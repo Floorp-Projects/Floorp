@@ -724,7 +724,142 @@ HashableValue::mark(JSTracer *trc) const
 }
 
 
+/*** MapIterator *********************************************************************************/
+
+class js::MapIteratorObject : public JSObject {
+  public:
+    enum { TargetSlot, RangeSlot, SlotCount };
+    static JSFunctionSpec methods[];
+    static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data);
+    static void finalize(FreeOp *fop, JSObject *obj);
+
+  private:
+    static inline bool is(const Value &v);
+    inline ValueMap::Range *range();
+    static bool next_impl(JSContext *cx, CallArgs args);
+    static JSBool next(JSContext *cx, unsigned argc, Value *vp);
+};
+
+inline js::MapIteratorObject &
+JSObject::asMapIterator()
+{
+    JS_ASSERT(isMapIterator());
+    return *static_cast<js::MapIteratorObject *>(this);
+}
+
+Class js::MapIteratorClass = {
+    "Iterator",
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    MapIteratorObject::finalize
+};
+
+JSFunctionSpec MapIteratorObject::methods[] = {
+    JS_FN("next", next, 0, 0),
+    JS_FS_END
+};
+
+inline ValueMap::Range *
+MapIteratorObject::range()
+{
+    return static_cast<ValueMap::Range *>(getSlot(RangeSlot).toPrivate());
+}
+
+bool
+GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
+{
+    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    if (!base)
+        return false;
+    Rooted<JSObject*> proto(cx,
+        NewObjectWithGivenProto(cx, &MapIteratorClass, base, global));
+    if (!proto)
+        return false;
+    proto->setSlot(MapIteratorObject::RangeSlot, PrivateValue(NULL));
+    if (!JS_DefineFunctions(cx, proto, MapIteratorObject::methods))
+        return false;
+    global->setReservedSlot(MAP_ITERATOR_PROTO, ObjectValue(*proto));
+    return true;
+}
+
+MapIteratorObject *
+MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data)
+{
+    Rooted<GlobalObject *> global(cx, &mapobj->global());
+    Rooted<JSObject*> proto(cx, global->getOrCreateMapIteratorPrototype(cx));
+    if (!proto)
+        return false;
+
+    ValueMap::Range *range = cx->new_<ValueMap::Range>(data->all());
+    if (!range)
+        return false;
+
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &MapIteratorClass, proto, global);
+    if (!iterobj) {
+        cx->delete_(range);
+        return false;
+    }
+    iterobj->setSlot(TargetSlot, ObjectValue(*mapobj));
+    iterobj->setSlot(RangeSlot, PrivateValue(range));
+    return static_cast<MapIteratorObject *>(iterobj);
+}
+
+void
+MapIteratorObject::finalize(FreeOp *fop, JSObject *obj)
+{
+    fop->delete_(obj->asMapIterator().range());
+}
+
+bool
+MapIteratorObject::is(const Value &v)
+{
+    return v.isObject() && v.toObject().hasClass(&MapIteratorClass);
+}
+
+bool
+MapIteratorObject::next_impl(JSContext *cx, CallArgs args)
+{
+    MapIteratorObject &thisobj = args.thisv().toObject().asMapIterator();
+    ValueMap::Range *range = thisobj.range();
+    if (!range)
+        return js_ThrowStopIteration(cx);
+    if (range->empty()) {
+        cx->delete_(range);
+        thisobj.setReservedSlot(RangeSlot, PrivateValue(NULL));
+        return js_ThrowStopIteration(cx);
+    }
+
+    Value pair[2] = { range->front().key.get(), range->front().value };
+    JSObject *pairobj = NewDenseCopiedArray(cx, 2, pair);
+    if (!pairobj)
+        return false;
+    range->popFront();
+    args.rval().setObject(*pairobj);
+    return true;
+}
+
+JSBool
+MapIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, next_impl, args);
+}
+
+
 /*** Map *****************************************************************************************/
+
+inline js::MapObject &
+JSObject::asMap()
+{
+    JS_ASSERT(hasClass(&MapObject::class_));
+    return *static_cast<js::MapObject *>(this);
+}
 
 Class MapObject::class_ = {
     "Map",
@@ -751,6 +886,7 @@ JSFunctionSpec MapObject::methods[] = {
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
     JS_FN("delete", delete_, 1, 0),
+    JS_FN("iterator", iterator, 0, 0),
     JS_FS_END
 };
 
@@ -812,8 +948,7 @@ MarkKey(Range &r, const HashableValue &key, JSTracer *trc)
 void
 MapObject::mark(JSTracer *trc, JSObject *obj)
 {
-    MapObject *mapobj = static_cast<MapObject *>(obj);
-    if (ValueMap *map = mapobj->getData()) {
+    if (ValueMap *map = obj->asMap().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
             MarkKey(r, r.front().key, trc);
             gc::MarkValue(trc, &r.front().value, "value");
@@ -824,15 +959,14 @@ MapObject::mark(JSTracer *trc, JSObject *obj)
 void
 MapObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    MapObject *mapobj = static_cast<MapObject *>(obj);
-    if (ValueMap *map = mapobj->getData())
+    if (ValueMap *map = obj->asMap().getData())
         fop->delete_(map);
 }
 
 JSBool
 MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<JSObject*> obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return false;
 
@@ -896,7 +1030,7 @@ MapObject::extract(CallReceiver call)
 {
     JS_ASSERT(call.thisv().isObject());
     JS_ASSERT(call.thisv().toObject().hasClass(&MapObject::class_));
-    return *static_cast<MapObject&>(call.thisv().toObject()).getData();
+    return *call.thisv().toObject().asMap().getData();
 }
 
 bool
@@ -1009,6 +1143,25 @@ MapObject::delete_(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod(cx, is, delete_impl, args);
 }
 
+bool
+MapObject::iterator_impl(JSContext *cx, CallArgs args)
+{
+    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().asMap());
+    ValueMap &map = *mapobj->getData();
+    Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, mapobj, &map));
+    if (!iterobj)
+        return false;
+    args.rval().setObject(*iterobj);
+    return true;
+}
+
+JSBool
+MapObject::iterator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, iterator_impl, args);
+}
+
 JSObject *
 js_InitMapClass(JSContext *cx, JSObject *obj)
 {
@@ -1016,7 +1169,137 @@ js_InitMapClass(JSContext *cx, JSObject *obj)
 }
 
 
+/*** SetIterator *********************************************************************************/
+
+class js::SetIteratorObject : public JSObject {
+  public:
+    enum { TargetSlot, RangeSlot, SlotCount };
+    static JSFunctionSpec methods[];
+    static SetIteratorObject *create(JSContext *cx, HandleObject setobj, ValueSet *data);
+    static void finalize(FreeOp *fop, JSObject *obj);
+
+  private:
+    static inline bool is(const Value &v);
+    inline ValueSet::Range *range();
+    static bool next_impl(JSContext *cx, CallArgs args);
+    static JSBool next(JSContext *cx, unsigned argc, Value *vp);
+};
+
+inline js::SetIteratorObject &
+JSObject::asSetIterator()
+{
+    JS_ASSERT(isSetIterator());
+    return *static_cast<js::SetIteratorObject *>(this);
+}
+
+Class js::SetIteratorClass = {
+    "Iterator",
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount),
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    SetIteratorObject::finalize
+};
+
+JSFunctionSpec SetIteratorObject::methods[] = {
+    JS_FN("next", next, 0, 0),
+    JS_FS_END
+};
+
+inline ValueSet::Range *
+SetIteratorObject::range()
+{
+    return static_cast<ValueSet::Range *>(getSlot(RangeSlot).toPrivate());
+}
+
+bool
+GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
+{
+    JSObject *base = global->getOrCreateIteratorPrototype(cx);
+    if (!base)
+        return false;
+    JSObject *proto = NewObjectWithGivenProto(cx, &SetIteratorClass, base, global);
+    if (!proto)
+        return false;
+    proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(NULL));
+    if (!JS_DefineFunctions(cx, proto, SetIteratorObject::methods))
+        return false;
+    global->setReservedSlot(SET_ITERATOR_PROTO, ObjectValue(*proto));
+    return true;
+}
+
+SetIteratorObject *
+SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data)
+{
+    Rooted<GlobalObject *> global(cx, &setobj->global());
+    Rooted<JSObject*> proto(cx, global->getOrCreateSetIteratorPrototype(cx));
+    if (!proto)
+        return false;
+
+    ValueSet::Range *range = cx->new_<ValueSet::Range>(data->all());
+    if (!range)
+        return false;
+
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &SetIteratorClass, proto, global);
+    if (!iterobj) {
+        cx->delete_(range);
+        return false;
+    }
+    iterobj->setSlot(TargetSlot, ObjectValue(*setobj));
+    iterobj->setSlot(RangeSlot, PrivateValue(range));
+    return static_cast<SetIteratorObject *>(iterobj);
+}
+
+void
+SetIteratorObject::finalize(FreeOp *fop, JSObject *obj)
+{
+    fop->delete_(obj->asSetIterator().range());
+}
+
+bool
+SetIteratorObject::is(const Value &v)
+{
+    return v.isObject() && v.toObject().hasClass(&SetIteratorClass);
+}
+
+bool
+SetIteratorObject::next_impl(JSContext *cx, CallArgs args)
+{
+    SetIteratorObject &thisobj = args.thisv().toObject().asSetIterator();
+    ValueSet::Range *range = thisobj.range();
+    if (!range)
+        return js_ThrowStopIteration(cx);
+    if (range->empty()) {
+        cx->delete_(range);
+        thisobj.setReservedSlot(RangeSlot, PrivateValue(NULL));
+        return js_ThrowStopIteration(cx);
+    }
+
+    args.rval() = range->front().get();
+    range->popFront();
+    return true;
+}
+
+JSBool
+SetIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, next_impl, args);
+}
+
+
 /*** Set *****************************************************************************************/
+
+inline js::SetObject &
+JSObject::asSet()
+{
+    JS_ASSERT(hasClass(&SetObject::class_));
+    return *static_cast<js::SetObject *>(this);
+}
 
 Class SetObject::class_ = {
     "Set",
@@ -1042,6 +1325,7 @@ JSFunctionSpec SetObject::methods[] = {
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
+    JS_FN("iterator", iterator, 0, 0),
     JS_FS_END
 };
 
@@ -1073,7 +1357,7 @@ SetObject::finalize(FreeOp *fop, JSObject *obj)
 JSBool
 SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<JSObject*> obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return false;
 
@@ -1197,6 +1481,25 @@ SetObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod(cx, is, delete_impl, args);
+}
+
+bool
+SetObject::iterator_impl(JSContext *cx, CallArgs args)
+{
+    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().asSet());
+    ValueSet &set = *setobj->getData();
+    Rooted<JSObject*> iterobj(cx, SetIteratorObject::create(cx, setobj, &set));
+    if (!iterobj)
+        return false;
+    args.rval().setObject(*iterobj);
+    return true;
+}
+
+JSBool
+SetObject::iterator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, iterator_impl, args);
 }
 
 JSObject *
