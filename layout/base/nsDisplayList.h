@@ -330,6 +330,11 @@ public:
   void MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect);
 
   /**
+   * Return the FrameLayerBuilder.
+   */
+  FrameLayerBuilder* LayerBuilder() { return &mLayerBuilder; }
+
+  /**
    * Get the area of the final transparent region.
    */
   const nsRegion* GetFinalTransparentRegion() { return mFinalTransparentRegion; }
@@ -498,6 +503,7 @@ private:
     return &mPresShellStates[mPresShellStates.Length() - 1];
   }
 
+  FrameLayerBuilder              mLayerBuilder;
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mIgnoreScrollFrame;
   PLArenaPool                    mPool;
