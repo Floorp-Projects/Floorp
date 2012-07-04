@@ -137,6 +137,7 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual bool MustRetainContent() { return HasShadow(); }
 
   void SetBackBufferAndAttrs(const OptionalThebesBuffer& aBuffer,
                              const nsIntRegion& aValidRegion,
