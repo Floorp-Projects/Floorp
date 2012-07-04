@@ -333,7 +333,7 @@ protected:
    * aItem in that layer. If aNewLayer is a ThebesLayer, invalidates the area of
    * aItem in that layer.
    */
-  void InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer, const FrameLayerBuilder::Clip& aClip);
+  void InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer);
   /**
    * Try to determine whether the ThebesLayer at aThebesLayerIndex
    * has a single opaque color behind it, over the entire bounds of its visible
@@ -950,8 +950,7 @@ FrameLayerBuilder::HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKe
 }
 
 Layer*
-FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey, 
-                                  nsDisplayItemGeometry** aOldGeometry, Clip** aOldClip)
+FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey, nsDisplayItemGeometry** aOldGeometry)
 {
   // If we need to build a new layer tree, then just refuse to recycle
   // anything.
@@ -968,9 +967,6 @@ FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey,
       if (layer->Manager() == mRetainingManager) {
         if (aOldGeometry) {
           *aOldGeometry = array->ElementAt(i).mGeometry.get();
-        }
-        if (aOldClip) {
-          *aOldClip = &array->ElementAt(i).mClip;
         }
         return layer;
       }
@@ -1870,14 +1866,14 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // way, since their ThebesLayer may decide it wants to draw them
       // into its buffer even if they're currently covered.
       if (itemVisibleRect.IsEmpty() && layerState != LAYER_ACTIVE_EMPTY) {
-        InvalidateForLayerChange(item, nsnull, aClip);
+        InvalidateForLayerChange(item, nsnull);
         continue;
       }
 
       // Just use its layer.
       nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager, mParameters);
       if (!ownLayer) {
-        InvalidateForLayerChange(item, ownLayer, aClip);
+        InvalidateForLayerChange(item, ownLayer);
         continue;
       }
 
@@ -1936,10 +1932,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       NS_ASSERTION(!mNewChildLayers.Contains(ownLayer),
                    "Layer already in list???");
 
-      InvalidateForLayerChange(item, ownLayer, aClip);
+      InvalidateForLayerChange(item, ownLayer);
 
       mNewChildLayers.AppendElement(ownLayer);
-      mLayerBuilder->AddLayerDisplayItem(ownLayer, item, aClip, layerState, nsnull);
+      mLayerBuilder->AddLayerDisplayItem(ownLayer, item, layerState, nsnull);
     } else {
       ThebesLayerData* data =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
@@ -1949,7 +1945,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
                                        activeScrolledRoot, mBuilder));
 
-      InvalidateForLayerChange(item, data->mLayer, aClip);
+      InvalidateForLayerChange(item, data->mLayer);
 
       mLayerBuilder->AddThebesDisplayItem(data->mLayer, item, aClip,
                                           mContainerFrame,
@@ -1963,16 +1959,15 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 }
 
 void
-ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer, const FrameLayerBuilder::Clip& aClip)
+ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
 {
   nsIFrame* f = aItem->GetUnderlyingFrame();
   NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
   PRUint32 key = aItem->GetPerFrameKey();
   NS_ASSERTION(key, "Display items that render using Thebes must have a key");
   nsDisplayItemGeometry *oldGeometry = NULL;
-  FrameLayerBuilder::Clip* oldClip = NULL;
   nsAutoPtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(mBuilder));
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(f, key, &oldGeometry, &oldClip);
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(f, key, &oldGeometry);
   if (aNewLayer != oldLayer && oldLayer) {
     // The item has changed layers.
     // Invalidate the bounds in the old layer and new layer.
@@ -2020,23 +2015,17 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer,
   // otherwise we only want to invalidate the changed areas.
   nsRegion combined;
   if (!oldLayer) {
-    // This item is being added for the first time, invalidate its entire area.
     //TODO: We call GetGeometry again in AddThebesDisplayItem, we should reuse this.
     combined = geometry->ComputeInvalidationRegion();
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), f, aNewLayer);
 #endif
-  } else if (aItem->IsInvalid() || *oldClip != aClip) {
-    // Either layout marked item as needing repainting, or the clip on it changed, invalidate
-    // the entire old and new areas.
-    // TODO: We could be smarter about handling clip changes here instead of repainting everything.
+  } else if (aItem->IsInvalid()) {
     combined.Or(geometry->ComputeInvalidationRegion(), oldGeometry->ComputeInvalidationRegion());
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), f, aNewLayer);
 #endif
   } else {
-    // No obvious differences, so let the display item check for geometry changes and decide what needs to be
-    // repainted.
     ThebesDisplayItemLayerUserData* data =
         static_cast<ThebesDisplayItemLayerUserData*>(newThebesLayer->GetUserData(&gThebesDisplayItemLayerUserData));
     nsIntPoint paintOffset = GetTranslationForThebesLayer(newThebesLayer);
@@ -2102,7 +2091,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     }
   }
 
-  AddLayerDisplayItem(aLayer, aItem, aClip, aLayerState, tempManager);
+  AddLayerDisplayItem(aLayer, aItem, aLayerState, tempManager);
 
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
@@ -2184,7 +2173,6 @@ FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
 void
 FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsDisplayItem* aItem,
-                                       const Clip& aClip,
                                        LayerState aLayerState,
                                        LayerManager* aManager)
 {
@@ -2211,7 +2199,6 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
     ThebesLayer *t = aLayer->AsThebesLayer();
     if (t) {
       data->mGeometry = aItem->AllocateGeometry(mDisplayListBuilder);
-      data->mClip = aClip;
       data->mGeometry->mAppUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
       ThebesDisplayItemLayerUserData* userData =
                     static_cast<ThebesDisplayItemLayerUserData*>(t->GetUserData(&gThebesDisplayItemLayerUserData));
