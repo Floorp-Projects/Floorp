@@ -34,6 +34,8 @@
 #include <math.h>
 #include "pixman-private.h"
 
+#include "pixman-dither.h"
+
 static inline pixman_fixed_32_32_t
 dot (pixman_fixed_48_16_t x1,
      pixman_fixed_48_16_t y1,
@@ -494,6 +496,7 @@ radial_get_scanline_16 (pixman_iter_t *iter, const uint32_t *mask)
     int y = iter->y;
     int width = iter->width;
     uint16_t *buffer = iter->buffer;
+    pixman_bool_t toggle = ((x ^ y) & 1);
 
     gradient_t *gradient = (gradient_t *)image;
     radial_gradient_t *radial = (radial_gradient_t *)image;
@@ -580,15 +583,17 @@ radial_get_scanline_16 (pixman_iter_t *iter, const uint32_t *mask)
 	{
 	    if (!mask || *mask++)
 	    {
-		*buffer = convert_8888_to_0565(
+		*buffer = dither_8888_to_0565(
 			  radial_compute_color (radial->a, b, c,
 						radial->inva,
 						radial->delta.radius,
 						radial->mindr,
 						&walker,
-						image->common.repeat));
+						image->common.repeat),
+			  toggle);
 	    }
 
+	    toggle ^= 1;
 	    b += db;
 	    c += dc;
 	    dc += ddc;
@@ -626,13 +631,14 @@ radial_get_scanline_16 (pixman_iter_t *iter, const uint32_t *mask)
 			      pdx, pdy, radial->c1.radius);
 		    /*  / pixman_fixed_1 / pixman_fixed_1 */
 
-		    *buffer = convert_8888_to_0565 (
+		    *buffer = dither_8888_to_0565 (
 			      radial_compute_color (radial->a, b, c,
 						    radial->inva,
 						    radial->delta.radius,
 						    radial->mindr,
 						    &walker,
-						    image->common.repeat));
+						    image->common.repeat),
+			      toggle);
 		}
 		else
 		{
@@ -641,6 +647,7 @@ radial_get_scanline_16 (pixman_iter_t *iter, const uint32_t *mask)
 	    }
 
 	    ++buffer;
+	    toggle ^= 1;
 
 	    v.vector[0] += unit.vector[0];
 	    v.vector[1] += unit.vector[1];
