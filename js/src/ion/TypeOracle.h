@@ -118,6 +118,9 @@ class TypeOracle
     virtual types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
+    virtual bool propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id) {
+        return false;
+    }
     virtual types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc,
                                                 jsid id, bool *canSpecialize) {
         *canSpecialize = true;
@@ -257,6 +260,7 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc);
     types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc);
+    bool propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id);
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);

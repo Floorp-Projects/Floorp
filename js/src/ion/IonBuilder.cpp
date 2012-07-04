@@ -4905,6 +4905,21 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     return true;
 }
 
+// Returns true if an idempotent cache has ever invalidated this script
+// or an outer script.
+bool
+IonBuilder::invalidatedIdempotentCache()
+{
+    IonBuilder *builder = this;
+    do {
+        if (builder->script->invalidatedIdempotentCache)
+            return true;
+        builder = builder->callerBuilder_;
+    } while (builder);
+
+    return false;
+}
+
 bool
 IonBuilder::jsop_getprop(HandlePropertyName name)
 {
@@ -4991,6 +5006,17 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
             if (unary.rval != MIRType_Undefined && unary.rval != MIRType_Null)
                 load->setResultType(unary.rval);
         }
+
+        // Try to mark the cache as idempotent. We only do this if JM is enabled
+        // (its ICs are used to mark property reads as likely non-idempotent) or
+        // if we are compiling eagerly (to improve test coverage).
+        if ((cx->methodJitEnabled || js_IonOptions.eagerCompilation) &&
+            !invalidatedIdempotentCache())
+        {
+            if (oracle->propertyReadIdempotent(script, pc, id))
+                load->setIdempotent();
+        }
+
         ins = load;
     } else {
         ins = MCallGetProperty::New(obj, name);
@@ -4999,7 +5025,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     current->add(ins);
     current->push(ins);
 
-    if (!resumeAfter(ins))
+    if (ins->isEffectful() && !resumeAfter(ins))
         return false;
 
     if (ins->isCallGetProperty())

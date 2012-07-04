@@ -157,11 +157,18 @@ struct IonOptions
     // Default: 800
     uint32 inlineMaxTotalBytecodeLength;
 
+    // Whether functions are compiled immediately.
+    //
+    // Default: false
+    bool eagerCompilation;
+
     void setEagerCompilation() {
+        eagerCompilation = true;
         usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
 
         // Eagerly inline calls to improve test coverage.
         usesBeforeInlining = 0;
+        smallFunctionUsesBeforeInlining = 0;
     }
 
     IonOptions()
@@ -182,7 +189,8 @@ struct IonOptions
         smallFunctionMaxBytecodeLength(100),
         smallFunctionUsesBeforeInlining(usesBeforeInlining / 4),
         polyInlineMax(4),
-        inlineMaxTotalBytecodeLength(800)
+        inlineMaxTotalBytecodeLength(800),
+        eagerCompilation(false)
     { }
 };
 
@@ -238,6 +246,8 @@ IonExecStatus SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
+bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true);
+
 void MarkFromIon(JSCompartment *comp, Value *vp);
 
 void ToggleBarriers(JSCompartment *comp, bool needs);
