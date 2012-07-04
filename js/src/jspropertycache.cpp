@@ -19,7 +19,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject 
                     Shape *shape)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
-    JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!cx->runtime->isHeapBusy());
 
     /*
      * Check for overdeep scope and prototype chain. Because resolve, getter,
