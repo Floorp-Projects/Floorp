@@ -1165,7 +1165,6 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
                               JSObject *newTarget)
 {
     Value origv = ObjectValue(*oldTarget);
-    Value targetv = ObjectValue(*newTarget);
 
     AutoValueVector toTransplant(cx);
     if (!toTransplant.reserve(cx->runtime->compartments.length()))

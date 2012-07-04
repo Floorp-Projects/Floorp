@@ -1862,8 +1862,9 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
     AllocationSiteTable::AddPtr p = allocationSiteTable->lookupForAdd(key);
     JS_ASSERT(!p);
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, key.script->global(), key.kind, &proto, NULL))
+    RootedObject proto(cx);
+    RootedObject global(cx, key.script->global());
+    if (!js_GetClassPrototype(cx, global, key.kind, &proto, NULL))
         return NULL;
 
     RootedScript keyScript(cx, key.script);

@@ -493,10 +493,10 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
 }
 
 static JSObject *
-ConstructObjectWithArguments(JSContext *cx, Class *clasp, JSObject *parent,
+ConstructObjectWithArguments(JSContext *cx, Class *clasp,
                              unsigned argc, jsval *argv)
 {
-    assertSameCompartment(cx, parent, JSValueArray(argv, argc));
+    assertSameCompartment(cx, JSValueArray(argv, argc));
 
     AutoArrayRooter argtvr(cx, argc, argv);
 
@@ -504,7 +504,8 @@ ConstructObjectWithArguments(JSContext *cx, Class *clasp, JSObject *parent,
 
     /* Protect constructor in case a crazy getter for .prototype uproots it. */
     RootedValue value(cx);
-    if (!js_FindClassObject(cx, parent, protoKey, value.address(), clasp))
+    RootedObject null(cx);
+    if (!js_FindClassObject(cx, null, protoKey, &value, clasp))
         return NULL;
 
     Value rval;
@@ -540,7 +541,7 @@ js_ConstructXMLQNameObject(JSContext *cx, const Value &nsval, const Value &lnval
         argv[0] = nsval;
     }
     argv[1] = lnval;
-    return ConstructObjectWithArguments(cx, &QNameClass, NULL, 2, argv);
+    return ConstructObjectWithArguments(cx, &QNameClass, 2, argv);
 }
 
 static JSBool
@@ -1661,15 +1662,15 @@ fail:
 static JSBool
 GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 {
-    jsval v;
-
-    if (!js_FindClassObject(cx, NULL, JSProto_XML, &v))
+    RootedValue v(cx);
+    RootedObject null(cx);
+    if (!js_FindClassObject(cx, null, JSProto_XML, &v))
         return JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(v) || !JSVAL_TO_OBJECT(v)->isFunction()) {
+    if (v.reference().isPrimitive() || !v.reference().toObject().isFunction()) {
         *vp = JSVAL_VOID;
         return JS_TRUE;
     }
-    return JS_GetProperty(cx, JSVAL_TO_OBJECT(v), name, vp);
+    return JS_GetProperty(cx, &v.reference().toObject(), name, vp);
 }
 
 static JSBool
@@ -2272,7 +2273,7 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray<JSObject> *inScopeNSe
     if (!match) {
         argv[0] = prefix ? STRING_TO_JSVAL(prefix) : JSVAL_VOID;
         argv[1] = STRING_TO_JSVAL(uri);
-        ns = ConstructObjectWithArguments(cx, &NamespaceClass, NULL, 2, argv);
+        ns = ConstructObjectWithArguments(cx, &NamespaceClass, 2, argv);
         if (!ns)
             return NULL;
         match = ns;
@@ -2953,7 +2954,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
 
 construct:
     v = STRING_TO_JSVAL(name);
-    obj = ConstructObjectWithArguments(cx, &QNameClass, NULL, 1, &v);
+    obj = ConstructObjectWithArguments(cx, &QNameClass, 1, &v);
     if (!obj)
         return NULL;
 
@@ -4631,7 +4632,6 @@ HasSimpleContent(JSXML *xml);
 static JSBool
 HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
 {
-    JSObject *pobj;
     JSProperty *prop;
     JSXML *xml;
 
@@ -4640,6 +4640,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
     RootedId funid(cx, funid_);
 
     Rooted<JSObject*> obj(cx, obj_);
+    RootedObject pobj(cx);
     if (!baseops::LookupProperty(cx, obj, funid, &pobj, &prop))
         return false;
     if (!prop) {
@@ -4742,7 +4743,8 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *found)
  * For a proper solution see bug 355257.
 */
 static JSBool
-xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp, JSProperty **propp)
+xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
+                  JSProperty **propp)
 {
     JSBool found;
     JSXML *xml;
@@ -4763,7 +4765,7 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
         found = HasNamedProperty(xml, qn);
     }
     if (!found) {
-        *objp = NULL;
+        objp.set(NULL);
         *propp = NULL;
     } else {
         const Shape *shape =
@@ -4773,27 +4775,27 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
         if (!shape)
             return JS_FALSE;
 
-        *objp = obj;
+        objp.set(obj);
         *propp = (JSProperty *) shape;
     }
     return JS_TRUE;
 }
 
 static JSBool
-xml_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
-                   JSProperty **propp)
+xml_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                   MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return xml_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
+xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
                   JSProperty **propp)
 {
     JSXML *xml = reinterpret_cast<JSXML *>(obj->getPrivate());
     if (!HasIndexedProperty(xml, index)) {
-        *objp = NULL;
+        objp.set(NULL);
         *propp = NULL;
         return true;
     }
@@ -4808,13 +4810,14 @@ xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **ob
     if (!shape)
         return false;
 
-    *objp = obj;
+    objp.set(obj);
     *propp = (JSProperty *) shape;
     return true;
 }
 
 static JSBool
-xml_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
+xml_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                  MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return xml_lookupGeneric(cx, obj, id, objp, propp);
@@ -5419,7 +5422,7 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
 };
 
 static JSXML *
-StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
+StartNonListXMLMethod(JSContext *cx, jsval *vp, MutableHandleObject objp)
 {
     JSXML *xml;
     JSFunction *fun;
@@ -5428,24 +5431,24 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
     JS_ASSERT(JSVAL_TO_OBJECT(*vp)->isFunction());
 
-    *objp = ToObject(cx, &vp[1]);
-    if (!*objp)
+    objp.set(ToObject(cx, &vp[1]));
+    if (!objp)
         return NULL;
-    if (!(*objp)->isXML()) {
+    if (!objp->isXML()) {
         ReportIncompatibleMethod(cx, CallReceiverFromVp(vp), &XMLClass);
         return NULL;
     }
-    xml = (JSXML *) (*objp)->getPrivate();
+    xml = (JSXML *) objp->getPrivate();
     if (!xml || xml->xml_class != JSXML_CLASS_LIST)
         return xml;
 
     if (xml->xml_kids.length == 1) {
         xml = XMLARRAY_MEMBER(&xml->xml_kids, 0, JSXML);
         if (xml) {
-            *objp = js_GetXMLObject(cx, xml);
-            if (!*objp)
+            objp.set(js_GetXMLObject(cx, xml));
+            if (!objp)
                 return NULL;
-            vp[1] = OBJECT_TO_JSVAL(*objp);
+            vp[1] = OBJECT_TO_JSVAL(objp);
             return xml;
         }
     }
@@ -5474,8 +5477,8 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         return JS_FALSE
 
 #define NON_LIST_XML_METHOD_PROLOG                                            \
-    RootedObject obj(cx);                                                  \
-    JSXML *xml = StartNonListXMLMethod(cx, vp, obj.address());                \
+    RootedObject obj(cx);                                                     \
+    JSXML *xml = StartNonListXMLMethod(cx, vp, &obj);                         \
     if (!xml)                                                                 \
         return JS_FALSE;                                                      \
     JS_ASSERT(xml->xml_class != JSXML_CLASS_LIST)
@@ -6688,7 +6691,7 @@ xml_setChildren(JSContext *cx, unsigned argc, jsval *vp)
 {
     RootedObject obj(cx);
 
-    if (!StartNonListXMLMethod(cx, vp, obj.address()))
+    if (!StartNonListXMLMethod(cx, vp, &obj))
         return JS_FALSE;
 
     Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.starAtom));
@@ -6757,7 +6760,7 @@ xml_setName(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    nameqn = ConstructObjectWithArguments(cx, &QNameClass, NULL, 1, &name);
+    nameqn = ConstructObjectWithArguments(cx, &QNameClass, 1, &name);
     if (!nameqn)
         return JS_FALSE;
 
@@ -6862,7 +6865,7 @@ xml_setNamespace(JSContext *cx, unsigned argc, jsval *vp)
     if (!JSXML_HAS_NAME(xml))
         return JS_TRUE;
 
-    ns = ConstructObjectWithArguments(cx, &NamespaceClass, NULL, argc == 0 ? 0 : 1, vp + 2);
+    ns = ConstructObjectWithArguments(cx, &NamespaceClass, argc == 0 ? 0 : 1, vp + 2);
     if (!ns)
         return JS_FALSE;
     vp[0] = OBJECT_TO_JSVAL(ns);
@@ -6870,7 +6873,7 @@ xml_setNamespace(JSContext *cx, unsigned argc, jsval *vp)
 
     qnargv[0] = OBJECT_TO_JSVAL(ns);
     qnargv[1] = OBJECT_TO_JSVAL(xml->name);
-    qn = ConstructObjectWithArguments(cx, &QNameClass, NULL, 2, qnargv);
+    qn = ConstructObjectWithArguments(cx, &QNameClass, 2, qnargv);
     if (!qn)
         return JS_FALSE;
 
@@ -7612,7 +7615,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         obj = tmp;
     }
 
-    ns = ConstructObjectWithArguments(cx, &NamespaceClass, NULL, 0, NULL);
+    ns = ConstructObjectWithArguments(cx, &NamespaceClass, 0, NULL);
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
@@ -7630,7 +7633,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
     Value argv[2];
     argv[0].setString(cx->runtime->emptyString);
     argv[1] = v;
-    JSObject *ns = ConstructObjectWithArguments(cx, &NamespaceClass, NULL, 2, argv);
+    JSObject *ns = ConstructObjectWithArguments(cx, &NamespaceClass, 2, argv);
     if (!ns)
         return JS_FALSE;
 
@@ -7733,13 +7736,13 @@ js_GetAnyName(JSContext *cx, jsid *idp)
 }
 
 JSBool
-js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *idp)
+js_FindXMLProperty(JSContext *cx, const Value &nameval, MutableHandleObject objp, jsid *idp)
 {
     JSObject *nameobj;
     jsval v;
     JSObject *qn;
     RootedId funid(cx);
-    JSObject *obj, *target, *proto, *pobj;
+    JSObject *obj, *target, *proto;
     JSXML *xml;
     JSBool found;
     JSProperty *prop;
@@ -7748,7 +7751,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     nameobj = &nameval.toObject();
     if (nameobj->getClass() == &AnyNameClass) {
         v = STRING_TO_JSVAL(cx->runtime->atomState.starAtom);
-        nameobj = ConstructObjectWithArguments(cx, &QNameClass, NULL, 1, &v);
+        nameobj = ConstructObjectWithArguments(cx, &QNameClass, 1, &v);
         if (!nameobj)
             return JS_FALSE;
     } else {
@@ -7784,15 +7787,16 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
             }
             if (found) {
                 *idp = OBJECT_TO_JSID(nameobj);
-                *objp = target;
+                objp.set(target);
                 return JS_TRUE;
             }
         } else if (!JSID_IS_VOID(funid)) {
+            RootedObject pobj(cx);
             if (!target->lookupGeneric(cx, funid, &pobj, &prop))
                 return JS_FALSE;
             if (prop) {
                 *idp = funid;
-                *objp = target;
+                objp.set(target);
                 return JS_TRUE;
             }
         }

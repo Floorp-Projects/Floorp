@@ -2838,7 +2838,7 @@ ASTSerializer::literal(ParseNode *pn, Value *dst)
         JSObject *re1 = pn->pn_objbox ? pn->pn_objbox->object : NULL;
         LOCAL_ASSERT(re1 && re1->isRegExp());
 
-        JSObject *proto;
+        RootedObject proto(cx);
         if (!js_GetClassPrototype(cx, cx->fp()->scopeChain(), JSProto_RegExp, &proto))
             return false;
 
