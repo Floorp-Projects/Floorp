@@ -23,7 +23,6 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
-#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -34,7 +33,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -42,6 +40,10 @@
 #include "vm/MethodGuard.h"
 #include "vm/ScopeObject.h"
 #include "vm/Xdr.h"
+
+#if JS_HAS_GENERATORS
+# include "jsiter.h"
+#endif
 
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
@@ -52,7 +54,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"

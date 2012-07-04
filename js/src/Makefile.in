@@ -130,7 +130,6 @@ CPPSRCS		= \
 		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
-		Eval.cpp \
 		MapObject.cpp \
 		MemoryMetrics.cpp \
 		RegExpObject.cpp \

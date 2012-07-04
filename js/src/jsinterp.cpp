@@ -29,7 +29,6 @@
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
-#include "jslibmath.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -38,15 +37,14 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jslibmath.h"
 
-#include "builtin/Eval.h"
 #include "gc/Marking.h"
-#include "vm/Debugger.h"
-
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Logging.h"
 #endif
+#include "vm/Debugger.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
