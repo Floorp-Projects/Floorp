@@ -396,17 +396,24 @@ class AutoDetectInvalidation
     JSScript *script_;
     IonScript *ion_;
     Value *rval_;
+    bool disabled_;
 
   public:
     AutoDetectInvalidation(JSContext *cx, Value *rval, JSScript *script = NULL)
       : cx_(cx),
         script_(script ? script : GetTopIonJSScript(cx)),
         ion_(script_->ionScript()),
-        rval_(rval)
+        rval_(rval),
+        disabled_(false)
     { }
 
+    void disable() {
+        JS_ASSERT(!disabled_);
+        disabled_ = true;
+    }
+
     ~AutoDetectInvalidation() {
-        if (script_->ion != ion_)
+        if (!disabled_ && script_->ion != ion_)
             cx_->runtime->setIonReturnOverride(*rval_);
     }
 };

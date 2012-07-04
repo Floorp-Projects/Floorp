@@ -752,6 +752,17 @@ struct GetPropHelper {
 namespace js {
 namespace mjit {
 
+inline void
+MarkNotIdempotent(JSScript *script, jsbytecode *pc)
+{
+    if (!script->hasAnalysis())
+        return;
+    analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+    if (!code)
+        return;
+    code->notIdempotent = true;
+}
+
 class GetPropCompiler : public PICStubCompiler
 {
     JSObject    *obj;
@@ -1229,6 +1240,8 @@ class GetPropCompiler : public PICStubCompiler
 
         bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
+            MarkNotIdempotent(script, f.regs.pc);
+
             start = masm.label();
             shapeGuardJump = masm.branchPtr(Assembler::NotEqual,
                                             Address(pic.objReg, JSObject::offsetOfShape()),
@@ -1279,6 +1292,8 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (!shape->hasDefaultGetter()) {
+            MarkNotIdempotent(script, f.regs.pc);
+
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
             } else {
@@ -1367,8 +1382,10 @@ class GetPropCompiler : public PICStubCompiler
 
         GetPropHelper<GetPropCompiler> getprop(cx, obj, name, *this, f);
         LookupStatus status = getprop.lookupAndTest();
-        if (status != Lookup_Cacheable)
+        if (status != Lookup_Cacheable) {
+            MarkNotIdempotent(script, f.regs.pc);
             return status;
+        }
         if (hadGC())
             return Lookup_Uncacheable;
 
