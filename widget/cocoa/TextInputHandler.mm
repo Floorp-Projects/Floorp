@@ -58,7 +58,7 @@ GetKeyNameForNativeKeyCode(unsigned short aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
     case kVK_Escape:              return "Escape";
-    case kRCommandKeyCode:        return "Right-Command";
+    case kVK_RightCommand:        return "Right-Command";
     case kVK_Command:             return "Command";
     case kVK_Shift:               return "Shift";
     case kVK_CapsLock:            return "CapsLock";
@@ -104,12 +104,12 @@ GetKeyNameForNativeKeyCode(unsigned short aNativeKeyCode)
     case kVK_ANSI_KeypadEquals:   return "NumPad-=";
     case kVK_ANSI_KeypadEnter:    return "NumPad-Enter";
     case kVK_Return:              return "Return";
-    case kPowerbookEnterKeyCode:  return "NumPad-EnterOnPowerBook";
+    case kVK_Powerbook_KeypadEnter: return "NumPad-EnterOnPowerBook";
 
-    case kVK_Help:                return "Insert/Help";
-    case kVK_ForwardDelete:       return "Delete";
+    case kVK_PC_Insert:           return "Insert/Help";
+    case kVK_PC_Delete:           return "Delete";
     case kVK_Tab:                 return "Tab";
-    case kVK_Delete:              return "Backspace";
+    case kVK_PC_Backspace:        return "Backspace";
     case kVK_Home:                return "Home";
     case kVK_End:                 return "End";
     case kVK_PageUp:              return "PageUp";
@@ -719,7 +719,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
       break;
 
-    case kRCommandKeyCode:
+    case kVK_RightCommand:
     case kVK_RightShift:
     case kVK_RightOption:
     case kVK_RightControl:
@@ -743,7 +743,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_ANSI_KeypadDivide:
     case kVK_ANSI_KeypadEquals:
     case kVK_ANSI_KeypadEnter:
-    case kPowerbookEnterKeyCode:
+    case kVK_Powerbook_KeypadEnter:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
 
@@ -1016,7 +1016,7 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_Escape:            return NS_VK_ESCAPE;
 
     // modifiers
-    case kRCommandKeyCode:
+    case kVK_RightCommand:
     case kVK_Command:           return NS_VK_META;
     case kVK_RightShift:
     case kVK_Shift:             return NS_VK_SHIFT;
@@ -1049,9 +1049,9 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_F18:               return NS_VK_F18;
     case kVK_F19:               return NS_VK_F19;
 
-    case kPauseKeyCode:         return NS_VK_PAUSE;
-    case kScrollLockKeyCode:    return NS_VK_SCROLL_LOCK;
-    case kPrintScreenKeyCode:   return NS_VK_PRINTSCREEN;
+    case kVK_PC_Pause:          return NS_VK_PAUSE;
+    case kVK_PC_ScrollLock:     return NS_VK_SCROLL_LOCK;
+    case kVK_PC_PrintScreen:    return NS_VK_PRINTSCREEN;
 
     // keypad
     case kVK_ANSI_Keypad0:      return NS_VK_NUMPAD0;
@@ -1076,10 +1076,10 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_JIS_Kana:          return NS_VK_KANA;
 
     // these may clash with forward delete and help
-    case kVK_Help:              return NS_VK_INSERT;
-    case kVK_ForwardDelete:     return NS_VK_DELETE;
+    case kVK_PC_Insert:         return NS_VK_INSERT;
+    case kVK_PC_Delete:         return NS_VK_DELETE;
 
-    case kVK_Delete:            return NS_VK_BACK;
+    case kVK_PC_Backspace:      return NS_VK_BACK;
     case kVK_Tab:               return NS_VK_TAB;
 
     case kVK_Home:              return NS_VK_HOME;
@@ -1106,7 +1106,7 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
 
     case kVK_ANSI_KeypadEnter:
     case kVK_Return:
-    case kPowerbookEnterKeyCode: return NS_VK_RETURN;
+    case kVK_Powerbook_KeypadEnter: return NS_VK_RETURN;
   }
 
   // If Cmd key is pressed, that causes switching keyboard layout temporarily.
@@ -3883,7 +3883,7 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kVK_Shift:
     case kVK_RightShift:
     case kVK_Command:
-    case kRCommandKeyCode:
+    case kVK_RightCommand:
     case kVK_CapsLock:
     case kVK_Control:
     case kVK_RightControl:
@@ -3904,18 +3904,18 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kVK_F10:
     case kVK_F11:
     case kVK_F12:
-    case kPauseKeyCode:
-    case kScrollLockKeyCode:
-    case kPrintScreenKeyCode:
+    case kVK_PC_Pause:
+    case kVK_PC_ScrollLock:
+    case kVK_PC_PrintScreen:
     case kVK_F16:
     case kVK_F17:
     case kVK_F18:
     case kVK_F19:
 
-    case kVK_Help:
-    case kVK_ForwardDelete:
+    case kVK_PC_Insert:
+    case kVK_PC_Delete:
     case kVK_Tab:
-    case kVK_Delete:
+    case kVK_PC_Backspace:
 
     case kVK_JIS_Eisu:
     case kVK_JIS_Kana:
@@ -3930,7 +3930,7 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kVK_DownArrow:
     case kVK_Return:
     case kVK_ANSI_KeypadEnter:
-    case kPowerbookEnterKeyCode:
+    case kVK_Powerbook_KeypadEnter:
       return true;
   }
   return false;
@@ -3957,7 +3957,7 @@ TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
     case kVK_CapsLock:
-    case kRCommandKeyCode:
+    case kVK_RightCommand:
     case kVK_Command:
     case kVK_Shift:
     case kVK_Option:
