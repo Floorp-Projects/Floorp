@@ -166,7 +166,7 @@ IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
     return obj->toFunction();
 }
 
-unsigned
+uint32_t
 IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
                                AutoObjectVector &targets, uint32_t maxTargets)
 {
@@ -189,16 +189,7 @@ IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
         targets.append(obj);
     }
 
-    /** Do we want to freeze here? **
-     *
-    if (freeze) {
-        add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                                               cx->compartment->types.compiledInfo), false);
-    }
-    *
-    */
-
-    return objCount;
+    return (uint32_t) objCount;
 }
 
 bool
@@ -395,7 +386,8 @@ IonBuilder::processIterators()
 
 bool
 IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                        MDefinition *thisDefn, MDefinitionVector &argv, int polymorphic)
+                        MDefinition *thisDefn, MDefinitionVector &argv,
+                        InlinePolymorphism polymorphism)
 {
     IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
@@ -412,13 +404,13 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerBuilder->current;
-    if (polymorphic == 0) {
+    if (polymorphism == Inline_Monomorphic) {
         JS_ASSERT(predecessor == callerResumePoint->block());
         predecessor->end(MGoto::New(current));
-    } else if (polymorphic == 1) {
+    } else if (polymorphism == Inline_Polymorphic) {
         predecessor->end(MInlineFunctionGuard::New(NULL, NULL, current, NULL));
     } else {
-        JS_ASSERT(polymorphic == 2);
+        JS_ASSERT(polymorphism == Inline_PolymorphicFinal);
         // The predecessor should already be terminated with the proper instruction
         JS_ASSERT(predecessor->lastIns() && predecessor->lastIns()->isInlineFunctionGuard());
         MInlineFunctionGuard *guardIns = predecessor->lastIns()->toInlineFunctionGuard();
@@ -428,9 +420,11 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         return false;
 
 #ifdef DEBUG
-    if(polymorphic == 0) {
+    if(polymorphism == Inline_Monomorphic) {
+        // Predecessor should end with a Goto.
         JS_ASSERT(predecessor->numSuccessors() == 1);
     } else {
+        // Predecessor should end with a InlineFunctionGuard.
         JS_ASSERT(predecessor->numSuccessors() == 2);
     }
 #endif
@@ -2801,12 +2795,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
                              MConstant *constFun, MResumePoint *inlineResumePoint,
                              MDefinitionVector &argv, MBasicBlock *bottom,
                              Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns,
-                             int polymorphic)
+                             InlinePolymorphism polymorphism)
 {
-    // polymorphic == 0 means monomorhpic
-    // polymorphic == 1 means guarded polymorphic case
-    // polymorphic == 2 means un-guarded (final) polymorphic case
-
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(
@@ -2837,7 +2827,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     }
 
     // Build the graph.
-    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv, polymorphic))
+    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv, polymorphism))
         return false;
 
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
@@ -2993,7 +2983,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
         // Monomorphic case is simple - no guards.
         RootedFunction target(cx, targets[0]->toFunction());
         if(!jsop_call_inline(target, argc, constructing, constFun, inlineResumePoint,
-                             argv, bottom, retvalDefns, 0))
+                             argv, bottom, retvalDefns, Inline_Monomorphic))
             return false;
     } else {
         // Polymorhpic inline case requires guards.
@@ -3003,9 +2993,10 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
             // Do the inline function build.
             current = entryBlock;
             RootedFunction target(cx, targets[i]->toFunction());
+            InlinePolymorphism poly = (i == targets.length() - 1) ?
+                                        Inline_PolymorphicFinal : Inline_Polymorphic;
             if (!jsop_call_inline(target, argc, constructing, constFun,
-                                  inlineResumePoint, argv, bottom, retvalDefns,
-                                  (i == targets.length() - 1) ? 2 : 1))
+                                  inlineResumePoint, argv, bottom, retvalDefns, poly))
                 return false;
 
             JS_ASSERT(entryBlock->lastIns());
@@ -3293,7 +3284,7 @@ IonBuilder::jsop_funcall(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, int numTargets,
+IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, uint32_t numTargets,
                                   uint32 argc, 
                                   bool constructing,
                                   types::TypeSet *types,
@@ -3314,10 +3305,8 @@ IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, int numTargets,
             }
         }
 
-        if (numTargets > 0) {
-            if (makeInliningDecision(targets))
-                return inlineScriptedCall(targets, argc, constructing);
-        }
+        if (numTargets > 0 && makeInliningDecision(targets))
+            return inlineScriptedCall(targets, argc, constructing);
     }
 
     RootedFunction target(cx, numTargets == 1 ? targets[0]->toFunction() : NULL);
@@ -3329,7 +3318,7 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
     // Acquire known call target if existent.
     AutoObjectVector targets(cx);
-    unsigned numTargets = getPolyCallTargets(argc, pc, targets, 4);
+    uint32_t numTargets = getPolyCallTargets(argc, pc, targets, 4);
     types::TypeSet *barrier;
     types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
     return jsop_call_fun_barrier(targets, numTargets, argc, constructing, types, barrier);
