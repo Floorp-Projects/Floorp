@@ -705,7 +705,8 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
                "SVG frames must always have an nsSVGOuterSVGFrame ancestor!");
   invalidArea.MoveBy(aFrame->GetContentRect().TopLeft() - aFrame->GetPosition());
 
-  static_cast<nsSVGOuterSVGFrame*>(aFrame)->InvalidateSVG(invalidArea);
+  static_cast<nsSVGOuterSVGFrame*>(aFrame)->InvalidateWithFlags(invalidArea,
+                                                                aFlags);
 }
 
 void
