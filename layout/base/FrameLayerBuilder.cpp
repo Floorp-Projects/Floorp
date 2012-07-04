@@ -1564,8 +1564,7 @@ DumpPaintedImage(nsDisplayItem* aItem, gfxASurface* aSurf)
 static void
 PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
                    nsDisplayItem* aItem,
-                   gfxContext* aContext,
-                   nsRenderingContext* aCtx)
+                   gfxContext* aContext)
 {
   // This item has an inactive layer. Render it to a ThebesLayer
   // using a temporary BasicLayerManager.
@@ -1596,11 +1595,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   
   tempManager->SetRoot(layer);
   aBuilder->LayerBuilder()->WillEndTransaction(tempManager);
-  if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
-    static_cast<nsDisplaySVGEffects*>(aItem)->PaintAsLayer(aBuilder, aCtx, tempManager);
-  } else {
-    tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
-  }
+  tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
   aBuilder->LayerBuilder()->DidEndTransaction(tempManager);
  
 #ifdef MOZ_DUMP_PAINTING
@@ -2565,7 +2560,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
 
     if (cdi->mInactiveLayer) {
-      PaintInactiveLayer(builder, cdi->mItem, aContext, rc);
+      PaintInactiveLayer(builder, cdi->mItem, aContext);
     } else {
       nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
       if (frame) {

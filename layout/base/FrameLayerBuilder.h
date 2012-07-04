@@ -29,9 +29,7 @@ enum LayerState {
   // when the layer has rounded rect clips.
   LAYER_ACTIVE_FORCE,
   // Special layer that is metadata only.
-  LAYER_ACTIVE_EMPTY,
-  // Inactive style layer for rendering SVG effects.
-  LAYER_SVG_EFFECTS
+  LAYER_ACTIVE_EMPTY
 };
 
 /**
