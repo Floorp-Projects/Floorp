@@ -5,16 +5,15 @@
              by :-moz-ui-invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
-    function doTest()
+    function onLoadHandler()
     {
       var e = document.getElementById('t');
       e.setCustomValidity('foo');
       e.removeAttribute('disabled');
       document.documentElement.className='';
     }
-    document.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
-  <body>
+  <body onload="onLoadHandler();">
     <textarea class='invalid' id='t' disabled></textarea>
   </body>
 </html>

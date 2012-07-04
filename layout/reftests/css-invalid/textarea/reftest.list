@@ -1,11 +1,11 @@
 == textarea-valid.html textarea-ref.html
-fuzzy(11,4) == textarea-customerror.html textarea-ref.html
+== textarea-customerror.html textarea-ref.html
 fails-if(Android) == textarea-disabled.html textarea-ref.html
-fuzzy(11,4) fails-if(Android) == textarea-dyn-disabled.html textarea-ref.html
-fuzzy(11,4) == textarea-dyn-not-disabled.html textarea-ref.html
+fails-if(Android) == textarea-dyn-disabled.html textarea-ref.html
+== textarea-dyn-not-disabled.html textarea-ref.html
 == textarea-readonly.html textarea-ref.html
-fuzzy(11,4) == textarea-dyn-readonly.html textarea-ref.html
-fuzzy(11,4) == textarea-dyn-not-readonly.html textarea-ref.html
+== textarea-dyn-readonly.html textarea-ref.html
+== textarea-dyn-not-readonly.html textarea-ref.html
 == textarea-maxlength-valid.html textarea-ref.html
 == textarea-maxlength-invalid.html textarea-withtext-ref.html
 == textarea-required-valid.html textarea-withtext-ref.html
