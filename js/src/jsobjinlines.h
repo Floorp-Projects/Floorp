@@ -28,6 +28,7 @@
 #include "jsxml.h"
 #include "jswrapper.h"
 
+#include "builtin/MapObject.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Root.h"
@@ -787,6 +788,7 @@ inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
 inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
 inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
 inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
+inline bool JSObject::isMapIterator() const { return hasClass(&js::MapIteratorClass); }
 inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
 inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
 inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
@@ -795,6 +797,7 @@ inline bool JSObject::isPrimitive() const { return isNumber() || isString() || i
 inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
 inline bool JSObject::isRegExpStatics() const { return hasClass(&js::RegExpStaticsClass); }
 inline bool JSObject::isScope() const { return isCall() || isDeclEnv() || isNestedScope(); }
+inline bool JSObject::isSetIterator() const { return hasClass(&js::SetIteratorClass); }
 inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
 inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
 inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
