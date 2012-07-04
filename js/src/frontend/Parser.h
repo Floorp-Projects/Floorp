@@ -200,9 +200,9 @@ struct Parser : private AutoGCRooter
     ParseNode *mulExpr1i();
     ParseNode *mulExpr1n();
     ParseNode *unaryExpr();
-    ParseNode *memberExpr(bool allowCallSyntax);
+    ParseNode *memberExpr(JSBool allowCallSyntax);
     ParseNode *primaryExpr(TokenKind tt, bool afterDoubleDot);
-    ParseNode *parenExpr(bool *genexp = NULL);
+    ParseNode *parenExpr(JSBool *genexp = NULL);
 
     /*
      * Additional JS parsers.
@@ -218,7 +218,7 @@ struct Parser : private AutoGCRooter
     ParseNode *comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
                                  ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
     ParseNode *generatorExpr(ParseNode *kid);
-    bool argumentList(ParseNode *listNode);
+    JSBool argumentList(ParseNode *listNode);
     ParseNode *bracketedExpr();
     ParseNode *letBlock(LetContext letContext);
     ParseNode *returnOrYield(bool useAssignExpr);
@@ -238,12 +238,12 @@ struct Parser : private AutoGCRooter
     ParseNode *qualifiedSuffix(ParseNode *pn);
     ParseNode *qualifiedIdentifier();
     ParseNode *attributeIdentifier();
-    ParseNode *xmlExpr(bool inTag);
+    ParseNode *xmlExpr(JSBool inTag);
     ParseNode *xmlNameExpr();
     ParseNode *xmlTagContent(ParseNodeKind tagkind, JSAtom **namep);
-    bool xmlElementContent(ParseNode *pn);
-    ParseNode *xmlElementOrList(bool allowList);
-    ParseNode *xmlElementOrListRoot(bool allowList);
+    JSBool xmlElementContent(ParseNode *pn);
+    ParseNode *xmlElementOrList(JSBool allowList);
+    ParseNode *xmlElementOrListRoot(JSBool allowList);
 
     ParseNode *starOrAtPropertyIdentifier(TokenKind tt);
     ParseNode *propertyQualifiedIdentifier();

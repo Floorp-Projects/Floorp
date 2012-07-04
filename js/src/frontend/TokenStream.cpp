@@ -94,7 +94,7 @@ js::FindKeyword(const jschar *s, size_t length)
     return NULL;
 }
 
-bool
+JSBool
 js::IsIdentifier(JSLinearString *str)
 {
     const jschar *chars = str->chars();
@@ -601,7 +601,7 @@ TokenStream::getXMLEntity()
 {
     ptrdiff_t offset, length, i;
     int c, d;
-    bool ispair;
+    JSBool ispair;
     jschar *bp, digit;
     char *bytes;
     JSErrNum msg;
@@ -782,7 +782,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
 
         tokenbuf.clear();
         if (IsXMLNamespaceStart(c)) {
-            bool sawColon = false;
+            JSBool sawColon = false;
 
             if (!tokenbuf.append(c))
                 goto error;
@@ -2127,7 +2127,7 @@ JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file)
 {
     int n, i, c;
-    bool crflag;
+    JSBool crflag;
 
     n = size - 1;
     if (n < 0)
