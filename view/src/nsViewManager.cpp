@@ -66,6 +66,7 @@ nsViewManager::nsViewManager()
 
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
+  mHasPendingUpdates = false;
   mHasPendingWidgetGeometryChanges = false;
   mRecursiveRefreshPending = false;
 }
@@ -429,6 +430,7 @@ void
 nsViewManager::PostPendingUpdate()
 {
   nsViewManager* rootVM = RootViewManager();
+  rootVM->mHasPendingUpdates = true;
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
     rootVM->mPresShell->ScheduleViewManagerFlush();
@@ -574,6 +576,9 @@ NS_IMETHODIMP nsViewManager::InvalidateViewNoSuppression(nsIView *aView,
   // accumulate this rectangle in the view's dirty region, so we can
   // process it later.
   AddDirtyRegion(displayRoot, nsRegion(damagedRect));
+
+  // Schedule an invalidation flush with the refresh driver.
+  PostPendingUpdate();
 
   return NS_OK;
 }
@@ -1307,7 +1312,10 @@ nsViewManager::ProcessPendingUpdates()
     return;
   }
 
-  ProcessPendingUpdatesForView(mRootView, true);
+  if (mHasPendingUpdates) {
+    ProcessPendingUpdatesForView(mRootView, true);
+    mHasPendingUpdates = false;
+  }
 }
 
 void

@@ -33,13 +33,6 @@ static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
     nsGkAtoms::bcTableCellFrame == frameType;
 }
 
-static inline bool FrameHasBorderOrBackground(nsIFrame* f) {
-  return (f->GetStyleVisibility()->IsVisible() &&
-          (!f->GetStyleBackground()->IsTransparent() ||
-           f->GetStyleDisplay()->mAppearance ||
-           f->GetStyleBorder()->HasBorder()));
-}
-
 class nsDisplayTableItem : public nsDisplayItem
 {
 public:
@@ -463,6 +456,23 @@ public:
 
   bool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(bool aValue);
+
+  /**
+   * To be called on a frame by its parent after setting its size/position and
+   * calling DidReflow (possibly via FinishReflowChild()).  This can also be
+   * used for child frames which are not being reflowed but did have their size
+   * or position changed.
+   *
+   * @param aFrame The frame to invalidate
+   * @param aOrigRect The original rect of aFrame (before the change).
+   * @param aOrigVisualOverflow The original overflow rect of aFrame.
+   * @param aIsFirstReflow True if the size/position change is due to the
+   *                       first reflow of aFrame.
+   */
+  static void InvalidateFrame(nsIFrame* aFrame,
+                              const nsRect& aOrigRect,
+                              const nsRect& aOrigVisualOverflow,
+                              bool aIsFirstReflow);
 
   virtual bool UpdateOverflow();
 

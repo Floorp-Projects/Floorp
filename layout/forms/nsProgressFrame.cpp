@@ -226,7 +226,7 @@ nsProgressFrame::AttributeChanged(PRInt32  aNameSpaceID,
     NS_ASSERTION(barFrame, "The progress frame should have a child with a frame!");
     PresContext()->PresShell()->FrameNeedsReflow(barFrame, nsIPresShell::eResize,
                                                  NS_FRAME_IS_DIRTY);
-    InvalidateFrame();
+    Invalidate(GetVisualOverflowRectRelativeToSelf());
   }
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

@@ -48,7 +48,6 @@ void
 ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
 {
   mValidRegion.Sub(mValidRegion, aRegion);
-  AddInvalidRect(aRegion.GetBounds());
 }
 
 void

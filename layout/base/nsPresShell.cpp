@@ -3550,7 +3550,8 @@ PresShell::UnsuppressAndInvalidate()
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
-    rootFrame->InvalidateFrame();
+    nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
+    rootFrame->Invalidate(rect);
 
     if (mCaretEnabled && mCaret) {
       mCaret->CheckCaretDrawingState();
@@ -3948,7 +3949,12 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
     VERIFY_STYLE_TREE;
   }
 
-  ScheduleViewManagerFlush();
+  if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+    nsIFrame* root = mFrameConstructor->GetRootFrame();
+    if (root) {
+      root->InvalidateFrameSubtree();
+    }
+  }
 }
 
 void
@@ -6088,11 +6094,13 @@ PresShell::ShowEventTargetDebug()
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
-      mDrawEventTargetFrame->InvalidateFrame();
+      mDrawEventTargetFrame->Invalidate(
+          nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
     }
 
     mDrawEventTargetFrame = mCurrentEventFrame;
-    mDrawEventTargetFrame->InvalidateFrame();
+    mDrawEventTargetFrame->Invalidate(
+        nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
   }
 }
 #endif
@@ -7300,8 +7308,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   NS_TIME_FUNCTION_WITH_DOCURL;
   SAMPLE_LABEL("layout", "DoReflow");
 
-  target->SchedulePaint();
-
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
     mReflowContinueTimer = nsnull;
@@ -7327,6 +7333,11 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsSize size;
   if (target == rootFrame) {
      size = mPresContext->GetVisibleArea().Size();
+
+     // target->GetRect() has the old size of the frame,
+     // mPresContext->GetVisibleArea() has the new size.
+     target->InvalidateRectDifference(mPresContext->GetVisibleArea(),
+                                      target->GetRect());
   } else {
      size = target->GetSize();
   }

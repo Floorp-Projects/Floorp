@@ -136,25 +136,6 @@ public:
     return mCallingUpdateBounds;
   }
 
-  void InvalidateSVG(const nsRegion& aRegion)
-  {
-    if (!aRegion.IsEmpty()) {
-      mInvalidRegion.Or(mInvalidRegion, aRegion);
-      InvalidateFrame();
-    }
-  }
-  
-  void ClearInvalidRegion() { mInvalidRegion.SetEmpty(); }
-
-  const nsRegion& GetInvalidRegion() {
-    if (!IsInvalid()) {
-      mInvalidRegion.SetEmpty();
-    }
-    return mInvalidRegion;
-  }
-
-  nsRegion FindInvalidatedForeignObjectFrameChildren(nsIFrame* aFrame);
-
 protected:
 
   bool mCallingUpdateBounds;
@@ -175,11 +156,9 @@ protected:
   // A hash-set containing our nsSVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
   // subtree if we were to use a list (see bug 381285 comment 20).
-  nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame> > mForeignObjectHash;
+  nsTHashtable<nsVoidPtrHashKey> mForeignObjectHash;
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
-
-  nsRegion mInvalidRegion; 
 
   float mFullZoom;
 
