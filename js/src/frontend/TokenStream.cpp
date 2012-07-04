@@ -101,17 +101,17 @@ js::IsIdentifier(JSLinearString *str)
     size_t length = str->length();
 
     if (length == 0)
-        return false;
+        return JS_FALSE;
     jschar c = *chars;
     if (!IsIdentifierStart(c))
-        return false;
+        return JS_FALSE;
     const jschar *end = chars + length;
     while (++chars != end) {
         c = *chars;
         if (!IsIdentifierPart(c))
-            return false;
+            return JS_FALSE;
     }
-    return true;
+    return JS_TRUE;
 }
 
 #ifdef _MSC_VER
@@ -782,7 +782,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
 
         tokenbuf.clear();
         if (IsXMLNamespaceStart(c)) {
-            JSBool sawColon = false;
+            JSBool sawColon = JS_FALSE;
 
             if (!tokenbuf.append(c))
                 goto error;
@@ -797,7 +797,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
                         reportError(JSMSG_BAD_XML_QNAME);
                         goto error;
                     }
-                    sawColon = true;
+                    sawColon = JS_TRUE;
                 }
 
                 if (!tokenbuf.append(c))
@@ -2133,7 +2133,7 @@ js_fgets(char *buf, int size, FILE *file)
     if (n < 0)
         return -1;
 
-    crflag = false;
+    crflag = JS_FALSE;
     for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
         buf[i] = c;
         if (c == '\n') {        /* any \n ends a line */

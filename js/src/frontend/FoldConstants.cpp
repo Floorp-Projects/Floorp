@@ -81,7 +81,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
             if (pn->isKind(PNK_STRING)) {
                 double d;
                 if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
-                    return false;
+                    return JS_FALSE;
                 pn->pn_dval = d;
                 pn->setKind(PNK_NUMBER);
                 pn->setOp(JSOP_DOUBLE);
@@ -92,10 +92,10 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
             if (pn->isKind(PNK_NUMBER)) {
                 JSString *str = js_NumberToString(cx, pn->pn_dval);
                 if (!str)
-                    return false;
+                    return JS_FALSE;
                 pn->pn_atom = js_AtomizeString(cx, str);
                 if (!pn->pn_atom)
-                    return false;
+                    return JS_FALSE;
                 pn->setKind(PNK_STRING);
                 pn->setOp(JSOP_STRING);
             }
@@ -104,7 +104,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
           default:;
         }
     }
-    return true;
+    return JS_TRUE;
 }
 
 /*
@@ -188,7 +188,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
     pn->setOp(JSOP_DOUBLE);
     pn->setArity(PN_NULLARY);
     pn->pn_dval = d;
-    return true;
+    return JS_TRUE;
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -238,20 +238,20 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
           case PNK_XMLCDATA:
             str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
-                return false;
+                return JS_FALSE;
             break;
 
           case PNK_XMLCOMMENT:
             str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
-                return false;
+                return JS_FALSE;
             break;
 
           case PNK_XMLPI: {
             XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
             str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
-                return false;
+                return JS_FALSE;
             break;
           }
 
@@ -278,7 +278,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
                 pn1->setArity(PN_NULLARY);
                 pn1->pn_atom = js_AtomizeString(cx, accum);
                 if (!pn1->pn_atom)
-                    return false;
+                    return JS_FALSE;
                 JS_ASSERT(pnp != &pn1->pn_next);
                 *pnp = pn1;
             }
@@ -295,7 +295,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
                       : js_ConcatStrings(cx, accum, str);
             }
             if (!str)
-                return false;
+                return JS_FALSE;
 #ifdef DEBUG_brendanXXX
             printf("2: %d, %d => ", i, j);
             FileEscapedString(stdout, str, 0);
@@ -317,7 +317,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
             if (!accum)
-                return false;
+                return JS_FALSE;
         }
 
         JS_ASSERT(*pnp == pn1);
@@ -330,7 +330,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         pn1->setArity(PN_NULLARY);
         pn1->pn_atom = js_AtomizeString(cx, accum);
         if (!pn1->pn_atom)
-            return false;
+            return JS_FALSE;
         JS_ASSERT(pnp != &pn1->pn_next);
         *pnp = pn1;
     }
@@ -350,7 +350,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
             pn->setOp(JSOP_TOXML);
         }
     }
-    return true;
+    return JS_TRUE;
 }
 
 #endif /* JS_HAS_XML_SUPPORT */
