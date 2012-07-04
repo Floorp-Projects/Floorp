@@ -1572,7 +1572,7 @@ class nsIWidget : public nsISupports {
     virtual bool WidgetPaintsBackground() { return false; }
 
     void SetNeedsPaint(bool aNeedsPaint) { mNeedsPaint = aNeedsPaint; }
-    virtual bool NeedsPaint() { 
+    bool NeedsPaint() { 
       if (!mNeedsPaint) {
         return false;
       }
