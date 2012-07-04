@@ -1635,10 +1635,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (nsIFrame* f = rootFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    f->RemoveStateBits(NS_FRAME_NO_COMPONENT_ALPHA);
-  }
-
   Element *root = mDocument->GetRootElement();
 
   if (root) {

@@ -110,9 +110,7 @@ public:
   FrameLayerBuilder() :
     mRetainingManager(nsnull),
     mDetectedDOMModification(false),
-    mInvalidateAllLayers(false),
-    mContainerLayerGeneration(0),
-    mMaxContainerLayerGeneration(0)
+    mInvalidateAllLayers(false)
   {
     MOZ_COUNT_CTOR(FrameLayerBuilder);
     mNewDisplayItemData.Init();
@@ -454,13 +452,8 @@ protected:
    */
   class DisplayItemData {
   public:
-    DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState, PRUint32 aGeneration)
-      : mLayer(aLayer)
-      , mDisplayItemKey(aKey)
-      , mContainerLayerGeneration(aGeneration)
-      , mLayerState(aLayerState)
-      , mUsed(false)
-    {}
+    DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState)
+      : mLayer(aLayer), mDisplayItemKey(aKey), mLayerState(aLayerState), mUsed(false) {}
     
     DisplayItemData()
       : mUsed(false)
@@ -473,7 +466,6 @@ protected:
       mInactiveManager = toCopy.mInactiveManager;
       mGeometry = toCopy.mGeometry;
       mDisplayItemKey = toCopy.mDisplayItemKey;
-      mContainerLayerGeneration = toCopy.mContainerLayerGeneration;
       mLayerState = toCopy.mLayerState;
       mUsed = toCopy.mUsed;
     }
@@ -482,7 +474,6 @@ protected:
     nsRefPtr<LayerManager> mInactiveManager;
     nsAutoPtr<nsDisplayItemGeometry> mGeometry;
     PRUint32        mDisplayItemKey;
-    PRUint32        mContainerLayerGeneration;
     LayerState      mLayerState;
 
     /**
@@ -513,14 +504,12 @@ protected:
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array.  Be careful.
       mData.SwapElements(toCopy.mData);
-      mContainerLayerGeneration = toCopy.mContainerLayerGeneration;
     }
     ~DisplayItemDataEntry() { MOZ_COUNT_DTOR(DisplayItemDataEntry); }
 
     bool HasNonEmptyContainerLayer();
 
     nsAutoTArray<DisplayItemData, 1> mData;
-    PRUint32 mContainerLayerGeneration;
 
     enum { ALLOW_MEMMOVE = false };
   };
@@ -575,8 +564,8 @@ protected:
    * mItem always has an underlying frame.
    */
   struct ClippedDisplayItem {
-    ClippedDisplayItem(nsDisplayItem* aItem, const Clip& aClip, PRUint32 aGeneration)
-      : mItem(aItem), mClip(aClip), mContainerLayerGeneration(aGeneration)
+    ClippedDisplayItem(nsDisplayItem* aItem, const Clip& aClip)
+      : mItem(aItem), mClip(aClip)
     {
     }
 
@@ -592,7 +581,6 @@ protected:
     nsRefPtr<LayerManager> mInactiveLayer;
 
     Clip mClip;
-    PRUint32 mContainerLayerGeneration;
   };
 
   /**
@@ -616,7 +604,6 @@ public:
     // The translation set on this ThebesLayer before we started updating the
     // layer tree.
     nsIntPoint mLastPaintOffset;
-    PRUint32 mContainerLayerGeneration;
     bool mHasExplicitLastPaintOffset;
     /**
       * The first mCommonClipCount rounded rectangle clips are identical for
@@ -646,12 +633,6 @@ protected:
   
   static PLDHashOperator StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
                                                  void* aUserArg);
-
-  static PLDHashOperator RestoreDisplayItemData(DisplayItemDataEntry* aEntry,
-                                                void *aUserArg);
-
-  static PLDHashOperator RestoreThebesLayerItemEntries(ThebesLayerItemsEntry* aEntry,
-                                                       void *aUserArg);
 
   /**
    * Returns true if the DOM has been modified since we started painting,
@@ -698,9 +679,6 @@ protected:
    * during this paint.
    */
   bool                                mInvalidateAllLayers;
-
-  PRUint32                            mContainerLayerGeneration;
-  PRUint32                            mMaxContainerLayerGeneration;
 };
 
 }
