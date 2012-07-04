@@ -28,17 +28,16 @@
 
 namespace js {
 
-struct NativeIterator
-{
+struct NativeIterator {
     HeapPtrObject obj;
     HeapPtr<JSFlatString> *props_array;
     HeapPtr<JSFlatString> *props_cursor;
     HeapPtr<JSFlatString> *props_end;
     const Shape **shapes_array;
-    uint32_t shapes_length;
-    uint32_t shapes_key;
-    uint32_t flags;
-    PropertyIteratorObject *next;  /* Forms cx->enumerators list, garbage otherwise. */
+    uint32_t  shapes_length;
+    uint32_t  shapes_key;
+    uint32_t  flags;
+    JSObject  *next;  /* Forms cx->enumerators list, garbage otherwise. */
 
     bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
 
@@ -70,21 +69,7 @@ struct NativeIterator
     void mark(JSTracer *trc);
 };
 
-class PropertyIteratorObject : public JSObject
-{
-  public:
-    static Class class_;
-
-    inline NativeIterator *getNativeIterator() const;
-    inline void setNativeIterator(js::NativeIterator *ni);
-
-  private:
-    static void trace(JSTracer *trc, JSObject *obj);
-    static void finalize(FreeOp *fop, JSObject *obj);
-};
-
-class ElementIteratorObject : public JSObject
-{
+class ElementIteratorObject : public JSObject {
   public:
     enum {
         TargetSlot,
@@ -244,8 +229,7 @@ Next(JSContext *cx, HandleObject iter, Value *vp)
  * and the failure is allowed to propagate on cx, as in this example if DoStuff
  * fails. In that case, ForOfIterator's destructor does all necessary cleanup.
  */
-class ForOfIterator
-{
+class ForOfIterator {
   private:
     JSContext *cx;
     RootedObject iterator;
@@ -321,7 +305,7 @@ struct JSGenerator
     js::HeapPtrObject   obj;
     JSGeneratorState    state;
     js::FrameRegs       regs;
-    js::PropertyIteratorObject *enumerators;
+    JSObject            *enumerators;
     JSGenerator         *prevGenerator;
     js::StackFrame      *fp;
     js::HeapValue       stackSnapshot[1];
