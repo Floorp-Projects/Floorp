@@ -4663,10 +4663,6 @@ nsIFrame::SchedulePaint(PRUint32 aFlags)
     pres = displayRoot->PresContext();
   }
   pres->PresShell()->ScheduleViewManagerFlush(aFlags);
-  nsIWidget *widget = GetNearestWidget();
-  if (widget) {
-    widget->SetNeedsPaint(true);
-  }
 }
 
 Layer*
