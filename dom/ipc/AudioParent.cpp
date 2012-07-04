@@ -12,11 +12,30 @@
 namespace mozilla {
 namespace dom {
 
+class AudioWriteDoneEvent : public nsRunnable
+{
+ public:
+  AudioWriteDoneEvent(AudioParent* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    mOwner->SendWriteDone();
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<AudioParent> mOwner;
+};
+
 class AudioWriteEvent : public nsRunnable
 {
  public:
-  AudioWriteEvent(nsAudioStream* owner, nsCString data, PRUint32 frames)
+  AudioWriteEvent(AudioParent* parent, nsAudioStream* owner, nsCString data, PRUint32 frames)
   {
+    mParent = parent;
     mOwner = owner;
     mData  = data;
     mFrames = frames;
@@ -25,10 +44,13 @@ class AudioWriteEvent : public nsRunnable
   NS_IMETHOD Run()
   {
     mOwner->Write(mData.get(), mFrames);
+    nsCOMPtr<nsIRunnable> event = new AudioWriteDoneEvent(mParent);
+    NS_DispatchToMainThread(event);
     return NS_OK;
   }
 
  private:
+    nsRefPtr<AudioParent> mParent;
     nsRefPtr<nsAudioStream> mOwner;
     nsCString mData;
     PRUint32  mFrames;
@@ -179,7 +201,7 @@ AudioParent::RecvWrite(const nsCString& data, const PRUint32& frames)
 {
   if (!mStream)
     return false;
-  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, frames);
+  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(this, mStream, data, frames);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
@@ -259,6 +281,14 @@ AudioParent::SendDrainDone()
 {
   if (mIPCOpen)
     return PAudioParent::SendDrainDone();
+  return true;
+}
+
+bool
+AudioParent::SendWriteDone()
+{
+  if (mIPCOpen)
+    return PAudioParent::SendWriteDone();
   return true;
 }
 

@@ -387,10 +387,16 @@ struct nsCSSRendering {
    * NOTE: aPt, aLineSize, aAscent and aOffset are non-rounded device pixels,
    *       not app units.
    *   input:
+   *     @param aFrame            the frame which needs the decoration line
    *     @param aGfxContext
    *     @param aDirtyRect        no need to paint outside this rect
    *     @param aColor            the color of the decoration line
    *     @param aPt               the top/left edge of the text
+   *     @param aXInFrame         the distance between aPt.x and left edge of
+   *                              aFrame.  If the decoration line is for shadow,
+   *                              set the distance between the left edge of
+   *                              the aFrame and the position of the text as
+   *                              positioned without offset of the shadow.
    *     @param aLineSize         the width and the height of the decoration
    *                              line
    *     @param aAscent           the ascent of the text
@@ -415,10 +421,12 @@ struct nsCSSRendering {
    *                              if it's possible.  Therefore, this value is
    *                              used for strikeout line and overline too.
    */
-  static void PaintDecorationLine(gfxContext* aGfxContext,
+  static void PaintDecorationLine(nsIFrame* aFrame,
+                                  gfxContext* aGfxContext,
                                   const gfxRect& aDirtyRect,
                                   const nscolor aColor,
                                   const gfxPoint& aPt,
+                                  const gfxFloat aXInFrame,
                                   const gfxSize& aLineSize,
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
@@ -475,6 +483,32 @@ protected:
                                                const PRUint8 aDecoration,
                                                const PRUint8 aStyle,
                                                const gfxFloat aDscentLimit);
+
+  /**
+   * Returns inflated rect for painting a decoration line.
+   * Complex style decoration lines should be painted from leftmost of nearest
+   * ancestor block box because that makes better look of connection of lines
+   * for different nodes.  ExpandPaintingRectForDecorationLine() returns
+   * a rect for actual painting rect for the clipped rect.
+   *
+   * input:
+   *     @param aFrame            the frame which needs the decoration line.
+   *     @param aStyle            the style of the complex decoration line
+   *                              NS_STYLE_TEXT_DECORATION_STYLE_DOTTED or
+   *                              NS_STYLE_TEXT_DECORATION_STYLE_DASHED or
+   *                              NS_STYLE_TEXT_DECORATION_STYLE_WAVY.
+   *     @param aClippedRect      the clipped rect for the decoration line.
+   *                              in other words, visible area of the line.
+   *     @param aXInFrame         the distance between left edge of aFrame and
+   *                              aClippedRect.pos.x.
+   *     @param aCycleLength      the width of one cycle of the line style.
+   */
+  static gfxRect ExpandPaintingRectForDecorationLine(
+                   nsIFrame* aFrame,
+                   const PRUint8 aStyle,
+                   const gfxRect &aClippedRect,
+                   const gfxFloat aXInFrame,
+                   const gfxFloat aCycleLength);
 };
 
 /*

@@ -1339,20 +1339,37 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
                                        aDestinationNode, aDestOffset,
                                        aDoDeleteSelection,
                                        isSafe);
+        } else {
+          // In some platforms (like Linux), the clipboard might return data
+          // requested for unknown flavors (for example:
+          // application/x-moz-nativehtml).  In this case, treat the data
+          // to be pasted as mere HTML to get the best chance of pasting it
+          // correctly.
+          bestFlavor.AssignLiteral(kHTMLMime);
+          // Fall through the next case
         }
       }
     }
-    else if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime) ||
-             0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
-             0 == nsCRT::strcmp(bestFlavor, kMozTextInternal)) {
+    if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime) ||
+        0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
+        0 == nsCRT::strcmp(bestFlavor, kMozTextInternal)) {
       nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
-      if (textDataObj && len > 0)
-      {
+      if (textDataObj && len > 0) {
         nsAutoString text;
         textDataObj->GetData(text);
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign(text.get(), len / 2);
+      } else {
+        nsCOMPtr<nsISupportsCString> textDataObj(do_QueryInterface(genericDataObj));
+        if (textDataObj && len > 0) {
+          nsCAutoString text;
+          textDataObj->GetData(text);
+          NS_ASSERTION(text.Length() <= len, "Invalid length!");
+          stuffToPaste.Assign(NS_ConvertUTF8toUTF16(Substring(text, 0, len)));
+        }
+      }
 
+      if (!stuffToPaste.IsEmpty()) {
         nsAutoEditBatch beginBatching(this);
         if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime)) {
           rv = DoInsertHTMLWithContext(stuffToPaste,
