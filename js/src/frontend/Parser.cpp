@@ -403,7 +403,7 @@ HasFinalReturn(ParseNode *pn)
     }
 }
 
-static bool
+static JSBool
 ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter reporter,
                 unsigned errnum, unsigned anonerrnum)
 {
@@ -417,7 +417,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, Parser::Reporter r
     return (parser->*reporter)(pn, errnum, name.ptr());
 }
 
-static bool
+static JSBool
 CheckFinalReturn(JSContext *cx, Parser *parser, ParseNode *pn)
 {
     JS_ASSERT(parser->tc->sc->inFunction());
@@ -919,13 +919,13 @@ js::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
  * function is called indirectly from the variable declaration parser by way
  * of CheckDestructuring and its friends.
  */
-typedef bool
+typedef JSBool
 (*Binder)(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
 
-static bool
+static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
 
-static bool
+static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
 
 struct BindData {
@@ -961,7 +961,7 @@ struct BindData {
 };
 
 #if JS_HAS_DESTRUCTURING
-static bool
+static JSBool
 BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 {
     TreeContext *tc = parser->tc;
@@ -1036,7 +1036,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
     return fun;
 }
 
-static bool
+static JSBool
 MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
 {
     TokenKind tt = ts->peekTokenSameLine(TSF_OPERAND);
@@ -1959,7 +1959,7 @@ ReportRedeclaration(JSContext *cx, Parser *parser, ParseNode *pn, bool isConst, 
  * populate data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to
  * data->pn in a slot of the block object.
  */
-static bool
+static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 {
     TreeContext *tc = parser->tc;
@@ -2100,7 +2100,7 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, TreeContex
     return true;
 }
 
-static bool
+static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 {
     TreeContext *tc = parser->tc;
@@ -2338,7 +2338,7 @@ NoteNameUse(ParseNode *pn, Parser *parser)
 
 #if JS_HAS_DESTRUCTURING
 
-static bool
+static JSBool
 BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, Parser *parser)
 {
     JS_ASSERT(pn->isKind(PNK_NAME));
@@ -2383,7 +2383,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, Parser *parse
  * JSOP_ENUMELEM yet, because the LHS may turn out to be an arg or local var,
  * which can be optimized further.  So we select JSOP_SETNAME.
  */
-static bool
+static JSBool
 BindDestructuringLHS(JSContext *cx, ParseNode *pn, Parser *parser)
 {
     switch (pn->getKind()) {
@@ -4618,7 +4618,7 @@ SetLvalKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
 
 static const char incop_name_str[][10] = {"increment", "decrement"};
 
-static bool
+static JSBool
 SetIncOpKid(JSContext *cx, Parser *parser, ParseNode *pn, ParseNode *kid,
             TokenKind tt, bool preorder)
 {
@@ -5462,7 +5462,7 @@ Parser::assignExprWithoutYield(unsigned msg)
     return res;
 }
 
-bool
+JSBool
 Parser::argumentList(ParseNode *listNode)
 {
     if (tokenStream.matchToken(TOK_RP, TSF_OPERAND))
@@ -5516,7 +5516,7 @@ Parser::argumentList(ParseNode *listNode)
 }
 
 ParseNode *
-Parser::memberExpr(bool allowCallSyntax)
+Parser::memberExpr(JSBool allowCallSyntax)
 {
     ParseNode *lhs;
 
@@ -5950,7 +5950,7 @@ Parser::attributeIdentifier()
  * Make a TOK_LC unary node whose pn_kid is an expression.
  */
 ParseNode *
-Parser::xmlExpr(bool inTag)
+Parser::xmlExpr(JSBool inTag)
 {
     JS_ASSERT(allowsXML());
 
@@ -6133,7 +6133,7 @@ Parser::xmlTagContent(ParseNodeKind tagkind, JSAtom **namep)
  * Consume XML element tag content, including the TOK_XMLETAGO (</) sequence
  * that opens the end tag for the container.
  */
-bool
+JSBool
 Parser::xmlElementContent(ParseNode *pn)
 {
     JS_ASSERT(allowsXML());
@@ -6198,7 +6198,7 @@ Parser::xmlElementContent(ParseNode *pn)
  * Return a PN_LIST node containing an XML or XMLList Initialiser.
  */
 ParseNode *
-Parser::xmlElementOrList(bool allowList)
+Parser::xmlElementOrList(JSBool allowList)
 {
     JS_ASSERT(allowsXML());
 
@@ -6334,7 +6334,7 @@ Parser::xmlElementOrList(bool allowList)
 }
 
 ParseNode *
-Parser::xmlElementOrListRoot(bool allowList)
+Parser::xmlElementOrListRoot(JSBool allowList)
 {
     JS_ASSERT(allowsXML());
 
@@ -6903,7 +6903,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 
       case TOK_LP:
       {
-        bool genexp;
+        JSBool genexp;
 
         pn = parenExpr(&genexp);
         if (!pn)
@@ -7024,7 +7024,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 }
 
 ParseNode *
-Parser::parenExpr(bool *genexp)
+Parser::parenExpr(JSBool *genexp)
 {
     TokenPtr begin;
     ParseNode *pn;
