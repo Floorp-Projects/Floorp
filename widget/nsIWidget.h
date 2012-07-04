@@ -1576,17 +1576,7 @@ class nsIWidget : public nsISupports {
       if (!mNeedsPaint) {
         return false;
       }
-
-      bool visible;
-      nsresult rv = IsVisible(visible);
-      NS_ENSURE_SUCCESS(rv, false);
-      if (!visible) {
-        return false;
-      }
-      nsIntRect bounds;
-      rv = GetBounds(bounds);
-      NS_ENSURE_SUCCESS(rv, false);
-      return !bounds.IsEmpty();
+      return true;
     }
 protected:
 
