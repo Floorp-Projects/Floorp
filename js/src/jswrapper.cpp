@@ -23,7 +23,6 @@
 
 #include "jsobjinlines.h"
 
-#include "builtin/Iterator-inl.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -611,8 +610,8 @@ CanReify(Value *vp)
 {
     JSObject *obj;
     return vp->isObject() &&
-           (obj = &vp->toObject())->isPropertyIterator() &&
-           (obj->asPropertyIterator().getNativeIterator()->flags & JSITER_ENUMERATE);
+           (obj = &vp->toObject())->getClass() == &IteratorClass &&
+           (obj->getNativeIterator()->flags & JSITER_ENUMERATE);
 }
 
 struct AutoCloseIterator
@@ -631,7 +630,7 @@ struct AutoCloseIterator
 static bool
 Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 {
-    PropertyIteratorObject *iterObj = &vp->toObject().asPropertyIterator();
+    JSObject *iterObj = &vp->toObject();
     NativeIterator *ni = iterObj->getNativeIterator();
 
     AutoCloseIterator close(cx, iterObj);
