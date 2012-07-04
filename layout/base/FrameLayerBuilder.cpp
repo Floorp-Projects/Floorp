@@ -818,7 +818,6 @@ FrameLayerBuilder::ProcessRemovedDisplayItems(DisplayItemDataEntry* aEntry,
           item.mGeometry->ComputeInvalidationRegion().
             ScaleToOutsidePixels(data->mXScale, data->mYScale, item.mGeometry->mAppUnitsPerDevPixel),
           item.mGeometry->mPaintOffset);
-      aEntry->GetKey()->ClearDisplayItemCache();
     }
   }
 
@@ -2004,7 +2003,6 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer,
             GetTranslationForThebesLayer(newThebesLayer));
       }
     }
-    aItem->GetUnderlyingFrame()->ClearDisplayItemCache();
     return;
   } 
   if (!aNewLayer) {
@@ -2059,7 +2057,6 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer,
     InvalidatePostTransformRegion(newThebesLayer,
         combined.ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
         GetTranslationForThebesLayer(newThebesLayer));
-    aItem->GetUnderlyingFrame()->ClearDisplayItemCache();
   }
 }
 
@@ -2895,9 +2892,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
 
     if (cdi->mInactiveLayer) {
-      builder->SetIsCompositingCheap(false);
       PaintInactiveLayer(builder, cdi->mInactiveLayer, cdi->mItem, aContext, rc);
-      builder->SetIsCompositingCheap(aLayer->Manager()->IsCompositingCheap());
     } else {
       nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
       if (frame) {
