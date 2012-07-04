@@ -86,6 +86,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
+  LayerBuilder()->Init(this);
+
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
 
@@ -584,10 +586,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     layerManager = new BasicLayerManager();
   }
 
-  FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
-  layerBuilder->Init(aBuilder);
-  layerManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(layerBuilder));
-
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
@@ -600,7 +598,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     }
   }
   if (allowRetaining) {
-    layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
+    aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
   }
 
   nsPresContext* presContext = aForFrame->PresContext();
@@ -608,14 +606,11 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   nsDisplayItem::ContainerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
-  nsRefPtr<ContainerLayer> root = layerBuilder->
+  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
                            containerParameters, nsnull);
-
-  if (!root) {
-    layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
+  if (!root)
     return;
-  }
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   gfx3DMatrix rootTransform = root->GetTransform()*
     gfx3DMatrix::ScalingMatrix(1.0f/containerParameters.mXScale,
@@ -646,17 +641,16 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetRoot(root);
-  layerBuilder->WillEndTransaction(layerManager);
+  aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder);
-  layerBuilder->DidEndTransaction(layerManager);
+  aBuilder->LayerBuilder()->DidEndTransaction(layerManager);
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
   nsCSSRendering::DidPaint();
-  layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
 }
 
 PRUint32 nsDisplayList::Count() const {
@@ -1916,7 +1910,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
+  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
   if (!layer)
@@ -2002,7 +1996,7 @@ already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
+  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
   return layer.forget();
@@ -2131,7 +2125,7 @@ already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
                                  const ContainerParameters& aContainerParameters) {
-  nsRefPtr<ContainerLayer> layer = GetLayerBuilderForManager(aManager)->
+  nsRefPtr<ContainerLayer> layer = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
 
@@ -2887,7 +2881,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nsnull;
   }
 
-  nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
+  nsRefPtr<ContainerLayer> container = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
                            aContainerParameters, &newTransformMatrix);
 
@@ -3303,7 +3297,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
   }
 
-  nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
+  nsRefPtr<ContainerLayer> container = aBuilder->LayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
 
