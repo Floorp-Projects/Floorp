@@ -1,7 +1,5 @@
 // for-of can iterate strict arguments objects.
 
-Object.prototype.iterator = Array.prototype.iterator;
-
 var s;
 function test() {
     "use strict";

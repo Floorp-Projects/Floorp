@@ -1,7 +1,5 @@
 // for-of can iterate arguments objects for other active frames.
 
-Object.prototype.iterator = Array.prototype.iterator;
-
 var s;
 function g(obj) {
     for (var v of obj)
