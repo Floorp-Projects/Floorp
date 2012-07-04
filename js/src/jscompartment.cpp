@@ -266,7 +266,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     // We maintain the invariant that the key in the cross-compartment wrapper
     // map is always directly wrapped by the value.
-    JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.reference().toObject());
+    JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
 
     vp->setObject(*wrapper);
 
@@ -287,7 +287,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
     RootedValue value(cx, StringValue(*strp));
     if (!wrap(cx, value.address()))
         return false;
-    *strp = value.reference().toString();
+    *strp = value.get().toString();
     return true;
 }
 
@@ -297,7 +297,7 @@ JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
     RootedValue value(cx, StringValue(*strp));
     if (!wrap(cx, value.address()))
         return false;
-    *strp = value.reference().toString();
+    *strp = value.get().toString();
     return true;
 }
 
@@ -309,7 +309,7 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
     RootedValue value(cx, ObjectValue(**objp));
     if (!wrap(cx, value.address()))
         return false;
-    *objp = &value.reference().toObject();
+    *objp = &value.get().toObject();
     return true;
 }
 
@@ -321,7 +321,7 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
     RootedValue value(cx, IdToValue(*idp));
     if (!wrap(cx, value.address()))
         return false;
-    return ValueToId(cx, value.reference(), idp);
+    return ValueToId(cx, value.get(), idp);
 }
 
 bool

@@ -167,13 +167,13 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
-    if (value.reference().isPrimitive()) {
+    if (value.get().isPrimitive()) {
         *vp = value;
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
-        if (idval.reference().isObject()) {
-            JSObject *obj = &idval.reference().toObject();
+        if (idval.get().isObject()) {
+            JSObject *obj = &idval.get().toObject();
             if (js_GetLocalNameFromFunctionQName(obj, id.address(), cx))
                 idval = IdToValue(id);
         }
@@ -595,9 +595,9 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     if (!ToPrimitive(cx, rvalue.address()))
         return false;
 
-    if (lvalue.reference().isString() && rvalue.reference().isString()) {
-        JSString *l = lvalue.reference().toString();
-        JSString *r = rvalue.reference().toString();
+    if (lvalue.get().isString() && rvalue.get().isString()) {
+        JSString *l = lvalue.get().toString();
+        JSString *r = rvalue.get().toString();
         return EqualStrings(cx, l, r, result);
     }
 
@@ -958,7 +958,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
     if (JOF_OPMODE(*pc) == JOF_NAME)
         ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
     else
-        ok = baseops::LookupProperty(cx, start, name.reference(), &pobj, &prop);
+        ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -2359,7 +2359,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (!GetPropertyOperation(cx, script, regs.pc, regs.sp[-1], rval.address()))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, rval.reference());
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);

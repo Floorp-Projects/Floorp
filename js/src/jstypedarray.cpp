@@ -322,7 +322,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
         return false;
 
     if (*propp != NULL) {
-        if (objp.value() == delegate)
+        if (objp == delegate)
             objp.set(obj);
         return true;
     }
@@ -363,7 +363,7 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
         return false;
 
     if (*propp != NULL) {
-        if (objp.value() == delegate)
+        if (objp == delegate)
             objp.set(obj);
         return true;
     }

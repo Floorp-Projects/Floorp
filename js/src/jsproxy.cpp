@@ -791,7 +791,7 @@ ScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy_, jsi
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), fval.address()) &&
            Trap1(cx, handler, fval, id, value.address()) &&
-           ((value.reference().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+           ((value.get().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), value) &&
              ParsePropertyDescriptorObject(cx, proxy, id, value, desc)));
 }
@@ -806,7 +806,7 @@ ScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy_, 
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), fval.address()) &&
            Trap1(cx, handler, fval, id, value.address()) &&
-           ((value.reference().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+           ((value.get().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), value) &&
              ParsePropertyDescriptorObject(cx, proxy, id, value, desc)));
 }

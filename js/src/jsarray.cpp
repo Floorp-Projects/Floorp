@@ -137,8 +137,8 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, uint32_t *lengthp)
     if (!obj->getProperty(cx, cx->runtime->atomState.lengthAtom, value.address()))
         return false;
 
-    if (value.reference().isInt32()) {
-        *lengthp = uint32_t(value.reference().toInt32()); /* uint32_t cast does ToUint32_t */
+    if (value.get().isInt32()) {
+        *lengthp = uint32_t(value.get().toInt32()); /* uint32_t cast does ToUint32_t */
         return true;
     }
 
@@ -2175,7 +2175,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedValue fvalRoot(cx);
-    Value &fval = fvalRoot.reference();
+    Value &fval = fvalRoot.get();
 
     if (args.hasDefined(0)) {
         if (args[0].isPrimitive()) {

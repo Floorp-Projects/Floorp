@@ -5165,7 +5165,7 @@ mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (id.reference() != types::MakeTypeId(cx, id))
+    if (id.get() != types::MakeTypeId(cx, id))
         return false;
 
     types::TypeSet *pushedTypes = pushedTypeSet(0);
