@@ -318,6 +318,8 @@ class IonBuilder : public MIRGenerator
 
     MDefinition *walkScopeChain(unsigned hops);
 
+    MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);

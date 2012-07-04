@@ -50,46 +50,6 @@
 using namespace js;
 using namespace js::ion;
 
-// Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
-LinearSum
-ion::ExtractLinearSum(MDefinition *ins)
-{
-    if (ins->type() != MIRType_Int32)
-        return LinearSum(ins, 0);
-
-    if (ins->isConstant()) {
-        const Value &v = ins->toConstant()->value();
-        JS_ASSERT(v.isInt32());
-        return LinearSum(NULL, v.toInt32());
-    } else if (ins->isAdd() || ins->isSub()) {
-        MDefinition *lhs = ins->getOperand(0);
-        MDefinition *rhs = ins->getOperand(1);
-        if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-            LinearSum lsum = ExtractLinearSum(lhs);
-            LinearSum rsum = ExtractLinearSum(rhs);
-
-            JS_ASSERT(lsum.term || rsum.term);
-            if (lsum.term && rsum.term)
-                return LinearSum(ins, 0);
-
-            // Check if this is of the form <SUM> + n, n + <SUM> or <SUM> - n.
-            if (ins->isAdd()) {
-                int32 constant;
-                if (!SafeAdd(lsum.constant, rsum.constant, &constant))
-                    return LinearSum(ins, 0);
-                return LinearSum(lsum.term ? lsum.term : rsum.term, constant);
-            } else if (lsum.term) {
-                int32 constant;
-                if (!SafeSub(lsum.constant, rsum.constant, &constant))
-                    return LinearSum(ins, 0);
-                return LinearSum(lsum.term, constant);
-            }
-        }
-    }
-
-    return LinearSum(ins, 0);
-}
-
 bool
 ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
                              LinearSum *plhs, MDefinition **prhs, bool *plessEqual)
@@ -328,6 +288,12 @@ Loop::hoistInstructions(InstructionQueue &toHoist, InstructionQueue &boundsCheck
                 if (lower && !hoistedChecks.append(lower))
                     return false;
                 if (upper || lower) {
+                    // Note: replace all uses of the original bounds check with the
+                    // actual index. This is usually done during bounds check elimination,
+                    // but in this case it's safe to do it here since the load/store is
+                    // definitely not loop-invariant, so we will never move it before
+                    // one of the bounds checks we just added.
+                    ins->replaceAllUsesWith(ins->index());
                     ins->block()->discard(ins);
                     break;
                 }

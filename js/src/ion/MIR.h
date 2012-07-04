@@ -3196,6 +3196,9 @@ class MBoundsCheck
         setMovable();
         JS_ASSERT(index->type() == MIRType_Int32);
         JS_ASSERT(length->type() == MIRType_Int32);
+
+        // Returns the checked index.
+        setResultType(MIRType_Int32);
     }
 
   public:
@@ -3204,7 +3207,6 @@ class MBoundsCheck
     static MBoundsCheck *New(MDefinition *index, MDefinition *length) {
         return new MBoundsCheck(index, length);
     }
-
     MDefinition *index() const {
         return getOperand(0);
     }
@@ -3223,13 +3225,17 @@ class MBoundsCheck
     void setMaximum(int32 n) {
         maximum_ = n;
     }
+    bool congruentTo(MDefinition * const &ins) const {
+        if (!ins->isBoundsCheck())
+            return false;
+        MBoundsCheck *other = ins->toBoundsCheck();
+        if (minimum() != other->minimum() || maximum() != other->maximum())
+            return false;
+        return congruentIfOperandsEqual(other);
+    }
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-
-    HashNumber valueHash() const;
-    bool congruentTo(MDefinition * const &ins) const;
-    bool updateForReplacement(MDefinition *ins);
 };
 
 // Bailout if index < minimum.

@@ -817,6 +817,15 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         AssertGraphCoherency(graph);
     }
 
+    // Note: bounds check elimination has to run after all other passes that
+    // move instructions. Since bounds check uses are replaced with the actual
+    // index, code motion after this pass could incorrectly move a load or
+    // store before its bounds check.
+    if (!EliminateRedundantBoundsChecks(graph))
+        return false;
+    IonSpewPass("Bounds Check Elimination");
+    AssertGraphCoherency(graph);
+
     LIRGraph lir(graph);
     LIRGenerator lirgen(&builder, graph, lir);
     if (!lirgen.generate())

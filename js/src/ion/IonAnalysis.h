@@ -79,6 +79,26 @@ FindNaturalLoops(MIRGraph &graph);
 void
 AssertGraphCoherency(MIRGraph &graph);
 
+bool
+EliminateRedundantBoundsChecks(MIRGraph &graph);
+
+// Linear sum of term(s). For now the only linear sums which can be represented
+// are 'n' or 'x + n' (for any computation x).
+class MDefinition;
+
+struct LinearSum
+{
+    MDefinition *term;
+    int32 constant;
+
+    LinearSum(MDefinition *term, int32 constant)
+        : term(term), constant(constant)
+    {}
+};
+
+LinearSum
+ExtractLinearSum(MDefinition *ins);
+
 } // namespace ion
 } // namespace js
 

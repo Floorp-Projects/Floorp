@@ -4352,8 +4352,7 @@ IonBuilder::jsop_getelem_dense()
         // in-bounds elements, and the array is packed or its holes are not
         // read. This is the best case: we can separate the bounds check for
         // hoisting.
-        MBoundsCheck *check = MBoundsCheck::New(id, initLength);
-        current->add(check);
+        id = addBoundsCheck(id, initLength);
 
         load = MLoadElement::New(elements, id, needsHoleCheck);
         current->add(load);
@@ -4432,8 +4431,7 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         current->add(length);
 
         // Bounds check.
-        MBoundsCheck *check = MBoundsCheck::New(id, length);
-        current->add(check);
+        id = addBoundsCheck(id, length);
 
         // Get the elements vector.
         MTypedArrayElements *elements = MTypedArrayElements::New(obj);
@@ -4476,8 +4474,7 @@ IonBuilder::jsop_getelem_string()
     MStringLength *length = MStringLength::New(str);
     current->add(length);
 
-    MBoundsCheck *boundsCheck = MBoundsCheck::New(id, length);
-    current->add(boundsCheck);
+    id = addBoundsCheck(id, length);
 
     MCharCodeAt *charCode = MCharCodeAt::New(str, id);
     current->add(charCode);
@@ -4556,8 +4553,7 @@ IonBuilder::jsop_setelem_dense()
         MInitializedLength *initLength = MInitializedLength::New(elements);
         current->add(initLength);
 
-        MBoundsCheck *check = MBoundsCheck::New(id, initLength);
-        current->add(check);
+        id = addBoundsCheck(id, initLength);
 
         MStoreElement *ins = MStoreElement::New(elements, id, value);
         store = ins;
@@ -4596,8 +4592,7 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     current->add(length);
 
     // Bounds check.
-    MBoundsCheck *check = MBoundsCheck::New(id, length);
-    current->add(check);
+    id = addBoundsCheck(id, length);
 
     // Get the elements vector.
     MTypedArrayElements *elements = MTypedArrayElements::New(obj);
@@ -4711,12 +4706,11 @@ IonBuilder::jsop_arguments_getelem()
     current->add(length);
 
     // Ensure idx is an integer.
-    MToInt32 *index = MToInt32::New(idx);
+    MInstruction *index = MToInt32::New(idx);
     current->add(index);
 
     // Bailouts if we read more than the number of actual arguments.
-    MBoundsCheck *check = MBoundsCheck::New(index, length);
-    current->add(check);
+    index = addBoundsCheck(index, length);
 
     // Load the argument from the actual arguments.
     MGetArgument *load = MGetArgument::New(index);
@@ -4729,9 +4723,6 @@ IonBuilder::jsop_arguments_getelem()
 bool
 IonBuilder::jsop_arguments_setelem()
 {
-    MDefinition *val = current->pop();
-    MDefinition *idx = current->pop();
-    MDefinition *obj = current->pop();
     return abort("NYI arguments[]=");
 }
 
@@ -5357,3 +5348,11 @@ IonBuilder::jsop_instanceof()
     return resumeAfter(ins);
 }
 
+MInstruction *
+IonBuilder::addBoundsCheck(MDefinition *index, MDefinition *length)
+{
+    MInstruction *check = MBoundsCheck::New(index, length);
+    current->add(check);
+
+    return check;
+}
