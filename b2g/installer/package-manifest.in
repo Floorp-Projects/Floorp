@@ -82,11 +82,13 @@
 @BINPATH@/mozcpp19.dll
 #endif
 #endif
+#ifdef MOZ_SHARED_MOZGLUE
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
+#endif
 #ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
 @BINPATH@/classes.dex
-@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 @BINPATH@/res/drawable
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
