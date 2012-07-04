@@ -16,7 +16,7 @@ notification[type="info"] {
 }
 
 notification[type="critical"] {
-  background-color: red;
+  background-image: -moz-linear-gradient(rgb(212,0,0), rgb(152,0,0));
   color: white;
 }
 
