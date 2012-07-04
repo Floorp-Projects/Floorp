@@ -334,6 +334,9 @@ IsCrossCompartmentWrapper(const JSObject *obj);
 void
 NukeCrossCompartmentWrapper(JSObject *wrapper);
 
+bool
+RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget);
+
 } /* namespace js */
 
 #endif
