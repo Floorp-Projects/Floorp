@@ -1388,8 +1388,8 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    GlobalObject &global = target->compartment()->global();
-    return JS_EnterCrossCompartmentCall(cx, &global);
+    GlobalObject *global = target->compartment()->maybeGlobal();
+    return global ? JS_EnterCrossCompartmentCall(cx, global) : NULL;
 }
 
 JS_PUBLIC_API(JSCrossCompartmentCall *)

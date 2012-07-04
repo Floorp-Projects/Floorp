@@ -119,12 +119,23 @@ struct JSCompartment
   private:
     js::GlobalObject             *global_;
   public:
-    js::GlobalObject &global() const {
-        JS_ASSERT(global_->compartment() == this);
-        return *global_;
+    // Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
+    // compartment's global has been collected.  The latter can happen if e.g.
+    // a string in a compartment is rooted but no object is, and thus the
+    // global isn't rooted, and thus the global can be finalized while the
+    // compartment lives on.
+    //
+    // In contrast, JSObject::global() is infallible because marking a JSObject
+    // always marks its global as well.
+    // TODO: add infallible JSScript::global() and JSContext::global()
+    //
+    js::GlobalObject *maybeGlobal() const {
+        JS_ASSERT_IF(global_, global_->compartment() == this);
+        return global_;
     }
 
     void initGlobal(js::GlobalObject &global) {
+        JS_ASSERT(global.compartment() == this);
         JS_ASSERT(!global_);
         global_ = &global;
     }
