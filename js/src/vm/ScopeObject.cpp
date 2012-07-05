@@ -661,7 +661,7 @@ StaticBlockObject::create(JSContext *cx)
     return &obj->asStaticBlock();
 }
 
-const Shape *
+Shape *
 StaticBlockObject::addVar(JSContext *cx, jsid id, int index, bool *redeclared)
 {
     JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == index));
@@ -804,7 +804,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObjec
             return false;
 
         for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
-            const Shape *shape = &r.front();
+            Shape *shape = &r.front();
             shapes[shape->shortid()] = shape;
         }
 
@@ -813,7 +813,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObjec
          * properties to XDR, stored as id/shortid pairs.
          */
         for (unsigned i = 0; i < count; i++) {
-            const Shape *shape = shapes[i];
+            Shape *shape = shapes[i];
             JS_ASSERT(shape->hasDefaultGetter());
             JS_ASSERT(unsigned(shape->shortid()) == i);
 
@@ -866,7 +866,7 @@ js::CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
     for (Shape::Range r = srcBlock.lastProperty()->all(); !r.empty(); r.popFront())
         shapes[r.front().shortid()] = &r.front();
 
-    for (const Shape **p = shapes.begin(); p != shapes.end(); ++p) {
+    for (Shape **p = shapes.begin(); p != shapes.end(); ++p) {
         jsid id = (*p)->propid();
         unsigned i = (*p)->shortid();
 

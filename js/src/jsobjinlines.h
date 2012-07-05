@@ -286,7 +286,7 @@ JSObject::dynamicSlotIndex(size_t slot)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(const js::Shape *shape)
+JSObject::setLastPropertyInfallible(js::Shape *shape)
 {
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -294,7 +294,7 @@ JSObject::setLastPropertyInfallible(const js::Shape *shape)
     JS_ASSERT(slotSpan() == shape->slotSpan());
     JS_ASSERT(numFixedSlots() == shape->numFixedSlots());
 
-    shape_ = const_cast<js::Shape *>(shape);
+    shape_ = shape;
 }
 
 inline void
@@ -315,7 +315,7 @@ JSObject::canRemoveLastProperty()
      * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
-    const js::Shape *previous = lastProperty()->previous();
+    js::Shape *previous = lastProperty()->previous();
     return previous->getObjectParent() == lastProperty()->getObjectParent()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
@@ -958,7 +958,7 @@ JSObject::nativeSetSlot(unsigned slot, const js::Value &value)
 }
 
 inline void
-JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value)
+JSObject::nativeSetSlotWithType(JSContext *cx, js::Shape *shape, const js::Value &value)
 {
     nativeSetSlot(shape->slot(), value);
     js::types::AddTypePropertyId(cx, this, shape->propid(), value);
@@ -1536,7 +1536,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj)
 
 JSObject *
 NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                  gc::AllocKind kind, const Shape *shape);
+                  gc::AllocKind kind, Shape *shape);
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
