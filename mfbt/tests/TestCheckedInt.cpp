@@ -396,7 +396,7 @@ void test()
     if (isUSigned) \
       VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), isTSigned); \
     if (sizeof(U) > sizeof(T)) \
-      VERIFY_IS_INVALID(CheckedInt<T>(U(detail::MaxValue<T>::value) + 1)); \
+      VERIFY_IS_INVALID(CheckedInt<T>(U(detail::MaxValue<T>::value) + one.value())); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MaxValue<U>::value), \
       (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (isUSigned || !isTSigned)))); \
     VERIFY_IS_VALID_IF(CheckedInt<T>(detail::MinValue<U>::value), \
