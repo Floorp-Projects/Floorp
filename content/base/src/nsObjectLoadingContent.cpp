@@ -139,9 +139,7 @@ InDocCheckEvent::Run()
   if (!content->IsInDoc()) {
     nsObjectLoadingContent *objLC =
       static_cast<nsObjectLoadingContent *>(mContent.get());
-    objLC->mType = nsObjectLoadingContent::eType_Null;
-    objLC->UnloadContent();
-    objLC->StopPluginInstance();
+    objLC->UnloadObject();
   }
   return NS_OK;
 }
@@ -151,50 +149,51 @@ InDocCheckEvent::Run()
  */
 class nsPluginErrorEvent : public nsRunnable {
 public:
-  nsCOMPtr<nsIContent> mContent;
-  PluginSupportState mState;
-
-  nsPluginErrorEvent(nsIContent* aContent, PluginSupportState aState)
+  nsPluginErrorEvent(nsIContent* aContent,
+                     nsObjectLoadingContent::FallbackType aFallbackType)
     : mContent(aContent),
-      mState(aState)
-  {}
+      mFallbackType(aFallbackType) {}
 
   ~nsPluginErrorEvent() {}
 
   NS_IMETHOD Run();
+
+private:
+  nsCOMPtr<nsIContent> mContent;
+  nsObjectLoadingContent::FallbackType mFallbackType;
 };
 
 NS_IMETHODIMP
 nsPluginErrorEvent::Run()
 {
-  LOG(("OBJLC [%p]: Firing plugin not found event\n",
-       mContent.get()));
   nsString type;
-  switch (mState) {
-    case ePluginClickToPlay:
-      type = NS_LITERAL_STRING("PluginClickToPlay");
-      break;
-    case ePluginVulnerableUpdatable:
+  switch (mFallbackType) {
+    case nsObjectLoadingContent::eFallbackVulnerableUpdatable:
       type = NS_LITERAL_STRING("PluginVulnerableUpdatable");
       break;
-    case ePluginVulnerableNoUpdate:
+    case nsObjectLoadingContent::eFallbackVulnerableNoUpdate:
       type = NS_LITERAL_STRING("PluginVulnerableNoUpdate");
       break;
-    case ePluginUnsupported:
+    case nsObjectLoadingContent::eFallbackClickToPlay:
+      type = NS_LITERAL_STRING("PluginClickToPlay");
+      break;
+    case nsObjectLoadingContent::eFallbackUnsupported:
       type = NS_LITERAL_STRING("PluginNotFound");
       break;
-    case ePluginDisabled:
+    case nsObjectLoadingContent::eFallbackDisabled:
       type = NS_LITERAL_STRING("PluginDisabled");
       break;
-    case ePluginBlocklisted:
+    case nsObjectLoadingContent::eFallbackBlocklisted:
       type = NS_LITERAL_STRING("PluginBlocklisted");
       break;
-    case ePluginOutdated:
+    case nsObjectLoadingContent::eFallbackOutdated:
       type = NS_LITERAL_STRING("PluginOutdated");
       break;
     default:
       return NS_OK;
   }
+  LOG(("OBJLC [%p]: nsPluginErrorEvent firing '%s'",
+       mContent.get(), NS_ConvertUTF16toUTF8(type).get()));
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
                                        type, true, true);
 
@@ -378,73 +377,6 @@ nsStopPluginRunnable::Run()
   return NS_OK;
 }
 
-class AutoNotifier {
-  public:
-    AutoNotifier(nsObjectLoadingContent* aContent, bool aNotify) :
-      mContent(aContent), mNotify(aNotify) {
-        mOldType = aContent->mType;
-        mOldState = aContent->ObjectState();
-    }
-    ~AutoNotifier() {
-      mContent->NotifyStateChanged(mOldType, mOldState, false, mNotify);
-    }
-
-    /**
-     * Send notifications now, ignoring the value of mNotify. The new type and
-     * state is saved, and the destructor will notify again if mNotify is true
-     * and the values changed.
-     */
-    void Notify() {
-      NS_ASSERTION(mNotify, "Should not notify when notify=false");
-
-      mContent->NotifyStateChanged(mOldType, mOldState, true, true);
-      mOldType = mContent->mType;
-      mOldState = mContent->ObjectState();
-    }
-
-  private:
-    nsObjectLoadingContent*            mContent;
-    bool                               mNotify;
-    nsObjectLoadingContent::ObjectType mOldType;
-    nsEventStates                      mOldState;
-};
-
-/**
- * Depending on the state of the |rv| variable, will either trigger loading
- * fallback or mark the load as complete
- */
-class AutoFallback {
-  public:
-    AutoFallback(nsObjectLoadingContent* aContent, const nsresult* rv)
-      : mContent(aContent), mResult(rv), mPluginState(ePluginOtherState) {}
-    ~AutoFallback() {
-      if (NS_FAILED(*mResult)) {
-        LOG(("OBJLC [%p]: rv=%08x, falling back\n", mContent, *mResult));
-        mContent->Fallback(false);
-        if (mPluginState != ePluginOtherState) {
-          mContent->mFallbackReason = mPluginState;
-        }
-      } else {
-        // Otherwise, mark the load as complete
-        mContent->mLoaded = true;
-      }
-    }
-
-    /**
-     * This should be set to something other than ePluginOtherState to indicate
-     * a specific failure that should be passed on.
-     */
-     void SetPluginState(PluginSupportState aState) {
-       NS_ASSERTION(aState != ePluginOtherState,
-                    "Should not be setting ePluginOtherState");
-       mPluginState = aState;
-     }
-  private:
-    nsObjectLoadingContent* mContent;
-    const nsresult* mResult;
-    PluginSupportState mPluginState;
-};
-
 // You can't take the address of bitfield members, so we have two separate
 // classes for these :-/
 
@@ -562,11 +494,11 @@ GetExtensionFromURI(nsIURI* uri, nsCString& ext)
  * Checks whether a plugin exists and is enabled for the extension
  * in the given URI. The MIME type is returned in the mimeType out parameter.
  */
-bool nsObjectLoadingContent::IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
+bool
+IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
 {
   nsCAutoString ext;
   GetExtensionFromURI(uri, ext);
-  bool enabled = false;
 
   if (ext.IsEmpty()) {
     return false;
@@ -581,28 +513,16 @@ bool nsObjectLoadingContent::IsPluginEnabledByExtension(nsIURI* uri, nsCString& 
   }
 
   const char* typeFromExt;
-  if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(ext.get(), typeFromExt))) {
+  nsresult rv = pluginHost->IsPluginEnabledForExtension(ext.get(), typeFromExt);
+  if (NS_SUCCEEDED(rv)) {
     mimeType = typeFromExt;
-    enabled = true;
-
-    if (!pluginHost->IsPluginClickToPlayForType(mimeType.get())) {
-      mCTPPlayable = true;
-    }
+    return true;
   }
-
-  if (!mCTPPlayable) {
-    return false;
-  } else {
-    return enabled;
-  }
+  return false;
 }
 
-///
-/// Member Functions
-///
-
 nsresult
-nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMEType)
+IsPluginEnabledForType(const nsCString& aMIMEType)
 {
   nsRefPtr<nsPluginHost> pluginHost =
     already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
@@ -621,60 +541,12 @@ nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMEType)
     return rv;
   }
 
-  if (!pluginHost->IsPluginClickToPlayForType(aMIMEType.get())) {
-    mCTPPlayable = true;
-  }
-
-  if (!mCTPPlayable) {
-    nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
-    MOZ_ASSERT(thisContent);
-    nsIDocument* ownerDoc = thisContent->OwnerDoc();
-
-    nsCOMPtr<nsIDOMWindow> window = ownerDoc->GetWindow();
-    if (!window) {
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    rv = window->GetTop(getter_AddRefs(topWindow));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDOMDocument> topDocument;
-    rv = topWindow->GetDocument(getter_AddRefs(topDocument));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
-
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool allowPerm = false;
-    // For now we always say that the system principal uses click-to-play since
-    // that maintains current behavior and we have tests that expect this.
-    // What we really should do is disable plugins entirely in pages that use
-    // the system principal, i.e. in chrome pages. That way the click-to-play
-    // code here wouldn't matter at all. Bug 775301 is tracking this.
-    if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
-      PRUint32 permission;
-      rv = permissionManager->TestPermissionFromPrincipal(topDoc->NodePrincipal(),
-                                                          "plugins",
-                                                          &permission);
-      NS_ENSURE_SUCCESS(rv, rv);
-      allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
-    }
-
-    PRUint32 state;
-    rv = pluginHost->GetBlocklistStateForType(aMIMEType.get(), &state);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (allowPerm &&
-        state != nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE &&
-        state != nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
-      mCTPPlayable = true;
-    } else {
-      return NS_ERROR_PLUGIN_CLICKTOPLAY;
-    }
-  }
-
   return NS_OK;
 }
+
+///
+/// Member Functions
+///
 
 bool
 nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
@@ -753,8 +625,7 @@ nsObjectLoadingContent::UnbindFromTree(bool /*aDeep*/, bool /*aNullParent*/)
   } else {
     /// XXX(johns): The implementation for GenericFrame notes that ideally we
     ///             would keep the docshell around, but trash the frameloader
-    UnloadContent();
-    mType = eType_Null;
+    UnloadObject();
   }
 
 }
@@ -763,18 +634,14 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   : mPendingInstantiateEvent(nsnull)
   , mChannel(nsnull)
   , mType(eType_Loading)
-  , mLoaded(false)
+  , mFallbackType(eFallbackAlternate)
   , mChannelLoaded(false)
   , mInstantiating(false)
-  , mUserDisabled(false)
-  , mSuppressed(false)
   , mNetworkCreated(true)
-  , mCTPPlayable(false)
   , mActivated(false)
   , mIsStopping(false)
   , mIsLoading(false)
-  , mSrcStreamLoading(false)
-  , mFallbackReason(ePluginOtherState) {}
+  , mSrcStreamLoading(false) {}
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
 {
@@ -796,9 +663,9 @@ nsObjectLoadingContent::~nsObjectLoadingContent()
 nsresult
 nsObjectLoadingContent::InstantiatePluginInstance()
 {
-  if (!mLoaded || mType != eType_Plugin) {
-    LOG(("OBJLC [%p]: Refusing to instantiate incomplete plugin, "
-         "loaded %u, type %u", this, mLoaded, mType));
+  if (mType != eType_Plugin) {
+    LOG(("OBJLC [%p]: Refusing to instantiate non-plugin, "
+         "type %u", this, mType));
     return NS_OK;
   }
 
@@ -840,14 +707,6 @@ nsObjectLoadingContent::InstantiatePluginInstance()
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
     return false;
-  }
-
-  if (!pluginHost->IsPluginClickToPlayForType(mContentType.get())) {
-    mCTPPlayable = true;
-  }
-
-  if (!mCTPPlayable) {
-    return NS_ERROR_PLUGIN_CLICKTOPLAY;
   }
 
   // If you add early return(s), be sure to balance this call to
@@ -904,11 +763,10 @@ nsObjectLoadingContent::InstantiatePluginInstance()
       blocklist->GetPluginBlocklistState(pluginTag, EmptyString(),
                                          EmptyString(), &blockState);
       if (blockState == nsIBlocklistService::STATE_OUTDATED)
-        FirePluginError(ePluginOutdated);
+        FirePluginError(eFallbackOutdated);
     }
   }
 
-  mActivated = true;
   return NS_OK;
 }
 
@@ -1156,54 +1014,32 @@ nsObjectLoadingContent::ObjectState() const
       // plugins.
       return nsEventStates();
     case eType_Null:
-      if (mSuppressed)
-        return NS_EVENT_STATE_SUPPRESSED;
-      if (mUserDisabled)
-        return NS_EVENT_STATE_USERDISABLED;
-
-      // Otherwise, broken
-      nsEventStates state = NS_EVENT_STATE_BROKEN;
-      switch (mFallbackReason) {
-        case ePluginClickToPlay:
+      switch (mFallbackType) {
+        case eFallbackSuppressed:
+          return NS_EVENT_STATE_SUPPRESSED;
+        case eFallbackUserDisabled:
+          return NS_EVENT_STATE_USERDISABLED;
+        case eFallbackClickToPlay:
           return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
-        case ePluginVulnerableUpdatable:
+        case eFallbackDisabled:
+          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_DISABLED;
+        case eFallbackBlocklisted:
+          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_BLOCKED;
+        case eFallbackCrashed:
+          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_CRASHED;
+        case eFallbackUnsupported:
+          return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_TYPE_UNSUPPORTED;
+        case eFallbackOutdated:
+        case eFallbackAlternate:
+          return NS_EVENT_STATE_BROKEN;
+        case eFallbackVulnerableUpdatable:
           return NS_EVENT_STATE_VULNERABLE_UPDATABLE;
-        case ePluginVulnerableNoUpdate:
+        case eFallbackVulnerableNoUpdate:
           return NS_EVENT_STATE_VULNERABLE_NO_UPDATE;
-        case ePluginDisabled:
-          state |= NS_EVENT_STATE_HANDLER_DISABLED;
-          break;
-        case ePluginBlocklisted:
-          state |= NS_EVENT_STATE_HANDLER_BLOCKED;
-          break;
-        case ePluginCrashed:
-          state |= NS_EVENT_STATE_HANDLER_CRASHED;
-          break;
-        case ePluginUnsupported:
-          state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
-          break;
-        case ePluginOutdated:
-        case ePluginOtherState:
-          // Do nothing, but avoid a compile warning
-          break;
       }
-      return state;
   };
   NS_NOTREACHED("unknown type?");
   return NS_EVENT_STATE_LOADING;
-}
-
-void
-nsObjectLoadingContent::UpdateFallbackState(nsIContent* aContent,
-                                            AutoFallback& fallback,
-                                            const nsCString& aTypeHint)
-{
-  // Notify the UI and update the fallback state
-  PluginSupportState state = GetPluginSupportState(aContent, aTypeHint);
-  if (state != ePluginOtherState) {
-    fallback.SetPluginState(state);
-    FirePluginError(state);
-  }
 }
 
 // Helper to call CheckURILoad on URI -> BaseURI and BaseURI -> Origin
@@ -1254,7 +1090,16 @@ bool nsObjectLoadingContent::CheckURILoad(nsIURI *aURI,
   nsIDocument* doc = thisContent->OwnerDoc();
   nsresult rv =
     secMan->CheckLoadURIWithPrincipal(thisContent->NodePrincipal(), aURI, 0);
-  NS_ENSURE_SUCCESS(rv, false);
+  
+  if (NS_FAILED(rv)) {
+    nsCAutoString uri;
+    nsCAutoString baseUri;
+    aURI->GetSpec(uri);
+    aURI->GetSpec(baseUri);
+    LOG(("OBJLC [%p]: CheckLoadURIWithPrincipal denied load of %s (base %s)",
+         this, uri.get(), baseUri.get()));
+    return false;
+  }
 
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
   rv = NS_CheckContentLoadPolicy(aContentPolicyType,
@@ -1271,6 +1116,12 @@ bool nsObjectLoadingContent::CheckURILoad(nsIURI *aURI,
     *aContentPolicy = shouldLoad;
   }
   if (NS_CP_REJECTED(shouldLoad)) {
+    nsCAutoString uri;
+    nsCAutoString baseUri;
+    aURI->GetSpec(uri);
+    aURI->GetSpec(baseUri);
+    LOG(("OBJLC [%p]: Content policy denied load of %s (base %s)",
+         this, uri.get(), baseUri.get()));
     return false;
   }
   return true;
@@ -1470,11 +1321,8 @@ nsObjectLoadingContent::UpdateObjectParameters()
     //
     //    XXX(johns): HTML5's "typesmustmatch" attribute would need to be
     //                honored here if implemented
-    bool oldPlay = mCTPPlayable;
-    mCTPPlayable = true;
-    ObjectType typeHint = newMime.IsEmpty() ? eType_Null
-                                            : GetTypeOfContent(newMime);
-    mCTPPlayable = oldPlay;
+
+    ObjectType typeHint = newMime.IsEmpty() ? eType_Null : GetTypeOfContent(newMime);
 
     bool caseOne = binaryChannelType
                    && typeHint != eType_Null
@@ -1613,6 +1461,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
   nsIDocument* doc = thisContent->OwnerDoc();
+  nsresult rv = NS_OK;
 
   // XXX(johns): In these cases, we refuse to touch our content and just
   //   remain unloaded, as per legacy behavior. It would make more sense to
@@ -1627,12 +1476,6 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     return NS_ERROR_UNEXPECTED;
   }
 
-  // If our type changes, e.g. from document -> plugin, we'll need to do frame
-  // recreation, so track this
-  ObjectType oldType = mType;
-
-  AutoNotifier notifier(this, aNotify);
-
   LOG(("OBJLC [%p]: LoadObject called, notify %u, forceload %u, channel %p",
        this, aNotify, aForceLoad, aLoadingChannel));
 
@@ -1642,6 +1485,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     CloseChannel();
     mChannelLoaded = false;
   }
+
+  // Save these for NotifyStateChanged();
+  nsEventStates oldState = ObjectState();
+  ObjectType oldType = mType;
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
 
@@ -1655,6 +1502,22 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   LOG(("OBJLC [%p]: LoadObject - plugin state changed (%u)",
        this, stateChange));
 
+  // Setup fallback info. We may also change type to fallback below in case of
+  // sanity/OOM/etc. errors. We default to showing alternate content
+  // NOTE LoadFallback can override this in some cases
+  FallbackType fallbackType = eFallbackAlternate;
+
+  if (mType == eType_Null) {
+    nsresult pluginsupport = IsPluginEnabledForType(mContentType);
+    if (pluginsupport == NS_ERROR_PLUGIN_DISABLED) {
+      fallbackType = eFallbackDisabled;
+    } else if (pluginsupport == NS_ERROR_PLUGIN_BLOCKLISTED) {
+      fallbackType = eFallbackBlocklisted;
+    } else {
+      fallbackType = eFallbackUnsupported;
+    }
+  }
+
   // We synchronously start/stop plugin instances below, which may spin the
   // event loop. Re-entering into the load is fine, but at that point the
   // original load call needs to abort when unwinding
@@ -1664,9 +1527,8 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   AutoSetLoadingToFalse reentryCheck(this);
 
   // Unload existing content, keeping in mind stopping plugins might spin the
-  // event loop
-  UnloadContent();
-  StopPluginInstance();
+  // event loop. Note that we check for still-open channels below
+  UnloadObject(false); // Don't reset state
   if (!mIsLoading) {
     // The event loop must've spun and re-entered into LoadObject, which
     // finished the load
@@ -1692,58 +1554,52 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     return NS_OK;
   }
 
-  // We need to notify of new state now that we've trashed old content
-  // The fallback variable MUST be declared after the notifier variable. Do NOT
-  // change the order of the declarations!
-  nsresult rv = NS_ERROR_UNEXPECTED;
-  AutoFallback fallback(this, &rv);
-
-  if (mType == eType_Null) {
-    // No type found, update our fallback state (for plugins) and set rv to
-    // trigger AutoFallback
-    UpdateFallbackState(thisContent, fallback, mContentType);
-    rv = NS_ERROR_FAILURE;
-    return NS_OK;
-  }
-
-  ///
-  /// Security checks
-  ///
+  //
+  // Security checks
+  //
 
   // NOTE For eType_Loading we'll try all three types, as we want to go ahead
   //      with the channel if it could be any acceptable type. This type is
   //      passed to OpenChannel() as the LoadType. We pass through LoadObject
   //      again once the channel is opened and we're actually loading, so if
   //      the final URI doesn't pass the now-known type, we'll abort.
-  bool allowLoad = false;
   PRInt32 policyType;
-  PRInt16 contentPolicy = nsIContentPolicy::ACCEPT;
-  if (mType == eType_Image || mType == eType_Loading) {
-    policyType = nsIContentPolicy::TYPE_IMAGE;
-    allowLoad = CheckObjectURIs(&contentPolicy, policyType);
-  }
-  if (!allowLoad && (mType == eType_Document || mType == eType_Loading)) {
-    contentPolicy = nsIContentPolicy::ACCEPT;
-    policyType = nsIContentPolicy::TYPE_SUBDOCUMENT;
-    allowLoad = CheckObjectURIs(&contentPolicy, policyType);
-  }
-  if (!allowLoad && (mType == eType_Plugin || mType == eType_Loading)) {
-    contentPolicy = nsIContentPolicy::ACCEPT;
-    policyType = nsIContentPolicy::TYPE_OBJECT;
-    allowLoad = CheckObjectURIs(&contentPolicy, policyType);
+  if (mType != eType_Null) {
+    bool allowLoad = false;
+    PRInt16 contentPolicy = nsIContentPolicy::ACCEPT;
+    if (mType == eType_Image || mType == eType_Loading) {
+      policyType = nsIContentPolicy::TYPE_IMAGE;
+      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
+    }
+    if (!allowLoad && (mType == eType_Document || mType == eType_Loading)) {
+      contentPolicy = nsIContentPolicy::ACCEPT;
+      policyType = nsIContentPolicy::TYPE_SUBDOCUMENT;
+      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
+    }
+    if (!allowLoad && (mType == eType_Plugin || mType == eType_Loading)) {
+      contentPolicy = nsIContentPolicy::ACCEPT;
+      policyType = nsIContentPolicy::TYPE_OBJECT;
+      allowLoad = CheckObjectURIs(&contentPolicy, policyType);
+    }
+
+    // Load denied, switch to fallback and set disabled/suppressed if applicable
+    if (!allowLoad) {
+      mType = eType_Null;
+      if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
+        fallbackType = eFallbackUserDisabled;
+      } else {
+        fallbackType = eFallbackSuppressed;
+      }
+    }
   }
 
-  // Load denied, switch to fallback and set disabled/suppressed if applicable
-  if (!allowLoad) {
+  // If we're a plugin but shouldn't start yet, load fallback with
+  // reason click-to-play instead
+  FallbackType clickToPlayReason;
+  if (mType == eType_Plugin && !ShouldPlay(clickToPlayReason)) {
+    LOG(("OBJLC [%p]: Marking plugin as click-to-play", this));
     mType = eType_Null;
-    mUserDisabled = mSuppressed = false;
-    if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
-      mUserDisabled = true;
-    } else if (contentPolicy == nsIContentPolicy::REJECT_SERVER) {
-      mSuppressed = true;
-    }
-    rv = NS_ERROR_FAILURE;
-    return NS_OK;
+    fallbackType = clickToPlayReason;
   }
 
   // Sanity check: We shouldn't have any loaded resources, pending events, or
@@ -1774,7 +1630,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         // channel for images, so this is not a valid state.
         NS_NOTREACHED("Attempting to load image without a channel?");
         rv = NS_ERROR_UNEXPECTED;
-        return NS_OK;
+        break;
       }
       rv = LoadImageWithChannel(mChannel, getter_AddRefs(mFinalListener));
       if (mFinalListener) {
@@ -1783,17 +1639,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         mSrcStreamLoading = true;
         rv = mFinalListener->OnStartRequest(mChannel, nsnull);
         mSrcStreamLoading = false;
-      } else {
-        // We can have success with no final listener if the image is cached
-        return NS_OK;
       }
     break;
     case eType_Plugin:
     {
-      if (aNotify && oldType != eType_Plugin) {
-        // Old type is not plugin, rebuild frames
-        notifier.Notify();
-      }
       if (mChannel) {
         nsRefPtr<nsPluginHost> pluginHost =
           already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
@@ -1802,16 +1651,18 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
           rv = NS_ERROR_UNEXPECTED;
           break;
         }
+
+        // Force a sync state change now, we need the frame created
+        NotifyStateChanged(oldType, oldState, true, aNotify);
+        oldType = mType;
+        oldState = ObjectState();
+
         rv = pluginHost->NewEmbeddedPluginStreamListener(mURI, this, nsnull,
                                                          getter_AddRefs(mFinalListener));
         if (NS_SUCCEEDED(rv)) {
           // Note that LoadObject is called from mChannel's OnStartRequest
           // when loading with a channel
 
-          // mFinalListener->OnStartRequest will call InstantiatePluginInstance,
-          // so this needs to be set early (usually set by AutoFallback)
-          // NOTE this goes away with fallback cleanup patch (bug 745030)
-          mLoaded = true;
           mSrcStreamLoading = true;
           rv = mFinalListener->OnStartRequest(mChannel, nsnull);
           mSrcStreamLoading = false;
@@ -1830,25 +1681,28 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         // We could mFrameLoader->LoadURI(mURI), but UpdateObjectParameters
         // requires documents have a channel, so this is not a valid state.
         NS_NOTREACHED("Attempting to load a document without a channel");
-        rv = NS_ERROR_UNEXPECTED;
-        return NS_OK;
+        mType = eType_Null;
+        break;
       }
       if (!mFrameLoader) {
-        if (oldType != eType_Document && aNotify) {
-          // Old type is not document, rebuild frames
-          notifier.Notify();
-        }
+        // Force a sync state change, we need the frame created
+        NotifyStateChanged(oldType, oldState, true, aNotify);
+        oldType = mType;
+        oldState = ObjectState();
+
         mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
                                              mNetworkCreated);
         if (!mFrameLoader) {
-          rv = NS_ERROR_UNEXPECTED;
-          return NS_OK;
+          NS_NOTREACHED("nsFrameLoader::Create failed");
+          mType = eType_Null;
+          break;
         }
       }
 
       rv = mFrameLoader->CheckForRecursiveLoad(mURI);
       if (NS_FAILED(rv)) {
-        return NS_OK;
+        mType = eType_Null;
+        break;
       }
 
       // We're loading a document, so we have to set LOAD_DOCUMENT_URI
@@ -1860,14 +1714,22 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
       nsCOMPtr<nsIDocShell> docShell;
       rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-      NS_ENSURE_SUCCESS(rv, NS_OK);
+      if (NS_FAILED(rv)) {
+        NS_NOTREACHED("Could not get DocShell from mFrameLoader?");
+        mType = eType_Null;
+        break;
+      }
 
       nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(docShell));
       NS_ASSERTION(req, "Docshell must be an ifreq");
 
       nsCOMPtr<nsIURILoader>
         uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID, &rv));
-      NS_ENSURE_SUCCESS(rv, NS_OK);
+      if (NS_FAILED(rv)) {
+        NS_NOTREACHED("Failed to get uriLoader service");
+        mType = eType_Null;
+        break;
+      }
       rv = uriLoader->OpenChannel(mChannel, nsIURILoader::DONT_RETARGET, req,
                                   getter_AddRefs(mFinalListener));
       if (NS_SUCCEEDED(rv)) {
@@ -1886,14 +1748,44 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         LOG(("OBJLC [%p]: OpenChannel returned failure (%u)", this, rv));
       }
     break;
-    default:
-      // Unknown type, eType_Null should've been handled above
-      rv = NS_ERROR_UNEXPECTED;
-      NS_NOTREACHED("Attempted to load with invalid type");
+    case eType_Null:
+      // Handled below, silence compiler warnings
     break;
   };
 
-  // Note that if rv is false here, we'll trigger AutoFallback
+  if (NS_FAILED(rv)) {
+    // If we failed in the loading hunk above, switch to fallback
+    LOG(("OBJLC [%p]: Loading failed, switching to fallback", this));
+    mType = eType_Null;
+  }
+
+  // Switching to fallback state
+  if (mType == eType_Null) {
+    LOG(("OBJLC [%p]: Loading fallback, type %u", this, fallbackType));
+    NS_ASSERTION(!mFrameLoader && !mInstanceOwner,
+                 "switched to type null but also loaded something");
+
+    if (mChannel) {
+      // If we were loading with a channel but then failed over, throw it away
+      // (this also closes mFinalListener)
+      CloseChannel();
+    }
+
+    // Don't notify or send events - we'll handle those ourselves
+    // (so really this is just setting mFallbackType)
+    LoadFallback(fallbackType, false);
+  }
+
+  // Notify of our final state if we haven't already
+  NotifyStateChanged(oldType, oldState, false, aNotify);
+
+  if (mType == eType_Null && mFallbackType != eFallbackAlternate) {
+    // if we're not showing alternate content, fire a pluginerror to trigger
+    // (we stopped LoadFallback from doing so above, it doesn't know of our old
+    //  state)
+    FirePluginError(mFallbackType);
+  }
+
   return NS_OK;
 }
 
@@ -1926,7 +1818,7 @@ nsObjectLoadingContent::OpenChannel(PRInt32 aPolicyType)
   NS_ASSERTION(thisContent, "must be a content");
   nsIDocument* doc = thisContent->OwnerDoc();
   NS_ASSERTION(doc, "No owner document?");
-  NS_ASSERTION(!mLoaded && !mInstanceOwner && !mInstantiating,
+  NS_ASSERTION(!mInstanceOwner && !mInstantiating,
                "opening a new channel with already loaded content");
 
   nsresult rv;
@@ -1988,17 +1880,6 @@ nsObjectLoadingContent::GetCapabilities() const
 }
 
 void
-nsObjectLoadingContent::Fallback(bool aNotify)
-{
-  AutoNotifier notifier(this, aNotify);
-
-  UnloadContent();
-  CloseChannel();
-  mType = eType_Null;
-  StopPluginInstance();
-}
-
-void
 nsObjectLoadingContent::DestroyContent()
 {
   if (mFrameLoader) {
@@ -2019,17 +1900,23 @@ nsObjectLoadingContent::Traverse(nsObjectLoadingContent *tmp,
 }
 
 void
-nsObjectLoadingContent::UnloadContent()
+nsObjectLoadingContent::UnloadObject(bool aResetState)
 {
-  // Don't notify in CancelImageRequests. We do it ourselves.
+  // Don't notify in CancelImageRequests until we transition to a new loaded
+  // state
   CancelImageRequests(false);
   if (mFrameLoader) {
     mFrameLoader->Destroy();
     mFrameLoader = nsnull;
   }
-  mLoaded = false;
-  mUserDisabled = mSuppressed = false;
-  mFallbackReason = ePluginOtherState;
+
+  if (aResetState) {
+    CloseChannel();
+    mType = eType_Loading;
+  }
+
+  // This call should be last as it may re-enter
+  StopPluginInstance();
 }
 
 void
@@ -2038,9 +1925,9 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
                                            bool aSync,
                                            bool aNotify)
 {
-  LOG(("OBJLC [%p]: Notifying about state change: (%u, %llx) -> (%u, %llx) (sync=%i)\n",
-       this, aOldType, aOldState.GetInternalValue(), mType,
-       ObjectState().GetInternalValue(), aSync));
+  LOG(("OBJLC [%p]: Notifying about state change: (%u, %llx) -> (%u, %llx)"
+       " (sync %i, notify %i)", this, aOldType, aOldState.GetInternalValue(),
+       mType, ObjectState().GetInternalValue(), aSync, aNotify));
 
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -2091,7 +1978,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
 }
 
 void
-nsObjectLoadingContent::FirePluginError(PluginSupportState state)
+nsObjectLoadingContent::FirePluginError(FallbackType aFallbackType)
 {
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -2100,7 +1987,7 @@ nsObjectLoadingContent::FirePluginError(PluginSupportState state)
   LOG(("OBJLC [%p]: Dispatching nsPluginErrorEvent for content %p\n",
        this));
 
-  nsCOMPtr<nsIRunnable> ev = new nsPluginErrorEvent(thisContent, state);
+  nsCOMPtr<nsIRunnable> ev = new nsPluginErrorEvent(thisContent, aFallbackType);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch nsPluginErrorEvent");
@@ -2171,77 +2058,6 @@ nsObjectLoadingContent::GetExistingFrame()
   return static_cast<nsObjectFrame*>(objFrame);
 }
 
-PluginSupportState
-nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
-                                              const nsCString& aContentType)
-{
-  if (!aContent->IsHTML()) {
-    return ePluginOtherState;
-  }
-
-  if (aContent->Tag() == nsGkAtoms::embed ||
-      aContent->Tag() == nsGkAtoms::applet) {
-    return GetPluginDisabledState(aContentType);
-  }
-
-  bool hasAlternateContent = false;
-
-  // Search for a child <param> with a pluginurl name
-  for (nsIContent* child = aContent->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTML(nsGkAtoms::param)) {
-      if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                             NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
-        return GetPluginDisabledState(aContentType);
-      }
-    } else if (!hasAlternateContent) {
-      hasAlternateContent =
-        nsStyleUtil::IsSignificantChild(child, true, false);
-    }
-  }
-
-  PluginSupportState pluginDisabledState = GetPluginDisabledState(aContentType);
-  if (pluginDisabledState == ePluginClickToPlay ||
-      pluginDisabledState == ePluginVulnerableUpdatable ||
-      pluginDisabledState == ePluginVulnerableNoUpdate) {
-    return pluginDisabledState;
-  } else if (hasAlternateContent) {
-    return ePluginOtherState;
-  } else {
-    return pluginDisabledState;
-  }
-}
-
-PluginSupportState
-nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
-{
-  nsresult rv = IsPluginEnabledForType(aContentType);
-  if (rv == NS_ERROR_PLUGIN_DISABLED) {
-    return ePluginDisabled;
-  }
-  if (rv == NS_ERROR_PLUGIN_CLICKTOPLAY) {
-    PRUint32 state;
-    nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-    nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-    if (pluginHost) {
-      rv = pluginHost->GetBlocklistStateForType(aContentType.get(), &state);
-      if (NS_SUCCEEDED(rv)) {
-        if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
-          return ePluginVulnerableUpdatable;
-        } else if (state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
-          return ePluginVulnerableNoUpdate;
-        }
-      }
-    }
-    return ePluginClickToPlay;
-  }
-  if (rv == NS_ERROR_PLUGIN_BLOCKLISTED) {
-    return ePluginBlocklisted;
-  }
-  return ePluginUnsupported;
-}
-
 void
 nsObjectLoadingContent::CreateStaticClone(nsObjectLoadingContent* aDest) const
 {
@@ -2282,10 +2098,16 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   LOG(("OBJLC [%p]: Plugin Crashed, queuing crash event", this));
   NS_ASSERTION(mType == eType_Plugin, "PluginCrashed at non-plugin type");
 
-  AutoNotifier notifier(this, true);
-  UnloadContent();
-  mFallbackReason = ePluginCrashed;
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  // Instance is dead, clean up
+  mInstanceOwner = nsnull;
+  CloseChannel();
+
+  // Switch to fallback/crashed state, notify
+  LoadFallback(eFallbackCrashed, true);
+
+  // send nsPluginCrashedEvent
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
   // Note that aPluginTag in invalidated after we're called, so copy 
   // out any data we need now.
@@ -2294,12 +2116,13 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   nsCAutoString pluginFilename;
   aPluginTag->GetFilename(pluginFilename);
 
-  nsCOMPtr<nsIRunnable> ev = new nsPluginCrashedEvent(thisContent,
-                                                      pluginDumpID,
-                                                      browserDumpID,
-                                                      NS_ConvertUTF8toUTF16(pluginName),
-                                                      NS_ConvertUTF8toUTF16(pluginFilename),
-                                                      submittedCrashReport);
+  nsCOMPtr<nsIRunnable> ev =
+    new nsPluginCrashedEvent(thisContent,
+                             pluginDumpID,
+                             browserDumpID,
+                             NS_ConvertUTF8toUTF16(pluginName),
+                             NS_ConvertUTF8toUTF16(pluginFilename),
+                             submittedCrashReport);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch nsPluginCrashedEvent");
@@ -2393,13 +2216,88 @@ DoDelayedStop(nsPluginInstanceOwner* aInstanceOwner,
 }
 
 void
+nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
+  nsEventStates oldState = ObjectState();
+  ObjectType oldType = mType;
+
+  NS_ASSERTION(!mInstanceOwner && !mFrameLoader && !mChannel,
+               "LoadFallback called with loaded content");
+
+  //
+  // Fixup mFallbackType
+  //
+  nsCOMPtr<nsIContent> thisContent =
+  do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "must be a content");
+
+  if (!thisContent->IsHTML()) {
+    // Don't let custom fallback handlers run outside HTML
+    LOG(("OBJLC [%p]: Non-HTML content, forcing eFallbackAlternate", this));
+    aType = eFallbackAlternate;
+  }
+
+  /// XXX(johns): This block is just mimicing legacy behavior, not any spec
+  // Check if we have any significant content (excluding param tags) OR a
+  // param named 'pluginUrl'
+  bool hasAlternateContent = false;
+  bool hasPluginUrl = false;
+  if (thisContent->Tag() == nsGkAtoms::object &&
+      (aType == eFallbackUnsupported ||
+       aType == eFallbackDisabled ||
+       aType == eFallbackBlocklisted))
+  {
+    for (nsIContent* child = thisContent->GetFirstChild();
+         child; child = child->GetNextSibling())
+    {
+      if (child->IsHTML(nsGkAtoms::param)) {
+        if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+          NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
+          hasPluginUrl = true;
+        }
+      } else if (nsStyleUtil::IsSignificantChild(child, true, false)) {
+        hasAlternateContent = true;
+      }
+    }
+
+    // Show alternate content if it exists, unless we have a 'pluginurl' param,
+    // in which case the missing-plugin fallback handler will want to handle
+    // it
+    if (hasAlternateContent && !hasPluginUrl) {
+      LOG(("OBJLC [%p]: Unsupported/disabled/blocked plugin has alternate "
+      "content, showing instead of custom handler", this));
+      aType = eFallbackAlternate;
+    }
+  }
+
+  mType = eType_Null;
+  mFallbackType = aType;
+
+  //
+  // Notify & send events
+  //
+  if (!aNotify) {
+    return; // done
+  }
+
+  NotifyStateChanged(oldType, oldState, false, true);
+
+  if (mFallbackType != eFallbackCrashed &&
+      mFallbackType != eFallbackAlternate)
+  {
+    // Alternate content doesn't trigger a pluginError, and nsPluginCrashedEvent
+    // is only handled by ::PluginCrashed
+    FirePluginError(mFallbackType);
+  }
+}
+
+void
 nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
                                      bool aDelayedStop,
                                      bool aForcedReentry)
 {
   // DoStopPlugin can process events and there may be pending InDocCheckEvent
   // events which can drop in underneath us and destroy the instance we are
-  // about to destroy unless we prevent that with the mIsStopping flag.
+  // about to destroy unless we prevent that with the mPluginStopping flag.
   // (aForcedReentry is only true from the callback of an earlier delayed stop)
   if (mIsStopping && !aForcedReentry) {
     return;
@@ -2425,7 +2323,6 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
   }
 
   aInstanceOwner->Destroy();
-  mIsStopping = false;
 }
 
 NS_IMETHODIMP
@@ -2518,13 +2415,90 @@ nsObjectLoadingContent::PlayPlugin()
   if (!nsContentUtils::IsCallerChrome())
     return NS_OK;
 
-  mCTPPlayable = true;
+  mActivated = true;
   return LoadObject(true, true);
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::GetActivated(bool* aActivated)
+nsObjectLoadingContent::GetActivated(bool *aActivated)
 {
-  *aActivated = mActivated;
+  FallbackType reason;
+  *aActivated = ShouldPlay(reason);
   return NS_OK;
 }
+
+bool
+nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
+{
+  // mActivated is true if we've been activated via PlayPlugin() (e.g. user has
+  // clicked through). Otherwise, only play if click-to-play is off or if page
+  // is whitelisted
+
+  nsRefPtr<nsPluginHost> pluginHost =
+    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+
+  bool isCTP = pluginHost->IsPluginClickToPlayForType(mContentType.get());
+
+  if (!isCTP || mActivated) {
+    return true;
+  }
+
+  aReason = eFallbackClickToPlay;
+
+  // If plugin type is click-to-play and we have not been explicitly clicked.
+  // check if permissions lets this page bypass - (e.g. user selected 'Always
+  // play plugins on this page')
+  nsresult rv = NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
+  MOZ_ASSERT(thisContent);
+  nsIDocument* ownerDoc = thisContent->OwnerDoc();
+
+  nsCOMPtr<nsIDOMWindow> window = ownerDoc->GetWindow();
+  if (!window) {
+    return false;
+  }
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  rv = window->GetTop(getter_AddRefs(topWindow));
+  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIDOMDocument> topDocument;
+  rv = topWindow->GetDocument(getter_AddRefs(topDocument));
+  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
+  nsIURI* topUri = topDoc->GetDocumentURI();
+
+  nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool allowPerm = false;
+  // For now we always say that the system principal uses click-to-play since
+  // that maintains current behavior and we have tests that expect this.
+  // What we really should do is disable plugins entirely in pages that use
+  // the system principal, i.e. in chrome pages. That way the click-to-play
+  // code here wouldn't matter at all. Bug 775301 is tracking this.
+  if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
+    PRUint32 permission;
+    rv = permissionManager->TestPermissionFromPrincipal(topDoc->NodePrincipal(),
+                                                        "plugins",
+                                                        &permission);
+    NS_ENSURE_SUCCESS(rv, false);
+    allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
+  }
+
+  PRUint32 state;
+  rv = pluginHost->GetBlocklistStateForType(mContentType.get(), &state);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Always c2p vulnerable plugins, regardless of permissions
+  if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
+    aReason = eFallbackVulnerableUpdatable;
+    return false;
+  }
+  if (state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
+    aReason = eFallbackVulnerableNoUpdate;
+    return false;
+  }
+
+  return allowPerm;
+}
+
