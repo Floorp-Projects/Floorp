@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
 // XXX never grant 'content-camera' to non-gaia apps
 function addPermissions(urls) {
   let permissions = [
-    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
+    'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'pin-app',
     'websettings-read', 'websettings-readwrite',
     'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
     'geolocation', 'device-storage'
