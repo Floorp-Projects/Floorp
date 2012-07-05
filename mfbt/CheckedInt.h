@@ -678,11 +678,13 @@ inline CheckedInt<T> operator OP(const CheckedInt<T> &lhs,            \
 {                                                                     \
   T x = lhs.mValue;                                                   \
   T y = rhs.mValue;                                                   \
-  T result = x OP y;                                                  \
   T isOpValid = detail::Is##NAME##Valid(x, y);                        \
-  /* Help the compiler perform RVO (return value optimization). */    \
-  return CheckedInt<T>(result,                                        \
-                       lhs.mIsValid && rhs.mIsValid && isOpValid);    \
+  if (isOpValid) {                                                    \
+    T result = x OP y;                                                \
+    return CheckedInt<T>(result, lhs.mIsValid && rhs.mIsValid);       \
+  } else {                                                            \
+    return CheckedInt<T>(T(0), false);                                \
+  }                                                                   \
 }
 
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)
