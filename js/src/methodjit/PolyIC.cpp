@@ -189,7 +189,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.slowPathCall, target);
     }
 
-    LookupStatus patchInline(const Shape *shape)
+    LookupStatus patchInline(Shape *shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -249,7 +249,7 @@ class SetPropCompiler : public PICStubCompiler
             repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
 
-    LookupStatus generateStub(const Shape *initialShape, const Shape *shape, bool adding)
+    LookupStatus generateStub(Shape *initialShape, Shape *shape, bool adding)
     {
         if (hadGC())
             return Lookup_Uncacheable;
@@ -465,7 +465,7 @@ class SetPropCompiler : public PICStubCompiler
 
         /* If the property exists but is on a prototype, treat as addprop. */
         if (prop && holder != obj) {
-            const Shape *shape = (const Shape *) prop;
+            Shape *shape = (Shape *) prop;
 
             if (!holder->isNative())
                 return disable("non-native holder");
@@ -512,7 +512,7 @@ class SetPropCompiler : public PICStubCompiler
                 proto = proto->getProto();
             }
 
-            const Shape *initialShape = obj->lastProperty();
+            Shape *initialShape = obj->lastProperty();
             uint32_t slots = obj->numDynamicSlots();
 
             unsigned flags = 0;
@@ -523,7 +523,7 @@ class SetPropCompiler : public PICStubCompiler
              * populate the slot to satisfy the method invariant (in case we
              * hit an early return below).
              */
-            const Shape *shape =
+            Shape *shape =
                 obj->putProperty(cx, name, getter, clasp->setProperty,
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
             if (!shape)
@@ -575,7 +575,7 @@ class SetPropCompiler : public PICStubCompiler
             return generateStub(initialShape, shape, true);
         }
 
-        const Shape *shape = (const Shape *) prop;
+        Shape *shape = (Shape *) prop;
         if (!shape->writable())
             return disable("readonly");
         if (shape->hasDefaultSetter()) {
@@ -665,7 +665,7 @@ struct GetPropHelper {
 
     // This field is set by |bind| and |lookup| only if they returned
     // Lookup_Cacheable, otherwise it is NULL.
-    const Shape *shape;
+    Shape *shape;
 
     GetPropHelper(JSContext *cx, JSObject *obj, PropertyName *name, IC &ic, VMFrame &f)
       : cx(cx), obj(cx, obj), name(cx, name), ic(ic), f(f), holder(cx), prop(NULL), shape(NULL)
@@ -687,7 +687,7 @@ struct GetPropHelper {
             return ic.disable(cx, "non-native");
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(cx, "non-native holder");
-        shape = (const Shape *)prop;
+        shape = (Shape *)prop;
         return Lookup_Cacheable;
     }
 
@@ -708,7 +708,7 @@ struct GetPropHelper {
             return ic.disable(f, "lookup failed");
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(f, "non-native holder");
-        shape = (const Shape *)prop;
+        shape = (Shape *)prop;
         return Lookup_Cacheable;
     }
 
@@ -984,7 +984,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    LookupStatus patchInline(JSObject *holder, const Shape *shape)
+    LookupStatus patchInline(JSObject *holder, Shape *shape)
     {
         spew("patch", "inline");
         Repatcher repatcher(f.chunk());
@@ -1019,7 +1019,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For JSPropertyOp getters. */
-    void generateGetterStub(Assembler &masm, const Shape *shape, jsid userid,
+    void generateGetterStub(Assembler &masm, Shape *shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
         /*
@@ -1126,7 +1126,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For getters backed by a JSNative. */
-    void generateNativeGetterStub(Assembler &masm, const Shape *shape,
+    void generateNativeGetterStub(Assembler &masm, Shape *shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
         /*
@@ -1217,7 +1217,7 @@ class GetPropCompiler : public PICStubCompiler
         linkerEpilogue(linker, start, shapeMismatches);
     }
 
-    LookupStatus generateStub(JSObject *holder, const Shape *shape)
+    LookupStatus generateStub(JSObject *holder, Shape *shape)
     {
         Vector<Jump, 8> shapeMismatches(cx);
 
@@ -1562,7 +1562,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
         CallObjPropKind kind;
-        const Shape *shape = getprop.shape;
+        Shape *shape = getprop.shape;
         if (shape->setterOp() == CallObject::setArgOp) {
             kind = ARG;
         } else if (shape->setterOp() == CallObject::setVarOp) {
@@ -1698,7 +1698,7 @@ class ScopeNameCompiler : public PICStubCompiler
             return true;
         }
 
-        const Shape *shape = getprop.shape;
+        Shape *shape = getprop.shape;
         Rooted<JSObject*> normalized(cx, obj);
         if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = &obj->asWith().object();
@@ -2257,7 +2257,7 @@ GetElementIC::attachGetProp(VMFrame &f, JSObject *obj, const Value &v, PropertyN
     }
 
     // Load the value.
-    const Shape *shape = getprop.shape;
+    Shape *shape = getprop.shape;
     masm.loadObjProp(holder, holderReg, shape, typeReg, objReg);
 
     Jump done = masm.jump();

@@ -60,7 +60,7 @@ class KidsPointer {
     }
 
 #ifdef DEBUG
-    void checkConsistency(const js::Shape *aKid) const;
+    void checkConsistency(js::Shape *aKid) const;
 #endif
 };
 
