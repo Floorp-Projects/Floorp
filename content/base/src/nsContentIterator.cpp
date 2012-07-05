@@ -1198,9 +1198,6 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsINode* endParent = mRange->GetEndParent();
   PRInt32 endOffset = mRange->EndOffset();
   MOZ_ASSERT(mCommonParent && startParent && endParent);
-  // Bug 767169
-  MOZ_ASSERT(startOffset <= startParent->Length() &&
-             endOffset <= endParent->Length());
 
   // short circuit when start node == end node
   if (startParent == endParent) {
@@ -1271,7 +1268,9 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   PRInt32 numChildren = endParent->GetChildCount();
 
   if (offset > numChildren) {
-    // Can happen for text nodes
+    // Can happen for text nodes -- or if we're being called from
+    // nsNodeUtils::ContentRemoved and the range hasn't been adjusted yet (bug
+    // 767169).
     offset = numChildren;
   }
   if (!offset || !numChildren) {
