@@ -415,25 +415,10 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         predecessor->end(MInlineFunctionGuard::New(NULL, NULL, current, NULL));
     } else {
         JS_ASSERT(polymorphism == Inline_PolymorphicFinal);
-        // The predecessor should already be terminated with the proper instruction
-        JS_ASSERT(predecessor->lastIns() && predecessor->lastIns()->isInlineFunctionGuard());
-        MInlineFunctionGuard *guardIns = predecessor->lastIns()->toInlineFunctionGuard();
-        guardIns->setFallbackBlock(current);
+        predecessor->end(MGoto::New(current));
     }
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
-
-#ifdef DEBUG
-    if(polymorphism == Inline_Monomorphic) {
-        // Predecessor should end with a Goto.
-        JS_ASSERT(predecessor->numSuccessors() == 1);
-    } else {
-        // Predecessor should end with a InlineFunctionGuard.
-        JS_ASSERT(predecessor->numSuccessors() == 2);
-    }
-#endif
-
-    JS_ASSERT(current->numPredecessors() == 1);
 
     // Explicitly pass Undefined for missing arguments.
     const size_t numActualArgs = argv.length() - 1;
@@ -2992,26 +2977,13 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
     } else {
         // Polymorphic inline case is not so simple - needs guards.
         MBasicBlock *entryBlock = top;
-
-        // The final function MConstant is added to the initial entryBlock because
-        // it's a real pain to add otherwise, since by the last loop iteration, the
-        // entryBlock will already have its lastIns (as the last inlined function
-        // flows from the fallbackBlock of the last guard), and adding an MConstant
-        // then is just not worth it.
-        MConstant *finalConstFun =
-            MConstant::New(ObjectValue(*(targets[targets.length()-1]->toFunction())));
-        entryBlock->add(finalConstFun);
-
         for (size_t i = 0; i < targets.length(); i++) {
             // Do the inline function build.
             current = entryBlock;
 
-            if (i == targets.length() - 1) {
-                constFun = finalConstFun;
-            } else {
-                constFun = MConstant::New(ObjectValue(*(targets[i]->toFunction())));
-                entryBlock->add(constFun);
-            }
+            // Create and add the constFun for the function being inlined.
+            constFun = MConstant::New(ObjectValue(*(targets[i]->toFunction())));
+            entryBlock->add(constFun);
 
             RootedFunction target(cx, targets[i]->toFunction());
             InlinePolymorphism poly = (i == targets.length() - 1) ?
@@ -3021,9 +2993,17 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
                 return false;
 
             JS_ASSERT(entryBlock->lastIns());
-            JS_ASSERT(entryBlock->lastIns()->isInlineFunctionGuard());
+            JS_ASSERT((i < targets.length() - 1) ?
+                            entryBlock->lastIns()->isInlineFunctionGuard()
+                          : entryBlock->lastIns()->isGoto());
 
-            // Build the fallback block, but only if we're not yet at the last case.
+            // The buildInline() called by jsop_call_inline will have terminated
+            // this block with either an InlineFunctionGuard (for a non-final
+            // inlined function), or Goto (for the last inlined function).
+            //
+            // In the former case, initialize the function and input for the
+            // InlineFunctionGuard, and set up the fallback block for the next
+            // loop iteration.
             if (i < targets.length() - 1) {
                 MInlineFunctionGuard *guardIns =
                     entryBlock->lastIns()->toInlineFunctionGuard();
@@ -3031,21 +3011,10 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
                 guardIns->setInput(funcDefn);
                 JS_ASSERT(guardIns->functionBlock() != NULL);
 
-                if (i < targets.length() - 2) {
-                    MBasicBlock *fallbackBlock = newBlock(entryBlock, pc);
-                    guardIns->setFallbackBlock(fallbackBlock);
-                    entryBlock = fallbackBlock;
-                }
+                MBasicBlock *fallbackBlock = newBlock(entryBlock, pc);
+                guardIns->setFallbackBlock(fallbackBlock);
+                entryBlock = fallbackBlock;
             }
-#ifdef DEBUG
-            if (i == targets.length() - 1) {
-                MInlineFunctionGuard *guardIns = entryBlock->lastIns()->toInlineFunctionGuard();
-                JS_ASSERT(guardIns->function() != NULL);
-                JS_ASSERT(guardIns->input() != NULL);
-                JS_ASSERT(guardIns->fallbackBlock() != NULL);
-                JS_ASSERT(guardIns->functionBlock() != NULL);
-            }
-#endif
         }
     }
 
