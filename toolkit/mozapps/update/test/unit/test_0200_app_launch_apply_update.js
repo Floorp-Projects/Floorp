@@ -247,7 +247,7 @@ function checkUpdateFinished() {
   log.append(FILE_UPDATE_LOG);
   if (!log.exists()) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created");
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created at " + log.path);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
@@ -257,7 +257,7 @@ function checkUpdateFinished() {
   let status = readStatusFile();
   if (status == STATE_PENDING || status == STATE_APPLYING) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates status to not be pending or applying");
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates status to not be pending or applying, current status is: " + status);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;

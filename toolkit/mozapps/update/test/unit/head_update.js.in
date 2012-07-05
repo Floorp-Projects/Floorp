@@ -288,7 +288,11 @@ var DEBUG_AUS_TEST = true;
 
 #include ../shared.js
 
+#ifdef MOZ_MAINTENANCE_SERVICE
 const STATE_APPLIED_PLATFORM = IS_WIN ? STATE_APPLIED_SVC : STATE_APPLIED;
+#else
+const STATE_APPLIED_PLATFORM = STATE_APPLIED;
+#endif
 
 /**
  * Nulls out the most commonly used global vars used by tests as appropriate.
