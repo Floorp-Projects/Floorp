@@ -40,6 +40,6 @@ function runTest() {
 }
 
 function getLeftMargin() {
-  let style = DeveloperToolbar.tooltipPanel._frame.style.marginLeft;
+  let style = DeveloperToolbar.tooltipPanel._panel.style.marginLeft;
   return parseInt(style.slice(0, -2), 10);
 }
