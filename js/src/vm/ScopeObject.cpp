@@ -351,22 +351,22 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
 
 static JSBool
 with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                   MutableHandleObject objp, MutableHandleShape propp)
+                   MutableHandleObject objp, JSProperty **propp)
 {
     return obj->asWith().object().lookupGeneric(cx, id, objp, propp);
 }
 
 static JSBool
 with_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                    MutableHandleObject objp, MutableHandleShape propp)
+                    MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return with_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                   MutableHandleObject objp, MutableHandleShape propp)
+with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
+                   JSProperty **propp)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
@@ -376,7 +376,7 @@ with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
 
 static JSBool
 with_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                   MutableHandleObject objp, MutableHandleShape propp)
+                   MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return with_LookupGeneric(cx, obj, id, objp, propp);

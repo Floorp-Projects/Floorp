@@ -1393,16 +1393,3 @@ JSCompartment::sweepInitialShapeTable()
         }
     }
 }
-
-/*
- * Property lookup hooks on non-native objects are required to return a non-NULL
- * shape to signify that the property has been found. The actual shape returned
- * is arbitrary, and it should never be read from. We use the non-native
- * object's shape_ field, since it is readily available.
- */
-void
-js::MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp)
-{
-    propp.set(obj->lastProperty());
-}
-

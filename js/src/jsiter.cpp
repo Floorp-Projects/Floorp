@@ -993,7 +993,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                     if (obj->getProto()) {
                         JSObject *proto = obj->getProto();
                         RootedObject obj2(cx);
-                        RootedShape prop(cx);
+                        JSProperty *prop;
                         RootedId id(cx);
                         if (!ValueToId(cx, StringValue(*idp), id.address()))
                             return false;
@@ -1002,7 +1002,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         if (prop) {
                             unsigned attrs;
                             if (obj2->isNative())
-                                attrs = prop->attributes();
+                                attrs = ((Shape *) prop)->attributes();
                             else if (!obj2->getGenericAttributes(cx, id, &attrs))
                                 return false;
 

@@ -927,7 +927,7 @@ inline bool
 JSObject::hasProperty(JSContext *cx, js::HandleId id, bool *foundp, unsigned flags)
 {
     js::RootedObject pobj(cx);
-    js::RootedShape prop(cx);
+    JSProperty *prop;
     JSAutoResolveFlags rf(cx, flags);
     if (!lookupGeneric(cx, id, &pobj, &prop))
         return false;
@@ -1034,8 +1034,7 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
 }
 
 inline JSBool
-JSObject::lookupGeneric(JSContext *cx, js::HandleId id,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp)
+JSObject::lookupGeneric(JSContext *cx, js::HandleId id, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::RootedObject self(cx, this);
 
@@ -1046,8 +1045,7 @@ JSObject::lookupGeneric(JSContext *cx, js::HandleId id,
 }
 
 inline JSBool
-JSObject::lookupProperty(JSContext *cx, js::PropertyName *name,
-                         js::MutableHandleObject objp, js::MutableHandleShape propp)
+JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::Rooted<jsid> id(cx, js::NameToId(name));
     return lookupGeneric(cx, id, objp, propp);
@@ -1099,8 +1097,7 @@ JSObject::defineSpecial(JSContext *cx, js::SpecialId sid, const js::Value &value
 }
 
 inline JSBool
-JSObject::lookupElement(JSContext *cx, uint32_t index,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp)
+JSObject::lookupElement(JSContext *cx, uint32_t index, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::RootedObject self(cx, this);
 
@@ -1109,8 +1106,7 @@ JSObject::lookupElement(JSContext *cx, uint32_t index,
 }
 
 inline JSBool
-JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid,
-                        js::MutableHandleObject objp, js::MutableHandleShape propp)
+JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return lookupGeneric(cx, id, objp, propp);
@@ -1158,7 +1154,7 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject receiver, uint32_t
         return false;
 
     js::RootedObject obj2(cx);
-    js::RootedShape prop(cx);
+    JSProperty *prop;
     if (!self->lookupGeneric(cx, id, &obj2, &prop))
         return false;
 
