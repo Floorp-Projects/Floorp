@@ -16,7 +16,7 @@ using namespace js;
 
 PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, unsigned scopeIndex, JSObject *pobj,
-                    const Shape *shape)
+                    Shape *shape)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);

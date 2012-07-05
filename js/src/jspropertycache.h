@@ -25,18 +25,18 @@ class PropertyCache;
 
 struct PropertyCacheEntry
 {
-    jsbytecode          *kpc;           /* pc of cache-testing bytecode */
-    const Shape         *kshape;        /* shape of direct (key) object */
-    const Shape         *pshape;        /* shape of owning object */
-    const Shape         *prop;          /* shape of accessed property */
+    jsbytecode    *kpc;           /* pc of cache-testing bytecode */
+    Shape         *kshape;        /* shape of direct (key) object */
+    Shape         *pshape;        /* shape of owning object */
+    Shape         *prop;          /* shape of accessed property */
 
     friend class PropertyCache;
 
   private:
     /* Index into scope chain; inapplicable to property lookup entries. */
-    uint8_t             scopeIndex;
+    uint8_t       scopeIndex;
     /* Index into the prototype chain from the object for this entry. */
-    uint8_t             protoIndex;
+    uint8_t       protoIndex;
 
   public:
     static const size_t MaxScopeIndex = 15;
@@ -62,8 +62,8 @@ struct PropertyCacheEntry
      */
     bool isPrototypePropertyHit() const { return scopeIndex == 0 && protoIndex == 1; }
 
-    void assign(jsbytecode *kpc, const Shape *kshape, const Shape *pshape,
-                const Shape *prop, unsigned scopeIndex, unsigned protoIndex) {
+    void assign(jsbytecode *kpc, Shape *kshape, Shape *pshape,
+                Shape *prop, unsigned scopeIndex, unsigned protoIndex) {
         JS_ASSERT(scopeIndex <= MaxScopeIndex);
         JS_ASSERT(protoIndex <= MaxProtoIndex);
 
@@ -184,7 +184,7 @@ class PropertyCache
      * not possible.
      */
     PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, unsigned scopeIndex,
-                             JSObject *pobj, const js::Shape *shape);
+                             JSObject *pobj, js::Shape *shape);
 
     void purge(JSRuntime *rt);
 
