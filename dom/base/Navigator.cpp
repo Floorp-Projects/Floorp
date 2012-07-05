@@ -699,7 +699,7 @@ Navigator::RemoveIdleObserver(nsIIdleObserver* aIdleObserver)
 }
 
 NS_IMETHODIMP
-Navigator::MozVibrate(const jsval& aPattern, JSContext* cx)
+Navigator::Vibrate(const jsval& aPattern, JSContext* cx)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_OK);
