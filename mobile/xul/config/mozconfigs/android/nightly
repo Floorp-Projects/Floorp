@@ -9,7 +9,6 @@ ac_add_options --enable-application=mobile
 
 # Android
 ac_add_options --target=arm-linux-androideabi
-ac_add_options --with-endian=little
 ac_add_options --with-android-ndk="/tools/android-ndk-r5c"
 ac_add_options --with-android-sdk="/tools/android-sdk-r13/platforms/android-13"
 ac_add_options --with-android-version=5

@@ -38,7 +38,7 @@ CPPSRCS		+=                          \
 		ChangeAttributeTxn.cpp      \
 		ChangeCSSInlineStyleTxn.cpp \
 		CreateElementTxn.cpp        \
-		DeleteElementTxn.cpp        \
+		DeleteNodeTxn.cpp           \
 		DeleteRangeTxn.cpp          \
 		DeleteTextTxn.cpp           \
 		EditAggregateTxn.cpp        \
