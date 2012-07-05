@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
+    bug_765063.xul \
     include.html \
     wild_crazy.webapp \
     wild_crazy.webapp^headers^ \
