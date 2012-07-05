@@ -325,11 +325,11 @@ protected:
 
 
   // called after a transaction is done successfully
-  NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
+  void DoAfterDoTransaction(nsITransaction *aTxn);
   // called after a transaction is undone successfully
-  NS_IMETHOD DoAfterUndoTransaction();
+  void DoAfterUndoTransaction();
   // called after a transaction is redone successfully
-  NS_IMETHOD DoAfterRedoTransaction();
+  void DoAfterRedoTransaction();
 
   typedef enum {
     eDocumentCreated,
