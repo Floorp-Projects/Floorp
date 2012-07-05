@@ -20,7 +20,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(e20b7e26-e952-4bba-9192-99bd1a4b3816)]
+[scriptable, uuid(71fb50df-5470-4e88-9a28-6ff2912e3ca7)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -66,6 +66,9 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             type;
            attribute DOMString             defaultValue;
            attribute DOMString             value;
+
+  [optional_argc] void stepDown([optional] in long n);
+  [optional_argc] void stepUp([optional] in long n);
 
   // The following lines are part of the constraint validation API, see:
   // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
