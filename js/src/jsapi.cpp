@@ -3397,7 +3397,7 @@ JS_DeepFreezeObject(JSContext *cx, JSObject *obj_)
 
 static JSBool
 LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                   MutableHandleObject objp, JSProperty **propp)
+                   MutableHandleObject objp, MutableHandleShape propp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -3411,17 +3411,15 @@ LookupPropertyById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
 static JSBool
 LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, jsid id,
-             JSProperty* prop, Value *vp)
+             HandleShape shape, Value *vp)
 {
-    if (!prop) {
+    if (!shape) {
         /* XXX bad API: no way to tell "not defined" from "void value" */
         vp->setUndefined();
         return JS_TRUE;
     }
 
     if (obj2->isNative()) {
-        Shape *shape = (Shape *) prop;
-
         /* Peek at the native property's slot value, without doing a Get. */
         if (shape->hasSlot()) {
             *vp = obj2->nativeGetSlot(shape->slot());
@@ -3452,7 +3450,7 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj_, jsid id_, jsval *vp)
     RootedId id(cx, id_);
     RootedObject obj(cx, obj_);
     RootedObject obj2(cx);
-    JSProperty* prop;
+    RootedShape prop(cx);
 
     return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) &&
            LookupResult(cx, obj, obj2, id, prop, vp);
@@ -3490,7 +3488,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj_, jsid id_, unsigned
     RootedObject obj(cx, obj_);
     RootedObject objp(cx, *objp_);
     RootedId id(cx, id_);
-    JSProperty* prop;
+    RootedShape prop(cx);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -3521,7 +3519,7 @@ JS_HasPropertyById(JSContext *cx, JSObject *obj_, jsid id_, JSBool *foundp)
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
     RootedObject obj2(cx);
-    JSProperty* prop;
+    RootedShape prop(cx);
     JSBool ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
                                    &obj2, &prop);
     *foundp = (prop != NULL);
@@ -3566,7 +3564,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj_, jsid id_, JSBool *fo
 
     if (!obj->isNative()) {
         RootedObject obj2(cx);
-        JSProperty *prop;
+        RootedShape prop(cx);
 
         if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
                                 &obj2, &prop)) {
@@ -3838,12 +3836,12 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
                           JSBool own, PropertyDescriptor *desc)
 {
     RootedObject obj2(cx);
-    JSProperty *prop;
+    RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, flags, &obj2, &prop))
+    if (!LookupPropertyById(cx, obj, id, flags, &obj2, &shape))
         return JS_FALSE;
 
-    if (!prop || (own && obj != obj2)) {
+    if (!shape || (own && obj != obj2)) {
         desc->obj = NULL;
         desc->attrs = 0;
         desc->getter = NULL;
@@ -3854,7 +3852,6 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
     desc->obj = obj2;
     if (obj2->isNative()) {
-        Shape *shape = (Shape *) prop;
         desc->attrs = shape->attributes();
         desc->getter = shape->getter();
         desc->setter = shape->setter();
@@ -3963,15 +3960,14 @@ static JSBool
 SetPropertyAttributesById(JSContext *cx, HandleObject obj, HandleId id, unsigned attrs, JSBool *foundp)
 {
     RootedObject obj2(cx);
-    JSProperty *prop;
+    RootedShape shape(cx);
 
-    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
+    if (!LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &shape))
         return false;
-    if (!prop || obj != obj2) {
+    if (!shape || obj != obj2) {
         *foundp = false;
         return true;
     }
-    Shape *shape = (Shape *) prop;
     JSBool ok = obj->isNative()
                 ? obj->changePropertyAttributes(cx, shape, attrs)
                 : obj->setGenericAttributes(cx, id, &attrs);

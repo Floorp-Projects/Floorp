@@ -259,7 +259,7 @@ args_enumerate(JSContext *cx, HandleObject obj)
              : INT_TO_JSID(i);
 
         RootedObject pobj(cx);
-        JSProperty *prop;
+        RootedShape prop(cx);
         if (!baseops::LookupProperty(cx, argsobj, id, &pobj, &prop))
             return false;
     }
@@ -369,7 +369,7 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
      * js_LookupProperty calls.
      */
     RootedObject pobj(cx);
-    JSProperty *prop;
+    RootedShape prop(cx);
     RootedId id(cx);
 
     // length
