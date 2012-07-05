@@ -3674,11 +3674,13 @@ nsHTMLInputElement::HasTypeMismatch() const
 bool
 nsHTMLInputElement::HasPatternMismatch() const
 {
-  nsAutoString pattern;
   if (!DoesPatternApply() ||
-      !GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern)) {
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::pattern)) {
     return false;
   }
+
+  nsAutoString pattern;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::pattern, pattern);
 
   nsAutoString value;
   NS_ENSURE_SUCCESS(GetValueInternal(value), false);
