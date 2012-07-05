@@ -24,6 +24,9 @@ interface nsIURI;
 [scriptable, uuid(e3e284a3-b4a8-49ef-af6b-c8c4a158db86)]
 interface nsIObjectLoadingContent : nsISupports
 {
+  /**
+   * See notes in nsObjectLoadingContent.h
+   */
   const unsigned long TYPE_LOADING  = 0;
   const unsigned long TYPE_IMAGE    = 1;
   const unsigned long TYPE_PLUGIN   = 2;
