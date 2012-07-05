@@ -54,6 +54,10 @@ public class testBookmarksTab extends BaseTest {
     private void testList(String url) {
         View child;
         ListView list = getBookmarksList();
+
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         mSolo.waitForText(url);
         mAsserter.ok(list != null, "checking that bookmarks list exists", list.toString());
 
@@ -99,6 +103,10 @@ public class testBookmarksTab extends BaseTest {
 
     private void testContextMenu(String url) {
         ListView list = getBookmarksList();
+
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         mSolo.waitForText(url);
 
         // test long tap on a folder, this should fail but will still open the folder
