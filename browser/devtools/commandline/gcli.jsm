@@ -6868,6 +6868,10 @@ FocusManager.prototype._checkShow = function() {
  * available inputs
  */
 FocusManager.prototype._shouldShowTooltip = function() {
+  if (!this._hasFocus) {
+    return { visible: false, reason: '!hasFocus' };
+  }
+
   if (eagerHelper.value === Eagerness.NEVER) {
     return { visible: false, reason: 'eagerHelper !== NEVER' };
   }
@@ -6896,6 +6900,10 @@ FocusManager.prototype._shouldShowTooltip = function() {
  * available inputs
  */
 FocusManager.prototype._shouldShowOutput = function() {
+  if (!this._hasFocus) {
+    return { visible: false, reason: '!hasFocus' };
+  }
+
   if (this._recentOutput) {
     return { visible: true, reason: 'recentOutput' };
   }
