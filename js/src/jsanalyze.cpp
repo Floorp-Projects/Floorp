@@ -32,6 +32,18 @@ PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 #endif
 
+inline bool
+IsJumpOpcode(JSOp op)
+{
+    uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
+
+    /*
+     * LABEL opcodes have type JOF_JUMP but are no-ops, don't treat them as
+     * jumps to avoid degrading precision.
+     */
+    return type == JOF_JUMP && op != JSOP_LABEL;
+}
+
 /////////////////////////////////////////////////////////////////////
 // Bytecode Analysis
 /////////////////////////////////////////////////////////////////////
@@ -603,10 +615,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
+        bool jump = IsJumpOpcode(op);
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
-        if (type == JOF_JUMP) {
+        if (jump) {
             /* Some opcodes behave differently on their branching path. */
             unsigned newStackDepth = stackDepth;
 
@@ -640,11 +652,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             }
             JS_ASSERT(nextcode->stackDepth == stackDepth);
 
-            if (type == JOF_JUMP)
+            if (jump)
                 nextcode->jumpFallthrough = true;
 
             /* Treat the fallthrough of a branch instruction as a jump target. */
-            if (type == JOF_JUMP)
+            if (jump)
                 nextcode->jumpTarget = true;
             else
                 nextcode->fallthrough = true;
@@ -839,8 +851,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           default:;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP) {
+        if (IsJumpOpcode(op)) {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
@@ -1571,8 +1582,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           default:;
         }
 
-        uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP) {
+        if (IsJumpOpcode(op)) {
             unsigned targetOffset = FollowBranch(cx, script, offset);
             checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 
