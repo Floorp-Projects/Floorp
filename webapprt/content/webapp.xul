@@ -14,7 +14,7 @@
 ]>
 
 <window windowtype="webapprt:webapp"
-        id="webapprt-window"
+        id="default"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="1024" height="768"
         persist="screenX screenY width height sizemode"
