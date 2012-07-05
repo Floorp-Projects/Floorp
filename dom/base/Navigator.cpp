@@ -98,7 +98,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
+  NS_INTERFACE_MAP_ENTRY(nsINavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
 #ifdef MOZ_MEDIA_NAVIGATOR
@@ -1002,11 +1002,11 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 }
 
 //*****************************************************************************
-//    Navigator::nsIDOMNavigatorBattery
+//    Navigator::nsINavigatorBattery
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
+Navigator::GetBattery(nsIDOMBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
     *aBattery = nsnull;
