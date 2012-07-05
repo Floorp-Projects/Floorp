@@ -148,7 +148,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
  * limitations under the License.
  */
 
-define('gcli/types/basic', ['require', 'exports', 'module' , 'gcli/l10n', 'gcli/types', 'gcli/types/spell', 'gcli/types/selection', 'gcli/argument'], function(require, exports, module) {
+define('gcli/types/basic', ['require', 'exports', 'module' , 'gcli/l10n', 'gcli/types', 'gcli/types/selection', 'gcli/argument'], function(require, exports, module) {
 
 
 var l10n = require('gcli/l10n');
@@ -157,12 +157,9 @@ var Type = require('gcli/types').Type;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
 var ArrayConversion = require('gcli/types').ArrayConversion;
-var Speller = require('gcli/types/spell').Speller;
 var SelectionType = require('gcli/types/selection').SelectionType;
 
-var Argument = require('gcli/argument').Argument;
-var TrueNamedArgument = require('gcli/argument').TrueNamedArgument;
-var FalseNamedArgument = require('gcli/argument').FalseNamedArgument;
+var BlankArgument = require('gcli/argument').BlankArgument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
 
 
@@ -263,7 +260,7 @@ NumberType.prototype.getMax = function() {
 };
 
 NumberType.prototype.parse = function(arg) {
-  if (arg.text.replace(/\s/g, '').length === 0) {
+  if (arg.text.replace(/^\s*-?/, '').length === 0) {
     return new Conversion(undefined, arg, Status.INCOMPLETE, '');
   }
 
@@ -348,10 +345,10 @@ BooleanType.prototype.lookup = [
 ];
 
 BooleanType.prototype.parse = function(arg) {
-  if (arg instanceof TrueNamedArgument) {
+  if (arg.type === 'TrueNamedArgument') {
     return new Conversion(true, arg);
   }
-  if (arg instanceof FalseNamedArgument) {
+  if (arg.type === 'FalseNamedArgument') {
     return new Conversion(false, arg);
   }
   return SelectionType.prototype.parse.call(this, arg);
@@ -365,7 +362,7 @@ BooleanType.prototype.stringify = function(value) {
 };
 
 BooleanType.prototype.getBlank = function() {
-  return new Conversion(false, new Argument(), Status.VALID, '', this.lookup);
+  return new Conversion(false, new BlankArgument(), Status.VALID, '', this.lookup);
 };
 
 BooleanType.prototype.name = 'boolean';
@@ -475,7 +472,7 @@ ArrayType.prototype.stringify = function(values) {
 };
 
 ArrayType.prototype.parse = function(arg) {
-  if (arg instanceof ArrayArgument) {
+  if (arg.type === 'ArrayArgument') {
     var conversions = arg.getArguments().map(function(subArg) {
       var conversion = this.subtype.parse(subArg);
       // Hack alert. ArrayConversion needs to be able to answer questions
@@ -613,6 +610,7 @@ var types = exports;
 
 
 var Argument = require('gcli/argument').Argument;
+var BlankArgument = require('gcli/argument').BlankArgument;
 
 
 /**
@@ -736,7 +734,7 @@ Conversion.prototype.assign = function(assignment) {
  * Work out if there is information provided in the contained argument.
  */
 Conversion.prototype.isDataProvided = function() {
-  return !this.arg.isBlank();
+  return this.arg.type !== 'BlankArgument';
 };
 
 /**
@@ -1003,7 +1001,7 @@ Type.prototype.decrement = function(value) {
  * 2 known examples of this are boolean -> false and array -> []
  */
 Type.prototype.getBlank = function() {
-  return this.parse(new Argument());
+  return this.parse(new BlankArgument());
 };
 
 /**
@@ -1125,6 +1123,17 @@ var argument = exports;
 
 
 /**
+ * Thinking out loud here:
+ * Arguments are an area where we could probably refactor things a bit better.
+ * The split process in Requisition creates a set of Arguments, which are then
+ * assigned. The assign process sometimes converts them into subtypes of
+ * Argument. We might consider that what gets assigned is _always_ one of the
+ * subtypes (or actually a different type hierarchy entirely) and that we
+ * don't manipulate the prefix/text/suffix but just use the 'subtypes' as
+ * filters which present a view of the underlying original Argument.
+ */
+
+/**
  * We record where in the input string an argument comes so we can report
  * errors against those string positions.
  * @param text The string (trimmed) that contains the argument
@@ -1148,6 +1157,8 @@ function Argument(text, prefix, suffix) {
     this.suffix = suffix !== undefined ? suffix : '';
   }
 }
+
+Argument.prototype.type = 'Argument';
 
 /**
  * Return the result of merging these arguments.
@@ -1180,15 +1191,6 @@ Argument.prototype.beget = function(replText, options) {
   }
 
   return new Argument(replText, prefix, suffix);
-};
-
-/**
- * Is there any visible content to this argument?
- */
-Argument.prototype.isBlank = function() {
-  return this.text === '' &&
-      this.prefix.trim() === '' &&
-      this.suffix.trim() === '';
 };
 
 /**
@@ -1256,7 +1258,40 @@ Argument.merge = function(argArray, start, end) {
   return joined;
 };
 
+/**
+ * For test/debug use only. The output from this function is subject to wanton
+ * random change without notice, and should not be relied upon to even exist
+ * at some later date.
+ */
+Object.defineProperty(Argument.prototype, '_summaryJson', {
+  get: function() {
+    var assignStatus = this.assignment == null ?
+            'null' :
+            this.assignment.param.name;
+    return '<' + this.prefix + ':' + this.text + ':' + this.suffix + '>' +
+        ' (a=' + assignStatus + ',' + ' t=' + this.type + ')';
+  },
+  enumerable: true
+});
+
 argument.Argument = Argument;
+
+
+/**
+ * BlankArgument is a marker that the argument wasn't typed but is there to
+ * fill a slot. Assignments begin with their arg set to a BlankArgument.
+ */
+function BlankArgument() {
+  this.text = '';
+  this.prefix = '';
+  this.suffix = '';
+}
+
+BlankArgument.prototype = Object.create(Argument.prototype);
+
+BlankArgument.prototype.type = 'BlankArgument';
+
+argument.BlankArgument = BlankArgument;
 
 
 /**
@@ -1284,6 +1319,8 @@ function ScriptArgument(text, prefix, suffix) {
 
 ScriptArgument.prototype = Object.create(Argument.prototype);
 
+ScriptArgument.prototype.type = 'ScriptArgument';
+
 /**
  * Returns a new Argument like this one but with the text set to
  * <tt>replText</tt> and the end adjusted to fit.
@@ -1299,15 +1336,6 @@ ScriptArgument.prototype.beget = function(replText, options) {
   }
 
   return new ScriptArgument(replText, prefix, suffix);
-};
-
-/**
- * ScriptArguments are never blank due to the '{' and '}' and their special use
- * for the command argument requires them not to be blank even when there is
- * no text.
- */
-ScriptArgument.prototype.isBlank = function() {
-  return false;
 };
 
 argument.ScriptArgument = ScriptArgument;
@@ -1337,6 +1365,8 @@ function MergedArgument(args, start, end) {
 }
 
 MergedArgument.prototype = Object.create(Argument.prototype);
+
+MergedArgument.prototype.type = 'MergedArgument';
 
 /**
  * Keep track of which assignment we've been assigned to, and allow the
@@ -1384,6 +1414,8 @@ function TrueNamedArgument(name, arg) {
 
 TrueNamedArgument.prototype = Object.create(Argument.prototype);
 
+TrueNamedArgument.prototype.type = 'TrueNamedArgument';
+
 TrueNamedArgument.prototype.assign = function(assignment) {
   if (this.arg) {
     this.arg.assign(assignment);
@@ -1427,6 +1459,8 @@ function FalseNamedArgument() {
 
 FalseNamedArgument.prototype = Object.create(Argument.prototype);
 
+FalseNamedArgument.prototype.type = 'FalseNamedArgument';
+
 FalseNamedArgument.prototype.getArgs = function() {
   return [ ];
 };
@@ -1452,29 +1486,34 @@ argument.FalseNamedArgument = FalseNamedArgument;
  * <ul>
  * <li>--param value
  * <li>-p value
- * <li>--pa value
- * <li>-p:value
- * <li>--param=value
- * <li>etc
  * </ul>
- * The general format is:
- * /--?{unique-param-name-prefix}[ :=]{value}/
  * We model this as a normal argument but with a long prefix.
  */
 function NamedArgument(nameArg, valueArg) {
   this.nameArg = nameArg;
   this.valueArg = valueArg;
 
-  this.text = valueArg.text;
-  this.prefix = nameArg.toString() + valueArg.prefix;
-  this.suffix = valueArg.suffix;
+  if (valueArg == null) {
+    this.text = '';
+    this.prefix = nameArg.toString();
+    this.suffix = '';
+  }
+  else {
+    this.text = valueArg.text;
+    this.prefix = nameArg.toString() + valueArg.prefix;
+    this.suffix = valueArg.suffix;
+  }
 }
 
 NamedArgument.prototype = Object.create(Argument.prototype);
 
+NamedArgument.prototype.type = 'NamedArgument';
+
 NamedArgument.prototype.assign = function(assignment) {
   this.nameArg.assign(assignment);
-  this.valueArg.assign(assignment);
+  if (this.valueArg != null) {
+    this.valueArg.assign(assignment);
+  }
   this.assignment = assignment;
 };
 
@@ -1513,6 +1552,8 @@ function ArrayArgument() {
 
 ArrayArgument.prototype = Object.create(Argument.prototype);
 
+ArrayArgument.prototype.type = 'ArrayArgument';
+
 ArrayArgument.prototype.addArgument = function(arg) {
   this.args.push(arg);
 };
@@ -1545,7 +1586,7 @@ ArrayArgument.prototype.equals = function(that) {
     return false;
   }
 
-  if (!(that instanceof ArrayArgument)) {
+  if (!(that.type === 'ArrayArgument')) {
     return false;
   }
 
@@ -1572,157 +1613,6 @@ ArrayArgument.prototype.toString = function() {
 };
 
 argument.ArrayArgument = ArrayArgument;
-
-
-});
-/*
- * Copyright (c) 2009 Panagiotis Astithas
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-define('gcli/types/spell', ['require', 'exports', 'module' ], function(require, exports, module) {
-
-
-/**
- * A spell-checker based on the statistical algorithm described by Peter Norvig
- * in http://norvig.com/spell-correct.html, and converted to JavaScript by Past
- * http://past.github.com/speller/
- *
- * Usage requires a two-step process:
- * 1) call speller.train() one or more times with a large text to train the
- *    language model
- * 2) call speller.correct(word) to retrieve the correction for the specified
- *    word
- */
-function Speller() {
-  // A map of words to the count of times they were encountered during training.
-  this._nWords = {};
-}
-
-Speller.letters = "abcdefghijklmnopqrstuvwxyz".split("");
-
-/**
- * A function that trains the language model with the words in the supplied
- * text. Multiple invocation of this function can extend the training of the
- * model.
- */
-Speller.prototype.train = function(words) {
-  words.forEach(function(word) {
-    word = word.toLowerCase();
-    this._nWords[word] = this._nWords.hasOwnProperty(word) ?
-            this._nWords[word] + 1 :
-            1;
-  }, this);
-};
-
-/**
- * A function that returns the correction for the specified word.
- */
-Speller.prototype.correct = function(word) {
-  if (this._nWords.hasOwnProperty(word)) {
-    return word;
-  }
-
-  var candidates = {};
-  var list = this._edits(word);
-  list.forEach(function(edit) {
-    if (this._nWords.hasOwnProperty(edit)) {
-      candidates[this._nWords[edit]] = edit;
-    }
-  }, this);
-
-  if (this._countKeys(candidates) > 0) {
-    return candidates[this._max(candidates)];
-  }
-
-  list.forEach(function(edit) {
-    this._edits(edit).forEach(function(w) {
-      if (this._nWords.hasOwnProperty(w)) {
-        candidates[this._nWords[w]] = w;
-      }
-    }, this);
-  }, this);
-
-  return this._countKeys(candidates) > 0 ?
-      candidates[this._max(candidates)] :
-      null;
-};
-
-/**
- * A helper function that counts the keys in the supplied object.
- */
-Speller.prototype._countKeys = function(object) {
-  // return Object.keys(object).length; ?
-  var count = 0;
-  for (var attr in object) {
-    if (object.hasOwnProperty(attr)) {
-      count++;
-    }
-  }
-  return count;
-};
-
-/**
- * A helper function that returns the word with the most occurrences in the
- * language model, among the supplied candidates.
- * @param candidates
- */
-Speller.prototype._max = function(candidates) {
-  var arr = [];
-  for (var candidate in candidates) {
-    if (candidates.hasOwnProperty(candidate)) {
-      arr.push(candidate);
-    }
-  }
-  return Math.max.apply(null, arr);
-};
-
-/**
- * A function that returns the set of possible corrections of the specified
- * word. The edits can be deletions, insertions, alterations or transpositions.
- */
-Speller.prototype._edits = function(word) {
-  var results = [];
-
-  // Deletion
-  for (var i = 0; i < word.length; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1));
-  }
-
-  // Transposition
-  for (i = 0; i < word.length - 1; i++) {
-    results.push(word.slice(0, i) + word.slice(i + 1, i + 2)
-            + word.slice(i, i + 1) + word.slice(i + 2));
-  }
-
-  // Alteration
-  for (i = 0; i < word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i + 1));
-    }, this);
-  }
-
-  // Insertion
-  for (i = 0; i <= word.length; i++) {
-    Speller.letters.forEach(function(l) {
-      results.push(word.slice(0, i) + l + word.slice(i));
-    }, this);
-  }
-
-  return results;
-};
-
-exports.Speller = Speller;
 
 
 });
@@ -2030,6 +1920,157 @@ exports.SelectionType = SelectionType;
 
 });
 /*
+ * Copyright (c) 2009 Panagiotis Astithas
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+define('gcli/types/spell', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+
+/**
+ * A spell-checker based on the statistical algorithm described by Peter Norvig
+ * in http://norvig.com/spell-correct.html, and converted to JavaScript by Past
+ * http://past.github.com/speller/
+ *
+ * Usage requires a two-step process:
+ * 1) call speller.train() one or more times with a large text to train the
+ *    language model
+ * 2) call speller.correct(word) to retrieve the correction for the specified
+ *    word
+ */
+function Speller() {
+  // A map of words to the count of times they were encountered during training.
+  this._nWords = {};
+}
+
+Speller.letters = "abcdefghijklmnopqrstuvwxyz".split("");
+
+/**
+ * A function that trains the language model with the words in the supplied
+ * text. Multiple invocation of this function can extend the training of the
+ * model.
+ */
+Speller.prototype.train = function(words) {
+  words.forEach(function(word) {
+    word = word.toLowerCase();
+    this._nWords[word] = this._nWords.hasOwnProperty(word) ?
+            this._nWords[word] + 1 :
+            1;
+  }, this);
+};
+
+/**
+ * A function that returns the correction for the specified word.
+ */
+Speller.prototype.correct = function(word) {
+  if (this._nWords.hasOwnProperty(word)) {
+    return word;
+  }
+
+  var candidates = {};
+  var list = this._edits(word);
+  list.forEach(function(edit) {
+    if (this._nWords.hasOwnProperty(edit)) {
+      candidates[this._nWords[edit]] = edit;
+    }
+  }, this);
+
+  if (this._countKeys(candidates) > 0) {
+    return candidates[this._max(candidates)];
+  }
+
+  list.forEach(function(edit) {
+    this._edits(edit).forEach(function(w) {
+      if (this._nWords.hasOwnProperty(w)) {
+        candidates[this._nWords[w]] = w;
+      }
+    }, this);
+  }, this);
+
+  return this._countKeys(candidates) > 0 ?
+      candidates[this._max(candidates)] :
+      null;
+};
+
+/**
+ * A helper function that counts the keys in the supplied object.
+ */
+Speller.prototype._countKeys = function(object) {
+  // return Object.keys(object).length; ?
+  var count = 0;
+  for (var attr in object) {
+    if (object.hasOwnProperty(attr)) {
+      count++;
+    }
+  }
+  return count;
+};
+
+/**
+ * A helper function that returns the word with the most occurrences in the
+ * language model, among the supplied candidates.
+ * @param candidates
+ */
+Speller.prototype._max = function(candidates) {
+  var arr = [];
+  for (var candidate in candidates) {
+    if (candidates.hasOwnProperty(candidate)) {
+      arr.push(candidate);
+    }
+  }
+  return Math.max.apply(null, arr);
+};
+
+/**
+ * A function that returns the set of possible corrections of the specified
+ * word. The edits can be deletions, insertions, alterations or transpositions.
+ */
+Speller.prototype._edits = function(word) {
+  var results = [];
+
+  // Deletion
+  for (var i = 0; i < word.length; i++) {
+    results.push(word.slice(0, i) + word.slice(i + 1));
+  }
+
+  // Transposition
+  for (i = 0; i < word.length - 1; i++) {
+    results.push(word.slice(0, i) + word.slice(i + 1, i + 2)
+            + word.slice(i, i + 1) + word.slice(i + 2));
+  }
+
+  // Alteration
+  for (i = 0; i < word.length; i++) {
+    Speller.letters.forEach(function(l) {
+      results.push(word.slice(0, i) + l + word.slice(i + 1));
+    }, this);
+  }
+
+  // Insertion
+  for (i = 0; i <= word.length; i++) {
+    Speller.letters.forEach(function(l) {
+      results.push(word.slice(0, i) + l + word.slice(i));
+    }, this);
+  }
+
+  return results;
+};
+
+exports.Speller = Speller;
+
+
+});
+/*
  * Copyright 2012, Mozilla Foundation and contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -2061,10 +2102,48 @@ var Conversion = require('gcli/types').Conversion;
  */
 exports.startup = function() {
   types.registerType(CommandType);
+  types.registerType(ParamType);
 };
 
 exports.shutdown = function() {
   types.unregisterType(CommandType);
+  types.unregisterType(ParamType);
+};
+
+
+/**
+ * Select from the available commands.
+ * This is very similar to a SelectionType, however the level of hackery in
+ * SelectionType to make it handle Commands correctly was to high, so we
+ * simplified.
+ * If you are making changes to this code, you should check there too.
+ */
+function ParamType(typeSpec) {
+  this.requisition = typeSpec.requisition;
+  this.isIncompleteName = typeSpec.isIncompleteName;
+  this.stringifyProperty = 'name';
+}
+
+ParamType.prototype = Object.create(SelectionType.prototype);
+
+ParamType.prototype.name = 'param';
+
+ParamType.prototype.lookup = function() {
+  var displayedParams = [];
+  var command = this.requisition.commandAssignment.value;
+  command.params.forEach(function(param) {
+    var arg = this.requisition.getAssignment(param.name).arg;
+    if (!param.isPositionalAllowed && arg.type === "BlankArgument") {
+      displayedParams.push({ name: '--' + param.name, value: param });
+    }
+  }, this);
+  return displayedParams;
+};
+
+ParamType.prototype.parse = function(arg) {
+  return this.isIncompleteName ?
+      SelectionType.prototype.parse.call(this, arg) :
+      new Conversion(undefined, arg, Status.ERROR, l10n.lookup('cliUnusedArg'));
 };
 
 
@@ -2160,7 +2239,7 @@ CommandType.prototype.parse = function(arg) {
  * limitations under the License.
  */
 
-define('gcli/canon', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/types/basic'], function(require, exports, module) {
+define('gcli/canon', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/types/basic', 'gcli/types/selection'], function(require, exports, module) {
 var canon = exports;
 
 
@@ -2170,6 +2249,7 @@ var l10n = require('gcli/l10n');
 var types = require('gcli/types');
 var Status = require('gcli/types').Status;
 var BooleanType = require('gcli/types/basic').BooleanType;
+var SelectionType = require('gcli/types/selection').SelectionType;
 
 /**
  * Implement the localization algorithm for any documentation objects (i.e.
@@ -2214,6 +2294,7 @@ function lookup(data, onUndefined) {
 
   return l10n.lookup(onUndefined);
 }
+
 
 /**
  * The command object is mostly just setup around a commandSpec (as passed to
@@ -2341,10 +2422,17 @@ function Parameter(paramSpec, command, groupName) {
     }
   }
 
-  // Some typed (boolean, array) have a non 'undefined' blank value. Give the
+  // Some types (boolean, array) have a non 'undefined' blank value. Give the
   // type a chance to override the default defaultValue of undefined
   if (this.defaultValue === undefined) {
     this.defaultValue = this.type.getBlank().value;
+  }
+
+  // All parameters that can only be set via a named parameter must have a
+  // non-undefined default value
+  if (!this.isPositionalAllowed && this.defaultValue === undefined) {
+    console.error('In ' + this.command.name + '/' + this.name +
+            ': Missing defaultValue for optional parameter.');
   }
 }
 
@@ -4858,11 +4946,12 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
  * limitations under the License.
  */
 
-define('gcli/cli', ['require', 'exports', 'module' , 'gcli/util', 'gcli/ui/view', 'gcli/canon', 'gcli/promise', 'gcli/types', 'gcli/types/basic', 'gcli/argument'], function(require, exports, module) {
+define('gcli/cli', ['require', 'exports', 'module' , 'gcli/util', 'gcli/ui/view', 'gcli/l10n', 'gcli/canon', 'gcli/promise', 'gcli/types', 'gcli/types/basic', 'gcli/argument'], function(require, exports, module) {
 
 
 var util = require('gcli/util');
 var view = require('gcli/ui/view');
+var l10n = require('gcli/l10n');
 
 var canon = require('gcli/canon');
 var Promise = require('gcli/promise').Promise;
@@ -4872,6 +4961,7 @@ var Conversion = require('gcli/types').Conversion;
 var ArrayType = require('gcli/types/basic').ArrayType;
 var StringType = require('gcli/types/basic').StringType;
 var BooleanType = require('gcli/types/basic').BooleanType;
+var NumberType = require('gcli/types/basic').NumberType;
 
 var Argument = require('gcli/argument').Argument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
@@ -4916,27 +5006,20 @@ exports.shutdown = function() {
  * @constructor
  */
 function Assignment(param, paramIndex) {
+  // The parameter that we are assigning to
   this.param = param;
+
+  this.conversion = undefined;
+
+  // The index of this parameter in the parent Requisition. paramIndex === -1
+  // is the command assignment although this should not be relied upon, it is
+  // better to test param instanceof CommandAssignment
   this.paramIndex = paramIndex;
+
   this.onAssignmentChange = util.createEvent('Assignment.onAssignmentChange');
 
   this.setBlank();
 }
-
-/**
- * The parameter that we are assigning to
- * @readonly
- */
-Assignment.prototype.param = undefined;
-
-Assignment.prototype.conversion = undefined;
-
-/**
- * The index of this parameter in the parent Requisition. paramIndex === -1
- * is the command assignment although this should not be relied upon, it is
- * better to test param instanceof CommandAssignment
- */
-Assignment.prototype.paramIndex = undefined;
 
 /**
  * Easy accessor for conversion.arg.
@@ -5021,7 +5104,7 @@ Assignment.prototype.ensureVisibleArgument = function() {
   // case we're going to ignore the event anyway. But on the other hand
   // perhaps this function shouldn't need to know how it is used, and should
   // do the inefficient thing.
-  if (!this.conversion.arg.isBlank()) {
+  if (this.conversion.arg.type !== 'BlankArgument') {
     return false;
   }
 
@@ -5043,13 +5126,13 @@ Assignment.prototype.ensureVisibleArgument = function() {
  */
 Assignment.prototype.getStatus = function(arg) {
   if (this.param.isDataRequired && !this.conversion.isDataProvided()) {
-    return Status.ERROR;
+    return Status.INCOMPLETE;
   }
 
   // Selection/Boolean types with a defined range of values will say that
   // '' is INCOMPLETE, but the parameter may be optional, so we don't ask
   // if the user doesn't need to enter something and hasn't done so.
-  if (!this.param.isDataRequired && this.arg.isBlank()) {
+  if (!this.param.isDataRequired && this.arg.type === 'BlankArgument') {
     return Status.VALID;
   }
 
@@ -5088,6 +5171,26 @@ Assignment.prototype.increment = function() {
 Assignment.prototype.toString = function() {
   return this.conversion.toString();
 };
+
+/**
+ * For test/debug use only. The output from this function is subject to wanton
+ * random change without notice, and should not be relied upon to even exist
+ * at some later date.
+ */
+Object.defineProperty(Assignment.prototype, '_summaryJson', {
+  get: function() {
+    return {
+      param: this.param.name + '/' + this.param.type.name,
+      defaultValue: this.param.defaultValue,
+      arg: this.conversion.arg._summaryJson,
+      value: this.value,
+      message: this.getMessage(),
+      status: this.getStatus().toString(),
+      predictionCount: this.getPredictions().length
+    };
+  },
+  enumerable: true
+});
 
 exports.Assignment = Assignment;
 
@@ -5182,31 +5285,27 @@ exports.CommandAssignment = CommandAssignment;
 /**
  * Special assignment used when ignoring parameters that don't have a home
  */
-function UnassignedAssignment() {
+function UnassignedAssignment(requisition, arg, isIncompleteName) {
   this.param = new canon.Parameter({
     name: '__unassigned',
-    type: 'string'
+    description: l10n.lookup('cliOptions'),
+    type: {
+      name: 'param',
+      requisition: requisition,
+      isIncompleteName: isIncompleteName
+    },
   });
   this.paramIndex = -1;
   this.onAssignmentChange = util.createEvent('UnassignedAssignment.onAssignmentChange');
 
-  this.setBlank();
+  this.conversion = this.param.type.parse(arg);
+  this.conversion.assign(this);
 }
 
 UnassignedAssignment.prototype = Object.create(Assignment.prototype);
 
 UnassignedAssignment.prototype.getStatus = function(arg) {
-  return Status.ERROR;
-};
-
-UnassignedAssignment.prototype.setUnassigned = function(args) {
-  if (!args || args.length === 0) {
-    this.setBlank();
-  }
-  else {
-    var conversion = this.param.type.parse(new MergedArgument(args));
-    this.setConversion(conversion);
-  }
+  return this.conversion.getStatus();
 };
 
 
@@ -5268,7 +5367,7 @@ function Requisition(environment, doc) {
   this._args = [];
 
   // Used to store cli arguments that were not assigned to parameters
-  this._unassigned = new UnassignedAssignment();
+  this._unassigned = [];
 
   // Temporarily set this to true to prevent _assignmentChanged resetting
   // argument positions
@@ -5431,7 +5530,7 @@ Requisition.prototype.cloneAssignments = function() {
  */
 Requisition.prototype.getStatus = function() {
   var status = Status.VALID;
-  if (!this._unassigned.arg.isBlank()) {
+  if (this._unassigned.length !== 0) {
     return Status.ERROR;
   }
   this.getAssignments(true).forEach(function(assignment) {
@@ -5478,6 +5577,28 @@ Requisition.prototype.getAssignments = function(includeCommand) {
 };
 
 /**
+ * Alter the given assignment using the given arg. This function is better than
+ * calling assignment.setConversion(assignment.param.type.parse(arg)) because
+ * it adjusts the args in this requisition to keep things up to date
+ */
+Requisition.prototype.setAssignment = function(assignment, arg) {
+  var originalArg = assignment.arg;
+  var conversion = assignment.param.type.parse(arg);
+  assignment.setConversion(conversion);
+
+  // If this argument isn't assigned to anything (i.e. it was created by
+  // assignment.setBlank) we need to add it into the _args array so
+  // requisition.toString can make sense
+  if (originalArg.type === 'BlankArgument') {
+    this._args.push(arg);
+  }
+  else {
+    var index = this._args.indexOf(originalArg);
+    this._args[index] = conversion.arg;
+  }
+};
+
+/**
  * Reset all the assignments to their default values
  */
 Requisition.prototype.setBlankArguments = function() {
@@ -5510,15 +5631,7 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
 
     // Mutate this argument to hold the completion
     var arg = assignment.arg.beget(prediction.name);
-    var conversion = assignment.param.type.parse(arg);
-    assignment.setConversion(conversion);
-
-    // If this argument isn't assigned to anything (i.e. it was created by
-    // assignment.setBlank) we need to add it into the _args array so
-    // requisition.toString can make sense
-    if (this._args.indexOf(arg) === -1) {
-      this._args.push(arg);
-    }
+    this.setAssignment(assignment, arg);
 
     if (prediction.incomplete) {
       // This is the easy case - the prediction is incomplete - no need to add
@@ -5542,34 +5655,28 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
       // Add a space onto the next argument (if there isn't one there already)
       var nextArg = nextAssignment.conversion.arg;
       if (nextArg.prefix.charAt(0) !== ' ') {
-        nextArg.prefix = ' ' + nextArg.prefix;
-        var nextConversion = nextAssignment.param.type.parse(nextArg);
-        nextAssignment.setConversion(nextConversion);
-
-        // If this argument isn't assigned to anything (i.e. it was created by
-        // assignment.setBlank) we need to add it into the _args array so
-        // requisition.toString can make sense
-        if (this._args.indexOf(nextArg) === -1) {
-          this._args.push(nextArg);
-        }
+        nextArg = new Argument(nextArg.text, ' ' + nextArg.prefix, nextArg.suffix);
+        this.setAssignment(nextAssignment, nextArg);
       }
     }
     else {
       // There is no next argument, this must be the last assignment, so just
       // add the space to the prefix of this argument
-      var conversion = assignment.conversion;
-      var arg = conversion.arg;
+      arg = assignment.conversion.arg;
       if (arg.suffix.charAt(arg.suffix.length - 1) !== ' ') {
-        arg.suffix = arg.suffix + ' ';
-
-        // It's tempting to think - "we're calling setConversion twice in one
+        // It's tempting to think - "we're calling setAssignment twice in one
         // call to complete, the first time to complete the text, the second
         // to add a space, why not save the event cascade and do it once"
         // However if we're setting up the command, the number of parameters
         // changes as a result, so our call to getAssignment(nextIndex) will
         // produce the wrong answer
-        assignment.setConversion(conversion);
+        arg = new Argument(arg.text, arg.prefix, arg.suffix + ' ');
+        this.setAssignment(assignment, arg);
       }
+    }
+
+    if (assignment instanceof UnassignedAssignment) {
+      this.update(this.toString());
     }
 
     this.onTextChange();
@@ -5677,9 +5784,16 @@ Requisition.prototype.toString = function() {
  * @return true iff the last character is interpreted as parameter separating
  * whitespace
  */
-Requisition.prototype.typedEndsWithWhitespace = function() {
+Requisition.prototype.typedEndsWithSeparator = function() {
+  // This is not as easy as doing (this.toString().slice(-1) === ' ')
+  // See the doc comments above; We're checking for separators, not spaces
   if (this._args) {
-    return this._args.slice(-1)[0].suffix.slice(-1) === ' ';
+    var lastArg = this._args.slice(-1)[0];
+    if (lastArg.suffix.slice(-1) === ' ') {
+      return true;
+    }
+    return lastArg.text === '' && lastArg.suffix === ''
+        && lastArg.prefix.slice(-1) === ' ';
   }
 
   return this.toCanonicalString().slice(-1) === ' ';
@@ -5710,8 +5824,16 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
       status = arg.assignment.getStatus(arg);
       // Promote INCOMPLETE to ERROR  ...
       if (status === Status.INCOMPLETE) {
-        // If the cursor is not in a position to be able to complete it
-        if (arg !== cTrace.arg || cTrace.part !== 'text') {
+        // If the cursor is in the prefix or suffix of an argument then we
+        // don't consider it in the argument for the purposes of preventing
+        // the escalation to ERROR. However if this is a NamedArgument, then we
+        // allow the suffix (as space between 2 parts of the argument) to be in.
+        // We use arg.assignment.arg not arg because we're looking at the arg
+        // that got put into the assignment not as returned by tokenize()
+        var isNamed = (cTrace.arg.assignment.arg.type === 'NamedArgument');
+        var isInside = cTrace.part === 'text' ||
+                        (isNamed && cTrace.part === 'suffix');
+        if (arg.assignment !== cTrace.arg.assignment || !isInside) {
           // And if we're not in the command
           if (!(arg.assignment instanceof CommandAssignment)) {
             status = Status.ERROR;
@@ -5769,13 +5891,16 @@ Requisition.prototype.getAssignmentAt = function(cursor) {
       assignForPos.push(assignment);
     }
 
-    // suffix looks forwards
-    if (this._args.length > i + 1) {
+    // suffix is part of the argument only if this is a named parameter,
+    // otherwise it looks forwards
+    if (arg.assignment.arg.type === 'NamedArgument') {
+      // leave the argument as it is
+    }
+    else if (this._args.length > i + 1) {
       // first to the next argument
       assignment = this._args[i + 1].assignment;
     }
-    else if (assignment &&
-        assignment.paramIndex + 1 < this.assignmentCount) {
+    else if (assignment && assignment.paramIndex + 1 < this.assignmentCount) {
       // then to the next assignment
       assignment = this.getAssignment(assignment.paramIndex + 1);
     }
@@ -5792,7 +5917,7 @@ Requisition.prototype.getAssignmentAt = function(cursor) {
 
   if (!reply) {
     throw new Error('Missing assignment.' +
-      ' cursor=' + cursor + ' text.length=' + this.toString().length);
+        ' cursor=' + cursor + ' text=' + this.toString());
   }
 
   return reply;
@@ -5898,12 +6023,6 @@ Requisition.prototype.exec = function(input) {
 /**
  * Called by the UI when ever the user interacts with a command line input
  * @param typed The contents of the input field
- * <p>The general sequence is:
- * <ul>
- * <li>_tokenize(): convert _typed into _parts
- * <li>_split(): convert _parts into _command and _unparsedArgs
- * <li>_assign(): convert _unparsedArgs into requisition
- * </ul>
  */
 Requisition.prototype.update = function(typed) {
   this._structuralChangeInProgress = true;
@@ -5916,6 +6035,32 @@ Requisition.prototype.update = function(typed) {
   this._structuralChangeInProgress = false;
   this.onTextChange();
 };
+
+/**
+ * For test/debug use only. The output from this function is subject to wanton
+ * random change without notice, and should not be relied upon to even exist
+ * at some later date.
+ */
+Object.defineProperty(Requisition.prototype, '_summaryJson', {
+  get: function() {
+    var summary = {
+      $args: this._args.map(function(arg) {
+        return arg._summaryJson;
+      }),
+      _command: this.commandAssignment._summaryJson,
+      _unassigned: this._unassigned.forEach(function(assignment) {
+        return assignment._summaryJson;
+      })
+    };
+
+    Object.keys(this._assignments).forEach(function(name) {
+      summary[name] = this.getAssignment(name)._summaryJson;
+    }.bind(this));
+
+    return summary;
+  },
+  enumerable: true
+});
 
 /**
  * Requisition._tokenize() is a state machine. These are the states.
@@ -6161,7 +6306,7 @@ Requisition.prototype._split = function(args) {
   // We use the hidden 'eval' command directly rather than shift()ing one of
   // the parameters, and parse()ing it.
   var conversion;
-  if (args[0] instanceof ScriptArgument) {
+  if (args[0].type === 'ScriptArgument') {
     // Special case: if the user enters { console.log('foo'); } then we need to
     // use the hidden 'eval' command
     conversion = new Conversion(evalCommand, new ScriptArgument());
@@ -6202,24 +6347,34 @@ Requisition.prototype._split = function(args) {
 };
 
 /**
+ * Add all the passed args to the list of unassigned assignments.
+ */
+Requisition.prototype._addUnassignedArgs = function(args) {
+  args.forEach(function(arg) {
+    this._unassigned.push(new UnassignedAssignment(this, arg, false));
+  }.bind(this));
+};
+
+/**
  * Work out which arguments are applicable to which parameters.
  */
 Requisition.prototype._assign = function(args) {
+  this._unassigned = [];
+
   if (!this.commandAssignment.value) {
-    this._unassigned.setUnassigned(args);
+    this._addUnassignedArgs(args);
     return;
   }
 
   if (args.length === 0) {
     this.setBlankArguments();
-    this._unassigned.setBlank();
     return;
   }
 
   // Create an error if the command does not take parameters, but we have
   // been given them ...
   if (this.assignmentCount === 0) {
-    this._unassigned.setUnassigned(args);
+    this._addUnassignedArgs(args);
     return;
   }
 
@@ -6233,7 +6388,6 @@ Requisition.prototype._assign = function(args) {
         new MergedArgument(args);
       var conversion = assignment.param.type.parse(arg);
       assignment.setConversion(conversion);
-      this._unassigned.setBlank();
       return;
     }
   }
@@ -6263,7 +6417,7 @@ Requisition.prototype._assign = function(args) {
         }
         else {
           var valueArg = null;
-          if (i + 1 >= args.length) {
+          if (i + 1 <= args.length) {
             valueArg = args.splice(i, 1)[0];
           }
           arg = new NamedArgument(arg, valueArg);
@@ -6312,12 +6466,25 @@ Requisition.prototype._assign = function(args) {
       args = [];
     }
     else {
-      var arg = (args.length > 0) ?
-          args.splice(0, 1)[0] :
-          new Argument();
+      if (args.length === 0) {
+        assignment.setBlank();
+      }
+      else {
+        var arg = args.splice(0, 1)[0];
+        // --foo and -f are named parameters, -4 is a number. So '-' is either
+        // the start of a named parameter or a number depending on the context
+        var isIncompleteName = assignment.param.type instanceof NumberType ?
+            /-[-a-zA-Z_]/.test(arg.text) :
+            arg.text.charAt(0) === '-';
 
-      var conversion = assignment.param.type.parse(arg);
-      assignment.setConversion(conversion);
+        if (isIncompleteName) {
+          this._unassigned.push(new UnassignedAssignment(this, arg, true));
+        }
+        else {
+          var conversion = assignment.param.type.parse(arg);
+          assignment.setConversion(conversion);
+        }
+      }
     }
   }, this);
 
@@ -6328,7 +6495,8 @@ Requisition.prototype._assign = function(args) {
     assignment.setConversion(conversion);
   }, this);
 
-  this._unassigned.setUnassigned(args);
+  // What's left is can't be assigned, but we need to extract
+  this._addUnassignedArgs(args);
 };
 
 exports.Requisition = Requisition;
@@ -6868,10 +7036,6 @@ FocusManager.prototype._checkShow = function() {
  * available inputs
  */
 FocusManager.prototype._shouldShowTooltip = function() {
-  if (!this._hasFocus) {
-    return { visible: false, reason: '!hasFocus' };
-  }
-
   if (eagerHelper.value === Eagerness.NEVER) {
     return { visible: false, reason: 'eagerHelper !== NEVER' };
   }
@@ -6900,10 +7064,6 @@ FocusManager.prototype._shouldShowTooltip = function() {
  * available inputs
  */
 FocusManager.prototype._shouldShowOutput = function() {
-  if (!this._hasFocus) {
-    return { visible: false, reason: '!hasFocus' };
-  }
-
   if (this._recentOutput) {
     return { visible: true, reason: 'recentOutput' };
   }
@@ -9515,30 +9675,16 @@ Completer.prototype.resized = function(ev) {
 };
 
 /**
- * Is the completion given, a "strict" completion of the user inputted value?
- * A completion is considered "strict" only if it the user inputted value is an
- * exact prefix of the completion (ignoring leading whitespace)
- */
-function isStrictCompletion(inputValue, completion) {
-  // Strip any leading whitespace from the user inputted value because the
-  // completion will never have leading whitespace.
-  inputValue = inputValue.replace(/^\s*/, '');
-  // Strict: "ec" -> "echo"
-  // Non-Strict: "ls *" -> "ls foo bar baz"
-  return completion.indexOf(inputValue) === 0;
-}
-
-/**
  * Bring the completion element up to date with what the requisition says
  */
 Completer.prototype.update = function(ev) {
   if (ev && ev.choice != null) {
     this.choice = ev.choice;
   }
-  this._preTemplateUpdate();
 
+  var data = this._getCompleterTemplateData();
   var template = this.template.cloneNode(true);
-  domtemplate.template(template, this, { stack: 'completer.html' });
+  domtemplate.template(template, data, { stack: 'completer.html' });
 
   util.clearElement(this.element);
   while (template.hasChildNodes()) {
@@ -9547,143 +9693,119 @@ Completer.prototype.update = function(ev) {
 };
 
 /**
- * Update the state of a number of internal variables in preparation for
- * templating. Some of these properties are interdependent, so it makes sense
- * to do them in one go.
+ * Calculate the properties required by the template process for completer.html
  */
-Completer.prototype._preTemplateUpdate = function() {
-  this.input = this.inputter.getInputState();
+Completer.prototype._getCompleterTemplateData = function() {
+  var input = this.inputter.getInputState();
 
-  this.directTabText = '';
-  this.arrowTabText = '';
-
-  // What text should we display as the tab text, and should it be given as a
-  // '-> full' or as 'suffix' (which depends on if the completion is a strict
-  // completion or not)
-  if (this.input.typed.trim().length === 0) {
-    return;
-  }
-
+  // directTabText is for when the current input is a prefix of the completion
+  // arrowTabText is for when we need to use an -> to show what will be used
+  var directTabText = '';
+  var arrowTabText = '';
   var current = this.inputter.assignment;
-  var prediction = current.conversion.getPredictionAt(this.choice);
-  if (!prediction) {
-    return;
-  }
 
-  var tabText = prediction.name;
-  var existing = current.arg.text;
+  if (input.typed.trim().length !== 0) {
+    var prediction = current.conversion.getPredictionAt(this.choice);
+    if (prediction) {
+      var tabText = prediction.name;
+      var existing = current.arg.text;
 
-  if (existing === tabText) {
-    return;
-  }
+      if (existing !== tabText) {
+        // Decide to use directTabText or arrowTabText
+        // Strip any leading whitespace from the user inputted value because the
+        // tabText will never have leading whitespace.
+        var inputValue = existing.replace(/^\s*/, '');
+        var isStrictCompletion = tabText.indexOf(inputValue) === 0;
+        if (isStrictCompletion && input.cursor.start === input.typed.length) {
+          // Display the suffix of the prediction as the completion
+          var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
 
-  if (isStrictCompletion(existing, tabText) &&
-          this.input.cursor.start === this.input.typed.length) {
-    // Display the suffix of the prediction as the completion
-    var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
-
-    this.directTabText = tabText.slice(existing.length - numLeadingSpaces);
-  }
-  else {
-    // Display the '-> prediction' at the end of the completer element
-    // These JS escapes are aka &nbsp;&rarr; the right arrow
-    this.arrowTabText = ' \u00a0\u21E5 ' + tabText;
-  }
-};
-
-/**
- * A proxy to requisition.getInputStatusMarkup which converts space to &nbsp;
- * in the string member (for HTML display) and converts status to an
- * appropriate class name (i.e. lower cased, prefixed with gcli-in-)
- */
-Object.defineProperty(Completer.prototype, 'statusMarkup', {
-  get: function() {
-    var markup = this.requisition.getInputStatusMarkup(this.input.cursor.start);
-    markup.forEach(function(member) {
-      member.string = member.string.replace(/ /g, '\u00a0'); // i.e. &nbsp;
-      member.className = 'gcli-in-' + member.status.toString().toLowerCase();
-    }, this);
-    return markup;
-  },
-  enumerable: true
-});
-
-/**
- * The text for the 'jump to scratchpad' feature, or null if it is disabled
- */
-Object.defineProperty(Completer.prototype, 'scratchLink', {
-  get: function() {
-    if (!this.scratchpad) {
-      return null;
-    }
-    var command = this.requisition.commandAssignment.value;
-    return command && command.name === '{' ? this.scratchpad.linkText : null;
-  },
-  enumerable: true
-});
-
-/**
- * Is the entered command a JS command with no closing '}'?
- * TWEAK: This code should be considered for promotion to Requisition
- */
-Object.defineProperty(Completer.prototype, 'unclosedJs', {
-  get: function() {
-    var command = this.requisition.commandAssignment.value;
-    var jsCommand = command && command.name === '{';
-    var unclosedJs = jsCommand &&
-        this.requisition.getAssignment(0).arg.suffix.indexOf('}') === -1;
-    return unclosedJs;
-  },
-  enumerable: true
-});
-
-/**
- * Accessor for the list of parameters to be filled in
- */
-Object.defineProperty(Completer.prototype, 'emptyParameters', {
-  get: function() {
-    var typedEndSpace = this.requisition.typedEndsWithWhitespace();
-    // Cache computed property
-    var directTabText = this.directTabText;
-    // If this is the first blank assignment we might not need a space prefix
-    // also we skip [param] text if we have directTabText, but only for the
-    // first blank param.
-    var firstBlankParam = true;
-    var params = [];
-    this.requisition.getAssignments().forEach(function(assignment) {
-      if (!assignment.param.isPositionalAllowed) {
-        return;
-      }
-
-      if (!assignment.arg.isBlank()) {
-        if (directTabText !== '') {
-          firstBlankParam = false;
+          directTabText = tabText.slice(existing.length - numLeadingSpaces);
         }
-        return;
+        else {
+          // Display the '-> prediction' at the end of the completer element
+          // These JS escapes are aka &nbsp;&rarr; the right arrow
+          arrowTabText = ' \u00a0\u21E5 ' + tabText;
+        }
       }
+    }
+  }
 
-      if (directTabText !== '' && firstBlankParam) {
+  // statusMarkup is wrapper around requisition.getInputStatusMarkup converting
+  // space to &nbsp; in the string member (for HTML display) and status to an
+  // appropriate class name (i.e. lower cased, prefixed with gcli-in-)
+  var statusMarkup = this.requisition.getInputStatusMarkup(input.cursor.start);
+  statusMarkup.forEach(function(member) {
+    member.string = member.string.replace(/ /g, '\u00a0'); // i.e. &nbsp;
+    member.className = 'gcli-in-' + member.status.toString().toLowerCase();
+  }, this);
+
+  // Calculate the list of parameters to be filled in
+  var trailingSeparator = this.requisition.typedEndsWithSeparator();
+  // We generate an array of emptyParameter markers for each positional
+  // parameter to the current command.
+  // Generally each emptyParameter marker begins with a space to separate it
+  // from whatever came before, unless what comes before ends in a space.
+  // Also if we've got a directTabText prediction or we're in a NamedParameter
+  // then we don't want any text for that parameter at all.
+  // The algorithm to add spaces needs to take this into account.
+
+  var firstBlankParam = true;
+  var emptyParameters = [];
+  this.requisition.getAssignments().forEach(function(assignment) {
+    if (!assignment.param.isPositionalAllowed) {
+      return;
+    }
+    if (current.arg.type === 'NamedArgument') {
+      return;
+    }
+
+    if (assignment.arg.toString().trim() !== '') {
+      if (directTabText !== '') {
         firstBlankParam = false;
-        return;
       }
+      return;
+    }
 
-      var text = (assignment.param.isDataRequired) ?
-          '<' + assignment.param.name + '>' :
-          '[' + assignment.param.name + ']';
-
-      // Add a space if we don't have one at the end of the input or if
-      // this isn't the first param we've mentioned
-      if (!typedEndSpace || !firstBlankParam) {
-        text = '\u00a0' + text; // i.e. &nbsp;
-      }
-
+    if (directTabText !== '' && firstBlankParam) {
       firstBlankParam = false;
-      params.push(text);
-    }.bind(this));
-    return params;
-  },
-  enumerable: true
-});
+      return;
+    }
+
+    var text = (assignment.param.isDataRequired) ?
+        '<' + assignment.param.name + '>' :
+        '[' + assignment.param.name + ']';
+
+    // Add a space if we don't have one at the end of the input or if
+    // this isn't the first param we've mentioned
+    if (!trailingSeparator || !firstBlankParam) {
+      text = '\u00a0' + text; // i.e. &nbsp;
+    }
+
+    firstBlankParam = false;
+    emptyParameters.push(text);
+  }.bind(this));
+
+  var command = this.requisition.commandAssignment.value;
+  var jsCommand = command && command.name === '{';
+
+  // Is the entered command a JS command with no closing '}'?
+  // TWEAK: This code should be considered for promotion to Requisition
+  var unclosedJs = jsCommand &&
+      this.requisition.getAssignment(0).arg.suffix.indexOf('}') === -1;
+
+  // The text for the 'jump to scratchpad' feature, or '' if it is disabled
+  var link = this.scratchpad && jsCommand ? this.scratchpad.linkText : '';
+
+  return {
+    statusMarkup: statusMarkup,
+    directTabText: directTabText,
+    emptyParameters: emptyParameters,
+    arrowTabText: arrowTabText,
+    unclosedJs: unclosedJs,
+    scratchLink: link
+  };
+};
 
 exports.Completer = Completer;
 
