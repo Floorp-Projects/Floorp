@@ -257,7 +257,7 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
  */
 MOZ_NEVER_INLINE
 #endif
-const Shape *
+Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
@@ -266,7 +266,7 @@ js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 }
 
 #ifdef DEBUG
-const Shape *
+Shape *
 js::ObjectImpl::nativeLookupNoAllocation(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
@@ -503,7 +503,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
         return false;
     }
 
-    const Shape *shape = obj->nativeLookup(cx, pid);
+    Shape *shape = obj->nativeLookup(cx, pid);
     if (!shape) {
         /* Not found: attempt to resolve it. */
         Class *clasp = obj->getClass();

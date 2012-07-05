@@ -274,10 +274,10 @@ struct JSObject : public js::ObjectImpl
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
      */
-    bool setLastProperty(JSContext *cx, const js::Shape *shape);
+    bool setLastProperty(JSContext *cx, js::Shape *shape);
 
     /* As above, but does not change the slot span. */
-    inline void setLastPropertyInfallible(const js::Shape *shape);
+    inline void setLastPropertyInfallible(js::Shape *shape);
 
     /* Make a non-array object with the specified initial state. */
     static inline JSObject *create(JSContext *cx,
@@ -417,7 +417,7 @@ struct JSObject : public js::ObjectImpl
     void rollbackProperties(JSContext *cx, uint32_t slotSpan);
 
     inline void nativeSetSlot(unsigned slot, const js::Value &value);
-    inline void nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value);
+    inline void nativeSetSlotWithType(JSContext *cx, js::Shape *shape, const js::Value &value);
 
     inline const js::Value &getReservedSlot(unsigned index) const;
     inline js::HeapSlot &getReservedSlotRef(unsigned index);
@@ -1145,12 +1145,12 @@ const unsigned DNP_SKIP_TYPE    = 8;   /* Don't update type information */
 /*
  * Return successfully added or changed shape or NULL on error.
  */
-extern const Shape *
+extern Shape *
 DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value,
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow = 0);
 
-inline const Shape *
+inline Shape *
 DefineNativeProperty(JSContext *cx, HandleObject obj, PropertyName *name, const Value &value,
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow = 0)
@@ -1237,11 +1237,11 @@ const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
  */
 extern JSBool
 js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pobj,
-             const js::Shape *shape, unsigned getHow, js::Value *vp);
+             js::Shape *shape, unsigned getHow, js::Value *vp);
 
 extern JSBool
 js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
-             const js::Shape *shape, bool added, bool strict, js::Value *vp);
+             js::Shape *shape, bool added, bool strict, js::Value *vp);
 
 namespace js {
 

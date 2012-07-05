@@ -262,7 +262,7 @@ class StaticBlockObject : public BlockObject
      */
     bool needsClone();
 
-    const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
+    Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject
