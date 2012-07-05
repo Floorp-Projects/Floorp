@@ -111,7 +111,10 @@ reflectUnsignedInt({
 // TODO: list (HTMLElement)
 
 // .max
-todo("max" in document.createElement("input"), "max isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'max',
+});
 
 // .maxLength
 reflectInt({
