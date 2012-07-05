@@ -376,7 +376,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return super.onKeyDown(keyCode, event);
-        } else if (keyCode == KeyEvent.KEYCODE_SEARCH ){
+        } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
              mText.setText("");
              mText.requestFocus();
              InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
