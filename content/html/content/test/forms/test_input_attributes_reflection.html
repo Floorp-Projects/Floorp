@@ -210,9 +210,9 @@ reflectString({
 todo("valueAsDate" in document.createElement("input"),
      "valueAsDate isn't implemented yet");
 
-// .valueAsNumber
-todo("valueAsNumber" in document.createElement("input"),
-     "valueAsNumber isn't implemented yet");
+// Deeper check will be done with bug 763305.
+is('valueAsNumber' in document.createElement("input"), true,
+   "valueAsNumber should be available");
 
 // .selectedOption
 todo("selectedOption" in document.createElement("input"),
