@@ -2686,17 +2686,18 @@ mjit::Compiler::jsop_initprop()
     }
 
     RootedObject holder(cx);
-    RootedShape shape(cx);
+    JSProperty *prop = NULL;
     Rooted<jsid> id(cx, NameToId(name));
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, id, JSRESOLVE_QUALIFIED, &holder, &shape);
-    JS_ASSERT(res && shape && holder == baseobj);
+    LookupPropertyWithFlags(cx, baseobj, id, JSRESOLVE_QUALIFIED, &holder, &prop);
+    JS_ASSERT(res && prop && holder == baseobj);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
 
     /* Perform the store. */
+    Shape *shape = (Shape *) prop;
     Address address = masm.objPropAddress(baseobj, objReg, shape->slot());
     frame.storeTo(fe, address);
     frame.freeReg(objReg);

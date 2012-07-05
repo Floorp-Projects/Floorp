@@ -1221,34 +1221,34 @@ proxy_innerObject(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                    MutableHandleObject objp, MutableHandleShape propp)
+proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
+                    JSProperty **propp)
 {
     bool found;
     if (!Proxy::has(cx, obj, id, &found))
         return false;
 
     if (found) {
-        MarkNonNativePropertyFound(obj, propp);
+        *propp = (JSProperty *)0x1;
         objp.set(obj);
     } else {
         objp.set(NULL);
-        propp.set(NULL);
+        *propp = NULL;
     }
     return true;
 }
 
 static JSBool
 proxy_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                     MutableHandleObject objp, MutableHandleShape propp)
+                     MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                    MutableHandleObject objp, MutableHandleShape propp)
+proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
+                    JSProperty **propp)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
@@ -1258,7 +1258,7 @@ proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
 
 static JSBool
 proxy_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                    MutableHandleObject objp, MutableHandleShape propp)
+                    MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);

@@ -954,7 +954,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
 
     RootedObject obj(cx);
     RootedObject pobj(cx);
-    RootedShape prop(cx);
+    JSProperty *prop;
     JSBool ok;
 
     if (JOF_OPMODE(*pc) == JOF_NAME)
@@ -967,7 +967,9 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
         JS_PROPERTY_CACHE(cx).restore(&savedEntry);
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
-    JS_ASSERT(entry->prop == prop);
+
+    Shape *shape = (Shape *) prop;
+    JS_ASSERT(entry->prop == shape);
 }
 #endif /* DEBUG && !JS_THREADSAFE */
 
@@ -1279,7 +1281,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedTypeObject rootType0(cx);
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
-    RootedShape rootShape0(cx);
 
     if (rt->profilingScripts)
         ENABLE_INTERRUPTS();
@@ -1745,7 +1746,7 @@ BEGIN_CASE(JSOP_IN)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
     RootedObject &obj2 = rootObject1;
-    RootedShape &prop = rootShape0;
+    JSProperty *prop;
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
@@ -2205,7 +2206,7 @@ BEGIN_CASE(JSOP_DELNAME)
 
     RootedObject &obj = rootObject1;
     RootedObject &obj2 = rootObject2;
-    RootedShape &prop = rootShape0;
+    JSProperty *prop;
     if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
         goto error;
 
@@ -2552,7 +2553,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
 
     RootedObject &obj = rootObject1;
     RootedObject &obj2 = rootObject2;
-    RootedShape &prop = rootShape0;
+    JSProperty *prop;
     if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
         goto error;
 
@@ -2919,9 +2920,9 @@ BEGIN_CASE(JSOP_DEFFUN)
     /* ES5 10.5 (NB: with subsequent errata). */
     RootedPropertyName &name = rootName0;
     name = fun->atom->asPropertyName();
-    RootedShape &shape = rootShape0;
+    JSProperty *prop = NULL;
     RootedObject &pobj = rootObject1;
-    if (!parent->lookupProperty(cx, name, &pobj, &shape))
+    if (!parent->lookupProperty(cx, name, &pobj, &prop))
         goto error;
 
     RootedValue &rval = rootValue0;
@@ -2929,7 +2930,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     do {
         /* Steps 5d, 5f. */
-        if (!shape || pobj != parent) {
+        if (!prop || pobj != parent) {
             if (!parent->defineProperty(cx, name, rval,
                                         JS_PropertyStub, JS_StrictPropertyStub, attrs))
             {
@@ -2940,6 +2941,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
         /* Step 5e. */
         JS_ASSERT(parent->isNative());
+        Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
                 if (!parent->defineProperty(cx, name, rval,

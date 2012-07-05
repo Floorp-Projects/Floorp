@@ -454,17 +454,19 @@ class SetPropCompiler : public PICStubCompiler
             return disable("ops set property hook");
 
         RootedObject holder(cx);
-        RootedShape shape(cx);
+        JSProperty *prop = NULL;
 
         /* lookupProperty can trigger recompilations. */
         RecompilationMonitor monitor(cx);
-        if (!obj->lookupProperty(cx, name, &holder, &shape))
+        if (!obj->lookupProperty(cx, name, &holder, &prop))
             return error();
         if (monitor.recompiled())
             return Lookup_Uncacheable;
 
         /* If the property exists but is on a prototype, treat as addprop. */
-        if (shape && holder != obj) {
+        if (prop && holder != obj) {
+            Shape *shape = (Shape *) prop;
+
             if (!holder->isNative())
                 return disable("non-native holder");
 
@@ -477,10 +479,10 @@ class SetPropCompiler : public PICStubCompiler
             if (!shape->hasSlot())
                 return disable("missing slot");
 
-            shape = NULL;
+            prop = NULL;
         }
 
-        if (!shape) {
+        if (!prop) {
             /* Adding a property to the object. */
             if (obj->isDelegate())
                 return disable("delegate");
@@ -521,7 +523,7 @@ class SetPropCompiler : public PICStubCompiler
              * populate the slot to satisfy the method invariant (in case we
              * hit an early return below).
              */
-            shape =
+            Shape *shape =
                 obj->putProperty(cx, name, getter, clasp->setProperty,
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
             if (!shape)
@@ -573,6 +575,7 @@ class SetPropCompiler : public PICStubCompiler
             return generateStub(initialShape, shape, true);
         }
 
+        Shape *shape = (Shape *) prop;
         if (!shape->writable())
             return disable("readonly");
         if (shape->hasDefaultSetter()) {
@@ -658,14 +661,14 @@ struct GetPropHelper {
     // These fields are set by |bind| and |lookup|. After a call to either
     // function, these are set exactly as they are in JSOP_GETPROP or JSOP_NAME.
     RootedObject       holder;
-    RootedShape        prop;
+    JSProperty         *prop;
 
     // This field is set by |bind| and |lookup| only if they returned
     // Lookup_Cacheable, otherwise it is NULL.
-    RootedShape        shape;
+    Shape *shape;
 
     GetPropHelper(JSContext *cx, JSObject *obj, PropertyName *name, IC &ic, VMFrame &f)
-      : cx(cx), obj(cx, obj), name(cx, name), ic(ic), f(f), holder(cx), prop(cx), shape(cx)
+      : cx(cx), obj(cx, obj), name(cx, name), ic(ic), f(f), holder(cx), prop(NULL), shape(NULL)
     { }
 
   public:
@@ -684,7 +687,7 @@ struct GetPropHelper {
             return ic.disable(cx, "non-native");
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(cx, "non-native holder");
-        shape = prop;
+        shape = (Shape *)prop;
         return Lookup_Cacheable;
     }
 
@@ -705,7 +708,7 @@ struct GetPropHelper {
             return ic.disable(f, "lookup failed");
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(f, "non-native holder");
-        shape = prop;
+        shape = (Shape *)prop;
         return Lookup_Cacheable;
     }
 
@@ -1672,7 +1675,7 @@ class ScopeNameCompiler : public PICStubCompiler
     {
         JSObject *obj = getprop.obj;
         Rooted<JSObject*> holder(cx, getprop.holder);
-        RootedShape prop(cx, getprop.prop);
+        const JSProperty *prop = getprop.prop;
 
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -1695,7 +1698,7 @@ class ScopeNameCompiler : public PICStubCompiler
             return true;
         }
 
-        RootedShape shape(cx, getprop.shape);
+        Shape *shape = getprop.shape;
         Rooted<JSObject*> normalized(cx, obj);
         if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = &obj->asWith().object();
