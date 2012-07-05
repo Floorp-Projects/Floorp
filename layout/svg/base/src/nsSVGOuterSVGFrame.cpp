@@ -487,15 +487,27 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   PRTime start = PR_Now();
 #endif
 
+  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
+  // it, but do so without changing the render mode:
+  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
+
+  if (aBuilder->IsPaintingToWindow()) {
+    state.SetPaintingToWindow(true);
+  }
+
   nsRect viewportRect =
     mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
 
   nsRect clipRect = mVisibleRect.Intersect(viewportRect);
 
+  nsIntRect contentAreaDirtyRect =
+    (clipRect - viewportRect.TopLeft()).
+      ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+
   aContext->PushState();
   aContext->IntersectClip(clipRect);
   aContext->Translate(viewportRect.TopLeft());
-  mFrame->Paint(aBuilder, aContext, clipRect - viewportRect.TopLeft());
+  nsSVGUtils::PaintFrameWithEffects(aContext, &contentAreaDirtyRect, mFrame);
   aContext->PopState();
 
   NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
@@ -592,26 +604,6 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 
   return NS_OK;
-}
-
-void
-nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext* aContext,
-                          const nsRect& aDirtyRect)
-{
-  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
-  // it, but don't change the render mode:
-  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
-
-  if (aBuilder->IsPaintingToWindow()) {
-    state.SetPaintingToWindow(true);
-  }
-
-  // Convert the (content area relative) dirty rect to dev pixels:
-  nsIntRect dirtyPxRect =
-    aDirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
-
-  nsSVGUtils::PaintFrameWithEffects(aContext, &dirtyPxRect, this);
 }
 
 nsSplittableType
