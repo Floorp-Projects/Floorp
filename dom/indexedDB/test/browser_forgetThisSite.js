@@ -20,8 +20,8 @@ function test()
 {
   waitForExplicitFinish();
   // Avoids the prompt
-  setPermission(testPageURL1, "indexedDB");
-  setPermission(testPageURL2, "indexedDB");
+  setPermission(testPageURL1, "indexedDB", "unknown");
+  setPermission(testPageURL2, "indexedDB", "unknown");
   executeSoon(test1);
 }
 
@@ -67,7 +67,7 @@ function test3()
   Components.classes["@mozilla.org/privatebrowsing;1"]
             .getService(Components.interfaces.nsIPrivateBrowsingService)
             .removeDataFromDomain(domains[1]);
-  setPermission(testPageURL4, "indexedDB");
+  setPermission(testPageURL4, "indexedDB", "unknown");
   executeSoon(test4);
 }
 
