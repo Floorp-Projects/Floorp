@@ -691,7 +691,7 @@ nsEditor::DoTransaction(nsITransaction* aTxn)
       res = aTxn->DoTransaction();
     }
     if (NS_SUCCEEDED(res)) {
-      res = DoAfterDoTransaction(aTxn);
+      DoAfterDoTransaction(aTxn);
     }
 
     // no need to check res here, don't lose result of operation
@@ -779,8 +779,7 @@ nsEditor::Undo(PRUint32 aCount)
     nsresult rv = mTxnMgr->UndoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = DoAfterUndoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
+    DoAfterUndoTransaction();
   }
 
   return NS_OK;
@@ -823,8 +822,7 @@ nsEditor::Redo(PRUint32 aCount)
     nsresult rv = mTxnMgr->RedoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = DoAfterRedoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
+    DoAfterRedoTransaction();
   }
 
   return NS_OK;
@@ -4451,14 +4449,12 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
 
 
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
 {
-  nsresult rv = NS_OK;
-  
-  bool    isTransientTransaction;
-  rv = aTxn->GetIsTransient(&isTransientTransaction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isTransientTransaction;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aTxn->GetIsTransient(&isTransientTransaction)));
   
   if (!isTransientTransaction)
   {
@@ -4471,27 +4467,27 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
     if (modCount < 0)
       modCount = -modCount;
         
-    rv = IncrementModificationCount(1);    // don't count transient transactions
+    // don't count transient transactions
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      IncrementModificationCount(1)));
   }
-  
-  return rv;
 }
 
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterUndoTransaction()
 {
-  nsresult rv = NS_OK;
-
-  rv = IncrementModificationCount(-1);    // all undoable transactions are non-transient
-
-  return rv;
+  // all undoable transactions are non-transient
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    IncrementModificationCount(-1)));
 }
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterRedoTransaction()
 {
-  return IncrementModificationCount(1);    // all redoable transactions are non-transient
+  // all redoable transactions are non-transient
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    IncrementModificationCount(1)));
 }
 
 NS_IMETHODIMP 
