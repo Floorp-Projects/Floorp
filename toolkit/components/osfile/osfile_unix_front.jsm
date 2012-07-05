@@ -590,6 +590,112 @@
 
      } // End of definition of copy/move
 
+     /**
+      * Iterate on one directory.
+      *
+      * This iterator will not enter subdirectories.
+      *
+      * @param {string} path The directory upon which to iterate.
+      * @param {*=} options Ignored in this implementation.
+      *
+      * @throws {File.Error} If |path| does not represent a directory or
+      * if the directory cannot be iterated.
+      * @constructor
+      */
+     File.DirectoryIterator = function DirectoryIterator(path, options) {
+       let dir = throw_on_null("DirectoryIterator", UnixFile.opendir(path));
+       this._dir = dir;
+       this._path = path;
+     };
+     File.DirectoryIterator.prototype = {
+       __iterator__: function __iterator__() {
+         return this;
+       },
+       /**
+        * Return the next entry in the directory, if any such entry is
+        * available.
+        *
+        * Skip special directories "." and "..".
+        *
+        * @return {File.Entry} The next entry in the directory.
+        * @throws {StopIteration} Once all files in the directory have been
+        * encountered.
+        */
+       next: function next() {
+         if (!this._dir) {
+           throw StopIteration;
+         }
+         for (let entry = UnixFile.readdir(this._dir);
+              entry != null && !entry.isNull();
+              entry = UnixFile.readdir(this._dir)) {
+           let contents = entry.contents;
+           if (contents.d_type == OS.Constants.libc.DT_DIR) {
+             let name = contents.d_name.readString();
+             if (name == "." || name == "..") {
+               continue;
+             }
+           }
+           return new File.DirectoryIterator.Entry(contents, this._path);
+         }
+         this.close();
+         throw StopIteration;
+       },
+
+       /**
+        * Close the iterator and recover all resources.
+        * You should call this once you have finished iterating on a directory.
+        */
+       close: function close() {
+         if (!this._dir) return;
+         UnixFile.closedir(this._dir);
+         this._dir = null;
+       }
+     };
+
+     /**
+      * An entry in a directory.
+      */
+     File.DirectoryIterator.Entry = function Entry(unix_entry, parent) {
+       // Copy the relevant part of |unix_entry| to ensure that
+       // our data is not overwritten prematurely.
+       this._d_type = unix_entry.d_type;
+       this._name = unix_entry.d_name.readString();
+       this._parent = parent;
+     };
+     File.DirectoryIterator.Entry.prototype = {
+       /**
+        * |true| if the entry is a directory, |false| otherwise
+        */
+       get isDir() {
+         return this._d_type == OS.Constants.libc.DT_DIR;
+       },
+
+       /**
+        * |true| if the entry is a symbolic link, |false| otherwise
+        */
+       get isLink() {
+         return this._d_type == OS.Constants.libc.DT_LNK;
+       },
+
+       /**
+        * The name of the entry.
+        * @type {string}
+        */
+       get name() {
+         return this._name;
+       },
+
+       /**
+        * The full path to the entry.
+        */
+       get path() {
+         delete this.path;
+         let path = OS.Unix.Path.join(this._parent, this.name);
+         Object.defineProperty(this, "path", {value: path});
+         return path;
+       }
+     };
+
 
      /**
       * Get/set the current directory.
@@ -601,11 +707,10 @@
            );
          },
          get: function() {
-           let path = UnixFile.getwd(null);
-           if (path.isNull()) {
-             throw new File.Error("getwd");
-           }
-           return ctypes.CDataFinalizer(path, UnixFile.free);
+           let path = UnixFile.get_current_dir_name?UnixFile.get_current_dir_name():
+             UnixFile.getwd_auto(null);
+           throw_on_null("curDir",path);
+           return path.readString();
          }
        }
      );
@@ -633,6 +738,13 @@
       */
      function throw_on_negative(operation, result) {
        if (result < 0) {
+         throw new File.Error(operation);
+       }
+       return result;
+     }
+
+     function throw_on_null(operation, result) {
+       if (result == null || (result.isNull && result.isNull())) {
          throw new File.Error(operation);
        }
        return result;
