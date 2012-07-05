@@ -41,13 +41,6 @@ nsQueryInterfaceWithError::operator()( const nsIID& aIID, void** answer ) const
 		return status;
 	}
 
-nsCOMPtr_base::~nsCOMPtr_base()
-	{
-	  NSCAP_LOG_RELEASE(this, mRawPtr);
-		if ( mRawPtr )
-			NSCAP_RELEASE(this, mRawPtr);
-	}
-
 void
 nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
 	{
