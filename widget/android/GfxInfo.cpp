@@ -289,10 +289,7 @@ GfxInfo::AddCrashReportAnnotations()
 const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  if (!mDriverInfo->Length()) {
-    /* The following entry, when uncommented, will allow us to whitelist a
-     * specific device. See the long comment in GetFeatureStatusImpl for more
-     * info. */
+  if (mDriverInfo->IsEmpty()) {
 #ifdef MOZ_JAVA_COMPOSITOR
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
@@ -302,9 +299,10 @@ GfxInfo::GetGfxDriverInfo()
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions );
+      DRIVER_COMPARISON_IGNORED, GfxDriverInfo::allDriverVersions );
 #endif
   }
+
   return *mDriverInfo;
 }
 
