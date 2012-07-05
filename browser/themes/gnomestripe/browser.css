@@ -2398,6 +2398,7 @@ html|*#gcli-output-frame {
 #gcli-tooltip {
   border-width: 0;
   background-color: transparent;
+  -moz-appearance: none;
   margin-bottom: -2px;
 }
 

@@ -1282,7 +1282,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
                 continue;
             }
 
-            const Shape *shape = protoWalk->nativeLookup(cx, id);
+            Shape *shape = protoWalk->nativeLookup(cx, id);
 
             foundSetter = shape &&
                           !shape->hasDefaultSetter();
