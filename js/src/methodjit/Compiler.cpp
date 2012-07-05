@@ -5070,7 +5070,7 @@ mjit::Compiler::testSingletonProperty(HandleObject obj, HandleId id)
         nobj = nobj->getProto();
     }
 
-    JSObject *holder;
+    RootedObject holder(cx);
     JSProperty *prop = NULL;
     if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
@@ -5145,7 +5145,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
     }
 
     RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, globalObj, key, proto.address(), NULL))
+    if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
         return false;
 
     return testSingletonProperty(proto, id);
@@ -5165,7 +5165,7 @@ mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (id.reference() != types::MakeTypeId(cx, id))
+    if (id.get() != types::MakeTypeId(cx, id))
         return false;
 
     types::TypeSet *pushedTypes = pushedTypeSet(0);
@@ -6090,8 +6090,7 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, T1,
-                                     &PropertyIteratorObject::class_);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, T1, &IteratorClass);
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
@@ -6142,8 +6141,7 @@ mjit::Compiler::iterMore(jsbytecode *target)
     RegisterID tempreg = frame.allocReg();
 
     /* Test clasp */
-    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, tempreg,
-                                     &PropertyIteratorObject::class_);
+    Jump notFast = masm.testObjClass(Assembler::NotEqual, reg, tempreg, &IteratorClass);
     stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
@@ -6182,8 +6180,7 @@ mjit::Compiler::iterEnd()
     frame.unpinReg(reg);
 
     /* Test clasp */
-    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, T1,
-                                         &PropertyIteratorObject::class_);
+    Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, T1, &IteratorClass);
     stubcc.linkExit(notIterator, Uses(1));
 
     /* Get private from iter obj. */

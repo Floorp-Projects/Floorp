@@ -71,11 +71,8 @@ class GlobalObject : public JSObject
 
     /* One-off properties stored after slots for built-ins. */
     static const unsigned THROWTYPEERROR          = STANDARD_CLASS_SLOTS;
-    static const unsigned ELEMENT_ITERATOR_PROTO  = THROWTYPEERROR + 1;
-    static const unsigned GENERATOR_PROTO         = ELEMENT_ITERATOR_PROTO + 1;
-    static const unsigned MAP_ITERATOR_PROTO      = GENERATOR_PROTO + 1;
-    static const unsigned SET_ITERATOR_PROTO      = MAP_ITERATOR_PROTO + 1;
-    static const unsigned REGEXP_STATICS          = SET_ITERATOR_PROTO + 1;
+    static const unsigned GENERATOR_PROTO         = THROWTYPEERROR + 1;
+    static const unsigned REGEXP_STATICS          = GENERATOR_PROTO + 1;
     static const unsigned FUNCTION_NS             = REGEXP_STATICS + 1;
     static const unsigned RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
     static const unsigned EVAL                    = RUNTIME_CODEGEN_ENABLED + 1;
@@ -270,42 +267,14 @@ class GlobalObject : public JSObject
         return &self->getPrototype(key).toObject();
     }
 
-    JSObject *getIteratorPrototype() {
-        return &getPrototype(JSProto_Iterator).toObject();
-    }
-
-  private:
-    typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
-
-    JSObject *getOrCreateObject(JSContext *cx, unsigned slot, ObjectInitOp init) {
-        Value v = getSlotRef(slot);
+    JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
+        Value v = getSlotRef(GENERATOR_PROTO);
         if (v.isObject())
             return &v.toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!init(cx, self))
+        if (!js_InitIteratorClasses(cx, this))
             return NULL;
-        return &self->getSlot(slot).toObject();
-    }
-
-  public:
-    JSObject *getOrCreateIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, JSProto_LIMIT + JSProto_Iterator, initIteratorClasses);
-    }
-
-    JSObject *getOrCreateElementIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, ELEMENT_ITERATOR_PROTO, initIteratorClasses);
-    }
-
-    JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, GENERATOR_PROTO, initIteratorClasses);
-    }
-
-    JSObject *getOrCreateMapIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, MAP_ITERATOR_PROTO, initMapIteratorProto);
-    }
-
-    JSObject *getOrCreateSetIteratorPrototype(JSContext *cx) {
-        return getOrCreateObject(cx, SET_ITERATOR_PROTO, initSetIteratorProto);
+        return &self->getSlot(GENERATOR_PROTO).toObject();
     }
 
     inline RegExpStatics *getRegExpStatics() const;
@@ -330,13 +299,7 @@ class GlobalObject : public JSObject
 
     bool getFunctionNamespace(JSContext *cx, Value *vp);
 
-    // Implemented in jsiter.cpp.
-    static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);
-
-    // Implemented in builtin/MapObject.cpp.
-    static bool initMapIteratorProto(JSContext *cx, Handle<GlobalObject*> global);
-    static bool initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global);
-
+    static bool initGeneratorClass(JSContext *cx, Handle<GlobalObject*> global);
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;
