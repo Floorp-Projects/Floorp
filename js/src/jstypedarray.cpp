@@ -295,12 +295,14 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
+static JSProperty * const PROPERTY_FOUND = reinterpret_cast<JSProperty *>(1);
+
 JSBool
 ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                                     MutableHandleObject objp, MutableHandleShape propp)
+                                     MutableHandleObject objp, JSProperty **propp)
 {
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
-        MarkNonNativePropertyFound(obj, propp);
+        *propp = PROPERTY_FOUND;
         objp.set(getArrayBuffer(obj));
         return true;
     }
@@ -319,7 +321,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
     if (!delegateResult)
         return false;
 
-    if (propp) {
+    if (*propp != NULL) {
         if (objp == delegate)
             objp.set(obj);
         return true;
@@ -328,7 +330,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
     JSObject *proto = obj->getProto();
     if (!proto) {
         objp.set(NULL);
-        propp.set(NULL);
+        *propp = NULL;
         return true;
     }
 
@@ -337,7 +339,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
 
 JSBool
 ArrayBufferObject::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                                      MutableHandleObject objp, MutableHandleShape propp)
+                                      MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return obj_lookupGeneric(cx, obj, id, objp, propp);
@@ -345,7 +347,7 @@ ArrayBufferObject::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePro
 
 JSBool
 ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                                     MutableHandleObject objp, MutableHandleShape propp)
+                                     MutableHandleObject objp, JSProperty **propp)
 {
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
@@ -360,7 +362,7 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
     if (!delegate->lookupElement(cx, index, objp, propp))
         return false;
 
-    if (propp) {
+    if (*propp != NULL) {
         if (objp == delegate)
             objp.set(obj);
         return true;
@@ -370,13 +372,13 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
         return proto->lookupElement(cx, index, objp, propp);
 
     objp.set(NULL);
-    propp.set(NULL);
+    *propp = NULL;
     return true;
 }
 
 JSBool
 ArrayBufferObject::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                                     MutableHandleObject objp, MutableHandleShape propp)
+                                     MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return obj_lookupGeneric(cx, obj, id, objp, propp);
@@ -772,13 +774,13 @@ js::IsDataView(JSObject* obj)
 
 JSBool
 TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                              MutableHandleObject objp, MutableHandleShape propp)
+                              MutableHandleObject objp, JSProperty **propp)
 {
     JSObject *tarray = getTypedArray(obj);
     JS_ASSERT(tarray);
 
     if (isArrayIndex(cx, tarray, id)) {
-        MarkNonNativePropertyFound(obj, propp);
+        *propp = PROPERTY_FOUND;
         objp.set(obj);
         return true;
     }
@@ -786,7 +788,7 @@ TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
     JSObject *proto = obj->getProto();
     if (!proto) {
         objp.set(NULL);
-        propp.set(NULL);
+        *propp = NULL;
         return true;
     }
 
@@ -795,7 +797,7 @@ TypedArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
 
 JSBool
 TypedArray::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                               MutableHandleObject objp, MutableHandleShape propp)
+                               MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return obj_lookupGeneric(cx, obj, id, objp, propp);
@@ -803,13 +805,13 @@ TypedArray::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyNa
 
 JSBool
 TypedArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                              MutableHandleObject objp, MutableHandleShape propp)
+                              MutableHandleObject objp, JSProperty **propp)
 {
     JSObject *tarray = getTypedArray(obj);
     JS_ASSERT(tarray);
 
     if (index < length(tarray)) {
-        MarkNonNativePropertyFound(obj, propp);
+        *propp = PROPERTY_FOUND;
         objp.set(obj);
         return true;
     }
@@ -818,13 +820,13 @@ TypedArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
         return proto->lookupElement(cx, index, objp, propp);
 
     objp.set(NULL);
-    propp.set(NULL);
+    *propp = NULL;
     return true;
 }
 
 JSBool
 TypedArray::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                              MutableHandleObject objp, MutableHandleShape propp)
+                              MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return obj_lookupGeneric(cx, obj, id, objp, propp);

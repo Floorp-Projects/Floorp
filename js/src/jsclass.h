@@ -149,17 +149,17 @@ typedef JS::Handle<SpecialId> HandleSpecialId;
 /* js::Class operation signatures. */
 
 typedef JSBool
-(* LookupGenericOp)(JSContext *cx, HandleObject obj, HandleId id,
-                    MutableHandleObject objp, MutableHandleShape propp);
+(* LookupGenericOp)(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
+                    JSProperty **propp);
 typedef JSBool
-(* LookupPropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                 MutableHandleObject objp, MutableHandleShape propp);
+(* LookupPropOp)(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleObject objp,
+                 JSProperty **propp);
 typedef JSBool
-(* LookupElementOp)(JSContext *cx, HandleObject obj, uint32_t index,
-                    MutableHandleObject objp, MutableHandleShape propp);
+(* LookupElementOp)(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
+                    JSProperty **propp);
 typedef JSBool
-(* LookupSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                    MutableHandleObject objp, MutableHandleShape propp);
+(* LookupSpecialOp)(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleObject objp,
+                    JSProperty **propp);
 typedef JSBool
 (* DefineGenericOp)(JSContext *cx, HandleObject obj, HandleId id, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);

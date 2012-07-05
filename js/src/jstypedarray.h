@@ -47,16 +47,16 @@ class ArrayBufferObject : public JSObject
 
     static JSBool
     obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                      MutableHandleObject objp, MutableHandleShape propp);
+                      MutableHandleObject objp, JSProperty **propp);
     static JSBool
     obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                       MutableHandleObject objp, MutableHandleShape propp);
+                       MutableHandleObject objp, JSProperty **propp);
     static JSBool
     obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                      MutableHandleObject objp, MutableHandleShape propp);
+                      MutableHandleObject objp, JSProperty **propp);
     static JSBool
     obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                      MutableHandleObject objp, MutableHandleShape propp);
+                      MutableHandleObject objp, JSProperty **propp);
 
     static JSBool
     obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v,
@@ -189,13 +189,13 @@ struct TypedArray {
     static Class protoClasses[TYPE_MAX];
 
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                                    MutableHandleObject objp, MutableHandleShape propp);
+                                    MutableHandleObject objp, JSProperty **propp);
     static JSBool obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                                     MutableHandleObject objp, MutableHandleShape propp);
+                                     MutableHandleObject objp, JSProperty **propp);
     static JSBool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                                    MutableHandleObject objp, MutableHandleShape propp);
+                                    MutableHandleObject objp, JSProperty **propp);
     static JSBool obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                                    MutableHandleObject objp, MutableHandleShape propp);
+                                    MutableHandleObject objp, JSProperty **propp);
 
     static JSBool obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
     static JSBool obj_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp);

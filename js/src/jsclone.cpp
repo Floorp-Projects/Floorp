@@ -559,7 +559,7 @@ JSStructuredCloneWriter::write(const Value &v)
                  * NativeIterators.
                  */
                 RootedObject obj2(context());
-                RootedShape prop(context());
+                JSProperty *prop;
                 if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
                                        &obj2, &prop)) {
                     return false;
