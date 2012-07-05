@@ -451,6 +451,11 @@ bool WebGLContext::ValidateLevelWidthHeightForTarget(WebGLenum target, WebGLint 
 
 uint32_t WebGLContext::GetBitsPerTexel(WebGLenum format, WebGLenum type)
 {
+    // If there is no defined format or type, we're not taking up any memory
+    if (!format || !type) {
+        return 0;
+    }
+
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
         int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
         switch (format) {

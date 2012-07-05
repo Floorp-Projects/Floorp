@@ -5,7 +5,7 @@
 
 #include "DeleteRangeTxn.h"
 #include "DeleteTextTxn.h"
-#include "DeleteElementTxn.h"
+#include "DeleteNodeTxn.h"
 #include "nsIContentIterator.h"
 #include "nsComponentManagerUtils.h"
 
@@ -160,8 +160,8 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
 
   nsresult res = NS_OK;
   for (PRInt32 i = aStartOffset; i < aEndOffset; ++i) {
-    nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
-    res = txn->Init(mEditor, child->AsDOMNode(), mRangeUpdater);
+    nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
+    res = txn->Init(mEditor, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
       AppendChild(txn);
     }
@@ -217,9 +217,9 @@ DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-    nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
+    nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
 
-    res = txn->Init(mEditor, node->AsDOMNode(), mRangeUpdater);
+    res = txn->Init(mEditor, node, mRangeUpdater);
     NS_ENSURE_SUCCESS(res, res);
     AppendChild(txn);
 
