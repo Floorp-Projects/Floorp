@@ -179,6 +179,9 @@ DeveloperToolbar.prototype._onload = function DT_onload()
     scratchpad: null
   });
 
+  this.display.focusManager.addMonitoredElement(this.outputPanel._frame);
+  this.display.focusManager.addMonitoredElement(this._element);
+
   this.display.onVisibilityChange.add(this.outputPanel._visibilityChanged, this.outputPanel);
   this.display.onVisibilityChange.add(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
   this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
@@ -187,7 +190,6 @@ DeveloperToolbar.prototype._onload = function DT_onload()
   this._chromeWindow.getBrowser().tabContainer.addEventListener("TabClose", this, false);
   this._chromeWindow.getBrowser().addEventListener("load", this, true);
   this._chromeWindow.getBrowser().addEventListener("beforeunload", this, true);
-  this._chromeWindow.addEventListener("resize", this, false);
 
   this._initErrorsCount(this._chromeWindow.getBrowser().selectedTab);
 
@@ -307,10 +309,12 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   this._chromeWindow.getBrowser().tabContainer.removeEventListener("TabSelect", this, false);
   this._chromeWindow.getBrowser().removeEventListener("load", this, true); 
   this._chromeWindow.getBrowser().removeEventListener("beforeunload", this, true);
-  this._chromeWindow.removeEventListener("resize", this, false);
 
   let tabs = this._chromeWindow.getBrowser().tabs;
   Array.prototype.forEach.call(tabs, this._stopErrorsCount, this);
+
+  this.display.focusManager.removeMonitoredElement(this.outputPanel._frame);
+  this.display.focusManager.removeMonitoredElement(this._element);
 
   this.display.onVisibilityChange.remove(this.outputPanel._visibilityChanged, this.outputPanel);
   this.display.onVisibilityChange.remove(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
@@ -367,9 +371,6 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
         this._initErrorsCount(aEvent.target);
       }
     }
-  }
-  else if (aEvent.type == "resize") {
-    this.outputPanel._resize();
   }
   else if (aEvent.type == "TabClose") {
     this._stopErrorsCount(aEvent.target);
@@ -812,7 +813,7 @@ TooltipPanel.prototype._resize = function TP_resize()
   }
 
   let offset = 10 + Math.floor(this._dimensions.start * AVE_CHAR_WIDTH);
-  this._frame.style.marginLeft = offset + "px";
+  this._panel.style.marginLeft = offset + "px";
 
   /*
   // Bug 744906: UX review - Not sure if we want this code to fatten connector

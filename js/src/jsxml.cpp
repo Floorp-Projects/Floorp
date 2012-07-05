@@ -4768,7 +4768,7 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObj
         objp.set(NULL);
         *propp = NULL;
     } else {
-        const Shape *shape =
+        Shape *shape =
             js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE,
                                  0, 0);
@@ -4804,7 +4804,7 @@ xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandle
     if (!IndexToId(cx, index, &id))
         return false;
 
-    const Shape *shape =
+    Shape *shape =
         js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty, SHAPE_INVALID_SLOT,
                              JSPROP_ENUMERATE, 0, 0);
     if (!shape)

@@ -46,7 +46,7 @@
 
      // Open libc
      let libc;
-     let libc_candidates =  [ "libSystem.dylib",
+     let libc_candidates =  [ "libsystem.B.dylib",
                               "libc.so.6",
                               "libc.so" ];
      for (let i = 0; i < libc_candidates.length; ++i) {
@@ -150,6 +150,47 @@
          Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_MODE_T),
          {name: {value: "mode_t"}});
 
+
+       Types.DIR =
+         new Type("DIR",
+                  ctypes.StructType("DIR"));
+
+       Types.null_or_DIR_ptr =
+         new Type("null_or_DIR*",
+                  Types.DIR.out_ptr.implementation,
+                  function(dir, operation) {
+                    if (dir == null || dir.isNull()) {
+                      return null;
+                    }
+                    return ctypes.CDataFinalizer(dir, _close_dir);
+                  });
+
+       // Structure |dirent|
+       // Building this type is rather complicated, as its layout varies between
+       // variants of Unix. For this reason, we rely on a number of constants
+       // (computed in C from the C data structures) that give us the layout.
+       // The structure we compute looks like
+       //  { int8_t[...] before_d_type; // ignored content
+       //    int8_t      d_type       ;
+       //    int8_t[...] before_d_name; // ignored content
+       //    char[...]   d_name;
+       //    };
+       {
+         let dirent = new OS.Shared.HollowStructure("dirent",
+           OS.Constants.libc.OSFILE_SIZEOF_DIRENT);
+         dirent.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_TYPE,
+           "d_type", ctypes.uint8_t);
+         dirent.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_DIRENT_D_NAME,
+           "d_name", ctypes.ArrayType(ctypes.char, OS.Constants.libc.OSFILE_SIZEOF_DIRENT_D_NAME));
+
+         // We now have built |dirent|.
+         Types.dirent = dirent.getType();
+         LOG("dirent is: " + Types.dirent.implementation.toSource());
+       }
+       Types.null_or_dirent_ptr =
+         new Type("null_of_dirent",
+                  Types.dirent.out_ptr.implementation);
+
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
@@ -160,6 +201,16 @@
 
        UnixFile.close = function close(fd) {
          // Detach the finalizer and call |_close|.
+         return fd.dispose();
+       };
+
+       let _close_dir =
+         libc.declare("closedir", ctypes.default_abi,
+                        /*return */ctypes.int,
+                        /*dirp*/   Types.DIR.in_ptr.implementation);
+
+       UnixFile.closedir = function closedir(fd) {
+         // Detach the finalizer and call |_close_dir|.
          return fd.dispose();
        };
 
@@ -284,6 +335,12 @@
                     /*offset*/ Types.off_t,
                     /*whence*/ Types.int);
 
+       UnixFile.mkdir =
+         declareFFI("mkdir", ctypes.default_abi,
+                    /*return*/ Types.int,
+                    /*path*/ Types.string,
+                    /*mode*/ Types.int);
+
        UnixFile.mkstemp =
          declareFFI("mkstemp", ctypes.default_abi,
                     /*return*/ Types.null_or_string,
@@ -295,6 +352,11 @@
                     /*path*/  Types.string,
                     /*oflags*/Types.int,
                     /*mode*/  Types.int);
+
+       UnixFile.opendir =
+         declareFFI("opendir", ctypes.default_abi,
+                    /*return*/ Types.null_or_DIR_ptr,
+                    /*path*/   Types.string);
 
        UnixFile.pread =
          declareFFI("pread", ctypes.default_abi,
@@ -319,11 +381,32 @@
                     /*buf*/   Types.char.out_ptr,
                     /*nbytes*/Types.size_t);
 
+       if (OS.Constants.libc._DARWIN_FEATURE_64_BIT_INODE) {
+         // Special case for MacOS X 10.5+
+         // Symbol name "readdir" still exists but is used for a
+         // deprecated function that does not match the
+         // constants of |OS.Constants.libc|.
+         UnixFile.readdir =
+           declareFFI("readdir$INODE64", ctypes.default_abi,
+                     /*return*/Types.null_or_dirent_ptr,
+                      /*dir*/   Types.DIR.in_ptr); // For MacOS X
+       } else {
+         UnixFile.readdir =
+           declareFFI("readdir", ctypes.default_abi,
+                      /*return*/Types.null_or_dirent_ptr,
+                      /*dir*/   Types.DIR.in_ptr); // Other Unices
+       }
+
        UnixFile.rename =
          declareFFI("rename", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
                     /*old*/    Types.string,
                     /*new*/    Types.string);
+
+       UnixFile.rmdir =
+         declareFFI("rmdir", ctypes.default_abi,
+                    /*return*/ Types.int,
+                    /*path*/   Types.string);
 
        UnixFile.splice =
          declareFFI("splice", ctypes.default_abi,

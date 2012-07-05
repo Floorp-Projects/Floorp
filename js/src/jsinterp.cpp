@@ -968,7 +968,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
 
-    const Shape *shape = (Shape *) prop;
+    Shape *shape = (Shape *) prop;
     JS_ASSERT(entry->prop == shape);
 }
 #endif /* DEBUG && !JS_THREADSAFE */

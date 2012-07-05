@@ -87,8 +87,11 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Util.h" // DebugOnly
+#include "mozilla/Preferences.h"
 
 #include "nsIIDNService.h"
+
+#include <limits>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -119,6 +122,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "hidden", NS_FORM_INPUT_HIDDEN },
   { "reset", NS_FORM_INPUT_RESET },
   { "image", NS_FORM_INPUT_IMAGE },
+  { "number", NS_FORM_INPUT_NUMBER },
   { "password", NS_FORM_INPUT_PASSWORD },
   { "radio", NS_FORM_INPUT_RADIO },
   { "search", NS_FORM_INPUT_SEARCH },
@@ -130,7 +134,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[12];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[13];
 
 static const PRUint8 NS_INPUT_AUTOCOMPLETE_OFF     = 0;
 static const PRUint8 NS_INPUT_AUTOCOMPLETE_ON      = 1;
@@ -145,6 +149,9 @@ static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
 
 // Default autocomplete value is "".
 static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
+
+const double nsHTMLInputElement::kDefaultStepBase = 0;
+const double nsHTMLInputElement::kStepAny = 0;
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -522,6 +529,7 @@ nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mInhibitRestoration(aFromParser & FROM_PARSER_FRAGMENT)
   , mCanShowValidUI(true)
   , mCanShowInvalidUI(true)
+  , mHasRange(false)
 {
   mInputData.mState = new nsTextEditorState(this);
 
@@ -646,6 +654,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       if (mValueChanged) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -809,6 +818,15 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       UpdatePatternMismatchValidityState();
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
+    } else if (aName == nsGkAtoms::max) {
+      UpdateHasRange();
+      UpdateRangeOverflowValidityState();
+    } else if (aName == nsGkAtoms::min) {
+      UpdateHasRange();
+      UpdateRangeUnderflowValidityState();
+      UpdateStepMismatchValidityState();
+    } else if (aName == nsGkAtoms::step) {
+      UpdateStepMismatchValidityState();
     }
 
     UpdateState(aNotify);
@@ -836,6 +854,8 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Autocomplete, autocomplete,
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Autofocus, autofocus)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Max, max)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Min, min)
 NS_IMPL_ACTION_ATTR(nsHTMLInputElement, FormAction, formaction)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
@@ -849,6 +869,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Required, required)
 NS_IMPL_URI_ATTR(nsHTMLInputElement, Src, src)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Step, step)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
@@ -972,6 +993,20 @@ nsHTMLInputElement::IsValueEmpty() const
   return value.IsEmpty();
 }
 
+double
+nsHTMLInputElement::GetValueAsDouble() const
+{
+  double doubleValue;
+  nsAutoString stringValue;
+  PRInt32 ec;
+
+  GetValueInternal(stringValue);
+  doubleValue = stringValue.ToDouble(&ec);
+
+  return NS_FAILED(ec) ? std::numeric_limits<double>::quiet_NaN()
+                       : doubleValue;
+}
+
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
@@ -1024,6 +1059,148 @@ nsHTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
 
   CallQueryInterface(element, aValue);
   return NS_OK;
+}
+
+void
+nsHTMLInputElement::SetValue(double aValue)
+{
+  nsAutoString value;
+  value.AppendFloat(aValue);
+  SetValue(value);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetValueAsNumber(double* aValueAsNumber)
+{
+  *aValueAsNumber = DoesValueAsNumberApply() ? GetValueAsDouble()
+                                             : std::numeric_limits<double>::quiet_NaN();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
+{
+  if (!DoesValueAsNumberApply()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  SetValue(aValueAsNumber);
+  return NS_OK;
+}
+
+double
+nsHTMLInputElement::GetStepBase() const
+{
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::min)) {
+    return kDefaultStepBase;
+  }
+
+  nsAutoString minStr;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+
+  PRInt32 ec;
+  double stepBase = minStr.ToDouble(&ec);
+
+  return NS_FAILED(ec) ? kDefaultStepBase : stepBase;
+}
+
+nsresult
+nsHTMLInputElement::ApplyStep(PRInt32 aStep)
+{
+  if (!DoStepDownStepUpApply()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  double step = GetStep();
+  if (step == kStepAny) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  double value = GetValueAsDouble();
+  if (value != value) { // NaN
+    return NS_OK;
+  }
+
+  // TODO: refactorize with GetMin(), see bug 636634.
+  double min = std::numeric_limits<double>::quiet_NaN();
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::min)) {
+    nsAutoString minStr;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+    PRInt32 ec;
+    double minTmp = minStr.ToDouble(&ec);
+    if (!NS_FAILED(ec)) {
+      min = minTmp;
+    }
+  }
+
+  // TODO: refactorize with GetMax(), see bug 636634.
+  double max = std::numeric_limits<double>::quiet_NaN();
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::max)) {
+    nsAutoString maxStr;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+    PRInt32 ec;
+    double maxTmp = maxStr.ToDouble(&ec);
+    if (!NS_FAILED(ec)) {
+      // "max - (max - stepBase) % step" is the nearest valid value to max.
+      max = maxTmp - NS_floorModulo(maxTmp - GetStepBase(), step);
+    }
+  }
+
+  // Cases where we are clearly going in the wrong way.
+  // We don't use ValidityState because we can be higher than the maximal
+  // allowed value and still not suffer from range overflow in the case of
+  // of the value specified in @max isn't in the step.
+  if ((value <= min && aStep < 0) ||
+      (value >= max && aStep > 0)) {
+    return NS_OK;
+  }
+
+  if (GetValidityState(VALIDITY_STATE_STEP_MISMATCH) &&
+      value != min && value != max) {
+    if (aStep > 0) {
+      value -= NS_floorModulo(value - GetStepBase(), step);
+    } else if (aStep < 0) {
+      value -= NS_floorModulo(value - GetStepBase(), step);
+      value += step;
+    }
+  }
+
+  value += aStep * step;
+
+  // When stepUp() is called and the value is below min, we should clamp on
+  // min unless stepUp() moves us higher than min.
+  if (GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW) && aStep > 0 &&
+      value <= min) {
+    MOZ_ASSERT(min == min); // min can't be NaN if we are here!
+    value = min;
+  // Same goes for stepDown() and max.
+  } else if (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) && aStep < 0 &&
+             value >= max) {
+    MOZ_ASSERT(max == max); // max can't be NaN if we are here!
+    value = max;
+  // If we go down, we want to clamp on min.
+  } else if (aStep < 0 && min == min) {
+    value = NS_MAX(value, min);
+  // If we go up, we want to clamp on max.
+  } else if (aStep > 0 && max == max) {
+    value = NS_MIN(value, max);
+  }
+
+  SetValue(value);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::StepDown(PRInt32 n, PRUint8 optional_argc)
+{
+  return ApplyStep(optional_argc ? -n : -1);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::StepUp(PRInt32 n, PRUint8 optional_argc)
+{
+  return ApplyStep(optional_argc ? n : 1);
 }
 
 NS_IMETHODIMP 
@@ -1097,6 +1274,12 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
 NS_IMETHODIMP
 nsHTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
+  // TODO: temporary until bug 635240 is fixed.
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    *aResult = false;
+    return NS_OK;
+  }
+
   *aResult = IsSingleLineTextControl(aExcludePassword);
 
   return NS_OK;
@@ -2174,7 +2357,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
-               IsSingleLineTextControl(false, mType)) {
+               (IsSingleLineTextControl(false, mType) ||
+                mType == NS_FORM_INPUT_NUMBER)) {
             FireChangeEventIfNeeded();   
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -2422,6 +2606,8 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
     } 
   }
 
+  UpdateHasRange();
+
   // Do not notify, it will be done after if needed.
   UpdateAllValidityStates(false);
 }
@@ -2450,6 +2636,15 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
         aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aValue);
       }
       break;
+    case NS_FORM_INPUT_NUMBER:
+      {
+        PRInt32 ec;
+        PromiseFlatString(aValue).ToDouble(&ec);
+        if (NS_FAILED(ec)) {
+          aValue.Truncate();
+        }
+      }
+      break;
   }
 }
 
@@ -2467,6 +2662,11 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
       if (success) {
         newType = aResult.GetEnumValue();
+        if (newType == NS_FORM_INPUT_NUMBER && 
+          !Preferences::GetBool("dom.experimental_forms", false)) {
+          newType = kInputDefaultType->value;
+          aResult.SetTo(newType, &aValue);
+        }
       } else {
         newType = kInputDefaultType->value;
       }
@@ -3068,6 +3268,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_NUMBER:
       {
         if (mValueChanged) {
           inputState = new nsHTMLInputElementState();
@@ -3216,6 +3417,14 @@ nsHTMLInputElement::IntrinsicState() const
     state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
   }
 
+  // :in-range and :out-of-range only apply if the element currently has a range.
+  if (mHasRange) {
+    state |= (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) ||
+              GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW))
+               ? NS_EVENT_STATE_OUTOFRANGE
+               : NS_EVENT_STATE_INRANGE;
+  }
+
   return state;
 }
 
@@ -3245,6 +3454,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_TEL:
       case NS_FORM_INPUT_URL:
       case NS_FORM_INPUT_HIDDEN:
+      case NS_FORM_INPUT_NUMBER:
         {
           SetValueInternal(inputState->GetValue(), false, true);
           break;
@@ -3469,6 +3679,7 @@ nsHTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -3512,6 +3723,7 @@ nsHTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -3547,6 +3759,7 @@ nsHTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -3561,7 +3774,81 @@ nsHTMLInputElement::DoesRequiredApply() const
 bool
 nsHTMLInputElement::DoesPatternApply() const
 {
+  // TODO: temporary until bug 635240 is fixed.
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    return false;
+  }
+
   return IsSingleLineTextControl(false);
+}
+
+bool
+nsHTMLInputElement::DoesMinMaxApply() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_NUMBER:
+    // TODO:
+    // case NS_FORM_INPUT_RANGE:
+    // All date/time types.
+      return true;
+#ifdef DEBUG
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
+      return false;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      return false;
+#else // DEBUG
+    default:
+      return false;
+#endif // DEBUG
+  }
+}
+
+double
+nsHTMLInputElement::GetStep() const
+{
+  NS_ASSERTION(mType == NS_FORM_INPUT_NUMBER,
+               "We can't be there if type!=number!");
+
+  // NOTE: should be defaultStep * defaultStepScaleFactor,
+  // which is 1 for type=number.
+  double step = 1;
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::step)) {
+    nsAutoString stepStr;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::step, stepStr);
+
+    if (stepStr.LowerCaseEqualsLiteral("any")) {
+      // The element can't suffer from step mismatch if there is no step.
+      return kStepAny;
+    }
+
+    PRInt32 ec;
+    // NOTE: should be multiplied by defaultStepScaleFactor,
+    // which is 1 for type=number.
+    step = stepStr.ToDouble(&ec);
+    if (NS_FAILED(ec) || step <= 0) {
+      // NOTE: we should use defaultStep * defaultStepScaleFactor,
+      // which is 1 for type=number.
+      step = 1;
+    }
+  }
+
+  return step;
 }
 
 // nsIConstraintValidation
@@ -3694,6 +3981,76 @@ nsHTMLInputElement::HasPatternMismatch() const
   return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }
 
+bool
+nsHTMLInputElement::IsRangeOverflow() const
+{
+  nsAutoString maxStr;
+  if (!DoesMinMaxApply() ||
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr)) {
+    return false;
+  }
+
+  PRInt32 ec;
+  double max = maxStr.ToDouble(&ec);
+  if (NS_FAILED(ec)) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  // value can be NaN when value="".
+  if (value != value) {
+    return false;
+  }
+
+  return value > max;
+}
+
+bool
+nsHTMLInputElement::IsRangeUnderflow() const
+{
+  nsAutoString minStr;
+  if (!DoesMinMaxApply() ||
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr)) {
+    return false;
+  }
+
+  PRInt32 ec;
+  double min = minStr.ToDouble(&ec);
+  if (NS_FAILED(ec)) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  // value can be NaN when value="".
+  if (value != value) {
+    return false;
+  }
+
+  return value < min;
+}
+
+bool
+nsHTMLInputElement::HasStepMismatch() const
+{
+  if (!DoesStepApply()) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  if (value != value) {
+    // The element can't suffer from step mismatch if it's value isn't a number.
+    return false;
+  }
+
+  double step = GetStep();
+  if (step == kStepAny) {
+    return false;
+  }
+
+  // Value has to be an integral multiple of step.
+  return fmod(value - GetStepBase(), step) != 0;
+}
+
 void
 nsHTMLInputElement::UpdateTooLongValidityState()
 {
@@ -3773,6 +4130,24 @@ nsHTMLInputElement::UpdatePatternMismatchValidityState()
 }
 
 void
+nsHTMLInputElement::UpdateRangeOverflowValidityState()
+{
+  SetValidityState(VALIDITY_STATE_RANGE_OVERFLOW, IsRangeOverflow());
+}
+
+void
+nsHTMLInputElement::UpdateRangeUnderflowValidityState()
+{
+  SetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW, IsRangeUnderflow());
+}
+
+void
+nsHTMLInputElement::UpdateStepMismatchValidityState()
+{
+  SetValidityState(VALIDITY_STATE_STEP_MISMATCH, HasStepMismatch());
+}
+
+void
 nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
 {
   bool validBefore = IsValid();
@@ -3780,6 +4155,9 @@ nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
   UpdateValueMissingValidityState();
   UpdateTypeMismatchValidityState();
   UpdatePatternMismatchValidityState();
+  UpdateRangeOverflowValidityState();
+  UpdateRangeUnderflowValidityState();
+  UpdateStepMismatchValidityState();
 
   if (validBefore != IsValid()) {
     UpdateState(aNotify);
@@ -3884,6 +4262,95 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
                                                    "FormValidationPatternMismatchWithTitle",
                                                    params, message);
       }
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_RANGE_OVERFLOW:
+    {
+      nsXPIDLString message;
+      nsAutoString maxStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+
+      // We want to show the double as parsed so we parse it and change maxStr.
+      PRInt32 ec;
+      double max = maxStr.ToDouble(&ec);
+      NS_ASSERTION(NS_SUCCEEDED(ec), "max must be a number at this point!");
+      maxStr.Truncate();
+      maxStr.AppendFloat(max);
+
+      const PRUnichar* params[] = { maxStr.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "FormValidationRangeOverflow",
+                                                 params, message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_RANGE_UNDERFLOW:
+    {
+      nsXPIDLString message;
+      nsAutoString minStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+
+      // We want to show the double as parsed so we parse it and change minStr.
+      PRInt32 ec;
+      double min = minStr.ToDouble(&ec);
+      NS_ASSERTION(NS_SUCCEEDED(ec), "min must be a number at this point!");
+      minStr.Truncate();
+      minStr.AppendFloat(min);
+
+      const PRUnichar* params[] = { minStr.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "FormValidationRangeUnderflow",
+                                                 params, message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_STEP_MISMATCH:
+    {
+      nsXPIDLString message;
+
+      double value = GetValueAsDouble();
+      NS_ASSERTION(value == value, "The element can't suffer from a step "
+                                   "mismatch if its value is NaN");
+
+      double step = GetStep();
+      NS_ASSERTION(step != kStepAny, "The element can't suffer from a step "
+                                     "mismatch if @step is 'any'");
+
+      PRInt32 ec;
+      nsAutoString minStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+      double min = minStr.ToDouble(&ec);
+      if (NS_FAILED(ec)) {
+        min = 0.f;
+      }
+
+      double valueLow = value - fmod(value - min, step);
+      double valueHigh = value + step - fmod(value - min, step);
+
+      nsAutoString maxStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+      double max = maxStr.ToDouble(&ec);
+
+      if (NS_FAILED(ec) || valueHigh <= max) {
+        nsAutoString valueLowStr, valueHighStr;
+        valueLowStr.AppendFloat(valueLow);
+        valueHighStr.AppendFloat(valueHigh);
+
+        const PRUnichar* params[] = { valueLowStr.get(), valueHighStr.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "FormValidationStepMismatch",
+                                                   params, message);
+      } else {
+        nsAutoString valueLowStr;
+        valueLowStr.AppendFloat(valueLow);
+
+        const PRUnichar* params[] = { valueLowStr.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "FormValidationStepMismatchWithoutMax",
+                                                   params, message);
+      }
+
       aValidationMessage = message;
       break;
     }
@@ -4313,3 +4780,33 @@ nsHTMLInputElement::UpdateValidityUIBits(bool aIsFocused)
   }
 }
 
+void
+nsHTMLInputElement::UpdateHasRange()
+{
+  mHasRange = false;
+
+  if (mType != NS_FORM_INPUT_NUMBER) {
+    return;
+  }
+
+  // <input type=number> has a range if min or max is a valid float number.
+  nsAutoString tmpStr;
+
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::min, tmpStr)) {
+    PRInt32 ec;
+    tmpStr.ToDouble(&ec);
+    if (NS_SUCCEEDED(ec)) {
+      mHasRange = true;
+      return;
+    }
+  }
+
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::max, tmpStr)) {
+    PRInt32 ec;
+    tmpStr.ToDouble(&ec);
+    if (NS_SUCCEEDED(ec)) {
+      mHasRange = true;
+      return;
+    }
+  }
+}

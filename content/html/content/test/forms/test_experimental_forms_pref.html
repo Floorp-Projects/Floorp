@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=764481
+-->
+<head>
+  <title>Test for Bug 764481</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=764481">Mozilla Bug 764481</a>
+<p id="display"></p>
+<div id="content" style="display: none" >
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+  var input = document.createElement("input");
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", false]]}, function() {
+    input.type = "number";
+    is(input.type, "text", "input type shouldn't be number when the experimental forms are disabled");
+    is(input.getAttribute('type'), "number", "input 'type' attribute should not change");
+
+    SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",true]]}, function() {
+      // Change the type of input to text and then back to number, 
+      // so that nsHTMLInputElement::ParseAttribute gets called with the pref enabled.
+      input.type = "text";
+      input.type = "number";
+      is(input.type, "number", "input type should be number when the experimental forms are enabled");
+      is(input.getAttribute('type'), "number", "input 'type' attribute should not change");
+    
+      SimpleTest.finish();
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>

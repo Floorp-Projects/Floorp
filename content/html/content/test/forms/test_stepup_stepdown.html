@@ -1,0 +1,353 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=636627
+-->
+<head>
+  <title>Test for Bug 636627</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=636627">Mozilla Bug 636627</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 636627 **/
+
+/**
+ * This test is testing stepDown() and stepUp().
+ */
+
+function checkPresence()
+{
+  var input = document.createElement('input');
+  is('stepDown' in input, true, 'stepDown() should be an input function');
+  is('stepUp' in input, true, 'stepUp() should be an input function');
+}
+
+function checkAvailability()
+{
+  var testData =
+  [
+    ["text", false],
+    ["password", false],
+    ["search", false],
+    ["telephone", false],
+    ["email", false],
+    ["url", false],
+    ["hidden", false],
+    ["checkbox", false],
+    ["radio", false],
+    ["file", false],
+    ["submit", false],
+    ["image", false],
+    ["reset", false],
+    ["button", false],
+    ["number", true],
+    // The next types have not been implemented but will fallback to "text"
+    // which has the same value.
+    ["color", false],
+  ];
+
+  var todoList =
+  [
+    ["datetime", true],
+    ["date", true],
+    ["month", true],
+    ["week", true],
+    ["time", true],
+    ["datetime-local", true],
+    ["range", true],
+  ];
+
+  var element = document.createElement("input");
+  element.setAttribute('value', '0');
+
+  for each (data in testData) {
+    var exceptionCaught = false;
+    element.type = data[0];
+    try {
+      element.stepDown();
+    } catch (e) {
+      exceptionCaught = true;
+    }
+    is(exceptionCaught, !data[1], "stepDown() availability is not correct");
+
+    exceptionCaught = false;
+    try {
+      element.stepUp();
+    } catch (e) {
+      exceptionCaught = true;
+    }
+    is(exceptionCaught, !data[1], "stepUp() availability is not correct");
+  }
+
+  for each (data in todoList) {
+    var exceptionCaught = false;
+    element.type = data[0];
+    try {
+      element.stepDown();
+    } catch (e) {
+      exceptionCaught = true;
+    }
+    todo_is(exceptionCaught, !data[1],
+            "stepDown() availability is not correct");
+
+    exceptionCaught = false;
+    try {
+      element.stepUp();
+    } catch (e) {
+      exceptionCaught = true;
+    }
+    todo_is(exceptionCaught, !data[1],
+            "stepUp() availability is not correct");
+  }
+}
+
+function checkStepDownForNumber()
+{
+  // This testData is very similar to the one in checkStepUpForNumber
+  // with some changes relative to stepDown.
+  var testData = [
+  /* Initial value | step | min | max | stepDown arg | final value | exception */
+    // Regular case.
+    [ '1',   null,  null,  null,  null, '0',    false ],
+    // Argument testing.
+    [ '1',   null,  null,  null,  1,    '0',    false ],
+    [ '9',   null,  null,  null,  9,    '0',    false ],
+    [ '1',   null,  null,  null,  -1,   '2',    false ],
+    [ '1',   null,  null,  null,  0,    '1',    false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '1',   null,  null,  null,  1.1,  '0',    false ],
+    // With step values.
+    [ '1',  '0.5',  null,  null,  null, '0.5',  false ],
+    [ null, '0.5',  null,  null,  null, '0',    false ],
+    [ null, '0.5',  null,  null,  null, '-0.5', false ],
+    [ '1',  '0.25', null,  null,  4,    '0',    false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '1',  '0',    null,  null,  null, '0',    false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '1',  '-1',   null,  null,  null, '0',    false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '1',  'foo',  null,  null,  null, '0',    false ],
+    // Min values testing.
+    [ '1',  '1',    'foo', null,  null, '0',    false ],
+    [ '1',  null,   '-10', null,  null, '0',    false ],
+    [ '1',  null,   '0',   null,  null, '0',    false ],
+    [ '1',  null,   '10',  null,  null, '1',    false ],
+    [ '1',  null,   '2',   null,  null, '1',    false ],
+    [ '1',  null,   '1',   null,  null, '1',    false ],
+    // Max values testing.
+    [ '1',  '1',    null,  'foo', null, '0',    false ],
+    [ '1',  null,   null,  '10',  null, '0',    false ],
+    [ '1',  null,   null,  '0',   null, '0',    false ],
+    [ '1',  null,   null,  '-10', null, '-10',  false ],
+    [ '1',  null,   null,  '1',   null, '0',    false ],
+    [ '5',  null,   null,  '3',   '3',  '2',    false ],
+    [ '5',  '2',    null,  '3',   '2',  '2',    false ],
+    [ '-3', '5',    '-10', '-3',  null, '-5',   false ],
+    // Step mismatch.
+    [ '1',  '2',    '-2',  null,  null, '0',    false ],
+    [ '3',  '2',    '-2',  null,  null, '2',    false ],
+    [ '3',  '2',    '-2',  null,  '2',  '0',    false ],
+    [ '3',  '2',    '-2',  null,  '-2', '6',    false ],
+    [ '1',  '2',    null,  null,  null, '0',    false ],
+    [ '1',  '2',    '-2',  null,  null, '0',    false ],
+    [ '1',  '3',    null,  null,  null, '0',    false ],
+    [ '2',  '3',    null,  null,  null, '0',    false ],
+    [ '2',  '3',    '1',   null,  null, '1',    false ],
+    [ '5',  '3',    '1',   null,  null, '4',    false ],
+    [ '3',  '2',    null,  null,  null, '2',    false ],
+    [ '5',  '2',    null,  null,  null, '4',    false ],
+    [ '6',  '2',   '1',    null,  null, '5',    false ],
+    [ '8',  '3',   '1',    null,  null, '7',    false ],
+    [ '9',  '2',   '-10',  null,  null, '8',    false ],
+    [ '7',  '3',   '-10',  null,  null, '5',    false ],
+    [ '-2', '3',   '-10',  null,  null, '-4',   false ],
+    // Clamping.
+    [ '0',  '2',    '-1',  null,  null, '-1',   false ],
+    [ '10', '2',    '0',   '4',   '10', '0',    false ],
+    [ '10', '2',    '0',   '4',   '5',  '0',    false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',     false ],
+    // With step = 'any'.
+    [ '0',  'any',  null,  null,  1,    null,   true ],
+    [ '0',  'ANY',  null,  null,  1,    null,   true ],
+    [ '0',  'AnY',  null,  null,  1,    null,   true ],
+    [ '0',  'aNy',  null,  null,  1,    null,   true ],
+  ];
+
+  var element = document.createElement("input");
+  element.type = 'number';
+  for each (var data in testData) {
+    if (data[0] != null) {
+      element.value = data[0];
+    }
+
+    if (data[1] != null) {
+      element.step = data[1];
+    }
+
+    if (data[2] != null) {
+      element.min = data[2];
+    }
+
+    if (data[3] != null) {
+      element.max = data[3];
+    }
+
+    var exceptionCaught = false;
+    try {
+      if (data[4] != null) {
+        element.stepDown(data[4]);
+      } else {
+        element.stepDown();
+      }
+
+      is(element.value, data[5], "The value should be " + data[5]);
+    } catch (e) {
+      exceptionCaught = true;
+      is(element.value, data[0], e.name + "The value should not have changed");
+      is(e.name, 'InvalidStateError',
+         "It should be a InvalidStateError exception.");
+    } finally {
+      is(exceptionCaught, data[6], "exception status should be " + data[6]);
+    }
+
+    element.removeAttribute('step');
+    element.removeAttribute('min');
+    element.removeAttribute('max');
+  }
+}
+
+function checkStepUpForNumber()
+{
+  // This testData is very similar to the one in checkStepDownForNumber
+  // with some changes relative to stepUp.
+  var testData = [
+  /* Initial value | step | min | max | stepUp arg | final value | exception */
+    // Regular case.
+    [ '1',   null,  null,  null,  null, '2',   false ],
+    // Argument testing.
+    [ '1',   null,  null,  null,  1,    '2',   false ],
+    [ '9',   null,  null,  null,  9,    '18',  false ],
+    [ '1',   null,  null,  null,  -1,   '0',   false ],
+    [ '1',   null,  null,  null,  0,    '1',   false ],
+    // Float values are rounded to integer (1.1 -> 1).
+    [ '1',   null,  null,  null,  1.1,  '2',   false ],
+    // With step values.
+    [ '1',  '0.5',  null,  null,  null, '1.5', false ],
+    [ null, '0.5',  null,  null,  null, '2',   false ],
+    [ null, '0.5',  null,  null,  null, '2.5', false ],
+    [ '1',  '0.25', null,  null,  4,    '2',   false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '1',  '0',    null,  null,  null, '2',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '1',  '-1',   null,  null,  null, '2',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '1',  'foo',  null,  null,  null, '2',   false ],
+    // Min values testing.
+    [ '1',  '1',    'foo', null,  null, '2',   false ],
+    [ '1',  null,   '-10', null,  null, '2',   false ],
+    [ '1',  null,   '0',   null,  null, '2',   false ],
+    [ '1',  null,   '10',  null,  null, '10',  false ],
+    [ '1',  null,   '2',   null,  null, '2',   false ],
+    [ '1',  null,   '1',   null,  null, '2',   false ],
+    [ '0',  null,   '4',   null,  '5',  '5',   false ],
+    [ '0',  '2',    '5',   null,  '3',  '5',   false ],
+    // Max values testing.
+    [ '1',  '1',    null,  'foo', null, '2',   false ],
+    [ '1',  null,   null,  '10',  null, '2',   false ],
+    [ '1',  null,   null,  '0',   null, '1',   false ],
+    [ '1',  null,   null,  '-10', null, '1',   false ],
+    [ '1',  null,   null,  '1',   null, '1',   false ],
+    [ '-3', '5',    '-10', '-3',  null, '-3',  false ],
+    // Step mismatch.
+    [ '1',  '2',    '0',   null,  null, '2',   false ],
+    [ '1',  '2',    '0',   null,  '2',  '4',   false ],
+    [ '8',  '2',    null,  '9',   null, '8',   false ],
+    [ '-3', '2',    null,  null,  null, '-2',  false ],
+    [ '9',  '3',    '-10', null,  null, '11',  false ],
+    [ '7',  '3',    '-10', null,  null, '8',   false ],
+    [ '7',  '3',    '5',   null,  null, '8',   false ],
+    [ '9',  '4',    '3',   null,  null, '11',  false ],
+    [ '-2', '3',    '-6',  null,  null, '0',   false ],
+    [ '7',  '3',    '6',   null,  null, '9',   false ],
+    // Clamping.
+    [ '1',  '2',    '0',  '3',   null,  '2',   false ],
+    [ '0',  '5',    '1',  '8',   '10',  '6',   false ],
+    [ '-9', '3',    '-8', '-1',  '5',   '-2',  false ],
+    [ '-9', '3',    '8',  '15',  '15',  '14',  false ],
+    [ '-1', '3',    '-1', '4',   '3',   '2',   false ],
+    [ '-3', '2',    null,  '-2',  null, '-2',  false ],
+    [ '-3', '2',    null,  '-1',  null, '-2',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '',    false ],
+    // With step = 'any'.
+    [ '0',  'any',  null,  null,  1,    null,  true ],
+    [ '0',  'ANY',  null,  null,  1,    null,  true ],
+    [ '0',  'AnY',  null,  null,  1,    null,  true ],
+    [ '0',  'aNy',  null,  null,  1,    null,  true ],
+  ];
+
+  var element = document.createElement("input");
+  element.type = 'number';
+  for each (var data in testData) {
+    if (data[0] != null) {
+      element.value = data[0];
+    }
+
+    if (data[1] != null) {
+      element.step = data[1];
+    }
+
+    if (data[2] != null) {
+      element.min = data[2];
+    }
+
+    if (data[3] != null) {
+      element.max = data[3];
+    }
+
+    var exceptionCaught = false;
+    try {
+      if (data[4] != null) {
+        element.stepUp(data[4]);
+      } else {
+        element.stepUp();
+      }
+
+      is(element.value, data[5], "The value should be " + data[5]);
+    } catch (e) {
+      exceptionCaught = true;
+      is(element.value, data[0], e.name + "The value should not have changed");
+      is(e.name, 'InvalidStateError',
+         "It should be a InvalidStateError exception.");
+    } finally {
+      is(exceptionCaught, data[6], "exception status should be " + data[6]);
+    }
+
+    element.removeAttribute('step');
+    element.removeAttribute('min');
+    element.removeAttribute('max');
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+
+checkPresence();
+checkAvailability();
+checkStepDownForNumber();
+checkStepUpForNumber();
+
+SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
