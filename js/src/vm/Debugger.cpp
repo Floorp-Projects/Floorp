@@ -4413,7 +4413,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
 
         /* This can trigger resolve hooks. */
         ErrorCopier ec(ac, dbg->toJSObject());
-        JSProperty *prop = NULL;
+        RootedShape prop(cx);
         RootedObject pobj(cx);
         for (; env && !prop; env = env->enclosingScope()) {
             if (!env->lookupGeneric(cx, id, &pobj, &prop))
