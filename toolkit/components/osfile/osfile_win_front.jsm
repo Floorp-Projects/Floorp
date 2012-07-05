@@ -454,11 +454,229 @@
      };
 
      /**
+      * A global value used to receive data during a
+      * |FindFirstFile|/|FindNextFile|.
+      */
+     let gFindData = new OS.Shared.Type.FindData.implementation();
+     let gFindDataPtr = gFindData.address();
+
+     /**
+      * A global value used to receive data during time conversions.
+      */
+     let gSystemTime = new OS.Shared.Type.SystemTime.implementation();
+     let gSystemTimePtr = gSystemTime.address();
+
+     /**
+      * Utility function: convert a FILETIME to a JavaScript Date.
+      */
+     let FILETIME_to_Date = function FILETIME_to_Date(fileTime) {
+       LOG("fileTimeToDate:", fileTime);
+       if (fileTime == null) {
+         throw new TypeError("Expecting a non-null filetime");
+       }
+       LOG("fileTimeToDate normalized:", fileTime);
+       throw_on_zero("FILETIME_to_Date", WinFile.FileTimeToSystemTime(fileTime.address(),
+                                                  gSystemTimePtr));
+       return new Date(gSystemTime.wYear, gSystemTime.wMonth,
+                       gSystemTime.wDay, gSystemTime.wHour,
+                       gSystemTime.wMinute, gSystemTime.wSecond,
+                       gSystemTime.wMilliSeconds);
+     };
+
+     /**
+      * Iterate on one directory.
+      *
+      * This iterator will not enter subdirectories.
+      *
+      * @param {string} path The directory upon which to iterate.
+      * @param {*=} options Ignored in this implementation.
+      *
+      * @throws {File.Error} If |path| does not represent a directory or
+      * if the directory cannot be iterated.
+      * @constructor
+      */
+     File.DirectoryIterator = function DirectoryIterator(path, options) {
+       if (options && options.winPattern) {
+         this._pattern = path + "\\" + options.winPattern;
+       } else {
+         this._pattern = path + "\\*";
+       }
+       this._handle = null;
+       this._path = path;
+       this._started = false;
+     };
+     File.DirectoryIterator.prototype = {
+       __iterator__: function __iterator__() {
+         return this;
+       },
+
+       /**
+        * Fetch the next entry in the directory.
+        *
+        * @return null If we have reached the end of the directory.
+        */
+       _next: function _next() {
+         // Iterator is not fully initialized yet. Finish
+         // initialization.
+         if (!this._started) {
+            this._started = true;
+            this._handle = WinFile.FindFirstFile(this._pattern, gFindDataPtr);
+            if (this._handle == null) {
+              let error = ctypes.winLastError;
+              if (error == Const.ERROR_FILE_NOT_FOUND) {
+                this.close();
+                return null;
+              } else {
+                throw new File.Error("iter (FindFirstFile)", error);
+              }
+            }
+            return gFindData;
+         }
+
+         // We have closed this iterator already.
+         if (!this._handle) {
+           return null;
+         }
+
+         if (WinFile.FindNextFile(this._handle, gFindDataPtr)) {
+           return gFindData;
+         } else {
+           let error = ctypes.winLastError;
+           this.close();
+           if (error == Const.ERROR_NO_MORE_FILES) {
+              return null;
+           } else {
+              throw new File.Error("iter (FindNextFile)", error);
+           }
+         }
+       },
+       /**
+        * Return the next entry in the directory, if any such entry is
+        * available.
+        *
+        * Skip special directories "." and "..".
+        *
+        * @return {File.Entry} The next entry in the directory.
+        * @throws {StopIteration} Once all files in the directory have been
+        * encountered.
+        */
+       next: function next() {
+         // FIXME: If we start supporting "\\?\"-prefixed paths, do not forget
+         // that "." and ".." are absolutely normal file names if _path starts
+         // with such prefix
+         for (let entry = this._next(); entry != null; entry = this._next()) {
+           let name = entry.cFileName.readString();
+           if (name == "." || name == "..") {
+             continue;
+           }
+           return new File.DirectoryIterator.Entry(entry, this._path);
+         }
+         throw StopIteration;
+       },
+       close: function close() {
+         if (!this._handle) {
+           return;
+         }
+         WinFile.FindClose(this._handle);
+         this._handle = null;
+       }
+     };
+     File.DirectoryIterator.Entry = function Entry(win_entry, parent) {
+       // Copy the relevant part of |win_entry| to ensure that
+       // our data is not overwritten prematurely.
+       if (!win_entry.dwFileAttributes) {
+         throw new TypeError();
+       }
+       this._dwFileAttributes = win_entry.dwFileAttributes;
+       this._name = win_entry.cFileName.readString();
+       if (!this._name) {
+         throw new TypeError("Empty name");
+       }
+       this._ftCreationTime = win_entry.ftCreationTime;
+       if (!win_entry.ftCreationTime) {
+         throw new TypeError();
+       }
+       this._ftLastAccessTime = win_entry.ftLastAccessTime;
+       if (!win_entry.ftLastAccessTime) {
+         throw new TypeError();
+       }
+       this._ftLastWriteTime = win_entry.ftLastWriteTime;
+       if (!win_entry.ftLastWriteTime) {
+         throw new TypeError();
+       }
+       if (!parent) {
+         throw new TypeError("Empty parent");
+       }
+       this._parent = parent;
+     };
+     File.DirectoryIterator.Entry.prototype = {
+       /**
+        * |true| if the entry is a directory, |false| otherwise
+        */
+       get isDir() {
+         return this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY;
+       },
+       /**
+        * |true| if the entry is a symbolic link, |false| otherwise
+        */
+       get isLink() {
+         return this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT;
+       },
+       /**
+        * The name of the entry.
+        * @type {string}
+        */
+       get name() {
+         return this._name;
+       },
+       /**
+        * The creation time of this file.
+        * @type {Date}
+        */
+       get winCreationTime() {
+         let date = FILETIME_to_Date(this._ftCreationTime);
+         delete this.winCreationTime;
+         Object.defineProperty(this, "winCreationTime", {value: date});
+         return date;
+       },
+       /**
+        * The last modification time of this file.
+        * @type {Date}
+        */
+       get winLastWriteTime() {
+         let date = FILETIME_to_Date(this._ftLastWriteTime);
+         delete this.winLastWriteTime;
+         Object.defineProperty(this, "winLastWriteTime", {value: date});
+         return date;
+       },
+       /**
+        * The last access time of this file.
+        * @type {Date}
+        */
+       get winLastAccessTime() {
+         let date = FILETIME_to_Date(this._ftLastAccessTime);
+         delete this.winLastAccessTime;
+         Object.defineProperty(this, "winLastAccessTime", {value: date});
+         return date;
+       },
+       /**
+        * The full path to the entry.
+        * @type {string}
+        */
+       get path() {
+         delete this.path;
+         let path = OS.Win.Path.join(this._parent, this.name);
+         Object.defineProperty(this, "path", {value: path});
+         return path;
+       }
+     };
+
+     /**
       * Get/set the current directory.
       */
      Object.defineProperty(File, "curDir", {
          set: function(path) {
-	   throw_on_zero("set curDir",
+           throw_on_zero("set curDir",
              WinFile.SetCurrentDirectory(path));
          },
          get: function() {
