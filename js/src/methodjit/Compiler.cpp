@@ -3762,12 +3762,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     if (a != outer) {
         JS_ASSERT(!debugMode());
-        if (Probes::callTrackingActive(cx)) {
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
-        } else {
-            profilingPopHelper();
-        }
+        profilingPopHelper();
 
         /*
          * Returning from an inlined script. The checks we do for inlineability
@@ -3809,12 +3804,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::Epilogue, REJOIN_NONE);
     } else {
-        if (Probes::callTrackingActive(cx)) {
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
-        } else {
-            profilingPopHelper();
-        }
+        profilingPopHelper();
 
         if (script->function() && script->nesting()) {
             masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
@@ -3972,9 +3962,14 @@ mjit::Compiler::profilingPushHelper()
 void
 mjit::Compiler::profilingPopHelper()
 {
-    if (!cx->runtime->spsProfiler.enabled())
-        return;
-    masm.sub32(Imm32(1), AbsoluteAddress(cx->runtime->spsProfiler.size()));
+    if (Probes::callTrackingActive(cx) ||
+        cx->runtime->spsProfiler.slowAssertionsEnabled())
+    {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
+    } else if (cx->runtime->spsProfiler.enabled()) {
+        masm.sub32(Imm32(1), AbsoluteAddress(cx->runtime->spsProfiler.size()));
+    }
 }
 
 void

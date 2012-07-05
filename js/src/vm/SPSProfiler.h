@@ -97,11 +97,12 @@ class SPSProfiler
     ProfileEntry         *stack_;
     uint32_t             *size_;
     uint32_t             max_;
+    bool                 slowAssertions;
 
     static const char *allocProfileString(JSContext *cx, JSScript *script,
                                           JSFunction *function);
   public:
-    SPSProfiler() : stack_(NULL), size_(NULL), max_(0) {}
+    SPSProfiler() : stack_(NULL), size_(NULL), max_(0), slowAssertions(false) {}
     ~SPSProfiler();
 
     uint32_t *size() { return size_; }
@@ -109,6 +110,8 @@ class SPSProfiler
     ProfileEntry *stack() { return stack_; }
 
     bool enabled() { return stack_ != NULL; }
+    void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
+    bool slowAssertionsEnabled() { return slowAssertions; }
     bool enter(JSContext *cx, JSScript *script, JSFunction *maybeFun);
     void exit(JSContext *cx, JSScript *script, JSFunction *maybeFun);
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);
