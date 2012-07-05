@@ -327,6 +327,18 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     return NS_OK;
   }
 
+  // Don't evaluate special cases when evaluating the downloaded blocklist.
+  if (aDriverInfo.IsEmpty()) {
+    if (aFeature == FEATURE_WEBGL_OPENGL) {
+      if (mRenderer.Find("Adreno 200") != -1 ||
+          mRenderer.Find("Adreno 205") != -1)
+      {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        return NS_OK;
+      }
+    }
+  }
+
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
 
