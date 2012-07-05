@@ -518,6 +518,15 @@ uniform sampler2D uCrTexture;\n\
 void main()\n\
 {\n\
 vec4 color;\n\
+/*\n\
+* Some older versions of the Tegra 2 android driver have a bug\n\
+* where arithmetic ops on a texture read are just ignored.  So,\n\
+* if the below was |cb = texture2D(...).r - 0.5|, the "- 0.5" was\n\
+* just being ignored/skipped.  This, of course, lead to crappy\n\
+* rendering -- see bug 765150.  Doing them separately like below\n\
+* makes it all OK.  We don't know if this is special to constants,\n\
+* special to 0.5, special to addition/subtraction, etc.\n\
+*/\n\
 float y = texture2D(uYTexture, vTexCoord).r;\n\
 float cb = texture2D(uCbTexture, vTexCoord).r;\n\
 float cr = texture2D(uCrTexture, vTexCoord).r;\n\
@@ -528,12 +537,9 @@ color.r = y + cr * 1.596;\n\
 color.g = y - 0.813 * cr - 0.391 * cb;\n\
 color.b = y + cb * 2.018;\n\
 color.a = 1.0;\n\
-/*\n\
 float mask = 1.0;\n\
 \n\
 gl_FragColor = color * uLayerOpacity * mask;\n\
-*/\n\
-gl_FragColor = color;\n\
 }\n\
 ";
 
@@ -564,6 +570,15 @@ uniform sampler2D uCrTexture;\n\
 void main()\n\
 {\n\
 vec4 color;\n\
+/*\n\
+* Some older versions of the Tegra 2 android driver have a bug\n\
+* where arithmetic ops on a texture read are just ignored.  So,\n\
+* if the below was |cb = texture2D(...).r - 0.5|, the "- 0.5" was\n\
+* just being ignored/skipped.  This, of course, lead to crappy\n\
+* rendering -- see bug 765150.  Doing them separately like below\n\
+* makes it all OK.  We don't know if this is special to constants,\n\
+* special to 0.5, special to addition/subtraction, etc.\n\
+*/\n\
 float y = texture2D(uYTexture, vTexCoord).r;\n\
 float cb = texture2D(uCbTexture, vTexCoord).r;\n\
 float cr = texture2D(uCrTexture, vTexCoord).r;\n\
@@ -574,12 +589,9 @@ color.r = y + cr * 1.596;\n\
 color.g = y - 0.813 * cr - 0.391 * cb;\n\
 color.b = y + cb * 2.018;\n\
 color.a = 1.0;\n\
-/*\n\
 float mask = texture2D(uMaskTexture, vMaskCoord).r;\n\
 \n\
 gl_FragColor = color * uLayerOpacity * mask;\n\
-*/\n\
-gl_FragColor = color;\n\
 }\n\
 ";
 
