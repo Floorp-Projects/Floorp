@@ -376,7 +376,7 @@ AitcClient.prototype = {
   // Set values from X-Backoff and Retry-After headers, if present.
   _setBackoff: function _setBackoff(req) {
     let backoff = 0;
-    let successfulStatusCodes = [200, 201, 204, 304];
+    let successfulStatusCodes = [200, 201, 204, 304, 401];
 
     let val;
     if (req.response.headers["Retry-After"]) {
@@ -387,7 +387,7 @@ AitcClient.prototype = {
       val = req.response.headers["X-Backoff"];
       backoff = parseInt(val, 10);
       this._log.warn("X-Backoff header was seen: " + val);
-    } else if (successfulStatusCodes.indexOf(req.response.status) === -1) {
+    } else if (statusCodesWithoutBackoff.indexOf(req.response.status) === -1) {
       // Bad status code.
       this._consecutiveFailures++;
       if (this._consecutiveFailures === this._maxFailures) {
