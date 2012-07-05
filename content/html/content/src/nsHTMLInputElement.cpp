@@ -939,7 +939,14 @@ nsHTMLInputElement::SetWidth(PRUint32 aWidth)
 NS_IMETHODIMP
 nsHTMLInputElement::GetValue(nsAString& aValue)
 {
-  return GetValueInternal(aValue);
+  nsresult rv = GetValueInternal(aValue);
+
+  // Don't return non-sanitized value for number inputs.
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    SanitizeValue(aValue);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -2073,6 +2080,12 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    // In number inputs we can't allow the user to set an invalid value.
+    if (mType == NS_FORM_INPUT_NUMBER) {
+      nsAutoString aValue;
+      GetValueInternal(aValue);
+      SetValueInternal(aValue, false, false);
+    }
     FireChangeEventIfNeeded();
   }
 
