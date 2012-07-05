@@ -385,10 +385,10 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
         return true;
     }
 
-    JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, obj, &obj, &obj2, &prop))
+    RootedShape shape(cx);
+    if (!FindPropertyHelper(cx, name, true, obj, &obj, &obj2, &shape))
         return false;
-    if (!prop) {
+    if (!shape) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
         JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
         if (op2 == JSOP_TYPEOF) {
@@ -401,13 +401,12 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
         return false;
     }
 
-    /* Take the slow path if prop was not found in a native object. */
+    /* Take the slow path if shape was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
         Rooted<jsid> id(cx, NameToId(name));
         if (!obj->getGeneric(cx, id, vp))
             return false;
     } else {
-        Shape *shape = (Shape *)prop;
         Rooted<JSObject*> normalized(cx, obj);
         if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
             normalized = &normalized->asWith().object();
@@ -424,7 +423,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
     JS_ASSERT(varobj->isVarObj());
     JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
-    JSProperty *prop;
+    RootedShape prop(cx);
     RootedObject obj2(cx);
     if (!varobj->lookupProperty(cx, dn, &obj2, &prop))
         return false;
