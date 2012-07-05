@@ -1228,7 +1228,7 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
         check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
                                  useRegister(ins->length()));
     }
-    return assignSnapshot(check) && add(check, ins);
+    return assignSnapshot(check, Bailout_BoundsCheck) && add(check, ins);
 }
 
 bool
@@ -1238,7 +1238,7 @@ LIRGenerator::visitBoundsCheckLower(MBoundsCheckLower *ins)
         return true;
 
     LInstruction *check = new LBoundsCheckLower(useRegister(ins->index()));
-    return assignSnapshot(check) && add(check, ins);
+    return assignSnapshot(check, Bailout_BoundsCheck) && add(check, ins);
 }
 
 bool

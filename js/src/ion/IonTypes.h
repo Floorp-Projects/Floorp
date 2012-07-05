@@ -81,7 +81,10 @@ enum BailoutKind
     Bailout_Monitor,
 
     // A bailout to trigger recompilation to inline calls when the script is hot.
-    Bailout_RecompileCheck
+    Bailout_RecompileCheck,
+
+    // A bailout triggered by a bounds-check failure.
+    Bailout_BoundsCheck
 };
 
 #ifdef DEBUG
