@@ -95,16 +95,6 @@ public:
 
   virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const;
 
-#ifdef XP_MACOSX
-  bool BitmapFallbackEnabled() const {
-    return mEnableBitmapFallback;
-  }
-  void SetBitmapFallbackEnabled(bool aVal) {
-    NS_NOTREACHED("don't think me need this any more"); // comment in bug 732429 if we do
-    mEnableBitmapFallback = aVal;
-  }
-#endif
-
   /**
    * Return true only if the height is unspecified (defaulting to 100%) or else
    * the height is explicitly set to a percentage value no greater than 100%.
@@ -135,9 +125,6 @@ protected:
   float mFullZoom;
 
   bool mViewportInitialized;
-#ifdef XP_MACOSX
-  bool mEnableBitmapFallback;
-#endif
   bool mIsRootContent;
 };
 
