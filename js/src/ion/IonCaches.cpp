@@ -291,8 +291,7 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
 bool
 js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp)
 {
-    JSScript *topScript = GetTopIonJSScript(cx);
-    IonScript *ion = topScript->ionScript();
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
     RootedPropertyName name(cx, cache.name());
@@ -302,7 +301,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     cache.getScriptedLocation(&script, &pc);
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, vp, topScript);
+    AutoDetectInvalidation adi(cx, vp, ion);
 
     // For now, just stop generating new stubs once we hit the stub count
     // limit. Once we can make calls from within generated stubs, a new call
@@ -763,13 +762,12 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &
 bool
 js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res)
 {
-    JSScript *script = GetTopIonJSScript(cx);
-    IonScript *ion = script->ionScript();
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheGetElement &cache = ion->getCache(cacheIndex).toGetElement();
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, res, script);
+    AutoDetectInvalidation adi(cx, res, ion);
 
     RootedId id(cx);
     if (!FetchElementId(cx, obj, idval, id.address(), res))
@@ -793,14 +791,14 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
         }
     }
 
-    JSScript *script_;
+    JSScript *script;
     jsbytecode *pc;
-    cache.getScriptedLocation(&script_, &pc);
+    cache.getScriptedLocation(&script, &pc);
 
     if (!GetElementOperation(cx, JSOp(*pc), ObjectValue(*obj), idval, res))
         return false;
 
-    types::TypeScript::Monitor(cx, script_, pc, *res);
+    types::TypeScript::Monitor(cx, script, pc, *res);
     return true;
 }
 
@@ -1123,8 +1121,7 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
 bool
 js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, Value *vp)
 {
-    JSScript *topScript = GetTopIonJSScript(cx);
-    IonScript *ion = topScript->ionScript();
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
 
     IonCacheName &cache = ion->getCache(cacheIndex).toName();
     RootedPropertyName name(cx, cache.name());
