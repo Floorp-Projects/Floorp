@@ -201,6 +201,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     Label interpret;
     Label exception;
     Label osr;
+    Label recompile;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -209,6 +210,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     // - 0x3: reflow barrier
     // - 0x4: monitor types
     // - 0x5: recompile to inline calls
+    // - 0x6: bounds check failure
 
     masm.cmpl(eax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
     masm.j(Assembler::LessThan, &interpret);
@@ -216,17 +218,28 @@ GenerateBailoutTail(MacroAssembler &masm)
 
     masm.cmpl(eax, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK));
     masm.j(Assembler::LessThan, &reflow);
+    masm.j(Assembler::Equal, &recompile);
+
+    // Bounds check failure.
+    {
+        masm.setupUnalignedABICall(0, edx);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
+
+        masm.testl(eax, eax);
+        masm.j(Assembler::Zero, &exception);
+        masm.jmp(&interpret);
+    }
 
     // Recompile to inline calls.
+    masm.bind(&recompile);
     {
         masm.setupUnalignedABICall(0, edx);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
 
         masm.testl(eax, eax);
         masm.j(Assembler::Zero, &exception);
+        masm.jmp(&interpret);
     }
-
-    masm.jmp(&interpret);
 
     masm.bind(&reflow);
     {
