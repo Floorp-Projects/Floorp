@@ -485,6 +485,11 @@ protected:
   bool DoStepDownStepUpApply() const { return DoesStepApply(); }
 
   /**
+   * Returns if valueAsNumber attribute applies for the current type.
+   */
+  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+
+  /**
    * Returns if the maxlength attribute applies for the current type.
    */
   bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }

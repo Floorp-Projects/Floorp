@@ -1068,6 +1068,25 @@ nsHTMLInputElement::SetValue(double aValue)
   SetValue(value);
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::GetValueAsNumber(double* aValueAsNumber)
+{
+  *aValueAsNumber = DoesValueAsNumberApply() ? GetValueAsDouble()
+                                             : std::numeric_limits<double>::quiet_NaN();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueAsNumber(double aValueAsNumber)
+{
+  if (!DoesValueAsNumberApply()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  SetValue(aValueAsNumber);
+  return NS_OK;
+}
+
 double
 nsHTMLInputElement::GetStepBase() const
 {
