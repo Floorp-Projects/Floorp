@@ -6058,16 +6058,45 @@ function WindowIsClosing()
  */
 function warnAboutClosingWindow() {
   // Popups aren't considered full browser windows.
-  if (!toolbar.visible)
+  let isPBWindow = gPrivateBrowsingUI.privateWindow;
+  if (!isPBWindow && !toolbar.visible)
     return gBrowser.warnAboutClosingTabs(true);
 
   // Figure out if there's at least one other browser window around.
   let e = Services.wm.getEnumerator("navigator:browser");
+  let otherPBWindowExists = false;
+  let warnAboutClosingTabs = false;
   while (e.hasMoreElements()) {
     let win = e.getNext();
-    if (win != window && win.toolbar.visible)
-      return gBrowser.warnAboutClosingTabs(true);
+    if (win != window) {
+      if (isPBWindow &&
+          ("gPrivateBrowsingUI" in win) &&
+          win.gPrivateBrowsingUI.privateWindow)
+        otherPBWindowExists = true;
+      if (win.toolbar.visible)
+        warnAboutClosingTabs = true;
+      // If the current window is not in private browsing mode we don't need to 
+      // look for other pb windows, we can leave the loop when finding the 
+      // first non-popup window. If however the current window is in private 
+      // browsing mode then we need at least one other pb and one non-popup 
+      // window to break out early.
+      if ((!isPBWindow || otherPBWindowExists) && warnAboutClosingTabs)
+        break;
+    }
   }
+
+  if (isPBWindow && !otherPBWindowExists) {
+    let exitingCanceled = Cc["@mozilla.org/supports-PRBool;1"].
+                          createInstance(Ci.nsISupportsPRBool);
+    exitingCanceled.data = false;
+    Services.obs.notifyObservers(exitingCanceled,
+                                 "last-pb-context-exiting",
+                                 null);
+    if (exitingCanceled.data)
+      return false;
+  }
+  if (warnAboutClosingTabs)
+    return gBrowser.warnAboutClosingTabs(true);
 
   let os = Services.obs;
 
