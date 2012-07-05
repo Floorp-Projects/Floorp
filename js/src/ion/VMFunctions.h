@@ -393,20 +393,18 @@ template <class R, class A1, class A2, class A3, class A4, class A5>
 class AutoDetectInvalidation
 {
     JSContext *cx_;
-    JSScript *script_;
-    IonScript *ion_;
+    IonScript *ionScript_;
     Value *rval_;
 
   public:
-    AutoDetectInvalidation(JSContext *cx, Value *rval, JSScript *script = NULL)
+    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = NULL)
       : cx_(cx),
-        script_(script ? script : GetTopIonJSScript(cx)),
-        ion_(script_->ionScript()),
+        ionScript_(ionScript ? ionScript : GetTopIonJSScript(cx)->ion),
         rval_(rval)
     { }
 
     ~AutoDetectInvalidation() {
-        if (script_->ion != ion_)
+        if (ionScript_->invalidated())
             cx_->runtime->setIonReturnOverride(*rval_);
     }
 };
