@@ -8590,7 +8590,7 @@ nsGlobalWindow::GetFuzzTimeMS()
   }
 
   if (randNum > MAX_IDLE_FUZZ_TIME_MS) {
-    (randNum) %= MAX_IDLE_FUZZ_TIME_MS;
+    randNum %= MAX_IDLE_FUZZ_TIME_MS;
   }
 
   return randNum;
@@ -8604,8 +8604,6 @@ nsGlobalWindow::ScheduleActiveTimerCallback()
   if (!mAddActiveEventFuzzTime) {
     return NotifyIdleObserversOfIdleActiveEvent();
   }
-
-  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
 
   MOZ_ASSERT(mIdleTimer);
   mIdleTimer->Cancel();
@@ -8801,8 +8799,6 @@ nsGlobalWindow::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
   if (removeElementIndex != mIdleCallbackIndex) {
     return NS_OK;
   }
-
-  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
 
   mIdleTimer->Cancel();
 
