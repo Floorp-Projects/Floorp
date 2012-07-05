@@ -72,15 +72,62 @@ function get_client_for_server(username, server) {
   return new AitcClient(token, new Preferences("services.aitc.client."));
 }
 
-// Check that a is less than b
+// Check that a is less than b.
 function do_check_lt(a, b) {
   do_check_true(a < b);
 }
 
+add_test(function test_401_responses() {
+  PREFS.set("client.backoff", "50");
+  PREFS.set("manager.putFreq", 50);
+  const app = get_mock_app();
+  const username = "123";
+  const premadeToken = {
+    id: "testtest",
+    key: "testtest",
+    endpoint: "http://localhost:8080/1.0/123",
+    uid: "uid",
+    duration: "5000"
+  };
+  let server = get_server_with_user(username);
+  server.mockStatus = {
+    code: 401,
+    method: "Unauthorized"
+  }
+  let client = get_client_for_server(username, server);
+  let manager = new AitcManager(function () {}, client, premadeToken);
+  // Assume first token is not out dated.
+  manager._lastTokenTime = Date.now();
+  let mockRequestCount = 0;
+  let clientFirstToken = null;
+
+  server.onRequest = function mockstatus () {
+    mockRequestCount++;
+    switch (mockRequestCount) {
+      case 1:
+        clientFirstToken = client.token;
+        // Switch to using mock 201s.
+        this.mockStatus = {
+          code: 201,
+          method: "Created"
+        };
+        break;
+      case 2:
+        // Check that the client obtained a different token.
+        do_check_neq(client.token.id, clientFirstToken.id);
+        do_check_neq(client.token.key, clientFirstToken.key);
+        server.stop(run_next_test);
+        break;
+    }
+  }
+
+  manager.appEvent("install", get_mock_app());
+});
+
 add_test(function test_client_exponential_backoff() {
   _("Test that the client is properly setting the backoff");
 
-  // Use prefs to speed up tests
+  // Use prefs to speed up tests.
   const putFreq = 50;
   const initialBackoff = 50;
   const username = "123";
@@ -90,7 +137,7 @@ add_test(function test_client_exponential_backoff() {
 
   let mockRequestCount = 0;
   let lastRequestTime = Date.now();
-  // Create server that returns failure codes
+  // Create server that returns failure codes.
   let server = get_server_with_user(username);
   server.mockStatus = {
     code: 399,
@@ -106,26 +153,26 @@ add_test(function test_client_exponential_backoff() {
     lastRequestTime = timeNow;
 
     // The time between the 3rd and 4th request should be atleast the
-    // initial backoff
+    // initial backoff.
     if (mockRequestCount === 4) {
       do_check_lt(initialBackoff, timeDiff);
     // The time beween the 4th and 5th request should be atleast double
-    // the intial backoff
+    // the intial backoff.
     } else if (mockRequestCount === 5) {
       do_check_lt(initialBackoff * 2, timeDiff);
       server.stop(run_next_test);
     }
   }
 
-  // Create dummy client and manager
+  // Create dummy client and manager.
   let client = get_client_for_server(username, server);
   let manager = new AitcManager(function() {
     CommonUtils.nextTick(gotManager);
   }, client);
 
   function gotManager() {
-    manager._lastToken = new Date();
-    // Create a bunch of dummy apps for the queue to cycle through
+    manager._lastTokenTime = Date.now();
+    // Create a bunch of dummy apps for the queue to cycle through.
     manager._pending._queue = [
       get_mock_queue_element(),
       get_mock_queue_element(),
