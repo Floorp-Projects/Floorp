@@ -9427,13 +9427,16 @@ Inputter.prototype.onKeyUp = function(ev) {
   }
 
   if (ev.keyCode === KeyEvent.DOM_VK_TAB && !ev.shiftKey) {
+    // Being able to complete 'nothing' is OK if there is some context, but
+    // when there is nothing on the command line it jsut looks bizarre.
+    var hasContents = (this.element.value.length > 0);
     // If the TAB keypress took the cursor from another field to this one,
     // then they get the keydown/keypress, and we get the keyup. In this
     // case we don't want to do any completion.
     // If the time of the keydown/keypress of TAB was close (i.e. within
     // 1 second) to the time of the keyup then we assume that we got them
     // both, and do the completion.
-    if (this.lastTabDownAt + 1000 > ev.timeStamp) {
+    if (hasContents && this.lastTabDownAt + 1000 > ev.timeStamp) {
       // It's possible for TAB to not change the input, in which case the
       // textChanged event will not fire, and the caret move will not be
       // processed. So we check that this is done first
