@@ -4632,7 +4632,6 @@ HasSimpleContent(JSXML *xml);
 static JSBool
 HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
 {
-    JSProperty *prop;
     JSXML *xml;
 
     JS_ASSERT(obj_->getClass() == &XMLClass);
@@ -4641,6 +4640,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj_, jsid funid_, JSBool *found)
 
     Rooted<JSObject*> obj(cx, obj_);
     RootedObject pobj(cx);
+    RootedShape prop(cx);
     if (!baseops::LookupProperty(cx, obj, funid, &pobj, &prop))
         return false;
     if (!prop) {
@@ -4743,8 +4743,8 @@ HasProperty(JSContext *cx, JSObject *obj, jsval id, JSBool *found)
  * For a proper solution see bug 355257.
 */
 static JSBool
-xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
-                  JSProperty **propp)
+xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                  MutableHandleObject objp, MutableHandleShape propp)
 {
     JSBool found;
     JSXML *xml;
@@ -4766,7 +4766,7 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObj
     }
     if (!found) {
         objp.set(NULL);
-        *propp = NULL;
+        propp.set(NULL);
     } else {
         Shape *shape =
             js_AddNativeProperty(cx, obj, id, GetProperty, PutProperty,
@@ -4776,14 +4776,14 @@ xml_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObj
             return JS_FALSE;
 
         objp.set(obj);
-        *propp = (JSProperty *) shape;
+        propp.set(shape);
     }
     return JS_TRUE;
 }
 
 static JSBool
 xml_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                   MutableHandleObject objp, JSProperty **propp)
+                   MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return xml_lookupGeneric(cx, obj, id, objp, propp);
@@ -4791,12 +4791,12 @@ xml_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
 
 static JSBool
 xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
-                  JSProperty **propp)
+                  MutableHandleShape propp)
 {
     JSXML *xml = reinterpret_cast<JSXML *>(obj->getPrivate());
     if (!HasIndexedProperty(xml, index)) {
         objp.set(NULL);
-        *propp = NULL;
+        propp.set(NULL);
         return true;
     }
 
@@ -4811,13 +4811,13 @@ xml_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandle
         return false;
 
     objp.set(obj);
-    *propp = (JSProperty *) shape;
+    propp.set(shape);
     return true;
 }
 
 static JSBool
 xml_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                  MutableHandleObject objp, JSProperty **propp)
+                  MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return xml_lookupGeneric(cx, obj, id, objp, propp);
@@ -7745,7 +7745,6 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, MutableHandleObject objp
     JSObject *obj, *target, *proto;
     JSXML *xml;
     JSBool found;
-    JSProperty *prop;
 
     JS_ASSERT(nameval.isObject());
     nameobj = &nameval.toObject();
@@ -7792,6 +7791,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, MutableHandleObject objp
             }
         } else if (!JSID_IS_VOID(funid)) {
             RootedObject pobj(cx);
+            RootedShape prop(cx);
             if (!target->lookupGeneric(cx, funid, &pobj, &prop))
                 return JS_FALSE;
             if (prop) {

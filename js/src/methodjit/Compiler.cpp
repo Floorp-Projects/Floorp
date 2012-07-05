@@ -5071,13 +5071,12 @@ mjit::Compiler::testSingletonProperty(HandleObject obj, HandleId id)
     }
 
     RootedObject holder(cx);
-    JSProperty *prop = NULL;
-    if (!obj->lookupGeneric(cx, id, &holder, &prop))
+    RootedShape shape(cx);
+    if (!obj->lookupGeneric(cx, id, &holder, &shape))
         return false;
-    if (!prop)
+    if (!shape)
         return false;
 
-    Shape *shape = (Shape *) prop;
     if (shape->hasDefaultGetter()) {
         if (!shape->hasSlot())
             return false;
