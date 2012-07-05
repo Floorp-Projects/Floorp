@@ -179,7 +179,10 @@ reflectUnsignedInt({
 // TODO: src (URL)
 
 // .step
-todo("step" in document.createElement("input"), "step isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'step',
+});
 
 // .type
 reflectLimitedEnumerated({
