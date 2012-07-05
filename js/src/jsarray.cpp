@@ -137,8 +137,8 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, uint32_t *lengthp)
     if (!obj->getProperty(cx, cx->runtime->atomState.lengthAtom, value.address()))
         return false;
 
-    if (value.reference().isInt32()) {
-        *lengthp = uint32_t(value.reference().toInt32()); /* uint32_t cast does ToUint32_t */
+    if (value.get().isInt32()) {
+        *lengthp = uint32_t(value.get().toInt32()); /* uint32_t cast does ToUint32_t */
         return true;
     }
 
@@ -346,7 +346,7 @@ DoGetElement(JSContext *cx, JSObject *obj_, double index, JSBool *hole, Value *v
         return JS_TRUE;
     }
 
-    JSObject *obj2;
+    RootedObject obj2(cx);
     JSProperty *prop;
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         return JS_FALSE;
@@ -692,7 +692,7 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
 }
 
 static JSBool
-array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
+array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
                     JSProperty **propp)
 {
     if (!obj->isDenseArray())
@@ -700,13 +700,13 @@ array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **obj
 
     if (IsDenseArrayId(cx, obj, id)) {
         *propp = (JSProperty *) 1;  /* non-null to indicate found */
-        *objp = obj;
+        objp.set(obj);
         return JS_TRUE;
     }
 
     JSObject *proto = obj->getProto();
     if (!proto) {
-        *objp = NULL;
+        objp.set(NULL);
         *propp = NULL;
         return JS_TRUE;
     }
@@ -714,15 +714,15 @@ array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **obj
 }
 
 static JSBool
-array_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
-                     JSProperty **propp)
+array_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                     MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return array_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
+array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
                     JSProperty **propp)
 {
     if (!obj->isDenseArray())
@@ -730,20 +730,20 @@ array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **
 
     if (IsDenseArrayIndex(obj, index)) {
         *propp = (JSProperty *) 1;  /* non-null to indicate found */
-        *objp = obj;
+        objp.set(obj);
         return true;
     }
 
     if (JSObject *proto = obj->getProto())
         return proto->lookupElement(cx, index, objp, propp);
 
-    *objp = NULL;
+    objp.set(NULL);
     *propp = NULL;
     return true;
 }
 
 static JSBool
-array_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
+array_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleObject objp,
                     JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
@@ -1190,7 +1190,7 @@ array_trace(JSTracer *trc, JSObject *obj)
 
 Class js::ArrayClass = {
     "Array",
-    Class::NON_NATIVE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    Class::NON_NATIVE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_FOR_OF_ITERATION,
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1208,7 +1208,7 @@ Class js::ArrayClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        NULL,       /* iteratorObject  */
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     },
@@ -1251,7 +1251,7 @@ Class js::ArrayClass = {
 
 Class js::SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_FOR_OF_ITERATION,
     slowarray_addProperty,
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -1269,7 +1269,7 @@ Class js::SlowArrayClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        NULL,       /* iteratorObject  */
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     }
@@ -2175,7 +2175,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedValue fvalRoot(cx);
-    Value &fval = fvalRoot.reference();
+    Value &fval = fvalRoot.get();
 
     if (args.hasDefined(0)) {
         if (args[0].isPrimitive()) {
@@ -3621,7 +3621,6 @@ static JSFunctionSpec array_methods[] = {
     JS_FN("some",               array_some,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
 
-    JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
 };
 
@@ -3774,11 +3773,11 @@ NewArray(JSContext *cx, uint32_t length, JSObject *proto_)
     }
 
     Rooted<GlobalObject*> parent(cx, parent_);
+    RootedObject proto(cx, proto_);
 
-    if (!proto_ && !FindProto(cx, &ArrayClass, parent, &proto_))
+    if (!proto && !FindProto(cx, &ArrayClass, parent, &proto))
         return NULL;
 
-    RootedObject proto(cx, proto_);
     RootedTypeObject type(cx);
 
     type = proto->getNewType(cx);

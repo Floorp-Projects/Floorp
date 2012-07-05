@@ -56,7 +56,7 @@
   -moz-margin-end: 0;
 }
 
-.newtab-cell:hover:not(:empty) {
+.newtab-cell:hover:not(:empty):not([dragged]) {
   border-color: rgba(8,22,37,.25) rgba(8,22,37,.27) rgba(8,22,37,.3);
 }
 
