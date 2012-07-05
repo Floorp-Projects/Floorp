@@ -3305,3 +3305,13 @@ stack[anonid=browserStack][responsivemode] {
 #developer-toolbar-debugger {
   -moz-image-region: rect(48px, 16px, 64px, 0);
 }
+
+/* Error counter */
+
+#developer-toolbar-webconsole[error-count]:before {
+  color: #FDF3DE;
+  min-width: 16px;
+  text-shadow: none;
+  background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
+  border-radius: 1px;
+}

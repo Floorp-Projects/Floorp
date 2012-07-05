@@ -43,7 +43,6 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
   this._errorsCount = {};
   this._webConsoleButton = this._doc
                            .getElementById("developer-toolbar-webconsole");
-  this._webConsoleButtonLabel = this._webConsoleButton.label;
 
   try {
     GcliCommands.refreshAutoCommands(aChromeWindow);
@@ -499,11 +498,9 @@ function DT__updateErrorsCount(aChangedTabId)
   let errors = this._errorsCount[tabId];
 
   if (errors) {
-    this._webConsoleButton.label =
-      this._webConsoleButtonLabel + " (" + errors + ")";
-  }
-  else {
-    this._webConsoleButton.label = this._webConsoleButtonLabel;
+    this._webConsoleButton.setAttribute("error-count", errors);
+  } else {
+    this._webConsoleButton.removeAttribute("error-count");
   }
 };
 
