@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozBatteryManager;
+interface nsIDOMBatteryManager;
 
-[scriptable, uuid(c295f049-be3d-4f83-9f7c-5c3e91d6ecb9)]
-interface nsIDOMMozNavigatorBattery : nsISupports
+[scriptable, uuid(4a78a8d5-5bbb-4a92-ad97-f19e853a7008)]
+interface nsINavigatorBattery : nsISupports
 {
-  readonly attribute nsIDOMMozBatteryManager mozBattery;
+  readonly attribute nsIDOMBatteryManager battery;
 };
