@@ -25,6 +25,10 @@ DEFINES += \
   -DMOZ_DEBUG=$(MOZ_DEBUG) \
   $(NULL)
 
+ifdef MOZ_MAINTENANCE_SERVICE
+DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
+endif
+
 # Android doesn't build the updater binary, so it skips the things that test it.
 ifneq ($(OS_TARGET),Android)
 DIRS = \

@@ -372,7 +372,7 @@ function checkUpdateApplied() {
   // Don't proceed until the update has been applied.
   if (gUpdateManager.activeUpdate.state != STATE_APPLIED_PLATFORM) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whist waiting for update to be applied to the platform");
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for update to be applied, current state is: " + gUpdateManager.activeUpdate.state);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
     return;
@@ -485,7 +485,7 @@ function checkUpdateFinished() {
     let status = readStatusFile();
     if (status != STATE_SUCCEEDED) {
       if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
-        do_throw("Exceeded MAX_TIMEOUT_RUNS whist waiting for success status");
+        do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for state to change to succeeded, current status: " + status);
       else
         do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
       return;

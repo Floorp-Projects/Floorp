@@ -204,7 +204,7 @@ function checkUpdateFinished() {
   log.append(FILE_UPDATE_LOG);
   if (!log.exists()) {
     if (++gTimeoutRuns > MAX_TIMEOUT_RUNS)
-      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created");
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created at " + log.path);
     else
       do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
