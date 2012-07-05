@@ -31,18 +31,6 @@ class AutoFallback;
 class AutoSetInstantiatingToFalse;
 class nsObjectFrame;
 
-enum PluginSupportState {
-  ePluginUnsupported,  // The plugin is not supported (e.g. not installed)
-  ePluginDisabled,     // The plugin has been explicitly disabled by the user
-  ePluginBlocklisted,  // The plugin is blocklisted and disabled
-  ePluginOutdated,     // The plugin is considered outdated, but not disabled
-  ePluginOtherState,   // Something else (e.g. uninitialized or not a plugin)
-  ePluginCrashed,
-  ePluginClickToPlay,  // The plugin is disabled until the user clicks on it
-  ePluginVulnerableUpdatable, // The plugin is vulnerable (update available)
-  ePluginVulnerableNoUpdate   // The plugin is vulnerable (no update available)
-};
-
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener
                              , public nsIFrameLoaderOwner
@@ -50,8 +38,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIInterfaceRequestor
                              , public nsIChannelEventSink
 {
-  friend class AutoNotifier;
-  friend class AutoFallback;
   friend class AutoSetInstantiatingToFalse;
   friend class AutoSetLoadingToFalse;
   friend class InDocCheckEvent;
@@ -73,6 +59,22 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       // No content loaded (fallback). May be showing alternate content or
       // a custom error handler - *including* click-to-play dialogs
       eType_Null           = TYPE_NULL
+    };
+    enum FallbackType {
+      eFallbackUnsupported,  // The content type is not supported (e.g. plugin 
+                             // not installed)
+      eFallbackAlternate,    // Showing alternate content
+      eFallbackDisabled,     // The plugin exists, but is disabled
+      eFallbackBlocklisted,  // The plugin is blocklisted and disabled
+      eFallbackOutdated,     // The plugin is considered outdated, but not
+                             // disabled
+      eFallbackCrashed,      // The plugin has crashed
+      eFallbackSuppressed,   // Suppressed by security policy
+      eFallbackUserDisabled, // Blocked by content policy
+      eFallbackClickToPlay,  // The plugin is disabled until the user clicks on
+                             // it
+      eFallbackVulnerableUpdatable, // The plugin is vulnerable (update avail)
+      eFallbackVulnerableNoUpdate  // The plugin is vulnerable (no update avail)
     };
 
     nsObjectLoadingContent();
@@ -189,14 +191,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     virtual PRUint32 GetCapabilities() const;
 
     /**
-     * Fall back to rendering the alternative content.
-     *
-     * @param aNotify If notifications should be sent. If false, the caller is
-     *                responsible for sending proper notifications.
-     */
-    void Fallback(bool aNotify);
-
-    /**
      * Destroys all loaded documents/plugins and releases references
      */
     void DestroyContent();
@@ -226,6 +220,15 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       // - mURI, mContentType, mType, mBaseURI
       eParamStateChanged       = PR_BIT(1)
     };
+
+    /**
+     * Loads fallback content with the specified FallbackType
+     *
+     * @param aType   FallbackType value for type of fallback we're loading
+     * @param aNotify Send notifications and events. If false, caller is
+     *                responsible for doing so
+     */
+    void LoadFallback(FallbackType aType, bool aNotify);
 
     /**
      * Internal version of LoadObject that should only be used by this class
@@ -275,6 +278,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsresult CloseChannel();
 
     /**
+     * If this object is allowed to play plugin content, or if it would display
+     * click-to-play instead.
+     * NOTE that this does not actually check if the object is a loadable plugin
+     */
+    bool ShouldPlay(FallbackType &aReason);
+
+    /**
      * Checks if a URI passes security checks and content policy, relative to
      * the current document's principal
      *
@@ -313,12 +323,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool IsSupportedDocument(const nsCString& aType);
 
     /**
-     * Unload the currently loaded content. This removes all state related to
-     * the displayed content and sets the type to eType_Null.
+     * Unloads all content and resets the object to a completely unloaded state
      *
-     * NOTE This does not send any notifications, or handle loading fallback
+     * NOTE Calls StopPluginInstance() and may spin the event loop
+     *
+     * @param aResetState Reset the object type to 'loading' and destroy channel
+     *                    as well
      */
-    void UnloadContent();
+    void UnloadObject(bool aResetState = true);
 
     /**
      * Notifies document observes about a new type/state of this object.
@@ -338,7 +350,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * whether it should be fired, or whether the given state translates to a
      * meaningful event
      */
-    void FirePluginError(PluginSupportState state);
+    void FirePluginError(FallbackType aFallbackType);
 
     /**
      * Returns a ObjectType value corresponding to the type of content we would
@@ -366,53 +378,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     nsObjectFrame* GetExistingFrame();
 
-    /**
-     * Handle being blocked by a content policy.  aStatus is the nsresult
-     * return value of the Should* call, while aRetval is what it returned in
-     * its out parameter.
-     */
-    void HandleBeingBlockedByContentPolicy(nsresult aStatus,
-                                           PRInt16 aRetval);
-
-    /**
-     * Get the plugin support state for the given content node and MIME type.
-     * This is used for purposes of determining whether to fire PluginNotFound
-     * events etc.  aContentType is the MIME type we ended up with.
-     *
-     * This should only be called if the type of this content is eType_Null.
-     */
-    PluginSupportState GetPluginSupportState(nsIContent* aContent,
-                                             const nsCString& aContentType);
-
-    /**
-     * If the plugin for aContentType is disabled, return ePluginDisabled.
-     * Otherwise (including if there is no plugin for aContentType at all),
-     * return ePluginUnsupported.
-     *
-     * This should only be called if the type of this content is eType_Null.
-     */
-    PluginSupportState GetPluginDisabledState(const nsCString& aContentType);
-
-    /**
-     * When there is no usable plugin available this will send UI events and
-     * update the AutoFallback object appropriate to the reason for there being
-     * no plugin available.
-     */
-    void UpdateFallbackState(nsIContent* aContent, AutoFallback& fallback,
-                             const nsCString& aTypeHint);
-
-    /**
-     * Checks if a plugin is available and enabled for this MIME type
-     */
-    nsresult IsPluginEnabledForType(const nsCString& aMIMEType);
-
-    /**
-     * Checks if a plugin is available and enabled for this file extension
-     * @param nsIURI   The URI to read the file extension of
-     * @param mimeType [out] The corresponding MIME type if successful
-     */
-    bool IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType);
-
     // The final listener for mChannel (uriloader, pluginstreamlistener, etc.)
     nsCOMPtr<nsIStreamListener> mFinalListener;
 
@@ -435,7 +400,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     // The channel that's currently being loaded. If set, but mChannelLoaded is
     // false, has not yet reached OnStartRequest
-    nsCOMPtr<nsIChannel>            mChannel;
+    nsCOMPtr<nsIChannel>        mChannel;
 
     // The URI of the current content.
     // May change as we open channels and encounter redirects - does not imply
@@ -451,11 +416,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsCOMPtr<nsIURI>            mBaseURI;
 
 
-    // Type of the currently-loaded content.
-    ObjectType                  mType          : 16;
 
-    // If true, we have loaded, non-fallback, content
-    bool                        mLoaded           : 1;
+    // Type of the currently-loaded content.
+    ObjectType                  mType           : 8;
+    // The type of fallback content we're showing (see ObjectState())
+    FallbackType                mFallbackType : 8;
 
     // If true, the current load has finished opening a channel. Does not imply
     // mChannel -- mChannelLoaded && !mChannel may occur for a load that failed
@@ -465,24 +430,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // SetFrame needs to asynchronously call Instantiate.
     bool                        mInstantiating : 1;
 
-    // True if we were blocked by content policy
-    bool                        mUserDisabled  : 1;
-    // True if we were blocked by security policy
-    bool                        mSuppressed    : 1;
-
     // True when the object is created for an element which the parser has
     // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
     // it may lose the flag.
     bool                        mNetworkCreated : 1;
 
-    // Used to keep track of if a plugin is blocked by click-to-play.
-    // True indicates the plugin is not click-to-play or it has been clicked by
-    // the user.
-    // False indicates the plugin is click-to-play and has not yet been clicked.
-    bool                        mCTPPlayable    : 1;
-
-    // Used to keep track of whether or not a plugin has been played.
-    // This is used for click-to-play plugins.
+    // Used to keep track of whether or not a plugin has been explicitly
+    // activated by PlayPlugin(). (see ShouldPlay())
     bool                        mActivated : 1;
 
     // Protects DoStopPlugin from reentry (bug 724781).
@@ -498,8 +452,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // not loading src data.
     bool mSrcStreamLoading;
 
-    // A specific state that caused us to fallback
-    PluginSupportState          mFallbackReason;
 
     nsWeakFrame                 mPrintFrame;
 
