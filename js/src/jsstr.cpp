@@ -378,7 +378,7 @@ str_enumerate(JSContext *cx, HandleObject obj)
 
 static JSBool
 str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     if (!JSID_IS_INT(id))
         return JS_TRUE;
@@ -394,7 +394,7 @@ str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                 STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
-        *objp = obj;
+        objp.set(obj);
     }
     return JS_TRUE;
 }
@@ -2975,7 +2975,6 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("sub",               str_sub,               0,0),
 #endif
 
-    JS_FN("iterator",          JS_ArrayIterator,      0,0),
     JS_FS_END
 };
 

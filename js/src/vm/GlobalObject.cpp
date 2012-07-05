@@ -293,14 +293,14 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 #if JS_HAS_XML_SUPPORT
            (!VersionHasAllowXML(cx->findVersion()) || js_InitXMLClasses(cx, global)) &&
 #endif
+#if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, global) &&
+#endif
            js_InitDateClass(cx, global) &&
            js_InitWeakMapClass(cx, global) &&
            js_InitProxyClass(cx, global) &&
            js_InitMapClass(cx, global) &&
-           GlobalObject::initMapIteratorProto(cx, global) &&
-           js_InitSetClass(cx, global) &&
-           GlobalObject::initSetIteratorProto(cx, global);
+           js_InitSetClass(cx, global);
 }
 
 void
@@ -397,7 +397,7 @@ GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
     if (!objectProto)
         return NULL;
 
-    return CreateBlankProto(cx, clasp, *objectProto, *self.reference());
+    return CreateBlankProto(cx, clasp, *objectProto, *self.get());
 }
 
 JSObject *

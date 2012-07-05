@@ -208,9 +208,9 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp
 
 static JSBool
 args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-             JSObject **objp)
+             MutableHandleObject objp)
 {
-    *objp = NULL;
+    objp.set(NULL);
 
     Rooted<NormalArgumentsObject*> argsobj(cx, &obj->asNormalArguments());
 
@@ -236,7 +236,7 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     if (!baseops::DefineGeneric(cx, argsobj, id, &undef, ArgGetter, ArgSetter, attrs))
         return JS_FALSE;
 
-    *objp = argsobj;
+    objp.set(argsobj);
     return true;
 }
 
@@ -258,7 +258,7 @@ args_enumerate(JSContext *cx, HandleObject obj)
              ? NameToId(cx->runtime->atomState.calleeAtom)
              : INT_TO_JSID(i);
 
-        JSObject *pobj;
+        RootedObject pobj(cx);
         JSProperty *prop;
         if (!baseops::LookupProperty(cx, argsobj, id, &pobj, &prop))
             return false;
@@ -320,9 +320,10 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Val
 }
 
 static JSBool
-strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
+strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                   MutableHandleObject objp)
 {
-    *objp = NULL;
+    objp.set(NULL);
 
     Rooted<StrictArgumentsObject*> argsobj(cx, &obj->asStrictArguments());
 
@@ -354,7 +355,7 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     if (!baseops::DefineGeneric(cx, argsobj, id, &undef, getter, setter, attrs))
         return false;
 
-    *objp = argsobj;
+    objp.set(argsobj);
     return true;
 }
 
@@ -367,7 +368,7 @@ strictargs_enumerate(JSContext *cx, HandleObject obj)
      * Trigger reflection in strictargs_resolve using a series of
      * js_LookupProperty calls.
      */
-    JSObject *pobj;
+    RootedObject pobj(cx);
     JSProperty *prop;
     RootedId id(cx);
 
@@ -421,7 +422,8 @@ Class js::NormalArgumentsObjectClass = {
     "Arguments",
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_FOR_OF_ITERATION,
     JS_PropertyStub,         /* addProperty */
     args_delProperty,
     JS_PropertyStub,         /* getProperty */
@@ -439,7 +441,7 @@ Class js::NormalArgumentsObjectClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        NULL,       /* iteratorObject  */
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     }
@@ -454,7 +456,8 @@ Class js::StrictArgumentsObjectClass = {
     "Arguments",
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_FOR_OF_ITERATION,
     JS_PropertyStub,         /* addProperty */
     args_delProperty,
     JS_PropertyStub,         /* getProperty */
@@ -472,7 +475,7 @@ Class js::StrictArgumentsObjectClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        NULL,       /* iteratorObject  */
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     }

@@ -331,9 +331,9 @@ FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 
 static JSBool
 XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-           JSObject **objp)
+           JSMutableHandleObject objp)
 {
-  *objp = NULL;
+  objp.set(NULL);
 
   if (!JSID_IS_STRING(id)) {
     return true;
@@ -379,15 +379,13 @@ XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                                 JS::StringValue(JSID_TO_STRING(id)));
 
   if (!::JS_DefinePropertyById(cx, obj, id, JS::UndefinedValue(),
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp,
-                                                   get.reference()),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp,
-                                                   set.reference()),
+                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get.get()),
+                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()),
                                field->AccessorAttributes())) {
     return false;
   }
 
-  *objp = obj;
+  objp.set(obj);
   return true;
 }
 

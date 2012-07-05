@@ -78,7 +78,7 @@ RegExpObjectBuilder::build(HandleAtom source, RegExpFlag flags)
     if (!getOrCreate())
         return NULL;
 
-    return reobj_->init(cx, source, flags) ? reobj_.raw() : NULL;
+    return reobj_->init(cx, source, flags) ? reobj_.get() : NULL;
 }
 
 RegExpObject *
