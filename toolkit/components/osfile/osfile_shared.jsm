@@ -614,6 +614,10 @@
        let argtypes  = [];
        for (let i = 3; i < arguments.length; ++i) {
          let current = arguments[i];
+         if (!current) {
+           throw new TypeError("Missing type for argument " + ( i - 3 ) +
+                               " of symbol " + symbol);
+         }
          if (!current.implementation) {
            throw new TypeError("Missing implementation for argument " + (i - 3)
                                + " of symbol " + symbol
