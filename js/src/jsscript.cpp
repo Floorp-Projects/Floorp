@@ -2145,6 +2145,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());
+    JS_ASSERT(!script->isGenerator);
 
     /*
      * It is possible that the apply speculation has already failed, everything
