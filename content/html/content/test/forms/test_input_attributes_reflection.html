@@ -124,7 +124,10 @@ reflectInt({
 });
 
 // .min
-todo("min" in document.createElement("input"), "min isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'min',
+});
 
 // .multiple
 reflectBoolean({

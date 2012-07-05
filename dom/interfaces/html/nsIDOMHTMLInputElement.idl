@@ -20,7 +20,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(23d5399b-004e-469b-a735-d89009ffe9a6)]
+[scriptable, uuid(261b0fa1-dfcc-445d-8ac8-6b3817ec63cb)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -46,6 +46,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
   readonly attribute nsIDOMHTMLElement     list;
            attribute DOMString             max;
            attribute long                  maxLength;
+           attribute DOMString             min;
 
            attribute boolean               multiple;
            attribute DOMString             name;
