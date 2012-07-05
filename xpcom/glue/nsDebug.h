@@ -315,7 +315,7 @@
 /*****************************************************************************/
 
 #ifdef XPCOM_GLUE
-#define NS_CheckThreadSafe
+#define NS_CheckThreadSafe(owningThread, msg)
 #else
 #define NS_CheckThreadSafe(owningThread, msg)                 \
   NS_ASSERTION(owningThread == PR_GetCurrentThread(), msg)
