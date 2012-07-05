@@ -2986,12 +2986,29 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
                              argv, bottom, retvalDefns, Inline_Monomorphic))
             return false;
     } else {
-        // Polymorhpic inline case requires guards.
         // Polymorphic inline case is not so simple - needs guards.
         MBasicBlock *entryBlock = top;
+
+        // The final function MConstant is added to the initial entryBlock because
+        // it's a real pain to add otherwise, since by the last loop iteration, the
+        // entryBlock will already have its lastIns (as the last inlined function
+        // flows from the fallbackBlock of the last guard), and adding an MConstant
+        // then is just not worth it.
+        MConstant *finalConstFun =
+            MConstant::New(ObjectValue(*(targets[targets.length()-1]->toFunction())));
+        entryBlock->add(finalConstFun);
+
         for (size_t i = 0; i < targets.length(); i++) {
             // Do the inline function build.
             current = entryBlock;
+
+            if (i == targets.length() - 1) {
+                constFun = finalConstFun;
+            } else {
+                constFun = MConstant::New(ObjectValue(*(targets[i]->toFunction())));
+                entryBlock->add(constFun);
+            }
+
             RootedFunction target(cx, targets[i]->toFunction());
             InlinePolymorphism poly = (i == targets.length() - 1) ?
                                         Inline_PolymorphicFinal : Inline_Polymorphic;
