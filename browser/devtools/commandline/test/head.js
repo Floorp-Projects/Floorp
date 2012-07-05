@@ -55,7 +55,7 @@ let DeveloperToolbarTest = {
       ok(false, "DeveloperToolbar.visible at start of openDeveloperToolbar");
     }
     else {
-      DeveloperToolbar.show(aCallback);
+      DeveloperToolbar.show(true, aCallback);
     }
   },
 
