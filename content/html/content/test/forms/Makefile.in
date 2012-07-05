@@ -45,6 +45,7 @@ _TEST_FILES = \
 		test_max_attribute.html \
 		test_min_attribute.html \
 		test_step_attribute.html \
+		test_stepup_stepdown.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

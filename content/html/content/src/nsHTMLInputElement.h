@@ -480,6 +480,11 @@ protected:
   bool DoesStepApply() const { return DoesMinMaxApply(); }
 
   /**
+   * Returns if stepDown and stepUp methods apply for the current type.
+   */
+  bool DoStepDownStepUpApply() const { return DoesStepApply(); }
+
+  /**
    * Returns if the maxlength attribute applies for the current type.
    */
   bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
@@ -558,6 +563,13 @@ protected:
   double GetValueAsDouble() const;
 
   /**
+   * Sets the value of the element to the string representation of the double.
+   *
+   * @param aValue The double that will be used to set the value.
+   */
+  void SetValue(double aValue);
+
+  /**
    * Update the HAS_RANGE bit field value.
    */
   void UpdateHasRange();
@@ -569,6 +581,22 @@ protected:
    * @return the current step value.
    */
   double GetStep() const;
+
+  /**
+   * Return the base used to compute if a value matches step.
+   * Basically, it's the min attribute if present and a default value otherwise.
+   *
+   * @return The step base.
+   */
+  double GetStepBase() const;
+
+  /**
+   * Apply a step change from stepUp or stepDown by multiplying aStep by the
+   * current step value.
+   *
+   * @param aStep The value used to be multiplied against the step value.
+   */
+  nsresult ApplyStep(PRInt32 aStep);
 
   nsCOMPtr<nsIControllers> mControllers;
 
