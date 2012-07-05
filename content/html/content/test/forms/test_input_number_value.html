@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=765772
+-->
+<head>
+  <title>Test for Bug 765772</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 765772</a>
+<p id="display"></p>
+<iframe name="submit_frame" style="visibility: hidden;"></iframe>
+<div id="content">
+  <form id='f' target="submit_frame" action="foo">
+    <input name=i id="i" step='any' >
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+var input = document.getElementById('i');
+var form = document.getElementById('f');
+var submitFrame = document.getElementsByTagName('iframe')[0];
+var testData = [];
+var validData =
+[
+  "42",
+  "-42", // should work for negative values
+  "42.1234",
+  "123.12345678912345",  // double precision
+  "1e2", // e should be usable
+  "2e1",
+  "1e-1", // value after e can be negative
+  "1E2", // E can be used instead of e
+];
+var invalidData =
+[
+  "e",
+  "e2",
+  "1e0.1",
+  "foo",
+  "42,13", // comma can't be used as a decimal separator
+];
+
+function submitForm() {
+  form.submit();
+}
+
+function sendKeyEventToSubmitForm() {
+  sendKey("return");
+}
+
+function checkValueSubmittedIsValid()
+{
+  is(frames['submit_frame'].location.href,
+     'http://mochi.test:8888/tests/content/html/content/test/forms/foo?i='
+     + validData[valueIndex++],
+     "The submitted value should not have been sanitized");
+
+  input.value = "";
+
+  if (valueIndex >= validData.length) {
+    valueIndex = 0;
+    submitFrame.onload = checkValueSubmittedIsInvalid;
+    testData = invalidData;
+  }
+  submitNextValue();
+}
+
+function checkValueSubmittedIsInvalid()
+{
+  is(frames['submit_frame'].location.href,
+        'http://mochi.test:8888/tests/content/html/content/test/forms/foo?i=',
+        "The submitted value should have been sanitized");
+
+  valueIndex++;
+  input.value = "";
+
+  if (valueIndex >= invalidData.length) {
+    if (submitMethod == sendKeyEventToSubmitForm) {
+      SimpleTest.finish();
+      return;
+    }
+    valueIndex = 0;
+    submitMethod = sendKeyEventToSubmitForm;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    testData = validData;
+  }
+  submitNextValue();
+}
+
+function submitNextValue() {
+  SpecialPowers.focus(input);
+  sendString(testData[valueIndex]);
+  submitMethod();
+}
+
+var valueIndex = 0;
+var submitMethod = submitForm;
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+  SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+    input.type = "number";
+
+    for each (data in validData) {
+      input.value = "";
+      SpecialPowers.focus(input);
+      sendString(data);
+      input.blur();
+      is(input.value, data, "valid user input should not be sanitized");
+    }
+
+    for each (data in invalidData) {
+      input.value = "";
+      SpecialPowers.focus(input);
+      sendString(data);
+      input.blur();
+      is(input.value, "", "invalid user input should be sanitized");
+    }
+
+    testData = validData;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    submitNextValue();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
