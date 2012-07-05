@@ -65,10 +65,6 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  void Paint(const nsDisplayListBuilder* aBuilder,
-             nsRenderingContext* aContext,
-             const nsRect& aDirtyRect);
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
