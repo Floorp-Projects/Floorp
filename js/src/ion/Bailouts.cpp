@@ -298,6 +298,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_MONITOR;
       case Bailout_RecompileCheck:
         return BAILOUT_RETURN_RECOMPILE_CHECK;
+      case Bailout_BoundsCheck:
+        return BAILOUT_RETURN_BOUNDS_CHECK;
     }
 
     JS_NOT_REACHED("bad bailout kind");
@@ -522,6 +524,31 @@ ion::EnsureHasCallObject(JSContext *cx, StackFrame *fp)
     {
         return fp->initCallObject(cx);
     }
+    return true;
+}
+
+uint32
+ion::BoundsCheckFailure()
+{
+    JSContext *cx = GetIonContext()->cx;
+    JSScript *script = cx->fp()->script();
+
+    IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename,
+            script->lineno);
+
+    if (!script->failedBoundsCheck) {
+        script->failedBoundsCheck = true;
+
+        // Invalidate the script to force a recompile.
+        Vector<types::RecompileInfo> scripts(cx);
+        if (!scripts.append(types::RecompileInfo(script)))
+            return BAILOUT_RETURN_FATAL_ERROR;
+
+        IonSpew(IonSpew_Invalidate, "Invalidating due to bounds check failure");
+
+        Invalidate(cx->runtime->defaultFreeOp(), scripts);
+    }
+
     return true;
 }
 

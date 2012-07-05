@@ -460,6 +460,10 @@ class IonBuilder : public MIRGenerator
     Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
     TypeOracle *oracle;
     size_t inliningDepth;
+
+    // True if script->failedBoundsCheck is set for the current script or
+    // an outer script.
+    bool failedBoundsCheck_;
 };
 
 } // namespace ion
