@@ -1659,16 +1659,6 @@ abstract public class GeckoApp
     public void requestRender() {
         mLayerController.getView().requestRender();
     }
-
-    public void hidePlugins() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-
-        if (tab == null)
-            return;
-
-        hidePlugins(tab);
-    }
     
     public void hidePlugins(Tab tab) {
         for (Layer layer : tab.getPluginLayers()) {
