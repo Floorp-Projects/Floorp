@@ -85,7 +85,9 @@ struct CompartmentStats
         memset(this, 0, sizeof(*this));
     }
 
-    void   *extra;
+    // These fields can be used by embedders.
+    void   *extra1;
+    void   *extra2;
 
     // If you add a new number, remember to update add() and maybe
     // gcHeapThingsSize()!

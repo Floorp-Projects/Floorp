@@ -176,6 +176,8 @@ struct BytecodeEmitter
 
     bool needsImplicitThis();
 
+    void tellDebuggerAboutCompiledScript(JSContext *cx);
+
     TokenStream *tokenStream() { return &parser->tokenStream; }
 
     jsbytecode *base() const { return current->base; }

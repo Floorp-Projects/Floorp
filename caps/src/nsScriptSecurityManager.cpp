@@ -3616,7 +3616,7 @@ PrintPropertyPolicy(PLDHashTable *table, PLDHashEntryHdr *entry,
     JSContext* cx = (JSContext*)arg;
     prop.AppendInt((PRUint32)pp->key);
     prop += ' ';
-    prop.AppendWithConversion((PRUnichar*)JS_GetStringChars(pp->key));
+    LossyAppendUTF16toASCII((PRUnichar*)JS_GetStringChars(pp->key), prop);
     prop += ": Get=";
     if (SECURITY_ACCESS_LEVEL_FLAG(pp->mGet))
         prop.AppendInt(pp->mGet.level);

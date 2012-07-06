@@ -214,7 +214,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * list in the compartment can mutate at any moment. We cannot do any
      * checks in this case.
      */
-    if (!compartment->rt->gcRunning)
+    if (!compartment->rt->isHeapBusy())
         return;
 
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
@@ -1633,7 +1633,7 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
 
     JSCompartment *comp = cx->compartment;
     JSRuntime *rt = comp->rt;
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
     bool runGC = rt->gcIncrementalState != NO_INCREMENTAL && comp->gcBytes > comp->gcTriggerBytes;
     for (;;) {
@@ -2027,7 +2027,7 @@ GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
 void
 SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
     rt->gcMarker.setSizeLimit(limit);
 }
 
@@ -2431,7 +2431,7 @@ TriggerGC(JSRuntime *rt, gcreason::Reason reason)
 {
     JS_ASSERT(rt->onOwnerThread());
 
-    if (rt->gcRunning)
+    if (rt->isHeapBusy())
         return;
 
     PrepareForFullGC(rt);
@@ -2444,7 +2444,7 @@ TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
     JSRuntime *rt = comp->rt;
     JS_ASSERT(rt->onOwnerThread());
 
-    if (rt->gcRunning)
+    if (rt->isHeapBusy())
         return;
 
     if (rt->gcZeal() == ZealAllocValue) {
@@ -2568,7 +2568,7 @@ DecommitArenasFromAvailableList(JSRuntime *rt, Chunk **availableListHeadp)
                  * lock.
                  */
                 Maybe<AutoUnlockGC> maybeUnlock;
-                if (!rt->gcRunning)
+                if (!rt->isHeapBusy())
                     maybeUnlock.construct(rt);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
@@ -3285,9 +3285,9 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
     /*
      * Sweep phase.
      *
-     * Finalize as we sweep, outside of rt->gcLock but with rt->gcRunning set
-     * so that any attempt to allocate a GC-thing from a finalizer will fail,
-     * rather than nest badly and leave the unmarked newborn to be swept.
+     * Finalize as we sweep, outside of rt->gcLock but with rt->isHeapBusy()
+     * true so that any attempt to allocate a GC-thing from a finalizer will
+     * fail, rather than nest badly and leave the unmarked newborn to be swept.
      *
      * We first sweep atom state so we can use IsAboutToBeFinalized on
      * JSString held in a hashtable to check if the hashtable entry can be
@@ -3420,43 +3420,44 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
  * This class should be used by any code that needs to exclusive access to the
  * heap in order to trace through it...
  */
-class AutoHeapSession {
+class AutoTraceSession {
   public:
-    explicit AutoHeapSession(JSRuntime *rt);
-    ~AutoHeapSession();
+    AutoTraceSession(JSRuntime *rt, JSRuntime::HeapState state = JSRuntime::Tracing);
+    ~AutoTraceSession();
 
   protected:
     JSRuntime *runtime;
 
   private:
-    AutoHeapSession(const AutoHeapSession&) MOZ_DELETE;
-    void operator=(const AutoHeapSession&) MOZ_DELETE;
+    AutoTraceSession(const AutoTraceSession&) MOZ_DELETE;
+    void operator=(const AutoTraceSession&) MOZ_DELETE;
 };
 
 /* ...while this class is to be used only for garbage collection. */
-class AutoGCSession : AutoHeapSession {
+class AutoGCSession : AutoTraceSession {
   public:
     explicit AutoGCSession(JSRuntime *rt);
     ~AutoGCSession();
 };
 
 /* Start a new heap session. */
-AutoHeapSession::AutoHeapSession(JSRuntime *rt)
+AutoTraceSession::AutoTraceSession(JSRuntime *rt, JSRuntime::HeapState heapState)
   : runtime(rt)
 {
     JS_ASSERT(!rt->noGCOrAllocationCheck);
-    JS_ASSERT(!rt->gcRunning);
-    rt->gcRunning = true;
+    JS_ASSERT(!rt->isHeapBusy());
+    JS_ASSERT(heapState == JSRuntime::Collecting || heapState == JSRuntime::Tracing);
+    rt->heapState = heapState;
 }
 
-AutoHeapSession::~AutoHeapSession()
+AutoTraceSession::~AutoTraceSession()
 {
-    JS_ASSERT(runtime->gcRunning);
-    runtime->gcRunning = false;
+    JS_ASSERT(runtime->isHeapBusy());
+    runtime->heapState = JSRuntime::Idle;
 }
 
 AutoGCSession::AutoGCSession(JSRuntime *rt)
-  : AutoHeapSession(rt)
+  : AutoTraceSession(rt, JSRuntime::Collecting)
 {
     DebugOnly<bool> any = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
@@ -3745,7 +3746,7 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
 #endif
 
     /* Recursive GC is no-op. */
-    if (rt->gcRunning)
+    if (rt->isHeapBusy())
         return;
 
     /* Don't GC if we are reporting an OOM. */
@@ -3956,7 +3957,7 @@ void
 ShrinkGCBuffers(JSRuntime *rt)
 {
     AutoLockGC lock(rt);
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 #ifndef JS_THREADSAFE
     ExpireChunksAndArenas(rt, true);
 #else
@@ -3972,8 +3973,8 @@ TraceRuntime(JSTracer *trc)
 #ifdef JS_THREADSAFE
     {
         JSRuntime *rt = trc->runtime;
-        if (!rt->gcRunning) {
-            AutoHeapSession session(rt);
+        if (!rt->isHeapBusy()) {
+            AutoTraceSession session(rt);
 
             rt->gcHelperThread.waitBackgroundSweepEnd();
 
@@ -4029,9 +4030,9 @@ IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback)
 {
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
     AutoCopyFreeListToArenas copy(rt);
@@ -4052,9 +4053,9 @@ void
 IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback)
 {
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
     for (js::GCChunkSet::Range r = rt->gcChunkSet.all(); !r.empty(); r.popFront())
@@ -4066,9 +4067,9 @@ IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
              void *data, IterateCellCallback cellCallback)
 {
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
     AutoCopyFreeListToArenas copy(rt);
@@ -4092,9 +4093,9 @@ IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, vo
 {
     JS_ASSERT(compartment);
     JSRuntime *rt = compartment->rt;
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
     AutoCopyFreeListToArenas copy(rt);
@@ -4454,7 +4455,7 @@ StartVerifyBarriers(JSRuntime *rt)
     if (rt->gcVerifyData || rt->gcIncrementalState != NO_INCREMENTAL)
         return;
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
 
     if (!IsIncrementalGCSafe(rt))
         return;
@@ -4582,7 +4583,7 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
 static void
 EndVerifyBarriers(JSRuntime *rt)
 {
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
 
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
 
@@ -4798,9 +4799,9 @@ JS_PUBLIC_API(void)
 JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
-    JS_ASSERT(!rt->gcRunning);
+    JS_ASSERT(!rt->isHeapBusy());
 
-    AutoHeapSession session(rt);
+    AutoTraceSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
 
     for (CompartmentsIter c(rt); !c.done(); c.next())

@@ -58,6 +58,7 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
 		-I$(topsrcdir)/editor/libeditor/text \
+		-I$(topsrcdir)/editor/txmgr/src \
 		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/events/src \
 		-I$(topsrcdir)/layout/style \

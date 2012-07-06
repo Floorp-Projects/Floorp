@@ -798,7 +798,7 @@ DisableIncrementalGC(JSRuntime *rt)
 JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
-    return (rt->gcIncrementalState == gc::MARK && !rt->gcRunning);
+    return (rt->gcIncrementalState == gc::MARK && !rt->isHeapBusy());
 }
 
 JS_FRIEND_API(bool)
@@ -824,7 +824,7 @@ IncrementalReferenceBarrier(void *ptr)
 {
     if (!ptr)
         return;
-    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->gcRunning);
+    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->isHeapBusy());
     uint32_t kind = gc::GetGCThingTraceKind(ptr);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) ptr);
