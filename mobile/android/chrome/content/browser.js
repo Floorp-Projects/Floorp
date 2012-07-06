@@ -1427,8 +1427,8 @@ var SelectionHandler = {
   },
 
   // Units in pixels
-  HANDLE_WIDTH: 35,
-  HANDLE_HEIGHT: 64,
+  HANDLE_WIDTH: 45,
+  HANDLE_HEIGHT: 66,
   HANDLE_PADDING: 20,
   HANDLE_HORIZONTAL_OFFSET: 5,
 
