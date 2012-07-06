@@ -505,7 +505,6 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
       ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
 
   aContext->PushState();
-  aContext->IntersectClip(clipRect);
   aContext->Translate(viewportRect.TopLeft());
   nsSVGUtils::PaintFrameWithEffects(aContext, &contentAreaDirtyRect, mFrame);
   aContext->PopState();
@@ -595,13 +594,23 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDisplayList replacedContent;
+  nsDisplayList childItems;
 
-  rv = replacedContent.AppendNewToTop(
-      new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
+  rv = childItems.AppendNewToTop(
+         new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    // Clip to our _content_ box:
+    nsRect clipRect =
+      GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+    nsDisplayClip* item =
+      new (aBuilder) nsDisplayClip(aBuilder, this, &childItems, clipRect);
+    rv = childItems.AppendNewToTop(item);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
 
   return NS_OK;
 }
