@@ -336,9 +336,6 @@ struct StmtInfoBase {
      */
     bool isBlockScope:1;
 
-    /* True if type == STMT_BLOCK and this block is a function body. */
-    bool isFunctionBodyBlock:1;
-
     /* for (let ...) induced block scope */
     bool isForLetBlock:1;
 
@@ -346,8 +343,7 @@ struct StmtInfoBase {
     Rooted<StaticBlockObject *> blockObj; /* block scope object */
 
     StmtInfoBase(JSContext *cx)
-        : isBlockScope(false), isFunctionBodyBlock(false), isForLetBlock(false), label(cx),
-          blockObj(cx)
+        : isBlockScope(false), isForLetBlock(false), label(cx), blockObj(cx)
     {}
 
     bool maybeScope() const {
@@ -373,7 +369,10 @@ struct StmtInfoTC : public StmtInfoBase {
 
     uint32_t        blockid;        /* for simplified dominance computation */
 
-    StmtInfoTC(JSContext *cx) : StmtInfoBase(cx) {}
+    /* True if type == STMT_BLOCK and this block is a function body. */
+    bool            isFunctionBodyBlock;
+
+    StmtInfoTC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
 };
 
 struct StmtInfoBCE : public StmtInfoBase {
