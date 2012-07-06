@@ -447,14 +447,8 @@ typedef PRUint32 nsrefcnt;
  */
 #ifdef NS_STATIC_CHECKING
 # define NS_SCRIPTABLE __attribute__((user("NS_script")))
-# define NS_INPARAM __attribute__((user("NS_inparam")))
-# define NS_OUTPARAM  __attribute__((user("NS_outparam")))
-# define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
 #else
 # define NS_SCRIPTABLE
-# define NS_INPARAM
-# define NS_OUTPARAM
-# define NS_INOUTPARAM
 #endif
 
 /*

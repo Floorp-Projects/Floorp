@@ -77,14 +77,14 @@ NS_IMPL_ISUPPORTS1(nsSerializationHelper, nsISerializationHelper)
 
 NS_IMETHODIMP
 nsSerializationHelper::SerializeToString(nsISerializable *serializable,
-                                         nsACString & _retval NS_OUTPARAM)
+                                         nsACString & _retval)
 {
   return NS_SerializeToString(serializable, _retval);
 }
 
 NS_IMETHODIMP
 nsSerializationHelper::DeserializeObject(const nsACString & input,
-                                         nsISupports **_retval NS_OUTPARAM)
+                                         nsISupports **_retval)
 {
   return NS_DeserializeObject(input, _retval);
 }

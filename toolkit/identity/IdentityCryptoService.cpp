@@ -363,8 +363,8 @@ KeyGenRunnable::KeyGenRunnable(KeyType keyType,
 
 MOZ_WARN_UNUSED_RESULT nsresult
 GenerateKeyPair(PK11SlotInfo * slot,
-                NS_OUTPARAM SECKEYPrivateKey ** privateKey,
-                NS_OUTPARAM SECKEYPublicKey ** publicKey,
+                SECKEYPrivateKey ** privateKey,
+                SECKEYPublicKey ** publicKey,
                 CK_MECHANISM_TYPE mechanism,
                 void * params)
 {
@@ -391,8 +391,8 @@ GenerateKeyPair(PK11SlotInfo * slot,
 
 MOZ_WARN_UNUSED_RESULT nsresult
 GenerateRSAKeyPair(PK11SlotInfo * slot,
-                   NS_OUTPARAM SECKEYPrivateKey ** privateKey,
-                   NS_OUTPARAM SECKEYPublicKey ** publicKey)
+                   SECKEYPrivateKey ** privateKey,
+                   SECKEYPublicKey ** publicKey)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -405,8 +405,8 @@ GenerateRSAKeyPair(PK11SlotInfo * slot,
 
 MOZ_WARN_UNUSED_RESULT nsresult
 GenerateDSAKeyPair(PK11SlotInfo * slot,
-                   NS_OUTPARAM SECKEYPrivateKey ** privateKey,
-                   NS_OUTPARAM SECKEYPublicKey ** publicKey)
+                   SECKEYPrivateKey ** privateKey,
+                   SECKEYPublicKey ** publicKey)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 

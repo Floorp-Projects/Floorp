@@ -120,7 +120,7 @@ nsXPCException::~nsXPCException()
 
 /* [noscript] xpcexJSVal stealJSVal (); */
 NS_IMETHODIMP
-nsXPCException::StealJSVal(jsval *vp NS_OUTPARAM)
+nsXPCException::StealJSVal(jsval *vp)
 {
     if (mThrownJSVal.IsHeld()) {
         *vp = mThrownJSVal.Release();

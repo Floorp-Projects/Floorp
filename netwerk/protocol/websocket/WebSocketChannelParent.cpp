@@ -221,7 +221,7 @@ WebSocketChannelParent::ActorDestroy(ActorDestroyReason why)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WebSocketChannelParent::GetInterface(const nsIID & iid, void **result NS_OUTPARAM)
+WebSocketChannelParent::GetInterface(const nsIID & iid, void **result)
 {
   LOG(("WebSocketChannelParent::GetInterface() %p\n", this));
   if (mAuthProvider && iid.Equals(NS_GET_IID(nsIAuthPromptProvider)))

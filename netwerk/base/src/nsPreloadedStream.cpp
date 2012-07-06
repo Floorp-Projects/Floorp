@@ -41,7 +41,7 @@ nsPreloadedStream::Close()
 
 
 NS_IMETHODIMP
-nsPreloadedStream::Available(PRUint32 *_retval NS_OUTPARAM)
+nsPreloadedStream::Available(PRUint32 *_retval)
 {
     PRUint32 avail = 0;
     
@@ -54,7 +54,7 @@ nsPreloadedStream::Available(PRUint32 *_retval NS_OUTPARAM)
 
 NS_IMETHODIMP
 nsPreloadedStream::Read(char *aBuf, PRUint32 aCount,
-                        PRUint32 *_retval NS_OUTPARAM)
+                        PRUint32 *_retval)
 {
     if (!mLen)
         return mStream->Read(aBuf, aCount, _retval);
@@ -96,7 +96,7 @@ nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::IsNonBlocking(bool *_retval NS_OUTPARAM)
+nsPreloadedStream::IsNonBlocking(bool *_retval)
 {
     return mStream->IsNonBlocking(_retval);
 }
