@@ -26,6 +26,7 @@ import android.widget.Toast;
 import android.widget.SimpleCursorAdapter;
 import android.widget.LinearLayout;
 import android.widget.TabHost.TabContentFactory;
+import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
@@ -109,7 +110,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     public ListView getListView() {
         if (mView == null) {
-            mView = new ListView(mContext, null, R.style.AwesomeBarList);
+            mView = (ListView) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_list, null));
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
