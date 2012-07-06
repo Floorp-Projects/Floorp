@@ -1010,8 +1010,7 @@ nsHTMLInputElement::GetValueAsDouble() const
   GetValueInternal(stringValue);
   doubleValue = stringValue.ToDouble(&ec);
 
-  return NS_FAILED(ec) ? std::numeric_limits<double>::quiet_NaN()
-                       : doubleValue;
+  return NS_SUCCEEDED(ec) ? doubleValue : MOZ_DOUBLE_NaN();
 }
 
 NS_IMETHODIMP 
@@ -1080,7 +1079,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetValueAsNumber(double* aValueAsNumber)
 {
   *aValueAsNumber = DoesValueAsNumberApply() ? GetValueAsDouble()
-                                             : std::numeric_limits<double>::quiet_NaN();
+                                             : MOZ_DOUBLE_NaN();
   return NS_OK;
 }
 
@@ -1102,7 +1101,7 @@ nsHTMLInputElement::GetMinAsDouble() const
   MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::min)) {
-    return std::numeric_limits<double>::quiet_NaN();;
+    return MOZ_DOUBLE_NaN();
   }
 
   nsAutoString minStr;
@@ -1110,7 +1109,7 @@ nsHTMLInputElement::GetMinAsDouble() const
 
   PRInt32 ec;
   double min = minStr.ToDouble(&ec);
-  return NS_SUCCEEDED(ec) ? min : std::numeric_limits<double>::quiet_NaN();
+  return NS_SUCCEEDED(ec) ? min : MOZ_DOUBLE_NaN();
 }
 
 double
@@ -1120,7 +1119,7 @@ nsHTMLInputElement::GetMaxAsDouble() const
   MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::max)) {
-    return std::numeric_limits<double>::quiet_NaN();;
+    return MOZ_DOUBLE_NaN();
   }
 
   nsAutoString maxStr;
@@ -1128,7 +1127,7 @@ nsHTMLInputElement::GetMaxAsDouble() const
 
   PRInt32 ec;
   double max = maxStr.ToDouble(&ec);
-  return NS_SUCCEEDED(ec) ? max : std::numeric_limits<double>::quiet_NaN();
+  return NS_SUCCEEDED(ec) ? max : MOZ_DOUBLE_NaN();
 }
 
 double
@@ -1136,8 +1135,7 @@ nsHTMLInputElement::GetStepBase() const
 {
   double stepBase = GetMinAsDouble();
 
-  // stepBase != stepBase means NaN.
-  return stepBase == stepBase ? stepBase : kDefaultStepBase;
+  return MOZ_DOUBLE_IS_NaN(stepBase) ? kDefaultStepBase : stepBase;
 }
 
 nsresult
@@ -1153,15 +1151,14 @@ nsHTMLInputElement::ApplyStep(PRInt32 aStep)
   }
 
   double value = GetValueAsDouble();
-  if (value != value) { // NaN
+  if (MOZ_DOUBLE_IS_NaN(value)) {
     return NS_OK;
   }
 
   double min = GetMinAsDouble();
 
   double max = GetMaxAsDouble();
-  // Means max != NaN.
-  if (max == max) {
+  if (!MOZ_DOUBLE_IS_NaN(max)) {
     // "max - (max - stepBase) % step" is the nearest valid value to max.
     max = max - NS_floorModulo(max - GetStepBase(), step);
   }
@@ -1191,12 +1188,12 @@ nsHTMLInputElement::ApplyStep(PRInt32 aStep)
   // min unless stepUp() moves us higher than min.
   if (GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW) && aStep > 0 &&
       value <= min) {
-    MOZ_ASSERT(min == min); // min can't be NaN if we are here!
+    MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(min)); // min can't be NaN if we are here!
     value = min;
   // Same goes for stepDown() and max.
   } else if (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) && aStep < 0 &&
              value >= max) {
-    MOZ_ASSERT(max == max); // max can't be NaN if we are here!
+    MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(max)); // max can't be NaN if we are here!
     value = max;
   // If we go down, we want to clamp on min.
   } else if (aStep < 0 && min == min) {
@@ -4015,14 +4012,12 @@ nsHTMLInputElement::IsRangeOverflow() const
   }
 
   double max = GetMaxAsDouble();
-  // Means max == NaN.
-  if (max != max) {
+  if (MOZ_DOUBLE_IS_NaN(max)) {
     return false;
   }
 
   double value = GetValueAsDouble();
-  // value can be NaN when value="".
-  if (value != value) {
+  if (MOZ_DOUBLE_IS_NaN(value)) {
     return false;
   }
 
@@ -4037,14 +4032,12 @@ nsHTMLInputElement::IsRangeUnderflow() const
   }
 
   double min = GetMinAsDouble();
-  // Means min == NaN.
-  if (min != min) {
+  if (MOZ_DOUBLE_IS_NaN(min)) {
     return false;
   }
 
   double value = GetValueAsDouble();
-  // value can be NaN when value="".
-  if (value != value) {
+  if (MOZ_DOUBLE_IS_NaN(value)) {
     return false;
   }
 
@@ -4059,7 +4052,7 @@ nsHTMLInputElement::HasStepMismatch() const
   }
 
   double value = GetValueAsDouble();
-  if (value != value) {
+  if (MOZ_DOUBLE_IS_NaN(value)) {
     // The element can't suffer from step mismatch if it's value isn't a number.
     return false;
   }
@@ -4292,7 +4285,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       nsXPIDLString message;
 
       double max = GetMaxAsDouble();
-      NS_ASSERTION(max == max, "max can't be NaN at this point!");
+      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(max));
 
       nsAutoString maxStr;
       maxStr.AppendFloat(max);
@@ -4309,7 +4302,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       nsXPIDLString message;
 
       double min = GetMinAsDouble();
-      NS_ASSERTION(min == min, "min can't be NaN at this point!");
+      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(min));
 
       nsAutoString minStr;
       minStr.AppendFloat(min);
@@ -4326,16 +4319,13 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       nsXPIDLString message;
 
       double value = GetValueAsDouble();
-      NS_ASSERTION(value == value, "The element can't suffer from a step "
-                                   "mismatch if its value is NaN");
+      MOZ_ASSERT(!MOZ_DOUBLE_IS_NaN(value));
 
       double step = GetStep();
-      NS_ASSERTION(step != kStepAny, "The element can't suffer from a step "
-                                     "mismatch if @step is 'any'");
+      MOZ_ASSERT(step != kStepAny);
 
       double min = GetMinAsDouble();
-      // Means min == NaN.
-      if (min != min) {
+      if (MOZ_DOUBLE_IS_NaN(min)) {
         min = 0.f;
       }
 
@@ -4344,8 +4334,7 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
 
       double max = GetMaxAsDouble();
 
-      // max != max means max == NaN.
-      if (max != max || valueHigh <= max) {
+      if (MOZ_DOUBLE_IS_NaN(max) || valueHigh <= max) {
         nsAutoString valueLowStr, valueHighStr;
         valueLowStr.AppendFloat(valueLow);
         valueHighStr.AppendFloat(valueHigh);
@@ -4805,15 +4794,13 @@ nsHTMLInputElement::UpdateHasRange()
   // <input type=number> has a range if min or max is a valid double.
 
   double min = GetMinAsDouble();
-  // Means min != NaN.
-  if (min == min) {
+  if (!MOZ_DOUBLE_IS_NaN(min)) {
     mHasRange = true;
     return;
   }
 
   double max = GetMaxAsDouble();
-  // Mean max != NaN.
-  if (max == max) {
+  if (!MOZ_DOUBLE_IS_NaN(max)) {
     mHasRange = true;
     return;
   }
