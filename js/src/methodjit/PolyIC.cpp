@@ -1240,7 +1240,7 @@ class GetPropCompiler : public PICStubCompiler
 
         bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
-            MarkNotIdempotent(script, f.regs.pc);
+            MarkNotIdempotent(f.script(), f.pc());
 
             start = masm.label();
             shapeGuardJump = masm.branchPtr(Assembler::NotEqual,
@@ -1292,7 +1292,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         if (!shape->hasDefaultGetter()) {
-            MarkNotIdempotent(script, f.regs.pc);
+            MarkNotIdempotent(f.script(), f.pc());
 
             if (shape->hasGetterValue()) {
                 generateNativeGetterStub(masm, shape, start, shapeMismatches);
@@ -1383,7 +1383,7 @@ class GetPropCompiler : public PICStubCompiler
         GetPropHelper<GetPropCompiler> getprop(cx, obj, name, *this, f);
         LookupStatus status = getprop.lookupAndTest();
         if (status != Lookup_Cacheable) {
-            MarkNotIdempotent(script, f.regs.pc);
+            MarkNotIdempotent(f.script(), f.pc());
             return status;
         }
         if (hadGC())
