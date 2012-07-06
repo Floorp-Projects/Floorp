@@ -106,7 +106,7 @@ frontend::PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtTyp
     stmt->blockObj = NULL;
     stmt->down = ct->topStmt;
     ct->topStmt = stmt;
-    if (STMT_LINKS_SCOPE(stmt)) {
+    if (stmt->linksScope()) {
         stmt->downScope = ct->topScopeStmt;
         ct->topScopeStmt = stmt;
     } else {
@@ -133,7 +133,7 @@ frontend::FinishPopStatement(ContextT *ct)
 {
     typename ContextT::StmtInfo *stmt = ct->topStmt;
     ct->topStmt = stmt->down;
-    if (STMT_LINKS_SCOPE(stmt)) {
+    if (stmt->linksScope()) {
         ct->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE)
             ct->blockChain = stmt->blockObj->enclosingBlock();
