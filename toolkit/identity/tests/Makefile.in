@@ -11,6 +11,7 @@ relativesrcdir = toolkit/identity/tests
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_identity
+XPCSHELL_TESTS = unit
 
 DIRS = chrome
 
