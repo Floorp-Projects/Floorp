@@ -949,7 +949,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
                              const jsval& options,
                              JSContext* cx,
-                             PRInt32 *_retval NS_OUTPARAM)
+                             PRInt32 *_retval)
 {
 
   NS_ENSURE_ARG_POINTER(callback);

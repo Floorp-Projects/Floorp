@@ -41,8 +41,8 @@ nsExternalSharingAppService::ShareWithDefault(const nsAString & data,
 
 NS_IMETHODIMP
 nsExternalSharingAppService::GetSharingApps(const nsAString & aMIMEType,
-                                            PRUint32 *aLen NS_OUTPARAM,
-                                            nsISharingHandlerApp ***aHandlers NS_OUTPARAM)
+                                            PRUint32 *aLen,
+                                            nsISharingHandlerApp ***aHandlers)
 {
   nsresult rv;
   NS_NAMED_LITERAL_STRING(sendAction, "android.intent.action.SEND");

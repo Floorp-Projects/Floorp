@@ -308,7 +308,7 @@ public:
    * @return whether the option is disabled
    */
   NS_IMETHOD IsOptionDisabled(PRInt32 aIndex,
-                              bool *aIsDisabled NS_OUTPARAM);
+                              bool *aIsDisabled);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
@@ -333,7 +333,7 @@ public:
                                        bool aClearAll,
                                        bool aSetDisabled,
                                        bool aNotify,
-                                       bool* aChangedSomething NS_OUTPARAM);
+                                       bool* aChangedSomething);
 
   /**
    * Finds the index of a given option element
@@ -346,7 +346,7 @@ public:
   NS_IMETHOD GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
                             PRInt32 aStartIndex,
                             bool aForward,
-                            PRInt32* aIndex NS_OUTPARAM);
+                            PRInt32* aIndex);
 
   /**
    * Called when an attribute is about to be changed

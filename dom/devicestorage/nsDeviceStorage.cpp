@@ -1230,7 +1230,7 @@ nsDOMDeviceStorage::GetType(nsAString & aType)
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Add(nsIDOMBlob *aBlob, nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+nsDOMDeviceStorage::Add(nsIDOMBlob *aBlob, nsIDOMDOMRequest * *_retval)
 {
   // possible race here w/ unique filename
   char buffer[128];
@@ -1245,7 +1245,7 @@ nsDOMDeviceStorage::Add(nsIDOMBlob *aBlob, nsIDOMDOMRequest * *_retval NS_OUTPAR
 NS_IMETHODIMP
 nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
                              const nsAString & aPath,
-                             nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+                             nsIDOMDOMRequest * *_retval)
 {
   // if the blob is null here, bail
   if (aBlob == nsnull)
@@ -1277,7 +1277,7 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
 NS_IMETHODIMP
 nsDOMDeviceStorage::Get(const JS::Value & aPath,
                         JSContext* aCx,
-                        nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+                        nsIDOMDOMRequest * *_retval)
 {
   return GetInternal(aPath, aCx, _retval, false);
 }
@@ -1285,7 +1285,7 @@ nsDOMDeviceStorage::Get(const JS::Value & aPath,
 NS_IMETHODIMP
 nsDOMDeviceStorage::GetEditable(const JS::Value & aPath,
                                 JSContext* aCx,
-                                nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+                                nsIDOMDOMRequest * *_retval)
 {
   return GetInternal(aPath, aCx, _retval, true);
 }
@@ -1293,7 +1293,7 @@ nsDOMDeviceStorage::GetEditable(const JS::Value & aPath,
 nsresult
 nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
                                 JSContext* aCx,
-                                nsIDOMDOMRequest * *_retval NS_OUTPARAM,
+                                nsIDOMDOMRequest * *_retval,
                                 bool aEditable)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mOwner);
@@ -1331,7 +1331,7 @@ nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMRequest * *_retval)
 {
   nsCOMPtr<nsIRunnable> r;
 

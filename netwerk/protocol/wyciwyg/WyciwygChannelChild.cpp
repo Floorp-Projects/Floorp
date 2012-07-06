@@ -662,7 +662,7 @@ WyciwygChannelChild::SetCharsetAndSource(PRInt32 aSource, const nsACString & aCh
 
 /* ACString getCharsetAndSource (out long aSource); */
 NS_IMETHODIMP
-WyciwygChannelChild::GetCharsetAndSource(PRInt32 *aSource NS_OUTPARAM, nsACString & _retval)
+WyciwygChannelChild::GetCharsetAndSource(PRInt32 *aSource, nsACString & _retval)
 {
   NS_ENSURE_TRUE((mState == WCC_ONSTART) ||
                  (mState == WCC_ONDATA) ||

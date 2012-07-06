@@ -107,19 +107,19 @@ public:
     static nsresult ConvertToFloat(const nsDiscriminatedUnion& data, float *_retval);
     static nsresult ConvertToDouble(const nsDiscriminatedUnion& data, double *_retval);
     static nsresult ConvertToBool(const nsDiscriminatedUnion& data, bool *_retval);
-    static nsresult ConvertToChar(const nsDiscriminatedUnion& data, char *_retval NS_OUTPARAM);
-    static nsresult ConvertToWChar(const nsDiscriminatedUnion& data, PRUnichar *_retval NS_OUTPARAM);
-    static nsresult ConvertToID(const nsDiscriminatedUnion& data, nsID * _retval NS_OUTPARAM);
-    static nsresult ConvertToAString(const nsDiscriminatedUnion& data, nsAString & _retval NS_OUTPARAM);
+    static nsresult ConvertToChar(const nsDiscriminatedUnion& data, char *_retval);
+    static nsresult ConvertToWChar(const nsDiscriminatedUnion& data, PRUnichar *_retval);
+    static nsresult ConvertToID(const nsDiscriminatedUnion& data, nsID * _retval);
+    static nsresult ConvertToAString(const nsDiscriminatedUnion& data, nsAString & _retval);
     static nsresult ConvertToAUTF8String(const nsDiscriminatedUnion& data, nsAUTF8String & _retval);
     static nsresult ConvertToACString(const nsDiscriminatedUnion& data, nsACString & _retval);
     static nsresult ConvertToString(const nsDiscriminatedUnion& data, char **_retval);
     static nsresult ConvertToWString(const nsDiscriminatedUnion& data, PRUnichar **_retval);
     static nsresult ConvertToISupports(const nsDiscriminatedUnion& data, nsISupports **_retval);
-    static nsresult ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid NS_OUTPARAM, void * *iface NS_OUTPARAM);
-    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type NS_OUTPARAM, nsIID* iid NS_OUTPARAM, PRUint32 *count NS_OUTPARAM, void * *ptr);
-    static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size NS_OUTPARAM, char **str);
-    static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size NS_OUTPARAM, PRUnichar **str);
+    static nsresult ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, void * *iface);
+    static nsresult ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsIID* iid, PRUint32 *count, void * *ptr);
+    static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, char **str);
+    static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *size, PRUnichar **str);
 
     static nsresult SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue);
 

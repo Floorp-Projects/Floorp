@@ -37,7 +37,7 @@ RedirectChannelRegistrar::RedirectChannelRegistrar()
 
 NS_IMETHODIMP
 RedirectChannelRegistrar::RegisterChannel(nsIChannel *channel,
-                                          PRUint32 *_retval NS_OUTPARAM)
+                                          PRUint32 *_retval)
 {
   mRealChannels.Put(mId, channel);
   *_retval = mId;
@@ -53,7 +53,7 @@ RedirectChannelRegistrar::RegisterChannel(nsIChannel *channel,
 
 NS_IMETHODIMP
 RedirectChannelRegistrar::GetRegisteredChannel(PRUint32 id,
-                                               nsIChannel **_retval NS_OUTPARAM)
+                                               nsIChannel **_retval)
 {
   if (!mRealChannels.Get(id, _retval))
     return NS_ERROR_NOT_AVAILABLE;
@@ -75,7 +75,7 @@ RedirectChannelRegistrar::LinkChannels(PRUint32 id,
 
 NS_IMETHODIMP
 RedirectChannelRegistrar::GetParentChannel(PRUint32 id,
-                                           nsIParentChannel **_retval NS_OUTPARAM)
+                                           nsIParentChannel **_retval)
 {
   if (!mParentChannels.Get(id, _retval))
     return NS_ERROR_NOT_AVAILABLE;
