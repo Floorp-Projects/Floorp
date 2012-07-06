@@ -89,7 +89,7 @@ NS_IMETHODIMP_(bool) nsDOMStringMap::HasDataAttr(const nsAString& aProp)
 
 /* [noscript] DOMString getDataAttr (in DOMString prop); */
 NS_IMETHODIMP nsDOMStringMap::GetDataAttr(const nsAString& aProp,
-                                          nsAString& aResult NS_OUTPARAM)
+                                          nsAString& aResult)
 {
   nsAutoString attr;
 

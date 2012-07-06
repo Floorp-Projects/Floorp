@@ -212,7 +212,7 @@ private:
   NS_IMETHOD RemoveSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture) { \
     return _to RemoveSystemEventListener(type, listener, aUseCapture); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, bool *_retval NS_OUTPARAM) { \
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, bool *_retval) { \
     return _to DispatchEvent(evt, _retval); \
   } \
   virtual nsIDOMEventTarget * GetTargetForDOMEvent(void) { \
@@ -233,7 +233,7 @@ private:
   virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { \
     return _to GetListenerManager(aMayCreate); \
   } \
-  virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv NS_OUTPARAM) { \
+  virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv) { \
     return _to GetContextForEventHandlers(aRv); \
   } \
   virtual JSContext * GetJSContextForEventHandlers(void) { \

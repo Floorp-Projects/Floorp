@@ -83,7 +83,7 @@ public:
 private:
   ~nsDOMDeviceStorage();
 
-  nsresult GetInternal(const JS::Value & aName, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM, bool aEditable);
+  nsresult GetInternal(const JS::Value & aName, JSContext* aCx, nsIDOMDOMRequest * *_retval, bool aEditable);
 
   nsresult EnumerateInternal(const JS::Value & aName, const JS::Value & aOptions, JSContext* aCx, PRUint8 aArgc, bool aEditable, nsIDOMDeviceStorageCursor** aRetval);
 

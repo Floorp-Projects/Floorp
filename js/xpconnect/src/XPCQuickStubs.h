@@ -403,7 +403,7 @@ castNativeFromWrapper(JSContext *cx,
                       nsISupports **pRef,
                       jsval *pVal,
                       XPCLazyCallContext *lccx,
-                      nsresult *rv NS_OUTPARAM)
+                      nsresult *rv)
 {
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
@@ -510,7 +510,7 @@ castNativeArgFromWrapper(JSContext *cx,
                          PRUint32 bit,
                          nsISupports **pArgRef,
                          jsval *vp,
-                         nsresult *rv NS_OUTPARAM)
+                         nsresult *rv)
 {
     JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
     if (!src)
