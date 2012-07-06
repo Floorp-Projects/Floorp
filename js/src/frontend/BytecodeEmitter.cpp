@@ -520,7 +520,7 @@ EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt)
             FLUSH_POPS();
             if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
                 return false;
-            if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &GOSUBS(*stmt)) < 0)
+            if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmt->gosubs()) < 0)
                 return false;
             break;
 
@@ -3800,13 +3800,13 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (pn->pn_kid2) {
         if (!EmitTree(cx, bce, pn->pn_kid2))
             return false;
-        if (!SetSrcNoteOffset(cx, bce, CATCHNOTE(*stmt), 0, bce->offset() - catchStart))
+        if (!SetSrcNoteOffset(cx, bce, stmt->catchNote(), 0, bce->offset() - catchStart))
             return false;
         /* ifeq <next block> */
         guardJump = EmitJump(cx, bce, JSOP_IFEQ, 0);
         if (guardJump < 0)
             return false;
-        GUARDJUMP(*stmt) = guardJump;
+        stmt->guardJump() = guardJump;
 
         /* Pop duplicated exception object as we no longer need it. */
         if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -3871,7 +3871,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (pn->pn_kid3) {
         if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
             return false;
-        if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &GOSUBS(stmtInfo)) < 0)
+        if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmtInfo.gosubs()) < 0)
             return false;
     }
 
@@ -3914,7 +3914,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             ptrdiff_t guardJump, catchNote;
 
             JS_ASSERT(bce->stackDepth == depth);
-            guardJump = GUARDJUMP(stmtInfo);
+            guardJump = stmtInfo.guardJump();
             if (guardJump != -1) {
                 /* Fix up and clean up previous catch block. */
                 SetJumpOffsetAt(bce, guardJump);
@@ -3952,7 +3952,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             catchNote = NewSrcNote2(cx, bce, SRC_CATCH, 0);
             if (catchNote < 0)
                 return false;
-            CATCHNOTE(stmtInfo) = catchNote;
+            stmtInfo.catchNote() = catchNote;
 
             /*
              * Emit the lexical scope and catch body.  Save the catch's
@@ -3966,7 +3966,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             /* gosub <finally>, if required */
             if (pn->pn_kid3) {
-                if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &GOSUBS(stmtInfo)) < 0)
+                if (EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, &stmtInfo.gosubs()) < 0)
                     return false;
                 JS_ASSERT(bce->stackDepth == depth);
             }
@@ -3995,7 +3995,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * stack unbalanced.
      */
     if (lastCatch && lastCatch->pn_kid2) {
-        SetJumpOffsetAt(bce, GUARDJUMP(stmtInfo));
+        SetJumpOffsetAt(bce, stmtInfo.guardJump());
 
         /* Sync the stack to take into account pushed exception. */
         JS_ASSERT(bce->stackDepth == depth);
@@ -4018,7 +4018,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * Fix up the gosubs that might have been emitted before non-local
          * jumps to the finally code.
          */
-        if (!BackPatch(cx, bce, GOSUBS(stmtInfo), bce->next(), JSOP_GOSUB))
+        if (!BackPatch(cx, bce, stmtInfo.gosubs(), bce->next(), JSOP_GOSUB))
             return false;
 
         finallyStart = bce->offset();

@@ -385,6 +385,30 @@ struct StmtInfoBCE : public StmtInfoBase {
     ptrdiff_t       continues;      /* offset of last continue in loop */
 
     StmtInfoBCE(JSContext *cx) : StmtInfoBase(cx) {}
+
+    /*
+     * To reuse space, alias the three ptrdiff_t fields for use during
+     * try/catch/finally code generation and backpatching.
+     *
+     * Only a loop, switch, or label statement info record can have breaks and
+     * continues, and only a for loop has an update backpatch chain, so it's
+     * safe to overlay these for the "trying" StmtTypes.
+     */
+
+    ptrdiff_t &gosubs() {
+        JS_ASSERT(type == STMT_FINALLY);
+        return breaks;
+    }
+
+    ptrdiff_t &catchNote() {
+        JS_ASSERT(type == STMT_TRY || type == STMT_FINALLY);
+        return update;
+    }
+
+    ptrdiff_t &guardJump() {
+        JS_ASSERT(type == STMT_TRY || type == STMT_FINALLY);
+        return continues;
+    }
 };
 
 namespace frontend {
