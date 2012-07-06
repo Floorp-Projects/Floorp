@@ -878,7 +878,10 @@ abstract public class GeckoApp
 
     void handlePageShow(final int tabId) { }
 
-    void handleClearHistory() { }
+    void handleClearHistory() {
+        BrowserDB.clearHistory(getContentResolver());
+        mFavicons.clearFavicons();
+    }
 
     public StartupMode getStartupMode() {
         // This function might touch the disk and should not
@@ -1252,6 +1255,8 @@ abstract public class GeckoApp
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            } else if (event.equals("Sanitize:ClearHistory")) {
+                handleClearHistory();
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1950,6 +1955,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2294,6 +2300,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();
