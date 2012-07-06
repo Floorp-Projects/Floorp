@@ -36,22 +36,22 @@ public:
   virtual ~FTPChannelParent();
 
 protected:
-  NS_OVERRIDE virtual bool RecvAsyncOpen(const IPC::URI& uri,
-                                         const PRUint64& startPos,
-                                         const nsCString& entityID,
-                                         const IPC::InputStream& uploadStream,
-                                         const bool& haveLoadContext,
-                                         const bool& isContent,
-                                         const bool& usingPrivateBrowsing,
-                                         const bool& isInBrowserElement,
-                                         const PRUint32& appId,
-                                         const nsCString& extendedOrigin);
-  NS_OVERRIDE virtual bool RecvConnectChannel(const PRUint32& channelId);
-  NS_OVERRIDE virtual bool RecvCancel(const nsresult& status);
-  NS_OVERRIDE virtual bool RecvSuspend();
-  NS_OVERRIDE virtual bool RecvResume();
+  virtual bool RecvAsyncOpen(const IPC::URI& uri,
+                             const PRUint64& startPos,
+                             const nsCString& entityID,
+                             const IPC::InputStream& uploadStream,
+                             const bool& haveLoadContext,
+                             const bool& isContent,
+                             const bool& usingPrivateBrowsing,
+                             const bool& isInBrowserElement,
+                             const PRUint32& appId,
+                             const nsCString& extendedOrigin) MOZ_OVERRIDE;
+  virtual bool RecvConnectChannel(const PRUint32& channelId) MOZ_OVERRIDE;
+  virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;
+  virtual bool RecvSuspend() MOZ_OVERRIDE;
+  virtual bool RecvResume() MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   nsRefPtr<nsFtpChannel> mChannel;
 

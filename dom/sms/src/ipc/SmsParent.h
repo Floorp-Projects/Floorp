@@ -24,17 +24,17 @@ public:
 
   SmsParent();
 
-  NS_OVERRIDE virtual bool RecvHasSupport(bool* aHasSupport);
-  NS_OVERRIDE virtual bool RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResult);
-  NS_OVERRIDE virtual bool RecvSendMessage(const nsString& aNumber, const nsString& aMessage, const PRInt32& aRequestId, const PRUint64& aProcessId);
-  NS_OVERRIDE virtual bool RecvSaveReceivedMessage(const nsString& aSender, const nsString& aBody, const PRUint64& aDate, PRInt32* aId);
-  NS_OVERRIDE virtual bool RecvSaveSentMessage(const nsString& aRecipient, const nsString& aBody, const PRUint64& aDate, PRInt32* aId);
-  NS_OVERRIDE virtual bool RecvGetMessage(const PRInt32& aMessageId, const PRInt32& aRequestId, const PRUint64& aProcessId);
-  NS_OVERRIDE virtual bool RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestId, const PRUint64& aProcessId);
-  NS_OVERRIDE virtual bool RecvCreateMessageList(const SmsFilterData& aFilter, const bool& aReverse, const PRInt32& aRequestId, const PRUint64& aProcessId);
-  NS_OVERRIDE virtual bool RecvGetNextMessageInList(const PRInt32& aListId, const PRInt32& aRequestId, const PRUint64& aProcessId);
-  NS_OVERRIDE virtual bool RecvClearMessageList(const PRInt32& aListId);
-  NS_OVERRIDE virtual bool RecvMarkMessageRead(const PRInt32& aMessageId, const bool& aValue, const PRInt32& aRequestId, const PRUint64& aProcessId);
+  virtual bool RecvHasSupport(bool* aHasSupport) MOZ_OVERRIDE;
+  virtual bool RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResult) MOZ_OVERRIDE;
+  virtual bool RecvSendMessage(const nsString& aNumber, const nsString& aMessage, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
+  virtual bool RecvSaveReceivedMessage(const nsString& aSender, const nsString& aBody, const PRUint64& aDate, PRInt32* aId) MOZ_OVERRIDE;
+  virtual bool RecvSaveSentMessage(const nsString& aRecipient, const nsString& aBody, const PRUint64& aDate, PRInt32* aId) MOZ_OVERRIDE;
+  virtual bool RecvGetMessage(const PRInt32& aMessageId, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
+  virtual bool RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
+  virtual bool RecvCreateMessageList(const SmsFilterData& aFilter, const bool& aReverse, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
+  virtual bool RecvGetNextMessageInList(const PRInt32& aListId, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
+  virtual bool RecvClearMessageList(const PRInt32& aListId) MOZ_OVERRIDE;
+  virtual bool RecvMarkMessageRead(const PRInt32& aMessageId, const bool& aValue, const PRInt32& aRequestId, const PRUint64& aProcessId) MOZ_OVERRIDE;
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason why);

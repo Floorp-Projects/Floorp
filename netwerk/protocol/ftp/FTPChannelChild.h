@@ -61,24 +61,24 @@ public:
   // default behavior, in order to be e10s-friendly.
   NS_IMETHOD IsPending(bool* result);
 
-  NS_OVERRIDE nsresult OpenContentStream(bool async,
-                                         nsIInputStream** stream,
-                                         nsIChannel** channel);
+  nsresult OpenContentStream(bool async,
+                             nsIInputStream** stream,
+                             nsIChannel** channel) MOZ_OVERRIDE;
 
   bool IsSuspended();
 
 protected:
-  NS_OVERRIDE bool RecvOnStartRequest(const PRInt32& aContentLength,
-                                      const nsCString& aContentType,
-                                      const PRTime& aLastModified,
-                                      const nsCString& aEntityID,
-                                      const IPC::URI& aURI);
-  NS_OVERRIDE bool RecvOnDataAvailable(const nsCString& data,
-                                       const PRUint32& offset,
-                                       const PRUint32& count);
-  NS_OVERRIDE bool RecvOnStopRequest(const nsresult& statusCode);
-  NS_OVERRIDE bool RecvFailedAsyncOpen(const nsresult& statusCode);
-  NS_OVERRIDE bool RecvDeleteSelf();
+  bool RecvOnStartRequest(const PRInt32& aContentLength,
+                          const nsCString& aContentType,
+                          const PRTime& aLastModified,
+                          const nsCString& aEntityID,
+                          const IPC::URI& aURI) MOZ_OVERRIDE;
+  bool RecvOnDataAvailable(const nsCString& data,
+                           const PRUint32& offset,
+                           const PRUint32& count) MOZ_OVERRIDE;
+  bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
+  bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
+  bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   void DoOnStartRequest(const PRInt32& aContentLength,
                         const nsCString& aContentType,

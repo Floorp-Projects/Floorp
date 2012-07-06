@@ -24,15 +24,13 @@ public:
     void Main();
 
 protected:    
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
     }
 
-    NS_OVERRIDE
-    virtual void ProcessingError(Result what);
+    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     bool mGotProcessingError;
 };
@@ -46,11 +44,9 @@ public:
     virtual ~TestRPCErrorCleanupChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool AnswerError();
+    virtual bool AnswerError() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         fail("should have 'crashed'!");
     }

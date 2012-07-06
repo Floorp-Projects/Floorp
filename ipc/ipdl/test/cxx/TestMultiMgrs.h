@@ -40,14 +40,12 @@ public:
     }
 
 protected:
-    NS_OVERRIDE
-    virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottom()
+    virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottom() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomParent();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomParent* actor)
+    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -67,14 +65,12 @@ public:
     }
 
 protected:
-    NS_OVERRIDE
-    virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottom()
+    virtual PTestMultiMgrsBottomParent* AllocPTestMultiMgrsBottom() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomParent();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomParent* actor)
+    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -94,37 +90,31 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvOK();
+    virtual bool RecvOK() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsLeftParent* AllocPTestMultiMgrsLeft()
+    virtual PTestMultiMgrsLeftParent* AllocPTestMultiMgrsLeft() MOZ_OVERRIDE
     {
         return new TestMultiMgrsLeftParent();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsLeft(PTestMultiMgrsLeftParent* actor)
+    virtual bool DeallocPTestMultiMgrsLeft(PTestMultiMgrsLeftParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsRightParent* AllocPTestMultiMgrsRight()
+    virtual PTestMultiMgrsRightParent* AllocPTestMultiMgrsRight() MOZ_OVERRIDE
     {
         return new TestMultiMgrsRightParent();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsRight(PTestMultiMgrsRightParent* actor)
+    virtual bool DeallocPTestMultiMgrsRight(PTestMultiMgrsRightParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -158,17 +148,14 @@ public:
     }
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor);
+    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottom()
+    virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottom() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomChild();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomChild* actor)
+    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -188,17 +175,14 @@ public:
     }
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor);
+    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottom()
+    virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottom() MOZ_OVERRIDE
     {
         return new TestMultiMgrsBottomChild();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomChild* actor)
+    virtual bool DeallocPTestMultiMgrsBottom(PTestMultiMgrsBottomChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
@@ -218,37 +202,31 @@ public:
     PTestMultiMgrsBottomChild* mBottomR;
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvCheck();
+    virtual bool RecvCheck() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsLeftChild* AllocPTestMultiMgrsLeft()
+    virtual PTestMultiMgrsLeftChild* AllocPTestMultiMgrsLeft() MOZ_OVERRIDE
     {
         return new TestMultiMgrsLeftChild();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsLeft(PTestMultiMgrsLeftChild* actor)
+    virtual bool DeallocPTestMultiMgrsLeft(PTestMultiMgrsLeftChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual PTestMultiMgrsRightChild* AllocPTestMultiMgrsRight()
+    virtual PTestMultiMgrsRightChild* AllocPTestMultiMgrsRight() MOZ_OVERRIDE
     {
         return new TestMultiMgrsRightChild();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestMultiMgrsRight(PTestMultiMgrsRightChild* actor)
+    virtual bool DeallocPTestMultiMgrsRight(PTestMultiMgrsRightChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
