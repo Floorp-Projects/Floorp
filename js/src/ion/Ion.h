@@ -162,6 +162,11 @@ struct IonOptions
     // Default: false
     bool eagerCompilation;
 
+    // If a function has attempted to make this many calls to
+    // functions that are marked "uncompileable", then
+    // stop running this function in IonMonkey. (default 512)
+    uint32 slowCallLimit;
+
     void setEagerCompilation() {
         eagerCompilation = true;
         usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
@@ -190,7 +195,8 @@ struct IonOptions
         smallFunctionUsesBeforeInlining(usesBeforeInlining / 4),
         polyInlineMax(4),
         inlineMaxTotalBytecodeLength(800),
-        eagerCompilation(false)
+        eagerCompilation(false),
+        slowCallLimit(512)
     { }
 };
 
