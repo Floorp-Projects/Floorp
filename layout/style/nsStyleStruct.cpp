@@ -2142,7 +2142,28 @@ nsStyleDisplay::nsStyleDisplay()
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-  : mTransitions(aSource.mTransitions)
+  : mBinding(aSource.mBinding)
+  , mClip(aSource.mClip)
+  , mOpacity(aSource.mOpacity)
+  , mDisplay(aSource.mDisplay)
+  , mOriginalDisplay(aSource.mOriginalDisplay)
+  , mAppearance(aSource.mAppearance)
+  , mPosition(aSource.mPosition)
+  , mFloats(aSource.mFloats)
+  , mOriginalFloats(aSource.mOriginalFloats)
+  , mBreakType(aSource.mBreakType)
+  , mBreakBefore(aSource.mBreakBefore)
+  , mBreakAfter(aSource.mBreakAfter)
+  , mOverflowX(aSource.mOverflowX)
+  , mOverflowY(aSource.mOverflowY)
+  , mResize(aSource.mResize)
+  , mClipFlags(aSource.mClipFlags)
+  , mOrient(aSource.mOrient)
+  , mBackfaceVisibility(aSource.mBackfaceVisibility)
+  , mTransformStyle(aSource.mTransformStyle)
+  , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mChildPerspective(aSource.mChildPerspective)
+  , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
   , mTransitionDurationCount(aSource.mTransitionDurationCount)
   , mTransitionDelayCount(aSource.mTransitionDelayCount)
@@ -2158,36 +2179,13 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-  mAppearance = aSource.mAppearance;
-  mDisplay = aSource.mDisplay;
-  mOriginalDisplay = aSource.mOriginalDisplay;
-  mOriginalFloats = aSource.mOriginalFloats;
-  mBinding = aSource.mBinding;
-  mPosition = aSource.mPosition;
-  mFloats = aSource.mFloats;
-  mBreakType = aSource.mBreakType;
-  mBreakBefore = aSource.mBreakBefore;
-  mBreakAfter = aSource.mBreakAfter;
-  mOverflowX = aSource.mOverflowX;
-  mOverflowY = aSource.mOverflowY;
-  mResize = aSource.mResize;
-  mClipFlags = aSource.mClipFlags;
-  mClip = aSource.mClip;
-  mOpacity = aSource.mOpacity;
-  mOrient = aSource.mOrient;
 
-  /* Copy over the transformation information. */
-  mSpecifiedTransform = aSource.mSpecifiedTransform;
-  
   /* Copy over transform origin. */
   mTransformOrigin[0] = aSource.mTransformOrigin[0];
   mTransformOrigin[1] = aSource.mTransformOrigin[1];
   mTransformOrigin[2] = aSource.mTransformOrigin[2];
   mPerspectiveOrigin[0] = aSource.mPerspectiveOrigin[0];
   mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
-  mChildPerspective = aSource.mChildPerspective;
-  mBackfaceVisibility = aSource.mBackfaceVisibility;
-  mTransformStyle = aSource.mTransformStyle;
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
