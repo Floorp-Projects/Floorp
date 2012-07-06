@@ -504,9 +504,14 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
     // because the service self updates itself and the service
     // installer will stop the service.
     LOG(("Service command %ls complete.\n", argv[2]));
-  } else if (!lstrcmpi(argv[2], L"clear-prefetch")) {
+  }
+  // See Bug 770883
+#if 0
+  else if (!lstrcmpi(argv[2], L"clear-prefetch")) {
     result = ClearKnownPrefetch();
-  } else {
+  } 
+#endif
+  else {
     LOG(("Service command not recognized: %ls.\n", argv[2]));
     // result is already set to FALSE
   }
