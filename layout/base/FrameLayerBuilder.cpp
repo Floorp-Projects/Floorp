@@ -2582,6 +2582,12 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       break;
   }
 
+  {
+    ThebesLayerItemsEntry* entry =
+      builder->LayerBuilder()->mThebesLayerItems.GetEntry(aLayer);
+    items.SwapElements(entry->mItems);
+  }
+
   if (setClipRect) {
     aContext->Restore();
   }
