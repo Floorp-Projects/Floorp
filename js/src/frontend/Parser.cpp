@@ -568,7 +568,7 @@ Parser::functionBody(FunctionBodyType type)
 
     StmtInfoTC stmtInfo(context);
     PushStatementTC(tc, &stmtInfo, STMT_BLOCK);
-    stmtInfo.flags = SIF_BODY_BLOCK;
+    stmtInfo.isFunctionBodyBlock = true;
 
     JS_ASSERT(!tc->hasReturnExpr && !tc->hasReturnVoid);
 
@@ -598,7 +598,7 @@ Parser::functionBody(FunctionBodyType type)
     }
 
     if (pn) {
-        JS_ASSERT(!(tc->topStmt->flags & SIF_SCOPE));
+        JS_ASSERT(!tc->topStmt->isBlockScope);
         FinishPopStatement(tc);
 
         /* Check for falling off the end of a function that returns a value. */
@@ -2044,7 +2044,7 @@ struct RemoveDecl {
 static void
 PopStatementTC(TreeContext *tc)
 {
-    if (tc->topStmt->flags & SIF_SCOPE) {
+    if (tc->topStmt->isBlockScope) {
         StaticBlockObject &blockObj = *tc->topStmt->blockObj;
         JS_ASSERT(!blockObj.inDictionaryMode());
         ForEachLetDef(tc, blockObj, RemoveDecl());
@@ -3237,7 +3237,7 @@ Parser::forStatement()
             ParseNode *block = PushLetScope(context, this, *blockObj, &letStmt);
             if (!block)
                 return NULL;
-            letStmt.flags |= SIF_FOR_BLOCK;
+            letStmt.isForLetBlock = true;
             block->pn_expr = pn1;
             pn1 = block;
         }
@@ -3294,7 +3294,7 @@ Parser::forStatement()
             ParseNode *block = PushLetScope(context, this, *blockObj, &letStmt);
             if (!block)
                 return NULL;
-            letStmt.flags |= SIF_FOR_BLOCK;
+            letStmt.isForLetBlock = true;
 
             ParseNode *let = new_<BinaryNode>(PNK_LET, JSOP_NOP, pos, pn1, block);
             if (!let)
@@ -3622,15 +3622,15 @@ Parser::letStatement()
          * we also need to set tc->blockNode to be our TOK_LEXICALSCOPE.
          */
         StmtInfoTC *stmt = tc->topStmt;
-        if (stmt && (!stmt->maybeScope() || (stmt->flags & SIF_FOR_BLOCK))) {
+        if (stmt && (!stmt->maybeScope() || stmt->isForLetBlock)) {
             reportError(NULL, JSMSG_LET_DECL_NOT_IN_BLOCK);
             return NULL;
         }
 
-        if (stmt && (stmt->flags & SIF_SCOPE)) {
+        if (stmt && stmt->isBlockScope) {
             JS_ASSERT(tc->blockChain == stmt->blockObj);
         } else {
-            if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
+            if (!stmt || stmt->isFunctionBodyBlock) {
                 /*
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
@@ -3647,7 +3647,7 @@ Parser::letStatement()
              * situation. This stmt is not yet a scope, so it must not be a
              * catch block (catch is a lexical scope by definition).
              */
-            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
+            JS_ASSERT(!stmt->isBlockScope);
             JS_ASSERT(stmt != tc->topScopeStmt);
             JS_ASSERT(stmt->type == STMT_BLOCK ||
                       stmt->type == STMT_SWITCH ||
@@ -3670,7 +3670,7 @@ Parser::letStatement()
              * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
              * block.
              */
-            stmt->flags |= SIF_SCOPE;
+            stmt->isBlockScope = true;
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
