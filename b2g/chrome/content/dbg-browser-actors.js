@@ -161,7 +161,7 @@ DeviceTabActor.prototype = {
                'tab should have an actorID.');
     return {
       'actor': this.actorID,
-      'title': this.browser.contentTitle,
+      'title': this.browser.title,
       'url': this.browser.document.documentURI
     }
   },
@@ -222,7 +222,7 @@ DeviceTabActor.prototype = {
     this.conn.addActorPool(this._contextPool);
 
     this.threadActor = new ThreadActor(this);
-    this._addDebuggees(this.browser.content.wrappedJSObject);
+    this._addDebuggees(this.browser.wrappedJSObject);
     this._contextPool.addActor(this.threadActor);
   },
 
@@ -293,7 +293,7 @@ DeviceTabActor.prototype = {
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function DTA_preNest() {
-    let windowUtils = this.browser.content
+    let windowUtils = this.browser
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.suppressEventHandling(true);
@@ -304,7 +304,7 @@ DeviceTabActor.prototype = {
    * Prepare to exit a nested event loop by enabling debuggee events.
    */
   postNest: function DTA_postNest(aNestData) {
-    let windowUtils = this.browser.content
+    let windowUtils = this.browser
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.resumeTimeouts();
