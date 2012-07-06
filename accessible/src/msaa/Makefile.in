@@ -69,6 +69,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xpcom \
   -I$(srcdir)/../xul \
+  -I$(srcdir)/../windows/uia \
   -I$(srcdir)/../../../content/base/src \
   -I$(srcdir)/../../../content/events/src \
   $(NULL)

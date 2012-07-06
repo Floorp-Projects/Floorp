@@ -21,8 +21,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(XULListboxAccessibleWrap,
                              XULListboxAccessible)
 
 IMPL_IUNKNOWN_QUERY_HEAD(XULListboxAccessibleWrap)
-IMPL_IUNKNOWN_QUERY_ENTRY_COND(CAccessibleTable, IsMulticolumn());
-IMPL_IUNKNOWN_QUERY_ENTRY(AccessibleWrap)
+IMPL_IUNKNOWN_QUERY_CLASS_COND(CAccessibleTable, IsMulticolumn());
+IMPL_IUNKNOWN_QUERY_CLASS(AccessibleWrap)
 IMPL_IUNKNOWN_QUERY_TAIL
 
 

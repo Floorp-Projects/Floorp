@@ -14,7 +14,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 PLATFORM_DIR = atk
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-PLATFORM_DIR = msaa
+PLATFORM_DIR = \
+  msaa \
+  windows \
+  $(null)
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 PLATFORM_DIR += mac
