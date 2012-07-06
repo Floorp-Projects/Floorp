@@ -17,51 +17,104 @@
 #include "ia2AccessibleHyperlink.h"
 #include "CAccessibleValue.h"
 
-#define DECL_IUNKNOWN_INHERITED                                               \
-public:                                                                       \
-STDMETHODIMP QueryInterface(REFIID, void**);                                  \
+#define DECL_IUNKNOWN                                                          \
+public:                                                                        \
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);            \
+  virtual ULONG STDMETHODCALLTYPE AddRef() MOZ_FINAL                           \
+    {  return ++mRefCnt; }                                                     \
+  virtual ULONG STDMETHODCALLTYPE Release() MOZ_FINAL                          \
+  {                                                                            \
+     mRefCnt--;                                                                \
+     if (mRefCnt)                                                              \
+       return mRefCnt;                                                         \
+                                                                               \
+     delete this;                                                              \
+     return 0;                                                                 \
+  }                                                                            \
+private:                                                                       \
+  ULONG mRefCnt;                                                               \
+public:
 
-#define IMPL_IUNKNOWN_QUERY_HEAD(Class)                                       \
-STDMETHODIMP                                                                  \
-Class::QueryInterface(REFIID iid, void** ppv)                                 \
-{                                                                             \
-  HRESULT hr = E_NOINTERFACE;                                                 \
-  *ppv = NULL;                                                                \
+#define DECL_IUNKNOWN_INHERITED                                                \
+public:                                                                        \
+virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);              \
 
-#define IMPL_IUNKNOWN_QUERY_TAIL                                              \
-  return hr;                                                                  \
-}                                                                             \
+#define IMPL_IUNKNOWN_QUERY_HEAD(Class)                                        \
+STDMETHODIMP                                                                   \
+Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
+{                                                                              \
+__try {                                                                        \
+  if (!aInstancePtr)                                                           \
+    return E_INVALIDARG;                                                       \
+  *aInstancePtr = NULL;                                                        \
+                                                                               \
+  HRESULT hr = E_NOINTERFACE;
 
-#define IMPL_IUNKNOWN_QUERY_ENTRY(Class)                                      \
-  hr = Class::QueryInterface(iid, ppv);                                       \
-  if (SUCCEEDED(hr))                                                          \
-    return hr;                                                                \
+#define IMPL_IUNKNOWN_QUERY_TAIL                                               \
+  return hr;                                                                   \
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),        \
+                                                  GetExceptionInformation())) { } \
+  return E_NOINTERFACE;                                                        \
+}
 
-#define IMPL_IUNKNOWN_QUERY_ENTRY_COND(Class, Cond)                           \
-  if (Cond) {                                                                 \
-    hr = Class::QueryInterface(iid, ppv);                                     \
-    if (SUCCEEDED(hr))                                                        \
-      return hr;                                                              \
-  }                                                                           \
+#define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \
+  if (aIID == IID_##Iface) {                                                   \
+    *aInstancePtr = static_cast<Iface*>(this);                                 \
+    AddRef();                                                                  \
+    return S_OK;                                                               \
+  }
 
-#define IMPL_IUNKNOWN_INHERITED0(Class, Super)                                \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
-  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+#define IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(Iface, aResolveIface)              \
+  if (aIID == IID_##Iface) {                                                   \
+    *aInstancePtr = static_cast<Iface*>(static_cast<aResolveIface*>(this));    \
+    AddRef();                                                                  \
+    return S_OK;                                                               \
+  }
 
-#define IMPL_IUNKNOWN_INHERITED1(Class, Super, I1)                            \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
-  IMPL_IUNKNOWN_QUERY_ENTRY(I1);                                              \
-  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+#define IMPL_IUNKNOWN_QUERY_CLASS(Class)                                       \
+  hr = Class::QueryInterface(aIID, aInstancePtr);                              \
+  if (SUCCEEDED(hr))                                                           \
+    return hr;
 
-#define IMPL_IUNKNOWN_INHERITED2(Class, Super, I1, I2)                        \
-  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
-  IMPL_IUNKNOWN_QUERY_ENTRY(I1);                                              \
-  IMPL_IUNKNOWN_QUERY_ENTRY(I2);                                              \
-  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
-  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+#define IMPL_IUNKNOWN_QUERY_CLASS_COND(Class, Cond)                            \
+  if (Cond) {                                                                  \
+    hr = Class::QueryInterface(aIID, aInstancePtr);                            \
+    if (SUCCEEDED(hr))                                                         \
+      return hr;                                                               \
+  }
 
+#define IMPL_IUNKNOWN_QUERY_AGGR_COND(Member, Cond)                            \
+  if (Cond) {                                                                  \
+    hr = Member->QueryInterface(aIID, aInstancePtr);                           \
+    if (SUCCEEDED(hr))                                                         \
+      return hr;                                                               \
+  }
+
+#define IMPL_IUNKNOWN1(Class, I1)                                              \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
+  IMPL_IUNKNOWN_QUERY_IFACE(I1);                                               \
+  IMPL_IUNKNOWN_QUERY_IFACE(IUnknown);                                         \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+
+#define IMPL_IUNKNOWN2(Class, I1, I2)                                          \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
+  IMPL_IUNKNOWN_QUERY_IFACE(I1);                                               \
+  IMPL_IUNKNOWN_QUERY_IFACE(I2);                                               \
+  IMPL_IUNKNOWN_QUERY_IFACE_AMBIGIOUS(IUnknown, I1);                           \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+
+#define IMPL_IUNKNOWN_INHERITED1(Class, Super0, Super1)                        \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                     \
+
+#define IMPL_IUNKNOWN_INHERITED2(Class, Super0, Super1, Super2)                \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                              \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super1);                                           \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
+  IMPL_IUNKNOWN_QUERY_CLASS(Super0)                                            \
+  IMPL_IUNKNOWN_QUERY_TAIL
 
 class AccessibleWrap : public Accessible,
                        public ia2AccessibleComponent,
@@ -82,6 +135,11 @@ public: // construction, destruction
 
   // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
+
+  // IServiceProvider
+  virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID aGuidService,
+                                                 REFIID aIID,
+                                                 void** aInstancePtr);
 
   public: // COM interface IAccessible
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 

@@ -32,6 +32,10 @@ SHARED_LIBRARY_LIBS = \
   ../src/xforms/$(LIB_PREFIX)accessibility_xforms_s.$(LIB_SUFFIX) \
   $(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+SHARED_LIBRARY_LIBS += ../src/windows/uia/$(LIB_PREFIX)accessibility_toolkit_uia_s.$(LIB_SUFFIX)
+endif
+
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += ../src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
 endif
