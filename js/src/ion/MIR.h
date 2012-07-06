@@ -1257,6 +1257,50 @@ class MCall
     }
 };
 
+// fun.apply(self, arguments)
+class MApplyArgs
+  : public MAryInstruction<3>,
+    public MixPolicy<ObjectPolicy<0>, MixPolicy<IntPolicy<1>, BoxPolicy<2> > >
+{
+  protected:
+    // Monomorphic cache of single target from TI, or NULL.
+    CompilerRootFunction target_;
+
+    MApplyArgs(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefinition *self)
+      : target_(target)
+    {
+        initOperand(0, fun);
+        initOperand(1, argc);
+        initOperand(2, self);
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ApplyArgs);
+    static MApplyArgs *New(JSFunction *target, MDefinition *fun, MDefinition *argc,
+                           MDefinition *self);
+
+    MDefinition *getFunction() const {
+        return getOperand(0);
+    }
+
+    // For TI-informed monomorphic callsites.
+    JSFunction *getSingleTarget() const {
+        return target_;
+    }
+
+    MDefinition *getArgc() const {
+        return getOperand(1);
+    }
+    MDefinition *getThis() const {
+        return getOperand(2);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MUnaryInstruction : public MAryInstruction<1>
 {
   protected:

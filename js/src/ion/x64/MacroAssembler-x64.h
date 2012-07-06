@@ -88,6 +88,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
   public:
     using MacroAssemblerX86Shared::call;
     using MacroAssemblerX86Shared::Push;
+    using MacroAssemblerX86Shared::callWithExitFrame;
 
     enum Result {
         GENERAL,
@@ -371,6 +372,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             addq(Imm32(amount), StackPointer);
         framePushed_ -= amount;
     }
+    void freeStack(Register amount) {
+        addq(amount, StackPointer);
+    }
 
     void addPtr(const Register &src, const Register &dest) {
         addq(src, dest);
@@ -383,6 +387,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void subPtr(Imm32 imm, const Register &dest) {
         subq(imm, dest);
+    }
+    void subPtr(const Register &src, const Register &dest) {
+        subq(src, dest);
     }
 
     // Specialization for AbsoluteAddress.
@@ -414,6 +421,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         testq(lhs, rhs);
+        j(cond, label);
+    }
+    void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        subPtr(imm, lhs);
         j(cond, label);
     }
 
@@ -805,6 +816,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void linkExitFrame() {
         mov(ImmWord(GetIonContext()->cx->runtime), ScratchReg);
         mov(StackPointer, Operand(ScratchReg, offsetof(JSRuntime, ionTop)));
+    }
+
+    void callWithExitFrame(IonCode *target, Register dynStack) {
+        addPtr(Imm32(framePushed()), dynStack);
+        makeFrameDescriptor(dynStack, IonFrame_JS);
+        Push(dynStack);
+        call(target);
     }
 
     void enterOsr(Register calleeToken, Register code) {

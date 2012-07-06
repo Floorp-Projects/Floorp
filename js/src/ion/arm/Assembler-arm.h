@@ -85,6 +85,8 @@ static const Register CallTempReg0 = r5;
 static const Register CallTempReg1 = r6;
 static const Register CallTempReg2 = r7;
 static const Register CallTempReg3 = r8;
+static const Register CallTempReg4 = r0;
+static const Register CallTempReg5 = r1;
 
 static const Register PreBarrierReg = r1;
 

@@ -231,6 +231,8 @@ class IonBailoutIterator : public IonFrameIterator
             return topIonScript_;
         return IonFrameIterator::ionScript();
     }
+
+    void dump() const;
 };
 
 bool EnsureHasCallObject(JSContext *cx, StackFrame *fp);

@@ -375,7 +375,7 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *callPointOffset)
 // Before doing any call to Cpp, you should ensure that volatile
 // registers are evicted by the register allocator.
 bool
-CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
+CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Register *dynStack)
 {
 #ifdef DEBUG
     if (ins->mirRaw()) {
@@ -403,7 +403,11 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
     // returned value, use another LIR instruction.
-    masm.callWithExitFrame(wrapper);
+    if (dynStack)
+        masm.callWithExitFrame(wrapper, *dynStack);
+    else
+        masm.callWithExitFrame(wrapper);
+
     if (!markSafepoint(ins))
         return false;
 

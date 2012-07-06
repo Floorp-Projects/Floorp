@@ -1383,6 +1383,18 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 }
 
 void
+MacroAssemblerARMCompat::callWithExitFrame(IonCode *target, Register dynStack)
+{
+    ma_add(Imm32(framePushed()), dynStack);
+    makeFrameDescriptor(dynStack, IonFrame_JS);
+    Push(dynStack); // descriptor
+
+    addPendingJump(m_buffer.nextOffset(), target->raw(), Relocation::IONCODE);
+    ma_mov(Imm32((int) target->raw()), ScratchRegister);
+    ma_callIonHalfPush(ScratchRegister);
+}
+
+void
 MacroAssemblerARMCompat::callIon(const Register &callee)
 {
     JS_ASSERT((framePushed() & 3) == 0);
@@ -1408,6 +1420,11 @@ MacroAssemblerARMCompat::freeStack(uint32 amount)
     if (amount)
         ma_add(Imm32(amount), sp);
     adjustFrame(-amount);
+}
+void
+MacroAssemblerARMCompat::freeStack(Register amount)
+{
+    ma_add(amount, sp);
 }
 
 void
