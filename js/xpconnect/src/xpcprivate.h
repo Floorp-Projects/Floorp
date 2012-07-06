@@ -763,6 +763,7 @@ public:
 
     nsresult AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     nsresult RemoveJSHolder(void* aHolder);
+    nsresult TestJSHolder(void* aHolder, bool* aRetval);
 
     static void SuspectWrappedNative(XPCWrappedNative *wrapper,
                                      nsCycleCollectionTraversalCallback &cb);
