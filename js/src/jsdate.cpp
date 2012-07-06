@@ -128,76 +128,58 @@ using namespace js::types;
  * general going-over.
  */
 
-/*
- * Supporting functions - ECMA 15.9.1.*
- */
+/* ES5 15.9.1.2. */
+const double msPerDay = 86400000;
 
-#define HoursPerDay     24.0
-#define MinutesPerDay   (HoursPerDay * MinutesPerHour)
-#define MinutesPerHour  60.0
-#define SecondsPerDay   (MinutesPerDay * SecondsPerMinute)
-#define SecondsPerHour  (MinutesPerHour * SecondsPerMinute)
-#define SecondsPerMinute 60.0
-
-#if defined(XP_WIN) || defined(XP_OS2)
-/* Work around msvc double optimization bug by making these runtime values; if
- * they're available at compile time, msvc optimizes division by them by
- * computing the reciprocal and multiplying instead of dividing - this loses
- * when the reciprocal isn't representable in a double.
- */
-static double msPerSecond = 1000.0;
-static double msPerDay = SecondsPerDay * 1000.0;
-static double msPerHour = SecondsPerHour * 1000.0;
-static double msPerMinute = SecondsPerMinute * 1000.0;
-#else
-#define msPerDay        (SecondsPerDay * msPerSecond)
-#define msPerHour       (SecondsPerHour * msPerSecond)
-#define msPerMinute     (SecondsPerMinute * msPerSecond)
-#define msPerSecond     1000.0
-#endif
-
-#define Day(t)          floor((t) / msPerDay)
+inline double
+Day(double t)
+{
+    return floor(t / msPerDay);
+}
 
 static double
 TimeWithinDay(double t)
 {
-    double result;
-    result = fmod(t, msPerDay);
+    double result = fmod(t, msPerDay);
     if (result < 0)
         result += msPerDay;
     return result;
 }
 
-static inline bool
+/* ES5 15.9.1.3. */
+inline bool
 IsLeapYear(int year)
 {
     return year % 4 == 0 && (year % 100 || (year % 400 == 0));
 }
 
-static inline int
+inline int
 DaysInYear(int year)
 {
     return IsLeapYear(year) ? 366 : 365;
 }
 
-static inline int
-DaysInFebruary(int year)
+inline int
+DayFromYear(int y)
 {
-    return IsLeapYear(year) ? 29 : 28;
+    /* This is floating-point math so that floor((1968 - 1969) / 4) == -1. */
+    return 365 * (y - 1970) +
+           floor((y - 1969) / 4.0) -
+           floor((y - 1901) / 100.0) +
+           floor((y - 1601) / 400.0);
 }
 
-/* math here has to be f.p, because we need
- *  floor((1968 - 1969) / 4) == -1
- */
-#define DayFromYear(y)  (365 * ((y)-1970) + floor(((y)-1969)/4.0)            \
-                         - floor(((y)-1901)/100.0) + floor(((y)-1601)/400.0))
-#define TimeFromYear(y) (DayFromYear(y) * msPerDay)
+inline double
+TimeFromYear(int y)
+{
+    return DayFromYear(y) * msPerDay;
+}
 
 static int
 YearFromTime(double t)
 {
-    int y = (int) floor(t /(msPerDay*365.2425)) + 1970;
-    double t2 = (double) TimeFromYear(y);
+    int y = (int) floor(t / (msPerDay * 365.2425)) + 1970;
+    double t2 = TimeFromYear(y);
 
     /*
      * Adjust the year if the approximation was wrong.  Since the year was
@@ -213,34 +195,27 @@ YearFromTime(double t)
     return y;
 }
 
-#define DayWithinYear(t, year) ((int) (Day(t) - DayFromYear(year)))
-
-/*
- * The following array contains the day of year for the first day of
- * each month, where index 0 is January, and day 0 is January 1.
- */
-static double firstDayOfMonth[2][13] = {
-    {0.0, 31.0, 59.0, 90.0, 120.0, 151.0, 181.0, 212.0, 243.0, 273.0, 304.0, 334.0, 365.0},
-    {0.0, 31.0, 60.0, 91.0, 121.0, 152.0, 182.0, 213.0, 244.0, 274.0, 305.0, 335.0, 366.0}
-};
-
-#define DayFromMonth(m, leap) firstDayOfMonth[leap][(int)m]
-
-static int
-DaysInMonth(int year, int month)
+inline int
+DaysInFebruary(int year)
 {
-    JSBool leap = IsLeapYear(year);
-    int result = int(DayFromMonth(month, leap) - DayFromMonth(month-1, leap));
-    return result;
+    return IsLeapYear(year) ? 29 : 28;
+}
+
+/* ES5 15.9.1.4. */
+inline int
+DayWithinYear(double t, int year)
+{
+    JS_ASSERT(YearFromTime(t) == year);
+    return int(Day(t) - DayFromYear(year));
 }
 
 static int
 MonthFromTime(double t)
 {
-    int d, step;
     int year = YearFromTime(t);
-    d = DayWithinYear(t, year);
+    int d = DayWithinYear(t, year);
 
+    int step;
     if (d < (step = 31))
         return 0;
     if (d < (step += DaysInFebruary(year)))
@@ -266,16 +241,17 @@ MonthFromTime(double t)
     return 11;
 }
 
+/* ES5 15.9.1.5. */
 static int
 DateFromTime(double t)
 {
-    int d, step, next;
     int year = YearFromTime(t);
-    d = DayWithinYear(t, year);
+    int d = DayWithinYear(t, year);
 
+    int next;
     if (d <= (next = 30))
         return d + 1;
-    step = next;
+    int step = next;
     if (d <= (next += DaysInFebruary(year)))
         return d - step;
     step = next;
@@ -309,56 +285,18 @@ DateFromTime(double t)
     return d - step;
 }
 
+/* ES5 15.9.1.6. */
 static int
 WeekDay(double t)
 {
-    int result;
-    result = (int) Day(t) + 4;
-    result = result % 7;
+    int result = (int(Day(t)) + 4) % 7;
     if (result < 0)
         result += 7;
-    return (int) result;
+    return result;
 }
 
-#define MakeTime(hour, min, sec, ms) \
-((((hour) * MinutesPerHour + (min)) * SecondsPerMinute + (sec)) * msPerSecond + (ms))
-
-static double
-MakeDay(double year, double month, double date)
-{
-    JSBool leap;
-    double yearday;
-    double monthday;
-
-    year += floor(month / 12);
-
-    month = fmod(month, 12.0);
-    if (month < 0)
-        month += 12;
-
-    leap = IsLeapYear((int) year);
-
-    yearday = floor(TimeFromYear(year) / msPerDay);
-    monthday = DayFromMonth(month, leap);
-
-    return yearday + monthday + date - 1;
-}
-
-#define MakeDate(day, time) ((day) * msPerDay + (time))
-
-/*
- * Years and leap years on which Jan 1 is a Sunday, Monday, etc.
- *
- * yearStartingWith[0][i] is an example non-leap year where
- * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
- *
- * yearStartingWith[1][i] is an example leap year where
- * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
- */
-static int yearStartingWith[2][7] = {
-    {1978, 1973, 1974, 1975, 1981, 1971, 1977},
-    {1984, 1996, 1980, 1992, 1976, 1988, 1972}
-};
+/* ES5 15.9.1.7. */
+static double LocalTZA; // set by js_InitDateClass
 
 /*
  * Find a year for which any given date will fall on the same weekday.
@@ -370,25 +308,86 @@ static int yearStartingWith[2][7] = {
 static int
 EquivalentYearForDST(int year)
 {
-    int day;
+    /*
+     * Years and leap years on which Jan 1 is a Sunday, Monday, etc.
+     *
+     * yearStartingWith[0][i] is an example non-leap year where
+     * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
+     *
+     * yearStartingWith[1][i] is an example leap year where
+     * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
+     */
+    static const int yearStartingWith[2][7] = {
+        {1978, 1973, 1974, 1975, 1981, 1971, 1977},
+        {1984, 1996, 1980, 1992, 1976, 1988, 1972}
+    };
 
-    day = (int) DayFromYear(year) + 4;
-    day = day % 7;
+    int day = int(DayFromYear(year) + 4) % 7;
     if (day < 0)
         day += 7;
 
     return yearStartingWith[IsLeapYear(year)][day];
 }
 
-/* LocalTZA gets set by js_InitDateClass() */
-static double LocalTZA;
+inline int
+DayFromMonth(int month, bool isLeapYear)
+{
+    /*
+     * The following array contains the day of year for the first day of
+     * each month, where index 0 is January, and day 0 is January 1.
+     */
+    static const int firstDayOfMonth[2][13] = {
+        {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+        {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
+    };
 
+    JS_ASSERT(0 <= month && month <= 12);
+    return firstDayOfMonth[isLeapYear][month];
+}
+
+/* ES5 15.9.1.12 (out of order to accommodate DaylightSavingTA). */
+static double
+MakeDay(double year, double month, double date)
+{
+    if (!MOZ_DOUBLE_IS_FINITE(year) || !MOZ_DOUBLE_IS_FINITE(month) || !MOZ_DOUBLE_IS_FINITE(date))
+        return js_NaN;
+
+    JS_ASSERT(ToInteger(year) == year);
+    JS_ASSERT(ToInteger(month) == month);
+    JS_ASSERT(ToInteger(date) == date);
+
+    year += floor(month / 12);
+
+    month = fmod(month, 12.0);
+    if (month < 0)
+        month += 12;
+
+    bool leap = IsLeapYear((int) year);
+
+    double yearday = floor(TimeFromYear(year) / msPerDay);
+    double monthday = DayFromMonth(month, leap);
+
+    return yearday + monthday + date - 1;
+}
+
+/* ES5 15.9.1.13 (out of order to accommodate DaylightSavingTA). */
+inline double
+MakeDate(double day, double time)
+{
+    /* Step 1. */
+    if (!MOZ_DOUBLE_IS_FINITE(day) || !MOZ_DOUBLE_IS_FINITE(time))
+        return js_NaN;
+
+    /* Step 2. */
+    return day * msPerDay + time;
+}
+
+/* ES5 15.9.1.8. */
 static double
 DaylightSavingTA(double t, JSContext *cx)
 {
-    /* abort if NaN */
-    if (MOZ_DOUBLE_IS_NaN(t))
-        return t;
+    if (!MOZ_DOUBLE_IS_FINITE(t))
+        return js_NaN;
 
     /*
      * If earlier than 1970 or after 2038, potentially beyond the ken of
@@ -413,6 +412,7 @@ AdjustTime(double date, JSContext *cx)
     return t;
 }
 
+/* ES5 15.9.1.9. */
 static double
 LocalTime(double t, JSContext *cx)
 {
@@ -425,12 +425,20 @@ UTC(double t, JSContext *cx)
     return t - AdjustTime(t - LocalTZA, cx);
 }
 
+/* ES5 15.9.1.10. */
+const double HoursPerDay = 24.0;
+const double MinutesPerHour = 60;
+const double SecondsPerMinute = 60;
+const double msPerSecond = 1000;
+const double msPerMinute = msPerSecond * SecondsPerMinute;
+const double msPerHour = msPerMinute * MinutesPerHour;
+
 static int
 HourFromTime(double t)
 {
     int result = (int) fmod(floor(t/msPerHour), HoursPerDay);
     if (result < 0)
-        result += (int)HoursPerDay;
+        result += int(HoursPerDay);
     return result;
 }
 
@@ -439,7 +447,7 @@ MinFromTime(double t)
 {
     int result = (int) fmod(floor(t / msPerMinute), MinutesPerHour);
     if (result < 0)
-        result += (int)MinutesPerHour;
+        result += int(MinutesPerHour);
     return result;
 }
 
@@ -448,7 +456,7 @@ SecFromTime(double t)
 {
     int result = (int) fmod(floor(t / msPerSecond), SecondsPerMinute);
     if (result < 0)
-        result += (int)SecondsPerMinute;
+        result += int(SecondsPerMinute);
     return result;
 }
 
@@ -457,7 +465,48 @@ msFromTime(double t)
 {
     int result = (int) fmod(t, msPerSecond);
     if (result < 0)
-        result += (int)msPerSecond;
+        result += int(msPerSecond);
+    return result;
+}
+
+/* ES5 15.9.1.11. */
+static double
+MakeTime(double hour, double min, double sec, double ms)
+{
+    /* Step 1. */
+    if (!MOZ_DOUBLE_IS_FINITE(hour) ||
+        !MOZ_DOUBLE_IS_FINITE(min) ||
+        !MOZ_DOUBLE_IS_FINITE(sec) ||
+        !MOZ_DOUBLE_IS_FINITE(ms))
+    {
+        return js_NaN;
+    }
+
+    /* Step 2. */
+    double h = ToInteger(hour);
+
+    /* Step 3. */
+    double m = ToInteger(min);
+
+    /* Step 4. */
+    double s = ToInteger(sec);
+
+    /* Step 5. */
+    double milli = ToInteger(ms);
+
+    /* Steps 6-7. */
+    return h * msPerHour + m * msPerMinute + s * msPerSecond + milli;
+}
+
+/* Additional quantities not mentioned in the spec. */
+const double SecondsPerDay = SecondsPerMinute * MinutesPerHour * HoursPerDay;
+
+/* Additional methods not mentioned in the spec. */
+static int
+DaysInMonth(int year, int month)
+{
+    bool leap = IsLeapYear(year);
+    int result = int(DayFromMonth(month, leap) - DayFromMonth(month - 1, leap));
     return result;
 }
 
