@@ -43,7 +43,6 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
   this._errorsCount = {};
   this._webConsoleButton = this._doc
                            .getElementById("developer-toolbar-webconsole");
-  this._webConsoleButtonLabel = this._webConsoleButton.label;
 
   try {
     GcliCommands.refreshAutoCommands(aChromeWindow);
@@ -107,7 +106,7 @@ DeveloperToolbar.prototype.toggle = function DT_toggle()
   if (this.visible) {
     this.hide();
   } else {
-    this.show();
+    this.show(true);
   }
 };
 
@@ -124,7 +123,7 @@ DeveloperToolbar.introShownThisSession = false;
  * @param aCallback show events can be asynchronous. If supplied aCallback will
  * be called when the DeveloperToolbar is visible
  */
-DeveloperToolbar.prototype.show = function DT_show(aCallback)
+DeveloperToolbar.prototype.show = function DT_show(aFocus, aCallback)
 {
   if (this._lastState != NOTIFICATIONS.HIDE) {
     return;
@@ -139,7 +138,7 @@ DeveloperToolbar.prototype.show = function DT_show(aCallback)
   let checkLoad = function() {
     if (this.tooltipPanel && this.tooltipPanel.loaded &&
         this.outputPanel && this.outputPanel.loaded) {
-      this._onload();
+      this._onload(aFocus);
     }
   }.bind(this);
 
@@ -152,7 +151,7 @@ DeveloperToolbar.prototype.show = function DT_show(aCallback)
  * Initializing GCLI can only be done when we've got content windows to write
  * to, so this needs to be done asynchronously.
  */
-DeveloperToolbar.prototype._onload = function DT_onload()
+DeveloperToolbar.prototype._onload = function DT_onload(aFocus)
 {
   this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "true");
 
@@ -194,7 +193,10 @@ DeveloperToolbar.prototype._onload = function DT_onload()
   this._initErrorsCount(this._chromeWindow.getBrowser().selectedTab);
 
   this._element.hidden = false;
-  this._input.focus();
+
+  if (aFocus) {
+    this._input.focus();
+  }
 
   this._notify(NOTIFICATIONS.SHOW);
   if (this._pendingShowCallback) {
@@ -499,11 +501,9 @@ function DT__updateErrorsCount(aChangedTabId)
   let errors = this._errorsCount[tabId];
 
   if (errors) {
-    this._webConsoleButton.label =
-      this._webConsoleButtonLabel + " (" + errors + ")";
-  }
-  else {
-    this._webConsoleButton.label = this._webConsoleButtonLabel;
+    this._webConsoleButton.setAttribute("error-count", errors);
+  } else {
+    this._webConsoleButton.removeAttribute("error-count");
   }
 };
 
