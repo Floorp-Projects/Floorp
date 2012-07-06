@@ -29,7 +29,7 @@ protected:
 public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_SCRIPTABLE NS_IMETHOD GetPreferences(char** prefBranch, char** id, char** subjectName, char** grantedList, char** deniedList, bool* isTrusted);
+  NS_IMETHOD GetPreferences(char** prefBranch, char** id, char** subjectName, char** grantedList, char** deniedList, bool* isTrusted);
   NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
   NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
   NS_IMETHOD CanEnableCapability(const char* capability, PRInt16* _retval);
