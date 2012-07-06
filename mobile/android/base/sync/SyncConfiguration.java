@@ -254,14 +254,14 @@ public class SyncConfiguration implements CredentialsSource {
       String u = prefs.getString(PREF_CLUSTER_URL, null);
       try {
         clusterURL = new URI(u);
-        Logger.info(LOG_TAG, "Set clusterURL from bundle: " + u);
+        Logger.debug(LOG_TAG, "Set clusterURL from bundle: " + u);
       } catch (URISyntaxException e) {
         Logger.warn(LOG_TAG, "Ignoring bundle clusterURL (" + u + "): invalid URI.", e);
       }
     }
     if (prefs.contains(PREF_SYNC_ID)) {
       syncID = prefs.getString(PREF_SYNC_ID, null);
-      Logger.info(LOG_TAG, "Set syncID from bundle: " + syncID);
+      Logger.debug(LOG_TAG, "Set syncID from bundle: " + syncID);
     }
     if (prefs.contains(PREF_ENABLED_ENGINE_NAMES)) {
       String json = prefs.getString(PREF_ENABLED_ENGINE_NAMES, null);
@@ -407,7 +407,7 @@ public class SyncConfiguration implements CredentialsSource {
       return;
     }
     setAndPersistClusterURL(uri.resolve("/"), prefs);
-    Logger.info(LOG_TAG, "Set cluster URL to " + clusterURL.toASCIIString() + ", given input " + u.toASCIIString());
+    Logger.debug(LOG_TAG, "Set cluster URL to " + clusterURL.toASCIIString() + ", given input " + u.toASCIIString());
   }
 
   public void setClusterURL(URI u) {

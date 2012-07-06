@@ -55,7 +55,6 @@ public class AuthenticateAccountStage implements AuthenticatorStage {
         }
         try {
           BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-          Logger.warn(LOG_TAG, "content: " + reader.readLine());
           BaseResource.consumeReader(reader);
         } catch (IllegalStateException e) {
           Logger.debug(LOG_TAG, "Error reading content.", e);
@@ -79,7 +78,8 @@ public class AuthenticateAccountStage implements AuthenticatorStage {
     // Calculate BasicAuth hash of username/password.
     String authHeader = makeAuthHeader(aa.username, aa.password);
     String authRequestUrl = makeAuthRequestUrl(aa.authServer, aa.username);
-    Logger.trace(LOG_TAG, "Making auth request to: " + authRequestUrl);
+    // Might contain plaintext username for old Sync accounts.
+    Logger.pii(LOG_TAG, "Making auth request to: " + authRequestUrl);
     authenticateAccount(callbackDelegate, authRequestUrl, authHeader);
 
   }

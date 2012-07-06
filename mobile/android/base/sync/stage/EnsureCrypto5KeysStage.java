@@ -49,19 +49,19 @@ implements SyncStorageRequestDelegate {
     long lastModified = pck.lastModified();
     if (retrying || !infoCollections.updateNeeded(CRYPTO_COLLECTION, lastModified)) {
       // Try to use our local collection keys for this session.
-      Logger.info(LOG_TAG, "Trying to use persisted collection keys for this session.");
+      Logger.debug(LOG_TAG, "Trying to use persisted collection keys for this session.");
       CollectionKeys keys = pck.keys();
       if (keys != null) {
-        Logger.info(LOG_TAG, "Using persisted collection keys for this session.");
+        Logger.trace(LOG_TAG, "Using persisted collection keys for this session.");
         session.config.setCollectionKeys(keys);
         session.advance();
         return;
       }
-      Logger.info(LOG_TAG, "Failed to use persisted collection keys for this session.");
+      Logger.trace(LOG_TAG, "Failed to use persisted collection keys for this session.");
     }
 
     // We need an update: fetch fresh keys.
-    Logger.info(LOG_TAG, "Fetching fresh collection keys for this session.");
+    Logger.debug(LOG_TAG, "Fetching fresh collection keys for this session.");
     try {
       SyncStorageRecordRequest request = new SyncStorageRecordRequest(session.wboURI(CRYPTO_COLLECTION, "keys"));
       request.delegate = this;
@@ -108,17 +108,17 @@ implements SyncStorageRequestDelegate {
     }
 
     if (newDefaultKeyBundle == null) {
-      Logger.info(LOG_TAG, "New default key not provided; returning changed individual keys.");
+      Logger.trace(LOG_TAG, "New default key not provided; returning changed individual keys.");
       return changedKeys;
     }
 
     if (!defaultKeyChanged) {
-      Logger.info(LOG_TAG, "New default key is the same as old default key; returning changed individual keys.");
+      Logger.trace(LOG_TAG, "New default key is the same as old default key; returning changed individual keys.");
       return changedKeys;
     }
 
     // New keys have a different default/sync key; check known collections against the default key.
-    Logger.info(LOG_TAG, "New default key is not the same as old default key.");
+    Logger.debug(LOG_TAG, "New default key is not the same as old default key.");
     for (Stage stage : Stage.getNamedStages()) {
       String name = stage.getRepositoryName();
       if (!newKeys.keyBundleForCollectionIsNotDefault(name)) {
@@ -162,7 +162,7 @@ implements SyncStorageRequestDelegate {
     PersistedCrypto5Keys pck = session.config.persistedCryptoKeys();
     if (!pck.persistedKeysExist()) {
       // New keys, and no old keys! Persist keys and server timestamp.
-      Logger.info(LOG_TAG, "Setting fetched keys for this session; persisting fetched keys and last modified.");
+      Logger.trace(LOG_TAG, "Setting fetched keys for this session; persisting fetched keys and last modified.");
       setAndPersist(pck, keys, responseTimestamp);
       session.advance();
       return;
@@ -173,7 +173,7 @@ implements SyncStorageRequestDelegate {
     Set<String> changedCollections = collectionsToUpdate(oldKeys, keys);
     if (!changedCollections.isEmpty()) {
       // New keys, different from old keys.
-      Logger.info(LOG_TAG, "Fetched keys are not the same as persisted keys; " +
+      Logger.trace(LOG_TAG, "Fetched keys are not the same as persisted keys; " +
           "setting fetched keys for this session before resetting changed engines.");
       setAndPersist(pck, keys, responseTimestamp);
       session.resetStagesByName(changedCollections);

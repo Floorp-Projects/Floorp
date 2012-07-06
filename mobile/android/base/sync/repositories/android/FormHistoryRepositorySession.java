@@ -289,7 +289,7 @@ public class FormHistoryRepositorySession extends
 
   @Override
   public void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
-    Logger.info(LOG_TAG, "Running fetchSince(" + timestamp + ").");
+    Logger.trace(LOG_TAG, "Running fetchSince(" + timestamp + ").");
 
     /*
      * We need to be careful about the timestamp we complete the fetch with. If
@@ -321,13 +321,13 @@ public class FormHistoryRepositorySession extends
 
   @Override
   public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-    Logger.info(LOG_TAG, "Running fetchAll.");
+    Logger.trace(LOG_TAG, "Running fetchAll.");
     fetchSince(0, delegate);
   }
 
   @Override
   public void fetch(final String[] guids, final RepositorySessionFetchRecordsDelegate delegate) {
-    Logger.info(LOG_TAG, "Running fetch.");
+    Logger.trace(LOG_TAG, "Running fetch.");
 
     final long sharedEnd = now();
     final String where = RepoUtils.computeSQLInClause(guids.length, FormHistory.GUID);
