@@ -1,3 +1,5 @@
+// |jit-test| tz-pacific
+
 function arrayExists(array, x) {
     for (var i = 0; i < array.length; i++) {
         if (array[i] == x) return true;

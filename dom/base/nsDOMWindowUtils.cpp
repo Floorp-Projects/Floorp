@@ -459,14 +459,14 @@ nsDOMWindowUtils::GetWidgetModifiers(PRInt32 aModifiers)
   if (aModifiers & nsIDOMWindowUtils::MODIFIER_NUMLOCK) {
     result |= widget::MODIFIER_NUMLOCK;
   }
-  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SCROLL) {
-    result |= widget::MODIFIER_SCROLL;
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SCROLLLOCK) {
+    result |= widget::MODIFIER_SCROLLLOCK;
   }
   if (aModifiers & nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK) {
     result |= widget::MODIFIER_SYMBOLLOCK;
   }
-  if (aModifiers & nsIDOMWindowUtils::MODIFIER_WIN) {
-    result |= widget::MODIFIER_WIN;
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_OS) {
+    result |= widget::MODIFIER_OS;
   }
   return result;
 }

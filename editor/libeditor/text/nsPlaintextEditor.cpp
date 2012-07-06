@@ -1183,7 +1183,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsresult rv = NS_OK;
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
-  formatType.AppendWithConversion(aFormatType);
+  LossyAppendUTF16toASCII(aFormatType, formatType);
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -36,6 +36,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
+#include "vm/Debugger.h"
 #include "vm/RegExpObject.h"
 
 #include "jsatominlines.h"
@@ -1587,6 +1588,21 @@ BytecodeEmitter::needsImplicitThis()
     return false;
 }
 
+void
+BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext *cx)
+{
+    js_CallNewScriptHook(cx, script, script->function());
+    if (!parent) {
+        GlobalObject *compileAndGoGlobal = NULL;
+        if (script->compileAndGo) {
+            compileAndGoGlobal = script->globalObject;
+            if (!compileAndGoGlobal)
+                compileAndGoGlobal = &sc->scopeChain()->global();
+        }
+        Debugger::onNewScript(cx, script, compileAndGoGlobal);
+    }
+}
+
 bool
 BytecodeEmitter::reportError(ParseNode *pn, unsigned errorNumber, ...)
 {
@@ -2552,6 +2568,25 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
 
     if (!bce->script->fullyInitFromEmitter(cx, bce))
         return false;
+
+    // Initialize fun->script() so that the debugger has a valid fun->script().
+    RootedFunction fun(cx, bce->script->function());
+    JS_ASSERT(fun->isInterpreted());
+    if (bce->sc->funIsHeavyweight())
+        fun->flags |= JSFUN_HEAVYWEIGHT;
+
+    /* Mark functions which will only be executed once as singletons. */
+    bool singleton =
+        cx->typeInferenceEnabled() &&
+        bce->parent &&
+        bce->parent->checkSingletonContext();
+
+    JS_ASSERT(!fun->script());
+    fun->setScript(bce->script);
+    if (!fun->setTypeForScriptedFunction(cx, singleton))
+        return false;
+
+    bce->tellDebuggerAboutCompiledScript(cx);
 
     return true;
 }

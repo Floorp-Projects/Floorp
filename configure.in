@@ -8859,10 +8859,10 @@ mkdir -p _virtualenv
 MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py --system-site-packages ./_virtualenv
 case "$host_os" in
 mingw*)
-    PYTHON=`pwd`/_virtualenv/Scripts/python.exe
+    PYTHON=$MOZ_BUILD_ROOT/_virtualenv/Scripts/python.exe
     ;;
 *)
-    PYTHON=`pwd`/_virtualenv/bin/python
+    PYTHON=$MOZ_BUILD_ROOT/_virtualenv/bin/python
     ;;
 esac
 

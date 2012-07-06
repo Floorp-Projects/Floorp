@@ -482,6 +482,8 @@ AsyncChannel::OnNotifyMaybeChannelError()
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
 
+    mChannelErrorTask = NULL;
+
     // OnChannelError holds mMonitor when it posts this task and this
     // task cannot be allowed to run until OnChannelError has
     // exited. We enforce that order by grabbing the mutex here which
@@ -744,12 +746,26 @@ AsyncChannel::OnChannelErrorFromLink()
 }
 
 void
+AsyncChannel::CloseWithError()
+{
+    AssertWorkerThread();
+
+    MonitorAutoLock lock(*mMonitor);
+    if (ChannelConnected != mChannelState) {
+        return;
+    }
+    SynchronouslyClose();
+    mChannelState = ChannelError;
+    PostErrorNotifyTask();
+}
+
+void
 AsyncChannel::PostErrorNotifyTask()
 {
-    AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
 
-    NS_ASSERTION(!mChannelErrorTask, "OnChannelError called twice?");
+    if (mChannelErrorTask)
+        return;
 
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
