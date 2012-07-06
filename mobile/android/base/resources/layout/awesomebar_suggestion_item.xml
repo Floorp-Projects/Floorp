@@ -5,8 +5,7 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="wrap_content"
-              android:layout_height="@dimen/awesomebar_suggestion_item_height"
-              android:minHeight="@dimen/awesomebar_suggestion_item_height"
+              android:layout_height="wrap_content"
               android:orientation="horizontal"
               android:background="@drawable/suggestion_selector"
               android:gravity="center_vertical"
