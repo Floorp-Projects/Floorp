@@ -797,7 +797,7 @@ std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile)
 
 std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
 {
-  if (entry.mTagName == 'r') {
+  if (entry.mTagName == 'r' || entry.mTagName == 't') {
     stream << entry.mTagName << "-" << std::fixed << entry.mTagFloat << "\n";
   } else if (entry.mTagName == 'l' || entry.mTagName == 'L') {
     // Bug 739800 - Force l-tag addresses to have a "0x" prefix on all platforms
