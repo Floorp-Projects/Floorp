@@ -1783,149 +1783,330 @@ date_setTime(JSContext *cx, unsigned argc, Value *vp)
     return SetUTCTime(cx, thisObj, TimeClip(result), &args.rval());
 }
 
+static bool
+GetMsecsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, double *millis)
+{
+    if (args.length() <= i) {
+        *millis = msFromTime(t);
+        return true;
+    }
+    return ToNumber(cx, args[i], millis);
+}
+
+static bool
+GetSecsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, double *sec)
+{
+    if (args.length() <= i) {
+        *sec = SecFromTime(t);
+        return true;
+    }
+    return ToNumber(cx, args[i], sec);
+}
+
+static bool
+GetMinsOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, double *mins)
+{
+    if (args.length() <= i) {
+        *mins = MinFromTime(t);
+        return true;
+    }
+    return ToNumber(cx, args[i], mins);
+}
+
+/* ES5 15.9.5.28. */
 static JSBool
-date_makeTime(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsigned argc, Value *vp)
+date_setMilliseconds(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject thisObj(cx);
-    if (!NonGenericMethodGuard(cx, args, native, &DateClass, thisObj.address()))
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setMilliseconds, &DateClass, thisObj.address()))
         return false;
     if (!thisObj)
         return true;
 
-    double result = thisObj->getDateUTCTime().toNumber();
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
 
-    /*
-     * Satisfy the ECMA rule that if a function is called with
-     * fewer arguments than the specified formal arguments, the
-     * remaining arguments are set to undefined.  Seems like all
-     * the Date.setWhatever functions in ECMA are only varargs
-     * beyond the first argument; this should be set to undefined
-     * if it's not given.  This means that "d = new Date();
-     * d.setMilliseconds()" returns NaN.  Blech.
-     */
-    if (args.length() == 0) {
-        SetDateToNaN(cx, thisObj, &args.rval());
-        return true;
-    }
+    /* Step 2. */
+    double milli;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &milli))
+        return false;
+    double time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
 
-    unsigned numNums = Min(args.length(), maxargs);
-    JS_ASSERT(numNums <= 4);
-    double nums[4];
-    bool argIsNotFinite = false;
-    for (unsigned i = 0; i < numNums; i++) {
-        if (!ToNumber(cx, args[i], &nums[i]))
-            return false;
-        if (!MOZ_DOUBLE_IS_FINITE(nums[i])) {
-            argIsNotFinite = true;
-        } else {
-            nums[i] = ToInteger(nums[i]);
-        }
-    }
+    /* Step 3. */
+    double u = TimeClip(UTC(MakeDate(Day(t), time), cx));
 
-    /*
-     * Return NaN if the date is already NaN, but don't short-circuit argument
-     * evaluation.
-     */
-    if (!MOZ_DOUBLE_IS_FINITE(result)) {
-        args.rval().setNumber(result);
-        return true;
-    }
-
-    /* set Date to NaN, after argument evaluation. */
-    if (argIsNotFinite) {
-        SetDateToNaN(cx, thisObj, &args.rval());
-        return true;
-    }
-
-    double lorutime;  /* Local or UTC version of *date */
-    if (local)
-        lorutime = LocalTime(result, cx);
-    else
-        lorutime = result;
-
-    double *argp = nums;
-    double *stop = argp + numNums;
-    double hour;
-    if (maxargs >= 4 && argp < stop)
-        hour = *argp++;
-    else
-        hour = HourFromTime(lorutime);
-
-    double min;
-    if (maxargs >= 3 && argp < stop)
-        min = *argp++;
-    else
-        min = MinFromTime(lorutime);
-
-    double sec;
-    if (maxargs >= 2 && argp < stop)
-        sec = *argp++;
-    else
-        sec = SecFromTime(lorutime);
-
-    double msec;
-    if (maxargs >= 1 && argp < stop)
-        msec = *argp;
-    else
-        msec = msFromTime(lorutime);
-
-    double msec_time = MakeTime(hour, min, sec, msec);
-    result = MakeDate(Day(lorutime), msec_time);
-
-    if (local)
-        result = UTC(result, cx);
-
-    return SetUTCTime(cx, thisObj, TimeClip(result), &args.rval());
+    /* Steps 4-5. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
-static JSBool
-date_setMilliseconds(JSContext *cx, unsigned argc, Value *vp)
-{
-    return date_makeTime(cx, date_setMilliseconds, 1, JS_TRUE, argc, vp);
-}
-
+/* ES5 15.9.5.29. */
 static JSBool
 date_setUTCMilliseconds(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setUTCMilliseconds, 1, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCMilliseconds, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double milli;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &milli))
+        return false;
+    double time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
+
+    /* Step 3. */
+    double v = TimeClip(MakeDate(Day(t), time));
+
+    /* Steps 4-5. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+/* ES5 15.9.5.30. */
 static JSBool
 date_setSeconds(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setSeconds, 2, JS_TRUE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setSeconds, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+
+    /* Step 2. */
+    double s;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &s))
+        return false;
+
+    /* Step 3. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 1, t, &milli))
+        return false;
+
+    /* Step 4. */
+    double date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
+
+    /* Step 5. */
+    double u = TimeClip(UTC(date, cx));
+
+    /* Steps 6-7. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
+/* ES5 15.9.5.31. */
 static JSBool
 date_setUTCSeconds(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setUTCSeconds, 2, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCSeconds, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double s;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &s))
+        return false;
+
+    /* Step 3. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 1, t, &milli))
+        return false;
+
+    /* Step 4. */
+    double date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
+
+    /* Step 5. */
+    double v = TimeClip(date);
+
+    /* Steps 6-7. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+/* ES5 15.9.5.32. */
 static JSBool
 date_setMinutes(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setMinutes, 3, JS_TRUE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setMinutes, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+
+    /* Step 2. */
+    double m;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &m))
+        return false;
+
+    /* Step 3. */
+    double s;
+    if (!GetSecsOrDefault(cx, args, 1, t, &s))
+        return false;
+
+    /* Step 4. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 2, t, &milli))
+        return false;
+
+    /* Step 5. */
+    double date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
+
+    /* Step 6. */
+    double u = TimeClip(UTC(date, cx));
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
+/* ES5 15.9.5.33. */
 static JSBool
 date_setUTCMinutes(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setUTCMinutes, 3, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCMinutes, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double m;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &m))
+        return false;
+
+    /* Step 3. */
+    double s;
+    if (!GetSecsOrDefault(cx, args, 1, t, &s))
+        return false;
+
+    /* Step 4. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 2, t, &milli))
+        return false;
+
+    /* Step 5. */
+    double date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
+
+    /* Step 6. */
+    double v = TimeClip(date);
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+/* ES5 15.9.5.34. */
 static JSBool
 date_setHours(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setHours, 4, JS_TRUE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setHours, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+
+    /* Step 2. */
+    double h;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &h))
+        return false;
+
+    /* Step 3. */
+    double m;
+    if (!GetMinsOrDefault(cx, args, 1, t, &m))
+        return false;
+
+    /* Step 4. */
+    double s;
+    if (!GetSecsOrDefault(cx, args, 2, t, &s))
+        return false;
+
+    /* Step 5. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 3, t, &milli))
+        return false;
+
+    /* Step 6. */
+    double date = MakeDate(Day(t), MakeTime(h, m, s, milli));
+
+    /* Step 6. */
+    double u = TimeClip(UTC(date, cx));
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
+/* ES5 15.9.5.35. */
 static JSBool
 date_setUTCHours(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeTime(cx, date_setUTCHours, 4, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCHours, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double h;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &h))
+        return false;
+
+    /* Step 3. */
+    double m;
+    if (!GetMinsOrDefault(cx, args, 1, t, &m))
+        return false;
+
+    /* Step 4. */
+    double s;
+    if (!GetSecsOrDefault(cx, args, 2, t, &s))
+        return false;
+
+    /* Step 5. */
+    double milli;
+    if (!GetMsecsOrDefault(cx, args, 3, t, &milli))
+        return false;
+
+    /* Step 6. */
+    double newDate = MakeDate(Day(t), MakeTime(h, m, s, milli));
+
+    /* Step 7. */
+    double v = TimeClip(newDate);
+
+    /* Steps 8-9. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
 static JSBool
