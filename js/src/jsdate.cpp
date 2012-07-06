@@ -2109,125 +2109,253 @@ date_setUTCHours(JSContext *cx, unsigned argc, Value *vp)
     return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+/* ES5 15.9.5.36. */
 static JSBool
-date_makeDate(JSContext *cx, Native native, unsigned maxargs, JSBool local, unsigned argc, Value *vp)
+date_setDate(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject thisObj(cx);
-    if (!NonGenericMethodGuard(cx, args, native, &DateClass, thisObj.address()))
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setDate, &DateClass, thisObj.address()))
         return false;
     if (!thisObj)
         return true;
 
-    double result = thisObj->getDateUTCTime().toNumber();
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
 
-    /* See complaint about ECMA in date_makeTime. */
-    if (args.length() == 0) {
-        SetDateToNaN(cx, thisObj, &args.rval());
-        return true;
-    }
+    /* Step 2. */
+    double dt;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &dt))
+        return false;
 
-    unsigned numNums = Min(args.length(), maxargs);
-    JS_ASSERT(1 <= numNums && numNums <= 3);
-    double nums[3];
-    bool argIsNotFinite = false;
-    for (unsigned i = 0; i < numNums; i++) {
-        if (!ToNumber(cx, args[i], &nums[i]))
-            return JS_FALSE;
-        if (!MOZ_DOUBLE_IS_FINITE(nums[i])) {
-            argIsNotFinite = true;
-        } else {
-            nums[i] = ToInteger(nums[i]);
-        }
-    }
+    /* Step 3. */
+    double newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t));
 
-    /* If we found a non-finite argument, set the date to NaN and return. */
-    if (argIsNotFinite) {
-        SetDateToNaN(cx, thisObj, &args.rval());
-        return true;
-    }
+    /* Step 4. */
+    double u = TimeClip(UTC(newDate, cx));
 
-    /*
-     * Return NaN if date is NaN and we're not setting the year.  If we are,
-     * use 0 as the time.
-     */
-    double lorutime; /* local or UTC version of *date */
-    if (!MOZ_DOUBLE_IS_FINITE(result)) {
-        if (maxargs < 3) {
-            args.rval().setDouble(result);
-            return true;
-        }
-        lorutime = +0.;
-    } else {
-        lorutime = local ? LocalTime(result, cx) : result;
-    }
-
-    double *argp = nums;
-    double *stop = argp + numNums;
-    double year;
-    if (maxargs >= 3 && argp < stop)
-        year = *argp++;
-    else
-        year = YearFromTime(lorutime);
-
-    double month;
-    if (maxargs >= 2 && argp < stop)
-        month = *argp++;
-    else
-        month = MonthFromTime(lorutime);
-
-    double day;
-    if (maxargs >= 1 && argp < stop)
-        day = *argp++;
-    else
-        day = DateFromTime(lorutime);
-
-    day = MakeDay(year, month, day); /* day within year */
-    result = MakeDate(day, TimeWithinDay(lorutime));
-
-    if (local)
-        result = UTC(result, cx);
-
-    return SetUTCTime(cx, thisObj, TimeClip(result), &args.rval());
+    /* Steps 5-6. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
-static JSBool
-date_setDate(JSContext *cx, unsigned argc, Value *vp)
-{
-    return date_makeDate(cx, date_setDate, 1, JS_TRUE, argc, vp);
-}
-
+/* ES5 15.9.5.37. */
 static JSBool
 date_setUTCDate(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeDate(cx, date_setUTCDate, 1, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCDate, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double dt;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &dt))
+        return false;
+
+    /* Step 3. */
+    double newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t));
+
+    /* Step 4. */
+    double v = TimeClip(newDate);
+
+    /* Steps 5-6. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+static bool
+GetDateOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, double *date)
+{
+    if (args.length() <= i) {
+        *date = DateFromTime(t);
+        return true;
+    }
+    return ToNumber(cx, args[i], date);
+}
+
+static bool
+GetMonthOrDefault(JSContext *cx, const CallArgs &args, unsigned i, double t, double *month)
+{
+    if (args.length() <= i) {
+        *month = MonthFromTime(t);
+        return true;
+    }
+    return ToNumber(cx, args[i], month);
+}
+
+/* ES5 15.9.5.38. */
 static JSBool
 date_setMonth(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeDate(cx, date_setMonth, 2, JS_TRUE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setMonth, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+
+    /* Step 2. */
+    double m;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &m))
+        return false;
+
+    /* Step 3. */
+    double dt;
+    if (!GetDateOrDefault(cx, args, 1, t, &dt))
+        return false;
+
+    /* Step 4. */
+    double newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
+
+    /* Step 5. */
+    double u = TimeClip(UTC(newDate, cx));
+
+    /* Steps 6-7. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
+/* ES5 15.9.5.39. */
 static JSBool
 date_setUTCMonth(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeDate(cx, date_setUTCMonth, 2, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setUTCMonth, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = thisObj->getDateUTCTime().toNumber();
+
+    /* Step 2. */
+    double m;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &m))
+        return false;
+
+    /* Step 3. */
+    double dt;
+    if (!GetDateOrDefault(cx, args, 1, t, &dt))
+        return false;
+
+    /* Step 4. */
+    double newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
+
+    /* Step 5. */
+    double v = TimeClip(newDate);
+
+    /* Steps 6-7. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+static double
+ThisLocalTimeOrZero(Handle<JSObject*> date, JSContext *cx)
+{
+    double t = date->getDateUTCTime().toNumber();
+    if (MOZ_DOUBLE_IS_NaN(t))
+        return +0;
+    return LocalTime(t, cx);
+}
+
+static double
+ThisUTCTimeOrZero(Handle<JSObject*> date)
+{
+    double t = date->getDateUTCTime().toNumber();
+    return MOZ_DOUBLE_IS_NaN(t) ? +0 : t;
+}
+
+/* ES5 15.9.5.40. */
 static JSBool
 date_setFullYear(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeDate(cx, date_setFullYear, 3, JS_TRUE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setFullYear, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = ThisLocalTimeOrZero(thisObj, cx);
+
+    /* Step 2. */
+    double y;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &y))
+        return false;
+
+    /* Step 3. */
+    double m;
+    if (!GetMonthOrDefault(cx, args, 1, t, &m))
+        return false;
+
+    /* Step 4. */
+    double dt;
+    if (!GetDateOrDefault(cx, args, 2, t, &dt))
+        return false;
+
+    /* Step 5. */
+    double newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
+
+    /* Step 6. */
+    double u = TimeClip(UTC(newDate, cx));
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, u, &args.rval());
 }
 
+/* ES5 15.9.5.41. */
 static JSBool
 date_setUTCFullYear(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_makeDate(cx, date_setUTCFullYear, 3, JS_FALSE, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_setFullYear, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    /* Step 1. */
+    double t = ThisUTCTimeOrZero(thisObj);
+
+    /* Step 2. */
+    double y;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &y))
+        return false;
+
+    /* Step 3. */
+    double m;
+    if (!GetMonthOrDefault(cx, args, 1, t, &m))
+        return false;
+
+    /* Step 4. */
+    double dt;
+    if (!GetDateOrDefault(cx, args, 2, t, &dt))
+        return false;
+
+    /* Step 5. */
+    double newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
+
+    /* Step 6. */
+    double v = TimeClip(newDate);
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, v, &args.rval());
 }
 
+/* ES5 Annex B.2.5. */
 static JSBool
 date_setYear(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2239,31 +2367,33 @@ date_setYear(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (args.length() == 0) {
-        /* Call this only after verifying that obj.[[Class]] = "Date". */
-        SetDateToNaN(cx, thisObj, &args.rval());
-        return true;
-    }
+    /* Step 1. */
+    double t = ThisLocalTimeOrZero(thisObj, cx);
 
-    double result = thisObj->getDateUTCTime().toNumber();
-
-    double year;
-    if (!ToNumber(cx, args[0], &year))
+    /* Step 2. */
+    double y;
+    if (!ToNumber(cx, args.length() > 0 ? args[0] : UndefinedValue(), &y))
         return false;
-    if (!MOZ_DOUBLE_IS_FINITE(year)) {
+
+    /* Step 3. */
+    if (MOZ_DOUBLE_IS_NaN(y)) {
         SetDateToNaN(cx, thisObj, &args.rval());
         return true;
     }
-    year = ToInteger(year);
-    if (year >= 0 && year <= 99)
-        year += 1900;
 
-    double t = MOZ_DOUBLE_IS_FINITE(result) ? LocalTime(result, cx) : +0.0;
-    double day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
-    result = MakeDate(day, TimeWithinDay(t));
-    result = UTC(result, cx);
+    /* Step 4. */
+    double yint = ToInteger(y);
+    if (0 <= yint && yint <= 99)
+        yint += 1900;
 
-    return SetUTCTime(cx, thisObj, TimeClip(result), &args.rval());
+    /* Step 5. */
+    double day = MakeDay(yint, MonthFromTime(t), DateFromTime(t));
+
+    /* Step 6. */
+    double u = UTC(MakeDate(day, TimeWithinDay(t)), cx);
+
+    /* Steps 7-8. */
+    return SetUTCTime(cx, thisObj, TimeClip(u), &args.rval());
 }
 
 /* constants for toString, toUTCString */
