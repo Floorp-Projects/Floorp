@@ -270,10 +270,46 @@ template<typename T,
          typename U,
          bool IsTSigned = IsSigned<T>::value,
          bool IsUSigned = IsSigned<U>::value>
-struct IsInRangeImpl {};
+struct DoesRangeContainRange
+{
+};
+
+template<typename T, typename U, bool Signedness>
+struct DoesRangeContainRange<T, U, Signedness, Signedness>
+{
+    static const bool value = sizeof(T) >= sizeof(U);
+};
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, true, true>
+struct DoesRangeContainRange<T, U, true, false>
+{
+    static const bool value = sizeof(T) > sizeof(U);
+};
+
+template<typename T, typename U>
+struct DoesRangeContainRange<T, U, false, true>
+{
+    static const bool value = false;
+};
+
+template<typename T,
+         typename U,
+         bool IsTSigned = IsSigned<T>::value,
+         bool IsUSigned = IsSigned<U>::value,
+         bool DoesTRangeContainURange = DoesRangeContainRange<T, U>::value>
+struct IsInRangeImpl {};
+
+template<typename T, typename U, bool IsTSigned, bool IsUSigned>
+struct IsInRangeImpl<T, U, IsTSigned, IsUSigned, true>
+{
+    static bool run(U)
+    {
+       return true;
+    }
+};
+
+template<typename T, typename U>
+struct IsInRangeImpl<T, U, true, true, false>
 {
     static bool run(U x)
     {
@@ -282,7 +318,7 @@ struct IsInRangeImpl<T, U, true, true>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, false, false>
+struct IsInRangeImpl<T, U, false, false, false>
 {
     static bool run(U x)
     {
@@ -291,7 +327,7 @@ struct IsInRangeImpl<T, U, false, false>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, true, false>
+struct IsInRangeImpl<T, U, true, false, false>
 {
     static bool run(U x)
     {
@@ -300,7 +336,7 @@ struct IsInRangeImpl<T, U, true, false>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, false, true>
+struct IsInRangeImpl<T, U, false, true, false>
 {
     static bool run(U x)
     {
@@ -678,11 +714,13 @@ inline CheckedInt<T> operator OP(const CheckedInt<T> &lhs,            \
 {                                                                     \
   T x = lhs.mValue;                                                   \
   T y = rhs.mValue;                                                   \
-  T result = x OP y;                                                  \
   T isOpValid = detail::Is##NAME##Valid(x, y);                        \
-  /* Help the compiler perform RVO (return value optimization). */    \
-  return CheckedInt<T>(result,                                        \
-                       lhs.mIsValid && rhs.mIsValid && isOpValid);    \
+  if (isOpValid) {                                                    \
+    T result = x OP y;                                                \
+    return CheckedInt<T>(result, lhs.mIsValid && rhs.mIsValid);       \
+  } else {                                                            \
+    return CheckedInt<T>(T(0), false);                                \
+  }                                                                   \
 }
 
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)

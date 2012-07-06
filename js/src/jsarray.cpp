@@ -347,7 +347,7 @@ DoGetElement(JSContext *cx, JSObject *obj_, double index, JSBool *hole, Value *v
     }
 
     RootedObject obj2(cx);
-    JSProperty *prop;
+    RootedShape prop(cx);
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
@@ -692,14 +692,14 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, jsid id)
 }
 
 static JSBool
-array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
-                    JSProperty **propp)
+array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     if (!obj->isDenseArray())
         return baseops::LookupProperty(cx, obj, id, objp, propp);
 
     if (IsDenseArrayId(cx, obj, id)) {
-        *propp = (JSProperty *) 1;  /* non-null to indicate found */
+        MarkNonNativePropertyFound(obj, propp);
         objp.set(obj);
         return JS_TRUE;
     }
@@ -707,7 +707,7 @@ array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleO
     JSObject *proto = obj->getProto();
     if (!proto) {
         objp.set(NULL);
-        *propp = NULL;
+        propp.set(NULL);
         return JS_TRUE;
     }
     return proto->lookupGeneric(cx, id, objp, propp);
@@ -715,21 +715,21 @@ array_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleO
 
 static JSBool
 array_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                     MutableHandleObject objp, JSProperty **propp)
+                     MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return array_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
-                    JSProperty **propp)
+array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     if (!obj->isDenseArray())
         return baseops::LookupElement(cx, obj, index, objp, propp);
 
     if (IsDenseArrayIndex(obj, index)) {
-        *propp = (JSProperty *) 1;  /* non-null to indicate found */
+        MarkNonNativePropertyFound(obj, propp);
         objp.set(obj);
         return true;
     }
@@ -738,13 +738,13 @@ array_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHand
         return proto->lookupElement(cx, index, objp, propp);
 
     objp.set(NULL);
-    *propp = NULL;
+    propp.set(NULL);
     return true;
 }
 
 static JSBool
-array_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleObject objp,
-                    JSProperty **propp)
+array_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return array_lookupGeneric(cx, obj, id, objp, propp);

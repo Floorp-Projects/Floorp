@@ -2689,19 +2689,18 @@ static JSBool
 CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
              unsigned lookupFlags, MutableHandleObject objp)
 {
-    JSProperty *prop;
+    RootedShape shape(cx);
     PropertyDescriptor desc;
     unsigned propFlags = 0;
     RootedObject obj2(cx);
 
     objp.set(NULL);
     if (referent->isNative()) {
-        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop))
+        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &shape))
             return false;
         if (obj2 != referent)
             return true;
 
-        const Shape *shape = (Shape *) prop;
         if (shape->hasSlot()) {
             desc.value = referent->nativeGetSlot(shape->slot());
         } else {
@@ -2724,7 +2723,7 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupGeneric(cx, id, objp, &prop))
+        if (!referent->lookupGeneric(cx, id, objp, &shape))
             return false;
         if (objp != referent)
             return true;

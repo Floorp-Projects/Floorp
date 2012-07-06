@@ -109,9 +109,6 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
     , mFullZoom(0)
     , mViewportInitialized(false)
-#ifdef XP_MACOSX
-    , mEnableBitmapFallback(false)
-#endif
     , mIsRootContent(false)
 {
   // Outer-<svg> has CSS layout, so remove this bit:
@@ -490,63 +487,30 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   PRTime start = PR_Now();
 #endif
 
-  aContext->PushState();
+  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
+  // it, but do so without changing the render mode:
+  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
 
-  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-
-#ifdef XP_MACOSX
-  if (frame->BitmapFallbackEnabled()) {
-    // nquartz fallback paths, which svg tends to trigger, need
-    // a non-window context target
-    aContext->ThebesContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  if (aBuilder->IsPaintingToWindow()) {
+    state.SetPaintingToWindow(true);
   }
-#endif
 
   nsRect viewportRect =
-    frame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+
   nsRect clipRect = mVisibleRect.Intersect(viewportRect);
 
+  nsIntRect contentAreaDirtyRect =
+    (clipRect - viewportRect.TopLeft()).
+      ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aContext->PushState();
   aContext->IntersectClip(clipRect);
   aContext->Translate(viewportRect.TopLeft());
-
-  frame->Paint(aBuilder, aContext, clipRect - viewportRect.TopLeft());
-
-#ifdef XP_MACOSX
-  if (frame->BitmapFallbackEnabled()) {
-    // show the surface we pushed earlier for fallbacks
-    aContext->ThebesContext()->PopGroupToSource();
-    aContext->ThebesContext()->Paint();
-  }
-
-  if (aContext->ThebesContext()->HasError() && !frame->BitmapFallbackEnabled()) {
-    frame->SetBitmapFallbackEnabled(true);
-    // It's not really clear what area to invalidate here. We might have
-    // stuffed up rendering for the entire window in this paint pass,
-    // so we can't just invalidate our own rect. Invalidate everything
-    // in sight.
-    // This won't work for printing, by the way, but failure to print the
-    // odd document is probably no worse than printing horribly for all
-    // documents. Better to fix things so we don't need fallback.
-    nsIFrame* ancestor = frame;
-    PRUint32 flags = 0;
-    while (true) {
-      nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(ancestor);
-      if (!next)
-        break;
-      if (ancestor->GetParent() != next) {
-        // We're crossing a document boundary. Logically, the invalidation is
-        // being triggered by a subdocument of the root document. This will
-        // prevent an untrusted root document being told about invalidation
-        // that happened because a child was using SVG...
-        flags |= nsIFrame::INVALIDATE_CROSS_DOC;
-      }
-      ancestor = next;
-    }
-    ancestor->InvalidateWithFlags(nsRect(nsPoint(0, 0), ancestor->GetSize()), flags);
-  }
-#endif
-
+  nsSVGUtils::PaintFrameWithEffects(aContext, &contentAreaDirtyRect, mFrame);
   aContext->PopState();
+
+  NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime end = PR_Now();
@@ -640,26 +604,6 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 
   return NS_OK;
-}
-
-void
-nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext* aContext,
-                          const nsRect& aDirtyRect)
-{
-  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
-  // it, but don't change the render mode:
-  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
-
-  if (aBuilder->IsPaintingToWindow()) {
-    state.SetPaintingToWindow(true);
-  }
-
-  // Convert the (content area relative) dirty rect to dev pixels:
-  nsIntRect dirtyPxRect =
-    aDirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
-
-  nsSVGUtils::PaintFrameWithEffects(aContext, &dirtyPxRect, this);
 }
 
 nsSplittableType
