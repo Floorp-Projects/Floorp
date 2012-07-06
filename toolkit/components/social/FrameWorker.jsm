@@ -24,7 +24,7 @@ var _nextPortId = 1;
 // Retrieves a reference to a WorkerHandle associated with a FrameWorker and a
 // new ClientPort.
 function getFrameWorkerHandle(url, clientWindow, name) {
-  // first create the client port we are going to use.  Laster we will
+  // first create the client port we are going to use.  Later we will
   // message the worker to create the worker port.
   let portid = _nextPortId++;
   let clientPort = new ClientPort(portid, clientWindow);
