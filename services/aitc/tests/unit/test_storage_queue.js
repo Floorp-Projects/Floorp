@@ -7,6 +7,7 @@ Cu.import("resource://services-common/async.js");
 let queue = null;
 
 function run_test() {
+  initTestLogging();
   queue = new AitcQueue("test", run_next_test);
 }
 
@@ -97,7 +98,6 @@ add_test(function test_queue_multiaddremove() {
   });
 });
 
-/* TODO Bug 760905 - Temporarily disabled for orange.
 add_test(function test_queue_writelock() {
   // Queue should not enqueue or dequeue if lock is enabled.
   queue._writeLock = true;
@@ -114,4 +114,3 @@ add_test(function test_queue_writelock() {
     });
   });
 });
-*/
