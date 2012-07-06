@@ -242,11 +242,17 @@ public:
 
   virtual void SetIsFirstPaint() MOZ_OVERRIDE;
 
+  void SetRepeatTransaction() { mRepeatTransaction = true; }
+
 private:
   /**
    * Forward transaction results to the parent context.
    */
   void ForwardTransaction();
+
+  // Used to repeat the transaction right away (to avoid rebuilding
+  // a display list) to support progressive drawing.
+  bool mRepeatTransaction;
 
   LayerRefArray mKeepAlive;
 };
