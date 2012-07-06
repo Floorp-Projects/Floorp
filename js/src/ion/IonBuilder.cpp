@@ -3464,7 +3464,7 @@ IonBuilder::jsop_incslot(JSOp op, uint32 slot)
 {
     int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
     bool post = !!(js_CodeSpec[op].format & JOF_POST);
-    TypeOracle::Binary b = oracle->binaryOp(script, pc);
+    TypeOracle::Binary b = oracle->incslot(script, pc);
 
     // Grab the value at the local slot, and convert it to a number. Currently,
     // we use ToInt32 or ToNumber which are fallible but idempotent. This whole

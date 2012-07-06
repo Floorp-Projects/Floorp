@@ -458,6 +458,7 @@ HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
 JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
                         HandleObject global);
 
+
 } // namespace ion
 } // namespace js
 
