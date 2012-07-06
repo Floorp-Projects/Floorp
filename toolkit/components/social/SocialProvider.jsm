@@ -13,7 +13,7 @@ const EXPORTED_SYMBOLS = ["SocialProvider"];
 
 /**
  * The SocialProvider object represents a social provider, and allows
- * controlling its FrameWorker.
+ * access to its FrameWorker (if it has one).
  *
  * @constructor
  * @param {jsobj} object representing the manifest file describing this provider
@@ -21,8 +21,6 @@ const EXPORTED_SYMBOLS = ["SocialProvider"];
 function SocialProvider(input) {
   if (!input.name)
     throw new Error("SocialProvider must be passed a name");
-  if (!input.workerURL)
-    throw new Error("SocialProvider must be passed a workerURL");
   if (!input.origin)
     throw new Error("SocialProvider must be passed an origin");
 
@@ -33,13 +31,15 @@ function SocialProvider(input) {
 
 SocialProvider.prototype = {
   /**
-   * Terminate's the provider's FrameWorker, closing all of its ports.
+   * Terminates the provider's FrameWorker, if it has one.
    */
   terminate: function shutdown() {
-    try {
-      getFrameWorkerHandle(this.workerURL, null).terminate();
-    } catch (e) {
-      Cu.reportError("SocialProvider termination failed: " + e);
+    if (this.workerURL) {
+      try {
+        getFrameWorkerHandle(this.workerURL, null).terminate();
+      } catch (e) {
+        Cu.reportError("SocialProvider FrameWorker termination failed: " + e);
+      }
     }
   },
 
@@ -47,9 +47,13 @@ SocialProvider.prototype = {
    * Instantiates a FrameWorker for the provider if one doesn't exist, and
    * returns a reference to a port to that FrameWorker.
    *
+   * Returns null if this provider has no workerURL.
+   *
    * @param {DOMWindow} window (optional)
    */
   getWorkerPort: function getWorkerPort(window) {
+    if (!this.workerURL)
+      return null;
     return getFrameWorkerHandle(this.workerURL, window).port;
   }
 }
