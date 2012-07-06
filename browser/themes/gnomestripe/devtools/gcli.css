@@ -123,3 +123,9 @@
 .gcli-menu-typed {
   color: hsl(25,78%,50%);
 }
+
+.gcli-menu-more {
+  font-size: 80%;
+  text-align: right;
+  -moz-padding-end: 8px;
+}
