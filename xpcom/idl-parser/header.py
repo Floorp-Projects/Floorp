@@ -74,12 +74,9 @@ def methodReturnType(m, macro):
         return macro
 
 def methodAsNative(m):
-    scriptable = m.isScriptable() and "NS_SCRIPTABLE " or ""
-
-    return "%s%s %s(%s)" % (scriptable,
-                            methodReturnType(m, 'NS_IMETHOD'),
-                            methodNativeName(m),
-                            paramlistAsNative(m))
+    return "%s %s(%s)" % (methodReturnType(m, 'NS_IMETHOD'),
+                          methodNativeName(m),
+                          paramlistAsNative(m))
 
 def paramlistAsNative(m, empty='void'):
     l = [paramAsNative(p) for p in m.params]
@@ -349,8 +346,6 @@ def write_interface(iface, fd):
     if not foundcdata:
         fd.write("NS_NO_VTABLE ")
 
-    if iface.attributes.scriptable:
-        fd.write("NS_SCRIPTABLE ")
     if iface.attributes.deprecated:
         fd.write("MOZ_DEPRECATED ")
     fd.write(iface.name)

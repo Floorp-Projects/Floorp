@@ -442,15 +442,6 @@ typedef PRUint32 nsrefcnt;
 #define NS_MUST_OVERRIDE
 #endif
 
-/**
- * Attributes defined to help Dehydra GCC analysis.
- */
-#ifdef NS_STATIC_CHECKING
-# define NS_SCRIPTABLE __attribute__((user("NS_script")))
-#else
-# define NS_SCRIPTABLE
-#endif
-
 /*
  * SEH exception macros.
  */

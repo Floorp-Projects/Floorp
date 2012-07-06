@@ -91,9 +91,9 @@ private:
 class AsyncBindingParams : public BindingParams
 {
 public:
-  NS_SCRIPTABLE NS_IMETHOD BindByName(const nsACString & aName,
+  NS_IMETHOD BindByName(const nsACString & aName,
                                       nsIVariant *aValue);
-  NS_SCRIPTABLE NS_IMETHOD BindByIndex(PRUint32 aIndex, nsIVariant *aValue);
+  NS_IMETHOD BindByIndex(PRUint32 aIndex, nsIVariant *aValue);
 
   virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt * aStatement);
 

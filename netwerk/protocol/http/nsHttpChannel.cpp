@@ -5253,11 +5253,11 @@ class nsHttpChannelCacheKey MOZ_FINAL : public nsISupportsPRUint32,
     
     // Both interfaces declares toString method with the same signature.
     // Thus we have to delegate only to nsISupportsPRUint32 implementation.
-    NS_SCRIPTABLE NS_IMETHOD GetData(nsACString & aData) 
+    NS_IMETHOD GetData(nsACString & aData) 
     { 
         return mSupportsCString->GetData(aData);
     }
-    NS_SCRIPTABLE NS_IMETHOD SetData(const nsACString & aData)
+    NS_IMETHOD SetData(const nsACString & aData)
     { 
         return mSupportsCString->SetData(aData);
     }
