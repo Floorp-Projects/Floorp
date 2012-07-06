@@ -1567,16 +1567,22 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   if (mType != eType_Null) {
     bool allowLoad = false;
     PRInt16 contentPolicy = nsIContentPolicy::ACCEPT;
-    if (mType == eType_Image || mType == eType_Loading) {
+    PRUint32 caps = GetCapabilities();
+    bool supportImage = caps & eSupportImages;
+    bool supportDoc = (caps & eSupportDocuments) || (caps & eSupportSVG);
+    bool supportPlugin = caps & eSupportPlugins;
+    if (mType == eType_Image || (mType == eType_Loading && supportImage)) {
       policyType = nsIContentPolicy::TYPE_IMAGE;
       allowLoad = CheckObjectURIs(&contentPolicy, policyType);
     }
-    if (!allowLoad && (mType == eType_Document || mType == eType_Loading)) {
+    if (!allowLoad &&
+        (mType == eType_Document || (mType == eType_Loading && supportDoc))) {
       contentPolicy = nsIContentPolicy::ACCEPT;
       policyType = nsIContentPolicy::TYPE_SUBDOCUMENT;
       allowLoad = CheckObjectURIs(&contentPolicy, policyType);
     }
-    if (!allowLoad && (mType == eType_Plugin || mType == eType_Loading)) {
+    if (!allowLoad &&
+        (mType == eType_Plugin || (mType == eType_Loading && supportPlugin))) {
       contentPolicy = nsIContentPolicy::ACCEPT;
       policyType = nsIContentPolicy::TYPE_OBJECT;
       allowLoad = CheckObjectURIs(&contentPolicy, policyType);
