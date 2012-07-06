@@ -2436,12 +2436,14 @@ print_iso_string(char* buf, size_t size, double utctime)
                 msFromTime(utctime));
 }
 
+/* ES5 B.2.6. */
 static JSBool
-date_utc_format(JSContext *cx, Native native, CallArgs args,
-                void (*printFunc)(char*, size_t, double))
+date_toGMTString(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, native, &DateClass, &thisObj))
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_toGMTString, &DateClass, thisObj.address()))
         return false;
     if (!thisObj)
         return true;
@@ -2449,16 +2451,10 @@ date_utc_format(JSContext *cx, Native native, CallArgs args,
     double utctime = thisObj->getDateUTCTime().toNumber();
 
     char buf[100];
-    if (!MOZ_DOUBLE_IS_FINITE(utctime)) {
-        if (printFunc == print_iso_string) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DATE);
-            return false;
-        }
-
+    if (!MOZ_DOUBLE_IS_FINITE(utctime))
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
-    } else {
-        (*printFunc)(buf, sizeof buf, utctime);
-    }
+    else
+        print_gmt_string(buf, sizeof buf, utctime);
 
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
@@ -2467,16 +2463,34 @@ date_utc_format(JSContext *cx, Native native, CallArgs args,
     return true;
 }
 
-static JSBool
-date_toGMTString(JSContext *cx, unsigned argc, Value *vp)
-{
-    return date_utc_format(cx, date_toGMTString, CallArgsFromVp(argc, vp), print_gmt_string);
-}
-
+/* ES5 15.9.5.43. */
 static JSBool
 date_toISOString(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_utc_format(cx, date_toISOString, CallArgsFromVp(argc, vp), print_iso_string);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_toISOString, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    double utctime = thisObj->getDateUTCTime().toNumber();
+
+    if (!MOZ_DOUBLE_IS_FINITE(utctime)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DATE);
+        return false;
+    }
+
+    char buf[100];
+    print_iso_string(buf, sizeof buf, utctime);
+
+    JSString *str = JS_NewStringCopyZ(cx, buf);
+    if (!str)
+        return false;
+    args.rval().setString(str);
+    return true;
+
 }
 
 /* ES5 15.9.5.44. */
