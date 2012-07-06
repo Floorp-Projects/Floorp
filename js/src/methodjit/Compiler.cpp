@@ -6962,6 +6962,28 @@ mjit::Compiler::finishLoop(jsbytecode *head)
             }
         }
 
+        /*
+         * Also watch for slots which we assume are doubles at the loop head,
+         * but are known to be int32s at this point.
+         */
+        const SlotValue *newv = analysis->newValues(head);
+        if (newv) {
+            while (newv->slot) {
+                if (newv->value.kind() == SSAValue::PHI &&
+                    newv->value.phiOffset() == uint32_t(head - script->code) &&
+                    analysis->trackSlot(newv->slot))
+                {
+                    JS_ASSERT(newv->slot < TotalSlots(script));
+                    types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
+                    if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
+                        FrameEntry *fe = frame.getSlotEntry(newv->slot);
+                        stubcc.masm.ensureInMemoryDouble(frame.addressOf(fe));
+                    }
+                }
+                newv++;
+            }
+        }
+
         frame.prepareForJump(head, stubcc.masm, true);
         if (!stubcc.jumpInScript(stubcc.masm.jump(), head))
             return false;
