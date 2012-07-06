@@ -19,6 +19,7 @@ EXPORTS = \
 		qsObjectHelper.h \
 		xpcObjectHelper.h \
 		xpcpublic.h \
+		XPCJSMemoryReporter.h \
 		dombindings.h \
 		dombindings_gen.h
 

@@ -779,7 +779,7 @@ inline void
 TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, Type type)
 {
     JS_ASSERT(this == &cx->compartment->types);
-    JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!cx->runtime->isHeapBusy());
 
     InferSpew(ISpewOps, "pending: %sC%p%s %s",
               InferSpewColor(constraint), constraint, InferSpewColorReset(),

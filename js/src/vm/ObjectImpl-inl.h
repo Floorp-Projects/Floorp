@@ -327,7 +327,7 @@ js::ObjectImpl::readBarrier(ObjectImpl *obj)
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = obj->compartment();
     if (comp->needsBarrier()) {
-        MOZ_ASSERT(!comp->rt->gcRunning);
+        MOZ_ASSERT(!comp->rt->isHeapBusy());
         JSObject *tmp = obj->asObjectPtr();
         MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
         MOZ_ASSERT(tmp == obj->asObjectPtr());
@@ -365,7 +365,7 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 
     JSCompartment *comp = obj->compartment();
     if (comp->needsBarrier()) {
-        MOZ_ASSERT(!comp->rt->gcRunning);
+        MOZ_ASSERT(!comp->rt->isHeapBusy());
         JSObject *tmp = obj->asObjectPtr();
         MarkObjectUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
         MOZ_ASSERT(tmp == obj->asObjectPtr());

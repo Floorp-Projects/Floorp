@@ -491,6 +491,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         discardJitCode(fop);
     }
 
+    if (global_ && !IsObjectMarked(&global_))
+        global_ = NULL;
+
     /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
     regExps.sweep(rt);
 
@@ -680,7 +683,7 @@ JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
     // dmgc makes sure we can't forget to GC, but it is also important not
     // to run any scripts in this compartment until the dmgc is destroyed.
     // That is the caller's responsibility.
-    if (!rt->gcRunning)
+    if (!rt->isHeapBusy())
         dmgc.scheduleGC(this);
 #endif
 }

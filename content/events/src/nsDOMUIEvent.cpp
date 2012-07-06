@@ -424,10 +424,10 @@ static const nsModifierPair kPairs[] = {
   { widget::MODIFIER_FN,         NS_DOM_KEYNAME_FN },
   { widget::MODIFIER_META,       NS_DOM_KEYNAME_META },
   { widget::MODIFIER_NUMLOCK,    NS_DOM_KEYNAME_NUMLOCK },
-  { widget::MODIFIER_SCROLL,     NS_DOM_KEYNAME_SCROLL },
+  { widget::MODIFIER_SCROLLLOCK, NS_DOM_KEYNAME_SCROLLLOCK },
   { widget::MODIFIER_SHIFT,      NS_DOM_KEYNAME_SHIFT },
   { widget::MODIFIER_SYMBOLLOCK, NS_DOM_KEYNAME_SYMBOLLOCK },
-  { widget::MODIFIER_WIN,        NS_DOM_KEYNAME_WIN }
+  { widget::MODIFIER_OS,         NS_DOM_KEYNAME_OS }
 };
 
 /* static */
@@ -484,8 +484,8 @@ nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_ALTGRAPH)) {
     return inputEvent->IsAltGraph();
   }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_WIN)) {
-    return inputEvent->IsWin();
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_OS)) {
+    return inputEvent->IsOS();
   }
 
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_CAPSLOCK)) {
@@ -498,7 +498,7 @@ nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_FN)) {
     return inputEvent->IsFn();
   }
-  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLL)) {
+  if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SCROLLLOCK)) {
     return inputEvent->IsScrollLocked();
   }
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SYMBOLLOCK)) {

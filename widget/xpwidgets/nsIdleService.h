@@ -89,6 +89,12 @@ private:
    * Boolean set to true when daily idle notifications should be disabled.
    */
   bool mShutdownInProgress;
+
+  /**
+   * Real time we fired off the one-day timer, in case timers aren't
+   * very reliable.
+   */
+  PRTime mDailyTimerStart;
 };
 
 class nsIdleService : public nsIIdleServiceInternal

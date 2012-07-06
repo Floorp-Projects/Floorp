@@ -481,6 +481,8 @@ protected:
   WindowHook            mWindowHook;
   DWORD                 mAssumeWheelIsZoomUntil;
   PRUint32              mPickerDisplayCount;
+  HICON                 mIconSmall;
+  HICON                 mIconBig;
   static bool           sDropShadowEnabled;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
