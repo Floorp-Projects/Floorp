@@ -250,6 +250,7 @@ public class PluginLayer extends TileLayer
         int positionHandle = context.positionHandle;
         int textureHandle = context.textureHandle;
 
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
 
         // Make sure we are at position zero in the buffer
