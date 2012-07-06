@@ -51,7 +51,6 @@
 #include "prmjtime.h"
 
 #include "jsoptparse.h"
-#include "jsworkers.h"
 #include "jsheaptools.h"
 
 #include "jsinferinlines.h"
@@ -157,10 +156,6 @@ bool gQuitting = false;
 bool gGotError = false;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
-#ifdef JS_THREADSAFE
-JSObject *gWorkers = NULL;
-js::workers::ThreadPool *gWorkerThreadPool = NULL;
-#endif
 
 static bool reportWarnings = true;
 static bool compileOnly = false;
@@ -1207,10 +1202,6 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
     JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/ i", &gExitCode);
 
     gQuitting = true;
-#ifdef JS_THREADSAFE
-    if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
-#endif
     return false;
 }
 
@@ -3035,10 +3026,6 @@ CancelExecution(JSRuntime *rt)
     gCanceled = true;
     if (gExitCode == 0)
         gExitCode = EXITCODE_TIMEOUT;
-#ifdef JS_THREADSAFE
-    if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
-#endif
     JS_TriggerOperationCallback(rt);
 
     static const char msg[] = "Script runs for too long, terminating.\n";
@@ -4700,28 +4687,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
     JS_SetPrivate(envobj, envp);
 
-#ifdef JS_THREADSAFE
-    class ShellWorkerHooks : public js::workers::WorkerHooks {
-    public:
-        JSObject *newGlobalObject(JSContext *cx) {
-            return NewGlobalObject(cx);
-        }
-    };
-    ShellWorkerHooks hooks;
-    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
-        (gWorkerThreadPool = js::workers::init(cx, &hooks, glob, &gWorkers)) == NULL) {
-        return 1;
-    }
-#endif
-
     int result = ProcessArgs(cx, glob, op);
-
-#ifdef JS_THREADSAFE
-    js::workers::finish(cx, gWorkerThreadPool);
-    JS_RemoveObjectRoot(cx, &gWorkers);
-    if (result == 0)
-        result = gExitCode;
-#endif
 
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);
