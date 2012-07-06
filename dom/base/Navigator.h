@@ -12,7 +12,7 @@
 #include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMClientInformation.h"
-#include "nsIDOMNavigatorBattery.h"
+#include "nsINavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
 #include "nsIDOMNavigatorNetwork.h"
 #include "nsAutoPtr.h"
@@ -69,7 +69,7 @@ class Navigator : public nsIDOMNavigator
                 , public nsIDOMNavigatorDeviceStorage
                 , public nsIDOMNavigatorGeolocation
                 , public nsIDOMNavigatorDesktopNotification
-                , public nsIDOMMozNavigatorBattery
+                , public nsINavigatorBattery
                 , public nsIDOMMozNavigatorSms
 #ifdef MOZ_MEDIA_NAVIGATOR
                 , public nsIDOMNavigatorUserMedia
@@ -93,7 +93,7 @@ public:
   NS_DECL_NSIDOMNAVIGATORDEVICESTORAGE
   NS_DECL_NSIDOMNAVIGATORGEOLOCATION
   NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
-  NS_DECL_NSIDOMMOZNAVIGATORBATTERY
+  NS_DECL_NSINAVIGATORBATTERY
   NS_DECL_NSIDOMMOZNAVIGATORSMS
 #ifdef MOZ_MEDIA_NAVIGATOR
   NS_DECL_NSIDOMNAVIGATORUSERMEDIA

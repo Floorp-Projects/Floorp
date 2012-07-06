@@ -607,20 +607,6 @@ WebGLContext::InitAndValidateGL()
         return false;
     }
 
-#ifdef MOZ_JAVA_COMPOSITOR
-    // bug 736123, blacklist WebGL on Adreno
-    bool forceEnabled = Preferences::GetBool("webgl.force-enabled", false);
-    if (!forceEnabled) {
-        int renderer = gl->Renderer();
-        if (renderer == gl::GLContext::RendererAdreno200 ||
-            renderer == gl::GLContext::RendererAdreno205)
-        {
-            GenerateWarning("WebGL blocked on this Adreno driver!");
-            return false;
-        }
-    }
-#endif
-
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
     mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
 
@@ -759,6 +745,15 @@ WebGLContext::InitAndValidateGL()
             gl->fEnable(LOCAL_GL_POINT_SPRITE);
         }
     }
+
+#ifdef XP_MACOSX
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Vendor() == gl::GLContext::VendorATI) {
+        // The Mac ATI driver, in all known OSX version up to and including 10.8,
+        // renders points sprites upside-down. Apple bug 11778921
+        gl->fPointParameterf(LOCAL_GL_POINT_SPRITE_COORD_ORIGIN, LOCAL_GL_LOWER_LEFT);
+    }
+#endif
 
     // Check the shader validator pref
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);

@@ -17,6 +17,7 @@ DIRS = \
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
+    test_bug_765063.xul \
     test_install_app.xul \
     test_list_api.xul \
     test_install_errors.xul \

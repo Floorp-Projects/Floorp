@@ -357,6 +357,8 @@ public:
 
     void NotifyWakeLockChanged(const nsAString& topic, const nsAString& state);
 
+    void GetGfxInfoData(nsACString& aRet);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -477,6 +479,9 @@ protected:
     jmethodID jUnlockScreenOrientation;
     jmethodID jPumpMessageLoop;
     jmethodID jNotifyWakeLockChanged;
+
+    // for GfxInfo (gfx feature detection and blacklisting)
+    jmethodID jGetGfxInfoData;
 
     // For native surface stuff
     jclass jSurfaceClass;

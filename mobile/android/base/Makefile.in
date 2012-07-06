@@ -107,6 +107,7 @@ FENNEC_JAVA_FILES = \
   gfx/DrawTimingQueue.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
+  gfx/GfxInfoThread.java \
   gfx/GLController.java \
   gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
