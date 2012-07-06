@@ -320,6 +320,8 @@ class IonBuilder : public MIRGenerator
 
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
 
+    bool invalidatedIdempotentCache();
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
