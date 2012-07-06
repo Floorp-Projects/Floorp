@@ -100,7 +100,7 @@ public class FormHistoryRecord extends Record {
   @Override
   public boolean equalPayloads(Object o) {
     if (o == null || !(o instanceof FormHistoryRecord)) {
-      Logger.debug(LOG_TAG, "Not a FormHistoryRecord: " + o);
+      Logger.debug(LOG_TAG, "Not a FormHistoryRecord: " + o.getClass());
       return false;
     }
     FormHistoryRecord other = (FormHistoryRecord) o;

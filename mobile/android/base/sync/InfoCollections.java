@@ -106,7 +106,7 @@ public class InfoCollections implements SyncStorageRequestDelegate {
 
   @SuppressWarnings("unchecked")
   public void setFromRecord(ExtendedJSONObject record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
-    Logger.info(LOG_TAG, "info/collections is " + record.toJSONString());
+    Logger.debug(LOG_TAG, "info/collections is " + record.toJSONString());
     HashMap<String, Long> map = new HashMap<String, Long>();
 
     Set<Entry<String, Object>> entrySet = record.object.entrySet();

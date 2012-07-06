@@ -331,7 +331,9 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     fields.put(Constants.JSON_KEY_PASSWORD, password);
     fields.put(Constants.JSON_KEY_SERVER,   serverURL);
 
-    Logger.debug(LOG_TAG, "Extracted account data: " + jAccount.toJSONString());
+    if (Logger.LOG_PERSONAL_INFORMATION) {
+      Logger.pii(LOG_TAG, "Extracted account data: " + jAccount.toJSONString());
+    }
     return jAccount;
   }
 
