@@ -227,6 +227,7 @@ public class ScrollbarLayer extends TileLayer {
         Rect rect = RectUtils.round(mVertical
                 ? getVerticalRect(context)
                 : getHorizontalRect(context));
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
 
         float viewWidth = context.viewport.width();

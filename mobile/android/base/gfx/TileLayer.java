@@ -157,6 +157,7 @@ public abstract class TileLayer extends Layer {
     }
 
     private void bindAndSetGLParameters() {
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureIDs[0]);
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
                                GLES20.GL_NEAREST);
