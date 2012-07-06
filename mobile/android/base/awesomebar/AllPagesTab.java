@@ -32,6 +32,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.Intent;
 import android.widget.FilterQueryProvider;
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.view.MenuInflater;
 import android.widget.TabHost;
@@ -51,12 +52,18 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 
-public class AllPagesTab extends AwesomeBarTab {
+public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     public static final String LOGTAG = "ALL_PAGES";
     private static final String TAG = "allPages";
+
+    private static final int SUGGESTION_TIMEOUT = 3000;
+    private static final int SUGGESTION_MAX = 3;
+
     private String mSearchTerm;
     private SearchEngine mSuggestEngine;
     private ArrayList<SearchEngine> mSearchEngines;
+    private SuggestClient mSuggestClient;
+    private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
     private ListView mView = null;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
 
@@ -70,6 +77,9 @@ public class AllPagesTab extends AwesomeBarTab {
     public AllPagesTab(Context context) {
         super(context);
         mSearchEngines = new ArrayList<SearchEngine>();
+
+        GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
 
     public boolean onBackPressed() {
@@ -112,6 +122,7 @@ public class AllPagesTab extends AwesomeBarTab {
 
     public void destroy() {
         AwesomeBarCursorAdapter adapter = getCursorAdapter();
+        GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
         if (adapter == null) {
             return;
         }
@@ -124,6 +135,24 @@ public class AllPagesTab extends AwesomeBarTab {
     public void filter(String searchTerm) {
         AwesomeBarCursorAdapter adapter = getCursorAdapter();
         adapter.filter(searchTerm);
+
+        // cancel previous query
+        if (mSuggestTask != null) {
+            mSuggestTask.cancel(true);
+        }
+
+        if (mSuggestClient != null) {
+            mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
+                 protected ArrayList<String> doInBackground(String... query) {
+                     return mSuggestClient.query(query[0]);
+                 }
+
+                 protected void onPostExecute(ArrayList<String> suggestions) {
+                     setSuggestions(suggestions);
+                 }
+            };
+            mSuggestTask.execute(searchTerm);
+        }
     }
 
     protected AwesomeBarCursorAdapter getCursorAdapter() {
@@ -481,6 +510,26 @@ public class AllPagesTab extends AwesomeBarTab {
             Log.i(LOGTAG, "exception while decoding drawable: " + base64, e);
         } catch (IOException e) { }
         return drawable;
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        try {
+            if (event.equals("SearchEngines:Data")) {
+                final String suggestEngine =  message.isNull("suggestEngine") ? null : message.getString("suggestEngine");
+                final String suggestTemplate = message.isNull("suggestTemplate") ? null : message.getString("suggestTemplate");
+                final JSONArray engines = message.getJSONArray("searchEngines");
+                if (suggestTemplate != null)
+                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+                GeckoAppShell.getMainHandler().post(new Runnable() {
+                    public void run() {
+                        setSearchEngines(suggestEngine, engines);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // do nothing
+            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
+        }
     }
 
     public void handleItemClick(AdapterView<?> parent, View view, int position, long id) {
