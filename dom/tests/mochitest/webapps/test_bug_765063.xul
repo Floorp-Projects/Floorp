@@ -21,6 +21,7 @@ SimpleTest.waitForExplicitFinish();
 // Observe app installation and confirm that the install origin didn't change.
 var observer = {
   observe: function observe(subject, topic, data) {
+    Services.obs.removeObserver(observer, "webapps-sync-install");
     ok(JSON.parse(data).installOrigin == "http://www.example.com",
        "the install origin didn't change");
     tearDown();
