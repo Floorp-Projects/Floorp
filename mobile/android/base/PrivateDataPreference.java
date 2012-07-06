@@ -53,17 +53,6 @@ class PrivateDataPreference extends MultiChoicePreference {
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON error", e);
             }
-
-            // clear private data in java
-            if (key.equals("history") && value) {
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        BrowserDB.clearHistory(mContext.getContentResolver());
-                        GeckoApp.mAppContext.mFavicons.clearFavicons();
-                        GeckoApp.mAppContext.handleClearHistory();
-                    }
-                });
-            }
         }
 
         // clear private data in gecko
