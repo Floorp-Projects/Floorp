@@ -25,9 +25,6 @@ class Element;
 }  // namespace dom
 }  // namespace mozilla
 
-#define SPECIFIED_STYLE_TYPE    1
-#define COMPUTED_STYLE_TYPE     2
-
 class nsHTMLEditor;
 class nsIDOMWindow;
 
@@ -63,6 +60,8 @@ public:
     eCSSEditableProperty_whitespace,
     eCSSEditableProperty_width
   };
+
+  enum StyleType { eSpecified, eComputed };
 
 
   struct CSSEquivTable {
@@ -176,14 +175,13 @@ public:
     * @param aHTMLProperty  [IN] an atom containing an HTML property
     * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
     * @param aValueString   [OUT] the list of css values
-    * @param aStyleType     [IN] SPECIFIED_STYLE_TYPE to query the specified style values
-                                 COMPUTED_STYLE_TYPE  to query the computed style values
+    * @param aStyleType     [IN] eSpecified or eComputed
     */
   nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                    nsIAtom * aHTMLProperty,
                                                    const nsAString * aAttribute,
                                                    nsAString & aValueString,
-                                                   PRUint8 aStyleType);
+                                                   StyleType aStyleType);
 
   /** Does the node aNode (or his parent if it is not an element node) carries
     * the CSS equivalent styles to the HTML style for this node ?
@@ -193,8 +191,7 @@ public:
     * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
     * @param aIsSet         [OUT] a boolean being true if the css properties are set
     * @param aValueString   [IN/OUT] the attribute value (in) the list of css values (out)
-    * @param aStyleType     [IN] SPECIFIED_STYLE_TYPE to query the specified style values
-    *                            COMPUTED_STYLE_TYPE  to query the computed style values
+    * @param aStyleType     [IN] eSpecified or eComputed
     *
     * The nsIContent variant returns aIsSet instead of using an out parameter.
     */
@@ -202,14 +199,14 @@ public:
                                            nsIAtom* aProperty,
                                            const nsAString* aAttribute,
                                            const nsAString& aValue,
-                                           PRUint8 aStyleType);
+                                           StyleType aStyleType);
 
   nsresult    IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                   nsIAtom * aHTMLProperty,
                                                   const nsAString * aAttribute,
                                                   bool & aIsSet,
                                                   nsAString & aValueString,
-                                                  PRUint8 aStyleType);
+                                                  StyleType aStyleType);
 
   /** Adds to the node the CSS inline styles equivalent to the HTML style
     * and return the number of CSS properties set by the call
@@ -384,15 +381,14 @@ private:
    * @param aProperty           [IN] a CSS property
    * @param aValue              [OUT] the retrieved value for this property
    * @param aWindow             [IN] the window we need in case we query computed styles
-   * @param aStyleType          [IN] SPECIFIED_STYLE_TYPE to query the specified style values
-   *                                 COMPUTED_STYLE_TYPE  to query the computed style values
+   * @param aStyleType          [IN] eSpecified or eComputed
    */
   nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
                                     nsAString& aValue, nsIDOMWindow* aWindow,
-                                    PRUint8 aStyleType);
+                                    StyleType aStyleType);
   nsresult GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
                                     nsAString& aValue, nsIDOMWindow* aWindow,
-                                    PRUint8 aStyleType);
+                                    StyleType aStyleType);
 
 
 private:
