@@ -68,9 +68,9 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
     // In order to prevent massive bouncing between Ion and JM, see if we keep
     // hitting functions that are uncompilable.
 
-    if (fun->script()->ion == ION_DISABLED_SCRIPT) {
-        JSScript *script = cx->stack.currentScript();
-        if (++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
+    if (fun->isInterpreted() && !fun->script()->canIonCompile()) {
+        JSScript *script = GetTopIonJSScript(cx);
+        if (script->hasIonScript() && ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
             Vector<types::RecompileInfo> scripts(cx);
             if (!scripts.append(types::RecompileInfo(script)))
                 return false;
