@@ -274,10 +274,10 @@ struct TreeContext {                /* tree context for semantic checks */
 };
 
 /*
- * NB: If you add enumerators for scope statements, add them between STMT_WITH
- * and STMT_CATCH, or you will break the STMT_TYPE_IS_SCOPE macro. If you add
- * non-looping statement enumerators, add them before STMT_DO_LOOP or you will
- * break the STMT_TYPE_IS_LOOP macro.
+ * NB: If you add a new type of statement that is a scope, add it between
+ * STMT_WITH and STMT_CATCH, or you will break StmtInfoBase::linksScope. If you
+ * add a non-looping statement type, add it before STMT_DO_LOOP or you will
+ * break StmtInfoBase::isLoop().
  *
  * Also remember to keep the statementName array in BytecodeEmitter.cpp in
  * sync.
@@ -301,48 +301,30 @@ enum StmtType {
     STMT_LIMIT
 };
 
-inline bool
-STMT_TYPE_IN_RANGE(uint16_t type, StmtType begin, StmtType end)
-{
-    return begin <= type && type <= end;
-}
-
 /*
- * A comment on the encoding of the js::StmtType enum and type-testing macros:
+ * A comment on the encoding of the js::StmtType enum and StmtInfoBase
+ * type-testing methods:
  *
- * STMT_TYPE_MAYBE_SCOPE tells whether a statement type is always, or may
- * become, a lexical scope.  It therefore includes block and switch (the two
+ * StmtInfoBase::maybeScope() tells whether a statement type is always, or may
+ * become, a lexical scope. It therefore includes block and switch (the two
  * low-numbered "maybe" scope types) and excludes with (with has dynamic scope
- * pending the "reformed with" in ES4/JS2).  It includes all try-catch-finally
+ * pending the "reformed with" in ES4/JS2). It includes all try-catch-finally
  * types, which are high-numbered maybe-scope types.
  *
- * STMT_TYPE_LINKS_SCOPE tells whether a js::StmtInfo{TC,BCE} of the given type
- * eagerly links to other scoping statement info records.  It excludes the two
- * early "maybe" types, block and switch, as well as the try and both finally
- * types, since try and the other trailing maybe-scope types don't need block
- * scope unless they contain let declarations.
+ * StmtInfoBase::linksScope() tells whether a js::StmtInfo{TC,BCE} of the given
+ * type eagerly links to other scoping statement info records. It excludes the
+ * two early "maybe" types, block and switch, as well as the try and both
+ * finally types, since try and the other trailing maybe-scope types don't need
+ * block scope unless they contain let declarations.
  *
  * We treat WITH as a static scope because it prevents lexical binding from
  * continuing further up the static scope chain. With the lost "reformed with"
  * proposal for ES4, we would be able to model it statically, too.
  */
-#define STMT_TYPE_MAYBE_SCOPE(type)                                           \
-    (type != STMT_WITH &&                                                     \
-     STMT_TYPE_IN_RANGE(type, STMT_BLOCK, STMT_SUBROUTINE))
 
-#define STMT_TYPE_LINKS_SCOPE(type)                                           \
-    STMT_TYPE_IN_RANGE(type, STMT_WITH, STMT_CATCH)
-
-#define STMT_TYPE_IS_TRYING(type)                                             \
-    STMT_TYPE_IN_RANGE(type, STMT_TRY, STMT_SUBROUTINE)
-
-#define STMT_TYPE_IS_LOOP(type) ((type) >= STMT_DO_LOOP)
-
-#define STMT_MAYBE_SCOPE(stmt)  STMT_TYPE_MAYBE_SCOPE((stmt)->type)
-#define STMT_LINKS_SCOPE(stmt)  (STMT_TYPE_LINKS_SCOPE((stmt)->type) ||       \
-                                 ((stmt)->flags & SIF_SCOPE))
-#define STMT_IS_TRYING(stmt)    STMT_TYPE_IS_TRYING((stmt)->type)
-#define STMT_IS_LOOP(stmt)      STMT_TYPE_IS_LOOP((stmt)->type)
+#define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
+#define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
+#define SIF_FOR_BLOCK    0x0004     /* for (let ...) induced block scope */
 
 // StmtInfoTC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
@@ -356,6 +338,22 @@ struct StmtInfoBase {
     Rooted<StaticBlockObject *> blockObj; /* block scope object */
 
     StmtInfoBase(JSContext *cx) : label(cx), blockObj(cx) {}
+
+    bool maybeScope() const {
+        return STMT_BLOCK <= type && type <= STMT_SUBROUTINE && type != STMT_WITH;
+    }
+
+    bool linksScope() const {
+        return (STMT_WITH <= type && type <= STMT_CATCH) || (flags & SIF_SCOPE);
+    }
+
+    bool isLoop() const {
+        return type >= STMT_DO_LOOP;
+    }
+
+    bool isTrying() const {
+        return STMT_TRY <= type && type <= STMT_SUBROUTINE;
+    }
 };
 
 struct StmtInfoTC : public StmtInfoBase {
@@ -377,10 +375,6 @@ struct StmtInfoBCE : public StmtInfoBase {
 
     StmtInfoBCE(JSContext *cx) : StmtInfoBase(cx) {}
 };
-
-#define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
-#define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
-#define SIF_FOR_BLOCK    0x0004     /* for (let ...) induced block scope */
 
 namespace frontend {
 

@@ -167,7 +167,7 @@ struct BytecodeEmitter
         if (!script->compileAndGo || sc->inFunction())
             return false;
         for (StmtInfoBCE *stmt = topStmt; stmt; stmt = stmt->down) {
-            if (STMT_IS_LOOP(stmt))
+            if (stmt->isLoop())
                 return false;
         }
         hasSingletons = true;

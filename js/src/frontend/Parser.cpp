@@ -180,7 +180,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
 {
     isFunctionBox = true;
     for (StmtInfoTC *stmt = tc->topStmt; stmt; stmt = stmt->down) {
-        if (STMT_IS_LOOP(stmt)) {
+        if (stmt->isLoop()) {
             inLoop = true;
             break;
         }
@@ -238,7 +238,7 @@ static bool
 GenerateBlockIdForStmtNode(ParseNode *pn, TreeContext *tc)
 {
     JS_ASSERT(tc->topStmt);
-    JS_ASSERT(STMT_MAYBE_SCOPE(tc->topStmt));
+    JS_ASSERT(tc->topStmt->maybeScope());
     JS_ASSERT(pn->isKind(PNK_STATEMENTLIST) || pn->isKind(PNK_LEXICALSCOPE));
     if (!GenerateBlockId(tc, tc->topStmt->blockid))
         return false;
@@ -3622,8 +3622,7 @@ Parser::letStatement()
          * we also need to set tc->blockNode to be our TOK_LEXICALSCOPE.
          */
         StmtInfoTC *stmt = tc->topStmt;
-        if (stmt &&
-            (!STMT_MAYBE_SCOPE(stmt) || (stmt->flags & SIF_FOR_BLOCK))) {
+        if (stmt && (!stmt->maybeScope() || (stmt->flags & SIF_FOR_BLOCK))) {
             reportError(NULL, JSMSG_LET_DECL_NOT_IN_BLOCK);
             return NULL;
         }
@@ -3944,7 +3943,7 @@ Parser::statement()
                     reportError(NULL, JSMSG_TOUGH_BREAK);
                     return NULL;
                 }
-                if (STMT_IS_LOOP(stmt) || stmt->type == STMT_SWITCH)
+                if (stmt->isLoop() || stmt->type == STMT_SWITCH)
                     break;
             }
         }
@@ -3970,7 +3969,7 @@ Parser::statement()
                 }
                 if (stmt->type == STMT_LABEL) {
                     if (stmt->label == label) {
-                        if (!stmt2 || !STMT_IS_LOOP(stmt2)) {
+                        if (!stmt2 || !stmt2->isLoop()) {
                             reportError(NULL, JSMSG_BAD_CONTINUE);
                             return NULL;
                         }
@@ -3986,7 +3985,7 @@ Parser::statement()
                     reportError(NULL, JSMSG_BAD_CONTINUE);
                     return NULL;
                 }
-                if (STMT_IS_LOOP(stmt))
+                if (stmt->isLoop())
                     break;
             }
         }

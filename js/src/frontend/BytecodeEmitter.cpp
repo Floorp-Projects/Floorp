@@ -652,7 +652,7 @@ static bool
 PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
 {
     StmtInfoBCE *stmt = bce->topStmt;
-    if (!STMT_IS_TRYING(stmt) &&
+    if (!stmt->isTrying() &&
         (!BackPatch(cx, bce, stmt->breaks, bce->next(), JSOP_GOTO) ||
          !BackPatch(cx, bce, stmt->continues, bce->code(stmt->update), JSOP_GOTO)))
     {
@@ -4977,7 +4977,7 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
         noteType = SRC_BREAK2LABEL;
     } else {
         labelIndex = INVALID_ATOMID;
-        while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
+        while (!stmt->isLoop() && stmt->type != STMT_SWITCH)
             stmt = stmt->down;
         noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
     }
@@ -4998,7 +4998,7 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
         /* Find the loop statement enclosed by the matching label. */
         StmtInfoBCE *loop = NULL;
         while (stmt->type != STMT_LABEL || stmt->label != label) {
-            if (STMT_IS_LOOP(stmt))
+            if (stmt->isLoop())
                 loop = stmt;
             stmt = stmt->down;
         }
@@ -5006,7 +5006,7 @@ EmitContinue(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
         noteType = SRC_CONT2LABEL;
     } else {
         labelIndex = INVALID_ATOMID;
-        while (!STMT_IS_LOOP(stmt))
+        while (!stmt->isLoop())
             stmt = stmt->down;
         noteType = SRC_CONTINUE;
     }
