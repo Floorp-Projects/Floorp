@@ -227,9 +227,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (regionToPaint.IsEmpty())
     return;
 
-  bool useProgressivePaint = true;
-
-  if (useProgressivePaint) {
+  if (gfxPlatform::UseProgressiveTilePainting()) {
     nsIntRegionRectIterator it(regionToPaint);
     const nsIntRect* rect = it.Next();
     if (!rect)
