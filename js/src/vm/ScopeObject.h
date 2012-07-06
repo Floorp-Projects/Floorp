@@ -65,6 +65,7 @@ class StaticScopeIter
 
     /* Return whether this static scope will be on the dynamic scope chain. */
     bool hasDynamicScopeObject() const;
+    Shape *scopeShape() const;
 
     enum Type { BLOCK, FUNCTION, NAMED_LAMBDA };
     Type type() const;
@@ -93,24 +94,16 @@ struct ScopeCoordinate
     inline ScopeCoordinate() {}
 };
 
-/* Return the static block chain (or null) accessed by *pc. */
-extern StaticBlockObject *
-ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
+/*
+ * Return a scope iterator pointing at the static scope containing the variable
+ * accessed by the ALIASEDVAR op at 'pc'.
+ */
+extern StaticScopeIter
+ScopeCoordinateToStaticScope(JSScript *script, jsbytecode *pc);
 
 /* Return the name being accessed by the given ALIASEDVAR op. */
 extern PropertyName *
 ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
-
-/*
- * The 'slot' of a ScopeCoordinate is relative to the scope object. Type
- * inference and jit compilation are instead relative to frame values (even if
- * these values are aliased and thus never accessed, the the index of the
- * variable is used to refer to the jit/inference information). This function
- * maps from the ScopeCoordinate space to the StackFrame variable space.
- */
-enum FrameIndexType { FrameIndex_Local, FrameIndex_Arg };
-extern FrameIndexType
-ScopeCoordinateToFrameIndex(JSScript *script, jsbytecode *pc, unsigned *index);
 
 /*****************************************************************************/
 
@@ -201,14 +194,15 @@ class CallObject : public ScopeObject
      */
     inline JSFunction &callee() const;
 
-    /* Returns the formal argument at the given index. */
-    inline const Value &arg(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
-    inline void setArg(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
+    /* Get/set the formal argument at the given index. */
+    inline const Value &formal(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
+    inline void setFormal(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
-    /* Returns the variable at the given index. */
+    /* Get/set the variable at the given index. */
     inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
+    /* Internal property ops for CallObject dynamic access via scope chain. */
     static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
     static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
 
