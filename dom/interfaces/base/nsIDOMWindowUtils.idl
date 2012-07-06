@@ -182,9 +182,9 @@ interface nsIDOMWindowUtils : nsISupports {
   const long MODIFIER_CAPSLOCK   = 0x0020;
   const long MODIFIER_FN         = 0x0040;
   const long MODIFIER_NUMLOCK    = 0x0080;
-  const long MODIFIER_SCROLL     = 0x0100;
+  const long MODIFIER_SCROLLLOCK = 0x0100;
   const long MODIFIER_SYMBOLLOCK = 0x0200;
-  const long MODIFIER_WIN        = 0x0400;
+  const long MODIFIER_OS         = 0x0400;
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
