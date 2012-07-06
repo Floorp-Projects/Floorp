@@ -102,7 +102,6 @@ frontend::PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtTyp
 {
     stmt->type = type;
     stmt->isBlockScope = false;
-    stmt->isFunctionBodyBlock = false;
     stmt->isForLetBlock = false;
     stmt->label = NULL;
     stmt->blockObj = NULL;
