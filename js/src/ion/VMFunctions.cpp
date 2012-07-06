@@ -65,6 +65,23 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 {
     Value fval = ObjectValue(*fun);
 
+    // In order to prevent massive bouncing between Ion and JM, see if we keep
+    // hitting functions that are uncompilable.
+
+    if (fun->script()->ion == ION_DISABLED_SCRIPT) {
+        JSScript *script = cx->stack.currentScript();
+        if (++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
+            Vector<types::RecompileInfo> scripts(cx);
+            if (!scripts.append(types::RecompileInfo(script)))
+                return false;
+
+            Invalidate(cx->runtime->defaultFreeOp(), scripts);
+            // Finally, poison the script so we don't try to run it again
+            script->ion = ION_DISABLED_SCRIPT;
+        }
+    }
+
+
     // TI will return false for monitorReturnTypes, meaning there is no
     // TypeBarrier or Monitor instruction following this. However, we need to
     // explicitly monitor if the callee has not been analyzed yet. We special

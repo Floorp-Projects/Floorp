@@ -233,6 +233,9 @@ struct IonScript
     // Number of references from invalidation records.
     size_t refcount_;
 
+    // Number of times this function has tried to call a non-IM compileable function
+    uint32 slowCallCount;
+
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
     }

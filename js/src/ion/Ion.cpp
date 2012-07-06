@@ -415,7 +415,8 @@ IonScript::IonScript()
     prebarrierEntries_(0),
     safepointsStart_(0),
     safepointsSize_(0),
-    refcount_(0)
+    refcount_(0),
+    slowCallCount(0)
 {
 }
 static const int DataAlignment = 4;
