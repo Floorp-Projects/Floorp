@@ -37,14 +37,14 @@
                                                 android:layout_height="fill_parent"
                                                 android:background="@drawable/abouthome_bg_repeat"/>
 
-            <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
-                                             android:layout_width="fill_parent"
-                                             android:layout_height="wrap_content"
-                                             android:layout_alignParentBottom="true"
-                                             style="@style/FindBar"
-                                             android:visibility="gone"/>
-
         </RelativeLayout>
+
+       <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_alignParentBottom="true"
+                                        style="@style/FindBar"
+                                        android:visibility="gone"/>
 
     </LinearLayout>
 
