@@ -1458,7 +1458,7 @@ gfxPlatform::GetLog(eGfxLog aWhichLog)
 int
 gfxPlatform::GetScreenDepth() const
 {
-    MOZ_ASSERT(false, "Not implemented on this platform");
+    NS_WARNING("GetScreenDepth not implemented on this platform -- returning 0!");
     return 0;
 }
 
