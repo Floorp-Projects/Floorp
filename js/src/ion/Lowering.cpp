@@ -294,12 +294,12 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
     JSFunction *target = apply->getSingleTarget();
 
     // Assert if we cannot build a rectifier frame.
-    JS_STATIC_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
-    JS_STATIC_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+    JS_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
+    JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
 
     // Assert if the return value is already erased.
-    JS_STATIC_ASSERT(CallTempReg2 != JSReturnReg_Type);
-    JS_STATIC_ASSERT(CallTempReg2 != JSReturnReg_Data);
+    JS_ASSERT(CallTempReg2 != JSReturnReg_Type);
+    JS_ASSERT(CallTempReg2 != JSReturnReg_Data);
 
     LApplyArgsGeneric *lir = new LApplyArgsGeneric(
         useFixed(apply->getFunction(), CallTempReg3),
