@@ -1359,11 +1359,10 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
             bce->parent &&
             bce->parent->checkSingletonContext();
 
-        script->setFunction(fun);
-        if (!script->typeSetFunction(cx, fun, singleton))
-            return false;
-
         fun->setScript(script);
+        script->setFunction(fun);
+        if (!fun->setTypeForScriptedFunction(cx, singleton))
+            return false;
     }
 
     /*
