@@ -618,7 +618,7 @@ struct JSScript : public js::gc::Cell
 
     js::ion::IonScript *ion;          /* Information attached by Ion */
 
-#if JS_BITS_PER_WORD == 32
+#if defined(JS_METHODJIT) && JS_BITS_PER_WORD == 32
     void *padding_;
 #endif
 
