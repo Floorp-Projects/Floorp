@@ -296,6 +296,17 @@ XPCJSRuntime::RemoveJSHolder(void* aHolder)
     return NS_OK;
 }
 
+nsresult
+XPCJSRuntime::TestJSHolder(void* aHolder, bool* aRetval)
+{
+    if (!mJSHolders.ops)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *aRetval = !!JS_DHashTableOperate(&mJSHolders, aHolder, JS_DHASH_LOOKUP);
+
+    return NS_OK;
+}
+
 // static
 void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
 {

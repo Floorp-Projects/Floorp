@@ -1282,6 +1282,8 @@ public:
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
 #ifdef DEBUG
+  static bool AreJSObjectsHeld(void* aScriptObjectHolder); 
+
   static void CheckCCWrapperTraversal(nsISupports* aScriptObjectHolder,
                                       nsWrapperCache* aCache);
 #endif
