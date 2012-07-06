@@ -42,6 +42,7 @@
  *         this tag will describe the last 'c' tag.
  * 'r' - Responsiveness tag following an 's' tag. Gives an indication on how well the
  *          application is responding to the event loop. Lower is better.
+ * 't' - Elapse time since recording started.
  *
  * NOTE: File format is planned to be extended to include a dictionary to reduce size.
  */

@@ -305,6 +305,13 @@ public:
             }
           }
           break;
+        case 't':
+          {
+            if (sample) {
+              b.DefineProperty(sample, "time", entry.mTagFloat);
+            }
+          }
+          break;
         case 'c':
         case 'l':
           {
@@ -362,6 +369,7 @@ class TableTicker: public Sampler {
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
     , mPrimaryThreadProfile(aEntrySize, aStack)
+    , mStartTime(TimeStamp::Now())
     , mSaveRequested(false)
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
@@ -401,6 +409,7 @@ private:
 private:
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile mPrimaryThreadProfile;
+  TimeStamp mStartTime;
   bool mSaveRequested;
   bool mUseStackWalk;
   bool mJankOnly;
@@ -765,9 +774,14 @@ void TableTicker::Tick(TickSample* sample)
   if (recordSample)
     mPrimaryThreadProfile.flush();
 
-  if (!mJankOnly && !sLastTracerEvent.IsNull() && sample) {
+  if (!sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
     mPrimaryThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+  }
+
+  if (sample) {
+    TimeDuration delta = sample->timestamp - mStartTime;
+    mPrimaryThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
   }
 }
 

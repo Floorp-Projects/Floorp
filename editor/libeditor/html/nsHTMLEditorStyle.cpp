@@ -1754,19 +1754,15 @@ nsHTMLEditor::RelativeFontChangeHelper(PRInt32 aSizeChange, nsINode* aNode)
   if (aNode->IsElement() && aNode->AsElement()->IsHTML(nsGkAtoms::font) &&
       aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::size)) {
     // Cycle through children and adjust relative font size.
-    for (nsIContent* child = aNode->GetLastChild();
-         child;
-         child = child->GetPreviousSibling()) {
-      nsresult rv = RelativeFontChangeOnNode(aSizeChange, child);
+    for (PRUint32 i = aNode->GetChildCount(); i--; ) {
+      nsresult rv = RelativeFontChangeOnNode(aSizeChange, aNode->GetChildAt(i));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
   // Now cycle through the children.
-  for (nsIContent* child = aNode->GetLastChild();
-       child;
-       child = child->GetPreviousSibling()) {
-    nsresult rv = RelativeFontChangeHelper(aSizeChange, child);
+  for (PRUint32 i = aNode->GetChildCount(); i--; ) {
+    nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode->GetChildAt(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1832,10 +1828,8 @@ nsHTMLEditor::RelativeFontChangeOnNode(PRInt32 aSizeChange, nsINode* aNode)
   // MOOSE: we should group the children together if possible
   // into a single "big" or "small".  For the moment they are
   // each getting their own.  
-  for (nsIContent* child = aNode->GetLastChild();
-       child;
-       child = child->GetPreviousSibling()) {
-    nsresult rv = RelativeFontChangeOnNode(aSizeChange, child);
+  for (PRUint32 i = aNode->GetChildCount(); i--; ) {
+    nsresult rv = RelativeFontChangeOnNode(aSizeChange, aNode->GetChildAt(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
