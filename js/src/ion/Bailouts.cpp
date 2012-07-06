@@ -503,11 +503,8 @@ ion::RecompileForInlining()
             script->lineno);
 
     // Invalidate the script to force a recompile.
-    Vector<types::RecompileInfo> scripts(cx);
-    if (!scripts.append(types::RecompileInfo(script)))
+    if (!Invalidate(cx, script, /* resetUses */ false))
         return BAILOUT_RETURN_FATAL_ERROR;
-
-    Invalidate(cx->runtime->defaultFreeOp(), scripts, /* resetUses */ false);
 
     // Invalidation should not reset the use count.
     JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);

@@ -2761,9 +2761,11 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
                               objReg, name, output);
-    JS_ASSERT(mir->resumePoint() != NULL);
 
-    cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
+    if (mir->resumePoint())
+        cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
+    else
+        cache.setIdempotent();
     size_t cacheIndex = allocateCache(cache);
 
     saveLive(ins);
