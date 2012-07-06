@@ -59,6 +59,7 @@
 #include "vm/Stack-inl.h"
 
 #ifdef JS_ION
+#include "ion/Ion.h"
 #include "ion/IonFrameIterator.h"
 #include "ion/IonFrameIterator-inl.h"
 #endif
@@ -128,7 +129,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
         // detecting its use early.
         JSScript *script = iter.script();
         if (!script->hasIonScript())
-            script->ion = ION_DISABLED_SCRIPT;
+            ion::forbidIonCompilation(script);
 #endif
 
         *vp = ObjectValue(*argsobj);

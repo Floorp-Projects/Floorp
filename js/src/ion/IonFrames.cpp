@@ -46,6 +46,7 @@
 #include "jsfun.h"
 #include "IonCompartment.h"
 #include "IonFrames-inl.h"
+#include "IonFrameIterator-inl.h"
 #include "Safepoints.h"
 #include "IonSpewer.h"
 #include "IonMacroAssembler.h"
@@ -159,7 +160,7 @@ IonFrameIterator::isFunctionFrame() const
 bool
 IonFrameIterator::isEntryJSFrame() const
 {
-    if (prevType() == IonFrame_JS)
+    if (prevType() == IonFrame_JS || prevType() == IonFrame_Bailed_JS)
         return false;
 
     if (prevType() == IonFrame_Entry)
@@ -205,7 +206,7 @@ IonFrameIterator::prevFp() const
     // This quick fix must be removed as soon as bug 717297 land.  This is
     // needed because the descriptor size of JS-to-JS frame which is just after
     // a Rectifier frame should not change. (cf EnsureExitFrame function)
-    if (prevType() == IonFrame_Bailed_Rectifier) {
+    if (prevType() == IonFrame_Bailed_Rectifier || prevType() == IonFrame_Bailed_JS) {
         JS_ASSERT(type_ == IonFrame_Exit);
         currentSize = SizeOfFramePrefix(IonFrame_JS);
     }
@@ -232,6 +233,8 @@ IonFrameIterator::operator++()
     // next frame.
     uint8 *prev = prevFp();
     type_ = current()->prevType();
+    if (type_ == IonFrame_Bailed_JS)
+        type_ = IonFrame_JS;
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
     return *this;
@@ -568,6 +571,9 @@ MarkIonActivation(JSTracer *trc, const IonActivationIterator &activations)
             break;
           case IonFrame_JS:
             MarkIonJSFrame(trc, frames);
+            break;
+          case IonFrame_Bailed_JS:
+            JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Rectifier:
           case IonFrame_Bailed_Rectifier: {
@@ -973,3 +979,114 @@ SnapshotIterator::warnUnreadableSlot()
     fprintf(stderr, "Warning! Tried to access unreadable IonMonkey slot (possible f.arguments).\n");
 }
 
+void
+IonFrameIterator::dump() const
+{
+    switch (type_) {
+      case IonFrame_Entry:
+        fprintf(stderr, " Entry frame\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
+      case IonFrame_JS:
+      {
+        InlineFrameIterator frames(this);
+        for (;;) {
+            frames.dump();
+            if (!frames.more())
+                break;
+            ++frames;
+        }
+        break;
+      }
+      case IonFrame_Rectifier:
+      case IonFrame_Bailed_Rectifier:
+        fprintf(stderr, " Rectifier frame\n");
+        fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
+        break;
+      case IonFrame_Bailed_JS:
+        fprintf(stderr, "Warning! Bailed JS frames are not observable.\n");
+        break;
+      case IonFrame_Exit:
+        break;
+      case IonFrame_Osr:
+        fprintf(stderr, "Warning! OSR frame are not defined yet.\n");
+        break;
+    };
+    fputc('\n', stderr);
+}
+
+struct DumpOp {
+    DumpOp(unsigned int i) : i_(i) {}
+
+    unsigned int i_;
+    void operator()(const Value& v) {
+        fprintf(stderr, "  actual (arg %d): ", i_);
+#ifdef DEBUG
+        js_DumpValue(v);
+#else
+        fputc('?\n', stderr);
+#endif
+        i_++;
+    }
+};
+
+void
+InlineFrameIterator::dump() const
+{
+    if (more())
+        fprintf(stderr, " JS frame (inlined)\n");
+    else
+        fprintf(stderr, " JS frame\n");
+
+    bool isFunction = false;
+    if (isFunctionFrame()) {
+        isFunction = true;
+        fprintf(stderr, "  callee fun: ");
+#ifdef DEBUG
+        js_DumpObject(callee());
+#else
+        fputc('?\n', stderr);
+#endif
+    } else {
+        fprintf(stderr, "  global frame, no callee\n");
+    }
+
+    fprintf(stderr, "  file %s line %u\n",
+            script()->filename, (unsigned) script()->lineno);
+
+    fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());
+    fprintf(stderr, "  current op: %s\n", js_CodeName[*pc()]);
+
+    if (!more()) {
+        numActualArgs();
+    }
+
+    SnapshotIterator si = snapshotIterator();
+    fprintf(stderr, "  slots: %u\n", si.slots() - 1);
+    for (unsigned i = 0; i < si.slots() - 1; i++) {
+        if (isFunction) {
+            if (i == 0)
+                fprintf(stderr, "  scope chain: ");
+            else if (i == 1)
+                fprintf(stderr, "  this: ");
+            else if (i - 2 < callee()->nargs)
+                fprintf(stderr, "  formal (arg %d): ", i - 2);
+            else {
+                if (i - 2 == callee()->nargs && numActualArgs() > callee()->nargs) {
+                    DumpOp d(callee()->nargs);
+                    forEachCanonicalActualArg(d, d.i_, numActualArgs());
+                }
+
+                fprintf(stderr, "  slot %d: ", i - 2 - callee()->nargs);
+            }
+        } else
+            fprintf(stderr, "  slot %u: ", i);
+#ifdef DEBUG
+        js_DumpValue(si.maybeRead());
+#else
+        fputc('?\n', stderr);
+#endif
+    }
+
+    fputc('\n', stderr);
+}

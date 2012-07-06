@@ -1022,7 +1022,7 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
     MethodStatus status = Compile(cx, script, fp, pc);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
-            script->ion = ION_DISABLED_SCRIPT;
+            ion::forbidIonCompilation(script);
         return status;
     }
 
@@ -1067,7 +1067,7 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
     MethodStatus status = Compile(cx, script, fp, NULL);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
-            script->ion = ION_DISABLED_SCRIPT;
+            ion::forbidIonCompilation(script);
         return status;
     }
 
@@ -1209,6 +1209,9 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
           }
           case IonFrame_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
+            break;
+          case IonFrame_Bailed_JS:
+            JS_NOT_REACHED("invalid");
             break;
           case IonFrame_Bailed_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d bailed rectifier frame @ %p", frameno, it.fp());
@@ -1388,5 +1391,11 @@ ion::MarkFromIon(JSCompartment *comp, Value *vp)
     gc::MarkValueUnbarriered(comp->barrierTracer(), vp, "write barrier");
 }
 
-
 int js::ion::LabelBase::id_count = 0;
+
+void ion::forbidIonCompilation(JSScript *script)
+{
+    IonSpew(IonSpew_Abort, "Disabling Ion compilation of script %s:%d",
+            script->filename, script->lineno);
+    script->ion = ION_DISABLED_SCRIPT;
+}

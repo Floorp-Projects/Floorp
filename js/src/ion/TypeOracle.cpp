@@ -590,34 +590,32 @@ TypeInferenceOracle::aliasedVarType(JSScript *script, jsbytecode *pc)
 }
 
 LazyArgumentsType
-TypeInferenceOracle::propertyReadMagicArguments(JSScript *script, jsbytecode *pc)
+TypeInferenceOracle::isArgumentObject(types::TypeSet *obj)
 {
-    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 0);
     if (obj->isMagicArguments(cx))
         return DefinitelyArguments;
     if (obj->hasAnyFlag(TYPE_FLAG_LAZYARGS))
         return MaybeArguments;
     return NotArguments;
+}
+
+LazyArgumentsType
+TypeInferenceOracle::propertyReadMagicArguments(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 0);
+    return isArgumentObject(obj);
 }
 
 LazyArgumentsType
 TypeInferenceOracle::elementReadMagicArguments(JSScript *script, jsbytecode *pc)
 {
     types::TypeSet *obj = script->analysis()->poppedTypes(pc, 1);
-    if (obj->isMagicArguments(cx))
-        return DefinitelyArguments;
-    if (obj->hasAnyFlag(TYPE_FLAG_LAZYARGS))
-        return MaybeArguments;
-    return NotArguments;
+    return isArgumentObject(obj);
 }
 
 LazyArgumentsType
 TypeInferenceOracle::elementWriteMagicArguments(JSScript *script, jsbytecode *pc)
 {
     types::TypeSet *obj = script->analysis()->poppedTypes(pc, 2);
-    if (obj->isMagicArguments(cx))
-        return DefinitelyArguments;
-    if (obj->hasAnyFlag(TYPE_FLAG_LAZYARGS))
-        return MaybeArguments;
-    return NotArguments;
+    return isArgumentObject(obj);
 }

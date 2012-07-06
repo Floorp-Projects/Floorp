@@ -337,6 +337,7 @@ BoxPolicy<Op>::staticAdjustInputs(MInstruction *ins)
 
 template bool BoxPolicy<0>::staticAdjustInputs(MInstruction *ins);
 template bool BoxPolicy<1>::staticAdjustInputs(MInstruction *ins);
+template bool BoxPolicy<2>::staticAdjustInputs(MInstruction *ins);
 
 template <unsigned Op>
 bool

@@ -44,8 +44,8 @@
 #include "IonSpewer.h"
 #include "MIRGenerator.h"
 #include "shared/CodeGenerator-shared-inl.h"
-#include "jsmath.h"
 #include "jsnum.h"
+#include "jsmath.h"
 #include "jsinterpinlines.h"
 
 using namespace js;
@@ -766,6 +766,228 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
 
     // Un-nestle %esp from the argument vector. No prefix was pushed.
     masm.reserveStack(unusedStack);
+
+    return true;
+}
+
+bool
+CodeGenerator::emitCallInvokeFunction(LApplyArgsGeneric *apply, Register extraStackSize)
+{
+    Register objreg = ToRegister(apply->getTempObject());
+    JS_ASSERT(objreg != extraStackSize);
+
+    typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
+    static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
+
+    // Push the space used by the arguments.
+    masm.movePtr(StackPointer, objreg);
+    masm.Push(extraStackSize);
+
+    pushArg(objreg);                           // argv.
+    pushArg(ToRegister(apply->getArgc()));     // argc.
+    pushArg(ToRegister(apply->getFunction())); // JSFunction *.
+
+    // This specialization og callVM restore the extraStackSize after the call.
+    if (!callVM(InvokeFunctionInfo, apply, &extraStackSize))
+        return false;
+
+    masm.Pop(extraStackSize);
+    return true;
+}
+
+// Do not bailout after the execution of this function since the stack no longer
+// correspond to what is expected by the snapshots.
+void
+CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSpace)
+{
+    // Holds the function nargs. Initially undefined.
+    Register argcreg = ToRegister(apply->getArgc());
+
+    Register copyreg = ToRegister(apply->getTempObject());
+    size_t argvOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
+    Label end;
+
+    // Initialize the loop counter AND Compute the stack usage (if == 0)
+    masm.movePtr(argcreg, extraStackSpace);
+    masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, &end);
+
+    // Copy arguments.
+    {
+        Register count = extraStackSpace; // <- argcreg
+        Label loop;
+        masm.bind(&loop);
+
+        // We remove sizeof(void*) from argvOffset because withtout it we target
+        // the address after the memory area that we want to copy.
+        BaseIndex disp(StackPointer, argcreg, ScaleFromShift(sizeof(Value)), argvOffset - sizeof(void*));
+
+        // Do not use Push here because other this account to 1 in the framePushed
+        // instead of 0.  These push are only counted by argcreg.
+        masm.loadPtr(disp, copyreg);
+        masm.push(copyreg);
+
+        // Handle 32 bits architectures.
+        if (sizeof(Value) == 2 * sizeof(void*)) {
+            masm.loadPtr(disp, copyreg);
+            masm.push(copyreg);
+        }
+
+        masm.decBranchPtr(Assembler::NonZero, count, Imm32(1), &loop);
+    }
+
+    // Compute the stack usage.
+    masm.movePtr(argcreg, extraStackSpace);
+    masm.lshiftPtr(Imm32::ShiftOf(ScaleFromShift(sizeof(Value))), extraStackSpace);
+
+    // Join with all arguments copied and the extra stack usage computed.
+    masm.bind(&end);
+
+    // Push |this|.
+    masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
+    masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
+}
+
+void
+CodeGenerator::emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSpace)
+{
+    // Pop |this| and Arguments.
+    masm.freeStack(extraStackSpace);
+}
+
+bool
+CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
+{
+    // Holds the function object.
+    Register calleereg = ToRegister(apply->getFunction());
+
+    // Temporary register for modifying the function object.
+    Register objreg = ToRegister(apply->getTempObject());
+    Register copyreg = ToRegister(apply->getTempCopy());
+
+    // Holds the function nargs. Initially undefined.
+    Register argcreg = ToRegister(apply->getArgc());
+
+    // Unless already known, guard that calleereg is actually a function object.
+    if (!apply->hasSingleTarget()) {
+        masm.loadObjClass(calleereg, objreg);
+        masm.cmpPtr(objreg, ImmWord(&js::FunctionClass));
+        if (!bailoutIf(Assembler::NotEqual, apply->snapshot()))
+            return false;
+    }
+
+    // Copy the arguments of the current function.
+    emitPushArguments(apply, copyreg);
+
+    masm.checkStackAlignment();
+
+    // If the function is known to be uncompilable, only emit the call to InvokeFunction.
+    if (apply->hasSingleTarget() &&
+        (!apply->getSingleTarget()->isInterpreted() ||
+         apply->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT))
+    {
+        emitCallInvokeFunction(apply, copyreg);
+        emitPopArguments(apply, copyreg);
+        return true;
+    }
+
+    Label end, invoke;
+
+    // Guard that calleereg is a non-native function:
+    // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
+    // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
+    if (!apply->hasSingleTarget()) {
+        Register kind = objreg;
+        Address flags(calleereg, offsetof(JSFunction, flags));
+        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_KINDMASK), kind);
+        masm.branch32(Assembler::LessThan, kind, Imm32(JSFUN_INTERPRETED), &invoke);
+    } else {
+        // Native single targets are handled by LCallNative.
+        JS_ASSERT(!apply->getSingleTarget()->isNative());
+    }
+
+    // Knowing that calleereg is a non-native function, load the JSScript.
+    masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
+    masm.movePtr(Address(objreg, offsetof(JSScript, ion)), objreg);
+
+    // Guard that the IonScript has been compiled.
+    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_DISABLED_SCRIPT), &invoke);
+
+    // Call with an Ion frame or a rectifier frame.
+    {
+        // Create the frame descriptor.
+        unsigned pushed = masm.framePushed();
+        masm.addPtr(Imm32(pushed), copyreg);
+        masm.makeFrameDescriptor(copyreg, IonFrame_JS);
+
+        masm.Push(argcreg);
+        masm.Push(calleereg);
+        masm.Push(copyreg); // descriptor
+
+        Label underflow, rejoin;
+
+        // Check whether the provided arguments satisfy target argc.
+        if (!apply->hasSingleTarget()) {
+            masm.load16ZeroExtend(Address(calleereg, offsetof(JSFunction, nargs)), copyreg);
+            masm.cmp32(argcreg, copyreg);
+            masm.j(Assembler::Below, &underflow);
+        } else {
+            masm.cmp32(argcreg, Imm32(apply->getSingleTarget()->nargs));
+            masm.j(Assembler::Below, &underflow);
+        }
+
+        // No argument fixup needed. Load the start of the target IonCode.
+        {
+            masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
+            masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
+
+            // Skip the construction of the rectifier frame because we have no
+            // underflow.
+            masm.jump(&rejoin);
+        }
+
+        // Argument fixup needed. Get ready to call the argumentsRectifier.
+        {
+            masm.bind(&underflow);
+
+            // Hardcode the address of the argumentsRectifier code.
+            IonCompartment *ion = gen->ionCompartment();
+            IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
+            if (!argumentsRectifier)
+                return false;
+
+            JS_ASSERT(ArgumentsRectifierReg != objreg);
+            masm.movePtr(argcreg, ArgumentsRectifierReg);
+            masm.movePtr(ImmWord(argumentsRectifier->raw()), objreg);
+        }
+
+        masm.bind(&rejoin);
+
+        // Finally call the function in objreg, as assigned by one of the paths above.
+        masm.callIon(objreg);
+        if (!markSafepoint(apply))
+            return false;
+
+        // Recover the number of arguments from the frame descriptor.
+        masm.movePtr(Address(StackPointer, 0), copyreg);
+        masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), copyreg);
+        masm.subPtr(Imm32(pushed), copyreg);
+
+        // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
+        // The return address has already been removed from the Ion frame.
+        int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
+        masm.adjustStack(prefixGarbage);
+        masm.jump(&end);
+    }
+
+    // Handle uncompiled or native functions.
+    {
+        masm.bind(&invoke);
+        emitCallInvokeFunction(apply, copyreg);
+    }
+
+    // Pop arguments and continue.
+    masm.bind(&end);
+    emitPopArguments(apply, copyreg);
 
     return true;
 }

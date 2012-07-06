@@ -705,6 +705,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
         branch32(cond, lhs, Imm32(imm.value), label);
     }
+    void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        subPtr(imm, lhs);
+        branch32(cond, lhs, Imm32(0), label);
+    }
     void moveValue(const Value &val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel *label, Condition cond = Always);
@@ -901,6 +905,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     bool buildFakeExitFrame(const Register &scratch, uint32 *offset);
 
     void callWithExitFrame(IonCode *target);
+    void callWithExitFrame(IonCode *target, Register dynStack);
 
     // Makes an Ion call using the only two methods that it is sane for
     // indep code to make a call
@@ -908,6 +913,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
+    void freeStack(Register amount);
 
     void add32(Imm32 imm, Register dest);
     void sub32(Imm32 imm, Register dest);

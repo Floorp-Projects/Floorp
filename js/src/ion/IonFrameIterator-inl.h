@@ -80,7 +80,7 @@ SnapshotIterator::readFrameArgs(Op op, const Value *argv, Value *scopeChain, Val
 
 template <class Op>
 inline bool
-InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count)
+InlineFrameIterator::forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const
 {
     unsigned nactual = numActualArgs();
     if (count == unsigned(-1))

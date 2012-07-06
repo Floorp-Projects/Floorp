@@ -919,9 +919,11 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_FUNCALL:
         return jsop_funcall(GET_ARGC(pc));
 
+      case JSOP_FUNAPPLY:
+        return jsop_funapply(GET_ARGC(pc));
+
       case JSOP_CALL:
       case JSOP_NEW:
-      case JSOP_FUNAPPLY:
         return jsop_call(GET_ARGC(pc), (JSOp)*pc == JSOP_NEW);
 
       case JSOP_INT8:
@@ -2755,10 +2757,6 @@ IonBuilder::jsop_notearg()
     MDefinition *def = current->pop();
     MPassArg *arg = MPassArg::New(def);
 
-    // We do not support giving the argument object as argument yet.
-    if (def->type() == MIRType_ArgObj)
-        return abort("NYI: escaping of the argument object.");
-
     current->add(arg);
     current->push(arg);
     return true;
@@ -2778,6 +2776,7 @@ class AutoAccumulateExits
         graph_.setExitAccumulator(prev_);
     }
 };
+
 
 bool
 IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
@@ -3271,6 +3270,73 @@ IonBuilder::jsop_funcall(uint32 argc)
 
     // Call without inlining.
     return makeCall(target, argc, false);
+}
+
+bool
+IonBuilder::jsop_funapply(uint32 argc)
+{
+    // Stack for JSOP_FUNAPPLY:
+    // 1:      MPassArg(Vp)
+    // 2:      MPassArg(This)
+    // argc+1: MPassArg(JSFunction *), the 'f' in |f.call()|, in |this| position.
+    // argc+2: The native 'apply' function.
+
+    // If |Function.prototype.call| may be overridden, don't optimize callsite.
+    RootedFunction native(cx, getSingleCallTarget(argc, pc));
+    if (!native || !native->isNative() || native->native() != &js_fun_apply)
+        return makeCall(native, argc, false);
+
+    // Do not handle case when there is no second argument.
+    if (argc != 2)
+        return makeCall(native, argc, false);
+
+    // Reject when called with an Array or object.
+    types::TypeSet *argObjTypes = oracle->getCallArg(script, argc, 2, pc);
+    if (oracle->isArgumentObject(argObjTypes) != DefinitelyArguments)
+        return makeCall(native, argc, false);
+
+    // Extract call target.
+    types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
+    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
+    RootedFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
+
+    // Vp
+    MPassArg *passVp = current->pop()->toPassArg();
+    passVp->replaceAllUsesWith(passVp->getArgument());
+    passVp->block()->discard(passVp);
+
+    // This
+    MPassArg *passThis = current->pop()->toPassArg();
+    MDefinition *argThis = passThis->getArgument();
+    passThis->replaceAllUsesWith(argThis);
+    passThis->block()->discard(passThis);
+
+    // Unwrap the (JSFunction *) parameter.
+    MPassArg *passFunc = current->pop()->toPassArg();
+    MDefinition *argFunc = passFunc->getArgument();
+    passFunc->replaceAllUsesWith(argFunc);
+    passFunc->block()->discard(passFunc);
+
+    // Pop apply function.
+    current->pop();
+
+    // Call without inlining.
+    // return makeCall(target, argc, false);
+    MLazyArguments *lazyArgs = MLazyArguments::New();
+    current->add(lazyArgs);
+
+    MArgumentsLength *numArgs = MArgumentsLength::New(lazyArgs);
+    current->add(numArgs);
+
+    MApplyArgs *apply = MApplyArgs::New(target, argFunc, numArgs, argThis);
+    current->add(apply);
+    current->push(apply);
+    if (!resumeAfter(apply))
+        return false;
+
+    types::TypeSet *barrier;
+    types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
+    return pushTypeBarrier(apply, types, barrier);
 }
 
 bool

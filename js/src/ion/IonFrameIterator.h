@@ -66,6 +66,10 @@ enum FrameType
     // mismatches in calls.
     IonFrame_Rectifier,
 
+    // A bailed JS frame is a JS frame signalling that its callee has been
+    // bailed out.
+    IonFrame_Bailed_JS,
+
     // A bailed rectifier frame is a rectifier frame signalling that its callee
     // has been bailed out.
     IonFrame_Bailed_Rectifier,
@@ -195,6 +199,8 @@ class IonFrameIterator
 
     uintptr_t *spillBase() const;
     MachineState machineState() const;
+
+    void dump() const;
 };
 
 class IonActivationIterator
@@ -293,7 +299,7 @@ class InlineFrameIterator
     unsigned numActualArgs() const;
 
     template <class Op>
-    inline bool forEachCanonicalActualArg(Op op, unsigned start, unsigned count);
+    inline bool forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const;
 
     JSScript *script() const {
         return script_;
@@ -308,6 +314,8 @@ class InlineFrameIterator
     bool isConstructing() const;
     JSObject *thisObject() const;
     InlineFrameIterator operator++();
+
+    void dump() const;
 };
 
 } // namespace ion
