@@ -4944,10 +4944,11 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!EmitFunctionDefNop(cx, bce, index))
             return false;
     } else {
-        unsigned slot;
-        DebugOnly<BindingKind> kind = bce->sc->bindings.lookup(cx, fun->atom, &slot);
-        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-        JS_ASSERT(index < JS_BIT(20));
+#ifdef DEBUG
+        BindingIter bi(cx, bce->sc->bindings.lookup(cx, fun->atom->asPropertyName()));
+        JS_ASSERT(bi->kind == VARIABLE || bi->kind == CONSTANT);
+        JS_ASSERT(bi.frameIndex() < JS_BIT(20));
+#endif
         pn->pn_index = index;
         if (bce->shouldNoteClosedName(pn) && !bce->noteClosedVar(pn))
             return false;
@@ -5981,12 +5982,10 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (EmitJump(cx, bce, JSOP_GOTO, 0) < 0)
                 return false;
 
-            unsigned slot;
-            bce->sc->bindings.lookup(cx, arg->pn_left->atom(), &slot);
-
             // It doesn't matter if this is correct with respect to aliasing or
             // not. Only the decompiler is going to see it.
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, slot, bce))
+            BindingIter bi(cx, bce->sc->bindings.lookup(cx, arg->pn_left->atom()));
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bi.frameIndex(), bce))
                 return false;
             SET_JUMP_OFFSET(bce->code(hop), bce->offset() - hop);
         }
