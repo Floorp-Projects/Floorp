@@ -89,13 +89,13 @@ class InlineMap
     {
         friend class InlineMap;
         const K &key_;
-        const V &value_;
+        V &value_;
 
-        Entry(const K &key, const V &value) : key_(key), value_(value) {}
+        Entry(const K &key, V &value) : key_(key), value_(value) {}
 
       public:
         const K &key() { return key_; }
-        const V &value() { return value_; }
+        V &value() { return value_; }
     }; /* class Entry */
 
     class Ptr

@@ -706,13 +706,17 @@ Parser::functionBody(FunctionBodyType type)
          * might, in the case of calls to eval) be assigned.
          */
         if (tc->sc->inStrictMode()) {
-            AtomDeclsIter iter(&tc->decls);
-            while (Definition *dn = iter.next()) {
-                if (dn->kind() == Definition::ARG && dn->isAssigned()) {
-                    tc->sc->setFunDefinitelyNeedsArgsObj();
-                    break;
+            for (AtomDefnListMap::Range r = tc->decls.all(); !r.empty(); r.popFront()) {
+                DefinitionList &dlist = r.front().value();
+                for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
+                    Definition *dn = dr.front();
+                    if (dn->kind() == Definition::ARG && dn->isAssigned()) {
+                        tc->sc->setFunDefinitelyNeedsArgsObj();
+                        goto exitLoop;
+                    }
                 }
             }
+          exitLoop: ;
         }
         break;
       case ARGUMENT:
@@ -1570,14 +1574,18 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
      * Parser::functionArguments has returned.
      */
     if (prelude) {
-        AtomDeclsIter iter(&funtc.decls);
-        while (Definition *apn = iter.next()) {
-            /* Filter based on pn_op -- see BindDestructuringArg, above. */
-            if (!apn->isOp(JSOP_SETLOCAL))
-                continue;
+        for (AtomDefnListMap::Range r = tc->decls.all(); !r.empty(); r.popFront()) {
+            DefinitionList &dlist = r.front().value();
+            for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
+                Definition *apn = dr.front();
 
-            if (!BindLocalVariable(context, &funtc, apn, VARIABLE))
-                return NULL;
+                /* Filter based on pn_op -- see BindDestructuringArg, above. */
+                if (!apn->isOp(JSOP_SETLOCAL))
+                    continue;
+
+                if (!BindLocalVariable(context, &funtc, apn, VARIABLE))
+                    return NULL;
+            }
         }
     }
 #endif
@@ -2067,7 +2075,7 @@ OuterLet(TreeContext *tc, StmtInfoTC *stmt, JSAtom *atom)
 }
 
 static bool
-BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, TreeContext *tc)
+BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, TreeContext *tc)
 {
     JS_ASSERT(tc->sc->inFunction());
 
@@ -2093,7 +2101,7 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, TreeContex
 
     if (kind == ARGUMENT) {
         JS_ASSERT(tc->sc->inFunction());
-        JS_ASSERT(!mdl.empty() && mdl.front()->kind() == Definition::ARG);
+        JS_ASSERT(!defs.empty() && defs.front()->kind() == Definition::ARG);
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
     }
@@ -2122,11 +2130,11 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
         return true;
     }
 
-    MultiDeclRange mdl = tc->decls.lookupMulti(atom);
+    DefinitionList::Range defs = tc->decls.lookupMulti(atom);
     JSOp op = data->op;
 
-    if (stmt || !mdl.empty()) {
-        Definition *dn = mdl.empty() ? NULL : mdl.front();
+    if (stmt || !defs.empty()) {
+        Definition *dn = defs.empty() ? NULL : defs.front();
         Definition::Kind dn_kind = dn ? dn->kind() : Definition::VAR;
 
         if (dn_kind == Definition::ARG) {
@@ -2163,14 +2171,14 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
         }
     }
 
-    if (mdl.empty()) {
+    if (defs.empty()) {
         if (!Define(pn, atom, tc))
             return false;
     } else {
         /*
          * A var declaration never recreates an existing binding, it restates
          * it and possibly reinitializes its value. Beware that if pn becomes a
-         * use of |mdl.defn()|, and if we have an initializer for this var or
+         * use of |defs.defn()|, and if we have an initializer for this var or
          * const (typically a const would ;-), then pn must be rewritten into a
          * PNK_ASSIGN node. See js::Parser::variables, further below.
          *
@@ -2178,7 +2186,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
          * There the x definition is hoisted but the x = 2 assignment mutates
          * the block-local binding of x.
          */
-        Definition *dn = mdl.front();
+        Definition *dn = defs.front();
 
         data->fresh = false;
 
@@ -2198,10 +2206,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 
         /* Find the first non-let binding of this atom. */
         while (dn->kind() == Definition::LET) {
-            mdl.popFront();
-            if (mdl.empty())
+            defs.popFront();
+            if (defs.empty())
                 break;
-            dn = mdl.front();
+            dn = defs.front();
         }
 
         if (dn) {
@@ -2240,7 +2248,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
         pn->pn_dflags |= PND_CONST;
 
     if (tc->sc->inFunction())
-        return BindFunctionLocal(cx, data, mdl, tc);
+        return BindFunctionLocal(cx, data, defs, tc);
 
     return true;
 }
@@ -2305,11 +2313,11 @@ NoteNameUse(ParseNode *pn, Parser *parser)
     PropertyName *name = pn->pn_atom->asPropertyName();
     StmtInfoTC *stmt = LexicalLookup(parser->tc, name, NULL, (StmtInfoTC *)NULL);
 
-    MultiDeclRange mdl = parser->tc->decls.lookupMulti(name);
+    DefinitionList::Range defs = parser->tc->decls.lookupMulti(name);
 
     Definition *dn;
-    if (!mdl.empty()) {
-        dn = mdl.front();
+    if (!defs.empty()) {
+        dn = defs.front();
     } else {
         if (AtomDefnAddPtr p = parser->tc->lexdeps->lookupForAdd(name)) {
             dn = p.value();
