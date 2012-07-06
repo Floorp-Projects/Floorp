@@ -2679,7 +2679,7 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
         PRMJTime split;
         new_explode(local, &split, cx);
 
-        /* let PRMJTime format it.       */
+        /* Let PRMJTime format it. */
         result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
 
         /* If it failed, default to toString. */
@@ -2711,81 +2711,92 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
     return true;
 }
 
-/*
- * NB: Because of NonGenericMethodGuard, the calling native return immediately
- * after calling date_toLocaleHelper, even if it returns 'true'.
- */
-static JSBool
-date_toLocaleHelper(JSContext *cx, unsigned argc, Value *vp, Native native, const char *format)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, native, &DateClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
-
-    return ToLocaleHelper(cx, args, thisObj, format);
-}
-
-static JSBool
-date_toLocaleStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
+static bool
+ToLocaleStringHelper(JSContext *cx, CallReceiver call, Handle<JSObject*> thisObj)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
      * with msvc; '%#c' requests that a full year be used in the result string.
      */
-    return date_toLocaleHelper(cx, argc, vp, native,
+    return ToLocaleHelper(cx, call, thisObj,
 #if defined(_WIN32) && !defined(__MWERKS__)
-                                   "%#c"
+                          "%#c"
 #else
-                                   "%c"
+                          "%c"
 #endif
-                               );
+                         );
 }
 
+/* ES5 15.9.5.5. */
 static JSBool
 date_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_toLocaleStringHelper(cx, date_toLocaleString, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_toLocaleString, &DateClass, thisObj.address()))
+        return false;
+    if (!thisObj)
+        return true;
+
+    return ToLocaleStringHelper(cx, args, thisObj);
 }
 
+/* ES5 15.9.5.6. */
 static JSBool
 date_toLocaleDateString(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, date_toLocaleDateString, &DateClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
+
     /*
      * Use '%#x' for windows, because '%x' is backward-compatible and non-y2k
      * with msvc; '%#x' requests that a full year be used in the result string.
      */
-    return date_toLocaleHelper(cx, argc, vp, date_toLocaleDateString,
+    static const char format[] =
 #if defined(_WIN32) && !defined(__MWERKS__)
                                    "%#x"
 #else
                                    "%x"
 #endif
-                               );
+                                   ;
+
+    return ToLocaleHelper(cx, args, thisObj, format);
 }
 
+/* ES5 15.9.5.7. */
 static JSBool
 date_toLocaleTimeString(JSContext *cx, unsigned argc, Value *vp)
 {
-    return date_toLocaleHelper(cx, argc, vp, date_toLocaleTimeString, "%X");
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, date_toLocaleTimeString, &DateClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
+
+    return ToLocaleHelper(cx, args, thisObj, "%X");
 }
 
 static JSBool
 date_toLocaleFormat(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc == 0)
-        return date_toLocaleStringHelper(cx, date_toLocaleFormat, argc, vp);
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, date_toLocaleFormat, &DateClass, &thisObj))
+    Rooted<JSObject*> thisObj(cx);
+    if (!NonGenericMethodGuard(cx, args, date_toLocaleFormat, &DateClass, thisObj.address()))
         return false;
     if (!thisObj)
         return true;
+
+    if (argc == 0)
+        return ToLocaleStringHelper(cx, args, thisObj);
 
     JSString *fmt = ToString(cx, args[0]);
     if (!fmt)
