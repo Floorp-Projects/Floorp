@@ -286,6 +286,50 @@ LIRGenerator::visitCall(MCall *call)
     return true;
 }
 
+bool
+LIRGenerator::visitApplyArgs(MApplyArgs *apply)
+{
+    JS_ASSERT(apply->getFunction()->type() == MIRType_Object);
+
+    JSFunction *target = apply->getSingleTarget();
+
+    // Assert if we cannot build a rectifier frame.
+    JS_STATIC_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
+    JS_STATIC_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+
+    // Assert if the return value is already erased.
+    JS_STATIC_ASSERT(CallTempReg2 != JSReturnReg_Type);
+    JS_STATIC_ASSERT(CallTempReg2 != JSReturnReg_Data);
+
+    LApplyArgsGeneric *lir = new LApplyArgsGeneric(
+        useFixed(apply->getFunction(), CallTempReg3),
+        useFixed(apply->getArgc(), CallTempReg0),
+        tempFixed(CallTempReg1),  // object register
+        tempFixed(CallTempReg2)); // copy register
+
+    MDefinition *self = apply->getThis();
+    size_t index = LApplyArgsGeneric::ThisIndex;
+    if (!ensureDefined(self))
+        return false;
+
+#if defined(JS_NUNBOX32)
+    lir->setOperand(index + 0, LUse(CallTempReg4, self->virtualRegister()));
+    lir->setOperand(index + 1, LUse(CallTempReg5, VirtualRegisterOfPayload(self)));
+#elif defined(JS_PUNBOX64)
+    lir->setOperand(index + 0, LUse(CallTempReg4, self->virtualRegister()));
+#endif
+
+    // Bailout is only needed in the case of possible non-JSFunction callee.
+    if (!target && !assignSnapshot(lir))
+        return false;
+
+    if (!defineReturn(lir, apply))
+        return false;
+    if (!assignSafepoint(lir, apply))
+        return false;
+    return true;
+}
+
 static JSOp
 ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
 {

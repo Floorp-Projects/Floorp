@@ -398,6 +398,12 @@ MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool constr
     return ins;
 }
 
+MApplyArgs *
+MApplyArgs::New(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefinition *self)
+{
+    return new MApplyArgs(target, fun, argc, self);
+}
+
 MTest *
 MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
@@ -501,7 +507,7 @@ MCall::addArg(size_t argnum, MPassArg *arg)
     // The operand vector is initialized in reverse order by the IonBuilder.
     // It cannot be checked for consistency until all arguments are added.
     arg->setArgnum(argnum);
-    return MNode::initOperand(argnum + NumNonArgumentOperands, arg->toDefinition());
+    MNode::initOperand(argnum + NumNonArgumentOperands, arg->toDefinition());
 }
 
 void

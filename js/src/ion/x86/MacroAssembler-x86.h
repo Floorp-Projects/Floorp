@@ -78,6 +78,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
   public:
     using MacroAssemblerX86Shared::Push;
+    using MacroAssemblerX86Shared::callWithExitFrame;
 
     enum Result {
         GENERAL,
@@ -402,6 +403,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             addl(Imm32(amount), StackPointer);
         framePushed_ -= amount;
     }
+    void freeStack(Register amount) {
+        addl(amount, StackPointer);
+    }
 
     void addPtr(const Register &src, const Register &dest) {
         addl(src, dest);
@@ -446,6 +450,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         testl(lhs, rhs);
+        j(cond, label);
+    }
+    void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        subPtr(imm, lhs);
         j(cond, label);
     }
 
@@ -735,6 +743,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void linkExitFrame() {
         JSContext *cx = GetIonContext()->cx;
         movl(StackPointer, Operand(&cx->runtime->ionTop));
+    }
+
+    void callWithExitFrame(IonCode *target, Register dynStack) {
+        addPtr(Imm32(framePushed()), dynStack);
+        makeFrameDescriptor(dynStack, IonFrame_JS);
+        Push(dynStack);
+        call(target);
     }
 
     void enterOsr(Register calleeToken, Register code) {

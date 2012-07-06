@@ -64,6 +64,7 @@ SizeOfFramePrefix(FrameType type)
       case IonFrame_Entry:
         return IonEntryFrameLayout::Size();
       case IonFrame_JS:
+      case IonFrame_Bailed_JS:
         return IonJSFrameLayout::Size();
       case IonFrame_Rectifier:
         return IonRectifierFrameLayout::Size();

@@ -98,6 +98,10 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
+// Avoid, except for assertions.
+static const Register JSReturnReg_Type = JSReturnReg;
+static const Register JSReturnReg_Data = JSReturnReg;
+
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
 static const FloatRegister ReturnFloatReg = xmm0;
@@ -108,6 +112,7 @@ static const Register CallTempReg0 = rax;
 static const Register CallTempReg1 = rdi;
 static const Register CallTempReg2 = rbx;
 static const Register CallTempReg3 = rcx;
+static const Register CallTempReg4 = rsi;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
