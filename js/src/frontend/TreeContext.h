@@ -322,10 +322,6 @@ enum StmtType {
  * proposal for ES4, we would be able to model it statically, too.
  */
 
-#define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
-#define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
-#define SIF_FOR_BLOCK    0x0004     /* for (let ...) induced block scope */
-
 // StmtInfoTC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
 // StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
@@ -333,18 +329,33 @@ enum StmtType {
 
 struct StmtInfoBase {
     uint16_t        type;           /* statement type */
-    uint16_t        flags;          /* flags, see below */
+
+    /*
+     * True if type is STMT_BLOCK, STMT_TRY, STMT_SWITCH, or
+     * STMT_FINALLY and the block contains at least one let-declaration.
+     */
+    bool isBlockScope:1;
+
+    /* True if type == STMT_BLOCK and this block is a function body. */
+    bool isFunctionBodyBlock:1;
+
+    /* for (let ...) induced block scope */
+    bool isForLetBlock:1;
+
     RootedAtom      label;          /* name of LABEL */
     Rooted<StaticBlockObject *> blockObj; /* block scope object */
 
-    StmtInfoBase(JSContext *cx) : label(cx), blockObj(cx) {}
+    StmtInfoBase(JSContext *cx)
+        : isBlockScope(false), isFunctionBodyBlock(false), isForLetBlock(false), label(cx),
+          blockObj(cx)
+    {}
 
     bool maybeScope() const {
         return STMT_BLOCK <= type && type <= STMT_SUBROUTINE && type != STMT_WITH;
     }
 
     bool linksScope() const {
-        return (STMT_WITH <= type && type <= STMT_CATCH) || (flags & SIF_SCOPE);
+        return (STMT_WITH <= type && type <= STMT_CATCH) || isBlockScope;
     }
 
     bool isLoop() const {

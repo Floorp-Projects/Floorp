@@ -550,10 +550,10 @@ EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt)
           default:;
         }
 
-        if (stmt->flags & SIF_SCOPE) {
+        if (stmt->isBlockScope) {
             FLUSH_POPS();
             unsigned blockObjCount = stmt->blockObj->slotCount();
-            if (stmt->flags & SIF_FOR_BLOCK) {
+            if (stmt->isForLetBlock) {
                 /*
                  * For a for-let-in statement, pushing/popping the block is
                  * interleaved with JSOP_(END)ITER. Just handle both together
@@ -3752,7 +3752,7 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * and save the block object atom.
      */
     StmtInfoBCE *stmt = bce->topStmt;
-    JS_ASSERT(stmt->type == STMT_BLOCK && (stmt->flags & SIF_SCOPE));
+    JS_ASSERT(stmt->type == STMT_BLOCK && stmt->isBlockScope);
     stmt->type = STMT_CATCH;
     catchStart = stmt->update;
 
@@ -4485,7 +4485,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     StmtInfoBCE letStmt(cx);
     if (letDecl) {
         PushBlockScopeBCE(bce, &letStmt, *blockObj, bce->offset());
-        letStmt.flags |= SIF_FOR_BLOCK;
+        letStmt.isForLetBlock = true;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET1))
             return false;
     }
