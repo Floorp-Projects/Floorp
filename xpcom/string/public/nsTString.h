@@ -350,9 +350,6 @@ class nsTString_CharT : public nsTSubstring_CharT
       void AssignWithConversion( const nsTAString_IncompatibleCharT& aString );
       void AssignWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
 
-      void AppendWithConversion( const nsTAString_IncompatibleCharT& aString );
-      void AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
-
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
 
