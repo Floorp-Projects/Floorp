@@ -208,6 +208,9 @@ class TypeOracle
     virtual LazyArgumentsType elementWriteMagicArguments(JSScript *script, jsbytecode *pc) {
         return MaybeArguments;
     }
+    virtual Binary incslot(JSScript *script, jsbytecode *pc) {
+        return binaryOp(script, pc);
+    }
 };
 
 class DummyOracle : public TypeOracle
@@ -291,6 +294,8 @@ class TypeInferenceOracle : public TypeOracle
     LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc);
     LazyArgumentsType elementReadMagicArguments(JSScript *script, jsbytecode *pc);
     LazyArgumentsType elementWriteMagicArguments(JSScript *script, jsbytecode *pc);
+
+    Binary incslot(JSScript *script, jsbytecode *pc);
 };
 
 static inline MIRType
