@@ -563,7 +563,7 @@ struct Shape : public js::gc::Cell
         Range(Shape *shape) : cursor(shape) { }
 
         bool empty() const {
-            return cursor->isEmptyShape();
+            return !cursor || cursor->isEmptyShape();
         }
 
         Shape &front() const {

@@ -27,20 +27,6 @@ Bindings::Bindings()
     : lastBinding(NULL), nargs(0), nvars(0), hasDup_(false)
 {}
 
-inline BindingKind
-Bindings::slotToFrameIndex(unsigned slot, unsigned *index)
-{
-    slot -= CallObject::RESERVED_SLOTS;
-    if (slot < numArgs()) {
-        *index = slot;
-        return ARGUMENT;
-    }
-
-    *index = slot - numArgs();
-    JS_ASSERT(*index < numVars());
-    return VARIABLE;
-}
-
 inline void
 Bindings::transfer(Bindings *bindings)
 {
@@ -51,14 +37,6 @@ Bindings::transfer(Bindings *bindings)
 #ifdef DEBUG
     bindings->lastBinding = NULL;
 #endif
-}
-
-Shape *
-Bindings::lastShape() const
-{
-    JS_ASSERT(lastBinding);
-    JS_ASSERT(!lastBinding->inDictionary());
-    return lastBinding;
 }
 
 Shape *
@@ -101,16 +79,6 @@ Bindings::varIndexToSlot(uint16_t i)
 {
     JS_ASSERT(i < nvars);
     return CallObject::RESERVED_SLOTS + i + nargs;
-}
-
-unsigned
-Bindings::argumentsVarIndex(JSContext *cx) const
-{
-    PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
-    unsigned i;
-    DebugOnly<BindingKind> kind = lookup(cx, arguments, &i);
-    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-    return i;
 }
 
 extern void
