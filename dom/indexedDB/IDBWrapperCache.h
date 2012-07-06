@@ -46,6 +46,14 @@ public:
       nsDOMEventTargetHelper::FromSupports(aSupports));
   }
 
+#ifdef DEBUG
+  void AssertIsRooted() const;
+#else
+  inline void AssertIsRooted() const
+  {
+  }
+#endif
+
 protected:
   IDBWrapperCache()
   : mScriptOwner(nsnull)
