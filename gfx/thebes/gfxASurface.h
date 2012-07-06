@@ -6,6 +6,10 @@
 #ifndef GFX_ASURFACE_H
 #define GFX_ASURFACE_H
 
+#ifdef MOZ_DUMP_PAINTING
+ #define MOZ_DUMP_IMAGES
+#endif
+
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "nsAutoPtr.h"
@@ -213,7 +217,7 @@ public:
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
-#ifdef MOZ_DUMP_PAINTING
+#ifdef MOZ_DUMP_IMAGES
     /**
      * Debug functions to encode the current image as a PNG and export it.
      */

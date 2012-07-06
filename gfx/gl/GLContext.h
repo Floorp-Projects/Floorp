@@ -2453,6 +2453,12 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fPointParameterf(GLenum pname, GLfloat param) {
+        BEFORE_GL_CALL;
+        mSymbols.fPointParameterf(pname, param);
+        AFTER_GL_CALL;
+    }
+
     void fPolygonOffset(GLfloat factor, GLfloat bias) {
         BEFORE_GL_CALL;
         mSymbols.fPolygonOffset(factor, bias);

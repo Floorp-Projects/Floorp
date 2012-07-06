@@ -65,10 +65,6 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  void Paint(const nsDisplayListBuilder* aBuilder,
-             nsRenderingContext* aContext,
-             const nsRect& aDirtyRect);
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -94,16 +90,6 @@ public:
   virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
 
   virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const;
-
-#ifdef XP_MACOSX
-  bool BitmapFallbackEnabled() const {
-    return mEnableBitmapFallback;
-  }
-  void SetBitmapFallbackEnabled(bool aVal) {
-    NS_NOTREACHED("don't think me need this any more"); // comment in bug 732429 if we do
-    mEnableBitmapFallback = aVal;
-  }
-#endif
 
   /**
    * Return true only if the height is unspecified (defaulting to 100%) or else
@@ -135,9 +121,6 @@ protected:
   float mFullZoom;
 
   bool mViewportInitialized;
-#ifdef XP_MACOSX
-  bool mEnableBitmapFallback;
-#endif
   bool mIsRootContent;
 };
 
