@@ -4063,7 +4063,7 @@ nsHTMLInputElement::HasStepMismatch() const
   }
 
   // Value has to be an integral multiple of step.
-  return fmod(value - GetStepBase(), step) != 0;
+  return NS_floorModulo(value - GetStepBase(), step) != 0;
 }
 
 void
@@ -4324,13 +4324,10 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       double step = GetStep();
       MOZ_ASSERT(step != kStepAny);
 
-      double min = GetMinAsDouble();
-      if (MOZ_DOUBLE_IS_NaN(min)) {
-        min = 0.f;
-      }
+      double stepBase = GetStepBase();
 
-      double valueLow = value - fmod(value - min, step);
-      double valueHigh = value + step - fmod(value - min, step);
+      double valueLow = value - NS_floorModulo(value - stepBase, step);
+      double valueHigh = value + step - NS_floorModulo(value - stepBase, step);
 
       double max = GetMaxAsDouble();
 
