@@ -38,7 +38,7 @@ TreeContext::blockid()
 inline bool
 TreeContext::atBodyLevel()
 {
-    return !topStmt || (topStmt->flags & SIF_BODY_BLOCK);
+    return !topStmt || topStmt->isFunctionBodyBlock;
 }
 
 inline bool
@@ -101,7 +101,9 @@ void
 frontend::PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtType type)
 {
     stmt->type = type;
-    stmt->flags = 0;
+    stmt->isBlockScope = false;
+    stmt->isFunctionBodyBlock = false;
+    stmt->isForLetBlock = false;
     stmt->label = NULL;
     stmt->blockObj = NULL;
     stmt->down = ct->topStmt;
@@ -119,7 +121,7 @@ void
 frontend::FinishPushBlockScope(ContextT *ct, typename ContextT::StmtInfo *stmt,
                                StaticBlockObject &blockObj)
 {
-    stmt->flags |= SIF_SCOPE;
+    stmt->isBlockScope = true;
     blockObj.setEnclosingBlock(ct->blockChain);
     stmt->downScope = ct->topScopeStmt;
     ct->topScopeStmt = stmt;
@@ -135,7 +137,7 @@ frontend::FinishPopStatement(ContextT *ct)
     ct->topStmt = stmt->down;
     if (stmt->linksScope()) {
         ct->topScopeStmt = stmt->downScope;
-        if (stmt->flags & SIF_SCOPE)
+        if (stmt->isBlockScope)
             ct->blockChain = stmt->blockObj->enclosingBlock();
     }
 }
@@ -151,7 +153,7 @@ frontend::LexicalLookup(ContextT *ct, JSAtom *atom, int *slotp, typename Context
             break;
 
         // Skip "maybe scope" statements that don't contain let bindings.
-        if (!(stmt->flags & SIF_SCOPE))
+        if (!stmt->isBlockScope)
             continue;
 
         StaticBlockObject &blockObj = *stmt->blockObj;
