@@ -1340,29 +1340,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
-
         script->isGenerator = bce->sc->funIsGenerator();
-
-        /*
-         * We initialize fun->script() to be the script constructed above
-         * so that the debugger has a valid fun->script().
-         */
-        fun = bce->sc->fun();
-        JS_ASSERT(fun->isInterpreted());
-        JS_ASSERT(!fun->script());
-        if (bce->sc->funIsHeavyweight())
-            fun->flags |= JSFUN_HEAVYWEIGHT;
-
-        /* Mark functions which will only be executed once as singletons. */
-        bool singleton =
-            cx->typeInferenceEnabled() &&
-            bce->parent &&
-            bce->parent->checkSingletonContext();
-
-        fun->setScript(script);
-        script->setFunction(fun);
-        if (!fun->setTypeForScriptedFunction(cx, singleton))
-            return false;
+        script->setFunction(bce->sc->fun());
     }
 
     /*

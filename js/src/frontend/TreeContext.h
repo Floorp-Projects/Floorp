@@ -126,7 +126,7 @@ class ContextFlags {
 };
 
 struct SharedContext {
-    JSContext       *context;
+    JSContext       *const context;
 
   private:
     const RootedFunction fun_;      /* function to store argument and variable

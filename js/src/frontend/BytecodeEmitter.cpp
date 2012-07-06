@@ -2569,6 +2569,23 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
     if (!bce->script->fullyInitFromEmitter(cx, bce))
         return false;
 
+    // Initialize fun->script() so that the debugger has a valid fun->script().
+    RootedFunction fun(cx, bce->script->function());
+    JS_ASSERT(fun->isInterpreted());
+    if (bce->sc->funIsHeavyweight())
+        fun->flags |= JSFUN_HEAVYWEIGHT;
+
+    /* Mark functions which will only be executed once as singletons. */
+    bool singleton =
+        cx->typeInferenceEnabled() &&
+        bce->parent &&
+        bce->parent->checkSingletonContext();
+
+    JS_ASSERT(!fun->script());
+    fun->setScript(bce->script);
+    if (!fun->setTypeForScriptedFunction(cx, singleton))
+        return false;
+
     bce->tellDebuggerAboutCompiledScript(cx);
 
     return true;
