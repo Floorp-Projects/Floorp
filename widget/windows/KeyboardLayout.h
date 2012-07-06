@@ -90,11 +90,14 @@ public:
   bool IsControl() const { return (mModifiers & MODIFIER_CONTROL) != 0; }
   bool IsAlt() const { return (mModifiers & MODIFIER_ALT) != 0; }
   bool IsAltGr() const { return IsControl() && IsAlt(); }
-  bool IsWin() const { return (mModifiers & MODIFIER_WIN) != 0; }
+  bool IsWin() const { return (mModifiers & MODIFIER_OS) != 0; }
 
   bool IsCapsLocked() const { return (mModifiers & MODIFIER_CAPSLOCK) != 0; }
   bool IsNumLocked() const { return (mModifiers & MODIFIER_NUMLOCK) != 0; }
-  bool IsScrollLocked() const { return (mModifiers & MODIFIER_SCROLL) != 0; }
+  bool IsScrollLocked() const
+  {
+    return (mModifiers & MODIFIER_SCROLLLOCK) != 0;
+  }
 
   Modifiers GetModifiers() const { return mModifiers; }
 
