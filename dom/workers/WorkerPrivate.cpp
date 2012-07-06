@@ -133,11 +133,19 @@ struct WorkerJSRuntimeStats : public JS::RuntimeStats
   virtual void initExtraCompartmentStats(JSCompartment *c,
                                          JS::CompartmentStats *cstats) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!cstats->extra);
+    MOZ_ASSERT(!cstats->extra1);
+    MOZ_ASSERT(!cstats->extra2);
     
-    // ReportJSRuntimeExplicitTreeStats expects that cstats->extra is a char pointer
-    const char *name = js::IsAtomsCompartment(c) ? "Web Worker Atoms" : "Web Worker";
-    cstats->extra = const_cast<char *>(name);
+    // ReportJSRuntimeExplicitTreeStats expects that cstats->{extra1,extra2}
+    // are char pointers.
+
+    // This is the |cPathPrefix|.  Using NULL here means that we'll end up
+    // using WorkerMemoryReporter::mRtPath as the path prefix for each
+    // compartment.  See xpc::ReportJSRuntimeExplicitTreeStats().
+    cstats->extra1 = NULL;
+
+    // This is the |cName|.
+    cstats->extra2 = (void *)(js::IsAtomsCompartment(c) ? "Web Worker Atoms" : "Web Worker");
   }
 };
   
@@ -145,7 +153,7 @@ class WorkerMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
   WorkerPrivate* mWorkerPrivate;
   nsCString mAddressString;
-  nsCString mPathPrefix;
+  nsCString mRtPath;
 
 public:
   NS_DECL_ISUPPORTS
@@ -175,10 +183,10 @@ public:
       }
     }
 
-    mPathPrefix = NS_LITERAL_CSTRING("explicit/dom/workers(") +
-                  escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
-                  escapedURL + NS_LITERAL_CSTRING(", ") + mAddressString +
-                  NS_LITERAL_CSTRING(")/");
+    mRtPath = NS_LITERAL_CSTRING("explicit/workers/workers(") +
+              escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
+              escapedURL + NS_LITERAL_CSTRING(", ") + mAddressString +
+              NS_LITERAL_CSTRING(")/");
   }
 
   nsresult
@@ -232,7 +240,7 @@ public:
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
-    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix,
+    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mRtPath,
                                                  aCallback, aClosure);
   }
 
