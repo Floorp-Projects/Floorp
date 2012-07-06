@@ -972,7 +972,13 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 {
   BasicLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
   ForwardTransaction();
-  if (mShadowTarget) {
+
+  if (mRepeatTransaction) {
+    mRepeatTransaction = false;
+    BasicLayerManager::BeginTransaction();
+    BasicShadowLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
+  } else if (mShadowTarget) {
+    // Draw to shadow target at the recursion tail of the repeat transactions
     ShadowLayerForwarder::ShadowDrawToTarget(mShadowTarget);
     mShadowTarget = nsnull;
   }
