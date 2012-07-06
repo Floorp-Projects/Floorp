@@ -230,6 +230,18 @@ AssertHeapIsIdle(JSContext *cx)
 }
 
 static void
+AssertHeapIsIdleOrIterating(JSRuntime *rt)
+{
+    JS_ASSERT(rt->heapState != JSRuntime::Collecting);
+}
+
+static void
+AssertHeapIsIdleOrIterating(JSContext *cx)
+{
+    AssertHeapIsIdleOrIterating(cx->runtime);
+}
+
+static void
 AssertHeapIsIdleOrStringIsFlat(JSContext *cx, JSString *str)
 {
     /*
@@ -2165,6 +2177,14 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj);
     return &obj->global();
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c)
+{
+    AssertHeapIsIdleOrIterating(cx);
+    assertSameCompartment(cx, c);
+    return c->maybeGlobal();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -5566,7 +5586,7 @@ JS_IsRunning(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx)
 {
-    AssertHeapIsIdle(cx);
+    AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
     return cx->stack.saveFrameChain();
 }
@@ -5574,7 +5594,7 @@ JS_SaveFrameChain(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx)
 {
-    AssertHeapIsIdle(cx);
+    AssertHeapIsIdleOrIterating(cx);
     CHECK_REQUEST(cx);
     cx->stack.restoreFrameChain();
 }

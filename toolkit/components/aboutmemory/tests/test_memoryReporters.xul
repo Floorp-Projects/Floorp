@@ -43,9 +43,9 @@
   let heapAllocatedAmounts = [];
   let storageSqliteAmounts = [];
 
-  let areJsCompartmentsPresent = false;
+  let areJsNonWindowCompartmentsPresent = false;
+  let areWindowObjectsJsCompartmentsPresent = false;
   let isSandboxLocationShown = false;
-  let areWindowObjectsPresent = false;
   let isPlacesPresent = false;
   let isImagesPresent = false;
   let isXptiWorkingSetPresent = false;
@@ -71,10 +71,10 @@
       storageSqliteAmounts.push(aAmount);
 
     // Check the presence of some other notable reporters.
-    } else if (aPath.search(/^explicit\/js\/compartment\(/) >= 0) {
-      areJsCompartmentsPresent = true;
-    } else if (aPath.search(/^explicit\/window-objects\/top\(/) >= 0) {
-      areWindowObjectsPresent = true;
+    } else if (aPath.search(/^explicit\/js-non-window\/.*compartment\(/) >= 0) {
+      areJsNonWindowCompartmentsPresent = true;
+    } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js\/compartment\(/) >= 0) {
+      areWindowObjectsJsCompartmentsPresent = true;
     } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
       isPlacesPresent = true;
     } else if (aPath.search(/^explicit\/images/) >= 0) {
@@ -144,13 +144,13 @@
   checkSpecialReport("js-main-runtime-gc-heap-committed/used/gc-things", jsGcHeapAmounts);
   checkSpecialReport("storage-sqlite", storageSqliteAmounts);
 
-  ok(areJsCompartmentsPresent,  "js compartments are present");
-  ok(isSandboxLocationShown,    "sandbox locations are present");
-  ok(areWindowObjectsPresent,   "window objects are present");
-  ok(isPlacesPresent,           "places is present");
-  ok(isImagesPresent,           "images is present");
-  ok(isXptiWorkingSetPresent,   "xpti-working-set is present");
-  ok(isAtomTablePresent,        "atom-table is present");
+  ok(areJsNonWindowCompartmentsPresent,     "js-non-window compartments are present");
+  ok(areWindowObjectsJsCompartmentsPresent, "window-objects/.../js compartments are present");
+  ok(isSandboxLocationShown,                "sandbox locations are present");
+  ok(isPlacesPresent,                       "places is present");
+  ok(isImagesPresent,                       "images is present");
+  ok(isXptiWorkingSetPresent,               "xpti-working-set is present");
+  ok(isAtomTablePresent,                    "atom-table is present");
 
   ]]>
   </script>
