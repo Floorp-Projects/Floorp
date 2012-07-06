@@ -105,20 +105,13 @@ nsSVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
-  *aInstancePtrResult = nsnull;
-  nsSVGDocument* doc = new nsSVGDocument();
+  nsRefPtr<nsSVGDocument> doc = new nsSVGDocument();
 
-  if (!doc)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(doc);
   nsresult rv = doc->Init();
-
   if (NS_FAILED(rv)) {
-    NS_RELEASE(doc);
     return rv;
   }
 
-  *aInstancePtrResult = doc;
+  *aInstancePtrResult = doc.forget().get();
   return rv;
 }
