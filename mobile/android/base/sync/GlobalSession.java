@@ -135,7 +135,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       throw new SyncConfigurationException();
     }
 
-    Logger.info(LOG_TAG, "GlobalSession initialized with bundle " + extras);
+    Logger.debug(LOG_TAG, "GlobalSession initialized with bundle " + extras);
     URI serverURI;
     try {
       serverURI = (serverURL == null) ? null : new URI(serverURL);

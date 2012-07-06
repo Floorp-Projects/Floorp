@@ -360,7 +360,7 @@ public class PasswordsRepositorySession extends
 
         // We found a local dupe.
         trace("Incoming record " + remoteRecord.guid + " dupes to local record " + existingRecord.guid);
-        Logger.debug(LOG_TAG, "remote " + remoteRecord + " dupes to " + existingRecord);
+        Logger.debug(LOG_TAG, "remote " + remoteRecord.guid + " dupes to " + existingRecord.guid);
         Record toStore = reconcileRecords(remoteRecord, existingRecord, lastRemoteRetrieval, lastLocalRetrieval);
 
         if (toStore == null) {
@@ -370,8 +370,6 @@ public class PasswordsRepositorySession extends
 
         // TODO: pass in timestamps?
         Logger.debug(LOG_TAG, "Replacing " + existingRecord.guid + " with record " + toStore.guid);
-        Logger.debug(LOG_TAG, "existing: " + existingRecord);
-        Logger.debug(LOG_TAG, "toStore: " + toStore);
         Record replaced = null;
         try {
           replaced = replace(existingRecord, toStore);
@@ -612,9 +610,9 @@ public class PasswordsRepositorySession extends
         // We don't have the keys for encrypting our query,
         // so we run a more general query and then filter
         // the returned records for a matching username.
-        Logger.trace(LOG_TAG, "Checking incoming [" + record.encryptedUsername + "] to [" + foundRecord.encryptedUsername + "]");
+        Logger.pii(LOG_TAG, "Checking incoming [" + record.encryptedUsername + "] to [" + foundRecord.encryptedUsername + "]");
         if (record.encryptedUsername.equals(foundRecord.encryptedUsername)) {
-          Logger.trace(LOG_TAG, "Found matching record: " + foundRecord);
+          Logger.trace(LOG_TAG, "Found matching record: " + foundRecord.guid);
           return foundRecord;
         }
       }

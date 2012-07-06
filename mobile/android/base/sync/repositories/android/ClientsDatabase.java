@@ -135,7 +135,11 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
    * @throws NullCursorException
    */
   public void store(String accountGUID, String command, String args) throws NullCursorException {
-    Logger.trace(LOG_TAG, "Storing command " + command + " with args " + args);
+    if (Logger.LOG_PERSONAL_INFORMATION) {
+      Logger.pii(LOG_TAG, "Storing command " + command + " with args " + args);
+    } else {
+      Logger.trace(LOG_TAG, "Storing command " + command + ".");
+    }
     SQLiteDatabase db = this.getCachedWritableDatabase();
 
     ContentValues cv = new ContentValues();
