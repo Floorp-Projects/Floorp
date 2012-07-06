@@ -3410,8 +3410,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_GETALIASEDVAR:
-      case JSOP_CALLALIASEDVAR:
       case JSOP_GETARG:
       case JSOP_CALLARG:
       case JSOP_GETLOCAL:
@@ -3431,12 +3429,11 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             /* Local 'let' variable. Punt on types for these, for now. */
             pushed[0].addType(cx, Type::UnknownType());
         }
-        if (op == JSOP_CALLARG || op == JSOP_CALLLOCAL || op == JSOP_CALLALIASEDVAR)
+        if (op == JSOP_CALLARG || op == JSOP_CALLLOCAL)
             pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
         break;
       }
 
-      case JSOP_SETALIASEDVAR:
       case JSOP_SETARG:
       case JSOP_SETLOCAL: {
         uint32_t slot = GetBytecodeSlot(script, pc);
@@ -3453,6 +3450,24 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
       }
+
+      case JSOP_GETALIASEDVAR:
+      case JSOP_CALLALIASEDVAR:
+        /*
+         * Every aliased variable will contain 'undefined' in addition to the
+         * type of whatever value is written to it. Thus, a dynamic barrier is
+         * necessary. Since we don't expect the to observe more than 1 type,
+         * there is little benefit to maintaining a TypeSet for the aliased
+         * variable. Instead, we monitor/barrier all reads unconditionally.
+         */
+        bytecodeTypes(pc)->addSubset(cx, &pushed[0]);
+        if (op == JSOP_CALLALIASEDVAR)
+            pushed[0].addPropagateThis(cx, script, pc, Type::UnknownType());
+        break;
+
+      case JSOP_SETALIASEDVAR:
+        poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
+        break;
 
       case JSOP_INCARG:
       case JSOP_DECARG:
