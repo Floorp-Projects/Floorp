@@ -13,8 +13,12 @@ MODULE              = dom
 XPIDL_MODULE        = dom_alarm
 LIBRARY_NAME        = domalarm_s
 LIBXUL_LIBRARY      = 1
+FORCE_STATIC_LIB    = 1
+GRE_MODULE          = 1
 
 include $(topsrcdir)/dom/dom-config.mk
+
+EXPORTS_NAMESPACES = mozilla/dom/alarm
 
 EXTRA_COMPONENTS =       \
   AlarmsManager.js       \
@@ -23,6 +27,15 @@ EXTRA_COMPONENTS =       \
 
 XPIDLSRCS =               \
   nsIDOMAlarmsManager.idl \
+  nsIAlarmHalService.idl  \
+  $(NULL)
+
+EXPORTS_mozilla/dom/alarm = \
+  AlarmHalService.h         \
+  $(NULL)
+
+CPPSRCS =             \
+  AlarmHalService.cpp \
   $(NULL)
 
 ifdef ENABLE_TESTS
@@ -30,4 +43,5 @@ DIRS += test
 endif
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk

@@ -218,12 +218,17 @@ static void Shutdown();
 #include "mozilla/dom/sms/SmsRequestManager.h"
 #include "mozilla/dom/sms/SmsServicesFactory.h"
 #include "nsIPowerManagerService.h"
+#include "nsIAlarmHalService.h"
 
 using namespace mozilla::dom::sms;
 
 #include "mozilla/dom/power/PowerManagerService.h"
 
 using mozilla::dom::power::PowerManagerService;
+
+#include "mozilla/dom/alarm/AlarmHalService.h"
+
+using mozilla::dom::alarm::AlarmHalService;
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
@@ -274,6 +279,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsDatabaseService, SmsServicesFacto
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
                                          PowerManagerService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SmsRequestManager)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIAlarmHalService,
+                                         AlarmHalService::GetInstance)
 
 //-----------------------------------------------------------------------------
 
@@ -775,6 +782,7 @@ NS_DEFINE_NAMED_CID(SMS_DATABASE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SMS_REQUEST_MANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_ALARMHALSERVICE_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1043,6 +1051,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kSMS_REQUEST_MANAGER_CID, false, NULL, SmsRequestManagerConstructor },
   { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
   { &kOSFILECONSTANTSSERVICE_CID, true, NULL, OSFileConstantsServiceConstructor },
+  { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
   { NULL }
 };
 
@@ -1176,6 +1185,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { SMS_REQUEST_MANAGER_CONTRACTID, &kSMS_REQUEST_MANAGER_CID },
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID },
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
+  { ALARMHALSERVICE_CONTRACTID, &kNS_ALARMHALSERVICE_CID },
   { NULL }
 };
 
