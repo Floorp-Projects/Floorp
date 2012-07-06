@@ -113,9 +113,9 @@ typedef PRUint16 Modifiers;
 #define NS_DOM_KEYNAME_FN         "Fn"
 #define NS_DOM_KEYNAME_META       "Meta"
 #define NS_DOM_KEYNAME_NUMLOCK    "NumLock"
-#define NS_DOM_KEYNAME_SCROLL     "Scroll"
+#define NS_DOM_KEYNAME_SCROLL     "ScrollLock"
 #define NS_DOM_KEYNAME_SHIFT      "Shift"
 #define NS_DOM_KEYNAME_SYMBOLLOCK "SymbolLock"
-#define NS_DOM_KEYNAME_WIN        "Win"
+#define NS_DOM_KEYNAME_WIN        "OS"
 
 #endif // nsEvent_h__
