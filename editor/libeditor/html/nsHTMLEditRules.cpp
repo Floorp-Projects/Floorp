@@ -836,7 +836,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
       // let's get the value(s) of text-align or margin-left/margin-right
       mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(
         blockParentContent, dummyProperty, &typeAttrName, value,
-        COMPUTED_STYLE_TYPE);
+        nsHTMLCSSUtils::eComputed);
       if (value.EqualsLiteral("center") ||
           value.EqualsLiteral("-moz-center") ||
           value.EqualsLiteral("auto auto"))
@@ -7166,8 +7166,9 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
     }
     else
     {
-      mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr),
-                                                    isSet, outValue, COMPUTED_STYLE_TYPE);
+      mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode,
+        mCachedStyles[j].tag, &(mCachedStyles[j].attr), isSet, outValue,
+        nsHTMLCSSUtils::eComputed);
     }
     if (isSet)
     {
@@ -7213,7 +7214,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
         // check computed style first in css case
         bAny = mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           selNode, mCachedStyles[i].tag, &(mCachedStyles[i].attr), curValue,
-          COMPUTED_STYLE_TYPE);
+          nsHTMLCSSUtils::eComputed);
       }
       if (!bAny) {
         // then check typeinstate and html style
