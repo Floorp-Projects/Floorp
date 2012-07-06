@@ -1337,142 +1337,142 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
  * because sometimes elements want to override them.
  */
 #define NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(_to) \
-  NS_SCRIPTABLE NS_IMETHOD GetId(nsAString& aId) { \
+  NS_IMETHOD GetId(nsAString& aId) { \
     return _to GetId(aId); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetId(const nsAString& aId) { \
+  NS_IMETHOD SetId(const nsAString& aId) { \
     return _to SetId(aId); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString& aTitle) { \
+  NS_IMETHOD GetTitle(nsAString& aTitle) { \
     return _to GetTitle(aTitle); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetTitle(const nsAString& aTitle) { \
+  NS_IMETHOD SetTitle(const nsAString& aTitle) { \
     return _to SetTitle(aTitle); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetLang(nsAString& aLang) { \
+  NS_IMETHOD GetLang(nsAString& aLang) { \
     return _to GetLang(aLang); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetLang(const nsAString& aLang) { \
+  NS_IMETHOD SetLang(const nsAString& aLang) { \
     return _to SetLang(aLang); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetDir(nsAString& aDir) { \
+  NS_IMETHOD GetDir(nsAString& aDir) { \
     return _to GetDir(aDir); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetDir(const nsAString& aDir) { \
+  NS_IMETHOD SetDir(const nsAString& aDir) { \
     return _to SetDir(aDir); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetClassName(nsAString& aClassName) { \
+  NS_IMETHOD GetClassName(nsAString& aClassName) { \
     return _to GetClassName(aClassName); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetClassName(const nsAString& aClassName) { \
+  NS_IMETHOD SetClassName(const nsAString& aClassName) { \
     return _to SetClassName(aClassName); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetDataset(nsIDOMDOMStringMap** aDataset) { \
+  NS_IMETHOD GetDataset(nsIDOMDOMStringMap** aDataset) { \
     return _to GetDataset(aDataset); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetHidden(bool* aHidden) { \
+  NS_IMETHOD GetHidden(bool* aHidden) { \
     return _to GetHidden(aHidden); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetHidden(bool aHidden) { \
+  NS_IMETHOD SetHidden(bool aHidden) { \
     return _to SetHidden(aHidden); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD Blur() { \
+  NS_IMETHOD Blur() { \
     return _to Blur(); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemScope(bool* aItemScope) { \
+  NS_IMETHOD GetItemScope(bool* aItemScope) { \
     return _to GetItemScope(aItemScope); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemScope(bool aItemScope) { \
+  NS_IMETHOD SetItemScope(bool aItemScope) { \
     return _to SetItemScope(aItemScope); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemType(nsIVariant** aType) { \
+  NS_IMETHOD GetItemType(nsIVariant** aType) { \
     return _to GetItemType(aType); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemType(nsIVariant* aType) { \
+  NS_IMETHOD SetItemType(nsIVariant* aType) { \
     return _to SetItemType(aType); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemId(nsAString& aId) { \
+  NS_IMETHOD GetItemId(nsAString& aId) { \
     return _to GetItemId(aId); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemId(const nsAString& aId) { \
+  NS_IMETHOD SetItemId(const nsAString& aId) { \
     return _to SetItemId(aId); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn) { \
+  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn) { \
     return _to GetProperties(aReturn); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemValue(nsIVariant** aValue) { \
+  NS_IMETHOD GetItemValue(nsIVariant** aValue) { \
     return _to GetItemValue(aValue); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemValue(nsIVariant* aValue) { \
+  NS_IMETHOD SetItemValue(nsIVariant* aValue) { \
     return _to SetItemValue(aValue); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemRef(nsIVariant** aRef) { \
+  NS_IMETHOD GetItemRef(nsIVariant** aRef) { \
     return _to GetItemRef(aRef); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemRef(nsIVariant* aRef) { \
+  NS_IMETHOD SetItemRef(nsIVariant* aRef) { \
     return _to SetItemRef(aRef); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetItemProp(nsIVariant** aProp) { \
+  NS_IMETHOD GetItemProp(nsIVariant** aProp) { \
     return _to GetItemProp(aProp); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetItemProp(nsIVariant* aProp) { \
+  NS_IMETHOD SetItemProp(nsIVariant* aProp) { \
     return _to SetItemProp(aProp); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString& aAccessKey) { \
+  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) { \
     return _to GetAccessKey(aAccessKey); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString& aAccessKey) { \
+  NS_IMETHOD SetAccessKey(const nsAString& aAccessKey) { \
     return _to SetAccessKey(aAccessKey); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel) { \
+  NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel) { \
     return _to GetAccessKeyLabel(aAccessKeyLabel); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetDraggable(bool aDraggable) { \
+  NS_IMETHOD SetDraggable(bool aDraggable) { \
     return _to SetDraggable(aDraggable); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetContentEditable(nsAString& aContentEditable) { \
+  NS_IMETHOD GetContentEditable(nsAString& aContentEditable) { \
     return _to GetContentEditable(aContentEditable); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetContentEditable(const nsAString& aContentEditable) { \
+  NS_IMETHOD SetContentEditable(const nsAString& aContentEditable) { \
     return _to SetContentEditable(aContentEditable); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetIsContentEditable(bool* aIsContentEditable) { \
+  NS_IMETHOD GetIsContentEditable(bool* aIsContentEditable) { \
     return _to GetIsContentEditable(aIsContentEditable); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) { \
+  NS_IMETHOD GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) { \
     return _to GetContextMenu(aContextMenu); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetSpellcheck(bool* aSpellcheck) { \
+  NS_IMETHOD GetSpellcheck(bool* aSpellcheck) { \
     return _to GetSpellcheck(aSpellcheck); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetSpellcheck(bool aSpellcheck) { \
+  NS_IMETHOD SetSpellcheck(bool aSpellcheck) { \
     return _to SetSpellcheck(aSpellcheck); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) { \
+  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) { \
     return _to GetOuterHTML(aOuterHTML); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) { \
+  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) { \
     return _to SetOuterHTML(aOuterHTML); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD InsertAdjacentHTML(const nsAString& position, const nsAString& text) { \
+  NS_IMETHOD InsertAdjacentHTML(const nsAString& position, const nsAString& text) { \
     return _to InsertAdjacentHTML(position, text); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD ScrollIntoView(bool top, PRUint8 _argc) { \
+  NS_IMETHOD ScrollIntoView(bool top, PRUint8 _argc) { \
     return _to ScrollIntoView(top, _argc); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
+  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
     return _to GetOffsetParent(aOffsetParent); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop) { \
+  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop) { \
     return _to GetOffsetTop(aOffsetTop); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft) { \
+  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft) { \
     return _to GetOffsetLeft(aOffsetLeft); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth) { \
+  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth) { \
     return _to GetOffsetWidth(aOffsetWidth); \
   } \
-  NS_SCRIPTABLE NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight) { \
+  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight) { \
     return _to GetOffsetHeight(aOffsetHeight); \
   }
 
