@@ -23,13 +23,11 @@ function run_test() {
 }
 
 function test(manifests, next) {
+  let providers = yield SocialService.getProviderList(next);
+  do_check_true(providers.length >= 3);
   for (let i = 0; i < manifests.length; i++) {
-    let manifest = manifests[i];
-    let provider = yield SocialService.getProvider(manifest.origin, next);
-    do_check_neq(provider, null);
-    do_check_eq(provider.name, manifest.name);
-    do_check_eq(provider.workerURL, manifest.workerURL);
-    do_check_eq(provider.origin, manifest.origin);
+    do_check_neq(providers.map(function (p) p.origin).indexOf(manifests[i].origin), -1);
+    do_check_neq(providers.map(function (p) p.workerURL).indexOf(manifests[i].workerURL), -1);
+    do_check_neq(providers.map(function (p) p.name).indexOf(manifests[i].name), -1);
   }
-  do_check_eq((yield SocialService.getProvider("bogus", next)), null);
 }
