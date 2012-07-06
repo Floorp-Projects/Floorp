@@ -104,8 +104,10 @@ CallObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
 inline HeapSlotArray
 CallObject::argArray()
 {
+#ifdef DEBUG
     JSFunction &fun = callee();
     JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun.nargs));
+#endif
     return HeapSlotArray(getSlotAddress(RESERVED_SLOTS));
 }
 
