@@ -393,7 +393,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
         fun->atom.init(atom);
         fun->initScript(script);
         script->setFunction(fun);
-        if (!script->typeSetFunction(cx, fun))
+        if (!fun->setTypeForScriptedFunction(cx))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -433,7 +433,7 @@ js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
     clone->atom.init(srcFun->atom);
     clone->initScript(clonedScript);
     clonedScript->setFunction(clone);
-    if (!clonedScript->typeSetFunction(cx, clone))
+    if (!clone->setTypeForScriptedFunction(cx))
         return NULL;
 
     js_CallNewScriptHook(cx, clone->script(), clone);
@@ -1304,7 +1304,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
             cscript->globalObject = &clone->global();
             clone->setScript(cscript);
             cscript->setFunction(clone);
-            if (!cscript->typeSetFunction(cx, clone))
+            if (!clone->setTypeForScriptedFunction(cx))
                 return NULL;
 
             js_CallNewScriptHook(cx, clone->script(), clone);

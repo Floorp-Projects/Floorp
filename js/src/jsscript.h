@@ -627,12 +627,6 @@ struct JSScript : public js::gc::Cell
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    /*
-     * Associates this script with a specific function, constructing a new type
-     * object for the function if necessary.
-     */
-    bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
-
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
