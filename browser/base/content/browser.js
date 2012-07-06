@@ -2610,13 +2610,16 @@ function BrowserOnClick(event) {
         if (previousNotification)
           notificationBox.removeNotification(previousNotification);
 
-        notificationBox.appendNotification(
+        let notification = notificationBox.appendNotification(
           title,
           value,
           "chrome://global/skin/icons/blacklist_favicon.png",
           notificationBox.PRIORITY_CRITICAL_HIGH,
           buttons
         );
+        // Persist the notification until the user removes so it
+        // doesn't get removed on redirects.
+        notification.persistence = -1;
       }
     }
     else if (/^about:home$/i.test(ownerDoc.documentURI)) {
