@@ -81,12 +81,13 @@ function testInitializingUntrustedEvent()
   ];
 
   const kOtherModifierName = [
-    "CapsLock", "NumLock", "Scroll", "SymbolLock", "Fn", "Win", "AltGraph"
+    "CapsLock", "NumLock", "ScrollLock", "SymbolLock", "Fn", "OS", "AltGraph"
   ];
 
   const kInvalidModifierName = [
-    "shift", "control", "alt", "meta", "capslock", "numlock", "scroll",
-    "symbollock", "fn", "win", "altgraph", "Invalid", "Shift Control"
+    "shift", "control", "alt", "meta", "capslock", "numlock", "scrolllock",
+    "symbollock", "fn", "os", "altgraph", "Invalid", "Shift Control",
+    "Win", "Scroll"
   ];
 
   for (var i = 0; i < kTests.length; i++) {
