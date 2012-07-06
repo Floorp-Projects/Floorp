@@ -51,6 +51,8 @@ class GCConstList {
     void finish(ConstArray *array);
 };
 
+class StmtInfoBCE;
+
 struct BytecodeEmitter
 {
     typedef StmtInfoBCE StmtInfo;
@@ -151,16 +153,7 @@ struct BytecodeEmitter
         return true;
     }
 
-    bool checkSingletonContext() {
-        if (!script->compileAndGo || sc->inFunction())
-            return false;
-        for (StmtInfoBCE *stmt = topStmt; stmt; stmt = stmt->down) {
-            if (stmt->isLoop())
-                return false;
-        }
-        hasSingletons = true;
-        return true;
-    }
+    bool checkSingletonContext();
 
     bool needsImplicitThis();
 
