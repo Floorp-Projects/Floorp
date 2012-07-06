@@ -100,6 +100,13 @@ nsIdleServiceDaily::Observe(nsISupports *,
   PRInt32 nowSec = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
   Preferences::SetInt(PREF_LAST_DAILY, nowSec);
 
+  // Force that to be stored so we don't retrigger twice a day under
+  // any circumstances.
+  nsIPrefService* prefs = Preferences::GetService();
+  if (prefs) {
+    prefs->SavePrefFile(nsnull);
+  }
+
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService", "Storing last idle time as %d",
                       nowSec);
