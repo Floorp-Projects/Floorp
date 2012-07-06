@@ -30,17 +30,13 @@ public:
 
     void Main();
 
-    NS_OVERRIDE
-    virtual bool RecvOk(PTestDescSubsubParent* a);
+    virtual bool RecvOk(PTestDescSubsubParent* a) MOZ_OVERRIDE;
 
 protected:
-    NS_OVERRIDE
-    virtual PTestDescSubParent* AllocPTestDescSub(PTestDescSubsubParent*);
-    NS_OVERRIDE
-    virtual bool DeallocPTestDescSub(PTestDescSubParent* actor);
+    virtual PTestDescSubParent* AllocPTestDescSub(PTestDescSubsubParent*) MOZ_OVERRIDE;
+    virtual bool DeallocPTestDescSub(PTestDescSubParent* actor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -58,17 +54,13 @@ public:
     virtual ~TestDescChild() { }
 
 protected:
-    NS_OVERRIDE
-    virtual PTestDescSubChild* AllocPTestDescSub(PTestDescSubsubChild*);
+    virtual PTestDescSubChild* AllocPTestDescSub(PTestDescSubsubChild*) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestDescSub(PTestDescSubChild* actor);
+    virtual bool DeallocPTestDescSub(PTestDescSubChild* actor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvTest(PTestDescSubsubChild* a);
+    virtual bool RecvTest(PTestDescSubsubChild* a) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -88,11 +80,9 @@ public:
     virtual ~TestDescSubParent() { }
 
 protected:
-    NS_OVERRIDE
-    virtual PTestDescSubsubParent* AllocPTestDescSubsub();
+    virtual PTestDescSubsubParent* AllocPTestDescSubsub() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestDescSubsub(PTestDescSubsubParent* actor);
+    virtual bool DeallocPTestDescSubsub(PTestDescSubsubParent* actor) MOZ_OVERRIDE;
 };
 
 
@@ -104,10 +94,8 @@ public:
     virtual ~TestDescSubChild() { }
 
 protected:
-    NS_OVERRIDE
-    virtual PTestDescSubsubChild* AllocPTestDescSubsub();
-    NS_OVERRIDE
-    virtual bool DeallocPTestDescSubsub(PTestDescSubsubChild* actor);
+    virtual PTestDescSubsubChild* AllocPTestDescSubsub() MOZ_OVERRIDE;
+    virtual bool DeallocPTestDescSubsub(PTestDescSubsubChild* actor) MOZ_OVERRIDE;
 };
 
 

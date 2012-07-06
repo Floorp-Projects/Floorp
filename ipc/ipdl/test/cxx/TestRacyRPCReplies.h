@@ -23,14 +23,11 @@ public:
     void Main();
 
 protected:    
-    NS_OVERRIDE
-    virtual bool RecvA_();
+    virtual bool RecvA_() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool Answer_R(int* replyNum);
+    virtual bool Answer_R(int* replyNum) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -51,17 +48,13 @@ public:
     virtual ~TestRacyRPCRepliesChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool AnswerR_(int* replyNum);
+    virtual bool AnswerR_(int* replyNum) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvChildTest();
+    virtual bool RecvChildTest() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool Recv_A();
+    virtual bool Recv_A() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

@@ -10,6 +10,7 @@
 
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"    // NS_INLINE_DECL_REFCOUNTING
+#include "mozilla/Attributes.h"
 
 //
 // This is a low-level wrapper around platform shared memory.  Don't

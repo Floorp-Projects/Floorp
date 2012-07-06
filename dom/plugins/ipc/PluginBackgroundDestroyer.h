@@ -31,8 +31,7 @@ public:
     virtual ~PluginBackgroundDestroyerParent() { }
 
 private:
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         switch(why) {
         case Deletion:
@@ -64,8 +63,7 @@ public:
 
 private:
     // Implementing this for good hygiene.
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     { }
 };
 
