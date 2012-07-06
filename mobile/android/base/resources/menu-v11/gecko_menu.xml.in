@@ -31,9 +31,11 @@
           gecko:title="@string/save_as_pdf" />
 
     <item gecko:id="@+id/find_in_page"
+          gecko:icon="@drawable/ic_menu_find_in_page"
           gecko:title="@string/find_in_page" />
 
     <item gecko:id="@+id/desktop_mode"
+          gecko:icon="@drawable/ic_menu_desktop_mode"
           gecko:title="@string/desktop_mode"
           gecko:checkable="true" />
 
