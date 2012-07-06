@@ -26,19 +26,15 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool ShouldContinueFromReplyTimeout();
+    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual bool RecvNonce() {
         return true;
     }
 
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame();
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
@@ -60,26 +56,22 @@ public:
     virtual ~TestHangsChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart() {
+    virtual bool RecvStart() MOZ_OVERRIDE {
         if (!SendNonce())
             fail("sending Nonce");
         return true;
     }
 
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame()
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE
     {
         if (CallStackFrame())
             fail("should have failed");
         return true;
     }
 
-    NS_OVERRIDE
-    virtual bool AnswerHang();
+    virtual bool AnswerHang() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");

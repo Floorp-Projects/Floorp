@@ -35,8 +35,7 @@ public:
   {
   }
 
-  NS_OVERRIDE
-  virtual bool Create(size_t aNbytes)
+  virtual bool Create(size_t aNbytes) MOZ_OVERRIDE
   {
     bool ok = mSharedMemory.Create("", false, false, aNbytes);
     if (ok) {
@@ -45,8 +44,7 @@ public:
     return ok;
   }
 
-  NS_OVERRIDE
-  virtual bool Map(size_t nBytes)
+  virtual bool Map(size_t nBytes) MOZ_OVERRIDE
   {
     bool ok = mSharedMemory.Map(nBytes);
     if (ok) {
@@ -55,14 +53,12 @@ public:
     return ok;
   }
 
-  NS_OVERRIDE
-  virtual void* memory() const
+  virtual void* memory() const MOZ_OVERRIDE
   {
     return mSharedMemory.memory();
   }
 
-  NS_OVERRIDE
-  virtual SharedMemoryType Type() const
+  virtual SharedMemoryType Type() const MOZ_OVERRIDE
   {
     return TYPE_BASIC;
   }

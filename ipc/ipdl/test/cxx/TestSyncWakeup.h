@@ -23,17 +23,13 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame();
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvSync1();
+    virtual bool RecvSync1() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvSync2();
+    virtual bool RecvSync2() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -51,20 +47,15 @@ public:
     virtual ~TestSyncWakeupChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvNote1();
+    virtual bool RecvNote1() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame();
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvNote2();
+    virtual bool RecvNote2() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

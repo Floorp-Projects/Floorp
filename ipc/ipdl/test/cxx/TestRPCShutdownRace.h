@@ -23,17 +23,14 @@ public:
 
     void Main();
 
-    NS_OVERRIDE
-    virtual bool RecvStartDeath();
+    virtual bool RecvStartDeath() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvOrphan();
+    virtual bool RecvOrphan() MOZ_OVERRIDE;
 
 protected:
     void StartShuttingDown();
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
@@ -49,14 +46,11 @@ public:
     virtual ~TestRPCShutdownRaceChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerExit();
+    virtual bool AnswerExit() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         fail("should have 'crashed'!");
     }

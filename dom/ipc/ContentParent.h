@@ -146,8 +146,8 @@ private:
                                                const NativeThreadId& tid,
                                                const PRUint32& processType);
 
-    NS_OVERRIDE virtual PHalParent* AllocPHal();
-    NS_OVERRIDE virtual bool DeallocPHal(PHalParent*);
+    virtual PHalParent* AllocPHal() MOZ_OVERRIDE;
+    virtual bool DeallocPHal(PHalParent*) MOZ_OVERRIDE;
 
     virtual PIndexedDBParent* AllocPIndexedDB();
 
