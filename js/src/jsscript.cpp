@@ -51,24 +51,75 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-BindingKind
-Bindings::lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const
+BindingIter::BindingIter(JSContext *cx, const Bindings &bindings, Shape *shape)
+  : bindings_(&bindings), shape_(shape), rooter_(cx, &shape_)
+{
+    settle();
+}
+
+BindingIter::BindingIter(JSContext *cx, Init init)
+  : bindings_(init.bindings), shape_(init.shape), rooter_(cx, &shape_)
+{
+    settle();
+}
+
+BindingIter::BindingIter(JSContext *cx, Bindings &bindings)
+  : bindings_(&bindings), shape_(bindings.lastBinding), rooter_(cx, &shape_)
+{
+    settle();
+}
+
+void
+BindingIter::operator=(Init init)
+{
+    bindings_ = init.bindings;
+    shape_ = init.shape;
+    settle();
+}
+
+void
+BindingIter::settle()
+{
+    if (shape_.empty())
+        return;
+    Shape &shape = shape_.front();
+    jsid id = shape_.front().propid();
+    binding_.maybeName = JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->asPropertyName() : NULL;
+    binding_.kind = shape.slot() - CallObject::RESERVED_SLOTS < bindings_->numArgs()
+                    ? ARGUMENT
+                    : shape.writable() ? VARIABLE : CONSTANT;
+}
+
+bool
+js::GetOrderedBindings(JSContext *cx, Bindings &bindings, BindingVector *vec)
+{
+    JS_ASSERT(vec->empty());
+    if (!vec->reserve(bindings.count()))
+        return false;
+
+    for (BindingIter bi(cx, bindings); bi; bi++)
+        vec->infallibleAppend(*bi);
+
+    /* Variables/arguments are stored in reverse order. */
+    Reverse(vec->begin(), vec->end());
+    return true;
+}
+
+BindingIter::Init
+Bindings::lookup(JSContext *cx, PropertyName *name) const
 {
     if (!lastBinding)
-        return NONE;
+        return BindingIter::Init(this, NULL);
 
-    Shape **spp;
-    Shape *shape = Shape::search(cx, lastBinding, AtomToId(name), &spp);
-    if (!shape)
-        return NONE;
+    Shape **_;
+    return BindingIter::Init(this, Shape::search(cx, lastBinding, NameToId(name), &_));
+}
 
-    if (indexp)
-        *indexp = shape->shortid();
-
-    if (shape->setter() == CallObject::setArgOp)
-        return ARGUMENT;
-
-    return shape->writable() ? VARIABLE : CONSTANT;
+unsigned
+Bindings::argumentsVarIndex(JSContext *cx) const
+{
+    BindingIter bi(cx, lookup(cx, cx->runtime->atomState.argumentsAtom));
+    return bi.frameIndex();
 }
 
 bool
@@ -145,7 +196,7 @@ Shape *
 Bindings::callObjectShape(JSContext *cx) const
 {
     if (!hasDup())
-        return lastShape();
+        return lastBinding;
 
     /*
      * Build a vector of non-duplicate properties in order from last added
@@ -157,7 +208,7 @@ Bindings::callObjectShape(JSContext *cx) const
     if (!seen.init())
         return NULL;
 
-    for (Shape::Range r = lastShape()->all(); !r.empty(); r.popFront()) {
+    for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
         Shape &s = r.front();
         HashSet<jsid>::AddPtr p = seen.lookupForAdd(s.propid());
         if (!p) {
@@ -179,63 +230,6 @@ Bindings::callObjectShape(JSContext *cx) const
     }
 
     return shape;
-}
-
-bool
-Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
-{
-    JS_ASSERT(lastBinding);
-    if (count() == 0)
-        return true;
-
-    BindingNames &names = *namesp;
-    JS_ASSERT(names.empty());
-
-    unsigned n = count();
-    if (!names.growByUninitialized(n))
-        return false;
-
-#ifdef DEBUG
-    JSAtom * const POISON = reinterpret_cast<JSAtom *>(0xdeadbeef);
-    for (unsigned i = 0; i < n; i++)
-        names[i].maybeAtom = POISON;
-#endif
-
-    for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
-        Shape &shape = r.front();
-        unsigned index = uint16_t(shape.shortid());
-
-        if (shape.setter() == CallObject::setArgOp) {
-            JS_ASSERT(index < nargs);
-            names[index].kind = ARGUMENT;
-        } else {
-            JS_ASSERT(index < nvars);
-            index += nargs;
-            names[index].kind = shape.writable() ? VARIABLE : CONSTANT;
-        }
-
-        if (JSID_IS_ATOM(shape.propid())) {
-            names[index].maybeAtom = JSID_TO_ATOM(shape.propid());
-        } else {
-            JS_ASSERT(JSID_IS_INT(shape.propid()));
-            JS_ASSERT(shape.setter() == CallObject::setArgOp);
-            names[index].maybeAtom = NULL;
-        }
-    }
-
-#ifdef DEBUG
-    for (unsigned i = 0; i < n; i++)
-        JS_ASSERT(names[i].maybeAtom != POISON);
-#endif
-
-    return true;
-}
-
-Shape *
-Bindings::lastVariable() const
-{
-    JS_ASSERT(lastBinding);
-    return lastBinding;
 }
 
 void
@@ -426,13 +420,13 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             return false;
         }
 
-        BindingNames names(cx);
+        BindingVector names(cx);
         if (mode == XDR_ENCODE) {
-            if (!script->bindings.getLocalNameArray(cx, &names))
+            if (!GetOrderedBindings(cx, script->bindings, &names))
                 return false;
             PodZero(bitmap, bitmapLength);
             for (unsigned i = 0; i < nameCount; i++) {
-                if (i < nargs && names[i].maybeAtom)
+                if (i < nargs && names[i].maybeName)
                     bitmap[i >> JS_BITS_PER_UINT32_LOG2] |= JS_BIT(i & (JS_BITS_PER_UINT32 - 1));
             }
         }
@@ -450,14 +444,14 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                     if (!bindings.addDestructuring(cx, &dummy))
                         return false;
                 } else {
-                    JS_ASSERT(!names[i].maybeAtom);
+                    JS_ASSERT(!names[i].maybeName);
                 }
                 continue;
             }
 
             RootedAtom name(cx);
             if (mode == XDR_ENCODE)
-                name = names[i].maybeAtom;
+                name = names[i].maybeName;
             if (!XDRAtom(xdr, name.address()))
                 return false;
             if (mode == XDR_DECODE) {
@@ -1722,12 +1716,12 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 
     Bindings bindings;
     Bindings::AutoRooter bindingsRoot(cx, &bindings);
-    BindingNames names(cx);
-    if (!src->bindings.getLocalNameArray(cx, &names))
+    BindingVector names(cx);
+    if (!GetOrderedBindings(cx, src->bindings, &names))
         return NULL;
 
     for (unsigned i = 0; i < names.length(); ++i) {
-        if (JSAtom *atom = names[i].maybeAtom) {
+        if (JSAtom *atom = names[i].maybeName) {
             Rooted<JSAtom*> root(cx, atom);
             if (!bindings.add(cx, root, names[i].kind))
                 return NULL;

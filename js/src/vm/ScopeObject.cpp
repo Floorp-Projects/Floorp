@@ -63,7 +63,7 @@ StaticScopeIter::scopeShape() const
 {
     JS_ASSERT(hasDynamicScopeObject());
     JS_ASSERT(type() != NAMED_LAMBDA);
-    return type() == BLOCK ? block().lastProperty() : funScript()->bindings.lastShape();
+    return type() == BLOCK ? block().lastProperty() : funScript()->bindings.lastBinding;
 }
 
 StaticScopeIter::Type
