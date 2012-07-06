@@ -260,6 +260,26 @@ GetCurrentSwitchState(SwitchDevice aDevice)
   return state;
 }
 
+bool
+EnableAlarm()
+{
+  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
+  return false;
+}
+
+void
+DisableAlarm()
+{
+  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
+}
+
+bool
+SetAlarm(long aSeconds, long aNanoseconds)
+{
+  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
+  return false;
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver

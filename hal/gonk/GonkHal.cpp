@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/android_alarm.h>
 #include <math.h>
 #include <stdio.h>
 #include <sys/syscall.h>
@@ -624,6 +625,168 @@ void
 UnlockScreenOrientation()
 {
   OrientationObserver::GetInstance()->UnlockScreenOrientation();
+}
+
+
+static pthread_t sAlarmFireWatcherThread;
+
+// If |sAlarmData| is non-null, it's owned by the watcher thread.
+typedef struct AlarmData {
+
+public:
+  AlarmData(int aFd) : mFd(aFd), mGeneration(sNextGeneration++), mShuttingDown(false) {}
+  ScopedClose mFd;
+  int mGeneration;
+  bool mShuttingDown;
+
+  static int sNextGeneration;
+
+} AlarmData;
+
+int AlarmData::sNextGeneration = 0;
+
+AlarmData* sAlarmData = NULL;
+
+class AlarmFiredEvent : public nsRunnable {
+
+public:
+  AlarmFiredEvent(int aGeneration) : mGeneration(aGeneration) {}
+
+  NS_IMETHOD Run() {
+    // Guard against spurious notifications caused by an alarm firing
+    // concurrently with it being disabled.
+    if (sAlarmData && !sAlarmData->mShuttingDown && mGeneration == sAlarmData->mGeneration) {
+      hal::NotifyAlarmFired();
+    }
+
+    return NS_OK;
+  }
+
+private:
+  int mGeneration;
+};
+
+// Runs on alarm-watcher thread.
+static void 
+DestroyAlarmData(void* aData)
+{
+  AlarmData* alarmData = static_cast<AlarmData*>(aData);
+  delete alarmData;
+}
+
+// Runs on alarm-watcher thread.
+void ShutDownAlarm(int aSigno)
+{
+  if (aSigno == SIGUSR2) {
+    sAlarmData->mShuttingDown = true;
+  }
+  return;
+}
+
+static void* 
+WaitForAlarm(void* aData)
+{
+  pthread_cleanup_push(DestroyAlarmData, aData);
+
+  AlarmData* alarmData = static_cast<AlarmData*>(aData);
+
+  while (!alarmData->mShuttingDown) {
+    int alarmTypeFlags = 0;
+
+    // ALARM_WAIT apparently will block even if an alarm hasn't been
+    // programmed, although this behavior doesn't seem to be
+    // documented.  We rely on that here to avoid spinning the CPU
+    // while awaiting an alarm to be programmed.
+    do {
+      alarmTypeFlags = ioctl(alarmData->mFd, ANDROID_ALARM_WAIT);
+    } while (alarmTypeFlags < 0 && errno == EINTR && !alarmData->mShuttingDown);
+
+    if (!alarmData->mShuttingDown && 
+        alarmTypeFlags >= 0 && (alarmTypeFlags & ANDROID_ALARM_RTC_WAKEUP_MASK)) {
+      NS_DispatchToMainThread(new AlarmFiredEvent(alarmData->mGeneration));
+    }
+  }
+
+  pthread_cleanup_pop(1);
+  return NULL;
+}
+
+bool
+EnableAlarm()
+{
+  MOZ_ASSERT(!sAlarmData);
+
+  int alarmFd = open("/dev/alarm", O_RDWR);
+  if (alarmFd < 0) {
+    HAL_LOG(("Failed to open alarm device: %s.", strerror(errno)));
+    return false;
+  }
+
+  nsAutoPtr<AlarmData> alarmData(new AlarmData(alarmFd));
+
+  struct sigaction actions;
+  memset(&actions, 0, sizeof(actions));
+  sigemptyset(&actions.sa_mask);
+  actions.sa_flags = 0;
+  actions.sa_handler = ShutDownAlarm;
+  if (sigaction(SIGUSR2, &actions, NULL)) {
+    HAL_LOG(("Failed to set SIGUSR2 signal for alarm-watcher thread."));
+    return false;
+  }
+
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+  int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm, alarmData.get());
+  if (status) {
+    alarmData = NULL;
+    HAL_LOG(("Failed to create alarm watcher thread. Status: %d.", status));
+    return false;
+  }
+
+  pthread_attr_destroy(&attr);
+
+  // The thread owns this now.  We only hold a pointer.
+  sAlarmData = alarmData.forget();
+  return true;
+}
+
+void
+DisableAlarm()
+{
+  MOZ_ASSERT(sAlarmData);
+
+  // NB: this must happen-before the thread cancellation.
+  sAlarmData = NULL;
+
+  // The cancel will interrupt the thread and destroy it, freeing the
+  // data pointed at by sAlarmData.
+  DebugOnly<int> err = pthread_kill(sAlarmFireWatcherThread, SIGUSR2);
+  MOZ_ASSERT(!err);
+}
+
+bool
+SetAlarm(long aSeconds, long aNanoseconds)
+{
+  if (!sAlarmData) {
+    HAL_LOG(("We should have enabled the alarm."));
+    return false;
+  }
+
+  struct timespec ts;
+  ts.tv_sec = aSeconds;
+  ts.tv_nsec = aNanoseconds;
+
+  // currently we only support RTC wakeup alarm type
+  const int result = ioctl(sAlarmData->mFd, ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &ts);
+
+  if (result < 0) {
+    HAL_LOG(("Unable to set alarm: %s.", strerror(errno)));
+    return false;
+  }
+
+  return true;
 }
 
 } // hal_impl
