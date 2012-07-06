@@ -568,6 +568,16 @@ html|*#gcli-output-frame,
   direction: ltr;
 }
 
+#developer-toolbar-webconsole[error-count] > .toolbarbutton-icon {
+  display: none;
+}
+
+#developer-toolbar-webconsole[error-count]:before {
+  content: attr(error-count);
+  display: -moz-box;
+  -moz-box-pack: center;
+}
+
 /* Responsive Mode */
 
 vbox[anonid=browserContainer][responsivemode] {
