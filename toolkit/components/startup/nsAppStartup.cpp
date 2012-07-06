@@ -285,7 +285,8 @@ RecordShutdownStartTimeStamp() {
   gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
 }
 
-static void
+namespace mozilla {
+void
 RecordShutdownEndTimeStamp() {
   if (!gRecordedShutdownTimeFileName)
     return;
@@ -313,18 +314,7 @@ RecordShutdownEndTimeStamp() {
   }
   PR_Rename(tmpName.get(), name.get());
 }
-
-// For now firefox runs static destructors during shutdown on release builds
-// too, so we just use one to run RecordShutdownEndTimeStamp. Once we are
-// exiting earlier in release builds we just move the call.
-class RecordShutdownEndTimeStampHelper {
-public:
-  ~RecordShutdownEndTimeStampHelper() {
-    RecordShutdownEndTimeStamp();
-  }
-};
-
-static RecordShutdownEndTimeStampHelper gHelper;
+}
 
 NS_IMETHODIMP
 nsAppStartup::Quit(uint32_t aMode)

@@ -3937,7 +3937,9 @@ int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, PRUint32 aFlags)
 {
   XREMain main;
-  return main.XRE_main(argc, argv, aAppData);
+  int result = main.XRE_main(argc, argv, aAppData);
+  mozilla::RecordShutdownEndTimeStamp();
+  return result;
 }
 
 nsresult
