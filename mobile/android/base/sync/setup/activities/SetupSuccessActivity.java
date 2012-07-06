@@ -8,11 +8,11 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.TextView;
 
@@ -43,10 +43,9 @@ public class SetupSuccessActivity extends Activity {
 
   /* Click Handlers */
   public void settingsClickHandler(View target) {
-    Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    startActivity(intent);
+    SyncAccounts.openSyncSettings(this);
   }
+
 
   public void launchBrowser(View target) {
     Intent intent = new Intent(Intent.ACTION_MAIN);
