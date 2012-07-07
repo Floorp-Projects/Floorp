@@ -11,12 +11,12 @@ function test() {
 
   var newWindow;
   var tabToDetach;
+  var documentToDetach;
 
   function onPageShow(event) {
     // we get here if the test is executed before the pageshow
     // event for the window's first tab
-    if (!tabToDetach ||
-        tabToDetach.linkedBrowser.contentDocument != event.target)
+    if (!tabToDetach || documentToDetach != event.target)
       return;
 
     event.currentTarget.removeEventListener("pageshow", onPageShow, false);
@@ -46,6 +46,10 @@ function test() {
     finish();
   }
 
-  gBrowser.addEventListener("pageshow", onPageShow, false);
   tabToDetach = gBrowser.addTab(testPage);
+  tabToDetach.linkedBrowser.addEventListener("load", function onLoad() {
+    tabToDetach.linkedBrowser.removeEventListener("load", onLoad, true);
+    documentToDetach = tabToDetach.linkedBrowser.contentDocument;
+    gBrowser.addEventListener("pageshow", onPageShow, false);
+  }, true);
 }
