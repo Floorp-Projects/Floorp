@@ -3070,7 +3070,7 @@ class MConstantElements : public MNullaryInstruction
     void printOpcode(FILE *fp);
 
     HashNumber valueHash() const {
-        return (HashNumber) value_;
+        return (HashNumber)(size_t) value_;
     }
 
     bool congruentTo(MDefinition * const &ins) const {
