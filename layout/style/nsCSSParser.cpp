@@ -5081,75 +5081,32 @@ CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating)
     return false;
   }
 
-  bool toCorner = false;
-  if (mToken.mType == eCSSToken_Ident &&
-      mToken.mIdent.LowerCaseEqualsLiteral("to")) {
-    toCorner = true;
-    if (!GetToken(true)) {
-      return false;
-    }
-  }
-
   nsCSSTokenType ty = mToken.mType;
   nsString id = mToken.mIdent;
-  cssGradient->mIsToCorner = toCorner;
   UngetToken();
 
   // <legacy-gradient-line>
   bool haveGradientLine = IsLegacyGradientLine(ty, id);
   if (haveGradientLine) {
-    if (toCorner) {
-      // "to" syntax only allows box position keywords
-      if (ty != eCSSToken_Ident) {
+    bool haveAngle =
+      ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull);
+
+    // if we got an angle, we might now have a comma, ending the gradient-line
+    if (!haveAngle || !ExpectSymbol(',', true)) {
+      if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
         SkipUntil(')');
         return false;
       }
 
-      // "to" syntax doesn't allow explicit "center"
-      if (!ParseBoxPositionValues(cssGradient->mBgPos, false, false)) {
+      if (!ExpectSymbol(',', true) &&
+          // if we didn't already get an angle, we might have one now,
+          // otherwise it's an error
+          (haveAngle ||
+           !ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull) ||
+           // now we better have a comma
+           !ExpectSymbol(',', true))) {
         SkipUntil(')');
         return false;
-      }
-
-      const nsCSSValue& xValue = cssGradient->mBgPos.mXValue;
-      const nsCSSValue& yValue = cssGradient->mBgPos.mYValue;
-      if (xValue.GetUnit() != eCSSUnit_Enumerated ||
-          !(xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
-                                    NS_STYLE_BG_POSITION_CENTER |
-                                    NS_STYLE_BG_POSITION_RIGHT)) ||
-          yValue.GetUnit() != eCSSUnit_Enumerated ||
-          !(yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
-                                    NS_STYLE_BG_POSITION_CENTER |
-                                    NS_STYLE_BG_POSITION_BOTTOM))) {
-        SkipUntil(')');
-        return false;
-      }
-
-      if (!ExpectSymbol(',', true)) {
-        SkipUntil(')');
-        return false;
-      }
-    } else {
-      bool haveAngle =
-        ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull);
-
-      // if we got an angle, we might now have a comma, ending the gradient-line
-      if (!haveAngle || !ExpectSymbol(',', true)) {
-        if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
-          SkipUntil(')');
-          return false;
-        }
-
-        if (!ExpectSymbol(',', true) &&
-            // if we didn't already get an angle, we might have one now,
-            // otherwise it's an error
-            (haveAngle ||
-             !ParseVariant(cssGradient->mAngle, VARIANT_ANGLE, nsnull) ||
-             // now we better have a comma
-             !ExpectSymbol(',', true))) {
-          SkipUntil(')');
-          return false;
-        }
       }
     }
   }
