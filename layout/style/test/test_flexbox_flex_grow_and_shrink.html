@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for flex-grow and flex-shrink animation (Bug 696253)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+
+  /* Set -moz-flex-grow and -moz-flex-shrink to nonzero values,
+     when no animations are applied. */
+
+  * { -moz-flex-grow: 10; -moz-flex-shrink: 20 }
+
+  /* These animations SHOULD affect computed style */
+  @-moz-keyframes flexGrowTwoToThree {
+     0%   { -moz-flex-grow: 2 }
+     100% { -moz-flex-grow: 3 }
+  }
+  @-moz-keyframes flexShrinkTwoToThree {
+     0%   { -moz-flex-shrink: 2 }
+     100% { -moz-flex-shrink: 3 }
+  }
+  @-moz-keyframes flexGrowZeroToZero {
+     0%   { -moz-flex-grow: 0 }
+     100% { -moz-flex-grow: 0 }
+  }
+  @-moz-keyframes flexShrinkZeroToZero {
+     0%   { -moz-flex-shrink: 0 }
+     100% { -moz-flex-shrink: 0 }
+  }
+
+  /* These animations SHOULD NOT affect computed style. (flex-grow and
+     flex-shrink are animatable "except between '0' and other values") */
+  @-moz-keyframes flexGrowZeroToOne {
+     0%   { -moz-flex-grow: 0 }
+     100% { -moz-flex-grow: 1 }
+  }
+  @-moz-keyframes flexShrinkZeroToOne {
+     0%   { -moz-flex-shrink: 0 }
+     100% { -moz-flex-shrink: 1 }
+  }
+  @-moz-keyframes flexGrowOneToZero {
+     0%   { -moz-flex-grow: 1 }
+     100% { -moz-flex-grow: 0 }
+  }
+  @-moz-keyframes flexShrinkOneToZero {
+     0%   { -moz-flex-shrink: 1 }
+     100% { -moz-flex-shrink: 0 }
+  }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<div id="display">
+  <div id="myDiv"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for flex-grow and flex-shrink animation (Bug 696253) **/
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+
+var display = document.getElementById("display");
+var div = null;
+var cs = null;
+function new_div(style) {
+  return new_element("div", style);
+}
+function new_element(tagname, style) {
+  if (div != null || cs != null) {
+    ok(false, "test author forgot to call done_div");
+  }
+  if (typeof(style) != "string") {
+    ok(false, "test author forgot to pass argument");
+  }
+  div = document.createElement(tagname);
+  div.setAttribute("style", style);
+  display.appendChild(div);
+  cs = getComputedStyle(div, "");
+}
+
+function done_div() {
+  display.removeChild(div);
+  div = null;
+  cs = null;
+}
+// take over the refresh driver
+advance_clock(0);
+
+// ANIMATIONS THAT SHOULD AFFECT COMPUTED STYLE
+// --------------------------------------------
+
+// flexGrowTwoToThree: 2.0 at 0%, 2.5 at 50%, 10 after animation is over
+new_div("-moz-animation: flexGrowTwoToThree linear 1s");
+is_approx(cs.MozFlexGrow, 2, 0.01, "flexGrowTwoToThree at 0.0s");
+advance_clock(500);
+is_approx(cs.MozFlexGrow, 2.5, 0.01, "flexGrowTwoToThree at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexGrow, 10, "flexGrowTwoToThree at 1.5s");
+done_div();
+
+// flexShrinkTwoToThree: 2.0 at 0%, 2.5 at 50%, 20 after animation is over
+new_div("-moz-animation: flexShrinkTwoToThree linear 1s");
+is_approx(cs.MozFlexShrink, 2, 0.01,  "flexShrinkTwoToThree at 0.0s");
+advance_clock(500);
+is_approx(cs.MozFlexShrink, 2.5, 0.01, "flexShrinkTwoToThree at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexShrink, 20, "flexShrinkTwoToThree at 1.5s");
+done_div();
+
+// flexGrowZeroToZero: 0 at 0%, 0 at 50%, 10 after animation is over
+new_div("-moz-animation: flexGrowZeroToZero linear 1s");
+is(cs.MozFlexGrow, 0, "flexGrowZeroToZero at 0.0s");
+advance_clock(500);
+is(cs.MozFlexGrow, 0, "flexGrowZeroToZero at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexGrow, 10, "flexGrowZeroToZero at 1.5s");
+done_div();
+
+// flexShrinkZeroToZero: 0 at 0%, 0 at 50%, 20 after animation is over
+new_div("-moz-animation: flexShrinkZeroToZero linear 1s");
+is(cs.MozFlexShrink, 0, "flexShrinkZeroToZero at 0.0s");
+advance_clock(500);
+is(cs.MozFlexShrink, 0, "flexShrinkZeroToZero at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexShrink, 20, "flexShrinkZeroToZero at 1.5s");
+done_div();
+
+// ANIMATIONS THAT SHOULD NOT AFFECT COMPUTED STYLE
+// ------------------------------------------------
+
+// flexGrowZeroToOne: no effect on computed style. 10 all the way through.
+new_div("-moz-animation: flexGrowZeroToOne linear 1s");
+is(cs.MozFlexGrow, 10, "flexGrowZeroToOne at 0.0s");
+advance_clock(500);
+is(cs.MozFlexGrow, 10, "flexGrowZeroToOne at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexGrow, 10, "flexGrowZeroToOne at 1.5s");
+done_div();
+
+// flexShrinkZeroToOne: no effect on computed style. 20 all the way through.
+new_div("-moz-animation: flexShrinkZeroToOne linear 1s");
+is(cs.MozFlexShrink, 20,  "flexShrinkZeroToOne at 0.0s");
+advance_clock(500);
+is(cs.MozFlexShrink, 20, "flexShrinkZeroToOne at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexShrink, 20, "flexShrinkZeroToOne at 1.5s");
+done_div();
+
+// flexGrowOneToZero: no effect on computed style. 10 all the way through.
+new_div("-moz-animation: flexGrowOneToZero linear 1s");
+is(cs.MozFlexGrow, 10, "flexGrowOneToZero at 0.0s");
+advance_clock(500);
+is(cs.MozFlexGrow, 10, "flexGrowOneToZero at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexGrow, 10, "flexGrowOneToZero at 1.5s");
+done_div();
+
+// flexShrinkOneToZero: no effect on computed style. 20 all the way through.
+new_div("-moz-animation: flexShrinkOneToZero linear 1s");
+is(cs.MozFlexShrink, 20,  "flexShrinkOneToZero at 0.0s");
+advance_clock(500);
+is(cs.MozFlexShrink, 20, "flexShrinkOneToZero at 0.5s");
+advance_clock(1000);
+is(cs.MozFlexShrink, 20, "flexShrinkOneToZero at 1.5s");
+done_div();
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</pre>
+</body>
+</html>

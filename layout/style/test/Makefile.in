@@ -205,6 +205,7 @@ _TEST_FILES =	test_acid3_test46.html \
 ifdef MOZ_FLEXBOX
 _TEST_FILES +=	\
 		test_flexbox_align_self_auto.html \
+		test_flexbox_flex_grow_and_shrink.html \
 		$(NULL)
 endif
 

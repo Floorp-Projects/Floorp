@@ -362,6 +362,8 @@ private:
   nsIDOMCSSValue* DoGetAlignItems();
   nsIDOMCSSValue* DoGetAlignSelf();
   nsIDOMCSSValue* DoGetFlexDirection();
+  nsIDOMCSSValue* DoGetFlexGrow();
+  nsIDOMCSSValue* DoGetFlexShrink();
   nsIDOMCSSValue* DoGetOrder();
   nsIDOMCSSValue* DoGetJustifyContent();
 #endif // MOZ_FLEXBOX
