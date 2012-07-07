@@ -5005,7 +5005,7 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating)
 
   nsCSSTokenType ty = mToken.mType;
   nsString id = mToken.mIdent;
-  cssGradient->mIsToCorner = toCorner;
+  cssGradient->mIsLegacySyntax = !toCorner;
   UngetToken();
 
   // <legacy-gradient-line>
@@ -5075,6 +5075,7 @@ CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating)
 {
   nsRefPtr<nsCSSValueGradient> cssGradient
     = new nsCSSValueGradient(true, aIsRepeating);
+  cssGradient->mIsLegacySyntax = true;
 
   // <gradient-line>
   if (!GetToken(true)) {
