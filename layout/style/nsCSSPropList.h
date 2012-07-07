@@ -1513,6 +1513,16 @@ CSS_PROP_TABLEBORDER(
     eStyleAnimType_None)
 #ifdef MOZ_FLEXBOX
 CSS_PROP_POSITION(
+    -moz-order,
+    order,
+    CSS_PROP_DOMPROP_PREFIXED(Order),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HI,
+    nsnull,
+    offsetof(nsStylePosition, mOrder),
+    eStyleAnimType_Custom) // <integer>
+CSS_PROP_POSITION(
     -moz-justify-content,
     justify_content,
     CSS_PROP_DOMPROP_PREFIXED(JustifyContent),

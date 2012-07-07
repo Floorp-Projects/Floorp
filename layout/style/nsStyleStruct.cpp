@@ -1127,6 +1127,7 @@ nsStylePosition::nsStylePosition(void)
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
 #ifdef MOZ_FLEXBOX
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
+  mOrder = NS_STYLE_ORDER_INITIAL;
 #endif // MOZ_FLEXBOX
   mZIndex.SetAutoValue();
 }
@@ -1153,6 +1154,14 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   }
 
 #ifdef MOZ_FLEXBOX
+  // Properties that apply to flex items:
+  // NOTE: Changes to "order" on a flex item may trigger some repositioning.
+  // If we're in a multi-line flex container, it also may affect our size
+  // (and that of our container & siblings) by shuffling items between lines.
+  if (mOrder != aOther.mOrder) {
+    return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
+  }
+
   // Properties that apply to flexbox containers:
   // Changing justify-content on a flexbox might affect the positioning of its
   // children, but it won't affect any sizing.

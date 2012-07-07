@@ -2553,6 +2553,16 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+#ifdef MOZ_FLEXBOX
+        case eCSSProperty_order: {
+          const nsStylePosition *stylePosition =
+            static_cast<const nsStylePosition*>(styleStruct);
+          aComputedValue.SetIntValue(stylePosition->mOrder,
+                                     eUnit_Integer);
+          break;
+        }
+#endif // MOZ_FLEXBOX
+
         case eCSSProperty_text_decoration_color: {
           const nsStyleTextReset *styleTextReset =
             static_cast<const nsStyleTextReset*>(styleStruct);
