@@ -832,27 +832,27 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Gradient,
                     "The given data is not a gradient");
 
-  nsCSSValueGradient* gradient = aValue.GetGradientValue();
+  const nsCSSValueGradient* gradient = aValue.GetGradientValue();
 
   if (gradient->mIsRadial) {
-    if (gradient->mRadialShape.GetUnit() == eCSSUnit_Enumerated) {
-      aResult.mShape = gradient->mRadialShape.GetIntValue();
+    if (gradient->GetRadialShape().GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mShape = gradient->GetRadialShape().GetIntValue();
     } else {
-      NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+      NS_ASSERTION(gradient->GetRadialShape().GetUnit() == eCSSUnit_None,
                    "bad unit for radial shape");
       aResult.mShape = NS_STYLE_GRADIENT_SHAPE_ELLIPTICAL;
     }
-    if (gradient->mRadialSize.GetUnit() == eCSSUnit_Enumerated) {
-      aResult.mSize = gradient->mRadialSize.GetIntValue();
+    if (gradient->GetRadialSize().GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mSize = gradient->GetRadialSize().GetIntValue();
     } else {
-      NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+      NS_ASSERTION(gradient->GetRadialSize().GetUnit() == eCSSUnit_None,
                    "bad unit for radial shape");
       aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
     }
   } else {
-    NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+    NS_ASSERTION(gradient->GetRadialShape().GetUnit() == eCSSUnit_None,
                  "bad unit for linear shape");
-    NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+    NS_ASSERTION(gradient->GetRadialSize().GetUnit() == eCSSUnit_None,
                  "bad unit for linear size");
     aResult.mShape = NS_STYLE_GRADIENT_SHAPE_LINEAR;
     aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
@@ -890,7 +890,7 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   // stops
   for (PRUint32 i = 0; i < gradient->mStops.Length(); i++) {
     nsStyleGradientStop stop;
-    nsCSSValueGradientStop &valueStop = gradient->mStops[i];
+    const nsCSSValueGradientStop &valueStop = gradient->mStops[i];
 
     if (!SetCoord(valueStop.mLocation, stop.mLocation,
                   nsStyleCoord(), SETCOORD_LPO,

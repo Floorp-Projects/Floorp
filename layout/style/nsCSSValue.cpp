@@ -956,13 +956,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     }
 
     if (gradient->mIsRadial &&
-        (gradient->mRadialShape.GetUnit() != eCSSUnit_None ||
-         gradient->mRadialSize.GetUnit() != eCSSUnit_None)) {
-      if (gradient->mRadialShape.GetUnit() != eCSSUnit_None) {
-        NS_ABORT_IF_FALSE(gradient->mRadialShape.GetUnit() ==
+        (gradient->GetRadialShape().GetUnit() != eCSSUnit_None ||
+         gradient->GetRadialSize().GetUnit() != eCSSUnit_None)) {
+      if (gradient->GetRadialShape().GetUnit() != eCSSUnit_None) {
+        NS_ABORT_IF_FALSE(gradient->GetRadialShape().GetUnit() ==
                           eCSSUnit_Enumerated,
                           "bad unit for radial gradient shape");
-        PRInt32 intValue = gradient->mRadialShape.GetIntValue();
+        PRInt32 intValue = gradient->GetRadialShape().GetIntValue();
         NS_ABORT_IF_FALSE(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
                           "radial gradient with linear shape?!");
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
@@ -971,11 +971,11 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         aResult.AppendLiteral(" ");
       }
 
-      if (gradient->mRadialSize.GetUnit() != eCSSUnit_None) {
-        NS_ABORT_IF_FALSE(gradient->mRadialSize.GetUnit() ==
+      if (gradient->GetRadialSize().GetUnit() != eCSSUnit_None) {
+        NS_ABORT_IF_FALSE(gradient->GetRadialSize().GetUnit() ==
                           eCSSUnit_Enumerated,
                           "bad unit for radial gradient size");
-        PRInt32 intValue = gradient->mRadialSize.GetIntValue();
+        PRInt32 intValue = gradient->GetRadialSize().GetIntValue();
         AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
                                nsCSSProps::kRadialGradientSizeKTable),
                            aResult);
@@ -1700,22 +1700,23 @@ nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
   : mIsRadial(aIsRadial),
     mIsRepeating(aIsRepeating),
     mIsLegacySyntax(false),
+    mIsExplicitSize(false),
     mBgPos(eCSSUnit_None),
-    mAngle(eCSSUnit_None),
-    mRadialShape(eCSSUnit_None),
-    mRadialSize(eCSSUnit_None)
+    mAngle(eCSSUnit_None)
 {
+  mRadialValues[0].SetNoneValue();
+  mRadialValues[1].SetNoneValue();
 }
 
 size_t
 nsCSSValueGradient::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += mBgPos      .SizeOfExcludingThis(aMallocSizeOf);
-  n += mAngle      .SizeOfExcludingThis(aMallocSizeOf);
-  n += mRadialShape.SizeOfExcludingThis(aMallocSizeOf);
-  n += mRadialSize .SizeOfExcludingThis(aMallocSizeOf);
-  n += mStops      .SizeOfExcludingThis(aMallocSizeOf);
+  n += mBgPos.SizeOfExcludingThis(aMallocSizeOf);
+  n += mAngle.SizeOfExcludingThis(aMallocSizeOf);
+  n += mRadialValues[0].SizeOfExcludingThis(aMallocSizeOf);
+  n += mRadialValues[1].SizeOfExcludingThis(aMallocSizeOf);
+  n += mStops.SizeOfExcludingThis(aMallocSizeOf);
   for (PRUint32 i = 0; i < mStops.Length(); i++) {
     n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
   }
