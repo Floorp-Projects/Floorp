@@ -7,6 +7,8 @@
 #include "gfxCrashReporterUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace gl {
@@ -58,6 +60,28 @@ static PRLibrary* LoadApitraceLibrary()
 
 #endif // ANDROID
 
+#ifdef XP_WIN
+// see the comment in GLLibraryEGL::EnsureInitialized() for the rationale here.
+static PRLibrary*
+LoadLibraryForEGLOnWindows(const nsAString& filename)
+{
+    nsCOMPtr<nsIFile> file;
+	nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    file->Append(filename);
+    PRLibrary* lib = nsnull;
+    rv = file->Load(&lib);
+    if (NS_FAILED(rv)) {
+        nsPrintfCString msg("Failed to load %s - Expect EGL initialization to fail",
+                            NS_LossyConvertUTF16toASCII(filename).get());
+        NS_WARNING(msg.get());
+    }
+    return lib;
+}
+#endif // XP_WIN
+
 bool
 GLLibraryEGL::EnsureInitialized()
 {
@@ -69,36 +93,31 @@ GLLibraryEGL::EnsureInitialized()
 
 #ifdef XP_WIN
     if (!mEGLLibrary) {
-        // On Windows, the GLESv2 and EGL libraries are shipped with libxul and
+        // On Windows, the GLESv2, EGL and DXSDK libraries are shipped with libxul and
         // we should look for them there. We have to load the libs in this
-        // order, because libEGL.dll depends on libGLESv2.dll.
+        // order, because libEGL.dll depends on libGLESv2.dll which depends on the DXSDK
+        // libraries. This matters especially for WebRT apps which are in a different directory.
+        // See bug 760323 and bug 749459
 
-        nsresult rv;
-        nsCOMPtr<nsIFile> libraryFile;
+#ifndef MOZ_D3DX9_DLL
+#error MOZ_D3DX9_DLL should have been defined by the Makefile
+#endif
+        LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DX9_DLL)));
+        // intentionally leak the D3DX9_DLL library
 
-        nsCOMPtr<nsIProperties> dirService =
-            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-        if (!dirService)
+#ifndef MOZ_D3DCOMPILER_DLL
+#error MOZ_D3DCOMPILER_DLL should have been defined by the Makefile
+#endif
+        LoadLibraryForEGLOnWindows(NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_DLL)));
+        // intentionally leak the D3DCOMPILER_DLL library
+
+        LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libGLESv2.dll"));
+        // intentionally leak the libGLESv2.dll library
+
+        mEGLLibrary = LoadLibraryForEGLOnWindows(NS_LITERAL_STRING("libEGL.dll"));
+
+        if (!mEGLLibrary)
             return false;
-
-        rv = dirService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
-                             getter_AddRefs(libraryFile));
-        if (NS_FAILED(rv))
-            return false;
-
-        libraryFile->Append(NS_LITERAL_STRING("libGLESv2.dll"));
-        PRLibrary* glesv2lib = nsnull;
-
-        libraryFile->Load(&glesv2lib);
-
-        // Intentionally leak glesv2lib
-    
-        libraryFile->SetLeafName(NS_LITERAL_STRING("libEGL.dll"));
-        rv = libraryFile->Load(&mEGLLibrary);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Couldn't load libEGL.dll, canvas3d will be disabled.");
-            return false;
-        }
     }
 #else // !Windows
 
