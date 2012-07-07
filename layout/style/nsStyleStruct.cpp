@@ -1126,6 +1126,7 @@ nsStylePosition::nsStylePosition(void)
   mMaxHeight.SetNoneValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
 #ifdef MOZ_FLEXBOX
+  mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
   mOrder = NS_STYLE_ORDER_INITIAL;
@@ -1166,7 +1167,10 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   // Properties that apply to flexbox containers:
 
   // flex-direction can swap a flexbox between vertical & horizontal.
-  if (mFlexDirection != aOther.mFlexDirection) {
+  // align-items can change the sizing of a flexbox & the positioning
+  // of its children.
+  if (mAlignItems != aOther.mAlignItems ||
+      mFlexDirection != aOther.mFlexDirection) {
     return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
   }
 

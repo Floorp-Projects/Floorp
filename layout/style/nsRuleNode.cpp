@@ -6425,6 +6425,12 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
 
 #ifdef MOZ_FLEXBOX
+  // align-items: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForAlignItems(),
+              pos->mAlignItems, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentPos->mAlignItems,
+              NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE, 0, 0, 0, 0);
+
   // flex-direction: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForFlexDirection(),
               pos->mFlexDirection, canStoreInRuleTree,

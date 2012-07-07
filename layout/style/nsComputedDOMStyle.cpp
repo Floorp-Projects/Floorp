@@ -2926,6 +2926,16 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 
 #ifdef MOZ_FLEXBOX
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAlignItems()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStylePosition()->mAlignItems,
+                                   nsCSSProps::kAlignItemsKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetFlexDirection()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4639,6 +4649,9 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of -moz- styles *
     \* ******************************* */
 
+#ifdef MOZ_FLEXBOX
+    COMPUTED_STYLE_MAP_ENTRY(align_items,                   AlignItems),
+#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
     COMPUTED_STYLE_MAP_ENTRY(animation_duration,            AnimationDuration),

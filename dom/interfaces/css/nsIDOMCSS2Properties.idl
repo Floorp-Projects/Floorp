@@ -762,6 +762,9 @@ interface nsIDOMCSS2Properties : nsISupports
    layout engine responds to them.  In builds with MOZ_FLEXBOX enabled, this
    block should be uncommented (and this interface's uuid should be revved).
    (This would be #ifdef MOZ_FLEXBOX, if that worked in IDL files.)
+           attribute DOMString        MozAlignItems;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozFlexDirection;
                                         // raises(DOMException) on setting
 
