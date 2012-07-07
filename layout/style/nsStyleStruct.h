@@ -1095,6 +1095,7 @@ struct nsStylePosition {
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
 #ifdef MOZ_FLEXBOX
   PRUint8       mJustifyContent;        // [reset] see nsStyleConsts.h
+  PRInt32       mOrder;                 // [reset] integer
 #endif // MOZ_FLEXBOX
   nsStyleCoord  mZIndex;                // [reset] integer, auto
 

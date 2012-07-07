@@ -2926,6 +2926,14 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 
 #ifdef MOZ_FLEXBOX
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetOrder()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mOrder);
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetJustifyContent()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4658,6 +4666,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
 #ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(justify_content,               JustifyContent),
+    COMPUTED_STYLE_MAP_ENTRY(order,                         Order),
 #endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),

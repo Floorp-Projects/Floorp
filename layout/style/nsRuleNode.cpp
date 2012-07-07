@@ -6425,6 +6425,12 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
 
 #ifdef MOZ_FLEXBOX
+  // order: integer, inherit, initial
+  SetDiscrete(*aRuleData->ValueForOrder(),
+              pos->mOrder, canStoreInRuleTree,
+              SETDSC_INTEGER, parentPos->mOrder,
+              NS_STYLE_ORDER_INITIAL, 0, 0, 0, 0);
+
   // justify-content: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForJustifyContent(),
               pos->mJustifyContent, canStoreInRuleTree,
