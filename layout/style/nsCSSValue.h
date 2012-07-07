@@ -1043,7 +1043,7 @@ struct nsCSSValueGradient {
   // true if gradient is radial, false if it is linear
   bool mIsRadial;
   bool mIsRepeating;
-  bool mIsToCorner;
+  bool mIsLegacySyntax;
   // line position and angle
   nsCSSValuePair mBgPos;
   nsCSSValue mAngle;
@@ -1058,7 +1058,7 @@ struct nsCSSValueGradient {
   {
     if (mIsRadial != aOther.mIsRadial ||
         mIsRepeating != aOther.mIsRepeating ||
-        mIsToCorner != aOther.mIsToCorner ||
+        mIsLegacySyntax != aOther.mIsLegacySyntax ||
         mBgPos != aOther.mBgPos ||
         mAngle != aOther.mAngle ||
         mRadialShape != aOther.mRadialShape ||
