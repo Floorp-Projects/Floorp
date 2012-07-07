@@ -1092,6 +1092,9 @@ struct nsStylePosition {
   nsStyleCoord  mHeight;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
+#ifdef MOZ_FLEXBOX
+  nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
+#endif // MOZ_FLEXBOX
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
 #ifdef MOZ_FLEXBOX
   PRUint8       mAlignItems;            // [reset] see nsStyleConsts.h

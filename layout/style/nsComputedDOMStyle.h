@@ -361,6 +361,7 @@ private:
   /* CSS Flexbox properties */
   nsIDOMCSSValue* DoGetAlignItems();
   nsIDOMCSSValue* DoGetAlignSelf();
+  nsIDOMCSSValue* DoGetFlexBasis();
   nsIDOMCSSValue* DoGetFlexDirection();
   nsIDOMCSSValue* DoGetFlexGrow();
   nsIDOMCSSValue* DoGetFlexShrink();

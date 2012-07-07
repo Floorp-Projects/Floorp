@@ -1533,6 +1533,18 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mAlignSelf),
     eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
+    -moz-flex-basis,
+    flex_basis,
+    CSS_PROP_DOMPROP_PREFIXED(FlexBasis),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC,
+    "",
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    offsetof(nsStylePosition, mFlexBasis),
+    eStyleAnimType_Coord)
+CSS_PROP_POSITION(
     -moz-flex-direction,
     flex_direction,
     CSS_PROP_DOMPROP_PREFIXED(FlexDirection),

@@ -2962,6 +2962,27 @@ nsComputedDOMStyle::DoGetAlignSelf()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexBasis()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  // XXXdholbert We could make this more automagic and resolve percentages
+  // if we wanted, by passing in a PercentageBaseGetter instead of nsnull
+  // below.  Logic would go like this:
+  //   if (i'm a flex item) {
+  //     if (my flex container is horizontal) {
+  //       percentageBaseGetter = &nsComputedDOMStyle::GetCBContentWidth;
+  //     } else {
+  //       percentageBaseGetter = &nsComputedDOMStyle::GetCBContentHeight;
+  //     }
+  //   }
+
+  SetValueToCoord(val, GetStylePosition()->mFlexBasis, true,
+                  nsnull, nsCSSProps::kWidthKTable);
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetFlexDirection()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4725,6 +4746,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
 #ifdef MOZ_FLEXBOX
+    COMPUTED_STYLE_MAP_ENTRY(flex_basis,                    FlexBasis),
     COMPUTED_STYLE_MAP_ENTRY(flex_direction,                FlexDirection),
     COMPUTED_STYLE_MAP_ENTRY(flex_grow,                     FlexGrow),
     COMPUTED_STYLE_MAP_ENTRY(flex_shrink,                   FlexShrink),
