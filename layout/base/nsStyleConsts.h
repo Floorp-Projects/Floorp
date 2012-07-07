@@ -822,6 +822,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER   1
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE    2
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER  3
+#define NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE    4
 
 // See nsStyleSVG
 
