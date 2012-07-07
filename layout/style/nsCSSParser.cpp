@@ -574,6 +574,8 @@ protected:
   bool ParseColorStop(nsCSSValueGradient* aGradient);
   bool ParseGradient(nsCSSValue& aValue, bool aIsRadial,
                        bool aIsRepeating);
+  bool IsLegacyGradientLine(const nsCSSTokenType& aType,
+                            const nsString& aId);
   bool ParseGradientColorStops(nsCSSValueGradient* aGradient,
                                nsCSSValue& aValue);
 
@@ -4989,13 +4991,6 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
     = new nsCSSValueGradient(aIsRadial, aIsRepeating);
 
   // <gradient-line>
-  // N.B. ParseBoxPositionValues is not guaranteed to put back
-  // everything it scanned if it fails, so we must only call it
-  // if there is no alternative to consuming a <box-position>.
-  // ParseVariant, as used here, will either succeed and consume
-  // a single token, or fail and consume none, so we can be more
-  // cavalier about calling it.
-
   if (!GetToken(true)) {
     return false;
   }
@@ -5014,43 +5009,8 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
   cssGradient->mIsToCorner = toCorner;
   UngetToken();
 
-  bool haveGradientLine = false;
-  switch (ty) {
-  case eCSSToken_Percentage:
-  case eCSSToken_Number:
-  case eCSSToken_Dimension:
-    haveGradientLine = true;
-    break;
-
-  case eCSSToken_Function:
-    if (id.LowerCaseEqualsLiteral("-moz-calc")) {
-      haveGradientLine = true;
-      break;
-    }
-    // fall through
-  case eCSSToken_ID:
-  case eCSSToken_Ref:
-    // this is a color
-    break;
-
-  case eCSSToken_Ident: {
-    // This is only a gradient line if it's a box position keyword.
-    nsCSSKeyword kw = nsCSSKeywords::LookupKeyword(id);
-    PRInt32 junk;
-    if (kw != eCSSKeyword_UNKNOWN &&
-        nsCSSProps::FindKeyword(kw, nsCSSProps::kBackgroundPositionKTable,
-                                junk)) {
-      haveGradientLine = true;
-    }
-    break;
-  }
-
-  default:
-    // error
-    SkipUntil(')');
-    return false;
-  }
-
+  // <legacy-gradient-line>
+  bool haveGradientLine = IsLegacyGradientLine(ty, id);
   if (haveGradientLine) {
     if (toCorner) {
       // "to" syntax only allows box position keywords
@@ -5130,6 +5090,56 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
   }
 
   return ParseGradientColorStops(cssGradient, aValue);
+}
+
+bool
+CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
+                                    const nsString& aId)
+{
+  // N.B. ParseBoxPositionValues is not guaranteed to put back
+  // everything it scanned if it fails, so we must only call it
+  // if there is no alternative to consuming a <box-position>.
+  // ParseVariant, as used here, will either succeed and consume
+  // a single token, or fail and consume none, so we can be more
+  // cavalier about calling it.
+
+  bool haveGradientLine = false;
+  switch (aType) {
+  case eCSSToken_Percentage:
+  case eCSSToken_Number:
+  case eCSSToken_Dimension:
+    haveGradientLine = true;
+    break;
+
+  case eCSSToken_Function:
+    if (aId.LowerCaseEqualsLiteral("-moz-calc")) {
+      haveGradientLine = true;
+      break;
+    }
+    // fall through
+  case eCSSToken_ID:
+  case eCSSToken_Ref:
+    // this is a color
+    break;
+
+  case eCSSToken_Ident: {
+    // This is only a gradient line if it's a box position keyword.
+    nsCSSKeyword kw = nsCSSKeywords::LookupKeyword(aId);
+    PRInt32 junk;
+    if (kw != eCSSKeyword_UNKNOWN &&
+        nsCSSProps::FindKeyword(kw, nsCSSProps::kBackgroundPositionKTable,
+                                junk)) {
+      haveGradientLine = true;
+    }
+    break;
+  }
+
+  default:
+    // error
+    break;
+  }
+
+  return haveGradientLine;
 }
 
 bool
