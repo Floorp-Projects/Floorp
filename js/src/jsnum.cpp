@@ -619,54 +619,48 @@ num_toString(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
-    size_t thousandsLength, decimalLength;
-    const char *numGrouping, *tmpGroup;
-    JSRuntime *rt;
-    JSString *str;
-    const char *num, *end, *tmpSrc;
-    char *buf, *tmpDest;
-    const char *nint;
-    int digits, buflen, remainder, nrepeat;
-
     /*
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
     if (!num_toStringHelper(cx, num_toLocaleString, 0, vp))
-        return JS_FALSE;
+        return false;
+
     JS_ASSERT(vp->isString());
     JSAutoByteString numBytes(cx, vp->toString());
     if (!numBytes)
-        return JS_FALSE;
-    num = numBytes.ptr();
+        return false;
+    const char *num = numBytes.ptr();
     if (!num)
-        return JS_FALSE;
+        return false;
 
     /*
      * Find the first non-integer value, whether it be a letter as in
      * 'Infinity', a decimal point, or an 'e' from exponential notation.
      */
-    nint = num;
+    const char *nint = num;
     if (*nint == '-')
         nint++;
     while (*nint >= '0' && *nint <= '9')
         nint++;
-    digits = nint - num;
-    end = num + digits;
+    int digits = nint - num;
+    const char *end = num + digits;
     if (!digits)
-        return JS_TRUE;
+        return true;
 
-    rt = cx->runtime;
-    thousandsLength = strlen(rt->thousandsSeparator);
-    decimalLength = strlen(rt->decimalSeparator);
+    JSRuntime *rt = cx->runtime;
+    size_t thousandsLength = strlen(rt->thousandsSeparator);
+    size_t decimalLength = strlen(rt->decimalSeparator);
 
     /* Figure out how long resulting string will be. */
-    buflen = strlen(num);
+    int buflen = strlen(num);
     if (*nint == '.')
         buflen += decimalLength - 1; /* -1 to account for existing '.' */
 
+    const char *numGrouping;
+    const char *tmpGroup;
     numGrouping = tmpGroup = rt->numGrouping;
-    remainder = digits;
+    int remainder = digits;
     if (*num == '-')
         remainder--;
 
@@ -677,6 +671,8 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
         remainder -= *tmpGroup;
         tmpGroup++;
     }
+
+    int nrepeat;
     if (*tmpGroup == '\0' && *numGrouping != '\0') {
         nrepeat = (remainder - 1) / tmpGroup[-1];
         buflen += thousandsLength * nrepeat;
@@ -686,12 +682,12 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     }
     tmpGroup--;
 
-    buf = (char *)cx->malloc_(buflen + 1);
+    char *buf = (char *)cx->malloc_(buflen + 1);
     if (!buf)
-        return JS_FALSE;
+        return false;
 
-    tmpDest = buf;
-    tmpSrc = num;
+    char *tmpDest = buf;
+    const char *tmpSrc = num;
 
     while (*tmpSrc == '-' || remainder--) {
         JS_ASSERT(tmpDest - buf < buflen);
@@ -726,13 +722,13 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
         return ok;
     }
 
-    str = js_NewStringCopyN(cx, buf, buflen);
+    JSString *str = js_NewStringCopyN(cx, buf, buflen);
     cx->free_(buf);
     if (!str)
-        return JS_FALSE;
+        return false;
 
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
