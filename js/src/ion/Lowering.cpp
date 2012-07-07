@@ -1108,6 +1108,12 @@ LIRGenerator::visitElements(MElements *ins)
 }
 
 bool
+LIRGenerator::visitConstantElements(MConstantElements *ins)
+{
+    return define(new LPointer(ins->value(), LPointer::NON_GC_THING), ins);
+}
+
+bool
 LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {
@@ -1270,7 +1276,7 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
                                       temp());
     } else {
         check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
-                                 useRegister(ins->length()));
+                                 useRegisterOrConstant(ins->length()));
     }
     return assignSnapshot(check, Bailout_BoundsCheck) && add(check, ins);
 }

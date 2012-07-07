@@ -46,7 +46,9 @@
 #include "IonAnalysis.h"
 #include "IonSpewer.h"
 #include "frontend/BytecodeEmitter.h"
+
 #include "jsscriptinlines.h"
+#include "jstypedarrayinlines.h"
 
 #ifdef JS_THREADSAFE
 # include "prthread.h"
@@ -4432,6 +4434,28 @@ IonBuilder::jsop_getelem_dense()
     return pushTypeBarrier(load, types, barrier);
 }
 
+static MInstruction *
+GetTypedArrayLength(MDefinition *obj)
+{
+    if (obj->isConstant()) {
+        JSObject *array = &obj->toConstant()->value().toObject();
+        int32_t length = (int32_t) TypedArray::length(array);
+        return MConstant::New(Int32Value(length));
+    }
+    return MTypedArrayLength::New(obj);
+}
+
+static MInstruction *
+GetTypedArrayElements(MDefinition *obj)
+{
+    if (obj->isConstant()) {
+        JSObject *array = &obj->toConstant()->value().toObject();
+        void *data = TypedArray::viewData(array);
+        return MConstantElements::New(data);
+    }
+    return MTypedArrayElements::New(obj);
+}
+
 bool
 IonBuilder::jsop_getelem_typed(int arrayType)
 {
@@ -4483,14 +4507,14 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         }
 
         // Get the length.
-        MTypedArrayLength *length = MTypedArrayLength::New(obj);
+        MInstruction *length = GetTypedArrayLength(obj);
         current->add(length);
 
         // Bounds check.
         id = addBoundsCheck(id, length);
 
         // Get the elements vector.
-        MTypedArrayElements *elements = MTypedArrayElements::New(obj);
+        MInstruction *elements = GetTypedArrayElements(obj);
         current->add(elements);
 
         // Load the element.
@@ -4644,14 +4668,14 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     id = idInt32;
 
     // Get the length.
-    MTypedArrayLength *length = MTypedArrayLength::New(obj);
+    MInstruction *length = GetTypedArrayLength(obj);
     current->add(length);
 
     // Bounds check.
     id = addBoundsCheck(id, length);
 
     // Get the elements vector.
-    MTypedArrayElements *elements = MTypedArrayElements::New(obj);
+    MInstruction *elements = GetTypedArrayElements(obj);
     current->add(elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
@@ -4713,7 +4737,7 @@ IonBuilder::jsop_length_fastPath()
 
         if (!sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             MDefinition *obj = current->pop();
-            MTypedArrayLength *length = MTypedArrayLength::New(obj);
+            MInstruction *length = GetTypedArrayLength(obj);
             current->add(length);
             current->push(length);
             return true;

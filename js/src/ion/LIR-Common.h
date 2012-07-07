@@ -158,20 +158,40 @@ class LInteger : public LInstructionHelper<1, 0, 0>
     }
 };
 
-// Constant 64-bit gc-pointer.
+// Constant pointer.
 class LPointer : public LInstructionHelper<1, 0, 0>
 {
-    gc::Cell *ptr_;
+  public:
+    enum Kind {
+        GC_THING,
+        NON_GC_THING
+    };
+
+  private:
+    void *ptr_;
+    Kind kind_;
 
   public:
     LIR_HEADER(Pointer);
 
-    LPointer(gc::Cell *ptr) : ptr_(ptr)
+    LPointer(gc::Cell *ptr) : ptr_(ptr), kind_(GC_THING)
     { }
 
-    gc::Cell *ptr() const {
+    LPointer(void *ptr, Kind kind) : ptr_(ptr), kind_(kind)
+    { }
+
+    void *ptr() const {
         return ptr_;
     }
+    Kind kind() const {
+        return kind_;
+    }
+
+    gc::Cell *gcptr() const {
+        JS_ASSERT(kind() == GC_THING);
+        return (gc::Cell *) ptr_;
+    }
+
     const LDefinition *output() {
         return getDef(0);
     }
