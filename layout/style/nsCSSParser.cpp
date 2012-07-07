@@ -572,10 +572,8 @@ protected:
   bool ParseImageRect(nsCSSValue& aImage);
   bool ParseElement(nsCSSValue& aValue);
   bool ParseColorStop(nsCSSValueGradient* aGradient);
-  bool ParseLinearGradient(nsCSSValue& aValue, bool aIsRadial,
-                           bool aIsRepeating);
-  bool ParseRadialGradient(nsCSSValue& aValue, bool aIsRadial,
-                           bool aIsRepeating);
+  bool ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating);
+  bool ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating);
   bool IsLegacyGradientLine(const nsCSSTokenType& aType,
                             const nsString& aId);
   bool ParseGradientColorStops(nsCSSValueGradient* aGradient,
@@ -4516,16 +4514,16 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       eCSSToken_Function == tk->mType) {
     // a generated gradient
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient"))
-      return ParseLinearGradient(aValue, false, false);
+      return ParseLinearGradient(aValue, false);
 
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))
-      return ParseRadialGradient(aValue, true, false);
+      return ParseRadialGradient(aValue, false);
 
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient"))
-      return ParseLinearGradient(aValue, false, true);
+      return ParseLinearGradient(aValue, true);
 
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient"))
-      return ParseRadialGradient(aValue, true, true);
+      return ParseRadialGradient(aValue, true);
   }
   if ((aVariantMask & VARIANT_IMAGE_RECT) != 0 &&
       eCSSToken_Function == tk->mType &&
@@ -4986,11 +4984,10 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 //
 // <color-stops> : <color-stop> , <color-stop> [, <color-stop>]*
 bool
-CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRadial,
-                                   bool aIsRepeating)
+CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating)
 {
   nsRefPtr<nsCSSValueGradient> cssGradient
-    = new nsCSSValueGradient(aIsRadial, aIsRepeating);
+    = new nsCSSValueGradient(false, aIsRepeating);
 
   // <gradient-line>
   if (!GetToken(true)) {
@@ -5067,27 +5064,6 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRadial,
           return false;
         }
       }
-    }
-  }
-
-  // radial gradients might have a <gradient-shape-size> here
-  if (aIsRadial) {
-    bool haveShape =
-      ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
-                   nsCSSProps::kRadialGradientShapeKTable);
-    bool haveSize =
-      ParseVariant(cssGradient->mRadialSize, VARIANT_KEYWORD,
-                   nsCSSProps::kRadialGradientSizeKTable);
-
-    // could be in either order
-    if (!haveShape) {
-      haveShape =
-        ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
-                     nsCSSProps::kRadialGradientShapeKTable);
-    }
-    if ((haveShape || haveSize) && !ExpectSymbol(',', true)) {
-      SkipUntil(')');
-      return false;
     }
   }
 
@@ -5095,11 +5071,10 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRadial,
 }
 
 bool
-CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRadial,
-                                   bool aIsRepeating)
+CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating)
 {
   nsRefPtr<nsCSSValueGradient> cssGradient
-    = new nsCSSValueGradient(aIsRadial, aIsRepeating);
+    = new nsCSSValueGradient(true, aIsRepeating);
 
   // <gradient-line>
   if (!GetToken(true)) {
@@ -5180,24 +5155,22 @@ CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRadial,
   }
 
   // radial gradients might have a <gradient-shape-size> here
-  if (aIsRadial) {
-    bool haveShape =
+  bool haveShape =
+    ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
+                 nsCSSProps::kRadialGradientShapeKTable);
+  bool haveSize =
+    ParseVariant(cssGradient->mRadialSize, VARIANT_KEYWORD,
+                 nsCSSProps::kRadialGradientSizeKTable);
+
+  // could be in either order
+  if (!haveShape) {
+    haveShape =
       ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
                    nsCSSProps::kRadialGradientShapeKTable);
-    bool haveSize =
-      ParseVariant(cssGradient->mRadialSize, VARIANT_KEYWORD,
-                   nsCSSProps::kRadialGradientSizeKTable);
-
-    // could be in either order
-    if (!haveShape) {
-      haveShape =
-        ParseVariant(cssGradient->mRadialShape, VARIANT_KEYWORD,
-                     nsCSSProps::kRadialGradientShapeKTable);
-    }
-    if ((haveShape || haveSize) && !ExpectSymbol(',', true)) {
-      SkipUntil(')');
-      return false;
-    }
+  }
+  if ((haveShape || haveSize) && !ExpectSymbol(',', true)) {
+    SkipUntil(')');
+    return false;
   }
 
   return ParseGradientColorStops(cssGradient, aValue);
