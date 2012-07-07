@@ -1,6 +1,8 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
+2012/07/04  -- Synced with libpng-1.5.11 (bug #771394).
+
 2012/04/13  -- Synced with libpng-1.5.10 (bug #745178).
 
 2012/02/19  -- Synced with libpng-1.5.9 (bug #648690).
