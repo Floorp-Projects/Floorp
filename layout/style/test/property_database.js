@@ -746,6 +746,15 @@ var gCSSProperties = {
 		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
 		invalid_values: [ "space-between", "abc", "30px" ]
 	},
+	"-moz-align-self": {
+		domProp: "MozAlignSelf",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		// (Assuming defaults on the parent, 'auto' will compute to 'stretch'.)
+		initial_values: [ "auto", "stretch" ],
+		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
+		invalid_values: [ "space-between", "abc", "30px" ]
+	},
 	"-moz-flex-direction": {
 		domProp: "MozFlexDirection",
 		inherited: false,

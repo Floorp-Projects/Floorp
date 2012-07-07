@@ -408,6 +408,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // For convenience/clarity (since we use this default value in multiple places)
 #define NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE      NS_STYLE_ALIGN_ITEMS_STRETCH
 
+// The "align-self" property accepts all of the normal "align-items" values
+// (above) plus a special 'auto' value that computes to the parent's
+// "align-items" value. Our computed style code internally represents 'auto'
+// with this enum until we actually evaluate it:
+#define NS_STYLE_ALIGN_SELF_AUTO                5
+
 // See nsStylePosition
 #define NS_STYLE_FLEX_DIRECTION_ROW             0
 #define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1

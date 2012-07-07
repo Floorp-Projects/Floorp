@@ -352,6 +352,7 @@ public:
   static const PRInt32 kEmptyCellsKTable[];
 #ifdef MOZ_FLEXBOX
   static const PRInt32 kAlignItemsKTable[];
+  static const PRInt32 kAlignSelfKTable[];
   static const PRInt32 kFlexDirectionKTable[];
   static const PRInt32 kJustifyContentKTable[];
 #endif // MOZ_FLEXBOX
