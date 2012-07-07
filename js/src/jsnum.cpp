@@ -578,14 +578,14 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, int base);
 
-static JS_ALWAYS_INLINE bool
-num_toStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
+static JSBool
+num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     double d;
     bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, native, &d, &ok))
+    if (!BoxedPrimitiveMethodGuard(cx, args, num_toString, &d, &ok))
         return ok;
 
     int32_t base = 10;
@@ -611,23 +611,26 @@ num_toStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
 }
 
 static JSBool
-num_toString(JSContext *cx, unsigned argc, Value *vp)
-{
-    return num_toStringHelper(cx, num_toString, argc, vp);
-}
-
-static JSBool
 num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    double d;
+    bool ok;
+    if (!BoxedPrimitiveMethodGuard(cx, args, num_toLocaleString, &d, &ok))
+        return ok;
+
+    Rooted<JSString*> str(cx, js_NumberToStringWithBase(cx, d, 10));
+    if (!str) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
     /*
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!num_toStringHelper(cx, num_toLocaleString, 0, vp))
-        return false;
-
-    JS_ASSERT(vp->isString());
-    JSAutoByteString numBytes(cx, vp->toString());
+    JSAutoByteString numBytes(cx, str);
     if (!numBytes)
         return false;
     const char *num = numBytes.ptr();
@@ -645,8 +648,10 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
         nint++;
     int digits = nint - num;
     const char *end = num + digits;
-    if (!digits)
+    if (!digits) {
+        args.rval() = StringValue(str);
         return true;
+    }
 
     JSRuntime *rt = cx->runtime;
     size_t thousandsLength = strlen(rt->thousandsSeparator);
@@ -717,17 +722,20 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     }
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode) {
-        JSBool ok = cx->localeCallbacks->localeToUnicode(cx, buf, vp);
+        Rooted<Value> v(cx, StringValue(str));
+        bool ok = !!cx->localeCallbacks->localeToUnicode(cx, buf, v.address());
+        if (ok)
+            args.rval() = v;
         cx->free_(buf);
         return ok;
     }
 
-    JSString *str = js_NewStringCopyN(cx, buf, buflen);
+    str = js_NewStringCopyN(cx, buf, buflen);
     cx->free_(buf);
     if (!str)
         return false;
 
-    vp->setString(str);
+    args.rval() = StringValue(str);
     return true;
 }
 
