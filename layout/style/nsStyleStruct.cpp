@@ -1124,6 +1124,9 @@ nsStylePosition::nsStylePosition(void)
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
   mMaxHeight.SetNoneValue();
+#ifdef MOZ_FLEXBOX
+  mFlexBasis.SetAutoValue();
+#endif // MOZ_FLEXBOX
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
 #ifdef MOZ_FLEXBOX
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
@@ -1164,6 +1167,7 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   // If we're in a multi-line flex container, it also may affect our size
   // (and that of our container & siblings) by shuffling items between lines.
   if (mAlignSelf != aOther.mAlignSelf ||
+      mFlexBasis != aOther.mFlexBasis ||
       mFlexGrow != aOther.mFlexGrow ||
       mFlexShrink != aOther.mFlexShrink ||
       mOrder != aOther.mOrder) {
