@@ -127,11 +127,14 @@ public:
   PRUint8 mSize;   // NS_STYLE_GRADIENT_SIZE_*;
                    // not used (must be FARTHEST_CORNER) for linear shape
   bool mRepeating;
-  bool mToCorner;
+  bool mLegacySyntax;
 
   nsStyleCoord mBgPosX; // percent, coord, calc, none
   nsStyleCoord mBgPosY; // percent, coord, calc, none
   nsStyleCoord mAngle;  // none, angle
+
+  nsStyleCoord mRadiusX; // percent, coord, calc, none
+  nsStyleCoord mRadiusY; // percent, coord, calc, none
 
   // stops are in the order specified in the stylesheet
   nsTArray<nsStyleGradientStop> mStops;

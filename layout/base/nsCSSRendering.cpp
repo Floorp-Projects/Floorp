@@ -1675,13 +1675,16 @@ ComputeLinearGradientLine(nsPresContext* aPresContext,
     double angle;
     if (aGradient->mAngle.IsAngleValue()) {
       angle = aGradient->mAngle.GetAngleValueInRadians();
+      if (!aGradient->mLegacySyntax) {
+        angle = M_PI_2 - angle;
+      }
     } else {
       angle = -M_PI_2; // defaults to vertical gradient starting from top
     }
     gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
     *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
     *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
-  } else if (aGradient->mToCorner) {
+  } else if (!aGradient->mLegacySyntax) {
     float xSign = aGradient->mBgPosX.GetPercentValue() * 2 - 1;
     float ySign = 1 - aGradient->mBgPosY.GetPercentValue() * 2;
     double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
@@ -1696,6 +1699,7 @@ ComputeLinearGradientLine(nsPresContext* aPresContext,
       ConvertGradientValueToPixels(aGradient->mBgPosY, aBoxSize.height,
                                    appUnitsPerPixel));
     if (aGradient->mAngle.IsAngleValue()) {
+      MOZ_ASSERT(aGradient->mLegacySyntax);
       double angle = aGradient->mAngle.GetAngleValueInRadians();
       *aLineEnd = ComputeGradientLineEndFromAngle(*aLineStart, angle, aBoxSize);
     } else {
@@ -1775,6 +1779,14 @@ ComputeRadialGradientLine(nsPresContext* aPresContext,
       radiusX = offsetX*M_SQRT2;
       radiusY = offsetY*M_SQRT2;
     }
+    break;
+  }
+  case NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE: {
+    PRInt32 appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+    radiusX = ConvertGradientValueToPixels(aGradient->mRadiusX,
+                                           aBoxSize.width, appUnitsPerPixel);
+    radiusY = ConvertGradientValueToPixels(aGradient->mRadiusY,
+                                           aBoxSize.height, appUnitsPerPixel);
     break;
   }
   default:

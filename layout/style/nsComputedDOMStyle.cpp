@@ -1441,7 +1441,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   nsAutoString tokenString;
   nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
 
-  if (aGradient->mToCorner) {
+  if (!aGradient->mLegacySyntax) {
     AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
   } else {
     if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {

@@ -1399,10 +1399,12 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
   if (mShape != aOther.mShape ||
       mSize != aOther.mSize ||
       mRepeating != aOther.mRepeating ||
-      mToCorner != aOther.mToCorner ||
+      mLegacySyntax != aOther.mLegacySyntax ||
       mBgPosX != aOther.mBgPosX ||
       mBgPosY != aOther.mBgPosY ||
-      mAngle != aOther.mAngle)
+      mAngle != aOther.mAngle ||
+      mRadiusX != aOther.mRadiusX ||
+      mRadiusY != aOther.mRadiusY)
     return false;
 
   if (mStops.Length() != aOther.mStops.Length())
@@ -1421,7 +1423,7 @@ nsStyleGradient::nsStyleGradient(void)
   : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
   , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
   , mRepeating(false)
-  , mToCorner(false)
+  , mLegacySyntax(false)
 {
 }
 
