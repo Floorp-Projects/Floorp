@@ -738,6 +738,14 @@ var gCSSProperties = {
 	},
 /* XXXdholbert In builds with MOZ_FLEXBOX enabled, this should be uncommented.
    (This would be #ifdef MOZ_FLEXBOX, if that worked in JS files.)
+	"-moz-flex-direction": {
+		domProp: "MozFlexDirection",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "row" ],
+		other_values: [ "row-reverse", "column", "column-reverse" ],
+		invalid_values: [ "10px", "30%", "justify", "column wrap" ]
+	},
 	"-moz-order": {
 		domProp: "MozOrder",
 		inherited: false,
