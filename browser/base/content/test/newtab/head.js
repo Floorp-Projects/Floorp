@@ -7,7 +7,17 @@ Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
 
 let tmp = {};
 Cu.import("resource:///modules/NewTabUtils.jsm", tmp);
-let NewTabUtils = tmp.NewTabUtils;
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript("chrome://browser/content/sanitize.js", tmp);
+
+let {NewTabUtils, Sanitizer} = tmp;
+
+let uri = Services.io.newURI("about:newtab", null, null);
+let principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
+
+let sm = Services.domStorageManager;
+let storage = sm.getLocalStorageForPrincipal(principal, "");
 
 registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1)
@@ -15,11 +25,6 @@ registerCleanupFunction(function () {
 
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
 });
-
-/**
- * We'll want to restore the original links provider later.
- */
-let originalProvider = NewTabUtils.links._provider;
 
 /**
  * Provide the default test function to start our test runner.
@@ -58,9 +63,7 @@ let TestRunner = {
    */
   finish: function () {
     function cleanupAndFinish() {
-      // Restore the old provider.
-      NewTabUtils.links._provider = originalProvider;
-
+      clearHistory();
       whenPagesUpdated(finish);
       NewTabUtils.restore();
     }
@@ -113,17 +116,52 @@ function getCell(aIndex) {
  * @param aLinksPattern the pattern (see below)
  *
  * Example: setLinks("1,2,3")
- * Result: [{url: "about:blank#1", title: "site#1"},
- *          {url: "about:blank#2", title: "site#2"}
- *          {url: "about:blank#3", title: "site#3"}]
+ * Result: [{url: "http://example.com/#1", title: "site#1"},
+ *          {url: "http://example.com/#2", title: "site#2"}
+ *          {url: "http://example.com/#3", title: "site#3"}]
  */
-function setLinks(aLinksPattern) {
-  let links = aLinksPattern.split(/\s*,\s*/).map(function (id) {
-    return {url: "about:blank#" + id, title: "site#" + id};
-  });
+function setLinks(aLinks) {
+  let links = aLinks;
 
-  NewTabUtils.links._provider = {getLinks: function (c) c(links)};
-  NewTabUtils.links._links = links;
+  if (typeof links == "string") {
+    links = aLinks.split(/\s*,\s*/).map(function (id) {
+      return {url: "http://example.com/#" + id, title: "site#" + id};
+    });
+  }
+
+  clearHistory();
+  fillHistory(links, function () {
+    NewTabUtils.links.populateCache(function () {
+      NewTabUtils.allPages.update();
+      TestRunner.next();
+    }, true);
+  });
+}
+
+function clearHistory() {
+  PlacesUtils.history.removeAllPages();
+}
+
+function fillHistory(aLinks, aCallback) {
+  let numLinks = aLinks.length;
+  let transitionLink = Ci.nsINavHistoryService.TRANSITION_LINK;
+
+  for (let link of aLinks.reverse()) {
+    let place = {
+      uri: makeURI(link.url),
+      title: link.title,
+      visits: [{visitDate: Date.now() * 1000, transitionType: transitionLink}]
+    };
+
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+      handleError: function () ok(false, "couldn't add visit to history"),
+      handleResult: function () {},
+      handleCompletion: function () {
+        if (--numLinks == 0)
+          aCallback();
+      }
+    });
+  }
 }
 
 /**
@@ -132,23 +170,22 @@ function setLinks(aLinksPattern) {
  * @param aLinksPattern the pattern (see below)
  *
  * Example: setPinnedLinks("3,,1")
- * Result: 'about:blank#3' is pinned in the first cell. 'about:blank#1' is
+ * Result: 'http://example.com/#3' is pinned in the first cell. 'http://example.com/#1' is
  *         pinned in the third cell.
  */
-function setPinnedLinks(aLinksPattern) {
-  let pinnedLinks = [];
+function setPinnedLinks(aLinks) {
+  let links = aLinks;
 
-  aLinksPattern.split(/\s*,\s*/).forEach(function (id, index) {
-    let link;
+  if (typeof links == "string") {
+    links = aLinks.split(/\s*,\s*/).map(function (id) {
+      if (id)
+        return {url: "http://example.com/#" + id, title: "site#" + id};
+    });
+  }
 
-    if (id)
-      link = {url: "about:blank#" + id, title: "site#" + id};
-
-    pinnedLinks[index] = link;
-  });
-
-  // Inject the list of pinned links to work with.
-  NewTabUtils.pinnedLinks._links = pinnedLinks;
+  storage.setItem("pinnedLinks", JSON.stringify(links));
+  NewTabUtils.pinnedLinks.resetCache();
+  NewTabUtils.allPages.update();
 }
 
 /**
@@ -187,9 +224,9 @@ function addNewTabPageTab() {
  * @param the array of sites to compare with (optional)
  *
  * Example: checkGrid("3p,2,,1p")
- * Result: We expect the first cell to contain the pinned site 'about:blank#3'.
- *         The second cell contains 'about:blank#2'. The third cell is empty.
- *         The fourth cell contains the pinned site 'about:blank#4'.
+ * Result: We expect the first cell to contain the pinned site 'http://example.com/#3'.
+ *         The second cell contains 'http://example.com/#2'. The third cell is empty.
+ *         The fourth cell contains the pinned site 'http://example.com/#4'.
  */
 function checkGrid(aSitesPattern, aSites) {
   let length = aSitesPattern.split(",").length;
@@ -205,7 +242,7 @@ function checkGrid(aSitesPattern, aSites) {
     if (pinned != hasPinnedAttr)
       ok(false, "invalid state (site.isPinned() != site[pinned])");
 
-    return aSite.url.replace(/^about:blank#(\d+)$/, "$1") + (pinned ? "p" : "");
+    return aSite.url.replace(/^http:\/\/example\.com\/#(\d+)$/, "$1") + (pinned ? "p" : "");
   });
 
   is(current, aSitesPattern, "grid status = " + aSitesPattern);
@@ -246,7 +283,7 @@ function unpinCell(aIndex) {
 function simulateDrop(aDropIndex, aDragIndex) {
   let draggedSite;
   let {gDrag: drag, gDrop: drop} = getContentWindow();
-  let event = createDragEvent("drop", "about:blank#99\nblank");
+  let event = createDragEvent("drop", "http://example.com/#99\nblank");
 
   if (typeof aDragIndex != "undefined")
     draggedSite = getCell(aDragIndex).site;
