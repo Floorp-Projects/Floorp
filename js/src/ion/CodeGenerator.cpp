@@ -416,7 +416,10 @@ CodeGenerator::visitInteger(LInteger *lir)
 bool
 CodeGenerator::visitPointer(LPointer *lir)
 {
-    masm.movePtr(ImmGCPtr(lir->ptr()), ToRegister(lir->output()));
+    if (lir->kind() == LPointer::GC_THING)
+        masm.movePtr(ImmGCPtr(lir->gcptr()), ToRegister(lir->output()));
+    else
+        masm.movePtr(ImmWord(lir->ptr()), ToRegister(lir->output()));
     return true;
 }
 
@@ -1931,10 +1934,22 @@ CodeGenerator::visitNotV(LNotV *lir)
 bool
 CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
 {
-    if (lir->index()->isConstant())
-        masm.cmp32(ToRegister(lir->length()), Imm32(ToInt32(lir->index())));
-    else
-        masm.cmp32(ToRegister(lir->length()), ToRegister(lir->index()));
+    if (lir->index()->isConstant()) {
+        int32_t index = ToInt32(lir->index());
+        if (lir->length()->isConstant()) {
+            int32_t length = ToInt32(lir->length());
+            if (index < length)
+                return true;
+            return bailout(lir->snapshot());
+        }
+        masm.cmp32(ToRegister(lir->length()), Imm32(index));
+        return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
+    }
+    if (lir->length()->isConstant()) {
+        masm.cmp32(ToRegister(lir->index()), Imm32(ToInt32(lir->length())));
+        return bailoutIf(Assembler::Above, lir->snapshot());
+    }
+    masm.cmp32(ToRegister(lir->length()), ToRegister(lir->index()));
     return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
 }
 

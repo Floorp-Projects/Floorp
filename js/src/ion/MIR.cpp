@@ -360,6 +360,13 @@ MConstant::printOpcode(FILE *fp)
     }
 }
 
+void
+MConstantElements::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " %p", value());
+}
+
 MParameter *
 MParameter::New(int32 index, types::TypeSet *types)
 {

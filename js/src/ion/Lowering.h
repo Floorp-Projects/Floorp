@@ -162,6 +162,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
+    bool visitConstantElements(MConstantElements *ins);
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitFunctionEnvironment(MFunctionEnvironment *ins);
     bool visitStoreSlot(MStoreSlot *ins);
