@@ -39,6 +39,7 @@
 #include "jsapi.h"
 #include "prenv.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -297,18 +298,24 @@ RecordShutdownEndTimeStamp() {
 
   nsCString tmpName = name;
   tmpName += ".tmp";
-  PRFileDesc *f = PR_Open(tmpName.get(), PR_CREATE_FILE | PR_WRONLY,
-                          PR_IRUSR | PR_IWUSR);
+  FILE *f = fopen(tmpName.get(), "w");
   if (!f)
     return;
+  // On a normal release build this should be called just before
+  // calling _exit, but on a debug build or when the user forces a full
+  // shutdown this is called as late as possible, so we have to
+  // white list this write as write poisoning will be enabled.
+  int fd = fileno(f);
+  MozillaRegisterDebugFD(fd);
 
   TimeStamp now = TimeStamp::Now();
   MOZ_ASSERT(now >= gRecordedShutdownStartTime);
   TimeDuration diff = now - gRecordedShutdownStartTime;
   uint32_t diff2 = diff.ToMilliseconds();
-  uint32_t written = PR_fprintf(f, "%d\n", diff2);
-  PRStatus rv = PR_Close(f);
-  if (written == static_cast<uint32_t>(-1) || rv != PR_SUCCESS) {
+  int written = fprintf(f, "%d\n", diff2);
+  int rv = fclose(f);
+  MozillaUnRegisterDebugFD(fd);
+  if (written < 0 || rv != 0) {
     PR_Delete(tmpName.get());
     return;
   }
