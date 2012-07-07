@@ -2972,6 +2972,22 @@ nsComputedDOMStyle::DoGetFlexDirection()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexGrow()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mFlexGrow);
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexShrink()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mFlexShrink);
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetOrder()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4710,6 +4726,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
 #ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(flex_direction,                FlexDirection),
+    COMPUTED_STYLE_MAP_ENTRY(flex_grow,                     FlexGrow),
+    COMPUTED_STYLE_MAP_ENTRY(flex_shrink,                   FlexShrink),
 #endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         FontFeatureSettings),

@@ -1543,6 +1543,28 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexDirection),
     eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
+    -moz-flex-grow,
+    flex_grow,
+    CSS_PROP_DOMPROP_PREFIXED(FlexGrow),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexGrow),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    -moz-flex-shrink,
+    flex_shrink,
+    CSS_PROP_DOMPROP_PREFIXED(FlexShrink),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexShrink),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
     -moz-order,
     order,
     CSS_PROP_DOMPROP_PREFIXED(Order),

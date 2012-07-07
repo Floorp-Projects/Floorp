@@ -771,6 +771,12 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozFlexDirection;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozFlexGrow;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlexShrink;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozOrder;
                                         // raises(DOMException) on setting
 
