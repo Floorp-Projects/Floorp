@@ -908,37 +908,90 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   else if (eCSSUnit_Gradient == unit) {
     nsCSSValueGradient* gradient = GetGradientValue();
 
+    if (gradient->mIsLegacySyntax) {
+      aResult.AppendLiteral("-moz-");
+    }
     if (gradient->mIsRepeating) {
-      if (gradient->mIsRadial)
-        aResult.AppendLiteral("-moz-repeating-radial-gradient(");
-      else
-        aResult.AppendLiteral("-moz-repeating-linear-gradient(");
+      aResult.AppendLiteral("repeating-");
+    }
+    if (gradient->mIsRadial) {
+      aResult.AppendLiteral("radial-gradient(");
     } else {
-      if (gradient->mIsRadial)
-        aResult.AppendLiteral("-moz-radial-gradient(");
-      else
-        aResult.AppendLiteral("-moz-linear-gradient(");
+      aResult.AppendLiteral("linear-gradient(");
     }
 
-    if (!gradient->mIsLegacySyntax) {
-      aResult.AppendLiteral("to");
-      NS_ABORT_IF_FALSE(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
-                        gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
-                        "unexpected unit");
-      if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
-        aResult.AppendLiteral(" ");
-        gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
-                                                aResult);
+    bool needSep = false;
+    if (gradient->mIsRadial && !gradient->mIsLegacySyntax) {
+      if (!gradient->mIsExplicitSize) {
+        if (gradient->GetRadialShape().GetUnit() != eCSSUnit_None) {
+          NS_ABORT_IF_FALSE(gradient->GetRadialShape().GetUnit() ==
+                            eCSSUnit_Enumerated,
+                            "bad unit for radial gradient shape");
+          PRInt32 intValue = gradient->GetRadialShape().GetIntValue();
+          NS_ABORT_IF_FALSE(intValue != NS_STYLE_GRADIENT_SHAPE_LINEAR,
+                            "radial gradient with linear shape?!");
+          AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                                 nsCSSProps::kRadialGradientShapeKTable),
+                             aResult);
+          needSep = true;
+        }
+
+        if (gradient->GetRadialSize().GetUnit() != eCSSUnit_None) {
+          if (needSep) {
+            aResult.AppendLiteral(" ");
+          }
+          NS_ABORT_IF_FALSE(gradient->GetRadialSize().GetUnit() ==
+                            eCSSUnit_Enumerated,
+                            "bad unit for radial gradient size");
+          PRInt32 intValue = gradient->GetRadialSize().GetIntValue();
+          AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                                 nsCSSProps::kRadialGradientSizeKTable),
+                             aResult);
+          needSep = true;
+        }
+      } else {
+        NS_ABORT_IF_FALSE(gradient->GetRadiusX().GetUnit() != eCSSUnit_None,
+                          "bad unit for radial gradient explicit size");
+        gradient->GetRadiusX().AppendToString(aProperty, aResult);
+        if (gradient->GetRadiusY().GetUnit() != eCSSUnit_None) {
+          aResult.AppendLiteral(" ");
+          gradient->GetRadiusY().AppendToString(aProperty, aResult);
+        }
+        needSep = true;
       }
-      if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
-        aResult.AppendLiteral(" ");
-        gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
-                                                aResult);
+    }
+    if (!gradient->mIsRadial && !gradient->mIsLegacySyntax) {
+      if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
+          gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None) {
+        MOZ_ASSERT(gradient->mAngle.GetUnit() == eCSSUnit_None);
+        NS_ABORT_IF_FALSE(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
+                          gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
+                          "unexpected unit");
+        aResult.AppendLiteral("to");
+        if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+          aResult.AppendLiteral(" ");
+          gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
+                                                  aResult);
+        }
+        if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+          aResult.AppendLiteral(" ");
+          gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
+                                                  aResult);
+        }
+        needSep = true;
+      } else if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
+        gradient->mAngle.AppendToString(aProperty, aResult);
+        needSep = true;
       }
-      aResult.AppendLiteral(", ");
     } else if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None ||
         gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None ||
         gradient->mAngle.GetUnit() != eCSSUnit_None) {
+      if (needSep) {
+        aResult.AppendLiteral(" ");
+      }
+      if (gradient->mIsRadial && !gradient->mIsLegacySyntax) {
+        aResult.AppendLiteral("at ");
+      }
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
         gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
                                                 aResult);
@@ -950,14 +1003,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         aResult.AppendLiteral(" ");
       }
       if (gradient->mAngle.GetUnit() != eCSSUnit_None) {
+        NS_ABORT_IF_FALSE(gradient->mIsLegacySyntax,
+                          "angle is allowed only for legacy syntax");
         gradient->mAngle.AppendToString(aProperty, aResult);
       }
-      aResult.AppendLiteral(", ");
+      needSep = true;
     }
 
-    if (gradient->mIsRadial &&
+    if (gradient->mIsRadial && gradient->mIsLegacySyntax &&
         (gradient->GetRadialShape().GetUnit() != eCSSUnit_None ||
          gradient->GetRadialSize().GetUnit() != eCSSUnit_None)) {
+      MOZ_ASSERT(!gradient->mIsExplicitSize);
+      if (needSep) {
+        aResult.AppendLiteral(", ");
+      }
       if (gradient->GetRadialShape().GetUnit() != eCSSUnit_None) {
         NS_ABORT_IF_FALSE(gradient->GetRadialShape().GetUnit() ==
                           eCSSUnit_Enumerated,
@@ -980,6 +1039,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
                                nsCSSProps::kRadialGradientSizeKTable),
                            aResult);
       }
+      needSep = true;
+    }
+    if (needSep) {
       aResult.AppendLiteral(", ");
     }
 
