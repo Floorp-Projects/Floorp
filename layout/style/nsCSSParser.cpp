@@ -572,8 +572,10 @@ protected:
   bool ParseImageRect(nsCSSValue& aImage);
   bool ParseElement(nsCSSValue& aValue);
   bool ParseColorStop(nsCSSValueGradient* aGradient);
-  bool ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating);
-  bool ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating);
+  bool ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating,
+                           bool aIsLegacy);
+  bool ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating,
+                           bool aIsLegacy);
   bool IsLegacyGradientLine(const nsCSSTokenType& aType,
                             const nsString& aId);
   bool ParseGradientColorStops(nsCSSValueGradient* aGradient,
@@ -4513,17 +4515,24 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   if ((aVariantMask & VARIANT_GRADIENT) != 0 &&
       eCSSToken_Function == tk->mType) {
     // a generated gradient
-    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient"))
-      return ParseLinearGradient(aValue, false);
+    nsDependentString tmp(tk->mIdent, 0);
+    bool isLegacy = false;
+    if (StringBeginsWith(tmp, NS_LITERAL_STRING("-moz-"))) {
+      tmp.Rebind(tmp, 5);
+      isLegacy = true;
+    }
+    bool isRepeating = false;
+    if (StringBeginsWith(tmp, NS_LITERAL_STRING("repeating-"))) {
+      tmp.Rebind(tmp, 10);
+      isRepeating = true;
+    }
 
-    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))
-      return ParseRadialGradient(aValue, false);
-
-    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient"))
-      return ParseLinearGradient(aValue, true);
-
-    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient"))
-      return ParseRadialGradient(aValue, true);
+    if (tmp.LowerCaseEqualsLiteral("linear-gradient")) {
+      return ParseLinearGradient(aValue, isRepeating, isLegacy);
+    }
+    if (tmp.LowerCaseEqualsLiteral("radial-gradient")) {
+      return ParseRadialGradient(aValue, isRepeating, isLegacy);
+    }
   }
   if ((aVariantMask & VARIANT_IMAGE_RECT) != 0 &&
       eCSSToken_Function == tk->mType &&
@@ -4984,7 +4993,8 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 //
 // <color-stops> : <color-stop> , <color-stop> [, <color-stop>]*
 bool
-CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating)
+CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating,
+                                   bool aIsLegacy)
 {
   nsRefPtr<nsCSSValueGradient> cssGradient
     = new nsCSSValueGradient(false, aIsRepeating);
@@ -5071,7 +5081,8 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue, bool aIsRepeating)
 }
 
 bool
-CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating)
+CSSParserImpl::ParseRadialGradient(nsCSSValue& aValue, bool aIsRepeating,
+                                   bool aIsLegacy)
 {
   nsRefPtr<nsCSSValueGradient> cssGradient
     = new nsCSSValueGradient(true, aIsRepeating);
@@ -6131,7 +6142,11 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       }
     } else if (tt == eCSSToken_URL ||
                (tt == eCSSToken_Function &&
-                (mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
+                (mToken.mIdent.LowerCaseEqualsLiteral("linear-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("radial-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("repeating-linear-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("repeating-radial-gradient") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
                  mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
                  mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
                  mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
