@@ -399,6 +399,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 #ifdef MOZ_FLEXBOX
 // See nsStylePosition
+#define NS_STYLE_FLEX_DIRECTION_ROW             0
+#define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1
+#define NS_STYLE_FLEX_DIRECTION_COLUMN          2
+#define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE  3
+
+// See nsStylePosition
 // NOTE: This is the initial value of the integer-valued 'order' property
 // (rather than an internal numerical representation of some keyword).
 #define NS_STYLE_ORDER_INITIAL                  0
