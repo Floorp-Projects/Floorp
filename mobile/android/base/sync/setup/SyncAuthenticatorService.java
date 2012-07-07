@@ -9,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
@@ -159,6 +160,36 @@ public class SyncAuthenticatorService extends Service {
         throws NetworkErrorException {
       Logger.debug(LOG_TAG, "updateCredentials()");
       return null;
+    }
+
+    /**
+     * Bug 769745: persist pickled Sync account settings so that we can unpickle
+     * after Fennec is moved to the SD card.
+     * <p>
+     * This is <b>not</b> called when an Android Account is blown away due to the
+     * SD card being unmounted.
+     * <p>
+     * This is a terrible hack, but it's better than the catching the generic
+     * "accounts changed" broadcast intent and trying to figure out whether our
+     * Account disappeared.
+     */
+    @Override
+    public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account) throws NetworkErrorException {
+      Bundle result = super.getAccountRemovalAllowed(response, account);
+
+      if (result != null &&
+          result.containsKey(AccountManager.KEY_BOOLEAN_RESULT) &&
+          !result.containsKey(AccountManager.KEY_INTENT)) {
+        final boolean removalAllowed = result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT);
+
+        if (removalAllowed) {
+          Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
+              "deleting saved pickle file '" + Constants.ACCOUNT_PICKLE_FILENAME + "'.");
+          AccountPickler.deletePickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME);
+        }
+      }
+
+      return result;
     }
   }
 }
