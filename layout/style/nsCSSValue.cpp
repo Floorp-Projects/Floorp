@@ -920,7 +920,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
         aResult.AppendLiteral("-moz-linear-gradient(");
     }
 
-    if (gradient->mIsToCorner) {
+    if (!gradient->mIsLegacySyntax) {
       aResult.AppendLiteral("to");
       NS_ABORT_IF_FALSE(gradient->mBgPos.mXValue.GetUnit() == eCSSUnit_Enumerated &&
                         gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
@@ -1699,7 +1699,7 @@ nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
                                        bool aIsRepeating)
   : mIsRadial(aIsRadial),
     mIsRepeating(aIsRepeating),
-    mIsToCorner(false),
+    mIsLegacySyntax(false),
     mBgPos(eCSSUnit_None),
     mAngle(eCSSUnit_None),
     mRadialShape(eCSSUnit_None),
