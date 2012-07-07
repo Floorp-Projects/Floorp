@@ -31,8 +31,7 @@ class SyncPreference extends Preference {
         final String accountType = org.mozilla.gecko.sync.setup.Constants.ACCOUNTTYPE_SYNC;
 
         // Show Sync setup if no accounts exist; otherwise, show account settings.
-        Account[] accounts = AccountManager.get(mContext).getAccountsByType(accountType);
-        if (accounts.length > 0) {
+        if (SyncAccounts.syncAccountsExist(mContext)) {
             SyncAccounts.openSyncSettings(mContext);
         } else {
             Intent intent = new Intent(mContext, SetupSyncActivity.class);
