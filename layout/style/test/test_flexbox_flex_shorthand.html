@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <title>Test for Bug 696253</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 696253 **/
+/* (Testing the [-moz-]flex CSS shorthand property) */
+
+const gFlexPropName = "-moz-flex";
+const gFlexPropInfo = gCSSProperties[gFlexPropName];
+
+// Default values for shorthand subproperties, when they're not specified
+// explicitly in a testcase.  This lets the testcases be more concise.
+//
+// The values here are from the flexbox spec on the 'flex' shorthand:
+//   "When omitted, [flex-grow and flex-shrink] are set to '1'.
+//   "If omitted, the flex basis defaults to 0%"
+let gFlexShorthandDefaults = {
+    "-moz-flex-grow":   "1",
+    "-moz-flex-shrink": "1",
+    "-moz-flex-basis":  "0%"
+};
+
+let gFlexShorthandTestcases = [
+/*
+  {
+    "-moz-flex":        "SPECIFIED value for flex shorthand",
+
+    // Expected Computed Values of Subproperties
+    // Semi-optional -- if unspecified, the expected value is taken
+    // from gFlexShorthandDefaults.
+    "-moz-flex-grow":   "EXPECTED computed value for flex-grow property",
+    "-moz-flex-shrink": "EXPECTED computed value for flex-shrink property",
+    "-moz-flex-basis":  "EXPECTED computed value for flex-basis property",
+  }, 
+*/
+
+  // Initial values of subproperties:
+  // --------------------------------
+  // (checked by another test that uses property_database.js, too, but
+  // might as well check here, too, for thoroughness).
+  {
+    "-moz-flex":        "",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "1",
+    "-moz-flex-basis":  "auto",
+  },
+  {
+    "-moz-flex":        "-moz-initial",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "1",
+    "-moz-flex-basis":  "auto",
+  },
+
+  // Special keyword "none" --> "0 0 auto"
+  // -------------------------------------
+  {
+    "-moz-flex":        "none",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "0",
+    "-moz-flex-basis":  "auto",
+  },
+
+  // One Value (numeric) --> sets flex-grow
+  // --------------------------------------
+  {
+    "-moz-flex":        "0",
+    "-moz-flex-grow":   "0",
+  },
+  {
+    "-moz-flex":        "5",
+    "-moz-flex-grow":   "5",
+  },
+  {
+    "-moz-flex":        "1000",
+    "-moz-flex-grow":   "1000",
+  },
+  {
+    "-moz-flex":        "0.0000001",
+    "-moz-flex-grow":   "1e-7"
+  },
+  {
+    "-moz-flex":        "20000000",
+    "-moz-flex-grow":   "2e+7"
+  },
+
+  // One Value (length or other nonnumeric) --> sets flex-basis
+  // ----------------------------------------------------------
+  {
+    "-moz-flex":        "0px",
+    "-moz-flex-basis":  "0px",
+  },
+  {
+    "-moz-flex":        "0%",
+    "-moz-flex-basis":  "0%",
+  },
+  {
+    "-moz-flex":        "25px",
+    "-moz-flex-basis":  "25px",
+  },
+  {
+    "-moz-flex":        "5%",
+    "-moz-flex-basis":  "5%",
+  },
+  {
+    "-moz-flex":        "auto",
+    "-moz-flex-basis":  "auto",
+  },
+  {
+    "-moz-flex":        "-moz-fit-content",
+    "-moz-flex-basis":  "-moz-fit-content",
+  },
+  {
+    "-moz-flex":        "-moz-calc(5px + 6px)",
+    "-moz-flex-basis":  "11px",
+  },
+  {
+    "-moz-flex":        "-moz-calc(15% + 30px)",
+    "-moz-flex-basis":  "-moz-calc(30px + 15%)",
+  },
+
+  // Two Values (numeric) --> sets flex-grow, flex-shrink
+  // ----------------------------------------------------
+  {
+    "-moz-flex":        "0 0",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "0",
+  },
+  {
+    "-moz-flex":        "0 2",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "2",
+  },
+  {
+    "-moz-flex":        "3 0",
+    "-moz-flex-grow":   "3",
+    "-moz-flex-shrink": "0",
+  },
+  {
+    "-moz-flex":        "0.5000 2.03",
+    "-moz-flex-grow":   "0.5",
+    "-moz-flex-shrink": "2.03",
+  },
+  {
+    "-moz-flex":        "300.0 500.0",
+    "-moz-flex-grow":   "300",
+    "-moz-flex-shrink": "500",
+  },
+
+  // Two Values (numeric & length-ish) --> sets flex-grow, flex-basis
+  // ----------------------------------------------------------------
+  {
+    "-moz-flex":        "0 0px",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-basis":  "0px",
+  },
+  {
+    "-moz-flex":        "0 0%",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-basis":  "0%",
+  },
+  {
+    "-moz-flex":        "10 30px",
+    "-moz-flex-grow":   "10",
+    "-moz-flex-basis":  "30px",
+  },
+  {
+    "-moz-flex":        "99px 2.3",
+    "-moz-flex-grow":   "2.3",
+    "-moz-flex-basis":  "99px",
+  },
+  {
+    "-moz-flex":        "99% 6",
+    "-moz-flex-grow":   "6",
+    "-moz-flex-basis":  "99%",
+  },
+  {
+    "-moz-flex":        "auto 5",
+    "-moz-flex-grow":   "5",
+    "-moz-flex-basis":  "auto",
+  },
+  {
+    "-moz-flex":        "5 -moz-fit-content",
+    "-moz-flex-grow":   "5",
+    "-moz-flex-basis":  "-moz-fit-content",
+  },
+  {
+    "-moz-flex":        "-moz-calc(5% + 10px) 3",
+    "-moz-flex-grow":   "3",
+    "-moz-flex-basis":  "-moz-calc(10px + 5%)",
+  },
+
+  // Three Values --> Sets all three subproperties
+  // ---------------------------------------------
+  {
+    "-moz-flex":        "0.0 0.00 0px",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "0",
+    "-moz-flex-basis":  "0px",
+  },
+  {
+    "-moz-flex":        "0% 0 0",
+    "-moz-flex-grow":   "0",
+    "-moz-flex-shrink": "0",
+    "-moz-flex-basis":  "0%",
+  },
+  {
+    "-moz-flex":        "10px 3 2",
+    "-moz-flex-grow":   "3",
+    "-moz-flex-shrink": "2",
+    "-moz-flex-basis":  "10px",
+  },
+];
+
+function runFlexShorthandTest(aFlexShorthandTestcase)
+{
+  let content = document.getElementById("content");
+
+  let elem = document.createElement("div");
+
+  elem.style[gFlexPropInfo.domProp] = aFlexShorthandTestcase[gFlexPropName];
+  content.appendChild(elem); 
+
+  gFlexPropInfo.subproperties.forEach(function(aSubPropName) {
+    var expectedVal = aSubPropName in aFlexShorthandTestcase ?
+     aFlexShorthandTestcase[aSubPropName] :
+     gFlexShorthandDefaults[aSubPropName];
+
+    // Compare computed value against expected computed value (from testcase)
+    is(window.getComputedStyle(elem, null).getPropertyValue(aSubPropName),
+       expectedVal,
+       "Computed value of subproperty \"" + aSubPropName + "\" when we set \"" +
+       gFlexPropName + ": " + aFlexShorthandTestcase[gFlexPropName] + "\"");
+  });
+
+  // Clean up
+  content.removeChild(elem);
+}
+
+// Run the tests!
+gFlexShorthandTestcases.forEach(runFlexShorthandTest)
+
+</script>
+</pre>
+</body>
+</html>
