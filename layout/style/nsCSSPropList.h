@@ -1532,6 +1532,12 @@ CSS_PROP_POSITION(
     kAlignSelfKTable,
     offsetof(nsStylePosition, mAlignSelf),
     eStyleAnimType_EnumU8)
+CSS_PROP_SHORTHAND(
+    -moz-flex,
+    flex,
+    CSS_PROP_DOMPROP_PREFIXED(Flex),
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
 CSS_PROP_POSITION(
     -moz-flex-basis,
     flex_basis,
@@ -1540,6 +1546,9 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
     VARIANT_AHKLP | VARIANT_CALC,
     kWidthKTable,
     offsetof(nsStylePosition, mFlexBasis),
@@ -1561,6 +1570,9 @@ CSS_PROP_POSITION(
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
     VARIANT_HN,
     nsnull,
     offsetof(nsStylePosition, mFlexGrow),
@@ -1572,6 +1584,9 @@ CSS_PROP_POSITION(
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
     "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
     VARIANT_HN,
     nsnull,
     offsetof(nsStylePosition, mFlexShrink),

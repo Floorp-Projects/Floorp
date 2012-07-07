@@ -755,6 +755,46 @@ var gCSSProperties = {
 		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
 		invalid_values: [ "space-between", "abc", "30px" ]
 	},
+	"-moz-flex": {
+		domProp: "MozFlex",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"-moz-flex-grow",
+			"-moz-flex-shrink",
+			"-moz-flex-basis"
+		],
+		initial_values: [ "0 1 auto", "auto 0 1", "0 auto", "auto 0" ],
+		other_values: [
+			"none",
+			"1",
+			"0",
+			"0 1",
+			"0.5",
+			"1.2 3.4",
+			"0 0 0px",
+			"0px 0 0",
+			"5px 0 0",
+			"2 auto",
+			"auto 4",
+			"auto 5.6 7.8",
+			"-moz-max-content",
+			"1 -moz-max-content",
+			"1 2 -moz-max-content",
+			"-moz-max-content 1",
+			"-moz-max-content 1 2",
+			"-0"
+		],
+		invalid_values: [
+			"0 0 0",
+			"1 2px 3",
+			"1 auto 3",
+			"1px 2 3px",
+			"1px 2 3 4px",
+			"-1",
+			"1 -1"
+		]
+	},
 	"-moz-flex-basis": {
 		domProp: "MozFlexBasis",
 		inherited: false,
