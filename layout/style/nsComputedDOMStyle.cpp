@@ -2936,6 +2936,32 @@ nsComputedDOMStyle::DoGetAlignItems()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAlignSelf()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  PRUint8 computedAlignSelf = GetStylePosition()->mAlignSelf;
+
+  if (computedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
+    // "align-self: auto" needs to compute to parent's align-items value.
+    nsStyleContext* parentStyleContext = mStyleContextHolder->GetParent();
+    if (parentStyleContext) {
+      computedAlignSelf =
+        parentStyleContext->GetStylePosition()->mAlignItems;
+    } else {
+      // No parent --> use default.
+      computedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+    }
+  }
+
+  NS_ABORT_IF_FALSE(computedAlignSelf != NS_STYLE_ALIGN_SELF_AUTO,
+                    "Should have swapped out 'auto' for something non-auto");
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(computedAlignSelf,
+                                   nsCSSProps::kAlignSelfKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetFlexDirection()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4651,6 +4677,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
 
 #ifdef MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(align_items,                   AlignItems),
+    COMPUTED_STYLE_MAP_ENTRY(align_self,                    AlignSelf),
 #endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
