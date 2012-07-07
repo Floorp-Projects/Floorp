@@ -476,6 +476,11 @@ protected:
   bool ParseCalcTerm(nsCSSValue& aValue, PRInt32& aVariantMask);
   bool RequireWhitespace();
 
+#ifdef MOZ_FLEXBOX
+  // For "flex" shorthand property, defined in CSS3 Flexbox
+  bool ParseFlex();
+#endif
+
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
   bool ParseColumns();
@@ -4831,6 +4836,116 @@ CSSParserImpl::ParseElement(nsCSSValue& aValue)
   return false;
 }
 
+#ifdef MOZ_FLEXBOX
+// flex: none | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
+bool
+CSSParserImpl::ParseFlex()
+{
+  // First check for inherit / initial
+  nsCSSValue tmpVal;
+  if (ParseVariant(tmpVal, VARIANT_INHERIT, nsnull)) {
+    AppendValue(eCSSProperty_flex_grow, tmpVal);
+    AppendValue(eCSSProperty_flex_shrink, tmpVal);
+    AppendValue(eCSSProperty_flex_basis, tmpVal);
+    return true;
+  }
+
+  // Next, check for 'none' == '0 0 auto'
+  if (ParseVariant(tmpVal, VARIANT_NONE, nsnull)) {
+    AppendValue(eCSSProperty_flex_grow, nsCSSValue(0.0f, eCSSUnit_Number));
+    AppendValue(eCSSProperty_flex_shrink, nsCSSValue(0.0f, eCSSUnit_Number));
+    AppendValue(eCSSProperty_flex_basis, nsCSSValue(eCSSUnit_Auto));
+    return true;
+  }
+
+  // OK, try parsing our value as individual per-subproperty components:
+  //   [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
+
+  // Each subproperty has a default value that it takes when it's omitted in a
+  // "flex" shorthand value. These default values are *only* for the shorthand
+  // syntax -- they're distinct from the subproperties' own initial values.  We
+  // start with each subproperty at its default, as if we had "flex: 1 1 0%".
+  nsCSSValue flexGrow(1.0f, eCSSUnit_Number);
+  nsCSSValue flexShrink(1.0f, eCSSUnit_Number);
+  nsCSSValue flexBasis(0.0f, eCSSUnit_Percent);
+
+  // OVERVIEW OF PARSING STRATEGY:
+  // =============================
+  // a) Parse the first component as either flex-basis or flex-grow.
+  // b) If it wasn't flex-grow, parse the _next_ component as flex-grow.
+  // c) Now we've just parsed flex-grow -- so try parsing the next thing as
+  //    flex-shrink.
+  // d) Finally: If we didn't get flex-basis at the beginning, try to parse
+  //    it now, at the end.
+  //
+  // More details in each section below.
+
+  // (a) Parse first component. It's either 'flex-basis' or 'flex-grow', so
+  // we allow anything that would be legal to specify for the 'flex-basis'
+  // property (except for "inherit") and we also allow VARIANT_NUMBER so that
+  // we'll accept 'flex-grow' values (and importantly, so that we'll treat
+  // unitless 0 as a number instead of a length, since the flexbox spec
+  // disallows unitless 0 as a flex-basis value in the shorthand).
+  PRUint32 variantMask = VARIANT_NUMBER |
+    (nsCSSProps::ParserVariant(eCSSProperty_flex_basis) & ~(VARIANT_INHERIT));
+
+  if (!ParseNonNegativeVariant(tmpVal, variantMask, nsCSSProps::kWidthKTable)) {
+    // First component was not a valid flex-basis or flex-grow value. Fail.
+    return false;
+  }
+
+  // Record what we just parsed as either flex-basis or flex-grow:
+  bool wasFirstComponentFlexBasis = (tmpVal.GetUnit() != eCSSUnit_Number);
+  (wasFirstComponentFlexBasis ? flexBasis : flexGrow) = tmpVal;
+
+  // (b) If we didn't get flex-grow yet, parse _next_ component as flex-grow.
+  bool doneParsing = false;
+  if (wasFirstComponentFlexBasis) {
+    if (ParseNonNegativeVariant(tmpVal, VARIANT_NUMBER, nsnull)) {
+      flexGrow = tmpVal;
+    } else {
+      // Failed to parse anything after our flex-basis -- that's fine. We can
+      // skip the remaining parsing.
+      doneParsing = true;
+    }
+  }
+
+  if (!doneParsing) {
+    // (c) OK -- the last thing we parsed was flex-grow, so look for a
+    //     flex-shrink in the next position.
+    if (ParseNonNegativeVariant(tmpVal, VARIANT_NUMBER, nsnull)) {
+      flexShrink = tmpVal;
+    }
+ 
+    // d) Finally: If we didn't get flex-basis at the beginning, try to parse
+    //    it now, at the end.
+    //
+    // NOTE: Even though we're looking for a (length-ish) flex-basis value, we
+    // *do* need to pass VARIANT_NUMBER as part of |variantMask| here.  This
+    // ensures that we'll parse unitless '0' as a number, rather than as a
+    // length, so that we can reject it (along with any other number) below.
+    // (The flexbox spec disallows unitless '0' as a flex-basis value in the
+    // 'flex' shorthand.)
+    if (!wasFirstComponentFlexBasis &&
+        ParseNonNegativeVariant(tmpVal, variantMask,
+                                nsCSSProps::kWidthKTable)) {
+      if (tmpVal.GetUnit() == eCSSUnit_Number) {
+        // This is where we reject "0 0 0" (which the spec says is invalid,
+        // because we must reject unitless 0 as a flex-basis value).
+        return false;
+      }
+      flexBasis = tmpVal;
+    }
+  }
+
+  AppendValue(eCSSProperty_flex_grow,   flexGrow);
+  AppendValue(eCSSProperty_flex_shrink, flexShrink);
+  AppendValue(eCSSProperty_flex_basis,  flexBasis);
+
+  return true;
+}
+#endif
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -5488,6 +5603,10 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseCounterData(aPropID);
   case eCSSProperty_cursor:
     return ParseCursor();
+#ifdef MOZ_FLEXBOX
+  case eCSSProperty_flex:
+    return ParseFlex();
+#endif // MOZ_FLEXBOX
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:
