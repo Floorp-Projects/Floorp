@@ -574,6 +574,8 @@ protected:
   bool ParseColorStop(nsCSSValueGradient* aGradient);
   bool ParseGradient(nsCSSValue& aValue, bool aIsRadial,
                        bool aIsRepeating);
+  bool ParseGradientColorStops(nsCSSValueGradient* aGradient,
+                               nsCSSValue& aValue);
 
   void SetParsingCompoundProperty(bool aBool) {
     mParsingCompoundProperty = aBool;
@@ -5127,17 +5129,24 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
     }
   }
 
+  return ParseGradientColorStops(cssGradient, aValue);
+}
+
+bool
+CSSParserImpl::ParseGradientColorStops(nsCSSValueGradient* aGradient,
+                                       nsCSSValue& aValue)
+{
   // At least two color stops are required
-  if (!ParseColorStop(cssGradient) ||
+  if (!ParseColorStop(aGradient) ||
       !ExpectSymbol(',', true) ||
-      !ParseColorStop(cssGradient)) {
+      !ParseColorStop(aGradient)) {
     SkipUntil(')');
     return false;
   }
 
   // Additional color stops
   while (ExpectSymbol(',', true)) {
-    if (!ParseColorStop(cssGradient)) {
+    if (!ParseColorStop(aGradient)) {
       SkipUntil(')');
       return false;
     }
@@ -5148,7 +5157,7 @@ CSSParserImpl::ParseGradient(nsCSSValue& aValue, bool aIsRadial,
     return false;
   }
 
-  aValue.SetGradientValue(cssGradient);
+  aValue.SetGradientValue(aGradient);
   return true;
 }
 
