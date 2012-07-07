@@ -11,6 +11,7 @@ import android.util.Log;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.RuntimeException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,6 +89,8 @@ public class testSearchSuggestions extends BaseTest {
     }
 
     private void connectSuggestClient(final Activity awesomeBarActivity) {
+        final int awesomeBarTabsId = mDriver.findElement(getActivity(), "awesomebar_tabs").getId();
+
         try {
             // create a SuggestClient that uses robocop_suggestions.sjs
             ClassLoader classLoader = getActivity().getApplicationContext().getClassLoader();
@@ -103,20 +106,24 @@ public class testSearchSuggestions extends BaseTest {
             checkNetworkField.setBoolean(client, false);
 
             // replace mSuggestClient with test client
-            Class awesomeBarClass = classLoader.loadClass("org.mozilla.gecko.AwesomeBar");
-            final Field suggestClientField = awesomeBarClass.getDeclaredField("mSuggestClient");
+            final Class awesomeBarTabsClass = classLoader.loadClass("org.mozilla.gecko.AwesomeBarTabs");
+            final Method getAllPagesTabMethod = awesomeBarTabsClass.getMethod("getAllPagesTab");
+            final View awesomeBarTabs = (View) awesomeBarActivity.findViewById(awesomeBarTabsId);
+            final Class allPagesTabClass = classLoader.loadClass("org.mozilla.gecko.AllPagesTab");
+            final Field suggestClientField = allPagesTabClass.getDeclaredField("mSuggestClient");
+            final Object allPagesTab = getAllPagesTabMethod.invoke(awesomeBarTabs);
             suggestClientField.setAccessible(true);
             waitForTest(new BooleanTest() {
                 public boolean test() {
                     // wait for mSuggestClient to be set before we replace it
                     try {
-                        return suggestClientField.get(awesomeBarActivity) != null;
+                        return suggestClientField.get(allPagesTab) != null;
                     } catch (IllegalAccessException e) {
                         return false;
                     }
                 }
             }, SUGGESTION_TIMEOUT);
-            suggestClientField.set(awesomeBarActivity, client);
+            suggestClientField.set(allPagesTab, client);
         } catch (Exception e) {
            throw new RuntimeException("Error setting SuggestClient", e);
         }
