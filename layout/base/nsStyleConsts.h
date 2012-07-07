@@ -399,6 +399,16 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 #ifdef MOZ_FLEXBOX
 // See nsStylePosition
+#define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
+#define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
+#define NS_STYLE_ALIGN_ITEMS_CENTER             2
+#define NS_STYLE_ALIGN_ITEMS_BASELINE           3
+#define NS_STYLE_ALIGN_ITEMS_STRETCH            4
+
+// For convenience/clarity (since we use this default value in multiple places)
+#define NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE      NS_STYLE_ALIGN_ITEMS_STRETCH
+
+// See nsStylePosition
 #define NS_STYLE_FLEX_DIRECTION_ROW             0
 #define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1
 #define NS_STYLE_FLEX_DIRECTION_COLUMN          2

@@ -1513,6 +1513,16 @@ CSS_PROP_TABLEBORDER(
     eStyleAnimType_None)
 #ifdef MOZ_FLEXBOX
 CSS_PROP_POSITION(
+    -moz-align-items,
+    align_items,
+    CSS_PROP_DOMPROP_PREFIXED(AlignItems),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignItemsKTable,
+    offsetof(nsStylePosition, mAlignItems),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
     -moz-flex-direction,
     flex_direction,
     CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
