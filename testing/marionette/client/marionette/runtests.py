@@ -21,7 +21,7 @@ try:
     from mozhttpd import iface, MozHttpd
 except ImportError:
     print "manifestparser or mozhttpd not found!  Please install mozbase:\n"
-    print "\tgit clone git clone git://github.com/mozilla/mozbase.git"
+    print "\tgit clone git://github.com/mozilla/mozbase.git"
     print "\tpython setup_development.py\n"
     import sys
     sys.exit(1)
@@ -144,13 +144,15 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 
 class MarionetteTestRunner(object):
 
-    def __init__(self, address=None, emulator=None, emulatorBinary=None, homedir=None,
-                 bin=None, profile=None, autolog=False, revision=None, es_server=None,
+    def __init__(self, address=None, emulator=None, emulatorBinary=None,
+                 emulator_res='480x800', homedir=None, bin=None, profile=None,
+                 autolog=False, revision=None, es_server=None,
                  rest_server=None, logger=None, testgroup="marionette",
                  noWindow=False, logcat_dir=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
+        self.emulator_res = emulator_res
         self.homedir = homedir
         self.bin = bin
         self.profile = profile
@@ -224,6 +226,7 @@ class MarionetteTestRunner(object):
         elif self.emulator:
             self.marionette = Marionette(emulator=self.emulator,
                                          emulatorBinary=self.emulatorBinary,
+                                         emulator_res=self.emulator_res,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
                                          noWindow=self.noWindow,
@@ -418,6 +421,11 @@ if __name__ == "__main__":
                       default = None,
                       help = "Launch a specific emulator binary rather than "
                       "launching from the B2G built emulator")
+    parser.add_option('--emulator-res',
+                      action = 'store', dest = 'emulator_res',
+                      default = '480x800', type= 'str',
+                      help = 'Set a custom resolution for the emulator. '
+                      'Example: "480x800"')
     parser.add_option("--no-window",
                       action = "store_true", dest = "noWindow",
                       default = False,
@@ -469,9 +477,21 @@ if __name__ == "__main__":
     if options.emulator and not options.logcat_dir:
         options.logcat_dir = 'logcat'
 
+    # check for valid resolution string, strip whitespaces
+    try:
+        dims = options.emulator_res.split('x')
+        assert len(dims) == 2
+        width = str(int(dims[0]))
+        height = str(int(dims[1]))
+        res = 'x'.join([width, height])
+    except:
+        raise ValueError('Invalid emulator resolution format. '
+                         'Should be like "480x800".\n')
+
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
                                   emulatorBinary=options.emulatorBinary,
+                                  emulator_res=res,
                                   homedir=options.homedir,
                                   logcat_dir=options.logcat_dir,
                                   bin=options.bin,
