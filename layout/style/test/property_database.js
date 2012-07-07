@@ -738,6 +738,14 @@ var gCSSProperties = {
 	},
 /* XXXdholbert In builds with MOZ_FLEXBOX enabled, this should be uncommented.
    (This would be #ifdef MOZ_FLEXBOX, if that worked in JS files.)
+	"-moz-order": {
+		domProp: "MozOrder",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0" ],
+		other_values: [ "1", "99999", "-1", "-50" ],
+		invalid_values: [ "0px", "1.0", "1.", "1%", "0.2", "3em", "stretch" ]
+	},
 	"-moz-justify-content": {
 		domProp: "MozJustifyContent",
 		inherited: false,
