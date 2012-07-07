@@ -1523,6 +1523,16 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mAlignItems),
     eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
+    -moz-align-self,
+    align_self,
+    CSS_PROP_DOMPROP_PREFIXED(AlignSelf),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignSelfKTable,
+    offsetof(nsStylePosition, mAlignSelf),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
     -moz-flex-direction,
     flex_direction,
     CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
