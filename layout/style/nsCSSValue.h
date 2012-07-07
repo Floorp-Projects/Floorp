@@ -1044,13 +1044,23 @@ struct nsCSSValueGradient {
   bool mIsRadial;
   bool mIsRepeating;
   bool mIsLegacySyntax;
+  bool mIsExplicitSize;
   // line position and angle
   nsCSSValuePair mBgPos;
   nsCSSValue mAngle;
 
   // Only meaningful if mIsRadial is true
-  nsCSSValue mRadialShape;
-  nsCSSValue mRadialSize;
+private:
+  nsCSSValue mRadialValues[2];
+public:
+  nsCSSValue& GetRadialShape() { return mRadialValues[0]; }
+  const nsCSSValue& GetRadialShape() const { return mRadialValues[0]; }
+  nsCSSValue& GetRadialSize() { return mRadialValues[1]; }
+  const nsCSSValue& GetRadialSize() const { return mRadialValues[1]; }
+  nsCSSValue& GetRadiusX() { return mRadialValues[0]; }
+  const nsCSSValue& GetRadiusX() const { return mRadialValues[0]; }
+  nsCSSValue& GetRadiusY() { return mRadialValues[1]; }
+  const nsCSSValue& GetRadiusY() const { return mRadialValues[1]; }
 
   InfallibleTArray<nsCSSValueGradientStop> mStops;
 
@@ -1059,10 +1069,11 @@ struct nsCSSValueGradient {
     if (mIsRadial != aOther.mIsRadial ||
         mIsRepeating != aOther.mIsRepeating ||
         mIsLegacySyntax != aOther.mIsLegacySyntax ||
+        mIsExplicitSize != aOther.mIsExplicitSize ||
         mBgPos != aOther.mBgPos ||
         mAngle != aOther.mAngle ||
-        mRadialShape != aOther.mRadialShape ||
-        mRadialSize != aOther.mRadialSize)
+        mRadialValues[0] != aOther.mRadialValues[0] ||
+        mRadialValues[1] != aOther.mRadialValues[1])
       return false;
 
     if (mStops.Length() != aOther.mStops.Length())
