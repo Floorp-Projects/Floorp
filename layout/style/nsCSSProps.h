@@ -350,6 +350,9 @@ public:
   static const PRInt32 kDisplayKTable[];
   static const PRInt32 kElevationKTable[];
   static const PRInt32 kEmptyCellsKTable[];
+#ifdef MOZ_FLEXBOX
+  static const PRInt32 kJustifyContentKTable[];
+#endif // MOZ_FLEXBOX
   static const PRInt32 kFloatKTable[];
   static const PRInt32 kFloatEdgeKTable[];
   static const PRInt32 kFontKTable[];

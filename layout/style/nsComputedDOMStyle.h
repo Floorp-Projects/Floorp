@@ -357,6 +357,11 @@ private:
   nsIDOMCSSValue* DoGetAnimationIterationCount();
   nsIDOMCSSValue* DoGetAnimationPlayState();
 
+#ifdef MOZ_FLEXBOX
+  /* CSS Flexbox properties */
+  nsIDOMCSSValue* DoGetJustifyContent();
+#endif // MOZ_FLEXBOX
+
   /* SVG properties */
   nsIDOMCSSValue* DoGetFill();
   nsIDOMCSSValue* DoGetStroke();

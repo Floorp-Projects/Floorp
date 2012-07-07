@@ -1093,6 +1093,9 @@ struct nsStylePosition {
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
+#ifdef MOZ_FLEXBOX
+  PRUint8       mJustifyContent;        // [reset] see nsStyleConsts.h
+#endif // MOZ_FLEXBOX
   nsStyleCoord  mZIndex;                // [reset] integer, auto
 
   bool WidthDependsOnContainer() const

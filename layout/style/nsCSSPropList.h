@@ -1511,6 +1511,18 @@ CSS_PROP_TABLEBORDER(
     kEmptyCellsKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+#ifdef MOZ_FLEXBOX
+CSS_PROP_POSITION(
+    -moz-justify-content,
+    justify_content,
+    CSS_PROP_DOMPROP_PREFIXED(JustifyContent),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kJustifyContentKTable,
+    offsetof(nsStylePosition, mJustifyContent),
+    eStyleAnimType_EnumU8)
+#endif // MOZ_FLEXBOX
 CSS_PROP_DISPLAY(
     float,
     float,
