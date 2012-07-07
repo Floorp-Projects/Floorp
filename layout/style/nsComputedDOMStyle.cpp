@@ -1425,38 +1425,75 @@ void
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
 {
-  if (aGradient->mRepeating) {
-    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
-      aString.AssignLiteral("-moz-repeating-linear-gradient(");
-    else
-      aString.AssignLiteral("-moz-repeating-radial-gradient(");
+  if (!aGradient->mLegacySyntax) {
+    aString.Truncate();
   } else {
-    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
-      aString.AssignLiteral("-moz-linear-gradient(");
-    else
-      aString.AssignLiteral("-moz-radial-gradient(");
+    aString.AssignLiteral("-moz-");
+  }
+  if (aGradient->mRepeating) {
+    aString.AppendLiteral("repeating-");
+  }
+  bool isRadial = aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR;
+  if (isRadial) {
+    aString.AppendLiteral("radial-gradient(");
+  } else {
+    aString.AppendLiteral("linear-gradient(");
   }
 
   bool needSep = false;
   nsAutoString tokenString;
   nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
 
-  if (!aGradient->mLegacySyntax) {
-    AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
-  } else {
-    if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
-      AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+  if (isRadial && !aGradient->mLegacySyntax) {
+    if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE) {
+      if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+        aString.AppendLiteral("circle");
+        needSep = true;
+      }
+      if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
+        if (needSep) {
+          aString.AppendLiteral(" ");
+        }
+        AppendASCIItoUTF16(nsCSSProps::
+                           ValueToKeyword(aGradient->mSize,
+                                          nsCSSProps::kRadialGradientSizeKTable),
+                           aString);
+        needSep = true;
+      }
+    } else {
+      AppendCSSGradientLength(aGradient->mRadiusX, tmpVal, aString);
+      if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+        aString.AppendLiteral(" ");
+        AppendCSSGradientLength(aGradient->mRadiusY, tmpVal, aString);
+      }
       needSep = true;
     }
-    if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
-      if (needSep) {
-        aString.AppendLiteral(" ");
+  }
+  if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
+    MOZ_ASSERT(aGradient->mBgPosY.GetUnit() != eStyleUnit_None);
+    if (!isRadial && !aGradient->mLegacySyntax) {
+      AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
+    } else if (aGradient->mBgPosX.GetUnit() != eStyleUnit_Percent ||
+               aGradient->mBgPosX.GetPercentValue() != 0.5f ||
+               aGradient->mBgPosY.GetUnit() != eStyleUnit_Percent ||
+               aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 1.0f)) {
+      if (isRadial && !aGradient->mLegacySyntax) {
+        if (needSep) {
+          aString.AppendLiteral(" ");
+        }
+        aString.AppendLiteral("at ");
+        needSep = false;
       }
-      AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+      AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+      if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
+        aString.AppendLiteral(" ");
+        AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+      }
       needSep = true;
     }
   }
   if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
+    MOZ_ASSERT(!isRadial || aGradient->mLegacySyntax);
     if (needSep) {
       aString.AppendLiteral(" ");
     }
@@ -1473,16 +1510,22 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     needSep = true;
   }
 
-  if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+  if (isRadial && aGradient->mLegacySyntax &&
+      (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR ||
+       aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)) {
+    MOZ_ASSERT(aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE);
     if (needSep) {
       aString.AppendLiteral(", ");
+      needSep = false;
     }
-    AppendASCIItoUTF16(nsCSSProps::
-                       ValueToKeyword(aGradient->mShape,
-                                      nsCSSProps::kRadialGradientShapeKTable),
-                       aString);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      aString.AppendLiteral("circle");
+      needSep = true;
+    }
     if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
-      aString.AppendLiteral(" ");
+      if (needSep) {
+        aString.AppendLiteral(" ");
+      }
       AppendASCIItoUTF16(nsCSSProps::
                          ValueToKeyword(aGradient->mSize,
                                         nsCSSProps::kRadialGradientSizeKTable),
