@@ -827,6 +827,10 @@ abstract public class GeckoApp
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
 
+        // We can get a location change event for the same document with an anchor tag
+        if (sameDocument)
+            return;
+
         tab.setContentType(contentType);
         tab.clearFavicon();
         tab.updateIdentityData(null);
