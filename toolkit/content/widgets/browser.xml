@@ -1141,16 +1141,6 @@
           // are swapped.
           var fieldsToSwap = [ "_docShell", "_webBrowserFind", "_contentWindow", "_webNavigation"];
 
-          var ourTabBrowser = this.getTabBrowser();
-
-          // _fastFind is tied to the docshell if we don't have a tabbrowser
-          if ((ourTabBrowser != null) !=
-              (aOtherBrowser.getTabBrowser() != null))
-            throw "Unable to perform swap on <browsers> if one is in a <tabbrowser> and one is not";
-
-          if (!ourTabBrowser)
-            fieldsToSwap.push("_fastFind");
-
           var ourFieldValues = {};
           var otherFieldValues = {};
           for each (var field in fieldsToSwap) {
@@ -1159,10 +1149,25 @@
           }
           this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
               .swapFrameLoaders(aOtherBrowser);
+
+          // Before we swap the actual docShell property we need to detach the
+          // form fill controller from those docShells.
+          this.detachFormFill();
+          aOtherBrowser.detachFormFill();
+
           for each (var field in fieldsToSwap) {
             this[field] = otherFieldValues[field];
             aOtherBrowser[field] = ourFieldValues[field];
           }
+
+          // Re-attach the docShells to the form fill controller.
+          this.attachFormFill();
+          aOtherBrowser.attachFormFill();
+
+          // Null the current nsITypeAheadFind instances so that they're
+          // lazily re-created on access. We need to do this because they
+          // might have attached the wrong docShell.
+          this._fastFind = aOtherBrowser._fastFind = null;
         ]]>
         </body>
       </method>
