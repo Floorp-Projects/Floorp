@@ -5,30 +5,26 @@ const NOW = Date.now() * 1000;
 const URL = "http://fake-site.com/";
 
 let tmp = {};
-Cu.import("resource:///modules/NewTabUtils.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
 
-let {NewTabUtils, Sanitizer} = tmp;
-
-let bhist = Cc["@mozilla.org/browser/global-history;2"]
-  .getService(Ci.nsIBrowserHistory);
+let {Sanitizer} = tmp;
 
 function runTests() {
-  clearHistory();
-  yield fillHistory();
+  sanitizeHistory();
+  yield addFakeVisits();
   yield addNewTabPageTab();
 
   is(getCell(0).site.url, URL, "first site is our fake site");
 
   whenPagesUpdated();
-  yield clearHistory();
+  yield sanitizeHistory();
 
   ok(!getCell(0).site, "the fake site is gone");
 }
 
-function fillHistory() {
+function addFakeVisits() {
   let visits = [];
   for (let i = 59; i > 0; i--) {
     visits.push({
@@ -42,13 +38,18 @@ function fillHistory() {
     visits: visits
   };
   PlacesUtils.asyncHistory.updatePlaces(place, {
-    handleError: function () do_throw("Unexpected error in adding visit."),
-    handleResult: function () { },
-    handleCompletion: function () TestRunner.next()
+    handleError: function () ok(false, "couldn't add visit"),
+    handleResult: function () {},
+    handleCompletion: function () {
+      NewTabUtils.links.populateCache(function () {
+        NewTabUtils.allPages.update();
+        TestRunner.next();
+      }, true);
+    }
   });
 }
 
-function clearHistory() {
+function sanitizeHistory() {
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
 
