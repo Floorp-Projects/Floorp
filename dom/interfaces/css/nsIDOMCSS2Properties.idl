@@ -768,6 +768,9 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozAlignSelf;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozFlexBasis;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozFlexDirection;
                                         // raises(DOMException) on setting
 
