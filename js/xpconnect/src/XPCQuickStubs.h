@@ -396,7 +396,7 @@ xpc_qsUnwrapThis(JSContext *cx,
     return true;
 }
 
-inline nsISupports*
+MOZ_ALWAYS_INLINE nsISupports*
 castNativeFromWrapper(JSContext *cx,
                       JSObject *obj,
                       PRUint32 interfaceBit,
