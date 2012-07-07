@@ -3854,6 +3854,43 @@ Version 1.5.10 [March 29, 2012]
   Revised png_set_text_2() to avoid potential memory corruption (fixes
     CVE-2011-3048).
 
+Version 1.5.11beta01 [April 28, 2012]
+  Revised scripts/makefile.darwin: use system zlib; remove quotes around
+    architecture list; add missing ppc architecture; add architecture options
+    to shared library link; don't try to create a shared lib based on missing
+    RELEASE variable.
+  Enable png_set_check_for_invalid_index() for both read and write.
+  Removed #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED/#endif in pngpriv.h around
+    declaration of png_handle_unknown().
+  Added -lssp_nonshared in a comment in scripts/makefile.freebsd
+    and changed deprecated NOOBJ and NOPROFILE to NO_OBJ and NO_PROFILE.
+
+Version 1.5.11rc01 [May 23, 2012]
+  No changes.
+
+Version 1.5.11rc02 [May 29, 2012]
+  Fixed some typos in comments.
+  Revised CMakeLists.txt to not attempt to make a symlink under mingw.
+  Added two images to contrib/pngsuite (1-bit and 2-bit transparent grayscale),
+    and renamed three whose names were inconsistent with those in
+    pngsuite/README.txt.
+
+Version 1.5.11rc03 [June 4, 2012]
+  Do not depend upon a GCC feature macro being available for use in generating
+    the linker mapfile symbol prefix.
+  Made fixes for new optimization warnings from gcc 4.7.0. The compiler
+    performed an optimization which is safe but then warned about it.
+    Changing the type of 'palette_number' in pngvalid.c removes the warning.
+
+Version 1.5.11rc04 [June 6, 2012]
+  Improved performance of new do_check_palette_indexes() function.
+
+Version 1.5.11rc05 [June 7, 2012]
+  Don't check palette indexes if num_palette is 0 (as it can be in MNG files).
+
+Version 1.5.11 [June 14, 2012]
+  Include zlib.h in contrib/gregbook and contrib/visupng examples.
+
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
