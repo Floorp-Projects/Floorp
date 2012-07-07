@@ -6424,6 +6424,14 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               SETDSC_ENUMERATED, parentPos->mBoxSizing,
               NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
 
+#ifdef MOZ_FLEXBOX
+  // justify-content: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForJustifyContent(),
+              pos->mJustifyContent, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentPos->mJustifyContent,
+              NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
+#endif // MOZ_FLEXBOX
+
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();
   if (! SetCoord(*zIndexValue, pos->mZIndex, parentPos->mZIndex,

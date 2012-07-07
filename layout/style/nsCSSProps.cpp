@@ -902,6 +902,17 @@ const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+#ifdef MOZ_FLEXBOX
+const PRInt32 nsCSSProps::kJustifyContentKTable[] = {
+  eCSSKeyword_flex_start,    NS_STYLE_JUSTIFY_CONTENT_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_JUSTIFY_CONTENT_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_JUSTIFY_CONTENT_CENTER,
+  eCSSKeyword_space_between, NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN,
+  eCSSKeyword_space_around,  NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND,
+  eCSSKeyword_UNKNOWN,-1
+};
+#endif // MOZ_FLEXBOX
+
 const PRInt32 nsCSSProps::kFloatKTable[] = {
   eCSSKeyword_none,  NS_STYLE_FLOAT_NONE,
   eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
