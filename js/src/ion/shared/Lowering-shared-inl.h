@@ -97,7 +97,7 @@ template <size_t X, size_t Y> bool
 LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LAllocation &output)
 {
     LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-    
+
     LDefinition def(type, LDefinition::PRESET);
     def.setOutput(output);
 
@@ -145,7 +145,8 @@ LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, M
 template <size_t Ops, size_t Temps> bool
 LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir)
 {
-    defineBox(lir, mir, LDefinition::PRESET);
+    if (!defineBox(lir, mir, LDefinition::PRESET))
+        return false;
 
 #if defined(JS_NUNBOX32)
     lir->getDef(TYPE_INDEX)->setOutput(LGeneralReg(JSReturnReg_Type));
