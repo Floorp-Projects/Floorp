@@ -738,6 +738,14 @@ var gCSSProperties = {
 	},
 /* XXXdholbert In builds with MOZ_FLEXBOX enabled, this should be uncommented.
    (This would be #ifdef MOZ_FLEXBOX, if that worked in JS files.)
+	"-moz-align-items": {
+		domProp: "MozAlignItems",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch" ],
+		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
+		invalid_values: [ "space-between", "abc", "30px" ]
+	},
 	"-moz-flex-direction": {
 		domProp: "MozFlexDirection",
 		inherited: false,
