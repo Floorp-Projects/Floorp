@@ -483,6 +483,7 @@ function run() {
   var dpi_low = resolution - 1;
   if (query_applies("(min-resolution: " + resolution + "dpi)")) {
     // It's exact!
+    is(resolution % 96, 0, "resolution should be a multiple of 96dpi");
     should_apply("(resolution: " + resolution + "dpi)");
     should_not_apply("(resolution: " + (resolution + 1) + "dpi)");
     should_not_apply("(resolution: " + (resolution - 1) + "dpi)");
@@ -490,6 +491,7 @@ function run() {
   } else {
 	// We have no way to test resolution applying since it need not be
 	// an integer.
+    ok(false, "resolution should be a multiple of 96dpi");
     should_not_apply("(resolution: " + resolution + "dpi)");
     should_not_apply("(resolution: " + (resolution - 1) + "dpi)");
     dpi_high = resolution;
