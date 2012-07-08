@@ -12,6 +12,7 @@
 #include "nsAlgorithm.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsComputedDOMStyle.h"
 #include "nsDebug.h"
 #include "nsEditProperty.h"
 #include "nsEditRules.h"
@@ -656,13 +657,9 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
                                          bgColorStr);
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {
-      nsCOMPtr<nsIDOMWindow> window;
-      res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(window));
-      NS_ENSURE_SUCCESS(res, res);
-
-      nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-      res = window->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
-      NS_ENSURE_SUCCESS(res, res);
+      nsRefPtr<nsComputedDOMStyle> cssDecl =
+        mHTMLCSSUtils->GetComputedStyle(aElement);
+      NS_ENSURE_STATE(cssDecl);
 
       // from these declarations, get the one we want and that one only
       nsCOMPtr<nsIDOMCSSValue> colorCssValue;

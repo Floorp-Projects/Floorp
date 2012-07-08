@@ -12,6 +12,7 @@
 #include "prtypes.h"                    // for PRUint8, PRInt32, PRUint32
 
 class ChangeCSSInlineStyleTxn;
+class nsComputedDOMStyle;
 class nsIAtom;
 class nsIContent;
 class nsIDOMCSSStyleDeclaration;
@@ -304,13 +305,12 @@ public:
   already_AddRefed<nsIDOMElement> GetElementContainerOrSelf(nsIDOMNode* aNode);
 
   /**
-   * Gets the default Window for a given node.
-   *
-   * @param aNode    the node we want the default Window for
-   * @param aWindow  [OUT] the default Window
+   * Gets the computed style for a given element.  Can return null.
    */
-  nsresult GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aWindow);
-  nsresult GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
+  already_AddRefed<nsComputedDOMStyle>
+    GetComputedStyle(nsIDOMElement* aElement);
+  already_AddRefed<nsComputedDOMStyle>
+    GetComputedStyle(mozilla::dom::Element* aElement);
 
 
 private:
@@ -380,15 +380,12 @@ private:
    * @param aNode               [IN] a DOM node
    * @param aProperty           [IN] a CSS property
    * @param aValue              [OUT] the retrieved value for this property
-   * @param aWindow             [IN] the window we need in case we query computed styles
    * @param aStyleType          [IN] eSpecified or eComputed
    */
   nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
-                                    nsAString& aValue, nsIDOMWindow* aWindow,
-                                    StyleType aStyleType);
+                                    nsAString& aValue, StyleType aStyleType);
   nsresult GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
-                                    nsAString& aValue, nsIDOMWindow* aWindow,
-                                    StyleType aStyleType);
+                                    nsAString& aValue, StyleType aStyleType);
 
 
 private:

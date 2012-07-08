@@ -13,6 +13,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
+#include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
@@ -570,34 +571,28 @@ nsresult
 nsHTMLCSSUtils::GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
                                      nsAString & aValue)
 {
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, nsnull, eSpecified);
+  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eSpecified);
 }
 
 nsresult
 nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
                                     nsAString & aValue)
 {
-  nsCOMPtr<nsIDOMWindow> window;
-  nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(window));
-  NS_ENSURE_SUCCESS(res, res);
-
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, window, eComputed);
+  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eComputed);
 }
 
 nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
                                          nsAString& aValue,
-                                         nsIDOMWindow* aWindow,
                                          StyleType aStyleType)
 {
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
-  return GetCSSInlinePropertyBase(node, aProperty, aValue, aWindow, aStyleType);
+  return GetCSSInlinePropertyBase(node, aProperty, aValue, aStyleType);
 }
 
 nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
                                          nsAString& aValue,
-                                         nsIDOMWindow* aWindow,
                                          StyleType aStyleType)
 {
   aValue.Truncate();
@@ -608,16 +603,14 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
 
   switch (aStyleType) {
     case eComputed:
-      if (element && aWindow) {
+      if (element) {
         nsAutoString value, propString;
-        nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
         aProperty->ToString(propString);
         // Get the all the computed css styles attached to the element node
-        nsresult res = aWindow->GetComputedStyle(element, EmptyString(), getter_AddRefs(cssDecl));
-        if (NS_FAILED(res) || !cssDecl)
-          return res;
+        nsRefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
+        NS_ENSURE_STATE(cssDecl);
         // from these declarations, get the one we want and that one only
-        res = cssDecl->GetPropertyValue(propString, value);
+        nsresult res = cssDecl->GetPropertyValue(propString, value);
         NS_ENSURE_SUCCESS(res, res);
         aValue.Assign(value);
       }
@@ -639,25 +632,30 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
   return NS_OK;
 }
 
-nsresult
-nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMWindow **aViewCSS)
+already_AddRefed<nsComputedDOMStyle>
+nsHTMLCSSUtils::GetComputedStyle(nsIDOMElement* aElement)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  return GetDefaultViewCSS(node, aViewCSS);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
+  return GetComputedStyle(element);
 }
 
-nsresult
-nsHTMLCSSUtils::GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aViewCSS)
+already_AddRefed<nsComputedDOMStyle>
+nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
 {
-  MOZ_ASSERT(aNode);
-  dom::Element* element = GetElementContainerOrSelf(aNode);
-  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aElement);
 
-  nsCOMPtr<nsIDOMWindow> window = element->OwnerDoc()->GetWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  window.forget(aViewCSS);
-  return NS_OK;
+  nsIDocument* doc = aElement->GetCurrentDoc();
+  NS_ASSERTION(doc, "Trying to compute style of detached element");
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  nsIPresShell* presShell = doc->GetShell();
+  NS_ASSERTION(presShell, "Trying to compute style without PresShell");
+  NS_ENSURE_TRUE(presShell, nsnull);
+
+  nsRefPtr<nsComputedDOMStyle> style =
+    NS_NewComputedDOMStyle(aElement, EmptyString(), presShell);
+
+  return style.forget();
 }
 
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the whole node
@@ -1078,12 +1076,6 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
   }
 
   // Yes, the requested HTML style has a CSS equivalence in this implementation
-  // Retrieve the default ViewCSS if we are asked for computed styles
-  nsCOMPtr<nsIDOMWindow> window;
-  if (aStyleType == eComputed) {
-    nsresult res = GetDefaultViewCSS(theElement, getter_AddRefs(window));
-    NS_ENSURE_SUCCESS(res, res);
-  }
   nsTArray<nsIAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
   // get the CSS equivalence with last param true indicating we want only the
@@ -1095,7 +1087,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
     nsAutoString valueString;
     // retrieve the specified/computed value of the property
     nsresult res = GetCSSInlinePropertyBase(theElement, cssPropertyArray[index],
-                                            valueString, window, aStyleType);
+                                            valueString, aStyleType);
     NS_ENSURE_SUCCESS(res, res);
     // append the value to aValueString (possibly with a leading whitespace)
     if (index) {
