@@ -1056,11 +1056,8 @@ class GetPropCompiler : public PICStubCompiler
         int32_t idHandleOffset = (char *) (f.regs.sp + 1) - (char *) f.fp();
         int32_t objHandleOffset = (char *) (f.regs.sp + 2) - (char *) f.fp();
 
-        /*
-         * Make sure we handle endianness correctly.
-         */
-        masm.storePtr(holdObjReg, masm.payloadOf(Address(JSFrameReg, objHandleOffset)));
-        masm.storePtr(ImmPtr((void *) JSID_BITS(userid)), masm.payloadOf(Address(JSFrameReg, idHandleOffset)));
+        masm.storePtr(holdObjReg, Address(JSFrameReg, objHandleOffset));
+        masm.storePtr(ImmPtr((void *) JSID_BITS(userid)), Address(JSFrameReg, idHandleOffset));
 
         /*
          * On 32 bit platforms zero the upper portion of the values so that
@@ -1099,7 +1096,7 @@ class GetPropCompiler : public PICStubCompiler
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 4);
         masm.storeArg(3, t0);
-        masm.addPtr(Imm32(idHandleOffset - vpOffset + Assembler::PAYLOAD_OFFSET), t0);
+        masm.addPtr(Imm32(idHandleOffset - vpOffset), t0);
         masm.storeArg(2, t0);
         masm.addPtr(Imm32(objHandleOffset - idHandleOffset), t0);
         masm.storeArg(1, t0);
