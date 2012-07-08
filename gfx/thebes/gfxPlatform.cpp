@@ -1090,7 +1090,7 @@ gfxPlatform::UseProgressiveTilePainting()
     sUseProgressiveTilePaintingPrefCached = true;
     mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
                                           "layers.progressive-paint",
-                                          true);
+                                          false);
   }
 
   return sUseProgressiveTilePainting;
