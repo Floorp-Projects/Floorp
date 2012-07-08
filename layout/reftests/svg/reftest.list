@@ -169,6 +169,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
+== marker-orientation-01.svg marker-orientation-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-extref-dataURI-01.svg pass.svg
