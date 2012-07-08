@@ -24,20 +24,26 @@ enum Phase {
     PHASE_WAIT_BACKGROUND_THREAD,
     PHASE_PURGE,
     PHASE_MARK,
+    PHASE_MARK_DISCARD_CODE,
     PHASE_MARK_ROOTS,
     PHASE_MARK_TYPES,
     PHASE_MARK_DELAYED,
-    PHASE_MARK_OTHER,
+    PHASE_MARK_WEAK,
+    PHASE_MARK_GRAY,
+    PHASE_MARK_GRAY_WEAK,
     PHASE_FINALIZE_START,
     PHASE_SWEEP,
+    PHASE_SWEEP_ATOMS,
     PHASE_SWEEP_COMPARTMENTS,
+    PHASE_SWEEP_TABLES,
     PHASE_SWEEP_OBJECT,
     PHASE_SWEEP_STRING,
     PHASE_SWEEP_SCRIPT,
     PHASE_SWEEP_SHAPE,
-    PHASE_DISCARD_CODE,
+    PHASE_SWEEP_DISCARD_CODE,
     PHASE_DISCARD_ANALYSIS,
     PHASE_DISCARD_TI,
+    PHASE_FREE_TI_ARENA,
     PHASE_SWEEP_TYPES,
     PHASE_CLEAR_SCRIPT_ANALYSIS,
     PHASE_FINALIZE_END,
@@ -96,18 +102,17 @@ struct Statistics {
     const char *nonincrementalReason;
 
     struct SliceData {
-        SliceData(gcreason::Reason reason, int64_t start)
-          : reason(reason), resetReason(NULL), start(start)
+        SliceData(gcreason::Reason reason, int64_t start, size_t startFaults)
+          : reason(reason), resetReason(NULL), start(start), startFaults(startFaults)
         {
             PodArrayZero(phaseTimes);
-            PodArrayZero(phaseFaults);
         }
 
         gcreason::Reason reason;
         const char *resetReason;
         int64_t start, end;
+        size_t startFaults, endFaults;
         int64_t phaseTimes[PHASE_LIMIT];
-        size_t phaseFaults[PHASE_LIMIT];
 
         int64_t duration() const { return end - start; }
     };
@@ -116,11 +121,9 @@ struct Statistics {
 
     /* Most recent time when the given phase started. */
     int64_t phaseStartTimes[PHASE_LIMIT];
-    size_t phaseStartFaults[PHASE_LIMIT];
 
     /* Total time in a given phase for this GC. */
     int64_t phaseTimes[PHASE_LIMIT];
-    size_t phaseFaults[PHASE_LIMIT];
 
     /* Total time in a given phase over all GCs. */
     int64_t phaseTotals[PHASE_LIMIT];
