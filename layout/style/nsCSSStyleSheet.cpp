@@ -250,17 +250,25 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
     case nsMediaFeature::eResolution:
       {
         NS_ASSERTION(actual.GetUnit() == eCSSUnit_Inch ||
+                     actual.GetUnit() == eCSSUnit_Pixel ||
                      actual.GetUnit() == eCSSUnit_Centimeter,
                      "bad actual value");
         NS_ASSERTION(required.GetUnit() == eCSSUnit_Inch ||
+                     required.GetUnit() == eCSSUnit_Pixel ||
                      required.GetUnit() == eCSSUnit_Centimeter,
                      "bad required value");
         float actualDPI = actual.GetFloatValue();
-        if (actual.GetUnit() == eCSSUnit_Centimeter)
+        if (actual.GetUnit() == eCSSUnit_Centimeter) {
           actualDPI = actualDPI * 2.54f;
+        } else if (actual.GetUnit() == eCSSUnit_Pixel) {
+          actualDPI = actualDPI * 96.0f;
+        }
         float requiredDPI = required.GetFloatValue();
-        if (required.GetUnit() == eCSSUnit_Centimeter)
+        if (required.GetUnit() == eCSSUnit_Centimeter) {
           requiredDPI = requiredDPI * 2.54f;
+        } else if (required.GetUnit() == eCSSUnit_Pixel) {
+          requiredDPI = requiredDPI * 96.0f;
+        }
         cmp = DoCompare(actualDPI, requiredDPI);
       }
       break;
@@ -432,6 +440,8 @@ nsMediaQuery::AppendToString(nsAString& aString) const
             aString.AppendFloat(expr.mValue.GetFloatValue());
             if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
               aString.AppendLiteral("dpi");
+            } else if (expr.mValue.GetUnit() == eCSSUnit_Pixel) {
+              aString.AppendLiteral("dppx");
             } else {
               NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
                            "bad unit");
