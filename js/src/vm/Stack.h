@@ -15,8 +15,6 @@
 struct JSContext;
 struct JSCompartment;
 
-extern void js_DumpStackFrame(JSContext *, js::StackFrame *);
-
 namespace js {
 
 class StackFrame;
@@ -56,10 +54,6 @@ typedef mjit::CallSite InlinedSite;
 struct InlinedSite {};
 #endif
 typedef size_t FrameRejoinState;
-
-namespace detail {
-    struct OOMCheck;
-}
 
 /*****************************************************************************/
 
