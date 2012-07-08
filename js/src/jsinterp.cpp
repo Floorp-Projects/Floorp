@@ -285,6 +285,8 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     } check(cx);
 #endif
 
+    SPSEntryMarker marker(cx->runtime);
+
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
@@ -1306,8 +1308,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
          * To support generator_throw and to catch ignored exceptions,
          * fail if cx->isExceptionPending() is true.
          */
-        if (cx->isExceptionPending())
+        if (cx->isExceptionPending()) {
+            Probes::enterScript(cx, script, script->function(), regs.fp());
             goto error;
+        }
     }
 #endif
 
@@ -1317,8 +1321,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
-        if (!fp->isGeneratorFrame() && !fp->prologue(cx, UseNewTypeAtEntry(cx, fp)))
-            goto error;
+        if (!fp->isGeneratorFrame()) {
+            if (!fp->prologue(cx, UseNewTypeAtEntry(cx, fp)))
+                goto error;
+        } else {
+            Probes::enterScript(cx, script, script->function(), fp);
+        }
         if (cx->compartment->debugMode()) {
             JSTrapStatus status = ScriptDebugPrologue(cx, fp);
             switch (status) {
@@ -1607,6 +1615,8 @@ BEGIN_CASE(JSOP_STOP)
 
         if (!regs.fp()->isYielding())
             regs.fp()->epilogue(cx);
+        else
+            Probes::exitScript(cx, script, script->function(), regs.fp());
 
         /* The JIT inlines the epilogue. */
 #ifdef JS_METHODJIT
@@ -2513,7 +2523,6 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     if (!regs.fp()->prologue(cx, newType))
         goto error;
-
     if (cx->compartment->debugMode()) {
         switch (ScriptDebugPrologue(cx, regs.fp())) {
           case JSTRAP_CONTINUE:
@@ -3974,6 +3983,8 @@ END_CASE(JSOP_ARRAYPUSH)
         interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
     if (!regs.fp()->isYielding())
         regs.fp()->epilogue(cx);
+    else
+        Probes::exitScript(cx, script, script->function(), regs.fp());
     regs.fp()->setFinishedInInterpreter();
 
 #ifdef JS_METHODJIT

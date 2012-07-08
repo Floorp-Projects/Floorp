@@ -389,8 +389,6 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     JS_ASSERT(IsBuiltinEvalForScope(caller->scopeChain(), args.calleev()));
     JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
 
-    AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
-
     if (!WarnOnTooManyArgs(cx, args))
         return false;
 
