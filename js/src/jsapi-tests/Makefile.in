@@ -63,6 +63,7 @@ CPPSRCS = \
   testValueABI.cpp \
   testVersion.cpp \
   testXDR.cpp \
+  testProfileStrings.cpp \
   $(NULL)
 
 CSRCS = \

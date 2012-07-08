@@ -12,6 +12,14 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 
+/* QT has a #define for the word "slots" and jsfriendapi.h has a struct with
+ * this variable name, causing compilation problems. Alleviate this for now by
+ * removing this #define */
+#ifdef MOZ_WIDGET_QT
+#undef slots
+#endif
+#include "jsfriendapi.h"
+
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
@@ -225,7 +233,6 @@ public:
   ProfileStack()
     : mStackPointer(0)
     , mMarkerPointer(0)
-    , mDroppedStackEntries(0)
     , mQueueClearMarker(false)
   { }
 
@@ -273,7 +280,7 @@ public:
   void push(const char *aName, void *aStackAddress, bool aCopy)
   {
     if (size_t(mStackPointer) >= mozilla::ArrayLength(mStack)) {
-      mDroppedStackEntries++;
+      mStackPointer++;
       return;
     }
 
@@ -288,15 +295,25 @@ public:
   }
   void pop()
   {
-    if (mDroppedStackEntries > 0) {
-      mDroppedStackEntries--;
-    } else {
-      mStackPointer--;
-    }
+    mStackPointer--;
   }
   bool isEmpty()
   {
     return mStackPointer == 0;
+  }
+
+  void sampleRuntime(JSRuntime *runtime) {
+    mRuntime = runtime;
+  }
+  void installJSSampling() {
+    JS_STATIC_ASSERT(sizeof(mStack[0]) == sizeof(js::ProfileEntry));
+    js::SetRuntimeProfilingStack(mRuntime,
+                                 (js::ProfileEntry*) mStack,
+                                 (uint32_t*) &mStackPointer,
+                                 mozilla::ArrayLength(mStack));
+  }
+  void uninstallJSSampling() {
+    js::SetRuntimeProfilingStack(mRuntime, NULL, NULL, 0);
   }
 
   // Keep a list of active checkpoints
@@ -305,11 +322,19 @@ public:
   char const * volatile mMarkers[1024];
   volatile mozilla::sig_safe_t mStackPointer;
   volatile mozilla::sig_safe_t mMarkerPointer;
-  volatile mozilla::sig_safe_t mDroppedStackEntries;
   // We don't want to modify _markers from within the signal so we allow
   // it to queue a clear operation.
   volatile mozilla::sig_safe_t mQueueClearMarker;
+  // The runtime which is being sampled
+  JSRuntime *mRuntime;
 };
+
+inline ProfileStack* mozilla_profile_stack(void)
+{
+  if (!stack_key_initialized)
+    return NULL;
+  return tlsStack.get();
+}
 
 inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress, bool aCopy)
 {

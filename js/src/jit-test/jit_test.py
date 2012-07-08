@@ -111,6 +111,8 @@ class Test:
                         test.jitflags.append('-d')
                     elif name == 'mjit':
                         test.jitflags.append('-m')
+                    elif name == 'dump-bytecode':
+                        test.jitflags.append('-D')
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
 

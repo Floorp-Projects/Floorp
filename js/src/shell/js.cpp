@@ -3411,6 +3411,29 @@ EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
+{
+    jsval arg = JS_ARGV(cx, vp)[0];
+    if (argc == 0 || !JSVAL_IS_BOOLEAN(arg)) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "enableSPSProfilingAssertions");
+        return false;
+    }
+
+    static ProfileEntry stack[1000];
+    static uint32_t stack_size = 0;
+
+    if (JSVAL_TO_BOOLEAN(arg))
+        SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
+    else
+        SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 0);
+    cx->runtime->spsProfiler.enableSlowAssertions(JSVAL_TO_BOOLEAN(arg));
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
+static JSBool
 GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
@@ -3709,6 +3732,11 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
+
+    JS_FN_HELP("enableSPSProfilingAssertions", EnableSPSProfilingAssertions, 1, 0,
+"enableProfilingAssertions(enabled)",
+"  Enables or disables the assertions related to SPS profiling. This is fairly\n"
+"  expensive, so it shouldn't be enabled normally."),
 
     JS_FS_END
 };
