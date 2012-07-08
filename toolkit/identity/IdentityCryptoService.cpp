@@ -219,7 +219,7 @@ public:
   {
     nsresult rv;
     nsCOMPtr<nsISupports> dummyUsedToEnsureNSSIsInitialized
-      = do_GetService("@mozilla.org/psm;1");
+      = do_GetService("@mozilla.org/psm;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -544,7 +544,7 @@ SignRunnable::Run()
         SECOidTag hashAlg = mPrivateKey->keyType == dsaKey ? SEC_OID_SHA1
                                                            : SEC_OID_SHA256;
         SECItem hashItem = { siBuffer, hash,
-                             hashAlg == SEC_OID_SHA1 ? 20 : 32 };
+                             hashAlg == SEC_OID_SHA1 ? 20u : 32u };
 
         mRv = MapSECStatus(PK11_HashBuf(hashAlg, hash,
                     const_cast<PRUint8*>(reinterpret_cast<const PRUint8 *>(
