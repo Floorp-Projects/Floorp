@@ -7,6 +7,8 @@
 #include "EditTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/css/Declaration.h"
+#include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
@@ -582,53 +584,48 @@ nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
 }
 
 nsresult
-nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
+nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
                                          nsAString& aValue,
                                          StyleType aStyleType)
 {
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   return GetCSSInlinePropertyBase(node, aProperty, aValue, aStyleType);
 }
 
 nsresult
-nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
+nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
                                          nsAString& aValue,
                                          StyleType aStyleType)
 {
+  MOZ_ASSERT(aNode && aProperty);
   aValue.Truncate();
-  NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMElement> element = GetElementContainerOrSelf(aNode);
+  nsCOMPtr<dom::Element> element = GetElementContainerOrSelf(aNode);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
-  switch (aStyleType) {
-    case eComputed:
-      if (element) {
-        nsAutoString value, propString;
-        aProperty->ToString(propString);
-        // Get the all the computed css styles attached to the element node
-        nsRefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
-        NS_ENSURE_STATE(cssDecl);
-        // from these declarations, get the one we want and that one only
-        nsresult res = cssDecl->GetPropertyValue(propString, value);
-        NS_ENSURE_SUCCESS(res, res);
-        aValue.Assign(value);
-      }
-      break;
-    case eSpecified:
-      if (element) {
-        nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-        PRUint32 length;
-        nsresult res = GetInlineStyles(element, getter_AddRefs(cssDecl), &length);
-        if (NS_FAILED(res) || !cssDecl) return res;
-        nsAutoString value, propString;
-        aProperty->ToString(propString);
-        res = cssDecl->GetPropertyValue(propString, value);
-        NS_ENSURE_SUCCESS(res, res);
-        aValue.Assign(value);
-      }
-      break;
+  if (aStyleType == eComputed) {
+    // Get the all the computed css styles attached to the element node
+    nsRefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
+    NS_ENSURE_STATE(cssDecl);
+
+    // from these declarations, get the one we want and that one only
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue)));
+
+    return NS_OK;
   }
+
+  MOZ_ASSERT(aStyleType == eSpecified);
+  nsRefPtr<css::StyleRule> rule = element->GetInlineStyleRule();
+  if (!rule) {
+    return NS_OK;
+  }
+  nsCSSProperty prop =
+    nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
+                               nsCSSProps::eEnabled);
+  MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
+  rule->GetDeclaration()->GetValue(prop, aValue);
+
   return NS_OK;
 }
 
