@@ -368,9 +368,8 @@ js_InitWeakMapClass(JSContext *cx, JSObject *obj)
     if (!weakMapProto)
         return NULL;
 
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, WeakMap_construct,
-                                     CLASS_NAME(cx, WeakMap), 0);
+    RootedFunction ctor(cx, global->createConstructor(cx, WeakMap_construct,
+                                                      CLASS_NAME(cx, WeakMap), 0));
     if (!ctor)
         return NULL;
 
