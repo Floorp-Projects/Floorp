@@ -17,6 +17,8 @@
 
 #include "vm/String-inl.h"
 
+void * const js::NullPtr::constNullValue = NULL;
+
 /*
  * There are two mostly separate mark paths. The first is a fast path used
  * internally in the GC. The second is a slow path used for root marking and
