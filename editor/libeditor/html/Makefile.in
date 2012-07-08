@@ -57,4 +57,5 @@ INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
                    -I$(topsrcdir)/editor/libeditor/text \
                    -I$(topsrcdir)/editor/txmgr/src \
                    -I$(topsrcdir)/content/base/src \
+                   -I$(topsrcdir)/layout/style \
                    $(NULL)
