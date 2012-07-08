@@ -242,23 +242,20 @@ struct MaxValue
  * Ideas taken from IntegerLib, code different.
  */
 
-// Bitwise ops may return a larger type, so it's good to use these inline
-// helpers guaranteeing that the result is really of type T.
-
 template<typename T>
-inline T
+inline bool
 HasSignBit(T x)
 {
   // In C++, right bit shifts on negative values is undefined by the standard.
   // Notice that signed-to-unsigned conversions are always well-defined in the
   // standard, as the value congruent modulo 2**n as expected. By contrast,
   // unsigned-to-signed is only well-defined if the value is representable.
-  // Here the unsigned-to-signed conversion is OK because the value
-  // (the result of the shift) is 0 or 1.
-  return T(typename UnsignedType<T>::Type(x)
-              >> PositionOfSignBit<T>::value);
+  return bool(typename UnsignedType<T>::Type(x)
+                >> PositionOfSignBit<T>::value);
 }
 
+// Bitwise ops may return a larger type, so it's good to use this inline
+// helper guaranteeing that the result is really of type T.
 template<typename T>
 inline T
 BinaryComplement(T x)
