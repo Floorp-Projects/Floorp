@@ -71,6 +71,7 @@ The meaning of the items:
     tz-pacific   Always run test with the Pacific time zone (TZ=PST8PDT).
     mjitalways   Run js with -a, whether --jitflags says to or not
     debug        Run js with -d, whether --jitflags says to or not
+    dump-bytecode Run js with -D, whether --jitflags says to or not
 
     error        The test should be considered to pass iff it throws the
                  given JS exception.

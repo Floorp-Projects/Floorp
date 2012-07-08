@@ -376,6 +376,7 @@ class TableTicker: public Sampler {
 
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
+    mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
     mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
@@ -402,6 +403,8 @@ class TableTicker: public Sampler {
   JSObject *ToJSObject(JSContext *aCx);
   JSObject *GetMetaJSObject(JSObjectBuilder& b);
 
+  const bool ProfileJS() { return mProfileJS; }
+
 private:
   // Not implemented on platforms which do not support backtracing
   void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
@@ -413,6 +416,7 @@ private:
   bool mSaveRequested;
   bool mUseStackWalk;
   bool mJankOnly;
+  bool mProfileJS;
 };
 
 std::string GetSharedLibraryInfoString();
@@ -683,7 +687,9 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   // 's' tag denotes the start of a sample block
   // followed by 0 or more 'c' tags.
   aProfile.addTag(ProfileEntry('s', "(root)"));
-  for (mozilla::sig_safe_t i = 0; i < aStack->mStackPointer; i++) {
+  for (mozilla::sig_safe_t i = 0;
+       i < aStack->mStackPointer && i < mozilla::ArrayLength(aStack->mStack);
+       i++) {
     // First entry has tagName 's' (start)
     // Check for magic pointer bit 1 to indicate copy
     const char* sampleLabel = aStack->mStack[i].mLabel;
@@ -906,6 +912,7 @@ const char** mozilla_sampler_get_features()
     "stackwalk",
 #endif
     "jank",
+    "js",
     NULL
   };
 
@@ -931,6 +938,8 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
                                    aFeatures, aFeatureCount);
   tlsTicker.set(t);
   t->Start();
+  if (t->ProfileJS())
+      stack->installJSSampling();
 }
 
 void mozilla_sampler_stop()
@@ -943,9 +952,16 @@ void mozilla_sampler_stop()
     return;
   }
 
+  bool uninstallJS = t->ProfileJS();
+
   t->Stop();
   delete t;
   tlsTicker.set(NULL);
+  ProfileStack *stack = tlsStack.get();
+  ASSERT(stack != NULL);
+
+  if (uninstallJS)
+    stack->uninstallJSSampling();
 }
 
 bool mozilla_sampler_is_active()
