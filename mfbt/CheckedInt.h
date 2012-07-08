@@ -712,37 +712,19 @@ template<typename T>                                                  \
 inline CheckedInt<T> operator OP(const CheckedInt<T> &lhs,            \
                                  const CheckedInt<T> &rhs)            \
 {                                                                     \
-  T x = lhs.mValue;                                                   \
-  T y = rhs.mValue;                                                   \
-  T isOpValid = detail::Is##NAME##Valid(x, y);                        \
-  if (isOpValid) {                                                    \
-    T result = x OP y;                                                \
-    return CheckedInt<T>(result, lhs.mIsValid && rhs.mIsValid);       \
-  } else {                                                            \
-    return CheckedInt<T>(T(0), false);                                \
-  }                                                                   \
+  if (!detail::Is##NAME##Valid(lhs.mValue, rhs.mValue))               \
+    return CheckedInt<T>(0, false);                                   \
+                                                                      \
+  return CheckedInt<T>(lhs.mValue OP rhs.mValue,                      \
+                       lhs.mIsValid && rhs.mIsValid);                 \
 }
 
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Sub, -)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Mul, *)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Div, /)
 
 #undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR
-
-// Division can't be implemented by MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR
-// because if rhs == 0, we are not allowed to even try to compute the quotient.
-template<typename T>
-inline CheckedInt<T> operator /(const CheckedInt<T> &lhs,
-                                const CheckedInt<T> &rhs)
-{
-  T x = lhs.mValue;
-  T y = rhs.mValue;
-  bool isOpValid = detail::IsDivValid(x, y);
-  T result = isOpValid ? (x / y) : 0;
-  /* give the compiler a good chance to perform RVO */
-  return CheckedInt<T>(result,
-                       lhs.mIsValid && rhs.mIsValid && isOpValid);
-}
 
 // Implement castToCheckedInt<T>(x), making sure that
 //  - it allows x to be either a CheckedInt<T> or any integer type
