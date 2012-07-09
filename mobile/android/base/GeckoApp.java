@@ -1702,15 +1702,11 @@ abstract public class GeckoApp
     }
 
     public boolean isTablet() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int screenLayout = getResources().getConfiguration().screenLayout;
 
-        // Checking for sw600dp for 7" tablet.
-        if (((metrics.widthPixels / metrics.density) >= 600) &&
-            ((metrics.heightPixels / metrics.density) >= 600))
-            return true;
-        else
-            return false;
+        return (((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) ||
+                ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE));
+               
     }
 
     /** Called when the activity is first created. */
