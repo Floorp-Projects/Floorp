@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ParseContext_h__
-#define ParseContext_h__
+#ifndef TreeContext_h__
+#define TreeContext_h__
 
 #include "jstypes.h"
 #include "jsatom.h"
@@ -187,19 +187,19 @@ struct SharedContext {
 
 typedef HashSet<JSAtom *> FuncStmtSet;
 struct Parser;
-struct StmtInfoPC;
+struct StmtInfoTC;
 
-struct ParseContext {                /* parse context for semantic checks */
+struct TreeContext {                /* tree context for semantic checks */
 
-    typedef StmtInfoPC StmtInfo;
+    typedef StmtInfoTC StmtInfo;
 
     SharedContext   *sc;            /* context shared between parsing and bytecode generation */
 
     uint32_t        bodyid;         /* block number of program/function body */
     uint32_t        blockidGen;     /* preincremented block number generator */
 
-    StmtInfoPC      *topStmt;       /* top of statement info stack */
-    StmtInfoPC      *topScopeStmt;  /* top lexical scope statement */
+    StmtInfoTC      *topStmt;       /* top of statement info stack */
+    StmtInfoTC      *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
                                     /* compile time block scope chain */
 
@@ -218,14 +218,14 @@ struct ParseContext {                /* parse context for semantic checks */
     FunctionBox     *functionList;
 
   private:
-    ParseContext    **parserPC;     /* this points to the Parser's active pc
+    TreeContext     **parserTC;     /* this points to the Parser's active tc
                                        and holds either |this| or one of
                                        |this|'s descendents */
 
   public:
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
-    ParseContext    *parent;        /* Enclosing function or global context.  */
+    TreeContext     *parent;        /* Enclosing function or global context.  */
 
     ParseNode       *innermostWith; /* innermost WITH parse node */
 
@@ -255,8 +255,8 @@ struct ParseContext {                /* parse context for semantic checks */
 
     void trace(JSTracer *trc);
 
-    inline ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
-    inline ~ParseContext();
+    inline TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid);
+    inline ~TreeContext();
 
     inline bool init();
 
@@ -310,7 +310,7 @@ enum StmtType {
  * pending the "reformed with" in ES4/JS2). It includes all try-catch-finally
  * types, which are high-numbered maybe-scope types.
  *
- * StmtInfoBase::linksScope() tells whether a js::StmtInfo{PC,BCE} of the given
+ * StmtInfoBase::linksScope() tells whether a js::StmtInfo{TC,BCE} of the given
  * type eagerly links to other scoping statement info records. It excludes the
  * two early "maybe" types, block and switch, as well as the try and both
  * finally types, since try and the other trailing maybe-scope types don't need
@@ -321,7 +321,7 @@ enum StmtType {
  * proposal for ES4, we would be able to model it statically, too.
  */
 
-// StmtInfoPC is used by the Parser.  StmtInfoBCE is used by the
+// StmtInfoTC is used by the Parser.  StmtInfoBCE is used by the
 // BytecodeEmitter.  The two types have some overlap, encapsulated by
 // StmtInfoBase.  Several functions below (e.g. PushStatement) are templated to
 // work with both types.
@@ -362,22 +362,22 @@ struct StmtInfoBase {
     }
 };
 
-struct StmtInfoPC : public StmtInfoBase {
-    StmtInfoPC      *down;          /* info for enclosing statement */
-    StmtInfoPC      *downScope;     /* next enclosing lexical scope */
+struct StmtInfoTC : public StmtInfoBase {
+    StmtInfoTC      *down;          /* info for enclosing statement */
+    StmtInfoTC      *downScope;     /* next enclosing lexical scope */
 
     uint32_t        blockid;        /* for simplified dominance computation */
 
     /* True if type == STMT_BLOCK and this block is a function body. */
     bool            isFunctionBodyBlock;
 
-    StmtInfoPC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
+    StmtInfoTC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
 };
 
 bool
-GenerateBlockId(ParseContext *pc, uint32_t &blockid);
+GenerateBlockId(TreeContext *tc, uint32_t &blockid);
 
-// Push the C-stack-allocated struct at stmt onto the StmtInfoPC stack.
+// Push the C-stack-allocated struct at stmt onto the StmtInfoTC stack.
 template <class ContextT>
 void
 PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtType type);
@@ -386,7 +386,7 @@ template <class ContextT>
 void
 FinishPushBlockScope(ContextT *ct, typename ContextT::StmtInfo *stmt, StaticBlockObject &blockObj);
 
-// Pop ct->topStmt. If the top StmtInfoPC struct is not stack-allocated, it
+// Pop tc->topStmt. If the top StmtInfoTC struct is not stack-allocated, it
 // is up to the caller to free it.  The dummy argument is just to make the
 // template matching work.
 template <class ContextT>
@@ -415,4 +415,4 @@ LexicalLookup(ContextT *ct, JSAtom *atom, int *slotp, typename ContextT::StmtInf
 
 } // namespace js
 
-#endif // ParseContext_h__
+#endif // TreeContext_h__

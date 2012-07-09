@@ -32,7 +32,7 @@
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "frontend/ParseContext.h"
+#include "frontend/TreeContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringBuffer.h"
 

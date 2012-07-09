@@ -46,6 +46,7 @@
 #include "builtin/MapObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
+#include "frontend/TreeContext.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
