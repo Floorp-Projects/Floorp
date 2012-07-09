@@ -548,7 +548,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             return false;
 
         if (mMenuPopup != null && !mMenuPopup.isShowing())
-            mMenuPopup.show(mMenu);
+            mMenuPopup.showAsDropDown(mMenu);
 
         return true;
     }
@@ -565,7 +565,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
     public class MenuPopup extends PopupWindow {
-        private ImageView mArrow;
         private RelativeLayout mPanel;
 
         public MenuPopup(Context context) {
@@ -581,40 +580,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.menu_popup, null);
             setContentView(layout);
 
-            mArrow = (ImageView) layout.findViewById(R.id.menu_arrow);
             mPanel = (RelativeLayout) layout.findViewById(R.id.menu_panel);
         }
 
         public void setPanelView(View view) {
             mPanel.removeAllViews();
             mPanel.addView(view);
-        }
-
-        public void show(View anchor) {
-            showAsDropDown(anchor);
-
-            int location[] = new int[2];
-            anchor.getLocationOnScreen(location);
-
-            int menuButtonWidth = anchor.getWidth();
-            int arrowWidth = mArrow.getWidth();
-
-            int rightMostEdge = location[0] + menuButtonWidth;
-
-            DisplayMetrics metrics = new DisplayMetrics();
-            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-            int leftMargin = (int)(240 * metrics.density) - (metrics.widthPixels - location[0] - menuButtonWidth/2);
-
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
-            RelativeLayout.LayoutParams newParams = new RelativeLayout.LayoutParams(params);
-            newParams.setMargins(leftMargin,
-                                 params.topMargin,
-                                 0,
-                                 params.bottomMargin);
-
-            // From the left of popup, the arrow should move half of (menuButtonWidth - arrowWidth)
-            mArrow.setLayoutParams(newParams);
         }
     }
 }
