@@ -560,7 +560,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         // that make 12 insufficent.  In case 16 is also insufficent, I've bumped
         // it to 20.
         ensureSpace(20);
-        int initFlushCount = flushCount();
+        DebugOnly<int> initFlushCount = flushCount();
 #endif
         // [Bug 614953]: This can only be made conditional once the ARM back-end
         // is able to distinguish and patch both call sequences. Other
