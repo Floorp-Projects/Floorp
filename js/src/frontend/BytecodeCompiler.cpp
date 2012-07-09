@@ -16,7 +16,7 @@
 
 #include "jsinferinlines.h"
 
-#include "frontend/ParseContext-inl.h"
+#include "frontend/TreeContext-inl.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -103,8 +103,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
-    ParseContext pc(&parser, &sc, staticLevel, /* bodyid = */ 0);
-    if (!pc.init())
+    TreeContext tc(&parser, &sc, staticLevel, /* bodyid = */ 0);
+    if (!tc.init())
         return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
@@ -193,7 +193,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
         if (!AnalyzeFunctions(&parser, callerFrame))
             return NULL;
-        pc.functionList = NULL;
+        tc.functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
             return NULL;
@@ -221,7 +221,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     // It's an error to use |arguments| in a function that has a rest parameter.
     if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
         PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
-        for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
+        for (AtomDefnRange r = tc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
                 parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
                 return NULL;
@@ -268,8 +268,8 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun,
     fun->setArgCount(funsc.bindings.numArgs());
 
     unsigned staticLevel = 0;
-    ParseContext funpc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
-    if (!funpc.init())
+    TreeContext funtc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
+    if (!funtc.init())
         return false;
 
     GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;

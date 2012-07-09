@@ -20,7 +20,7 @@
 
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
-#include "frontend/ParseContext.h"
+#include "frontend/TreeContext.h"
 
 namespace js {
 namespace frontend {
@@ -40,7 +40,7 @@ struct Parser : private AutoGCRooter
     ParseNodeAllocator  allocator;
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
 
-    ParseContext        *pc;            /* innermost parse context (stack-allocated) */
+    TreeContext         *tc;            /* innermost tree context (stack-allocated) */
 
     /* Root atoms and objects allocated for the parsed tree. */
     AutoKeepAtoms       keepAtoms;
@@ -86,13 +86,13 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, ParseContext *pc);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc);
 
     /*
-     * Create a new function object given parse context (pc) and a name (which
+     * Create a new function object given tree context (tc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(ParseContext *pc, JSAtom *atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind);
 
     void trace(JSTracer *trc);
 
@@ -148,8 +148,8 @@ struct Parser : private AutoGCRooter
     /*
      * JS parsers, from lowest to highest precedence.
      *
-     * Each parser must be called during the dynamic scope of a ParseContext
-     * object, pointed to by this->pc.
+     * Each parser must be called during the dynamic scope of a TreeContext
+     * object, pointed to by this->tc.
      *
      * Each returns a parse node tree or null on error.
      *
@@ -229,7 +229,7 @@ struct Parser : private AutoGCRooter
 
 #if JS_HAS_XML_SUPPORT
     // True if E4X syntax is allowed in the current syntactic context.
-    bool allowsXML() const { return !pc->sc->inStrictMode() && tokenStream.allowsXML(); }
+    bool allowsXML() const { return !tc->sc->inStrictMode() && tokenStream.allowsXML(); }
 
     ParseNode *endBracketedExpr();
 
@@ -309,5 +309,10 @@ DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser);
 
 } /* namespace frontend */
 } /* namespace js */
+
+/*
+ * Convenience macro to access Parser.tokenStream as a pointer.
+ */
+#define TS(p) (&(p)->tokenStream)
 
 #endif /* Parser_h__ */

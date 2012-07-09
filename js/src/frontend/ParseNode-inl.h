@@ -9,9 +9,9 @@
 
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
-#include "frontend/ParseContext.h"
+#include "frontend/TreeContext.h"
 
-#include "frontend/ParseContext-inl.h"
+#include "frontend/TreeContext-inl.h"
 
 namespace js {
 namespace frontend {
@@ -184,14 +184,14 @@ NameNode::dump(int indent)
 #endif
 
 inline void
-NameNode::initCommon(ParseContext *pc)
+NameNode::initCommon(TreeContext *tc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
-    pn_dflags = (!pc->topStmt || pc->topStmt->type == STMT_BLOCK)
+    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
                 ? PND_BLOCKCHILD
                 : 0;
-    pn_blockid = pc->blockid();
+    pn_blockid = tc->blockid();
 }
 
 } /* namespace frontend */
