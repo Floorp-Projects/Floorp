@@ -101,7 +101,7 @@ try {
   rule.style.color = "fuchsia";
 } catch(ex) {}
 
-rule = make_rule_and_remove_sheet("@-moz-keyframes a { from { color: blue } }");
+rule = make_rule_and_remove_sheet("@keyframes a { from { color: blue } }");
 rule.insertRule("from { color: fuchsia}");
 rule.deleteRule("from");
 rule.name = "b";

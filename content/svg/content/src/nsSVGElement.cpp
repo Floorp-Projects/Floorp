@@ -923,13 +923,14 @@ nsSVGElement::sGraphicsMap[] = {
 // PresentationAttributes-TextContentElements
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sTextContentElementsMap[] = {
-  { &nsGkAtoms::alignment_baseline },
-  { &nsGkAtoms::baseline_shift },
+  // Properties that we don't support are commented out.
+  // { &nsGkAtoms::alignment_baseline },
+  // { &nsGkAtoms::baseline_shift },
   { &nsGkAtoms::direction },
   { &nsGkAtoms::dominant_baseline },
-  { &nsGkAtoms::glyph_orientation_horizontal },
-  { &nsGkAtoms::glyph_orientation_vertical },
-  { &nsGkAtoms::kerning },
+  // { &nsGkAtoms::glyph_orientation_horizontal },
+  // { &nsGkAtoms::glyph_orientation_vertical },
+  // { &nsGkAtoms::kerning },
   { &nsGkAtoms::letter_spacing },
   { &nsGkAtoms::text_anchor },
   { &nsGkAtoms::text_decoration },

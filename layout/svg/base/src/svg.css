@@ -14,7 +14,7 @@ switch {
  -moz-binding: none !important;
 }
 
-svg, symbol, image, marker, pattern, foreignObject {
+svg:not(:root), symbol, image, marker, pattern, foreignObject {
  overflow: hidden;
 }
 

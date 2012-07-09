@@ -19,34 +19,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525530
 var p = document.getElementById("display");
 var cs = getComputedStyle(p, "");
 
-p.style.MozTransitionProperty = "all";
-p.style.MozTransitionDuration = "4s";
-p.style.MozTransitionDelay = "-2s";
-p.style.MozTransitionTimingFunction = "linear";
+p.style.transitionProperty = "all";
+p.style.transitionDuration = "4s";
+p.style.transitionDelay = "-2s";
+p.style.transitionTimingFunction = "linear";
 
 is(cs.textIndent, "100px", "initial value");
 
 p.style.textIndent = "0";
 is(cs.textIndent, "50px", "transition is halfway");
-p.style.MozTransitionDuration = "0s";
+p.style.transitionDuration = "0s";
 is(cs.textIndent, "50px", "changing duration doesn't change transitioning");
-p.style.MozTransitionDelay = "0s";
+p.style.transitionDelay = "0s";
 is(cs.textIndent, "50px", "changing delay doesn't change transitioning");
-p.style.MozTransitionProperty = "text-indent";
+p.style.transitionProperty = "text-indent";
 is(cs.textIndent, "50px",
    "irrelevant change to transition property doesn't change transitioning");
-p.style.MozTransitionProperty = "font";
+p.style.transitionProperty = "font";
 is(cs.textIndent, "0px",
    "relevant change to transition property does change transitioning");
 
 /** Test for Bug 522643 */
-p.style.MozTransitionDuration = "4s";
-p.style.MozTransitionDelay = "-2s";
-p.style.MozTransitionProperty = "text-indent";
+p.style.transitionDuration = "4s";
+p.style.transitionDelay = "-2s";
+p.style.transitionProperty = "text-indent";
 p.style.textIndent = "100px";
 is(cs.textIndent, "50px", "transition is halfway");
-p.style.MozTransitionDuration = "0s";
-p.style.MozTransitionDelay = "0s";
+p.style.transitionDuration = "0s";
+p.style.transitionDelay = "0s";
 is(cs.textIndent, "50px",
    "changing duration and delay doesn't change transitioning");
 p.style.textIndent = "0px";
