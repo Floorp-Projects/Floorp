@@ -556,7 +556,7 @@ struct JSScript : public js::gc::Cell
                        uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
                        uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets);
     bool fullyInitTrivial(JSContext *cx);  // inits a JSOP_STOP-only script
-    bool fullyInitFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+    bool fullyInitFromEmitter(JSContext *cx, js::frontend::BytecodeEmitter *bce);
 
     void setVersion(JSVersion v) { version = v; }
 
