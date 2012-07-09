@@ -391,28 +391,31 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
     NotifyViewportOrTransformChanged(changeBits);
   }
 
-  // Now that we've marked the necessary children as dirty, call
-  // UpdateBounds() on them:
+  nsSVGOuterSVGAnonChildFrame *anonKid =
+    static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
 
-  mCallingUpdateBounds = true;
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    // Now that we've marked the necessary children as dirty, call
+    // UpdateBounds() on them:
 
-  if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-      if (SVGFrame && !(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-        SVGFrame->UpdateBounds(); 
-      }
-      kid = kid->GetNextSibling();
-    }
+    mCallingUpdateBounds = true;
+
+    // Update the mRects and visual overflow rects of all our descendants,
+    // including our anonymous wrapper kid:
+    anonKid->UpdateBounds();
+    NS_ABORT_IF_FALSE(!anonKid->GetNextSibling(),
+      "We should have one anonymous child frame wrapping our real children");
+
+    mCallingUpdateBounds = false;
   }
-
-  mCallingUpdateBounds = false;
 
   // Make sure we scroll if we're too big:
   // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
+
+  // Set our anonymous kid's offset from our border box:
+  anonKid->SetPosition(GetContentRectRelativeToSelf().TopLeft());
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
@@ -471,9 +474,12 @@ nsDisplayOuterSVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
   nsPoint rectCenter(rectAtOrigin.x + rectAtOrigin.width / 2,
                      rectAtOrigin.y + rectAtOrigin.height / 2);
 
+  nsSVGOuterSVGAnonChildFrame *anonKid =
+    static_cast<nsSVGOuterSVGAnonChildFrame*>(
+      outerSVGFrame->GetFirstPrincipalChild());
   nsIFrame* frame = nsSVGUtils::HitTestChildren(
-    outerSVGFrame, rectCenter + outerSVGFrame->GetPosition() -
-                   outerSVGFrame->GetContentRect().TopLeft());
+    anonKid, rectCenter + outerSVGFrame->GetPosition() -
+               outerSVGFrame->GetContentRect().TopLeft());
   if (frame) {
     aOutFrames->AppendElement(frame);
   }
@@ -546,8 +552,8 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
 
-      nsSVGUtils::NotifyChildrenOfSVGChange(
-          this, aAttribute == nsGkAtoms::viewBox ?
+      nsSVGUtils::NotifyChildrenOfSVGChange(GetFirstPrincipalChild(),
+                aAttribute == nsGkAtoms::viewBox ?
                   TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED : TRANSFORM_CHANGED);
 
       static_cast<nsSVGSVGElement*>(mContent)->ChildrenOnlyTransformChanged();
@@ -676,7 +682,38 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
     }
   }
 
-  nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
+  nsSVGUtils::NotifyChildrenOfSVGChange(GetFirstPrincipalChild(), aFlags);
+}
+
+//----------------------------------------------------------------------
+// nsISVGChildFrame methods:
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
+                             const nsIntRect *aDirtyRect)
+{
+  NS_ASSERTION(GetFirstPrincipalChild()->GetType() ==
+                 nsGkAtoms::svgOuterSVGAnonChildFrame &&
+               !GetFirstPrincipalChild()->GetNextSibling(),
+               "We should have a single, anonymous, child");
+  nsSVGOuterSVGAnonChildFrame *anonKid =
+    static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
+  return anonKid->PaintSVG(aContext, aDirtyRect);
+}
+
+SVGBBox
+nsSVGOuterSVGFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+                                        PRUint32 aFlags)
+{
+  NS_ASSERTION(GetFirstPrincipalChild()->GetType() ==
+                 nsGkAtoms::svgOuterSVGAnonChildFrame &&
+               !GetFirstPrincipalChild()->GetNextSibling(),
+               "We should have a single, anonymous, child");
+  // We must defer to our child so that we don't include our
+  // content->PrependLocalTransformsTo() transforms.
+  nsSVGOuterSVGAnonChildFrame *anonKid =
+    static_cast<nsSVGOuterSVGAnonChildFrame*>(GetFirstPrincipalChild());
+  return anonKid->GetBBoxContribution(aToBBoxUserspace, aFlags);
 }
 
 //----------------------------------------------------------------------
@@ -703,24 +740,6 @@ nsSVGOuterSVGFrame::GetCanvasTM(PRUint32 aFor)
     mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
-}
-
-bool
-nsSVGOuterSVGFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
-{
-  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
-
-  bool hasTransform = content->HasChildrenOnlyTransform();
-
-  if (hasTransform && aTransform) {
-    // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
-    gfxMatrix identity;
-    *aTransform =
-      content->PrependLocalTransformsTo(identity,
-                                        nsSVGElement::eChildToUserSpace);
-  }
-
-  return hasTransform;
 }
 
 //----------------------------------------------------------------------
@@ -776,4 +795,56 @@ nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const
   nsSVGLength2 &height = static_cast<nsSVGSVGElement*>(mContent)->
                            mLengthAttributes[nsSVGSVGElement::HEIGHT];
   return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;
+}
+
+
+//----------------------------------------------------------------------
+// Implementation of nsSVGOuterSVGAnonChildFrame
+
+nsIFrame*
+NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
+                                nsStyleContext* aContext)
+{
+  return new (aPresShell) nsSVGOuterSVGAnonChildFrame(aContext);
+}
+
+NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsSVGOuterSVGAnonChildFrame::Init(nsIContent* aContent,
+                                  nsIFrame* aParent,
+                                  nsIFrame* aPrevInFlow)
+{
+  NS_ABORT_IF_FALSE(aParent->GetType() == nsGkAtoms::svgOuterSVGFrame,
+                    "Unexpected parent");
+  return nsSVGOuterSVGAnonChildFrameBase::Init(aContent, aParent, aPrevInFlow);
+}
+#endif
+
+nsIAtom *
+nsSVGOuterSVGAnonChildFrame::GetType() const
+{
+  return nsGkAtoms::svgOuterSVGAnonChildFrame;
+}
+
+bool
+nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
+{
+  // We must claim our nsSVGOuterSVGFrame's children-only transforms as our own
+  // so that the children we are used to wrap are transformed properly.
+
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+
+  bool hasTransform = content->HasChildrenOnlyTransform();
+
+  if (hasTransform && aTransform) {
+    // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
+    gfxMatrix identity;
+    *aTransform =
+      content->PrependLocalTransformsTo(identity,
+                                        nsSVGElement::eChildToUserSpace);
+  }
+
+  return hasTransform;
 }
