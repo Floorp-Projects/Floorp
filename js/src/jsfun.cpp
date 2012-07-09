@@ -276,9 +276,9 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-static JSBool
-fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+JSBool
+js_fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+               JSObject **objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -533,7 +533,7 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     fun_enumerate,
-    (JSResolveOp)fun_resolve,
+    (JSResolveOp)js_fun_resolve,
     JS_ConvertStub,
     NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
@@ -1006,7 +1006,7 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     if (!funobj->toFunction()->initBoundFunction(cx, thisArg, boundArgs, argslen))
         return NULL;
 
-    /* Steps 17, 19-21 are handled by fun_resolve. */
+    /* Steps 17, 19-21 are handled by js_fun_resolve. */
     /* Step 18 is the default for new functions. */
     return funobj;
 }
