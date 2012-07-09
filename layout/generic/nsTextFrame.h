@@ -396,7 +396,7 @@ public:
   struct TrimmedOffsets {
     PRInt32 mStart;
     PRInt32 mLength;
-    PRInt32 GetEnd() { return mStart + mLength; }
+    PRInt32 GetEnd() const { return mStart + mLength; }
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
                                    bool aTrimAfter);
