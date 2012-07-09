@@ -139,6 +139,8 @@ NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
+NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -2407,25 +2409,30 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 #endif
   if (aDocElement->IsSVG()) {
     if (aDocElement->Tag() == nsGkAtoms::svg) {
-      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
-      if (NS_UNLIKELY(!contentFrame)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      InitAndRestoreFrame(state, aDocElement,
-                          state.GetGeometricParent(display,
-                                                   mDocElementContainingBlock),
-                          nsnull, contentFrame);
+      // We're going to call the right function ourselves, so no need to give a
+      // function to this FrameConstructionData.
 
-      // AddChild takes care of transforming the frame tree for fixed-pos
-      // or abs-pos situations
+      // XXXbz on the other hand, if we converted this whole function to
+      // FrameConstructionData/Item, then we'd need the right function
+      // here... but would probably be able to get away with less code in this
+      // function in general.
+      // Use a null PendingBinding, since our binding is not in fact pending.
+      static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nsnull);
+      nsRefPtr<nsStyleContext> extraRef(styleContext);
+      FrameConstructionItem item(&rootSVGData, aDocElement,
+                                 aDocElement->Tag(), kNameSpaceID_SVG,
+                                 nsnull, extraRef.forget(), true);
+
       nsFrameItems frameItems;
-      rv = state.AddChild(contentFrame, frameItems, aDocElement,
-                          styleContext, mDocElementContainingBlock);
-      if (NS_FAILED(rv) || frameItems.IsEmpty()) {
+      rv = ConstructOuterSVG(state, item, mDocElementContainingBlock,
+                             styleContext->GetStyleDisplay(),
+                             frameItems, &contentFrame);
+      if (NS_FAILED(rv))
         return rv;
-      }
+      if (!contentFrame || frameItems.IsEmpty())
+        return NS_ERROR_FAILURE;
       *aNewFrame = frameItems.FirstChild();
-      processChildren = true;
+      NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     } else {
       return NS_ERROR_FAILURE;
     }
@@ -2498,8 +2505,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // Still need to process the child content
     nsFrameItems childItems;
 
-    NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame),
-                 "Only XUL and SVG frames should reach here");
+    NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame) &&
+                 !contentFrame->IsFrameOfType(nsIFrame::eSVG),
+                 "Only XUL frames should reach here");
     // Use a null PendingBinding, since our binding is not in fact pending.
     ProcessChildren(state, aDocElement, styleContext, contentFrame, true,
                     childItems, false, nsnull);
@@ -4702,6 +4710,82 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
                        ArrayLength(sMathMLData));
 }
 
+
+// Construct an nsSVGOuterSVGFrame, the anonymous child that wraps its real
+// children, and its descendant frames.
+nsresult
+nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
+                                         FrameConstructionItem&   aItem,
+                                         nsIFrame*                aParentFrame,
+                                         const nsStyleDisplay*    aDisplay,
+                                         nsFrameItems&            aFrameItems,
+                                         nsIFrame**               aNewFrame)
+{
+  nsIContent* const content = aItem.mContent;
+  nsStyleContext* const styleContext = aItem.mStyleContext;
+
+  nsresult rv = NS_OK;
+
+  // Create the nsSVGOuterSVGFrame:
+  nsIFrame* newFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
+
+  nsIFrame* geometricParent =
+    aState.GetGeometricParent(styleContext->GetStyleDisplay(),
+                              aParentFrame);
+
+  InitAndRestoreFrame(aState, content, geometricParent, nsnull, newFrame);
+
+  // Create the pseudo SC for the anonymous wrapper child as a child of the SC:
+  nsRefPtr<nsStyleContext> scForAnon;
+  scForAnon = mPresShell->StyleSet()->
+    ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozSVGOuterSVGAnonChild,
+                             styleContext);
+
+  // Create the anonymous inner wrapper frame
+  nsIFrame* innerFrame = NS_NewSVGOuterSVGAnonChildFrame(mPresShell, scForAnon);
+
+  if (!innerFrame) {
+    newFrame->Destroy();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  InitAndRestoreFrame(aState, content, newFrame, nsnull, innerFrame);
+
+  // Put the newly created frames into the right child list
+  SetInitialSingleChild(newFrame, innerFrame);
+
+  rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
+                       aParentFrame);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!mRootElementFrame) {
+    // The frame we're constructing will be the root element frame.
+    // Set mRootElementFrame before processing children.
+    mRootElementFrame = newFrame;
+  }
+
+  nsFrameItems childItems;
+
+  // Process children
+  if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
+    rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
+                                     innerFrame, childItems);
+  } else {
+    rv = ProcessChildren(aState, content, styleContext, innerFrame,
+                         true, childItems, false, aItem.mPendingBinding);
+  }
+  // XXXbz what about cleaning up?
+  if (NS_FAILED(rv)) return rv;
+
+  // Set the inner wrapper frame's initial primary list
+  innerFrame->SetInitialChildList(kPrincipalList, childItems);
+
+  *aNewFrame = newFrame;
+  return rv;
+}
+
 // Only outer <svg> elements can be floated or positioned.  All other SVG
 // should be in-flow.
 #define SIMPLE_SVG_FCDATA(_func)                                        \
@@ -4789,8 +4873,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     // and do the PassesConditionalProcessingTests call in
     // nsSVGOuterSVGFrame::Init.
     static const FrameConstructionData sOuterSVGData =
-      FCDATA_DECL(FCDATA_SKIP_ABSPOS_PUSH | FCDATA_DISALLOW_GENERATED_CONTENT,
-                  NS_NewSVGOuterSVGFrame);
+      FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructOuterSVG);
     return &sOuterSVGData;
   }
   
