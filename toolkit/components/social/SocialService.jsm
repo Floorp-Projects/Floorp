@@ -25,8 +25,10 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
         providers[provider.origin] = provider;
       }
     } catch (err) {
-      Cu.reportError("SocialService: failed to load provider: " + pref +
-                     ", exception: " + err);
+      let msg = "SocialService: failed to load provider: " + pref +
+                ", exception: " + err;
+      Cu.reportError(msg);
+      dump(msg);
     }
   }, this);
 

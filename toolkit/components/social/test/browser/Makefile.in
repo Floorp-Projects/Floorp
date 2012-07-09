@@ -15,13 +15,15 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-		head.js \
-		data.json \
-		worker_xhr.js \
-		browser_frameworker.js \
-		worker_relative.js \
-		relative_import.js \
-		$(NULL)
+  head.js \
+  data.json \
+  worker_xhr.js \
+  browser_frameworker.js \
+  worker_relative.js \
+  relative_import.js \
+  browser_workerAPI.js \
+  worker_social.js \
+  $(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
