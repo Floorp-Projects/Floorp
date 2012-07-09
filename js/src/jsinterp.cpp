@@ -313,6 +313,9 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
+    /* We should never enter a new script while cx->iterValue is live. */
+    JS_ASSERT(cx->iterValue.isMagic(JS_NO_ITER_VALUE));
+
     /* MaybeConstruct is a subset of InitialFrameFlags */
     InitialFrameFlags initial = (InitialFrameFlags) construct;
 
