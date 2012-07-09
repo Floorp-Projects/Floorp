@@ -20,9 +20,11 @@
 #define ENABLE_SPS_LEAF_DATA
 #define ENABLE_ARM_LR_SAVING
 #endif
-#define LOG(text) __android_log_print(ANDROID_LOG_ERROR, "profiler", "%s", text);
+#define LOG(text) __android_log_write(ANDROID_LOG_ERROR, "profiler", text)
+#define LOGF(format, ...) __android_log_print(ANDROID_LOG_ERROR, "profiler", format, __VA_ARGS__)
 #else
 #define LOG(text) printf("Profiler: %s\n", text)
+#define LOGF(format, ...) printf("Profiler: " format "\n", __VA_ARGS__)
 #endif
 
 #if defined(XP_MACOSX) || defined(XP_WIN)
