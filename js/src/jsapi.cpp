@@ -5067,7 +5067,8 @@ JS::CompileOptions::CompileOptions(JSContext *cx)
       filename(NULL),
       lineno(1),
       compileAndGo(cx->hasRunOption(JSOPTION_COMPILE_N_GO)),
-      noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL))
+      noScriptRval(cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL)),
+      allowIntrinsicsCalls(false)
 {
 }
 
