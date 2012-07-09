@@ -100,9 +100,10 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
     static const unsigned FLAGS                   = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned DEBUGGERS               = FLAGS + 1;
+    static const unsigned INTRINSICS              = DEBUGGERS + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = DEBUGGERS + 1;
+    static const unsigned RESERVED_SLOTS = INTRINSICS + 1;
 
     void staticAsserts() {
         /*
@@ -134,6 +135,8 @@ class GlobalObject : public JSObject
     inline void setThrowTypeError(JSFunction *fun);
     inline void setOriginalEval(JSObject *evalobj);
     inline void setProtoGetter(JSFunction *protoGetter);
+
+    inline void setIntrinsicsHolder(JSObject *obj);
 
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
@@ -358,6 +361,20 @@ class GlobalObject : public JSObject
         if (!js_InitTypedArrayClasses(cx, this))
             return NULL;
         return &self->getPrototype(JSProto_DataView).toObject();
+    }
+
+    bool hasIntrinsicFunction(JSContext *cx, PropertyName *name) {
+        RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
+        Value fun = NullValue();
+        return HasDataProperty(cx, holder, NameToId(name), &fun);
+    }
+
+    JSFunction *getIntrinsicFunction(JSContext *cx, PropertyName *name) {
+        RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
+        Value fun = NullValue();
+        DebugOnly<bool> ok = HasDataProperty(cx, holder, NameToId(name), &fun);
+        JS_ASSERT(ok);
+        return fun.toObject().toFunction();
     }
 
     inline RegExpStatics *getRegExpStatics() const;
