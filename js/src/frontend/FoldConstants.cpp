@@ -24,7 +24,6 @@
 #include "vm/String-inl.h"
 
 using namespace js;
-using namespace js::frontend;
 
 static ParseNode *
 ContainsVarOrConst(ParseNode *pn)
@@ -402,8 +401,7 @@ Boolish(ParseNode *pn)
 }
 
 bool
-frontend::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda,
-                        bool inCond)
+js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda, bool inCond)
 {
     ParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 

@@ -1112,7 +1112,7 @@ struct JSContext : js::ContextFriendFields
 
   private:
     /* Lazily initialized pool of maps used during parse/emit. */
-    js::frontend::ParseMapPool *parseMapPool_;
+    js::ParseMapPool    *parseMapPool_;
 
   public:
     /* Top-level object and pointer to top stack frame's scope chain. */
@@ -1141,7 +1141,7 @@ struct JSContext : js::ContextFriendFields
     inline js::RegExpStatics *regExpStatics();
 
   public:
-    js::frontend::ParseMapPool &parseMapPool() {
+    js::ParseMapPool &parseMapPool() {
         JS_ASSERT(parseMapPool_);
         return *parseMapPool_;
     }
