@@ -39,7 +39,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -177,10 +176,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             public void onClick(View view) {
                 int[] lockLocation = new int[2];
                 view.getLocationOnScreen(lockLocation);
-                LayoutParams lockLayoutParams = (LayoutParams) view.getLayoutParams();
+
+                RelativeLayout.LayoutParams iconsLayoutParams =
+                        (RelativeLayout.LayoutParams) ((View) view.getParent()).getLayoutParams();
 
                 // Calculate the left margin for the arrow based on the position of the lock icon.
-                int leftMargin = lockLocation[0] - lockLayoutParams.rightMargin;
+                int leftMargin = lockLocation[0] - iconsLayoutParams.rightMargin;
                 SiteIdentityPopup.getInstance().show(mSiteSecurity, leftMargin);
             }
         });
