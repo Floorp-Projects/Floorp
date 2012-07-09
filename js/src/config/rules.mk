@@ -1161,7 +1161,7 @@ ifndef NO_SUBMAKEFILES_RULE
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $@
+	$(if $(subsrcdir),cd $(subsrcdir) && )$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir)$(addprefix /,$(subsrcdir)) -d $(DEPTH) $(@:$(subsrcdir)/%=%)
 endif
 endif
 
