@@ -442,7 +442,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
-    relhackcode->insertBefore(section);
+    relhackcode->insertAfter(section);
     relhack->insertAfter(relhackcode);
 
     unsigned int old_end = section->getOffset() + section->getSize();
