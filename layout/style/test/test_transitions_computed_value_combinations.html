@@ -38,7 +38,7 @@ function myrand()
 // Each of these values will also have a "computed" property filled in
 // below, so that we ensure it always computes to the same value.
 var values = {
-  "-moz-transition-duration":
+  "transition-duration":
     [
       { lone: true,  specified: "-moz-initial" },
       { lone: false, specified: "2s" },
@@ -46,7 +46,7 @@ var values = {
       { lone: false, specified: "430ms" },
       { lone: false, specified: "-1s" },
     ],
-  "-moz-transition-property":
+  "transition-property":
     [
       { lone: true,  specified: "-moz-initial" },
       { lone: true,  specified: "none" },
@@ -57,7 +57,7 @@ var values = {
       { lone: false, specified: "unsupported-property" },
       { lone: false, specified: "-other-unsupported-property" },
     ],
-  "-moz-transition-timing-function":
+  "transition-timing-function":
     [
       { lone: true,  specified: "-moz-initial" },
       { lone: false, specified: "linear" },
@@ -65,7 +65,7 @@ var values = {
       { lone: false, specified: "ease-in-out" },
       { lone: false, specified: "cubic-bezier(0, 0, 0.63, 1.00)" },
     ],
-  "-moz-transition-delay":
+  "transition-delay":
     [
       { lone: true,  specified: "-moz-initial" },
       { lone: false, specified: "2s" },
