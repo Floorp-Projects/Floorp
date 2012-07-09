@@ -4971,7 +4971,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
         }
     }
 
-    *funcp = (JSFunction *)found;
+    if (found->isFunction())
+        *funcp = found->toFunction();
 
     return true;
 }
