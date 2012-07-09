@@ -459,7 +459,9 @@ public class GeckoInputConnection
                 if (DEBUG) Log.d(LOGTAG, String.format(
                                  ". . . notifyTextChange: current mEditable=\"%s\"",
                                  mEditable.toString()));
-                setEditable(text);
+                // Editable will be updated by IME event
+                if (!hasCompositionString())
+                    setEditable(text);
             }
         }
 
