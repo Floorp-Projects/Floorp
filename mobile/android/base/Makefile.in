@@ -310,6 +310,7 @@ RES_LAYOUT_LARGE = \
   res/layout-large/gecko_app.xml \
   res/layout-large/remote_tabs_child.xml \
   res/layout-large/remote_tabs_group.xml \
+  res/layout-large/site_identity_popup.xml \
   res/layout-large/tabs_panel_toolbar.xml \
   res/layout-large/tabs_row.xml \
   $(NULL)
