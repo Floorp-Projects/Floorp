@@ -60,11 +60,14 @@ let DOMApplicationRegistry = {
     if (this.appsFile.exists()) {
       this._loadJSONAsync(this.appsFile, (function(aData) {
         this.webapps = aData;
-#ifdef MOZ_SYS_MSG
         for (let id in this.webapps) {
+#ifdef MOZ_SYS_MSG
           this._registerSystemMessagesForId(id);
-        };
 #endif
+          if (!this.webapps[id].localId) {
+            this.webapps[id].localId = this._nextLocalId();
+          }
+        };
       }).bind(this));
     }
 
@@ -208,6 +211,7 @@ let DOMApplicationRegistry = {
   confirmInstall: function(aData, aFromSync, aProfileDir, aOfflineCacheObserver) {
     let app = aData.app;
     let id = app.syncId || this._appId(app.origin);
+    let localId = this.getAppLocalIdByManifestURL(app.manifestURL);
 
     // install an application again is considered as an update
     if (id) {
@@ -218,12 +222,15 @@ let DOMApplicationRegistry = {
       }
     } else {
       id = this.makeAppId();
+      localId = this._nextLocalId();
     }
 
     let appObject = this._cloneAppObject(app);
     appObject.installTime = app.installTime = Date.now();
     let appNote = JSON.stringify(appObject);
     appNote.id = id;
+
+    appObject.localId = localId;
 
     let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
     let manFile = dir.clone();
@@ -258,6 +265,17 @@ let DOMApplicationRegistry = {
         cacheUpdate.addObserver(aOfflineCacheObserver, false);
       }
     }
+  },
+
+  _nextLocalId: function() {
+    let maxLocalId = 0;
+    for (let id in this.webapps) {
+      if (this.webapps[id].localId > maxLocalId) {
+        maxLocalId = this.webapps[id].localId;
+      }
+    }
+
+    return maxLocalId + 1;
   },
 
   _appId: function(aURI) {
@@ -450,7 +468,17 @@ let DOMApplicationRegistry = {
 
     return null;
   },
-  
+
+  getAppLocalIdByManifestURL: function(aManifestURL) {
+    for (let id in this.webapps) {
+      if (this.webapps[id].manifestURL == aManifestURL) {
+        return this.webapps[id].localId;
+      }
+    }
+
+    return 0;
+  },
+
   getAllWithoutManifests: function(aCallback) {
     let result = {};
     for (let id in this.webapps) {
