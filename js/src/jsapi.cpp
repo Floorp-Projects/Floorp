@@ -784,6 +784,7 @@ JSRuntime::JSRuntime()
     positiveInfinityValue(UndefinedValue()),
     emptyString(NULL),
     debugMode(false),
+    spsProfiler(thisFromCtor()),
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),

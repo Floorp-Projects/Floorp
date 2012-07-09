@@ -1041,7 +1041,7 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS())
-      stack->installJSSampling();
+      stack->enableJSSampling();
 }
 
 void mozilla_sampler_stop()
@@ -1054,7 +1054,7 @@ void mozilla_sampler_stop()
     return;
   }
 
-  bool uninstallJS = t->ProfileJS();
+  bool disableJS = t->ProfileJS();
 
   t->Stop();
   delete t;
@@ -1062,8 +1062,8 @@ void mozilla_sampler_stop()
   ProfileStack *stack = tlsStack.get();
   ASSERT(stack != NULL);
 
-  if (uninstallJS)
-    stack->uninstallJSSampling();
+  if (disableJS)
+    stack->disableJSSampling();
 }
 
 bool mozilla_sampler_is_active()
