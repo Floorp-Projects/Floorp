@@ -43,7 +43,6 @@
 #endif
 
 using namespace js;
-using namespace js::frontend;
 using namespace js::unicode;
 
 #define JS_KEYWORD(keyword, type, op, version) \
@@ -59,7 +58,7 @@ static const KeywordInfo keywords[] = {
 };
 
 const KeywordInfo *
-frontend::FindKeyword(const jschar *s, size_t length)
+js::FindKeyword(const jschar *s, size_t length)
 {
     JS_ASSERT(length != 0);
 
@@ -96,7 +95,7 @@ frontend::FindKeyword(const jschar *s, size_t length)
 }
 
 bool
-frontend::IsIdentifier(JSLinearString *str)
+js::IsIdentifier(JSLinearString *str)
 {
     const jschar *chars = str->chars();
     size_t length = str->length();

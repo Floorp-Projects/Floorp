@@ -131,6 +131,20 @@ class StackSpace;
 class ContextStack;
 class ScriptFrameIter;
 
+struct BytecodeEmitter;
+struct Definition;
+struct FunctionBox;
+struct ObjectBox;
+struct ParseNode;
+struct Parser;
+struct SharedContext;
+class TokenStream;
+struct Token;
+struct TokenPos;
+struct TokenPtr;
+struct TreeContext;
+class UpvarCookie;
+
 class Proxy;
 class BaseProxyHandler;
 class DirectWrapper;
@@ -158,6 +172,13 @@ class Bindings;
 struct StackBaseShape;
 struct StackShape;
 
+class MultiDeclRange;
+class ParseMapPool;
+class DefinitionList;
+typedef InlineMap<JSAtom *, Definition *, 24> AtomDefnMap;
+typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
+typedef Vector<UpvarCookie, 8> UpvarCookies;
+
 class Breakpoint;
 class BreakpointSite;
 class Debugger;
@@ -175,22 +196,6 @@ typedef JSNative             Native;
 typedef JSPropertyOp         PropertyOp;
 typedef JSStrictPropertyOp   StrictPropertyOp;
 typedef JSPropertyDescriptor PropertyDescriptor;
-
-namespace frontend {
-
-struct BytecodeEmitter;
-struct Definition;
-struct FunctionBox;
-struct ObjectBox;
-struct Token;
-struct TokenPos;
-struct TokenPtr;
-class TokenStream;
-struct Parser;
-class ParseMapPool;
-struct ParseNode;
-
-} /* namespace frontend */
 
 namespace analyze {
 

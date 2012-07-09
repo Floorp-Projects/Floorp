@@ -14,7 +14,6 @@
 #include "frontend/TreeContext-inl.h"
 
 namespace js {
-namespace frontend {
 
 inline bool
 UpvarCookie::set(JSContext *cx, unsigned newLevel, uint16_t newSlot)
@@ -194,7 +193,6 @@ NameNode::initCommon(TreeContext *tc)
     pn_blockid = tc->blockid();
 }
 
-} /* namespace frontend */
 } /* namespace js */
 
 #endif /* ParseNode_inl_h__ */

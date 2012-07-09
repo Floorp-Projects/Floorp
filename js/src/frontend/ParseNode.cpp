@@ -14,7 +14,6 @@
 #include "frontend/ParseNode-inl.h"
 
 using namespace js;
-using namespace js::frontend;
 
 /*
  * Asserts to verify assumptions behind pn_ macros.
@@ -571,7 +570,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
  * the original tree.
  */
 ParseNode *
-frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
+js::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 {
     ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
                                             opn->pn_pos);
@@ -642,7 +641,7 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
 
 #ifdef DEBUG
 void
-frontend::DumpParseTree(ParseNode *pn, int indent)
+js::DumpParseTree(ParseNode *pn, int indent)
 {
     if (pn == NULL)
         fprintf(stderr, "()");

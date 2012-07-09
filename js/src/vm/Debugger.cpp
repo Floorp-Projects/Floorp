@@ -26,7 +26,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using js::frontend::IsIdentifier;
 
 
 /*** Forward declarations ************************************************************************/

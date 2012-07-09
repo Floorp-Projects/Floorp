@@ -890,7 +890,7 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
 }
 
 bool
-frontend::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
+js::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
 {
     /*
      * Make an argument definition node, distinguished by being in
@@ -933,7 +933,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
 static bool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser);
 
-struct frontend::BindData {
+struct BindData {
     BindData(JSContext *cx) : let(cx), fresh(true) {}
 
     ParseNode       *pn;        /* name node for definition processing and
