@@ -233,12 +233,11 @@ nsInvalidPluginTag::~nsInvalidPluginTag()
 
 // Helper to check for a MIME in a comma-delimited preference
 static bool
-IsTypeInPrefList(nsCString &aMimeType, const char* aPrefName)
+IsTypeInList(nsCString &aMimeType, nsCString aTypeList)
 {
   nsCAutoString searchStr;
   searchStr.Assign(',');
-  nsAdoptingCString prefStr = Preferences::GetCString(aPrefName);
-  searchStr += prefStr;
+  searchStr.Append(aTypeList);
   searchStr.Append(',');
 
   nsACString::const_iterator start, end;
@@ -2403,11 +2402,12 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
 /* static */ bool
 nsPluginHost::IsTypeWhitelisted(const char *aMimeType)
 {
-  if (!Preferences::HasUserValue(kPrefWhitelist)) {
+  nsAdoptingCString whitelist = Preferences::GetCString(kPrefWhitelist);
+  if (!whitelist.Length()) {
     return true;
   }
   nsDependentCString wrap(aMimeType);
-  return IsTypeInPrefList(wrap, kPrefWhitelist);
+  return IsTypeInList(wrap, whitelist);
 }
 
 nsresult
