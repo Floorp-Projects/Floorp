@@ -83,6 +83,7 @@ CPPSRCS = \
   SpdyStream2.cpp \
   SpdySession3.cpp \
   SpdyStream3.cpp \
+  ConnectionDiagnostics.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
