@@ -17,6 +17,8 @@
 
 // TODO: maybe make those reflections be tested against all input types.
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 // .accept
 reflectString({
   element: document.createElement("input"),
@@ -111,7 +113,10 @@ reflectUnsignedInt({
 // TODO: list (HTMLElement)
 
 // .max
-todo("max" in document.createElement("input"), "max isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'max',
+});
 
 // .maxLength
 reflectInt({
@@ -121,7 +126,10 @@ reflectInt({
 });
 
 // .min
-todo("min" in document.createElement("input"), "min isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'min',
+});
 
 // .multiple
 reflectBoolean({
@@ -173,7 +181,10 @@ reflectUnsignedInt({
 // TODO: src (URL)
 
 // .step
-todo("step" in document.createElement("input"), "step isn't implemented yet");
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'step',
+});
 
 // .type
 reflectLimitedEnumerated({
@@ -181,11 +192,11 @@ reflectLimitedEnumerated({
   attribute: "type",
   validValues: [ "hidden", "text", "search", "tel", "url", "email", "password",
                  "checkbox", "radio", "file", "submit", "image", "reset",
-                 "button" ],
+                 "button", "number" ],
   invalidValues: [ "this-is-probably-a-wrong-type", "", "tulip" ],
   defaultValue: "text",
   unsupportedValues: [ "datetime", "date", "month", "week", "time",
-                       "datetime-local", "number", "range", "color" ]
+                       "datetime-local", "range", "color" ]
 });
 
 // .defaultValue
@@ -201,9 +212,9 @@ reflectString({
 todo("valueAsDate" in document.createElement("input"),
      "valueAsDate isn't implemented yet");
 
-// .valueAsNumber
-todo("valueAsNumber" in document.createElement("input"),
-     "valueAsNumber isn't implemented yet");
+// Deeper check will be done with bug 763305.
+is('valueAsNumber' in document.createElement("input"), true,
+   "valueAsNumber should be available");
 
 // .selectedOption
 todo("selectedOption" in document.createElement("input"),
@@ -220,6 +231,9 @@ reflectUnsignedInt({
 // .validity doesn't reflect a content attribute.
 // .validationMessage doesn't reflect a content attribute.
 // .labels doesn't reflect a content attribute.
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>

@@ -7,6 +7,7 @@
 #include "nsAutoPtr.h"
 #include <stdio.h>
 #include "nscore.h"
+#include "mozilla/Attributes.h"
 
 class TestObjectBaseA {
     public:
@@ -53,7 +54,7 @@ class TestRefObjectBaseB {
         virtual nsrefcnt Release() = 0;
 };
 
-class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
+class TestRefObject MOZ_FINAL : public TestRefObjectBaseA, public TestRefObjectBaseB {
     public:
         TestRefObject()
             : mRefCount(0)

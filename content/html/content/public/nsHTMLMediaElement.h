@@ -298,7 +298,7 @@ public:
   static bool IsH264Enabled();
   static bool IsH264Type(const nsACString& aType);
   static const char gH264Types[3][17];
-  static char const *const gH264Codecs[6];
+  static char const *const gH264Codecs[7];
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS

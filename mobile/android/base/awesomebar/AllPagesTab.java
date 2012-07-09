@@ -26,12 +26,14 @@ import android.widget.Toast;
 import android.widget.SimpleCursorAdapter;
 import android.widget.LinearLayout;
 import android.widget.TabHost.TabContentFactory;
+import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.Intent;
 import android.widget.FilterQueryProvider;
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.view.MenuInflater;
 import android.widget.TabHost;
@@ -51,12 +53,17 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 
-public class AllPagesTab extends AwesomeBarTab {
+public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     public static final String LOGTAG = "ALL_PAGES";
     private static final String TAG = "allPages";
+
+    private static final int SUGGESTION_TIMEOUT = 3000;
+    private static final int SUGGESTION_MAX = 3;
+
     private String mSearchTerm;
-    private SearchEngine mSuggestEngine;
     private ArrayList<SearchEngine> mSearchEngines;
+    private SuggestClient mSuggestClient;
+    private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
     private ListView mView = null;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
 
@@ -70,6 +77,9 @@ public class AllPagesTab extends AwesomeBarTab {
     public AllPagesTab(Context context) {
         super(context);
         mSearchEngines = new ArrayList<SearchEngine>();
+
+        GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
 
     public boolean onBackPressed() {
@@ -100,7 +110,7 @@ public class AllPagesTab extends AwesomeBarTab {
 
     public ListView getListView() {
         if (mView == null) {
-            mView = new ListView(mContext, null, R.style.AwesomeBarList);
+            mView = (ListView) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_list, null));
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
@@ -112,6 +122,7 @@ public class AllPagesTab extends AwesomeBarTab {
 
     public void destroy() {
         AwesomeBarCursorAdapter adapter = getCursorAdapter();
+        GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
         if (adapter == null) {
             return;
         }
@@ -124,6 +135,24 @@ public class AllPagesTab extends AwesomeBarTab {
     public void filter(String searchTerm) {
         AwesomeBarCursorAdapter adapter = getCursorAdapter();
         adapter.filter(searchTerm);
+
+        // cancel previous query
+        if (mSuggestTask != null) {
+            mSuggestTask.cancel(true);
+        }
+
+        if (mSuggestClient != null) {
+            mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
+                 protected ArrayList<String> doInBackground(String... query) {
+                     return mSuggestClient.query(query[0]);
+                 }
+
+                 protected void onPostExecute(ArrayList<String> suggestions) {
+                     setSuggestions(suggestions);
+                 }
+            };
+            mSuggestTask.execute(searchTerm);
+        }
     }
 
     protected AwesomeBarCursorAdapter getCursorAdapter() {
@@ -207,7 +236,7 @@ public class AllPagesTab extends AwesomeBarTab {
         }
 
         private int getSuggestEngineCount() {
-            return (mSearchTerm.length() == 0 || mSuggestEngine == null) ? 0 : 1;
+            return (mSearchTerm.length() == 0 || mSuggestClient == null) ? 0 : 1;
         }
 
         // Add the search engines to the number of reported results.
@@ -219,7 +248,7 @@ public class AllPagesTab extends AwesomeBarTab {
             if (mSearchTerm.length() == 0)
                 return resultCount;
 
-            return resultCount + mSearchEngines.size() + getSuggestEngineCount();
+            return resultCount + mSearchEngines.size();
         }
 
         // If an item is part of the cursor result set, return that entry.
@@ -235,14 +264,7 @@ public class AllPagesTab extends AwesomeBarTab {
             }
 
             // return search engine
-            return new AwesomeBarSearchEngineItem(getEngine(engineIndex).name);
-        }
-
-        private SearchEngine getEngine(int index) {
-            final int suggestEngineCount = getSuggestEngineCount();
-            if (index < suggestEngineCount)
-                return mSuggestEngine;
-            return mSearchEngines.get(index - suggestEngineCount);
+            return new AwesomeBarSearchEngineItem(mSearchEngines.get(engineIndex).name);
         }
 
         private int getEngineIndex(int position) {
@@ -251,7 +273,7 @@ public class AllPagesTab extends AwesomeBarTab {
 
             // return suggest engine index
             if (position < suggestEngineCount)
-                return 0;
+                return position;
 
             // not an engine
             if (position - suggestEngineCount < resultCount)
@@ -279,9 +301,8 @@ public class AllPagesTab extends AwesomeBarTab {
             // has the same effect as clicking the single suggestion. If the
             // row contains multiple items, clicking the row will do nothing.
             int index = getEngineIndex(position);
-            if (index != -1) {
-                return getEngine(index).suggestions.isEmpty();
-            }
+            if (index != -1)
+                return mSearchEngines.get(index).suggestions.isEmpty();
             return true;
         }
 
@@ -304,7 +325,7 @@ public class AllPagesTab extends AwesomeBarTab {
                     viewHolder = (SearchEntryViewHolder) convertView.getTag();
                 }
 
-                bindSearchEngineView(getEngine(getEngineIndex(position)), viewHolder);
+                bindSearchEngineView(mSearchEngines.get(getEngineIndex(position)), viewHolder);
             } else {
                 AwesomeEntryViewHolder viewHolder = null;
 
@@ -416,29 +437,12 @@ public class AllPagesTab extends AwesomeBarTab {
     };
 
     /**
-     * Sets the suggest engine, which will show suggestions for user-entered queries.
-     * If the suggest engine has already been set, it will be replaced, and its
-     * suggestions will be copied to the new suggest engine.
-     */
-    public void setSuggestEngine(String name, Drawable icon) {
-        // We currently save the suggest engine in shared preferences, so this
-        // method is called immediately when the AwesomeBar is created. It's
-        // called again in setSuggestions(), when the list of search engines is
-        // received from Gecko (in case the suggestion engine has changed).
-        final SearchEngine suggestEngine = new SearchEngine(name, icon);
-        if (mSuggestEngine != null)
-            suggestEngine.suggestions = mSuggestEngine.suggestions;
-
-        mSuggestEngine = suggestEngine;
-    }
-
-    /**
      * Sets suggestions associated with the current suggest engine.
      * If there is no suggest engine, this does nothing.
      */
     public void setSuggestions(final ArrayList<String> suggestions) {
-        if (mSuggestEngine != null) {
-            mSuggestEngine.suggestions = suggestions;
+        if (mSuggestClient != null) {
+            mSearchEngines.get(0).suggestions = suggestions;
             getCursorAdapter().notifyDataSetChanged();
         }
     }
@@ -446,27 +450,31 @@ public class AllPagesTab extends AwesomeBarTab {
     /**
      * Sets search engines to be shown for user-entered queries.
      */
-    public void setSearchEngines(String suggestEngine, JSONArray engines) {
-        mSearchEngines = new ArrayList<SearchEngine>();
-        for (int i = 0; i < engines.length(); i++) {
-            try {
+    public void setSearchEngines(JSONObject data) {
+        try {
+            String suggestEngine = data.isNull("suggestEngine") ? null : data.getString("suggestEngine");
+            String suggestTemplate = data.isNull("suggestTemplate") ? null : data.getString("suggestTemplate");
+            JSONArray engines = data.getJSONArray("searchEngines");
+
+            mSearchEngines = new ArrayList<SearchEngine>();
+            for (int i = 0; i < engines.length(); i++) {
                 JSONObject engineJSON = engines.getJSONObject(i);
                 String name = engineJSON.getString("name");
                 String iconURI = engineJSON.getString("iconURI");
                 Drawable icon = getDrawableFromDataURI(iconURI);
-                if (name.equals(suggestEngine)) {
-                    setSuggestEngine(name, icon);
+                if (name.equals(suggestEngine) && suggestTemplate != null) {
+                    // suggest engine should be at the front of the list
+                    mSearchEngines.add(0, new SearchEngine(name, icon));
+                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 } else {
                     mSearchEngines.add(new SearchEngine(name, icon));
                 }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error getting search engine JSON", e);
-                return;
             }
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error getting search engine JSON", e);
         }
-        AwesomeBarCursorAdapter adapter = getCursorAdapter();
-        if (adapter != null)
-            adapter.notifyDataSetChanged();
+
+        filter(mSearchTerm);
     }
 
     private Drawable getDrawableFromDataURI(String dataURI) {
@@ -481,6 +489,16 @@ public class AllPagesTab extends AwesomeBarTab {
             Log.i(LOGTAG, "exception while decoding drawable: " + base64, e);
         } catch (IOException e) { }
         return drawable;
+    }
+
+    public void handleMessage(String event, final JSONObject message) {
+        if (event.equals("SearchEngines:Data")) {
+            GeckoAppShell.getMainHandler().post(new Runnable() {
+                public void run() {
+                    setSearchEngines(message);
+                }
+            });
+        }
     }
 
     public void handleItemClick(AdapterView<?> parent, View view, int position, long id) {

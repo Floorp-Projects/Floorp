@@ -353,10 +353,6 @@ pref("nglayout.enable_drag_images", true);
 // enable/disable paint flashing --- useful for debugging
 pref("nglayout.debug.paint_flashing", false);
 
-// enable/disable widget update area flashing --- only supported with 
-// BasicLayers (other layer managers always update the entire widget area)
-pref("nglayout.debug.widget_update_flashing", false);
-
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
@@ -650,6 +646,9 @@ pref("dom.min_background_timeout_value", 1000);
 // changed)
 pref("dom.new_bindings", true);
 pref("dom.experimental_bindings", true);
+
+// Don't use new input types
+pref("dom.experimental_forms", false);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
@@ -3578,6 +3577,9 @@ pref("dom.sms.whitelist", "");
 // WebContacts
 pref("dom.mozContacts.enabled", false);
 pref("dom.mozContacts.whitelist", "");
+
+// WebAlarms
+pref("dom.mozAlarms.enabled", false);
 
 // WebSettings
 pref("dom.mozSettings.enabled", false);

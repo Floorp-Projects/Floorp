@@ -1,18 +1,10 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('t').value = '';
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if textarea isn't valid and it's value has been changed,
              it should be affected by :-moz-ui-invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('t').value = '';
+                document.documentElement.className='';">
     <textarea id='t' class='invalid' required></textarea>
   </body>
 </html>

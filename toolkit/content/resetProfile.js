@@ -55,19 +55,24 @@ function getMigratedData() {
 
 #expand const MOZ_BUILD_APP = "__MOZ_BUILD_APP__";
 #expand const MOZ_APP_NAME = "__MOZ_APP_NAME__";
-  const MAX_MIGRATED_TYPES = 16;
 
-  // Loop over possible data to migrate to give the user a list of what will be preserved. This
-  // assumes that if the string for the data exists, then it will be migrated because calling
-  // getMigrateData now won't give the correct result.
+  // From migration.properties
+  const MIGRATED_TYPES = [
+    4,  // History and Bookmarks
+    16, // Passwords
+    8,  // Form History
+    2,  // Cookies
+  ];
+
+  // Loop over possible data to migrate to give the user a list of what will be preserved.
   let dataTypes = [];
-  for (let i = 1; i < MAX_MIGRATED_TYPES; ++i) {
-    let itemID = Math.pow(2, i);
+  for (let itemID of MIGRATED_TYPES) {
     try {
       let typeName = MigrationUtils.getLocalizedString(itemID + "_" + MOZ_APP_NAME);
       dataTypes.push(typeName);
     } catch (x) {
-      // Catch exceptions when the string for a data type doesn't exist because it's not migrated
+      // Catch exceptions when the string for a data type doesn't exist.
+      Components.utils.reportError(x);
     }
   }
   return dataTypes;

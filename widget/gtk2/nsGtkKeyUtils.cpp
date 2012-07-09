@@ -536,7 +536,7 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
     }
     if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
         keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_WIN;
+        aInputEvent.modifiers |= MODIFIER_OS;
     }
     if (keymapWrapper->AreModifiersActive(ALTGR, aModifierState)) {
         aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
@@ -548,22 +548,22 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
         aInputEvent.modifiers |= MODIFIER_NUMLOCK;
     }
     if (keymapWrapper->AreModifiersActive(SCROLL_LOCK, aModifierState)) {
-        aInputEvent.modifiers |= MODIFIER_SCROLL;
+        aInputEvent.modifiers |= MODIFIER_SCROLLLOCK;
     }
 
     PR_LOG(gKeymapWrapperLog, PR_LOG_DEBUG,
         ("KeymapWrapper(%p): InitInputEvent, aModifierState=0x%08X, "
          "aInputEvent.modifiers=0x%04X (Shift: %s, Control: %s, Alt: %s, "
-         "Win: %s, AltGr: %s, CapsLock: %s, NumLock: %s, ScrollLock: %s)",
+         "OS: %s, AltGr: %s, CapsLock: %s, NumLock: %s, ScrollLock: %s)",
          keymapWrapper, aModifierState, aInputEvent.modifiers,
          GetBoolName(aInputEvent.modifiers & MODIFIER_SHIFT),
          GetBoolName(aInputEvent.modifiers & MODIFIER_CONTROL),
          GetBoolName(aInputEvent.modifiers & MODIFIER_ALT),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_WIN),
+         GetBoolName(aInputEvent.modifiers & MODIFIER_OS),
          GetBoolName(aInputEvent.modifiers & MODIFIER_ALTGRAPH),
          GetBoolName(aInputEvent.modifiers & MODIFIER_CAPSLOCK),
          GetBoolName(aInputEvent.modifiers & MODIFIER_NUMLOCK),
-         GetBoolName(aInputEvent.modifiers & MODIFIER_SCROLL)));
+         GetBoolName(aInputEvent.modifiers & MODIFIER_SCROLLLOCK)));
 
     switch(aInputEvent.eventStructType) {
         case NS_MOUSE_EVENT:

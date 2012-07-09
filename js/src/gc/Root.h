@@ -106,10 +106,10 @@ class Handle
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     const T *address() const { return ptr; }
-    T value() const { return *ptr; }
+    T get() const { return *ptr; }
 
-    operator T () const { return value(); }
-    T operator ->() const { return value(); }
+    operator T () const { return get(); }
+    T operator ->() const { return get(); }
 
   private:
     Handle() {}
@@ -123,6 +123,43 @@ typedef Handle<JSScript*>    HandleScript;
 typedef Handle<JSString*>    HandleString;
 typedef Handle<jsid>         HandleId;
 typedef Handle<Value>        HandleValue;
+
+/*
+ * Similar to a handle, but the underlying storage can be changed. This is
+ * useful for outparams.
+ */
+template <typename T>
+class MutableHandle
+{
+  public:
+    template <typename S>
+    MutableHandle(MutableHandle<S> handle,
+                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
+    {
+        this->ptr = reinterpret_cast<const T *>(handle.address());
+    }
+
+    template <typename S>
+    inline
+    MutableHandle(Rooted<S> *root,
+                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
+
+    void set(T v) { *ptr = v; }
+
+    T *address() const { return ptr; }
+    T get() const { return *ptr; }
+
+    operator T () const { return get(); }
+    T operator ->() const { return get(); }
+
+  private:
+    MutableHandle() {}
+
+    T *ptr;
+};
+
+typedef MutableHandle<JSObject*>    MutableHandleObject;
+typedef MutableHandle<Value>        MutableHandleValue;
 
 template <typename T>
 struct RootMethods<T *>
@@ -174,8 +211,8 @@ class Rooted
     T operator ->() const { return ptr; }
     T * address() { return &ptr; }
     const T * address() const { return &ptr; }
-    T & reference() { return ptr; }
-    T raw() const { return ptr; }
+    T & get() { return ptr; }
+    const T & get() const { return ptr; }
 
     T & operator =(T value)
     {
@@ -207,6 +244,14 @@ Handle<T>::Handle(Rooted<S> &root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
 {
     ptr = reinterpret_cast<const T *>(root.address());
+}
+
+template<typename T> template <typename S>
+inline
+MutableHandle<T>::MutableHandle(Rooted<S> *root,
+                                typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
+{
+    ptr = root->address();
 }
 
 typedef Rooted<JSObject*>    RootedObject;

@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ParseMaps-inl.h"
+#include "jscntxt.h"
 #include "jscompartment.h"
 
 using namespace js;
@@ -18,13 +19,13 @@ ParseMapPool::checkInvariants()
      * allocated space for each of the map types.
      */
     JS_STATIC_ASSERT(sizeof(Definition *) == sizeof(jsatomid));
-    JS_STATIC_ASSERT(sizeof(Definition *) == sizeof(DefnOrHeader));
+    JS_STATIC_ASSERT(sizeof(Definition *) == sizeof(DefinitionList));
     JS_STATIC_ASSERT(sizeof(AtomDefnMap::Entry) == sizeof(AtomIndexMap::Entry));
-    JS_STATIC_ASSERT(sizeof(AtomDefnMap::Entry) == sizeof(AtomDOHMap::Entry));
-    JS_STATIC_ASSERT(sizeof(AtomMapT::Entry) == sizeof(AtomDOHMap::Entry));
+    JS_STATIC_ASSERT(sizeof(AtomDefnMap::Entry) == sizeof(AtomDefnListMap::Entry));
+    JS_STATIC_ASSERT(sizeof(AtomMapT::Entry) == sizeof(AtomDefnListMap::Entry));
     /* Ensure that the HasTable::clear goes quickly via memset. */
     JS_STATIC_ASSERT(tl::IsPodType<AtomIndexMap::WordMap::Entry>::result);
-    JS_STATIC_ASSERT(tl::IsPodType<AtomDOHMap::WordMap::Entry>::result);
+    JS_STATIC_ASSERT(tl::IsPodType<AtomDefnListMap::WordMap::Entry>::result);
     JS_STATIC_ASSERT(tl::IsPodType<AtomDefnMap::WordMap::Entry>::result);
 }
 
@@ -53,23 +54,67 @@ ParseMapPool::allocateFresh()
     return (void *) map;
 }
 
+DefinitionList::Node *
+DefinitionList::allocNode(JSContext *cx, Definition *head, Node *tail)
+{
+    Node *result = cx->tempLifoAlloc().new_<Node>(head, tail);
+    if (!result)
+        js_ReportOutOfMemory(cx);
+    return result;
+}
+
+bool
+DefinitionList::pushFront(JSContext *cx, Definition *val)
+{
+    Node *tail;
+    if (isMultiple()) {
+        tail = firstNode();
+    } else {
+        tail = allocNode(cx, defn(), NULL);
+        if (!tail)
+            return false;
+    }
+
+    Node *node = allocNode(cx, val, tail);
+    if (!node)
+        return false;
+    *this = DefinitionList(node);
+    return true;
+}
+
+bool
+DefinitionList::pushBack(JSContext *cx, Definition *val)
+{
+    Node *last;
+    if (isMultiple()) {
+        last = firstNode();
+        while (last->next)
+            last = last->next;
+    } else {
+        last = allocNode(cx, defn(), NULL);
+        if (!last)
+            return false;
+    }
+
+    Node *node = allocNode(cx, val, NULL);
+    if (!node)
+        return false;
+    last->next = node;
+    if (!isMultiple())
+        *this = DefinitionList(last);
+    return true;
+}
+
 #ifdef DEBUG
 void
 AtomDecls::dump()
 {
-    for (AtomDOHRange r = map->all(); !r.empty(); r.popFront()) {
+    for (AtomDefnListRange r = map->all(); !r.empty(); r.popFront()) {
         fprintf(stderr, "atom: ");
         js_DumpAtom(r.front().key());
-        const DefnOrHeader &doh = r.front().value();
-        if (doh.isHeader()) {
-            AtomDeclNode *node = doh.header();
-            do {
-                fprintf(stderr, "  node: %p\n", (void *) node);
-                fprintf(stderr, "    defn: %p\n", (void *) node->defn);
-                node = node->next;
-            } while (node);
-        } else {
-            fprintf(stderr, "  defn: %p\n", (void *) doh.defn());
+        const DefinitionList &dlist = r.front().value();
+        for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {
+            fprintf(stderr, "    defn: %p\n", (void *) dr.front());
         }
     }
 }
@@ -90,74 +135,21 @@ DumpAtomDefnMap(const AtomDefnMapPtr &map)
 }
 #endif
 
-AtomDeclNode *
-AtomDecls::allocNode(Definition *defn)
-{
-    AtomDeclNode *p = cx->tempLifoAlloc().new_<AtomDeclNode>(defn);
-    if (!p) {
-        js_ReportOutOfMemory(cx);
-        return NULL;
-    }
-    return p;
-}
-
 bool
 AtomDecls::addShadow(JSAtom *atom, Definition *defn)
 {
-    AtomDeclNode *node = allocNode(defn);
-    if (!node)
-        return false;
-
-    AtomDOHAddPtr p = map->lookupForAdd(atom);
+    AtomDefnListAddPtr p = map->lookupForAdd(atom);
     if (!p)
-        return map->add(p, atom, DefnOrHeader(node));
+        return map->add(p, atom, DefinitionList(defn));
 
-    AtomDeclNode *toShadow;
-    if (p.value().isHeader()) {
-        toShadow = p.value().header();
-    } else {
-        toShadow = allocNode(p.value().defn());
-        if (!toShadow)
-            return false;
-    }
-    node->next = toShadow;
-    p.value() = DefnOrHeader(node);
-    return true;
-}
-
-AtomDeclNode *
-AtomDecls::lastAsNode(DefnOrHeader *doh)
-{
-    if (doh->isHeader()) {
-        AtomDeclNode *last = doh->header();
-        while (last->next)
-            last = last->next;
-        return last;
-    }
-
-    /* Otherwise, we need to turn the existing defn into a node. */
-    AtomDeclNode *node = allocNode(doh->defn());
-    if (!node)
-        return NULL;
-    *doh = DefnOrHeader(node);
-    return node;
+    return p.value().pushFront(cx, defn);
 }
 
 bool
 AtomDecls::addHoist(JSAtom *atom, Definition *defn)
 {
-    AtomDeclNode *node = allocNode(defn);
-    if (!node)
-        return false;
-
-    AtomDOHAddPtr p = map->lookupForAdd(atom);
-    if (p) {
-        AtomDeclNode *last = lastAsNode(&p.value());
-        if (!last)
-            return false;
-        last->next = node;
-        return true;
-    }
-
-    return map->add(p, atom, DefnOrHeader(node));
+    AtomDefnListAddPtr p = map->lookupForAdd(atom);
+    if (p)
+        return p.value().pushBack(cx, defn);
+    return map->add(p, atom, DefinitionList(defn));
 }

@@ -101,7 +101,7 @@ var ScratchpadManager = {
     }
     let win = Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
                                      SCRATCHPAD_WINDOW_FEATURES, params);
-    // Only add shutdown observer if we've opened a scratchpad window
+    // Only add the shutdown observer if we've opened a scratchpad window.
     ShutdownObserver.init();
 
     return win;

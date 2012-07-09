@@ -209,13 +209,6 @@ public:
                             nsPoint              aPt);
 
   virtual bool UpdateOverflow();
-  
-  virtual void InvalidateFrame()
-  {
-    nsIFrame::InvalidateFrame();
-    nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-    tableFrame->InvalidateFrame();
-  }
 
 protected:
   /** implement abstract method on nsContainerFrame */

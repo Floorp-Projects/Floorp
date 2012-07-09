@@ -1951,11 +1951,12 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
 
     /*
      * Since let variables and dynamic name access are not tracked, we cannot
-     * soundly perform this analysis in their presence. Also, debuggers may
-     * want to see 'arguments', so assume every arguments object escapes.
+     * soundly perform this analysis in their presence. Debuggers may want to
+     * see 'arguments', so assume every arguments object escapes. Generators
+     * can be suspended when the speculation fails, so disallow it also.
      */
     if (script->bindingsAccessedDynamically || script->numClosedArgs() > 0 ||
-        localsAliasStack() || cx->compartment->debugMode())
+        localsAliasStack() || cx->compartment->debugMode() || script->isGenerator)
     {
         return true;
     }

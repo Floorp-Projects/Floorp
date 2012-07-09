@@ -161,6 +161,7 @@
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
+@BINPATH@/components/dom_system.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_wifi.xpt
@@ -172,6 +173,7 @@
 #endif
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_contacts.xpt
+@BINPATH@/components/dom_alarm.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_devicestorage.xpt
@@ -217,6 +219,7 @@
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
+@BINPATH@/components/identity.xpt
 @BINPATH@/components/imglib2.xpt
 @BINPATH@/components/imgicon.xpt
 @BINPATH@/components/inspector.xpt
@@ -471,6 +474,8 @@
 
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
+@BINPATH@/components/AlarmsManager.js
+@BINPATH@/components/AlarmsManager.manifest
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest

@@ -42,6 +42,13 @@ _TEST_FILES = \
 		test_option_disabled.html \
 		test_meter_element.html \
 		test_meter_pseudo-classes.html \
+		test_max_attribute.html \
+		test_min_attribute.html \
+		test_step_attribute.html \
+		test_stepup_stepdown.html \
+		test_valueasnumber_attribute.html \
+		test_experimental_forms_pref.html \
+		test_input_number_value.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

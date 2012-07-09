@@ -211,9 +211,9 @@ protected:
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
   nsresult NormalizeSelection(nsISelection *inSelection);
-  nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
-                            PRInt32 aOffset, nsEditor::OperationID actionID,
-                            nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+  void GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
+                        PRInt32 aOffset, nsEditor::OperationID actionID,
+                        nsCOMPtr<nsIDOMNode>* outNode, PRInt32* outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
                              nsCOMArray<nsIDOMRange> &outArrayOfRanges, 
                              nsEditor::OperationID inOperationType);

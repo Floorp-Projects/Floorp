@@ -835,10 +835,11 @@ public:
   {
     return ((modifiers & mozilla::widget::MODIFIER_META) != 0);
   }
-  // true indicates the win key is down (or, on Linux, the Super or Hyper key)
-  bool IsWin() const
+  // true indicates the win key is down on Windows. Or the Super or Hyper key
+  // is down on Linux.
+  bool IsOS() const
   {
-    return ((modifiers & mozilla::widget::MODIFIER_WIN) != 0);
+    return ((modifiers & mozilla::widget::MODIFIER_OS) != 0);
   }
   // true indicates the alt graph key is down
   // NOTE: on Mac, the option key press causes both IsAlt() and IsAltGrpah()
@@ -860,7 +861,7 @@ public:
   // true indeicates the ScrollLock LED is turn on.
   bool IsScrollLocked() const
   {
-    return ((modifiers & mozilla::widget::MODIFIER_SCROLL) != 0);
+    return ((modifiers & mozilla::widget::MODIFIER_SCROLLLOCK) != 0);
   }
 
   // true indeicates the Fn key is down, but this is not supported by native

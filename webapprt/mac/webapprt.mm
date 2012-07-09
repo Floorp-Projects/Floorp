@@ -115,7 +115,7 @@ main(int argc, char **argv)
 
     NSString *myWebRTPath = [myBundle pathForAuxiliaryExecutable: @"webapprt"];
     if (!myWebRTPath) {
-      @throw MakeException(@"Missing WebRT Files", @"Cannot locate binary for this application");
+      @throw MakeException(@"Missing Web Runtime Files", @"Cannot locate binary for this App");
     }
 
     //GET FIREFOX BUILD ID
@@ -153,20 +153,20 @@ main(int argc, char **argv)
       NSLog(@"### Firefox webapprt path: %@", newWebRTPath);
       if (![fileClerk fileExistsAtPath:newWebRTPath]) {
         NSString* msg = [NSString stringWithFormat: @"This version of Firefox (%@) cannot run web applications, because it is not recent enough or damaged", firefoxVersion];
-        @throw MakeException(@"Missing WebRT Files", msg);
+        @throw MakeException(@"Missing Web Runtime Files", msg);
       }
 
       [fileClerk removeItemAtPath: myWebRTPath error: &errorDesc];
       if (errorDesc != nil) {
         NSLog(@"failed to unlink old binary file at path: %@ with error: %@", myWebRTPath, errorDesc);
-        @throw MakeException(@"Unable To Update", @"Failed preparation for runtime update");
+        @throw MakeException(@"Unable To Update", @"Failed preparation for Web Runtime update");
       }
 
       [fileClerk copyItemAtPath: newWebRTPath toPath: myWebRTPath error: &errorDesc];
       [fileClerk release];
       if (errorDesc != nil) {
         NSLog(@"failed to copy new webrt file: %@", errorDesc);
-        @throw MakeException(@"Unable To Update", @"Failed to update runtime");
+        @throw MakeException(@"Unable To Update Web Runtime", @"Failed to update Web Runtime");
       } else {
         NSLog(@"### Successfully updated webapprt, relaunching");
       }
@@ -187,7 +187,7 @@ main(int argc, char **argv)
       snprintf(appEnv, MAXPATHLEN, "%s%s%s", [myBundlePath UTF8String], APP_CONTENTS_PATH, WEBAPPINI_NAME);
       if (setenv("XUL_APP_FILE", appEnv, 1)) {
         NSLog(@"Couldn't set XUL_APP_FILE to: %s", appEnv);
-        @throw MakeException(@"Error", @"Unable to set webapp INI file.");
+        @throw MakeException(@"Error", @"Unable to set Web Runtime INI file.");
       }
       NSLog(@"Set XUL_APP_FILE to: %s", appEnv);
 
@@ -222,8 +222,8 @@ main(int argc, char **argv)
         bool exists;
         nsresult rv = rtINI->Exists(&exists);
         if (NS_FAILED(rv) || !exists) {
-          NSString* msg = [NSString stringWithFormat: @"This copy of Firefox (%@) cannot run web applications, because it is missing WebappRT application.ini", firefoxVersion];
-          @throw MakeException(@"Missing WebappRT application.ini", msg);
+          NSString* msg = [NSString stringWithFormat: @"This copy of Firefox (%@) cannot run Apps, because it is missing the Web Runtime's application.ini file", firefoxVersion];
+          @throw MakeException(@"Missing Web Runtime application.ini", msg);
         }
 
         nsXREAppData *webShellAppData;
@@ -244,7 +244,7 @@ main(int argc, char **argv)
           }
           char profile[MAXPATHLEN];
           if (NS_FAILED(parser.GetString("Webapp", "Profile", profile, MAXPATHLEN))) {
-            NSLog(@"Unable to retrieve profile from web app INI file");
+            NSLog(@"Unable to retrieve profile from App INI file");
             @throw MakeException(@"Error", @"Unable to retrieve installation profile.");
           }
           NSLog(@"setting app profile: %s", profile);
@@ -254,13 +254,13 @@ main(int argc, char **argv)
         nsCOMPtr<nsIFile> directory;
         if (NS_FAILED(XRE_GetFileFromPath(rtDir, getter_AddRefs(directory)))) {
           NSLog(@"Unable to open app dir");
-          @throw MakeException(@"Error", @"Unable to open application directory.");
+          @throw MakeException(@"Error", @"Unable to open App directory.");
         }
 
         nsCOMPtr<nsIFile> xreDir;
         if (NS_FAILED(XRE_GetFileFromPath(greDir, getter_AddRefs(xreDir)))) {
           NSLog(@"Unable to open XRE dir");
-          @throw MakeException(@"Error", @"Unable to open application XRE directory.");
+          @throw MakeException(@"Error", @"Unable to open App XRE directory.");
         }
 
         xreDir.forget(&webShellAppData->xreDirectory);
@@ -335,8 +335,8 @@ NSString
   if (alternateBinaryID != nil && ([alternateBinaryID length] > 0)) {
     binaryPath = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:alternateBinaryID];
     if (binaryPath == nil || [binaryPath length] == 0) {
-      @throw MakeException(@"WebappRT Not Found",
-                            [NSString stringWithFormat:@"Failed to locate specified override runtime with signature '%@'", alternateBinaryID]);
+      @throw MakeException(@"Web Runtime Not Found",
+                            [NSString stringWithFormat:@"Failed to locate specified override Web Runtime with signature '%@'", alternateBinaryID]);
     }
     return binaryPath;
   }
@@ -351,7 +351,7 @@ NSString
   }
 
   NSLog(@"unable to find a valid webrt path");
-  @throw MakeException(@"Missing Runtime", @"Mozilla Apps require Firefox to be installed");
+  @throw MakeException(@"This App requires that Firefox version 15 or above is installed.", @"Firefox 15+ has not been detected.");
 
   return nil;
 }

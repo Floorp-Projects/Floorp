@@ -103,7 +103,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement);
   if (!frame) return NS_OK;
 
-  frame->InvalidateFrame();
+  frame->Invalidate(frame->GetRect());
 
   return NS_OK;
 }

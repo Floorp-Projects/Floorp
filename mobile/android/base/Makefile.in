@@ -107,6 +107,7 @@ FENNEC_JAVA_FILES = \
   gfx/DrawTimingQueue.java \
   gfx/FloatSize.java \
   gfx/GeckoLayerClient.java \
+  gfx/GfxInfoThread.java \
   gfx/GLController.java \
   gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
@@ -247,8 +248,10 @@ RES_LAYOUT = \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
   res/layout/awesomebar_actionbar.xml \
+  res/layout/awesomebar_expandable_list.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_header_row.xml \
+  res/layout/awesomebar_list.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
   res/layout/awesomebar_suggestion_row.xml \
@@ -393,7 +396,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_back.xml \
   res/drawable/ic_menu_bookmark_add.png \
   res/drawable/ic_menu_bookmark_remove.png \
-  res/drawable/ic_menu_find_in_page.png \
   res/drawable/ic_menu_reload.png \
   res/drawable/ic_menu_save_as_pdf.png \
   res/drawable/ic_menu_share.png \
@@ -476,7 +478,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_awesomebar_star.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi/ic_menu_find_in_page.png \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_menu_save_as_pdf.png \
   res/drawable-hdpi/ic_menu_share.png \
@@ -526,13 +527,14 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-mdpi-v11/ic_menu_clear_site_settings.png \
+  res/drawable-mdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-mdpi-v11/ic_menu_forward.png \
+  res/drawable-mdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-mdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
-  res/drawable-mdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-mdpi-v11/ic_menu_reading_list_remove.png \
-  res/drawable-mdpi-v11/ic_menu_forward.png \
   res/drawable-mdpi-v11/menu.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
   res/drawable-mdpi-v11/menu_popup_bg.9.png \
@@ -550,13 +552,14 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-hdpi-v11/ic_menu_clear_site_settings.png \
+  res/drawable-hdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-hdpi-v11/ic_menu_forward.png \
+  res/drawable-hdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-hdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
-  res/drawable-hdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-hdpi-v11/ic_menu_reading_list_remove.png \
-  res/drawable-hdpi-v11/ic_menu_forward.png \
   res/drawable-hdpi-v11/menu.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
   res/drawable-hdpi-v11/menu_popup_bg.9.png \
@@ -592,12 +595,13 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi-v11/ic_menu_clear_site_settings.png \
+  res/drawable-xhdpi-v11/ic_menu_desktop_mode.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
+  res/drawable-xhdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-xhdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
-  res/drawable-xhdpi-v11/ic_menu_reading_list_add.png \
-  res/drawable-xhdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-xhdpi-v11/remote_tabs_off.png \
   res/drawable-xhdpi-v11/remote_tabs_on.png \
   res/drawable-xhdpi-v11/tab_new.png \

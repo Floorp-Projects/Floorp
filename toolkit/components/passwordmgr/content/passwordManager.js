@@ -325,13 +325,26 @@ function CopyPassword() {
   clipboard.copyString(password, document);
 }
 
+function CopyUsername() {
+  // Copy selected signon's username to clipboard
+  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
+                  getService(Components.interfaces.nsIClipboardHelper);
+  var row = document.getElementById("signonsTree").currentIndex;
+  var username = signonsTreeView.getCellText(row, {id : "userCol" });
+  clipboard.copyString(username);
+}
+
 function UpdateCopyPassword() {
   var singleSelection = (signonsTreeView.selection.count == 1);
-  var menuitem = document.getElementById("context-copypassword");
-  if (singleSelection)
-    menuitem.removeAttribute("disabled");
-  else
-    menuitem.setAttribute("disabled", "true");
+  var passwordMenuitem = document.getElementById("context-copypassword");
+  var usernameMenuitem = document.getElementById("context-copyusername");
+  if (singleSelection) {
+    usernameMenuitem.removeAttribute("disabled");
+    passwordMenuitem.removeAttribute("disabled");
+  } else {
+    usernameMenuitem.setAttribute("disabled", "true");
+    passwordMenuitem.setAttribute("disabled", "true");
+  }
 }
 
 function masterPasswordLogin(noPasswordCallback) {

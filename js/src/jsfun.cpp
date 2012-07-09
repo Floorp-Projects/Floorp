@@ -23,6 +23,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -33,6 +34,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -40,10 +42,6 @@
 #include "vm/MethodGuard.h"
 #include "vm/ScopeObject.h"
 #include "vm/Xdr.h"
-
-#if JS_HAS_GENERATORS
-# include "jsiter.h"
-#endif
 
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
@@ -54,6 +52,7 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
@@ -256,7 +255,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 
 static JSBool
 fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -282,7 +281,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun))
             return false;
-        *objp = fun;
+        objp.set(fun);
         return true;
     }
 
@@ -300,7 +299,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;
         }
-        *objp = fun;
+        objp.set(fun);
         return true;
     }
 
@@ -328,7 +327,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                       attrs, 0, 0)) {
                 return false;
             }
-            *objp = fun;
+            objp.set(fun);
             return true;
         }
     }
@@ -393,7 +392,8 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
         fun->flags = uint16_t(flagsword);
         fun->atom.init(atom);
         fun->initScript(script);
-        if (!script->typeSetFunction(cx, fun))
+        script->setFunction(fun);
+        if (!fun->setTypeForScriptedFunction(cx))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
         js_CallNewScriptHook(cx, fun->script(), fun);
@@ -432,7 +432,8 @@ js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
     clone->flags = srcFun->flags;
     clone->atom.init(srcFun->atom);
     clone->initScript(clonedScript);
-    if (!clonedScript->typeSetFunction(cx, clone))
+    clonedScript->setFunction(clone);
+    if (!clone->setTypeForScriptedFunction(cx))
         return NULL;
 
     js_CallNewScriptHook(cx, clone->script(), clone);
@@ -1302,7 +1303,8 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
             cscript->globalObject = &clone->global();
             clone->setScript(cscript);
-            if (!cscript->typeSetFunction(cx, clone))
+            cscript->setFunction(clone);
+            if (!clone->setTypeForScriptedFunction(cx))
                 return NULL;
 
             js_CallNewScriptHook(cx, clone->script(), clone);

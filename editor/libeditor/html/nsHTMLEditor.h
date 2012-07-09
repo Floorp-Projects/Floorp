@@ -229,19 +229,18 @@ public:
   /* ------------ Block methods moved from nsEditor -------------- */
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
-  static already_AddRefed<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
-  void     IsNextCharWhitespace(nsIDOMNode *aParentNode,
-                                PRInt32 aOffset, 
-                                bool *outIsSpace, 
-                                bool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
-  void     IsPrevCharWhitespace(nsIDOMNode *aParentNode,
-                                PRInt32 aOffset, 
-                                bool *outIsSpace, 
-                                bool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
+  void IsNextCharInNodeWhitespace(nsIContent* aContent,
+                                  PRInt32 aOffset,
+                                  bool* outIsSpace,
+                                  bool* outIsNBSP,
+                                  nsIContent** outNode = nsnull,
+                                  PRInt32* outOffset = 0);
+  void IsPrevCharInNodeWhitespace(nsIContent* aContent,
+                                  PRInt32 aOffset,
+                                  bool* outIsSpace,
+                                  bool* outIsNBSP,
+                                  nsIContent** outNode = nsnull,
+                                  PRInt32* outOffset = 0);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
@@ -332,7 +331,6 @@ public:
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
                               bool aNoEmptyNodes);
-  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
 
   // Use this to assure that selection is set after attribute nodes when 
   //  trying to collapse selection at begining of a block node
@@ -694,7 +692,11 @@ protected:
   nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
   nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsIContent* GetPriorHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                               bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsIContent* GetNextHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                              bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
 
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst);

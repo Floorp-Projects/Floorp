@@ -127,11 +127,14 @@ public:
   PRUint8 mSize;   // NS_STYLE_GRADIENT_SIZE_*;
                    // not used (must be FARTHEST_CORNER) for linear shape
   bool mRepeating;
-  bool mToCorner;
+  bool mLegacySyntax;
 
   nsStyleCoord mBgPosX; // percent, coord, calc, none
   nsStyleCoord mBgPosY; // percent, coord, calc, none
   nsStyleCoord mAngle;  // none, angle
+
+  nsStyleCoord mRadiusX; // percent, coord, calc, none
+  nsStyleCoord mRadiusY; // percent, coord, calc, none
 
   // stops are in the order specified in the stylesheet
   nsTArray<nsStyleGradientStop> mStops;
@@ -1092,7 +1095,19 @@ struct nsStylePosition {
   nsStyleCoord  mHeight;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
+#ifdef MOZ_FLEXBOX
+  nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
+#endif // MOZ_FLEXBOX
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
+#ifdef MOZ_FLEXBOX
+  PRUint8       mAlignItems;            // [reset] see nsStyleConsts.h
+  PRUint8       mAlignSelf;             // [reset] see nsStyleConsts.h
+  PRUint8       mFlexDirection;         // [reset] see nsStyleConsts.h
+  PRUint8       mJustifyContent;        // [reset] see nsStyleConsts.h
+  PRInt32       mOrder;                 // [reset] integer
+  float         mFlexGrow;              // [reset] float
+  float         mFlexShrink;            // [reset] float
+#endif // MOZ_FLEXBOX
   nsStyleCoord  mZIndex;                // [reset] integer, auto
 
   bool WidthDependsOnContainer() const

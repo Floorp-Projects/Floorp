@@ -126,10 +126,12 @@ CPPSRCS		= \
 		ParseNode.cpp \
 		Parser.cpp \
 		SemanticAnalysis.cpp \
+		SPSProfiler.cpp \
 		TokenStream.cpp \
 		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
+		Eval.cpp \
 		MapObject.cpp \
 		MemoryMetrics.cpp \
 		RegExpObject.cpp \

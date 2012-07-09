@@ -9,22 +9,170 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426082
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    canvas {
+      display: none;
+    }
+  </style>
 </head>
-<body>
-
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426082">Mozilla Bug 426082</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
 <pre id="test">
 <script type="application/javascript;version=1.8">
 
 /** Test for Bug 426082 **/
 SimpleTest.waitForExplicitFinish();
-var subwindow = window.open("./bug426082.html", "bug426082", "width=800,height=1000");
 
-function finishTests() {
-  subwindow.close();
+var normalButtonCanvas, pressedButtonCanvas, normalFocusedButtonCanvas,
+    pressedFocusedButtonCanvas, currentSnapshot, button, label, outside;
+
+function runTests() {
+  normalButtonCanvas = $("normalButtonCanvas");
+  pressedButtonCanvas = $("pressedButtonCanvas");
+  normalFocusedButtonCanvas = $("normalFocusedButtonCanvas");
+  pressedFocusedButtonCanvas = $("pressedFocusedButtonCanvas");
+  currentSnapshot = $("currentSnapshot");
+  button = $("button");
+  label = $("label");
+  outside = $("outside");
+  SimpleTest.executeSoon(executeTests);
+}
+
+function isRectContainedInRectFromRegion(rect, region) {
+  return Array.some(region, function (r) {
+    return rect.left >= r.left &&
+           rect.top >= r.top &&
+           rect.right <= r.right &&
+           rect.bottom <= r.bottom;
+  });
+}
+
+function paintListener(e) {
+  if (isRectContainedInRectFromRegion(buttonRect(), e.clientRects)) {
+    gNeedsPaint = false;
+    takeSnapshot(currentSnapshot);
+  }
+}
+
+var gNeedsPaint = false;
+function executeTests() {
+  var testYielder = tests();
+  function execNext() {
+    try {
+      if (!gNeedsPaint) {
+        testYielder.next();
+        button.getBoundingClientRect(); // Flush.
+        gNeedsPaint = true;
+      }
+      SimpleTest.executeSoon(execNext);
+    } catch (e) {}
+  }
+  execNext();
+}
+
+function tests() {
+  window.addEventListener("MozAfterPaint", paintListener, false);
+  takeSnapshot(normalButtonCanvas);
+  // Press the button.
+  sendMouseEvent("mousemove", button);
+  sendMouseEvent("mousedown", button);
+  yield;
+  takeSnapshot(pressedFocusedButtonCanvas);
+  compareSnapshots_(normalButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal buttons.");
+  // Release.
+  sendMouseEvent("mouseup", button);
+  yield;
+  // make sure the button is focused as this doesn't happen on click on Mac
+  button.focus();
+  takeSnapshot(normalFocusedButtonCanvas);
+  compareSnapshots_(normalFocusedButtonCanvas, pressedFocusedButtonCanvas, false, "Pressed focused buttons should look different from normal focused buttons.");
+  // Unfocus the button.
+  sendMouseEvent("mousedown", outside);
+  sendMouseEvent("mouseup", outside);
+  yield;
+
+  // Press the label.
+  sendMouseEvent("mousemove", label);
+  sendMouseEvent("mousedown", label);
+  yield;
+  compareSnapshots_(normalButtonCanvas, currentSnapshot, false, "Pressing the label should have pressed the button.");
+  takeSnapshot(pressedButtonCanvas);
+  // Move the mouse down from the label.
+  sendMouseEvent("mousemove", outside);
+  yield;
+  compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Moving the mouse down from the label should have unpressed the button.");
+  // ... and up again.
+  sendMouseEvent("mousemove", label);
+  yield;
+  compareSnapshots_(pressedButtonCanvas, currentSnapshot, true, "Moving the mouse back on top of the label should have pressed the button.");
+  // Release.
+  sendMouseEvent("mouseup", label);
+  yield;
+  compareSnapshots_(normalFocusedButtonCanvas, currentSnapshot, true, "Releasing the mouse over the label should have unpressed (and focused) the button.");
+  // Press the label and remove it.
+  sendMouseEvent("mousemove", label);
+  sendMouseEvent("mousedown", label);
+  yield;
+  label.parentNode.removeChild(label);
+  yield;
+  compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Removing the label should have unpressed the button.");
+  sendMouseEvent("mouseup", label);
+  window.removeEventListener("MozAfterPaint", paintListener, false);
   SimpleTest.finish();
 }
+
+function sendMouseEvent(t, elem) {
+  var r = elem.getBoundingClientRect();
+  synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
+}
+
+function compareSnapshots_(c1, c2, shouldBeIdentical, msg) {
+  var [correct, c1url, c2url] = compareSnapshots(c1, c2, shouldBeIdentical);
+  if (correct) {
+    if (shouldBeIdentical) {
+      ok(true, msg + " - expected " + c1url);
+    } else {
+      ok(true, msg + " - got " + c1url + " and " + c2url);
+    }
+  } else {
+    if (shouldBeIdentical) {
+      ok(false, msg + " - expected " + c1url + " but got " + c2url);
+    } else {
+      ok(false, msg + " - expected something other than " + c1url);
+    }
+  }
+}
+
+function takeSnapshot(canvas) {
+  var r = buttonRect();
+  var ctx = canvas.getContext("2d");
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  canvas.width = r.width + 4;
+  canvas.height = r.height + 4;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawWindow(window, r.left - 2, r.top - 2, r.width + 4, r.height + 4, "#FFF");
+}
+
+function buttonRect() {
+  return button.getBoundingClientRect();
+}
+
+
 </script>
 </pre>
+<p><input type="button" value="Button" id="button"></p>
+<p><label for="button" id="label">Label</label></p>
+<p id="outside">Something under the label</p>
+
+<canvas id="normalButtonCanvas"></canvas>
+<canvas id="pressedButtonCanvas"></canvas>
+<canvas id="normalFocusedButtonCanvas"></canvas>
+<canvas id="pressedFocusedButtonCanvas"></canvas>
+<canvas id="currentSnapshot"></canvas>
 
 </body>
 </html>

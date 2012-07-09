@@ -1,21 +1,13 @@
 <!DOCTYPE html>
 <html class='reftest-wait'>
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('s').options[0].selected = false;
-        document.getElementById('s').options[1].selected = false;
-        document.getElementById('s').options[0].selected = true;
-        document.getElementById('s').options[1].selected = true;
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if select is required and has at least one option selected and the
              selection did changed, :-moz-ui-valid should not apply. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('s').options[0].selected = false;
+                document.getElementById('s').options[1].selected = false;
+                document.getElementById('s').options[0].selected = true;
+                document.getElementById('s').options[1].selected = true;
+                document.documentElement.className = '';">
     <select id='s' class='valid' required multiple>
       <option selected></option>
       <option selected>foo</option>

@@ -2,12 +2,11 @@
 <html class="reftest-wait">
   <head>
     <script>
-      function doTest() {
+      window.onload = function() {
         window.frames[0].document.body.innerHTML =
           "<img src='passouter.png' " +
           "onload='window.parent.document.documentElement.className = &quot;&quot;'>";
       }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
     </script>
   </head>
   <body>

@@ -38,7 +38,6 @@ EXPORTS		= \
 		nsCompatibility.h \
 		nsDisplayItemTypes.h \
 		nsDisplayList.h \
-		nsDisplayListInvalidation.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
 		nsFrameTraversal.h \

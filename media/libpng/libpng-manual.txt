@@ -1,6 +1,6 @@
-libpng-manual.txt - A description on how to use and modify libpng
+Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.10 - March 29, 2012
+ libpng version 1.5.11 - June 14, 2012
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.10 - March 29, 2012
+ libpng versions 0.97, January 1998, through 1.5.11 - June 14, 2012
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
 
@@ -141,8 +141,8 @@ APIs.  Most of these are fairly obvious; for example types corresponding
 to integers of particular sizes and types for passing color values.
 
 One exception is how non-integral numbers are handled.  For application
-convenience most APIs that take such numbers have C (double) arguments,
-however internally PNG, and libpng, use 32 bit signed integers and encode
+convenience most APIs that take such numbers have C (double) arguments;
+however, internally PNG, and libpng, use 32 bit signed integers and encode
 the value by multiplying by 100,000.  As of libpng 1.5.0 a convenience
 macro PNG_FP_1 is defined in png.h along with a type (png_fixed_point)
 which is simply (png_int_32).
@@ -799,7 +799,7 @@ the screen_gamma value.  Pixels with alpha less than 1.0
 will still have linear components.
 
 Use this format if you have control over your
-compositing software and do don't do other arithmetic
+compositing software and so don't do other arithmetic
 (such as scaling) on the data you get from libpng.  Your
 compositing software can simply copy opaque pixels to
 the output but still has linear values for the
@@ -1130,6 +1130,11 @@ data has been read, or zero if it is missing.  The parameters to the
 png_get_<chunk> are set directly if they are simple data types, or a
 pointer into the info_ptr is returned for any complex types.
 
+The colorspace data from gAMA, cHRM, sRGB, iCCP, and sBIT chunks
+is simply returned to give the application information about how the
+image was encoded.  Libpng itself only does transformations using the file
+gamma when combining semitransparent pixels with the background color.
+
     png_get_PLTE(png_ptr, info_ptr, &palette,
                      &num_palette);
 
@@ -1141,7 +1146,7 @@ pointer into the info_ptr is returned for any complex types.
     png_get_gAMA(png_ptr, info_ptr, &file_gamma);
     png_get_gAMA_fixed(png_ptr, info_ptr, &int_file_gamma);
 
-    file_gamma     - the gamma at which the file is
+    file_gamma     - the gamma at which the file was
                      written (PNG_INFO_gAMA)
 
     int_file_gamma - 100,000 times the gamma at which the
@@ -1733,7 +1738,7 @@ the current display (e.g., the background color from a web page).  You
 need to tell libpng how the color is represented, both the format of the
 component values in the color (the number of bits) and the gamma encoding of the
 color.  The function takes two arguments, background_gamma_mode and need_expand
-to convey this information, however only two combinations are likely to be
+to convey this information; however, only two combinations are likely to be
 useful:
 
     png_color_16 my_background;
@@ -2027,7 +2032,7 @@ the second parameter NULL.
 
 If you don't want libpng to handle the interlacing details, just call
 png_read_rows() PNG_INTERLACE_ADAM7_PASSES times to read in all the images.
-Each of the images is a valid image by itself, however you will almost
+Each of the images is a valid image by itself; however, you will almost
 certainly need to distribute the pixels from each sub-image to the
 correct place.  This is where everything gets very tricky.
 
@@ -3685,7 +3690,7 @@ available to set these separately for non-IDAT
 compressed chunks such as zTXt, iTXt, and iCCP:
 
     #include zlib.h
-    #if PNG_LIBPNG_VER <= 10504
+    #if PNG_LIBPNG_VER >= 10504
     png_set_text_compression_level(png_ptr, level);
 
     png_set_text_compression_mem_level(png_ptr, level);
@@ -4155,7 +4160,7 @@ This is enabled by default but can be disabled in each png_ptr with
 A. Changes that affect users of libpng
 
 There are no substantial API changes between the non-deprecated parts of
-the 1.4.5 API and the 1.5.0 API, however the ability to directly access
+the 1.4.5 API and the 1.5.0 API; however, the ability to directly access
 the main libpng control structures, png_struct and png_info, deprecated
 in earlier versions of libpng, has been completely removed from
 libpng 1.5.
@@ -4288,12 +4293,12 @@ B. Changes to the build and configuration of libpng
 
 Details of internal changes to the library code can be found in the CHANGES
 file and in the GIT repository logs.  These will be of no concern to the vast
-majority of library users or builders, however the few who configure libpng
+majority of library users or builders; however, the few who configure libpng
 to a non-default feature set may need to change how this is done.
 
 There should be no need for library builders to alter build scripts if
 these use the distributed build support - configure or the makefiles -
-however users of the makefiles may care to update their build scripts
+however, users of the makefiles may care to update their build scripts
 to build pnglibconf.h where the corresponding makefile does not do so.
 
 Building libpng with a non-default configuration has changed completely.
@@ -4399,7 +4404,7 @@ merely stops the function from being exported.
 PNG_FLOATING_ARITHMETIC_SUPPORTED chooses between the internal floating
 point implementation or the fixed point one.  Typically the fixed point
 implementation is larger and slower than the floating point implementation
-on a system that supports floating point, however it may be faster on a
+on a system that supports floating point; however, it may be faster on a
 system which lacks floating point hardware and therefore uses a software
 emulation.
 
@@ -4428,7 +4433,7 @@ pngconf.h no longer includes pngusr.h, therefore pngusr.h is ignored after the
 build of pnglibconf.h and it is never included in an application build.
 
 The rarely used alternative of adding a list of feature macros to the
-CFLAGS setting in the build also still works, however the macros will be
+CFLAGS setting in the build also still works; however, the macros will be
 copied to pnglibconf.h and this may produce macro redefinition warnings
 when the individual C files are compiled.
 
@@ -4597,25 +4602,25 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-March 29, 2012
+June 14, 2012
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.10 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.11 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
-Libpng only has three year fields.  One is a 2-byte unsigned integer that
-will hold years up to 65535.  The other two hold the date in text
+Libpng only has two year fields.  One is a 2-byte unsigned integer that
+will hold years up to 65535.  The other holds the date in text
 format, and will hold years up to 9999.
 
 The integer is
     "png_uint_16 year" in png_time_struct.
 
-The strings are
-    "png_charp time_buffer" in png_struct and
-    "near_time_buffer", which is a local character string in png.c.
+The string is
+    "char time_buffer[29]" in png_struct.  This will no
+longer be used in libpng-1.6.x and will be removed from libpng-1.7.0.
 
 There are seven time-related functions:
 

@@ -651,22 +651,32 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
 
   frame->MarkLayersActive(nsChangeHint(0));
 
-  Layer* layer;
+  nsRect invalRect;
+  nsRect contentArea = frame->GetContentRect();
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
     if (size.width != 0 && size.height != 0) {
 
+      // damageRect and size are in CSS pixels; contentArea is in appunits
+      // We want a rect in appunits; so avoid doing pixels-to-appunits and
+      // vice versa conversion here.
       gfxRect realRect(*damageRect);
+      realRect.Scale(contentArea.width / gfxFloat(size.width),
+                     contentArea.height / gfxFloat(size.height));
       realRect.RoundOut();
 
-      nsIntRect invalRect(realRect.X(), realRect.Y(),
-                          realRect.Width(), realRect.Height());
-      layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS, &invalRect);
+      // then make it a nsRect
+      invalRect = nsRect(realRect.X(), realRect.Y(),
+                         realRect.Width(), realRect.Height());
+
+      invalRect = invalRect.Intersect(nsRect(nsPoint(0,0), contentArea.Size()));
     }
   } else {
-    layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS);
+    invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
   }
-  
+  invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
+
+  Layer* layer = frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
   if (layer) {
     static_cast<CanvasLayer*>(layer)->Updated();
   }
@@ -694,7 +704,7 @@ nsHTMLCanvasElement::InvalidateCanvas()
   if (!frame)
     return;
 
-  frame->InvalidateFrame();
+  frame->Invalidate(frame->GetContentRect() - frame->GetPosition());
 }
 
 PRInt32

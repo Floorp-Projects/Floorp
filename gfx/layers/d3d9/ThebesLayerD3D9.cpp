@@ -47,9 +47,7 @@ ThebesLayerD3D9::~ThebesLayerD3D9()
 void
 ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
 {
-  mInvalidRegion.Or(mInvalidRegion, aRegion);
-  mInvalidRegion.SimplifyOutward(10);
-  mValidRegion.Sub(mValidRegion, mInvalidRegion);
+  mValidRegion.Sub(mValidRegion, aRegion);
 }
 
 void
@@ -236,10 +234,6 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
     DrawRegion(drawRegion, mode, readbackUpdates);
 
     mValidRegion = neededRegion;
-  }
-
-  if (mD3DManager->CompositingDisabled()) {
-    return;
   }
 
   SetShaderTransformAndOpacity();
@@ -660,7 +654,7 @@ ShadowThebesLayerD3D9::IsEmpty()
 void
 ShadowThebesLayerD3D9::RenderThebesLayer()
 {
-  if (!mBuffer || mD3DManager->CompositingDisabled()) {
+  if (!mBuffer) {
     return;
   }
   NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");

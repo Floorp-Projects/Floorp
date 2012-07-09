@@ -55,6 +55,10 @@ BINPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
 
+ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
+DEFINES += -DMOZ_SHARED_MOZGLUE=1
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@

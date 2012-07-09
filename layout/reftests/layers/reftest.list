@@ -1,2 +1,2 @@
 == move-to-background-1.html move-to-background-1-ref.html
-fuzzy-if(cocoaWidget,2,6) random-if(Android&&!browserIsRemote) == component-alpha-exit-1.html component-alpha-exit-1-ref.html # bug 760275
+random-if(Android&&!browserIsRemote) == component-alpha-exit-1.html component-alpha-exit-1-ref.html # bug 760275

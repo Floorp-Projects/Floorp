@@ -17,11 +17,9 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsRenderingContext.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGForeignObjectFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsSubDocumentFrame.h"
 
 namespace dom = mozilla::dom;
 
@@ -82,33 +80,6 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
 // Implementation helpers
 
 void
-nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-
-  if (!mForeignObjectHash.IsInitialized()) {
-    mForeignObjectHash.Init();
-  }
-
-  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame already registered!");
-
-  mForeignObjectHash.PutEntry(aFrame);
-
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "Failed to register nsSVGForeignObjectFrame!");
-}
-
-void
-nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash.RemoveEntry(aFrame);
-}
-
-void
 nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
 {
   nsIFrame* kid = aFrame->GetFirstPrincipalChild();
@@ -138,9 +109,6 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext)
     , mFullZoom(0)
     , mViewportInitialized(false)
-#ifdef XP_MACOSX
-    , mEnableBitmapFallback(false)
-#endif
     , mIsRootContent(false)
 {
   // Outer-<svg> has CSS layout, so remove this bit:
@@ -487,11 +455,6 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion);
-
   NS_DISPLAY_DECL_NAME("SVGOuterSVG", TYPE_SVG_OUTER_SVG)
 };
 
@@ -524,93 +487,34 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   PRTime start = PR_Now();
 #endif
 
-  aContext->PushState();
+  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
+  // it, but do so without changing the render mode:
+  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
 
-  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-
-#ifdef XP_MACOSX
-  if (frame->BitmapFallbackEnabled()) {
-    // nquartz fallback paths, which svg tends to trigger, need
-    // a non-window context target
-    aContext->ThebesContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  if (aBuilder->IsPaintingToWindow()) {
+    state.SetPaintingToWindow(true);
   }
-#endif
 
   nsRect viewportRect =
-    frame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+
   nsRect clipRect = mVisibleRect.Intersect(viewportRect);
 
-  aContext->IntersectClip(clipRect);
+  nsIntRect contentAreaDirtyRect =
+    (clipRect - viewportRect.TopLeft()).
+      ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aContext->PushState();
   aContext->Translate(viewportRect.TopLeft());
-
-  frame->Paint(aBuilder, aContext, clipRect - viewportRect.TopLeft());
-
-#ifdef XP_MACOSX
-  if (frame->BitmapFallbackEnabled()) {
-    // show the surface we pushed earlier for fallbacks
-    aContext->ThebesContext()->PopGroupToSource();
-    aContext->ThebesContext()->Paint();
-  }
-
-  if (aContext->ThebesContext()->HasError() && !frame->BitmapFallbackEnabled()) {
-    frame->SetBitmapFallbackEnabled(true);
-    // It's not really clear what area to invalidate here. We might have
-    // stuffed up rendering for the entire window in this paint pass,
-    // so we can't just invalidate our own rect. Invalidate everything
-    // in sight.
-    // This won't work for printing, by the way, but failure to print the
-    // odd document is probably no worse than printing horribly for all
-    // documents. Better to fix things so we don't need fallback.
-    nsIFrame* ancestor = frame;
-    while (true) {
-      nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(ancestor);
-      if (!next)
-        break;
-      ancestor = next;
-    }
-    ancestor->InvalidateFrame();
-  }
-#endif
-
+  nsSVGUtils::PaintFrameWithEffects(aContext, &contentAreaDirtyRect, mFrame);
   aContext->PopState();
+
+  NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime end = PR_Now();
   printf("SVG Paint Timing: %f ms\n", (end-start)/1000.0);
 #endif
-}
-
-static PLDHashOperator CheckForeignObjectInvalidatedArea(nsPtrHashKey<nsSVGForeignObjectFrame>* aEntry, void* aData)
-{
-  nsRegion* region = static_cast<nsRegion*>(aData);
-  region->Or(*region, aEntry->GetKey()->GetInvalidRegion());
-  return PL_DHASH_NEXT;
-}
-
-nsRegion
-nsSVGOuterSVGFrame::FindInvalidatedForeignObjectFrameChildren(nsIFrame* aFrame)
-{
-  nsRegion result;
-  if (mForeignObjectHash.Count()) {
-    mForeignObjectHash.EnumerateEntries(CheckForeignObjectInvalidatedArea, &result);
-  }
-  return result;
-}
-
-void
-nsDisplayOuterSVG::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                             const nsDisplayItemGeometry* aGeometry,
-                                             nsRegion* aInvalidRegion)
-{
-  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-  frame->InvalidateSVG(frame->FindInvalidatedForeignObjectFrameChildren(frame));
-
-  nsRegion result = frame->GetInvalidRegion();
-  result.MoveBy(ToReferenceFrame());
-  frame->ClearInvalidRegion();
-
-  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
-  aInvalidRegion->Or(*aInvalidRegion, result);
 }
 
 // helper
@@ -690,35 +594,25 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDisplayList replacedContent;
+  nsDisplayList childItems;
 
-  rv = replacedContent.AppendNewToTop(
-      new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
+  rv = childItems.AppendNewToTop(
+         new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
-
-  return NS_OK;
-}
-
-void
-nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext* aContext,
-                          const nsRect& aDirtyRect)
-{
-  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
-  // it, but don't change the render mode:
-  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
-
-  if (aBuilder->IsPaintingToWindow()) {
-    state.SetPaintingToWindow(true);
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    // Clip to our _content_ box:
+    nsRect clipRect =
+      GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+    nsDisplayClip* item =
+      new (aBuilder) nsDisplayClip(aBuilder, this, &childItems, clipRect);
+    rv = childItems.AppendNewToTop(item);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Convert the (content area relative) dirty rect to dev pixels:
-  nsIntRect dirtyPxRect =
-    aDirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
+  WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
 
-  nsSVGUtils::PaintFrameWithEffects(aContext, &dirtyPxRect, this);
+  return NS_OK;
 }
 
 nsSplittableType

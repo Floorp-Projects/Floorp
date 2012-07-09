@@ -1004,7 +1004,7 @@ XPC_WN_Helper_Finalize(js::FreeOp *fop, JSObject *obj)
 
 static JSBool
 XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                         JSObject **objp)
+                         JSMutableHandleObject objp)
 {
     nsresult rv = NS_OK;
     bool retval = true;
@@ -1025,7 +1025,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsig
             return Throw(rv, cx);
 
         if (obj2FromScriptable)
-            *objp = obj2FromScriptable;
+            objp.set(obj2FromScriptable);
 
         return retval;
     }
@@ -1059,7 +1059,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsig
     }
 
     if (obj2FromScriptable) {
-        *objp = obj2FromScriptable;
+        objp.set(obj2FromScriptable);
     } else if (wrapper->HasMutatedSet()) {
         // We are here if scriptable did not resolve this property and
         // it *might* be in the instance set but not the proto set.
@@ -1096,7 +1096,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsig
                                            enumFlag, &resolved);
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
             if (retval && resolved)
-                *objp = obj;
+                objp.set(obj);
         }
     }
 

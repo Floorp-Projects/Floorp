@@ -76,7 +76,8 @@ var properties1 = {
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
   tel: [{type: "work", number: "123456"} , {type: "home", number: "+9-876-5432"}],
-  adr: adr1
+  adr: adr1,
+  email: [{type: "work", address: "x@y.com"}]
 };
 
 var properties2 = {
@@ -88,7 +89,7 @@ var properties2 = {
   additionalName: "dummyadditionalName",
   nickname: "dummyNickname",
   tel: [{type: "test", number: "123456789"},{type: "home", number: "234567890"}],
-  email: ["a@b.c", "b@c.d"],
+  email: [{type: "test", address: "a@b.c"}, {address: "b@c.d"}],
   adr: [adr1, adr2],
   impp: ["im1", "im2"],
   org: ["org1", "org2"],
@@ -148,6 +149,11 @@ function checkTel(tel1, tel2) {
   checkStr(tel1.number, tel2.number, "Same number");
 }
 
+function checkEmail(email1, email2) {
+  checkStr(email1.type, email2.type, "Same type");
+  checkStr(email1.address, email2.address, "Same address");
+}
+
 function checkContacts(contact1, contact2) {
   checkStr(contact1.name, contact2.name, "Same name");
   checkStr(contact1.honorificPrefix, contact2.honorificPrefix, "Same honorificPrefix");
@@ -156,7 +162,6 @@ function checkContacts(contact1, contact2) {
   checkStr(contact1.familyName, contact2.familyName, "Same familyName");
   checkStr(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
   checkStr(contact1.nickname, contact2.nickname, "Same nickname");
-  checkStr(contact1.email, contact2.email, "Same email");
   checkStr(contact1.photo, contact2.photo, "Same photo");
   checkStr(contact1.url, contact2.url, "Same url");
   checkStr(contact1.category, contact2.category, "Same category");
@@ -169,6 +174,8 @@ function checkContacts(contact1, contact2) {
   is(contact1.sex, contact2.sex, "Same sex");
   is(contact1.genderIdentity, contact2.genderIdentity, "Same genderIdentity");
 
+  for (var i in contact1.email)
+    checkEmail(contact1.email[i], contact2.email[i]);
   for (var i in contact1.adr)
     checkAddress(contact1.adr[i], contact2.adr[i]);
   for (var i in contact1.tel)
@@ -265,6 +272,21 @@ var steps = [
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
       checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for exact email");
+    var options = {filterBy: ["email"],
+                   filterOp: "equals",
+                   filterValue: properties1.email[0].address};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(findResult1, createResult1);
       next();
     };
     req.onerror = onFailure;
@@ -616,14 +638,14 @@ var steps = [
   },
   function () {
     ok(true, "Modifying contact3");
-    findResult1.email = (properties1.nickname);
+    findResult1.email = [{address: properties1.nickname}];
     findResult1.nickname = "TEST";
     var newContact = new mozContact();
     newContact.init(findResult1);
     req = mozContacts.save(newContact);
     req.onsuccess = function () {
       var options = {filterBy: ["nickname", "email", "name"],
-                     filterOp: "equals",
+                     filterOp: "contains",
                      filterValue: properties1.nickname};
       // One contact has it in nickname and the other in email
       var req2 = mozContacts.find(options);
@@ -741,7 +763,7 @@ var steps = [
     ok(true, "Searching contacts by email");
     var options = {filterBy: ["email"],
                    filterOp: "contains",
-                   filterValue: properties2.email[0].substring(0, 4)};
+                   filterValue: properties2.email[0].address.substring(0, 4)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 1, "Found exactly 1 contact.");
@@ -865,12 +887,12 @@ var steps = [
     ok(true, "Testing clone contact2");
     var cloned = new mozContact(createResult1);
     ok(cloned.id != createResult1.id, "Cloned contact has new ID");
-    cloned.email = "new email!";
+    cloned.email = {address: "new email!"};
     cloned.givenName = "Tom";
     req = mozContacts.save(cloned);
     req.onsuccess = function () {
       ok(cloned.id, "The contact now has an ID.");
-      ok(cloned.email == "new email!", "Same Email");
+      ok(cloned.email.address == "new email!", "Same Email");
       ok(createResult1.email != cloned.email, "Clone has different email");
       ok(cloned.givenName == "Tom", "New Name");
       next();
@@ -892,7 +914,7 @@ var steps = [
   function () {
     ok(true, "Search with redundant fields should only return 1 contact");
     createResult1 = new mozContact();
-    createResult1.init({name: "XXX", nickname: "XXX", email: "XXX", tel: {number: "XXX"}});
+    createResult1.init({name: "XXX", nickname: "XXX", email: [{address: "XXX"}], tel: {number: "XXX"}});
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
       var options = {filterBy: [],
@@ -1085,6 +1107,40 @@ var steps = [
     req.onsuccess = function () {
       ok(req.result.length == 1, "1 Entry.");
       checkContacts(req.result[0], createResult2);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding empty contact");
+    createResult1 = new mozContact();
+    createResult1.init({givenName: 5});
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test category search with equals");
+    var options = {filterBy: ["givenName"],
+                   filterOp: "contains",
+                   filterValue: 5};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "1 Entry.");
+      checkContacts(req.result[0], createResult1);
       next();
     }
     req.onerror = onFailure;

@@ -69,7 +69,7 @@ struct AutoIncrCounters {
 };
 
 bool
-doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
+doResolve(JSObject *obj, jsid id, unsigned flags, JSMutableHandleObject objp)
 {
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
@@ -87,12 +87,12 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
             EVAL("obj2.y = true", &v);
             CHECK_SAME(v, JSVAL_TRUE);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_FALSE, NULL, NULL, 0));
-            *objp = obj;
+            objp.set(obj);
             return true;
         }
         if (obj == obj2) {
             CHECK_EQUAL(resolveEntryCount, 4);
-            *objp = NULL;
+            objp.set(NULL);
             return true;
         }
     } else if (JS_FlatStringEqualsAscii(str, "y")) {
@@ -103,7 +103,7 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y", &v);
             CHECK_SAME(v, JSVAL_ZERO);
-            *objp = obj;
+            objp.set(obj);
             return true;
         }
         if (obj == obj1) {
@@ -118,7 +118,7 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
             CHECK(JSVAL_IS_VOID(v));
             EVAL("obj1.y = 0", &v);
             CHECK_SAME(v, JSVAL_ZERO);
-            *objp = obj;
+            objp.set(obj);
             return true;
         }
     }
@@ -127,7 +127,8 @@ doResolve(JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 }
 
 static JSBool
-my_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
+my_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+           JSMutableHandleObject objp)
 {
     return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
            doResolve(obj, id, flags, objp);

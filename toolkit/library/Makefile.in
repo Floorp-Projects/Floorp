@@ -148,6 +148,7 @@ COMPONENT_LIBS += \
   startupcache \
   pref \
   htmlpars \
+  identity \
   imglib2 \
   gkgfx \
   gklayout \

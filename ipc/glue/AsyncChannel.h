@@ -103,6 +103,10 @@ public:
     // Close the underlying transport channel.
     void Close();
 
+    // Force the channel to behave as if a channel error occurred. Valid
+    // for process links only, not thread links.
+    void CloseWithError();
+
     // Asynchronously send a message to the other side of the channel
     virtual bool Send(Message* msg);
 

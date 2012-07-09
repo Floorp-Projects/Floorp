@@ -26,6 +26,8 @@ class AudioChild : public PAudioChild
     virtual PRInt32 WaitForMinWriteSize();
     virtual bool RecvMinWriteSizeDone(const PRInt32& frameCount);
     virtual void WaitForDrain();
+    virtual bool RecvWriteDone();
+    virtual void WaitForWrite();
     virtual void ActorDestroy(ActorDestroyReason);
 
     PRInt64 GetLastKnownPosition();
@@ -37,6 +39,7 @@ class AudioChild : public PAudioChild
     NS_DECL_OWNINGTHREAD
     PRInt64 mLastPosition;
     PRInt64 mLastPositionTimestamp;
+    PRUint64 mWriteCounter;
     PRInt32 mMinWriteSize;
     mozilla::ReentrantMonitor mAudioReentrantMonitor;
     bool mIPCOpen;

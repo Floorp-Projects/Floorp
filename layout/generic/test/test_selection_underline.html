@@ -2,9 +2,8 @@
 
 <head>
   <title>Test for selection underline</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
-  <script type="text/javascript" src="../../base/tests/decoration_line_rendering.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
@@ -12,21 +11,14 @@
 // Canvas related code stolen from layout/base/tests/bidi_numeral_test.js which
 // stole from http://developer.mozilla.org/en/docs/Code_snippets:Canvas
 
-const kStyleNames = [ "none", "dotted", "dashed", "solid", "double", "wavy" ];
-
-var RemoteCanvas = function(aURL, aIsReference, aStyle, aRelativeSize) {
-  this.url = aURL;
-  this.id = kStyleNames[aStyle] + aRelativeSize;
-  if (aIsReference)
-    this.id = "ref-" + this.id;
-  this.isReference = aIsReference;
-  this.underlineStyle = aStyle;
-  this.underlineRelativeSize = aRelativeSize;
+var RemoteCanvas = function(aIFrame, aTest) {
+  this.iframe = aIFrame;
+  this.test = aTest;
   this.snapshot = null;
 };
 
-RemoteCanvas.CANVAS_WIDTH = 820;
-RemoteCanvas.CANVAS_HEIGHT = 500;
+RemoteCanvas.CANVAS_WIDTH = 200;
+RemoteCanvas.CANVAS_HEIGHT = 100;
 
 RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
   var ret = compareSnapshots(this.snapshot, otherCanvas.snapshot, expected);
@@ -35,140 +27,20 @@ RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
   return ret[0];
 }
 
+RemoteCanvas.prototype.isReference = function() {
+  return this.iframe && (this.iframe.id == "reference");
+}
+
 RemoteCanvas.prototype.load = function(callback) {
-  var iframe = document.createElement("iframe");
-  iframe.id = this.id;
-  iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
-  iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
-  iframe.src = this.url;
+  this.iframe.contentWindow.wrappedJSObject.init(this.test);
   var me = this;
-  iframe.addEventListener("load", function() {
-      me.remotePageLoaded(callback);
-    }, false);
-  window.document.body.appendChild(iframe);
-};
-
-const kIsMac = navigator.platform.indexOf("Mac") == 0;
-const kIsWin = navigator.platform.indexOf("Win") == 0;
-const kIsLinux = navigator.platform.indexOf("Linux") == 0;
-
-/**
- * gFontMetrics has predictable font metrics:
- *   0: font-family: Ahem.ttf;             font-size: 16px;
- *   1: font-family: mplus-1p-regular.ttf; font-size: 16px;
- *   2: font-family: Ahem.ttf;             font-size: 32px;
- *   3: font-family: mplus-1p-regular.ttf; font-size: 32px;
- *   4: font-family: Ahem.ttf;             font-size: 52px;
- *   5: font-family: mplus-1p-regular.ttf; font-size: 52px;
- */
-var gFontMetrics = [];
-
-if (kIsWin) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).DWriteEnabled) {
-    todo(false, "This test is not supported on Windows when DirectWrite is enabled.");
-  } else {
-    gFontMetrics = [
-      { emHeight: 16, ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
-      { emHeight: 16, ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
-      { emHeight: 32, ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
-      { emHeight: 32, ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
-      { emHeight: 52, ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
-      { emHeight: 52, ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
-    ];
-  }
-}
-/*
-else if (kIsMac) {
-  // XXX mnakano: I got following metrics on my Mac (both 10.4 and 10.5).
-  // However, on tinderbox machines, they are different values.  I'm not sure
-  // the reason.
-  gFontMetrics = [
-    { ascent: 13, offset: -2.127930, lineHeight: 1.000000 },
-    { ascent: 18, offset: -2.000000, lineHeight: 1.000000 },
-    { ascent: 26, offset: -4.255859, lineHeight: 1.000000 },
-    { ascent: 35, offset: -4.000000, lineHeight: 1.600098 },
-    { ascent: 42, offset: -6.915771, lineHeight: 1.040222 },
-    { ascent: 56, offset: -6.500000, lineHeight: 2.600159 }
-  ];
-}
-else if (kIsLinux) {
-  // XXX mnakano: I got following metrics on my Ubuntu 8.10.  However, on
-  // tinderbox machines, they are different.  Probably, the values depend on
-  // the version of FreeType and Pango.  I bet we cannot test this on Linux
-  // without the way to get the actual font metrics from javascript.
-  gFontMetrics = [
-    { ascent: 13, offset: -1.015625, lineHeight: 1.000000 },
-    { ascent: 18, offset: -1.015625, lineHeight: 1.000000 },
-    { ascent: 26, offset: -2.031250, lineHeight: 1.000000 },
-    { ascent: 35, offset: -2.031250, lineHeight: 1.600003 },
-    { ascent: 42, offset: -3.300781, lineHeight: 1.040001 },
-    { ascent: 56, offset: -3.300781, lineHeight: 2.600002 }
-  ];
-}
-*/
-else {
-  todo(false, "This test is not supported on this platform.");
+  setTimeout(function () { me.remotePagePrepared(callback) }, 100);
 }
 
-const kUnderlineStyles = [
-  { color: "rgb(100%,  0%,  0%)", isIMESelection: false },
-  { color: "rgb(  0%,100%,  0%)", isIMESelection: true  },
-  { color: "rgb(  0%,  0%,100%)", isIMESelection: true  },
-  { color: "rgb(100%,100%,  0%)", isIMESelection: true  },
-  { color: "rgb(  0%,100%,100%)", isIMESelection: true  }
-];
-
-var gDefaultFontSizeIndex = 0;
-const kDefaultFontSizes = [ 16, 20, 21, 50 ];
-
-function computeSpellcheckerUnderlineSize(aFontMetrics)
-{
-  var fontSize = Math.min(aFontMetrics.emHeight,
-                          kDefaultFontSizes[gDefaultFontSizeIndex - 1]);
-  fontSize = Math.max(fontSize, 1);
-  return Math.ceil(fontSize / 20);
-}
-
-function drawSelectionDecorationLines(aDocument, aStyle, aRelativeSize)
-{
-  var index = 0;
-  for (var i = 0; i < kUnderlineStyles.length; i++) {
-    var underlineStyle = kUnderlineStyles[i];
-    for (var j = 0; j < gFontMetrics.length; j++) {
-      var fontMetrics = gFontMetrics[j];
-      var element = aDocument.getElementById("t" + index++);
-      var pt = { x: element.getBoundingClientRect().left,
-                 y: element.getBoundingClientRect().top };
-      var width = 120;
-      var lineHeight;
-      if (underlineStyle.isIMESelection) {
-        pt.x += 1;
-        width -= 1;
-        lineHeight = fontMetrics.lineHeight;
-      } else {
-        // see bug 486735.
-        lineHeight = computeSpellcheckerUnderlineSize(fontMetrics);
-      }
-      drawDecorationLine(aDocument, underlineStyle.color, pt,
-        { width: width, height: lineHeight * aRelativeSize },
-        fontMetrics.ascent, fontMetrics.offset, aStyle,
-        fontMetrics.descentLimit);
-    }
-  }
-}
-
-RemoteCanvas.prototype.remotePageLoaded = function(callback) {
-  var ldrFrame = document.getElementById(this.id);
-  if (this.isReference) {
-    var doc = ldrFrame.contentDocument;
-    drawSelectionDecorationLines(doc, this.underlineStyle,
-                                 this.underlineRelativeSize);
-    doc.documentElement.removeAttribute("class");
-  }
-  this.snapshot = snapshotWindow(ldrFrame.contentWindow);
+RemoteCanvas.prototype.remotePagePrepared = function(callback) {
+  this.snapshot = snapshotWindow(this.iframe.contentWindow);
   callback(this);
-};
+}
 
 var gPrefs = [
   {
@@ -179,7 +51,7 @@ var gPrefs = [
   {
     name: "ui.IMERawInputBackground",
     type: "char",
-    newValue: "#ffffff"
+    newValue: "transparent"
   },
   {
     name: "ui.IMERawInputForeground",
@@ -194,7 +66,7 @@ var gPrefs = [
   {
     name: "ui.IMESelectedRawTextBackground",
     type: "char",
-    newValue: "#ffffff"
+    newValue: "transparent"
   },
   {
     name: "ui.IMESelectedRawTextForeground",
@@ -209,7 +81,7 @@ var gPrefs = [
   {
     name: "ui.IMEConvertedTextBackground",
     type: "char",
-    newValue: "#ffffff"
+    newValue: "transparent"
   },
   {
     name: "ui.IMEConvertedTextForeground",
@@ -224,7 +96,7 @@ var gPrefs = [
   {
     name: "ui.IMESelectedConvertedTextBackground",
     type: "char",
-    newValue: "#ffffff"
+    newValue: "transparent"
   },
   {
     name: "ui.IMESelectedConvertedTextForeground",
@@ -273,77 +145,104 @@ var gPrefs = [
   }
 ];
 
-function setPrefValue(aPrefs, aName, aType, aValue)
-{
-  if (aType == "char")
-    aPrefs.setCharPref(aName, aValue);
-  else if (aType == "int")
-    aPrefs.setIntPref(aName, aValue);
-  else if (aType == "float")
-    aPrefs.setIntPref(aName, aValue * 100);
-}
+const nsISelectionController = Components.interfaces.nsISelectionController;
 
-const kPrefStyles = [ 0, 3, 1, 2, 4, 5 ];
-
-var gTests = [
- { size: 1.0, style: kDecorationStyleNone   },
- { size: 1.0, style: kDecorationStyleSolid  },
- { size: 1.0, style: kDecorationStyleDotted },
- { size: 1.0, style: kDecorationStyleDashed },
- { size: 1.0, style: kDecorationStyleDouble },
- { size: 1.0, style: kDecorationStyleWavy   },
- { size: 2.0, style: kDecorationStyleNone   },
- { size: 2.0, style: kDecorationStyleSolid  },
- { size: 2.0, style: kDecorationStyleDotted },
- { size: 2.0, style: kDecorationStyleDashed },
- { size: 2.0, style: kDecorationStyleDouble },
- { size: 2.0, style: kDecorationStyleWavy   }
+var gSelectionIndex = -1;
+const kSelections = [
+  { type: nsISelectionController.SELECTION_SPELLCHECK,
+    typeName: "SpellCheck", isIME: false,
+    decorationColor: "#ff0000" },
+  { type: nsISelectionController.SELECTION_IME_RAWINPUT,
+    typeName: "IME-RawInput", isIME: true,
+    decorationColor: "#00ff00" },
+  { type: nsISelectionController.SELECTION_IME_SELECTEDRAWTEXT,
+    typeName: "IME-SelectedRawText", isIME: true,
+    decorationColor: "#0000ff" },
+  { type: nsISelectionController.SELECTION_IME_CONVERTEDTEXT,
+    typeName: "IME-ConvertedText", isIME: true,
+    decorationColor: "#ffff00" },
+  { type: nsISelectionController.SELECTION_IME_SELECTEDCONVERTEDTEXT,
+    typeName: "IME-SelectedConvertedText", isIME: true,
+    decorationColor: "#00ffff" },
 ];
 
-var gTestingIndex = 0;
+const kFontName_Ahem = "AhemTest";
+const kFontName_MPlus = "mplusTest";
+
+var gFontIndex = 0;
+const kFonts = [
+  { family: kFontName_Ahem, defaultSize: 16 },
+  { family: kFontName_Ahem, defaultSize: 20 },
+  { family: kFontName_Ahem, defaultSize: 32 },
+  { family: kFontName_Ahem, defaultSize: 52 },
+
+  { family: kFontName_MPlus, defaultSize: 16 },
+  { family: kFontName_MPlus, defaultSize: 20 },
+  { family: kFontName_MPlus, defaultSize: 32 },
+  { family: kFontName_MPlus, defaultSize: 52 },
+];
+
+const kDecorationStyleNone   = 0;
+const kDecorationStyleDotted = 1;
+const kDecorationStyleDashed = 2;
+const kDecorationStyleSolid  = 3;
+const kDecorationStyleDouble = 4;
+const kDecorationStyleWavy   = 5;
+
+var gDecorationIndex = 0;
+const kDecorations = [
+  { relativeSize: 1.0, style: kDecorationStyleNone,   styleName: "-moz-none" },
+  { relativeSize: 1.0, style: kDecorationStyleSolid,  styleName: "solid"     },
+  { relativeSize: 1.0, style: kDecorationStyleDotted, styleName: "dotted"    },
+  { relativeSize: 1.0, style: kDecorationStyleDashed, styleName: "dashed"    },
+  { relativeSize: 1.0, style: kDecorationStyleDouble, styleName: "double"    },
+  { relativeSize: 1.0, style: kDecorationStyleWavy,   styleName: "wavy"      },
+
+// XXX relativeSize 2.0 cannot be tested by CSS3 text-decoration
+
+];
 
 function run()
 {
-  if (gTestingIndex == gTests.length) {
-    if (gDefaultFontSizeIndex == kDefaultFontSizes.length) {
-      SimpleTest.finish();
-      cleanup();
-      return;
+  if (++gSelectionIndex == kSelections.length) {
+    if (++gFontIndex == kFonts.length) {
+      if (++gDecorationIndex == kDecorations.length) {
+        SimpleTest.finish();
+        cleanup();
+        return;
+      }
+      gFontIndex = 0;
     }
-    gTestingIndex = 0;
+    gSelectionIndex = 0;
+    SpecialPowers.setIntPref("font.size.variable.x-western",
+                             kFonts[gFontIndex].defaultSize);
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var test = {
+    font: kFonts[gFontIndex],
+    decoration: kDecorations[gDecorationIndex],
+    selection: kSelections[gSelectionIndex],
+  };
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
+  SpecialPowers.setIntPref("ui.SpellCheckerUnderlineRelativeSize",
+                           test.decoration.relativeSize * 100);
+  SpecialPowers.setIntPref("ui.IMEUnderlineRelativeSize",
+                           test.decoration.relativeSize * 100);
+  SpecialPowers.setIntPref("ui.SpellCheckerUnderlineStyle",
+                           test.decoration.style);
+  SpecialPowers.setIntPref("ui.IMERawInputUnderlineStyle",
+                           test.decoration.style);
+  SpecialPowers.setIntPref("ui.IMESelectedRawTextUnderlineStyle",
+                           test.decoration.style);
+  SpecialPowers.setIntPref("ui.IMEConvertedTextUnderlineStyle",
+                           test.decoration.style);
+  SpecialPowers.setIntPref("ui.IMESelectedConvertedTextUnderlineStyle",
+                           test.decoration.style);
 
-  if (gTestingIndex == 0) {
-    prefs.setIntPref("font.size.variable.x-western",
-                     kDefaultFontSizes[gDefaultFontSizeIndex++]);
-  }
-
-  var test = gTests[gTestingIndex++];
-
-  setPrefValue(prefs, "ui.SpellCheckerUnderlineRelativeSize", "float",
-               test.size);
-  setPrefValue(prefs, "ui.IMEUnderlineRelativeSize", "float",
-               test.size);
-  setPrefValue(prefs, "ui.SpellCheckerUnderlineStyle", "int",
-               kPrefStyles[test.style]);
-  setPrefValue(prefs, "ui.IMERawInputUnderlineStyle", "int",
-               kPrefStyles[test.style]);
-  setPrefValue(prefs, "ui.IMESelectedRawTextUnderlineStyle", "int",
-               kPrefStyles[test.style]);
-  setPrefValue(prefs, "ui.IMEConvertedTextUnderlineStyle", "int",
-               kPrefStyles[test.style]);
-  setPrefValue(prefs, "ui.IMESelectedConvertedTextUnderlineStyle", "int",
-               kPrefStyles[test.style]);
-
-  doTest(test.style, test.size);
+  SimpleTest.executeSoon(function () { doTest(test); });
 }
 
-function doTest(aStyle, aSize)
+function doTest(aTest)
 {
 
   var canvases = [];
@@ -354,89 +253,83 @@ function doTest(aStyle, aSize)
     if (canvases.length != 2)
       return;
 
-    var result = !canvases[0].isReference ? canvases[0] : canvases[1];
-    var reference = canvases[0].isReference ? canvases[0] : canvases[1];
+    var result = !canvases[0].isReference() ? canvases[0] : canvases[1];
+    var reference = canvases[0].isReference() ? canvases[0] : canvases[1];
 
-    // when both canvases are loaded
-    ok(result.compare(reference, true),
-         "Rendering of reftest (style: " + kStyleNames[aStyle] +
-         ", size: " + aSize + ", default font size: " +
-         kDefaultFontSizes[gDefaultFontSizeIndex - 1] + ") is different\n" +
-         "RESULT=" + result.snapshotDataURL + "\n" +
-         "REFERENCE=" + reference.snapshotDataURL + "\n");
+    var description = "Rendering of reftest (" +
+                        "selection: " + aTest.selection.typeName +
+                        ", style: " + aTest.decoration.styleName +
+                        ", relativeSize: " + aTest.decoration.relativeSize +
+                        ", font: " + aTest.font.family +
+                        ", default font size: " + aTest.font.defaultSize +
+                        ") is different\n" +
+                        "RESULT=" + result.snapshotDataURL + "\n" +
+                        "REFERENCE=" + reference.snapshotDataURL + "\n";
 
-    var iframe = window.document.getElementById(canvases[0].id);
-    iframe.parentNode.removeChild(iframe);
-    iframe = window.document.getElementById(canvases[1].id);
-    iframe.parentNode.removeChild(iframe);
+    if (result.compare(reference, true)) {
+      ok(true, description);
+    // If the decoration line is thick and the descender of the text isn't
+    // enough for containing it, selection underline may be painted lower
+    // if it's possible.  Then, we cannot test it with CSS3 text-decoration.
+    } else if (aTest.decoration.style == kDecorationStyleDouble ||
+               aTest.decoration.style == kDecorationStyleWavy) {
+      todo(false, description);
+    } else {
+      ok(false, description);
+    }
 
     canvases = [];
 
-    setTimeout(run, 0);
+    run();
   }
 
-  var testCanvas = new RemoteCanvas("frame_selection_underline.xhtml",
-                                    false, aStyle, aSize);
+  var testCanvas = new RemoteCanvas(document.getElementById("result"), aTest);
   testCanvas.load(callbackTestCanvas);
 
-  var refFile = "frame_selection_underline-ref.xhtml";
-  var refCanvas = new RemoteCanvas(refFile, true, aStyle, aSize);
+  var refCanvas = new RemoteCanvas(document.getElementById("reference"), aTest);
   refCanvas.load(callbackTestCanvas);
 }
 
 function onLoad()
 {
-  if (gFontMetrics.length == 0) {
-    SimpleTest.finish();
-    return;
-  }
-
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-
   for (var i = 0; i < gPrefs.length; i++) {
-    gPrefs[i].wasUserSetValue = prefs.prefHasUserValue(gPrefs[i].name);
-    if (gPrefs[i].wasUserSetValue) {
-      if (gPrefs[i].type == "char")
-        gPrefs[i].oldValue = prefs.getCharPref(gPrefs[i].name);
-      else if (gPrefs[i].type == "int")
-        gPrefs[i].oldValue = prefs.getIntPref(gPrefs[i].name);
-      else if (gPrefs[i].type == "float")
-        gPrefs[i].oldValue = prefs.getIntPref(gPrefs[i].name) / 100;
+    if (gPrefs[i].type == "char") {
+      SpecialPowers.setCharPref(gPrefs[i].name, gPrefs[i].newValue);
+    } else if (gPrefs[i].type == "int") {
+      SpecialPowers.setIntPref(gPrefs[i].name, gPrefs[i].newValue);
+    } else if (gPrefs[i].type == "float") {
+      SpecialPowers.setIntPref(gPrefs[i].name, gPrefs[i].newValue * 100);
     }
-    setPrefValue(prefs, gPrefs[i].name, gPrefs[i].type, gPrefs[i].newValue);
   }
+
+  var iframe = document.getElementById("result");
+  iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
+  iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
+  iframe = document.getElementById("reference");
+  iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
+  iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
 
   run();
 }
 
 function cleanup()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-
-  if (prefs.prefHasUserValue("font.size.variable.x-western"))
-    prefs.clearUserPref("font.size.variable.x-western");
-
+  SpecialPowers.clearUserPref("font.size.variable.x-western");
   for (var i = 0; i < gPrefs.length; i++) {
-    if (gPrefs[i].wasUserSetValue)
-      setPrefValue(prefs, gPrefs[i].name, gPrefs[i].type, gPrefs[i].oldValue);
-    else if (prefs.prefHasUserValue(gPrefs[i].name))
-      prefs.clearUserPref(gPrefs[i].name);
+    SpecialPowers.clearUserPref(gPrefs[i].name);
   }
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(onLoad, window);
 
 </script>
 
 </head>
-<body onload="onLoad();">
+<body>
 
+<iframe src="frame_selection_underline.xhtml" id="result"></iframe>
+<iframe src="frame_selection_underline-ref.xhtml" id="reference"></iframe>
 <pre id="test">
 </pre>
 

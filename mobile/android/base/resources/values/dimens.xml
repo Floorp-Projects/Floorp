@@ -7,7 +7,6 @@
 
     <dimen name="awesomebar_header_row_height">20dp</dimen>
     <dimen name="awesomebar_row_height">48dp</dimen>
-    <dimen name="awesomebar_suggestion_item_height">30dp</dimen>
     <dimen name="awesomebar_tab_transparency_height">38dp</dimen>
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="flow_layout_spacing">6dp</dimen>

@@ -1901,6 +1901,7 @@ nsEventStateManager::FireContextClick()
                              type == NS_FORM_INPUT_URL ||
                              type == NS_FORM_INPUT_PASSWORD ||
                              type == NS_FORM_INPUT_FILE ||
+                             type == NS_FORM_INPUT_NUMBER ||
                              type == NS_FORM_TEXTAREA);
       }
       else if (tag == nsGkAtoms::applet ||
