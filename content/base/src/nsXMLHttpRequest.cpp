@@ -449,12 +449,12 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mWarnAboutMultipartHtml(false),
     mWarnAboutSyncHtml(false),
     mLoadLengthComputable(false), mLoadTotal(0),
+    mIsSystem(false),
+    mIsAnon(false),
     mFirstStartRequestSeen(false),
     mInLoadProgressEvent(false),
     mResultJSON(JSVAL_VOID),
-    mResultArrayBuffer(nsnull),
-    mIsAnon(false),
-    mIsSystem(false)
+    mResultArrayBuffer(nsnull)
 {
   nsLayoutStatics::AddRef();
 
