@@ -9,39 +9,39 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
   <script type="application/javascript" src="animation_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
-  @-moz-keyframes anim1 {
+  @keyframes anim1 {
      0% { margin-left: 0px }
      50% { margin-left: 80px }
      100% { margin-left: 100px }
   }
-  @-moz-keyframes anim2 {
+  @keyframes anim2 {
     from { margin-right: 0 } to { margin-right: 100px }
   }
-  @-moz-keyframes anim3 {
+  @keyframes anim3 {
     from { margin-top: 0 } to { margin-top: 100px }
   }
-  @-moz-keyframes anim4 {
+  @keyframes anim4 {
     from { margin-bottom: 0 } to { margin-bottom: 100px }
   }
-  @-moz-keyframes anim5 {
+  @keyframes anim5 {
     from { margin-left: 0 } to { margin-left: 100px }
   }
 
-  @-moz-keyframes kf1 {
+  @keyframes kf1 {
     50% { margin-top: 50px }
     to { margin-top: 150px }
   }
-  @-moz-keyframes kf2 {
+  @keyframes kf2 {
     from { margin-top: 150px }
     50% { margin-top: 50px }
   }
-  @-moz-keyframes kf3 {
+  @keyframes kf3 {
     25% { margin-top: 100px }
   }
-  @-moz-keyframes kf4 {
+  @keyframes kf4 {
     to, from { display: inline; margin-top: 37px }
   }
-  @-moz-keyframes kf_cascade1 {
+  @keyframes kf_cascade1 {
     from { padding-top: 50px }
     50%, from { padding-top: 30px }      /* wins: 0% */
     75%, 85%, 50% { padding-top: 20px }  /* wins: 75%, 50% */
@@ -49,54 +49,54 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     85.1% { padding-top: 60px }          /* wins: 85.1% */
     85% { padding-top: 30px }            /* wins: 85% */
   }
-  @-moz-keyframes kf_cascade2 { from, to { margin-top: 100px } }
-  @-moz-keyframes kf_cascade2 { from, to { margin-left: 200px } }
-  @-moz-keyframes kf_cascade2 { from, to { margin-left: 300px } }
-  @-moz-keyframes kf_tf1 {
-    0%   { padding-bottom: 20px; -moz-animation-timing-function: ease }
+  @keyframes kf_cascade2 { from, to { margin-top: 100px } }
+  @keyframes kf_cascade2 { from, to { margin-left: 200px } }
+  @keyframes kf_cascade2 { from, to { margin-left: 300px } }
+  @keyframes kf_tf1 {
+    0%   { padding-bottom: 20px; animation-timing-function: ease }
     25%  { padding-bottom: 60px; }
-    50%  { padding-bottom: 160px; -moz-animation-timing-function: steps(5) }
-    75%  { padding-bottom: 120px; -moz-animation-timing-function: linear }
-    100% { padding-bottom: 20px; -moz-animation-timing-function: ease-out }
+    50%  { padding-bottom: 160px; animation-timing-function: steps(5) }
+    75%  { padding-bottom: 120px; animation-timing-function: linear }
+    100% { padding-bottom: 20px; animation-timing-function: ease-out }
   }
 
   #withbefore::before, #withafter::after {
     content: "";
-    -moz-animation: anim2 1s linear alternate infinite;
+    animation: anim2 1s linear alternate infinite;
   }
 
-  @-moz-keyframes multiprop {
+  @keyframes multiprop {
     0% {
       padding-top: 10px; padding-left: 30px;
-      -moz-animation-timing-function: ease;
+      animation-timing-function: ease;
     }
     25% {
       padding-left: 50px;
-      -moz-animation-timing-function: ease-out;
+      animation-timing-function: ease-out;
     }
     50% {
       padding-top: 40px;
     }
     75% {
       padding-top: 80px; padding-left: 60px;
-      -moz-animation-timing-function: ease-in;
+      animation-timing-function: ease-in;
     }
   }
 
-  @-moz-keyframes uaoverride {
+  @keyframes uaoverride {
     0%, 100% { line-height: 3; margin-top: 20px }
     50% { margin-top: 120px }
   }
 
-  @-moz-keyframes cascade {
+  @keyframes cascade {
     0%, 25%, 100% { top: 0 }
     50%, 75% { top: 100px }
     0%, 75%, 100% { left: 0 }
     25%, 50% { left: 100px }
   }
-  @-moz-keyframes cascade2 {
+  @keyframes cascade2 {
     0% { text-indent: 0 }
-    25% { text-indent: 30px; -moz-animation-timing-function: ease-in } /* beaten by rule below */
+    25% { text-indent: 30px; animation-timing-function: ease-in } /* beaten by rule below */
     50% { text-indent: 0 }
     25% { text-indent: 50px }
     100% { text-indent: 100px }
@@ -194,7 +194,7 @@ advance_clock(0);
 // animation-fill-mode.
 function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
 {
-  var style = "margin-left: 30px; -moz-animation: 10s 3s anim1 linear";
+  var style = "margin-left: 30px; animation: 10s 3s anim1 linear";
   var desc;
   if (fill_mode.length > 0) {
     style += " " + fill_mode;
@@ -254,7 +254,7 @@ test_fill_mode("both", true, true);
 
 // Test that animations continue running when the animation name
 // list is changed.
-new_div("-moz-animation: anim1 linear 10s");
+new_div("animation: anim1 linear 10s");
   is(cs.getPropertyValue("margin-top"), "0px",
      "just anim1, margin-top at start");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -273,7 +273,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "16px",
      "just anim1, margin-left at 1s");
 // append anim2
-div.style.MozAnimation = "anim1 linear 10s, anim2 linear 10s";
+div.style.animation = "anim1 linear 10s, anim2 linear 10s";
   is(cs.getPropertyValue("margin-top"), "0px",
      "anim1 + anim2, margin-top at 1s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -292,7 +292,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "32px",
      "anim1 + anim2, margin-left at 2s");
 // prepend anim3
-div.style.MozAnimation = "anim3 linear 10s, anim1 linear 10s, anim2 linear 10s";
+div.style.animation = "anim3 linear 10s, anim1 linear 10s, anim2 linear 10s";
   is(cs.getPropertyValue("margin-top"), "0px",
      "anim3 + anim1 + anim2, margin-top at 2s");
   is(cs.getPropertyValue("margin-right"), "10px",
@@ -311,7 +311,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "48px",
      "anim3 + anim1 + anim2, margin-left at 3s");
 // remove anim2 from end
-div.style.MozAnimation = "anim3 linear 10s, anim1 linear 10s";
+div.style.animation = "anim3 linear 10s, anim1 linear 10s";
   is(cs.getPropertyValue("margin-top"), "10px",
      "anim3 + anim1, margin-top at 3s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -330,7 +330,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "64px",
      "anim3 + anim1, margin-left at 4s");
 // swap anim1 and anim3, change duration of anim3
-div.style.MozAnimation = "anim1 linear 10s, anim3 linear 5s";
+div.style.animation = "anim1 linear 10s, anim3 linear 5s";
   is(cs.getPropertyValue("margin-top"), "40px",
      "anim1 + anim3, margin-top at 4s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -349,7 +349,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "80px",
      "anim1 + anim3, margin-left at 5s");
 // list anim1 twice, last duration wins, original start time still applies
-div.style.MozAnimation = "anim1 linear 10s, anim3 linear 5s, anim1 linear 20s";
+div.style.animation = "anim1 linear 10s, anim3 linear 5s, anim1 linear 20s";
   is(cs.getPropertyValue("margin-top"), "60px",
      "anim1 + anim3 + anim1, margin-top at 5s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -360,7 +360,7 @@ div.style.MozAnimation = "anim1 linear 10s, anim3 linear 5s, anim1 linear 20s";
      "anim1 + anim3 + anim1, margin-left at 5s");
 // drop one of the anim1, and list anim5 as well, which animates
 // the same property as anim1
-div.style.MozAnimation = "anim3 linear 5s, anim1 linear 20s, anim5 linear 10s";
+div.style.animation = "anim3 linear 5s, anim1 linear 20s, anim5 linear 10s";
   is(cs.getPropertyValue("margin-top"), "60px",
      "anim3 + anim1 + anim5, margin-top at 5s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -379,7 +379,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "10px",
      "anim3 + anim1 + anim5, margin-left at 6s");
 // now swap the anim5 and anim1 order
-div.style.MozAnimation = "anim3 linear 5s, anim5 linear 10s, anim1 linear 20s";
+div.style.animation = "anim3 linear 5s, anim5 linear 10s, anim1 linear 20s";
   is(cs.getPropertyValue("margin-top"), "80px",
      "anim3 + anim1 + anim5, margin-top at 6s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -398,7 +398,7 @@ advance_clock(1000);
   is(cs.getPropertyValue("margin-left"), "56px",
      "anim3 + anim1 + anim5, margin-left at 7s");
 // swap anim1 and anim5 back
-div.style.MozAnimation = "anim3 linear 5s, anim1 linear 20s, anim5 linear 10s";
+div.style.animation = "anim3 linear 5s, anim1 linear 20s, anim5 linear 10s";
   is(cs.getPropertyValue("margin-top"), "0px",
      "anim3 + anim1 + anim5, margin-top at 7s");
   is(cs.getPropertyValue("margin-right"), "0px",
@@ -411,7 +411,7 @@ advance_clock(100);
   is(cs.getPropertyValue("margin-top"), "0px",
      "anim3 + anim1 + anim5, margin-top at 7.1s");
 // Change the animation fill mode on the completed animation.
-div.style.MozAnimation = "anim3 linear 5s forwards, anim1 linear 20s, anim5 linear 10s";
+div.style.animation = "anim3 linear 5s forwards, anim1 linear 20s, anim5 linear 10s";
   is(cs.getPropertyValue("margin-top"), "100px",
      "anim3 + anim1 + anim5, margin-top at 7.1s, with fill mode");
 advance_clock(900);
@@ -419,7 +419,7 @@ advance_clock(900);
      "anim3 + anim1 + anim5, margin-top at 8s, with fill mode");
 // Change the animation duration on the completed animation, so it is
 // no longer completed.
-div.style.MozAnimation = "anim3 linear 10s, anim1 linear 20s, anim5 linear 10s";
+div.style.animation = "anim3 linear 10s, anim1 linear 20s, anim5 linear 10s";
   is(cs.getPropertyValue("margin-top"), "60px",
      "anim3 + anim1 + anim5, margin-top at 8s, with fill mode");
   is(cs.getPropertyValue("margin-left"), "30px",
@@ -438,7 +438,7 @@ done_div();
 // run backwards)
 
 // 100px at 0%, 50px at 50%, 150px at 100%
-new_div("margin-top: 100px; -moz-animation: kf1 ease 1s alternate infinite");
+new_div("margin-top: 100px; animation: kf1 ease 1s alternate infinite");
 is(cs.marginTop, "100px", "no-0% at 0.0s");
 advance_clock(100);
 is_approx(px_to_num(cs.marginTop), 100 - 50 * gTF.ease(0.2), 0.01,
@@ -473,7 +473,7 @@ is(cs.marginTop, "100px", "no-0% at 2.0s");
 done_div();
 
 // 150px at 0%, 50px at 50%, 100px at 100%
-new_div("margin-top: 100px; -moz-animation: kf2 ease-in 1s alternate infinite");
+new_div("margin-top: 100px; animation: kf2 ease-in 1s alternate infinite");
 is(cs.marginTop, "150px", "no-100% at 0.0s");
 advance_clock(100);
 is_approx(px_to_num(cs.marginTop), 150 - 100 * gTF.ease_in(0.2), 0.01,
@@ -509,7 +509,7 @@ done_div();
 
 
 // 50px at 0%, 100px at 25%, 50px at 100%
-new_div("margin-top: 50px; -moz-animation: kf3 ease-out 1s alternate infinite");
+new_div("margin-top: 50px; animation: kf3 ease-out 1s alternate infinite");
 is(cs.marginTop, "50px", "no-0%-no-100% at 0.0s");
 advance_clock(50);
 is_approx(px_to_num(cs.marginTop), 50 + 50 * gTF.ease_out(0.2), 0.01,
@@ -547,7 +547,7 @@ done_div();
 // Simultaneously, test that the block is still honored, and that
 // we still override the value when two consecutive keyframes have
 // the same value.
-new_div("-moz-animation: kf4 ease 10s");
+new_div("animation: kf4 ease 10s");
 is(cs.display, "block",
    "non-animatable properties should be ignored (linear, 0s)");
 is(cs.marginTop, "37px",
@@ -558,7 +558,7 @@ is(cs.display, "block",
 is(cs.marginTop, "37px",
    "animatable properties should still apply (linear, 1s)");
 done_div();
-new_div("-moz-animation: kf4 step-start 10s");
+new_div("animation: kf4 step-start 10s");
 is(cs.display, "block",
    "non-animatable properties should be ignored (step-start, 0s)");
 is(cs.marginTop, "37px",
@@ -571,7 +571,7 @@ is(cs.marginTop, "37px",
 done_div();
 
 // Test cascading of the keyframes within an @keyframes rule.
-new_div("-moz-animation: kf_cascade1 linear 10s");
+new_div("animation: kf_cascade1 linear 10s");
 //   0%: 30px
 //  50%: 20px
 //  75%: 20px
@@ -598,7 +598,7 @@ is(cs.paddingTop, "65px", "kf_cascade1 at 9.2505s");
 done_div();
 
 // Test cascading of the @keyframes rules themselves.
-new_div("-moz-animation: kf_cascade2 linear 10s");
+new_div("animation: kf_cascade2 linear 10s");
 is(cs.marginTop, "0px", "@keyframes rule with margin-top should be ignored");
 is(cs.marginLeft, "300px", "last @keyframes rule with margin-left should win");
 done_div();
@@ -607,7 +607,7 @@ done_div();
  * css3-animations:  3.1. Timing functions for keyframes
  * http://dev.w3.org/csswg/css3-animations/#timing-functions-for-keyframes-
  */
-new_div("-moz-animation: kf_tf1 ease-in 10s alternate infinite");
+new_div("animation: kf_tf1 ease-in 10s alternate infinite");
 is(cs.paddingBottom, "20px",
    "keyframe timing functions test at 0s (test needed for flush)");
 advance_clock(1000);
@@ -676,7 +676,7 @@ is(cs.paddingBottom, "20px",
 done_div();
 
 // spot-check the same thing without alternate
-new_div("-moz-animation: kf_tf1 ease-in 10s infinite");
+new_div("animation: kf_tf1 ease-in 10s infinite");
 is(cs.paddingBottom, "20px",
    "keyframe timing functions test at 0s (test needed for flush)");
 advance_clock(11000);
@@ -706,21 +706,21 @@ done_div();
 // it again starts a new one.
 
 new_div("");
-div.style.MozAnimation = "anim2 ease-in-out 10s";
+div.style.animation = "anim2 ease-in-out 10s";
 is(cs.marginRight, "0px", "after setting animation-name to anim2");
 advance_clock(1000);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in_out(0.1), 0.01,
           "before changing animation-name to none");
-div.style.MozAnimationName = "none";
+div.style.animationName = "none";
 is(cs.marginRight, "0px", "after changing animation-name to none");
 advance_clock(1000);
 is(cs.marginRight, "0px", "after changing animation-name to none plus 1s");
-div.style.MozAnimationName = "anim2";
+div.style.animationName = "anim2";
 is(cs.marginRight, "0px", "after changing animation-name to anim2");
 advance_clock(1000);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in_out(0.1), 0.01,
           "at 1s in animation when animation-name no longer none again");
-div.style.MozAnimationName = "none";
+div.style.animationName = "none";
 is(cs.marginRight, "0px", "after changing animation-name to none");
 advance_clock(1000);
 is(cs.marginRight, "0px", "after changing animation-name to none plus 1s");
@@ -746,7 +746,7 @@ done_div();
  * css3-animations:  3.5. The 'animation-iteration-count' Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-iteration-count-property-
  */
-new_div("-moz-animation: anim2 ease-in 10s 0.3 forwards");
+new_div("animation: anim2 ease-in 10s 0.3 forwards");
 is(cs.marginRight, "0px", "animation-iteration-count test 1 at 0s");
 advance_clock(2000);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
@@ -765,7 +765,7 @@ is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
           "animation-iteration-count test 1 at 8.1s");
 done_div();
 
-new_div("-moz-animation: anim2 ease-in 10s 0.3, anim3 ease-out 20s 1.2 alternate forwards, anim4 ease-in-out 5s 1.6 forwards");
+new_div("animation: anim2 ease-in 10s 0.3, anim3 ease-out 20s 1.2 alternate forwards, anim4 ease-in-out 5s 1.6 forwards");
 is(cs.marginRight, "0px", "animation-iteration-count test 2 at 0s");
 is(cs.marginTop, "0px", "animation-iteration-count test 3 at 0s");
 is(cs.marginBottom, "0px", "animation-iteration-count test 4 at 0s");
@@ -826,78 +826,78 @@ done_div();
 
 // Tested in tests for sections 3.1 and 3.5.
 
-new_div("-moz-animation: anim2 ease-in 10s infinite");
-div.style.MozAnimationDirection = "normal";
+new_div("animation: anim2 ease-in 10s infinite");
+div.style.animationDirection = "normal";
 is(cs.marginRight, "0px", "animation-direction test 1 (normal) at 0s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is(cs.marginRight, "100px", "animation-direction test 1 (reverse) at 0s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is(cs.marginRight, "0px", "animation-direction test 1 (alternate) at 0s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is(cs.marginRight, "100px", "animation-direction test 1 (alternate-reverse) at 0s");
 advance_clock(2000);
-div.style.MozAnimationDirection = "normal";
+div.style.animationDirection = "normal";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (normal) at 2s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (reverse) at 2s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (alternate) at 2s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (alternate-reverse) at 2s");
 advance_clock(5000);
-div.style.MozAnimationDirection = "normal";
+div.style.animationDirection = "normal";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.7), 0.01,
           "animation-direction test 1 (normal) at 7s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
           "animation-direction test 1 (reverse) at 7s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.7), 0.01,
           "animation-direction test 1 (alternate) at 7s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
           "animation-direction test 1 (alternate-reverse) at 7s");
 advance_clock(5000);
-div.style.MozAnimationDirection = "normal";
+div.style.animationDirection = "normal";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (normal) at 12s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (reverse) at 12s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (alternate) at 12s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (alternate-reverse) at 12s");
 advance_clock(10000);
-div.style.MozAnimationDirection = "normal";
+div.style.animationDirection = "normal";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (normal) at 22s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (reverse) at 22s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (alternate) at 22s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (alternate-reverse) at 22s");
 advance_clock(30000);
-div.style.MozAnimationDirection = "normal";
+div.style.animationDirection = "normal";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (normal) at 52s");
-div.style.MozAnimationDirection = "reverse";
+div.style.animationDirection = "reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (reverse) at 52s");
-div.style.MozAnimationDirection = "alternate";
+div.style.animationDirection = "alternate";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
           "animation-direction test 1 (alternate) at 52s");
-div.style.MozAnimationDirection = "alternate-reverse";
+div.style.animationDirection = "alternate-reverse";
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
           "animation-direction test 1 (alternate-reverse) at 52s");
 done_div();
@@ -909,22 +909,22 @@ done_div();
 
 // simple test with just one animation
 new_div("");
-div.style.MozAnimationTimingFunction = "ease";
-div.style.MozAnimationName = "anim1";
-div.style.MozAnimationDuration = "1s";
-div.style.MozAnimationDirection = "alternate";
-div.style.MozAnimationIterationCount = "2";
+div.style.animationTimingFunction = "ease";
+div.style.animationName = "anim1";
+div.style.animationDuration = "1s";
+div.style.animationDirection = "alternate";
+div.style.animationIterationCount = "2";
 is(cs.marginLeft, "0px", "animation-play-state test 1, at 0s");
 advance_clock(250);
 is_approx(px_to_num(cs.marginLeft), 80 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 250ms");
-div.style.MozAnimationPlayState = "paused";
+div.style.animationPlayState = "paused";
 is_approx(px_to_num(cs.marginLeft), 80 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 250ms");
 advance_clock(250);
 is_approx(px_to_num(cs.marginLeft), 80 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 still at 500ms");
-div.style.MozAnimationPlayState = "running";
+div.style.animationPlayState = "running";
 is_approx(px_to_num(cs.marginLeft), 80 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 still at 500ms");
 advance_clock(500);
@@ -935,7 +935,7 @@ is(cs.marginLeft, "100px", "animation-play-state test 1 at 1250ms");
 advance_clock(250);
 is_approx(px_to_num(cs.marginLeft), 80 + 20 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 1500ms");
-div.style.MozAnimationPlayState = "paused";
+div.style.animationPlayState = "paused";
 is_approx(px_to_num(cs.marginLeft), 80 + 20 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 1500ms");
 advance_clock(2000);
@@ -944,7 +944,7 @@ is_approx(px_to_num(cs.marginLeft), 80 + 20 * gTF.ease(0.5), 0.01,
 advance_clock(500);
 is_approx(px_to_num(cs.marginLeft), 80 + 20 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 4000ms");
-div.style.MozAnimationPlayState = "";
+div.style.animationPlayState = "";
 is_approx(px_to_num(cs.marginLeft), 80 + 20 * gTF.ease(0.5), 0.01,
           "animation-play-state test 1 at 4000ms");
 advance_clock(500);
@@ -959,16 +959,16 @@ done_div();
 // more complicated test with multiple animations (and different directions
 // and iteration counts)
 new_div("");
-div.style.MozAnimationTimingFunction = "ease-out, ease-in, ease-in-out";
-div.style.MozAnimationName = "anim2, anim3, anim4";
-div.style.MozAnimationDuration = "1s, 2s, 1s";
-div.style.MozAnimationDirection = "alternate, normal, normal";
-div.style.MozAnimationIterationCount = "4, 2, infinite";
+div.style.animationTimingFunction = "ease-out, ease-in, ease-in-out";
+div.style.animationName = "anim2, anim3, anim4";
+div.style.animationDuration = "1s, 2s, 1s";
+div.style.animationDirection = "alternate, normal, normal";
+div.style.animationIterationCount = "4, 2, infinite";
 is(cs.marginRight, "0px", "animation-play-state test 2, at 0s");
 is(cs.marginTop, "0px", "animation-play-state test 3, at 0s");
 is(cs.marginBottom, "0px", "animation-play-state test 4, at 0s");
 advance_clock(250);
-div.style.MozAnimationPlayState = "paused, running"; // pause 1 and 3
+div.style.animationPlayState = "paused, running"; // pause 1 and 3
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.25), 0.01,
           "animation-play-state test 2 at 250ms");
 is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.125), 0.01,
@@ -982,7 +982,7 @@ is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.25), 0.01,
           "animation-play-state test 3 at 500ms");
 is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.25), 0.01,
           "animation-play-state test 4 at 500ms");
-div.style.MozAnimationPlayState = "paused, running, running"; // unpause 3
+div.style.animationPlayState = "paused, running, running"; // unpause 3
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.25), 0.01,
           "animation-play-state test 2 at 500ms");
 is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.25), 0.01,
@@ -996,7 +996,7 @@ is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.375), 0.01,
           "animation-play-state test 3 at 750ms");
 is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.5), 0.01,
           "animation-play-state test 4 at 750ms");
-div.style.MozAnimationPlayState = "running, paused"; // unpause 1, pause 2
+div.style.animationPlayState = "running, paused"; // unpause 1, pause 2
 advance_clock(0); // notify refresh observers
 advance_clock(250);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.5), 0.01,
@@ -1005,7 +1005,7 @@ is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.375), 0.01,
           "animation-play-state test 3 at 1000ms");
 is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.75), 0.01,
           "animation-play-state test 4 at 1000ms");
-div.style.MozAnimationPlayState = "paused"; // pause all
+div.style.animationPlayState = "paused"; // pause all
 advance_clock(0); // notify refresh observers
 advance_clock(3000);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.5), 0.01,
@@ -1014,7 +1014,7 @@ is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.375), 0.01,
           "animation-play-state test 3 at 4000ms");
 is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.75), 0.01,
           "animation-play-state test 4 at 4000ms");
-div.style.MozAnimationPlayState = "running, paused"; // pause 2
+div.style.animationPlayState = "running, paused"; // pause 2
 advance_clock(0); // notify refresh observers
 advance_clock(850);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.65), 0.01,
@@ -1043,7 +1043,7 @@ is_approx(px_to_num(cs.marginTop), 100 * gTF.ease_in(0.375), 0.01,
           "animation-play-state test 3 at 7550ms");
 is_approx(px_to_num(cs.marginBottom), 100 * gTF.ease_in_out(0.3), 0.01,
           "animation-play-state test 4 at 7550ms");
-div.style.MozAnimationPlayState = "running"; // unpause 2
+div.style.animationPlayState = "running"; // unpause 2
 advance_clock(0); // notify refresh observers
 advance_clock(1000);
 is(cs.marginRight, "0px", "animation-play-state test 2 at 7550ms");
@@ -1082,7 +1082,7 @@ done_div();
  */
 
 // test positive delay
-new_div("-moz-animation: anim2 1s 0.5s ease-out");
+new_div("animation: anim2 1s 0.5s ease-out");
 is(cs.marginRight, "0px", "positive delay test at 0ms");
 advance_clock(400);
 is(cs.marginRight, "0px", "positive delay test at 400ms");
@@ -1095,18 +1095,18 @@ done_div();
 
 // test dynamic changes to delay (i.e., that we only check delay once,
 // at the very start of the animation)
-new_div("-moz-animation: anim2 1s 0.5s ease-out");
+new_div("animation: anim2 1s 0.5s ease-out");
 is(cs.marginRight, "0px", "dynamic delay delay test at 0ms");
 advance_clock(400);
 is(cs.marginRight, "0px", "dynamic delay delay test at 400ms");
-div.style.MozAnimationDelay = "0.2s";
+div.style.animationDelay = "0.2s";
 advance_clock(0);
 advance_clock(100);
 is(cs.marginRight, "0px", "dynamic delay delay test at 500ms");
 advance_clock(100);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.1), 0.01,
           "dynamic delay delay test at 500ms");
-div.style.MozAnimationDelay = "1s";
+div.style.animationDelay = "1s";
 advance_clock(0);
 advance_clock(100);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.2), 0.01,
@@ -1114,24 +1114,24 @@ is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.2), 0.01,
 done_div();
 
 // test delay and play-state interaction
-new_div("-moz-animation: anim2 1s 0.5s ease-out");
+new_div("animation: anim2 1s 0.5s ease-out");
 is(cs.marginRight, "0px", "delay and play-state delay test at 0ms");
 advance_clock(400);
 is(cs.marginRight, "0px", "delay and play-state delay test at 400ms");
-div.style.MozAnimationPlayState = "paused";
+div.style.animationPlayState = "paused";
 advance_clock(0);
 advance_clock(100);
 is(cs.marginRight, "0px", "delay and play-state delay test at 500ms");
 advance_clock(500);
 is(cs.marginRight, "0px", "delay and play-state delay test at 1000ms");
-div.style.MozAnimationPlayState = "running";
+div.style.animationPlayState = "running";
 advance_clock(0);
 advance_clock(100);
 is(cs.marginRight, "0px", "delay and play-state delay test at 1100ms");
 advance_clock(100);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.1), 0.01,
           "delay and play-state delay test at 1200ms");
-div.style.MozAnimationPlayState = "paused";
+div.style.animationPlayState = "paused";
 advance_clock(0);
 advance_clock(100);
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_out(0.1), 0.01,
@@ -1142,14 +1142,14 @@ done_div();
 new_div("margin-top: 1000px");
 advance_clock(300);
 div.style.marginTop = "100px";
-div.style.MozAnimation = "kf1 1s -0.1s ease-in";
+div.style.animation = "kf1 1s -0.1s ease-in";
 is_approx(px_to_num(cs.marginTop), 100 - 50 * gTF.ease_in(0.2), 0.01,
           "delay and implicit starting values test");
 done_div();
 
 // test large negative delay that causes the animation to start
 // in the fourth iteration
-new_div("-moz-animation: anim2 1s -3.6s ease-in 5 alternate forwards");
+new_div("animation: anim2 1s -3.6s ease-in 5 alternate forwards");
 listen(); // rely on no flush having happened yet
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.4), 0.01,
           "large negative delay test at 0ms");
@@ -1232,7 +1232,7 @@ done_div();
  * Test handling of properties that are present in only some of the
  * keyframes.
  */
-new_div("-moz-animation: multiprop 1s ease-in-out alternate infinite");
+new_div("animation: multiprop 1s ease-in-out alternate infinite");
 is(cs.paddingTop, "10px", "multiprop top at 0ms");
 is(cs.paddingLeft, "30px", "multiprop top at 0ms");
 advance_clock(100);
@@ -1280,7 +1280,7 @@ done_div();
 // Test for https://bugzilla.mozilla.org/show_bug.cgi?id=651456 -- make
 // sure that refreshing of animations doesn't break when we get two
 // refreshes with the same timestamp.
-new_div("-moz-animation: anim2 1s linear");
+new_div("animation: anim2 1s linear");
 is(cs.marginRight, "0px", "bug 651456 at 0ms");
 advance_clock(100);
 is(cs.marginRight, "10px", "bug 651456 at 100ms (1)");
@@ -1297,7 +1297,7 @@ done_div();
 new_element("select", "");
 var default_line_height = cs.lineHeight;
 done_div();
-new_element("select", "-moz-animation: uaoverride 2s linear infinite");
+new_element("select", "animation: uaoverride 2s linear infinite");
 is(cs.lineHeight, default_line_height,
    "animations should not override UA !important at 0ms");
 is(cs.marginTop, "20px",
@@ -1313,7 +1313,7 @@ done_div();
 // This test depends on kf3 getting its 0% and 100% values from the
 // rules below it in the cascade; we're checking that the animation
 // isn't rebuilt when the restyles happen.
-new_div("-moz-animation: kf3 1s linear forwards");
+new_div("animation: kf3 1s linear forwards");
 is(cs.marginTop, "0px", "bug 686656 test 1 at 0ms");
 advance_clock(250);
 display.style.color = "blue";
@@ -1330,7 +1330,7 @@ display.style.color = "";
 // This test depends on kf3 getting its 0% and 100% values from the
 // rules below it in the cascade; we're checking that the animation
 // isn't rebuilt when the restyles happen.
-new_div("-moz-animation: kf3 1s linear forwards");
+new_div("animation: kf3 1s linear forwards");
 is(cs.marginTop, "0px", "bug 686656 test 2 at 0ms");
 advance_clock(250);
 display.style.overflow = "scroll";
@@ -1345,7 +1345,7 @@ display.style.overflow = "";
 // Test that cascading between keyframes rules is per-property rather
 // than per-rule (bug ), and that the timing function isn't taken from a
 // rule that's skipped.  (Bug 738003)
-new_div("-moz-animation: cascade 1s linear forwards; position: relative");
+new_div("animation: cascade 1s linear forwards; position: relative");
 is(cs.top, "0px", "cascade test (top) at 0ms");
 is(cs.left, "0px", "cascade test (top) at 0ms");
 advance_clock(125);
@@ -1374,7 +1374,7 @@ is(cs.top, "0px", "cascade test (top) at 1000ms");
 is(cs.left, "0px", "cascade test (top) at 1000ms");
 done_div();
 
-new_div("-moz-animation: cascade2 8s linear forwards");
+new_div("animation: cascade2 8s linear forwards");
 is(cs.textIndent, "0px", "cascade2 test at 0s");
 advance_clock(1000);
 is(cs.textIndent, "25px", "cascade2 test at 1s");

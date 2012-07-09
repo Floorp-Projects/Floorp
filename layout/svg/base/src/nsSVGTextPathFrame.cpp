@@ -46,7 +46,6 @@ nsSVGTextPathFrame::Init(nsIContent* aContent,
   nsCOMPtr<nsIDOMSVGTextPathElement> textPath = do_QueryInterface(aContent);
   NS_ASSERTION(textPath, "Content is not an SVG textPath");
 
-
   return nsSVGTextPathFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */

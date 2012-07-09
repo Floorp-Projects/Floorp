@@ -1351,6 +1351,18 @@ private:
                        nsStyleContext* aStyleContext);
 
 // SVG - rods
+  /**
+   * Construct an nsSVGOuterSVGFrame, the anonymous child that wraps its real
+   * children, and its descendant frames.  This is the FrameConstructionData
+   * callback used for the job.
+   */
+  nsresult ConstructOuterSVG(nsFrameConstructorState& aState,
+                             FrameConstructionItem&   aItem,
+                             nsIFrame*                aParentFrame,
+                             const nsStyleDisplay*    aDisplay,
+                             nsFrameItems&            aFrameItems,
+                             nsIFrame**               aNewFrame);
+
   static const FrameConstructionData* FindSVGData(Element* aElement,
                                                   nsIAtom* aTag,
                                                   PRInt32 aNameSpaceID,
