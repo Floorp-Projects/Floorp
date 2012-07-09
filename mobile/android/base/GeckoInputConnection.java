@@ -491,8 +491,7 @@ public class GeckoInputConnection
         imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
     }
 
-    public void notifySelectionChange(InputMethodManager imm,
-                                      int start, int end) {
+    protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
         if (!mBatchMode) {
             final Editable content = getEditable();
 
@@ -995,71 +994,82 @@ public class GeckoInputConnection
         return mIMEState != IME_STATE_DISABLED;
     }
 
-    public void notifyIME(int type, int state) {
-        View v = GeckoApp.mAppContext.getLayerController().getView();
+    public void notifyIME(final int type, final int state) {
+        postToUiThread(new Runnable() {
+            public void run() {
+                View v = GeckoApp.mAppContext.getLayerController().getView();
+                if (v == null)
+                    return;
 
-        if (v == null)
-            return;
+                switch (type) {
+                    case NOTIFY_IME_RESETINPUTSTATE:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
 
-        switch (type) {
-        case NOTIFY_IME_RESETINPUTSTATE:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
+                        // Gecko just cancelled the current composition from underneath us,
+                        // so abandon our active composition string WITHOUT committing it!
+                        resetCompositionState();
 
-            // Gecko just cancelled the current composition from underneath us,
-            // so abandon our active composition string WITHOUT committing it!
-            resetCompositionState();
+                        // Don't use IMEStateUpdater for reset.
+                        // Because IME may not work showSoftInput()
+                        // after calling restartInput() immediately.
+                        // So we have to call showSoftInput() delay.
+                        InputMethodManager imm = getInputMethodManager();
+                        if (imm == null) {
+                            // no way to reset IME status directly
+                            IMEStateUpdater.resetIME();
+                        } else {
+                            imm.restartInput(v);
+                        }
 
-            // Don't use IMEStateUpdater for reset.
-            // Because IME may not work showSoftInput()
-            // after calling restartInput() immediately.
-            // So we have to call showSoftInput() delay.
-            InputMethodManager imm = getInputMethodManager();
-            if (imm == null) {
-                // no way to reset IME status directly
-                IMEStateUpdater.resetIME();
-            } else {
-                imm.restartInput(v);
+                        // keep current enabled state
+                        IMEStateUpdater.enableIME();
+                        break;
+
+                    case NOTIFY_IME_CANCELCOMPOSITION:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
+                        IMEStateUpdater.resetIME();
+                        break;
+
+                    case NOTIFY_IME_FOCUSCHANGE:
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
+                        IMEStateUpdater.resetIME();
+                        break;
+                }
             }
-
-            // keep current enabled state
-            IMEStateUpdater.enableIME();
-            break;
-
-        case NOTIFY_IME_CANCELCOMPOSITION:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
-            IMEStateUpdater.resetIME();
-            break;
-
-        case NOTIFY_IME_FOCUSCHANGE:
-            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
-            IMEStateUpdater.resetIME();
-            break;
-        }
+        });
     }
 
-    public void notifyIMEEnabled(int state, String typeHint, String actionHint) {
-        View v = GeckoApp.mAppContext.getLayerController().getView();
+    public void notifyIMEEnabled(final int state, final String typeHint, final String actionHint) {
+        postToUiThread(new Runnable() {
+            public void run() {
+                View v = GeckoApp.mAppContext.getLayerController().getView();
+                if (v == null)
+                    return;
 
-        if (v == null)
-            return;
-
-        /* When IME is 'disabled', IME processing is disabled.
-           In addition, the IME UI is hidden */
-        mIMEState = state;
-        mIMETypeHint = typeHint;
-        mIMEActionHint = actionHint;
-        IMEStateUpdater.enableIME();
+                /* When IME is 'disabled', IME processing is disabled.
+                   In addition, the IME UI is hidden */
+                mIMEState = state;
+                mIMETypeHint = typeHint;
+                mIMEActionHint = actionHint;
+                IMEStateUpdater.enableIME();
+            }
+        });
     }
 
-    public void notifyIMEChange(String text, int start, int end, int newEnd) {
-        InputMethodManager imm = getInputMethodManager();
-        if (imm == null)
-            return;
+    public final void notifyIMEChange(final String text, final int start, final int end,
+                                      final int newEnd) {
+        postToUiThread(new Runnable() {
+            public void run() {
+                InputMethodManager imm = getInputMethodManager();
+                if (imm == null)
+                    return;
 
-        if (newEnd < 0)
-            notifySelectionChange(imm, start, end);
-        else
-            notifyTextChange(imm, text, start, end, newEnd);
+                if (newEnd < 0)
+                    notifySelectionChange(imm, start, end);
+                else
+                    notifyTextChange(imm, text, start, end, newEnd);
+            }
+        });
     }
 
     /* Delay updating IME states (see bug 573800) */
@@ -1090,35 +1100,40 @@ public class GeckoInputConnection
                 instance = null;
             }
 
-            final View v = GeckoApp.mAppContext.getLayerController().getView();
-            if (DEBUG) Log.d(LOGTAG, "IME: v=" + v);
+            // TimerTask.run() is running on a random background thread, so post to UI thread.
+            postToUiThread(new Runnable() {
+                public void run() {
+                    final View v = GeckoApp.mAppContext.getLayerController().getView();
+                    if (DEBUG) Log.d(LOGTAG, "IME: v=" + v);
 
-            final InputMethodManager imm = getInputMethodManager();
-            if (imm == null)
-                return;
+                    final InputMethodManager imm = getInputMethodManager();
+                    if (imm == null)
+                        return;
 
-            if (mReset)
-                imm.restartInput(v);
+                    if (mReset)
+                        imm.restartInput(v);
 
-            if (!mEnable)
-                return;
+                    if (!mEnable)
+                        return;
 
-            if (mIMEState != IME_STATE_DISABLED) {
-                imm.showSoftInput(v, 0);
-            } else {
-                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-            }
+                    if (mIMEState != IME_STATE_DISABLED) {
+                        imm.showSoftInput(v, 0);
+                    } else {
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    }
+                }
+            });
         }
     }
 
-    public void setEditable(String contents) {
+    private void setEditable(String contents) {
         mEditable.removeSpan(this);
         mEditable.replace(0, mEditable.length(), contents);
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
     }
 
-    public void initEditable(String contents) {
+    private void initEditable(String contents) {
         mEditable = mEditableFactory.newEditable(contents);
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
@@ -1143,6 +1158,12 @@ public class GeckoInputConnection
         }
 
         return new Span(start, end, content);
+    }
+
+    private static void postToUiThread(Runnable runnable) {
+        // postToUiThread() is called by the Gecko and TimerTask threads.
+        // The UI thread does not need to post Runnables to itself.
+        GeckoApp.mAppContext.mMainHandler.post(runnable);
     }
 
     private static final class Span {
@@ -1296,8 +1317,8 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     }
 
     @Override
-    public void notifyTextChange(InputMethodManager imm, String text,
-                                 int start, int oldEnd, int newEnd) {
+    protected void notifyTextChange(InputMethodManager imm, String text,
+                                    int start, int oldEnd, int newEnd) {
         Log.d(LOGTAG, String.format(
                       "IME: >notifyTextChange(\"%s\", start=%d, oldEnd=%d, newEnd=%d)",
                       text, start, oldEnd, newEnd));
@@ -1305,8 +1326,7 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     }
 
     @Override
-    public void notifySelectionChange(InputMethodManager imm,
-                                      int start, int end) {
+    protected void notifySelectionChange(InputMethodManager imm, int start, int end) {
         Log.d(LOGTAG, String.format("IME: >notifySelectionChange(start=%d, end=%d)", start, end));
         super.notifySelectionChange(imm, start, end);
     }
