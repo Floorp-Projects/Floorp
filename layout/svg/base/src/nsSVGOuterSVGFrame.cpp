@@ -600,15 +600,13 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
          new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (GetStyleDisplay()->IsScrollableOverflow()) {
-    // Clip to our _content_ box:
-    nsRect clipRect =
-      GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
-    nsDisplayClip* item =
-      new (aBuilder) nsDisplayClip(aBuilder, this, &childItems, clipRect);
-    rv = childItems.AppendNewToTop(item);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // Clip to our _content_ box:
+  nsRect clipRect =
+    GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+  nsDisplayClip* item =
+    new (aBuilder) nsDisplayClip(aBuilder, this, &childItems, clipRect);
+  rv = childItems.AppendNewToTop(item);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
 

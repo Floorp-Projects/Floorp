@@ -11,6 +11,8 @@
 #   http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
 #   http://www.w3.org/TR/CSS21/visudet.html
 
+!= scrollbars-01.svg scrollbars-01-anti-ref.svg
+!= scrollbars-02.svg scrollbars-01-anti-ref.svg
 
 # Standalone tests
 #
