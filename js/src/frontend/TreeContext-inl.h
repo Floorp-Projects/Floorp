@@ -14,6 +14,7 @@
 #include "frontend/ParseMaps-inl.h"
 
 namespace js {
+namespace frontend {
 
 inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
@@ -29,6 +30,11 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     JS_ASSERT((fun && !scopeChain_) || (!fun && !funbox));
 }
 
+inline bool
+SharedContext::needStrictChecks() {
+    return context->hasStrictOption() || inStrictMode();
+}
+
 inline unsigned
 TreeContext::blockid()
 {
@@ -39,11 +45,6 @@ inline bool
 TreeContext::atBodyLevel()
 {
     return !topStmt || topStmt->isFunctionBodyBlock;
-}
-
-inline bool
-SharedContext::needStrictChecks() {
-    return context->hasStrictOption() || inStrictMode();
 }
 
 inline
@@ -95,6 +96,8 @@ TreeContext::~TreeContext()
     *parserTC = this->parent;
     sc->context->delete_(funcStmts);
 }
+
+} /* namespace frontend */
 
 template <class ContextT>
 void

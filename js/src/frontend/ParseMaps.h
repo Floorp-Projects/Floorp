@@ -15,10 +15,22 @@
 #include "js/Vector.h"
 
 namespace js {
+namespace frontend {
 
 struct Definition;
+class DefinitionList;
 
+typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
+typedef InlineMap<JSAtom *, Definition *, 24> AtomDefnMap;
 typedef InlineMap<JSAtom *, DefinitionList, 24> AtomDefnListMap;
+
+/*
+ * For all unmapped atoms recorded in al, add a mapping from the atom's index
+ * to its address. map->length must already be set to the number of atoms in
+ * the list and map->vector must point to pre-allocated memory.
+ */
+void
+InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtr<JSAtom> *atoms);
 
 /*
  * A pool that permits the reuse of the backing storage for the defn, index, or
@@ -310,14 +322,6 @@ class DefinitionList
 #endif
 };
 
-namespace tl {
-
-template <> struct IsPodType<DefinitionList> {
-    static const bool result = true;
-};
-
-} /* namespace tl */
-
 /*
  * Multimap for function-scope atom declarations.
  *
@@ -400,6 +404,16 @@ typedef AtomIndexMap::Ptr       AtomIndexPtr;
 typedef AtomDefnListMap::Ptr    AtomDefnListPtr;
 typedef AtomDefnListMap::AddPtr AtomDefnListAddPtr;
 typedef AtomDefnListMap::Range  AtomDefnListRange;
+
+} /* namespace frontend */
+
+namespace tl {
+
+template <> struct IsPodType<frontend::DefinitionList> {
+    static const bool result = true;
+};
+
+} /* namespace tl */
 
 } /* namepsace js */
 

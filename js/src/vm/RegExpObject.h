@@ -107,7 +107,9 @@ class RegExpCode
             Foreground::delete_<BytecodePattern>(byteCode);
     }
 
-    static bool checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearString *source) {
+    static bool checkSyntax(JSContext *cx, frontend::TokenStream *tokenStream,
+                            JSLinearString *source)
+    {
         ErrorCode error = JSC::Yarr::checkSyntax(*source);
         if (error == JSC::Yarr::NoError)
             return true;
@@ -119,7 +121,8 @@ class RegExpCode
 #if ENABLE_YARR_JIT
     static inline bool isJITRuntimeEnabled(JSContext *cx);
 #endif
-    static void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
+    static void reportYarrError(JSContext *cx, frontend::TokenStream *ts,
+                                JSC::Yarr::ErrorCode error);
 
     static size_t getOutputSize(size_t pairCount) {
         return pairCount * 2;
@@ -312,14 +315,14 @@ class RegExpObject : public JSObject
      */
     static RegExpObject *
     create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
-           RegExpFlag flags, TokenStream *ts);
+           RegExpFlag flags, frontend::TokenStream *ts);
 
     static RegExpObject *
     createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
-                    TokenStream *ts);
+                    frontend::TokenStream *ts);
 
     static RegExpObject *
-    createNoStatics(JSContext *cx, HandleAtom atom, RegExpFlag flags, TokenStream *ts);
+    createNoStatics(JSContext *cx, HandleAtom atom, RegExpFlag flags, frontend::TokenStream *ts);
 
     /*
      * Run the regular expression over the input text.

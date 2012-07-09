@@ -246,8 +246,8 @@ class StaticBlockObject : public BlockObject
      * Frontend compilation temporarily uses the object's slots to link
      * a let var to its associated Definition parse node.
      */
-    void setDefinitionParseNode(unsigned i, Definition *def);
-    Definition *maybeDefinitionParseNode(unsigned i);
+    void setDefinitionParseNode(unsigned i, frontend::Definition *def);
+    frontend::Definition *maybeDefinitionParseNode(unsigned i);
 
     /*
      * A let binding is aliased is accessed lexically by nested functions or

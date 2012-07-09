@@ -17,6 +17,7 @@
 #include "frontend/TreeContext.h"
 
 namespace js {
+namespace frontend {
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -1537,6 +1538,7 @@ struct FunctionBox : public ObjectBox
     bool inAnyDynamicScope() const;
 };
 
+} /* namespace frontend */
 } /* namespace js */
 
 #endif /* ParseNode_h__ */
