@@ -5,11 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TreeContext_inl_h__
-#define TreeContext_inl_h__
+#ifndef ParseContext_inl_h__
+#define ParseContext_inl_h__
 
 #include "frontend/Parser.h"
-#include "frontend/TreeContext.h"
+#include "frontend/ParseContext.h"
 
 #include "frontend/ParseMaps-inl.h"
 
@@ -36,19 +36,19 @@ SharedContext::needStrictChecks() {
 }
 
 inline unsigned
-TreeContext::blockid()
+ParseContext::blockid()
 {
     return topStmt ? topStmt->blockid : bodyid;
 }
 
 inline bool
-TreeContext::atBodyLevel()
+ParseContext::atBodyLevel()
 {
     return !topStmt || topStmt->isFunctionBodyBlock;
 }
 
 inline
-TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid)
+ParseContext::ParseContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid)
   : sc(sc),
     bodyid(0),           // initialized in init()
     blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
@@ -62,9 +62,9 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, u
     decls(prs->context),
     yieldNode(NULL),
     functionList(NULL),
-    parserTC(&prs->tc),
+    parserPC(&prs->pc),
     lexdeps(prs->context),
-    parent(prs->tc),
+    parent(prs->pc),
     innermostWith(NULL),
     funcStmts(NULL),
     hasReturnExpr(false),
@@ -72,11 +72,11 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, u
     inForInit(false),
     inDeclDestructuring(false)
 {
-    prs->tc = this;
+    prs->pc = this;
 }
 
 inline bool
-TreeContext::init()
+ParseContext::init()
 {
     if (!frontend::GenerateBlockId(this, this->bodyid))
         return false;
@@ -84,16 +84,16 @@ TreeContext::init()
     return decls.init() && lexdeps.ensureMap(sc->context);
 }
 
-// For functions the tree context is constructed and destructed a second
-// time during code generation. To avoid a redundant stats update in such
-// cases, we store UINT16_MAX in maxScopeDepth.
+// For functions the parse context is constructed and destructed a second time
+// during code generation. To avoid a redundant stats update in such cases, we
+// store UINT16_MAX in maxScopeDepth.
 inline
-TreeContext::~TreeContext()
+ParseContext::~ParseContext()
 {
-    // |*parserTC| pointed to this object.  Now that this object is about to
-    // die, make |*parserTC| point to this object's parent.
-    JS_ASSERT(*parserTC == this);
-    *parserTC = this->parent;
+    // |*parserPC| pointed to this object.  Now that this object is about to
+    // die, make |*parserPC| point to this object's parent.
+    JS_ASSERT(*parserPC == this);
+    *parserPC = this->parent;
     sc->context->delete_(funcStmts);
 }
 
@@ -176,4 +176,4 @@ frontend::LexicalLookup(ContextT *ct, JSAtom *atom, int *slotp, typename Context
 
 } // namespace js
 
-#endif // TreeContext_inl_h__
+#endif // ParseContext_inl_h__

@@ -20,7 +20,7 @@
 
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
-#include "frontend/TreeContext.h"
+#include "frontend/ParseContext.h"
 
 #include "vm/ScopeObject.h"
 

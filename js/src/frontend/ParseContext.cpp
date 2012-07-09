@@ -6,11 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "frontend/ParseNode.h"
-#include "frontend/TreeContext.h"
+#include "frontend/ParseContext.h"
 
 #include "jsatominlines.h"
 
-#include "frontend/TreeContext-inl.h"
+#include "frontend/ParseContext-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
@@ -18,19 +18,19 @@ using namespace js;
 using namespace js::frontend;
 
 void
-TreeContext::trace(JSTracer *trc)
+ParseContext::trace(JSTracer *trc)
 {
     sc->bindings.trace(trc);
 }
 
 bool
-frontend::GenerateBlockId(TreeContext *tc, uint32_t &blockid)
+frontend::GenerateBlockId(ParseContext *pc, uint32_t &blockid)
 {
-    if (tc->blockidGen == JS_BIT(20)) {
-        JS_ReportErrorNumber(tc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
+    if (pc->blockidGen == JS_BIT(20)) {
+        JS_ReportErrorNumber(pc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
         return false;
     }
-    blockid = tc->blockidGen++;
+    blockid = pc->blockidGen++;
     return true;
 }
 
