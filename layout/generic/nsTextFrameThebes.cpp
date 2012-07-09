@@ -5349,6 +5349,7 @@ nsTextFrame::GetCaretColorAt(PRInt32 aOffset)
 {
   NS_PRECONDITION(aOffset >= 0, "aOffset must be positive");
 
+  nscolor result = nsFrame::GetCaretColorAt(aOffset);
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
   PRInt32 contentOffset = provider.GetStart().GetOriginalOffset();
@@ -5358,13 +5359,12 @@ nsTextFrame::GetCaretColorAt(PRInt32 aOffset)
                   "aOffset must be in the frame's range");
   PRInt32 offsetInFrame = aOffset - contentOffset;
   if (offsetInFrame < 0 || offsetInFrame >= contentLength) {
-    return nsFrame::GetCaretColorAt(aOffset);
+    return result;
   }
 
   nsTextPaintStyle textPaintStyle(this);
   SelectionDetails* details = GetSelectionDetails();
   SelectionDetails* sdptr = details;
-  nscolor result = nsFrame::GetCaretColorAt(aOffset);
   SelectionType type = 0;
   while (sdptr) {
     PRInt32 start = NS_MAX(0, sdptr->mStart - contentOffset);

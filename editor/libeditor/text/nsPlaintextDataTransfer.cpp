@@ -228,8 +228,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     //      The decision for dropping before or after the
     //      subtree should really be done based on coordinates.
 
-    GetNodeLocation(userSelectNode, address_of(newSelectionParent),
-                    &newSelectionOffset);
+    newSelectionParent = GetNodeLocation(userSelectNode, &newSelectionOffset);
 
     NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
   }

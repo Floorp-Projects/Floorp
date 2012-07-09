@@ -29,14 +29,14 @@ var tests = {
 var p = document.getElementById("display");
 
 for (var test in tests) {
-  p.setAttribute("style", "-moz-transition-duration: " + test);
-  is(p.style.getPropertyValue("-moz-transition-duration"), test,
+  p.setAttribute("style", "transition-duration: " + test);
+  is(p.style.getPropertyValue("transition-duration"), test,
      test + " serializes to exactly itself");
   var equiv = tests[test];
   if (equiv) {
-    var cm1 = getComputedStyle(p, "").MozTransitionDuration;
-    p.style.MozTransitionDuration = equiv;
-    var cm2 = getComputedStyle(p, "").MozTransitionDuration;
+    var cm1 = getComputedStyle(p, "").transitionDuration;
+    p.style.transitionDuration = equiv;
+    var cm2 = getComputedStyle(p, "").transitionDuration;
     is(cm1, cm2, test + " should compute to the same as " + equiv);
   }
 }

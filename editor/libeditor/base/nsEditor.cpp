@@ -1719,9 +1719,8 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
   nsresult res;
 
-  nsCOMPtr<nsIDOMNode> oldParent;
   PRInt32 oldOffset;
-  GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
+  nsCOMPtr<nsIDOMNode> oldParent = GetNodeLocation(aNode, &oldOffset);
   
   if (aOffset == -1)
   {
@@ -2932,9 +2931,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     PRUint32 firstNodeLength;
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
     NS_ENSURE_SUCCESS(result, result);
-    nsCOMPtr<nsIDOMNode> parent;
-    GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
-    GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
+    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(aNodeToJoin, &joinOffset);
+    parent = GetNodeLocation(aNodeToKeep, &keepOffset);
     
     // if selection endpoint is between the nodes, remember it as being
     // in the one that is going away instead.  This simplifies later selection
@@ -3122,18 +3120,21 @@ nsEditor::GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent)
 }
 
 // static
-void
-nsEditor::GetNodeLocation(nsIDOMNode* aChild, nsCOMPtr<nsIDOMNode>* outParent,
-                          PRInt32* outOffset)
+already_AddRefed<nsIDOMNode>
+nsEditor::GetNodeLocation(nsIDOMNode* aChild, PRInt32* outOffset)
 {
-  MOZ_ASSERT(aChild && outParent && outOffset);
+  MOZ_ASSERT(aChild && outOffset);
   *outOffset = -1;
 
+  nsCOMPtr<nsIDOMNode> parent;
+
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aChild->GetParentNode(getter_AddRefs(*outParent))));
-  if (*outParent) {
-    *outOffset = GetChildOffset(aChild, *outParent);
+    aChild->GetParentNode(getter_AddRefs(parent))));
+  if (parent) {
+    *outOffset = GetChildOffset(aChild, parent);
   }
+
+  return parent.forget();
 }
 
 // returns the number of things inside aNode.  

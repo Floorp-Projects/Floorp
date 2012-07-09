@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
   <style type="text/css">
 
   p.transition {
-    -moz-transition: margin-top 100s linear;
+    transition: margin-top 100s linear;
   }
 
   </style>
@@ -33,8 +33,8 @@ function run_test(tf, percent, value)
   p.className = "transition";
   p.style.marginTop = "0px";
   // be this percent of the way through a 100s transition
-  p.style.MozTransitionDelay = (percent * -100) + "s";
-  p.style.MozTransitionTimingFunction = tf;
+  p.style.transitionDelay = (percent * -100) + "s";
+  p.style.transitionTimingFunction = tf;
   display.appendChild(p);
   var cs = getComputedStyle(p, "");
   var flush1 = cs.marginTop;

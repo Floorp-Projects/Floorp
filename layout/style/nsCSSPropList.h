@@ -348,15 +348,15 @@ CSS_PROP_FONT(
     eStyleAnimType_None)
 #endif
 CSS_PROP_SHORTHAND(
-    -moz-animation,
     animation,
-    CSS_PROP_DOMPROP_PREFIXED(Animation),
+    animation,
+    Animation,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_DISPLAY(
-    -moz-animation-delay,
+    animation-delay,
     animation_delay,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDelay),
+    AnimationDelay,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -365,9 +365,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-direction,
+    animation-direction,
     animation_direction,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDirection),
+    AnimationDirection,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -376,9 +376,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-duration,
+    animation-duration,
     animation_duration,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDuration),
+    AnimationDuration,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -387,9 +387,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-fill-mode,
+    animation-fill-mode,
     animation_fill_mode,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationFillMode),
+    AnimationFillMode,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -398,9 +398,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-iteration-count,
+    animation-iteration-count,
     animation_iteration_count,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationIterationCount),
+    AnimationIterationCount,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         // nonnegative per
         // http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
@@ -412,9 +412,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-name,
+    animation-name,
     animation_name,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationName),
+    AnimationName,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -425,9 +425,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-play-state,
+    animation-play-state,
     animation_play_state,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationPlayState),
+    AnimationPlayState,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -436,9 +436,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-timing-function,
+    animation-timing-function,
     animation_timing_function,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationTimingFunction),
+    AnimationTimingFunction,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2666,15 +2666,15 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Top)
 CSS_PROP_SHORTHAND(
-    -moz-transition,
     transition,
-    CSS_PROP_DOMPROP_PREFIXED(Transition),
+    transition,
+    Transition,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_DISPLAY(
-    -moz-transition-delay,
+    transition-delay,
     transition_delay,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionDelay),
+    TransitionDelay,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2683,9 +2683,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-duration,
+    transition-duration,
     transition_duration,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionDuration),
+    TransitionDuration,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2694,9 +2694,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-property,
+    transition-property,
     transition_property,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionProperty),
+    TransitionProperty,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2705,9 +2705,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-timing-function,
+    transition-timing-function,
     transition_timing_function,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionTimingFunction),
+    TransitionTimingFunction,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
