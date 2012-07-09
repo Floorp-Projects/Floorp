@@ -115,7 +115,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest);
 
   void StartObjectLoad() { StartObjectLoad(true); }
 
@@ -550,7 +550,7 @@ nsHTMLObjectElement::DestroyContent()
 }
 
 nsresult
-nsHTMLObjectElement::CopyInnerTo(nsGenericElement* aDest) const
+nsHTMLObjectElement::CopyInnerTo(nsGenericElement* aDest)
 {
   nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

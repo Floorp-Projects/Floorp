@@ -523,7 +523,7 @@ nsHTMLImageElement::GetNaturalWidth(PRUint32* aNaturalWidth)
 }
 
 nsresult
-nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest) const
+nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsHTMLImageElement*>(aDest));

@@ -565,7 +565,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
   nsXTFElementWrapper* wrapper =
     static_cast<nsXTFElementWrapper*>(it.get());
-  nsresult rv = CopyInnerTo(wrapper);
+  nsresult rv = const_cast<nsXTFElementWrapper*>(this)->CopyInnerTo(wrapper);
 
   if (NS_SUCCEEDED(rv)) {
     if (mAttributeHandler) {

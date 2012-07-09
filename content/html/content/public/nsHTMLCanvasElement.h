@@ -124,7 +124,7 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest);
 
   /*
    * Helpers called by various users of Canvas
