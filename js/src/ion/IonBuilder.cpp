@@ -4918,10 +4918,13 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
                                          shape->setterObject();
 
         // Save the first seen, or verify uniqueness.
-        if (!found)
+        if (!found) {
+            if (!curFound->isFunction())
+                return true;
             found = curFound;
-        else if (found != curFound)
+        } else if (found != curFound) {
             return true;
+        }
 
         // We only support cases with a single prototype shared. This is
         // overwhelmingly more likely than having multiple different prototype
@@ -4933,7 +4936,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     }
 
     // No need to add a freeze if we didn't find anything
-    if (!found || !found->isFunction())
+    if (!found)
         return true;
 
     JS_ASSERT(foundProto);
@@ -4970,6 +4973,8 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             JS_ASSERT(propSet);
         }
     }
+
+    *funcp = found->toFunction();
 
     return true;
 }
