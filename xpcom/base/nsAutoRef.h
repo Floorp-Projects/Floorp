@@ -186,7 +186,7 @@ public:
     void swap(ThisClass& aOther)
     {
         LocalSimpleRef temp;
-        temp.SimpleRef::operator=(this);
+        temp.SimpleRef::operator=(*this);
         SimpleRef::operator=(aOther);
         aOther.SimpleRef::operator=(temp);
     }
