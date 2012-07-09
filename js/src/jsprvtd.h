@@ -51,7 +51,6 @@ typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
-typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSTryNote            JSTryNote;
 
@@ -131,8 +130,6 @@ class StackSegment;
 class StackSpace;
 class ContextStack;
 class ScriptFrameIter;
-class CallReceiver;
-class CallArgs;
 
 struct BytecodeEmitter;
 struct Definition;
@@ -177,10 +174,9 @@ struct StackShape;
 
 class MultiDeclRange;
 class ParseMapPool;
-class DefnOrHeader;
+class DefinitionList;
 typedef InlineMap<JSAtom *, Definition *, 24> AtomDefnMap;
 typedef InlineMap<JSAtom *, jsatomid, 24> AtomIndexMap;
-typedef InlineMap<JSAtom *, DefnOrHeader, 24> AtomDOHMap;
 typedef Vector<UpvarCookie, 8> UpvarCookies;
 
 class Breakpoint;
@@ -226,6 +222,8 @@ typedef JS::Handle<BaseShape*>         HandleBaseShape;
 typedef JS::Handle<types::TypeObject*> HandleTypeObject;
 typedef JS::Handle<JSAtom*>            HandleAtom;
 typedef JS::Handle<PropertyName*>      HandlePropertyName;
+
+typedef JS::MutableHandle<Shape*>      MutableHandleShape;
 
 typedef JS::Rooted<Shape*>             RootedShape;
 typedef JS::Rooted<BaseShape*>         RootedBaseShape;

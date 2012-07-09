@@ -17,7 +17,27 @@ namespace js {
 
 class DummyFrameGuard;
 
-/* Base class for all C++ wrappers. */
+/*
+ * A wrapper is essentially a proxy that restricts access to certain traps. The
+ * way in which a wrapper restricts access to its traps depends on the
+ * particular policy for that wrapper. To allow a wrapper's policy to be
+ * customized, the Wrapper base class contains two functions, enter/leave, which
+ * are called as a policy enforcement check before/after each trap is forwarded.
+ *
+ * To minimize code duplication, a set of abstract wrapper classes is
+ * provided, from which other wrappers may inherit. These abstract classes are
+ * organized in the following hierarchy:
+ *
+ * BaseProxyHandler Wrapper
+ * |                    | |
+ * IndirectProxyHandler | |
+ * |                  | | |
+ * |      IndirectWrapper |
+ * |                      |
+ * DirectProxyHandler     |
+ *                  |     |
+ *            DirectWrapper
+ */
 class JS_FRIEND_API(Wrapper)
 {
     unsigned mFlags;
@@ -104,14 +124,16 @@ class JS_FRIEND_API(Wrapper)
 };
 
 /*
- * AbstractWrappers forward their fundamental traps to the wrapped object, and
- * implement their derived traps in terms of the fundamental traps.
+ * IndirectWrapper forwards its traps by forwarding them to
+ * IndirectProxyHandler. In effect, IndirectWrapper behaves the same as
+ * IndirectProxyHandler, except that it adds policy enforcement checks to each
+ * fundamental trap.
  */
-class JS_FRIEND_API(AbstractWrapper) : public Wrapper,
+class JS_FRIEND_API(IndirectWrapper) : public Wrapper,
                                        public IndirectProxyHandler
 {
   public:
-    explicit AbstractWrapper(unsigned flags);
+    explicit IndirectWrapper(unsigned flags);
 
     virtual BaseProxyHandler* toBaseProxyHandler() {
         return this;
@@ -139,8 +161,9 @@ class JS_FRIEND_API(AbstractWrapper) : public Wrapper,
 };
 
 /*
- * DirectWrappers forward both their fundamental and derived traps to the
- * wrapped object.
+ * DirectWrapper forwards its traps by forwarding them to DirectProxyHandler.
+ * In effect, DirectWrapper behaves the same as DirectProxyHandler, except that
+ * it adds policy enforcement checks to each trap.
  */
 class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
 {
@@ -310,6 +333,50 @@ IsCrossCompartmentWrapper(const JSObject *obj);
 
 void
 NukeCrossCompartmentWrapper(JSObject *wrapper);
+
+bool
+RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget);
+
+bool
+RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
+                          JSObject *newTarget);
+
+// API to recompute all cross-compartment wrappers whose source and target
+// match the given filters.
+//
+// These filters are designed to be ephemeral stack classes, and thus don't
+// do any rooting or holding of their members.
+struct CompartmentFilter {
+    virtual bool match(JSCompartment *c) const = 0;
+};
+
+struct AllCompartments : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const { return true; };
+};
+
+struct ContentCompartmentsOnly : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const {
+        return !IsSystemCompartment(c);
+    };
+};
+
+struct SingleCompartment : public CompartmentFilter {
+    JSCompartment *ours;
+    SingleCompartment(JSCompartment *c) : ours(c) {};
+    virtual bool match(JSCompartment *c) const { return c == ours; };
+};
+
+struct CompartmentsWithPrincipals : public CompartmentFilter {
+    JSPrincipals *principals;
+    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {};
+    virtual bool match(JSCompartment *c) const {
+        return JS_GetCompartmentPrincipals(c) == principals;
+    };
+};
+
+JS_FRIEND_API(bool)
+RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
+                  const CompartmentFilter &targetFilter);
 
 } /* namespace js */
 

@@ -50,7 +50,7 @@ bool
 HashableValue::setValue(JSContext *cx, const Value &v)
 {
     if (v.isString() && v.toString()->isRope()) {
-        /* Flatten this rope so that equals() is infallible. */
+        // Flatten this rope so that equals() is infallible.
         JSString *str = v.toString()->ensureLinear(cx);
         if (!str)
             return false;
@@ -59,10 +59,10 @@ HashableValue::setValue(JSContext *cx, const Value &v)
         double d = v.toDouble();
         int32_t i;
         if (MOZ_DOUBLE_IS_INT32(d, &i)) {
-            /* Normalize int32-valued doubles to int32 for faster hashing and testing. */
+            // Normalize int32-valued doubles to int32 for faster hashing and testing.
             value = Int32Value(i);
         } else if (MOZ_DOUBLE_IS_NaN(d)) {
-            /* NaNs with different bits must hash and test identically. */
+            // NaNs with different bits must hash and test identically.
             value = DoubleValue(js_NaN);
         } else {
             value = v;
@@ -79,17 +79,15 @@ HashableValue::setValue(JSContext *cx, const Value &v)
 HashNumber
 HashableValue::hash() const
 {
-    /*
-     * HashableValue::setValue normalizes values so that the SameValue relation
-     * on HashableValues is the same as the == relationship on
-     * value.data.asBits, except for strings.
-     */
+    // HashableValue::setValue normalizes values so that the SameValue relation
+    // on HashableValues is the same as the == relationship on
+    // value.data.asBits, except for strings.
     if (value.isString()) {
         JSLinearString &s = value.toString()->asLinear();
         return HashChars(s.chars(), s.length());
     }
 
-    /* Having dispensed with strings, we can just hash asBits. */
+    // Having dispensed with strings, we can just hash asBits.
     uint64_t u = value.asRawBits();
     return HashNumber((u >> 3) ^ (u >> (32 + 3)) ^ (u << (32 - 3)));
 }
@@ -97,7 +95,7 @@ HashableValue::hash() const
 bool
 HashableValue::equals(const HashableValue &other) const
 {
-    /* Two HashableValues are equal if they have equal bits or they're equal strings. */
+    // Two HashableValues are equal if they have equal bits or they're equal strings.
     bool b = (value.asRawBits() == other.value.asRawBits()) ||
               (value.isString() &&
                other.value.isString() &&
@@ -128,18 +126,18 @@ Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
-    JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
+    JS_PropertyStub,         // addProperty
+    JS_PropertyStub,         // delProperty
+    JS_PropertyStub,         // getProperty
+    JS_StrictPropertyStub,   // setProperty
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
     finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* construct   */
-    NULL,                    /* hasInstance */
+    NULL,                    // checkAccess
+    NULL,                    // call
+    NULL,                    // construct
+    NULL,                    // hasInstance
     mark
 };
 
@@ -322,18 +320,18 @@ Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
-    JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
+    JS_PropertyStub,         // addProperty
+    JS_PropertyStub,         // delProperty
+    JS_PropertyStub,         // getProperty
+    JS_StrictPropertyStub,   // setProperty
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
     finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* construct   */
-    NULL,                    /* hasInstance */
+    NULL,                    // checkAccess
+    NULL,                    // call
+    NULL,                    // construct
+    NULL,                    // hasInstance
     mark
 };
 

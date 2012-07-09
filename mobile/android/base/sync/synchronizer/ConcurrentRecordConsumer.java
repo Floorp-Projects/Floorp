@@ -29,18 +29,6 @@ class ConcurrentRecordConsumer extends RecordConsumer {
     this.delegate = delegate;
   }
 
-  private static void info(String message) {
-    Logger.info(LOG_TAG, message);
-  }
-
-  private static void debug(String message) {
-    Logger.debug(LOG_TAG, message);
-  }
-
-  private static void trace(String message) {
-    Logger.trace(LOG_TAG, message);
-  }
-
   private Object monitor = new Object();
   @Override
   public void doNotify() {
@@ -51,7 +39,7 @@ class ConcurrentRecordConsumer extends RecordConsumer {
 
   @Override
   public void queueFilled() {
-    debug("Queue filled.");
+    Logger.debug(LOG_TAG, "Queue filled.");
     synchronized (monitor) {
       this.allRecordsQueued = true;
       monitor.notify();
@@ -69,14 +57,14 @@ class ConcurrentRecordConsumer extends RecordConsumer {
   private Object countMonitor = new Object();
   @Override
   public void stored() {
-    trace("Record stored. Notifying.");
+    Logger.trace(LOG_TAG, "Record stored. Notifying.");
     synchronized (countMonitor) {
       counter++;
     }
   }
 
   private void consumerIsDone() {
-    info("Consumer is done. Processed " + counter + ((counter == 1) ? " record." : " records."));
+    Logger.debug(LOG_TAG, "Consumer is done. Processed " + counter + ((counter == 1) ? " record." : " records."));
     delegate.consumerIsDone(!allRecordsQueued);
   }
 
@@ -88,46 +76,46 @@ class ConcurrentRecordConsumer extends RecordConsumer {
       // The queue is concurrent-safe.
       while ((record = delegate.getQueue().poll()) != null) {
         synchronized (monitor) {
-          trace("run() took monitor.");
+          Logger.trace(LOG_TAG, "run() took monitor.");
           if (stopImmediately) {
-            debug("Stopping immediately. Clearing queue.");
+            Logger.debug(LOG_TAG, "Stopping immediately. Clearing queue.");
             delegate.getQueue().clear();
-            debug("Notifying consumer.");
+            Logger.debug(LOG_TAG, "Notifying consumer.");
             consumerIsDone();
             return;
           }
-          debug("run() dropped monitor.");
+          Logger.debug(LOG_TAG, "run() dropped monitor.");
         }
 
-        trace("Storing record with guid " + record.guid + ".");
+        Logger.trace(LOG_TAG, "Storing record with guid " + record.guid + ".");
         try {
           delegate.store(record);
         } catch (Exception e) {
           // TODO: Bug 709371: track records that failed to apply.
           Logger.error(LOG_TAG, "Caught error in store.", e);
         }
-        trace("Done with record.");
+        Logger.trace(LOG_TAG, "Done with record.");
       }
       synchronized (monitor) {
-        trace("run() took monitor.");
+        Logger.trace(LOG_TAG, "run() took monitor.");
 
         if (allRecordsQueued) {
-          debug("Done with records and no more to come. Notifying consumerIsDone.");
+          Logger.debug(LOG_TAG, "Done with records and no more to come. Notifying consumerIsDone.");
           consumerIsDone();
           return;
         }
         if (stopImmediately) {
-          debug("Done with records and told to stop immediately. Notifying consumerIsDone.");
+          Logger.debug(LOG_TAG, "Done with records and told to stop immediately. Notifying consumerIsDone.");
           consumerIsDone();
           return;
         }
         try {
-          debug("Not told to stop but no records. Waiting.");
+          Logger.debug(LOG_TAG, "Not told to stop but no records. Waiting.");
           monitor.wait(10000);
         } catch (InterruptedException e) {
           // TODO
         }
-        trace("run() dropped monitor.");
+        Logger.trace(LOG_TAG, "run() dropped monitor.");
       }
     }
   }

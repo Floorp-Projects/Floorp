@@ -82,11 +82,13 @@
 @BINPATH@/mozcpp19.dll
 #endif
 #endif
+#ifdef MOZ_SHARED_MOZGLUE
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
+#endif
 #ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
 @BINPATH@/classes.dex
-@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 @BINPATH@/res/drawable
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
@@ -161,6 +163,7 @@
 #endif
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_contacts.xpt
+@BINPATH@/components/dom_alarm.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_devicestorage.xpt
@@ -317,6 +320,8 @@
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
+@BINPATH@/components/AlarmsManager.js
+@BINPATH@/components/AlarmsManager.manifest
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/BrowserFeeds.manifest

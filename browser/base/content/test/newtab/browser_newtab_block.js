@@ -9,7 +9,7 @@
 function runTests() {
   // we remove sites and expect the gaps to be filled as long as there still
   // are some sites available
-  setLinks("0,1,2,3,4,5,6,7,8,9");
+  yield setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks("");
 
   yield addNewTabPageTab();
@@ -26,7 +26,7 @@ function runTests() {
 
   // we removed a pinned site
   yield restore();
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",1");
 
   yield addNewTabPageTab();
@@ -38,7 +38,7 @@ function runTests() {
   // we remove the last site on the grid (which is pinned) and expect the gap
   // to be re-filled and the new site to be unpinned
   yield restore();
-  setLinks("0,1,2,3,4,5,6,7,8,9");
+  yield setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks(",,,,,,,,8");
 
   yield addNewTabPageTab();
@@ -50,7 +50,7 @@ function runTests() {
   // we remove the first site on the grid with the last one pinned. all cells
   // but the last one should shift to the left and a new site fades in
   yield restore();
-  setLinks("0,1,2,3,4,5,6,7,8,9");
+  yield setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks(",,,,,,,,8");
 
   yield addNewTabPageTab();

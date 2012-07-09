@@ -674,6 +674,13 @@ interface nsIXPConnect : nsISupports
     [noscript] void removeJSHolder(in voidPtr aHolder);
 
     /**
+     * Test to see if a JS holder is in our hashtable.
+     * Only available in debug builds.
+     * @param aHolder The object to test for.
+     */
+    [noscript] bool testJSHolder(in voidPtr aHolder);
+
+    /**
      * Note aJSContext as a child to the cycle collector.
      * @param aJSContext The JSContext to note.
      * @param aCb The cycle collection traversal callback.

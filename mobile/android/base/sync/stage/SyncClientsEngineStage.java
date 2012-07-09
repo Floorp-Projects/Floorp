@@ -525,7 +525,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
   }
 
   protected void uploadClientRecords(JSONArray records) {
-    Logger.trace(LOG_TAG, "Uploading client records " + records.toJSONString());
+    Logger.trace(LOG_TAG, "Uploading " + records.size() + " client records.");
     try {
       final URI postURI = session.config.collectionURI(COLLECTION_NAME, false);
       final SyncStorageRecordRequest request = new SyncStorageRecordRequest(postURI);

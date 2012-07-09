@@ -410,7 +410,6 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
 
     mThebesLayerCallback = aCallback;
     mThebesLayerCallbackData = aCallbackData;
-    SetCompositingDisabled(aFlags & END_NO_COMPOSITE);
 
     Render();
 
@@ -768,13 +767,6 @@ LayerManagerOGL::Render()
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
     mGLContext->fScissor(0, 0, width, height);
-  }
-
-  if (CompositingDisabled()) {
-    RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
-                             nsIntPoint(0, 0));
-    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-    return;
   }
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);

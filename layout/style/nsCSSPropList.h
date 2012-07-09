@@ -1511,6 +1511,107 @@ CSS_PROP_TABLEBORDER(
     kEmptyCellsKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+#ifdef MOZ_FLEXBOX
+CSS_PROP_POSITION(
+    -moz-align-items,
+    align_items,
+    CSS_PROP_DOMPROP_PREFIXED(AlignItems),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignItemsKTable,
+    offsetof(nsStylePosition, mAlignItems),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
+    -moz-align-self,
+    align_self,
+    CSS_PROP_DOMPROP_PREFIXED(AlignSelf),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignSelfKTable,
+    offsetof(nsStylePosition, mAlignSelf),
+    eStyleAnimType_EnumU8)
+CSS_PROP_SHORTHAND(
+    -moz-flex,
+    flex,
+    CSS_PROP_DOMPROP_PREFIXED(Flex),
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_POSITION(
+    -moz-flex-basis,
+    flex_basis,
+    CSS_PROP_DOMPROP_PREFIXED(FlexBasis),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    offsetof(nsStylePosition, mFlexBasis),
+    eStyleAnimType_Coord)
+CSS_PROP_POSITION(
+    -moz-flex-direction,
+    flex_direction,
+    CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kFlexDirectionKTable,
+    offsetof(nsStylePosition, mFlexDirection),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
+    -moz-flex-grow,
+    flex_grow,
+    CSS_PROP_DOMPROP_PREFIXED(FlexGrow),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexGrow),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    -moz-flex-shrink,
+    flex_shrink,
+    CSS_PROP_DOMPROP_PREFIXED(FlexShrink),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexShrink),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    -moz-order,
+    order,
+    CSS_PROP_DOMPROP_PREFIXED(Order),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HI,
+    nsnull,
+    offsetof(nsStylePosition, mOrder),
+    eStyleAnimType_Custom) // <integer>
+CSS_PROP_POSITION(
+    -moz-justify-content,
+    justify_content,
+    CSS_PROP_DOMPROP_PREFIXED(JustifyContent),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kJustifyContentKTable,
+    offsetof(nsStylePosition, mJustifyContent),
+    eStyleAnimType_EnumU8)
+#endif // MOZ_FLEXBOX
 CSS_PROP_DISPLAY(
     float,
     float,

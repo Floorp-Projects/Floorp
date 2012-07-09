@@ -102,7 +102,7 @@ Open()
     if (!sScreenSize) {
         sScreenSize = new gfxIntSize(sVi.xres, sVi.yres);
     }
-    long stride = sScreenSize->width * bytesPerPixel;
+    long stride = fi.line_length;
     size_t numFrameBytes = stride * sScreenSize->height;
 
     sBuffers = new BufferVector(2);

@@ -200,6 +200,7 @@ browser.jar:
   skin/classic/browser/devtools/responsive-se-resizer.png   (devtools/responsive-se-resizer.png)
   skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
   skin/classic/browser/devtools/responsive-background.png   (devtools/responsive-background.png)
+  skin/classic/browser/devtools/tools-icons-small.png       (devtools/tools-icons-small.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

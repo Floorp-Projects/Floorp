@@ -1081,6 +1081,22 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
 }
 
 bool
+gfxPlatform::UseProgressiveTilePainting()
+{
+  static bool sUseProgressiveTilePainting;
+  static bool sUseProgressiveTilePaintingPrefCached = false;
+
+  if (!sUseProgressiveTilePaintingPrefCached) {
+    sUseProgressiveTilePaintingPrefCached = true;
+    mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
+                                          "layers.progressive-paint",
+                                          false);
+  }
+
+  return sUseProgressiveTilePainting;
+}
+
+bool
 gfxPlatform::UseAzureContentDrawing()
 {
   static bool sAzureContentDrawingEnabled;
@@ -1088,7 +1104,7 @@ gfxPlatform::UseAzureContentDrawing()
 
   if (!sAzureContentDrawingPrefCached) {
     sAzureContentDrawingPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sAzureContentDrawingEnabled, 
+    mozilla::Preferences::AddBoolVarCache(&sAzureContentDrawingEnabled,
                                           "gfx.content.azure.enabled");
   }
 

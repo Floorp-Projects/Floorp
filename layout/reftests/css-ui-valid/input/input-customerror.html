@@ -1,18 +1,9 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('t').setCustomValidity('foo');
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if input has a custom error, it should not be affected by :-moz-ui-valid
              pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('t').setCustomValidity('foo'); document.documentElement.className='';">
     <input class='notvalid' id='t'>
   </body>
 </html>

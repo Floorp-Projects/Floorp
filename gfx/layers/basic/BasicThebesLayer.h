@@ -37,9 +37,7 @@ public:
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    mInvalidRegion.Or(mInvalidRegion, aRegion);
-    mInvalidRegion.SimplifyOutward(10);
-    mValidRegion.Sub(mValidRegion, mInvalidRegion);
+    mValidRegion.Sub(mValidRegion, aRegion);
   }
 
   virtual void PaintThebes(gfxContext* aContext,
@@ -137,6 +135,7 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual bool MustRetainContent() { return HasShadow(); }
 
   void SetBackBufferAndAttrs(const OptionalThebesBuffer& aBuffer,
                              const nsIntRegion& aValidRegion,

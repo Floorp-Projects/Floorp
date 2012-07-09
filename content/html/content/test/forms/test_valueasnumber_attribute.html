@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=636737
+-->
+<head>
+  <title>Test for Bug 636737</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=636737">Mozilla Bug 636737</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 636737 **/
+
+/**
+ * This test is checking .valueAsNumber.
+ */
+
+// Global variable used by all functions.
+var element = document.createElement("input");
+
+function checkAvailability()
+{
+  var testData =
+  [
+    ["text", false],
+    ["password", false],
+    ["search", false],
+    ["telephone", false],
+    ["email", false],
+    ["url", false],
+    ["hidden", false],
+    ["checkbox", false],
+    ["radio", false],
+    ["file", false],
+    ["submit", false],
+    ["image", false],
+    ["reset", false],
+    ["button", false],
+    ["number", true],
+    // The next types have not been implemented but will fallback to "text"
+    // which has the same value.
+    ["color", false],
+  ];
+
+  var todoList =
+  [
+    ["datetime", true],
+    ["date", true],
+    ["month", true],
+    ["week", true],
+    ["time", true],
+    ["datetime-local", true],
+    ["range", true],
+  ];
+
+
+  for each (data in testData) {
+    var exceptionCatched = false;
+    element.type = data[0];
+    try {
+      element.valueAsNumber;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, false,
+       "valueAsNumber shouldn't throw exception on getting");
+
+    exceptionCatched = false;
+    try {
+      element.valueAsNumber = 42;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, !data[1], "valueAsNumber for " + data[0] +
+                                   " availability is not correct");
+  }
+
+  for each (data in todoList) {
+    var exceptionCatched = false;
+    element.type = data[0];
+    try {
+      element.valueAsNumber;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    is(exceptionCatched, false,
+       "valueAsNumber shouldn't throw exception on getting");
+
+    exceptionCatched = false;
+    try {
+      element.valueAsNumber = 42;
+    } catch (e) {
+      exceptionCatched = true;
+    }
+    todo_is(exceptionCatched, !data[1],
+            "valueAsNumber for " + data[0] + " availability is not correct");
+  }
+}
+
+function checkGet()
+{
+  var testData =
+  [
+    ["42", 42],
+    ["-42", -42], // should work for negative values
+    ["42.1234", 42.1234],
+    ["123.12345678912345", 123.12345678912345], // double precision
+    ["1e2", 100], // e should be usable
+    ["2e1", 20],
+    ["1e-1", 0.1], // value after e can be negative
+    ["1E2", 100], // E can be used instead of e
+    ["e", null],
+    ["e2", null],
+    ["1e0.1", null],
+    ["", null], // the empty string is not a number
+    ["foo", null],
+    ["42,13", null], // comma can't be used as a decimal separator
+  ];
+
+  element.type = "number";
+  for each (data in testData) {
+    element.value = data[0];
+    if (data[1] != null) {
+      is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
+         "floating point representation of the value");
+    } else {
+      ok(isNaN(element.valueAsNumber), "valueAsNumber should return NaN "  +
+         "when the element value is not a number");
+    }
+  }
+}
+
+function checkSet()
+{
+  var testData =
+  [
+    [42, "42"],
+    [-42, "-42"], // should work for negative values
+    [42.1234, "42.1234"],
+    [123.123456789123, "123.123456789123"], // double precision
+    [1e2, "100"], // e should be usable
+    [2e1, "20"],
+    [1e-1, "0.1"], // value after e can be negative
+    [1E2, "100"], // E can be used instead of e
+    ["", null], // the empty string is not a number
+    ["foo", null],
+  ];
+
+  element.type = "number";
+  for each (data in testData) {
+    element.valueAsNumber = data[0];
+    if (data[1] != null) {
+      is(element.value, data[1],
+         "valueAsNumber should be able to set the value");
+    } else {
+      element.valueAsNumber = testData[0];
+      isnot(element.value, data[1],
+            "valueAsNumber should not set the value if it's not a number");
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+checkAvailability();
+checkGet();
+checkSet();
+
+SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

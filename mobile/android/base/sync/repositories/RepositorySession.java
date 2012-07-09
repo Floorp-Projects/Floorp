@@ -245,7 +245,7 @@ public abstract class RepositorySession {
       throw ex;
     }
 
-    Logger.info(LOG_TAG, "Shutting down work queues.");
+    Logger.trace(LOG_TAG, "Shutting down work queues.");
     storeWorkQueue.shutdown();
     delegateQueue.shutdown();
   }

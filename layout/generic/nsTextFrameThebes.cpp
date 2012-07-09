@@ -3307,7 +3307,8 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
-    frameData.mFrame->InvalidateFrame();
+    nsRect bounds(nsPoint(0, 0), frameData.mFrame->GetSize());
+    frameData.mFrame->Invalidate(bounds);
   }
   return NS_OK;
 }
@@ -4302,7 +4303,6 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
       // will do that when it gets called during reflow.
       textFrame->AddStateBits(NS_FRAME_IS_DIRTY);
     }
-    textFrame->InvalidateFrame();
 
     // Below, frames that start after the deleted text will be adjusted so that
     // their offsets move with the trailing unchanged text. If this change
@@ -4343,23 +4343,7 @@ nsTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsFrame::DidSetStyleContext(aOldStyleContext);
   ClearTextRuns();
-}
-
-class nsDisplayTextGeometry : public nsDisplayItemGenericGeometry
-{
-public:
-  nsDisplayTextGeometry(nsTextFrame* aFrame)
-  {
-    aFrame->GetTextDecorations(aFrame->PresContext(), mDecorations);
-  }
- 
-  /**
-   * We store the computed text decorations here since they are
-   * computed using style data from parent frames. Any changes to these
-   * styles will only invalidate the parent frame and not this frame.
-   */
-  nsTextFrame::TextDecorations mDecorations;
-};
+} 
 
 class nsDisplayText : public nsCharClipDisplayItem {
 public:
@@ -4376,10 +4360,7 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     *aSnap = false;
-    nsRect temp = mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
-    // Bug 748228
-    temp.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
-    return temp;
+    return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
@@ -4397,37 +4378,6 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
-  {
-    nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
-    nsDisplayTextGeometry* geometry = new nsDisplayTextGeometry(f);
-    bool snap;
-    geometry->mBounds = GetBounds(aBuilder, &snap);
-    geometry->mBorderRect = GetBorderRect();
-    
-    return geometry;
-  }
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion *aInvalidRegion)
-  {
-    const nsDisplayTextGeometry* geometry = static_cast<const nsDisplayTextGeometry*>(aGeometry);
-    nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
-
-    nsTextFrame::TextDecorations decorations;
-    f->GetTextDecorations(f->PresContext(), decorations);
-
-    bool snap;
-    nsRect newRect = geometry->mBounds;
-    nsRect oldRect = GetBounds(aBuilder, &snap);
-    if (decorations != geometry->mDecorations ||
-        !oldRect.IsEqualInterior(newRect) ||
-        !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
-      aInvalidRegion->Or(oldRect, newRect);
-    }
-  }
-  
   virtual void DisableComponentAlpha() { mDisableSubpixelAA = true; }
 
   bool mDisableSubpixelAA;
@@ -4822,7 +4772,7 @@ static void DrawSelectionDecorations(gfxContext* aContext,
     nsTextFrame* aFrame,
     nsTextPaintStyle& aTextPaintStyle,
     const nsTextRangeStyle &aRangeStyle,
-    const gfxPoint& aPt, gfxFloat aWidth,
+    const gfxPoint& aPt, gfxFloat aXInFrame, gfxFloat aWidth,
     gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics)
 {
   gfxPoint pt(aPt);
@@ -4899,8 +4849,8 @@ static void DrawSelectionDecorations(gfxContext* aContext,
       return;
   }
   size.height *= relativeSize;
-  nsCSSRendering::PaintDecorationLine(
-    aContext, aDirtyRect, color, pt, size, aAscent, aFontMetrics.underlineOffset,
+  nsCSSRendering::PaintDecorationLine(aFrame, aContext, aDirtyRect, color, pt,
+    pt.x - aPt.x + aXInFrame, size, aAscent, aFontMetrics.underlineOffset,
     NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, style, descentLimit);
 }
 
@@ -5339,9 +5289,10 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
       pt.x = (aFramePt.x + xOffset -
              (mTextRun->IsRightToLeft() ? advance : 0)) / app;
       gfxFloat width = NS_ABS(advance) / app;
-      DrawSelectionDecorations(aCtx, dirtyRect, aSelectionType, this, aTextPaintStyle,
-                               selectedStyle,
-                               pt, width, mAscent / app, decorationMetrics);
+      gfxFloat xInFrame = pt.x - (aFramePt.x / app);
+      DrawSelectionDecorations(aCtx, dirtyRect, aSelectionType, this,
+                               aTextPaintStyle, selectedStyle, pt, xInFrame,
+                               width, mAscent / app, decorationMetrics);
     }
     iterator.UpdateWithAdvance(advance);
   }
@@ -5692,9 +5643,9 @@ nsTextFrame::DrawTextRunAndDecorations(
       decPt.y = (frameTop - dec.mBaselineOffset) / app;
 
       const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
-      nsCSSRendering::PaintDecorationLine(aCtx, dirtyRect, lineColor, decPt, decSize, ascent,
-        metrics.underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-        dec.mStyle);
+      nsCSSRendering::PaintDecorationLine(this, aCtx, dirtyRect, lineColor,
+        decPt, 0.0, decSize, ascent, metrics.underlineOffset,
+        NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, dec.mStyle);
     }
     // Overlines
     for (PRUint32 i = aDecorations.mOverlines.Length(); i-- > 0; ) {
@@ -5709,8 +5660,9 @@ nsTextFrame::DrawTextRunAndDecorations(
       decPt.y = (frameTop - dec.mBaselineOffset) / app;
 
       const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
-      nsCSSRendering::PaintDecorationLine(aCtx, dirtyRect, lineColor, decPt, decSize, ascent,
-        metrics.maxAscent, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle);
+      nsCSSRendering::PaintDecorationLine(this, aCtx, dirtyRect, lineColor,
+        decPt, 0.0, decSize, ascent, metrics.maxAscent,
+        NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle);
     }
 
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
@@ -5731,9 +5683,9 @@ nsTextFrame::DrawTextRunAndDecorations(
       decPt.y = (frameTop - dec.mBaselineOffset) / app;
 
       const nscolor lineColor = aDecorationOverrideColor ? *aDecorationOverrideColor : dec.mColor;
-      nsCSSRendering::PaintDecorationLine(aCtx, dirtyRect, lineColor, decPt, decSize, ascent,
-        metrics.strikeoutOffset, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
-        dec.mStyle);
+      nsCSSRendering::PaintDecorationLine(this, aCtx, dirtyRect, lineColor,
+        decPt, 0.0, decSize, ascent, metrics.strikeoutOffset,
+        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, dec.mStyle);
     }
 }
 
@@ -6021,7 +5973,7 @@ nsTextFrame::SetSelectedRange(PRUint32 aStart, PRUint32 aEnd, bool aSelected,
       }
     }
     // Selection might change anything. Invalidate the overflow area.
-    f->InvalidateFrame();
+    f->InvalidateOverflowRect();
 
     f = static_cast<nsTextFrame*>(f->GetNextContinuation());
   }
@@ -7782,7 +7734,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   SetLength(contentLength, &aLineLayout, ALLOW_FRAME_CREATION_AND_DESTRUCTION);
 
-  InvalidateFrame();
+  Invalidate(aMetrics.VisualOverflow());
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);

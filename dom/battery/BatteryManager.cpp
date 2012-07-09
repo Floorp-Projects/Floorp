@@ -21,7 +21,7 @@
 #define DISCHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("dischargingtimechange")
 #define CHARGINGTIMECHANGE_EVENT_NAME    NS_LITERAL_STRING("chargingtimechange")
 
-DOMCI_DATA(MozBatteryManager, mozilla::dom::battery::BatteryManager)
+DOMCI_DATA(BatteryManager, mozilla::dom::battery::BatteryManager)
 
 namespace mozilla {
 namespace dom {
@@ -46,8 +46,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BatteryManager,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BatteryManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozBatteryManager)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozBatteryManager)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMBatteryManager)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BatteryManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(BatteryManager, nsDOMEventTargetHelper)

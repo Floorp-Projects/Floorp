@@ -264,8 +264,9 @@ struct AutoEnterCompilation
 inline TypeObject *
 GetTypeNewObject(JSContext *cx, JSProtoKey key)
 {
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, key, &proto, NULL))
+    RootedObject proto(cx);
+    RootedObject null(cx);
+    if (!js_GetClassPrototype(cx, null, key, &proto))
         return NULL;
     return proto->getNewType(cx);
 }
@@ -502,8 +503,9 @@ TypeScript::SlotTypes(JSScript *script, unsigned slot)
 /* static */ inline TypeObject *
 TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 {
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, script->global(), key, &proto, NULL))
+    RootedObject proto(cx);
+    RootedObject global(cx, script->global());
+    if (!js_GetClassPrototype(cx, global, key, &proto, NULL))
         return NULL;
     return proto->getNewType(cx);
 }
@@ -777,7 +779,7 @@ inline void
 TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, Type type)
 {
     JS_ASSERT(this == &cx->compartment->types);
-    JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!cx->runtime->isHeapBusy());
 
     InferSpew(ISpewOps, "pending: %sC%p%s %s",
               InferSpewColor(constraint), constraint, InferSpewColorReset(),
@@ -1280,7 +1282,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
                 continue;
             }
 
-            const Shape *shape = protoWalk->nativeLookup(cx, id);
+            Shape *shape = protoWalk->nativeLookup(cx, id);
 
             foundSetter = shape &&
                           !shape->hasDefaultSetter();

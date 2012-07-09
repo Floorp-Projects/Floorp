@@ -27,6 +27,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -191,7 +192,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   container->SetScaleHint(scaleHint);
 
   nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
-    (GetLayerBuilderForManager(aManager)->GetLeafLayerFor(aBuilder, aItem));
+    (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
   if (!layer) {
     layer = aManager->CreateImageLayer();
     if (!layer)
@@ -296,6 +297,10 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aMetrics);
 
+  if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+  }
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsVideoFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
@@ -345,14 +350,13 @@ public:
                                    LayerManager* aManager,
                                    const FrameLayerBuilder::ContainerParameters& aParameters)
   {
-    if (aManager->GetBackendType() != LayerManager::LAYERS_BASIC) {
-      // For non-basic layer managers we can assume that compositing
-      // layers is very cheap, and since ImageLayers don't require
-      // additional memory of the video frames we have to have anyway,
-      // we can't save much by making layers inactive. Also, for many
-      // accelerated layer managers calling
-      // imageContainer->GetCurrentAsSurface can be very expensive. So
-      // just always be active for these managers.
+    if (aManager->IsCompositingCheap()) {
+      // Since ImageLayers don't require additional memory of the
+      // video frames we have to have anyway, we can't save much by
+      // making layers inactive. Also, for many accelerated layer
+      // managers calling imageContainer->GetCurrentAsSurface can be
+      // very expensive. So just always be active when compositing is
+      // cheap (i.e. hardware accelerated).
       return LAYER_ACTIVE;
     }
     nsHTMLMediaElement* elem =

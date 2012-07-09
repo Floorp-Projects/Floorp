@@ -2562,9 +2562,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
       [self setGLContext:glContext];
     }
 
-    [glContext setView:self];
-    [glContext update];
-
     mGeckoChild->DispatchWindowEvent(paintEvent);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
@@ -4559,7 +4556,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   NSEvent *currentEvent = [NSApp currentEvent];
   gUserCancelledDrag = ([currentEvent type] == NSKeyDown &&
-                        [currentEvent keyCode] == kEscapeKeyCode);
+                        [currentEvent keyCode] == kVK_Escape);
 
   if (!mDragService) {
     CallGetService(kDragServiceContractID, &mDragService);

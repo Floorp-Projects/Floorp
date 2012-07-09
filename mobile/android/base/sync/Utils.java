@@ -4,6 +4,10 @@
 
 package org.mozilla.gecko.sync;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -439,6 +443,52 @@ public class Utils {
         o.put(stageName, 0);
       }
       bundle.putString(Constants.EXTRAS_KEY_STAGES_TO_SKIP, o.toJSONString());
+    }
+  }
+
+  /**
+   * Read contents of file as a string.
+   *
+   * @param context Android context.
+   * @param filename name of file to read; must not be null.
+   * @return <code>String</code> instance.
+   */
+  public static String readFile(final Context context, final String filename) {
+    if (filename == null) {
+      throw new IllegalArgumentException("Passed null filename in readFile.");
+    }
+
+    FileInputStream fis = null;
+    InputStreamReader isr = null;
+    BufferedReader br = null;
+
+    try {
+      fis = context.openFileInput(filename);
+      isr = new InputStreamReader(fis);
+      br = new BufferedReader(isr);
+      StringBuilder sb = new StringBuilder();
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line);
+      }
+      return sb.toString();
+    } catch (Exception e) {
+      return null;
+    } finally {
+      if (isr != null) {
+        try {
+          isr.close();
+        } catch (IOException e) {
+          // Ignore.
+        }
+      }
+      if (fis != null) {
+        try {
+          fis.close();
+        } catch (IOException e) {
+          // Ignore.
+        }
+      }
     }
   }
 }

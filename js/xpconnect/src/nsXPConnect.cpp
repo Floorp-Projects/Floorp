@@ -2261,6 +2261,17 @@ nsXPConnect::RemoveJSHolder(void* aHolder)
 }
 
 NS_IMETHODIMP
+nsXPConnect::TestJSHolder(void* aHolder, bool* aRetval)
+{
+#ifdef DEBUG
+    return mRuntime->TestJSHolder(aHolder, aRetval);
+#else
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+#endif
+}
+
+NS_IMETHODIMP
 nsXPConnect::SetReportAllJSExceptions(bool newval)
 {
     // Ignore if the environment variable was set.

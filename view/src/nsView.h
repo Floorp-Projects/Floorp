@@ -162,28 +162,12 @@ public:
   nsPoint GetOffsetTo(const nsView* aOther, const PRInt32 aAPD) const;
   nsIWidget* GetNearestWidget(nsPoint* aOffset, const PRInt32 aAPD) const;
 
-  void SetPendingRefresh(bool aPending) { mPendingRefresh = aPending; }
-  bool PendingRefresh() { return mPendingRefresh; }
-
-  void SkippedPaint() { mSkippedPaints++; }
-  void ClearSkippedPaints() { mSkippedPaints = 0; }
-  PRUint32 SkippedPaints() { return mSkippedPaints; }
-
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
   // call this method if we have no widget.
   void DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize);
 
   nsRegion*    mDirtyRegion;
-
-  // True if the view has invalidate scheduled with the widget
-  // and is waiting for nsViewManager::Refresh to be called.
-  bool mPendingRefresh;
-
-  // True if a paint event was skipped while mPendingRefresh was
-  // true, and a new one should be scheduled once we get
-  // nsViewManager::Refresh called.
-  PRUint32 mSkippedPaints;
 
 private:
   void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);

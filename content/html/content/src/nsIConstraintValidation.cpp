@@ -72,10 +72,14 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_TYPE_MISMATCH);
     } else if (GetValidityState(VALIDITY_STATE_PATTERN_MISMATCH)) {
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_PATTERN_MISMATCH);
+    } else if (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_RANGE_OVERFLOW);
+    } else if (GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_RANGE_UNDERFLOW);
+    } else if (GetValidityState(VALIDITY_STATE_STEP_MISMATCH)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_STEP_MISMATCH);
     } else {
-      // TODO: The other messages have not been written
-      // because related constraint validation are not implemented yet.
-      // We should not be here.
+      // There should not be other validity states.
       return NS_ERROR_UNEXPECTED;
     }
   } else {

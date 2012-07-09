@@ -63,6 +63,7 @@ def _nsinstall_internal(argv):
 
   # just create one directory?
   def maybe_create_dir(dir, mode, try_again):
+    dir = os.path.abspath(dir)
     if os.path.exists(dir):
       if not os.path.isdir(dir):
         print >> sys.stderr, ('nsinstall: %s is not a directory' % dir)

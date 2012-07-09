@@ -272,7 +272,15 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
-// Three textures, representing YCbCr planes of a video image
+// Three textures, representing YCbCr planes of a video image.
+//
+// Some older versions of the Tegra 2 android driver have a bug
+// where arithmetic ops on a texture read are just ignored.  So,
+// if the below was |cb = texture2D(...).r - 0.5|, the "- 0.5" was
+// just being ignored/skipped.  This, of course, lead to crappy
+// rendering -- see bug 765150.  Doing them separately like below
+// makes it all OK.  We don't know if this is special to constants,
+// special to 0.5, special to addition/subtraction, etc.
 @shader sYCbCrTextureLayer<mask:,Mask>FS
 $LAYER_FRAGMENT<mask>$
 #ifdef GL_ES
@@ -284,14 +292,19 @@ uniform sampler2D uCrTexture;
 
 void main()
 {
-  vec4 yuv;
   vec4 color;
-  yuv.r = texture2D(uCrTexture, vTexCoord).r - 0.5;
-  yuv.g = texture2D(uYTexture, vTexCoord).r - 0.0625;
-  yuv.b = texture2D(uCbTexture, vTexCoord).r - 0.5;
-  color.r = yuv.g * 1.164 + yuv.r * 1.596;
-  color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
-  color.b = yuv.g * 1.164 + yuv.b * 2.018;
+
+  float y = texture2D(uYTexture, vTexCoord).r;
+  float cb = texture2D(uCbTexture, vTexCoord).r;
+  float cr = texture2D(uCrTexture, vTexCoord).r;
+
+  y = (y - 0.0625) * 1.164;
+  cb = cb - 0.5;
+  cr = cr - 0.5;
+
+  color.r = y + cr * 1.596;
+  color.g = y - 0.813 * cr - 0.391 * cb;
+  color.b = y + cb * 2.018;
   color.a = 1.0;
 $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = color * uLayerOpacity * mask;

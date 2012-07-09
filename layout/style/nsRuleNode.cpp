@@ -832,33 +832,47 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Gradient,
                     "The given data is not a gradient");
 
-  nsCSSValueGradient* gradient = aValue.GetGradientValue();
+  const nsCSSValueGradient* gradient = aValue.GetGradientValue();
 
-  if (gradient->mIsRadial) {
-    if (gradient->mRadialShape.GetUnit() == eCSSUnit_Enumerated) {
-      aResult.mShape = gradient->mRadialShape.GetIntValue();
+  if (gradient->mIsExplicitSize) {
+    SetCoord(gradient->GetRadiusX(), aResult.mRadiusX, nsStyleCoord(),
+             SETCOORD_LP | SETCOORD_STORE_CALC,
+             aContext, aPresContext, aCanStoreInRuleTree);
+    if (gradient->GetRadiusY().GetUnit() != eCSSUnit_None) {
+      SetCoord(gradient->GetRadiusY(), aResult.mRadiusY, nsStyleCoord(),
+               SETCOORD_LP | SETCOORD_STORE_CALC,
+               aContext, aPresContext, aCanStoreInRuleTree);
+      aResult.mShape = NS_STYLE_GRADIENT_SHAPE_ELLIPTICAL;
     } else {
-      NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+      aResult.mRadiusY = aResult.mRadiusX;
+      aResult.mShape = NS_STYLE_GRADIENT_SHAPE_CIRCULAR;
+    }
+    aResult.mSize = NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE;
+  } else if (gradient->mIsRadial) {
+    if (gradient->GetRadialShape().GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mShape = gradient->GetRadialShape().GetIntValue();
+    } else {
+      NS_ASSERTION(gradient->GetRadialShape().GetUnit() == eCSSUnit_None,
                    "bad unit for radial shape");
       aResult.mShape = NS_STYLE_GRADIENT_SHAPE_ELLIPTICAL;
     }
-    if (gradient->mRadialSize.GetUnit() == eCSSUnit_Enumerated) {
-      aResult.mSize = gradient->mRadialSize.GetIntValue();
+    if (gradient->GetRadialSize().GetUnit() == eCSSUnit_Enumerated) {
+      aResult.mSize = gradient->GetRadialSize().GetIntValue();
     } else {
-      NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+      NS_ASSERTION(gradient->GetRadialSize().GetUnit() == eCSSUnit_None,
                    "bad unit for radial shape");
       aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
     }
   } else {
-    NS_ASSERTION(gradient->mRadialShape.GetUnit() == eCSSUnit_None,
+    NS_ASSERTION(gradient->GetRadialShape().GetUnit() == eCSSUnit_None,
                  "bad unit for linear shape");
-    NS_ASSERTION(gradient->mRadialSize.GetUnit() == eCSSUnit_None,
+    NS_ASSERTION(gradient->GetRadialSize().GetUnit() == eCSSUnit_None,
                  "bad unit for linear size");
     aResult.mShape = NS_STYLE_GRADIENT_SHAPE_LINEAR;
     aResult.mSize = NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER;
-
-    aResult.mToCorner = gradient->mIsToCorner;
   }
+
+  aResult.mLegacySyntax = gradient->mIsLegacySyntax;
 
   // bg-position
   SetGradientCoord(gradient->mBgPos.mXValue, aPresContext, aContext,
@@ -890,7 +904,7 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
   // stops
   for (PRUint32 i = 0; i < gradient->mStops.Length(); i++) {
     nsStyleGradientStop stop;
-    nsCSSValueGradientStop &valueStop = gradient->mStops[i];
+    const nsCSSValueGradientStop &valueStop = gradient->mStops[i];
 
     if (!SetCoord(valueStop.mLocation, stop.mLocation,
                   nsStyleCoord(), SETCOORD_LPO,
@@ -6423,6 +6437,102 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               pos->mBoxSizing, canStoreInRuleTree,
               SETDSC_ENUMERATED, parentPos->mBoxSizing,
               NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
+
+#ifdef MOZ_FLEXBOX
+  // align-items: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForAlignItems(),
+              pos->mAlignItems, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentPos->mAlignItems,
+              NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE, 0, 0, 0, 0);
+
+  // align-self: enum, inherit, initial
+  // NOTE: align-self's initial value is the special keyword "auto", which is
+  // supposed to compute to our parent's computed value of "align-items".  So
+  // technically, "auto" itself is never a valid computed value for align-self,
+  // since it always computes to something else.  Despite that, we do actually
+  // store "auto" in nsStylePosition::mAlignSelf, as NS_STYLE_ALIGN_SELF_AUTO
+  // (and then resolve it as-necessary).  We do this because "auto" is the
+  // initial value for this property, so if we were to actually resolve it in
+  // nsStylePosition, we'd never be able to share any nsStylePosition structs
+  // in the rule tree, since their mAlignSelf values would depend on the parent
+  // style, by default.
+  if (aRuleData->ValueForAlignSelf()->GetUnit() == eCSSUnit_Inherit) {
+    // Special handling for "align-self: inherit", in case we're inheriting
+    // "align-self: auto", in which case we need to resolve the parent's "auto"
+    // and inherit that resolved value.
+    PRUint8 inheritedAlignSelf = parentPos->mAlignSelf;
+    if (inheritedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
+      if (parentPos == pos) {
+        // We're the root node. (If we weren't, COMPUTE_START_RESET would've
+        // given us a distinct parentPos, since we've got an 'inherit' value.)
+        // Nothing to inherit from --> just use default value.
+        inheritedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+      } else {
+        // Our parent's "auto" value should resolve to our grandparent's value
+        // for "align-items".  So, that's what we're supposed to inherit.
+        NS_ABORT_IF_FALSE(aContext->GetParent(),
+                          "we've got a distinct parent style-struct already, "
+                          "so we should have a parent style-context");
+        nsStyleContext* grandparentContext = aContext->GetParent()->GetParent();
+        if (!grandparentContext) {
+          // No grandparent --> our parent is the root node, so its
+          // "align-self: auto" computes to the default "align-items" value:
+          inheritedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+        } else {
+          // Normal case -- we have a grandparent.
+          // Its "align-items" value is what we should end up inheriting.
+          const nsStylePosition* grandparentPos =
+            grandparentContext->GetStylePosition();
+          inheritedAlignSelf = grandparentPos->mAlignItems;
+        }
+      }
+    }
+
+    pos->mAlignSelf = inheritedAlignSelf;
+    canStoreInRuleTree = false;
+  } else {
+    SetDiscrete(*aRuleData->ValueForAlignSelf(),
+                pos->mAlignSelf, canStoreInRuleTree,
+                SETDSC_ENUMERATED,
+                parentPos->mAlignSelf, // (unused -- we handled inherit above)
+                NS_STYLE_ALIGN_SELF_AUTO, // initial == auto
+                0, 0, 0, 0);
+  }
+
+  // flex-basis: auto, length, percent, enum, calc, inherit, initial
+  // (Note: The flags here should match those used for 'width' property above.)
+  SetCoord(*aRuleData->ValueForFlexBasis(), pos->mFlexBasis, parentPos->mFlexBasis,
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC,
+           aContext, mPresContext, canStoreInRuleTree);
+
+  // flex-direction: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForFlexDirection(),
+              pos->mFlexDirection, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentPos->mFlexDirection,
+              NS_STYLE_FLEX_DIRECTION_ROW, 0, 0, 0, 0);
+
+  // flex-grow: float, inherit, initial
+  SetFactor(*aRuleData->ValueForFlexGrow(),
+            pos->mFlexGrow, canStoreInRuleTree,
+            parentPos->mFlexGrow, 0.0f);
+
+  // flex-shrink: float, inherit, initial
+  SetFactor(*aRuleData->ValueForFlexShrink(),
+            pos->mFlexShrink, canStoreInRuleTree,
+            parentPos->mFlexShrink, 1.0f);
+
+  // order: integer, inherit, initial
+  SetDiscrete(*aRuleData->ValueForOrder(),
+              pos->mOrder, canStoreInRuleTree,
+              SETDSC_INTEGER, parentPos->mOrder,
+              NS_STYLE_ORDER_INITIAL, 0, 0, 0, 0);
+
+  // justify-content: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForJustifyContent(),
+              pos->mJustifyContent, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentPos->mJustifyContent,
+              NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
+#endif // MOZ_FLEXBOX
 
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();

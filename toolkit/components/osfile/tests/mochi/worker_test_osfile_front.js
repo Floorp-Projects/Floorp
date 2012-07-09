@@ -20,6 +20,7 @@ self.onmessage = function(msg) {
     test_copy_existing_file();
     test_read_write_file();
     test_move_file();
+    test_iter_dir();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -198,3 +199,63 @@ function test_move_file()
 }
 
 
+function test_iter_dir()
+{
+  ok(true, "test_iter_dir: Starting");
+
+  // Create a file, to be sure that it exists
+  let tmp_file_name = "test_osfile_front.tmp";
+  let tmp_file = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  tmp_file.close();
+
+  let parent = OS.File.curDir;
+  ok(true, "test_iter_dir: directory " + parent);
+  let iterator = new OS.File.DirectoryIterator(parent);
+  ok(true, "test_iter_dir: iterator created");
+  let encountered_tmp_file = false;
+  for (let entry in iterator) {
+    // Checking that |name| can be decoded properly
+    ok(true, "test_iter_dir: encountering entry " + entry.name);
+
+    if (entry.name == tmp_file_name) {
+      encountered_tmp_file = true;
+      isnot(entry.isDir, "test_iter_dir: The temporary file is not a directory");
+      isnot(entry.isLink, "test_iter_dir: The temporary file is not a link");
+    }
+
+    let file;
+    let success = true;
+    try {
+      file = OS.File.open(entry.path);
+    } catch (x) {
+      if (x.becauseNoSuchFile) {
+        success = false;
+      }
+    }
+    if (file) {
+      file.close();
+    }
+    ok(success, "test_iter_dir: Entry " + entry.path + " exists");
+
+    if (OS.Win) {
+      let year = new Date().getFullYear();
+      let creation = entry.winCreationTime;
+      ok(creation, "test_iter_dir: Windows creation date exists: " + creation);
+      ok(creation.getFullYear() >= year -  1 && creation.getFullYear() <= year, "test_iter_dir: consistent creation date");
+
+      let lastWrite = entry.winLastWriteTime;
+      ok(lastWrite, "test_iter_dir: Windows lastWrite date exists: " + lastWrite);
+      ok(lastWrite.getFullYear() >= year - 1 && lastWrite.getFullYear() <= year, "test_iter_dir: consistent lastWrite date");
+
+      let lastAccess = entry.winLastAccessTime;
+      ok(lastAccess, "test_iter_dir: Windows lastAccess date exists: " + lastAccess);
+      ok(lastAccess.getFullYear() >= year - 1 && lastAccess.getFullYear() <= year, "test_iter_dir: consistent lastAccess date");
+    }
+
+  }
+  ok(encountered_tmp_file, "test_iter_dir: We have found the temporary file");
+
+  ok(true, "test_iter_dir: Cleaning up");
+  iterator.close();
+  ok(true, "test_iter_dir: Complete");
+}

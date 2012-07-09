@@ -71,8 +71,9 @@ class Marionette(object):
     CONTEXT_CONTENT = 'content'
 
     def __init__(self, host='localhost', port=2828, bin=None, profile=None,
-                 emulator=None, emulatorBinary=None, connectToRunningEmulator=False,
-                 homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
+                 emulator=None, emulatorBinary=None, emulator_res='480x800',
+                 connectToRunningEmulator=False, homedir=None, baseurl=None,
+                 noWindow=False, logcat_dir=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -96,7 +97,8 @@ class Marionette(object):
                                      noWindow=self.noWindow,
                                      logcat_dir=self.logcat_dir,
                                      arch=emulator,
-                                     emulatorBinary=emulatorBinary)
+                                     emulatorBinary=emulatorBinary,
+                                     res=emulator_res)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())

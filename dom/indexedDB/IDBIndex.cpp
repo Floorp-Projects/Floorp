@@ -394,9 +394,9 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
 
 IDBIndex::IDBIndex()
 : mId(LL_MININT),
+  mKeyPath(0),
   mActorChild(nsnull),
   mActorParent(nsnull),
-  mKeyPath(0),
   mCachedKeyPath(JSVAL_VOID),
   mUnique(false),
   mMultiEntry(false),

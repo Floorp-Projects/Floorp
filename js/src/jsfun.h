@@ -178,6 +178,9 @@ struct JSFunction : public JSObject
     inline void setExtendedSlot(size_t which, const js::Value &val);
     inline const js::Value &getExtendedSlot(size_t which) const;
 
+    /* Constructs a new type for the function if necessary. */
+    bool setTypeForScriptedFunction(JSContext *cx, bool singleton = false);
+
   private:
     /*
      * These member functions are inherited from JSObject, but should never be applied to

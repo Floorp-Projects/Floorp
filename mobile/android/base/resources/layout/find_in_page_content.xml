@@ -6,6 +6,7 @@
               android:background="@drawable/address_bar_url"
               android:singleLine="true"
               android:textColor="#000000"
+              android:textCursorDrawable="@null"
               android:inputType="text"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"

@@ -791,7 +791,7 @@ ScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy_, jsi
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), fval.address()) &&
            Trap1(cx, handler, fval, id, value.address()) &&
-           ((value.reference().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+           ((value.get().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), value) &&
              ParsePropertyDescriptorObject(cx, proxy, id, value, desc)));
 }
@@ -806,7 +806,7 @@ ScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy_, 
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), fval.address()) &&
            Trap1(cx, handler, fval, id, value.address()) &&
-           ((value.reference().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+           ((value.get().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), value) &&
              ParsePropertyDescriptorObject(cx, proxy, id, value, desc)));
 }
@@ -1221,34 +1221,34 @@ proxy_innerObject(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
-                    JSProperty **propp)
+proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     bool found;
     if (!Proxy::has(cx, obj, id, &found))
         return false;
 
     if (found) {
-        *propp = (JSProperty *)0x1;
-        *objp = obj;
+        MarkNonNativePropertyFound(obj, propp);
+        objp.set(obj);
     } else {
-        *objp = NULL;
-        *propp = NULL;
+        objp.set(NULL);
+        propp.set(NULL);
     }
     return true;
 }
 
 static JSBool
-proxy_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
-                     JSProperty **propp)
+proxy_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                     MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
-                    JSProperty **propp)
+proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
@@ -1257,7 +1257,8 @@ proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **
 }
 
 static JSBool
-proxy_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
+proxy_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                    MutableHandleObject objp, MutableHandleShape propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);
@@ -1477,18 +1478,11 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
         JSObject *referent = &GetProxyPrivate(obj).toObject();
         if (referent->compartment() != obj->compartment()) {
             /*
-             * Assert that this proxy is tracked in the wrapper map. Normally,
-             * the wrapped object will be the key in the wrapper map. However,
-             * sometimes when wrapping Location objects, the wrapped object is
-             * not the key. In that case, we unwrap to find the key.
+             * Assert that this proxy is tracked in the wrapper map. We maintain
+             * the invariant that the wrapped object is the key in the wrapper map.
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = obj->compartment()->crossCompartmentWrappers.lookup(key);
-            if (!p) {
-                key = ObjectValue(*UnwrapObject(referent));
-                p = obj->compartment()->crossCompartmentWrappers.lookup(key);
-                JS_ASSERT(p.found());
-            }
             JS_ASSERT(p->value.get() == ObjectValue(*obj));
         }
     }

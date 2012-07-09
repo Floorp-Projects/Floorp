@@ -14,6 +14,7 @@ self.onmessage = function(msg) {
     log("ignored message "+JSON.stringify(msg.data));
   };
   try {
+    test_name();
     test_xul();
   } catch (x) {
     log("Catching error: " + x);
@@ -38,21 +39,23 @@ function isnot(a, b, description) {
   send({kind: "isnot", a: a, b:b, description:description});
 }
 
-// Test that OS.Constants.Sys.libxulpath lets us open libxul
+// Test that OS.Constants.Sys.Name is defined
+function test_name() {
+  isnot(null, OS.Constants.Sys.Name, "OS.Constants.Sys.Name is defined");
+}
+
+// Test that OS.Constants.Path.libxul lets us open libxul
 function test_xul() {
-  let success;
   let lib;
-  isnot(null, OS.Constants.Sys.libxulpath, "libxulpath is defined");
+  isnot(null, OS.Constants.Path.libxul, "libxul is defined");
   try {
-    lib = ctypes.open(OS.Constants.Sys.libxulpath);
+    lib = ctypes.open(OS.Constants.Path.libxul);
     lib.declare("DumpJSStack", ctypes.default_abi, ctypes.void_t);
-    success = true;
   } catch (x) {
-    success = false;
-    log("Could not open libxul " + x);
+    ok(false, "test_xul: Could not open libxul: " + x);
   }
   if (lib) {
     lib.close();
   }
-  ok(success, "test_xul: opened libxul successfully");
+  ok(true, "test_xul: opened libxul successfully");
 }

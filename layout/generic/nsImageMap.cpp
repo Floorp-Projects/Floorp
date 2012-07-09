@@ -981,7 +981,9 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
           area->HasFocus(focus);
           //Now invalidate the rect
           if (mImageFrame) {
-            mImageFrame->InvalidateFrame();
+            nsRect dmgRect;
+            area->GetRect(mImageFrame, dmgRect);
+            mImageFrame->Invalidate(dmgRect);
           }
           break;
         }

@@ -105,8 +105,8 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p);
  *  - Adding this to a public function _will_ break binary compatibility.
  *  - This may be used on virtual functions but you must ensure it is applied
  *    to all implementations - the compiler will _not_ warn but it will crash.
- *  - This has no effect for inline functions or functions which take a
- *    variable number of arguments.
+ *  - This has no effect for functions which take a variable number of
+ *    arguments.
  *  - __fastcall on windows should not be applied to class
  *    constructors/destructors - use the NS_CONSTRUCTOR_FASTCALL macro for
  *    constructors/destructors.

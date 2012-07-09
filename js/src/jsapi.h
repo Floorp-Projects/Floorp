@@ -1232,6 +1232,96 @@ class AutoScriptVector : public AutoVectorRooter<JSScript *>
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class CallReceiver
+{
+  protected:
+#ifdef DEBUG
+    mutable bool usedRval_;
+    void setUsedRval() const { usedRval_ = true; }
+    void clearUsedRval() const { usedRval_ = false; }
+#else
+    void setUsedRval() const {}
+    void clearUsedRval() const {}
+#endif
+    Value *argv_;
+  public:
+    friend CallReceiver CallReceiverFromVp(Value *);
+    friend CallReceiver CallReceiverFromArgv(Value *);
+    Value *base() const { return argv_ - 2; }
+    JSObject &callee() const { JS_ASSERT(!usedRval_); return argv_[-2].toObject(); }
+    Value &calleev() const { JS_ASSERT(!usedRval_); return argv_[-2]; }
+    Value &thisv() const { return argv_[-1]; }
+
+    Value &rval() const {
+        setUsedRval();
+        return argv_[-2];
+    }
+
+    Value *spAfterCall() const {
+        setUsedRval();
+        return argv_ - 1;
+    }
+
+    void setCallee(Value calleev) {
+        clearUsedRval();
+        this->calleev() = calleev;
+    }
+};
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromArgv(Value *argv)
+{
+    CallReceiver receiver;
+    receiver.clearUsedRval();
+    receiver.argv_ = argv;
+    return receiver;
+}
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromVp(Value *vp)
+{
+    return CallReceiverFromArgv(vp + 2);
+}
+
+/*****************************************************************************/
+
+class CallArgs : public CallReceiver
+{
+  protected:
+    unsigned argc_;
+  public:
+    friend CallArgs CallArgsFromVp(unsigned, Value *);
+    friend CallArgs CallArgsFromArgv(unsigned, Value *);
+    friend CallArgs CallArgsFromSp(unsigned, Value *);
+    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value *array() const { return argv_; }
+    unsigned length() const { return argc_; }
+    Value *end() const { return argv_ + argc_; }
+    bool hasDefined(unsigned i) const { return i < argc_ && !argv_[i].isUndefined(); }
+};
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromArgv(unsigned argc, Value *argv)
+{
+    CallArgs args;
+    args.clearUsedRval();
+    args.argv_ = argv;
+    args.argc_ = argc;
+    return args;
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromVp(unsigned argc, Value *vp)
+{
+    return CallArgsFromArgv(argc, vp + 2);
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromSp(unsigned argc, Value *sp)
+{
+    return CallArgsFromArgv(argc, sp - argc);
+}
+
 }  /* namespace JS */
 
 /************************************************************************/
@@ -1299,6 +1389,7 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 
 typedef JS::Handle<JSObject*> JSHandleObject;
 typedef JS::Handle<jsid> JSHandleId;
+typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
 
 #else
 
@@ -1308,10 +1399,14 @@ typedef JS::Handle<jsid> JSHandleId;
  */
 
 typedef struct { JSObject **_; } JSHandleObject;
+typedef struct { JSObject **_; } JSMutableHandleObject;
 typedef struct { jsid *_; } JSHandleId;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
+
+JSBool JS_CreateMutableHandleObject(JSContext *cx, JSObject *obj, JSMutableHandleObject *phandle);
+void JS_DestroyMutableHandleObject(JSContext *cx, JSMutableHandleObject handle);
 
 JSBool JS_CreateHandleId(JSContext *cx, jsid id, JSHandleId *phandle);
 void JS_DestroyHandleId(JSContext *cx, JSHandleId handle);
@@ -1414,7 +1509,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewResolveOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                   JSObject **objp);
+                   JSMutableHandleObject objp);
 
 /*
  * Convert obj to the given type, returning true with the resulting value in
@@ -2957,6 +3052,13 @@ JS_GetObjectPrototype(JSContext *cx, JSObject *forObj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
+
+/*
+ * May return NULL, if |c| never had a global (e.g. the atoms compartment), or
+ * if |c|'s global has been collected.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx);

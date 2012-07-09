@@ -51,7 +51,6 @@
 #include "prmjtime.h"
 
 #include "jsoptparse.h"
-#include "jsworkers.h"
 #include "jsheaptools.h"
 
 #include "jsinferinlines.h"
@@ -157,10 +156,6 @@ bool gQuitting = false;
 bool gGotError = false;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
-#ifdef JS_THREADSAFE
-JSObject *gWorkers = NULL;
-js::workers::ThreadPool *gWorkerThreadPool = NULL;
-#endif
 
 static bool reportWarnings = true;
 static bool compileOnly = false;
@@ -1207,10 +1202,6 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
     JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/ i", &gExitCode);
 
     gQuitting = true;
-#ifdef JS_THREADSAFE
-    if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
-#endif
     return false;
 }
 
@@ -2489,7 +2480,7 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
 
 static JSBool
 sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                JSObject **objp)
+                MutableHandleObject objp)
 {
     jsval v;
     JSBool b, resolved;
@@ -2502,11 +2493,11 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return false;
         if (resolved) {
-            *objp = obj;
+            objp.set(obj);
             return true;
         }
     }
-    *objp = NULL;
+    objp.set(NULL);
     return true;
 }
 
@@ -2687,21 +2678,20 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  */
 static JSBool
 CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
-             unsigned lookupFlags, JSObject **objp)
+             unsigned lookupFlags, MutableHandleObject objp)
 {
-    JSProperty *prop;
+    RootedShape shape(cx);
     PropertyDescriptor desc;
     unsigned propFlags = 0;
-    JSObject *obj2;
+    RootedObject obj2(cx);
 
-    *objp = NULL;
+    objp.set(NULL);
     if (referent->isNative()) {
-        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop))
+        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &shape))
             return false;
         if (obj2 != referent)
             return true;
 
-        const Shape *shape = (Shape *) prop;
         if (shape->hasSlot()) {
             desc.value = referent->nativeGetSlot(shape->slot());
         } else {
@@ -2724,9 +2714,9 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         if (!desc.obj)
             return true;
     } else {
-        if (!referent->lookupGeneric(cx, id, objp, &prop))
+        if (!referent->lookupGeneric(cx, id, objp, &shape))
             return false;
-        if (*objp != referent)
+        if (objp != referent)
             return true;
         if (!referent->getGeneric(cx, id, &desc.value) ||
             !referent->getGenericAttributes(cx, id, &desc.attrs)) {
@@ -2738,13 +2728,14 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         desc.shortid = 0;
     }
 
-    *objp = obj;
+    objp.set(obj);
     return !!DefineNativeProperty(cx, obj, id, desc.value, desc.getter, desc.setter,
                                   desc.attrs, propFlags, desc.shortid);
 }
 
 static JSBool
-resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
+resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                 MutableHandleObject objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
     Rooted<JSObject*> vobj(cx, &v.toObject());
@@ -2759,7 +2750,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
 
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
-    JSObject *ignore;
+    RootedObject ignore(cx);
     for (size_t i = 0; ok && i < ida.length(); i++) {
         Rooted<jsid> id(cx, ida[i]);
         ok = CopyProperty(cx, obj, referent, id, JSRESOLVE_QUALIFIED, &ignore);
@@ -3035,10 +3026,6 @@ CancelExecution(JSRuntime *rt)
     gCanceled = true;
     if (gExitCode == 0)
         gExitCode = EXITCODE_TIMEOUT;
-#ifdef JS_THREADSAFE
-    if (gWorkerThreadPool)
-        js::workers::terminateAll(gWorkerThreadPool);
-#endif
     JS_TriggerOperationCallback(rt);
 
     static const char msg[] = "Script runs for too long, terminating.\n";
@@ -3424,6 +3411,29 @@ EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
+{
+    jsval arg = JS_ARGV(cx, vp)[0];
+    if (argc == 0 || !JSVAL_IS_BOOLEAN(arg)) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "enableSPSProfilingAssertions");
+        return false;
+    }
+
+    static ProfileEntry stack[1000];
+    static uint32_t stack_size = 0;
+
+    if (JSVAL_TO_BOOLEAN(arg))
+        SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
+    else
+        SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 0);
+    cx->runtime->spsProfiler.enableSlowAssertions(JSVAL_TO_BOOLEAN(arg));
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
+static JSBool
 GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
@@ -3723,6 +3733,11 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
 
+    JS_FN_HELP("enableSPSProfilingAssertions", EnableSPSProfilingAssertions, 1, 0,
+"enableProfilingAssertions(enabled)",
+"  Enables or disables the assertions related to SPS profiling. This is fairly\n"
+"  expensive, so it shouldn't be enabled normally."),
+
     JS_FS_END
 };
 #ifdef MOZ_PROFILING
@@ -3961,7 +3976,7 @@ its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 
 static JSBool
 its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     if (its_noisy) {
         IdStringifier idString(cx, id);
@@ -4275,7 +4290,7 @@ global_enumerate(JSContext *cx, HandleObject obj)
 
 static JSBool
 global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-               JSObject **objp)
+               MutableHandleObject objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     JSBool resolved;
@@ -4283,7 +4298,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
         return false;
     if (resolved) {
-        *objp = obj;
+        objp.set(obj);
         return true;
     }
 #endif
@@ -4330,7 +4345,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                         JSPROP_ENUMERATE);
                 ok = (fun != NULL);
                 if (ok)
-                    *objp = obj;
+                    objp.set(obj);
                 break;
             }
         }
@@ -4424,7 +4439,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
 
 static JSBool
 env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     JSString *valstr;
     const char *name, *value;
@@ -4446,7 +4461,7 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                NULL, NULL, JSPROP_ENUMERATE)) {
             return false;
         }
-        *objp = obj;
+        objp.set(obj);
     }
     return true;
 }
@@ -4700,28 +4715,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         return 1;
     JS_SetPrivate(envobj, envp);
 
-#ifdef JS_THREADSAFE
-    class ShellWorkerHooks : public js::workers::WorkerHooks {
-    public:
-        JSObject *newGlobalObject(JSContext *cx) {
-            return NewGlobalObject(cx);
-        }
-    };
-    ShellWorkerHooks hooks;
-    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
-        (gWorkerThreadPool = js::workers::init(cx, &hooks, glob, &gWorkers)) == NULL) {
-        return 1;
-    }
-#endif
-
     int result = ProcessArgs(cx, glob, op);
-
-#ifdef JS_THREADSAFE
-    js::workers::finish(cx, gWorkerThreadPool);
-    JS_RemoveObjectRoot(cx, &gWorkers);
-    if (result == 0)
-        result = gExitCode;
-#endif
 
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);

@@ -196,7 +196,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     IterateCompartmentsArenasCells(rt, rtStats, StatsCompartmentCallback,
                                    StatsArenaCallback, StatsCellCallback);
 
-    // Take the "explcit/js/runtime/" measurements.
+    // Take the "explicit/js/runtime/" measurements.
     rt->sizeOfIncludingThis(rtStats->mallocSizeOf, &rtStats->runtime);
 
     rtStats->gcHeapGcThings = 0;

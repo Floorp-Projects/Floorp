@@ -95,7 +95,8 @@ public:
                                     nsFrameList&    aFrameList);
 
   NS_HIDDEN_(nsresult) RemoveFrame(ChildListID     aListID,
-                                   nsIFrame*       aOldFrame);
+                                   nsIFrame*       aOldFrame,
+                                   bool            aInvalidate = true);
 
   /*
    * Notification that a frame is about to be destroyed. This allows any

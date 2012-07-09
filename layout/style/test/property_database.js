@@ -736,6 +736,173 @@ var gCSSProperties = {
 		],
 		invalid_values: [ "20", "-1px", "50%" ]
 	},
+/* XXXdholbert In builds with MOZ_FLEXBOX enabled, this should be uncommented.
+   (This would be #ifdef MOZ_FLEXBOX, if that worked in JS files.)
+	"-moz-align-items": {
+		domProp: "MozAlignItems",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch" ],
+		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
+		invalid_values: [ "space-between", "abc", "30px" ]
+	},
+	"-moz-align-self": {
+		domProp: "MozAlignSelf",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		// (Assuming defaults on the parent, 'auto' will compute to 'stretch'.)
+		initial_values: [ "auto", "stretch" ],
+		other_values: [ "flex-start", "flex-end", "center", "baseline" ],
+		invalid_values: [ "space-between", "abc", "30px" ]
+	},
+	"-moz-flex": {
+		domProp: "MozFlex",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"-moz-flex-grow",
+			"-moz-flex-shrink",
+			"-moz-flex-basis"
+		],
+		initial_values: [ "0 1 auto", "auto 0 1", "0 auto", "auto 0" ],
+		other_values: [
+			"none",
+			"1",
+			"0",
+			"0 1",
+			"0.5",
+			"1.2 3.4",
+			"0 0 0px",
+			"0px 0 0",
+			"5px 0 0",
+			"2 auto",
+			"auto 4",
+			"auto 5.6 7.8",
+			"-moz-max-content",
+			"1 -moz-max-content",
+			"1 2 -moz-max-content",
+			"-moz-max-content 1",
+			"-moz-max-content 1 2",
+			"-0"
+		],
+		invalid_values: [
+			"0 0 0",
+			"1 2px 3",
+			"1 auto 3",
+			"1px 2 3px",
+			"1px 2 3 4px",
+			"-1",
+			"1 -1"
+		]
+	},
+	"-moz-flex-basis": {
+		domProp: "MozFlexBasis",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ " auto" ],
+        // NOTE: This is cribbed directly from the "width" chunk, since this
+        // property takes the exact same values as width (albeit with
+        // different semantics on 'auto').
+        // XXXdholbert (Maybe these should get separated out into
+        // a reusable array defined at the top of this file?)
+		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+			// valid calc() values
+			"-moz-calc(-2px)",
+			"-moz-calc(2px)",
+			"-moz-calc(50%)",
+			"-moz-calc(50% + 2px)",
+			"-moz-calc( 50% + 2px)",
+			"-moz-calc(50% + 2px )",
+			"-moz-calc( 50% + 2px )",
+			"-moz-calc(50% - -2px)",
+			"-moz-calc(2px - -50%)",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3 *25px)",
+			"-moz-calc(3 * 25px)",
+			"-moz-calc(3* 25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(25px *3)",
+			"-moz-calc(25px* 3)",
+			"-moz-calc(25px * 3)",
+			"-moz-calc(3*25px + 50%)",
+			"-moz-calc(50% - 3em + 2px)",
+			"-moz-calc(50% - (3em + 2px))",
+			"-moz-calc((50% - 3em) + 2px)",
+			"-moz-calc(2em)",
+			"-moz-calc(50%)",
+			"-moz-calc(50px/2)",
+			"-moz-calc(50px/(2 - 1))"
+		],
+		invalid_values: [ "none", "-2px",
+			// invalid calc() values
+			"-moz-calc(50%+ 2px)",
+			"-moz-calc(50% +2px)",
+			"-moz-calc(50%+2px)",
+			"-moz-min()",
+			"-moz-calc(min())",
+			"-moz-max()",
+			"-moz-calc(max())",
+			"-moz-min(5px)",
+			"-moz-calc(min(5px))",
+			"-moz-max(5px)",
+			"-moz-calc(max(5px))",
+			"-moz-min(5px,2em)",
+			"-moz-calc(min(5px,2em))",
+			"-moz-max(5px,2em)",
+			"-moz-calc(max(5px,2em))",
+			"-moz-calc(50px/(2 - 2))",
+			// If we ever support division by values, which is
+			// complicated for the reasons described in
+			// http://lists.w3.org/Archives/Public/www-style/2010Jan/0007.html
+			// , we should support all 4 of these as described in
+			// http://lists.w3.org/Archives/Public/www-style/2009Dec/0296.html
+			"-moz-calc((3em / 100%) * 3em)",
+			"-moz-calc(3em / 100% * 3em)",
+			"-moz-calc(3em * (3em / 100%))",
+			"-moz-calc(3em * 3em / 100%)"
+		]
+	},
+	"-moz-flex-direction": {
+		domProp: "MozFlexDirection",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "row" ],
+		other_values: [ "row-reverse", "column", "column-reverse" ],
+		invalid_values: [ "10px", "30%", "justify", "column wrap" ]
+	},
+	"-moz-flex-grow": {
+		domProp: "MozFlexGrow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0" ],
+		other_values: [ "3", "1", "1.0", "2.5", "123" ],
+		invalid_values: [ "0px", "-5", "1%", "3em", "stretch", "auto" ]
+	},
+	"-moz-flex-shrink": {
+		domProp: "MozFlexShrink",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "1" ],
+		other_values: [ "3", "0", "0.0", "2.5", "123" ],
+		invalid_values: [ "0px", "-5", "1%", "3em", "stretch", "auto" ]
+	},
+	"-moz-order": {
+		domProp: "MozOrder",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0" ],
+		other_values: [ "1", "99999", "-1", "-50" ],
+		invalid_values: [ "0px", "1.0", "1.", "1%", "0.2", "3em", "stretch" ]
+	},
+	"-moz-justify-content": {
+		domProp: "MozJustifyContent",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "flex-start" ],
+		other_values: [ "flex-end", "center", "space-between", "space-around" ],
+		invalid_values: [ "baseline", "stretch", "30px", "5%" ]
+	},
+*/
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
 		inherited: false,
@@ -1219,6 +1386,34 @@ var gCSSProperties = {
 		"-moz-element(#a-1)",
 		"-moz-element(#a\\:1)",
 		/* gradient torture test */
+		"linear-gradient(red, blue)",
+		"linear-gradient(red, yellow, blue)",
+		"linear-gradient(red 1px, yellow 20%, blue 24em, green)",
+		"linear-gradient(red, yellow, green, blue 50%)",
+		"linear-gradient(red -50%, yellow -25%, green, blue)",
+		"linear-gradient(red -99px, yellow, green, blue 120%)",
+		"linear-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
+		"linear-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
+
+		"linear-gradient(to top, red, blue)",
+		"linear-gradient(to bottom, red, blue)",
+		"linear-gradient(to left, red, blue)",
+		"linear-gradient(to right, red, blue)",
+		"linear-gradient(to top left, red, blue)",
+		"linear-gradient(to top right, red, blue)",
+		"linear-gradient(to bottom left, red, blue)",
+		"linear-gradient(to bottom right, red, blue)",
+		"linear-gradient(to left top, red, blue)",
+		"linear-gradient(to left bottom, red, blue)",
+		"linear-gradient(to right top, red, blue)",
+		"linear-gradient(to right bottom, red, blue)",
+
+		"linear-gradient(-33deg, red, blue)",
+		"linear-gradient(30grad, red, blue)",
+		"linear-gradient(10deg, red, blue)",
+		"linear-gradient(1turn, red, blue)",
+		"linear-gradient(.414rad, red, blue)",
+
 		"-moz-linear-gradient(red, blue)",
 		"-moz-linear-gradient(red, yellow, blue)",
 		"-moz-linear-gradient(red 1px, yellow 20%, blue 24em, green)",
@@ -1262,6 +1457,51 @@ var gCSSProperties = {
 		"-moz-linear-gradient(10deg 20px, red, blue)",
 		"-moz-linear-gradient(1turn 20px, red, blue)",
 		"-moz-linear-gradient(.414rad bottom, red, blue)",
+
+		"radial-gradient(red, blue)",
+		"radial-gradient(red, yellow, blue)",
+		"radial-gradient(red 1px, yellow 20%, blue 24em, green)",
+		"radial-gradient(red, yellow, green, blue 50%)",
+		"radial-gradient(red -50%, yellow -25%, green, blue)",
+		"radial-gradient(red -99px, yellow, green, blue 120%)",
+		"radial-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
+
+		"radial-gradient(0 0, red, blue)",
+		"radial-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
+
+		"radial-gradient(at top left, red, blue)",
+		"radial-gradient(at 20% bottom, red, blue)",
+		"radial-gradient(at center 20%, red, blue)",
+		"radial-gradient(at left 35px, red, blue)",
+		"radial-gradient(at 10% 10em, red, blue)",
+		"radial-gradient(at 44px top, red, blue)",
+		"radial-gradient(at 0 0, red, blue)",
+
+		"radial-gradient(farthest-corner, red, blue)",
+		"radial-gradient(circle, red, blue)",
+		"radial-gradient(ellipse closest-corner, red, blue)",
+		"radial-gradient(closest-corner ellipse, red, blue)",
+
+		"radial-gradient(43px, red, blue)",
+		"radial-gradient(43px 43px, red, blue)",
+		"radial-gradient(50% 50%, red, blue)",
+		"radial-gradient(43px 50%, red, blue)",
+		"radial-gradient(50% 43px, red, blue)",
+		"radial-gradient(circle 43px, red, blue)",
+		"radial-gradient(ellipse 43px 43px, red, blue)",
+		"radial-gradient(ellipse 50% 50%, red, blue)",
+		"radial-gradient(ellipse 43px 50%, red, blue)",
+		"radial-gradient(ellipse 50% 43px, red, blue)",
+
+		"radial-gradient(farthest-corner at top left, red, blue)",
+		"radial-gradient(ellipse closest-corner at 45px, red, blue)",
+		"radial-gradient(circle farthest-side at 45px, red, blue)",
+		"radial-gradient(closest-side ellipse at 50%, red, blue)",
+		"radial-gradient(farthest-corner circle at 4em, red, blue)",
+
+		"radial-gradient(30% 40% at top left, red, blue)",
+		"radial-gradient(50px 60px at 15% 20%, red, blue)",
+		"radial-gradient(7em 8em at 45px, red, blue)",
 
 		"-moz-radial-gradient(red, blue)",
 		"-moz-radial-gradient(red, yellow, blue)",
@@ -1363,45 +1603,28 @@ var gCSSProperties = {
 		"-moz-repeating-radial-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
 		"-moz-repeating-radial-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
 
-		"-moz-repeating-radial-gradient(top left, red, blue)",
-		"-moz-repeating-radial-gradient(0 0, red, blue)",
-		"-moz-repeating-radial-gradient(20% bottom, red, blue)",
-		"-moz-repeating-radial-gradient(center 20%, red, blue)",
-		"-moz-repeating-radial-gradient(left 35px, red, blue)",
-		"-moz-repeating-radial-gradient(10% 10em, red, blue)",
-		"-moz-repeating-radial-gradient(44px top, red, blue)",
+		"repeating-radial-gradient(at top left, red, blue)",
+		"repeating-radial-gradient(at 0 0, red, blue)",
+		"repeating-radial-gradient(at 20% bottom, red, blue)",
+		"repeating-radial-gradient(at center 20%, red, blue)",
+		"repeating-radial-gradient(at left 35px, red, blue)",
+		"repeating-radial-gradient(at 10% 10em, red, blue)",
+		"repeating-radial-gradient(at 44px top, red, blue)",
 
-		"-moz-repeating-radial-gradient(top left 45deg, red, blue)",
-		"-moz-repeating-radial-gradient(20% bottom -300deg, red, blue)",
-		"-moz-repeating-radial-gradient(center 20% 1.95929rad, red, blue)",
-		"-moz-repeating-radial-gradient(left 35px 30grad, red, blue)",
-		"-moz-repeating-radial-gradient(10% 10em 99999deg, red, blue)",
-		"-moz-repeating-radial-gradient(44px top -33deg, red, blue)",
-
-		"-moz-repeating-radial-gradient(-33deg, red, blue)",
-		"-moz-repeating-radial-gradient(30grad left 35px, red, blue)",
-		"-moz-repeating-radial-gradient(10deg 20px, red, blue)",
-		"-moz-repeating-radial-gradient(.414rad bottom, red, blue)",
-
-		"-moz-repeating-radial-gradient(cover, red, blue)",
+		"-moz-repeating-radial-gradient(farthest-corner, red, blue)",
 		"-moz-repeating-radial-gradient(circle, red, blue)",
 		"-moz-repeating-radial-gradient(ellipse closest-corner, red, blue)",
-		"-moz-repeating-radial-gradient(farthest-side circle, red, blue)",
 
-		"-moz-repeating-radial-gradient(top left, cover, red, blue)",
-		"-moz-repeating-radial-gradient(15% 20%, circle, red, blue)",
-		"-moz-repeating-radial-gradient(45px, ellipse closest-corner, red, blue)",
-		"-moz-repeating-radial-gradient(45px, farthest-side circle, red, blue)",
+		"repeating-radial-gradient(farthest-corner at top left, red, blue)",
+		"repeating-radial-gradient(closest-corner ellipse at 45px, red, blue)",
+		"repeating-radial-gradient(farthest-side circle at 45px, red, blue)",
+		"repeating-radial-gradient(ellipse closest-side at 50%, red, blue)",
+		"repeating-radial-gradient(circle farthest-corner at 4em, red, blue)",
 
-		"-moz-repeating-radial-gradient(99deg, cover, red, blue)",
-		"-moz-repeating-radial-gradient(-1.2345rad, circle, red, blue)",
-		"-moz-repeating-radial-gradient(399grad, ellipse closest-corner, red, blue)",
-		"-moz-repeating-radial-gradient(399grad, farthest-side circle, red, blue)",
+		"repeating-radial-gradient(30% 40% at top left, red, blue)",
+		"repeating-radial-gradient(50px 60px at 15% 20%, red, blue)",
+		"repeating-radial-gradient(7em 8em at 45px, red, blue)",
 
-		"-moz-repeating-radial-gradient(top left 99deg, cover, red, blue)",
-		"-moz-repeating-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
-		"-moz-repeating-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
-		"-moz-repeating-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
 		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 2, 10, 10, 2)",
 		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10%, 50%, 30%, 0%)",
 		"-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), 10, 50%, 30%, 0)",
@@ -1462,6 +1685,45 @@ var gCSSProperties = {
 			"-moz-radial-gradient(10deg, contain,, red, blue)",
 			"-moz-radial-gradient(contain contain, red, blue)",
 			"-moz-radial-gradient(ellipse circle, red, blue)",
+			"-moz-radial-gradient(to top left, red, blue)",
+			"-moz-radial-gradient(center, 10%, red, blue)",
+			"-moz-radial-gradient(5rad, 20px, red, blue)",
+			"-moz-radial-gradient(40%, -100px -10%, red, blue)",
+
+			"-moz-radial-gradient(at top left to cover, red, blue)",
+			"-moz-radial-gradient(at 15% 20% circle, red, blue)",
+
+			"-moz-radial-gradient(to cover, red, blue)",
+			"-moz-radial-gradient(to contain, red, blue)",
+			"-moz-radial-gradient(to closest-side circle, red, blue)",
+			"-moz-radial-gradient(to farthest-corner ellipse, red, blue)",
+
+			"-moz-radial-gradient(ellipse at 45px closest-corner, red, blue)",
+			"-moz-radial-gradient(circle at 45px farthest-side, red, blue)",
+			"-moz-radial-gradient(ellipse 45px, closest-side, red, blue)",
+			"-moz-radial-gradient(circle 45px, farthest-corner, red, blue)",
+			"-moz-radial-gradient(ellipse, ellipse closest-side, red, blue)",
+			"-moz-radial-gradient(circle, circle farthest-corner, red, blue)",
+
+			"-moz-radial-gradient(99deg to farthest-corner, red, blue)",
+			"-moz-radial-gradient(-1.2345rad circle, red, blue)",
+			"-moz-radial-gradient(ellipse 399grad to closest-corner, red, blue)",
+			"-moz-radial-gradient(circle 399grad to farthest-side, red, blue)",
+
+			"-moz-radial-gradient(at top left 99deg, to farthest-corner, red, blue)",
+			"-moz-radial-gradient(circle at 15% 20% -1.2345rad, red, blue)",
+			"-moz-radial-gradient(to top left at 30% 40%, red, blue)",
+			"-moz-radial-gradient(ellipse at 45px 399grad, to closest-corner, red, blue)",
+			"-moz-radial-gradient(at 45px 399grad to farthest-side circle, red, blue)",
+
+			"-moz-radial-gradient(to 50%, red, blue)",
+			"-moz-radial-gradient(circle to 50%, red, blue)",
+			"-moz-radial-gradient(circle to 43px 43px, red, blue)",
+			"-moz-radial-gradient(circle to 50% 50%, red, blue)",
+			"-moz-radial-gradient(circle to 43px 50%, red, blue)",
+			"-moz-radial-gradient(circle to 50% 43px, red, blue)",
+			"-moz-radial-gradient(ellipse to 43px, red, blue)",
+			"-moz-radial-gradient(ellipse to 50%, red, blue)",
 
 			"-moz-linear-gradient(to 0 0, red, blue)",
 			"-moz-linear-gradient(to 20% bottom, red, blue)",
@@ -1517,7 +1779,89 @@ var gCSSProperties = {
 			"-moz-repeating-linear-gradient(to top top, red, blue)",
 			"-moz-repeating-linear-gradient(to bottom bottom, red, blue)",
 			"-moz-repeating-linear-gradient(to left left, red, blue)",
-			"-moz-repeating-linear-gradient(to right right, red, blue)" ]
+			"-moz-repeating-linear-gradient(to right right, red, blue)",
+
+			"-moz-repeating-radial-gradient(to top left at 30% 40%, red, blue)",
+			"-moz-repeating-radial-gradient(ellipse at 45px closest-corner, red, blue)",
+			"-moz-repeating-radial-gradient(circle at 45px farthest-side, red, blue)",
+
+			/* Valid only when prefixed */
+			"linear-gradient(top left, red, blue)",
+			"linear-gradient(0 0, red, blue)",
+			"linear-gradient(20% bottom, red, blue)",
+			"linear-gradient(center 20%, red, blue)",
+			"linear-gradient(left 35px, red, blue)",
+			"linear-gradient(10% 10em, red, blue)",
+			"linear-gradient(44px top, red, blue)",
+
+			"linear-gradient(top left 45deg, red, blue)",
+			"linear-gradient(20% bottom -300deg, red, blue)",
+			"linear-gradient(center 20% 1.95929rad, red, blue)",
+			"linear-gradient(left 35px 30grad, red, blue)",
+			"linear-gradient(left 35px 0.1turn, red, blue)",
+			"linear-gradient(10% 10em 99999deg, red, blue)",
+			"linear-gradient(44px top -33deg, red, blue)",
+
+			"linear-gradient(30grad left 35px, red, blue)",
+			"linear-gradient(10deg 20px, red, blue)",
+			"linear-gradient(1turn 20px, red, blue)",
+			"linear-gradient(.414rad bottom, red, blue)",
+
+			"radial-gradient(top left 45deg, red, blue)",
+			"radial-gradient(20% bottom -300deg, red, blue)",
+			"radial-gradient(center 20% 1.95929rad, red, blue)",
+			"radial-gradient(left 35px 30grad, red, blue)",
+			"radial-gradient(10% 10em 99999deg, red, blue)",
+			"radial-gradient(44px top -33deg, red, blue)",
+
+			"radial-gradient(-33deg, red, blue)",
+			"radial-gradient(30grad left 35px, red, blue)",
+			"radial-gradient(10deg 20px, red, blue)",
+			"radial-gradient(.414rad bottom, red, blue)",
+
+			"radial-gradient(cover, red, blue)",
+			"radial-gradient(ellipse contain, red, blue)",
+			"radial-gradient(cover circle, red, blue)",
+
+			"radial-gradient(top left, cover, red, blue)",
+			"radial-gradient(15% 20%, circle, red, blue)",
+			"radial-gradient(45px, ellipse closest-corner, red, blue)",
+			"radial-gradient(45px, farthest-side circle, red, blue)",
+
+			"radial-gradient(99deg, cover, red, blue)",
+			"radial-gradient(-1.2345rad, circle, red, blue)",
+			"radial-gradient(399grad, ellipse closest-corner, red, blue)",
+			"radial-gradient(399grad, farthest-side circle, red, blue)",
+
+			"radial-gradient(top left 99deg, cover, red, blue)",
+			"radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
+			"radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
+			"radial-gradient(45px 399grad, farthest-side circle, red, blue)",
+
+			/* Valid only when unprefixed */
+			"-moz-radial-gradient(at top left, red, blue)",
+			"-moz-radial-gradient(at 20% bottom, red, blue)",
+			"-moz-radial-gradient(at center 20%, red, blue)",
+			"-moz-radial-gradient(at left 35px, red, blue)",
+			"-moz-radial-gradient(at 10% 10em, red, blue)",
+			"-moz-radial-gradient(at 44px top, red, blue)",
+			"-moz-radial-gradient(at 0 0, red, blue)",
+
+			"-moz-radial-gradient(circle 43px, red, blue)",
+			"-moz-radial-gradient(ellipse 43px 43px, red, blue)",
+			"-moz-radial-gradient(ellipse 50% 50%, red, blue)",
+			"-moz-radial-gradient(ellipse 43px 50%, red, blue)",
+			"-moz-radial-gradient(ellipse 50% 43px, red, blue)",
+
+			"-moz-radial-gradient(farthest-corner at top left, red, blue)",
+			"-moz-radial-gradient(ellipse closest-corner at 45px, red, blue)",
+			"-moz-radial-gradient(circle farthest-side at 45px, red, blue)",
+			"-moz-radial-gradient(closest-side ellipse at 50%, red, blue)",
+			"-moz-radial-gradient(farthest-corner circle at 4em, red, blue)",
+
+			"-moz-radial-gradient(30% 40% at top left, red, blue)",
+			"-moz-radial-gradient(50px 60px at 15% 20%, red, blue)",
+			"-moz-radial-gradient(7em 8em at 45px, red, blue)" ]
 	},
 	"background-origin": {
 		domProp: "backgroundOrigin",

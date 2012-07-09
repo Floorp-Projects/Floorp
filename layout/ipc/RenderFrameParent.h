@@ -131,7 +131,7 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerParameters& aParameters)
-  { return mozilla::LAYER_ACTIVE_FORCE; }
+  { return mozilla::LAYER_ACTIVE; }  
 
   NS_OVERRIDE
   virtual already_AddRefed<Layer>

@@ -634,8 +634,11 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
     if (base->hasSetterObject())
         PushMarkStack(gcmarker, base->setterObject());
 
-    if (JSObject *parent = base->getObjectParent())
+    if (JSObject *parent = base->getObjectParent()) {
         PushMarkStack(gcmarker, parent);
+    } else if (GlobalObject *global = base->compartment()->maybeGlobal()) {
+        PushMarkStack(gcmarker, global);
+    }
 
     /*
      * All children of the owned base shape are consistent with its

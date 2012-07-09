@@ -194,9 +194,6 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
                             const nsIntPoint& aOffset)
 {
   UpdateSurface();
-  if (mOGLManager->CompositingDisabled()) {
-    return;
-  }
   FireDidTransactionCallback();
 
   mOGLManager->MakeCurrent();
@@ -368,9 +365,6 @@ void
 ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                   const nsIntPoint& aOffset)
 {
-  if (mOGLManager->CompositingDisabled()) {
-    return;
-  }
   mOGLManager->MakeCurrent();
 
   ShaderProgramOGL *program =

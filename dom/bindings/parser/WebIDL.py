@@ -1682,9 +1682,6 @@ def matchIntegerValueToType(value):
 
     return None
 
-def checkDistinguishability(argset1, argset2):
-    assert isinstance(argset1, list) and isinstance(argset2, list)
-
 class IDLValue(IDLObject):
     def __init__(self, location, type, value):
         IDLObject.__init__(self, location)
@@ -1939,6 +1936,21 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
 
+class IDLMethodOverload:
+    """
+    A class that represents a single overload of a WebIDL method.  This is not
+    quite the same as an element of the "effective overload set" in the spec,
+    because separate IDLMethodOverloads are not created based on arguments being
+    optional.  Rather, when multiple methods have the same name, there is an
+    IDLMethodOverload for each one, all hanging off an IDLMethod representing
+    the full set of overloads.
+    """
+    def __init__(self, returnType, arguments, location):
+        self.returnType = returnType
+        # Clone the list of arguments, just in case
+        self.arguments = list(arguments)
+        self.location = location
+
 class IDLMethod(IDLInterfaceMember, IDLScope):
 
     Special = enum(
@@ -1975,10 +1987,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         self._hasOverloads = False
 
         assert isinstance(returnType, IDLType)
-        self._returnType = [returnType]
-        # We store a list of all the overload locations, matching our
-        # signature list.
-        self._location = [location]
+
+        # self._overloads is a list of IDLMethodOverloads
+        self._overloads = [IDLMethodOverload(returnType, arguments, location)]
 
         assert isinstance(static, bool)
         self._static = static
@@ -1996,9 +2007,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         self._stringifier = stringifier
         self._specialType = specialType
 
-        # Clone the list
-        self._arguments = [list(arguments)]
-
         self.assertSignatureConstraints()
 
     def __str__(self):
@@ -2006,29 +2014,36 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def assertSignatureConstraints(self):
         if self._getter or self._deleter:
-            assert len(self._arguments) == 1
-            assert self._arguments[0][0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
-                   self._arguments[0][0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
-            assert not self._arguments[0][0].optional and not self._arguments[0][0].variadic
-            assert not self._getter or not self._returnType[0].isVoid()
+            assert len(self._overloads) == 1
+            overload = self._overloads[0]
+            arguments =  overload.arguments
+            assert len(arguments) == 1
+            assert arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
+                   arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
+            assert not arguments[0].optional and not arguments[0].variadic
+            assert not self._getter or not overload.returnType.isVoid()
 
         if self._setter or self._creator:
-            assert len(self._arguments[0]) == 2
-            assert self._arguments[0][0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
-                   self._arguments[0][0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
-            assert not self._arguments[0][0].optional and not self._arguments[0][0].variadic
-            assert not self._arguments[0][1].optional and not self._arguments[0][1].variadic
+            assert len(self._overloads) == 1
+            arguments = self._overloads[0].arguments
+            assert len(arguments) == 2
+            assert arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.domstring] or \
+                   arguments[0].type == BuiltinTypes[IDLBuiltinType.Types.unsigned_long]
+            assert not arguments[0].optional and not arguments[0].variadic
+            assert not arguments[1].optional and not arguments[1].variadic
 
         if self._stringifier:
-            assert len(self._arguments[0]) == 0
-            assert self._returnType[0] == BuiltinTypes[IDLBuiltinType.Types.domstring]
+            assert len(self._overloads) == 1
+            overload = self._overloads[0]
+            assert len(overload.arguments) == 0
+            assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.domstring]
 
         inOptionalArguments = False
         variadicArgument = None
         sawOptionalWithNoDefault = False
 
-        assert len(self._arguments) == 1
-        arguments = self._arguments[0]
+        assert len(self._overloads) == 1
+        arguments = self._overloads[0].arguments
 
         for argument in arguments:
             # Only the last argument can be variadic
@@ -2094,15 +2109,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 argument.resolve(self)
 
     def addOverload(self, method):
-        checkDistinguishability(self._arguments, method._arguments)
+        assert len(method._overloads) == 1
 
-        assert len(method._returnType) == 1
-        assert len(method._arguments) == 1
-        assert len(method._location) == 1
-
-        self._returnType.extend(method._returnType)
-        self._arguments.extend(method._arguments)
-        self._location.extend(method._location)
+        self._overloads.extend(method._overloads)
 
         self._hasOverloads = True
 
@@ -2129,22 +2138,12 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return self
 
     def signatures(self):
-        assert len(self._returnType) == len(self._arguments)
-        return zip(self._returnType, self._arguments)
+        return [(overload.returnType, overload.arguments) for overload in
+                self._overloads]
 
     def finish(self, scope):
-        for index, returnType in enumerate(self._returnType):
-            if returnType.isComplete():
-                continue
-
-            type = returnType.complete(scope)
-
-            assert not isinstance(type, IDLUnresolvedType)
-            assert not isinstance(type.name, IDLUnresolvedIdentifier)
-            self._returnType[index] = type
-
-        for arguments in self._arguments:
-            for argument in arguments:
+        for overload in self._overloads:
+            for argument in overload.arguments:
                 if argument.type.isComplete():
                     continue
 
@@ -2153,6 +2152,16 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 assert not isinstance(type, IDLUnresolvedType)
                 assert not isinstance(type.name, IDLUnresolvedIdentifier)
                 argument.type = type
+
+            returnType = overload.returnType
+            if returnType.isComplete():
+                continue
+
+            type = returnType.complete(scope)
+
+            assert not isinstance(type, IDLUnresolvedType)
+            assert not isinstance(type.name, IDLUnresolvedIdentifier)
+            overload.returnType = type
 
         # Now compute various information that will be used by the
         # WebIDL overload resolution algorithm.
@@ -2164,32 +2173,37 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         # Make sure our overloads are properly distinguishable and don't have
         # different argument types before the distinguishing args.
         for argCount in self.allowedArgCounts:
-            possibleSignatures = self.signaturesForArgCount(argCount)
-            if len(possibleSignatures) == 1:
+            possibleOverloads = self.overloadsForArgCount(argCount)
+            if len(possibleOverloads) == 1:
                 continue
             distinguishingIndex = self.distinguishingIndexForArgCount(argCount)
-            arglists = [ s[1] for s in possibleSignatures ]
             for idx in range(distinguishingIndex):
-                firstSigType = arglists[0][idx].type
-                for (otherArgList, location) in zip(arglists[1:],
-                                                    self._location[1:]):
-                    if otherArgList[idx].type != firstSigType:
+                firstSigType = possibleOverloads[0].arguments[idx].type
+                for overload in possibleOverloads[1:]:
+                    if overload.arguments[idx].type != firstSigType:
                         raise WebIDLError(
                             "Signatures for method '%s' with %d arguments have "
                             "different types of arguments at index %d, which "
                             "is before distinguishing index %d" %
                             (self.identifier.name, argCount, idx,
                              distinguishingIndex),
-                            [self.location, location])
+                            [self.location, overload.location])
+
+    def overloadsForArgCount(self, argc):
+        return [overload for overload in self._overloads if
+                len(overload.arguments) == argc or
+                (len(overload.arguments) > argc and
+                 overload.arguments[argc].optional)]
 
     def signaturesForArgCount(self, argc):
-        return [(retval, args) for (retval, args) in self.signatures() if
-                len(args) == argc or (len(args) > argc and args[argc].optional)]
+        return [(overload.returnType, overload.arguments) for overload
+                in self.overloadsForArgCount(argc)]
 
     def locationsForArgCount(self, argc):
-        return [ self._location[i] for (i, args) in enumerate(self._arguments) if
-                 len(args) == argc or
-                 (len(args) > argc and args[argc].optional)]
+        return [overload.location for overload in self._overloads if
+                len(overload.arguments) == argc or
+                (len(overload.arguments) > argc and
+                 overload.arguments[argc].optional)]
 
     def distinguishingIndexForArgCount(self, argc):
         def isValidDistinguishingIndex(idx, signatures):

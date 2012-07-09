@@ -177,7 +177,7 @@ private:
   void VerifyBufferSize();
   void EnsureReadbackManager();
 
-  void Render(EndTransactionFlags aFlags);
+  void Render();
 
   nsRefPtr<ID3D10Device1> mDevice;
 
