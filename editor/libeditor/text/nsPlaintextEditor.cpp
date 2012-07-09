@@ -447,8 +447,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
       // split the text node
       res = SplitNode(node, theOffset, getter_AddRefs(tmp));
       NS_ENSURE_SUCCESS(res, res);
-      res = GetNodeLocation(node, address_of(tmp), &offset);
-      NS_ENSURE_SUCCESS(res, res);
+      GetNodeLocation(node, address_of(tmp), &offset);
     }
     // create br
     res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
@@ -468,8 +467,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
   {
     nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    res = GetNodeLocation(*outBRNode, address_of(parent), &offset);
-    NS_ENSURE_SUCCESS(res, res);
+    GetNodeLocation(*outBRNode, address_of(parent), &offset);
 
     nsCOMPtr<nsISelection> selection;
     res = GetSelection(getter_AddRefs(selection));
@@ -526,8 +524,7 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   NS_ENSURE_SUCCESS(res, res);
     
   // position selection after br
-  res = GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
   selPriv->SetInterlinePosition(true);
   return selection->Collapse(selNode, selOffset+1);
@@ -1186,7 +1183,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsresult rv = NS_OK;
 
   nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
-  formatType.AppendWithConversion(aFormatType);
+  LossyAppendUTF16toASCII(aFormatType, formatType);
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1570,8 +1567,7 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   if (childNode && nsTextEditUtils::IsMozBR(childNode)) {
     nsCOMPtr<nsIDOMNode> parentNode;
     PRInt32 parentOffset;
-    rv = GetNodeLocation(childNode, address_of(parentNode), &parentOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetNodeLocation(childNode, address_of(parentNode), &parentOffset);
 
     return aSelection->Extend(parentNode, parentOffset);
   }

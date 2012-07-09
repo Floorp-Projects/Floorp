@@ -282,6 +282,12 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 break;
             }
 
+            /* See bug 768313. */
+            if (script->hasScriptCounts != outerScript->hasScriptCounts) {
+                okay = false;
+                break;
+            }
+
             /*
              * The outer and inner scripts must have the same scope. This only
              * allows us to inline calls between non-inner functions. Also
@@ -1174,17 +1180,11 @@ mjit::Compiler::generatePrologue()
         }
     }
 
-    if (debugMode()) {
-        prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
-    } else if (Probes::callTrackingActive(cx)) {
-        prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
-    }
+    CompileStatus status = methodEntryHelper();
+    if (status == Compile_Okay)
+        recompileCheckHelper();
 
-    recompileCheckHelper();
-
-    return Compile_Okay;
+    return status;
 }
 
 void
@@ -3740,7 +3740,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
 
-    if (debugMode() || Probes::callTrackingActive(cx)) {
+    if (debugMode()) {
         /* If the return value isn't in the frame's rval slot, move it there. */
         if (fe) {
             frame.storeTo(fe, Address(JSFrameReg, StackFrame::offsetOfReturnValue()), true);
@@ -3761,6 +3761,9 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     if (a != outer) {
+        JS_ASSERT(!debugMode());
+        profilingPopHelper();
+
         /*
          * Returning from an inlined script. The checks we do for inlineability
          * and recompilation triggered by args object construction ensure that
@@ -3800,8 +3803,12 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     if (debugMode()) {
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::Epilogue, REJOIN_NONE);
-    } else if (script->function() && script->nesting()) {
-        masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
+    } else {
+        profilingPopHelper();
+
+        if (script->function() && script->nesting()) {
+            masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
+        }
     }
 
     emitReturnValue(&masm, fe);
@@ -3891,6 +3898,78 @@ mjit::Compiler::recompileCheckHelper()
 
     OOL_STUBCALL(stubs::RecompileForInline, REJOIN_RESUME);
     stubcc.rejoin(Changes(0));
+}
+
+CompileStatus
+mjit::Compiler::methodEntryHelper()
+{
+    if (debugMode()) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
+    } else if (Probes::callTrackingActive(cx)) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
+    } else {
+        return profilingPushHelper();
+    }
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::profilingPushHelper()
+{
+    SPSProfiler *p = &cx->runtime->spsProfiler;
+    if (!p->enabled())
+        return Compile_Okay;
+    /* If allocation fails, make sure no PopHelper() is emitted */
+    const char *str = p->profileString(cx, script, script->function());
+    if (str == NULL)
+        return Compile_Error;
+
+    /* Check if there's still space on the stack */
+    RegisterID size = frame.allocReg();
+    RegisterID base = frame.allocReg();
+    masm.load32(p->size(), size);
+    Jump j = masm.branch32(Assembler::GreaterThanOrEqual, size,
+                           Imm32(p->maxSize()));
+
+    /* With room, store our string onto the stack */
+    masm.move(ImmPtr(p->stack()), base);
+    JS_STATIC_ASSERT(sizeof(ProfileEntry) == 2 * sizeof(void*));
+    masm.lshift32(Imm32(sizeof(void*) == 4 ? 3 : 4), size);
+    masm.addPtr(size, base);
+
+    masm.storePtr(ImmPtr(str), Address(base, offsetof(ProfileEntry, string)));
+    masm.storePtr(ImmPtr(NULL), Address(base, offsetof(ProfileEntry, sp)));
+
+    frame.freeReg(base);
+    frame.freeReg(size);
+
+    /* Always increment the stack size (paired with a decrement below) */
+    j.linkTo(masm.label(), &masm);
+    masm.add32(Imm32(1), AbsoluteAddress(p->size()));
+
+    /* Set the flags that we've pushed information onto the SPS stack */
+    RegisterID reg = frame.allocReg();
+    masm.load32(FrameFlagsAddress(), reg);
+    masm.or32(Imm32(StackFrame::HAS_PUSHED_SPS_FRAME), reg);
+    masm.store32(reg, FrameFlagsAddress());
+    frame.freeReg(reg);
+
+    return Compile_Okay;
+}
+
+void
+mjit::Compiler::profilingPopHelper()
+{
+    if (Probes::callTrackingActive(cx) ||
+        cx->runtime->spsProfiler.slowAssertionsEnabled())
+    {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
+    } else if (cx->runtime->spsProfiler.enabled()) {
+        masm.sub32(Imm32(1), AbsoluteAddress(cx->runtime->spsProfiler.size()));
+    }
 }
 
 void
@@ -4456,7 +4535,10 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
 
         markUndefinedLocals();
 
-        status = generateMethod();
+        status = methodEntryHelper();
+        if (status == Compile_Okay)
+            status = generateMethod();
+
         if (status != Compile_Okay) {
             popActiveFrame();
             if (status == Compile_Abort) {
@@ -5070,14 +5152,13 @@ mjit::Compiler::testSingletonProperty(HandleObject obj, HandleId id)
         nobj = nobj->getProto();
     }
 
-    JSObject *holder;
-    JSProperty *prop = NULL;
-    if (!obj->lookupGeneric(cx, id, &holder, &prop))
+    RootedObject holder(cx);
+    RootedShape shape(cx);
+    if (!obj->lookupGeneric(cx, id, &holder, &shape))
         return false;
-    if (!prop)
+    if (!shape)
         return false;
 
-    Shape *shape = (Shape *) prop;
     if (shape->hasDefaultGetter()) {
         if (!shape->hasSlot())
             return false;
@@ -5145,7 +5226,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
     }
 
     RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, globalObj, key, proto.address(), NULL))
+    if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
         return false;
 
     return testSingletonProperty(proto, id);
@@ -5165,7 +5246,7 @@ mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (id.reference() != types::MakeTypeId(cx, id))
+    if (id.get() != types::MakeTypeId(cx, id))
         return false;
 
     types::TypeSet *pushedTypes = pushedTypeSet(0);
@@ -6285,7 +6366,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          * then bake its address into the jitcode and guard against future
          * reallocation of the global object's slots.
          */
-        const js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
+        js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
         if (shape && shape->hasDefaultGetter() && shape->hasSlot()) {
             HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             if (!value->isUndefined() &&
@@ -6408,7 +6489,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
         types::TypeSet *types = globalObj->getType(cx)->getProperty(cx, id, false);
         if (!types)
             return false;
-        const js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
+        js::Shape *shape = globalObj->nativeLookup(cx, NameToId(name));
         if (shape && shape->hasDefaultSetter() &&
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
@@ -6960,6 +7041,28 @@ mjit::Compiler::finishLoop(jsbytecode *head)
             if (a->varTypes[slot].getTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
                 FrameEntry *fe = frame.getSlotEntry(slot);
                 stubcc.masm.ensureInMemoryDouble(frame.addressOf(fe));
+            }
+        }
+
+        /*
+         * Also watch for slots which we assume are doubles at the loop head,
+         * but are known to be int32s at this point.
+         */
+        const SlotValue *newv = analysis->newValues(head);
+        if (newv) {
+            while (newv->slot) {
+                if (newv->value.kind() == SSAValue::PHI &&
+                    newv->value.phiOffset() == uint32_t(head - script->code) &&
+                    analysis->trackSlot(newv->slot))
+                {
+                    JS_ASSERT(newv->slot < TotalSlots(script));
+                    types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
+                    if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE) {
+                        FrameEntry *fe = frame.getSlotEntry(newv->slot);
+                        stubcc.masm.ensureInMemoryDouble(frame.addressOf(fe));
+                    }
+                }
+                newv++;
             }
         }
 

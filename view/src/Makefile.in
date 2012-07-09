@@ -17,8 +17,6 @@ MODULE_NAME	= nsViewModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-DEFINES += -D_IMPL_NS_LAYOUT
-
 CPPSRCS		= \
 		nsView.cpp \
 		nsViewManager.cpp \

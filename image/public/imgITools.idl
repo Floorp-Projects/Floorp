@@ -9,7 +9,7 @@
 interface nsIInputStream;
 interface imgIContainer;
 
-[scriptable, uuid(1f19a2ce-cf5c-4a6b-8ba7-63785b45053f)]
+[scriptable, uuid(8e16f39e-7012-46bd-aa22-2a7a3265608f)]
 interface imgITools : nsISupports
 {
     /**
@@ -60,7 +60,8 @@ interface imgITools : nsISupports
      * @param aMimeType
      *        Type of encoded image desired (eg "image/png").
      * @param aWidth, aHeight
-     *        The size (in pixels) desired for the resulting image.
+     *        The size (in pixels) desired for the resulting image. Specify 0 to
+     *        use the given image's width or height. Values must be >= 0.
      * @param outputOptions
      *        Encoder-specific output options.
      */
@@ -69,4 +70,32 @@ interface imgITools : nsISupports
                                      in long aWidth,
                                      in long aHeight,
                                      [optional] in AString outputOptions);
+
+    /**
+     * encodeCroppedImage
+     * Caller provides an image container, and the mime type it should be
+     * encoded to. We return an input stream for the encoded image data.
+     * The encoded image is cropped to the specified dimensions.
+     *
+     * The given offset and size must not exceed the image bounds.
+     *
+     * @param aContainer
+     *        An image container.
+     * @param aMimeType
+     *        Type of encoded image desired (eg "image/png").
+     * @param aOffsetX, aOffsetY
+     *        The crop offset (in pixels). Values must be >= 0.
+     * @param aWidth, aHeight
+     *        The size (in pixels) desired for the resulting image. Specify 0 to
+     *        use the given image's width or height. Values must be >= 0.
+     * @param outputOptions
+     *        Encoder-specific output options.
+     */
+    nsIInputStream encodeCroppedImage(in imgIContainer aContainer,
+                                      in ACString aMimeType,
+                                      in long aOffsetX,
+                                      in long aOffsetY,
+                                      in long aWidth,
+                                      in long aHeight,
+                                      [optional] in AString outputOptions);
 };

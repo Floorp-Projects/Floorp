@@ -77,6 +77,9 @@ public class testBookmark extends BaseTest  {
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();
 
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         // Wait for bookmark to appear in list
         mSolo.waitForText(ABOUT_HOME_URL);
 
@@ -125,9 +128,9 @@ public class testBookmark extends BaseTest  {
             Boolean res = (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
             return res.booleanValue();
         } catch(java.lang.IllegalAccessException ex) {
-            mAsserter.is(true, false, "Can not call addBookmark");
+            mAsserter.is(true, false, "Can not call isBookmarked");
         } catch(java.lang.reflect.InvocationTargetException ex) {
-            mAsserter.is(true, false, "Error calling addBookmark");
+            mAsserter.is(true, false, "Error calling isBookmarked");
         }
         return !isBookmarked;
     }

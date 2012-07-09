@@ -237,11 +237,14 @@ StackFrame::prologue(JSContext *cx, bool newType)
             pushOnScopeChain(*callobj);
             flags_ |= HAS_CALL_OBJ;
         }
+        Probes::enterScript(cx, script(), NULL, this);
         return true;
     }
 
-    if (isGlobalFrame())
+    if (isGlobalFrame()) {
+        Probes::enterScript(cx, script(), NULL, this);
         return true;
+    }
 
     JS_ASSERT(isNonEvalFunctionFrame());
 
@@ -266,7 +269,7 @@ StackFrame::prologue(JSContext *cx, bool newType)
         functionThis() = ObjectValue(*obj);
     }
 
-    Probes::enterJSFun(cx, fun(), script());
+    Probes::enterScript(cx, script(), script()->function(), this);
     return true;
 }
 
@@ -276,6 +279,8 @@ StackFrame::epilogue(JSContext *cx)
     JS_ASSERT(!isDummyFrame());
     JS_ASSERT(!isYielding());
     JS_ASSERT(!hasBlockChain());
+
+    Probes::exitScript(cx, script(), script()->function(), this);
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
@@ -300,17 +305,14 @@ StackFrame::epilogue(JSContext *cx)
 
     JS_ASSERT(isNonEvalFunctionFrame());
     if (fun()->isHeavyweight()) {
-        JS_ASSERT_IF(hasCallObj(),
-                     scopeChain()->asCall().getCalleeFunction()->script() == script());
+        JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().callee().script() == script());
     } else {
         JS_ASSERT(!scopeChain()->isCall() || scopeChain()->asCall().isForEval() ||
-                  scopeChain()->asCall().getCalleeFunction()->script() != script());
+                  scopeChain()->asCall().callee().script() != script());
     }
 
     if (cx->compartment->debugMode())
         cx->runtime->debugScopes->onPopCall(this, cx);
-
-    Probes::exitJSFun(cx, fun(), script());
 
     if (script()->nesting() && (flags_ & HAS_NESTING))
         types::NestingEpilogue(this);
@@ -1191,7 +1193,7 @@ StackIter::popFrame()
 void
 StackIter::popCall()
 {
-    CallArgsList *oldCall = calls_;
+    DebugOnly<CallArgsList*> oldCall = calls_;
     JS_ASSERT(seg_->contains(oldCall));
     calls_ = calls_->prev();
     if (!seg_->contains(fp_))

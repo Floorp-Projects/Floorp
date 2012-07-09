@@ -11,7 +11,7 @@
 != defaultfont-bolditalic.html defaultfont.html 
 != defaultfont-bolditalic.html defaultfont-bold.html
 
-fails-if(Android) != defaultjapanese-bold.html defaultjapanese.html
+!= defaultjapanese-bold.html defaultjapanese.html
 != defaultjapanese-italic.html defaultjapanese.html
 != defaultjapanese-oblique.html defaultjapanese.html
 != defaultjapanese-bolditalic.html defaultjapanese.html
@@ -75,3 +75,9 @@ HTTP(..) == font-stretch-1.html font-stretch-1-ref.html
 != synthetic-style-1.html synthetic-style-1-notref.html
 != synthetic-style-2.html synthetic-style-2-notref.html
 
+# Bug 765906 - synthetic bold should be used if necessary together with system fallback.
+# **NOTE** we skip these on Linux because of bug 769659.
+# test 1 uses Cherokee; expected to pass on OS X and Win7
+random-if(!(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu))) skip-if(gtk2Widget) != bold-system-fallback-1.html bold-system-fallback-1-notref.html
+# test 2 uses Chess symbols; expected to pass on Android
+random-if(!Android) skip-if(gtk2Widget) != bold-system-fallback-2.html bold-system-fallback-2-notref.html

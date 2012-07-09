@@ -25,12 +25,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549475
 var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
-  "submit", "image", "reset", "button", "email", "url"
+  "submit", "image", "reset", "button", "email", "url", "number",
 ];
 
 var todoTypes =
 [
-  "number", "range", "color",
+  "range", "color",
   "date", "month", "week", "time", "datetime", "datetime-local",
 ];
 
@@ -60,8 +60,7 @@ function sanitizeValue(aType, aValue)
       // TODO: write the sanitize algorithm.
       return "";
     case "number":
-      // TODO: write the sanitize algorithm.
-      return "";
+      return (parseFloat(aValue) + "" === aValue) ? aValue : "";
     case "range":
       // TODO: write the sanitize algorithm.
       return "";
@@ -77,11 +76,17 @@ function checkSanitizing(element)
 {
   var testData =
   [
+    // For text, password, search, tel, email:
     "\n\rfoo\n\r",
     "foo\n\rbar",
     "  foo  ",
     "  foo\n\r  bar  ",
+    // For url:
     "\r\n foobar    \n\r",
+    // For number:
+    "42",
+    "13.37",
+    "1.234567898765432",
   ];
 
   for each (value in testData) {
@@ -126,6 +131,8 @@ function checkSanitizing(element)
   }
 }
 
+var pref = SpecialPowers.getBoolPref("dom.experimental_forms");
+SpecialPowers.setBoolPref("dom.experimental_forms", true);
 for each (type in inputTypes) {
   var form = document.forms[0];
   var element = document.createElement("input");
@@ -160,6 +167,8 @@ for each (type in todoTypes) {
 
   form.removeChild(element);
 }
+
+SpecialPowers.setBoolPref("dom.experimental_forms", pref);
 
 </script>
 </pre>

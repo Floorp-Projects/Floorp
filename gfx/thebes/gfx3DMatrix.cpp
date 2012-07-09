@@ -112,13 +112,6 @@ gfx3DMatrix::operator==(const gfx3DMatrix& o) const
          _41 == o._41 && _42 == o._42 && _43 == o._43 && _44 == o._44;
 }
 
-bool
-gfx3DMatrix::operator!=(const gfx3DMatrix& o) const
-{
-  return !((*this) == o);
-}
-
-
 gfx3DMatrix&
 gfx3DMatrix::operator/=(const gfxFloat scalar)
 {

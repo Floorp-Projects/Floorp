@@ -1425,38 +1425,75 @@ void
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
 {
-  if (aGradient->mRepeating) {
-    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
-      aString.AssignLiteral("-moz-repeating-linear-gradient(");
-    else
-      aString.AssignLiteral("-moz-repeating-radial-gradient(");
+  if (!aGradient->mLegacySyntax) {
+    aString.Truncate();
   } else {
-    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR)
-      aString.AssignLiteral("-moz-linear-gradient(");
-    else
-      aString.AssignLiteral("-moz-radial-gradient(");
+    aString.AssignLiteral("-moz-");
+  }
+  if (aGradient->mRepeating) {
+    aString.AppendLiteral("repeating-");
+  }
+  bool isRadial = aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR;
+  if (isRadial) {
+    aString.AppendLiteral("radial-gradient(");
+  } else {
+    aString.AppendLiteral("linear-gradient(");
   }
 
   bool needSep = false;
   nsAutoString tokenString;
   nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
 
-  if (aGradient->mToCorner) {
-    AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
-  } else {
-    if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
-      AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+  if (isRadial && !aGradient->mLegacySyntax) {
+    if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE) {
+      if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+        aString.AppendLiteral("circle");
+        needSep = true;
+      }
+      if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
+        if (needSep) {
+          aString.AppendLiteral(" ");
+        }
+        AppendASCIItoUTF16(nsCSSProps::
+                           ValueToKeyword(aGradient->mSize,
+                                          nsCSSProps::kRadialGradientSizeKTable),
+                           aString);
+        needSep = true;
+      }
+    } else {
+      AppendCSSGradientLength(aGradient->mRadiusX, tmpVal, aString);
+      if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+        aString.AppendLiteral(" ");
+        AppendCSSGradientLength(aGradient->mRadiusY, tmpVal, aString);
+      }
       needSep = true;
     }
-    if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
-      if (needSep) {
-        aString.AppendLiteral(" ");
+  }
+  if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
+    MOZ_ASSERT(aGradient->mBgPosY.GetUnit() != eStyleUnit_None);
+    if (!isRadial && !aGradient->mLegacySyntax) {
+      AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
+    } else if (aGradient->mBgPosX.GetUnit() != eStyleUnit_Percent ||
+               aGradient->mBgPosX.GetPercentValue() != 0.5f ||
+               aGradient->mBgPosY.GetUnit() != eStyleUnit_Percent ||
+               aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 1.0f)) {
+      if (isRadial && !aGradient->mLegacySyntax) {
+        if (needSep) {
+          aString.AppendLiteral(" ");
+        }
+        aString.AppendLiteral("at ");
+        needSep = false;
       }
-      AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+      AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
+      if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
+        aString.AppendLiteral(" ");
+        AppendCSSGradientLength(aGradient->mBgPosY, tmpVal, aString);
+      }
       needSep = true;
     }
   }
   if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
+    MOZ_ASSERT(!isRadial || aGradient->mLegacySyntax);
     if (needSep) {
       aString.AppendLiteral(" ");
     }
@@ -1473,16 +1510,22 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     needSep = true;
   }
 
-  if (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+  if (isRadial && aGradient->mLegacySyntax &&
+      (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR ||
+       aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)) {
+    MOZ_ASSERT(aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE);
     if (needSep) {
       aString.AppendLiteral(", ");
+      needSep = false;
     }
-    AppendASCIItoUTF16(nsCSSProps::
-                       ValueToKeyword(aGradient->mShape,
-                                      nsCSSProps::kRadialGradientShapeKTable),
-                       aString);
+    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
+      aString.AppendLiteral("circle");
+      needSep = true;
+    }
     if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
-      aString.AppendLiteral(" ");
+      if (needSep) {
+        aString.AppendLiteral(" ");
+      }
       AppendASCIItoUTF16(nsCSSProps::
                          ValueToKeyword(aGradient->mSize,
                                         nsCSSProps::kRadialGradientSizeKTable),
@@ -2923,6 +2966,109 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
                                    nsCSSProps::kBorderImageRepeatKTable));
   return valueList;
 }
+
+#ifdef MOZ_FLEXBOX
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAlignItems()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStylePosition()->mAlignItems,
+                                   nsCSSProps::kAlignItemsKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAlignSelf()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  PRUint8 computedAlignSelf = GetStylePosition()->mAlignSelf;
+
+  if (computedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
+    // "align-self: auto" needs to compute to parent's align-items value.
+    nsStyleContext* parentStyleContext = mStyleContextHolder->GetParent();
+    if (parentStyleContext) {
+      computedAlignSelf =
+        parentStyleContext->GetStylePosition()->mAlignItems;
+    } else {
+      // No parent --> use default.
+      computedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+    }
+  }
+
+  NS_ABORT_IF_FALSE(computedAlignSelf != NS_STYLE_ALIGN_SELF_AUTO,
+                    "Should have swapped out 'auto' for something non-auto");
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(computedAlignSelf,
+                                   nsCSSProps::kAlignSelfKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexBasis()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  // XXXdholbert We could make this more automagic and resolve percentages
+  // if we wanted, by passing in a PercentageBaseGetter instead of nsnull
+  // below.  Logic would go like this:
+  //   if (i'm a flex item) {
+  //     if (my flex container is horizontal) {
+  //       percentageBaseGetter = &nsComputedDOMStyle::GetCBContentWidth;
+  //     } else {
+  //       percentageBaseGetter = &nsComputedDOMStyle::GetCBContentHeight;
+  //     }
+  //   }
+
+  SetValueToCoord(val, GetStylePosition()->mFlexBasis, true,
+                  nsnull, nsCSSProps::kWidthKTable);
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexDirection()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStylePosition()->mFlexDirection,
+                                   nsCSSProps::kFlexDirectionKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexGrow()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mFlexGrow);
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetFlexShrink()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mFlexShrink);
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetOrder()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetNumber(GetStylePosition()->mOrder);
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetJustifyContent()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStylePosition()->mJustifyContent,
+                                   nsCSSProps::kJustifyContentKTable));
+  return val;
+}
+#endif // MOZ_FLEXBOX
 
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetFloatEdge()
@@ -4609,6 +4755,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of -moz- styles *
     \* ******************************* */
 
+#ifdef MOZ_FLEXBOX
+    COMPUTED_STYLE_MAP_ENTRY(align_items,                   AlignItems),
+    COMPUTED_STYLE_MAP_ENTRY(align_self,                    AlignSelf),
+#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
     COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
     COMPUTED_STYLE_MAP_ENTRY(animation_duration,            AnimationDuration),
@@ -4638,12 +4788,22 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_style,        ColumnRuleStyle),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
+#ifdef MOZ_FLEXBOX
+    COMPUTED_STYLE_MAP_ENTRY(flex_basis,                    FlexBasis),
+    COMPUTED_STYLE_MAP_ENTRY(flex_direction,                FlexDirection),
+    COMPUTED_STYLE_MAP_ENTRY(flex_grow,                     FlexGrow),
+    COMPUTED_STYLE_MAP_ENTRY(flex_shrink,                   FlexShrink),
+#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         FontFeatureSettings),
     COMPUTED_STYLE_MAP_ENTRY(font_language_override,        FontLanguageOverride),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,       ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(hyphens,                       Hyphens),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
+#ifdef MOZ_FLEXBOX
+    COMPUTED_STYLE_MAP_ENTRY(justify_content,               JustifyContent),
+    COMPUTED_STYLE_MAP_ENTRY(order,                         Order),
+#endif // MOZ_FLEXBOX
     COMPUTED_STYLE_MAP_ENTRY(orient,                        Orient),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),

@@ -273,7 +273,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
             case TITLE:
-                // if (sameDocument)
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     setTitle(tab.getDisplayTitle());
                 }

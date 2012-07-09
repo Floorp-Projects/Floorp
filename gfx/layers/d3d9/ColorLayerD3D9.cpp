@@ -19,9 +19,6 @@ RenderColorLayerD3D9(ColorLayer* aLayer, LayerManagerD3D9 *aManager)
 {
   // XXX we might be able to improve performance by using
   // IDirect3DDevice9::Clear
-  if (aManager->CompositingDisabled()) {
-    return;
-  }
 
   nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
 

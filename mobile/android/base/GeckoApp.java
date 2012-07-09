@@ -165,31 +165,29 @@ abstract public class GeckoApp
     void focusChrome() { }
 
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        // When a tab is closed, it is always unselected first.
+        // When a tab is unselected, another tab is always selected first.
         switch(msg) {
-            case LOCATION_CHANGE:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    hidePlugins(tab);
-                    updatePopups(tab);
-                    invalidateOptionsMenu();
-                }
+            case UNSELECTED:
+                hidePlugins(tab);
                 break;
+
+            case LOCATION_CHANGE:
+                // We only care about location change for the selected tab.
+                if (!Tabs.getInstance().isSelectedTab(tab))
+                    break;
+                // Fall through...
+            case SELECTED:
+                updatePopups(tab);
+                invalidateOptionsMenu();
+                break;
+
             case LOAD_ERROR:
             case START:
             case STOP:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
+                // The options menu only applies to the selected tab.
+                if (Tabs.getInstance().isSelectedTab(tab))
                     invalidateOptionsMenu();
-                }
-                break;
-            case UNSELECTED:
-            case CLOSED:
-                invalidateOptionsMenu();
-                updatePopups(tab);
-                hidePlugins(tab);
-                break;
-            case ADDED:
-            case SELECTED:
-                invalidateOptionsMenu();
-                updatePopups(tab);
                 break;
         }
     }
@@ -822,14 +820,21 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
+        // Only remove doorhangers if the popup is hidden or if we're navigating to a new URL
+        if (!mDoorHangerPopup.isShowing() || !uri.equals(tab.getURL()))
+            tab.removeTransientDoorHangers();
+
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
+
+        // We can get a location change event for the same document with an anchor tag
+        if (sameDocument)
+            return;
 
         tab.setContentType(contentType);
         tab.clearFavicon();
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
-        tab.removeTransientDoorHangers();
         tab.setAllowZoom(true);
         tab.setDefaultZoom(0);
         tab.setMinZoom(0);
@@ -875,7 +880,10 @@ abstract public class GeckoApp
 
     void handlePageShow(final int tabId) { }
 
-    void handleClearHistory() { }
+    void handleClearHistory() {
+        BrowserDB.clearHistory(getContentResolver());
+        mFavicons.clearFavicons();
+    }
 
     public StartupMode getStartupMode() {
         // This function might touch the disk and should not
@@ -1249,6 +1257,8 @@ abstract public class GeckoApp
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            } else if (event.equals("Sanitize:ClearHistory")) {
+                handleClearHistory();
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1653,16 +1663,6 @@ abstract public class GeckoApp
     public void requestRender() {
         mLayerController.getView().requestRender();
     }
-
-    public void hidePlugins() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-
-        if (tab == null)
-            return;
-
-        hidePlugins(tab);
-    }
     
     public void hidePlugins(Tab tab) {
         for (Layer layer : tab.getPluginLayers()) {
@@ -1947,6 +1947,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2291,6 +2292,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();

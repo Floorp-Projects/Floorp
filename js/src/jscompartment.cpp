@@ -175,8 +175,13 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
-        if (obj->isStopIteration())
-            return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
+        if (obj->isStopIteration()) {
+            RootedObject null(cx);
+            RootedValue vvp(cx, *vp);
+            bool result = js_FindClassObject(cx, null, JSProto_StopIteration, &vvp);
+            *vp = vvp;
+            return result;
+        }
 
         /* Unwrap the object, but don't unwrap outer windows. */
         obj = UnwrapObject(&vp->toObject(), /* stopAtOuter = */ true, &flags);
@@ -259,6 +264,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!wrapper)
         return false;
 
+    // We maintain the invariant that the key in the cross-compartment wrapper
+    // map is always directly wrapped by the value.
+    JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
+
     vp->setObject(*wrapper);
 
     if (wrapper->getProto() != proto && !SetProto(cx, wrapper, proto, false))
@@ -278,7 +287,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
     RootedValue value(cx, StringValue(*strp));
     if (!wrap(cx, value.address()))
         return false;
-    *strp = value.reference().toString();
+    *strp = value.get().toString();
     return true;
 }
 
@@ -288,7 +297,7 @@ JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
     RootedValue value(cx, StringValue(*strp));
     if (!wrap(cx, value.address()))
         return false;
-    *strp = value.reference().toString();
+    *strp = value.get().toString();
     return true;
 }
 
@@ -300,7 +309,7 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
     RootedValue value(cx, ObjectValue(**objp));
     if (!wrap(cx, value.address()))
         return false;
-    *objp = &value.reference().toObject();
+    *objp = &value.get().toObject();
     return true;
 }
 
@@ -312,7 +321,7 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp)
     RootedValue value(cx, IdToValue(*idp));
     if (!wrap(cx, value.address()))
         return false;
-    return ValueToId(cx, value.reference(), idp);
+    return ValueToId(cx, value.get(), idp);
 }
 
 bool
@@ -463,27 +472,35 @@ JSCompartment::discardJitCode(FreeOp *fop)
 void
 JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
-    sweepCrossCompartmentWrappers();
-
-    /* Remove dead references held weakly by the compartment. */
-
-    sweepBaseShapeTable();
-    sweepInitialShapeTable();
-    sweepNewTypeObjectTable(newTypeObjects);
-    sweepNewTypeObjectTable(lazyTypeObjects);
-
-    if (emptyTypeObject && !IsTypeObjectMarked(emptyTypeObject.unsafeGet()))
-        emptyTypeObject = NULL;
-
-    sweepBreakpoints(fop);
-
     {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_DISCARD_CODE);
         discardJitCode(fop);
     }
 
-    /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
-    regExps.sweep(rt);
+    /* This function includes itself in PHASE_SWEEP_TABLES. */
+    sweepCrossCompartmentWrappers();
+
+    {
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+
+        /* Remove dead references held weakly by the compartment. */
+
+        sweepBaseShapeTable();
+        sweepInitialShapeTable();
+        sweepNewTypeObjectTable(newTypeObjects);
+        sweepNewTypeObjectTable(lazyTypeObjects);
+
+        if (emptyTypeObject && !IsTypeObjectMarked(emptyTypeObject.unsafeGet()))
+            emptyTypeObject = NULL;
+
+        sweepBreakpoints(fop);
+
+        if (global_ && !IsObjectMarked(&global_))
+            global_ = NULL;
+
+        /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
+        regExps.sweep(rt);
+    }
 
     if (!activeAnalysis && !gcPreserveCode) {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
@@ -536,6 +553,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
                 script->clearAnalysis();
             }
         }
+
+        {
+            gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
+            oldAlloc.freeAll();
+        }
     }
 
     active = false;
@@ -549,6 +571,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
+    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key;
@@ -671,7 +695,7 @@ JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
     // dmgc makes sure we can't forget to GC, but it is also important not
     // to run any scripts in this compartment until the dmgc is destroyed.
     // That is the caller's responsibility.
-    if (!rt->gcRunning)
+    if (!rt->isHeapBusy())
         dmgc.scheduleGC(this);
 #endif
 }

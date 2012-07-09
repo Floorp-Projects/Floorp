@@ -9,7 +9,6 @@ ac_add_options --enable-application=mobile/android
 
 # Android
 ac_add_options --target=i386-linux-android
-ac_add_options --with-endian=little
 ac_add_options --with-android-ndk="/tools/android-ndk-r7b"
 ac_add_options --with-android-sdk="/tools/android-sdk-r15/platforms/android-14"
 ac_add_options --with-android-version=9

@@ -1026,8 +1026,14 @@ var NativeWindow = {
    *        persistence: An integer. The notification will not automatically
    *                     dismiss for this many page loads. If persistence is set
    *                     to -1, the doorhanger will never automatically dismiss.
+   *        persistWhileVisible:
+   *                     A boolean. If true, a visible notification will always
+   *                     persist across location changes.
    *        timeout:     A time in milliseconds. The notification will not
    *                     automatically dismiss before this time.
+   *        checkbox:    A string to appear next to a checkbox under the notification
+   *                     message. The button callback functions will be called with
+   *                     the checked state as an argument.                   
    */
     show: function(aMessage, aValue, aButtons, aTabID, aOptions) {
       aButtons.forEach((function(aButton) {
@@ -1421,8 +1427,8 @@ var SelectionHandler = {
   },
 
   // Units in pixels
-  HANDLE_WIDTH: 35,
-  HANDLE_HEIGHT: 64,
+  HANDLE_WIDTH: 45,
+  HANDLE_HEIGHT: 66,
   HANDLE_PADDING: 20,
   HANDLE_HORIZONTAL_OFFSET: 5,
 
@@ -1746,8 +1752,11 @@ var SelectionHandler = {
       win = win.parent;
     }
 
-    return (aX - offset.x > this.cache.rect.left && aX - offset.x < this.cache.rect.right) &&
-           (aY - offset.y > this.cache.rect.top && aY - offset.y < this.cache.rect.bottom);
+    let radius = ElementTouchHelper.getTouchRadius();
+    return (aX - offset.x > this.cache.rect.left - radius.left &&
+            aX - offset.x < this.cache.rect.right + radius.right &&
+            aY - offset.y > this.cache.rect.top - radius.top &&
+            aY - offset.y < this.cache.rect.bottom + radius.bottom);
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
@@ -3623,6 +3632,19 @@ const ElementTouchHelper = {
     return elem;
   },
 
+  /* Returns the touch radius in content px. */
+  getTouchRadius: function getTouchRadius() {
+    let dpiRatio = ViewportHandler.displayDPI / kReferenceDpi;
+    let zoom = BrowserApp.selectedTab._zoom;
+    return {
+      top: this.radius.top * dpiRatio / zoom,
+      right: this.radius.right * dpiRatio / zoom,
+      bottom: this.radius.bottom * dpiRatio / zoom,
+      left: this.radius.left * dpiRatio / zoom
+    };
+  },
+
+  /* Returns the touch radius in reference pixels. */
   get radius() {
     let prefs = Services.prefs;
     delete this.radius;
@@ -3640,11 +3662,6 @@ const ElementTouchHelper = {
 
   /* Retrieve the closest element to a point by looking at borders position */
   getClosest: function getClosest(aWindowUtils, aX, aY) {
-    if (!this.dpiRatio)
-      this.dpiRatio = aWindowUtils.displayDPI / kReferenceDpi;
-
-    let dpiRatio = this.dpiRatio;
-
     let target = aWindowUtils.elementFromPoint(aX, aY,
                                                true,   /* ignore root scroll frame*/
                                                false); /* don't flush layout */
@@ -3657,11 +3674,8 @@ const ElementTouchHelper = {
       return target;
 
     target = null;
-    let zoom = BrowserApp.selectedTab._zoom;
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio / zoom,
-                                                   this.radius.right * dpiRatio / zoom,
-                                                   this.radius.bottom * dpiRatio / zoom,
-                                                   this.radius.left * dpiRatio / zoom, true, false);
+    let radius = this.getTouchRadius();
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, radius.top, radius.right, radius.bottom, radius.left, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {

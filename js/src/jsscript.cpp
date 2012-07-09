@@ -154,13 +154,13 @@ Bindings::callObjectShape(JSContext *cx) const
      * to first (i.e., the order we normally have iterate over Shapes). Choose
      * the last added property in each set of dups.
      */
-    Vector<const Shape *> shapes(cx);
+    Vector<Shape *> shapes(cx);
     HashSet<jsid> seen(cx);
     if (!seen.init())
         return NULL;
 
     for (Shape::Range r = lastShape()->all(); !r.empty(); r.popFront()) {
-        const Shape &s = r.front();
+        Shape &s = r.front();
         HashSet<jsid>::AddPtr p = seen.lookupForAdd(s.propid());
         if (!p) {
             if (!seen.add(p, s.propid()))
@@ -205,7 +205,7 @@ Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
 #endif
 
     for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
-        const Shape &shape = r.front();
+        Shape &shape = r.front();
         unsigned index = uint16_t(shape.shortid());
 
         if (shape.setter() == CallObject::setArgOp) {
@@ -234,7 +234,7 @@ Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
     return true;
 }
 
-const Shape *
+Shape *
 Bindings::lastVariable() const
 {
     JS_ASSERT(lastBinding);
@@ -1340,41 +1340,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
-
         script->isGenerator = bce->sc->funIsGenerator();
-
-        /*
-         * We initialize fun->script() to be the script constructed above
-         * so that the debugger has a valid fun->script().
-         */
-        fun = bce->sc->fun();
-        JS_ASSERT(fun->isInterpreted());
-        JS_ASSERT(!fun->script());
-        if (bce->sc->funIsHeavyweight())
-            fun->flags |= JSFUN_HEAVYWEIGHT;
-
-        /* Mark functions which will only be executed once as singletons. */
-        bool singleton =
-            cx->typeInferenceEnabled() &&
-            bce->parent &&
-            bce->parent->checkSingletonContext();
-
-        if (!script->typeSetFunction(cx, fun, singleton))
-            return false;
-
-        fun->setScript(script);
-    }
-
-    /* Tell the debugger about this compiled script. */
-    js_CallNewScriptHook(cx, script, fun);
-    if (!bce->parent) {
-        GlobalObject *compileAndGoGlobal = NULL;
-        if (script->compileAndGo) {
-            compileAndGoGlobal = script->globalObject;
-            if (!compileAndGoGlobal)
-                compileAndGoGlobal = &bce->sc->scopeChain()->global();
-        }
-        Debugger::onNewScript(cx, script, compileAndGoGlobal);
+        script->setFunction(bce->sc->fun());
     }
 
     /*
@@ -1449,6 +1416,7 @@ JSScript::finalize(FreeOp *fop)
     // fullyInitFromEmitter() or fullyInitTrivial().
 
     CallDestroyScriptHook(fop, this);
+    fop->runtime()->spsProfiler.onScriptFinalized(this);
 
     JS_ASSERT_IF(principals, originPrincipals);
     if (principals)
@@ -2145,6 +2113,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());
+    JS_ASSERT(!script->isGenerator);
 
     /*
      * It is possible that the apply speculation has already failed, everything
@@ -2193,6 +2162,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 
 #ifdef JS_METHODJIT
     if (script->hasJITInfo()) {
+        mjit::ExpandInlineFrames(cx->compartment);
         mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
         mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }

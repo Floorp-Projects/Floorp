@@ -105,7 +105,7 @@ public:
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
 
-  virtual bool ProcessPendingUpdates();
+  virtual void ProcessPendingUpdates();
   virtual void UpdateWidgetGeometry();
 
 protected:
@@ -114,10 +114,7 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  /* Returns true if we skipped painting a view and we should try
-   * again later.
-   */
-  bool ProcessPendingUpdatesForView(nsView *aView,
+  void ProcessPendingUpdatesForView(nsView *aView,
                                     bool aFlushDirtyRegion = true);
   void FlushDirtyRegionToWidget(nsView* aView);
   /**
@@ -132,7 +129,8 @@ private:
   void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
+  void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion,
+               bool aWillSendDidPaint);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
@@ -201,6 +199,7 @@ private:
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
+  bool              mHasPendingUpdates;
   bool              mHasPendingWidgetGeometryChanges;
   bool              mInScroll;
 

@@ -209,7 +209,7 @@ class Bindings
      * Sometimes iteration order must be from oldest to youngest, however. For
      * such cases, use js::Bindings::getLocalNameArray.
      */
-    const js::Shape *lastVariable() const;
+    js::Shape *lastVariable() const;
 
     void trace(JSTracer *trc);
 
@@ -234,9 +234,6 @@ class Bindings
 };
 
 } /* namespace js */
-
-#define JS_OBJECT_ARRAY_SIZE(length)                                          \
-    (offsetof(ObjectArray, vector) + sizeof(JSObject *) * (length))
 
 #ifdef JS_METHODJIT
 namespace JSC {
@@ -630,16 +627,10 @@ struct JSScript : public js::gc::Cell
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    /*
-     * Associates this script with a specific function, constructing a new type
-     * object for the function if necessary.
-     */
-    bool typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton = false);
-
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
-    inline js::GlobalObject *global() const;
+    inline js::GlobalObject * global() const;
     inline js::types::TypeScriptNesting *nesting() const;
 
     inline void clearNesting();

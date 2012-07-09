@@ -2,72 +2,50 @@ html {
   font-size: 16px;
 }
 
-html, body, div, span {
+* {
   margin: 0;
   padding: 0;
-  line-height: 1;
-}
-
-div.selection {
-  overflow: hidden;
-  display: block;
-  width: auto;
-  height: 100px;
-  white-space: nowrap;
-}
-
-div.fontsize {
-  display: inline-block;
-  width: auto;
-  height: auto;
-}
-
-div.fontsize.size1 {
-  font-size: 16px;
-}
-
-div.fontsize.size2 {
-  font-size: 32px;
-}
-
-div.fontsize.size3 {
-  font-size: 52px;
 }
 
 @font-face {
   font-family: "AhemTest";
-  src: url(../../../fonts/Ahem.ttf);
+  src: url(../../../../tests/fonts/Ahem.ttf);
 }
 
 @font-face {
   font-family: "mplusTest";
-  src: url(../../../fonts/mplus/mplus-1p-regular.ttf);
+  src: url(../../../../tests/fonts/mplus/mplus-1p-regular.ttf);
 }
 
-div.font1,
-div.font2 {
-  display: inline-block;
-  width: 120px;
-  height: 140px;
-  margin: 10px 1px;
+/* For aligning the two spacers (see below) to the left most and the right most,
+   the div must create a new blocking format context. */
+div#target {
+  position: absolute;
+}
+
+span#decoration {
+  margin-left: 0.333em;
+}
+
+body.reference div span#decoration {
+  text-decoration: underline;
+}
+
+/* both ends of selection underlines for IME are clipped for making the
+   boundaries of clauses in composition string clear.  These spacers will
+   cover the ends in the reference. */
+span#leftspacer, span#rightspacer {
+  background-color: white;
+  position: absolute;
+  width: 1px;
+  height: 100%;
   overflow: hidden;
 }
 
-div.font1 {
-  font-family: "AhemTest";
+span#leftspacer {
+  left: 0.333em;
 }
 
-div.font2 {
-  font-family: "mplusTest";
-}
-
-span {
-  text-align: top;
-}
-
-body.reference div.IMEselection span,
-body.reference div.IMEselection span,
-body.reference div.IMEselection span,
-body.reference div.IMEselection span {
-  background-color: black;
+span#rightspacer {
+  right: 0;
 }

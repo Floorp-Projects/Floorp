@@ -31,7 +31,7 @@ getNativeViewFromRootAccessible(Accessible* aAccessible)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
   
   // if we're expired, we don't support any attributes.
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return [NSArray array];
   
   // standard attributes that are shared and supported by root accessible (AXMain) elements.

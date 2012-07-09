@@ -79,6 +79,7 @@ _TEST_FILES = \
 		test_root_element_replacement.html \
 		test_bug738366.html \
 		test_bug757371.html \
+		test_bug767684.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))

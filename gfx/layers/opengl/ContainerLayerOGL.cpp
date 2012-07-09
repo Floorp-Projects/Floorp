@@ -179,14 +179,12 @@ ContainerRender(Container* aContainer,
     }
 
     aContainer->gl()->PushViewportRect();
-    framebufferRect -= childOffset;
-    if (!aManager->CompositingDisabled()) {
-      aManager->CreateFBOWithTexture(framebufferRect,
-                                     mode,
-                                     aPreviousFrameBuffer,
-                                     &frameBuffer,
-                                     &containerSurface);
-    }
+    framebufferRect -= childOffset; 
+    aManager->CreateFBOWithTexture(framebufferRect,
+                                   mode,
+                                   aPreviousFrameBuffer,
+                                   &frameBuffer,
+                                   &containerSurface);
     childOffset.x = visibleRect.x;
     childOffset.y = visibleRect.y;
   } else {
@@ -241,47 +239,45 @@ ContainerRender(Container* aContainer,
     aManager->SetupPipeline(viewport.width, viewport.height,
                             LayerManagerOGL::ApplyWorldTransform);
     aContainer->gl()->PopScissorRect();
+
     aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
+    aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);
 
-    if (!aManager->CompositingDisabled()) {
-      aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);
+    aContainer->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
-      aContainer->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    aContainer->gl()->fBindTexture(aManager->FBOTextureTarget(), containerSurface);
 
-      aContainer->gl()->fBindTexture(aManager->FBOTextureTarget(), containerSurface);
-
-      MaskType maskType = MaskNone;
-      if (aContainer->GetMaskLayer()) {
-        if (!aContainer->GetTransform().CanDraw2D()) {
-          maskType = Mask3d;
-        } else {
-          maskType = Mask2d;
-        }
+    MaskType maskType = MaskNone;
+    if (aContainer->GetMaskLayer()) {
+      if (!aContainer->GetTransform().CanDraw2D()) {
+        maskType = Mask3d;
+      } else {
+        maskType = Mask2d;
       }
-      ShaderProgramOGL *rgb =
-        aManager->GetFBOLayerProgram(maskType);
-
-      rgb->Activate();
-      rgb->SetLayerQuadRect(visibleRect);
-      rgb->SetLayerTransform(transform);
-      rgb->SetLayerOpacity(opacity);
-      rgb->SetRenderOffset(aOffset);
-      rgb->SetTextureUnit(0);
-      rgb->LoadMask(aContainer->GetMaskLayer());
-
-      if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
-        // 2DRect case, get the multiplier right for a sampler2DRect
-        rgb->SetTexCoordMultiplier(visibleRect.width, visibleRect.height);
-      }
-
-      // Drawing is always flipped, but when copying between surfaces we want to avoid
-      // this. Pass true for the flip parameter to introduce a second flip
-      // that cancels the other one out.
-      aManager->BindAndDrawQuad(rgb, true);
-
-      // Clean up resources.  This also unbinds the texture.
-      aContainer->gl()->fDeleteTextures(1, &containerSurface);
     }
+    ShaderProgramOGL *rgb =
+      aManager->GetFBOLayerProgram(maskType);
+
+    rgb->Activate();
+    rgb->SetLayerQuadRect(visibleRect);
+    rgb->SetLayerTransform(transform);
+    rgb->SetLayerOpacity(opacity);
+    rgb->SetRenderOffset(aOffset);
+    rgb->SetTextureUnit(0);
+    rgb->LoadMask(aContainer->GetMaskLayer());
+
+    if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
+      // 2DRect case, get the multiplier right for a sampler2DRect
+      rgb->SetTexCoordMultiplier(visibleRect.width, visibleRect.height);
+    }
+
+    // Drawing is always flipped, but when copying between surfaces we want to avoid
+    // this. Pass true for the flip parameter to introduce a second flip
+    // that cancels the other one out.
+    aManager->BindAndDrawQuad(rgb, true);
+
+    // Clean up resources.  This also unbinds the texture.
+    aContainer->gl()->fDeleteTextures(1, &containerSurface);
   } else {
     aContainer->gl()->PopScissorRect();
   }

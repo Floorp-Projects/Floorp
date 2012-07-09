@@ -29,6 +29,7 @@
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
+#include "jslibmath.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -37,14 +38,15 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jslibmath.h"
 
+#include "builtin/Eval.h"
 #include "gc/Marking.h"
+#include "vm/Debugger.h"
+
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Logging.h"
 #endif
-#include "vm/Debugger.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -167,13 +169,13 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
         return false;
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
-    if (value.reference().isPrimitive()) {
+    if (value.get().isPrimitive()) {
         *vp = value;
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
-        if (idval.reference().isObject()) {
-            JSObject *obj = &idval.reference().toObject();
+        if (idval.get().isObject()) {
+            JSObject *obj = &idval.get().toObject();
             if (js_GetLocalNameFromFunctionQName(obj, id.address(), cx))
                 idval = IdToValue(id);
         }
@@ -282,6 +284,8 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     } check(cx);
 #endif
+
+    SPSEntryMarker marker(cx->runtime);
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
@@ -595,9 +599,9 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     if (!ToPrimitive(cx, rvalue.address()))
         return false;
 
-    if (lvalue.reference().isString() && rvalue.reference().isString()) {
-        JSString *l = lvalue.reference().toString();
-        JSString *r = rvalue.reference().toString();
+    if (lvalue.get().isString() && rvalue.get().isString()) {
+        JSString *l = lvalue.get().toString();
+        JSString *r = rvalue.get().toString();
         return EqualStrings(cx, l, r, result);
     }
 
@@ -950,23 +954,22 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
     RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
 
-    JSObject *obj, *pobj;
-    JSProperty *prop;
+    RootedObject obj(cx);
+    RootedObject pobj(cx);
+    RootedShape prop(cx);
     JSBool ok;
 
     if (JOF_OPMODE(*pc) == JOF_NAME)
         ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
     else
-        ok = baseops::LookupProperty(cx, start, name.reference(), &pobj, &prop);
+        ok = baseops::LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
         JS_PROPERTY_CACHE(cx).restore(&savedEntry);
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
-
-    const Shape *shape = (Shape *) prop;
-    JS_ASSERT(entry->prop == shape);
+    JS_ASSERT(entry->prop == prop);
 }
 #endif /* DEBUG && !JS_THREADSAFE */
 
@@ -1050,7 +1053,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-    gc::MaybeVerifyBarriers(cx, true);
+    if (interpMode == JSINTERP_NORMAL)
+        gc::MaybeVerifyBarriers(cx, true);
 
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
@@ -1273,11 +1277,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      */
     RootedValue rootValue0(cx), rootValue1(cx);
     RootedString rootString0(cx), rootString1(cx);
-    RootedObject rootObject0(cx), rootObject1(cx);
+    RootedObject rootObject0(cx), rootObject1(cx), rootObject2(cx);
     RootedFunction rootFunction0(cx);
     RootedTypeObject rootType0(cx);
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
+    RootedShape rootShape0(cx);
 
     if (rt->profilingScripts)
         ENABLE_INTERRUPTS();
@@ -1303,8 +1308,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
          * To support generator_throw and to catch ignored exceptions,
          * fail if cx->isExceptionPending() is true.
          */
-        if (cx->isExceptionPending())
+        if (cx->isExceptionPending()) {
+            Probes::enterScript(cx, script, script->function(), regs.fp());
             goto error;
+        }
     }
 #endif
 
@@ -1314,8 +1321,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
-        if (!fp->isGeneratorFrame() && !fp->prologue(cx, UseNewTypeAtEntry(cx, fp)))
-            goto error;
+        if (!fp->isGeneratorFrame()) {
+            if (!fp->prologue(cx, UseNewTypeAtEntry(cx, fp)))
+                goto error;
+        } else {
+            Probes::enterScript(cx, script, script->function(), fp);
+        }
         if (cx->compartment->debugMode()) {
             JSTrapStatus status = ScriptDebugPrologue(cx, fp);
             switch (status) {
@@ -1604,6 +1615,8 @@ BEGIN_CASE(JSOP_STOP)
 
         if (!regs.fp()->isYielding())
             regs.fp()->epilogue(cx);
+        else
+            Probes::exitScript(cx, script, script->function(), regs.fp());
 
         /* The JIT inlines the epilogue. */
 #ifdef JS_METHODJIT
@@ -1742,8 +1755,8 @@ BEGIN_CASE(JSOP_IN)
     obj = &rref.toObject();
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
-    JSObject *obj2;
-    JSProperty *prop;
+    RootedObject &obj2 = rootObject1;
+    RootedShape &prop = rootShape0;
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
@@ -2201,8 +2214,9 @@ BEGIN_CASE(JSOP_DELNAME)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    JSObject *obj, *obj2;
-    JSProperty *prop;
+    RootedObject &obj = rootObject1;
+    RootedObject &obj2 = rootObject2;
+    RootedShape &prop = rootShape0;
     if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
         goto error;
 
@@ -2357,7 +2371,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (!GetPropertyOperation(cx, script, regs.pc, regs.sp[-1], rval.address()))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, rval.reference());
+    TypeScript::Monitor(cx, script, regs.pc, rval);
 
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
@@ -2509,7 +2523,6 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     if (!regs.fp()->prologue(cx, newType))
         goto error;
-
     if (cx->compartment->debugMode()) {
         switch (ScriptDebugPrologue(cx, regs.fp())) {
           case JSTRAP_CONTINUE:
@@ -2547,8 +2560,9 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    JSObject *obj, *obj2;
-    JSProperty *prop;
+    RootedObject &obj = rootObject1;
+    RootedObject &obj2 = rootObject2;
+    RootedShape &prop = rootShape0;
     if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
         goto error;
 
@@ -2915,9 +2929,9 @@ BEGIN_CASE(JSOP_DEFFUN)
     /* ES5 10.5 (NB: with subsequent errata). */
     RootedPropertyName &name = rootName0;
     name = fun->atom->asPropertyName();
-    JSProperty *prop = NULL;
-    JSObject *pobj;
-    if (!parent->lookupProperty(cx, name, &pobj, &prop))
+    RootedShape &shape = rootShape0;
+    RootedObject &pobj = rootObject1;
+    if (!parent->lookupProperty(cx, name, &pobj, &shape))
         goto error;
 
     RootedValue &rval = rootValue0;
@@ -2925,7 +2939,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     do {
         /* Steps 5d, 5f. */
-        if (!prop || pobj != parent) {
+        if (!shape || pobj != parent) {
             if (!parent->defineProperty(cx, name, rval,
                                         JS_PropertyStub, JS_StrictPropertyStub, attrs))
             {
@@ -2936,7 +2950,6 @@ BEGIN_CASE(JSOP_DEFFUN)
 
         /* Step 5e. */
         JS_ASSERT(parent->isNative());
-        Shape *shape = reinterpret_cast<Shape *>(prop);
         if (parent->isGlobal()) {
             if (shape->configurable()) {
                 if (!parent->defineProperty(cx, name, rval,
@@ -3478,7 +3491,7 @@ BEGIN_CASE(JSOP_BINDXMLNAME)
 
     Value lval;
     lval = regs.sp[-1];
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
@@ -3509,7 +3522,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     JS_ASSERT(!script->strictModeCode);
 
     Value lval = regs.sp[-1];
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     RootedId &id = rootId0;
     if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;
@@ -3970,6 +3983,8 @@ END_CASE(JSOP_ARRAYPUSH)
         interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
     if (!regs.fp()->isYielding())
         regs.fp()->epilogue(cx);
+    else
+        Probes::exitScript(cx, script, script->function(), regs.fp());
     regs.fp()->setFinishedInInterpreter();
 
 #ifdef JS_METHODJIT

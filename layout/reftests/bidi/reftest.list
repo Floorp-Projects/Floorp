@@ -16,8 +16,8 @@ random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-04.svg bidiSVG-04-ref.svg
 == bidiSVG-05.svg bidiSVG-05-ref.svg
 == bidiMirroring.svg bidiMirroring-ref.svg
-fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
-fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
+random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html
 # test for glyph mirroring in right-to-left text
 == mirroring-01.html mirroring-01-ref.html
@@ -93,7 +93,7 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 613149-1a.html 613149-1-ref.html
 == 613149-1b.html 613149-1-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia) == 613149-2a.html 613149-2-ref.html # bug 696672
-fuzzy-if(Android,24,1) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia) == 613149-2b.html 613149-2-ref.html # bug 696672
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia) == 613149-2b.html 613149-2-ref.html # bug 696672
 == 613157-1.html 613157-1-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia) == 613157-2.html 613157-2-ref.html # bug 696673
 == 662288-1.html 662288-1-ref.html

@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635553
+-->
+<head>
+  <title>Test for Bug 635553</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635499">Mozilla Bug 635499</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635553 **/
+
+var types = [
+  [ 'hidden',         false ],
+  [ 'text',           false ],
+  [ 'search',         false ],
+  [ 'tel',            false ],
+  [ 'url',            false ],
+  [ 'email',          false ],
+  [ 'password',       false ],
+  [ 'datetime',       true,  true ],
+  [ 'date',           true,  true ],
+  [ 'month',          true,  true ],
+  [ 'week',           true,  true ],
+  [ 'time',           true,  true ],
+  [ 'datetime-local', true,  true ],
+  [ 'number',         true ],
+  [ 'range',          true,  true ],
+  [ 'color',          false, true ],
+  [ 'checkbox',       false ],
+  [ 'radio',          false ],
+  [ 'file',           false ],
+  [ 'submit',         false ],
+  [ 'image',          false ],
+  [ 'reset',          false ],
+  [ 'button',         false ],
+];
+
+var input = document.createElement("input");
+document.getElementById('content').appendChild(input);
+
+function checkValidity(aElement, aValidity, aApply, aRangeApply)
+{
+  aValidity = aApply ? aValidity : true;
+
+  is(aElement.validity.valid, aValidity,
+     "element validity should be " + aValidity);
+  is(aElement.validity.rangeUnderflow, !aValidity,
+     "element underflow status should be " + !aValidity);
+  is(aElement.validationMessage, aValidity
+       ? "" : "Please select a value that is higher than " + aElement.min + ".",
+     "validation message");
+
+  is(aElement.mozMatchesSelector(":valid"), aElement.willValidate && aValidity,
+     (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
+  is(aElement.mozMatchesSelector(":invalid"), aElement.willValidate && !aValidity,
+     (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
+
+  if (!aRangeApply) {
+    ok(!aElement.mozMatchesSelector(":in-range"), ":in-range should not match");
+    ok(!aElement.mozMatchesSelector(":out-of-range"),
+       ":out-of-range should not match");
+  } else {
+    is(aElement.mozMatchesSelector(":in-range"), aValidity,
+       ":in-range matches status should be " + aValidity);
+    is(aElement.mozMatchesSelector(":out-of-range"), !aValidity,
+       ":out-of-range matches status should be " + !aValidity);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+for each (var data in types) {
+  input.type = data[0];
+  var apply = data[1];
+
+  if (data[2]) {
+    todo_is(input.type, data[0], data[0] + " isn't implemented yet");
+    continue;
+  }
+
+  checkValidity(input, true, apply, false);
+
+  input.min = '0';
+  checkValidity(input, true, apply, apply);
+
+  if (input.type == 'url') {
+    input.value = 'http://mozilla.org';
+    checkValidity(input, true, apply, apply);
+  } else if (input.type == 'email') {
+    input.value = 'foo@bar.com';
+    checkValidity(input, true, apply, apply);
+  } else if (input.type == 'file') {
+    // Need privileges to set a filename with .value.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+    var file = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    file.append('635499_file');
+    var outStream = Components.
+                    classes["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write("foo", 3);
+    outStream.close();
+
+    input.value = file.path;
+    checkValidity(input, true, apply, apply);
+
+    file.remove(false);
+  } else {
+    input.value = '1';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '0';
+    checkValidity(input, true, apply, apply);
+
+    input.value = 'foo';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '-1';
+    checkValidity(input, false, apply, apply);
+
+    input.min = '-1';
+    checkValidity(input, true, apply, apply);
+
+    input.value = '-42';
+    checkValidity(input, false, apply, apply);
+  }
+
+  input.min = '';
+  checkValidity(input, true, apply, false);
+
+  input.min = 'foo';
+  checkValidity(input, true, apply, false);
+
+  // Check that we correctly convert input.min to a double in validationMessage.
+  if (input.type == 'number') {
+    input.min = "4.333333333333333333333333333333333331";
+    input.value = "2";
+    is(input.validationMessage,
+       "Please select a value that is higher than 4.33333333333333.",
+       "validation message");
+  }
+
+  // Cleaning up,
+  input.removeAttribute('min');
+  input.value = '';
+}
+
+SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

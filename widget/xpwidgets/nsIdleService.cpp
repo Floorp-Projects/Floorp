@@ -100,10 +100,20 @@ nsIdleServiceDaily::Observe(nsISupports *,
   PRInt32 nowSec = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
   Preferences::SetInt(PREF_LAST_DAILY, nowSec);
 
+  // Force that to be stored so we don't retrigger twice a day under
+  // any circumstances.
+  nsIPrefService* prefs = Preferences::GetService();
+  if (prefs) {
+    prefs->SavePrefFile(nsnull);
+  }
+
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService", "Storing last idle time as %d",
                       nowSec);
 #endif
+
+  // Note the moment we started our timer.
+  mDailyTimerStart  = PR_Now();
 
   // Start timer for the next check in one day.
   (void)mTimer->InitWithFuncCallback(DailyCallback,
@@ -146,6 +156,10 @@ nsIdleServiceDaily::Init()
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService", "Setting timer a day from now");
 #endif
+
+    // Note the moment we started our timer.
+    mDailyTimerStart  = PR_Now();
+
     // Start timer for the next check in one day.
     (void)mTimer->InitWithFuncCallback(DailyCallback,
                                        this,
@@ -175,10 +189,39 @@ void
 nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
 {
 #ifdef ANDROID
-  __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback running, registering Idle observer");
+  __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback running");
 #endif
 
   nsIdleServiceDaily* me = static_cast<nsIdleServiceDaily*>(aClosure);
+
+  PRTime now = PR_Now();
+  PRTime launchTime = me->mDailyTimerStart + ((PRTime)SECONDS_PER_DAY * PR_USEC_PER_SEC);
+
+  // Check if it has been a day since we launched this timer.
+  if (now < launchTime) {
+      // Timer returned early, reschedule.
+      PRTime newTime = launchTime;
+
+      // Add 10 ms to ensure we don't undershoot, and never get a "0" timer.
+      newTime += 10 * PR_USEC_PER_MSEC;
+
+#ifdef ANDROID
+      __android_log_print(ANDROID_LOG_INFO, "IdleService",
+                          "DailyCallback resetting timer to %lld msec",
+                          (newTime - now) / PR_USEC_PER_MSEC);
+#endif
+
+      // Refire the timer.
+      (void)me->mTimer->InitWithFuncCallback(DailyCallback,
+                                             me,
+                                             (newTime - now) / PR_USEC_PER_MSEC,
+                                             nsITimer::TYPE_ONE_SHOT);
+      return;
+  }
+
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback registering Idle observer");
+#endif
 
   // The one thing we do every day is to start waiting for the user to "have
   // a significant idle time".

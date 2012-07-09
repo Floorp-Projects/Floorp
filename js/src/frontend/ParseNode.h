@@ -600,7 +600,7 @@ struct ParseNode {
         } binary;
         struct {                        /* one kid if unary */
             ParseNode   *kid;
-            JSBool      hidden;         /* hidden genexp-induced JSOP_YIELD
+            bool        hidden;         /* hidden genexp-induced JSOP_YIELD
                                            or directive prologue member (as
                                            pn_prologue) */
         } unary;

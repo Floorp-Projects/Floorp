@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, uuid(6f60ac96-fa2c-41a5-92b4-29aaadbd7a7b)]
+[scriptable, builtinclass, uuid(89ea9f32-18ec-413b-9e2c-ce9a4c851b1c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -433,6 +433,19 @@ interface nsIDocShell : nsISupports
    * @param storage the storage object to add
    */
   void addSessionStorage(in nsIPrincipal principal, in nsIDOMStorage storage);
+
+  /**
+   * Clones all session storage objects and attaches them to the given docshell.
+   * Useful when duplicating tabs and their states.
+   *
+   * @param docShell the docshell to clone the sessionstorage objects to
+   */
+  void cloneSessionStoragesTo(in nsIDocShell docShell);
+
+  /**
+   * Removes all WebApps session storage objects attached to the docshell.
+   */
+  void clearSessionStorages();
 
   /**
    * Gets the channel for the currently loaded document, if any. 

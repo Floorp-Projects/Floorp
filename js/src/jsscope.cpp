@@ -58,7 +58,7 @@ ShapeTable::init(JSRuntime *rt, Shape *lastProp)
 
     hashShift = HASH_BITS - sizeLog2;
     for (Shape::Range r = lastProp->all(); !r.empty(); r.popFront()) {
-        const Shape &shape = r.front();
+        Shape &shape = r.front();
         Shape **spp = search(shape.propid(), true);
 
         /*
@@ -589,7 +589,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id_,
  * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
  */
 inline bool
-CheckCanChangeAttrs(JSContext *cx, JSObject *obj, const Shape *shape, unsigned *attrsp)
+CheckCanChangeAttrs(JSContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
 {
     if (shape->configurable())
         return true;
@@ -880,7 +880,7 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
              * checks not to alter significantly the complexity of the
              * delete in debug builds, see bug 534493.
              */
-            const Shape *aprop = self->lastProperty();
+            Shape *aprop = self->lastProperty();
             for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent)
                 JS_ASSERT_IF(aprop != shape, self->nativeContains(cx, *aprop));
 #endif
@@ -1352,7 +1352,7 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
 
     /* The new shape had better be rooted at the old one. */
 #ifdef DEBUG
-    const Shape *nshape = shape;
+    Shape *nshape = shape;
     while (!nshape->isEmptyShape())
         nshape = nshape->previous();
     JS_ASSERT(nshape == entry.shape);
@@ -1393,3 +1393,16 @@ JSCompartment::sweepInitialShapeTable()
         }
     }
 }
+
+/*
+ * Property lookup hooks on non-native objects are required to return a non-NULL
+ * shape to signify that the property has been found. The actual shape returned
+ * is arbitrary, and it should never be read from. We use the non-native
+ * object's shape_ field, since it is readily available.
+ */
+void
+js::MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp)
+{
+    propp.set(obj->lastProperty());
+}
+

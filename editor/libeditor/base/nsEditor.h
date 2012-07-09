@@ -19,7 +19,7 @@
 #include "mozilla/Selection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIPrivateTextRange.h"
-#include "nsITransactionManager.h"
+#include "nsTransactionManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMArray.h"
 #include "nsIEditActionListener.h"
@@ -41,7 +41,7 @@ class nsIPresShell;
 class ChangeAttributeTxn;
 class CreateElementTxn;
 class InsertElementTxn;
-class DeleteElementTxn;
+class DeleteNodeTxn;
 class InsertTextTxn;
 class DeleteTextTxn;
 class SplitElementTxn;
@@ -176,6 +176,7 @@ public:
                                            nsIDOMNode ** aNewNode);
 
   /* helper routines for node/parent manipulations */
+  nsresult DeleteNode(nsINode* aNode);
   nsresult ReplaceContainer(nsINode* inNode,
                             mozilla::dom::Element** outNode,
                             const nsAString& aNodeType,
@@ -217,7 +218,7 @@ public:
   virtual nsresult BeginIMEComposition();
   virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
                                         nsIPrivateTextRangeList *aTextRange)=0;
-  nsresult EndIMEComposition();
+  void EndIMEComposition();
 
   void SwitchTextDirectionTo(PRUint32 aDirection);
 
@@ -251,10 +252,9 @@ protected:
                                        PRInt32      aOffset,
                                        InsertElementTxn ** aTxn);
 
-  /** create a transaction for removing aElement from its parent.
+  /** create a transaction for removing aNode from its parent.
     */
-  NS_IMETHOD CreateTxnForDeleteElement(nsIDOMNode * aElement,
-                                       DeleteElementTxn ** aTxn);
+  nsresult CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn);
 
 
   nsresult CreateTxnForDeleteSelection(EDirection aAction,
@@ -325,11 +325,11 @@ protected:
 
 
   // called after a transaction is done successfully
-  NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
+  void DoAfterDoTransaction(nsITransaction *aTxn);
   // called after a transaction is undone successfully
-  NS_IMETHOD DoAfterUndoTransaction();
+  void DoAfterUndoTransaction();
   // called after a transaction is redone successfully
-  NS_IMETHOD DoAfterRedoTransaction();
+  void DoAfterRedoTransaction();
 
   typedef enum {
     eDocumentCreated,
@@ -436,20 +436,19 @@ public:
                          bool        aNodeToKeepIsFirst);
 
   /**
-   *  Set aOffset to the offset of aChild in aParent.  
-   *  Returns an error if aChild is not an immediate child of aParent.
+   * Return the offset of aChild in aParent.  Asserts fatally if parent or
+   * child is null, or parent is not child's parent.
    */
-  static nsresult GetChildOffset(nsIDOMNode *aChild, 
-                                 nsIDOMNode *aParent, 
-                                 PRInt32    &aOffset);
+  static PRInt32 GetChildOffset(nsIDOMNode *aChild,
+                                nsIDOMNode *aParent);
 
   /**
-   *  Set aParent to the parent of aChild.
-   *  Set aOffset to the offset of aChild in aParent.  
+   *  Set outParent to the parent of aChild.
+   *  Set outOffset to the offset of aChild in outParent.
    */
-  static nsresult GetNodeLocation(nsIDOMNode *aChild, 
-                                 nsCOMPtr<nsIDOMNode> *aParent, 
-                                 PRInt32    *aOffset);
+  static void GetNodeLocation(nsIDOMNode* aChild,
+                              nsCOMPtr<nsIDOMNode>* outParent,
+                              PRInt32* outOffset);
 
   /** returns the number of things inside aNode in the out-param aCount.  
     * @param  aNode is the node to get the length of.  
@@ -590,7 +589,6 @@ public:
   bool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
 
-  static bool IsTextOrElementNode(nsIDOMNode *aNode);
   static bool IsTextNode(nsIDOMNode *aNode);
   static bool IsTextNode(nsINode *aNode);
   
@@ -823,7 +821,7 @@ protected:
 
   nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;
 
-  nsCOMPtr<nsITransactionManager> mTxnMgr;
+  nsRefPtr<nsTransactionManager> mTxnMgr;
   nsCOMPtr<mozilla::dom::Element> mRootElement; // cached root node
   nsCOMPtr<nsIPrivateTextRangeList> mIMETextRangeList; // IME special selection ranges
   nsCOMPtr<nsIDOMCharacterData>     mIMETextNode;      // current IME text node

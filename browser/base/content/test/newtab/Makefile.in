@@ -16,6 +16,7 @@ _BROWSER_FILES = \
 	browser_newtab_disable.js \
 	browser_newtab_drag_drop.js \
 	browser_newtab_drop_preview.js \
+	browser_newtab_focus.js \
 	browser_newtab_private_browsing.js \
 	browser_newtab_reset.js \
 	browser_newtab_tabsync.js \

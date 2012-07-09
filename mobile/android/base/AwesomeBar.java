@@ -53,11 +53,8 @@ import org.mozilla.gecko.db.BrowserDB;
 
 import org.json.JSONObject;
 
-public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
+public class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
-
-    private static final int SUGGESTION_TIMEOUT = 2000;
-    private static final int SUGGESTION_MAX = 3;
 
     static final String URL_KEY = "url";
     static final String CURRENT_URL_KEY = "currenturl";
@@ -72,8 +69,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private ImageButton mGoButton;
     private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
-    private SuggestClient mSuggestClient;
-    private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,24 +170,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 if (!hasCompositionString(s)) {
                     updateGoButton(text);
                 }
-
-                // cancel previous query
-                if (mSuggestTask != null) {
-                    mSuggestTask.cancel(true);
-                }
-
-                if (mSuggestClient != null) {
-                    mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
-                         protected ArrayList<String> doInBackground(String... query) {
-                             return mSuggestClient.query(query[0]);
-                         }
-
-                         protected void onPostExecute(ArrayList<String> suggestions) {
-                             mAwesomeTabs.setSuggestions(suggestions);
-                         }
-                    };
-                    mSuggestTask.execute(text);
-                }
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count,
@@ -228,24 +205,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 }
             }
         });
-
-        GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-    }
-
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("SearchEngines:Data")) {
-                final String suggestEngine =  message.isNull("suggestEngine") ? null : message.getString("suggestEngine");
-                final String suggestTemplate = message.isNull("suggestTemplate") ? null : message.getString("suggestTemplate");
-                if (suggestTemplate != null)
-                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
-                mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
-            }
-        } catch (Exception e) {
-            // do nothing
-            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
-        }
     }
 
     @Override
@@ -367,7 +326,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         // by any of the views, which usually means the edit box lost focus
         if (keyCode == KeyEvent.KEYCODE_BACK ||
             keyCode == KeyEvent.KEYCODE_MENU ||
-            keyCode == KeyEvent.KEYCODE_SEARCH ||
             keyCode == KeyEvent.KEYCODE_DPAD_UP ||
             keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
             keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
@@ -377,6 +335,12 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return super.onKeyDown(keyCode, event);
+        } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+             mText.setText("");
+             mText.requestFocus();
+             InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+             imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
+             return true;
         } else {
             int selStart = -1;
             int selEnd = -1;
@@ -419,7 +383,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void onDestroy() {
         super.onDestroy();
         mAwesomeTabs.destroy();
-        GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
     }
 
     @Override

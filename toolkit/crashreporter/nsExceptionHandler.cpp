@@ -84,6 +84,7 @@ using mozilla::InjectCrashRunnable;
 #include <vector>
 
 #include "mozilla/mozalloc_oom.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -656,6 +657,14 @@ static bool ShouldReport()
   return !(envvar && *envvar);
 }
 
+namespace {
+  bool Filter(void* context) {
+    mozilla::DisableWritePoisoning();
+    return true;
+  }
+}
+
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -814,7 +823,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #ifdef XP_WIN
                      FPEFilter,
 #else
-                     nsnull,
+                     Filter,
 #endif
                      MinidumpCallback,
                      nsnull,
@@ -1940,6 +1949,11 @@ OOPInitialized()
   return pidToMinidump != NULL;
 }
 
+static bool ChildFilter(void *context) {
+  mozilla::DisableWritePoisoning();
+  return true;
+}
+
 static void
 OOPInit()
 {
@@ -1990,6 +2004,8 @@ OOPInit()
 
   crashServer = new CrashGenerationServer(
     childCrashNotifyPipe,
+    ChildFilter,
+    NULL,
     OnChildProcessDumpRequested, NULL,
     NULL, NULL,
     true, // automatically generate dumps
@@ -2203,7 +2219,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler("",
-                     NULL,    // no filter callback
+                     Filter,
                      NULL,    // no minidump callback
                      NULL,    // no callback context
                      true,    // install signal handlers

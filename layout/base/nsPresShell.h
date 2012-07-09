@@ -184,8 +184,9 @@ public:
 
   //nsIViewObserver interface
 
-  virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
-                     PaintType aType, bool aWillSendDidPaint);
+  virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
+                     const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
+                     bool aWillSendDidPaint);
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,
@@ -199,7 +200,7 @@ public:
   virtual bool ShouldIgnoreInvalidation();
   virtual void WillPaint(bool aWillSendDidPaint);
   virtual void DidPaint();
-  virtual void ScheduleViewManagerFlush(PRUint32 aFlags = 0);
+  virtual void ScheduleViewManagerFlush();
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange);
   virtual void ClearMouseCaptureOnView(nsIView* aView);
   virtual bool IsVisible();
@@ -322,9 +323,6 @@ public:
                            size_t *aTextRunsSize,
                            size_t *aPresContextSize);
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
-
-  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver);
-
 
   // This data is stored as a content property (nsGkAtoms::scrolling) on
   // mContentToScrollTo when we have a pending ScrollIntoView.
@@ -770,12 +768,6 @@ protected:
   bool                      mLastRootReflowHadUnconstrainedHeight : 1;
   bool                      mNoDelayedMouseEvents : 1;
   bool                      mNoDelayedKeyEvents : 1;
-
-  // False if calls to Paint with the retaining manager can be handled
-  // with an empty transaction, True if we require painting and a layer
-  // tree update.
-  bool                      mPaintRequired : 1;
-
 
   // We've been disconnected from the document.  We will refuse to paint the
   // document until either our timer fires or all frames are constructed.

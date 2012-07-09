@@ -397,6 +397,42 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
 #endif // MOZ_FLEXBOX
 
+#ifdef MOZ_FLEXBOX
+// See nsStylePosition
+#define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
+#define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
+#define NS_STYLE_ALIGN_ITEMS_CENTER             2
+#define NS_STYLE_ALIGN_ITEMS_BASELINE           3
+#define NS_STYLE_ALIGN_ITEMS_STRETCH            4
+
+// For convenience/clarity (since we use this default value in multiple places)
+#define NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE      NS_STYLE_ALIGN_ITEMS_STRETCH
+
+// The "align-self" property accepts all of the normal "align-items" values
+// (above) plus a special 'auto' value that computes to the parent's
+// "align-items" value. Our computed style code internally represents 'auto'
+// with this enum until we actually evaluate it:
+#define NS_STYLE_ALIGN_SELF_AUTO                5
+
+// See nsStylePosition
+#define NS_STYLE_FLEX_DIRECTION_ROW             0
+#define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1
+#define NS_STYLE_FLEX_DIRECTION_COLUMN          2
+#define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE  3
+
+// See nsStylePosition
+// NOTE: This is the initial value of the integer-valued 'order' property
+// (rather than an internal numerical representation of some keyword).
+#define NS_STYLE_ORDER_INITIAL                  0
+
+// See nsStylePosition
+#define NS_STYLE_JUSTIFY_CONTENT_FLEX_START     0
+#define NS_STYLE_JUSTIFY_CONTENT_FLEX_END       1
+#define NS_STYLE_JUSTIFY_CONTENT_CENTER         2
+#define NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN  3
+#define NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND   4
+#endif // MOZ_FLEXBOX
+
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
 #define NS_STYLE_FLOAT_LEFT                     1
@@ -786,6 +822,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER   1
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE    2
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER  3
+#define NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE    4
 
 // See nsStyleSVG
 

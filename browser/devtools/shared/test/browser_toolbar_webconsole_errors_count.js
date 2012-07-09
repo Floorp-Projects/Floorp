@@ -29,8 +29,8 @@ function test() {
   addTab(TEST_URI, openToolbar);
 
   function getErrorsCount() {
-    let match = webconsole.label.match(/\((\d+)\)$/);
-    return match ? match[1] : 0;
+    let count = webconsole.getAttribute("error-count");
+    return count ? count : "0";
   }
 
   function onOpenToolbar() {

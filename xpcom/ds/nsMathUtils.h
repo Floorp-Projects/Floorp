@@ -107,4 +107,15 @@ inline NS_HIDDEN_(bool) NS_finite(double d)
 #endif
 }
 
+/**
+ * Returns the result of the modulo of x by y using a floored division.
+ * fmod(x, y) is using a truncated division.
+ * The main difference is that the result of this method will have the sign of
+ * y while the result of fmod(x, y) will have the sign of x.
+ */
+inline NS_HIDDEN_(double) NS_floorModulo(double x, double y)
+{
+  return (x - y * floor(x / y));
+}
+
 #endif

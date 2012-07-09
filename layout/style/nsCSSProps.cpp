@@ -902,6 +902,45 @@ const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+#ifdef MOZ_FLEXBOX
+const PRInt32 nsCSSProps::kAlignItemsKTable[] = {
+  eCSSKeyword_flex_start, NS_STYLE_ALIGN_ITEMS_FLEX_START,
+  eCSSKeyword_flex_end,   NS_STYLE_ALIGN_ITEMS_FLEX_END,
+  eCSSKeyword_center,     NS_STYLE_ALIGN_ITEMS_CENTER,
+  eCSSKeyword_baseline,   NS_STYLE_ALIGN_ITEMS_BASELINE,
+  eCSSKeyword_stretch,    NS_STYLE_ALIGN_ITEMS_STRETCH,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+// Note: 'align-self' takes the same keywords as 'align-items', plus 'auto'.
+const PRInt32 nsCSSProps::kAlignSelfKTable[] = {
+  eCSSKeyword_flex_start, NS_STYLE_ALIGN_ITEMS_FLEX_START,
+  eCSSKeyword_flex_end,   NS_STYLE_ALIGN_ITEMS_FLEX_END,
+  eCSSKeyword_center,     NS_STYLE_ALIGN_ITEMS_CENTER,
+  eCSSKeyword_baseline,   NS_STYLE_ALIGN_ITEMS_BASELINE,
+  eCSSKeyword_stretch,    NS_STYLE_ALIGN_ITEMS_STRETCH,
+  eCSSKeyword_auto,       NS_STYLE_ALIGN_SELF_AUTO,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kFlexDirectionKTable[] = {
+  eCSSKeyword_row,            NS_STYLE_FLEX_DIRECTION_ROW,
+  eCSSKeyword_row_reverse,    NS_STYLE_FLEX_DIRECTION_ROW_REVERSE,
+  eCSSKeyword_column,         NS_STYLE_FLEX_DIRECTION_COLUMN,
+  eCSSKeyword_column_reverse, NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kJustifyContentKTable[] = {
+  eCSSKeyword_flex_start,    NS_STYLE_JUSTIFY_CONTENT_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_JUSTIFY_CONTENT_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_JUSTIFY_CONTENT_CENTER,
+  eCSSKeyword_space_between, NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN,
+  eCSSKeyword_space_around,  NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND,
+  eCSSKeyword_UNKNOWN,-1
+};
+#endif // MOZ_FLEXBOX
+
 const PRInt32 nsCSSProps::kFloatKTable[] = {
   eCSSKeyword_none,  NS_STYLE_FLOAT_NONE,
   eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
@@ -1168,6 +1207,14 @@ const PRInt32 nsCSSProps::kRadialGradientShapeKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kRadialGradientSizeKTable[] = {
+  eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE,
+  eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER,
+  eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE,
+  eCSSKeyword_farthest_corner, NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kRadialGradientLegacySizeKTable[] = {
   eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE,
   eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER,
   eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE,
@@ -2028,6 +2075,15 @@ static const nsCSSProperty gColumnRuleSubpropTable[] = {
   eCSSProperty__moz_column_rule_color,
   eCSSProperty_UNKNOWN
 };
+
+#ifdef MOZ_FLEXBOX
+static const nsCSSProperty gFlexSubpropTable[] = {
+  eCSSProperty_flex_grow,
+  eCSSProperty_flex_shrink,
+  eCSSProperty_flex_basis,
+  eCSSProperty_UNKNOWN
+};
+#endif // MOZ_FLEXBOX
 
 static const nsCSSProperty gOverflowSubpropTable[] = {
   eCSSProperty_overflow_x,

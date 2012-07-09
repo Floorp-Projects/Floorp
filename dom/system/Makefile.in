@@ -10,6 +10,7 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = dom
+XPIDL_MODULE    = dom_system
 LIBRARY_NAME    = domsystem_s
 LIBXUL_LIBRARY  = 1
 
@@ -31,6 +32,9 @@ endif
 
 DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
+XPIDLSRCS = \
+  nsIOSFileConstantsService.idl \
+  $(NULL)
 
 CPPSRCS     = \
   nsDeviceSensors.cpp \

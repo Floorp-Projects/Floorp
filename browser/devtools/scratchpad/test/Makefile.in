@@ -32,6 +32,7 @@ _BROWSER_TEST_FILES = \
 		browser_scratchpad_bug650345_find_ui.js \
 		browser_scratchpad_bug714942_goto_line_ui.js \
 		browser_scratchpad_bug_650760_help_key.js \
+		browser_scratchpad_bug_651942_recent_files.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)

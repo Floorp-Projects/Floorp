@@ -23,16 +23,11 @@ class PropertyProvider;
 
 #define TEXT_HAS_FONT_INFLATION          NS_FRAME_STATE_BIT(61)
 
-class nsDisplayTextGeometry;
-class nsDisplayText;
-
 class nsTextFrame : public nsFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
   friend class nsContinuingTextFrame;
-  friend class nsDisplayTextGeometry;
-  friend class nsDisplayText;
 
   nsTextFrame(nsStyleContext* aContext)
     : nsFrame(aContext)
@@ -497,10 +492,6 @@ protected:
              mColor == aOther.mColor &&
              mBaselineOffset == aOther.mBaselineOffset;
     }
-
-    bool operator!=(const LineDecoration& aOther) const {
-      return !(*this == aOther);
-    }
   };
   struct TextDecorations {
     nsAutoTArray<LineDecoration, 1> mOverlines, mUnderlines, mStrikes;
@@ -519,17 +510,6 @@ protected:
     bool HasStrikeout() const {
       return !mStrikes.IsEmpty();
     }
-
-    bool operator==(const TextDecorations& aOther) const {
-      return mOverlines == aOther.mOverlines &&
-             mUnderlines == aOther.mUnderlines &&
-             mStrikes == aOther.mStrikes;
-    }
-    
-    bool operator!=(const TextDecorations& aOther) const {
-      return !(*this == aOther);
-    }
-
   };
   void GetTextDecorations(nsPresContext* aPresContext,
                           TextDecorations& aDecorations);

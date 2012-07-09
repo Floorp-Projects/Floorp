@@ -25,6 +25,13 @@ interface nsIDOMContactTelephone : nsISupports
   attribute DOMString number;
 };
 
+[scriptable, uuid(94811520-c11f-11e1-afa7-0800200c9a66)]
+interface nsIDOMContactEmail : nsISupports
+{
+  attribute DOMString type;
+  attribute DOMString address;
+};
+
 [scriptable, uuid(e31daea0-0cb6-11e1-be50-0800200c9a66)]
 interface nsIDOMContactFindOptions : nsISupports
 {
@@ -46,7 +53,7 @@ interface nsIDOMContactProperties : nsISupports
   attribute jsval         familyName;         // DOMString[]
   attribute jsval         honorificSuffix;    // DOMString[]
   attribute jsval         nickname;           // DOMString[]
-  attribute jsval         email;              // DOMString[]
+  attribute jsval         email;              // ContactEmail[]
   attribute jsval         photo;              // DOMString[]
   attribute jsval         url;                // DOMString[]
   attribute jsval         category;           // DOMString[]

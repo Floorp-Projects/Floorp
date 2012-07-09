@@ -11,14 +11,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MAX_EVENTS = 200;
 
-XPCOMUtils.defineLazyGetter(this, "gPrivBrowsing", function () {
-  // private browsing may not be available in some Gecko Apps
-  if (!(["@mozilla.org/privatebrowsing;1"] in Cc))
-    return null;
-
-  return Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
-});
-
 var EXPORTED_SYMBOLS = ["ConsoleAPIStorage"];
 
 var _consoleStorage = {};
@@ -103,10 +95,6 @@ var ConsoleAPIStorage = {
     let ID = parseInt(aWindowID);
     if (isNaN(ID)) {
       throw new Error("Invalid window ID argument");
-    }
-
-    if (gPrivBrowsing && gPrivBrowsing.privateBrowsingEnabled) {
-      return;
     }
 
     if (!_consoleStorage[ID]) {

@@ -170,7 +170,6 @@
 #include "sampler.h"
 
 #include "Layers.h"
-#include "LayerTreeInvalidation.h"
 #include "nsAsyncDOMEvent.h"
 
 #ifdef NS_FUNCTION_TIMER
@@ -595,24 +594,6 @@ nsIPresShell::GetVerifyReflowEnable()
 #endif
   return gVerifyReflowEnabled;
 }
-  
-void 
-PresShell::AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver)
-{
-  if (!mHiddenInvalidationObserverRefreshDriver && !mIsDestroying && !mHaveShutDown) {
-    aDriver->AddPresShellToInvalidateIfHidden(this);
-    mHiddenInvalidationObserverRefreshDriver = aDriver;
-  }
-}
-
-void
-nsIPresShell::InvalidatePresShellIfHidden()
-{
-  if (!IsVisible() && mPresContext) {
-    mPresContext->NotifyInvalidation(0);
-  }
-  mHiddenInvalidationObserverRefreshDriver = nsnull;
-}
 
 void
 nsIPresShell::SetVerifyReflowEnable(bool aEnabled)
@@ -1026,10 +1007,6 @@ PresShell::Destroy()
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
   rd->RemoveLayoutFlushObserver(this);
-  if (mHiddenInvalidationObserverRefreshDriver) {
-    mHiddenInvalidationObserverRefreshDriver->RemovePresShellToInvalidateIfHidden(this);
-  }
-
   rd->RevokeViewManagerFlush();
 
   mResizeEvent.Revoke();
@@ -1655,10 +1632,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   if (!rootFrame) {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  for (nsIFrame* f = rootFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    f->RemoveStateBits(NS_FRAME_NO_COMPONENT_ALPHA);
   }
 
   Element *root = mDocument->GetRootElement();
@@ -3401,14 +3374,11 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
 }
 
 void
-PresShell::ScheduleViewManagerFlush(PRUint32 aFlags)
+PresShell::ScheduleViewManagerFlush()
 {
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
-    if (!(aFlags & nsIFrame::PAINT_COMPOSITE_ONLY)) {
-      mPaintRequired = true;
-    }
   }
   if (mDocument) {
     mDocument->SetNeedLayoutFlush();
@@ -3580,7 +3550,8 @@ PresShell::UnsuppressAndInvalidate()
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
-    rootFrame->InvalidateFrame();
+    nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
+    rootFrame->Invalidate(rect);
 
     if (mCaretEnabled && mCaret) {
       mCaret->CheckCaretDrawingState();
@@ -5232,8 +5203,9 @@ private:
 
 void
 PresShell::Paint(nsIView*           aViewToPaint,
+                 nsIWidget*         aWidgetToPaint,
                  const nsRegion&    aDirtyRegion,
-                 PaintType          aType,
+                 const nsIntRegion& aIntDirtyRegion,
                  bool               aWillSendDidPaint)
 {
 #ifdef NS_FUNCTION_TIMER
@@ -5250,6 +5222,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
   SAMPLE_LABEL("Paint", "PresShell::Paint");
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
+  NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
 
   nsAutoNotifyDidPaint notifyDidPaint(aWillSendDidPaint);
 
@@ -5260,82 +5233,37 @@ PresShell::Paint(nsIView*           aViewToPaint,
 
   bool isRetainingManager;
   LayerManager* layerManager =
-    aViewToPaint->GetWidget()->GetLayerManager(&isRetainingManager);
+    aWidgetToPaint->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
 
   if (mIsFirstPaint) {
     layerManager->SetIsFirstPaint();
     mIsFirstPaint = false;
   }
+  layerManager->BeginTransaction();
 
   if (frame && isRetainingManager) {
     // Try to do an empty transaction, if the frame tree does not
     // need to be updated. Do not try to do an empty transaction on
     // a non-retained layer manager (like the BasicLayerManager that
     // draws the window title bar on Mac), because a) it won't work
-    // and b) below we don't want to clear mPaintRequired,
+    // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
     // that will cause us to forget to update the real layer manager!
-    if (aType == PaintType_Composite) {
-      if (layerManager->HasShadowManager()) {
-        return;
-      }
-      layerManager->BeginTransaction();
+    if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager->EndEmptyTransaction()) {
-        return;
-      }
-      NS_WARNING("Must complete empty transaction when compositing!");
-    } else {
-      layerManager->BeginTransaction();
-    }
-
-    if (!mPaintRequired) {
-      NotifySubDocInvalidationFunc computeInvalidFunc =
-        presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
-      bool computeInvalidRect = computeInvalidFunc ||
-                                (layerManager->GetBackendType() == LayerManager::LAYERS_BASIC);
-
-      nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
-                                         LayerProperties::CloneFrom(layerManager->GetRoot()) : 
-                                         nsnull);
-
-      if (layerManager->EndEmptyTransaction()) {
-        nsIntRect invalid;
-        if (props) {
-          invalid = props->ComputeDifferences(layerManager->GetRoot(), computeInvalidFunc);
-        } else {
-          LayerProperties::ClearInvalidations(layerManager->GetRoot());
-        }
-        if (!invalid.IsEmpty()) {
-          if (props) {
-            nsRect rect(presContext->DevPixelsToAppUnits(invalid.x),
-                        presContext->DevPixelsToAppUnits(invalid.y),
-                        presContext->DevPixelsToAppUnits(invalid.width),
-                        presContext->DevPixelsToAppUnits(invalid.height));
-            aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
-            presContext->NotifyInvalidation(invalid, 0);
-          } else {
-            aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
-          }
-        }
-    
         frame->UpdatePaintCountForPaintedPresShells();
         presContext->NotifyDidPaintForSubtree();
         return;
       }
     }
-    mPaintRequired = false;
-  } else {
-    layerManager->BeginTransaction();
+
+    frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
   if (frame) {
     frame->ClearPresShellsFromLastPaint();
   }
 
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
-  PRUint32 flags = nsLayoutUtils::PAINT_WIDGET_LAYERS | nsLayoutUtils::PAINT_EXISTING_TRANSACTION;
-  if (aType == PaintType_NoComposite) {
-    flags |= nsLayoutUtils::PAINT_NO_COMPOSITE;
-  }
 
   if (frame) {
     // Defer invalidates that are triggered during painting, and discard
@@ -5345,12 +5273,12 @@ PresShell::Paint(nsIView*           aViewToPaint,
     frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
 
     // We can paint directly into the widget using its layer manager.
-    nsLayoutUtils::PaintFrame(nsnull, frame, aDirtyRegion, bgcolor, flags);
+    nsLayoutUtils::PaintFrame(nsnull, frame, aDirtyRegion, bgcolor,
+                              nsLayoutUtils::PAINT_WIDGET_LAYERS |
+                              nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
 
     frame->EndDeferringInvalidatesForDisplayRoot();
-    if (aType != PaintType_Composite) {
-      presContext->NotifyDidPaintForSubtree();
-    }
+    presContext->NotifyDidPaintForSubtree();
     return;
   }
 
@@ -5364,13 +5292,9 @@ PresShell::Paint(nsIView*           aViewToPaint,
     root->SetVisibleRegion(bounds);
     layerManager->SetRoot(root);
   }
-  layerManager->EndTransaction(NULL, NULL, aType == PaintType_NoComposite ?
-                                             LayerManager::END_NO_COMPOSITE :
-                                             LayerManager::END_DEFAULT);
+  layerManager->EndTransaction(NULL, NULL);
 
-  if (aType != PaintType_Composite) {
-    presContext->NotifyDidPaintForSubtree();
-  }
+  presContext->NotifyDidPaintForSubtree();
 }
 
 // static
@@ -6158,11 +6082,13 @@ PresShell::ShowEventTargetDebug()
   if (nsFrame::GetShowEventTargetFrameBorder() &&
       GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
-      mDrawEventTargetFrame->InvalidateFrame();
+      mDrawEventTargetFrame->Invalidate(
+          nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
     }
 
     mDrawEventTargetFrame = mCurrentEventFrame;
-    mDrawEventTargetFrame->InvalidateFrame();
+    mDrawEventTargetFrame->Invalidate(
+        nsRect(nsPoint(0, 0), mDrawEventTargetFrame->GetSize()));
   }
 }
 #endif
@@ -7370,8 +7296,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   NS_TIME_FUNCTION_WITH_DOCURL;
   SAMPLE_LABEL("layout", "DoReflow");
 
-  target->SchedulePaint();
-
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
     mReflowContinueTimer = nsnull;
@@ -7397,6 +7321,11 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   nsSize size;
   if (target == rootFrame) {
      size = mPresContext->GetVisibleArea().Size();
+
+     // target->GetRect() has the old size of the frame,
+     // mPresContext->GetVisibleArea() has the new size.
+     target->InvalidateRectDifference(mPresContext->GetVisibleArea(),
+                                      target->GetRect());
   } else {
      size = target->GetSize();
   }

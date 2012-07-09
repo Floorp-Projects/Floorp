@@ -58,7 +58,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIDOMDragEvent.h"
 #include "nsIScrollableFrame.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIObjectLoadingContent.h"
 #include "nsIDocShell.h"
 
 #include "nsContentCID.h"
@@ -633,11 +632,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   }
 #endif
 
-  nsIntRect rect(invalidRect->left,
-                 invalidRect->top,
-                 invalidRect->right - invalidRect->left,
-                 invalidRect->bottom - invalidRect->top);
-  mObjectFrame->InvalidateLayer(nsDisplayItem::TYPE_PLUGIN, &rect);
+  nsPresContext* presContext = mObjectFrame->PresContext();
+  nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->top),
+              presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+  if (container) {
+    gfxIntSize newSize = container->GetCurrentSize();
+    if (newSize != oldSize) {
+      // The image size has changed - invalidate the old area too, bug 635405.
+      nsRect oldRect = nsRect(0, 0,
+                              presContext->DevPixelsToAppUnits(oldSize.width),
+                              presContext->DevPixelsToAppUnits(oldSize.height));
+      rect.UnionRect(rect, oldRect);
+    }
+  }
+  rect.MoveBy(mObjectFrame->GetContentRectRelativeToSelf().TopLeft());
+  mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
   return NS_OK;
 }
 
@@ -650,7 +661,7 @@ NS_IMETHODIMP
 nsPluginInstanceOwner::RedrawPlugin()
 {
   if (mObjectFrame) {
-    mObjectFrame->InvalidateLayer(nsDisplayItem::TYPE_PLUGIN);
+    mObjectFrame->InvalidateLayer(mObjectFrame->GetContentRectRelativeToSelf(), nsDisplayItem::TYPE_PLUGIN);
   }
   return NS_OK;
 }
@@ -1195,31 +1206,6 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     mNumCachedAttrs++;
   }
 
-  // Some plugins (java, bug 406541) don't canonicalize the 'codebase' attribute
-  // in a standard way - codebase="" results in / (domain root), but
-  // codebase="blah" results in ./blah; codebase="file:" results in "file:///".
-  // We canonicalize codebase here to ensure the codebase we run security checks
-  // against is the same codebase java uses.
-  // Note that GetObjectBaseURI mimics some of java's quirks for maximal
-  // compatibility.
-  const char* mime = nsnull;
-  bool addCodebase = false;
-  nsCAutoString codebaseSpec;
-  if (mInstance && NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime &&
-      strcmp(mime, "application/x-java-vm") == 0) {
-    addCodebase = true;
-    nsCOMPtr<nsIObjectLoadingContent> objlContent = do_QueryInterface(mContent);
-    nsCOMPtr<nsIURI> codebaseURI;
-    objlContent->GetObjectBaseURI(nsCString(mime), getter_AddRefs(codebaseURI));
-    nsresult rv = codebaseURI->GetSpec(codebaseSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Make space if codebase isn't already set
-    if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::codebase)) {
-      mNumCachedAttrs++;
-    }
-  }
-
   mCachedAttrParamNames  = (char**)NS_Alloc(sizeof(char*) * (mNumCachedAttrs + 1 + mNumCachedParams));
   NS_ENSURE_TRUE(mCachedAttrParamNames,  NS_ERROR_OUT_OF_MEMORY);
   mCachedAttrParamValues = (char**)NS_Alloc(sizeof(char*) * (mNumCachedAttrs + 1 + mNumCachedParams));
@@ -1273,19 +1259,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
         mNumCachedAttrs--;
         wmodeSet = true;
       }
-    } else if (addCodebase && 0 == PL_strcasecmp(mCachedAttrParamNames[nextAttrParamIndex], "codebase")) {
-      mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(codebaseSpec));
-      addCodebase = false;
     } else {
       mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(value);
     }
-    nextAttrParamIndex++;
-  }
-
-  // Pontentially add CODEBASE attribute
-  if (addCodebase) {
-    mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING("codebase"));
-    mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(codebaseSpec));
     nextAttrParamIndex++;
   }
 
@@ -3756,7 +3732,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       mObjectFrame->PrepForDrawing(mWidget);
     }
     mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
-    mObjectFrame->InvalidateFrame();
+    mObjectFrame->Invalidate(mObjectFrame->GetContentRectRelativeToSelf());
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)

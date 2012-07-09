@@ -55,7 +55,7 @@
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
 #include "InsertElementTxn.h"
-#include "DeleteElementTxn.h"
+#include "DeleteNodeTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "DeleteRangeTxn.h"
@@ -165,7 +165,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEditor)
  }
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInlineSpellChecker)
- NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTxnMgr)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTxnMgr, nsITransactionManager)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIMETextRangeList)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIMETextNode)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mActionListeners)
@@ -613,61 +613,52 @@ nsEditor::GetSelection()
   return frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
 }
 
-NS_IMETHODIMP 
-nsEditor::DoTransaction(nsITransaction *aTxn)
+NS_IMETHODIMP
+nsEditor::DoTransaction(nsITransaction* aTxn)
 {
-#ifdef NS_DEBUG_EDITOR
-  if (gNoisy) { printf("Editor::DoTransaction ----------\n"); }
-#endif
+  if (mPlaceHolderBatch && !mPlaceHolderTxn) {
+    // it's pretty darn amazing how many different types of pointers this
+    // transaction goes through here.  I bet this is a record.
 
-  nsresult result = NS_OK;
-  
-  if (mPlaceHolderBatch && !mPlaceHolderTxn)
-  {
-    // it's pretty darn amazing how many different types of pointers
-    // this transaction goes through here.  I bet this is a record.
-    
     // We start off with an EditTxn since that's what the factory returns.
     nsRefPtr<EditTxn> editTxn = new PlaceholderTxn();
-    if (!editTxn) { return NS_ERROR_OUT_OF_MEMORY; }
 
-    // Then we QI to an nsIAbsorbingTransaction to get at placeholder functionality
+    // Then we QI to an nsIAbsorbingTransaction to get at placeholder
+    // functionality
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
-    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction),
+                            getter_AddRefs(plcTxn));
     // have to use line above instead of "plcTxn = do_QueryInterface(editTxn);"
     // due to our broken interface model for transactions.
 
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = do_GetWeakReference(plcTxn);
     plcTxn->Init(mPlaceHolderName, mSelState, this);
-    mSelState = nsnull;  // placeholder txn took ownership of this pointer
+    // placeholder txn took ownership of this pointer
+    mSelState = nsnull;
 
-    // finally we QI to an nsITransaction since that's what DoTransaction() expects
+    // finally we QI to an nsITransaction since that's what DoTransaction()
+    // expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
-    DoTransaction(theTxn);  // we will recurse, but will not hit this case in the nested call
+    // we will recurse, but will not hit this case in the nested call
+    DoTransaction(theTxn);
 
-    if (mTxnMgr)
-    {
-      nsCOMPtr<nsITransaction> topTxn;
-      result = mTxnMgr->PeekUndoStack(getter_AddRefs(topTxn));
-      NS_ENSURE_SUCCESS(result, result);
-      if (topTxn)
-      {
+    if (mTxnMgr) {
+      nsCOMPtr<nsITransaction> topTxn = mTxnMgr->PeekUndoStack();
+      if (topTxn) {
         plcTxn = do_QueryInterface(topTxn);
-        if (plcTxn)
-        {
-          // there is a palceholder transaction on top of the undo stack.  It is 
-          // either the one we just created, or an earlier one that we are now merging
-          // into.  From here on out remember this placeholder instead of the one
-          // we just created.
+        if (plcTxn) {
+          // there is a placeholder transaction on top of the undo stack.  It
+          // is either the one we just created, or an earlier one that we are
+          // now merging into.  From here on out remember this placeholder
+          // instead of the one we just created.
           mPlaceHolderTxn = do_GetWeakReference(plcTxn);
         }
       }
     }
   }
 
-  if (aTxn)
-  {  
+  if (aTxn) {
     // XXX: Why are we doing selection specific batching stuff here?
     // XXX: Most entry points into the editor have auto variables that
     // XXX: should trigger Begin/EndUpdateViewBatch() calls that will make
@@ -688,56 +679,42 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     // XXX: re-entry during initial reflow. - kin
 
     // get the selection and start a batch change
-    nsCOMPtr<nsISelection>selection;
-    result = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(result, result);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
-    selPrivate->StartBatchChanges();
+    selection->StartBatchChanges();
 
+    nsresult res;
     if (mTxnMgr) {
-      result = mTxnMgr->DoTransaction(aTxn);
+      res = mTxnMgr->DoTransaction(aTxn);
+    } else {
+      res = aTxn->DoTransaction();
     }
-    else {
-      result = aTxn->DoTransaction();
-    }
-    if (NS_SUCCEEDED(result)) {
-      result = DoAfterDoTransaction(aTxn);
+    if (NS_SUCCEEDED(res)) {
+      DoAfterDoTransaction(aTxn);
     }
 
-    selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
+    // no need to check res here, don't lose result of operation
+    selection->EndBatchChanges();
+
+    NS_ENSURE_SUCCESS(res, res);
   }
- 
-  NS_ENSURE_SUCCESS(result, result);
 
-  return result;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsEditor::EnableUndo(bool aEnable)
 {
-  nsresult result=NS_OK;
-
-  if (true==aEnable)
-  {
-    if (!mTxnMgr)
-    {
-      mTxnMgr = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
-      if (NS_FAILED(result) || !mTxnMgr) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
+  if (aEnable) {
+    if (!mTxnMgr) {
+      mTxnMgr = new nsTransactionManager();
     }
-    mTxnMgr->SetMaxTransactionCount(-1);
-  }
-  else
-  { // disable the transaction manager if it is enabled
-    if (mTxnMgr)
-    {
-      mTxnMgr->Clear();
-      mTxnMgr->SetMaxTransactionCount(0);
-    }
+  } else if (mTxnMgr) {
+    // disable the transaction manager if it is enabled
+    mTxnMgr->Clear();
+    mTxnMgr->SetMaxTransactionCount(0);
   }
 
   return NS_OK;
@@ -774,7 +751,8 @@ nsEditor::SetTransactionManager(nsITransactionManager *aTxnManager)
 {
   NS_ENSURE_TRUE(aTxnManager, NS_ERROR_FAILURE);
 
-  mTxnMgr = aTxnManager;
+  // nsITransactionManager is builtinclass, so this is safe
+  mTxnMgr = static_cast<nsTransactionManager*>(aTxnManager);
   return NS_OK;
 }
 
@@ -801,8 +779,7 @@ nsEditor::Undo(PRUint32 aCount)
     nsresult rv = mTxnMgr->UndoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = DoAfterUndoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
+    DoAfterUndoTransaction();
   }
 
   return NS_OK;
@@ -845,8 +822,7 @@ nsEditor::Redo(PRUint32 aCount)
     nsresult rv = mTxnMgr->RedoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = DoAfterRedoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
+    DoAfterRedoTransaction();
   }
 
   return NS_OK;
@@ -1463,16 +1439,15 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
                     nsIDOMNode * aRightNode,
                     nsIDOMNode * aParent)
 {
-  PRInt32 i, offset;
+  PRInt32 i;
   nsAutoRules beginRulesSniffing(this, kOpJoinNode, nsIEditor::ePrevious);
 
   // remember some values; later used for saved selection updating.
   // find the offset between the nodes to be joined.
-  nsresult result = GetChildOffset(aRightNode, aParent, offset);
-  NS_ENSURE_SUCCESS(result, result);
+  PRInt32 offset = GetChildOffset(aRightNode, aParent);
   // find the number of children of the lefthand node
   PRUint32 oldLeftNodeLen;
-  result = GetLengthOfDOMNode(aLeftNode, oldLeftNodeLen);
+  nsresult result = GetLengthOfDOMNode(aLeftNode, oldLeftNodeLen);
   NS_ENSURE_SUCCESS(result, result);
 
   for (i = 0; i < mActionListeners.Count(); i++)
@@ -1493,29 +1468,36 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
 }
 
 
-NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
+NS_IMETHODIMP
+nsEditor::DeleteNode(nsIDOMNode* aNode)
 {
-  PRInt32 i, offset;
-  nsCOMPtr<nsIDOMNode> parent;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  return DeleteNode(node);
+}
+
+nsresult
+nsEditor::DeleteNode(nsINode* aNode)
+{
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
-  nsresult result = GetNodeLocation(aElement, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(result, result);
-
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillDeleteNode(aElement);
-
-  nsRefPtr<DeleteElementTxn> txn;
-  result = CreateTxnForDeleteElement(aElement, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);  
+  for (PRInt32 i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillDeleteNode(aNode->AsDOMNode());
   }
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->DidDeleteNode(aElement, result);
+  nsRefPtr<DeleteNodeTxn> txn;
+  nsresult res = CreateTxnForDeleteNode(aNode, getter_AddRefs(txn));
+  if (NS_SUCCEEDED(res))  {
+    res = DoTransaction(txn);
+  }
 
-  return result;
+  for (PRInt32 i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidDeleteNode(aNode->AsDOMNode(), res);
+  }
+
+  NS_ENSURE_SUCCESS(res, res);
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1735,10 +1717,11 @@ nsresult
 nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
 {
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
+  nsresult res;
 
   nsCOMPtr<nsIDOMNode> oldParent;
   PRInt32 oldOffset;
-  nsresult res = GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
+  GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
   
   if (aOffset == -1)
   {
@@ -2012,22 +1995,18 @@ nsEditor::BeginIMEComposition()
   return NS_OK;
 }
 
-nsresult
+void
 nsEditor::EndIMEComposition()
 {
-  NS_ENSURE_TRUE(mInIMEMode, NS_OK); // nothing to do
-
-  nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mInIMEMode, ); // nothing to do
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
   if (mTxnMgr) {
-    nsCOMPtr<nsITransaction> txn;
-    rv = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "PeekUndoStack() failed");
+    nsCOMPtr<nsITransaction> txn = mTxnMgr->PeekUndoStack();
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn) {
-      rv = plcTxn->Commit();
+      DebugOnly<nsresult> rv = plcTxn->Commit();
       NS_ASSERTION(NS_SUCCEEDED(rv),
                    "nsIAbsorbingTransaction::Commit() failed");
     }
@@ -2042,8 +2021,6 @@ nsEditor::EndIMEComposition()
 
   // notify editor observers of action
   NotifyEditorObservers();
-
-  return rv;
 }
 
 
@@ -2956,10 +2933,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
     NS_ENSURE_SUCCESS(result, result);
     nsCOMPtr<nsIDOMNode> parent;
-    result = GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
-    NS_ENSURE_SUCCESS(result, result);
-    result = GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
-    NS_ENSURE_SUCCESS(result, result);
+    GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
+    GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
     
     // if selection endpoint is between the nodes, remember it as being
     // in the one that is going away instead.  This simplifies later selection
@@ -3132,34 +3107,33 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
 }
 
 
-nsresult 
-nsEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+PRInt32
+nsEditor::GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent)
 {
-  NS_ASSERTION((aChild && aParent), "bad args");
+  MOZ_ASSERT(aChild && aParent);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
-  nsCOMPtr<nsIContent> cChild = do_QueryInterface(aChild);
-  NS_ENSURE_TRUE(cChild && content, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  nsCOMPtr<nsINode> child = do_QueryInterface(aChild);
+  MOZ_ASSERT(parent && child);
 
-  aOffset = content->IndexOf(cChild);
-
-  return NS_OK;
+  PRInt32 idx = parent->IndexOf(child);
+  MOZ_ASSERT(idx != -1);
+  return idx;
 }
 
-nsresult 
-nsEditor::GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
+// static
+void
+nsEditor::GetNodeLocation(nsIDOMNode* aChild, nsCOMPtr<nsIDOMNode>* outParent,
+                          PRInt32* outOffset)
 {
-  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (inChild && outParent && outOffset)
-  {
-    result = inChild->GetParentNode(getter_AddRefs(*outParent));
-    if ((NS_SUCCEEDED(result)) && (*outParent))
-    {
-      result = GetChildOffset(inChild, *outParent, *outOffset);
-    }
+  MOZ_ASSERT(aChild && outParent && outOffset);
+  *outOffset = -1;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aChild->GetParentNode(getter_AddRefs(*outParent))));
+  if (*outParent) {
+    *outOffset = GetChildOffset(aChild, *outParent);
   }
-  return result;
 }
 
 // returns the number of things inside aNode.  
@@ -3906,24 +3880,6 @@ nsEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
 }
 
 
-// IsTextOrElementNode: true if node of dom type element or text
-//               
-bool
-nsEditor::IsTextOrElementNode(nsIDOMNode *aNode)
-{
-  if (!aNode)
-  {
-    NS_NOTREACHED("null node passed to IsTextOrElementNode()");
-    return false;
-  }
-  
-  PRUint16 nodeType;
-  aNode->GetNodeType(&nodeType);
-  return ((nodeType == nsIDOMNode::ELEMENT_NODE) || (nodeType == nsIDOMNode::TEXT_NODE));
-}
-
-
-
 ///////////////////////////////////////////////////////////////////////////
 // IsTextNode: true if node of dom type text
 //               
@@ -4444,12 +4400,14 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
   nsresult res;
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(selection->GetAnchorFocusRange());
 
-  if (!selection->Collapsed()) {
+  if (!selection->GetAnchorFocusRange()->Collapsed()) {
     res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
 
-    MOZ_ASSERT(selection->Collapsed(),
+    MOZ_ASSERT(selection->GetAnchorFocusRange() &&
+               selection->GetAnchorFocusRange()->Collapsed(),
                "Selection not collapsed after delete");
   }
 
@@ -4491,14 +4449,12 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
 
 
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
 {
-  nsresult rv = NS_OK;
-  
-  bool    isTransientTransaction;
-  rv = aTxn->GetIsTransient(&isTransientTransaction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isTransientTransaction;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aTxn->GetIsTransient(&isTransientTransaction)));
   
   if (!isTransientTransaction)
   {
@@ -4511,27 +4467,27 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
     if (modCount < 0)
       modCount = -modCount;
         
-    rv = IncrementModificationCount(1);    // don't count transient transactions
+    // don't count transient transactions
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      IncrementModificationCount(1)));
   }
-  
-  return rv;
 }
 
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterUndoTransaction()
 {
-  nsresult rv = NS_OK;
-
-  rv = IncrementModificationCount(-1);    // all undoable transactions are non-transient
-
-  return rv;
+  // all undoable transactions are non-transient
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    IncrementModificationCount(-1)));
 }
 
-NS_IMETHODIMP 
+void
 nsEditor::DoAfterRedoTransaction()
 {
-  return IncrementModificationCount(1);    // all redoable transactions are non-transient
+  // all redoable transactions are non-transient
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    IncrementModificationCount(1)));
 }
 
 NS_IMETHODIMP 
@@ -4610,20 +4566,18 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
   return rv;
 }
 
-NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
-                                             DeleteElementTxn ** aTxn)
+nsresult
+nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
+  nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
 
-  nsresult rv = txn->Init(this, aElement, &mRangeUpdater);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
+  nsresult res = txn->Init(this, aNode, &mRangeUpdater);
+  NS_ENSURE_SUCCESS(res, res);
 
-  return rv;
+  txn.forget(aTxn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -4815,9 +4769,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
-      nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(priorNode->AsDOMNode(),
-                                      getter_AddRefs(txn));
+      nsRefPtr<DeleteNodeTxn> txn;
+      res = CreateTxnForDeleteNode(priorNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
 
       aTxn->AppendChild(txn);
@@ -4852,9 +4805,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
-      nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(nextNode->AsDOMNode(),
-                                      getter_AddRefs(txn));
+      nsRefPtr<DeleteNodeTxn> txn;
+      res = CreateTxnForDeleteNode(nextNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
       aTxn->AppendChild(txn);
     }
@@ -4915,9 +4867,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aOffset = delTextTxn->GetOffset();
       *aLength = delTextTxn->GetNumCharsToDelete();
     } else {
-      nsRefPtr<DeleteElementTxn> delElementTxn;
-      res = CreateTxnForDeleteElement(selectedNode->AsDOMNode(),
-                                      getter_AddRefs(delElementTxn));
+      nsRefPtr<DeleteNodeTxn> delElementTxn;
+      res = CreateTxnForDeleteNode(selectedNode, getter_AddRefs(delElementTxn));
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_TRUE(delElementTxn, NS_ERROR_NULL_POINTER);
 
@@ -4953,9 +4904,7 @@ nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
   
-  PRInt32 offset;
-  res = GetChildOffset(aNode, parentNode, offset);
-  NS_ENSURE_SUCCESS(res, res);
+  PRInt32 offset = GetChildOffset(aNode, parentNode);
   
   nsCOMPtr<nsIDOMRange> range;
   res = CreateRange(parentNode, offset, parentNode, offset+1, getter_AddRefs(range));

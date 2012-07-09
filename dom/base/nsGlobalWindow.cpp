@@ -3967,6 +3967,14 @@ nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
 
   *aResult = nsnull;
 
+  // We need this now to ensure that we have a non-null |presContext|
+  // when we ought to.
+  // This is similar to EnsureSizeUpToDate, but only flushes frames.
+  nsGlobalWindow *parent = static_cast<nsGlobalWindow*>(GetPrivateParent());
+  if (parent) {
+    parent->FlushPendingNotifications(Flush_Frames);
+  }
+
   if (!mDocShell)
     return NS_OK;
 
@@ -8545,8 +8553,8 @@ nsGlobalWindow::ScheduleNextIdleObserverCallback()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 callbackTimeMS = 0;
-  if (idleObserver.mTimeInS * 1000 > userIdleTimeMS) {
-    callbackTimeMS = idleObserver.mTimeInS * 1000 - userIdleTimeMS;
+  if (idleObserver.mTimeInS * 1000 + mIdleFuzzFactor > userIdleTimeMS) {
+    callbackTimeMS = idleObserver.mTimeInS * 1000 - userIdleTimeMS + mIdleFuzzFactor;
   }
 
   mIdleTimer->Cancel();
@@ -8568,7 +8576,7 @@ nsGlobalWindow::GetFuzzTimeMS()
     return 0;
   }
 
-  PRUint32 randNum = 0;
+  PRUint32 randNum = MAX_IDLE_FUZZ_TIME_MS;
   PRSize nbytes = PR_GetRandomNoise(&randNum, sizeof(randNum));
   if (nbytes != sizeof(randNum)) {
     NS_WARNING("PR_GetRandomNoise(...) Not implemented or no available noise!");
@@ -8606,35 +8614,21 @@ nsGlobalWindow::ScheduleActiveTimerCallback()
 }
 
 nsresult
-nsGlobalWindow::ScheduleIdleTimerCallback()
-{
-  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-  MOZ_ASSERT(mIdleTimer);
-
-  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
-  mIdleTimer->Cancel();
-  mIdleFuzzFactor = GetFuzzTimeMS();
-  nsresult rv = mIdleTimer->InitWithFuncCallback(IdleActiveTimerCallback,
-                                                 this,
-                                                 mIdleFuzzFactor,
-                                                 nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-nsresult
 nsGlobalWindow::NotifyIdleObserversOfIdleActiveEvent()
 {
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
 
   if (mCurrentlyIdle) {
     mIdleCallbackIndex = 0;
+    mIdleFuzzFactor = GetFuzzTimeMS();
     nsresult rv = ScheduleNextIdleObserverCallback();
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
   mIdleCallbackIndex = -1;
+  MOZ_ASSERT(mIdleTimer);
+  mIdleTimer->Cancel();
   nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
   while (iter.HasMore()) {
     IdleObserverHolder& idleObserver = iter.GetNext();
@@ -8682,8 +8676,6 @@ nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
     } else {
       mIdleTimer->Cancel();
     }
-
-    mIdleFuzzFactor = GetFuzzTimeMS();
   }
 
   MOZ_ASSERT(mIdleService);
@@ -8730,20 +8722,7 @@ nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
   }
 
   if (static_cast<PRInt32>(insertAtIndex) == mIdleCallbackIndex) {
-    PRUint32 userIdleTimeMS;
-    rv = mIdleService->GetIdleTime(&userIdleTimeMS);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (tmpIdleObserver.mTimeInS*1000 <= userIdleTimeMS) {
-      NotifyIdleObserver(tmpIdleObserver.mIdleObserver,
-                         tmpIdleObserver.mTimeInS,
-                         true);
-      mIdleCallbackIndex++;
-      return NS_OK;
-    }
-
     mIdleTimer->Cancel();
-
     rv = ScheduleNextIdleObserverCallback();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -8860,7 +8839,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       mNotifyIdleObserversIdleOnThaw = true;
       mNotifyIdleObserversActiveOnThaw = false;
     } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
-      ScheduleIdleTimerCallback();
+      NotifyIdleObserversOfIdleActiveEvent();
     }
     return NS_OK;
   }
@@ -9046,7 +9025,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 
   if (mNotifyIdleObserversIdleOnThaw) {
     mNotifyIdleObserversIdleOnThaw = false;
-    ScheduleIdleTimerCallback();
+    NotifyIdleObserversOfIdleActiveEvent();    
   }
 
   if (mNotifyIdleObserversActiveOnThaw) {
@@ -10678,14 +10657,9 @@ nsGlobalWindow::SetIsApp(bool aValue)
 bool
 nsGlobalWindow::IsPartOfApp()
 {
-  mozIDOMApplication* app;
-  nsresult rv = GetApp(&app);
+  nsCOMPtr<mozIDOMApplication> app;
 
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return app != nsnull;
+  return NS_SUCCEEDED(GetApp(getter_AddRefs(app))) ? app != nsnull : false;
 }
 
 nsresult

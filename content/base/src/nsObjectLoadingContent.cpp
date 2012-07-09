@@ -643,7 +643,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(const char* aMimeType, nsIURI*
   if (!aURI) {
     // We need some URI. If we have nothing else, use the base URI.
     // XXX(biesi): The code used to do this. Not sure why this is correct...
-    GetObjectBaseURI(nsCString(aMimeType), getter_AddRefs(baseURI));
+    GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
     aURI = baseURI;
   }
 
@@ -1100,7 +1100,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 
   // Set up new frame to draw.
   objFrame->FixupWindow(objFrame->GetContentRectRelativeToSelf().Size());
-  objFrame->InvalidateFrame();
+  objFrame->Invalidate(objFrame->GetContentRectRelativeToSelf());
 
   return NS_OK;
 }
@@ -1232,7 +1232,7 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
 
   nsIDocument* doc = thisContent->OwnerDoc();
   nsCOMPtr<nsIURI> baseURI;
-  GetObjectBaseURI(aTypeHint, getter_AddRefs(baseURI));
+  GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
 
   nsCOMPtr<nsIURI> uri;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
@@ -1261,51 +1261,6 @@ nsObjectLoadingContent::UpdateFallbackState(nsIContent* aContent,
     fallback.SetPluginState(state);
     FirePluginError(aContent, state);
   }
-}
-
-bool
-nsObjectLoadingContent::IsFileCodebaseAllowable(nsIURI* aBaseURI, nsIURI* aOriginURI)
-{
-  nsCOMPtr<nsIFileURL> baseFileURL(do_QueryInterface(aBaseURI));
-  nsCOMPtr<nsIFileURL> originFileURL(do_QueryInterface(aOriginURI));
-
-  // get IFile handles and normalize
-  nsCOMPtr<nsIFile> originFile;
-  nsCOMPtr<nsIFile> baseFile;
-  if (!originFileURL || !baseFileURL ||
-      NS_FAILED(originFileURL->GetFile(getter_AddRefs(originFile))) ||
-      NS_FAILED(baseFileURL->GetFile(getter_AddRefs(baseFile))) ||
-      NS_FAILED(baseFile->Normalize()) ||
-      NS_FAILED(originFile->Normalize())) {
-    return false;
-  }
-
-  // If the origin is a directory, it should contain/equal baseURI
-  // Otherwise, its parent directory should contain/equal baseURI
-  bool origin_is_dir;
-  bool contained = false;
-  nsresult rv = originFile->IsDirectory(&origin_is_dir);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (origin_is_dir) {
-    // originURI is a directory, ensure it contains the baseURI
-    rv = originFile->Contains(baseFile, true, &contained);
-    if (NS_SUCCEEDED(rv) && !contained) {
-      rv = originFile->Equals(baseFile, &contained);
-    }
-  } else {
-    // originURI is a file, ensure its parent contains the baseURI
-    nsCOMPtr<nsIFile> originParent;
-    rv = originFile->GetParent(getter_AddRefs(originParent));
-    if (NS_SUCCEEDED(rv) && originParent) {
-      rv = originParent->Contains(baseFile, true, &contained);
-      if (NS_SUCCEEDED(rv) && !contained) {
-        rv = originParent->Equals(baseFile, &contained);
-      }
-    }
-  }
-
-  return NS_SUCCEEDED(rv) && contained;
 }
 
 nsresult
@@ -1405,28 +1360,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       HandleBeingBlockedByContentPolicy(rv, shouldLoad);
       return NS_OK;
-    }
-
-    // If this is a file:// URI, require that the codebase (baseURI)
-    // is contained within the same folder as the document origin (originURI)
-    // or within the document origin, if it is a folder.
-    // No originURI implies chrome, which bypasses the check
-    // -- bug 406541
-    nsCOMPtr<nsIURI> originURI;
-    nsCOMPtr<nsIURI> baseURI;
-    GetObjectBaseURI(aTypeHint, getter_AddRefs(baseURI));
-    rv = thisContent->NodePrincipal()->GetURI(getter_AddRefs(originURI));
-    if (NS_FAILED(rv)) {
-      Fallback(aNotify);
-      return NS_OK;
-    }
-    if (originURI) {
-      bool isfile;
-      if (NS_FAILED(originURI->SchemeIs("file", &isfile)) ||
-          (isfile && !IsFileCodebaseAllowable(baseURI, originURI))) {
-        Fallback(aNotify);
-        return NS_OK;
-      }
     }
   }
 
@@ -1545,7 +1478,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       // XXX(biesi). The plugin instantiation code used to pass the base URI
       // here instead of the plugin URI for instantiation via class ID, so I
       // continue to do so. Why that is, no idea...
-      GetObjectBaseURI(mContentType, getter_AddRefs(mURI));
+      GetObjectBaseURI(thisContent, getter_AddRefs(mURI));
       if (!mURI) {
         mURI = aURI;
       }
@@ -1922,38 +1855,25 @@ nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-nsObjectLoadingContent::GetObjectBaseURI(const nsACString & aMimeType, nsIURI** aURI)
+void
+nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
 {
-  nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  // We want to use swap(); since this is just called from this file,
+  // we can assert this (callers use comptrs)
+  NS_PRECONDITION(*aURI == nsnull, "URI must be inited to zero");
 
   // For plugins, the codebase attribute is the base URI
   nsCOMPtr<nsIURI> baseURI = thisContent->GetBaseURI();
   nsAutoString codebase;
   thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase,
                        codebase);
-
-  if (codebase.IsEmpty() && aMimeType.Equals("application/x-java-vm")) {
-    // bug 406541
-    // Java resolves codebase="" as "/" -- so we replicate that quirk, to ensure
-    // we run security checks against the same path.
-    codebase.AssignLiteral("/");
-  }
-
   if (!codebase.IsEmpty()) {
-    nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
-                                                            thisContent->OwnerDoc(),
-                                                            baseURI);
-    if (NS_SUCCEEDED(rv))
-      return rv;
-    NS_WARNING("GetObjectBaseURI: Could not resolve plugin's codebase to a URI, using baseURI instead");
+    nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
+                                              thisContent->OwnerDoc(),
+                                              baseURI);
+  } else {
+    baseURI.swap(*aURI);
   }
-
-  // Codebase empty or build URI failed, just use baseURI
-  *aURI = NULL;
-  baseURI.swap(*aURI);
-  return NS_OK;
 }
 
 nsObjectFrame*

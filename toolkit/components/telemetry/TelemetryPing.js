@@ -355,6 +355,10 @@ TelemetryPing.prototype = {
     if (this._addons)
       ret.addons = this._addons;
 
+    let flashVersion = this.getFlashVersion();
+    if (flashVersion)
+      ret.flashVersion = flashVersion;
+
     return ret;
   },
 
@@ -719,7 +723,7 @@ TelemetryPing.prototype = {
                  RW_OWNER, ostream.DEFER_OPEN);
 
     if (sync) {
-      let utf8String = converter.ConvertToUnicode(pingString);
+      let utf8String = converter.ConvertFromUnicode(pingString);
       utf8String += converter.Finish();
       let amount = ostream.write(utf8String, utf8String.length);
       this.finishTelemetrySave(amount == utf8String.length, ostream);
@@ -732,6 +736,18 @@ TelemetryPing.prototype = {
                                                    ostream);
                         });
     }
+  },
+
+  getFlashVersion: function getFlashVersion() {
+    let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let tags = host.getPluginTags();
+    
+    for (let i = 0; i < tags.length; i++) {
+      if (tags[i].name == "Shockwave Flash")
+        return tags[i].version;
+    }
+    
+    return null;
   },
 
   /** 

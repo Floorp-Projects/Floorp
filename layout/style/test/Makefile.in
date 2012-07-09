@@ -202,6 +202,14 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug721136.html \
 		$(NULL)
 
+ifdef MOZ_FLEXBOX
+_TEST_FILES +=	\
+		test_flexbox_align_self_auto.html \
+		test_flexbox_flex_grow_and_shrink.html \
+		test_flexbox_flex_shorthand.html \
+		$(NULL)
+endif
+
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02.svg \

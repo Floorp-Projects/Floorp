@@ -455,22 +455,3 @@ nsTString_CharT::AssignWithConversion( const incompatible_char_type* aData, PRIn
         AssignWithConversion(Substring(aData, aLength));
       }
   }
-
-
-  /**
-   * nsTString::AppendWithConversion
-   */
-
-void
-nsTString_CharT::AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength )
-  {
-      // for compatibility with the old string implementation, we need to allow
-      // for a NULL input buffer :-(
-    if (aData)
-      {
-        if (aLength < 0)
-          aLength = nsCharTraits<incompatible_char_type>::length(aData);
-
-        AppendWithConversion(Substring(aData, aLength));
-      }
-  }

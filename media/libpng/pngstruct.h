@@ -1,11 +1,11 @@
 
 /* pngstruct.h - header file for PNG reference library
  *
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
- * Last changed in libpng 1.5.9 [March 29, 2012]
+ * Last changed in libpng 1.5.9 [February 18, 2012]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -248,6 +248,7 @@ struct png_struct_def
 #endif
 
 #ifdef PNG_TIME_RFC1123_SUPPORTED
+   /* This is going to be unused in libpng16 and removed from libpng17 */
    char time_buffer[29]; /* String to hold RFC 1123 time text */
 #endif
 

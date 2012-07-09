@@ -262,8 +262,6 @@ public:
   nscoord GetFinalWidth() {
     return mFinalWidth;
   }
-  
-  virtual void InvalidateFrame();
 
 protected:
 

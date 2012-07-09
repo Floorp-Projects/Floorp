@@ -565,7 +565,7 @@ nsNativeTheme::Notify(nsITimer* aTimer)
   for (PRUint32 index = 0; index < count; index++) {
     nsIFrame* frame = mAnimatedContentList[index]->GetPrimaryFrame();
     if (frame) {
-      frame->InvalidateFrame();
+      frame->InvalidateOverflowRect();
     }
   }
 
