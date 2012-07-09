@@ -768,6 +768,32 @@ inline bool JSObject::isIndexed() const
     return lastProperty()->hasObjectFlag(js::BaseShape::INDEXED);
 }
 
+inline bool JSObject::hasIdempotentProtoChain() const
+{
+    // Return false if obj (or an object on its proto chain) is non-native or
+    // has a resolve or lookup hook.
+    const JSObject *obj = this;
+    while (true) {
+        if (!obj->isNative())
+            return false;
+
+        JSResolveOp resolve = obj->getClass()->resolve;
+        if (resolve != JS_ResolveStub && resolve != (JSResolveOp) js_fun_resolve)
+            return false;
+
+        if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)
+            return false;
+
+        const JSObject *proto = obj->getProto();
+        if (!proto)
+            return true;
+        obj = proto;
+    }
+
+    JS_NOT_REACHED("Should not get here");
+    return false;
+}
+
 inline bool JSObject::watched() const
 {
     return lastProperty()->hasObjectFlag(js::BaseShape::WATCHED);

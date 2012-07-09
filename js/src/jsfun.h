@@ -289,4 +289,8 @@ extern JSObject*
 js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
 
+extern JSBool
+js_fun_resolve(JSContext *cx, js::HandleObject obj, js::HandleId id, unsigned flags,
+               JSObject **objp);
+
 #endif /* jsfun_h___ */

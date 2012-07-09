@@ -290,31 +290,6 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
 }
 
 static bool
-IsIdempotentProtoChain(JSObject *obj)
-{
-    // Return false if obj (or an object on its proto chain) is non-native or has
-    // a resolve or lookup hook.
-    while (true) {
-        if (!obj->isNative())
-            return false;
-
-        if (obj->getClass()->resolve != JS_ResolveStub)
-            return false;
-
-        if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)
-            return false;
-
-        JSObject *proto = obj->getProto();
-        if (!proto)
-            return true;
-        obj = proto;
-    }
-
-    JS_NOT_REACHED("Should not get here");
-    return false;
-}
-
-static bool
 TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, JSObject *obj,
                     HandlePropertyName name, bool *isCacheableNative)
 {
@@ -326,7 +301,7 @@ TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, JSObject *obj,
     // If the cache is idempotent, watch out for resolve hooks or non-native
     // objects on the proto chain. We check this before calling lookupProperty,
     // to make sure no effectful lookup hooks or resolve hooks are called.
-    if (cache.idempotent() && !IsIdempotentProtoChain(obj))
+    if (cache.idempotent() && !obj->hasIdempotentProtoChain())
         return true;
 
     JSObject *holder;
