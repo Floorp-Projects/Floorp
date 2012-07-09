@@ -11,11 +11,13 @@
 #include "jsprvtd.h"
 
 namespace js {
+namespace frontend {
 
 bool
 FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLambda = false,
               bool inCond = false);
 
+} /* namespace frontend */
 } /* namespace js */
 
 #endif /* FoldConstants_h__ */
