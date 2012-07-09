@@ -275,7 +275,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
 // No closing bracket, because NS_INTERFACE_MAP_END does that for us.
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
+nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst)
 {
   nsresult rv;
   PRInt32 i, count = GetAttrCount();
