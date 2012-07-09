@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(7775d662-0b71-4c9d-92c3-4d0a88a6729d)]
+[builtinclass, scriptable, uuid(492673d6-039b-4d94-a598-dbf82abc174f)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -684,6 +684,21 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTextDecorationStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionProperty;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDuration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDelay;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionTimingFunction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transition;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTransitionProperty;
