@@ -41,6 +41,15 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_SetVisible.html \
 		browserElement_KeyEvents.js \
 		test_browserElement_inproc_KeyEvents.html \
+		browserElement_XFrameOptions.js \
+		test_browserElement_inproc_XFrameOptions.html \
+		file_browserElement_XFrameOptions.sjs \
+		browserElement_XFrameOptionsDeny.js \
+		test_browserElement_inproc_XFrameOptionsDeny.html \
+		file_browserElement_XFrameOptionsDeny.html \
+		browserElement_XFrameOptionsSameOrigin.js \
+		test_browserElement_inproc_XFrameOptionsSameOrigin.html \
+		file_browserElement_XFrameOptionsSameOrigin.html \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
 		browserElement_AlertInFrame.js \
@@ -88,6 +97,9 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_KeyEvents.html \
+		test_browserElement_oop_XFrameOptions.html \
+		test_browserElement_oop_XFrameOptionsDeny.html \
+		test_browserElement_oop_XFrameOptionsSameOrigin.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_PromptCheck.html \
