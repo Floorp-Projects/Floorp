@@ -541,9 +541,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
               rv = IsEmptyNode(parentNode, &isEmpty, true);
               if (NS_SUCCEEDED(rv) && isEmpty)
               {
-                nsCOMPtr<nsIDOMNode> listNode;
                 PRInt32 newOffset;
-                GetNodeLocation(parentNode, address_of(listNode), &newOffset);
+                nsCOMPtr<nsIDOMNode> listNode = GetNodeLocation(parentNode, &newOffset);
                 if (listNode)
                 {
                   DeleteNode(parentNode);
@@ -618,7 +617,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       }
       if (lastInsertNode)
       {
-        GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
+        parentNode = GetNodeLocation(lastInsertNode, &offsetOfNewNode);
         offsetOfNewNode++;
       }
     }
@@ -657,7 +656,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       else // we need to find a container for selection.  Look up.
       {
         tmp = selNode;
-        GetNodeLocation(tmp, address_of(selNode), &selOffset);
+        selNode = GetNodeLocation(tmp, &selOffset);
         ++selOffset;  // want to be *after* last leaf node in paste
       }
 
@@ -677,8 +676,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         {
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
-          GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode),
-                          &selOffset);
+          selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
           wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
@@ -693,8 +691,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           {
             // prior visible thing is an image or some other non-text thingy.  
             // We want to be right after it.
-            GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode),
-                            &selOffset);
+            selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
             ++selOffset;
           }
         }
@@ -713,7 +710,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         PRInt32 linkOffset;
         rv = SplitNodeDeep(link, selNode, selOffset, &linkOffset, true, address_of(leftLink));
         NS_ENSURE_SUCCESS(rv, rv);
-        GetNodeLocation(leftLink, address_of(selNode), &selOffset);
+        selNode = GetNodeLocation(leftLink, &selOffset);
         selection->Collapse(selNode, selOffset+1);
       }
     }
@@ -2009,9 +2006,8 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode)
   {
-    nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    GetNodeLocation(newNode, address_of(parent), &offset);
+    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(newNode, &offset);
     if (parent) {
       selection->Collapse(parent, offset + 1);
     }
@@ -2094,9 +2090,8 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode)
   {
-    nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    GetNodeLocation(newNode, address_of(parent), &offset);
+    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(newNode, &offset);
     if (parent) {
       selection->Collapse(parent, offset + 1);
     }
