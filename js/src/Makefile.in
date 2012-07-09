@@ -122,13 +122,13 @@ CPPSRCS		= \
 		BytecodeCompiler.cpp \
 		BytecodeEmitter.cpp \
 		FoldConstants.cpp \
+		ParseContext.cpp \
 		ParseMaps.cpp \
 		ParseNode.cpp \
 		Parser.cpp \
 		SemanticAnalysis.cpp \
 		SPSProfiler.cpp \
 		TokenStream.cpp \
-		TreeContext.cpp \
 		TestingFunctions.cpp \
 		LifoAlloc.cpp \
 		Eval.cpp \
