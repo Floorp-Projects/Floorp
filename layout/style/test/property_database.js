@@ -43,49 +43,49 @@ function initial_font_family_is_sans_serif()
 var gInitialFontFamilyIsSansSerif = initial_font_family_is_sans_serif();
 
 var gCSSProperties = {
-	"-moz-animation": {
-		domProp: "MozAnimation",
+	"animation": {
+		domProp: "animation",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "-moz-animation-name", "-moz-animation-duration", "-moz-animation-timing-function", "-moz-animation-delay", "-moz-animation-direction", "-moz-animation-fill-mode", "-moz-animation-iteration-count" ],
+		subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count" ],
 		initial_values: [ "none none 0s 0s ease normal 1.0", "none", "0s", "ease", "normal", "1.0" ],
 		other_values: [ "bounce 1s linear 2s", "bounce 1s 2s linear", "bounce linear 1s 2s", "linear bounce 1s 2s", "linear 1s bounce 2s", "linear 1s 2s bounce", "1s bounce linear 2s", "1s bounce 2s linear", "1s 2s bounce linear", "1s linear bounce 2s", "1s linear 2s bounce", "1s 2s linear bounce", "bounce linear 1s", "bounce 1s linear", "linear bounce 1s", "linear 1s bounce", "1s bounce linear", "1s linear bounce", "1s 2s bounce", "1s bounce 2s", "bounce 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "bounce 1s", "1s bounce", "linear 1s", "1s linear", "1s 2s", "2s 1s", "bounce", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s bounce, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32bounce linear 2s", "1s -bounce linear 2s", "1s -\\32bounce linear 2s", "1s \\32 0bounce linear 2s", "1s -\\32 0bounce linear 2s", "1s \\2bounce linear 2s", "1s -\\2bounce linear 2s", "2s, 1s bounce", "1s bounce, 2s", "2s all, 1s bounce", "1s bounce, 2s all", "1s bounce, 2s none", "2s none, 1s bounce", "2s bounce, 1s all", "2s all, 1s bounce" ],
 		invalid_values: [  "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial" ]
 	},
-	"-moz-animation-delay": {
-		domProp: "MozAnimationDelay",
+	"animation-delay": {
+		domProp: "animationDelay",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
 		other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
 		invalid_values: [ "0", "0px" ]
 	},
-	"-moz-animation-direction": {
-		domProp: "MozAnimationDirection",
+	"animation-direction": {
+		domProp: "animationDirection",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "alternate", "normal, alternate", "alternate, normal", "normal, normal", "normal, normal, normal", "reverse", "alternate-reverse", "normal, reverse, alternate-reverse, alternate" ],
 		invalid_values: [ "normal normal", "inherit, normal", "reverse-alternate" ]
 	},
-	"-moz-animation-duration": {
-		domProp: "MozAnimationDuration",
+	"animation-duration": {
+		domProp: "animationDuration",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
 		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
 		invalid_values: [ "0", "0px" ]
 	},
-	"-moz-animation-fill-mode": {
-		domProp: "MozAnimationFillMode",
+	"animation-fill-mode": {
+		domProp: "animationFillMode",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "forwards", "backwards", "both", "none, none", "forwards, backwards", "forwards, none", "none, both" ],
 		invalid_values: [ "all"]
 	},
-	"-moz-animation-iteration-count": {
-		domProp: "MozAnimationIterationCount",
+	"animation-iteration-count": {
+		domProp: "animationIterationCount",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
@@ -94,24 +94,24 @@ var gCSSProperties = {
 		// http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
 		invalid_values: [ "none", "-1", "-0.5", "-1, infinite", "infinite, -3" ]
 	},
-	"-moz-animation-name": {
-		domProp: "MozAnimationName",
+	"animation-name": {
+		domProp: "animationName",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "all", "ball", "mall", "color", "bounce, bubble, opacity", "foobar", "auto", "\\32bounce", "-bounce", "-\\32bounce", "\\32 0bounce", "-\\32 0bounce", "\\2bounce", "-\\2bounce" ],
 		invalid_values: [ "bounce, initial", "initial, bounce", "bounce, inherit", "inherit, bounce" ]
 	},
-	"-moz-animation-play-state": {
-		domProp: "MozAnimationPlayState",
+	"animation-play-state": {
+		domProp: "animationPlayState",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "running" ],
 		other_values: [ "paused", "running, running", "paused, running", "paused, paused", "running, paused", "paused, running, running, running, paused, running" ],
 		invalid_values: [ "0" ]
 	},
-	"-moz-animation-timing-function": {
-		domProp: "MozAnimationTimingFunction",
+	"animation-timing-function": {
+		domProp: "animationTimingFunction",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
@@ -3143,41 +3143,41 @@ var gCSSProperties = {
 		],
 		invalid_values: []
 	},
-	"-moz-transition": {
-		domProp: "MozTransition",
+	"transition": {
+		domProp: "transition",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "-moz-transition-property", "-moz-transition-duration", "-moz-transition-timing-function", "-moz-transition-delay" ],
+		subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
 		initial_values: [ "all 0s ease 0s", "all", "0s", "0s 0s", "ease" ],
 		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32width linear 2s", "1s -width linear 2s", "1s -\\32width linear 2s", "1s \\32 0width linear 2s", "1s -\\32 0width linear 2s", "1s \\2width linear 2s", "1s -\\2width linear 2s" ],
 		invalid_values: [ "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "2s all, 1s width", "2s width, 1s all" ]
 	},
-	"-moz-transition-delay": {
-		domProp: "MozTransitionDelay",
+	"transition-delay": {
+		domProp: "transitionDelay",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
 		other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
 		invalid_values: [ "0", "0px" ]
 	},
-	"-moz-transition-duration": {
-		domProp: "MozTransitionDuration",
+	"transition-duration": {
+		domProp: "transitionDuration",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
 		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
 		invalid_values: [ "0", "0px" ]
 	},
-	"-moz-transition-property": {
-		domProp: "MozTransitionProperty",
+	"transition-property": {
+		domProp: "transitionProperty",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "all" ],
 		other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto", "\\32width", "-width", "-\\32width", "\\32 0width", "-\\32 0width", "\\2width", "-\\2width" ],
 		invalid_values: [ "none, none", "all, all", "color, none", "none, color", "all, color", "color, all", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none", "all, color", "color, all" ]
 	},
-	"-moz-transition-timing-function": {
-		domProp: "MozTransitionTimingFunction",
+	"transition-timing-function": {
+		domProp: "transitionTimingFunction",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],

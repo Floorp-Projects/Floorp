@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(bb40a531-d92b-44d6-a543-cfc25054d5eb)]
+[builtinclass, scriptable, uuid(492673d6-039b-4d94-a598-dbf82abc174f)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -686,6 +686,21 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozTextDecorationStyle;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        transitionProperty;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDuration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDelay;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionTimingFunction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transition;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozTransitionProperty;
                                         // raises(DOMException) on setting
 
@@ -708,6 +723,33 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        resize;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationName;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDuration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDelay;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationTimingFunction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDirection;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationFillMode;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationIterationCount;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationPlayState;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animation;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozAnimationName;
