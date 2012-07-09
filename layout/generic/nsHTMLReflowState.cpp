@@ -596,7 +596,6 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
   // takes precedence over float which takes precedence over display.
   // XXXldb nsRuleNode::ComputeDisplayData should take care of this, right?
   // Make sure the frame was actually moved out of the flow, and don't
-
   // just assume what the style says, because we might not have had a
   // useful float/absolute containing block
 
@@ -1642,6 +1641,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
   // Make sure not to return a negative height here!
   return NS_MAX(result, 0);
 }
+
 // Called by InitConstraints() to compute the containing block rectangle for
 // the element. Handles the special logic for absolutely positioned elements
 void
@@ -1672,7 +1672,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
       nsMargin computedBorder = aContainingBlockRS->mComputedBorderPadding -
         aContainingBlockRS->mComputedPadding;
       aContainingBlockWidth = aContainingBlockRS->frame->GetRect().width -
-        computedBorder.LeftRight();;
+        computedBorder.LeftRight();
       NS_ASSERTION(aContainingBlockWidth >= 0,
                    "Negative containing block width!");
       aContainingBlockHeight = aContainingBlockRS->frame->GetRect().height -
