@@ -1032,7 +1032,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
         VALARRAY =     -2, /* js::AutoValueArrayRooter */
-        PARSER =       -3, /* js::Parser */
+        PARSER =       -3, /* js::frontend::Parser */
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
         IDARRAY =      -6, /* js::AutoIdArray */

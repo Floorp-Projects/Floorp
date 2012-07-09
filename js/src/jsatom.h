@@ -426,14 +426,6 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid *id
     return InternNonIntElementId(cx, obj, idval, idp, &dummy);
 }
 
-/*
- * For all unmapped atoms recorded in al, add a mapping from the atom's index
- * to its address. map->length must already be set to the number of atoms in
- * the list and map->vector must point to pre-allocated memory.
- */
-extern void
-InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtr<JSAtom> *atoms);
-
 template<XDRMode mode>
 bool
 XDRAtom(XDRState<mode> *xdr, JSAtom **atomp);

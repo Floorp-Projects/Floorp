@@ -86,6 +86,7 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+using js::frontend::Parser;
 
 bool
 JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
@@ -6813,7 +6814,7 @@ JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
     if (!linearStr)
         return false;
 
-    *isIdentifier = js::IsIdentifier(linearStr);
+    *isIdentifier = js::frontend::IsIdentifier(linearStr);
     return true;
 }
 
