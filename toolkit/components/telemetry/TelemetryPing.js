@@ -538,12 +538,12 @@ TelemetryPing.prototype = {
       // Notify that testing is complete, even if we didn't send everything.
       finishPings(reason);
     }
-    this.doPing(server, data.slug, data.payload,
+    this.doPing(server, data,
                 onSuccess.bind(this), onError.bind(this));
   },
 
-  doPing: function doPing(server, slug, payload, onSuccess, onError) {
-    let submitPath = "/submit/telemetry/" + slug;
+  doPing: function doPing(server, ping, onSuccess, onError) {
+    let submitPath = "/submit/telemetry/" + ping.slug;
     let url = server + submitPath;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
@@ -576,7 +576,7 @@ TelemetryPing.prototype = {
     request.setRequestHeader("Content-Encoding", "gzip");
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
-    payloadStream.data = this.gzipCompressString(payload);
+    payloadStream.data = this.gzipCompressString(ping.payload);
     request.send(payloadStream);
   },
 
