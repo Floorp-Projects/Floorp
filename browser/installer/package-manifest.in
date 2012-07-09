@@ -95,6 +95,9 @@
 #elif MOZ_MSVC_REDIST == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
+#ifdef MOZ_METRO
+@BINPATH@/vccorlib110.dll
+#endif
 #endif
 #endif
 #endif
