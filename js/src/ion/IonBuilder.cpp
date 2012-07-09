@@ -4933,7 +4933,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     }
 
     // No need to add a freeze if we didn't find anything
-    if (!found)
+    if (!found || !found->isFunction())
         return true;
 
     JS_ASSERT(foundProto);
@@ -4970,9 +4970,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             JS_ASSERT(propSet);
         }
     }
-
-    if (found->isFunction())
-        *funcp = found->toFunction();
 
     return true;
 }

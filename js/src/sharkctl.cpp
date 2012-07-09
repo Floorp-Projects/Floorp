@@ -190,7 +190,7 @@ Start()
     if (!running && ::Start(shark_port, 0xdeadbeef))
         return false;
     return running = true;
-};
+}
 
 void
 Stop()
