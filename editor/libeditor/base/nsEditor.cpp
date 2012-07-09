@@ -1603,7 +1603,7 @@ nsEditor::RemoveContainer(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  nsINode* parent = aNode->GetNodeParent();
+  nsCOMPtr<nsINode> parent = aNode->GetNodeParent();
   NS_ENSURE_STATE(parent);
 
   PRInt32 offset = parent->IndexOf(aNode);
@@ -1616,7 +1616,7 @@ nsEditor::RemoveContainer(nsINode* aNode)
   nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent, offset, nodeOrigLen);
                                    
   while (aNode->HasChildren()) {
-    nsIContent* child = aNode->GetLastChild();
+    nsCOMPtr<nsIContent> child = aNode->GetLastChild();
     nsresult rv = DeleteNode(child->AsDOMNode());
     NS_ENSURE_SUCCESS(rv, rv);
 
