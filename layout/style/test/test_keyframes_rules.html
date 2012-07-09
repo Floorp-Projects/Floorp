@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=577974
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style id="style">
 
-  @-moz-keyframes bounce {
+  @keyframes bounce {
     from {
       margin-left: 0
     }
@@ -75,7 +75,7 @@ is(bounce.cssRules[0].style.marginLeft, "0px", "keyframe rule style");
 is(bounce.cssRules[1].style.marginLeft, "25px", "keyframe rule style");
 
 is(bounce.cssRules[0].cssText, "0% { margin-left: 0px; }");
-is(bounce.cssText, "@-moz-keyframes bouncier {\n" +
+is(bounce.cssText, "@keyframes bouncier {\n" +
                    "0% { margin-left: 0px; }\n" +
                    "25% { margin-left: 25px; }\n" +
                    "75%, 85% { margin-left: 90px; }\n" +
