@@ -221,10 +221,22 @@ nsSVGPathGeometryFrame::UpdateBounds()
     return;
   }
 
-  gfxRect extent = GetBBoxContribution(gfxMatrix(),
-    nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIgnoreFillIfNone |
-    nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIgnoreStrokeIfNone |
-    nsSVGUtils::eBBoxIncludeMarkers);
+  PRUint32 flags = nsSVGUtils::eBBoxIncludeFill |
+                   nsSVGUtils::eBBoxIncludeStroke |
+                   nsSVGUtils::eBBoxIncludeMarkers;
+  PRUint32 pointerEvents = GetStyleVisibility()->mPointerEvents;
+  if (pointerEvents == NS_STYLE_POINTER_EVENTS_AUTO ||
+      pointerEvents == NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED ||
+      pointerEvents == NS_STYLE_POINTER_EVENTS_PAINTED ||
+      pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
+    // We can only ignore 'none' stroke if the value of the pointer-events
+    // property doesn't require us to include it in our "visual" overflow rect
+    // so that our visual overflow rect is valid for building display lists for
+    // hit-testing.
+    flags |= nsSVGUtils::eBBoxIgnoreStrokeIfNone |
+             nsSVGUtils::eBBoxIgnoreFillIfNone;
+  }
+  gfxRect extent = GetBBoxContribution(gfxMatrix(), flags);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
             PresContext()->AppUnitsPerCSSPixel());
 
