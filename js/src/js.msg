@@ -352,3 +352,4 @@ MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 298, 0, JSEXN_ERR, "the 'arguments' p
 MSG_DEF(JSMSG_REST_WITH_DEFAULT,      299, 0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
 MSG_DEF(JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT, 300, 0, JSEXN_SYNTAXERR, "parameter(s) with default followed by parameter without default")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default expression")
+MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic function {0}")
