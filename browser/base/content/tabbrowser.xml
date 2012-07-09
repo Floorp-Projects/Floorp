@@ -3001,9 +3001,9 @@
               let tab = tabs[i];
               tab.style.setProperty("max-width", tabWidth, "important");
               if (!isEndTab) { // keep tabs the same width
-                tab.style.MozTransition = "none";
+                tab.style.transition = "none";
                 tab.clientTop; // flush styles to skip animation; see bug 649247
-                tab.style.MozTransition = "";
+                tab.style.transition = "";
               }
             }
             this._hasTabTempMaxWidth = true;
