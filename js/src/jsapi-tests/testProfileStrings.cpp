@@ -22,6 +22,8 @@ reset(JSContext *cx)
     size = max_stack = 0;
     memset(stack, 0, sizeof(stack));
     cx->runtime->spsProfiler.stringsReset();
+    cx->runtime->spsProfiler.enableSlowAssertions(true);
+    js::EnableRuntimeProfilingStack(cx->runtime, true);
 }
 
 static JSClass ptestClass = {
@@ -44,9 +46,16 @@ test_fn2(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-test_fn3(JSContext *cx, unsigned argc, jsval *vp)
+enable(JSContext *cx, unsigned argc, jsval *vp)
 {
-    js::SetRuntimeProfilingStack(cx->runtime, stack, &size, 10);
+    js::EnableRuntimeProfilingStack(cx->runtime, true);
+    return JS_TRUE;
+}
+
+static JSBool
+disable(JSContext *cx, unsigned argc, jsval *vp)
+{
+    js::EnableRuntimeProfilingStack(cx->runtime, false);
     return JS_TRUE;
 }
 
@@ -63,7 +72,8 @@ Prof(JSContext* cx, unsigned argc, jsval *vp)
 static JSFunctionSpec ptestFunctions[] = {
     JS_FS("test_fn", test_fn, 0, 0),
     JS_FS("test_fn2", test_fn2, 0, 0),
-    JS_FS("test_fn3", test_fn3, 0, 0),
+    JS_FS("enable", enable, 0, 0),
+    JS_FS("disable", disable, 0, 0),
     JS_FS_END
 };
 
@@ -112,10 +122,11 @@ BEGIN_TEST(testProfileStrings_isCalled)
         CHECK(max_stack == 7);
         CHECK(size == 0);
     }
+    js::EnableRuntimeProfilingStack(cx->runtime, false);
+    js::SetRuntimeProfilingStack(cx->runtime, stack, &size, 3);
     reset(cx);
     {
         jsvalRoot rval(cx);
-        js::SetRuntimeProfilingStack(cx->runtime, stack, &size, 3);
         stack[3].string = (char*) 1234;
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.addr()));
         CHECK((size_t) stack[3].string == 1234);
@@ -158,11 +169,13 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         CHECK(cx->runtime->spsProfiler.stringsCount() == cnt);
         CHECK(max_stack == 9);
     }
+
+    js::EnableRuntimeProfilingStack(cx->runtime, false);
+    js::SetRuntimeProfilingStack(cx->runtime, stack, &size, 3);
     reset(cx);
     {
         /* Limit the size of the stack and make sure we don't overflow */
         jsvalRoot rval(cx);
-        js::SetRuntimeProfilingStack(cx->runtime, stack, &size, 3);
         stack[3].string = (char*) 1234;
         CHECK(JS_CallFunctionName(cx, global, "check", 0, NULL, rval.addr()));
         CHECK(size == 0);
@@ -197,18 +210,52 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
 {
     CHECK(initialize(cx));
     JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_METHODJIT |
-                        JSOPTION_METHODJIT_ALWAYS);
+                      JSOPTION_METHODJIT_ALWAYS);
 
-    EXEC("function b() { }");
-    EXEC("function a() { var p = new Prof(); p.test_fn3(); b(); }");
-
+    EXEC("function b(p) { p.test_fn(); }");
+    EXEC("function a() { var p = new Prof(); p.enable(); b(p); }");
     reset(cx);
-    js::SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 10);
+    js::EnableRuntimeProfilingStack(cx->runtime, false);
     {
+        /* enable it in the middle of JS and make sure things check out */
         jsvalRoot rval(cx);
         JS_CallFunctionName(cx, global, "a", 0, NULL, rval.addr());
         CHECK(size == 0);
+        CHECK(max_stack == 1);
         CHECK(cx->runtime->spsProfiler.stringsCount() == 1);
+    }
+
+    EXEC("function d(p) { p.disable(); }");
+    EXEC("function c() { var p = new Prof(); d(p); }");
+    reset(cx);
+    {
+        /* now disable in the middle of js */
+        jsvalRoot rval(cx);
+        JS_CallFunctionName(cx, global, "c", 0, NULL, rval.addr());
+        CHECK(size == 0);
+    }
+
+    EXEC("function e() { var p = new Prof(); d(p); p.enable(); b(p); }");
+    reset(cx);
+    {
+        /* now disable in the middle of js, but re-enable before final exit */
+        jsvalRoot rval(cx);
+        JS_CallFunctionName(cx, global, "e", 0, NULL, rval.addr());
+        CHECK(size == 0);
+        CHECK(max_stack == 3);
+    }
+
+    EXEC("function h() { }");
+    EXEC("function g(p) { p.disable(); for (var i = 0; i < 100; i++) i++; }");
+    EXEC("function f() { g(new Prof()); }");
+    reset(cx);
+    cx->runtime->spsProfiler.enableSlowAssertions(false);
+    {
+        jsvalRoot rval(cx);
+        /* disable, and make sure that if we try to re-enter the JIT the pop
+         * will still happen */
+        JS_CallFunctionName(cx, global, "f", 0, NULL, rval.addr());
+        CHECK(size == 0);
     }
     return true;
 }
