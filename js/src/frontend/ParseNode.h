@@ -17,6 +17,7 @@
 #include "frontend/TreeContext.h"
 
 namespace js {
+namespace frontend {
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -1504,6 +1505,7 @@ struct FunctionBox : public ObjectBox
     void recursivelySetStrictMode(StrictMode::StrictModeState strictness);
 };
 
+} /* namespace frontend */
 } /* namespace js */
 
 #endif /* ParseNode_h__ */
