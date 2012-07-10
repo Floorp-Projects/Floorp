@@ -189,7 +189,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     protected void loadRequest(String url, AwesomeBar.Target target, String searchEngine, boolean userEntered) {
-        mBrowserToolbar.setTitle(url);
+        mBrowserToolbar.setTitle(StringUtils.prettyURL(url));
         super.loadRequest(url, target, searchEngine, userEntered);
     }
 
@@ -250,7 +250,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (uri != null && uri.length() > 0) {
-            mBrowserToolbar.setTitle(uri);
+            mBrowserToolbar.setTitle(StringUtils.prettyURL(uri));
         }
 
         if (!isExternalURL) {

@@ -136,7 +136,7 @@ public final class Tab {
             return mTitle;
         }
 
-        return mUrl;
+        return StringUtils.prettyURL(mUrl);
     }
 
     public Drawable getFavicon() {
