@@ -1425,20 +1425,28 @@ class OutOfLineCreateThis : public OutOfLineCodeBase<CodeGenerator>
 bool
 CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
 {
-    Register objReg    = ToRegister(lir->output());
-    Register calleeReg = ToRegister(lir->getCallee());
-    Register protoReg  = ToRegister(lir->getPrototype());
-
-    // Since LCreateThis is not isCall(), used registers must be saved around the call.
-    JS_ASSERT(!lir->isCall());
-    saveLive(lir);
+    const LAllocation *proto = lir->getPrototype();
+    const LAllocation *callee = lir->getCallee();
+    Register objReg = ToRegister(lir->output());
 
     typedef JSObject *(*pf)(JSContext *cx, HandleObject callee, JSObject *proto);
     static const VMFunction CreateThisInfo =
         FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
 
-    pushArg(protoReg);
-    pushArg(calleeReg);
+    // Since LCreateThis is not isCall(), used registers must be saved around the call.
+    JS_ASSERT(!lir->isCall());
+    saveLive(lir);
+
+    // Push arguments.
+    if (proto->isConstant())
+        pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(proto));
+
+    if (callee->isConstant())
+        pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(callee));
 
     if (!callVM(CreateThisInfo, lir))
         return false;
