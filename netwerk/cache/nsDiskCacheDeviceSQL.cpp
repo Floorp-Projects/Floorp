@@ -631,7 +631,7 @@ nsApplicationCache::GetClientID(nsACString &out)
 }
 
 NS_IMETHODIMP
-nsApplicationCache::GetProfileDirectory(nsIFile **out)
+nsApplicationCache::GetCacheDirectory(nsIFile **out)
 {
   if (mDevice->BaseDirectory())
       NS_ADDREF(*out = mDevice->BaseDirectory());
@@ -657,10 +657,6 @@ nsApplicationCache::Activate()
   NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   mDevice->ActivateCache(mGroup, mClientID);
-
-  if (mDevice->AutoShutdown(this))
-    mDevice = nsnull;
-
   return NS_OK;
 }
 
@@ -677,12 +673,7 @@ nsApplicationCache::Discard()
     mDevice->DeactivateGroup(mGroup);
   }
 
-  nsresult rv = mDevice->EvictEntries(mClientID.get());
-
-  if (mDevice->AutoShutdown(this))
-    mDevice = nsnull;
-
-  return rv;
+  return mDevice->EvictEntries(mClientID.get());
 }
 
 NS_IMETHODIMP
@@ -813,7 +804,6 @@ nsOfflineCacheDevice::nsOfflineCacheDevice()
   : mDB(nsnull)
   , mCacheCapacity(0)
   , mDeltaCounter(0)
-  , mAutoShutdown(false)
 {
 }
 
@@ -2401,24 +2391,4 @@ void
 nsOfflineCacheDevice::SetCapacity(PRUint32 capacity)
 {
   mCacheCapacity = capacity * 1024;
-}
-
-bool
-nsOfflineCacheDevice::AutoShutdown(nsIApplicationCache * aAppCache)
-{
-  if (!mAutoShutdown)
-    return false;
-
-  mAutoShutdown = false;
-
-  Shutdown();
-
-  nsRefPtr<nsCacheService> cacheService = nsCacheService::GlobalInstance();
-  cacheService->RemoveCustomOfflineDevice(this);
-
-  nsCAutoString clientID;
-  aAppCache->GetClientID(clientID);
-  mCaches.Remove(clientID);
-
-  return true;
 }

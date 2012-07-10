@@ -29,7 +29,6 @@
 #include "nsIHttpActivityObserver.h"
 
 #include "mozilla/FunctionTimer.h"
-#include "mozilla/VisualEventTracer.h"
 
 using namespace mozilla;
 
@@ -171,13 +170,6 @@ nsHttpTransaction::Init(PRUint8 caps,
                         nsITransportEventSink *eventsink,
                         nsIAsyncInputStream **responseBody)
 {
-    MOZ_EVENT_TRACER_COMPOUND_NAME(static_cast<nsAHttpTransaction*>(this),
-                                   requestHead->PeekHeader(nsHttp::Host),
-                                   requestHead->RequestURI().BeginReading());
-
-    MOZ_EVENT_TRACER_WAIT(static_cast<nsAHttpTransaction*>(this),
-                          "nsHttpTransaction");
-
     NS_TIME_FUNCTION;
 
     nsresult rv;
@@ -393,11 +385,6 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 {
     NS_IF_RELEASE(mConnection);
     NS_IF_ADDREF(mConnection = conn);
-
-    if (conn) {
-        MOZ_EVENT_TRACER_EXEC(static_cast<nsAHttpTransaction*>(this),
-                              "nsHttpTransaction");
-    }
 }
 
 void
@@ -529,12 +516,6 @@ nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
         // First data we're sending -> this is requestStart
         trans->mTimings.requestStart = mozilla::TimeStamp::Now();
     }
-
-    if (!trans->mSentData) {
-        MOZ_EVENT_TRACER_MARK(static_cast<nsAHttpTransaction*>(trans),
-                              "First write");
-    }
-
     trans->mSentData = true;
     return NS_OK;
 }
@@ -604,11 +585,6 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     //
     rv = trans->mWriter->OnWriteSegment(buf, count, countWritten);
     if (NS_FAILED(rv)) return rv; // caller didn't want to write anything
-
-    if (!trans->mReceivedData) {
-        MOZ_EVENT_TRACER_MARK(static_cast<nsAHttpTransaction*>(trans),
-                              "First read");
-    }
 
     NS_ASSERTION(*countWritten > 0, "bad writer");
     trans->mReceivedData = true;
@@ -808,9 +784,6 @@ nsHttpTransaction::Close(nsresult reason)
 
     // closing this pipe triggers the channel's OnStopRequest method.
     mPipeOut->CloseWithStatus(reason);
-
-    MOZ_EVENT_TRACER_DONE(static_cast<nsAHttpTransaction*>(this),
-                          "nsHttpTransaction");
 }
 
 nsresult

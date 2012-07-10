@@ -29,7 +29,6 @@
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/VisualEventTracer.h"
 
 using namespace mozilla;
 
@@ -278,8 +277,6 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
         if (!rec)
             status = NS_ERROR_OUT_OF_MEMORY;
     }
-
-    MOZ_EVENT_TRACER_DONE(this, "DNS");
 
     mListener->OnLookupComplete(this, rec, status);
     mListener = nsnull;
@@ -607,9 +604,6 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
     if (!req)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = req);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(req, hostname.BeginReading());
-    MOZ_EVENT_TRACER_WAIT(req, "DNS");
 
     // addref for resolver; will be released when OnLookupComplete is called.
     NS_ADDREF(req);

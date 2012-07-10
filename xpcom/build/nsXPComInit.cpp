@@ -315,6 +315,8 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 {
     NS_TIME_FUNCTION;
 
+    PR_SetCurrentThreadName("Main Thread");
+
     nsresult rv = NS_OK;
 
      // We are not shutting down
