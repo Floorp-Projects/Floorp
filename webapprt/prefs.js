@@ -13,6 +13,8 @@ pref("extensions.autoDisableScopes", 1);
 pref("xpinstall.enabled", false);
 // Disable installation of distribution add-ons
 pref("extensions.installDistroAddons", false);
+// Disable the add-on compatibility dialog
+pref("extensions.showMismatchUI", false);
 
 // Whether or not we've ever run.  We use this to set permissions on firstrun.
 pref("webapprt.firstrun", false);
