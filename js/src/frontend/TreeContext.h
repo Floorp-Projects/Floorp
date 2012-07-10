@@ -29,13 +29,6 @@ class ContextFlags {
     friend struct SharedContext;
     friend struct FunctionBox;
 
-    // This function/global/eval code body contained a Use Strict Directive.
-    // Treat certain strict warnings as errors, and forbid the use of 'with'.
-    // See also StrictModeGetter, JSScript::strictModeCode,
-    // JSREPORT_STRICT_ERROR, and JSOPTION_STRICT_MODE.
-    //
-    bool            inStrictMode:1;
-
     // The (static) bindings of this script need to support dynamic name
     // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
     // the scope chain for a dynamic set of keys. The primary examples are:
@@ -114,8 +107,7 @@ class ContextFlags {
 
   public:
     ContextFlags(JSContext *cx)
-      : inStrictMode(cx->hasRunOption(JSOPTION_STRICT_MODE)),
-        bindingsAccessedDynamically(false),
+      : bindingsAccessedDynamically(false),
         funIsHeavyweight(false),
         funIsGenerator(false),
         funMightAliasLocals(false),
@@ -144,9 +136,31 @@ struct SharedContext {
 
     ContextFlags    cxFlags;
 
+
+    // strictModeState tracks the strictness of this context. Normally, it
+    // should be STRICT or NOTSTRICT. However, it can be UNKNOWN when parsing
+    // code for which the strictness has not yet been determined. This happens
+    // when parsing the defaults of a functions and non-"use strict" directive
+    // prologue strings.
+    //
+    // Unless its parent is strict, a context starts out in the UNKNOWN
+    // state. Parser::setStrictMode() should be called when a context has been
+    // determined to be strict or it cannot possibly become strict through the
+    // directive prologue. (It might become strict later if it is in the default
+    // expressions of a strict function.)
+    //
+    // If the state is STRICT, all context children are STRICT, too. Neither of
+    // the other two states have this behavior. A funbox with the UNKNOWN state
+    // can have STRICT children but not NOTSTRICT children. NOTSTRICT funboxes
+    // can have any kind of children.
+    //
+    // When parsing is done, no context may be in the UNKNOWN strictness state.
+    StrictMode::StrictModeState strictModeState;
+
     // If it's function code, fun must be non-NULL and scopeChain must be NULL.
     // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox);
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
+                         StrictMode::StrictModeState sms);
 
     // In theory, |fun*| flags are only relevant if |inFunction()| is true.
     // However, we get and set in some cases where |inFunction()| is false,
@@ -154,7 +168,6 @@ struct SharedContext {
     // functions below.
 #define INFUNC JS_ASSERT(inFunction())
 
-    bool inStrictMode()                const {         return cxFlags.inStrictMode; }
     bool bindingsAccessedDynamically() const {         return cxFlags.bindingsAccessedDynamically; }
     bool funIsHeavyweight()            const { INFUNC; return cxFlags.funIsHeavyweight; }
     bool funIsGenerator()              const { INFUNC; return cxFlags.funIsGenerator; }
@@ -163,7 +176,6 @@ struct SharedContext {
     bool funArgumentsHasLocalBinding() const { INFUNC; return cxFlags.funArgumentsHasLocalBinding; }
     bool funDefinitelyNeedsArgsObj()   const { INFUNC; return cxFlags.funDefinitelyNeedsArgsObj; }
 
-    void setInStrictMode()                  {         cxFlags.inStrictMode                = true; }
     void setBindingsAccessedDynamically()   {         cxFlags.bindingsAccessedDynamically = true; }
     void setFunIsHeavyweight()              {         cxFlags.funIsHeavyweight            = true; }
     void setFunIsGenerator()                { INFUNC; cxFlags.funIsGenerator              = true; }
@@ -181,9 +193,9 @@ struct SharedContext {
     FunctionBox *funbox()  const { JS_ASSERT(inFunction());  return funbox_; }
     JSObject *scopeChain() const { JS_ASSERT(!inFunction()); return scopeChain_; }
 
-    // Return true if we need to check for conditions that elicit
     // JSOPTION_STRICT warnings or strict mode errors.
     inline bool needStrictChecks();
+    inline bool inStrictMode();
 };
 
 typedef HashSet<JSAtom *> FuncStmtSet;
@@ -217,6 +229,11 @@ struct TreeContext {                /* tree context for semantic checks */
                                        be an error if we turn out to be inside a
                                        generator expression */
     FunctionBox     *functionList;
+
+    // A strict mode error found in this scope or one of its children. It is
+    // used only when strictModeState is UNKNOWN. If the scope turns out to be
+    // strict and this is non-null, it is thrown.
+    CompileError    *queuedStrictModeError;
 
   private:
     TreeContext     **parserTC;     /* this points to the Parser's active tc
@@ -260,6 +277,8 @@ struct TreeContext {                /* tree context for semantic checks */
     inline ~TreeContext();
 
     inline bool init();
+
+    inline void setQueuedStrictModeError(CompileError *e);
 
     unsigned blockid();
 

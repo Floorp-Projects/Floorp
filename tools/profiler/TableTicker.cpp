@@ -24,6 +24,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULAppInfo.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
@@ -432,39 +434,36 @@ public:
   NS_IMETHOD Run() {
     TableTicker *t = tlsTicker.get();
 
-    char buff[MAXPATHLEN];
-#ifdef ANDROID
-  #define FOLDER "/sdcard/"
-#elif defined(XP_WIN)
-  #define FOLDER "%TEMP%\\"
-#else
-  #define FOLDER "/tmp/"
-#endif
-
-    snprintf(buff, MAXPATHLEN, "%sprofile_%i_%i.txt", FOLDER, XRE_GetProcessType(), getpid());
-
-#ifdef XP_WIN
-    // Expand %TEMP% on Windows
-    {
-      char tmp[MAXPATHLEN];
-      ExpandEnvironmentStringsA(buff, tmp, mozilla::ArrayLength(tmp));
-      strcpy(buff, tmp);
-    }
-#endif
-
     // Pause the profiler during saving.
     // This will prevent us from recording sampling
     // regarding profile saving. This will also
     // prevent bugs caused by the circular buffer not
     // being thread safe. Bug 750989.
-    std::ofstream stream;
-    stream.open(buff);
     t->SetPaused(true);
+
+    nsCOMPtr<nsIFile> tmpFile;
+    nsCAutoString tmpPath;
+    if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
+      LOG("Failed to find temporary directory.");
+      return NS_ERROR_FAILURE;
+    }
+    tmpPath.AppendPrintf("profile_%i_%i.txt", XRE_GetProcessType(), getpid());
+
+    nsresult rv = tmpFile->AppendNative(tmpPath);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = tmpFile->GetNativePath(tmpPath);
+    if (NS_FAILED(rv))
+      return rv;
+
+    std::ofstream stream;
+    stream.open(tmpPath.get());
     if (stream.is_open()) {
       stream << *(t->GetPrimaryThreadProfile());
       stream << "h-" << GetSharedLibraryInfoString() << std::endl;
       stream.close();
-      LOGF("Saved to %s", buff);
+      LOGF("Saved to %s", tmpPath.get());
     } else {
       LOG("Fail to open profile log file.");
     }

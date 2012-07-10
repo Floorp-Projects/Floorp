@@ -30,7 +30,7 @@
  *  9. client closes the connection before the ws connection is established;
  * 10. client sends a message before the ws connection is established;
  * 11. a simple hello echo;
- * 12. client sends a message with bad bytes;
+ * 12. client sends a message containing unpaired surrogates
  * 13. server sends an invalid message;
  * 14. server sends the close frame, it doesn't close the tcp connection and
  *     it keeps sending normal ws messages;
@@ -485,29 +485,37 @@ function test11()
 
 function test12()
 {
- ok(true,"test 12");
-
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-12");
   ws.onopen = function()
   {
     try {
       // send an unpaired surrogate
-      ws.send(String.fromCharCode(0xD800));
-      ok(false, "couldn't send an unpaired surrogate!");
+      ws._gotMessage = false;
+      ws.send("a\ud800b");
+      ok(true, "ok to send an unpaired surrogate");
     }
     catch (e) {
-      ok(true, "couldn't send an unpaired surrogate!");
+      ok(false, "shouldn't fail any more when sending an unpaired surrogate!");
     }
-    ws.close();
+  }
 
-// there isnt really a server implementation of test-12, so just
-// ignore an error
-    ws.onerror = function()
-    {
-    }
+  ws.onmessage = function(msg)
+  {
+    ok(msg.data == "SUCCESS", "Unpaired surrogate in UTF-16 not converted in test-12");
+    ws._gotMessage = true;
+    // Must support unpaired surrogates in close reason, too
+    ws.close(1000, "a\ud800b");
+  }
 
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "onclose bad readyState in test-12!");
+    ok(ws._gotMessage, "didn't receive message!");
+    shouldCloseCleanly(e);
+    ok(e.code == 1000, "test 12 got wrong close code: " + e.code);
+    ok(e.reason == "a\ufffdb", "test 11 didn't get replacement char in close reason: " + e.reason);
     doTest(13);
-  };
+  }
 }
 
 function test13()

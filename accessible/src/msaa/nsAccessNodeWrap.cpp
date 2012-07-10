@@ -393,7 +393,6 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
     if (!newNode)
       return NULL;
 
-    newNode->Init();
     iNode = static_cast<ISimpleDOMNode*>(newNode);
     iNode->AddRef();
   }

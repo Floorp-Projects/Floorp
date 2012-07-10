@@ -1019,7 +1019,7 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     // body of the reply, and instead give the user a (hopefully helpful) 
     // boilerplate error page, based on just the HTTP status of the reply.
 
-    NS_ABORT_IF_FALSE(mConnectionInfo->UsingSSL(),
+    NS_ABORT_IF_FALSE(mConnectionInfo->UsingConnect(),
                       "SSL connect failed but not using SSL?");
     nsresult rv;
     switch (httpStatus) 

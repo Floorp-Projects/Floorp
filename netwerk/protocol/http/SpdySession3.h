@@ -158,6 +158,8 @@ public:
   
   PRUint32 GetServerInitialWindow() { return mServerInitialWindow; }
 
+  void     PrintDiagnostics (nsCString &log);
+
 private:
 
   enum stateType {

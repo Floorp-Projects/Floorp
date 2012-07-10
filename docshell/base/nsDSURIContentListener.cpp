@@ -20,8 +20,6 @@
 
 using namespace mozilla;
 
-static bool sIgnoreXFrameOptions = false;
-
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
 //*****************************************************************************
@@ -30,18 +28,6 @@ nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
     : mDocShell(aDocShell), 
       mParentContentListener(nsnull)
 {
-  static bool initializedPrefCache = false;
-
-  // Set up a pref cache for sIgnoreXFrameOptions, if we haven't already.
-  if (NS_UNLIKELY(!initializedPrefCache)) {
-    // Lock the pref so that the user's changes to it, if any, are ignored.
-    nsIPrefBranch *root = Preferences::GetRootBranch();
-    if (XRE_GetProcessType() != GeckoProcessType_Content)
-      root->LockPref("b2g.ignoreXFrameOptions");
-
-    Preferences::AddBoolVarCache(&sIgnoreXFrameOptions, "b2g.ignoreXFrameOptions");
-    initializedPrefCache = true;
-  }
 }
 
 nsDSURIContentListener::~nsDSURIContentListener()
@@ -292,8 +278,10 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
         if (!thisWindow)
             return true;
 
+        // GetScriptableTop, not GetTop, because we want this to respect
+        // <iframe mozbrowser> boundaries.
         nsCOMPtr<nsIDOMWindow> topWindow;
-        thisWindow->GetTop(getter_AddRefs(topWindow));
+        thisWindow->GetScriptableTop(getter_AddRefs(topWindow));
 
         // if the document is in the top window, it's not in a frame.
         if (thisWindow == topWindow)
@@ -316,10 +304,19 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
             return false;
         }
 
-        // Traverse up the parent chain to the top docshell that doesn't have
-        // a system principal
+        // Traverse up the parent chain and stop when we see a docshell whose
+        // parent has a system principal, or a docshell corresponding to
+        // <iframe mozbrowser>.
         while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
                parentDocShellItem) {
+
+            nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
+            bool browserFrame = false;
+            curDocShell->GetIsBrowserFrame(&browserFrame);
+            if (browserFrame) {
+              break;
+            }
+
             bool system = false;
             topDoc = do_GetInterface(parentDocShellItem);
             if (topDoc) {
@@ -369,11 +366,6 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIRequest *request,
 // in the request (comma-separated in a header, multiple headers, etc).
 bool nsDSURIContentListener::CheckFrameOptions(nsIRequest *request)
 {
-    // If X-Frame-Options checking is disabled, return true unconditionally.
-    if (sIgnoreXFrameOptions) {
-        return true;
-    }
-
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
     if (!httpChannel) {
         return true;
