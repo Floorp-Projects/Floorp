@@ -34,6 +34,8 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsIClassInfoImpl.h"
 
+#include "mozilla/VisualEventTracer.h"
+
 #if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsNativeConnectionHelper.h"
 #endif
@@ -725,6 +727,8 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
                         const nsACString &host, PRUint16 port,
                         nsIProxyInfo *givenProxyInfo)
 {
+    MOZ_EVENT_TRACER_NAME_OBJECT(this, host.BeginReading());
+
     nsCOMPtr<nsProxyInfo> proxyInfo;
     if (givenProxyInfo) {
         proxyInfo = do_QueryInterface(givenProxyInfo);
@@ -1155,6 +1159,7 @@ nsSocketTransport::InitiateSocket()
     // 
     // Initiate the connect() to the host...  
     //
+    MOZ_EVENT_TRACER_EXEC(this, "TCP connect");
     status = PR_Connect(fd, &mNetAddr, NS_SOCKET_CONNECT_TIMEOUT);
     if (status == PR_SUCCESS) {
         // 
@@ -1378,6 +1383,8 @@ nsSocketTransport::OnSocketConnected()
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = true;
     }
+
+    MOZ_EVENT_TRACER_DONE(this, "TCP connect");
 
     SendStatus(STATUS_CONNECTED_TO);
 }
@@ -2001,6 +2008,7 @@ nsSocketTransport::OnLookupComplete(nsICancelable *request,
     // flag host lookup complete for the benefit of the ResolveHost method.
     mResolving = false;
 
+    MOZ_EVENT_TRACER_WAIT(this, "TCP connect");
     nsresult rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, status, rec);
 
     // if posting a message fails, then we should assume that the socket
