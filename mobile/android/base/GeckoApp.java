@@ -1250,6 +1250,10 @@ abstract public class GeckoApp
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            } else if (event.equals("Share:Image")) {
+                String src = message.getString("url");
+                String type = message.getString("mime");
+                GeckoAppShell.shareImage(src, type);
             } else if (event.equals("Sanitize:ClearHistory")) {
                 handleClearHistory();
             }
@@ -1936,6 +1940,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Share:Image", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
@@ -2281,7 +2286,10 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Share:Image", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
+
+        deleteTempFiles();
 
         if (mFavicons != null)
             mFavicons.close();
@@ -2298,6 +2306,25 @@ abstract public class GeckoApp
             mBatteryReceiver.unregisterFor(mAppContext);
 
         ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
+    }
+
+    // Get/Create a temporary direcory
+    public static File getTempDirectory() {
+        File sdcard = Environment.getExternalStorageDirectory();
+        File dir = new File(sdcard.getAbsolutePath() + "/firefox");
+        dir.mkdirs();
+        return dir;
+    }
+
+    // Delete any files in our temporary directory
+    public static void deleteTempFiles() {
+        File[] files  = getTempDirectory().listFiles();
+        if (files == null)
+            return;
+
+        for (File file : files) {
+            file.delete();
+        }
     }
 
     @Override
