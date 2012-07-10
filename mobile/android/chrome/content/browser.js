@@ -5851,7 +5851,7 @@ var WebappsUI = {
 
           // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
           // a unique ID for Android webapp allocation
-          this.makeBase64Icon(this.getBiggestIcon(manifest.icons),
+          this.makeBase64Icon(this.getBiggestIcon(manifest.icons, Services.io.newURI(data.origin, null, null)),
                               function(icon) {
                                 sendMessageToJava({
                                   gecko: {
@@ -5888,15 +5888,37 @@ var WebappsUI = {
     }
   },
 
-  getBiggestIcon: function getBiggestIcon(aIcons) {
+  getBiggestIcon: function getBiggestIcon(aIcons, aOrigin) {
+    const DEFAULT_ICON = "chrome://browser/skin/images/default-app-icon.png";
     if (!aIcons)
-      return "chrome://browser/skin/images/default-app-icon.png";
+      return DEFAULT_ICON;
   
     let iconSizes = Object.keys(aIcons);
     if (iconSizes.length == 0)
-      return "chrome://browser/skin/images/default-app-icon.png";
+      return DEFAULT_ICON;
     iconSizes.sort(function(a, b) a - b);
-    return aIcons[iconSizes.pop()];
+
+    let biggestIcon = aIcons[iconSizes.pop()];
+    let iconURI = null;
+    try {
+      iconURI = Services.io.newURI(biggestIcon, null, null);
+      if (iconURI.scheme == "data") {
+        return iconURI.spec;
+      }
+    } catch (ex) {
+      // we don't have a biggestIcon or its not a valid url
+    }
+
+    // if we have an origin, try to resolve biggestIcon as a relative url
+    if (!iconURI && aOrigin) {
+      try {
+        iconURI = Services.io.newURI(aOrigin.resolve(biggestIcon), null, null);
+      } catch (ex) {
+        console.log("Could not resolve url: " + aOrigin.spec + " " + biggestIcon + " - " + ex);
+      }
+    }
+
+    return iconURI ? iconURI.spec : DEFAULT_ICON;
   },
 
   doInstall: function doInstall(aData) {
