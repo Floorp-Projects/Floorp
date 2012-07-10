@@ -11,9 +11,8 @@ TESTXPI  = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 ADDONSRC = $(srcdir)/addons
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
   head.js \
   remote_autocomplete.js \
   remote_contentpopup.js \
@@ -77,7 +76,7 @@ _BROWSER_FILES = \
   $(NULL)
 
 ifneq ($(OS_TARGET),Android)
-_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES += \
   browser_autocomplete.html \
   browser_autocomplete.js \
   browser_bookmarks_star.js \
@@ -89,12 +88,11 @@ _BROWSER_FILES += \
   browser_navigation.js \
   $(NULL)
 ifndef MOZ_PLATFORM_MAEMO
-_BROWSER_FILES +=  browser_sidebars.js
+MOCHITEST_BROWSER_FILES +=  browser_sidebars.js
 endif
 endif
 
-libs:: $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 
 libs::
 	rm -rf $(TESTXPI)

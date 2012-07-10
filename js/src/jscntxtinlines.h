@@ -478,12 +478,6 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     return CallJSPropertyOpSetter(cx, op, obj, nid, strict, vp);
 }
 
-static inline HeapPtrAtom *
-FrameAtomBase(JSContext *cx, js::StackFrame *fp)
-{
-    return fp->script()->atoms;
-}
-
 }  /* namespace js */
 
 inline JSVersion

@@ -16,9 +16,7 @@ DIRS = 	\
 	tmp \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	ajax_test.js \
 	array_test.js \
 	base_test.js \
@@ -36,5 +34,4 @@ _TEST_FILES	= \
 	unittest_test.js \
 	$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -442,10 +442,11 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
-    relhackcode->insertAfter(section);
+    unsigned int old_end = section->getOffset() + section->getSize();
+
+    relhackcode->insertBefore(section);
     relhack->insertAfter(relhackcode);
 
-    unsigned int old_end = section->getOffset() + section->getSize();
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
     ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
@@ -454,7 +455,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     if (dyn->getValueForType(Rel_Type::d_tag_count))
         dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
 
-    if (relhack->getOffset() + relhack->getSize() >= old_end) {
+    if (section->getOffset() + section->getSize() >= old_end) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
     }

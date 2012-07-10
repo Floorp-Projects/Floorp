@@ -33,8 +33,9 @@
 
 interface nsIURI;
 interface nsIObserver;
+interface nsIPrincipal;
 
-[scriptable, uuid(0b83f9d5-3f96-41b6-91aa-ff3a7e4880d7)]
+[scriptable, uuid(cc423aaf-f088-4ec2-86ef-7733225773f9)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -89,6 +90,16 @@ interface nsIPermissionManager : nsISupports
            [optional] in PRInt64 expireTime);
 
   /**
+   * Add permission information for a given principal.
+   * It is internally calling the other add() method using the nsIURI from the
+   * principal.
+   */
+  void addFromPrincipal(in nsIPrincipal principal, in string typed,
+                        in PRUint32 permission,
+                        [optional] in PRUint32 expireType,
+                        [optional] in PRInt64 expireTime);
+
+  /**
    * Remove permission information for a given host string and permission type.
    * The host string represents the exact entry in the permission list (such as
    * obtained from the enumerator), not a URI which that permission might apply
@@ -101,6 +112,12 @@ interface nsIPermissionManager : nsISupports
    */
   void remove(in AUTF8String host,
               in string type);
+
+  /**
+   * Remove permission information for a given principal.
+   * This is internally calling remove() with the host from the principal's URI.
+   */
+  void removeFromPrincipal(in nsIPrincipal principal, in string type);
 
   /**
    * Clear permission information for all websites.
@@ -118,6 +135,12 @@ interface nsIPermissionManager : nsISupports
                           in string type);
 
   /**
+   * Test whether the principal has the permission to perform a given action.
+   */
+  PRUint32 testPermissionFromPrincipal(in nsIPrincipal principal,
+                                       in string type);
+
+  /**
    * Test whether a website has permission to perform the given action.
    * This requires an exact hostname match, subdomains are not a match.
    * @param uri     the uri to be tested
@@ -127,6 +150,12 @@ interface nsIPermissionManager : nsISupports
    */
   PRUint32 testExactPermission(in nsIURI uri,
                                in string type);
+
+  /**
+   * See testExactPermission() above.
+   */
+  PRUint32 testExactPermissionFromPrincipal(in nsIPrincipal principal,
+                                            in string type);
 
   /**
    * Allows enumeration of all stored permissions

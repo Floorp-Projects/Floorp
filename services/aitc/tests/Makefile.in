@@ -13,13 +13,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = test_services_aitc
 XPCSHELL_TESTS = unit
 
-include $(topsrcdir)/config/rules.mk
 
-_browser_files = \
+MOCHITEST_BROWSER_FILES = \
   mochitest/head.js \
   mochitest/browser_id_simple.js \
   mochitest/file_browser_id_mock.html \
   $(NULL)
 
-libs:: $(_browser_files)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

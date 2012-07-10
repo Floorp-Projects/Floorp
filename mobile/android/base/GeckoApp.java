@@ -793,7 +793,7 @@ abstract public class GeckoApp
     }
 
     private boolean shouldUpdateThumbnail(Tab tab) {
-        return (Tabs.getInstance().isSelectedTab(tab) || mTabsPanel.isShown());
+        return (Tabs.getInstance().isSelectedTab(tab) || areTabsShown());
     }
 
     void updatePopups(final Tab tab) {

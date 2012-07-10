@@ -367,6 +367,9 @@ nsDragService::GetNumDropItems(PRUint32 * aNumItems)
         *aNumItems = ::DragQueryFileW(hdrop, 0xFFFFFFFF, NULL, 0);
         ::GlobalUnlock(stm.hGlobal);
         ::ReleaseStgMedium(&stm);
+        // Data may be provided later, so assume we have 1 item
+        if (*aNumItems == 0)
+          *aNumItems = 1;
       }
       else
         *aNumItems = 1;

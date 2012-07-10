@@ -176,9 +176,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
         /* Translate StopIteration singleton. */
         if (obj->isStopIteration()) {
-            RootedObject null(cx);
             RootedValue vvp(cx, *vp);
-            bool result = js_FindClassObject(cx, null, JSProto_StopIteration, &vvp);
+            bool result = js_FindClassObject(cx, NullPtr(), JSProto_StopIteration, &vvp);
             *vp = vvp;
             return result;
         }
