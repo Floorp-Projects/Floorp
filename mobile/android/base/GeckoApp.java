@@ -11,7 +11,9 @@ import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
+import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SurfaceTextureLayer;
+import org.mozilla.gecko.ui.PanZoomController;
 
 import java.io.*;
 import java.util.*;
@@ -3082,11 +3084,30 @@ abstract public class GeckoApp
         layerController.setLayerClient(mLayerClient);
 
         layerController.getView().getTouchEventHandler().setOnTouchListener(new View.OnTouchListener() {
+            private PointF initialPoint = null;
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
                     return true;
+
                 if (autoHideTabs())
                     return true;
+
+                int action = event.getAction();
+                PointF point = new PointF(event.getX(), event.getY());
+                if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+                    initialPoint = point;
+                }
+
+                if (initialPoint != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
+                    if (PointUtils.subtract(point, initialPoint).length() < PanZoomController.PAN_THRESHOLD) {
+                        // Don't send the touchmove event if if the users finger hasn't move far
+                        // Necessary for Google Maps to work correctlly. See bug 771099.
+                        return true;
+                    } else {
+                        initialPoint = null;
+                    }
+                }
+
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
                 return true;
             }
