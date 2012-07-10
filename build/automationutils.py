@@ -458,17 +458,15 @@ class ShutdownLeakLogger(object):
     if leakingTests:
       totalWindows = sum(len(test["leakedWindows"]) for test in leakingTests)
       totalDocShells = sum(len(test["leakedDocShells"]) for test in leakingTests)
-      msgType = "INFO" if totalWindows + totalDocShells <= self.MAX_LEAK_COUNT else "UNEXPECTED-FAIL"
-      self.logger.info("TEST-%s | ShutdownLeaks | leaked %d DOMWindow(s) and %d DocShell(s) until shutdown", msgType, totalWindows, totalDocShells)
+      msgType = "TEST-INFO" if totalWindows + totalDocShells <= self.MAX_LEAK_COUNT else "TEST-UNEXPECTED-FAIL"
+      self.logger.info("%s | ShutdownLeaks | leaked %d DOMWindow(s) and %d DocShell(s) until shutdown", msgType, totalWindows, totalDocShells)
 
     for test in leakingTests:
-      self.logger.info("\n[%s]", test["fileName"])
-
       for url, count in self._zipLeakedWindows(test["leakedWindows"]):
-        self.logger.info("  %d window(s) [url = %s]", count, url)
+        self.logger.info("%s | %s | leaked %d window(s) until shutdown [url = %s]", msgType, test["fileName"], count, url)
 
       if test["leakedDocShells"]:
-        self.logger.info("  %d docShell(s)", len(test["leakedDocShells"]))
+        self.logger.info("%s | %s | leaked %d docShell(s) until shutdown", msgType, test["fileName"], len(test["leakedDocShells"]))
 
   def _logWindow(self, line):
     created = line[:2] == "++"
