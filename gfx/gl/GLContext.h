@@ -47,7 +47,6 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 
-typedef uintptr_t SharedTextureHandle;
 
 enum ShaderProgramType {
     RGBALayerProgramType,
@@ -97,11 +96,6 @@ public:
         UseNearestFilter = 0x1,
         NeedsYFlip       = 0x2,
         ForceSingleTile  = 0x4
-    };
-
-    enum TextureShareType {
-        ThreadShared     = 0x0,
-        ProcessShared    = 0x1
     };
 
     typedef gfxASurface::gfxContentType ContentType;
@@ -853,43 +847,7 @@ public:
         return IsExtensionSupported(EXT_framebuffer_blit) || IsExtensionSupported(ANGLE_framebuffer_blit);
     }
 
-    /**
-     * Create new shared GLContext content handle, must be released by ReleaseSharedHandle.
-     */
-    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType) { return nsnull; }
-    /**
-     * Publish GLContext content to intermediate buffer attached to shared handle.
-     * Shared handle content is ready to be used after call returns, and no need extra Flush/Finish are required.
-     * GLContext must be current before this call
-     */
-    virtual void UpdateSharedHandle(TextureImage::TextureShareType aType,
-                                    SharedTextureHandle aSharedHandle) { }
-    /**
-     * - It is better to call ReleaseSharedHandle before original GLContext destroyed,
-     *     otherwise warning will be thrown on attempt to destroy Texture associated with SharedHandle, depends on backend implementation.
-     * - It does not require to be called on context where it was created,
-     *     because SharedHandle suppose to keep Context reference internally,
-     *     or don't require specific context at all, for example IPC SharedHandle.
-     * - Not recommended to call this between AttachSharedHandle and Draw Target call.
-     *      if it is really required for some special backend, then DetachSharedHandle API must be added with related implementation.
-     * - It is recommended to stop any possible access to SharedHandle (Attachments, pending GL calls) before calling Release,
-     *      otherwise some artifacts might appear or even crash if API backend implementation does not expect that.
-     * SharedHandle (currently EGLImage) does not require GLContext because it is EGL call, and can be destroyed
-     *   at any time, unless EGLImage have siblings (which are not expected with current API).
-     */
-    virtual void ReleaseSharedHandle(TextureImage::TextureShareType aType,
-                                     SharedTextureHandle aSharedHandle) { }
-    /**
-     * Attach Shared GL Handle to GL_TEXTURE_2D target
-     * GLContext must be current before this call
-     */
-    virtual bool AttachSharedHandle(TextureImage::TextureShareType aType,
-                                    SharedTextureHandle aSharedHandle) { return false; }
-    /**
-     * Detach Shared GL Handle from GL_TEXTURE_2D target
-     */
-    virtual void DetachSharedHandle(TextureImage::TextureShareType aType,
-                                    SharedTextureHandle aSharedHandle) { return; }
+
 
 private:
     GLuint mUserBoundDrawFBO;

@@ -53,6 +53,7 @@ protected:
   gl::ShaderProgramType mLayerProgram;
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
+  void MakeTexture();
   GLuint mTexture;
 
   bool mDelayedUpdates;
@@ -126,8 +127,6 @@ private:
   nsRefPtr<TextureImage> mTexImage;
 
   bool mNeedsYFlip;
-  SurfaceDescriptor mFrontBufferDescriptor;
-  GLuint mTexture;
 };
 
 } /* layers */
