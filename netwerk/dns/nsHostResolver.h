@@ -22,24 +22,6 @@ class nsHostResolver;
 class nsHostRecord;
 class nsResolveHostCallback;
 
-/* XXX move this someplace more generic */
-#define NS_DECL_REFCOUNTED_THREADSAFE(classname)                             \
-  private:                                                                   \
-    nsAutoRefCnt _refc;                                                      \
-  public:                                                                    \
-    PRInt32 AddRef() {                                                       \
-        PRInt32 n = NS_AtomicIncrementRefcnt(_refc);                         \
-        NS_LOG_ADDREF(this, n, #classname, sizeof(classname));               \
-        return n;                                                            \
-    }                                                                        \
-    PRInt32 Release() {                                                      \
-        PRInt32 n = NS_AtomicDecrementRefcnt(_refc);                         \
-        NS_LOG_RELEASE(this, n, #classname);                                 \
-        if (n == 0)                                                          \
-            delete this;                                                     \
-        return n;                                                            \
-    }
-
 #define MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY  3
 #define MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY 5
 #define MAX_NON_PRIORITY_REQUESTS 150
@@ -62,7 +44,7 @@ class nsHostRecord : public PRCList, public nsHostKey
     typedef mozilla::Mutex Mutex;
 
 public:
-    NS_DECL_REFCOUNTED_THREADSAFE(nsHostRecord)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHostRecord)
 
     /* instantiates a new host record */
     static nsresult Create(const nsHostKey *key, nsHostRecord **record);
@@ -178,7 +160,7 @@ public:
     /**
      * host resolver instances are reference counted.
      */
-    NS_DECL_REFCOUNTED_THREADSAFE(nsHostResolver)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHostResolver)
 
     /**
      * creates an addref'd instance of a nsHostResolver object.
