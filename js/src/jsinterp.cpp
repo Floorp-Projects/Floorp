@@ -1150,20 +1150,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define ENABLE_INTERRUPTS() (interruptEnabler.enableInterrupts())
 
-#define LOAD_ATOM(PCOFF, atom)                                                \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((size_t)(atoms - script->atoms) <                           \
-                  (size_t)(script->natoms - GET_UINT32_INDEX(regs.pc + PCOFF)));\
-        atom = atoms[GET_UINT32_INDEX(regs.pc + PCOFF)];                      \
-    JS_END_MACRO
-
-#define LOAD_NAME(PCOFF, name)                                                \
-    JS_BEGIN_MACRO                                                            \
-        JSAtom *atom;                                                         \
-        LOAD_ATOM((PCOFF), atom);                                             \
-        name = atom->asPropertyName();                                        \
-    JS_END_MACRO
-
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
@@ -1189,7 +1175,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             /* FALLTHROUGH */                                                 \
           case mjit::Jaeger_Unfinished:                                       \
             op = (JSOp) *regs.pc;                                             \
-            RESTORE_INTERP_VARS_CHECK_EXCEPTION();                            \
+            SET_SCRIPT(regs.fp()->script());                                  \
+            if (cx->isExceptionPending())                                     \
+                goto error;                                                   \
             DO_OP();                                                          \
           default:;                                                           \
         }                                                                     \
@@ -1200,21 +1188,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESET_USE_METHODJIT() ((void) 0)
 
 #endif
-
-#define RESTORE_INTERP_VARS()                                                 \
-    JS_BEGIN_MACRO                                                            \
-        SET_SCRIPT(regs.fp()->script());                                      \
-        atoms = FrameAtomBase(cx, regs.fp());                                 \
-        JS_ASSERT(&cx->regs() == &regs);                                      \
-    JS_END_MACRO
-
-#define RESTORE_INTERP_VARS_CHECK_EXCEPTION()                                 \
-    JS_BEGIN_MACRO                                                            \
-        RESTORE_INTERP_VARS();                                                \
-        if (cx->isExceptionPending())                                         \
-            goto error;                                                       \
-        CHECK_INTERRUPT_HANDLER();                                            \
-    JS_END_MACRO
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1289,15 +1262,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     if (!entryFrame)
         entryFrame = regs.fp();
-
-    /*
-     * Initialize the index segment register used by LOAD_ATOM and
-     * GET_FULL_INDEX macros below. As a register we use a pointer based on
-     * the atom map to turn frequently executed LOAD_ATOM into simple array
-     * access. For less frequent object loads we have to recover the segment
-     * from atoms pointer first.
-     */
-    HeapPtrAtom *atoms = script->atoms;
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
@@ -1627,8 +1591,7 @@ BEGIN_CASE(JSOP_STOP)
         bool shiftResult = regs.fp()->loweredCallOrApply();
 
         cx->stack.popInlineFrame(regs);
-
-        RESTORE_INTERP_VARS();
+        SET_SCRIPT(regs.fp()->script());
 
         JS_ASSERT(*regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
                   *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
@@ -1850,8 +1813,9 @@ END_CASE(JSOP_PICK)
 
 BEGIN_CASE(JSOP_SETCONST)
 {
-    PropertyName *name;
-    LOAD_NAME(0, name);
+    RootedPropertyName &name = rootName0;
+    name = script->getName(regs.pc);
+
     JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
     if (!obj.defineProperty(cx, name, ref,
@@ -1909,7 +1873,7 @@ BEGIN_CASE(JSOP_BINDNAME)
             break;
 
         RootedPropertyName &name = rootName0;
-        LOAD_NAME(0, name);
+        name = script->getName(regs.pc);
 
         RootedObject &scopeChain = rootObject0;
         scopeChain = regs.fp()->scopeChain();
@@ -2209,7 +2173,7 @@ END_CASE(JSOP_POS)
 BEGIN_CASE(JSOP_DELNAME)
 {
     RootedPropertyName &name = rootName0;
-    LOAD_NAME(0, name);
+    name = script->getName(regs.pc);
 
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
@@ -2235,7 +2199,7 @@ END_CASE(JSOP_DELNAME)
 BEGIN_CASE(JSOP_DELPROP)
 {
     RootedPropertyName &name = rootName0;
-    LOAD_NAME(0, name);
+    name = script->getName(regs.pc);
 
     JSObject *obj;
     FETCH_OBJECT(cx, -1, obj);
@@ -2498,7 +2462,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, newScript, initial))
         goto error;
 
-    RESTORE_INTERP_VARS();
+    SET_SCRIPT(regs.fp()->script());
     RESET_USE_METHODJIT();
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
@@ -2555,7 +2519,7 @@ END_CASE(JSOP_SETCALL)
 BEGIN_CASE(JSOP_IMPLICITTHIS)
 {
     RootedPropertyName &name = rootName0;
-    LOAD_NAME(0, name);
+    name = script->getName(regs.pc);
 
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
@@ -2613,17 +2577,11 @@ BEGIN_CASE(JSOP_DOUBLE)
 END_CASE(JSOP_DOUBLE)
 
 BEGIN_CASE(JSOP_STRING)
-{
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    PUSH_STRING(atom);
-}
+    PUSH_STRING(script->getAtom(regs.pc));
 END_CASE(JSOP_STRING)
 
 BEGIN_CASE(JSOP_OBJECT)
-{
-    PUSH_OBJECT(*script->getObject(GET_UINT32_INDEX(regs.pc)));
-}
+    PUSH_OBJECT(*script->getObject(regs.pc));
 END_CASE(JSOP_OBJECT)
 
 BEGIN_CASE(JSOP_REGEXP)
@@ -2711,7 +2669,6 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
      * JSOP_LOOKUPSWITCH are never used if any atom index in it would exceed
      * 64K limit.
      */
-    JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
 
     Value lval = regs.sp[-1];
@@ -2862,8 +2819,6 @@ END_CASE(JSOP_SETLOCAL)
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
-    PropertyName *dn = atoms[GET_UINT32_INDEX(regs.pc)]->asPropertyName();
-
     /* ES5 10.5 step 8 (with subsequent errata). */
     unsigned attrs = JSPROP_ENUMERATE;
     if (!regs.fp()->isEvalFrame())
@@ -2875,7 +2830,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     RootedObject &obj = rootObject0;
     obj = &regs.fp()->varObj();
 
-    if (!DefVarOrConstOperation(cx, obj, dn, attrs))
+    if (!DefVarOrConstOperation(cx, obj, script->getName(regs.pc), attrs))
         goto error;
 }
 END_CASE(JSOP_DEFVAR)
@@ -3015,14 +2970,10 @@ BEGIN_CASE(JSOP_SETTER)
     switch (op2) {
       case JSOP_SETNAME:
       case JSOP_SETPROP:
-      {
-        PropertyName *name;
-        LOAD_NAME(0, name);
-        id = NameToId(name);
+        id = NameToId(script->getName(regs.pc));
         rval = regs.sp[-1];
         i = -1;
         goto gs_pop_lval;
-      }
       case JSOP_SETELEM:
         rval = regs.sp[-1];
         id = JSID_VOID;
@@ -3032,15 +2983,11 @@ BEGIN_CASE(JSOP_SETTER)
         break;
 
       case JSOP_INITPROP:
-      {
         JS_ASSERT(regs.stackDepth() >= 2);
         rval = regs.sp[-1];
         i = -1;
-        PropertyName *name;
-        LOAD_NAME(0, name);
-        id = NameToId(name);
+        id = NameToId(script->getName(regs.pc));
         goto gs_get_lval;
-      }
       default:
         JS_ASSERT(op2 == JSOP_INITELEM);
         JS_ASSERT(regs.stackDepth() >= 3);
@@ -3145,7 +3092,7 @@ END_CASE(JSOP_NEWARRAY)
 BEGIN_CASE(JSOP_NEWOBJECT)
 {
     RootedObject &baseobj = rootObject0;
-    baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
+    baseobj = script->getObject(regs.pc);
 
     RootedObject &obj = rootObject1;
     obj = CopyInitializerObject(cx, baseobj);
@@ -3178,10 +3125,9 @@ BEGIN_CASE(JSOP_INITPROP)
     obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
-    RootedId &id = rootId0;
+    PropertyName *name = script->getName(regs.pc);
 
-    PropertyName *name;
-    LOAD_NAME(0, name);
+    RootedId &id = rootId0;
     id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
@@ -3399,27 +3345,19 @@ END_CASE(JSOP_ANYNAME)
 #endif
 
 BEGIN_CASE(JSOP_QNAMEPART)
-{
     /*
      * We do not JS_ASSERT(!script->strictModeCode) here because JSOP_QNAMEPART
      * is used for __proto__ and (in contexts where we favor JSOP_*ELEM instead
      * of JSOP_*PROP) obj.prop compiled as obj['prop'].
      */
-
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    PUSH_STRING(atom);
-}
+    PUSH_STRING(script->getAtom(regs.pc));
 END_CASE(JSOP_QNAMEPART)
 
 #if JS_HAS_XML_SUPPORT
 BEGIN_CASE(JSOP_QNAMECONST)
 {
     JS_ASSERT(!script->strictModeCode);
-
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    Value rval = StringValue(atom);
+    Value rval = StringValue(script->getAtom(regs.pc));
     Value lval = regs.sp[-1];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
@@ -3666,7 +3604,7 @@ BEGIN_CASE(JSOP_XMLCDATA)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
+    JSAtom *atom = script->getAtom(regs.pc);
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, atom);
     if (!obj)
         goto error;
@@ -3678,7 +3616,7 @@ BEGIN_CASE(JSOP_XMLCOMMENT)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
+    JSAtom *atom = script->getAtom(regs.pc);
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, atom);
     if (!obj)
         goto error;
@@ -3690,7 +3628,7 @@ BEGIN_CASE(JSOP_XMLPI)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
+    JSAtom *atom = script->getAtom(regs.pc);
     Value rval = regs.sp[-1];
     JSString *str2 = rval.toString();
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, atom, str2);
@@ -3716,7 +3654,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
 {
-    StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(regs.pc))->asStaticBlock();
+    StaticBlockObject &blockObj = script->getObject(regs.pc)->asStaticBlock();
 
     if (op == JSOP_ENTERBLOCK) {
         JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());
@@ -3871,9 +3809,6 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(interpMode != JSINTERP_REJOIN);
 
     if (cx->isExceptionPending()) {
-        /* Restore atoms local in case we will resume. */
-        atoms = script->atoms;
-
         /* Call debugger throw hook if set. */
         if (cx->runtime->debugHooks.throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;

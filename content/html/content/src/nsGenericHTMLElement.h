@@ -71,7 +71,7 @@ public:
                              void **aInstancePtr);
 
   // From nsGenericElement
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest);
 
   // Implementation for nsIDOMElement
   NS_METHOD SetAttribute(const nsAString& aName,
