@@ -1505,8 +1505,11 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   }
 
   // the constructor should throw a SYNTAX_ERROR only if it fails to parse the
-  // url parameter, so we don't care about the EstablishConnection result.
-  EstablishConnection();
+  // url parameter, so don't throw if EstablishConnection fails, and call
+  // onerror/onclose asynchronously
+  if (NS_FAILED(EstablishConnection())) {
+    FailConnection(nsIWebSocketChannel::CLOSE_ABNORMAL);
+  }
 
   return NS_OK;
 }
