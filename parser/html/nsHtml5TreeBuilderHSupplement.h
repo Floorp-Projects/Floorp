@@ -15,6 +15,7 @@
     nsHtml5TreeOpStage*                    mSpeculativeLoadStage;
     nsIContent**                           mDeepTreeSurrogateParent;
     bool                                   mCurrentHtmlScriptIsAsyncOrDefer;
+    bool                                   mPreventScriptExecution;
 #ifdef DEBUG
     bool                                   mActive;
 #endif
@@ -95,6 +96,10 @@
     void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, PRInt32 aLine);
 
     void DropHandles();
+
+    void SetPreventScriptExecution(bool aPrevent) {
+      mPreventScriptExecution = aPrevent;
+    }
 
     void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 

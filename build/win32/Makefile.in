@@ -68,6 +68,10 @@ REDIST_FILES = \
   $(NULL)
 endif
 
+ifdef MOZ_METRO
+REDIST_FILES += vccorlib110.dll
+endif
+
 ifdef REDIST_FILES
 libs-preqs = \
   $(call mkdir_deps,$(FINAL_TARGET)) \

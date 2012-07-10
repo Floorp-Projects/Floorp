@@ -4816,11 +4816,12 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         FunctionBox *funbox = pn->pn_funbox;
-        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox);
+        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
         sc.cxFlags = funbox->cxFlags;
         if (bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         sc.bindings.transfer(&funbox->bindings);
+        JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
         // Inherit most things (principals, version, etc) from the parent.
         GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;

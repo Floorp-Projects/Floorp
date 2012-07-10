@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileRequest, DOMRequest)
 
   static already_AddRefed<FileRequest>
-  Create(nsIDOMWindow* aOwner, LockedFile* aLockedFile);
+  Create(nsIDOMWindow* aOwner, LockedFile* aLockedFile, bool aIsFileRequest);
 
   // nsIDOMEventTarget
   virtual nsresult
@@ -55,6 +55,7 @@ private:
   RootResultVal();
 
   nsRefPtr<LockedFile> mLockedFile;
+  bool mIsFileRequest;
 
   NS_DECL_EVENT_HANDLER(progress)
 };
