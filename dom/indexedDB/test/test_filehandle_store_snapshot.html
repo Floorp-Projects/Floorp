@@ -59,9 +59,6 @@
 
     let file = event.target.result;
 
-    lockedFile = event.target.lockedFile;
-    is(lockedFile.active, true, "Correct active state");
-
     let trans = db.transaction([objectStoreName], READ_WRITE);
     let objectStore = trans.objectStore(objectStoreName);
 
@@ -69,7 +66,17 @@
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    is(lockedFile.active, false, "Correct open state");
+    // At this moment, the file should not be readable anymore.
+    let reader = new FileReader();
+    try {
+      reader.readAsArrayBuffer(file);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "LockedFileInactiveError", "Good error.");
+      is(e.code, 0, "Good error code.");
+    }
 
     request = objectStore.get(42);
     request.onsuccess = grabEventAndContinueHandler;
