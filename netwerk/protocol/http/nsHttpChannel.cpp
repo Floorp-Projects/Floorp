@@ -34,7 +34,6 @@
 #include "base/compiler_specific.h"
 #include "NullHttpTransaction.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/VisualEventTracer.h"
 
 namespace mozilla { namespace net {
  
@@ -180,14 +179,9 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
     NS_QueryNotificationCallbacks(mChannel, 
                                   NS_GET_IID(nsIRedirectResultListener), 
                                   getter_AddRefs(vetoHook));
-
-    nsHttpChannel * channel = mChannel;
     mChannel = nsnull;
-
     if (vetoHook)
         vetoHook->OnRedirectResult(succeeded);
-
-    MOZ_EVENT_TRACER_DONE(channel, "AsyncProcessRedirection");
 }
 
 class HttpCacheQuery : public nsRunnable, public nsICacheListener
@@ -207,7 +201,7 @@ public:
         , mHasQueryString(HasQueryString(channel->mRequestHead.Method(),
                                          channel->mURI))
         , mLoadFlags(channel->mLoadFlags)
-        , mCacheForOfflineUse(!!channel->mApplicationCacheForWrite)
+        , mCacheForOfflineUse(channel->mCacheForOfflineUse)
         , mFallbackChannel(channel->mFallbackChannel)
         , mClientID(clientID)
         , mStoragePolicy(storagePolicy)
@@ -316,6 +310,7 @@ nsHttpChannel::nsHttpChannel()
     , mAuthRetryPending(false)
     , mResuming(false)
     , mInitedCacheEntry(false)
+    , mCacheForOfflineUse(false)
     , mFallbackChannel(false)
     , mCustomConditionalRequest(false)
     , mFallingBack(false)
@@ -341,12 +336,6 @@ nsHttpChannel::Init(nsIURI *uri,
                     PRUint8 caps,
                     nsProxyInfo *proxyInfo)
 {
-#ifdef MOZ_VISUAL_EVENT_TRACER
-    nsCAutoString url;
-    uri->GetAsciiSpec(url);
-    MOZ_EVENT_TRACER_NAME_OBJECT(this, url.BeginReading());
-#endif
-
     nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo);
     if (NS_FAILED(rv))
         return rv;
@@ -461,7 +450,7 @@ nsHttpChannel::Connect()
 
     // if cacheForOfflineUse has been set, open up an offline cache
     // entry to update
-    if (mApplicationCacheForWrite) {
+    if (mCacheForOfflineUse) {
         rv = OpenOfflineCacheEntryForWriting();
         if (NS_FAILED(rv)) return rv;
 
@@ -1007,7 +996,7 @@ nsHttpChannel::CallOnStartRequest()
                 rv = InstallOfflineCacheListener();
                 if (NS_FAILED(rv)) return rv;
             }
-        } else if (mApplicationCacheForWrite) {
+        } else if (mCacheForOfflineUse) {
             LOG(("offline cache is up to date, not updating"));
             CloseOfflineCacheEntry();
         }
@@ -1379,7 +1368,7 @@ nsHttpChannel::ContinueProcessResponse(nsresult rv)
         InitCacheEntry();
         CloseCacheEntry(false);
 
-        if (mApplicationCacheForWrite) {
+        if (mCacheForOfflineUse) {
             // Store response in the offline cache
             InitOfflineCacheEntry();
             CloseOfflineCacheEntry();
@@ -2280,7 +2269,8 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
         mOfflineCacheAccess = 0;
     }
 
-    mApplicationCacheForWrite = nsnull;
+    mCacheForOfflineUse = false;
+    mOfflineCacheClientID.Truncate();
     mOfflineCacheEntry = 0;
     mOfflineCacheAccess = 0;
 
@@ -2379,8 +2369,6 @@ IsSubRangeRequest(nsHttpRequestHead &aRequestHead)
 nsresult
 nsHttpChannel::OpenCacheEntry(bool usingSSL)
 {
-    MOZ_EVENT_TRACER_EXEC(this, "OpenCacheEntry");
-
     nsresult rv;
 
     NS_ASSERTION(!mOnCacheEntryAvailableCallback, "Unexpected state");
@@ -2516,7 +2504,7 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
     if (NS_SUCCEEDED(aEntryStatus))
         return NS_OK;
 
-    if (!mApplicationCacheForWrite && !mFallbackChannel) {
+    if (!mCacheForOfflineUse && !mFallbackChannel) {
         nsCAutoString cacheKey;
         GenerateCacheKey(mPostID, cacheKey);
 
@@ -2653,14 +2641,7 @@ nsHttpChannel::OpenOfflineCacheEntryForWriting()
     nsCAutoString cacheKey;
     GenerateCacheKey(mPostID, cacheKey);
 
-    NS_ENSURE_TRUE(mApplicationCacheForWrite,
-                   NS_ERROR_NOT_AVAILABLE);
-
-    nsCAutoString offlineCacheClientID;
-    rv = mApplicationCacheForWrite->GetClientID(offlineCacheClientID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(!offlineCacheClientID.IsEmpty(),
+    NS_ENSURE_TRUE(!mOfflineCacheClientID.IsEmpty(),
                    NS_ERROR_NOT_AVAILABLE);
 
     nsCOMPtr<nsICacheSession> session;
@@ -2668,19 +2649,14 @@ nsHttpChannel::OpenOfflineCacheEntryForWriting()
         do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->CreateSession(offlineCacheClientID.get(),
+    rv = serv->CreateSession(mOfflineCacheClientID.get(),
                              nsICache::STORE_OFFLINE,
                              nsICache::STREAM_BASED,
                              getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFile> profileDirectory;
-    rv = mApplicationCacheForWrite->GetProfileDirectory(
-            getter_AddRefs(profileDirectory));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (profileDirectory) {
-        rv = session->SetProfileDirectory(profileDirectory);
+    if (mProfileDirectory) {
+        rv = session->SetProfileDirectory(mProfileDirectory);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3320,7 +3296,7 @@ HttpCacheQuery::MustValidateBasedOnQueryUrl() const
 bool
 nsHttpChannel::ShouldUpdateOfflineCacheEntry()
 {
-    if (!mApplicationCacheForWrite || !mOfflineCacheEntry) {
+    if (!mCacheForOfflineUse || !mOfflineCacheEntry) {
         return false;
     }
 
@@ -3511,7 +3487,7 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     }
     
     if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
-        if (!mApplicationCacheForWrite) {
+        if (!mCacheForOfflineUse) {
             LOG(("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
                  "load flag\n"));
             MOZ_ASSERT(!mCacheInputStream);
@@ -3522,7 +3498,7 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
         
         if (!ShouldUpdateOfflineCacheEntry()) {
             LOG(("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
-                 "load flag (mApplicationCacheForWrite not null case)\n"));
+                 "load flag (mCacheForOfflineUse case)\n"));
             mCacheInputStream.CloseAndRelease();
             // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
             // here, to avoid event dispatching latency.
@@ -4013,12 +3989,11 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
                     cachingChannel->SetCacheKey(cacheKey);
                 }
             }
-        }
 
-        nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel = do_QueryInterface(newChannel);
-        if (appCacheChannel) {
-            // app cache for write
-            appCacheChannel->SetApplicationCacheForWrite(mApplicationCacheForWrite);
+            // cacheClientID, cacheForOfflineUse
+            cachingChannel->SetOfflineCacheClientID(mOfflineCacheClientID);
+            cachingChannel->SetCacheForOfflineUse(mCacheForOfflineUse);
+            cachingChannel->SetProfileDirectory(mProfileDirectory);
         }
     }
 
@@ -4030,11 +4005,6 @@ nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
 {
     LOG(("nsHttpChannel::AsyncProcessRedirection [this=%p type=%u]\n",
         this, redirectType));
-
-    // The channel is actually starting its operation now, at least because
-    // we want it to appear like being in the waiting phase until now.
-    MOZ_EVENT_TRACER_EXEC(this, "nsHttpChannel");
-    MOZ_EVENT_TRACER_EXEC(this, "AsyncProcessRedirection");
 
     const char *location = mResponseHead->PeekHeader(nsHttp::Location);
 
@@ -4381,8 +4351,6 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 NS_IMETHODIMP
 nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 {
-    MOZ_EVENT_TRACER_WAIT(this, "nsHttpChannel");
-
     LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
 
     NS_ENSURE_ARG_POINTER(listener);
@@ -5013,7 +4981,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mListener) {
         LOG(("  calling OnStopRequest\n"));
         mListener->OnStopRequest(this, mListenerContext, status);
-        MOZ_EVENT_TRACER_DONE(this, "nsHttpChannel");
         mListener = 0;
         mListenerContext = 0;
     }
@@ -5110,8 +5077,6 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         // already streamed some data from another source (see, for example,
         // OnDoneReadingPartialCacheEntry).
         //
-        if (!mLogicalOffset)
-            MOZ_EVENT_TRACER_EXEC(this, "nsHttpChannel");
 
         // report the current stream offset to our listener... if we've
         // streamed more than PR_UINT32_MAX, then avoid overflowing the
@@ -5414,6 +5379,62 @@ nsHttpChannel::SetCacheAsFile(bool value)
     return mCacheEntry->SetStoragePolicy(policy);
 }
 
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheForOfflineUse(bool *value)
+{
+    *value = mCacheForOfflineUse;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetCacheForOfflineUse(bool value)
+{
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
+    mCacheForOfflineUse = value;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetOfflineCacheClientID(nsACString &value)
+{
+    value = mOfflineCacheClientID;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetOfflineCacheClientID(const nsACString &value)
+{
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
+    mOfflineCacheClientID = value;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetProfileDirectory(nsIFile **_result)
+{
+    NS_ENSURE_ARG(_result);
+
+    if (!mProfileDirectory)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    NS_ADDREF(*_result = mProfileDirectory);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetProfileDirectory(nsIFile *value)
+{
+    mProfileDirectory = value;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::GetCacheFile(nsIFile **cacheFile)
 {
@@ -5448,10 +5469,6 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
                                      nsresult status)
 {
     MOZ_ASSERT(NS_IsMainThread());
-
-    mozilla::eventtracer::AutoEventTracer profiler(this,
-             eventtracer::eNone, eventtracer::eDone,
-             "OpenCacheEntry");
 
     nsresult rv;
 
@@ -5528,9 +5545,9 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntryDescriptor *entry,
             // proceed without using the cache
         }
 
-        // if app cache for write has been set, open up an offline cache entry
+        // if cacheForOfflineUse has been set, open up an offline cache entry
         // to update
-        if (mApplicationCacheForWrite) {
+        if (mCacheForOfflineUse) {
             rv = OpenOfflineCacheEntryForWriting();
             if (mOnCacheEntryAvailableCallback) {
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Unexpected state");
@@ -5616,7 +5633,6 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIApplicationCacheChannel
 //-----------------------------------------------------------------------------
-
 NS_IMETHODIMP
 nsHttpChannel::GetApplicationCache(nsIApplicationCache **out)
 {
@@ -5630,22 +5646,6 @@ nsHttpChannel::SetApplicationCache(nsIApplicationCache *appCache)
     ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
     mApplicationCache = appCache;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetApplicationCacheForWrite(nsIApplicationCache **out)
-{
-    NS_IF_ADDREF(*out = mApplicationCacheForWrite);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetApplicationCacheForWrite(nsIApplicationCache *appCache)
-{
-    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-
-    mApplicationCacheForWrite = appCache;
     return NS_OK;
 }
 
@@ -5798,7 +5798,6 @@ nsHttpChannel::OnRedirectVerifyCallback(nsresult result)
         // We are not waiting for the callback. At this moment we must release
         // reference to the redirect target channel, otherwise we may leak.
         mRedirectChannel = nsnull;
-        MOZ_EVENT_TRACER_DONE(this, "nsHttpChannel");
     }
 
     // We always resume the pumps here. If all functions on stack have been

@@ -1588,7 +1588,6 @@ nsCacheService::GetCustomOfflineDevice(nsIFile *aProfileDir,
         rv = CreateCustomOfflineDevice(aProfileDir, aQuota, aDevice);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        (*aDevice)->SetAutoShutdown();
         mCustomOfflineDevices.Put(profilePath, *aDevice);
     }
 
@@ -1677,20 +1676,6 @@ nsCacheService::CreateMemoryDevice()
     return rv;
 }
 
-nsresult
-nsCacheService::RemoveCustomOfflineDevice(nsOfflineCacheDevice *aDevice)
-{
-    nsCOMPtr<nsIFile> profileDir = aDevice->BaseDirectory();
-    if (!profileDir)
-        return NS_ERROR_UNEXPECTED;
-
-    nsAutoString profilePath;
-    nsresult rv = profileDir->GetPath(profilePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mCustomOfflineDevices.Remove(profilePath);
-    return NS_OK;
-}
 
 nsresult
 nsCacheService::CreateRequest(nsCacheSession *   session,

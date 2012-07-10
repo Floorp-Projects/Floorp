@@ -199,8 +199,6 @@ private:
                                                nsOfflineCacheDevice **aDevice);
     nsresult         CreateMemoryDevice();
 
-    nsresult         RemoveCustomOfflineDevice(nsOfflineCacheDevice *aDevice);
-
     nsresult         CreateRequest(nsCacheSession *   session,
                                    const nsACString & clientKey,
                                    nsCacheAccessMode  accessRequested,
