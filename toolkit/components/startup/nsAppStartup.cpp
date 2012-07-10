@@ -277,7 +277,33 @@ nsAppStartup::Run(void)
 }
 
 static TimeStamp gRecordedShutdownStartTime;
+static bool gAlreadyFreedShutdownTimeFileName = false;
 static char *gRecordedShutdownTimeFileName = NULL;
+
+static char *
+GetShutdownTimeFileName()
+{
+  if (gAlreadyFreedShutdownTimeFileName) {
+    return NULL;
+  }
+
+  if (!gRecordedShutdownTimeFileName) {
+    nsCOMPtr<nsIFile> mozFile;
+    NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR, getter_AddRefs(mozFile));
+    if (!mozFile)
+      return NULL;
+
+    mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
+    nsCAutoString nativePath;
+    nsresult rv = mozFile->GetNativePath(nativePath);
+    if (!NS_SUCCEEDED(rv))
+      return NULL;
+
+    gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+  }
+
+  return gRecordedShutdownTimeFileName;
+}
 
 static void
 RecordShutdownStartTimeStamp() {
@@ -286,29 +312,19 @@ RecordShutdownStartTimeStamp() {
 
   gRecordedShutdownStartTime = TimeStamp::Now();
 
-  nsCOMPtr<nsIFile> mozFile;
-  NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR, getter_AddRefs(mozFile));
-  if (!mozFile)
-    return;
-
-  mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
-  nsCAutoString nativePath;
-  nsresult rv = mozFile->GetNativePath(nativePath);
-  if (!NS_SUCCEEDED(rv))
-    return;
-
-  gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+  GetShutdownTimeFileName();
 }
 
 namespace mozilla {
 void
 RecordShutdownEndTimeStamp() {
-  if (!gRecordedShutdownTimeFileName)
+  if (!gRecordedShutdownTimeFileName || gAlreadyFreedShutdownTimeFileName)
     return;
 
   nsCString name(gRecordedShutdownTimeFileName);
   PL_strfree(gRecordedShutdownTimeFileName);
   gRecordedShutdownTimeFileName = NULL;
+  gAlreadyFreedShutdownTimeFileName = true;
 
   nsCString tmpName = name;
   tmpName += ".tmp";
