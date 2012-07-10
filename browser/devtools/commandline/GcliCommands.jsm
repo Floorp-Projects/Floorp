@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "LayoutHelpers",
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource:///modules/devtools/Console.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+
 let prefSvc = "@mozilla.org/preferences-service;1";
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Cc[prefSvc].getService(Ci.nsIPrefService);
@@ -30,6 +33,7 @@ XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
 });
 
 Cu.import("resource:///modules/devtools/GcliTiltCommands.jsm", {});
+Cu.import("resource:///modules/devtools/GcliCookieCommands.jsm", {});
 
 /**
  * A place to store the names of the commands that we have added as a result of
@@ -333,6 +337,51 @@ gcli.addCommand({
 });
 
 /**
+ * Restart command
+ *
+ * @param boolean nocache
+ *        Disables loading content from cache upon restart.
+ *
+ * Examples :
+ * >> restart
+ * - restarts browser immediately
+ * >> restart --nocache
+ * - restarts immediately and starts Firefox without using cache
+ */
+gcli.addCommand({
+  name: "restart",
+  description: gcli.lookup("restartFirefoxDesc"),
+  params: [
+    {
+      name: "nocache",
+      type: "boolean",
+      defaultValue: false,
+      description: gcli.lookup("restartFirefoxNocacheDesc")
+    }
+  ],
+  returnType: "string",
+  exec: function Restart(args, context) {
+    let canceled = Cc["@mozilla.org/supports-PRBool;1"]
+                     .createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
+    if (canceled.data) {
+      return gcli.lookup("restartFirefoxRequestCancelled");
+    }
+
+    // disable loading content from cache.
+    if (args.nocache) {
+      Services.appinfo.invalidateCachesOnRestart();
+    }
+
+    // restart
+    Cc['@mozilla.org/toolkit/app-startup;1']
+      .getService(Ci.nsIAppStartup)
+      .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+    return gcli.lookup("restartFirefoxRestarting");
+  }
+});
+
+/**
  * 'inspect' command
  */
 gcli.addCommand({
@@ -542,3 +591,615 @@ gcli.addCommand({
     return promise;
   }
 });
+
+/**
+ * 'export' command
+ */
+gcli.addCommand({
+  name: "export",
+  description: gcli.lookup("exportDesc"),
+});
+
+/**
+ * The 'export html' command. This command allows the user to export the page to
+ * HTML after they do DOM changes.
+ */
+gcli.addCommand({
+  name: "export html",
+  description: gcli.lookup("exportHtmlDesc"),
+  exec: function(args, context) {
+    let document = context.environment.contentDocument;
+    let window = document.defaultView;
+    let page = document.documentElement.outerHTML;
+    window.open('data:text/plain;charset=utf8,' + encodeURIComponent(page));
+  }
+});
+
+/**
+ * 'pagemod' command
+ */
+gcli.addCommand({
+  name: "pagemod",
+  description: gcli.lookup("pagemodDesc"),
+});
+
+/**
+ * The 'pagemod replace' command. This command allows the user to search and
+ * replace within text nodes and attributes.
+ */
+gcli.addCommand({
+  name: "pagemod replace",
+  description: gcli.lookup("pagemodReplaceDesc"),
+  params: [
+    {
+      name: "search",
+      type: "string",
+      description: gcli.lookup("pagemodReplaceSearchDesc"),
+    },
+    {
+      name: "replace",
+      type: "string",
+      description: gcli.lookup("pagemodReplaceReplaceDesc"),
+    },
+    {
+      name: "ignoreCase",
+      type: "boolean",
+      description: gcli.lookup("pagemodReplaceIgnoreCaseDesc"),
+    },
+    {
+      name: "selector",
+      type: "string",
+      description: gcli.lookup("pagemodReplaceSelectorDesc"),
+      defaultValue: "*:not(script):not(style):not(embed):not(object):not(frame):not(iframe):not(frameset)",
+    },
+    {
+      name: "root",
+      type: "node",
+      description: gcli.lookup("pagemodReplaceRootDesc"),
+      defaultValue: null,
+    },
+    {
+      name: "attrOnly",
+      type: "boolean",
+      description: gcli.lookup("pagemodReplaceAttrOnlyDesc"),
+    },
+    {
+      name: "contentOnly",
+      type: "boolean",
+      description: gcli.lookup("pagemodReplaceContentOnlyDesc"),
+    },
+    {
+      name: "attributes",
+      type: "string",
+      description: gcli.lookup("pagemodReplaceAttributesDesc"),
+      defaultValue: null,
+    },
+  ],
+  exec: function(args, context) {
+    let document = context.environment.contentDocument;
+    let searchTextNodes = !args.attrOnly;
+    let searchAttributes = !args.contentOnly;
+    let regexOptions = args.ignoreCase ? 'ig' : 'g';
+    let search = new RegExp(escapeRegex(args.search), regexOptions);
+    let attributeRegex = null;
+    if (args.attributes) {
+      attributeRegex = new RegExp(args.attributes, regexOptions);
+    }
+
+    let root = args.root || document;
+    let elements = root.querySelectorAll(args.selector);
+    elements = Array.prototype.slice.call(elements);
+
+    let replacedTextNodes = 0;
+    let replacedAttributes = 0;
+
+    function replaceAttribute() {
+      replacedAttributes++;
+      return args.replace;
+    }
+    function replaceTextNode() {
+      replacedTextNodes++;
+      return args.replace;
+    }
+
+    for (let i = 0; i < elements.length; i++) {
+      let element = elements[i];
+      if (searchTextNodes) {
+        for (let y = 0; y < element.childNodes.length; y++) {
+          let node = element.childNodes[y];
+          if (node.nodeType == node.TEXT_NODE) {
+            node.textContent = node.textContent.replace(search, replaceTextNode);
+          }
+        }
+      }
+
+      if (searchAttributes) {
+        if (!element.attributes) {
+          continue;
+        }
+        for (let y = 0; y < element.attributes.length; y++) {
+          let attr = element.attributes[y];
+          if (!attributeRegex || attributeRegex.test(attr.name)) {
+            attr.value = attr.value.replace(search, replaceAttribute);
+          }
+        }
+      }
+    }
+
+    return gcli.lookupFormat("pagemodReplaceResult",
+                             [elements.length, replacedTextNodes,
+                              replacedAttributes]);
+  }
+});
+
+/**
+ * 'pagemod remove' command
+ */
+gcli.addCommand({
+  name: "pagemod remove",
+  description: gcli.lookup("pagemodRemoveDesc"),
+});
+
+
+/**
+ * The 'pagemod remove element' command.
+ */
+gcli.addCommand({
+  name: "pagemod remove element",
+  description: gcli.lookup("pagemodRemoveElementDesc"),
+  params: [
+    {
+      name: "search",
+      type: "string",
+      description: gcli.lookup("pagemodRemoveElementSearchDesc"),
+    },
+    {
+      name: "root",
+      type: "node",
+      description: gcli.lookup("pagemodRemoveElementRootDesc"),
+      defaultValue: null,
+    },
+    {
+      name: 'stripOnly',
+      type: 'boolean',
+      description: gcli.lookup("pagemodRemoveElementStripOnlyDesc"),
+    },
+    {
+      name: 'ifEmptyOnly',
+      type: 'boolean',
+      description: gcli.lookup("pagemodRemoveElementIfEmptyOnlyDesc"),
+    },
+  ],
+  exec: function(args, context) {
+    let document = context.environment.contentDocument;
+    let root = args.root || document;
+    let elements = Array.prototype.slice.call(root.querySelectorAll(args.search));
+
+    let removed = 0;
+    for (let i = 0; i < elements.length; i++) {
+      let element = elements[i];
+      let parentNode = element.parentNode;
+      if (!parentNode || !element.removeChild) {
+        continue;
+      }
+      if (args.stripOnly) {
+        while (element.hasChildNodes()) {
+          parentNode.insertBefore(element.childNodes[0], element);
+        }
+      }
+      if (!args.ifEmptyOnly || !element.hasChildNodes()) {
+        element.parentNode.removeChild(element);
+        removed++;
+      }
+    }
+
+    return gcli.lookupFormat("pagemodRemoveElementResultMatchedAndRemovedElements",
+                             [elements.length, removed]);
+  }
+});
+
+/**
+ * The 'pagemod remove attribute' command.
+ */
+gcli.addCommand({
+  name: "pagemod remove attribute",
+  description: gcli.lookup("pagemodRemoveAttributeDesc"),
+  params: [
+    {
+      name: "searchAttributes",
+      type: "string",
+      description: gcli.lookup("pagemodRemoveAttributeSearchAttributesDesc"),
+    },
+    {
+      name: "searchElements",
+      type: "string",
+      description: gcli.lookup("pagemodRemoveAttributeSearchElementsDesc"),
+    },
+    {
+      name: "root",
+      type: "node",
+      description: gcli.lookup("pagemodRemoveAttributeRootDesc"),
+      defaultValue: null,
+    },
+    {
+      name: "ignoreCase",
+      type: "boolean",
+      description: gcli.lookup("pagemodRemoveAttributeIgnoreCaseDesc"),
+    },
+  ],
+  exec: function(args, context) {
+    let document = context.environment.contentDocument;
+
+    let root = args.root || document;
+    let regexOptions = args.ignoreCase ? 'ig' : 'g';
+    let attributeRegex = new RegExp(args.searchAttributes, regexOptions);
+    let elements = root.querySelectorAll(args.searchElements);
+    elements = Array.prototype.slice.call(elements);
+
+    let removed = 0;
+    for (let i = 0; i < elements.length; i++) {
+      let element = elements[i];
+      if (!element.attributes) {
+        continue;
+      }
+
+      var attrs = Array.prototype.slice.call(element.attributes);
+      for (let y = 0; y < attrs.length; y++) {
+        let attr = attrs[y];
+        if (attributeRegex.test(attr.name)) {
+          element.removeAttribute(attr.name);
+          removed++;
+        }
+      }
+    }
+
+    return gcli.lookupFormat("pagemodRemoveAttributeResult",
+                             [elements.length, removed]);
+  }
+});
+
+
+/**
+ * Make a given string safe to use  in a regular expression.
+ *
+ * @param string aString
+ *        The string you want to use in a regex.
+ * @return string
+ *         The equivalent of |aString| but safe to use in a regex.
+ */
+function escapeRegex(aString) {
+  return aString.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
+/**
+ * 'addon' command.
+ */
+gcli.addCommand({
+  name: "addon",
+  description: gcli.lookup("addonDesc")
+});
+
+/**
+ * 'addon list' command.
+ */
+gcli.addCommand({
+  name: "addon list",
+  description: gcli.lookup("addonListDesc"),
+  params: [{
+    name: 'type',
+    type: {
+      name: 'selection',
+      data: ["dictionary", "extension", "locale", "plugin", "theme", "all"]
+    },
+    defaultValue: 'all',
+    description: gcli.lookup("addonListTypeDesc"),
+  }],
+  exec: function(aArgs, context) {
+    function representEnabledAddon(aAddon) {
+      return "<li><![CDATA[" + aAddon.name + "\u2002" + aAddon.version +
+      getAddonStatus(aAddon) + "]]></li>";
+    }
+
+    function representDisabledAddon(aAddon) {
+      return "<li class=\"gcli-addon-disabled\">" +
+        "<![CDATA[" + aAddon.name + "\u2002" + aAddon.version + aAddon.version +
+        "]]></li>";
+    }
+
+    function getAddonStatus(aAddon) {
+      let operations = [];
+
+      if (aAddon.pendingOperations & AddonManager.PENDING_ENABLE) {
+        operations.push("PENDING_ENABLE");
+      }
+
+      if (aAddon.pendingOperations & AddonManager.PENDING_DISABLE) {
+        operations.push("PENDING_DISABLE");
+      }
+
+      if (aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+        operations.push("PENDING_UNINSTALL");
+      }
+
+      if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL) {
+        operations.push("PENDING_INSTALL");
+      }
+
+      if (aAddon.pendingOperations & AddonManager.PENDING_UPGRADE) {
+        operations.push("PENDING_UPGRADE");
+      }
+
+      if (operations.length) {
+        return " (" + operations.join(", ") + ")";
+      }
+      return "";
+    }
+
+    /**
+     * Compares two addons by their name. Used in sorting.
+     */
+    function compareAddonNames(aNameA, aNameB) {
+      return String.localeCompare(aNameA.name, aNameB.name);
+    }
+
+    /**
+     * Resolves the promise which is the scope (this) of this function, filling
+     * it with an HTML representation of the passed add-ons.
+     */
+    function list(aType, aAddons) {
+      if (!aAddons.length) {
+        this.resolve(gcli.lookup("addonNoneOfType"));
+      }
+
+      // Separate the enabled add-ons from the disabled ones.
+      let enabledAddons = [];
+      let disabledAddons = [];
+
+      aAddons.forEach(function(aAddon) {
+        if (aAddon.isActive) {
+          enabledAddons.push(aAddon);
+        } else {
+          disabledAddons.push(aAddon);
+        }
+      });
+
+      let header;
+      switch(aType) {
+        case "dictionary":
+          header = gcli.lookup("addonListDictionaryHeading");
+          break;
+        case "extension":
+          header = gcli.lookup("addonListExtensionHeading");
+          break;
+        case "locale":
+          header = gcli.lookup("addonListLocaleHeading");
+          break;
+        case "plugin":
+          header = gcli.lookup("addonListPluginHeading");
+          break;
+        case "theme":
+          header = gcli.lookup("addonListThemeHeading");
+        case "all":
+          header = gcli.lookup("addonListAllHeading");
+          break;
+        default:
+          header = gcli.lookup("addonListUnknownHeading");
+      }
+
+      // Map and sort the add-ons, and create an HTML list.
+      this.resolve(header +
+        "<ol>" +
+        enabledAddons.sort(compareAddonNames).map(representEnabledAddon).join("") +
+        disabledAddons.sort(compareAddonNames).map(representDisabledAddon).join("") +
+        "</ol>");
+    }
+
+    // Create the promise that will be resolved when the add-on listing has
+    // been finished.
+    let promise = context.createPromise();
+    let types = aArgs.type == "all" ? null : [aArgs.type];
+    AddonManager.getAddonsByTypes(types, list.bind(promise, aArgs.type));
+    return promise;
+  }
+});
+
+// We need a list of addon names for the enable and disable commands. Because
+// getting the name list is async we do not add the commands until we have the
+// list.
+AddonManager.getAllAddons(function addonAsync(aAddons) {
+  // We listen for installs to keep our addon list up to date. There is no need
+  // to listen for uninstalls because uninstalled addons are simply disabled
+  // until restart (to enable undo functionality).
+  AddonManager.addAddonListener({
+    onInstalled: function(aAddon) {
+      addonNameCache.push({
+        name: representAddon(aAddon).replace(/\s/g, "_"),
+        value: aAddon.name
+      });
+    },
+    onUninstalled: function(aAddon) {
+      let name = representAddon(aAddon).replace(/\s/g, "_");
+
+      for (let i = 0; i < addonNameCache.length; i++) {
+        if(addonNameCache[i].name == name) {
+          addonNameCache.splice(i, 1);
+          break;
+        }
+      }
+    },
+  });
+
+  /**
+   * Returns a string that represents the passed add-on.
+   */
+  function representAddon(aAddon) {
+    let name = aAddon.name + " " + aAddon.version;
+    return name.trim();
+  }
+
+  let addonNameCache = [];
+
+  // The name parameter, used in "addon enable" and "addon disable."
+  let nameParameter = {
+    name: "name",
+    type: {
+      name: "selection",
+      lookup: addonNameCache
+    },
+    description: gcli.lookup("addonNameDesc")
+  };
+
+  for (let addon of aAddons) {
+    addonNameCache.push({
+      name: representAddon(addon).replace(/\s/g, "_"),
+      value: addon.name
+    });
+  }
+
+  /**
+   * 'addon enable' command.
+   */
+  gcli.addCommand({
+    name: "addon enable",
+    description: gcli.lookup("addonEnableDesc"),
+    params: [nameParameter],
+    exec: function(aArgs, context) {
+      /**
+       * Enables the addon in the passed list which has a name that matches
+       * according to the passed name comparer, and resolves the promise which
+       * is the scope (this) of this function to display the result of this
+       * enable attempt.
+       */
+      function enable(aName, addons) {
+        // Find the add-on.
+        let addon = null;
+        addons.some(function(candidate) {
+          if (candidate.name == aName) {
+            addon = candidate;
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        let name = representAddon(addon);
+
+        if (!addon.userDisabled) {
+          this.resolve("<![CDATA[" +
+            gcli.lookupFormat("addonAlreadyEnabled", [name]) + "]]>");
+        } else {
+          addon.userDisabled = false;
+          // nl-nl: {$1} is ingeschakeld.
+          this.resolve("<![CDATA[" +
+            gcli.lookupFormat("addonEnabled", [name]) + "]]>");
+        }
+      }
+
+      let promise = context.createPromise();
+      // List the installed add-ons, enable one when done listing.
+      AddonManager.getAllAddons(enable.bind(promise, aArgs.name));
+      return promise;
+    }
+  });
+
+  /**
+   * 'addon disable' command.
+   */
+  gcli.addCommand({
+    name: "addon disable",
+    description: gcli.lookup("addonDisableDesc"),
+    params: [nameParameter],
+    exec: function(aArgs, context) {
+      /**
+       * Like enable, but ... you know ... the exact opposite.
+       */
+      function disable(aName, addons) {
+        // Find the add-on.
+        let addon = null;
+        addons.some(function(candidate) {
+          if (candidate.name == aName) {
+            addon = candidate;
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        let name = representAddon(addon);
+
+        if (addon.userDisabled) {
+          this.resolve("<![CDATA[" +
+            gcli.lookupFormat("addonAlreadyDisabled", [name]) + "]]>");
+        } else {
+          addon.userDisabled = true;
+          // nl-nl: {$1} is uitgeschakeld.
+          this.resolve("<![CDATA[" +
+            gcli.lookupFormat("addonDisabled", [name]) + "]]>");
+        }
+      }
+
+      let promise = context.createPromise();
+      // List the installed add-ons, disable one when done listing.
+      AddonManager.getAllAddons(disable.bind(promise, aArgs.name));
+      return promise;
+    }
+  });
+  Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
+});
+
+/* Responsive Mode commands */
+(function gcli_cmd_resize_container() {
+  function gcli_cmd_resize(args, context) {
+    let browserDoc = context.environment.chromeDocument;
+    let browserWindow = browserDoc.defaultView;
+    let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+    mgr.handleGcliCommand(browserWindow,
+                          browserWindow.gBrowser.selectedTab,
+                          this.name,
+                          args);
+  }
+
+  gcli.addCommand({
+    name: 'resize',
+    description: gcli.lookup('resizeModeDesc')
+  });
+
+  gcli.addCommand({
+    name: 'resize on',
+    description: gcli.lookup('resizeModeOnDesc'),
+    manual: gcli.lookup('resizeModeManual'),
+    exec: gcli_cmd_resize
+  });
+
+  gcli.addCommand({
+    name: 'resize off',
+    description: gcli.lookup('resizeModeOffDesc'),
+    manual: gcli.lookup('resizeModeManual'),
+    exec: gcli_cmd_resize
+  });
+
+  gcli.addCommand({
+    name: 'resize toggle',
+    description: gcli.lookup('resizeModeToggleDesc'),
+    manual: gcli.lookup('resizeModeManual'),
+    exec: gcli_cmd_resize
+  });
+
+  gcli.addCommand({
+    name: 'resize to',
+    description: gcli.lookup('resizeModeToDesc'),
+    params: [
+      {
+        name: 'width',
+        type: 'number',
+        description: gcli.lookup("resizePageArgWidthDesc"),
+      },
+      {
+        name: 'height',
+        type: 'number',
+        description: gcli.lookup("resizePageArgHeightDesc"),
+      },
+    ],
+    exec: gcli_cmd_resize
+  });
+})();
