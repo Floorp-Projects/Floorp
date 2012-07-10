@@ -547,7 +547,7 @@ SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 - d2;
-    if (!res->setNumber(d) && !(lhs.get().isDouble() || rhs.get().isDouble()))
+    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -559,7 +559,7 @@ MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 * d2;
-    if (!res->setNumber(d) && !(lhs.get().isDouble() || rhs.get().isDouble()))
+    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -572,7 +572,7 @@ DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
         return false;
     res->setNumber(NumberDiv(d1, d2));
 
-    if (d2 == 0 || (res->isDouble() && !(lhs.get().isDouble() || rhs.get().isDouble())))
+    if (d2 == 0 || (res->isDouble() && !(lhs.isDouble() || rhs.isDouble())))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -581,8 +581,8 @@ static JS_ALWAYS_INLINE bool
 ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     int32_t l, r;
-    if (lhs.get().isInt32() && rhs.get().isInt32() &&
-        (l = lhs.get().toInt32()) >= 0 && (r = rhs.get().toInt32()) > 0) {
+    if (lhs.isInt32() && rhs.isInt32() &&
+        (l = lhs.toInt32()) >= 0 && (r = rhs.toInt32()) > 0) {
         int32_t mod = l % r;
         res->setInt32(mod);
         return true;
