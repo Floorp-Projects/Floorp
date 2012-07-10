@@ -225,8 +225,8 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 bool
 LIRGenerator::visitCreateThis(MCreateThis *ins)
 {
-    LCreateThis *lir = new LCreateThis(useRegister(ins->getCallee()),
-                                       useRegister(ins->getPrototype()));
+    LCreateThis *lir = new LCreateThis(useRegisterOrConstant(ins->getCallee()),
+                                       useRegisterOrConstant(ins->getPrototype()));
     
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
