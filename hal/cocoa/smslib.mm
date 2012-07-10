@@ -66,8 +66,8 @@ typedef struct axisStruct {
 
 // Represents the configuration of a type of sensor.
 typedef struct sensorSpec {
-	char *model;				// Prefix of model to be tested
-	char *name;					// Name of device to be read
+	const char *model;			// Prefix of model to be tested
+	const char *name;			// Name of device to be read
 	unsigned int function;		// Kernel function index
 	int recordSize;				// Size of record to be sent/received
 	axisStruct axes[3];			// Description of three axes (X, Y, Z)
@@ -273,7 +273,7 @@ static int debugging = NO;		// True if debugging (synthetic data)
 static io_connect_t connection;	// Connection for reading accel values
 static int running = NO;		// True if we successfully started
 static int sensorNum = 0;		// The current index into sensors[]
-static char *serviceName;		// The name of the current service
+static const char *serviceName;	// The name of the current service
 static char *iRecord, *oRecord;	// Pointers to read/write records for sensor
 static int recordSize;			// Size of read/write records
 static unsigned int function;	// Which kernel function should be used
