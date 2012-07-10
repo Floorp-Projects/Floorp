@@ -919,11 +919,9 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
                         const nsIntRect& aRect, const nsIntPoint& aRotation,
                         bool aDelayUpload, nsIntRegion& aPendingUploadRegion)
 {
-  // aUpdated is in screen coordinates.  Move it so that the layer's
-  // top-left is 0,0
+  // aUpdated is in screen coordinates. Convert it to buffer coordinates.
   nsIntRegion destRegion(aUpdated);
-  nsIntPoint visTopLeft = mLayer->GetVisibleRegion().GetBounds().TopLeft();
-  destRegion.MoveBy(-visTopLeft);
+  destRegion.MoveBy(-aRect.TopLeft());
 
   // Correct for rotation
   destRegion.MoveBy(aRotation);
