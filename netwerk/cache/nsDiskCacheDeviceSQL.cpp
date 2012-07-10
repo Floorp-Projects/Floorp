@@ -631,7 +631,7 @@ nsApplicationCache::GetClientID(nsACString &out)
 }
 
 NS_IMETHODIMP
-nsApplicationCache::GetCacheDirectory(nsIFile **out)
+nsApplicationCache::GetProfileDirectory(nsIFile **out)
 {
   if (mDevice->BaseDirectory())
       NS_ADDREF(*out = mDevice->BaseDirectory());
