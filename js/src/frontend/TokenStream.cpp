@@ -396,14 +396,14 @@ bool
 TokenStream::reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, va_list args)
 {
     /* In strict mode code, this is an error, not merely a warning. */
-    unsigned flags;
-    if (isStrictMode())
-        flags = JSREPORT_ERROR;
+    unsigned flags = JSREPORT_STRICT;
+    if (strictModeState() != StrictMode::NOTSTRICT)
+        flags |= JSREPORT_ERROR;
     else if (cx->hasStrictOption())
-        flags = JSREPORT_WARNING;
+        flags |= JSREPORT_WARNING;
     else
         return true;
-
+ 
     return reportCompileErrorNumberVA(pn, flags, errorNumber, args);
 }
 
@@ -466,7 +466,9 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
     bool strict = JSREPORT_IS_STRICT(flags);
     bool warning = JSREPORT_IS_WARNING(flags);
 
-    if (strict && !cx->hasStrictOption())
+    // Avoid reporting JSMSG_STRICT_CODE_WITH as a warning. See the comment in
+    // Parser::withStatement.
+    if (strict && warning && (!cx->hasStrictOption() || errorNumber == JSMSG_STRICT_CODE_WITH))
         return true;
 
     if (warning && cx->hasWErrorOption()) {
@@ -476,6 +478,24 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 
     CompileError normalError(cx);
     CompileError *err = &normalError;
+    if (strict && !warning && strictModeState() == StrictMode::UNKNOWN) {
+        if (strictModeGetter->queuedStrictModeError()) {
+            // Avoid reporting JSMSG_STRICT_CODE_WITH as a warning. See the
+            // comment in Parser::withStatement.
+            if (cx->hasStrictOption() && errorNumber != JSMSG_STRICT_CODE_WITH) {
+                flags |= JSREPORT_WARNING;
+                warning = true;
+            } else {
+                return true;
+            }
+        } else {
+            err = cx->new_<CompileError, JSContext *>(cx);
+            if (!err)
+                return false;
+            strictModeGetter->setQueuedStrictModeError(err);
+        }
+    }
+
     const TokenPos *const tp = pn ? &pn->pn_pos : &currentToken().pos;
 
     err->report.flags = flags;
@@ -543,7 +563,10 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
         err->report.uctokenptr = err->report.uclinebuf + windowIndex;
     }
 
-    err->throwError();
+    if (err == &normalError)
+        err->throwError();
+    else
+        return true;
 
     return warning;
 }
@@ -1319,9 +1342,7 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSO
     }
 
     /* Strict reserved word. */
-    if (isStrictMode())
-        return reportStrictModeError(JSMSG_RESERVED_ID, kw->chars);
-    return reportStrictWarning(JSMSG_RESERVED_ID, kw->chars);
+    return reportStrictModeError(JSMSG_RESERVED_ID, kw->chars);
 }
 
 enum FirstCharKind {
@@ -1606,7 +1627,6 @@ TokenStream::getTokenInternal()
                             if (val != 0 || JS7_ISDEC(c)) {
                                 if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                                     goto error;
-                                setOctalCharacterEscape();
                             }
                             if ('0' <= c && c < '8') {
                                 val = 8 * val + JS7_UNDEC(c);
