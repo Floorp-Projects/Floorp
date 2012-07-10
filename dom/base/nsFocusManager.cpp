@@ -69,8 +69,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::widget;
 
-//#define DEBUG_FOCUS 1
-//#define DEBUG_FOCUS_NAVIGATION 1
+#define DEBUG_FOCUS 1
+#define DEBUG_FOCUS_NAVIGATION 1
 #define PRINTTAGF(format, content)                     \
   {                                                    \
     nsAutoString tag(NS_LITERAL_STRING("(none)"));     \
