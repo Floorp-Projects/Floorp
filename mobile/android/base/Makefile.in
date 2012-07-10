@@ -87,7 +87,6 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   SetupScreen.java \
   SiteIdentityPopup.java \
-  StringUtils.java \
   SuggestClient.java \
   SurfaceBits.java \
   Tab.java \
