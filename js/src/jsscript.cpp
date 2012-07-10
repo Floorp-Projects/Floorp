@@ -173,8 +173,7 @@ Bindings::callObjectShape(JSContext *cx) const
     /*
      * Now build the Shape without duplicate properties.
      */
-    RootedShape shape(cx);
-    shape = initialShape(cx);
+    RootedShape shape(cx, initialShape(cx));
     for (int i = shapes.length() - 1; i >= 0; --i) {
         shape = shape->getChildBinding(cx, shapes[i]);
         if (!shape)

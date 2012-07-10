@@ -14,11 +14,13 @@
   </style>
   <defs>
     <!-- A 'pin' marker, just offscreen, pointing directly down at 0,0 -->
-    <!-- NOTE: The lime 2px-wide stroke is a hack to get around "seams" in
+    <!-- NOTE: The lime 2.83px-wide stroke is a hack to get around "seams" in
          SVG when redrawing the same non-pixel-aligned shape on top of itself
-         in different colors. -->
+         in different colors. 2.83 is just over 2*sqrt(2), sqrt(2) being the
+         maximum distance from a path that antialiasing of square pixels can
+         cause the path to affect. -->
     <path id="marker" d="m0,0 l-10,-30  c-5,-20 25,-20 20,0 z"
-          style="fill: currentColor; stroke: lime; stroke-width: 2px"/>
+          style="fill: currentColor; stroke: lime; stroke-width: 2.83px"/>
   </defs>
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <script type="text/javascript">

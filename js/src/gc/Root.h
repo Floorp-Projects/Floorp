@@ -14,6 +14,7 @@
 
 #include "jspubtd.h"
 
+#include "js/TemplateLib.h"
 #include "js/Utility.h"
 
 namespace JS {
@@ -67,6 +68,18 @@ template <typename T>
 struct RootMethods { };
 
 /*
+ * Handle provides an implicit constructor for NullPtr so that, given:
+ *   foo(Handle<JSObject*> h);
+ * callers can simply write:
+ *   foo(NullPtr());
+ * which avoids creating a Rooted<JSObject*> just to pass NULL.
+ */
+struct NullPtr
+{
+    static void * const constNullValue;
+};
+
+/*
  * Reference to a T that has been rooted elsewhere. This is most useful
  * as a parameter type, which guarantees that the T lvalue is properly
  * rooted. See "Move GC Stack Rooting" above.
@@ -81,6 +94,13 @@ class Handle
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
     {
         ptr = reinterpret_cast<const T *>(handle.address());
+    }
+
+    /* Create a handle for a NULL pointer. */
+    Handle(NullPtr)
+    {
+        typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
+        ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
     }
 
     /*
@@ -363,6 +383,11 @@ public:
     }
 };
 
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+extern void
+CheckStackRoots(JSContext *cx);
+#endif
+
 /*
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
@@ -372,7 +397,6 @@ inline void MaybeCheckStackRoots(JSContext *cx)
 #ifdef DEBUG
     JS_ASSERT(!IsRootingUnnecessaryForContext(cx));
 # if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    void CheckStackRoots(JSContext *cx);
     CheckStackRoots(cx);
 # endif
 #endif

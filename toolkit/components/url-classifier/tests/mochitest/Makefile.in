@@ -12,9 +12,8 @@ relativesrcdir  = toolkit/components/url-classifier/tests/mochitest
 MODULE = test_url-classifier
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_classifier.html \
 		test_classifier_worker.html \
 		classifierFrame.html \
@@ -26,5 +25,4 @@ _TEST_FILES = \
 		import.css \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

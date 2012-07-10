@@ -12,7 +12,7 @@ TESTXPI = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/
 
 include $(DEPTH)/config/autoconf.mk
 
-_MAIN_TEST_FILES = \
+MOCHITEST_BROWSER_MAIN = \
   head.js \
   browser_about.js \
   browser_bug523784.js \
@@ -61,7 +61,7 @@ _MAIN_TEST_FILES = \
   browser_tabsettings.js \
   $(NULL)
 
-_TEST_FILES = \
+MOCHITEST_BROWSER_SECONDARY = \
   head.js \
   browser_addonrepository_performance.js \
   browser_bug557956.js \
@@ -77,7 +77,7 @@ _TEST_FILES = \
   browser_updatessl.js \
   $(NULL)
 
-_TEST_RESOURCES = \
+MOCHITEST_BROWSER_RESOURCES = \
   addon_about.xul \
   addon_prefs.xul \
   browser_bug557956.rdf \
@@ -108,17 +108,12 @@ _TEST_RESOURCES = \
   releaseNotes.xhtml \
   $(NULL)
 
+MOCHITEST_BROWSER_FILES_PARTS = $(foreach s,MAIN SECONDARY RESOURCES,MOCHITEST_BROWSER_$(s))
+
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(_MAIN_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+libs:: $(MOCHITEST_BROWSER_MAIN)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)-window
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_TEST_RESOURCES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 libs::
 	rm -rf $(TESTXPI)

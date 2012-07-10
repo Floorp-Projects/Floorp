@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir	= dom/tests/mochitest/dom-level0
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 		test_crossdomainprops.html \
 		file_crossdomainprops_inner.html \
 		test_setting_document.domain_to_shortened_ipaddr.html \
@@ -26,5 +25,4 @@ _TEST_FILES	= \
 		test_location_setters.html \
 		$(NULL)
 
-libs:: 	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

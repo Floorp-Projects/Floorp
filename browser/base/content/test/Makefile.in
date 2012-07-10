@@ -13,9 +13,8 @@ DIRS += \
 		$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_feed_discovery.html \
 		feed_discovery.html \
 		test_bug395533.html \
@@ -44,7 +43,7 @@ _TEST_FILES = \
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
 ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		audio.ogg \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
@@ -271,8 +270,7 @@ _BROWSER_FILES += \
 
 endif
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

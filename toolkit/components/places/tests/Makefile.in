@@ -31,7 +31,7 @@ XPCSHELL_TESTS_COMMON = \
   $(NULL)
 
 # Simple MochiTests
-MOCHI_TESTS = \
+MOCHITEST_FILES = \
 	mochitest/test_bug_411966.html \
 	mochitest/test_bug_461710.html \
 	$(NULL)
@@ -51,9 +51,6 @@ TOOL_DIRS = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(MOCHI_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(XPCSHELL_TESTS_COMMON)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(relativesrcdir)

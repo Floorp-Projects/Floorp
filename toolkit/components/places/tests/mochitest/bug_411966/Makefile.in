@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir = toolkit/components/places/tests/bug_411966
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_HTTP_FILES	= \
+MOCHITEST_FILES	= \
 		redirect.js \
 		TypedPage.htm \
 		ClickedPage.htm \
@@ -22,5 +21,4 @@ _HTTP_FILES	= \
 		PermRedirectPage.htm \
 		$(NULL)
 
-libs:: $(_HTTP_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

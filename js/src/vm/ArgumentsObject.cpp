@@ -30,20 +30,17 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
     if (!proto)
         return NULL;
 
-    RootedTypeObject type(cx);
-    type = proto->getNewType(cx);
+    RootedTypeObject type(cx, proto->getNewType(cx));
     if (!type)
         return NULL;
 
     bool strict = callee.inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
 
-    RootedShape emptyArgumentsShape(cx);
-    emptyArgumentsShape =
-        EmptyShape::getInitialShape(cx, clasp, proto,
-                                    proto->getParent(), FINALIZE_KIND,
-                                    BaseShape::INDEXED);
-    if (!emptyArgumentsShape)
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, proto,
+                                                      proto->getParent(), FINALIZE_KIND,
+                                                      BaseShape::INDEXED));
+    if (!shape)
         return NULL;
 
     unsigned numActuals = fp->numActualArgs();
@@ -77,7 +74,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, emptyArgumentsShape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
     if (!obj)
         return NULL;
 

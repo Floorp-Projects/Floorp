@@ -360,6 +360,23 @@ public:
             markDirty();
     }
 
+    void insertBefore(ElfSection *section, bool dirty = true) {
+        if (previous != NULL)
+            previous->next = next;
+        if (next != NULL)
+            next->previous = previous;
+        next = section;
+        if (section != NULL) {
+            previous = section->previous;
+            section->previous = this;
+        } else
+            previous = NULL;
+        if (previous != NULL)
+            previous->next = this;
+        if (dirty)
+            markDirty();
+    }
+
     void markDirty() {
         if (link != NULL)
             shdr.sh_link = -1;

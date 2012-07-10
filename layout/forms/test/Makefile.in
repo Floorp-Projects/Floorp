@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = layout/forms/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_bug231389.html \
+MOCHITEST_FILES =	test_bug231389.html \
 		test_bug287446.html \
 		     bug287446_subframe.html \
 		test_bug345267.html \
@@ -47,15 +46,11 @@ _TEST_FILES =	test_bug231389.html \
 		test_bug704049.html \
 		$(NULL)
 
-_CHROME_FILES = \
+MOCHITEST_CHROME_FILES = \
 		test_bug536567.html \
 		     bug536567_subframe.html \
 		test_bug665540.html \
 		     bug665540_window.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -260,8 +260,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     if (!JSID_IS_ATOM(id))
         return true;
 
-    RootedFunction fun(cx);
-    fun = obj->toFunction();
+    RootedFunction fun(cx, obj->toFunction());
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         /*
@@ -910,9 +909,6 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject target(cx);
-    target = &thisv.toObject();
-
     /* Step 3. */
     Value *boundArgs = NULL;
     unsigned argslen = 0;
@@ -923,7 +919,7 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
 
     /* Steps 7-9. */
     RootedValue thisArg(cx, args.length() >= 1 ? args[0] : UndefinedValue());
-
+    RootedObject target(cx, &thisv.toObject());
     JSObject *boundFunction = js_fun_bind(cx, target, thisArg, boundArgs, argslen);
     if (!boundFunction)
         return false;
@@ -948,9 +944,8 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     /* Step 4-6, 10-11. */
     JSAtom *name = target->isFunction() ? target->toFunction()->atom.get() : NULL;
 
-    RootedObject funobj(cx);
-    funobj = js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
-                            JSFUN_CONSTRUCTOR, target, name);
+    RootedObject funobj(cx, js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
+                                           JSFUN_CONSTRUCTOR, target, name));
     if (!funobj)
         return NULL;
 
@@ -1002,8 +997,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Block this call if security callbacks forbid it. */
-    Rooted<GlobalObject*> global(cx);
-    global = &args.callee().global();
+    Rooted<GlobalObject*> global(cx, &args.callee().global());
     if (!global->isRuntimeCodeGenEnabled(cx)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
@@ -1212,7 +1206,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
 
     RootedAtom atom(cx, atom_);
-    RootedFunction fun(cx);
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
@@ -1222,7 +1215,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
         if (!funobj)
             return NULL;
     }
-    fun = static_cast<JSFunction *>(funobj);
+    RootedFunction fun(cx, static_cast<JSFunction *>(funobj));
 
     /* Initialize all function members. */
     fun->nargs = uint16_t(nargs);

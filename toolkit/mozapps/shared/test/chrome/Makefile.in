@@ -10,11 +10,9 @@ relativesrcdir = toolkit/mozapps/shared/test/chrome
 
 include $(DEPTH)/config/autoconf.mk
 
-_CHROME_FILES = \
+MOCHITEST_CHROME_FILES = \
   test_bug544442_checkCert.xul \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
 
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

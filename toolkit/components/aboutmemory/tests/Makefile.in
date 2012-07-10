@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = toolkit/components/aboutmemory/tests
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_CHROME_FILES	= \
+MOCHITEST_CHROME_FILES	= \
 		test_aboutcompartments.xul \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
@@ -20,6 +19,5 @@ _CHROME_FILES	= \
 		test_sqliteMultiReporter.xul \
 		$(NULL)
 
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 

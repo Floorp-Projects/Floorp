@@ -10,11 +10,10 @@ VPATH		= @srcdir@
 relativesrcdir  = content/base/test/websocket_hybi
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 #### MODULE = content
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
     test_send-arraybuffer.html \
     test_send-blob.html \
     file_check-binary-messages_wsh.py \
@@ -23,7 +22,4 @@ _TEST_FILES = \
     file_binary-frames_wsh.py \
     $(NULL)
 
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
+include $(topsrcdir)/config/rules.mk

@@ -14,9 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	absolute.html \
 	fixed.html \
 	relative.html \
@@ -25,5 +23,4 @@ _TEST_FILES	= \
 	table.html \
 	$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

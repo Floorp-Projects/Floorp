@@ -464,7 +464,7 @@ public:
       stream << *(t->GetPrimaryThreadProfile());
       stream << "h-" << GetSharedLibraryInfoString() << std::endl;
       stream.close();
-      LOG("Saved to " FOLDER "profile_TYPE_PID.txt");
+      LOGF("Saved to %s", buff);
     } else {
       LOG("Fail to open profile log file.");
     }

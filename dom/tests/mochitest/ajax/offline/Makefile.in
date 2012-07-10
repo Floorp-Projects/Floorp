@@ -13,9 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = namespace1 namespace2
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	offlineTests.js \
 	test_badManifestMagic.html \
 	test_badManifestMime.html \
@@ -31,13 +29,13 @@ _TEST_FILES	= \
 	test_bug460353.html \
 	test_bug474696.html \
 	test_bug544462.html \
-  test_bug744719.html \
-  744719.cacheManifest \
-  744719.cacheManifest^headers^ \
-  test_bug744719-cancel.html \
-  744719-cancel.cacheManifest \
-  744719-cancel.cacheManifest^headers^ \
-  subresource744719.html \
+	test_bug744719.html \
+	744719.cacheManifest \
+	744719.cacheManifest^headers^ \
+	test_bug744719-cancel.html \
+	744719-cancel.cacheManifest \
+	744719-cancel.cacheManifest^headers^ \
+	subresource744719.html \
 	test_foreign.html \
 	test_fallback.html \
 	test_overlap.html \
@@ -100,5 +98,4 @@ _TEST_FILES	= \
 
 # test_offlineMode.html disabled due to bug 656943
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

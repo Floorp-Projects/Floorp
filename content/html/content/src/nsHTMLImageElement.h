@@ -95,7 +95,7 @@ public:
   virtual nsEventStates IntrinsicState() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest);
 
   void MaybeLoadImage();
   virtual nsXPCClassInfo* GetClassInfo();

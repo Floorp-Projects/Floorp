@@ -109,9 +109,15 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     GlobalObject *globalObject = needScriptGlobal ? GetCurrentGlobal(cx) : NULL;
-    Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, savedCallerFun, principals, originPrincipals, compileAndGo,
-                              noScriptRval, globalObject, version, staticLevel);
+    Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                  savedCallerFun,
+                                                  principals,
+                                                  originPrincipals,
+                                                  compileAndGo,
+                                                  noScriptRval,
+                                                  globalObject,
+                                                  version,
+                                                  staticLevel));
     if (!script)
         return NULL;
 
@@ -267,10 +273,15 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun,
         return false;
 
     GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
-    Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, /* savedCallerFun = */ false, principals, originPrincipals,
-                              /* compileAndGo = */ false, /* noScriptRval = */ false,
-                              globalObject, version, staticLevel);
+    Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                  /* savedCallerFun = */ false,
+                                                  principals,
+                                                  originPrincipals,
+                                                  /* compileAndGo = */ false,
+                                                  /* noScriptRval = */ false,
+                                                  globalObject,
+                                                  version,
+                                                  staticLevel));
     if (!script)
         return false;
 

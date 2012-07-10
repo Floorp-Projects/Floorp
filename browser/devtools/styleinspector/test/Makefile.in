@@ -10,9 +10,8 @@ VPATH     = @srcdir@
 relativesrcdir  = browser/devtools/styleinspector/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_styleinspector.js \
   browser_bug683672.js \
   browser_styleinspector_bug_672746_default_styles.js \
@@ -40,7 +39,7 @@ _BROWSER_TEST_FILES = \
   head.js \
   $(NULL)
 
-_BROWSER_TEST_PAGES = \
+MOCHITEST_BROWSER_FILES += \
   browser_bug683672.html \
   browser_bug705707_is_content_stylesheet.html \
   browser_bug705707_is_content_stylesheet_imported.css \
@@ -52,8 +51,4 @@ _BROWSER_TEST_PAGES = \
   browser_bug722196_identify_media_queries.html \
   $(NULL)
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_PAGES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

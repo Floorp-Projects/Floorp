@@ -10,13 +10,12 @@ VPATH		= @srcdir@
 relativesrcdir  = dom/browser-element/mochitest
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 # Note: browserElementTestHelpers.js looks at the test's filename to determine
 # whether the test should be OOP.  "_oop_" signals OOP, "_inproc_" signals in
 # process.  Default is OOP.
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		file_empty_script.js \
 		file_empty.html \
 		file_focus.html \
@@ -76,7 +75,7 @@ _TEST_FILES = \
 #
 # Note that there's no inproc equivalent of BackForward; that's intentional.
 ifneq ($(OS_ARCH),WINNT)
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
 		test_browserElement_oop_ErrorSecurity.html \
@@ -101,5 +100,4 @@ _TEST_FILES += \
 endif
 
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

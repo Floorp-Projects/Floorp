@@ -17,7 +17,7 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-MOCHI_TESTS = \
+MOCHITEST_FILES = \
 		test_bug_511615.html \
 		test_form_autocomplete.html \
 		test_form_autocomplete_with_list.html \
@@ -25,16 +25,10 @@ MOCHI_TESTS = \
 		test_form_submission_cap.html \
 		test_form_submission_cap2.html \
 		test_privbrowsing.html \
-		$(NULL)
-
-MOCHI_CONTENT = \
 		satchel_common.js \
 		subtst_form_submission_1.html \
 		subtst_privbrowsing.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 

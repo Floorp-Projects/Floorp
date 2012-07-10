@@ -27,9 +27,7 @@ ifneq (mobile,$(MOZ_BUILD_APP))
 	DIRS += browser
 endif
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_bug94514.html \
 		bug94514-postpage.html \
 		test_bug123696.html \
@@ -103,11 +101,10 @@ _TEST_FILES = \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_bug511449.html \
 		file_bug511449.html \
 		$(NULL)
 endif
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

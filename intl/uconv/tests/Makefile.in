@@ -32,7 +32,7 @@ XPCSHELL_TESTS	= unit
 
 relativesrcdir	= intl/uconv/tests
 
-_TEST_FILES =	\
+MOCHITEST_FILES =	\
 		test_bug335816.html \
 		test_long_doc.html \
 		test_singlebyte_overconsumption.html \
@@ -41,7 +41,5 @@ _TEST_FILES =	\
 		test_unicode_noncharacters_utf8.html \
 		test_utf8_overconsumption.html \
 		$(NULL)
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 include $(topsrcdir)/config/rules.mk
