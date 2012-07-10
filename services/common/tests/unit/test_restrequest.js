@@ -616,7 +616,7 @@ add_test(function test_abort() {
  * channel activity until the request is automatically canceled.
  */
 add_test(function test_timeout() {
-  let server = new nsHttpServer();
+  let server = new HttpServer();
   let server_connection;
   server._handler.handleResponse = function(connection) {
     // This is a handler that doesn't do anything, just keeps the connection
@@ -633,7 +633,9 @@ add_test(function test_timeout() {
     do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
     do_check_eq(this.status, this.ABORTED);
 
+    _("Closing connection.");
     server_connection.close();
+    _("Shutting down server.");
     server.stop(run_next_test);
   });
 });
