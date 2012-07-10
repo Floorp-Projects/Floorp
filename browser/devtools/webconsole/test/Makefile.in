@@ -110,6 +110,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug664688_sandbox_update_after_navigation.js \
 	browser_webconsole_menustatus.js \
 	browser_result_format_as_string.js \
+	browser_webconsole_bug_737873_mixedcontent.js \
 	head.js \
 	$(NULL)
 
@@ -183,6 +184,7 @@ MOCHITEST_BROWSER_FILES += \
 	test-webconsole-error-observer.html \
 	test-for-of.html \
 	test-result-format-as-string.html \
+	test-bug-737873-mixedcontent.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
