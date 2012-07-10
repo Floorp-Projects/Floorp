@@ -229,7 +229,7 @@ class CompartmentChecker
     {
         if (cx->compartment) {
             GlobalObject *global = GetGlobalForScopeChain(cx);
-            JS_ASSERT(cx->compartment->maybeGlobal() == global);
+            JS_ASSERT(cx->global() == global);
         }
     }
 
