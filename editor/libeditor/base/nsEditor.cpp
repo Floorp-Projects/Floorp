@@ -3111,6 +3111,7 @@ already_AddRefed<nsIDOMNode>
 nsEditor::GetNodeLocation(nsIDOMNode* aChild, PRInt32* outOffset)
 {
   MOZ_ASSERT(aChild && outOffset);
+  NS_ENSURE_TRUE(aChild && outOffset, nsnull);
   *outOffset = -1;
 
   nsCOMPtr<nsIDOMNode> parent;
