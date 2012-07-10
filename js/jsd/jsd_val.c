@@ -375,7 +375,6 @@ static JSDProperty* _newProperty(JSDContext* jsdc, JSPropertyDesc* pd,
     JS_INIT_CLIST(&jsdprop->links);
     jsdprop->nref = 1;
     jsdprop->flags = pd->flags | additionalFlags;
-    jsdprop->slot = pd->slot;
 
     if(!(jsdprop->name = jsd_NewValue(jsdc, pd->id)))
         goto new_prop_fail;
@@ -625,7 +624,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
         return NULL;
     }
 
-    pd.slot = pd.spare = 0;
+    pd.spare = 0;
     pd.alias = JSVAL_NULL;
     pd.flags |= (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
         | (attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0
@@ -845,12 +844,6 @@ unsigned
 jsd_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop)
 {
     return jsdprop->flags;
-}
-
-unsigned
-jsd_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop)
-{
-    return jsdprop->slot;
 }
 
 void
