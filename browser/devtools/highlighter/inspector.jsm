@@ -440,7 +440,7 @@ InspectorUI.prototype = {
   /**
    * Toggle the TreePanel.
    */
-  toggleHTMLPanel: function TP_toggleHTMLPanel()
+  toggleHTMLPanel: function IUI_toggleHTMLPanel()
   {
     if (this.treePanel.isOpen()) {
       this.treePanel.close();
@@ -653,15 +653,10 @@ InspectorUI.prototype = {
    setupNavigationKeys: function IUI_setupNavigationKeys()
    {
      // UI elements that are arrow keys sensitive:
-     // - highlighter veil;
-     // - content window (when the highlighter `veil is pointer-events:none`;
      // - the Inspector toolbar.
 
      this.onKeypress = this.onKeypress.bind(this);
 
-     this.highlighter.highlighterContainer.addEventListener("keypress",
-       this.onKeypress, true);
-     this.win.addEventListener("keypress", this.onKeypress, true);
      this.toolbar.addEventListener("keypress", this.onKeypress, true);
    },
 
@@ -670,9 +665,6 @@ InspectorUI.prototype = {
    */
    removeNavigationKeys: function IUI_removeNavigationKeys()
    {
-      this.highlighter.highlighterContainer.removeEventListener("keypress",
-        this.onKeypress, true);
-      this.win.removeEventListener("keypress", this.onKeypress, true);
       this.toolbar.removeEventListener("keypress", this.onKeypress, true);
    },
 
@@ -857,7 +849,7 @@ InspectorUI.prototype = {
 
     this.breadcrumbs.update();
     this.chromeWin.Tilt.update(aNode);
-    this.treePanel.select(aNode, aScroll);
+    this.treePanel.select(aNode, aScroll, aFrom);
 
     this._notifySelected(aFrom);
   },
@@ -1924,7 +1916,7 @@ HTMLBreadcrumbs.prototype = {
 
     let classesLabel = this.IUI.chromeDoc.createElement("label");
     classesLabel.className = "inspector-breadcrumbs-classes plain";
-    
+
     let pseudosLabel = this.IUI.chromeDoc.createElement("label");
     pseudosLabel.className = "inspector-breadcrumbs-pseudo-classes plain";
 
@@ -2153,6 +2145,7 @@ HTMLBreadcrumbs.prototype = {
     };
 
     button.onclick = (function _onBreadcrumbsRightClick(aEvent) {
+      button.focus();
       if (aEvent.button == 2) {
         this.openSiblingMenu(button, aNode);
       }
