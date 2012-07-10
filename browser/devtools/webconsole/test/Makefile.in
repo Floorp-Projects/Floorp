@@ -109,6 +109,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_cached_messages.js \
 	browser_bug664688_sandbox_update_after_navigation.js \
 	browser_webconsole_menustatus.js \
+	browser_result_format_as_string.js \
 	head.js \
 	$(NULL)
 
@@ -181,6 +182,7 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-658368-time-methods.html \
 	test-webconsole-error-observer.html \
 	test-for-of.html \
+	test-result-format-as-string.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
