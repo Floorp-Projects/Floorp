@@ -395,7 +395,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
   res/drawable/tabs_carat.png \
-  res/drawable/tabs_button_expanded.png \
   res/drawable/tabs_normal.png \
   res/drawable/tabs_pressed.png \
   res/drawable/address_bar_back_button.xml \
@@ -476,7 +475,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_carat.png \
-  res/drawable-hdpi/tabs_button_expanded.png \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_pressed.png \
   res/drawable-hdpi/address_bar_bg_curve.png \
@@ -596,7 +594,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tab_thumbnail_default.png \
   res/drawable-xhdpi-v11/tab_thumbnail_shadow.png \
   res/drawable-xhdpi-v11/tabs_carat.png \
-  res/drawable-xhdpi-v11/tabs_button_expanded.png \
   res/drawable-xhdpi-v11/tabs_normal.png \
   res/drawable-xhdpi-v11/tabs_pressed.png \
   res/drawable-xhdpi-v11/address_bar_texture_port.png \
@@ -635,7 +632,6 @@ RES_DRAWABLE_XHDPI_V14 = \
   res/drawable-xhdpi-v14/menu_pressed.png \
   res/drawable-xhdpi-v14/tab_new_normal.png \
   res/drawable-xhdpi-v14/tab_new_pressed.png \
-  res/drawable-xhdpi-v14/tabs_button_expanded.png \
   res/drawable-xhdpi-v14/tabs_normal.png \
   res/drawable-xhdpi-v14/tabs_pressed.png \
   $(NULL)
@@ -655,7 +651,6 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
   res/drawable-land-mdpi-v14/tabs_carat.png \
-  res/drawable-land-mdpi-v14/tabs_button_expanded.png \
   res/drawable-land-mdpi-v14/tabs_normal.png \
   res/drawable-land-mdpi-v14/tabs_pressed.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
@@ -675,7 +670,6 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
   res/drawable-land-hdpi-v14/tabs_carat.png \
-  res/drawable-land-hdpi-v14/tabs_button_expanded.png \
   res/drawable-land-hdpi-v14/tabs_normal.png \
   res/drawable-land-hdpi-v14/tabs_pressed.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
@@ -695,7 +689,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
-  res/drawable-land-xhdpi-v14/tabs_button_expanded.png \
   res/drawable-land-xhdpi-v14/tabs_normal.png \
   res/drawable-land-xhdpi-v14/tabs_pressed.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
@@ -712,7 +705,6 @@ RES_DRAWABLE_LARGE_MDPI = \
   res/drawable-large-mdpi/address_bar_texture_tablet.png \
   res/drawable-large-mdpi/address_bar_back_button_bg.png \
   res/drawable-large-mdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-large-mdpi/address_bar_bg_curve.png \
   res/drawable-large-mdpi/address_bar_url_default.9.png \
   res/drawable-large-mdpi/address_bar_url_pressed.9.png \
   res/drawable-large-mdpi/awesomebar_tab_center.9.png \
@@ -728,6 +720,7 @@ RES_DRAWABLE_LARGE_MDPI = \
   res/drawable-large-mdpi/remote_tabs_off.png \
   res/drawable-large-mdpi/remote_tabs_on.png \
   res/drawable-large-mdpi/tab_new.png \
+  res/drawable-large-mdpi/tabs_button.xml \
   res/drawable-large-mdpi/tabs_button_expanded.xml  \
   res/drawable-large-mdpi/tabs_carat_contracted.png \
   res/drawable-large-mdpi/tabs_carat_expanded.png \
@@ -746,7 +739,6 @@ RES_DRAWABLE_LARGE_HDPI = \
   res/drawable-large-hdpi/address_bar_texture_tablet.png \
   res/drawable-large-hdpi/address_bar_back_button_bg.png \
   res/drawable-large-hdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-large-hdpi/address_bar_bg_curve.png \
   res/drawable-large-hdpi/address_bar_url_default.9.png \
   res/drawable-large-hdpi/address_bar_url_pressed.9.png \
   res/drawable-large-hdpi/awesomebar_tab_center.9.png \
@@ -778,7 +770,6 @@ RES_DRAWABLE_LARGE_XHDPI = \
   res/drawable-large-xhdpi/address_bar_texture_tablet.png \
   res/drawable-large-xhdpi/address_bar_back_button_bg.png \
   res/drawable-large-xhdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-large-xhdpi/address_bar_bg_curve.png \
   res/drawable-large-xhdpi/address_bar_url_default.9.png \
   res/drawable-large-xhdpi/address_bar_url_pressed.9.png \
   res/drawable-large-xhdpi/awesomebar_tab_center.9.png \
