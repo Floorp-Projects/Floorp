@@ -1138,6 +1138,27 @@ var NativeWindow = {
                  aTarget.mozRequestFullScreen();
                });
 
+      this.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
+               this.imageSaveableContext,
+               function(aTarget) {
+                 let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+                 let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+                 let src = aTarget.src;
+                 let type = "";
+                 try {
+                    type = String(props.get("type", Ci.nsISupportsCString));
+                 } catch(ex) {
+                    type = "";
+                 }
+                 sendMessageToJava({
+                   gecko: {
+                     type: "Share:Image",
+                     url: src,
+                     mime: type,
+                   }
+                 });
+               });
+
       this.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
                this.imageSaveableContext,
                function(aTarget) {
@@ -1146,9 +1167,12 @@ var NativeWindow = {
                  let contentDisposition = "";
                  let type = "";
                  try {
-                    String(props.get("content-disposition", Ci.nsISupportsCString));
-                    String(props.get("type", Ci.nsISupportsCString));
-                 } catch(ex) { }
+                    contentDisposition = String(props.get("content-disposition", Ci.nsISupportsCString));
+                    type = String(props.get("type", Ci.nsISupportsCString));
+                 } catch(ex) {
+                    contentDisposition = "";
+                    type = "";
+                 }
                  ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, aTarget.ownerDocument.documentURIObject, true, null);
                });
     },
