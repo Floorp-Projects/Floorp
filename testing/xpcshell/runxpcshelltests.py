@@ -202,9 +202,11 @@ class XPCShellTests(object):
     ]
 
     if self.testingModulesDir:
+        # Escape backslashes in string literal.
+        sanitized = self.testingModulesDir.replace('\\', '\\\\')
         self.xpcsCmd.extend([
             '-e',
-            'const _TESTING_MODULES_DIR = "%s";' % self.testingModulesDir
+            'const _TESTING_MODULES_DIR = "%s";' % sanitized
         ])
 
     self.xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
@@ -587,9 +589,29 @@ class XPCShellTests(object):
             raise Exception("testsRootDir path does not exists: %s" %
                     testsRootDir)
 
+    # Try to guess modules directory.
+    # This somewhat grotesque hack allows the buildbot machines to find the
+    # modules directory without having to configure the buildbot hosts. This
+    # code path should never be executed in local runs because the build system
+    # should always set this argument.
+    if not testingModulesDir:
+        ourDir = os.path.dirname(__file__)
+        possible = os.path.join(ourDir, os.path.pardir, 'modules')
+
+        if os.path.isdir(possible):
+            testingModulesDir = possible
+
     if testingModulesDir:
+        # The resource loader expects native paths. Depending on how we were
+        # invoked, a UNIX style path may sneak in on Windows. We try to
+        # normalize that.
+        testingModulesDir = os.path.normpath(testingModulesDir)
+
         if not os.path.isabs(testingModulesDir):
             testingModulesDir = os.path.abspath(testingModulesDir)
+
+        if not testingModulesDir.endswith(os.path.sep):
+            testingModulesDir += os.path.sep
 
     self.xpcshell = xpcshell
     self.xrePath = xrePath
@@ -664,6 +686,7 @@ class XPCShellTests(object):
       # dir and the test with path characters replaced with '.' (using Java
       # class notation).
       if testsRootDir is not None:
+          testsRootDir = os.path.normpath(testsRootDir)
           if test["here"].find(testsRootDir) != 0:
               raise Exception("testsRootDir is not a parent path of %s" %
                   test["here"])

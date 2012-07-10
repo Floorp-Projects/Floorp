@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/utils.js");
 
 /**
  * Provides a file-backed queue. Currently used by manager.js as persistent
@@ -43,23 +44,17 @@ function AitcQueue(filename, cb) {
 
   this._queue = [];
   this._writeLock = false;
-  this._file = FileUtils.getFile("ProfD", ["webapps", filename], true);
+  this._filePath = "webapps/" + filename;
 
   this._log.info("AitcQueue instance loading");
 
-  let self = this;
-  if (this._file.exists()) {
-    this._getFile(function gotFile(data) {
-      if (data && Array.isArray(data)) {
-        self._queue = data;
-      }
-      self._log.info("AitcQueue instance created");
-      cb(true);
-    });
-  } else {
-    self._log.info("AitcQueue instance created");
+  CommonUtils.jsonLoad(this._filePath, this, function jsonLoaded(data) {
+    if (data && Array.isArray(data)) {
+      this._queue = data;
+    }
+    this._log.info("AitcQueue instance created");
     cb(true);
-  }
+  });
 }
 AitcQueue.prototype = {
   /**
@@ -145,36 +140,6 @@ AitcQueue.prototype = {
   },
 
   /**
-   * Get contents of cache file and parse it into an array. Will throw an
-   * exception if there is an error while reading the file.
-   */
-  _getFile: function _getFile(cb) {
-    let channel = NetUtil.newChannel(this._file);
-    channel.contentType = "application/json";
-
-    let self = this;
-    NetUtil.asyncFetch(channel, function _asyncFetched(stream, res) {
-      if (!Components.isSuccessCode(res)) {
-        self._log.error("Could not read from json file " + this._file.path);
-        cb(null);
-        return;
-      }
-
-      let data = [];
-      try {
-        data = JSON.parse(
-          NetUtil.readInputStreamToString(stream, stream.available())
-        );
-        stream.close();
-        cb(data);
-      } catch (e) {
-        self._log.error("Could not parse JSON " + e);
-        cb(null);
-      }
-    });
-  },
-
-  /**
    * Put an array into the cache file. Will throw an exception if there is
    * an error while trying to write to the file.
    */
@@ -184,32 +149,18 @@ AitcQueue.prototype = {
     }
 
     this._writeLock = true;
-    try {
-      let ostream = FileUtils.openSafeFileOutputStream(this._file);
-
-      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                      createInstance(Ci.nsIScriptableUnicodeConverter);
-      converter.charset = "UTF-8";
-      let istream = converter.convertToInputStream(JSON.stringify(value));
-
-      // Asynchronously copy the data to the file.
-      let self = this;
-      this._log.info("Writing queue to disk");
-      NetUtil.asyncCopy(istream, ostream, function _asyncCopied(result) {
-        self._writeLock = false;
-        if (Components.isSuccessCode(result)) {
-          self._log.info("asyncCopy succeeded");
-          cb(null);
-        } else {
-          let msg = new Error("asyncCopy failed with " + result);
-          self._log.info(msg);
-          cb(msg);
-        }
-      });
-    } catch (e) {
+    this._log.info("Writing queue to disk");
+    CommonUtils.jsonSave(this._filePath, this, value, function jsonSaved(err) {
+      if (err) {
+        let msg = new Error("_putFile failed with " + err);
+        this._writeLock = false;
+        cb(msg);
+        return;
+      }
+      this._log.info("_putFile succeeded");
       this._writeLock = false;
-      cb(msg);
-    }
+      cb(null);
+    });
   },
 };
 

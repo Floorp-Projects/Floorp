@@ -1,13 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
+
 // Where to bind test HTTP servers to.
 const TEST_SERVER_URL = "http://localhost:8080/";
-
-// This has the side-effect of populating Cc, Ci, Cu, Cr. It's best not to
-// ask questions and just accept it.
-do_load_httpd_js();
-const Cm = Components.manager;
 
 let gSyncProfile = do_get_profile();
 

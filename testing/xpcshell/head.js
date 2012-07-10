@@ -281,7 +281,18 @@ function _register_protocol_handlers() {
                         createInstance(Components.interfaces.nsILocalFile);
       modulesFile.initWithPath(_TESTING_MODULES_DIR);
 
+      if (!modulesFile.exists()) {
+        throw new Error("Specified modules directory does not exist: " +
+                        _TESTING_MODULES_DIR);
+      }
+
+      if (!modulesFile.isDirectory()) {
+        throw new Error("Specified modules directory is not a directory: " +
+                        _TESTING_MODULES_DIR);
+      }
+
       let modulesURI = ios.newFileURI(modulesFile);
+
       protocolHandler.setSubstitution("testing-common", modulesURI);
     }
   }
@@ -814,7 +825,8 @@ function do_load_child_test_harness()
       + "const _XPCSHELL_PROCESS='child';";
 
   if (this._TESTING_MODULES_DIR) {
-    command += "const _TESTING_MODULES_DIR='" + _TESTING_MODULES_DIR + "'; ";
+    normalized = this._TESTING_MODULES_DIR.replace('\\', '\\\\', 'g');
+    command += "const _TESTING_MODULES_DIR='" + normalized + "'; ";
   }
 
   command += "load(_HEAD_JS_PATH);";
