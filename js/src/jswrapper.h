@@ -357,7 +357,7 @@ struct AllCompartments : public CompartmentFilter {
 struct ContentCompartmentsOnly : public CompartmentFilter {
     virtual bool match(JSCompartment *c) const {
         return !IsSystemCompartment(c);
-    };
+    }
 };
 
 struct SingleCompartment : public CompartmentFilter {
@@ -371,7 +371,7 @@ struct CompartmentsWithPrincipals : public CompartmentFilter {
     CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {}
     virtual bool match(JSCompartment *c) const {
         return JS_GetCompartmentPrincipals(c) == principals;
-    };
+    }
 };
 
 JS_FRIEND_API(bool)
