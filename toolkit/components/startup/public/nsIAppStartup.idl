@@ -7,7 +7,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(50c4194b-61c6-4292-963f-6e1a8e11c9d3)]
+[scriptable, uuid(5016bc45-54d9-4f97-935c-df4cef4b999f)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -41,6 +41,12 @@ interface nsIAppStartup : nsISupports
      */
     void enterLastWindowClosingSurvivalArea();
     void exitLastWindowClosingSurvivalArea();
+
+    /**
+     * The amount of time, in milliseconds, that the last session took
+     * to shutdown.  Reads as 0 to indicate failure.
+     */
+    readonly attribute PRUint32 lastShutdownDuration;
 
     /**
      * Startup Crash Detection
