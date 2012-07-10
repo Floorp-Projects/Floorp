@@ -3199,20 +3199,3 @@ js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
     return obj->isDate() ? obj->getDateUTCTime().toNumber() : 0;
 }
 
-#ifdef JS_THREADSAFE
-#include "prinrval.h"
-
-JS_FRIEND_API(uint32_t)
-js_IntervalNow()
-{
-    return uint32_t(PR_IntervalToMilliseconds(PR_IntervalNow()));
-}
-
-#else /* !JS_THREADSAFE */
-
-JS_FRIEND_API(uint32_t)
-js_IntervalNow()
-{
-    return uint32_t(PRMJ_Now() / PRMJ_USEC_PER_MSEC);
-}
-#endif
