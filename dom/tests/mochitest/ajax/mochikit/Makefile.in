@@ -16,12 +16,9 @@ DIRS	= \
 	tests \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	test_Mochikit.html \
 	manifest.json \
 	$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

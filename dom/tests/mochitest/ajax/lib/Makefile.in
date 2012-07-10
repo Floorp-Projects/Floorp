@@ -10,12 +10,10 @@ VPATH		= @srcdir@
 relativesrcdir	= dom/tests/mochitest/ajax/lib
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 		AJAX_setup.js \
 		test.css \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

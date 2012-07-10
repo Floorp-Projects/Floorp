@@ -10,11 +10,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
-
 relativesrcdir = extensions/universalchardet/tests
 
-_TEST_FILES =	\
+MOCHITEST_CHROME_FILES =	\
 		CharsetDetectionTests.js \
 		bug9357_text.html \
 		test_bug9357.html \
@@ -45,5 +43,4 @@ _TEST_FILES =	\
 		test_bug638318.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

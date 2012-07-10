@@ -412,9 +412,7 @@ JSObject::toDictionaryMode(JSContext *cx)
     RootedShape root(cx);
     RootedShape dictionaryShape(cx);
 
-    RootedShape shape(cx);
-    shape = lastProperty();
-
+    RootedShape shape(cx, lastProperty());
     while (shape) {
         JS_ASSERT(!shape->inDictionary());
 
@@ -804,10 +802,8 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
     RootedId id(cx, id_);
     RootedObject self(cx, this);
 
-    RootedShape shape(cx);
-
     Shape **spp;
-    shape = Shape::search(cx, lastProperty(), id, &spp);
+    RootedShape shape(cx, Shape::search(cx, lastProperty(), id, &spp));
     if (!shape)
         return true;
 
@@ -1295,10 +1291,8 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
     RootedObject protoRoot(cx, lookup.proto);
     RootedObject parentRoot(cx, lookup.parent);
 
-    Rooted<UnownedBaseShape*> nbase(cx);
-
     StackBaseShape base(clasp, parent, objectFlags);
-    nbase = BaseShape::getUnowned(cx, base);
+    Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
     if (!nbase)
         return NULL;
 

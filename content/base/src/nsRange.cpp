@@ -1453,6 +1453,11 @@ ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
 {
   bool before, after;
   nsCOMPtr<nsIDOMNode> domNode = aIter.GetCurrentNode();
+  if (!domNode) {
+    // We don't have to worry that the node was removed if it doesn't exist,
+    // e.g., the iterator is done.
+    return true;
+  }
   nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
   MOZ_ASSERT(node);
 

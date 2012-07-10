@@ -15,11 +15,8 @@ MODULE         = json_test
 
 XPCSHELL_TESTS = unit
 
-include $(topsrcdir)/config/rules.mk
-
- _TEST_FILES =	test_json.html \
+ MOCHITEST_FILES =	test_json.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 

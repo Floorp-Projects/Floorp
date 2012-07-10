@@ -133,6 +133,7 @@
                 if (this.type == "scrubber") {
                     // Update the time shown in the thumb.
                     this.thumb.setTime(newValue);
+                    this.Utils.positionLabel.setAttribute("value", this.thumb.timeLabel.value);
                     // Update the value bar to match the thumb position.
                     var percent = newValue / this.max;
                     this.valueBar.value = Math.round(percent * 10000); // has max=10000
@@ -1551,11 +1552,15 @@
               }
             },
 
-            delayHideControls : function(aTimeout) {
+            clearTimer: function() {
               if (this.controlsTimer) {
                 clearTimeout(this.controlsTimer);
                 this.controlsTimer = null;
               }
+            },
+
+            delayHideControls : function(aTimeout) {
+              this.clearTimer();
               let self = this;
               this.controlsTimer = setTimeout(function() {
                 self.hideControls();
@@ -1598,7 +1603,12 @@
                 else
                     self.showControls();
               }, false);
-              this.Utils.scrubber.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
+              this.Utils.scrubber.addEventListener("touchstart", function() {
+                self.clearTimer();
+              }, false);
+              this.Utils.scrubber.addEventListener("touchend", function() {
+                self.delayHideControls(self.controlsTimeout);
+              }, false);
               this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
 
               if (!video.autoplay && this.Utils.dynamicControls)

@@ -2006,8 +2006,7 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    RootedObject obj(cx);
-    obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, &args.callee().global());
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &ObjectClass, proto, &args.callee().global()));
     if (!obj)
         return false;
 
@@ -2352,8 +2351,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
 
     RootedTypeObject type(cx, type_);
 
-    RootedShape shape(cx);
-    shape = EmptyShape::getInitialShape(cx, clasp, type->proto, parent, kind);
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, type->proto, parent, kind));
     if (!shape)
         return NULL;
 
@@ -3249,8 +3247,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
      * [which already needs to happen for bug 638316], figure out nicer
      * semantics for null-protoProto, and use createBlankPrototype.)
      */
-    RootedObject proto(cx);
-    proto = NewObjectWithClassProto(cx, clasp, protoProto, obj);
+    RootedObject proto(cx, NewObjectWithClassProto(cx, clasp, protoProto, obj));
     if (!proto)
         return NULL;
 
@@ -3287,9 +3284,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
          * (FIXME: remove this dependency on the exact identity of the parent,
          * perhaps as part of bug 638316.)
          */
-        RootedFunction fun(cx);
-        fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
-                             ctorKind);
+        RootedFunction fun(cx, js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR,
+                                              obj, atom, ctorKind));
         if (!fun)
             goto bad;
 
@@ -3395,8 +3391,7 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
 {
     RootedObject protoProto(cx, protoProto_);
 
-    RootedAtom atom(cx);
-    atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
+    RootedAtom atom(cx, js_Atomize(cx, clasp->name, strlen(clasp->name)));
     if (!atom)
         return NULL;
 
@@ -4087,7 +4082,7 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, HandleObject obj, HandleShape s
 namespace js {
 
 Shape *
-DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value_,
+DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &valueArg,
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow /* = 0 */)
 {
@@ -4098,8 +4093,7 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     /* Make a local copy of value so addProperty can mutate its inout parameter. */
-    RootedValue value(cx);
-    value = value_;
+    RootedValue value(cx, valueArg);
 
     /*
      * If defining a getter or setter, we must check for its counterpart and

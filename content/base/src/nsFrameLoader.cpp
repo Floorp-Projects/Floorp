@@ -296,6 +296,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mRemoteFrame(false)
   , mClipSubdocument(true)
   , mClampScrollPosition(true)
+  , mRemoteBrowserInitialized(false)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
@@ -913,9 +914,10 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     EnsureMessageManager();
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (OwnerIsBrowserFrame() && os) {
+    if (OwnerIsBrowserFrame() && os && !mRemoteBrowserInitialized) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
                           "remote-browser-frame-shown", NULL);
+      mRemoteBrowserInitialized = true;
     }
   } else {
     nsRect dimensions;
@@ -2241,4 +2243,12 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   MOZ_ASSERT(!mRemoteBrowser);
   MOZ_ASSERT(!mCurrentRemoteFrame);
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
+
+  EnsureMessageManager();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (OwnerIsBrowserFrame() && os) {
+    mRemoteBrowserInitialized = true;
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+                        "remote-browser-frame-shown", NULL);
+  }
 }

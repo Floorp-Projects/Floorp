@@ -59,6 +59,7 @@ CPP_UNIT_TESTS = \
                  ShowAlignments.cpp \
                  ShowSSEConfig.cpp \
                  TestAutoPtr.cpp \
+                 TestAutoRef.cpp \
                  TestBloomFilter.cpp \
                  TestCOMArray.cpp \
                  TestCOMPtr.cpp \

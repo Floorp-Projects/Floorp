@@ -91,8 +91,7 @@ js::ScopeCoordinateToFrameIndex(JSScript *script, jsbytecode *pc, unsigned *inde
 CallObject *
 CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
 {
-    RootedShape shape(cx);
-    shape = script->bindings.callObjectShape(cx);
+    RootedShape shape(cx, script->bindings.callObjectShape(cx));
     if (shape == NULL)
         return NULL;
 
@@ -100,8 +99,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    RootedTypeObject type(cx);
-    type = cx->compartment->getEmptyType(cx);
+    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
     if (!type)
         return NULL;
 
@@ -288,8 +286,7 @@ Class js::DeclEnvClass = {
 DeclEnvObject *
 DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 {
-    RootedTypeObject type(cx);
-    type = cx->compartment->getEmptyType(cx);
+    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
     if (!type)
         return NULL;
 
@@ -320,18 +317,16 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 WithObject *
 WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth)
 {
-    RootedTypeObject type(cx);
-    type = proto->getNewType(cx);
+    RootedTypeObject type(cx, proto->getNewType(cx));
     if (!type)
         return NULL;
 
-    RootedShape emptyWithShape(cx);
-    emptyWithShape = EmptyShape::getInitialShape(cx, &WithClass, proto,
-                                                 &enclosing->global(), FINALIZE_KIND);
-    if (!emptyWithShape)
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &WithClass, proto,
+                                                      &enclosing->global(), FINALIZE_KIND));
+    if (!shape)
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, emptyWithShape, type, NULL));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, shape, type, NULL));
     if (!obj)
         return NULL;
 
@@ -583,8 +578,7 @@ Class js::WithClass = {
 ClonedBlockObject *
 ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, StackFrame *fp)
 {
-    RootedTypeObject type(cx);
-    type = block->getNewType(cx);
+    RootedTypeObject type(cx, block->getNewType(cx));
     if (!type)
         return NULL;
 
@@ -592,8 +586,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
     if (!PreallocateObjectDynamicSlots(cx, block->lastProperty(), &slots))
         return NULL;
 
-    RootedShape shape(cx);
-    shape = block->lastProperty();
+    RootedShape shape(cx, block->lastProperty());
 
     RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, shape, type, slots));
     if (!obj)
@@ -644,17 +637,15 @@ ClonedBlockObject::copyUnaliasedValues(StackFrame *fp)
 StaticBlockObject *
 StaticBlockObject::create(JSContext *cx)
 {
-    RootedTypeObject type(cx);
-    type = cx->compartment->getEmptyType(cx);
+    RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
     if (!type)
         return NULL;
 
-    RootedShape emptyBlockShape(cx);
-    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND);
-    if (!emptyBlockShape)
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND));
+    if (!shape)
         return NULL;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, emptyBlockShape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, shape, type, NULL);
     if (!obj)
         return NULL;
 

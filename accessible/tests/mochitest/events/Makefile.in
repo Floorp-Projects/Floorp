@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = accessible/events
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =\
+MOCHITEST_A11Y_FILES =\
 		docload_wnd.html \
 		focus.html \
 		scroll.html \
@@ -62,5 +61,4 @@ _TEST_FILES =\
 		test_valuechange.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

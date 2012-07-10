@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = accessible/hittest
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_A11Y_FILES = \
 		test_browser.html \
 		test_general.html \
 		test_zoom_tree.xul \
@@ -20,5 +19,4 @@ _TEST_FILES = \
 		zoom_tree.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

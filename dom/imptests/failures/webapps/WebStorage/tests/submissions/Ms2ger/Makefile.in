@@ -9,9 +9,8 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TESTS = \
+MOCHITEST_FILES = \
   test_missing_arguments.html.json \
   test_storage_local_in_js.html.json \
   test_storage_local_removeitem_js.html.json \
@@ -19,5 +18,4 @@ _TESTS = \
   test_storage_session_removeitem_js.html.json \
   $(NULL)
 
-libs:: $(_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
