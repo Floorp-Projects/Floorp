@@ -198,9 +198,11 @@ ContentSecurityPolicy.prototype = {
     uri.userPass = '';
     this._request = uri.asciiSpec;
 
-    let referrer = aChannel.referrer.cloneIgnoringRef();
-    referrer.userPass = '';
-    this._referrer = referrer.asciiSpec;
+    if (aChannel.referrer) {
+      let referrer = aChannel.referrer.cloneIgnoringRef();
+      referrer.userPass = '';
+      this._referrer = referrer.asciiSpec;
+    }
   },
 
 /* ........ Methods .............. */
