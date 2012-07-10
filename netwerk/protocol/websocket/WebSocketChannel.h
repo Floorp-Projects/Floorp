@@ -126,7 +126,7 @@ private:
   void GeneratePong(PRUint8 *payload, PRUint32 len);
   void GeneratePing();
 
-  bool     BeginOpen();
+  void     BeginOpen();
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();
