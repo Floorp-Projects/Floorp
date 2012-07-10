@@ -20,7 +20,8 @@
 
     </ScrollView>
 
-    <ImageView android:layout_width="44dip"
+    <ImageView android:id="@+id/doorhanger_arrow"
+               android:layout_width="@dimen/doorhanger_arrow_width"
                android:layout_height="16dip"
                android:layout_marginLeft="4dip"
                android:layout_marginTop="9dip"

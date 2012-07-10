@@ -173,6 +173,7 @@ StackWalkInitCriticalAddress()
 #include <windows.h>
 #include <process.h>
 #include <stdio.h>
+#include <malloc.h>
 #include "plstr.h"
 #include "mozilla/FunctionTimer.h"
 
@@ -439,7 +440,8 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
-    HANDLE myProcess, myThread;
+    static HANDLE myProcess = NULL;
+    HANDLE myThread;
     DWORD walkerReturn;
     struct WalkStackData data;
 
@@ -456,13 +458,15 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     }
 
     // Have to duplicate handle to get a real handle.
-    if (!::DuplicateHandle(::GetCurrentProcess(),
-                           ::GetCurrentProcess(),
-                           ::GetCurrentProcess(),
-                           &myProcess,
-                           PROCESS_ALL_ACCESS, FALSE, 0)) {
-        PrintError("DuplicateHandle (process)");
-        return NS_ERROR_FAILURE;
+    if (!myProcess) {
+        if (!::DuplicateHandle(::GetCurrentProcess(),
+                               ::GetCurrentProcess(),
+                               ::GetCurrentProcess(),
+                               &myProcess,
+                               PROCESS_ALL_ACCESS, FALSE, 0)) {
+            PrintError("DuplicateHandle (process)");
+            return NS_ERROR_FAILURE;
+        }
     }
     if (!::DuplicateHandle(::GetCurrentProcess(),
                            targetThread,
@@ -470,7 +474,6 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
                            &myThread,
                            THREAD_ALL_ACCESS, FALSE, 0)) {
         PrintError("DuplicateHandle (thread)");
-        ::CloseHandle(myProcess);
         return NS_ERROR_FAILURE;
     }
 
@@ -486,6 +489,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         // If we're walking the stack of another thread, we don't need to
         // use a separate walker thread.
         WalkStackMain64(&data);
+
+        if (data.pc_count > data.pc_size) {
+            data.pcs = (void**) _alloca(data.pc_count * sizeof(void*));
+            data.pc_size = data.pc_count;
+            data.pc_count = 0;
+            WalkStackMain64(&data);
+        }
     } else {
         data.eventStart = ::CreateEvent(NULL, FALSE /* auto-reset*/,
                               FALSE /* initially non-signaled */, NULL);
@@ -499,7 +509,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         if (walkerReturn != WAIT_OBJECT_0)
             PrintError("SignalObjectAndWait (1)");
         if (data.pc_count > data.pc_size) {
-            data.pcs = (void**) malloc(data.pc_count * sizeof(void*));
+            data.pcs = (void**) _alloca(data.pc_count * sizeof(void*));
             data.pc_size = data.pc_count;
             data.pc_count = 0;
             ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
@@ -514,13 +524,9 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     }
 
     ::CloseHandle(myThread);
-    ::CloseHandle(myProcess);
 
     for (PRUint32 i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], aClosure);
-
-    if (data.pc_size > ArrayLength(local_pcs))
-        free(data.pcs);
 
     return NS_OK;
 }

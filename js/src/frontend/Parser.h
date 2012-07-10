@@ -87,7 +87,8 @@ struct Parser : private AutoGCRooter
      */
     ObjectBox *newObjectBox(JSObject *obj);
 
-    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc);
+    FunctionBox *newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc,
+                                StrictMode::StrictModeState sms);
 
     /*
      * Create a new function object given tree context (tc) and a name (which
@@ -136,7 +137,7 @@ struct Parser : private AutoGCRooter
 
     /* Public entry points for parsing. */
     ParseNode *statement();
-    bool recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMember);
+    bool processDirectives(ParseNode *stringsAtStart);
 
     /*
      * Parse a function body.  Pass StatementListBody if the body is a list of
@@ -230,7 +231,7 @@ struct Parser : private AutoGCRooter
 
 #if JS_HAS_XML_SUPPORT
     // True if E4X syntax is allowed in the current syntactic context.
-    bool allowsXML() const { return !tc->sc->inStrictMode() && tokenStream.allowsXML(); }
+    bool allowsXML() const { return tokenStream.allowsXML(); }
 
     ParseNode *endBracketedExpr();
 
@@ -249,6 +250,7 @@ struct Parser : private AutoGCRooter
     ParseNode *propertyQualifiedIdentifier();
 #endif /* JS_HAS_XML_SUPPORT */
 
+    bool setStrictMode(bool strictMode);
     bool setAssignmentLhsOps(ParseNode *pn, JSOp op);
     bool matchInOrOf(bool *isForOfp);
 };
