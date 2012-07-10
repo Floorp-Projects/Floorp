@@ -23,20 +23,10 @@
                       android:layout_height="0dip"
                       android:visibility="gone"/>
 
-        <View android:id="@+id/spacer_menu"
-              style="@style/AddressBar.ImageButton"
-              android:layout_width="22dip"
-              android:layout_alignParentRight="true"/>
-
-        <View android:id="@+id/spacer_tabs"
-              style="@style/AddressBar.ImageButton"
-              android:layout_width="95dip"
-              android:layout_alignParentRight="true"/>
-
         <View android:id="@+id/curve"
-              android:layout_width="56dip"
+              android:layout_width="72dip"
               android:layout_height="fill_parent"
-              android:layout_marginRight="60dip"
+              android:layout_marginRight="48dip"
               android:layout_alignParentRight="true"
               android:background="@drawable/address_bar_bg_curve"/>
 
@@ -62,7 +52,8 @@
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="98dip"
-                     android:layout_toLeftOf="@+id/spacer_menu"
+                     android:layout_marginRight="22dip"
+                     android:layout_alignParentRight="true"
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
@@ -83,10 +74,9 @@
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="4dp"
                 android:layout_marginLeft="4dp"
-                android:layout_marginRight="6dp"
+                android:layout_marginRight="100dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
-                android:layout_toLeftOf="@id/spacer_tabs"
                 android:layout_centerVertical="true"
                 android:background="@drawable/address_bar_url"
                 android:singleLine="true"
