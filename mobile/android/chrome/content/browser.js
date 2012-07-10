@@ -210,6 +210,7 @@ var BrowserApp = {
     RemoteDebugger.init();
     Reader.init();
     UserAgent.init();
+    ExternalApps.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -362,6 +363,7 @@ var BrowserApp = {
     RemoteDebugger.uninit();
     Reader.uninit();
     UserAgent.uninit();
+    ExternalApps.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -1166,9 +1168,9 @@ var NativeWindow = {
         matches: function(aElt) {
           return this.context.matches(aElt);
         },
-        getValue: function() {
+        getValue: function(aElt) {
           return {
-            label: this.name,
+            label: (typeof this.name == "function") ? this.name(aElt) : this.name,
             id: this.id
           }
         }
@@ -1307,7 +1309,7 @@ var NativeWindow = {
       // convert this.menuitems object to an array for sending to native code
       let itemArray = [];
       for each (let item in this.menuitems) {
-        itemArray.push(item.getValue());
+        itemArray.push(item.getValue(popupNode));
       }
 
       let msg = {
@@ -6533,3 +6535,44 @@ let Reader = {
     }.bind(this);
   }
 };
+
+var ExternalApps = {
+  _contextMenuId: -1,
+
+  init: function helper_init() {
+    this._contextMenuId = NativeWindow.contextmenus.add(function(aElement) {
+      let uri = null;
+      var node = aElement;
+      while (node && !uri) {
+        uri = NativeWindow.contextmenus._getLink(node);
+        node = node.parentNode;
+      }
+      let apps = [];
+      if (uri)
+        apps = HelperApps.getAppsForUri(uri);
+
+      return apps.length == 1 ? Strings.browser.formatStringFromName("helperapps.openWithApp2", [apps[0].name], 1) :
+                                Strings.browser.GetStringFromName("helperapps.openWithList2");
+    }, this.filter, this.openExternal);
+  },
+
+  uninit: function helper_uninit() {
+    NativeWindow.contextmenus.remove(this._contextMenuId);
+  },
+
+  filter: {
+    matches: function(aElement) {
+      let uri = NativeWindow.contextmenus._getLink(aElement);
+      let apps = [];
+      if (uri) {
+        apps = HelperApps.getAppsForUri(uri);
+      }
+      return apps.length > 0;
+    }
+  },
+
+  openExternal: function(aElement) {
+    let uri = NativeWindow.contextmenus._getLink(aElement);
+    HelperApps.openUriInApp(uri);
+  }
+}
