@@ -4824,17 +4824,16 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         // Inherit most things (principals, version, etc) from the parent.
         GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
-        Rooted<JSScript*> script(cx);
         Rooted<JSScript*> parent(cx, bce->script);
-        script = JSScript::Create(cx,
-                                  /* savedCallerFun = */ false,
-                                  parent->principals,
-                                  parent->originPrincipals,
-                                  parent->compileAndGo,
-                                  /* noScriptRval = */ false,
-                                  globalObject,
-                                  parent->getVersion(),
-                                  parent->staticLevel + 1);
+        Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                      /* savedCallerFun = */ false,
+                                                      parent->principals,
+                                                      parent->originPrincipals,
+                                                      parent->compileAndGo,
+                                                      /* noScriptRval = */ false,
+                                                      globalObject,
+                                                      parent->getVersion(),
+                                                      parent->staticLevel + 1));
         if (!script)
             return false;
 

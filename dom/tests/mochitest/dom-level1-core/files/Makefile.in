@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir	= dom/tests/mochitest/dom-level1-core/files
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 		hc_nodtdstaff.html \
 		hc_nodtdstaff.xhtml \
 		hc_staff.html \
@@ -34,5 +33,4 @@ _TEST_FILES	= \
 		xhtml1-strict.dtd \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

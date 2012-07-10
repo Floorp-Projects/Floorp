@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+XUL <scale> dragging tests
+-->
+<window title="Dragging XUL scale tests" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+
+  <hbox flex="1">
+    <scale id="scale1" orient="horizontal" flex="1" min="0" max="4" value="2"/>
+    <scale id="scale2" orient="vertical" flex="1" min="0" max="4" value="2"/>
+    <scale id="scale3" orient="horizontal" flex="1" movetoclick="true" min="0" max="4" value="2"/>
+  </hbox>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+function getThumb(aScale) {
+  return document.getAnonymousElementByAttribute(aScale, "class", "scale-thumb");
+}
+
+function sendTouch(aType, aRect, aDX, aDY, aMods) {
+  var cwu = SpecialPowers.getDOMWindowUtils(window);
+  var x = aRect.left + aRect.width/2  + aDX;
+  var y = aRect.top  + aRect.height/2 + aDY;
+  if (/mouse/.test(aType))
+    cwu.sendMouseEvent(aType, x, y, 0, 1, aMods || 0, false);
+  else
+    cwu.sendTouchEvent(aType, [0], [x], [y], [1], [1], [0], [1], 1, aMods || 0, true);
+}
+
+function getOffset(aScale, aDir) {
+  var rect = aScale.getBoundingClientRect();
+  var d = aScale.orient == "horizontal" ? rect.width/4 : rect.height/4;
+  switch (aDir) {
+    case "right":      return [   d,   0];
+    case "left":       return [-1*d,   0];
+    case "up":         return [   0,-1*d];
+    case "down":       return [   0,   d];
+    case "downleft":   return [ -1*d,   d];
+    case "upleft":     return [ -1*d,-1*d];
+    case "downright": return [d,   d];
+    case "upright":   return [d,-1*d];
+  }
+  return [0,0];
+}
+
+function testTouchDragThumb(aDesc, aId, aDir, aVal1, aVal2, aMods) {
+  info(aDesc);
+  var scale = document.getElementById(aId);
+  var [x,y] = getOffset(scale, aDir);
+
+  sendTouch("touchstart", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal1, "Touchstart on thumb has correct value");
+  sendTouch("touchmove", getThumb(scale).getBoundingClientRect(), x, y, aMods);
+  sendTouch("touchend", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal2, "After touch " + (aDir ? ("and drag " + aDir + " ") : "") + "on thumb, scale has correct value");
+
+  scale.value = 2;
+}
+
+function testMouseDragThumb(aDesc, aId, aDir, aVal1, aVal2, aMods) {
+  info(aDesc);
+  var scale = document.getElementById(aId);
+  var [x,y] = getOffset(scale, aDir);
+
+  sendTouch("mousedown", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal1, "Mousedown on thumb has correct value");
+  sendTouch("mousemove", getThumb(scale).getBoundingClientRect(), x, y, aMods);
+  sendTouch("mouseup", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal2, "After mouseup " + (aDir ? ("and drag " + aDir + " ") : "") + "on thumb, scale has correct value");
+
+  scale.value = 2;
+}
+
+function testTouchDragSlider(aDesc, aId, aDir, aVal1, aVal2, aMods) {
+  info(aDesc);
+  var scale = document.getElementById(aId);
+  var [x,y] = getOffset(scale, aDir);
+
+  sendTouch("touchstart", getThumb(scale).getBoundingClientRect(), x, y, aMods);
+  is(scale.value, aVal1, "Touchstart on slider has correct value");
+  sendTouch("touchmove", getThumb(scale).getBoundingClientRect(), -x, -y, aMods);
+  sendTouch("touchend", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal2, "After touch " + (aDir ? ("and drag " + aDir + " ") : "") + "on slider, scale has correct value");
+
+  scale.value = 2;
+}
+
+function testMouseDragSlider(aDesc, aId, aDir, aVal1, aVal2, aMods) {
+  info(aDesc);
+  var scale = document.getElementById(aId);
+  var [x,y] = getOffset(scale, aDir);
+
+  sendTouch("mousedown", getThumb(scale).getBoundingClientRect(), x, y, aMods);
+  is(scale.value, aVal1, "Mousedown on slider has correct value");
+  sendTouch("mousemove", getThumb(scale).getBoundingClientRect(), -x, -y, aMods);
+  sendTouch("mouseup", getThumb(scale).getBoundingClientRect(), 0, 0, aMods);
+  is(scale.value, aVal2, "After mouseup " + (aDir ? ("and drag " + aDir + " ") : "") + "on slider, scale has correct value");
+
+  scale.value = 2;
+}
+
+function runTests() {
+  // test dragging a horizontal slider with touch events by tapping on the thumb
+  testTouchDragThumb("Touch Horizontal Thumb", "scale1", "", 2, 2);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Left", "scale1", "left", 2, 1);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Right", "scale1", "right", 2, 3);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Up", "scale1", "up", 2, 2);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Down", "scale1", "down", 2, 2);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Downleft", "scale1", "downleft", 2, 1);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Upleft", "scale1", "upleft", 2, 1);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Upright", "scale1", "upright", 2, 3);
+  testTouchDragThumb("TouchDrag Horizontal Thumb Downright", "scale1", "downright", 2, 3);
+
+  // test dragging a horizontal slider with mouse events by clicking on the thumb
+  testMouseDragThumb("Click Horizontal Thumb", "scale1", "", 2, 2);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Left", "scale1", "left", 2, 1);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Right", "scale1", "right", 2, 3);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Up", "scale1", "up", 2, 2);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Down", "scale1", "down", 2, 2);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Downleft", "scale1", "downleft", 2, 1);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Upleft", "scale1", "upleft", 2, 1);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Upright", "scale1", "upright", 2, 3);
+  testMouseDragThumb("MouseDrag Horizontal Thumb Downright", "scale1", "downright", 2, 3);
+
+  // test dragging a vertical slider with touch events by tapping on the thumb
+  testTouchDragThumb("Touch Vertical Thumb", "scale2", "", 2, 2);
+  testTouchDragThumb("TouchDrag Vertical Thumb Left", "scale2", "left", 2, 2);
+  testTouchDragThumb("TouchDrag Vertical Thumb Right", "scale2", "right", 2, 2);
+  testTouchDragThumb("TouchDrag Vertical Thumb Up", "scale2", "up", 2, 1);
+  testTouchDragThumb("TouchDrag Vertical Thumb Down", "scale2", "down", 2, 3);
+  testTouchDragThumb("TouchDrag Vertical Thumb Downleft", "scale2", "downleft", 2, 3);
+  testTouchDragThumb("TouchDrag Vertical Thumb Upleft", "scale2", "upleft", 2, 1);
+  testTouchDragThumb("TouchDrag Vertical Thumb Upright", "scale2", "upright", 2, 1);
+  testTouchDragThumb("TouchDrag Vertical Thumb Downright", "scale2", "downright", 2, 3);
+
+  // test dragging a vertical slider with mouse events by clicking on the thumb
+  testMouseDragThumb("Click Vertical Thumb", "scale2", "", 2, 2);
+  testMouseDragThumb("MouseDrag Vertical Thumb Left", "scale2", "left", 2, 2);
+  testMouseDragThumb("MouseDrag Vertical Thumb Right", "scale2", "right", 2, 2);
+  testMouseDragThumb("MouseDrag Vertical Thumb Up", "scale2", "up", 2, 1);
+  testMouseDragThumb("MouseDrag Vertical Thumb Down", "scale2", "down", 2, 3);
+  testMouseDragThumb("MouseDrag Vertical Thumb Downleft", "scale2", "downleft", 2, 3);
+  testMouseDragThumb("MouseDrag Vertical Thumb Upleft", "scale2", "upleft", 2, 1);
+  testMouseDragThumb("MouseDrag Vertical Thumb Upright", "scale2", "upright", 2, 1);
+  testMouseDragThumb("MouseDrag Vertical Thumb Downright", "scale2", "downright", 2, 3);
+
+  var isMac = /Mac/.test(navigator.platform);
+
+  // test dragging a slider by tapping off the thumb
+  testTouchDragSlider("TouchDrag Slider Left", "scale1", "left", isMac ? 1 : 0, isMac ? 2 : 0);
+  testTouchDragSlider("TouchDrag Slider Right", "scale1", "right", isMac ? 3 : 4, isMac ? 2 : 4);
+  testMouseDragSlider("MouseDrag Slider Left", "scale1", "left", isMac ? 1 : 0, isMac ? 2 : 0);
+  testMouseDragSlider("MouseDrag Slider Right", "scale1", "right", isMac ? 3 : 4, isMac ? 2 : 4);
+
+  // test dragging a slider by tapping off the thumb and holding shift
+  // modifiers don't affect touch events
+  var mods = /Mac/.test(navigator.platform) ? Components.interfaces.nsIDOMNSEvent.ALT_MASK :
+                                              Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
+  testTouchDragSlider("TouchDrag Slider Left+Shift", "scale1", "left", isMac ? 1 : 0, isMac ? 2 : 0, mods);
+  testTouchDragSlider("TouchDrag Slider Right+Shift", "scale1", "right", isMac ? 3 : 4, isMac ? 2 : 4, mods);
+  testMouseDragSlider("MouseDrag Slider Left+Shift", "scale1", "left", isMac ? 0 : 1, isMac ? 0 : 2, mods);
+  testMouseDragSlider("MouseDrag Slider Right+Shift", "scale1", "right", isMac ? 4 : 3, isMac ? 4 : 2, mods);
+
+  // test dragging a slider with movetoclick="true" by tapping off the thumb
+  testTouchDragSlider("TouchDrag Slider Left+MoveToClick", "scale3", "left", 1, 2);
+  testTouchDragSlider("TouchDrag Slider Right+MoveToClick", "scale3", "right", 3, 2);
+  testMouseDragSlider("MouseDrag Slider Left+MoveToClick", "scale3", "left", 1, 2);
+  testMouseDragSlider("MouseDrag Slider Right+MoveToClick", "scale3", "right", 3, 2);
+
+  // test dragging a slider by tapping off the thumb and holding shift
+  // modifiers don't affect touch events
+  testTouchDragSlider("MouseDrag Slider Left+MoveToClick+Shift", "scale3", "left", 1, 2, mods);
+  testTouchDragSlider("MouseDrag Slider Right+MoveToClick+Shift", "scale3", "right", 3, 2, mods);
+  testMouseDragSlider("MouseDrag Slider Left+MoveToClick+Shift", "scale3", "left", 0, 0, mods);
+  testMouseDragSlider("MouseDrag Slider Right+MoveToClick+Shift", "scale3", "right", 4, 4, mods);
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(function() { SimpleTest.executeSoon(runTests); });
+]]></script>
+
+</window>

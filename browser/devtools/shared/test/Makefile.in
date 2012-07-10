@@ -10,9 +10,8 @@ VPATH     = @srcdir@
 relativesrcdir  = browser/devtools/shared/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_browser_basic.js \
   browser_promise_basic.js \
   browser_require_basic.js \
@@ -24,7 +23,7 @@ _BROWSER_TEST_FILES = \
   head.js \
   $(NULL)
 
-_BROWSER_TEST_PAGES = \
+MOCHITEST_BROWSER_FILES += \
   browser_templater_basic.html \
   browser_toolbar_basic.html \
   browser_toolbar_webconsole_errors_count.html \
@@ -32,8 +31,4 @@ _BROWSER_TEST_PAGES = \
   browser_layoutHelpers_iframe.html \
   $(NULL)
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_PAGES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -133,8 +133,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
         return NULL;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, Boolean, CLASS_NAME(cx, Boolean), 1);
+    RootedFunction ctor(cx, global->createConstructor(cx, Boolean, CLASS_NAME(cx, Boolean), 1));
     if (!ctor)
         return NULL;
 

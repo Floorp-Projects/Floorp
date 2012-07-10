@@ -10,12 +10,10 @@ VPATH		= @srcdir@
 relativesrcdir  = accessible/pivot
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_A11Y_FILES = \
 		doc_virtualcursor.html \
 		test_virtualcursor.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

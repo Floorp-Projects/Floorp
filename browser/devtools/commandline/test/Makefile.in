@@ -10,9 +10,8 @@ VPATH     = @srcdir@
 relativesrcdir  = browser/devtools/commandline/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_gcli_break.js \
   browser_gcli_commands.js \
   browser_gcli_edit.js \
@@ -24,7 +23,7 @@ _BROWSER_TEST_FILES = \
   head.js \
   $(NULL)
 
-_BROWSER_TEST_PAGES = \
+MOCHITEST_BROWSER_FILES += \
   browser_gcli_break.html \
   browser_gcli_inspect.html \
   resources_inpage.js \
@@ -33,8 +32,4 @@ _BROWSER_TEST_PAGES = \
   resources.html \
   $(NULL)
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_PAGES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

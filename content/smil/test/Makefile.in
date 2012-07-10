@@ -8,9 +8,8 @@ VPATH		= @srcdir@
 relativesrcdir  = content/smil/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 	  db_smilAnimateMotion.js \
 	  db_smilCSSFromBy.js \
 	  db_smilCSSFromTo.js \
@@ -65,5 +64,4 @@ _TEST_FILES = \
 # Tests disabled due to intermittent orange
 # test_smilCSSInherit.xhtml disabled until bug 501183 is fixed
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

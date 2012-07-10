@@ -10,8 +10,7 @@ VPATH		= @srcdir@
 relativesrcdir  = content/canvas/test/webgl
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
-_TEST_FILES = \
+MOCHITEST_FILES = \
   test_webgl_conformance_test_suite.html \
   00_test_list.txt \
   failing_tests_linux.txt \
@@ -20,8 +19,9 @@ _TEST_FILES = \
   failing_tests_android.txt \
   $(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
+
+libs::
 	$(TAR) -cf - -C $(srcdir) \
 	  resources \
 	  conformance \

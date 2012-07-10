@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = content/xslt/tests/mochitest
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug319374.xhtml \
+MOCHITEST_FILES = 	test_bug319374.xhtml \
 		test_bug440974.html \
 		test_bug427060.html \
 		test_bug468208.html \
@@ -28,5 +27,4 @@ _TEST_FILES = 	test_bug319374.xhtml \
 		test_exslt_regex.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

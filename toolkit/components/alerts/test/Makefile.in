@@ -14,13 +14,9 @@ include $(DEPTH)/config/autoconf.mk
 # Mochitest tests
 # Synchronous tests like test_alerts.html must come before
 # asynchronous tests like test_alerts_noobserve.html!
-MOCHI_TESTS = \
+MOCHITEST_FILES = \
 		test_alerts.html \
 		test_alerts_noobserve.html \
 		$(NULL)
 
-
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(MOCHI_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

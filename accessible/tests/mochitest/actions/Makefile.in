@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = accessible/actions
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =\
+MOCHITEST_A11Y_FILES =\
 		test_anchors.html \
 		test_aria.html \
 		test_general.html \
@@ -27,5 +26,4 @@ _TEST_FILES =\
 		test_treegrid.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

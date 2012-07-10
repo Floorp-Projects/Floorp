@@ -15,9 +15,8 @@ DIRS = \
 		scripted \
 		$(NULL)
 
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	adoption01.dat \
+MOCHITEST_FILES =	adoption01.dat \
 		adoption02.dat \
 		comments01.dat \
 		doctype01.dat \
@@ -62,5 +61,4 @@ _TEST_FILES =	adoption01.dat \
 		webkit02.dat \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

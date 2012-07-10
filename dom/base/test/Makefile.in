@@ -9,9 +9,8 @@ VPATH = @srcdir@
 relativesrcdir = dom/base/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-TEST_FILES = \
+MOCHITEST_FILES = \
   test_domrequest.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \
@@ -19,14 +18,10 @@ TEST_FILES = \
   test_screen_orientation.html \
   $(NULL)
 
-CHROME_TEST_FILES = \
+MOCHITEST_CHROME_FILES = \
    test_bug715041.xul \
    test_bug715041_removal.xul \
    $(NULL)
 
-libs:: $(TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 

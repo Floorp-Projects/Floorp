@@ -10,12 +10,10 @@ VPATH		= @srcdir@
 relativesrcdir  = parser/htmlparser/tests/mochitest/html5lib_tree_construction/scripted
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	adoption01.dat \
+MOCHITEST_FILES =	adoption01.dat \
 		webkit01.dat \
 		ark.dat \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

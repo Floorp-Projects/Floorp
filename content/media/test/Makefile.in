@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 relativesrcdir	= content/media/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 # Media tests should be backend independent, i.e., not conditioned on
 # MOZ_OGG, MOZ_WAVE etc. (The only exception is the can_play_type tests,
@@ -34,7 +33,7 @@ include $(topsrcdir)/config/rules.mk
 # make the test first check canPlayType for the type, and if it's not
 # supported, just do ok(true, "Type not supported") and stop the test.
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		allowed.sjs \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
@@ -125,7 +124,7 @@ _TEST_FILES = \
 		$(NULL)
 
 # Bug 759221
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_autoplay_contentEditable.html \
 		test_buffered.html \
 		test_bug448534.html \
@@ -138,7 +137,7 @@ _TEST_FILES += \
 
 # Don't run in suite
 ifndef MOZ_SUITE
-_TEST_FILES += test_play_twice.html
+MOCHITEST_FILES += test_play_twice.html
 else
 $(warning test_play_twice.html is disabled pending investigation. Bug 598252)
 endif
@@ -156,7 +155,7 @@ endif
 #		test_audioDocumentTitle.html
 
 # sample files
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		320x240.ogv \
 		448636.ogv \
 		audio-overhang.ogg \
@@ -210,7 +209,7 @@ _TEST_FILES += \
 		$(NULL)
 
 # Wave sample files
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		big.wav \
 		bogus.wav \
 		r11025_msadpcm_c1.wav \
@@ -225,14 +224,14 @@ _TEST_FILES += \
 		$(NULL)
 
 # Other files
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		bogus.duh \
 		$(NULL)
 
 # These tests contain backend-specific tests. Try to write backend
 # independent tests rather than adding to this list.
 ifdef MOZ_OGG
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_ogg.html \
 		noContentLength.sjs \
 		test_seekable3.html \
@@ -244,7 +243,7 @@ _TEST_FILES += \
 		$(NULL)
 
 # Bug 759221
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_bug686137.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
@@ -264,39 +263,38 @@ _TEST_FILES += \
 		test_seekable2.html \
 		$(NULL)
 else
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_no_ogg.html \
 		$(NULL)
 endif
 
 ifdef MOZ_WEBM
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_webm.html \
 		$(NULL)
 else
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_no_webm.html \
 		$(NULL)
 endif
 
 ifdef MOZ_WAVE
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_wave.html \
 		$(NULL)
 
 
 # Bug 759221
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_fragment_play.html \
 		test_fragment_noplay.html \
 		test_wave_data_u8.html \
 		test_wave_data_s16.html \
 		$(NULL)
 else
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_can_play_type_no_wave.html \
 		$(NULL)
 endif
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

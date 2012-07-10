@@ -644,7 +644,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   nsRefPtr<nsHTMLInputElement> it =
     new nsHTMLInputElement(ni.forget(), NOT_FROM_PARSER);
 
-  nsresult rv = CopyInnerTo(it);
+  nsresult rv = const_cast<nsHTMLInputElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mType) {

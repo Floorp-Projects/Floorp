@@ -10,11 +10,9 @@ VPATH		= @srcdir@
 relativesrcdir  = extensions/spellcheck/tests/chrome/map
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	maputf.dic \
+MOCHITEST_CHROME_FILES = 	maputf.dic \
 				maputf.aff \
 				$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

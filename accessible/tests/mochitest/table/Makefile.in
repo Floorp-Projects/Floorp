@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = accessible/table
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_A11Y_FILES = \
 		test_headers_ariagrid.html \
 		test_headers_listbox.xul \
 		test_headers_table.html \
@@ -35,5 +34,4 @@ _TEST_FILES = \
 		test_table_2.html \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

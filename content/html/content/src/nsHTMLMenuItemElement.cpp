@@ -190,7 +190,7 @@ nsHTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsRefPtr<nsHTMLMenuItemElement> it =
     new nsHTMLMenuItemElement(ni.forget(), NOT_FROM_PARSER);
-  nsresult rv = CopyInnerTo(it);
+  nsresult rv = const_cast<nsHTMLMenuItemElement*>(this)->CopyInnerTo(it);
   if (NS_SUCCEEDED(rv)) {
     switch (mType) {
       case CMD_TYPE_CHECKBOX:

@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = editor/libeditor/base/tests
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_bug408231.html \
 		test_bug502673.html \
 		test_bug514156.html \
@@ -23,7 +22,7 @@ _TEST_FILES = \
 		test_bug742261.html \
 		$(NULL)
 
-_CHROME_TEST_FILES = \
+MOCHITEST_CHROME_FILES = \
 		test_selection_move_commands.xul \
                 test_bug46555.html \
 		test_bug646194.xul \
@@ -31,9 +30,5 @@ _CHROME_TEST_FILES = \
 		test_bug599983.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 

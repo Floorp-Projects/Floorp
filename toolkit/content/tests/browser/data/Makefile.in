@@ -10,12 +10,10 @@ VPATH          = @srcdir@
 relativesrcdir = toolkit/content/tests/browser/data
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_DATA_FILES = \
+MOCHITEST_BROWSER_FILES = \
   post_form_inner.sjs \
   post_form_outer.sjs \
   $(NULL)
 
-libs:: $(_DATA_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

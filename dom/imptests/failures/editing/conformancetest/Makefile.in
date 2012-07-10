@@ -9,12 +9,10 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TESTS = \
+MOCHITEST_FILES = \
   test_event.html.json \
   test_runtest.html.json \
   $(NULL)
 
-libs:: $(_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -4297,8 +4297,8 @@ case "${target}" in
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
         MOZ_RAW=1
-        MOZ_WEBRTC=
         ;;
+
 esac
 
 MOZ_ARG_ENABLE_STRING(application,
@@ -5246,6 +5246,25 @@ MOZ_ARG_DISABLE_BOOL(printing,
 if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
     AC_DEFINE(NS_PRINT_PREVIEW)
+fi
+
+dnl Turn off webrtc for OS's we don't handle yet, but allow 
+dnl --enable-webrtc to override.  Can disable for everything in
+dnl the master list above.
+if test -n "$MOZ_WEBRTC"; then
+    case "$target" in
+    *-android*|*-linuxandroid*)
+        dnl Make sure doesn't get matched by *-linux*
+        MOZ_WEBRTC=
+        ;;
+    *-linux*|*-mingw*|*-darwin*)
+        dnl Leave enabled
+        ;;
+    *)
+        dnl default to disabled for all others
+        MOZ_WEBRTC=
+        ;;
+    esac
 fi
 
 dnl ========================================================
@@ -8375,6 +8394,7 @@ AC_SUBST(MOZ_OS2_TOOLS)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
+AC_SUBST(MOZ_PER_WINDOW_PRIVATE_BROWSING)
 
 dnl ========================================================
 dnl = Mac bundle name prefix
