@@ -875,7 +875,6 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/devtools/debugger/tests/Makefile
     toolkit/identity/tests/Makefile
     toolkit/identity/tests/chrome/Makefile
-    toolkit/identity/tests/mochitest/Makefile
     toolkit/mozapps/downloads/tests/Makefile
     toolkit/mozapps/downloads/tests/chrome/Makefile
     toolkit/mozapps/extensions/test/Makefile
