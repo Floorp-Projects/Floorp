@@ -67,7 +67,6 @@
 
 #endif
 
-#ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
 @BINPATH@/package-name.txt
@@ -76,7 +75,6 @@
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
 @BINPATH@/recommended-addons.json
-#endif
 
 [browser]
 ; [Base Browser Files]
@@ -253,9 +251,7 @@
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
-#ifdef ANDROID
 @BINPATH@/components/widget_android.xpt
-#endif
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
 @BINPATH@/components/xpcom_base.xpt

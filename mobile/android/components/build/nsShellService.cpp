@@ -8,12 +8,10 @@
 #include <QtGui/QWidget>
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#endif
-
 #include "nsShellService.h"
 #include "nsString.h"
+
+#include "AndroidBridge.h"
 
 NS_IMPL_ISUPPORTS1(nsShellService, nsIShellService)
 
@@ -36,10 +34,6 @@ nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI, c
   if (!aTitle.Length() || !aURI.Length() || !aIconData.Length())
     return NS_ERROR_FAILURE;
 
-#if MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->CreateShortcut(aTitle, aURI, aIconData, aIntent);
   return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
