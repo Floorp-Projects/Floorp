@@ -28,8 +28,4 @@ CPPSRCS = \
 	nsShellService.cpp \
 	$(NULL)
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),qt))
-LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
-endif
-
 include $(topsrcdir)/config/rules.mk
