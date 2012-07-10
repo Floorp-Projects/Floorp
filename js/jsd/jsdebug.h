@@ -1370,8 +1370,6 @@ JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
 #define JSDPD_READONLY   JSPD_READONLY     /* assignment is error */
 #define JSDPD_PERMANENT  JSPD_PERMANENT    /* property cannot be deleted */
 #define JSDPD_ALIAS      JSPD_ALIAS        /* property has an alias id */
-#define JSDPD_ARGUMENT   JSPD_ARGUMENT     /* argument to function */
-#define JSDPD_VARIABLE   JSPD_VARIABLE     /* local variable in function */
 #define JSDPD_EXCEPTION  JSPD_EXCEPTION    /* exception occurred looking up */
                                            /* proprety, value is exception  */
 #define JSDPD_ERROR      JSPD_ERROR        /* native getter returned JS_FALSE */
@@ -1416,13 +1414,6 @@ JSD_GetPropertyAlias(JSDContext* jsdc, JSDProperty* jsdprop);
 */
 extern JSD_PUBLIC_API(unsigned)
 JSD_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop);
-
-/*
-* Get Variable or Argument slot number (if JSDPD_ARGUMENT or JSDPD_VARIABLE set)
-* *** new for version 1.1 ****
-*/
-extern JSD_PUBLIC_API(unsigned)
-JSD_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop);
 
 /***************************************************************************/
 /* Object Functions  --- All NEW for 1.1 --- */
