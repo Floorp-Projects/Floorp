@@ -417,7 +417,7 @@ int smsStartup(id logObject, SEL logSelector) {
 			}
 			continue;
 		} else if (connection == 0) {
-			LOG_ARG(@"'success', but didn't get a connection.\n", result);
+			LOG_ARG(@"'success', but didn't get a connection (return value was: 0x%x).\n", result);
 			IOObjectRelease(device);
 			if (failure_result < SMS_FAIL_CONNECTION) {
 				failure_result = SMS_FAIL_CONNECTION;
@@ -803,7 +803,7 @@ int getData(sms_acceleration *accel, int calibrated, id logObject, SEL logSelect
 	memset(iRecord, 1, iSize);
 	memset(oRecord, 0, oSize);
 	
-	LOG_2ARG(@"    Querying device: ", 
+	LOG_2ARG(@"    Querying device (%u, %d): ", 
 			 sensors[sensorNum].function, sensors[sensorNum].recordSize);
 	
 #if __MAC_OS_X_VERSION_MIN_REQUIRED  >= 1050
