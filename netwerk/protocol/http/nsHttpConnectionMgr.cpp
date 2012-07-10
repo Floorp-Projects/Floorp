@@ -19,6 +19,7 @@
 #include "nsISSLSocketControl.h"
 #include "prnetdb.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/VisualEventTracer.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
