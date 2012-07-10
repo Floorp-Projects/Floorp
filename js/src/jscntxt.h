@@ -1097,6 +1097,9 @@ struct JSContext : js::ContextFriendFields
     /* Current execution stack. */
     js::ContextStack    stack;
 
+    /* Current global. */
+    inline js::Handle<js::GlobalObject*> global() const;
+
     /* ContextStack convenience functions */
     inline bool hasfp() const               { return stack.hasfp(); }
     inline js::StackFrame* fp() const       { return stack.fp(); }
