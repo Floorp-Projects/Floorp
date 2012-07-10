@@ -243,6 +243,11 @@ class Marionette(object):
     def get_window(self):
         self.window = self._send_message('getWindow', 'value')
         return self.window
+    
+    @property
+    def title(self):
+        response = self._send_message('getTitle', 'value') 
+        return response
 
     def get_windows(self):
         response = self._send_message('getWindows', 'value')
