@@ -1211,7 +1211,7 @@ interface jsdIObject : nsISupports
  * Representation of a property of an object. When an instance is invalid, all
  * method and property access will result in a NS_UNAVAILABLE error.
  */
-[scriptable, uuid(09332485-1419-42bc-ba1f-070815ed4b82)]
+[scriptable, uuid(acf1329e-aaf6-4d6a-a1eb-f75858566f09)]
 interface jsdIProperty : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1250,6 +1250,4 @@ interface jsdIProperty : jsdIEphemeral
     readonly attribute jsdIValue     name;
     /** value of this property. */
     readonly attribute jsdIValue     value;
-    /** slot number if this property is a local variable or parameter. */
-    readonly attribute unsigned long varArgSlot;
 };

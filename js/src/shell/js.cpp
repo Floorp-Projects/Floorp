@@ -2368,8 +2368,6 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
              JS_SetProperty(cx, pdobj, "value", &pd->value) &&
              (v = INT_TO_JSVAL(pd->flags),
               JS_SetProperty(cx, pdobj, "flags", &v)) &&
-             (v = INT_TO_JSVAL(pd->slot),
-              JS_SetProperty(cx, pdobj, "slot", &v)) &&
              JS_SetProperty(cx, pdobj, "alias", &pd->alias);
         if (!ok)
             break;

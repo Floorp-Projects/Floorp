@@ -336,7 +336,6 @@ typedef struct JSPropertyDesc {
     jsval           value;      /* property value */
     uint8_t         flags;      /* flags, see below */
     uint8_t         spare;      /* unused */
-    uint16_t        slot;       /* argument/variable slot */
     jsval           alias;      /* alias id if JSPD_ALIAS flag */
 } JSPropertyDesc;
 
@@ -344,8 +343,6 @@ typedef struct JSPropertyDesc {
 #define JSPD_READONLY   0x02    /* assignment is error */
 #define JSPD_PERMANENT  0x04    /* property cannot be deleted */
 #define JSPD_ALIAS      0x08    /* property has an alias id */
-#define JSPD_ARGUMENT   0x10    /* argument to function */
-#define JSPD_VARIABLE   0x20    /* local variable in function */
 #define JSPD_EXCEPTION  0x40    /* exception occurred fetching the property, */
                                 /* value is exception */
 #define JSPD_ERROR      0x80    /* native getter returned JS_FALSE without */
