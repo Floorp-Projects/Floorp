@@ -123,6 +123,16 @@ var UtteranceGenerator = {
     }
   },
 
+  /**
+   * Generates an utterance for announcing entering and leaving editing mode.
+   * @param {aIsEditing} boolean true if we are in editing mode
+   * @return {Array} The mode utterance
+   */
+  genForEditingMode: function genForEditingMode(aIsEditing) {
+    return [gStringBundle.GetStringFromName(
+              aIsEditing ? 'editingMode' : 'navigationMode')];
+  },
+
   verbosityRoleMap: {
     'menubar': INCLUDE_DESC,
     'scrollbar': INCLUDE_DESC,
