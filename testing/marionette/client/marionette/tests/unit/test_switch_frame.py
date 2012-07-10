@@ -12,7 +12,7 @@ class TestSwitchFrame(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_iframe.html")
         self.marionette.navigate(test_html)
         self.assertNotEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        self.assertEqual("Marionette IFrame Test", self.marionette.execute_script("return window.document.title;"))
+        self.assertEqual("Marionette IFrame Test", self.marionette.title)
         self.marionette.switch_to_frame("test_iframe")
         self.assertTrue("test.html" in self.marionette.get_url())
 
@@ -22,7 +22,7 @@ class TestSwitchFrame(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_nested_iframe.html")
         self.marionette.navigate(test_html)
         self.assertNotEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
-        self.assertEqual("Marionette IFrame Test", self.marionette.execute_script("return window.document.title;"))
+        self.assertEqual("Marionette IFrame Test", self.marionette.title)
         self.marionette.switch_to_frame("test_iframe")
         self.assertTrue("test_inner_iframe.html" in self.marionette.get_url())
         self.marionette.switch_to_frame("inner_frame")
