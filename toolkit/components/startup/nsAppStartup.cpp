@@ -566,6 +566,39 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAppStartup::GetLastShutdownDuration(PRUint32 *aResult)
+{
+  if (!mCachedShutdownTime) {
+    const char *filename = GetShutdownTimeFileName();
+
+    if (!filename) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    int shutdownTime;
+    int r = fscanf(f, "%d\n", &shutdownTime);
+    if (r != 1) {
+      *aResult = 0;
+      return NS_OK;
+    }
+
+    fclose(f);
+    mLastShutdownTime = shutdownTime;
+    mCachedShutdownTime = true;
+  }
+
+  *aResult = mLastShutdownTime;
+  return NS_OK;
+}
+
 //
 // nsAppStartup->nsIAppStartup2
 //
