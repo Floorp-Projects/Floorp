@@ -12,7 +12,7 @@
 
 #include "mozilla/TypeTraits.h"
 
-#include "jspubtd.h"
+#include "jsapi.h"
 
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
@@ -97,8 +97,7 @@ class Handle
     }
 
     /* Create a handle for a NULL pointer. */
-    Handle(NullPtr)
-    {
+    Handle(NullPtr) {
         typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
         ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
     }
@@ -136,6 +135,10 @@ class Handle
 
     const T *ptr;
 };
+
+/* Defined in jsapi.h under Value definition */
+template <>
+class Handle<Value>;
 
 typedef Handle<JSObject*>    HandleObject;
 typedef Handle<JSFunction*>  HandleFunction;

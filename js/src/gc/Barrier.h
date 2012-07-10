@@ -321,8 +321,8 @@ class EncapsulatedValue
     ~EncapsulatedValue() {}
 
   public:
-    inline bool operator==(const EncapsulatedValue &v) const { return value == v.value; }
-    inline bool operator!=(const EncapsulatedValue &v) const { return value != v.value; }
+    bool operator==(const EncapsulatedValue &v) const { return value == v.value; }
+    bool operator!=(const EncapsulatedValue &v) const { return value != v.value; }
 
     const Value &get() const { return value; }
     Value *unsafeGet() { return &value; }
