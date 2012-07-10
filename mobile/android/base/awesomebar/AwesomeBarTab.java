@@ -112,7 +112,7 @@ abstract public class AwesomeBarTab {
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
         if (TextUtils.isEmpty(title)) {
             int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
-            title = StringUtils.prettyURL(cursor.getString(urlIndex));
+            title = cursor.getString(urlIndex);
         }
 
         titleView.setText(title);
@@ -122,7 +122,7 @@ abstract public class AwesomeBarTab {
         int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
         String url = cursor.getString(urlIndex);
 
-        urlView.setText(StringUtils.prettyURL(url));
+        urlView.setText(url);
     }
 
     protected boolean hideSoftInput(View view) {
