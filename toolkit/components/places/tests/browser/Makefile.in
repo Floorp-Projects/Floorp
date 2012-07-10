@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = toolkit/components/places/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_bug399606.js \
 	browser_bug646422.js \
@@ -27,7 +26,7 @@ _BROWSER_FILES = \
 
 # These are files that need to be loaded via the HTTP proxy server
 # Access them through http://example.com/
-_HTTP_FILES = \
+MOCHITEST_FILES = \
 	bug_399606/399606-httprefresh.html \
 	bug_399606/399606-location.reload.html \
 	bug_399606/399606-location.replace.html \
@@ -44,8 +43,4 @@ _HTTP_FILES = \
 	visituri/final.html \
 	$(NULL)
 
-libs:: $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_HTTP_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

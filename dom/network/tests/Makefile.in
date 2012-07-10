@@ -14,17 +14,8 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES = \
+MOCHITEST_FILES = \
   test_network_basics.html \
   $(NULL)
 
-_CHROME_TEST_FILES = \
-  $(NULL)
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-#libs:: $(_CHROME_TEST_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

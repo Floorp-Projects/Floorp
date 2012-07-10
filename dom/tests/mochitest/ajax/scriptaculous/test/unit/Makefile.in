@@ -14,9 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	_ajax_inplaceeditor_result.html \
 	_ajax_inplaceeditor_text.html \
 	_ajax_updater_result.html \
@@ -38,5 +36,4 @@ _TEST_FILES	= \
 	unit_test.html \
 	$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
