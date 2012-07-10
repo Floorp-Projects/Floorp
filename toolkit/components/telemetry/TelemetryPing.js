@@ -542,6 +542,22 @@ TelemetryPing.prototype = {
                 onSuccess.bind(this), onError.bind(this));
   },
 
+  finishPingRequest: function finishPingRequest(success, startTime) {
+    let hping = Telemetry.getHistogramById("TELEMETRY_PING");
+    let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+
+    hsuccess.add(success);
+    hping.add(new Date() - startTime);
+
+    if (success) {
+      let file = this.savedHistogramsFile();
+      try {
+        file.remove(true);
+      } catch(e) {
+      }
+    }
+  },
+
   doPing: function doPing(server, ping, onSuccess, onError) {
     let submitPath = "/submit/telemetry/" + ping.slug;
     let url = server + submitPath;
@@ -553,25 +569,15 @@ TelemetryPing.prototype = {
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
     let startTime = new Date();
-    let file = this.savedHistogramsFile();
-
-    function finishRequest(success) {
-      let hping = Telemetry.getHistogramById("TELEMETRY_PING");
-      let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
-
-      hsuccess.add(success);
-      hping.add(new Date() - startTime);
-
-      if (success && file.exists()) {
-        file.remove(true);
-      }
-    }
 
     function handler(success, callback) {
-      return function(event) { finishRequest(success); callback() };
+      return function(event) {
+        this.finishPingRequest(success, startTime);
+        callback();
+      };
     }
-    request.addEventListener("error", handler(false, onError), false);
-    request.addEventListener("load", handler(true, onSuccess), false);
+    request.addEventListener("error", handler(false, onError).bind(this), false);
+    request.addEventListener("load", handler(true, onSuccess).bind(this), false);
 
     request.setRequestHeader("Content-Encoding", "gzip");
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
