@@ -165,7 +165,7 @@ public class HistoryTab extends AwesomeBarTab {
             String url = (String) historyItem.get(URLColumns.URL);
 
             if (TextUtils.isEmpty(title))
-                title = url;
+                title = StringUtils.prettyURL(url);
 
             viewHolder.titleView.setText(title);
             viewHolder.urlView.setText(url);
