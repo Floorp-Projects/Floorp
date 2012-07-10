@@ -37,7 +37,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/VisualEventTracer.h"
 
 using namespace mozilla;
 
@@ -181,8 +180,6 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
     void *place = ::operator new(size);
     *result = new(place) nsHostRecord(key);
     NS_ADDREF(*result);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(*result, key->host);
     return NS_OK;
 }
 
@@ -715,8 +712,6 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
 nsresult
 nsHostResolver::IssueLookup(nsHostRecord *rec)
 {
-    MOZ_EVENT_TRACER_WAIT(rec, "nsHostResolver");
-
     nsresult rv = NS_OK;
     NS_ASSERTION(!rec->resolving, "record is already being resolved"); 
 
@@ -894,8 +889,6 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         }
     }
 
-    MOZ_EVENT_TRACER_DONE(rec, "nsHostResolver");
-
     if (!PR_CLIST_IS_EMPTY(&cbs)) {
         PRCList *node = cbs.next;
         while (node != &cbs) {
@@ -979,7 +972,6 @@ nsHostResolver::ThreadFunc(void *arg)
 
         TimeStamp startTime = TimeStamp::Now();
 
-        MOZ_EVENT_TRACER_EXEC(rec, "nsHostResolver");
         ai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
 #if defined(RES_RETRY_ON_FAILURE)
         if (!ai && rs.Reset())
