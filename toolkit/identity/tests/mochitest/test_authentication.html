@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<!--
+Test of Identity Provider (IDP) Authentication using the DOM APIs
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test of Identity Provider (IDP) Authentication using the DOM APIs</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+</head>
+<body onload="run_next_test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753238">Test of Identity Provider (IDP) Authentication using the DOM APIs</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+/** Test of Identity Provider (IDP) Authentication using the DOM APIs **/
+/** Most tests are ported from test_authentication.js */
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const DOMIdentity = Cu.import("resource://gre/modules/DOMIdentity.jsm")
+                      .DOMIdentity;
+let outerWinId = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+
+function run_next_auth_test() {
+  // Reset the DOM state then run the next test
+  let provContext = IdentityProvider._provisionFlows[outerWinId];
+  if (provContext && provContext.caller) {
+    makeObserver("identity-DOM-state-reset", function() {
+      SimpleTest.executeSoon(run_next_test);
+    });
+    DOMIdentity._resetFrameState(provContext.caller);
+  } else {
+    SimpleTest.executeSoon(run_next_test);
+  }
+}
+
+function test_begin_authentication_flow() {
+  let _provId = null;
+
+  // set up a watch, to be consistent
+  let mockedDoc = mock_watch(null, function(action, params) {});
+  identity.watch(mockedDoc);
+
+  // The identity-auth notification is sent up to the UX from the
+  // _doAuthentication function.  Be ready to receive it and call
+  // beginAuthentication
+  makeObserver("identity-auth", function (aSubject, aTopic, aData) {
+    isnot(aSubject, null);
+
+    is(aSubject.wrappedJSObject.provId, _provId);
+
+    run_next_auth_test();
+  });
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      _provId = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    }, function() {},
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        // let's say this user needs to authenticate
+        IDService.IDP._doAuthentication(_provId, TEST_IDPPARAMS);
+      }
+    });
+}
+
+function test_complete_authentication_flow() {
+  let _provId = null;
+  let _authId = null;
+  let id = TEST_USER;
+
+  let callbacksFired = false;
+  let topicObserved = false;
+
+  // The result of authentication should be a successful login
+  IDService.reset();
+
+  let mockedDoc = mock_watch(null, call_sequentially(
+    function(action, params) {
+      is(action, 'ready');
+      is(params, undefined);
+    }
+  ));
+
+  identity.watch(mockedDoc);
+
+  // A mock calling context
+  let authCaller = {
+    doBeginAuthenticationCallback: function doBeginAuthCallback(aIdentity) {
+      is(aIdentity, TEST_USER);
+      identity.completeAuthentication();
+    },
+
+    doError: function(err) {
+      ok(false, "doError called: " + err);
+    },
+  };
+
+  makeObserver("identity-auth-complete", function (aSubject, aTopic, aData) {
+    info("identity-auth-complete");
+    is(aSubject.wrappedJSObject.identity, TEST_USER);
+
+    run_next_test();
+  });
+
+  // Create a provisioning flow for our auth flow to attach to
+  setup_provisioning(
+    TEST_USER,
+    function(provFlow) {
+      _provId = provFlow.id;
+      info("after setup: " + _provId);
+      identity.beginProvisioning(provFlow.beginProvisioningCallback);
+    },
+    function() {
+      info("doneProvisioningCallback");
+
+      // let's say this user needs to authenticate
+      IDService.IDP._doAuthentication(_provId, TEST_IDPPARAMS);
+
+      // test_begin_authentication_flow verifies that the right
+      // message is sent to the UI.  So that works.  Moving on,
+      // the UI calls setAuthenticationFlow ...
+      _authId = outerWinId;
+      IDService.IDP.setAuthenticationFlow(_authId, _provId);
+      IDService.IDP._provisionFlows[_provId].rpId = outerWinId;
+
+      // ... then the UI calls beginAuthentication ...
+      authCaller.id = _authId;
+      IDService.IDP._provisionFlows[_provId].caller = authCaller;
+      identity.beginAuthentication(function bac() {
+        info("beginAuthentication callback");
+        identity.completeAuthentication();
+      });
+    },
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        info("beginProvisioningCallback");
+
+        identity.raiseProvisioningFailure("Prov. failed");
+      }
+    }
+  );
+}
+
+TESTS.push(test_begin_authentication_flow);
+TESTS.push(test_complete_authentication_flow);
+
+</script>
+</pre>
+</body>
+</html>

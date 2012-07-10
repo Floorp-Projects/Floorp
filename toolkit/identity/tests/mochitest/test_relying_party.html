@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<!--
+Test of Relying Party (RP) using the DOM APIs
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test of Relying Party (RP) using the DOM APIs</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+</head>
+<body onload="run_next_test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753238">Test of Relying Party (RP) using the DOM APIs</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+/** Test of Relying Party (RP) using the DOM APIs **/
+/** Most tests are ported from test_relying_party.js */
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const DOMIdentity = Cu.import("resource://gre/modules/DOMIdentity.jsm")
+                      .DOMIdentity;
+let outerWinId = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+
+// Reset the DOM state then run the next test
+function run_next_rp_test() {
+  let rpContext = RelyingParty._rpFlows[outerWinId];
+  if (rpContext) {
+    makeObserver("identity-DOM-state-reset", function() {
+      SimpleTest.executeSoon(run_next_test);
+    });
+    DOMIdentity._resetFrameState(rpContext);
+  } else {
+    SimpleTest.executeSoon(run_next_test);
+  }
+}
+
+function test_watch_loggedin_ready() {
+  resetState();
+
+  let id = TEST_USER;
+  setup_test_identity(id, TEST_CERT, function() {
+    let store = get_idstore();
+
+    // set it up so we're supposed to be logged in to TEST_URL
+    store.setLoginState(TEST_URL, true, id);
+    identity.watch(mock_watch(id, function(action, params) {
+      is(action, 'ready');
+      is(params, undefined);
+
+      run_next_rp_test();
+    }));
+  });
+}
+
+function test_watch_loggedin_login() {
+  resetState();
+
+  let id = TEST_USER;
+  setup_test_identity(id, TEST_CERT, function() {
+    let store = get_idstore();
+
+    // set it up so we're supposed to be logged in to TEST_URL
+    store.setLoginState(TEST_URL, true, id);
+
+    // check for first a login() call, then a ready() call
+    identity.watch(mock_watch(null, call_sequentially(
+      function(action, params) {
+        is(action, 'login');
+        isnot(params, null);
+      },
+      function(action, params) {
+        is(action, 'ready');
+        do_check_null(params);
+
+        run_next_rp_test();
+      }
+    )));
+  });
+}
+
+function test_watch_loggedin_logout() {
+  resetState();
+
+  let id = TEST_USER;
+  let other_id = "otherid@foo.com";
+  setup_test_identity(other_id, TEST_CERT, function() {
+    setup_test_identity(id, TEST_CERT, function() {
+      let store = get_idstore();
+
+      // set it up so we're supposed to be logged in to TEST_URL
+      // with id, not other_id
+      store.setLoginState(TEST_URL, true, id);
+
+      // this should cause a login with an assertion for id,
+      // not for other_id
+      identity.watch(mock_watch(other_id, call_sequentially(
+        function(action, params) {
+          is(action, 'login');
+          isnot(params, null);
+        },
+        function(action, params) {
+          is(action, 'ready');
+          do_check_null(params);
+
+          run_next_rp_test();
+        }
+      )));
+    });
+  });
+}
+
+function test_watch_notloggedin_ready() {
+  resetState();
+
+  identity.watch(mock_watch(null, function(action, params) {
+    is(action, 'ready');
+    is(params, undefined);
+
+    run_next_rp_test();
+  }));
+}
+
+function test_watch_notloggedin_logout() {
+  resetState();
+
+  identity.watch(mock_watch(TEST_USER, call_sequentially(
+    function(action, params) {
+      is(action, 'logout');
+      is(params, undefined);
+
+      let store = get_idstore();
+      do_check_null(store.getLoginState(TEST_URL));
+    },
+    function(action, params) {
+      is(action, 'ready');
+      is(params, undefined);
+      run_next_rp_test();
+    }
+  )));
+}
+
+function test_request() {
+  // set up a watch, to be consistent
+  let mockedDoc = mock_watch(null, function(action, params) {
+    // We're not checking anything here at the moment.
+  });
+
+  identity.watch(mockedDoc);
+
+  // be ready for the UX identity-request notification
+  makeObserver("identity-request", function (aSubject, aTopic, aData) {
+    isnot(aSubject, null);
+
+    run_next_rp_test();
+  });
+
+  identity.request();
+}
+
+function test_logout() {
+  resetState();
+
+  let id = TEST_USER;
+  setup_test_identity(id, TEST_CERT, function() {
+    let store = get_idstore();
+
+    // set it up so we're supposed to be logged in to TEST_URL
+    store.setLoginState(TEST_URL, true, id);
+
+    let doLogout;
+    let mockedDoc = mock_watch(id, call_sequentially(
+      function(action, params) {
+        is(action, 'ready');
+        is(params, undefined);
+
+        SimpleTest.executeSoon(doLogout);
+      },
+      function(action, params) {
+        is(action, 'logout');
+        is(params, undefined);
+      },
+      function(action, params) {
+        is(action, 'ready');
+        is(params, undefined);
+
+        run_next_rp_test();
+      }));
+
+    doLogout = function() {
+      makeObserver("identity-login-state-changed", function (aSubject, aTopic, aData) {
+        isnot(aSubject.wrappedJSObject.rpId, null, "Check rpId is not null");
+        is(aData, null, "Check identity changed to nobody");
+
+        ok(!store.getLoginState(TEST_URL).isLoggedIn, "Check isLoggedIn is false");
+        is(store.getLoginState(TEST_URL).email, TEST_USER, "Check notification email");
+      });
+      identity.logout();
+    };
+
+    identity.watch(mockedDoc);
+  });
+}
+
+
+TESTS = TESTS.concat([test_watch_loggedin_ready, test_watch_loggedin_login, test_watch_loggedin_logout]);
+TESTS = TESTS.concat([test_watch_notloggedin_ready, test_watch_notloggedin_logout]);
+TESTS.push(test_request);
+TESTS.push(test_logout);
+
+</script>
+</pre>
+</body>
+</html>
