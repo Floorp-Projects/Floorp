@@ -529,7 +529,7 @@ public class AboutHomeContent extends ScrollView
 
                 String optTitle = entry.optString("title");
                 if (optTitle.length() == 0)
-                    title = url;
+                    title = StringUtils.prettyURL(url);
                 else
                     title = optTitle;
             } catch (JSONException e) {
@@ -549,7 +549,7 @@ public class AboutHomeContent extends ScrollView
                 public void run() {
                     View container = mInflater.inflate(R.layout.abouthome_last_tabs_row, mLastTabs.getItemsContainer(), false);
                     ((TextView) container.findViewById(R.id.last_tab_title)).setText(title);
-                    ((TextView) container.findViewById(R.id.last_tab_url)).setText(url);
+                    ((TextView) container.findViewById(R.id.last_tab_url)).setText(StringUtils.prettyURL(url));
                     if (favicon != null)
                         ((ImageView) container.findViewById(R.id.last_tab_favicon)).setImageDrawable(favicon);
 
@@ -616,7 +616,7 @@ public class AboutHomeContent extends ScrollView
                 break;
 
             final TextView row = (TextView) mInflater.inflate(R.layout.abouthome_remote_tab_row, mRemoteTabs.getItemsContainer(), false);
-            row.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
+            row.setText(TextUtils.isEmpty(tab.title) ? StringUtils.prettyURL(tab.url) : tab.title);
             row.setTag(tab.url);
             mRemoteTabs.addItem(row);
             row.setOnClickListener(mRemoteTabClickListener);
@@ -723,7 +723,7 @@ public class AboutHomeContent extends ScrollView
             // bar view - this is the equivalent of getDisplayTitle() in Tab.java
             if (title == null || title.length() == 0) {
                 int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
-                title = cursor.getString(urlIndex);
+                title = StringUtils.prettyURL(cursor.getString(urlIndex));
             }
 
             titleView.setText(title);
