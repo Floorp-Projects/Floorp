@@ -3873,8 +3873,7 @@ var ErrorPageEventHandler = {
 };
 
 var FindHelper = {
-  _find: null,
-  _findInProgress: false,
+  _fastFind: null,
   _targetTab: null,
   _initialViewport: null,
   _viewportChanged: false,
@@ -3917,38 +3916,35 @@ var FindHelper = {
   },
 
   doFind: function(aSearchString) {
-    if (!this._findInProgress) {
-      this._findInProgress = true;
+    if (!this._fastFind) {
       this._targetTab = BrowserApp.selectedTab;
-      this._find = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
-      this._find.init(this._targetTab.browser.docShell);
+      this._fastFind = this._targetTab.browser.fastFind;
       this._initialViewport = JSON.stringify(this._targetTab.getViewport());
       this._viewportChanged = false;
     }
 
-    let result = this._find.find(aSearchString, false);
+    let result = this._fastFind.find(aSearchString, false);
     this.handleResult(result);
   },
 
   findAgain: function(aString, aFindBackwards) {
     // This can happen if the user taps next/previous after re-opening the search bar
-    if (!this._findInProgress) {
+    if (!this._fastFind) {
       this.doFind(aString);
       return;
     }
 
-    let result = this._find.findAgain(aFindBackwards, false);
+    let result = this._fastFind.findAgain(aFindBackwards, false);
     this.handleResult(result);
   },
 
   findClosed: function() {
     // If there's no find in progress, there's nothing to clean up
-    if (!this._findInProgress)
+    if (!this._fastFind)
       return;
 
-    this._find.collapseSelection();
-    this._find = null;
-    this._findInProgress = false;
+    this._fastFind.collapseSelection();
+    this._fastFind = null;
     this._targetTab = null;
     this._initialViewport = null;
     this._viewportChanged = false;
