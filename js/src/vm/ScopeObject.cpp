@@ -257,26 +257,6 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
     return create(cx, fp->script(), fp->scopeChain(), callee);
 }
 
-JSBool
-CallObject::setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
-{
-    /* TODO: this can totally be a data property now. */
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-    obj->asCall().setFormal(i, *vp);
-    return true;
-}
-
-JSBool
-CallObject::setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
-{
-    /* TODO: this can totally be a data property now. */
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-    obj->asCall().setVar(i, *vp);
-    return true;
-}
-
 JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
@@ -1123,7 +1103,12 @@ class DebugScopeProxy : public BaseProxyHandler
             if (!script->ensureHasTypes(cx))
                 return false;
 
-            if (shape->setterOp() == CallObject::setVarOp) {
+            Bindings &bindings = script->bindings;
+            unsigned i = shape->slot() - CallObject::RESERVED_SLOTS;
+            bool isArg = i < bindings.numArgs();
+            bool isVar = !isArg && (i - bindings.numArgs()) < bindings.numVars();
+
+            if (isVar) {
                 unsigned i = shape->shortid();
                 if (script->varIsAliased(i))
                     return false;
@@ -1146,7 +1131,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return true;
             }
 
-            if (shape->setterOp() == CallObject::setArgOp) {
+            if (isArg) {
                 unsigned i = shape->shortid();
                 if (script->formalLivesInCallObject(i))
                     return false;

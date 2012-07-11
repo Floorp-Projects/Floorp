@@ -144,22 +144,16 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     uint16_t *indexp;
-    PropertyOp getter;
-    StrictPropertyOp setter;
     uint32_t slot = CallObject::RESERVED_SLOTS;
 
     if (kind == ARGUMENT) {
         JS_ASSERT(nvars == 0);
         indexp = &nargs;
-        getter = NULL;
-        setter = CallObject::setArgOp;
         slot += nargs;
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
         indexp = &nvars;
-        getter = NULL;
-        setter = CallObject::setVarOp;
         if (kind == CONSTANT)
             attrs |= JSPROP_READONLY;
         slot += nargs + nvars;
@@ -174,8 +168,6 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
     }
 
     StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ);
-    base.updateGetterSetter(attrs, getter, setter);
-
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;

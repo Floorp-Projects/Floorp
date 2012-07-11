@@ -202,10 +202,6 @@ class CallObject : public ScopeObject
     inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
-    /* Internal property ops for CallObject dynamic access via scope chain. */
-    static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
-    static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
-
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(StackFrame *fp);
 };
