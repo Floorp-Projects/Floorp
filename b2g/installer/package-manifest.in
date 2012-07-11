@@ -473,6 +473,9 @@
 @BINPATH@/components/SystemMessageManager.js
 @BINPATH@/components/SystemMessageManager.manifest
 
+@BINPATH@/components/AppProtocolHandler.js
+@BINPATH@/components/AppProtocolHandler.manifest
+
 ; Modules
 @BINPATH@/modules/*
 
