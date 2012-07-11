@@ -72,7 +72,7 @@ textbox.plain {
 }
 
 .textbox-search-icon:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .textbox-search-icon[searchbutton]:not([disabled]) {
