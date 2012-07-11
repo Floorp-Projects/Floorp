@@ -2737,6 +2737,20 @@ panel[dimmed="true"] {
   position: relative;
 }
 
+/* Lion Fullscreen window styling */
+@media (-moz-mac-lion-theme) {
+  #navigator-toolbox[inFullscreen][tabsontop="true"]:not(:-moz-lwtheme)::before {
+    height: 36px;
+  }
+  #main-window[inFullscreen]:-moz-lwtheme {
+    /* This additional padding matches the change in height in the pseudo-element
+     * above. The rules combined force the top 22px of the background image to
+     * be hidden, so there image doesn't jump around with the loss of the titlebar */
+    padding-top: 11px;
+    background-position: right -11px;
+  }
+}
+
 #devtools-sidebar-box {
   background-color: -moz-Field;
 }

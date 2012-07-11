@@ -27,8 +27,13 @@ var FullScreen = {
     // If we're leaving fullscreen, then we'll go through the exit code below to
     // make sure toolbars are made visible in the case of DOM fullscreen.
     if (enterFS && this.useLionFullScreen) {
-      if (document.mozFullScreen)
+      if (document.mozFullScreen) {
         this.showXULChrome("toolbar", false);
+      }
+      else {
+        gNavToolbox.setAttribute("inFullscreen", true);
+        document.documentElement.setAttribute("inFullscreen", true);
+      }
       return;
     }
 
