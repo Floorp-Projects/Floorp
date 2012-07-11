@@ -132,7 +132,7 @@ CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, Heap
 CallObject *
 CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee)
 {
-    RootedShape shape(cx, shape = script->bindings.callObjectShape(cx));
+    RootedShape shape(cx, script->bindings.callObjectShape(cx));
     if (!shape)
         return NULL;
 
