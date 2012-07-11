@@ -69,17 +69,11 @@ nsresult SetSubmitReports(bool aSubmitReport);
 
 // Out-of-process crash reporter API.
 
-// Initializes out-of-process crash reporting. This method must be called
-// before the platform-specifi notificationpipe APIs are called.
-void OOPInit();
-
-// Return true if a dump was found for |childPid|, and return the
+// Return true iff a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
-// is non-NULL. The sequence parameter will be filled with an ordinal
-// indicating which remote process crashed first.
+// is non-NULL.
 bool TakeMinidumpForChild(PRUint32 childPid,
-                          nsIFile** dump NS_OUTPARAM,
-                          PRUint32* aSequence = NULL);
+                          nsIFile** dump NS_OUTPARAM);
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
@@ -126,17 +120,9 @@ class InjectorCrashCallback
 public:
   InjectorCrashCallback() { }
 
-  /**
-   * Inform the callback of a crash. The client code should call
-   * TakeMinidumpForChild to remove it from the PID mapping table.
-   *
-   * The callback will not be fired if the client has already called
-   * TakeMinidumpForChild for this process ID.
-   */
-  virtual void OnCrash(DWORD processID) = 0;
+  virtual void OnCrash(DWORD processID, const nsAString& aDumpID) = 0;
 };
 
-// This method implies OOPInit
 void InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb);
 void UnregisterInjectorCallback(DWORD processID);
 #endif
