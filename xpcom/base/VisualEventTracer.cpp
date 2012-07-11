@@ -10,7 +10,8 @@
 #include "prprf.h"
 #include "prio.h"
 #include "prenv.h"
-#include "plstr.h"  
+#include "plstr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla { namespace eventtracer {
 
@@ -54,6 +55,22 @@ public:
   char * mText2;
 };
 
+char * DupCurrentThreadName()
+{
+  if (NS_IsMainThread())
+    return PL_strdup("Main Thread");
+
+  PRThread * currentThread = PR_GetCurrentThread();
+  const char * name = PR_GetThreadName(currentThread);
+  if (name)
+    return PL_strdup(name);
+
+  char buffer[128];
+  PR_snprintf(buffer, 127, "Nameless %p", currentThread);
+
+  return PL_strdup(buffer);
+}
+
 // An array of events, each thread keeps its own private instance
 class RecordBatch {
 public:
@@ -62,7 +79,7 @@ public:
     , mRecordsTail(mRecordsHead + kBatchSize)
     , mNextRecord(mRecordsHead)
     , mNextBatch(nsnull)
-    , mThreadNameCopy(PL_strdup(PR_GetThreadName(PR_GetCurrentThread())))
+    , mThreadNameCopy(DupCurrentThreadName())
   {
     MOZ_COUNT_CTOR(RecordBatch);
   }
