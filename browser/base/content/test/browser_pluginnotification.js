@@ -517,5 +517,103 @@ function test17() {
   var missingNotification = PopupNotifications.getNotification("missing-plugins", gTestBrowser);
   ok(!missingNotification, "Test 17, Should not have a missing plugin notification");
 
+  registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
+  prepareTest(test18a, gTestRoot + "plugin_test.html");
+}
+
+const Cr = Components.results;
+const Cm = Components.manager;
+const Cc = Components.classes;
+const gReg = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+const gRealBlocklistServiceCID = Cc["@mozilla.org/extensions/blocklist;1"];
+const gFakeBlocklistServiceCID = Components.ID("{614b68a0-3c53-4ec0-8146-28cc1e25f8a1}");
+var gFactory = null;
+
+function registerFakeBlocklistService(blockState) {
+
+  var BlocklistService = {
+    getPluginBlocklistState: function(plugin, appVersion, toolkitVersion) {
+      return blockState;
+    },
+
+    classID: gFakeBlocklistServiceCID,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService])
+  };
+
+  gFactory = {
+    createInstance: function(outer, iid) {
+      if (outer != null)
+        throw Cr.NS_ERROR_NO_AGGREGATION;
+      return BlocklistService.QueryInterface(iid);
+    }
+  };
+
+  gReg.registerFactory(gFakeBlocklistServiceCID,
+                       "Fake Blocklist Service",
+                       "@mozilla.org/extensions/blocklist;1",
+                       gFactory);
+}
+
+function unregisterFakeBlocklistService() {
+  if (gFactory != null ) {
+    gReg.unregisterFactory(gFakeBlocklistServiceCID, gFactory);
+    gFactory = null;
+    // This should restore the original blocklist service:
+    gReg.registerFactory(gRealBlocklistServiceCID,
+                         "Blocklist Service",
+                         "@mozilla.org/extensions/blocklist;1",
+                         null);
+  }
+}
+
+// Tests a vulnerable, updatable plugin
+function test18a() {
+  var clickToPlayNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(clickToPlayNotification, "Test 18a, Should have a click-to-play notification");
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 18a, Plugin should not be activated");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(overlay.style.visibility != "hidden", "Test 18a, Plugin overlay should exist, not be hidden");
+  var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+  ok(updateLink.style.visibility != "hidden", "Test 18a, Plugin should have an update link");
+
+  var tabOpenListener = new TabOpenListener(Services.urlFormatter.formatURLPref("plugins.update.url"), false, false);
+  tabOpenListener.handleEvent = function(event) {
+    if (event.type == "TabOpen") {
+      gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
+      this.tab = event.originalTarget;
+      ok(event.target.label == this.url, "Test 18a, Update link should open up the plugin check page");
+      gBrowser.removeTab(this.tab);
+      test18b();
+    }
+  };
+  EventUtils.synthesizeMouse(updateLink, 5, 5, {}, gTestBrowser.contentWindow);
+}
+
+function test18b() {
+  unregisterFakeBlocklistService();
+  registerFakeBlocklistService(Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
+  prepareTest(test18c, gTestRoot + "plugin_test.html");
+}
+
+// Tests a vulnerable plugin with no update
+function test18c() {
+  var clickToPlayNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(clickToPlayNotification, "Test 18c, Should have a click-to-play notification");
+  var doc = gTestBrowser.contentDocument;
+  var plugin = doc.getElementById("test");
+  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "Test 18c, Plugin should not be activated");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  ok(overlay.style.visibility != "hidden", "Test 18c, Plugin overlay should exist, not be hidden");
+  var updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+  ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
+
+  unregisterFakeBlocklistService();
+  var plugin = get_test_plugin();
+  plugin.clicktoplay = false;
+
   finishTest();
 }
