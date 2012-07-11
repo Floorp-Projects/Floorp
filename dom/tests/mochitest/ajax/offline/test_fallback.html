@@ -93,17 +93,24 @@ function onFallbackLoad(fallbackIdentification)
   ++gStep;
 }
 
+
+function finishTest()
+{
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
 function finalize()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub-non-existing.html", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/non-existing.html", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/non-existing.html", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace2/non-existing.html", false);
-
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  var entries = [
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub-non-existing.html", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/non-existing.html", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/non-existing.html", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace2/non-existing.html", false]
+  ];
+  OfflineTest.checkCacheEntries(entries, finishTest);
 }
 
 SimpleTest.waitForExplicitFinish();

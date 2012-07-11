@@ -11,6 +11,11 @@
 var gGotChecking = false;
 var gGotDownloading = false;
 
+function finishTest() {
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
 function handleError() {
   OfflineTest.ok(gGotChecking, "Expected checking event");
   OfflineTest.ok(gGotDownloading, "Expected downloading event");
@@ -18,11 +23,11 @@ function handleError() {
 
   // These items are listed in the manifest, but the error should have
   // prevented them from being committed to the cache.
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
-
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  var entries = [
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false]
+  ];
+  OfflineTest.checkCacheEntries(entries, finishTest);
 }
 
 if (OfflineTest.setup()) {
