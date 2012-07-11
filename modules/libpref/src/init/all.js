@@ -3621,3 +3621,5 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 // likely leak)?  This should be longer than it usually takes for an eligible
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
+
+pref("social.enabled", false);
