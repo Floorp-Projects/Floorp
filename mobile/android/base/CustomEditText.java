@@ -12,15 +12,19 @@ import android.view.View;
 import android.widget.EditText;
 
 public class CustomEditText extends EditText {
+    public CustomEditText(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mOnKeyPreImeListener = null;
+    }
+
     OnKeyPreImeListener mOnKeyPreImeListener;
 
     public interface OnKeyPreImeListener {
         public boolean onKeyPreIme(View v, int keyCode, KeyEvent event);
     }
 
-    public CustomEditText(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        mOnKeyPreImeListener = null;
+    public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
+        mOnKeyPreImeListener = listener;
     }
 
     @Override
@@ -31,7 +35,20 @@ public class CustomEditText extends EditText {
         return false;
     }
 
-    public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
-        mOnKeyPreImeListener = listener;
+    public void setOnWindowFocusChangeListener(OnWindowFocusChangeListener listener) {
+        mOnWindowFocusChangeListener = listener;
+    }
+
+    OnWindowFocusChangeListener mOnWindowFocusChangeListener;
+
+    public interface OnWindowFocusChangeListener {
+        public void onWindowFocusChanged(boolean hasFocus);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (mOnWindowFocusChangeListener != null)
+            mOnWindowFocusChangeListener.onWindowFocusChanged(hasFocus);
     }
 }
