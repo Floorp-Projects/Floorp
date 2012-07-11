@@ -519,6 +519,7 @@
                             autocheck="false"
                             hidden="true"
                             label="&devToolbarMenu.label;"
+                            accesskey="&devToolbarMenu.accesskey;"
                             key="key_devToolbar"
                             command="Tools:DevToolbar"/>
                   <menuitem id="webConsole"
