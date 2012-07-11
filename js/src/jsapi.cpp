@@ -4564,14 +4564,14 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id_, JSAccessMode mode,
 JS_PUBLIC_API(void)
 JS_HoldPrincipals(JSPrincipals *principals)
 {
-    JS_ATOMIC_INCREMENT(&principals->refcount);
+    ++principals->refcount;
 }
 
 JS_PUBLIC_API(void)
 JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals)
 {
-    int rc = JS_ATOMIC_DECREMENT(&principals->refcount);
-    if (rc == 0)
+    JS_AbortIfWrongThread(rt);
+    if (--principals->refcount == 0)
         rt->destroyPrincipals(principals);
 }
 
