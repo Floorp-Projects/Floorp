@@ -53,8 +53,11 @@ add_test(function test_queue_multiaddremove() {
   let items = [{test:"object"}, "teststring", 42];
 
   // Two random numbers: how many items to queue and how many to remove.
-  let num = Math.floor(Math.random() * 100 + 1);
-  let rem = Math.floor(Math.random() * num + 1);
+  // The next test relies on rem > 0.
+  let num = Math.floor(Math.random() * 100 + 20);
+  let rem = Math.floor(Math.random() * 15 + 5);
+  do_check_true(rem < num);
+  do_check_true(rem > 0);
 
   // First insert all the items we will remove later.
   for (let i = 0; i < rem; i++) {
