@@ -78,6 +78,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Attributes.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -408,9 +409,9 @@ IsSameHost(nsIURI *uri1, nsIURI *uri2)
   return host1.Equals(host2);
 }
 
-class nsPingListener : public nsIStreamListener
-                     , public nsIInterfaceRequestor
-                     , public nsIChannelEventSink
+class nsPingListener MOZ_FINAL : public nsIStreamListener
+                               , public nsIInterfaceRequestor
+                               , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -7995,7 +7996,7 @@ namespace
 
 // Callback used by CopyFavicon to inform the favicon service that one URI
 // (mNewURI) has the same favicon URI (OnComplete's aFaviconURI) as another.
-class nsCopyFaviconCallback : public nsIFaviconDataCallback
+class nsCopyFaviconCallback MOZ_FINAL : public nsIFaviconDataCallback
 {
 public:
     NS_DECL_ISUPPORTS
