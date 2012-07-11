@@ -262,6 +262,7 @@ void Sampler::Stop() {
   sActiveSampler = NULL;
 }
 
+#ifdef ANDROID
 static struct sigaction old_sigstart_signal_handler;
 const int SIGSTART = SIGUSR1;
 
@@ -281,4 +282,4 @@ void OS::RegisterStartHandler()
     LOG("Error installing signal");
   }
 }
-
+#endif
