@@ -66,6 +66,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   private final AccountManager mAccountManager;
   private final Context        mContext;
 
+  protected long syncStartTimestamp;
+
   public SyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
     mContext = context;
@@ -254,7 +256,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                             final String authority,
                             final ContentProviderClient provider,
                             final SyncResult syncResult) {
-
     Logger.resetLogging();
     Utils.reseedSharedRandom(); // Make sure we don't work with the same random seed for too long.
 
@@ -380,6 +381,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
         long next = System.currentTimeMillis() + interval;
         Log.i(LOG_TAG, "Setting minimum next sync time to " + next + " (" + interval + "ms from now).");
         extendEarliestNextSync(next);
+        Log.i(LOG_TAG, "Sync took " + Utils.formatDuration(syncStartTimestamp, System.currentTimeMillis()) + ".");
       } catch (InterruptedException e) {
         Log.w(LOG_TAG, "Waiting on sync monitor interrupted.", e);
       } finally {
@@ -433,6 +435,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                                         IOException, ParseException,
                                         NonObjectJSONException, CryptoException {
     Logger.trace(LOG_TAG, "Performing sync.");
+    syncStartTimestamp = System.currentTimeMillis();
 
     /**
      * Bug 769745: pickle Sync account parameters to JSON file. Un-pickle in
