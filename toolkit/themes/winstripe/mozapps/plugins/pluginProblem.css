@@ -38,7 +38,9 @@ html|a {
 :-moz-type-unsupported .icon[status="ready"] {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginDownload.png);
 }
-:-moz-handler-clicktoplay .icon {
+:-moz-handler-clicktoplay .icon,
+:-moz-handler-vulnerable-updatable .icon,
+:-moz-handler-vulnerable-no-update .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginClickToPlay.png);
 }
 :-moz-handler-disabled .icon {
@@ -64,8 +66,9 @@ html|a {
   text-shadow: rgba(0,0,0,0.8) 0 0 3.5px;
 }
 
-:-moz-handler-clicktoplay,
-.msgClickToPlay {
+:-moz-handler-clicktoplay .msgClickToPlay,
+:-moz-handler-vulnerable-updatable .msgClickToPlay,
+:-moz-handler-vulnerable-no-update .msgClickToPlay {
   cursor: pointer;
 }
 

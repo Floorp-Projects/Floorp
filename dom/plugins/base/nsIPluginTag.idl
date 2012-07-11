@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(88e03453-a773-47ba-9d84-14f672ac99e2)]
+[scriptable, uuid(a361a7e7-7f8d-4b68-91e9-30ae096460d4)]
 interface nsIPluginTag : nsISupports
 {
   readonly attribute AUTF8String description;
@@ -15,4 +15,5 @@ interface nsIPluginTag : nsISupports
   readonly attribute AUTF8String name;
            attribute boolean  disabled;
            attribute boolean  blocklisted;
+           attribute boolean  clicktoplay;
 };

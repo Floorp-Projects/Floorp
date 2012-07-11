@@ -342,8 +342,10 @@ nsPluginHost::nsPluginHost()
     Preferences::GetBool("plugin.override_internal_types", false);
 
   mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
+  mPluginsClickToPlay = Preferences::GetBool("plugins.click_to_play", false);
 
   Preferences::AddStrongObserver(this, "plugin.disable");
+  Preferences::AddStrongObserver(this, "plugins.click_to_play");
 
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
@@ -1294,6 +1296,36 @@ nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
 
   return NS_OK;
 }
+ 
+bool
+nsPluginHost::IsPluginClickToPlayForType(const char* aMimeType)
+{
+  nsPluginTag *plugin = FindPluginForType(aMimeType, true);
+  if (plugin && 
+      (plugin->HasFlag(NS_PLUGIN_FLAG_CLICKTOPLAY) || mPluginsClickToPlay)) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+nsresult
+nsPluginHost::GetBlocklistStateForType(const char *aMimeType, PRUint32 *aState) 
+{
+  nsPluginTag *plugin = FindPluginForType(aMimeType, true);
+  if (plugin) {
+    nsCOMPtr<nsIBlocklistService> blocklist = do_GetService("@mozilla.org/extensions/blocklist;1");
+    if (blocklist) {
+      // The EmptyString()s are so we use the currently running application
+      // and toolkit versions
+      return blocklist->GetPluginBlocklistState(plugin, EmptyString(),
+                                                EmptyString(), aState);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 // check comma delimitered extensions
 static int CompareExtensions(const char *aExtensionList, const char *aExtension)
@@ -2074,19 +2106,32 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
                                                 EmptyString(), &state);
 
         if (NS_SUCCEEDED(rv)) {
-          // If the blocklist says so then block the plugin. If the blocklist says
-          // it is risky and we have never seen this plugin before then disable it
-          if (state == nsIBlocklistService::STATE_BLOCKED)
-            pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
-          else if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore)
-            enabled = false;
-          else if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore)
-            warnOutdated = true;
+          // If the blocklist says so, block the plugin.
+          // If the blocklist says it is risky and we have never seen this
+          // plugin before, then disable it.
+          // If the blocklist says this is an outdated plugin, warn about
+          // outdated plugins.
+          // If the blocklist says the plugin is one of the click-to-play
+          // states, set the click-to-play flag.
+          if (state == nsIBlocklistService::STATE_BLOCKED) {
+             pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
+          }
+          if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
+             enabled = false;
+          }
+          if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore) {
+             warnOutdated = true;
+          }
+          if (state == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE ||
+              state == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
+            pluginTag->Mark(NS_PLUGIN_FLAG_CLICKTOPLAY);
+          }
         }
       }
 
-      if (!enabled)
+      if (!enabled) {
         pluginTag->UnMark(NS_PLUGIN_FLAG_ENABLED);
+      }
 
       // Plugin unloading is tag-based. If we created a new tag and loaded
       // the library in the process then we want to attempt to unload it here.
@@ -3302,6 +3347,7 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
   }
   if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
     mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
+    mPluginsClickToPlay = Preferences::GetBool("plugins.click_to_play", false);
     // Unload or load plugins as needed
     if (mPluginsDisabled) {
       UnloadPlugins();

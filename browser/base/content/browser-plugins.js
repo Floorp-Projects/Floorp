@@ -140,6 +140,12 @@ var gPluginHandler = {
         self.pluginUnavailable(plugin, event.type);
         break;
 
+      case "PluginVulnerableUpdatable":
+        let updateLink = doc.getAnonymousElementByAttribute(plugin, "class", "checkForUpdatesLink");
+        self.addLinkClickCallback(updateLink, "openPluginUpdatePage");
+        /* FALLTHRU */
+
+      case "PluginVulnerableNoUpdate":
       case "PluginClickToPlay":
         self._handleClickToPlayEvent(plugin);
         break;
@@ -151,9 +157,10 @@ var gPluginHandler = {
     }
 
     // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
-    if (event.type != "PluginCrashed" && event.type != "PluginClickToPlay") {
+    if (event.type != "PluginCrashed") {
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-      if (self.isTooSmall(plugin, overlay))
+      /* overlay might be null, so only operate on it if it exists */
+      if (overlay != null && self.isTooSmall(plugin, overlay))
           overlay.style.visibility = "hidden";
     }
   },
@@ -224,6 +231,12 @@ var gPluginHandler = {
   managePlugins: function (aEvent) {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
+ 
+  // Callback for user clicking on the link in a click-to-play plugin
+  // (where the plugin has an update)
+  openPluginUpdatePage: function (aEvent) {
+    openURL(Services.urlFormatter.formatURLPref("plugins.update.url"));
+  },
 
 #ifdef MOZ_CRASHREPORTER
   // Callback for user clicking "submit a report" link
@@ -258,15 +271,18 @@ var gPluginHandler = {
       objLoadingContent.playPlugin();
       return;
     } else if (pluginsPermission == Ci.nsIPermissionManager.DENY_ACTION) {
-      overlay.style.visibility = "hidden";
+      if (overlay)
+        overlay.style.visibility = "hidden";
       return;
     }
 
-    let overlay = doc.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
     // The overlay is null if the XBL binding is not attached (element is display:none).
     if (overlay) {
       overlay.addEventListener("click", function(aEvent) {
-        if (aEvent.button == 0 && aEvent.isTrusted)
+        // Have to check that the target is a XULElement and not the link
+        // to update the plugin
+        if (aEvent.target instanceof XULElement && 
+            aEvent.button == 0 && aEvent.isTrusted)
           gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
       }, true);
     }
