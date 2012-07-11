@@ -90,6 +90,11 @@ public class GfxInfoThread extends Thread {
 
         // get the first config
         int numConfigs = returnedNumberOfConfigs[0];
+        if (numConfigs == 0) {
+            error("eglChooseConfig returned zero configs");
+            return;
+        }
+
         EGLConfig[] returnedConfigs = new EGLConfig[numConfigs];
         if (!egl.eglChooseConfig(eglDisplay,
                                  configAttribs,
