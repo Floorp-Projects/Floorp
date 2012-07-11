@@ -125,11 +125,7 @@ JSRuntime::sizeOfExplicitNonHeap()
 void
 JSRuntime::triggerOperationCallback()
 {
-    /*
-     * Use JS_ATOMIC_SET in the hope that it ensures the write will become
-     * immediately visible to other processors polling the flag.
-     */
-    JS_ATOMIC_SET(&interrupt, 1);
+    interrupt = 1;
 }
 
 void
@@ -438,8 +434,9 @@ js_ReportOutOfMemory(JSContext *cx)
     }
 
     if (onError) {
-        AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
+        ++cx->runtime->inOOMReport;
         onError(cx, msg, &report);
+        --cx->runtime->inOOMReport;
     }
 }
 
@@ -911,7 +908,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * thread is racing us here we will accumulate another callback request
      * which will be serviced at the next opportunity.
      */
-    JS_ATOMIC_SET(&rt->interrupt, 0);
+    rt->interrupt = 0;
 
     if (rt->gcIsNeeded)
         GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
