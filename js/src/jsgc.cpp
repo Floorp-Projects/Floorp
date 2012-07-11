@@ -3575,11 +3575,29 @@ AutoGCSession::~AutoGCSession()
     runtime->resetGCMallocBytes();
 }
 
+class AutoCopyFreeListToArenas {
+    JSRuntime *rt;
+
+  public:
+    AutoCopyFreeListToArenas(JSRuntime *rt)
+      : rt(rt) {
+        for (CompartmentsIter c(rt); !c.done(); c.next())
+            c->arenas.copyFreeListsToArenas();
+    }
+
+    ~AutoCopyFreeListToArenas() {
+        for (CompartmentsIter c(rt); !c.done(); c.next())
+            c->arenas.clearFreeListsInArenas();
+    }
+};
+
 static void
 ResetIncrementalGC(JSRuntime *rt, const char *reason)
 {
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         return;
+
+    AutoCopyFreeListToArenas copy(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
         c->setNeedsBarrier(false);
@@ -3634,22 +3652,6 @@ AutoGCSlice::~AutoGCSlice()
         }
     }
 }
-
-class AutoCopyFreeListToArenas {
-    JSRuntime *rt;
-
-  public:
-    AutoCopyFreeListToArenas(JSRuntime *rt)
-      : rt(rt) {
-        for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.copyFreeListsToArenas();
-    }
-
-    ~AutoCopyFreeListToArenas() {
-        for (CompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.clearFreeListsInArenas();
-    }
-};
 
 static void
 IncrementalMarkSlice(JSRuntime *rt, int64_t budget, gcreason::Reason reason, bool *shouldSweep)
@@ -3769,7 +3771,6 @@ IsIncrementalGCSafe(JSRuntime *rt)
 static void
 BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
 {
-    AutoCopyFreeListToArenas copy(rt);
     IncrementalSafety safe = IsIncrementalGCSafe(rt);
     if (!safe) {
         ResetIncrementalGC(rt, safe.reason());
