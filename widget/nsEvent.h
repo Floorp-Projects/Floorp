@@ -95,10 +95,10 @@ enum Modifier {
   MODIFIER_FN         = 0x0010,
   MODIFIER_META       = 0x0020,
   MODIFIER_NUMLOCK    = 0x0040,
-  MODIFIER_SCROLL     = 0x0080,
+  MODIFIER_SCROLLLOCK = 0x0080,
   MODIFIER_SHIFT      = 0x0100,
   MODIFIER_SYMBOLLOCK = 0x0200,
-  MODIFIER_WIN        = 0x0400
+  MODIFIER_OS         = 0x0400
 };
 
 typedef PRUint16 Modifiers;
@@ -113,9 +113,9 @@ typedef PRUint16 Modifiers;
 #define NS_DOM_KEYNAME_FN         "Fn"
 #define NS_DOM_KEYNAME_META       "Meta"
 #define NS_DOM_KEYNAME_NUMLOCK    "NumLock"
-#define NS_DOM_KEYNAME_SCROLL     "Scroll"
+#define NS_DOM_KEYNAME_SCROLLLOCK "ScrollLock"
 #define NS_DOM_KEYNAME_SHIFT      "Shift"
 #define NS_DOM_KEYNAME_SYMBOLLOCK "SymbolLock"
-#define NS_DOM_KEYNAME_WIN        "Win"
+#define NS_DOM_KEYNAME_OS         "OS"
 
 #endif // nsEvent_h__

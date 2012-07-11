@@ -5,8 +5,11 @@
 #include "fcntl.h"
 #include "errno.h"
 
+#include "prsystem.h"
+
 #if defined(XP_UNIX)
 #include "unistd.h"
+#include "dirent.h"
 #endif // defined(XP_UNIX)
 
 #if defined(XP_MACOSX)
@@ -23,19 +26,79 @@
 
 // Used to provide information on the OS
 
+#include "nsThreadUtils.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIXULRuntime.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
 #include "OSFileConstants.h"
+#include "nsIOSFileConstantsService.h"
 
 /**
  * This module defines the basic libc constants (error numbers, open modes,
  * etc.) used by OS.File and possibly other OS-bound JavaScript libraries.
  */
 
+
 namespace mozilla {
+
+// Use an anonymous namespace to hide the symbols and avoid any collision
+// with, for instance, |extern bool gInitialized;|
+namespace {
+/**
+ * |true| if this module has been initialized, |false| otherwise
+ */
+bool gInitialized = false;
+
+/**
+ * The name of the directory holding all the libraries (libxpcom, libnss, etc.)
+ */
+nsString* gLibDirectory;
+}
+
+/**
+ * Perform the part of initialization that can only be
+ * executed on the main thread.
+ */
+nsresult InitOSFileConstants()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (gInitialized) {
+    return NS_OK;
+  }
+
+  gInitialized = true;
+
+  // Initialize gLibDirectory
+  nsCOMPtr<nsIFile> xpcomLib;
+  nsresult rv = NS_GetSpecialDirectory("XpcomLib", getter_AddRefs(xpcomLib));
+  if (NS_FAILED(rv) || !xpcomLib) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> libDir;
+  rv = xpcomLib->GetParent(getter_AddRefs(libDir));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  gLibDirectory = new nsString();
+  return libDir->GetPath(*gLibDirectory);
+}
+
+void CleanupOSFileConstants()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gInitialized) {
+    return;
+  }
+
+  gInitialized = false;
+  delete gLibDirectory;
+}
+
 
 /**
  * Define a simple read-only property holding an integer.
@@ -202,6 +265,18 @@ static dom::ConstantSpec gLibcProperties[] =
 #endif // defined(EWOULDBLOCK)
   INT_CONSTANT(EXDEV),
 
+#if defined(DT_UNKNOWN)
+  // Constants for |readdir|
+  INT_CONSTANT(DT_UNKNOWN),
+  INT_CONSTANT(DT_FIFO),
+  INT_CONSTANT(DT_CHR),
+  INT_CONSTANT(DT_DIR),
+  INT_CONSTANT(DT_BLK),
+  INT_CONSTANT(DT_REG),
+  INT_CONSTANT(DT_LNK),
+  INT_CONSTANT(DT_SOCK),
+#endif // defined(DT_UNKNOWN)
+
   // Constants used to define data structures
   //
   // Many data structures have different fields/sizes/etc. on
@@ -212,8 +287,39 @@ static dom::ConstantSpec gLibcProperties[] =
 
 #if defined(XP_UNIX)
   // The size of |mode_t|.
-  {"OSFILE_SIZEOF_MODE_T", INT_TO_JSVAL(sizeof (mode_t)) },
+  { "OSFILE_SIZEOF_MODE_T", INT_TO_JSVAL(sizeof (mode_t)) },
+
+  // Defining |dirent|.
+  // Size
+  { "OSFILE_SIZEOF_DIRENT", INT_TO_JSVAL(sizeof (dirent)) },
+
+  // Offset of field |d_name|.
+  { "OSFILE_OFFSETOF_DIRENT_D_NAME", INT_TO_JSVAL(offsetof (struct dirent, d_name)) },
+  // An upper bound to the length of field |d_name| of struct |dirent|.
+  // (may not be exact, depending on padding).
+  { "OSFILE_SIZEOF_DIRENT_D_NAME", INT_TO_JSVAL(sizeof (struct dirent) - offsetof (struct dirent, d_name)) },
+
+#if defined(DT_UNKNOWN)
+  // Position of field |d_type| in |dirent|
+  // Not strictly posix, but seems defined on all platforms
+  // except mingw32.
+  { "OSFILE_OFFSETOF_DIRENT_D_TYPE", INT_TO_JSVAL(offsetof (struct dirent, d_type)) },
+#endif // defined(DT_UNKNOWN)
+
 #endif // defined(XP_UNIX)
+
+
+  // System configuration
+
+  // Under MacOSX, to avoid using deprecated functions that do not
+  // match the constants we define in this object (including
+  // |sizeof|/|offsetof| stuff, but not only), for a number of
+  // functions, we need to adapt the name of the symbols we are using,
+  // whenever macro _DARWIN_FEATURE_64_BIT_INODE is set. We export
+  // this value to be able to do so from JavaScript.
+#if defined(_DARWIN_FEATURE_64_BIT_INODE)
+  { "_DARWIN_FEATURE_64_BIT_INODE", INT_TO_JSVAL(1) },
+#endif // defind(_DARWIN_FEATURE_64_BIT_INODE)
 
   PROP_END
 };
@@ -233,6 +339,9 @@ static dom::ConstantSpec gWinProperties[] =
   // FormatMessage flags
   INT_CONSTANT(FORMAT_MESSAGE_FROM_SYSTEM),
   INT_CONSTANT(FORMAT_MESSAGE_IGNORE_INSERTS),
+
+  // The max length of paths
+  INT_CONSTANT(MAX_PATH),
 
   // CreateFile desired access
   INT_CONSTANT(GENERIC_ALL),
@@ -257,6 +366,7 @@ static dom::ConstantSpec gWinProperties[] =
   INT_CONSTANT(FILE_ATTRIBUTE_DIRECTORY),
   INT_CONSTANT(FILE_ATTRIBUTE_NORMAL),
   INT_CONSTANT(FILE_ATTRIBUTE_READONLY),
+  INT_CONSTANT(FILE_ATTRIBUTE_REPARSE_POINT),
   INT_CONSTANT(FILE_ATTRIBUTE_TEMPORARY),
 
   // CreateFile error constant
@@ -274,14 +384,19 @@ static dom::ConstantSpec gWinProperties[] =
   // SetFilePointer error constant
   INT_CONSTANT(INVALID_SET_FILE_POINTER),
 
+  // File attributes
+  INT_CONSTANT(FILE_ATTRIBUTE_DIRECTORY),
+
+
   // MoveFile flags
   INT_CONSTANT(MOVEFILE_COPY_ALLOWED),
   INT_CONSTANT(MOVEFILE_REPLACE_EXISTING),
 
   // Errors
+  INT_CONSTANT(ERROR_ACCESS_DENIED),
   INT_CONSTANT(ERROR_FILE_EXISTS),
   INT_CONSTANT(ERROR_FILE_NOT_FOUND),
-  INT_CONSTANT(ERROR_ACCESS_DENIED),
+  INT_CONSTANT(ERROR_NO_MORE_FILES),
 
   PROP_END
 };
@@ -321,6 +436,8 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JSObject *aObject,
  */
 bool DefineOSFileConstants(JSContext *cx, JSObject *global)
 {
+  MOZ_ASSERT(gInitialized);
+
   JSObject *objOS;
   if (!(objOS = GetOrCreateObjectProperty(cx, global, "OS"))) {
     return false;
@@ -329,6 +446,9 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
   if (!(objConstants = GetOrCreateObjectProperty(cx, objOS, "Constants"))) {
     return false;
   }
+
+  // Build OS.Constants.libc
+
   JSObject *objLibc;
   if (!(objLibc = GetOrCreateObjectProperty(cx, objConstants, "libc"))) {
     return false;
@@ -336,7 +456,10 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
   if (!dom::DefineConstants(cx, objLibc, gLibcProperties)) {
     return false;
   }
+
 #if defined(XP_WIN)
+  // Build OS.Constants.Win
+
   JSObject *objWin;
   if (!(objWin = GetOrCreateObjectProperty(cx, objConstants, "Win"))) {
     return false;
@@ -345,6 +468,9 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     return false;
   }
 #endif // defined(XP_WIN)
+
+  // Build OS.Constants.Sys
+
   JSObject *objSys;
   if (!(objSys = GetOrCreateObjectProperty(cx, objConstants, "Sys"))) {
     return false;
@@ -353,7 +479,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
   nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (runtime) {
     nsCAutoString os;
-    nsresult rv = runtime->GetOS(os);
+    DebugOnly<nsresult> rv = runtime->GetOS(os);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     JSString* strVersion = JS_NewStringCopyZ(cx, os.get());
@@ -367,8 +493,71 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
   }
 
+  // Build OS.Constants.Path
+
+  JSObject *objPath;
+  if (!(objPath = GetOrCreateObjectProperty(cx, objConstants, "Path"))) {
+    return false;
+  }
+
+
+  // Locate libxul
+  {
+    nsAutoString xulPath(*gLibDirectory);
+
+    xulPath.Append(PR_GetDirectorySeparator());
+
+#if defined(XP_MACOSX)
+    // Under MacOS X, for some reason, libxul is called simply "XUL"
+    xulPath.Append(NS_LITERAL_STRING("XUL"));
+#else
+    // On other platforms, libxul is a library "xul" with regular
+    // library prefix/suffix
+    xulPath.Append(NS_LITERAL_STRING(DLL_PREFIX));
+    xulPath.Append(NS_LITERAL_STRING("xul"));
+    xulPath.Append(NS_LITERAL_STRING(DLL_SUFFIX));
+#endif // defined(XP_MACOSX)
+
+    JSString* strPathToLibXUL = JS_NewUCStringCopyZ(cx, xulPath.get());
+    jsval valXul = STRING_TO_JSVAL(strPathToLibXUL);
+    if (!JS_SetProperty(cx, objPath, "libxul", &valXul)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
-} // namespace mozilla
+NS_IMPL_ISUPPORTS1(OSFileConstantsService, nsIOSFileConstantsService)
 
+OSFileConstantsService::OSFileConstantsService()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+OSFileConstantsService::~OSFileConstantsService()
+{
+  mozilla::CleanupOSFileConstants();
+}
+
+
+NS_IMETHODIMP
+OSFileConstantsService::Init(JSContext *aCx)
+{
+  nsresult rv = mozilla::InitOSFileConstants();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  JSObject *global = JS_GetGlobalForScopeChain(aCx);
+  if (!global) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (!mozilla::DefineOSFileConstants(aCx, global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+} // namespace mozilla

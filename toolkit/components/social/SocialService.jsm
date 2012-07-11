@@ -5,34 +5,49 @@
 const EXPORTED_SYMBOLS = ["SocialService"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/SocialProvider.jsm");
 
 const MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
 
-const SocialService = {
+let SocialServiceInternal = {};
 
-  _init: function _init() {
-    let origins = MANIFEST_PREFS.getChildList("", {});
-    this._providers = origins.reduce(function (memo, origin) {
-      try {
-        var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(origin));
-      }
-      catch (err) {}
+XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
+  let providers = {};
+  let prefs = MANIFEST_PREFS.getChildList("", {});
+  prefs.forEach(function (pref) {
+    try {
+      var manifest = JSON.parse(MANIFEST_PREFS.getCharPref(pref));
       if (manifest && typeof(manifest) == "object") {
-        memo[manifest.origin] = Object.create(manifest);
+        let provider = new SocialProvider(manifest);
+        providers[provider.origin] = provider;
       }
-      return memo;
-    }, {}, this);
-  },
+    } catch (err) {
+      Cu.reportError("SocialService: failed to load provider: " + pref +
+                     ", exception: " + err);
+    }
+  }, this);
 
+  return providers;
+});
+
+const SocialService = {
   getProvider: function getProvider(origin, onDone) {
     schedule((function () {
-      onDone(this._providers[origin] || null);
+      onDone(SocialServiceInternal.providers[origin] || null);
     }).bind(this));
   },
-};
 
-SocialService._init();
+  // Returns an array of installed provider origins.
+  getProviderList: function getProviderList(onDone) {
+    let providers = [p for each (p in SocialServiceInternal.providers)];
+    schedule((function () {
+      onDone(providers);
+    }).bind(this));
+  }
+};
 
 function schedule(callback) {
   Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);

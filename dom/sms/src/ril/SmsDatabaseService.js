@@ -142,7 +142,7 @@ SmsDatabaseService.prototype = {
       callback(null, db);
     }
 
-    let request = GLOBAL_SCOPE.mozIndexedDB.open(DB_NAME, DB_VERSION);
+    let request = GLOBAL_SCOPE.indexedDB.open(DB_NAME, DB_VERSION);
     request.onsuccess = function (event) {
       if (DEBUG) debug("Opened database:", DB_NAME, DB_VERSION);
       gotDB(event.target.result);
@@ -255,20 +255,22 @@ SmsDatabaseService.prototype = {
    * return Array of keys containing the final result of createMessageList.
    */
   keyIntersection: function keyIntersection(keys, filter) {
+    // Always use keys[FILTER_TIMESTAMP] as base result set to be filtered.
+    // This ensures the result set is always sorted by timestamp.
     let result = keys[FILTER_TIMESTAMP];
     if (keys[FILTER_NUMBERS].length || filter.numbers) {
-      result = keys[FILTER_NUMBERS].filter(function(i) {
-        return result.indexOf(i) != -1;
+      result = result.filter(function(i) {
+        return keys[FILTER_NUMBERS].indexOf(i) != -1;
       });
     }
     if (keys[FILTER_DELIVERY].length || filter.delivery) {
-      result = keys[FILTER_DELIVERY].filter(function(i) {
-        return result.indexOf(i) != -1;
+      result = result.filter(function(i) {
+        return keys[FILTER_DELIVERY].indexOf(i) != -1;
       });
     }
     if (keys[FILTER_READ].length || filter.read) {
-      result = keys[FILTER_READ].filter(function(i) {
-        return result.indexOf(i) != -1;
+      result = result.filter(function(i) {
+        return keys[FILTER_READ].indexOf(i) != -1;
       });
     }
     return result;
@@ -379,7 +381,7 @@ SmsDatabaseService.prototype = {
           requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
         return;
       }
-      let request = store.getAll(messageId);
+      let request = store.mozGetAll(messageId);
 
       txn.oncomplete = function oncomplete() {
         if (DEBUG) debug("Transaction " + txn + " completed.");

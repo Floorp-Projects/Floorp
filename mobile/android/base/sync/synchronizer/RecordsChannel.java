@@ -148,7 +148,7 @@ public class RecordsChannel implements
    * @throws InvalidSessionTransitionException 
    */
   public void beginAndFlow() throws InvalidSessionTransitionException {
-    Logger.info(LOG_TAG, "Beginning source.");
+    Logger.trace(LOG_TAG, "Beginning source.");
     source.begin(this);
   }
 
@@ -187,8 +187,8 @@ public class RecordsChannel implements
 
   @Override
   public void onFetchCompleted(final long fetchEnd) {
-    Logger.info(LOG_TAG, "onFetchCompleted. Stopping consumer once stores are done.");
-    Logger.info(LOG_TAG, "Fetch timestamp is " + fetchEnd);
+    Logger.trace(LOG_TAG, "onFetchCompleted. Stopping consumer once stores are done.");
+    Logger.trace(LOG_TAG, "Fetch timestamp is " + fetchEnd);
     this.fetchEnd = fetchEnd;
     this.consumer.queueFilled();
   }
@@ -220,8 +220,8 @@ public class RecordsChannel implements
 
   @Override
   public void onStoreCompleted(long storeEnd) {
-    Logger.info(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
-                         "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
+    Logger.trace(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
+                          "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
     // TODO: synchronize on consumer callback?
     delegate.onFlowCompleted(this, fetchEnd, storeEnd);
   }
@@ -234,7 +234,7 @@ public class RecordsChannel implements
   @Override
   public void onBeginSucceeded(RepositorySession session) {
     if (session == source) {
-      Logger.info(LOG_TAG, "Source session began. Beginning sink session.");
+      Logger.trace(LOG_TAG, "Source session began. Beginning sink session.");
       try {
         sink.begin(this);
       } catch (InvalidSessionTransitionException e) {
@@ -243,7 +243,7 @@ public class RecordsChannel implements
       }
     }
     if (session == sink) {
-      Logger.info(LOG_TAG, "Sink session began. Beginning flow.");
+      Logger.trace(LOG_TAG, "Sink session began. Beginning flow.");
       this.flow();
       return;
     }

@@ -9,9 +9,9 @@ function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
-  ok(mozIndexedDB.deleteDatabase, "deleteDatabase function should exist!");
+  ok(indexedDB.deleteDatabase, "deleteDatabase function should exist!");
 
-  let request = mozIndexedDB.open(name, 10);
+  let request = indexedDB.open(name, 10);
   request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -35,7 +35,7 @@ function testSteps()
   ok(event.target.result instanceof IDBDatabase, "Result should be a database");
   is(db.objectStoreNames.length, 1, "Expect an objectStore here");
 
-  let request = mozIndexedDB.open(name, 10);
+  let request = indexedDB.open(name, 10);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
@@ -66,7 +66,7 @@ function testSteps()
   db.onversionchange = closeDBs;
   db2.onversionchange = closeDBs;
 
-  let request = mozIndexedDB.deleteDatabase(name);
+  let request = indexedDB.deleteDatabase(name);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
@@ -78,7 +78,7 @@ function testSteps()
   is(event.target, request, "event has right target");
   ok(event.target.result === undefined, "event should have no result");
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
@@ -87,14 +87,14 @@ function testSteps()
   is(event.target.result.objectStoreNames.length, 0, "DB should have no object stores");
 
 
-  let request = mozIndexedDB.deleteDatabase("thisDatabaseHadBetterNotExist");
+  let request = indexedDB.deleteDatabase("thisDatabaseHadBetterNotExist");
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
   event = yield;
   ok(true, "deleteDatabase on a non-existent database succeeded");
 
-  let request = mozIndexedDB.open("thisDatabaseHadBetterNotExist");
+  let request = indexedDB.open("thisDatabaseHadBetterNotExist");
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 

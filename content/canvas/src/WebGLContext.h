@@ -11,7 +11,6 @@
 
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
-#include "nsRefPtrHashtable.h"
 #include "nsHashKeys.h"
 
 #include "nsIDocShell.h"
@@ -19,18 +18,14 @@
 #include "nsIDOMWebGLRenderingContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsHTMLCanvasElement.h"
-#include "nsWeakReference.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIMemoryReporter.h"
 #include "nsIJSNativeInitializer.h"
-#include "nsContentUtils.h"
 #include "nsWrapperCache.h"
 #include "nsIObserver.h"
 
 #include "GLContextProvider.h"
 #include "Layers.h"
-
-#include "nsDataHashtable.h"
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
@@ -65,7 +60,6 @@
 #define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
 #define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
 
-class nsIDocShell;
 class nsIPropertyBag;
 
 namespace mozilla {
@@ -2524,6 +2518,12 @@ public:
     
     int64_t MemoryUsage() const {
         int64_t pixels = int64_t(Width()) * int64_t(Height());
+
+        // If there is no defined format, we're not taking up any memory
+        if (!mInternalFormatForGL) {
+            return 0;
+        }
+
         switch (mInternalFormatForGL) {
             case LOCAL_GL_STENCIL_INDEX8:
                 return pixels;

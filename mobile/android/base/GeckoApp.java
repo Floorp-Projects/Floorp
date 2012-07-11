@@ -6,19 +6,12 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.CairoImage;
-import org.mozilla.gecko.gfx.BufferedCairoImage;
-import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
-import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
-import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.SurfaceTextureLayer;
-import org.mozilla.gecko.gfx.ViewportMetrics;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 
 import java.io.*;
 import java.util.*;
@@ -27,7 +20,6 @@ import java.util.regex.Matcher;
 import java.util.zip.*;
 import java.net.URL;
 import java.nio.*;
-import java.nio.channels.FileChannel;
 import java.util.concurrent.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -40,7 +32,6 @@ import android.text.*;
 import android.text.format.Time;
 import android.view.*;
 import android.view.inputmethod.*;
-import android.view.ViewGroup.LayoutParams;
 import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
@@ -94,7 +85,7 @@ abstract public class GeckoApp
     public static boolean mDOMFullScreen = false;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
-    private static GeckoThread sGeckoThread = null;
+    private static GeckoThread sGeckoThread;
     public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
@@ -165,31 +156,29 @@ abstract public class GeckoApp
     void focusChrome() { }
 
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        // When a tab is closed, it is always unselected first.
+        // When a tab is unselected, another tab is always selected first.
         switch(msg) {
-            case LOCATION_CHANGE:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    hidePlugins(tab);
-                    updatePopups(tab);
-                    invalidateOptionsMenu();
-                }
+            case UNSELECTED:
+                hidePlugins(tab);
                 break;
+
+            case LOCATION_CHANGE:
+                // We only care about location change for the selected tab.
+                if (!Tabs.getInstance().isSelectedTab(tab))
+                    break;
+                // Fall through...
+            case SELECTED:
+                updatePopups(tab);
+                invalidateOptionsMenu();
+                break;
+
             case LOAD_ERROR:
             case START:
             case STOP:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
+                // The options menu only applies to the selected tab.
+                if (Tabs.getInstance().isSelectedTab(tab))
                     invalidateOptionsMenu();
-                }
-                break;
-            case UNSELECTED:
-            case CLOSED:
-                invalidateOptionsMenu();
-                updatePopups(tab);
-                hidePlugins(tab);
-                break;
-            case ADDED:
-            case SELECTED:
-                invalidateOptionsMenu();
-                updatePopups(tab);
                 break;
         }
     }
@@ -804,7 +793,7 @@ abstract public class GeckoApp
     }
 
     private boolean shouldUpdateThumbnail(Tab tab) {
-        return (Tabs.getInstance().isSelectedTab(tab) || mTabsPanel.isShown());
+        return (Tabs.getInstance().isSelectedTab(tab) || areTabsShown());
     }
 
     void updatePopups(final Tab tab) {
@@ -822,14 +811,21 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
+        // Only remove doorhangers if the popup is hidden or if we're navigating to a new URL
+        if (!mDoorHangerPopup.isShowing() || !uri.equals(tab.getURL()))
+            tab.removeTransientDoorHangers();
+
         tab.updateURL(uri);
         tab.setDocumentURI(documentURI);
+
+        // We can get a location change event for the same document with an anchor tag
+        if (sameDocument)
+            return;
 
         tab.setContentType(contentType);
         tab.clearFavicon();
         tab.updateIdentityData(null);
         tab.setReaderEnabled(false);
-        tab.removeTransientDoorHangers();
         tab.setAllowZoom(true);
         tab.setDefaultZoom(0);
         tab.setMinZoom(0);
@@ -875,7 +871,10 @@ abstract public class GeckoApp
 
     void handlePageShow(final int tabId) { }
 
-    void handleClearHistory() { }
+    void handleClearHistory() {
+        BrowserDB.clearHistory(getContentResolver());
+        mFavicons.clearFavicons();
+    }
 
     public StartupMode getStartupMode() {
         // This function might touch the disk and should not
@@ -1249,6 +1248,8 @@ abstract public class GeckoApp
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            } else if (event.equals("Sanitize:ClearHistory")) {
+                handleClearHistory();
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1653,16 +1654,6 @@ abstract public class GeckoApp
     public void requestRender() {
         mLayerController.getView().requestRender();
     }
-
-    public void hidePlugins() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-
-        if (tab == null)
-            return;
-
-        hidePlugins(tab);
-    }
     
     public void hidePlugins(Tab tab) {
         for (Layer layer : tab.getPluginLayers()) {
@@ -1784,11 +1775,31 @@ abstract public class GeckoApp
         Intent intent = getIntent();
         String action = intent.getAction();
         String args = intent.getStringExtra("args");
-        if (args != null && args.contains("-profile")) {
-            Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
-            Matcher m = p.matcher(args);
-            if (m.find()) {
-                mProfile = GeckoProfile.get(this, m.group(1));
+
+        String profileName = null;
+        String profilePath = null;
+        if (args != null) {
+            if (args.contains("-P")) {
+                Pattern p = Pattern.compile("(?:-P\\s*)(\\w*)(\\s*)");
+                Matcher m = p.matcher(args);
+                if (m.find()) {
+                    profileName = m.group(1);
+                }
+            }
+            if (args.contains("-profile")) {
+                Pattern p = Pattern.compile("(?:-profile\\s*)(\\S*)(\\s*)");
+                Matcher m = p.matcher(args);
+                if (m.find()) {
+                    profilePath =  m.group(1);
+                }
+                if (profileName == null) {
+                    profileName = getDefaultProfileName();
+                    if (profileName == null)
+                        profileName = "default";
+                }
+            }
+            if (profileName != null || profilePath != null) {
+                mProfile = GeckoProfile.get(this, profileName, profilePath);
             }
         }
 
@@ -1927,6 +1938,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2152,7 +2164,7 @@ abstract public class GeckoApp
             return uri;
 
         final String action = intent.getAction();
-        if (action.startsWith(ACTION_WEBAPP_PREFIX) || ACTION_BOOKMARK.equals(action)) {
+        if ((action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) || ACTION_BOOKMARK.equals(action)) {
             uri = intent.getStringExtra("args");
             if (uri != null && uri.startsWith("--url=")) {
                 uri.replace("--url=", "");
@@ -2271,6 +2283,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();
@@ -3196,6 +3209,28 @@ abstract public class GeckoApp
             }
         }
         return false;
+    }
+
+    public static void assertOnUiThread() {
+        Thread uiThread = mAppContext.getMainLooper().getThread();
+        assertOnThread(uiThread);
+    }
+
+    public static void assertOnGeckoThread() {
+        assertOnThread(sGeckoThread);
+    }
+
+    private static void assertOnThread(Thread expectedThread) {
+        Thread currentThread = Thread.currentThread();
+        long currentThreadId = currentThread.getId();
+        long expectedThreadId = expectedThread.getId();
+
+        if (currentThreadId != expectedThreadId) {
+            throw new IllegalThreadStateException("Expected thread " + expectedThreadId + " (\""
+                                                  + expectedThread.getName()
+                                                  + "\"), but running on thread " + currentThreadId
+                                                  + " (\"" + currentThread.getName() + ")");
+        }
     }
 
     // SDK version 15 accessibility methods retrieved through reflection.

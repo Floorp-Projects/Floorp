@@ -10,7 +10,7 @@ function testSteps()
   // Test object stores
   
   let name = this.window ? window.location.pathname : "Splendid Test";
-  let openRequest = mozIndexedDB.open(name, 1);
+  let openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;

@@ -542,6 +542,23 @@
       testTextAttrs(ID, 2, { }, defAttrs, 2, 6);
       testTextAttrs(ID, 6, attrs, defAttrs, 6, 7);
 
+       //////////////////////////////////////////////////////////////////////////
+      // area19, "HTML5 mark tag" test
+      // text enclosed in mark tag will have a different background color
+      ID = "area19";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
+      
+      tempElem = getNode(ID).firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = { "background-color": gComputedStyle.backgroundColor };
+      testTextAttrs(ID, 11, attrs, defAttrs, 10, 17);
+
+      attrs = {};
+      testTextAttrs(ID, 18, attrs, defAttrs, 17, 28);
+
       SimpleTest.finish();
     }
 
@@ -692,5 +709,9 @@
     <li id="area18" class="gencontent">item</li>
   </ul>
 
+  <p id="area19">uncolored
+    <mark>colored</mark> uncolored
+  </p>
+   
 </body>
 </html>

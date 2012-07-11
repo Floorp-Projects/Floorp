@@ -1198,6 +1198,9 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsINode* endParent = mRange->GetEndParent();
   PRInt32 endOffset = mRange->EndOffset();
   MOZ_ASSERT(mCommonParent && startParent && endParent);
+  // Bug 767169
+  MOZ_ASSERT(startOffset <= startParent->Length() &&
+             endOffset <= endParent->Length());
 
   // short circuit when start node == end node
   if (startParent == endParent) {
@@ -1268,12 +1271,10 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   PRInt32 numChildren = endParent->GetChildCount();
 
   if (offset > numChildren) {
+    // Can happen for text nodes
     offset = numChildren;
   }
-  if (!offset) {
-    node = endParent;
-  } else if (!numChildren) {
-    // no children, must be a text node
+  if (!offset || !numChildren) {
     node = endParent;
   } else {
     lastCandidate = endParent->GetChildAt(--offset);
@@ -1284,6 +1285,11 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!lastCandidate) {
     // then lastCandidate is prev node before node
     lastCandidate = GetPrevSibling(node);
+  }
+
+  if (!lastCandidate) {
+    MakeEmpty();
+    return NS_OK;
   }
 
   lastCandidate = GetDeepLastChild(lastCandidate);

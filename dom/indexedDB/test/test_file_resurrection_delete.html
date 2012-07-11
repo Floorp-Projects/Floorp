@@ -22,7 +22,7 @@
     const fileData = { key: 1, file: getRandomFile("random.bin", 100000) };
 
     {
-      let request = mozIndexedDB.open(name, 1, description);
+      let request = indexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
@@ -72,7 +72,7 @@
     is(getFileRefCount(name, 1), 0, "Correct ref count");
 
     {
-      let request = mozIndexedDB.open(name, 1, description);
+      let request = indexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;

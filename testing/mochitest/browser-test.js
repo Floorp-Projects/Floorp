@@ -13,7 +13,7 @@ function testOnLoad() {
   window.removeEventListener("load", testOnLoad, false);
 
   gConfig = readConfig();
-  if (gConfig.testRoot == "browser") {
+  if (gConfig.testRoot == "browser" || gConfig.testRoot == "webapprtChrome") {
     // Make sure to launch the test harness for the first opened window only
     var prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
@@ -110,7 +110,10 @@ Tester.prototype = {
                            : this.currentTest ? "Found an unexpected {elt} at the end of test run"
                                               : "Found an unexpected {elt}";
 
-    if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
+    if (gConfig.testRoot == "browser" &&
+        this.currentTest &&
+        window.gBrowser &&
+        gBrowser.tabs.length > 1) {
       while (gBrowser.tabs.length > 1) {
         let lastTab = gBrowser.tabContainer.lastChild;
         let msg = baseMsg.replace("{elt}", "tab") +

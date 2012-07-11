@@ -24,6 +24,7 @@
 #include "mozilla/dom/ContentChild.h"
 
 #include "mozilla/Util.h"
+#include "mozilla/Attributes.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -1180,7 +1181,7 @@ ScopedXPCOMStartup::Initialize()
  * This is a little factory class that serves as a singleton-service-factory
  * for the nativeappsupport object.
  */
-class nsSingletonFactory : public nsIFactory
+class nsSingletonFactory MOZ_FINAL : public nsIFactory
 {
 public:
   NS_DECL_ISUPPORTS
@@ -3936,7 +3937,9 @@ int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, PRUint32 aFlags)
 {
   XREMain main;
-  return main.XRE_main(argc, argv, aAppData);
+  int result = main.XRE_main(argc, argv, aAppData);
+  mozilla::RecordShutdownEndTimeStamp();
+  return result;
 }
 
 nsresult

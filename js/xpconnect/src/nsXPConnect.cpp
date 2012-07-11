@@ -327,7 +327,7 @@ nsXPConnect::NeedCollect()
 }
 
 void
-nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
+nsXPConnect::Collect(PRUint32 reason)
 {
     // We're dividing JS objects into 2 categories:
     //
@@ -377,20 +377,13 @@ nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
 
     JSRuntime *rt = GetRuntime()->GetJSRuntime();
     js::PrepareForFullGC(rt);
-    if (kind == nsGCShrinking) {
-        js::ShrinkingGC(rt, gcreason);
-    } else if (kind == nsGCIncremental) {
-        js::IncrementalGC(rt, gcreason);
-    } else {
-        MOZ_ASSERT(kind == nsGCNormal);
-        js::GCForReason(rt, gcreason);
-    }
+    js::GCForReason(rt, gcreason);
 }
 
 NS_IMETHODIMP
-nsXPConnect::GarbageCollect(PRUint32 reason, PRUint32 kind)
+nsXPConnect::GarbageCollect(PRUint32 reason)
 {
-    Collect(reason, kind);
+    Collect(reason);
     return NS_OK;
 }
 
@@ -2266,6 +2259,17 @@ NS_IMETHODIMP
 nsXPConnect::RemoveJSHolder(void* aHolder)
 {
     return mRuntime->RemoveJSHolder(aHolder);
+}
+
+NS_IMETHODIMP
+nsXPConnect::TestJSHolder(void* aHolder, bool* aRetval)
+{
+#ifdef DEBUG
+    return mRuntime->TestJSHolder(aHolder, aRetval);
+#else
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+#endif
 }
 
 NS_IMETHODIMP

@@ -5,7 +5,8 @@
 
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
-#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
+#include "nsObserverService.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
@@ -42,14 +43,40 @@ struct LockCount {
 static int sActiveChildren = 0;
 static nsAutoPtr<nsDataHashtable<nsStringHashKey, LockCount> > sLockTable;
 static bool sInitialized = false;
+static bool sIsShuttingDown = false;
+
+namespace {
+class ClearHashtableOnShutdown : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(ClearHashtableOnShutdown, nsIObserver)
+
+NS_IMETHODIMP
+ClearHashtableOnShutdown::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* data)
+{
+  MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
+
+  sIsShuttingDown = true;
+  sLockTable = nsnull;
+
+  return NS_OK;
+}
+} // anonymous namespace
 
 static void
 Init()
 {
   sLockTable = new nsDataHashtable<nsStringHashKey, LockCount>();
   sLockTable->Init();
-  ClearOnShutdown(&sLockTable);
   sInitialized = true;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(new ClearHashtableOnShutdown(), "xpcom-shutdown", false);
+  }
 }
 
 void
@@ -69,6 +96,9 @@ ModifyWakeLock(const nsAString &aTopic,
                hal::WakeLockControl aLockAdjust,
                hal::WakeLockControl aHiddenAdjust)
 {
+  if (sIsShuttingDown) {
+    return;
+  }
   if (!sInitialized) {
     Init();
   }
@@ -107,6 +137,10 @@ ModifyWakeLock(const nsAString &aTopic,
 void
 GetWakeLockInfo(const nsAString &aTopic, WakeLockInformation *aWakeLockInfo)
 {
+  if (sIsShuttingDown) {
+    NS_WARNING("You don't want to get wake lock information during xpcom-shutdown!");
+    return;
+  }
   if (!sInitialized) {
     Init();
   }

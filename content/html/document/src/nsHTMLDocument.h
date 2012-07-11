@@ -79,9 +79,6 @@ public:
     return mWriteLevel != PRUint32(0);
   }
 
-  virtual bool GetIsFrameset() { return mIsFrameset; }
-  virtual void SetIsFrameset(bool aFrameset) { mIsFrameset = aFrameset; }
-
   virtual NS_HIDDEN_(nsContentList*) GetForms();
  
   virtual NS_HIDDEN_(nsContentList*) GetFormControls();
@@ -252,8 +249,6 @@ protected:
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;
-
-  bool mIsFrameset;
 
   bool mTooDeepWriteRecursion;
 

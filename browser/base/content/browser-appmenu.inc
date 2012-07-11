@@ -118,7 +118,7 @@
                 command="Browser:SavePage"
                 key="key_savePage"/>
       <menuitem id="appmenu_sendLink"
-                label="&sendPageCmd.label;"
+                label="&emailPageCmd.label;"
                 command="Browser:SendLink"/>
       <splitmenu id="appmenu_print"
                  iconic="true"

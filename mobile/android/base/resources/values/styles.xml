@@ -65,6 +65,12 @@
         <item name="android:visibility">gone</item>
     </style>
 
+    <!-- Address bar - Image Button - Icon -->
+    <style name="AddressBar.ImageButton.Icon">
+         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
+         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+    </style>
+
     <!-- AwesomeBar -->
     <style name="AwesomeBar">
         <item name="android:layout_width">fill_parent</item>
@@ -77,9 +83,28 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:divider">#E5E5E5</item>
+        <item name="android:background">#EEF1F5</item>
+        <item name="android:divider">#D1D5DA</item>
         <item name="android:dividerHeight">1dp</item>
-        <item name="android:cacheColorHint">#FFFFFF</item>
+        <item name="android:cacheColorHint">#EEF1F5</item>
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+    </style>
+
+    <!-- AwesomeBar Tab Indicator Curve -->
+    <style name="AwesomeBarTabIndicatorCurve">
+         <item name="android:layout_width">wrap_content</item>
+         <item name="android:layout_height">fill_parent</item>
+         <item name="android:background">@drawable/awesomebar_tab_unselected</item>
+    </style>
+
+    <!-- AwesomeBar Tab Indicator Curve Left -->
+    <style name="AwesomeBarTabIndicatorCurve.Left">
+         <item name="android:layout_width">20dp</item>
+    </style>
+
+    <!-- AwesomeBar Tab Indicator Curve Right -->
+    <style name="AwesomeBarTabIndicatorCurve.Right">
+         <item name="android:layout_width">20dp</item>
     </style>
 
     <!-- Lists in TabsTray -->
@@ -102,9 +127,9 @@
 
     <!-- TabWidget --> 
     <style name="TabWidget">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">48dip</item>
-        <item name="android:background">@drawable/tabs_tray_bg_repeat</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dip</item>
+        <item name="android:layout_weight">1.0</item>
     </style>
 
     <!-- Find bar -->

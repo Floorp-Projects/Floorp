@@ -14,7 +14,6 @@
 #define nsIRDFContentSink_h___
 
 #include "nsIXMLContentSink.h"
-class nsIDocument;
 class nsIRDFDataSource;
 class nsIURI;
 

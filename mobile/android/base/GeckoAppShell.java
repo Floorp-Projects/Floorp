@@ -123,6 +123,8 @@ public class GeckoAppShell
 
     private static Handler sGeckoHandler;
 
+    public static GfxInfoThread sGfxInfoThread = null;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -2224,6 +2226,13 @@ public class GeckoAppShell
     public static void notifyWakeLockChanged(String topic, String state) {
         GeckoApp.mAppContext.notifyWakeLockChanged(topic, state);
     }
+
+    public static String getGfxInfoData() {
+        String data = sGfxInfoThread.getData();
+        sGfxInfoThread = null;
+        return data;
+    }
+
 }
 
 class ScreenshotHandler {

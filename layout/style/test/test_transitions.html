@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
   #display .before.started::before, #display .after.started::after {
     width: 100px;
     text-indent: 100px;
-    -moz-transition: 8s width ease-in-out, 8s text-indent ease-in-out;
+    transition: 8s width ease-in-out, 8s text-indent ease-in-out;
   }
   #display .before::before {
     content: "Before";
@@ -125,7 +125,7 @@ function make_reference_p() {
     var p = document.createElement("p");
     p.appendChild(document.createTextNode("reference"));
     p.style.textIndent = "0px";
-    p.style.MozTransition = "8s text-indent linear";
+    p.style.transition = "8s text-indent linear";
     div.appendChild(p);
     return p;
 }
@@ -140,8 +140,8 @@ for (var tf in timingFunctions) {
     var t = document.createTextNode("transition-timing-function: " + tf);
     p.appendChild(t);
     p.style.textIndent = "0px";
-    p.style.MozTransition = "8s text-indent linear";
-    p.style.MozTransitionTimingFunction = tf;
+    p.style.transition = "8s text-indent linear";
+    p.style.transitionTimingFunction = tf;
     div.appendChild(p);
     is(getComputedStyle(p, "").textIndent, "0px",
        "should be zero before changing value");
@@ -159,7 +159,7 @@ for each (var restyleParent in [true, false]) {
                                         " at " + itime + "s");
         p.appendChild(t);
         p.style.textIndent = "0px";
-        p.style.MozTransition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
+        p.style.transition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
         if (restyleParent) {
           var d = document.createElement("div");
           d.appendChild(p);
@@ -186,7 +186,7 @@ for (var d = -4; d <= 4; ++d) {
     var t = document.createTextNode("transition-delay: " + delay);
     p.appendChild(t);
     p.style.marginLeft = "0px";
-    p.style.MozTransition = "4s margin-left ease-out " + delay;
+    p.style.transition = "4s margin-left ease-out " + delay;
     div.appendChild(p);
     is(getComputedStyle(p, "").marginLeft, "0px",
        "should be zero before changing value");
@@ -202,7 +202,7 @@ for (var d = -4; d <= 4; ++d) {
     var t = document.createTextNode("transition-delay: " + delay);
     p.appendChild(t);
     p.style.marginLeft = "0px";
-    p.style.MozTransition = "0s margin-left linear " + delay;
+    p.style.transition = "0s margin-left linear " + delay;
     div.appendChild(p);
     is(getComputedStyle(p, "").marginLeft, "0px",
        "should be zero before changing value");
@@ -217,7 +217,7 @@ function make_reset_test(transition, description)
     var t = document.createTextNode(description);
     p.appendChild(t);
     p.style.marginLeft = "0px";
-    p.style.MozTransition = transition;
+    p.style.transition = transition;
     div.appendChild(p);
     is(getComputedStyle(p, "").marginLeft, "0px",
        "should be zero before changing value");
@@ -266,8 +266,8 @@ for (var i in descendant_tests) {
     test.childNode.appendChild(document.createTextNode(
         "parent with \"" + test.parent_transition + "\" and " +
         "child with \"" + test.child_transition + "\""));
-    test.parentNode.style.MozTransition = test.parent_transition;
-    test.childNode.style.MozTransition = test.child_transition;
+    test.parentNode.style.transition = test.parent_transition;
+    test.childNode.style.transition = test.child_transition;
     test.parentNode.style.textIndent = "50px"; // transition from 50 to 150
     test.parentNode.style.letterSpacing = "10px"; // transition from 10 to 5
     div.appendChild(test.parentNode);
@@ -290,26 +290,26 @@ for (var i in descendant_tests) {
 // This is because we're implementing the proposal in
 // http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
 var number_tests = [
-  { style: "-moz-transition: 4s margin, 8s margin-left" },
-  { style: "-moz-transition: 4s margin-left, 8s margin" },
-  { style: "-moz-transition-property: margin-left; " +
-             "-moz-transition-duration: 8s, 2s" },
-  { style: "-moz-transition-property: margin-left, margin-left; " + 
-             "-moz-transition-duration: 2s, 8s" },
-  { style: "-moz-transition-property: margin-left, margin-left, margin-left; " +
-             "-moz-transition-duration: 8s, 2s" },
-  { style: "-moz-transition-property: margin-left; " +
-             "-moz-transition-duration: 8s, 16s" },
-  { style: "-moz-transition-property: margin-left, margin-left; " + 
-             "-moz-transition-duration: 16s, 8s" },
-  { style: "-moz-transition-property: margin-left, margin-left, margin-left; " +
-             "-moz-transition-duration: 8s, 16s" },
-  { style: "-moz-transition-property: text-indent,word-spacing,margin-left; " +
-             "-moz-transition-duration: 8s; " +
-             "-moz-transition-delay: 0, 8s" },
-  { style: "-moz-transition-property: text-indent,word-spacing,margin-left; " +
-             "-moz-transition-duration: 8s, 16s; " +
-             "-moz-transition-delay: 8s, 8s, 0, 8s, 8s, 8s" },
+  { style: "transition: 4s margin, 8s margin-left" },
+  { style: "transition: 4s margin-left, 8s margin" },
+  { style: "transition-property: margin-left; " +
+             "transition-duration: 8s, 2s" },
+  { style: "transition-property: margin-left, margin-left; " + 
+             "transition-duration: 2s, 8s" },
+  { style: "transition-property: margin-left, margin-left, margin-left; " +
+             "transition-duration: 8s, 2s" },
+  { style: "transition-property: margin-left; " +
+             "transition-duration: 8s, 16s" },
+  { style: "transition-property: margin-left, margin-left; " + 
+             "transition-duration: 16s, 8s" },
+  { style: "transition-property: margin-left, margin-left, margin-left; " +
+             "transition-duration: 8s, 16s" },
+  { style: "transition-property: text-indent,word-spacing,margin-left; " +
+             "transition-duration: 8s; " +
+             "transition-delay: 0, 8s" },
+  { style: "transition-property: text-indent,word-spacing,margin-left; " +
+             "transition-duration: 8s, 16s; " +
+             "transition-delay: 8s, 8s, 0, 8s, 8s, 8s" },
 ];
 
 for (var i in number_tests) {
@@ -333,7 +333,7 @@ function make_display_test(initially_none, text)
     var p = document.createElement("p");
     p.appendChild(document.createTextNode(text));
     p.style.textIndent = "0px";
-    p.style.MozTransition = "8s text-indent ease-in-out";
+    p.style.transition = "8s text-indent ease-in-out";
     if (initially_none)
         p.style.display = "none";
     div.appendChild(p);

@@ -13,10 +13,25 @@
 class nsIdleServiceAndroid : public nsIdleService
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     bool PollIdleTime(PRUint32* aIdleTime);
+
+    static already_AddRefed<nsIdleServiceAndroid> GetInstance() 
+    {
+        nsIdleServiceAndroid* idleService = 
+            static_cast<nsIdleServiceAndroid*>(nsIdleService::GetInstance().get());
+        if (!idleService) {
+            idleService = new nsIdleServiceAndroid();
+            NS_ADDREF(idleService);
+        }
+        
+        return idleService;
+    }
+
 protected:
+    nsIdleServiceAndroid() { }
+    virtual ~nsIdleServiceAndroid() { }
     bool UsePollMode();
 };
 

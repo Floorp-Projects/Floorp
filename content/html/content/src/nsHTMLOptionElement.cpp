@@ -25,7 +25,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "nsEventStates.h"
-#include "nsIDOMDocument.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 
@@ -435,7 +434,7 @@ nsHTMLOptionElement::Initialize(nsISupports* aOwner,
 }
 
 nsresult
-nsHTMLOptionElement::CopyInnerTo(nsGenericElement* aDest) const
+nsHTMLOptionElement::CopyInnerTo(nsGenericElement* aDest)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+
+<!--
+  This is the webapp.  It doesn't need to do anything in particular, just
+  whatever you want to test from your browser_ test file.
+-->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+
+function onLoad() {
+  var msg = document.getElementById("msg");
+  var self = navigator.mozApps.getSelf();
+  self.onsuccess = function () {
+    msg.textContent = "Webapp getSelf OK: " + self.result;
+  };
+  self.onerror = function () {
+    msg.textContent = "Webapp getSelf failed: " + self.error.name;
+  };
+}
+
+    </script>
+  </head>
+  <body onload="onLoad();" onunload="">
+    <p>This is the test webapp.</p>
+    <p id="msg">Webapp waiting for page load...</p>
+  </body>
+</html>

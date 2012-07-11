@@ -14,7 +14,7 @@ function testSteps()
   let testString = { value: "testString" };
   let testInt = { value: 1002 };
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

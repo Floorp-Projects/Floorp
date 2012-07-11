@@ -276,20 +276,26 @@ static PhaseInfo phases[] = {
     { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread" },
     { PHASE_PURGE, "Purge" },
     { PHASE_MARK, "Mark" },
+    { PHASE_MARK_DISCARD_CODE, "Mark Discard Code" },
     { PHASE_MARK_ROOTS, "Mark Roots" },
     { PHASE_MARK_TYPES, "Mark Types" },
     { PHASE_MARK_DELAYED, "Mark Delayed" },
-    { PHASE_MARK_OTHER, "Mark Other" },
+    { PHASE_MARK_WEAK, "Mark Weak" },
+    { PHASE_MARK_GRAY, "Mark Gray" },
+    { PHASE_MARK_GRAY_WEAK, "Mark Gray and Weak" },
     { PHASE_FINALIZE_START, "Finalize Start Callback" },
     { PHASE_SWEEP, "Sweep" },
+    { PHASE_SWEEP_ATOMS, "Sweep Atoms" },
     { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments" },
+    { PHASE_SWEEP_TABLES, "Sweep Tables" },
     { PHASE_SWEEP_OBJECT, "Sweep Object" },
     { PHASE_SWEEP_STRING, "Sweep String" },
     { PHASE_SWEEP_SCRIPT, "Sweep Script" },
     { PHASE_SWEEP_SHAPE, "Sweep Shape" },
-    { PHASE_DISCARD_CODE, "Discard Code" },
+    { PHASE_SWEEP_DISCARD_CODE, "Sweep Discard Code" },
     { PHASE_DISCARD_ANALYSIS, "Discard Analysis" },
     { PHASE_DISCARD_TI, "Discard TI" },
+    { PHASE_FREE_TI_ARENA, "Free TI Arena" },
     { PHASE_SWEEP_TYPES, "Sweep Types" },
     { PHASE_CLEAR_SCRIPT_ANALYSIS, "Clear Script Analysis" },
     { PHASE_FINALIZE_END, "Finalize End Callback" },
@@ -304,15 +310,6 @@ FormatPhaseTimes(StatisticsSerializer &ss, const char *name, int64_t *times)
     ss.beginObject(name);
     for (unsigned i = 0; phases[i].name; i++)
         ss.appendIfNonzeroMS(phases[i].name, t(times[phases[i].index]));
-    ss.endObject();
-}
-
-static void
-FormatPhaseFaults(StatisticsSerializer &ss, const char *name, size_t *faults)
-{
-    ss.beginObject(name);
-    for (unsigned i = 0; phases[i].name; i++)
-        ss.appendNumber(phases[i].name, "%u", "", unsigned(faults[phases[i].index]));
     ss.endObject();
 }
 
@@ -367,12 +364,14 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
             ss.extra(" (");
             ss.appendDecimal("When", "ms", t(slices[i].start - slices[0].start));
             ss.appendString("Reason", ExplainReason(slices[i].reason));
+            if (ss.isJSON()) {
+                ss.appendDecimal("Page Faults", "",
+                                 double(slices[i].endFaults - slices[i].startFaults));
+            }
             if (slices[i].resetReason)
                 ss.appendString("Reset", slices[i].resetReason);
             ss.extra("): ");
             FormatPhaseTimes(ss, "Times", slices[i].phaseTimes);
-            if (ss.isJSON())
-                FormatPhaseFaults(ss, "Page Faults", slices[i].phaseFaults);
             ss.endLine();
             ss.endObject();
         }
@@ -380,8 +379,6 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     }
     ss.extra("    Totals: ");
     FormatPhaseTimes(ss, "Totals", phaseTimes);
-    if (ss.isJSON())
-        FormatPhaseFaults(ss, "Total Page Faults", phaseFaults);
     ss.endObject();
 
     return !ss.isOOM();
@@ -484,9 +481,7 @@ void
 Statistics::beginGC()
 {
     PodArrayZero(phaseStartTimes);
-    PodArrayZero(phaseStartFaults);
     PodArrayZero(phaseTimes);
-    PodArrayZero(phaseFaults);
 
     slices.clearAndFree();
     nonincrementalReason = NULL;
@@ -531,7 +526,7 @@ Statistics::beginSlice(int collectedCount, int compartmentCount, gcreason::Reaso
     if (first)
         beginGC();
 
-    SliceData data(reason, PRMJ_Now());
+    SliceData data(reason, PRMJ_Now(), gc::GetPageFaultCount());
     (void) slices.append(data); /* Ignore any OOMs here. */
 
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback)
@@ -549,6 +544,7 @@ void
 Statistics::endSlice()
 {
     slices.back().end = PRMJ_Now();
+    slices.back().endFaults = gc::GetPageFaultCount();
 
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
         (*cb)(JS_TELEMETRY_GC_SLICE_MS, t(slices.back().end - slices.back().start));
@@ -578,7 +574,6 @@ Statistics::beginPhase(Phase phase)
     JS_ASSERT(!phaseStartTimes[phase]);
 
     phaseStartTimes[phase] = PRMJ_Now();
-    phaseStartFaults[phase] = gc::GetPageFaultCount();
 
     if (phase == gcstats::PHASE_MARK)
         Probes::GCStartMarkPhase();
@@ -593,10 +588,6 @@ Statistics::endPhase(Phase phase)
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
     phaseStartTimes[phase] = 0;
-
-    size_t faults = gc::GetPageFaultCount() - phaseStartFaults[phase];
-    slices.back().phaseFaults[phase] += faults;
-    phaseFaults[phase] += faults;
 
     if (phase == gcstats::PHASE_MARK)
         Probes::GCEndMarkPhase();

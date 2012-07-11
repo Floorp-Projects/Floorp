@@ -35,6 +35,7 @@
 #include "nsXBLProtoImpl.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsTextFragment.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"

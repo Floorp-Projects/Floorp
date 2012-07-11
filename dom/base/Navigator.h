@@ -12,7 +12,7 @@
 #include "nsIDOMNavigatorDeviceStorage.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMClientInformation.h"
-#include "nsIDOMNavigatorBattery.h"
+#include "nsINavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
 #include "nsIDOMNavigatorNetwork.h"
 #include "nsAutoPtr.h"
@@ -37,6 +37,8 @@ class nsIDOMTelephony;
 #ifdef MOZ_B2G_BT
 #include "nsIDOMNavigatorBluetooth.h"
 #endif
+
+#include "nsIDOMNavigatorSystemMessages.h"
 
 //*****************************************************************************
 // Navigator: Script "navigator" object
@@ -67,7 +69,7 @@ class Navigator : public nsIDOMNavigator
                 , public nsIDOMNavigatorDeviceStorage
                 , public nsIDOMNavigatorGeolocation
                 , public nsIDOMNavigatorDesktopNotification
-                , public nsIDOMMozNavigatorBattery
+                , public nsINavigatorBattery
                 , public nsIDOMMozNavigatorSms
 #ifdef MOZ_MEDIA_NAVIGATOR
                 , public nsIDOMNavigatorUserMedia
@@ -79,7 +81,7 @@ class Navigator : public nsIDOMNavigator
 #ifdef MOZ_B2G_BT
                 , public nsIDOMNavigatorBluetooth
 #endif
-
+                , public nsIDOMNavigatorSystemMessages
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -91,7 +93,7 @@ public:
   NS_DECL_NSIDOMNAVIGATORDEVICESTORAGE
   NS_DECL_NSIDOMNAVIGATORGEOLOCATION
   NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
-  NS_DECL_NSIDOMMOZNAVIGATORBATTERY
+  NS_DECL_NSINAVIGATORBATTERY
   NS_DECL_NSIDOMMOZNAVIGATORSMS
 #ifdef MOZ_MEDIA_NAVIGATOR
   NS_DECL_NSIDOMNAVIGATORUSERMEDIA
@@ -104,6 +106,7 @@ public:
 #ifdef MOZ_B2G_BT
   NS_DECL_NSIDOMNAVIGATORBLUETOOTH
 #endif
+  NS_DECL_NSIDOMNAVIGATORSYSTEMMESSAGES
 
   static void Init();
 
@@ -126,6 +129,11 @@ public:
    */
   void OnNavigation();
 
+#ifdef MOZ_SYS_MSG
+  // Helper to initialize mMessagesManager.
+  nsresult EnsureMessagesManager();
+#endif
+
 private:
   bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
@@ -145,6 +153,7 @@ private:
 #ifdef MOZ_B2G_BT
   nsCOMPtr<nsIDOMBluetoothManager> mBluetooth;
 #endif
+  nsCOMPtr<nsIDOMNavigatorSystemMessages> mMessagesManager;
   nsWeakPtr mWindow;
 };
 

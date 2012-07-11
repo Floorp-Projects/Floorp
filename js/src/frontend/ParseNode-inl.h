@@ -183,14 +183,14 @@ NameNode::dump(int indent)
 #endif
 
 inline void
-NameNode::initCommon(SharedContext *sc)
+NameNode::initCommon(TreeContext *tc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
-    pn_dflags = (!sc->topStmt || sc->topStmt->type == STMT_BLOCK)
+    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
                 ? PND_BLOCKCHILD
                 : 0;
-    pn_blockid = sc->blockid();
+    pn_blockid = tc->blockid();
 }
 
 } /* namespace js */

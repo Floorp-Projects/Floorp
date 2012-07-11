@@ -161,7 +161,7 @@ class CompileInfo
     }
 
     bool hasArguments() {
-        return script()->argumentsHasLocalBinding();
+        return script()->argumentsHasVarBinding();
     }
 
   private:

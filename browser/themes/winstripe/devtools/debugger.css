@@ -277,10 +277,6 @@
   list-style-image: url("chrome://browser/skin/devtools/debugger-step-out.png");
 }
 
-#step-over {
-  list-style-image: url("chrome://browser/skin/devtools/debugger-step-over.png");
-}
-
 #debugger-controls > toolbarbutton {
   border-width: 0;
   -moz-border-end-width: 1px;

@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.5.10 - March 29, 2012
+ * libpng version 1.5.11 - June 14, 2012
  *
  * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -25,7 +25,7 @@
 #ifndef PNG_BUILDING_SYMBOL_TABLE
 /* PNG_NO_LIMITS_H may be used to turn off the use of the standard C
  * definition file for  machine specific limits, this may impact the
- * correctness of the definitons below (see uses of INT_MAX).
+ * correctness of the definitions below (see uses of INT_MAX).
  */
 #  ifndef PNG_NO_LIMITS_H
 #    include <limits.h>

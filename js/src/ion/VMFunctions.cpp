@@ -152,7 +152,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &
     RootedId id(cx, NameToId(name));
 
     if (name == cx->runtime->atomState.protoAtom)
-        return baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false);
     return !!DefineNativeProperty(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, 0, 0, 0);
 }
 
@@ -279,7 +279,7 @@ JSObject*
 NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
 {
     RootedObject obj(cx);
-    if (baseObj.value()) {
+    if (baseObj) {
         // JSOP_NEWOBJECT
         obj = CopyInitializerObject(cx, baseObj);
     } else {
@@ -359,10 +359,10 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
 
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = isSetName ? DNP_UNQUALIFIED : 0;
-        return baseops::SetPropertyHelper(cx, obj, id, defineHow, &v, strict);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, defineHow, &v, strict);
     }
 
-    return obj->setGeneric(cx, id, &v, strict);
+    return obj->setGeneric(cx, obj, id, &v, strict);
 }
 
 bool

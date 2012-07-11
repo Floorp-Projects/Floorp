@@ -72,7 +72,7 @@ ContainsVarOrConst(ParseNode *pn)
  * Fold from one constant type to another.
  * XXX handles only strings and numbers for now
  */
-static JSBool
+static bool
 FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
 {
     if (!pn->isKind(kind)) {
@@ -81,7 +81,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
             if (pn->isKind(PNK_STRING)) {
                 double d;
                 if (!ToNumber(cx, StringValue(pn->pn_atom), &d))
-                    return JS_FALSE;
+                    return false;
                 pn->pn_dval = d;
                 pn->setKind(PNK_NUMBER);
                 pn->setOp(JSOP_DOUBLE);
@@ -92,10 +92,10 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
             if (pn->isKind(PNK_NUMBER)) {
                 JSString *str = js_NumberToString(cx, pn->pn_dval);
                 if (!str)
-                    return JS_FALSE;
+                    return false;
                 pn->pn_atom = js_AtomizeString(cx, str);
                 if (!pn->pn_atom)
-                    return JS_FALSE;
+                    return false;
                 pn->setKind(PNK_STRING);
                 pn->setOp(JSOP_STRING);
             }
@@ -104,7 +104,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
           default:;
         }
     }
-    return JS_TRUE;
+    return true;
 }
 
 /*
@@ -112,7 +112,7 @@ FoldType(JSContext *cx, ParseNode *pn, ParseNodeKind kind)
  * one of them aliases pn, so you can't safely fetch pn2->pn_next, e.g., after
  * a successful call to this function.
  */
-static JSBool
+static bool
 FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
                   ParseNode *pn, Parser *parser)
 {
@@ -188,12 +188,12 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
     pn->setOp(JSOP_DOUBLE);
     pn->setArity(PN_NULLARY);
     pn->pn_dval = d;
-    return JS_TRUE;
+    return true;
 }
 
 #if JS_HAS_XML_SUPPORT
 
-static JSBool
+static bool
 FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
 {
     JS_ASSERT(pn->isArity(PN_LIST));
@@ -238,20 +238,20 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
           case PNK_XMLCDATA:
             str = js_MakeXMLCDATAString(cx, pn2->pn_atom);
             if (!str)
-                return JS_FALSE;
+                return false;
             break;
 
           case PNK_XMLCOMMENT:
             str = js_MakeXMLCommentString(cx, pn2->pn_atom);
             if (!str)
-                return JS_FALSE;
+                return false;
             break;
 
           case PNK_XMLPI: {
             XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
             str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
-                return JS_FALSE;
+                return false;
             break;
           }
 
@@ -278,7 +278,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
                 pn1->setArity(PN_NULLARY);
                 pn1->pn_atom = js_AtomizeString(cx, accum);
                 if (!pn1->pn_atom)
-                    return JS_FALSE;
+                    return false;
                 JS_ASSERT(pnp != &pn1->pn_next);
                 *pnp = pn1;
             }
@@ -295,7 +295,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
                       : js_ConcatStrings(cx, accum, str);
             }
             if (!str)
-                return JS_FALSE;
+                return false;
 #ifdef DEBUG_brendanXXX
             printf("2: %d, %d => ", i, j);
             FileEscapedString(stdout, str, 0);
@@ -317,7 +317,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         if (str) {
             accum = js_ConcatStrings(cx, accum, str);
             if (!accum)
-                return JS_FALSE;
+                return false;
         }
 
         JS_ASSERT(*pnp == pn1);
@@ -330,7 +330,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
         pn1->setArity(PN_NULLARY);
         pn1->pn_atom = js_AtomizeString(cx, accum);
         if (!pn1->pn_atom)
-            return JS_FALSE;
+            return false;
         JS_ASSERT(pnp != &pn1->pn_next);
         *pnp = pn1;
     }
@@ -350,7 +350,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, Parser *parser)
             pn->setOp(JSOP_TOXML);
         }
     }
-    return JS_TRUE;
+    return true;
 }
 
 #endif /* JS_HAS_XML_SUPPORT */

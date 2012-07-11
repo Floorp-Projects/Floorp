@@ -12,8 +12,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "gfxContext.h"
-#include "nsContentUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsSpecialCasingData.h"
 

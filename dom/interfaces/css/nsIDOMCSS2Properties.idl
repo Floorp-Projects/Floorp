@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(35b2c7f0-b56c-11e1-afa6-0800200c9a66)]
+[builtinclass, scriptable, uuid(492673d6-039b-4d94-a598-dbf82abc174f)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -632,6 +632,24 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozHyphens;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        transform;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transformOrigin;
+                                        // raises(DOMException) on setting 
+
+           attribute DOMString        perspective;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        perspectiveOrigin;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        backfaceVisibility;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transformStyle;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozTransform;
                                         // raises(DOMException) on setting
 
@@ -668,6 +686,21 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozTextDecorationStyle;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        transitionProperty;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDuration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionDelay;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transitionTimingFunction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        transition;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozTransitionProperty;
                                         // raises(DOMException) on setting
 
@@ -690,6 +723,33 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        resize;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationName;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDuration;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDelay;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationTimingFunction;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationDirection;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationFillMode;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationIterationCount;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animationPlayState;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        animation;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozAnimationName;
@@ -739,4 +799,36 @@ interface nsIDOMCSS2Properties : nsISupports
 
            attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
+
+/* XXXdholbert NOTE: Flexbox properties are commented out here, until our
+   layout engine responds to them.  In builds with MOZ_FLEXBOX enabled, this
+   block should be uncommented (and this interface's uuid should be revved).
+   (This would be #ifdef MOZ_FLEXBOX, if that worked in IDL files.)
+           attribute DOMString        MozAlignItems;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozAlignSelf;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlex;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlexBasis;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlexDirection;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlexGrow;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFlexShrink;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozOrder;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozJustifyContent;
+                                        // raises(DOMException) on setting
+*/
 };

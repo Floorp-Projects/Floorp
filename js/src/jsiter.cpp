@@ -213,7 +213,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj_, JSObject *pobj_, unsign
     Shape::Range r = pobj->lastProperty()->all();
     Shape::Range::AutoRooter root(cx, &r);
     for (; !r.empty(); r.popFront()) {
-        const Shape &shape = r.front();
+        Shape &shape = r.front();
 
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid()) &&
             !Enumerate(cx, obj, pobj, shape.propid(), shape.enumerable(), flags, ht, props))
@@ -483,19 +483,16 @@ static inline JSObject *
 NewIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx);
-        type = cx->compartment->getEmptyType(cx);
+        RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
         if (!type)
             return NULL;
 
-        RootedShape emptyEnumeratorShape(cx);
-        emptyEnumeratorShape = EmptyShape::getInitialShape(cx, &IteratorClass, NULL, NULL,
-                                                           ITERATOR_FINALIZE_KIND);
-        if (!emptyEnumeratorShape)
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, &IteratorClass, NULL, NULL,
+                                                          ITERATOR_FINALIZE_KIND));
+        if (!shape)
             return NULL;
 
-        JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                         emptyEnumeratorShape, type, NULL);
+        JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND, shape, type, NULL);
         if (!obj)
             return NULL;
 
@@ -535,7 +532,7 @@ NativeIterator::init(JSObject *obj, unsigned flags, uint32_t slength, uint32_t k
 {
     this->obj.init(obj);
     this->flags = flags;
-    this->shapes_array = (const Shape **) this->props_end;
+    this->shapes_array = (Shape **) this->props_end;
     this->shapes_length = slength;
     this->shapes_key = key;
 }
@@ -654,7 +651,7 @@ UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 bool
 GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 {
-    Vector<const Shape *, 8> shapes(cx);
+    Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
 
     bool keysOnly = (flags == JSITER_ENUMERATE);
@@ -719,7 +716,7 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
                     shapes.clear();
                     goto miss;
                 }
-                const Shape *shape = pobj->lastProperty();
+                Shape *shape = pobj->lastProperty();
                 key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
                 if (!shapes.append((Shape *) shape))
                     return false;
@@ -824,10 +821,9 @@ Iterator(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 js_ThrowStopIteration(JSContext *cx)
 {
-    Value v;
-
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
+    RootedValue v(cx);
+    if (js_FindClassObject(cx, NullPtr(), JSProto_StopIteration, &v))
         cx->setPendingException(v);
     return JS_FALSE;
 }
@@ -1001,8 +997,8 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                      */
                     if (obj->getProto()) {
                         JSObject *proto = obj->getProto();
-                        JSObject *obj2;
-                        JSProperty *prop;
+                        RootedObject obj2(cx);
+                        RootedShape prop(cx);
                         RootedId id(cx);
                         if (!ValueToId(cx, StringValue(*idp), id.address()))
                             return false;
@@ -1011,7 +1007,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         if (prop) {
                             unsigned attrs;
                             if (obj2->isNative())
-                                attrs = ((Shape *) prop)->attributes();
+                                attrs = prop->attributes();
                             else if (!obj2->getGenericAttributes(cx, id, &attrs))
                                 return false;
 
@@ -1724,8 +1720,7 @@ InitIteratorClass(JSContext *cx, Handle<GlobalObject*> global)
 
     iteratorProto->setNativeIterator(ni);
 
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, Iterator, CLASS_NAME(cx, Iterator), 2);
+    RootedFunction ctor(cx, global->createConstructor(cx, Iterator, CLASS_NAME(cx, Iterator), 2));
     if (!ctor)
         return false;
 
@@ -1779,7 +1774,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
      * as happens when the StopIteration object is frozen, initializing the
      * Iterator class a second time will assert.
      */
-    JSObject *iter;
+    RootedObject iter(cx);
     if (!js_GetClassObject(cx, global, JSProto_Iterator, &iter))
         return NULL;
     if (iter)

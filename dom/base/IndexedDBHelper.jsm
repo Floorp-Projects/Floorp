@@ -46,7 +46,7 @@ IndexedDBHelper.prototype = {
   open: function open(aSuccessCb, aFailureCb) {
     let self = this;
     debug("Try to open database:" + self.dbName + " " + self.dbVersion);
-    let req = this.dbGlobal.mozIndexedDB.open(this.dbName, this.dbVersion);
+    let req = this.dbGlobal.indexedDB.open(this.dbName, this.dbVersion);
     req.onsuccess = function (event) {
       debug("Opened database:" + self.dbName + " " + self.dbName);
       self._db = event.target.result;
@@ -135,7 +135,7 @@ IndexedDBHelper.prototype = {
    * @param aDBStoreName
    *        ObjectStore that is used.
    * @param aGlobal
-   *        Global object that has mozIndexedDB property.
+   *        Global object that has indexedDB property.
    */
   initDBHelper: function initDBHelper(aDBName, aDBVersion, aDBStoreName, aGlobal) {
     this.dbName = aDBName;

@@ -25,3 +25,7 @@
 == mask-html-01-extref-02.xhtml mask-html-01-ref.svg
 == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
 == mask-html-xbl-bound-01.html mask-html-01-ref.svg
+== mask-transformed-html-01.xhtml ../pass.svg
+== mask-transformed-html-02.xhtml ../pass.svg
+
+

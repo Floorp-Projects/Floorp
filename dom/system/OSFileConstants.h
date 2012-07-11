@@ -6,8 +6,31 @@
 #define mozilla_osfileconstants_h__
 
 #include "jspubtd.h"
+#include "nsIOSFileConstantsService.h"
 
 namespace mozilla {
+
+/**
+ * Perform initialization of this module.
+ *
+ * This function _must_ be called:
+ * - from the main thread;
+ * - before any Chrome Worker is created.
+ *
+ * The function is idempotent.
+ */
+nsresult InitOSFileConstants();
+
+/**
+ * Perform cleanup of this module.
+ *
+ * This function _must_ be called:
+ * - from the main thread;
+ * - after all Chrome Workers are dead.
+ *
+ * The function is idempotent.
+ */
+void CleanupOSFileConstants();
 
 /**
  * Define OS-specific constants.
@@ -16,6 +39,19 @@ namespace mozilla {
  * all its constants.
  */
 bool DefineOSFileConstants(JSContext *cx, JSObject *global);
+
+/**
+ * XPConnect initializer, for use in the main thread.
+ */
+class OSFileConstantsService: public nsIOSFileConstantsService
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOSFILECONSTANTSSERVICE
+  OSFileConstantsService();
+private:
+  ~OSFileConstantsService();
+};
 
 }
 

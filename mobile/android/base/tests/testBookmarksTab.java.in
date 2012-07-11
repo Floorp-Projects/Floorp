@@ -1,0 +1,225 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.content.ContentUris;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.TabHost;
+import android.text.TextUtils;
+
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.io.File;
+
+/* Tests opening the all pages tab, that items look correct, clicking on an item
+   and long tapping on an item
+*/
+
+public class testBookmarksTab extends BaseTest {
+    private static final String ABOUT_HOME_URL = "about:home";
+    private String[] defaultBookmarksUrls = new String[] {
+        "about:firefox",
+        "about:home",
+        "http://support.mozilla.org/en-US/mobile",
+        "https://addons.mozilla.org/en-US/android/"
+    };
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testBookmarksTab() {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        String url = "http://www.example.com";
+
+        // add one page to desktop folders so that we can see them
+        addBookmark("BOOKMARK_TITLE", url);
+
+        testList(url);
+        testContextMenu(url);
+    }
+
+    private void testList(String url) {
+        View child;
+        ListView list = getBookmarksList();
+
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+        mSolo.waitForText(url);
+        mAsserter.ok(list != null, "checking that bookmarks list exists", list.toString());
+
+        mAsserter.is(list.getChildCount(), 5, "bookmarks list has 5 children (defaults + a folder)");
+
+        int count = list.getChildCount();
+        for (int i = count - 1; i >= 0; i--) {
+            child = list.getChildAt(i);
+            compareRow(child, i == 0 ? 1 : 2, 1);
+        }
+
+        child = list.getChildAt(0);
+        mSolo.clickOnView(child);
+        mSolo.waitForText("Bookmarks Toolbar");
+
+        mAsserter.is(list.getChildCount(), 4, "desktop folder has correct number of children");
+        count = list.getChildCount();
+        for (int i = count - 1; i >= 0; i--) {
+            child = list.getChildAt(i);
+            compareRow(child, 1, i == 0 ? 0 : 1);
+        }
+
+        child = list.getChildAt(1);
+        mSolo.clickOnView(child);
+        mSolo.waitForText("BOOKMARK_TITLE");
+
+        mAsserter.is(list.getChildCount(), 2, "toolbar folder has correct number of children");
+        count = list.getChildCount();
+        for (int i = count - 1; i >= 0; i--) {
+            child = list.getChildAt(i);
+            compareRow(child, i == 0 ? 1:2, i == 0 ? 0:1);
+        }
+
+        // Test backing out of the folder using the back button
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mAsserter.ok(mSolo.waitForText("Bookmarks Toolbar"), "Back moved up one level", "");
+
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mAsserter.ok(mSolo.waitForText("about:home"), "Back moved up one level", "");
+
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private void testContextMenu(String url) {
+        ListView list = getBookmarksList();
+
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+        mSolo.waitForText(url);
+
+        // test long tap on a folder, this should fail but will still open the folder
+        View child = list.getChildAt(0);
+        mSolo.clickLongOnView(child);
+        mAsserter.is(mSolo.waitForText("Open in New Tab"), false, "Folders have no context menu");
+        // pressing back should exit the folder
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+        // long tap on a bookmark should show a context menu with an edit option
+        child = list.getChildAt(1);
+        mSolo.clickLongOnView(child);
+
+        // TODO: Test clicking these does the right thing
+        mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
+        mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
+        mAsserter.ok(mSolo.searchText("Edit", true), "Context menu has Edit option", "Edit");
+        mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
+        mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
+
+        // press back to exit the context menu
+        // back again to exit the awesomebar
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private void compareRow(View child, int numTextViews, int numImageViews) {
+        ArrayList<View> views = mSolo.getViews(child);
+        ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
+        ArrayList<TextView> textViews = new ArrayList<TextView>();
+
+        for (int j = 0; j < views.size(); j++) {
+            View v = views.get(j);
+            if (v instanceof TextView) {
+                TextView t = (TextView)v;
+                textViews.add(t);
+
+                String string = t.getText().toString();
+                mAsserter.ok(!TextUtils.isEmpty(string), "TextView is filled in", string);
+            } else if (v instanceof ImageView) {
+                imageViews.add((ImageView)v);
+            }
+        }
+
+        int visible = 0;
+        for (int j = 0; j < imageViews.size(); j++) {
+            ImageView img = imageViews.get(j);
+            visible += (img.getVisibility() == View.VISIBLE) ? 1 : 0;
+        }
+        mAsserter.is(visible, numImageViews, "Correct number of ImageViews visible");
+
+        visible = 0;
+        for (int j = 0; j < textViews.size(); j++) {
+            TextView text = textViews.get(j);
+            visible += (text.getVisibility() == View.VISIBLE) ? 1 : 0;
+        }
+        mAsserter.is(textViews.size(), numTextViews, "Correct number of TextViews visible");
+    }
+
+    private ListView getBookmarksList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("Bookmarks");
+
+        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
+        return (ListView)tabHost.getCurrentView();
+    }
+
+    private long addBookmark(String title, String url) {
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
+
+        long folderId = -1;
+        Cursor c = null;
+        try {
+            c = resolver.query(bookmarksUri,
+                               new String[] { "_id" },
+                               "guid = ?",
+                               new String[] { "toolbar" },
+                               null);
+
+            if (c.moveToFirst())
+                folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
+        } finally {
+            if (c != null)
+                c.close();
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("title", title);
+        values.put("url", url);
+        values.put("type", 1);
+        values.put("parent", folderId);
+        values.put("guid", url);
+        values.put("position", 10);
+        long now = System.currentTimeMillis();
+        values.put("created", now);
+        values.put("modified", now);
+
+        Uri uri = resolver.insert(bookmarksUri, values);
+        mAsserter.ok(true, "Inserted at: ", uri.toString());
+        return ContentUris.parseId(uri);
+    }
+
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        resolver.delete(uri, "title = ?", new String[] {
+            "BOOKMARK_TITLE"
+        });
+    }
+}

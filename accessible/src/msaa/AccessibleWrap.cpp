@@ -8,29 +8,23 @@
 #include "Compatibility.h"
 #include "DocAccessible-inl.h"
 #include "EnumVariant.h"
+#include "ia2AccessibleRelation.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
+#include "nsIAccessibleEvent.h"
+#include "nsIAccessibleRelation.h"
 #include "nsWinUtils.h"
 #include "Relation.h"
 #include "Role.h"
-#include "States.h"
-
-#include "ia2AccessibleRelation.h"
-
-#include "nsIAccessibleEvent.h"
-#include "nsIAccessibleRelation.h"
-
-#include "Accessible2_i.c"
-#include "AccessibleRole.h"
-#include "AccessibleStates.h"
 #include "RootAccessible.h"
+#include "States.h"
+#include "uiaRawElmProvider.h"
 
 #ifdef DEBUG
 #include "Logging.h"
 #endif
 
 #include "nsIMutableArray.h"
-#include "nsIDOMDocument.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"
@@ -41,7 +35,11 @@
 #include "nsIViewManager.h"
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
+#include "mozilla/Preferences.h"
 
+#include "Accessible2_i.c"
+#include "AccessibleRole.h"
+#include "AccessibleStates.h"
 #include "OLEACC.H"
 
 using namespace mozilla;
@@ -121,6 +119,32 @@ __try {
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// IServiceProvider
+
+STDMETHODIMP
+AccessibleWrap::QueryService(REFGUID aGuidService, REFIID aIID,
+                             void** aInstancePtr)
+{
+  if (!aInstancePtr)
+    return E_INVALIDARG;
+
+  *aInstancePtr = NULL;
+
+  // UIA IAccessibleEx
+  if (aGuidService == IID_IAccessibleEx &&
+      Preferences::GetBool("accessibility.uia.enable")) {
+    IAccessibleEx* accEx = new uiaRawElmProvider(this);
+    HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
+    if (FAILED(hr))
+      delete accEx;
+
+    return hr;
+  }
+
+  return nsAccessNodeWrap::QueryService(aGuidService, aIID, aInstancePtr);
 }
 
 //-----------------------------------------------------

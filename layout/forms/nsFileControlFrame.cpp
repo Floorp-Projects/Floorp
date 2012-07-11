@@ -18,7 +18,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsXPCOM.h"

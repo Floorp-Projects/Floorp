@@ -542,7 +542,7 @@ private:
       }
 
 #ifdef ANDROID
-      __android_log_print(ANDROID_LOG_INFO, "Gecko", buffer.ptr());
+      __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", buffer.ptr());
 #endif
       fputs(buffer.ptr(), stdout);
       fflush(stdout);
@@ -787,14 +787,14 @@ private:
 
   static JSBool
   Resolve(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsigned aFlags,
-          JSObject** aObjp)
+          JSMutableHandleObject aObjp)
   {
     JSBool resolved;
     if (!JS_ResolveStandardClass(aCx, aObj, aId, &resolved)) {
       return false;
     }
 
-    *aObjp = resolved ? aObj.value() : NULL;
+    aObjp.set(resolved ? aObj.get() : NULL);
     return true;
   }
 

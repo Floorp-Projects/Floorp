@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.5.10 [March 8, 2012]
+ * Last changed in libpng 1.5.11 [June 14, 2012]
  * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -816,7 +816,8 @@ png_write_row(png_structp png_ptr, png_const_bytep row)
 /* Added at libpng-1.5.10 */
 #ifdef PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED
    /* Check for out-of-range palette index */
-   if(row_info.color_type == PNG_COLOR_TYPE_PALETTE)
+   if (row_info.color_type == PNG_COLOR_TYPE_PALETTE &&
+       png_ptr->num_palette_max >= 0)
       png_do_check_palette_indexes(png_ptr, &row_info);
 #endif
 

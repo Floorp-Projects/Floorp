@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 765063">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="apphelper.js"/>
+  <!-- We only need jshelper.js for debug(), which apphelper.js calls.  But
+     - since we include it, we also let it call apphelper.js's popup_listener(),
+     - which listens for the install doorhanger and presses its main button. -->
+  <script type="application/javascript" src="jshelper.js"/>
+
+<script> 
+SimpleTest.waitForExplicitFinish();
+
+// Observe app installation and confirm that the install origin didn't change.
+var observer = {
+  observe: function observe(subject, topic, data) {
+    Services.obs.removeObserver(observer, "webapps-sync-install");
+    ok(JSON.parse(data).installOrigin == "http://www.example.com",
+       "the install origin didn't change");
+    tearDown();
+    SimpleTest.finish();
+  }
+};
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+Services.obs.addObserver(observer, "webapps-sync-install", false);
+</script> 
+
+  <!-- Load a page that initiates an app installation and then immediately
+     - redirects to a page at a different origin.  We can't do this directly
+     - inside this test page, because that would cause the test to hang. -->
+  <iframe src="http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/bug_765063.xul"/>
+
+</window>

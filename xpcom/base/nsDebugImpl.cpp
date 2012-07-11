@@ -43,6 +43,13 @@
 #include "nsString.h"
 #endif
 
+#if defined(XP_MACOSX)
+#include <stdbool.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/sysctl.h>
+#endif
+
 #include "mozilla/mozalloc_abort.h"
 
 static void
@@ -133,6 +140,40 @@ NS_IMETHODIMP
 nsDebugImpl::GetAssertionCount(PRInt32* aResult)
 {
   *aResult = gAssertionCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
+{
+  *aResult = false;
+
+#if defined(XP_WIN)
+  *aResult = ::IsDebuggerPresent();
+#elif defined(XP_MACOSX)
+  // Specify the info we're looking for
+  int mib[4];
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PID;
+  mib[3] = getpid();
+  size_t mibSize = sizeof(mib) / sizeof(int);
+
+  struct kinfo_proc info;
+  size_t infoSize = sizeof(info);
+  memset(&info, 0, infoSize);
+
+  if (sysctl(mib, mibSize, &info, &infoSize, NULL, 0)) {
+    // if the call fails, default to false
+    *aResult = false;
+    return NS_OK;
+  }
+
+  if (info.kp_proc.p_flag & P_TRACED) {
+    *aResult = true;
+  }
+#endif
+
   return NS_OK;
 }
 

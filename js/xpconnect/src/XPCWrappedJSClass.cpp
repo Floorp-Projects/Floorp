@@ -1112,17 +1112,6 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     return NS_ERROR_FAILURE;
 }
 
-class ContextPrincipalGuard
-{
-    nsIScriptSecurityManager *ssm;
-    XPCCallContext &ccx;
-  public:
-    ContextPrincipalGuard(XPCCallContext &ccx)
-      : ssm(nsnull), ccx(ccx) {}
-    void principalPushed(nsIScriptSecurityManager *ssm) { this->ssm = ssm; }
-    ~ContextPrincipalGuard() { if (ssm) ssm->PopContextPrincipal(ccx); }
-};
-
 NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 const XPTMethodDescriptor* info,
@@ -1166,7 +1155,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
     JS::AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
-    ContextPrincipalGuard principalGuard(ccx);
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     uint8_t paramCount = info->num_args;
@@ -1179,29 +1167,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
     XPCJSRuntime::Get()->SetPendingException(nsnull);
-
-    // This scoping is necessary due to the gotos here. Ugh.
-    {
-        // TODO Remove me in favor of security wrappers.
-        nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-        if (ssm) {
-            nsIPrincipal *objPrincipal =
-                xpc::AccessCheck::getPrincipal(js::GetObjectCompartment(obj));
-            if (objPrincipal) {
-                JSStackFrame* fp = nsnull;
-                nsresult rv =
-                    ssm->PushContextPrincipal(ccx, JS_FrameIterator(ccx, &fp),
-                                              objPrincipal);
-                if (NS_FAILED(rv)) {
-                    JS_ReportOutOfMemory(ccx);
-                    retval = NS_ERROR_OUT_OF_MEMORY;
-                    goto pre_call_clean_up;
-                }
-
-                principalGuard.principalPushed(ssm);
-            }
-        }
-    }
 
     // We use js_Invoke so that the gcthings we use as args will be rooted by
     // the engine as we do conversions and prepare to do the function call.

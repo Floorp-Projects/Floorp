@@ -14,6 +14,7 @@ NS_IMPL_THREADSAFE_RELEASE(AudioChild);
 AudioChild::AudioChild()
   : mLastPosition(-1),
     mLastPositionTimestamp(0),
+    mWriteCounter(0),
     mMinWriteSize(-2),// Initial value, -2, error on -1
     mAudioReentrantMonitor("AudioChild.mReentrantMonitor"),
     mIPCOpen(true),
@@ -76,6 +77,25 @@ AudioChild::WaitForDrain()
 {
   ReentrantMonitorAutoEnter mon(mAudioReentrantMonitor);
   while (!mDrained && mIPCOpen) {
+    mAudioReentrantMonitor.Wait();
+  }
+}
+
+bool
+AudioChild::RecvWriteDone()
+{
+  ReentrantMonitorAutoEnter mon(mAudioReentrantMonitor);
+  mWriteCounter += 1;
+  mAudioReentrantMonitor.NotifyAll();
+  return true;
+}
+
+void
+AudioChild::WaitForWrite()
+{
+  ReentrantMonitorAutoEnter mon(mAudioReentrantMonitor);
+  PRUint64 writeCounter = mWriteCounter;
+  while (mWriteCounter == writeCounter && mIPCOpen) {
     mAudioReentrantMonitor.Wait();
   }
 }

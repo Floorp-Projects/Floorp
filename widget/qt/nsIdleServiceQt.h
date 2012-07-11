@@ -27,18 +27,30 @@ typedef struct {
 class nsIdleServiceQt : public nsIdleService
 {
 public:
-    NS_DECL_ISUPPORTS
-    nsIdleServiceQt();
+    NS_DECL_ISUPPORTS_INHERITED
 
     bool PollIdleTime(PRUint32* aIdleTime);
 
+    static already_AddRefed<nsIdleServiceQt> GetInstance()
+    {
+        nsIdleServiceQt* idleService =
+            static_cast<nsIdleServiceQt*>(nsIdleService::GetInstance().get());
+        if (!idleService) {
+            idleService = new nsIdleServiceQt();
+            NS_ADDREF(idleService);
+        }
+        
+        return idleService;
+    }
+
 private:
-    ~nsIdleServiceQt();
 #if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)
     XScreenSaverInfo* mXssInfo;
 #endif
 
 protected:
+    nsIdleServiceQt();
+    virtual ~nsIdleServiceQt();
     bool UsePollMode();
 };
 

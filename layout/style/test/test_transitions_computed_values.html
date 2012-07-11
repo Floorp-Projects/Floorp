@@ -27,85 +27,85 @@ var c = document.createElement("div");
 p.appendChild(c);
 var cs = getComputedStyle(c, "");
 
-p.style.MozTransitionProperty = "margin-left, margin-right";
-c.style.MozTransitionProperty = "inherit";
-is(cs.MozTransitionProperty, "margin-left, margin-right",
+p.style.transitionProperty = "margin-left, margin-right";
+c.style.transitionProperty = "inherit";
+is(cs.transitionProperty, "margin-left, margin-right",
    "computed style match with no other properties");
-c.style.MozTransitionDuration = "5s";
-is(cs.MozTransitionProperty, "margin-left, margin-right",
+c.style.transitionDuration = "5s";
+is(cs.transitionProperty, "margin-left, margin-right",
    "computed style match with shorter property");
-is(cs.MozTransitionDuration, "5s",
+is(cs.transitionDuration, "5s",
    "shorter property not extended");
-c.style.MozTransitionDuration = "5s, 4s, 3s, 2000ms";
-is(cs.MozTransitionProperty, "margin-left, margin-right",
+c.style.transitionDuration = "5s, 4s, 3s, 2000ms";
+is(cs.transitionProperty, "margin-left, margin-right",
    "computed style match with longer property");
-is(cs.MozTransitionDuration, "5s, 4s, 3s, 2s",
+is(cs.transitionDuration, "5s, 4s, 3s, 2s",
    "longer property computed correctly");
-p.style.MozTransitionProperty = "";
-c.style.MozTransitionProperty = "";
-c.style.MozTransitionDuration = "";
+p.style.transitionProperty = "";
+c.style.transitionProperty = "";
+c.style.transitionDuration = "";
 
 // and repeat the above set of tests with property and duration swapped
-p.style.MozTransitionDuration = "5s, 4s";
-c.style.MozTransitionDuration = "inherit";
-is(cs.MozTransitionDuration, "5s, 4s",
+p.style.transitionDuration = "5s, 4s";
+c.style.transitionDuration = "inherit";
+is(cs.transitionDuration, "5s, 4s",
    "computed style match with no other properties");
-c.style.MozTransitionProperty = "margin-left";
-is(cs.MozTransitionDuration, "5s, 4s",
+c.style.transitionProperty = "margin-left";
+is(cs.transitionDuration, "5s, 4s",
    "computed style match with shorter property");
-is(cs.MozTransitionProperty, "margin-left",
+is(cs.transitionProperty, "margin-left",
    "shorter property not extended");
-c.style.MozTransitionProperty =
+c.style.transitionProperty =
   "margin-left, margin-right, margin-top, margin-bottom";
-is(cs.MozTransitionDuration, "5s, 4s",
+is(cs.transitionDuration, "5s, 4s",
    "computed style match with longer property");
-is(cs.MozTransitionProperty,
+is(cs.transitionProperty,
    "margin-left, margin-right, margin-top, margin-bottom",
    "longer property computed correctly");
-p.style.MozTransitionDuration = "";
-c.style.MozTransitionDuration = "";
-c.style.MozTransitionProperty = "";
+p.style.transitionDuration = "";
+c.style.transitionDuration = "";
+c.style.transitionProperty = "";
 
 // And do the same pair of tests for animations:
 
-p.style.MozAnimationName = "bounce, roll";
-c.style.MozAnimationName = "inherit";
-is(cs.MozAnimationName, "bounce, roll",
+p.style.animationName = "bounce, roll";
+c.style.animationName = "inherit";
+is(cs.animationName, "bounce, roll",
    "computed style match with no other properties");
-c.style.MozAnimationDuration = "5s";
-is(cs.MozAnimationName, "bounce, roll",
+c.style.animationDuration = "5s";
+is(cs.animationName, "bounce, roll",
    "computed style match with shorter property");
-is(cs.MozAnimationDuration, "5s",
+is(cs.animationDuration, "5s",
    "shorter property not extended");
-c.style.MozAnimationDuration = "5s, 4s, 3s, 2000ms";
-is(cs.MozAnimationName, "bounce, roll",
+c.style.animationDuration = "5s, 4s, 3s, 2000ms";
+is(cs.animationName, "bounce, roll",
    "computed style match with longer property");
-is(cs.MozAnimationDuration, "5s, 4s, 3s, 2s",
+is(cs.animationDuration, "5s, 4s, 3s, 2s",
    "longer property computed correctly");
-p.style.MozAnimationName = "";
-c.style.MozAnimationName = "";
-c.style.MozAnimationDuration = "";
+p.style.animationName = "";
+c.style.animationName = "";
+c.style.animationDuration = "";
 
 // and repeat the above set of tests with name and duration swapped
-p.style.MozAnimationDuration = "5s, 4s";
-c.style.MozAnimationDuration = "inherit";
-is(cs.MozAnimationDuration, "5s, 4s",
+p.style.animationDuration = "5s, 4s";
+c.style.animationDuration = "inherit";
+is(cs.animationDuration, "5s, 4s",
    "computed style match with no other properties");
-c.style.MozAnimationName = "bounce";
-is(cs.MozAnimationDuration, "5s, 4s",
+c.style.animationName = "bounce";
+is(cs.animationDuration, "5s, 4s",
    "computed style match with shorter property");
-is(cs.MozAnimationName, "bounce",
+is(cs.animationName, "bounce",
    "shorter property not extended");
-c.style.MozAnimationName =
+c.style.animationName =
   "bounce, roll, wiggle, spin";
-is(cs.MozAnimationDuration, "5s, 4s",
+is(cs.animationDuration, "5s, 4s",
    "computed style match with longer property");
-is(cs.MozAnimationName,
+is(cs.animationName,
    "bounce, roll, wiggle, spin",
    "longer property computed correctly");
-p.style.MozAnimationDuration = "";
-c.style.MozAnimationDuration = "";
-c.style.MozAnimationName = "";
+p.style.animationDuration = "";
+c.style.animationDuration = "";
+c.style.animationName = "";
 
 </script>
 </pre>

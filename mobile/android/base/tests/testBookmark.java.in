@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.TabHost;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.reflect.Method;
@@ -15,7 +16,7 @@ import android.content.ContentResolver;
 
 public class testBookmark extends BaseTest  {
     private static final int MAX_WAIT_MS = 3000; 
-    private static final String ABOUT_HOME_URL = "about:home";
+    private static final String ABOUT_HOME_URL = "about:firefox";
     private static String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
     private static String BOOKMARK_TITLE = "Browser Blank Page 01";
 
@@ -76,6 +77,9 @@ public class testBookmark extends BaseTest  {
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();
 
+        // Clear VKB so that list is not obscured
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
         // Wait for bookmark to appear in list
         mSolo.waitForText(ABOUT_HOME_URL);
 
@@ -124,9 +128,9 @@ public class testBookmark extends BaseTest  {
             Boolean res = (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
             return res.booleanValue();
         } catch(java.lang.IllegalAccessException ex) {
-            mAsserter.is(true, false, "Can not call addBookmark");
+            mAsserter.is(true, false, "Can not call isBookmarked");
         } catch(java.lang.reflect.InvocationTargetException ex) {
-            mAsserter.is(true, false, "Error calling addBookmark");
+            mAsserter.is(true, false, "Error calling isBookmarked");
         }
         return !isBookmarked;
     }
@@ -157,17 +161,8 @@ public class testBookmark extends BaseTest  {
         // Click the "Bookmarks" tab to switch to bookmarks list
         mSolo.clickOnText("Bookmarks");
 
-        Element bookmarkList = mDriver.findElement(awesomeBarActivity, "bookmarks_list");
-        if (bookmarkList != null) {
-            ArrayList<ListView> lists = mSolo.getCurrentListViews();
-            for (ListView list : lists) {
-                if (list.getId() == bookmarkList.getId())
-                    return list;
-            }
-        }
-
-        // Just return null if we can't find the bookmarks list view
-        return null;
+        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
+        return (ListView)tabHost.getCurrentView();
     }
 
     // This method opens the menu and selects the "Bookmark" menu item

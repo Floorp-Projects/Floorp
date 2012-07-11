@@ -78,7 +78,7 @@ RegExpObjectBuilder::build(HandleAtom source, RegExpFlag flags)
     if (!getOrCreate())
         return NULL;
 
-    return reobj_->init(cx, source, flags) ? reobj_.raw() : NULL;
+    return reobj_->init(cx, source, flags) ? reobj_.get() : NULL;
 }
 
 RegExpObject *
@@ -242,10 +242,10 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 {
      /*
       * We have to check both conditions, since:
-      *   1. During TraceRuntime, gcRunning is set
+      *   1. During TraceRuntime, isHeapBusy() is true
       *   2. When a write barrier executes, IS_GC_MARKING_TRACER is true.
       */
-    if (trc->runtime->gcRunning && IS_GC_MARKING_TRACER(trc))
+    if (trc->runtime->isHeapBusy() && IS_GC_MARKING_TRACER(trc))
         obj->setPrivate(NULL);
 }
 

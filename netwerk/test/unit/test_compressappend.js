@@ -6,37 +6,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var _CSvc;
-function get_cache_service() {
-  if (_CSvc)
-    return _CSvc;
-
-  return _CSvc = Cc["@mozilla.org/network/cache-service;1"].
-                 getService(Ci.nsICacheService);
-}
-
-function get_ostream_for_entry(key, append, compress, entryRef)
-{
-  var cache = get_cache_service();
-  var session = cache.createSession(
-                  "HTTP",
-                  Ci.nsICache.STORE_ON_DISK,
-                  Ci.nsICache.STREAM_BASED);
-  var cacheEntry = session.openCacheEntry(
-                     key,
-                     append ? Ci.nsICache.ACCESS_READ_WRITE
-                            : Ci.nsICache.ACCESS_WRITE,
-                     true);
-
-  if (compress)
-    if (!append)
-      cacheEntry.setMetaDataElement("uncompressed-len", "0");
-
-  var oStream = cacheEntry.openOutputStream(append ? cacheEntry.storageDataSize : 0);
-  entryRef.value = cacheEntry;
-  return oStream;
-}
-
 function write_and_check(str, data, len)
 {
   var written = str.write(data, len);
@@ -47,60 +16,77 @@ function write_and_check(str, data, len)
   }
 }
 
-function check_datafile()
+function TestAppend(compress, callback)
 {
-  var cache = get_cache_service();
-  var session = cache.createSession(
-                  "HTTP",
-                  Ci.nsICache.STORE_ON_DISK,
-                  Ci.nsICache.STREAM_BASED);
-  var entry = session.openCacheEntry(
-                "data",
-                Ci.nsICache.ACCESS_READ,
-                true);
-
-  var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
-                createInstance(Ci.nsIScriptableInputStream);
-
-  wrapper.init(entry.openInputStream(0));
-
-  var str = wrapper.read(wrapper.available());
-  do_check_eq(str.length, 10);
-  do_check_eq(str, "12345abcde");
-
-  wrapper.close();
-  entry.close();
+  this._compress = compress;
+  this._callback = callback;
+  this.run();
 }
 
+TestAppend.prototype = {
+  _compress: false,
+  _callback: null,
 
-function write_datafile(compress)
-{
-  var entry = {};
-  var oStr = get_ostream_for_entry("data", false, compress, entry);
-  write_and_check(oStr, "12345", 5);
-  oStr.close();
-  entry.value.close();
-}
+  run: function() {
+    evict_cache_entries();
+    asyncOpenCacheEntry("data",
+                        "HTTP",
+                        Ci.nsICache.STORE_ON_DISK,
+                        Ci.nsICache.ACCESS_WRITE,
+                        this.writeData.bind(this));
+  },
 
-function append_datafile()
-{
-  var entry = {};
-  var oStr = get_ostream_for_entry("data", true, false, entry);
-  write_and_check(oStr, "abcde", 5);
-  oStr.close();
-  entry.value.close();
-}
+  writeData: function(status, entry) {
+    do_check_eq(status, Cr.NS_OK);
+    if (this._compress)
+      entry.setMetaDataElement("uncompressed-len", "0");
+    var os = entry.openOutputStream(0);
+    write_and_check(os, "12345", 5);
+    os.close();
+    entry.close();
+    asyncOpenCacheEntry("data",
+                        "HTTP",
+                        Ci.nsICache.STORE_ON_DISK,
+                        Ci.nsICache.ACCESS_READ_WRITE,
+                        this.appendData.bind(this));
+  },
 
-function test_append(compress)
-{
-  get_cache_service().evictEntries(Ci.nsICache.STORE_ANYWHERE);
-  write_datafile(compress);
-  append_datafile();
-  check_datafile();
-}
+  appendData: function(status, entry) {
+    do_check_eq(status, Cr.NS_OK);
+    var os = entry.openOutputStream(entry.storageDataSize);
+    write_and_check(os, "abcde", 5);
+    os.close();
+    entry.close();
+
+    asyncOpenCacheEntry("data",
+                        "HTTP",
+                        Ci.nsICache.STORE_ON_DISK,
+                        Ci.nsICache.ACCESS_READ,
+                        this.checkData.bind(this));
+  },
+
+  checkData: function(status, entry) {
+    do_check_eq(status, Cr.NS_OK);
+    var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
+                  createInstance(Ci.nsIScriptableInputStream);
+    wrapper.init(entry.openInputStream(0));
+    var str = wrapper.read(wrapper.available());
+    do_check_eq(str.length, 10);
+    do_check_eq(str, "12345abcde");
+
+    wrapper.close();
+    entry.close();
+
+    do_execute_soon(this._callback);
+  }
+};
 
 function run_test() {
   do_get_profile();
-  test_append(false);
-  test_append(true);
+  new TestAppend(false, run_test2);
+  do_test_pending();
+}
+
+function run_test2() {
+  new TestAppend(true, do_test_finished);
 }

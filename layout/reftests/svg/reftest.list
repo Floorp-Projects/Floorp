@@ -169,6 +169,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
+== marker-orientation-01.svg marker-orientation-01-ref.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-extref-dataURI-01.svg pass.svg
@@ -242,6 +243,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == suspend-07.svg pass.svg
 == suspend-08.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
+== text-font-size-01.svg pass.svg
 random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101

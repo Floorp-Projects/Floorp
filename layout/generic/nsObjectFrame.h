@@ -162,7 +162,7 @@ public:
 
   bool PaintedByGecko();
 
-  nsIWidget* GetWidget() { return mWidget; }
+  nsIWidget* GetWidget() { return mInnerView ? mWidget : nsnull; }
 
   /**
    * Adjust the plugin's idea of its size, using aSize as its new size.

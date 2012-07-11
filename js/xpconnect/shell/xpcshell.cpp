@@ -423,7 +423,7 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", bytes.ptr());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", bytes.ptr());
 #endif
     fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
@@ -901,7 +901,7 @@ env_enumerate(JSContext *cx, JSHandleObject obj)
 
 static JSBool
 env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-            JSObject **objp)
+            JSMutableHandleObject objp)
 {
     JSString *idstr, *valstr;
 
@@ -927,7 +927,7 @@ env_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                                    NULL, NULL, JSPROP_ENUMERATE)) {
             return false;
         }
-        *objp = obj;
+        objp.set(obj);
     }
     return true;
 }
@@ -1379,20 +1379,6 @@ FullTrustSecMan::GetSubjectPrincipal(nsIPrincipal **_retval)
 {
     NS_IF_ADDREF(*_retval = mSystemPrincipal);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] void pushContextPrincipal (in JSContextPtr cx, in JSStackFramePtr fp, in nsIPrincipal principal); */
-NS_IMETHODIMP
-FullTrustSecMan::PushContextPrincipal(JSContext * cx, JSStackFrame * fp, nsIPrincipal *principal)
-{
-    return NS_OK;
-}
-
-/* [noscript] void popContextPrincipal (in JSContextPtr cx); */
-NS_IMETHODIMP
-FullTrustSecMan::PopContextPrincipal(JSContext * cx)
-{
-    return NS_OK;
 }
 
 /* [noscript] nsIPrincipal getSystemPrincipal (); */
@@ -2046,18 +2032,27 @@ XPCShellDirProvider::GetFile(const char *prop, bool *persistent,
             FAILED(SHGetPathFromIDListA(pItemIDList, appData))) {
             return NS_ERROR_FAILURE;
         }
-#ifdef MOZ_APP_PROFILE
-        sprintf(path, "%s\\%s", appData, MOZ_APP_PROFILE);
-#else
-        sprintf(path, "%s\\%s\\%s\\%s", appData, MOZ_APP_VENDOR, MOZ_APP_BASENAME, MOZ_APP_NAME);
-#endif
         nsAutoString pathName;
-        pathName.AssignASCII(path);
+        pathName.AssignASCII(appData);
         nsCOMPtr<nsIFile> localFile;
         nsresult rv = NS_NewLocalFile(pathName, true, getter_AddRefs(localFile));
         if (NS_FAILED(rv)) {
             return rv;
         }
+
+#ifdef MOZ_APP_PROFILE
+        localFile->AppendNative(NS_LITERAL_CSTRING(MOZ_APP_PROFILE));
+#else
+        // MOZ_APP_VENDOR and MOZ_APP_BASENAME are optional.
+#ifdef MOZ_APP_VENDOR
+        localFile->AppendNative(NS_LITERAL_CSTRING(MOZ_APP_VENDOR));
+#endif
+#ifdef MOZ_APP_BASENAME
+        localFile->AppendNative(NS_LITERAL_CSTRING(MOZ_APP_BASENAME));
+#endif
+        // However app name is always appended.
+        localFile->AppendNative(NS_LITERAL_CSTRING(MOZ_APP_NAME));
+#endif
         return localFile->Clone(result);
 #else
         // Fail on non-Windows platforms, the caller is supposed to fal back on

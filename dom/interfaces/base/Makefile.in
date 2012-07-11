@@ -57,6 +57,7 @@ XPIDLSRCS =					\
 	nsIDOMPerformance.idl			\
 	nsIDOMPerformanceTiming.idl		\
 	nsIDOMPerformanceNavigation.idl		\
+	nsIIdleObserver.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsIDOMSVGAltGlyphElement.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 
 //----------------------------------------------------------------------
@@ -90,10 +91,16 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGTSpanFrame::GetCanvasTM()
+nsSVGTSpanFrame::GetCanvasTM(PRUint32 aFor)
 {
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
+        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+      return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+  }
   NS_ASSERTION(mParent, "null parent");
-  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();  
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM(aFor);
 }
 
 //----------------------------------------------------------------------

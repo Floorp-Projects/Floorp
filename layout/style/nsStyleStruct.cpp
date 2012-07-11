@@ -1124,7 +1124,19 @@ nsStylePosition::nsStylePosition(void)
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
   mMaxHeight.SetNoneValue();
+#ifdef MOZ_FLEXBOX
+  mFlexBasis.SetAutoValue();
+#endif // MOZ_FLEXBOX
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+#ifdef MOZ_FLEXBOX
+  mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+  mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
+  mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
+  mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
+  mOrder = NS_STYLE_ORDER_INITIAL;
+  mFlexGrow = 0.0f;
+  mFlexShrink = 1.0f;
+#endif // MOZ_FLEXBOX
   mZIndex.SetAutoValue();
 }
 
@@ -1148,6 +1160,36 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     // Can affect both widths and heights; just a bad scene.
     return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
   }
+
+#ifdef MOZ_FLEXBOX
+  // Properties that apply to flex items:
+  // NOTE: Changes to "order" on a flex item may trigger some repositioning.
+  // If we're in a multi-line flex container, it also may affect our size
+  // (and that of our container & siblings) by shuffling items between lines.
+  if (mAlignSelf != aOther.mAlignSelf ||
+      mFlexBasis != aOther.mFlexBasis ||
+      mFlexGrow != aOther.mFlexGrow ||
+      mFlexShrink != aOther.mFlexShrink ||
+      mOrder != aOther.mOrder) {
+    return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
+  }
+
+  // Properties that apply to flexbox containers:
+
+  // flex-direction can swap a flexbox between vertical & horizontal.
+  // align-items can change the sizing of a flexbox & the positioning
+  // of its children.
+  if (mAlignItems != aOther.mAlignItems ||
+      mFlexDirection != aOther.mFlexDirection) {
+    return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
+  }
+
+  // Changing justify-content on a flexbox might affect the positioning of its
+  // children, but it won't affect any sizing.
+  if (mJustifyContent != aOther.mJustifyContent) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+  }
+#endif // MOZ_FLEXBOX
 
   if (mHeight != aOther.mHeight ||
       mMinHeight != aOther.mMinHeight ||
@@ -1357,10 +1399,12 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
   if (mShape != aOther.mShape ||
       mSize != aOther.mSize ||
       mRepeating != aOther.mRepeating ||
-      mToCorner != aOther.mToCorner ||
+      mLegacySyntax != aOther.mLegacySyntax ||
       mBgPosX != aOther.mBgPosX ||
       mBgPosY != aOther.mBgPosY ||
-      mAngle != aOther.mAngle)
+      mAngle != aOther.mAngle ||
+      mRadiusX != aOther.mRadiusX ||
+      mRadiusY != aOther.mRadiusY)
     return false;
 
   if (mStops.Length() != aOther.mStops.Length())
@@ -1379,7 +1423,7 @@ nsStyleGradient::nsStyleGradient(void)
   : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
   , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
   , mRepeating(false)
-  , mToCorner(false)
+  , mLegacySyntax(false)
 {
 }
 
@@ -2142,7 +2186,28 @@ nsStyleDisplay::nsStyleDisplay()
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-  : mTransitions(aSource.mTransitions)
+  : mBinding(aSource.mBinding)
+  , mClip(aSource.mClip)
+  , mOpacity(aSource.mOpacity)
+  , mDisplay(aSource.mDisplay)
+  , mOriginalDisplay(aSource.mOriginalDisplay)
+  , mAppearance(aSource.mAppearance)
+  , mPosition(aSource.mPosition)
+  , mFloats(aSource.mFloats)
+  , mOriginalFloats(aSource.mOriginalFloats)
+  , mBreakType(aSource.mBreakType)
+  , mBreakBefore(aSource.mBreakBefore)
+  , mBreakAfter(aSource.mBreakAfter)
+  , mOverflowX(aSource.mOverflowX)
+  , mOverflowY(aSource.mOverflowY)
+  , mResize(aSource.mResize)
+  , mClipFlags(aSource.mClipFlags)
+  , mOrient(aSource.mOrient)
+  , mBackfaceVisibility(aSource.mBackfaceVisibility)
+  , mTransformStyle(aSource.mTransformStyle)
+  , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mChildPerspective(aSource.mChildPerspective)
+  , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
   , mTransitionDurationCount(aSource.mTransitionDurationCount)
   , mTransitionDelayCount(aSource.mTransitionDelayCount)
@@ -2158,36 +2223,13 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-  mAppearance = aSource.mAppearance;
-  mDisplay = aSource.mDisplay;
-  mOriginalDisplay = aSource.mOriginalDisplay;
-  mOriginalFloats = aSource.mOriginalFloats;
-  mBinding = aSource.mBinding;
-  mPosition = aSource.mPosition;
-  mFloats = aSource.mFloats;
-  mBreakType = aSource.mBreakType;
-  mBreakBefore = aSource.mBreakBefore;
-  mBreakAfter = aSource.mBreakAfter;
-  mOverflowX = aSource.mOverflowX;
-  mOverflowY = aSource.mOverflowY;
-  mResize = aSource.mResize;
-  mClipFlags = aSource.mClipFlags;
-  mClip = aSource.mClip;
-  mOpacity = aSource.mOpacity;
-  mOrient = aSource.mOrient;
 
-  /* Copy over the transformation information. */
-  mSpecifiedTransform = aSource.mSpecifiedTransform;
-  
   /* Copy over transform origin. */
   mTransformOrigin[0] = aSource.mTransformOrigin[0];
   mTransformOrigin[1] = aSource.mTransformOrigin[1];
   mTransformOrigin[2] = aSource.mTransformOrigin[2];
   mPerspectiveOrigin[0] = aSource.mPerspectiveOrigin[0];
   mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
-  mChildPerspective = aSource.mChildPerspective;
-  mBackfaceVisibility = aSource.mBackfaceVisibility;
-  mTransformStyle = aSource.mTransformStyle;
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const

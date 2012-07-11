@@ -600,7 +600,7 @@ struct ParseNode {
         } binary;
         struct {                        /* one kid if unary */
             ParseNode   *kid;
-            JSBool      hidden;         /* hidden genexp-induced JSOP_YIELD
+            bool        hidden;         /* hidden genexp-induced JSOP_YIELD
                                            or directive prologue member (as
                                            pn_prologue) */
         } unary;
@@ -1037,9 +1037,9 @@ struct FunctionNode : public ParseNode {
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, SharedContext *sc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc);
 
-    inline void initCommon(SharedContext *sc);
+    inline void initCommon(TreeContext *tc);
 
 #ifdef DEBUG
     inline void dump(int indent);

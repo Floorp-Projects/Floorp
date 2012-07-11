@@ -83,7 +83,7 @@ interface mozIDOMApplicationMgmt : nsISupports
   attribute nsIDOMEventListener onuninstall;
 };
 
-[scriptable, uuid(f6929871-288b-4613-9a37-9a150760ac50)]
+[scriptable, uuid(d7b0ff50-e667-4ed2-b996-0eb937763952)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
@@ -105,6 +105,12 @@ interface mozIDOMApplicationRegistry : nsISupports
    * the request will return the applications installed from this origin, or null.
    */
   nsIDOMDOMRequest getInstalled();
+
+  /**
+   * the request will return the applications acquired from this origin but which
+   * are not launchable (e.g. by not being natively installed), or null.
+   */
+  nsIDOMDOMRequest getNotInstalled();
 
   readonly attribute mozIDOMApplicationMgmt mgmt;
 };

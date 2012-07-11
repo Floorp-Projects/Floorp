@@ -29,3 +29,10 @@
 }
 -(id)tabs;
 @end
+
+/**
+ * Accessible for a PANE
+ */
+@interface mozPaneAccessible : mozAccessible
+
+@end

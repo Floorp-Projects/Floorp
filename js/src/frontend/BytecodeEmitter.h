@@ -26,18 +26,6 @@
 
 namespace js {
 
-/*
- * To reuse space in StmtInfo, rename breaks and continues for use during
- * try/catch/finally code generation and backpatching. To match most common
- * use cases, the macro argument is a struct, not a struct pointer. Only a
- * loop, switch, or label statement info record can have breaks and continues,
- * and only a for loop has an update backpatch chain, so it's safe to overlay
- * these for the "trying" StmtTypes.
- */
-#define CATCHNOTE(stmt)  ((stmt).update)
-#define GOSUBS(stmt)     ((stmt).breaks)
-#define GUARDJUMP(stmt)  ((stmt).continues)
-
 struct TryNode {
     JSTryNote       note;
     TryNode       *prev;
@@ -63,8 +51,12 @@ class GCConstList {
     void finish(ConstArray *array);
 };
 
+class StmtInfoBCE;
+
 struct BytecodeEmitter
 {
+    typedef StmtInfoBCE StmtInfo;
+
     SharedContext   *const sc;      /* context shared between parsing and bytecode generation */
 
     BytecodeEmitter *const parent;  /* enclosing function or global context */
@@ -85,6 +77,11 @@ struct BytecodeEmitter
     Parser          *const parser;  /* the parser */
 
     StackFrame      *const callerFrame; /* scripted caller frame for eval and dbgapi */
+
+    StmtInfoBCE     *topStmt;       /* top of statement info stack */
+    StmtInfoBCE     *topScopeStmt;  /* top lexical scope statement */
+    Rooted<StaticBlockObject *> blockChain;
+                                    /* compile time block scope chain */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
@@ -156,18 +153,11 @@ struct BytecodeEmitter
         return true;
     }
 
-    bool checkSingletonContext() {
-        if (!script->compileAndGo || sc->inFunction())
-            return false;
-        for (StmtInfo *stmt = sc->topStmt; stmt; stmt = stmt->down) {
-            if (STMT_IS_LOOP(stmt))
-                return false;
-        }
-        hasSingletons = true;
-        return true;
-    }
+    bool checkSingletonContext();
 
     bool needsImplicitThis();
+
+    void tellDebuggerAboutCompiledScript(JSContext *cx);
 
     TokenStream *tokenStream() { return &parser->tokenStream; }
 
@@ -221,14 +211,6 @@ ptrdiff_t
 EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
 
 /*
- * Like PopStatementTC(bce), also patch breaks and continues unless the top
- * statement info record represents a try-catch-finally suite. May fail if a
- * jump offset overflows.
- */
-JSBool
-PopStatementBCE(JSContext *cx, BytecodeEmitter *bce);
-
-/*
  * Define and lookup a primitive jsval associated with the const named by atom.
  * DefineCompileTimeConstant analyzes the constant-folded initializer at pn
  * and saves the const's value in bce->constList, if it can be used at compile
@@ -240,19 +222,19 @@ PopStatementBCE(JSContext *cx, BytecodeEmitter *bce);
  * value other than undefined if the constant was found, true with *vp set to
  * JSVAL_VOID if not found, and false on error.
  */
-JSBool
+bool
 DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn);
 
 /*
  * Emit code into bce for the tree rooted at pn.
  */
-JSBool
+bool
 EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn);
 
 /*
  * Emit function code using bce for the tree rooted at body.
  */
-JSBool
+bool
 EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
 
 } /* namespace frontend */
@@ -422,7 +404,7 @@ NewSrcNote3(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t off
 jssrcnote *
 AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
-JSBool
+bool
 FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
 
 void

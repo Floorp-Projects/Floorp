@@ -137,7 +137,6 @@ var UtteranceGenerator = {
     'toolbar': INCLUDE_DESC,
     'table': INCLUDE_DESC | INCLUDE_NAME,
     'link': INCLUDE_DESC,
-    'list': INCLUDE_DESC,
     'listitem': INCLUDE_DESC,
     'outline': INCLUDE_DESC,
     'outlineitem': INCLUDE_DESC,

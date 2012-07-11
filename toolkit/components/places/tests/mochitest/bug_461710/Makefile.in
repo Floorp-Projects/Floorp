@@ -10,14 +10,12 @@ VPATH		= @srcdir@
 relativesrcdir = toolkit/components/places/tests/bug_461710
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_HTTP_FILES	= \
+MOCHITEST_FILES	= \
 		visited_page.html \
 		link_page.html \
 		link_page-2.html \
 		link_page-3.html \
 		$(NULL)
 
-libs:: $(_HTTP_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

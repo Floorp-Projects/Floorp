@@ -49,6 +49,7 @@ nsHttpConnection::nsHttpConnection()
     , mTotalBytesWritten(0)
     , mKeepAlive(true) // assume to keep-alive by default
     , mKeepAliveMask(true)
+    , mDontReuse(false)
     , mSupportsPipelining(false) // assume low-grade server
     , mIsReused(false)
     , mCompletedProxyConnect(false)
@@ -516,6 +517,7 @@ nsHttpConnection::DontReuse()
 {
     mKeepAliveMask = false;
     mKeepAlive = false;
+    mDontReuse = true;
     mIdleTimeout = 0;
     if (mSpdySession)
         mSpdySession->DontReuse();
@@ -532,12 +534,15 @@ nsHttpConnection::SupportsPipelining()
              this, mTransaction->PipelineDepth(), mRemainingConnectionUses));
         return false;
     }
-    return mSupportsPipelining && IsKeepAlive();
+    return mSupportsPipelining && IsKeepAlive() && !mDontReuse;
 }
 
 bool
 nsHttpConnection::CanReuse()
 {
+    if (mDontReuse)
+        return false;
+
     if ((mTransaction ? mTransaction->PipelineDepth() : 0) >=
         mRemainingConnectionUses) {
         return false;
@@ -962,24 +967,23 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
 
     PRUint32 pipelineDepth = mTransaction->PipelineDepth();
 
-    if (delta >= gHttpHandler->GetPipelineRescheduleTimeout()) {
+    if (delta >= gHttpHandler->GetPipelineRescheduleTimeout() &&
+        pipelineDepth > 1) {
 
         // this just reschedules blocked transactions. no transaction
         // is aborted completely.
         LOG(("cancelling pipeline due to a %ums stall - depth %d\n",
              PR_IntervalToMilliseconds(delta), pipelineDepth));
 
-        if (pipelineDepth > 1) {
-            nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
-            NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
-            // code this defensively for the moment and check for null in opt build
-            // This will reschedule blocked members of the pipeline, but the
-            // blocking transaction (i.e. response 0) will not be changed.
-            if (pipeline) {
-                pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
-                LOG(("Rescheduling the head of line blocked members of a pipeline "
-                     "because reschedule-timeout idle interval exceeded"));
-            }
+        nsHttpPipeline *pipeline = mTransaction->QueryPipeline();
+        NS_ABORT_IF_FALSE(pipeline, "pipelinedepth > 1 without pipeline");
+        // code this defensively for the moment and check for null in opt build
+        // This will reschedule blocked members of the pipeline, but the
+        // blocking transaction (i.e. response 0) will not be changed.
+        if (pipeline) {
+            pipeline->CancelPipeline(NS_ERROR_NET_TIMEOUT);
+            LOG(("Rescheduling the head of line blocked members of a pipeline "
+                 "because reschedule-timeout idle interval exceeded"));
         }
     }
 

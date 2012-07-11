@@ -180,10 +180,10 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   protected abstract String buildRecordString(Record record);
 
   protected void checkDatabase() throws ProfileDatabaseException, NullCursorException {
-    Logger.info(LOG_TAG, "BEGIN: checking database.");
+    Logger.debug(LOG_TAG, "BEGIN: checking database.");
     try {
       dbHelper.fetch(new String[] { "none" }).close();
-      Logger.info(LOG_TAG, "END: checking database.");
+      Logger.debug(LOG_TAG, "END: checking database.");
     } catch (NullPointerException e) {
       throw new ProfileDatabaseException(e);
     }
@@ -340,7 +340,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       throw new IllegalStateException("Store tracker not yet initialized!");
     }
 
-    Logger.info(LOG_TAG, "Running fetchSince(" + timestamp + ").");
+    Logger.debug(LOG_TAG, "Running fetchSince(" + timestamp + ").");
     FetchSinceRunnable command = new FetchSinceRunnable(timestamp, now(), this.storeTracker.getFilter(), delegate);
     delegateQueue.execute(command);
   }

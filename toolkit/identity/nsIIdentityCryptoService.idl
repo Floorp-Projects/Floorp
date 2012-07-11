@@ -1,0 +1,106 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIIdentityKeyGenCallback;
+interface nsIIdentitySignCallback;
+
+/* Naming and calling conventions:
+ *
+ * A"hex" prefix means "hex-encoded string representation of a byte sequence"
+ * e.g. "ae34bcdf123"
+ *
+ * A "base64url" prefix means "base-64-URL-encoded string repressentation of a
+ * byte sequence.
+ * e.g. "eyJhbGciOiJSUzI1NiJ9"
+ * http://en.wikipedia.org/wiki/Base64#Variants_summary_table
+ * we use the no-padding approach to base64-url-encoding
+ *
+ * Callbacks take an "in nsresult rv" argument that indicates whether the async
+ * operation succeeded. On success, rv will be a success code
+ * (NS_SUCCEEDED(rv) / Components.isSuccessCode(rv)) and the remaining
+ * arguments are as defined in the documentation for the callback. When the
+ * operation fails, rv will be a failure code (NS_FAILED(rv) /
+ * !Components.isSuccessCode(rv)) and the values of the remaining arguments will
+ * be unspecified.
+ *
+ * Key Types:
+ *
+ * "RS256": RSA + SHA-256.
+ *
+ * "DS160": DSA with SHA-1. A 1024-bit prime and a 160-bit subprime with SHA-1.
+ *
+ * we use these abbreviated algorithm names as per the JWA spec
+ * http://tools.ietf.org/html/draft-ietf-jose-json-web-algorithms-02
+ */
+
+// "@mozilla.org/identity/crypto-service;1"
+[scriptable, builtinclass, uuid(f087e6bc-dd33-4f6c-a106-dd786e052ee9)]
+interface nsIIdentityCryptoService : nsISupports
+{
+  void generateKeyPair(in AUTF8String algorithm,
+                       in nsIIdentityKeyGenCallback callback);
+
+  ACString base64UrlEncode(in AUTF8String toEncode);
+};
+
+/**
+ * This interface provides a keypair and signing interface for Identity functionality
+ */
+[scriptable, uuid(73962dc7-8ee7-4346-a12b-b039e1d9b54d)]
+interface nsIIdentityKeyPair : nsISupports
+{
+  readonly attribute AUTF8String keyType;
+
+  // RSA properties, only accessible when keyType == "RS256"
+
+  readonly attribute AUTF8String hexRSAPublicKeyExponent;
+  readonly attribute AUTF8String hexRSAPublicKeyModulus;
+
+  // DSA properties, only accessible when keyType == "DS128"
+  readonly attribute AUTF8String hexDSAPrime;       // p
+  readonly attribute AUTF8String hexDSASubPrime;    // q
+  readonly attribute AUTF8String hexDSAGenerator;   // g
+  readonly attribute AUTF8String hexDSAPublicValue; // y
+
+  void sign(in AUTF8String aText,
+            in nsIIdentitySignCallback callback);
+
+  // XXX implement verification bug 769856
+  // AUTF8String verify(in AUTF8String aSignature, in AUTF8String encodedPublicKey);
+
+};
+
+/**
+ * This interface provides a JavaScript callback object used to collect the
+ * nsIIdentityServeKeyPair when the keygen operation is complete
+ *
+ * though there is discussion as to whether we need the nsresult,
+ * we keep it so we can track deeper crypto errors.
+ */
+[scriptable, function, uuid(90f24ca2-2b05-4ca9-8aec-89d38e2f905a)]
+interface nsIIdentityKeyGenCallback : nsISupports
+{
+  void generateKeyPairFinished(in nsresult rv,
+                               in nsIIdentityKeyPair keyPair);
+};
+
+/**
+ * This interface provides a JavaScript callback object used to collect the
+ * AUTF8String signature
+ */
+[scriptable, function, uuid(2d3e5036-374b-4b47-a430-1196b67b890f)]
+interface nsIIdentitySignCallback : nsISupports
+{
+  /** On success, base64urlSignature is the base-64-URL-encoded signature
+   *
+   * For RS256 signatures, XXX bug 769858
+   *
+   * For DSA128 signatures, the signature is the r value concatenated with the
+   * s value, each component padded with leading zeroes as necessary.
+   */
+  void signFinished(in nsresult rv, in ACString base64urlSignature);
+};

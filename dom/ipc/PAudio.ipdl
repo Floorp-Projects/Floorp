@@ -33,7 +33,7 @@ parent:
   PositionInFramesUpdate(PRInt64 position, PRInt64 time);
   MinWriteSizeDone(PRInt32 frameCount);
   DrainDone();
-
+  WriteDone();
 };
 
 } // namespace dom

@@ -154,6 +154,7 @@ public:
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
+  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nsnull; }
 
   bool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;

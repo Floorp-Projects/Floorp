@@ -13,7 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE          = test_cookies
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
   test_samedomain.html \
   file_testcommon.js \
   file_domain_inner.html \
@@ -52,15 +52,9 @@ _TEST_FILES = \
   file_loopback_inner.html \
   $(NULL)
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_test_favicon.js \
   $(NULL)
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 XPCSHELL_TESTS = unit
 

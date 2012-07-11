@@ -218,6 +218,8 @@ public:
   /**
    * This callback must be provided to EndTransaction. The callback data
    * must be the nsDisplayListBuilder containing this FrameLayerBuilder.
+   * This function can be called multiple times in a row to draw
+   * different regions.
    */
   static void DrawThebesLayer(ThebesLayer* aLayer,
                               gfxContext* aContext,

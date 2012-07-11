@@ -79,7 +79,7 @@ typedef enum JSOp {
 #define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
 #define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
 #define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
-#define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
+/* (1U<<17) is unused */
 /* (1U<<18) is unused */
 #define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
                                      parenthesized statement head */

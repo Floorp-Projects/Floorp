@@ -62,6 +62,11 @@
 #error "Not yet implemented for this platform"
 #endif // defined(XP_WIN32)
 
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+#include "InjectCrashReporter.h"
+using mozilla::InjectCrashRunnable;
+#endif
+
 #include <stdlib.h>
 #include <time.h>
 #include <prenv.h>
@@ -79,6 +84,7 @@
 #include <vector>
 
 #include "mozilla/mozalloc_oom.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -217,6 +223,23 @@ static const int kMagicChildCrashReportFd = 4;
 static Mutex* dumpMapLock;
 typedef nsInterfaceHashtable<nsUint32HashKey, nsIFile> ChildMinidumpMap;
 static ChildMinidumpMap* pidToMinidump;
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+static nsIThread* sInjectorThread;
+typedef nsDataHashtable<nsUint32HashKey, InjectorCrashCallback*> InjectorPIDMap;
+static InjectorPIDMap* pidToInjectorCallback;
+
+class ReportInjectedCrash : public nsRunnable
+{
+public:
+  ReportInjectedCrash(PRUint32 pid) : mPID(pid) { }
+
+  NS_IMETHOD Run();
+
+private:
+  PRUint32 mPID;
+};
+#endif // MOZ_CRASHREPORTER_INJECTOR
 
 // Crashreporter annotations that we don't send along in subprocess
 // reports
@@ -634,6 +657,14 @@ static bool ShouldReport()
   return !(envvar && *envvar);
 }
 
+namespace {
+  bool Filter(void* context) {
+    mozilla::DisableWritePoisoning();
+    return true;
+  }
+}
+
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -792,14 +823,14 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #ifdef XP_WIN
                      FPEFilter,
 #else
-                     nsnull,
+                     Filter,
 #endif
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      minidump_type,
-                     NULL,
+                     (const wchar_t*) NULL,
                      NULL);
 #else
                      true
@@ -1902,8 +1933,13 @@ OnChildProcessDumpRequested(void* aContext,
       aClientInfo->pid();
 #endif
 
-    MutexAutoLock lock(*dumpMapLock);
-    pidToMinidump->Put(pid, minidump);
+    {
+      MutexAutoLock lock(*dumpMapLock);
+      pidToMinidump->Put(pid, minidump);
+    }
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+    NS_DispatchToMainThread(new ReportInjectedCrash(pid));
+#endif
   }
 }
 
@@ -1911,6 +1947,11 @@ static bool
 OOPInitialized()
 {
   return pidToMinidump != NULL;
+}
+
+static bool ChildFilter(void *context) {
+  mozilla::DisableWritePoisoning();
+  return true;
 }
 
 static void
@@ -1963,6 +2004,8 @@ OOPInit()
 
   crashServer = new CrashGenerationServer(
     childCrashNotifyPipe,
+    ChildFilter,
+    NULL,
     OnChildProcessDumpRequested, NULL,
     NULL, NULL,
     true, // automatically generate dumps
@@ -1985,6 +2028,16 @@ OOPDeinit()
     NS_WARNING("OOPDeinit() without successful OOPInit()");
     return;
   }
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+  if (sInjectorThread) {
+    sInjectorThread->Shutdown();
+    NS_RELEASE(sInjectorThread);
+  }
+
+  delete pidToInjectorCallback;
+  pidToInjectorCallback = NULL;
+#endif
 
   delete crashServer;
   crashServer = NULL;
@@ -2015,6 +2068,67 @@ GetChildNotificationPipe()
   return childCrashNotifyPipe;
 }
 #endif
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+void
+InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb)
+{
+  if (!GetEnabled())
+    return;
+
+  if (!OOPInitialized())
+    OOPInit();
+
+  if (!pidToInjectorCallback) {
+    pidToInjectorCallback = new InjectorPIDMap;
+    pidToInjectorCallback->Init();
+  }
+
+  if (!sInjectorThread) {
+    if (NS_FAILED(NS_NewThread(&sInjectorThread)))
+      return;
+  }
+
+  pidToInjectorCallback->Put(processID, cb);
+
+  nsCOMPtr<nsIRunnable> r = new InjectCrashRunnable(processID);
+  sInjectorThread->Dispatch(r, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+NS_IMETHODIMP
+ReportInjectedCrash::Run()
+{
+  // Crash reporting may have been disabled after this method was dispatched
+  if (!pidToInjectorCallback)
+    return NS_OK;
+
+  InjectorCrashCallback* cb = pidToInjectorCallback->Get(mPID);
+  if (!cb)
+    return NS_OK;
+
+  nsCOMPtr<nsIFile> minidump;
+  if (!TakeMinidumpForChild(mPID, getter_AddRefs(minidump))) {
+    NS_WARNING("No minidump for crash notification.");
+    return NS_OK;
+  }
+
+  nsString id;
+  GetIDFromMinidump(minidump, id);
+
+  cb->OnCrash(mPID, id);
+  return NS_OK;
+}
+
+void
+UnregisterInjectorCallback(DWORD processID)
+{
+  if (!OOPInitialized())
+    return;
+
+  pidToInjectorCallback->Remove(processID);
+}
+
+#endif // MOZ_CRASHREPORTER_INJECTOR
 
 #if defined(XP_WIN)
 // Child-side API
@@ -2105,7 +2219,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   gExceptionHandler = new google_breakpad::
     ExceptionHandler("",
-                     NULL,    // no filter callback
+                     Filter,
                      NULL,    // no minidump callback
                      NULL,    // no callback context
                      true,    // install signal handlers

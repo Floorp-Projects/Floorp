@@ -51,9 +51,9 @@ ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
  * variable is used to refer to the jit/inference information). This function
  * maps from the ScopeCoordinate space to the StackFrame variable space.
  */
-enum FrameVarType { FrameVar_Local, FrameVar_Arg };
-extern FrameVarType
-ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index);
+enum FrameIndexType { FrameIndex_Local, FrameIndex_Arg };
+extern FrameIndexType
+ScopeCoordinateToFrameIndex(JSScript *script, jsbytecode *pc, unsigned *index);
 
 /*****************************************************************************/
 
@@ -101,9 +101,6 @@ class ScopeObject : public JSObject
     static const uint32_t SCOPE_CHAIN_SLOT = 0;
 
   public:
-    /* Number of reserved slots for both CallObject and BlockObject. */
-    static const uint32_t CALL_BLOCK_RESERVED_SLOTS = 2;
-
     /*
      * Since every scope chain terminates with a global object and GlobalObject
      * does not derive ScopeObject (it has a completely different layout), the
@@ -142,21 +139,19 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
            HandleObject enclosing);
 
-    static const uint32_t RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
+    static const uint32_t RESERVED_SLOTS = 2;
 
     static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
     static CallObject *createForStrictEval(JSContext *cx, StackFrame *fp);
 
-    /* True if this is for a strict mode eval frame or for a function call. */
+    /* True if this is for a strict mode eval frame. */
     inline bool isForEval() const;
 
     /*
-     * The callee function if this CallObject was created for a function
-     * invocation, or null if it was created for a strict mode eval frame.
+     * Returns the function for which this CallObject was created. (This may
+     * only be called if !isForEval.)
      */
-    inline JSObject *getCallee() const;
-    inline JSFunction *getCalleeFunction() const;
-    inline void setCallee(JSObject *callee);
+    inline JSFunction &callee() const;
 
     /* Returns the formal argument at the given index. */
     inline const Value &arg(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
@@ -230,7 +225,7 @@ class WithObject : public NestedScopeObject
 class BlockObject : public NestedScopeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
+    static const unsigned RESERVED_SLOTS = 2;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
     /* Return the number of variables associated with this block. */
@@ -241,7 +236,8 @@ class BlockObject : public NestedScopeObject
      * range [0, slotCount()) and the return local index is in the range
      * [script->nfixed, script->nfixed + script->nslots).
      */
-    unsigned slotToFrameLocal(JSScript *script, unsigned i);
+    unsigned slotToLocalIndex(const Bindings &bindings, unsigned slot);
+    unsigned localIndexToSlot(const Bindings &bindings, uint32_t i);
 
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
@@ -280,7 +276,7 @@ class StaticBlockObject : public BlockObject
      */
     bool needsClone();
 
-    const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
+    Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject

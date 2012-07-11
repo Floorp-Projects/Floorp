@@ -264,7 +264,7 @@ nsSVGImageElement::GetStringInfo()
 }
 
 nsresult
-nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest) const
+nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest)
 {
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));

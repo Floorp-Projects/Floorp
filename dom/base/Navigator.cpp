@@ -37,6 +37,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "Connection.h"
 #include "MobileConnection.h"
+#include "nsIIdleObserver.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -48,6 +49,8 @@
 #include "nsIDOMBluetoothManager.h"
 #include "BluetoothManager.h"
 #endif
+
+#include "nsIDOMGlobalPropertyInitializer.h"
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -95,7 +98,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
+  NS_INTERFACE_MAP_ENTRY(nsINavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
 #ifdef MOZ_MEDIA_NAVIGATOR
@@ -108,6 +111,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #ifdef MOZ_B2G_BT
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBluetooth)
 #endif
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -171,6 +175,13 @@ Navigator::Invalidate()
     mBluetooth = nsnull;
   }
 #endif
+
+#ifdef MOZ_SYS_MSG
+  if (mMessagesManager) {
+    mMessagesManager = nsnull;
+  }
+#endif
+
 }
 
 nsPIDOMWindow *
@@ -651,7 +662,44 @@ GetVibrationDurationFromJsval(const jsval& aJSVal, JSContext* cx,
 } // anonymous namespace
 
 NS_IMETHODIMP
-Navigator::MozVibrate(const jsval& aPattern, JSContext* cx)
+Navigator::AddIdleObserver(nsIIdleObserver* aIdleObserver)
+{
+  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
+    NS_WARNING("The IdleObserver API has been disabled.");
+    return NS_OK;
+  }
+
+  NS_ENSURE_ARG_POINTER(aIdleObserver);
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+  if (NS_FAILED(win->RegisterIdleObserver(aIdleObserver))) {
+    NS_WARNING("Failed to add idle observer.");
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Navigator::RemoveIdleObserver(nsIIdleObserver* aIdleObserver)
+{
+  if (!nsContentUtils::IsIdleObserverAPIEnabled()) {
+    NS_WARNING("The IdleObserver API has been disabled");
+    return NS_OK;
+  }
+
+  NS_ENSURE_ARG_POINTER(aIdleObserver);
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+  if (NS_FAILED(win->UnregisterIdleObserver(aIdleObserver))) {
+    NS_WARNING("Failed to remove idle observer.");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Navigator::Vibrate(const jsval& aPattern, JSContext* cx)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(win, NS_OK);
@@ -954,11 +1002,11 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
 }
 
 //*****************************************************************************
-//    Navigator::nsIDOMNavigatorBattery
+//    Navigator::nsINavigatorBattery
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
+Navigator::GetBattery(nsIDOMBatteryManager** aBattery)
 {
   if (!mBatteryManager) {
     *aBattery = nsnull;
@@ -1210,6 +1258,67 @@ Navigator::GetMozBluetooth(nsIDOMBluetoothManager** aBluetooth)
   return NS_OK;
 }
 #endif //MOZ_B2G_BT
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorSystemMessages
+//*****************************************************************************
+#ifdef MOZ_SYS_MSG
+NS_IMETHODIMP
+Navigator::EnsureMessagesManager()
+{
+  if (mMessagesManager) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMNavigatorSystemMessages> messageManager =
+    do_CreateInstance("@mozilla.org/system-message-manager;1", &rv);
+  
+  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi =
+    do_QueryInterface(messageManager);
+  NS_ENSURE_TRUE(gpi, NS_ERROR_FAILURE);
+
+  // We don't do anything with the return value.
+  jsval prop_val = JSVAL_VOID;
+  rv = gpi->Init(window, &prop_val);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mMessagesManager = messageManager.forget();
+
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+Navigator::MozHasPendingMessage(const nsAString& aType, bool *aResult)
+{
+#ifdef MOZ_SYS_MSG
+  *aResult = false;
+  nsresult rv = EnsureMessagesManager();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mMessagesManager->MozHasPendingMessage(aType, aResult);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP
+Navigator::MozSetMessageHandler(const nsAString& aType,
+                                nsIDOMSystemMessageCallback *aCallback)
+{
+#ifdef MOZ_SYS_MSG
+  nsresult rv = EnsureMessagesManager();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mMessagesManager->MozSetMessageHandler(aType, aCallback);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 
 size_t
 Navigator::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const

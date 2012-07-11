@@ -93,10 +93,6 @@ function chromePathIsSet(evt)
 function receiveContent(evt)
 {
   is(evt.isTrusted, true, "should have sent a trusted event");
-  is(evt.origin, "http://example.org", "content response event has wrong URI");
-  is(evt.source, window.frames.contentDomain,
-     "wrong source for same-domain message!");
-
   finish();
 }
 

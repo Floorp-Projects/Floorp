@@ -285,6 +285,8 @@ function checkValidityStateObjectAliveWithoutElement(element)
   ok(v.valid, "When the element is not alive, it should be valid");
 }
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 checkConstraintValidationAPIExist(document.getElementById('f'));
 checkConstraintValidationAPIExist(document.getElementById('i'));
 checkConstraintValidationAPIExist(document.getElementById('b'));
@@ -338,6 +340,9 @@ checkValidityStateObjectAliveWithoutElement("select");
 checkValidityStateObjectAliveWithoutElement("textarea");
 checkValidityStateObjectAliveWithoutElement("output");
 checkValidityStateObjectAliveWithoutElement("object");
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>

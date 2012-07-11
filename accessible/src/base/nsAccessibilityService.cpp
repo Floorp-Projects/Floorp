@@ -42,25 +42,14 @@
 #include "Logging.h"
 #endif
 
-#include "nsCURILoader.h"
-#include "nsEventStates.h"
-#include "nsIContentViewer.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLOptGroupElement.h"
-#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMXULElement.h"
-#include "nsIHTMLDocument.h"
 #include "nsImageFrame.h"
-#include "nsILink.h"
 #include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsISupportsUtils.h"
 #include "nsObjectFrame.h"
-#include "nsTextFragment.h"
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
@@ -1164,11 +1153,14 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (!newAcc) {
-    // Create generic accessibles for SVG and MathML nodes.
-    if (content->IsSVG(nsGkAtoms::svg)) {
+    // xul:deck does not have XBL and nsIFrame::CreateAccessible() is only called 
+    // on HTML elements
+    nsIAtom* tag = content->Tag();
+    if ((tag == nsGkAtoms::deck) || (tag == nsGkAtoms::tabpanels)) {
+      newAcc = new XULDeckAccessible(content, docAcc);
+    } else if (content->IsSVG(nsGkAtoms::svg)) {
       newAcc = new EnumRoleAccessible(content, docAcc, roles::DIAGRAM);
-    }
-    else if (content->IsMathML(nsGkAtoms::math)) {
+    } else if (content->IsMathML(nsGkAtoms::math)) {
       newAcc = new EnumRoleAccessible(content, docAcc, roles::EQUATION);
     }
   }
@@ -1337,6 +1329,10 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       accessible = new XULComboboxAccessible(aContent, aDoc);
       break;
 
+    case nsIAccessibleProvider::XULDeck:
+      accessible = new XULDeckAccessible(aContent, aDoc);
+      break;
+
     case nsIAccessibleProvider::XULDropmarker:
       accessible = new XULDropmarkerAccessible(aContent, aDoc);
       break;
@@ -1439,10 +1435,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
     case nsIAccessibleProvider::XULTabs:
       accessible = new XULTabsAccessible(aContent, aDoc);
-      break;
-
-    case nsIAccessibleProvider::XULTabpanels:
-      accessible = new XULTabpanelsAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULText:

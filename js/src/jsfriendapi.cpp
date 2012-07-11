@@ -114,6 +114,18 @@ js::PrepareForFullGC(JSRuntime *rt)
         c->scheduleGC();
 }
 
+JS_FRIEND_API(void)
+js::PrepareForIncrementalGC(JSRuntime *rt)
+{
+    if (rt->gcIncrementalState == gc::NO_INCREMENTAL)
+        return;
+
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->needsBarrier())
+            PrepareCompartmentForGC(c);
+    }
+}
+
 JS_FRIEND_API(bool)
 js::IsGCScheduled(JSRuntime *rt)
 {
@@ -147,6 +159,12 @@ JS_FRIEND_API(void)
 js::IncrementalGC(JSRuntime *rt, gcreason::Reason reason)
 {
     GCSlice(rt, GC_NORMAL, reason);
+}
+
+JS_FRIEND_API(void)
+js::FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason)
+{
+    GCFinalSlice(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -230,9 +248,8 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj_, const JSFunctionSpecWi
         if (!atom)
             return false;
 
-        RootedFunction fun(cx);
         Rooted<jsid> id(cx, AtomToId(atom));
-        fun = js_DefineFunction(cx, obj, id, fs->call, fs->nargs, fs->flags);
+        RootedFunction fun(cx, js_DefineFunction(cx, obj, id, fs->call, fs->nargs, fs->flags));
         if (!fun)
             return false;
 
@@ -758,10 +775,7 @@ NotifyDidPaint(JSRuntime *rt)
     }
 
     if (rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcInterFrameGC) {
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            if (c->needsBarrier())
-                PrepareCompartmentForGC(c);
-        }
+        PrepareForIncrementalGC(rt);
         GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
     }
 
@@ -783,7 +797,7 @@ DisableIncrementalGC(JSRuntime *rt)
 JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
-    return (rt->gcIncrementalState == gc::MARK && !rt->gcRunning);
+    return (rt->gcIncrementalState == gc::MARK && !rt->isHeapBusy());
 }
 
 JS_FRIEND_API(bool)
@@ -809,7 +823,7 @@ IncrementalReferenceBarrier(void *ptr)
 {
     if (!ptr)
         return;
-    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->gcRunning);
+    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->isHeapBusy());
     uint32_t kind = gc::GetGCThingTraceKind(ptr);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) ptr);
@@ -850,6 +864,14 @@ GetTestingFunctions(JSContext *cx)
         return NULL;
 
     return obj;
+}
+
+JS_FRIEND_API(void)
+SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size,
+                         uint32_t max)
+{
+    rt->spsProfiler.setProfilingStack(stack, size, max);
+    ReleaseAllJITCode(rt->defaultFreeOp());
 }
 
 } // namespace js

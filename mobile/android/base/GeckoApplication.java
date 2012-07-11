@@ -14,6 +14,16 @@ public class GeckoApplication extends Application {
     private boolean mInBackground = false;
     private ArrayList<ApplicationLifecycleCallbacks> mListeners;
 
+    @Override
+    public void onCreate() {
+        // workaround for http://code.google.com/p/android/issues/detail?id=20915
+        try {
+            Class.forName("android.os.AsyncTask");
+        } catch (ClassNotFoundException e) {}
+
+        super.onCreate();
+    }
+
     public interface ApplicationLifecycleCallbacks {
         public void onApplicationPause();
         public void onApplicationResume();

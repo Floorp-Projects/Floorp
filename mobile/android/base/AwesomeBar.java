@@ -53,11 +53,8 @@ import org.mozilla.gecko.db.BrowserDB;
 
 import org.json.JSONObject;
 
-public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
+public class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
-
-    private static final int SUGGESTION_TIMEOUT = 2000;
-    private static final int SUGGESTION_MAX = 3;
 
     static final String URL_KEY = "url";
     static final String CURRENT_URL_KEY = "currenturl";
@@ -72,8 +69,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private ImageButton mGoButton;
     private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
-    private SuggestClient mSuggestClient;
-    private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,24 +170,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 if (!hasCompositionString(s)) {
                     updateGoButton(text);
                 }
-
-                // cancel previous query
-                if (mSuggestTask != null) {
-                    mSuggestTask.cancel(true);
-                }
-
-                if (mSuggestClient != null) {
-                    mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
-                         protected ArrayList<String> doInBackground(String... query) {
-                             return mSuggestClient.query(query[0]);
-                         }
-
-                         protected void onPostExecute(ArrayList<String> suggestions) {
-                             mAwesomeTabs.setSuggestions(suggestions);
-                         }
-                    };
-                    mSuggestTask.execute(text);
-                }
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count,
@@ -220,27 +197,14 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             }
         });
 
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.all_pages_list));
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
-
-        GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-    }
-
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("SearchEngines:Data")) {
-                final String suggestEngine =  message.isNull("suggestEngine") ? null : message.getString("suggestEngine");
-                final String suggestTemplate = message.isNull("suggestTemplate") ? null : message.getString("suggestTemplate");
-                if (suggestTemplate != null)
-                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
-                mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
+        mText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
             }
-        } catch (Exception e) {
-            // do nothing
-            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
-        }
+        });
     }
 
     @Override
@@ -353,11 +317,15 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Galaxy Note sends key events for the stylus that are outside of the
+        // valid keyCode range (see bug 758427)
+        if (keyCode > KeyEvent.getMaxKeyCode())
+            return true;
+
         // This method is called only if the key event was not handled
         // by any of the views, which usually means the edit box lost focus
         if (keyCode == KeyEvent.KEYCODE_BACK ||
             keyCode == KeyEvent.KEYCODE_MENU ||
-            keyCode == KeyEvent.KEYCODE_SEARCH ||
             keyCode == KeyEvent.KEYCODE_DPAD_UP ||
             keyCode == KeyEvent.KEYCODE_DPAD_DOWN ||
             keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
@@ -367,6 +335,12 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return super.onKeyDown(keyCode, event);
+        } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+             mText.setText("");
+             mText.requestFocus();
+             InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+             imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
+             return true;
         } else {
             int selStart = -1;
             int selEnd = -1;
@@ -409,7 +383,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void onDestroy() {
         super.onDestroy();
         mAwesomeTabs.destroy();
-        GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
     }
 
     @Override
@@ -423,7 +396,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         cancelAndFinish();
     }
 
-    private class ContextMenuSubject {
+    static public class ContextMenuSubject {
         public int id;
         public String url;
         public byte[] favicon;
@@ -443,86 +416,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
         ListView list = (ListView) view;
-        mContextMenuSubject = null;
-
-        if (list == findViewById(R.id.history_list)) {
-            if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
-                return;
-            }
-
-            ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
-            int childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
-            int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-
-            // Check if long tap is on a header row
-            if (groupPosition < 0 || childPosition < 0)
-                return;
-
-            ExpandableListView exList = (ExpandableListView) list;
-
-            // The history list is backed by a SimpleExpandableListAdapter
-            @SuppressWarnings("rawtypes")
-            Map map = (Map) exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
-            mContextMenuSubject = new ContextMenuSubject((Integer) map.get(Combined.HISTORY_ID),
-                                                         (String) map.get(URLColumns.URL),
-                                                         (byte[]) map.get(URLColumns.FAVICON),
-                                                         (String) map.get(URLColumns.TITLE),
-                                                         null);
-        } else {
-            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
-                return;
-            }
-
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            Object selectedItem = list.getItemAtPosition(info.position);
-
-            if (!(selectedItem instanceof Cursor)) {
-                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
-                return;
-            }
-
-            Cursor cursor = (Cursor) selectedItem;
-
-            // Don't show the context menu for folders
-            if (!(list == findViewById(R.id.bookmarks_list) &&
-                  cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER)) {
-                String keyword = null;
-                int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
-                if (keywordCol != -1)
-                    keyword = cursor.getString(keywordCol);
-
-                // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
-                int id = (list == findViewById(R.id.bookmarks_list)) ? cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)) :
-                                                                       cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
-
-                mContextMenuSubject = new ContextMenuSubject(id,
-                                                             cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),
-                                                             cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
-                                                             cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE)),
-                                                             keyword);
-            }
-        }
-
-        if (mContextMenuSubject == null)
-            return;
-
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
-        
-        if (list != findViewById(R.id.bookmarks_list)) {
-            menu.findItem(R.id.remove_bookmark).setVisible(false);
-            menu.findItem(R.id.edit_bookmark).setVisible(false);
-
-            // Hide "Remove" item if there isn't a valid history ID
-            if (mContextMenuSubject.id < 0)
-                menu.findItem(R.id.remove_history).setVisible(false);
-        } else {
-            menu.findItem(R.id.remove_history).setVisible(false);
-        }
-
-        menu.setHeaderTitle(mContextMenuSubject.title);
+        AwesomeBarTab tab = mAwesomeTabs.getAwesomeBarTabForView(view);
+        mContextMenuSubject = tab.getSubject(menu, view, menuInfo);
     }
 
     @Override

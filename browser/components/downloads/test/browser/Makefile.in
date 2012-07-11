@@ -9,12 +9,10 @@ VPATH     = @srcdir@
 relativesrcdir = browser/components/downloads/test/browser
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_basic_functionality.js \
   head.js \
   $(NULL)
 
-libs:: $(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

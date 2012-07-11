@@ -129,6 +129,16 @@ else
 endif
 	$(CHECK_TEST_ERROR)
 
+ifeq ($(OS_ARCH),Darwin)
+webapprt_stub_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/webapprt-stub$(BIN_SUFFIX)
+webapprt-test-content:
+	$(RUN_MOCHITEST) --webapprt-content --appname $(webapprt_stub_path)
+	$(CHECK_TEST_ERROR)
+webapprt-test-chrome:
+	$(RUN_MOCHITEST) --webapprt-chrome --appname $(webapprt_stub_path) --browser-arg -test-mode
+	$(CHECK_TEST_ERROR)
+endif
+
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
@@ -293,7 +303,16 @@ package-tests: stage-android
 endif
 
 make-stage-dir:
-	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs && $(NSINSTALL) -D $(PKG_STAGE)/jetpack && $(NSINSTALL) -D $(PKG_STAGE)/firebug && $(NSINSTALL) -D $(PKG_STAGE)/peptest && $(NSINSTALL) -D $(PKG_STAGE)/mozbase && $(NSINSTALL) -D $(PKG_STAGE)/modules
+	rm -rf $(PKG_STAGE)
+	$(NSINSTALL) -D $(PKG_STAGE)
+	$(NSINSTALL) -D $(PKG_STAGE)/bin
+	$(NSINSTALL) -D $(PKG_STAGE)/bin/components
+	$(NSINSTALL) -D $(PKG_STAGE)/certs
+	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
+	$(NSINSTALL) -D $(PKG_STAGE)/firebug
+	$(NSINSTALL) -D $(PKG_STAGE)/peptest
+	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
+	$(NSINSTALL) -D $(PKG_STAGE)/modules
 
 robotium-id-map:
 ifeq ($(MOZ_BUILD_APP),mobile/android)
@@ -337,9 +356,9 @@ stage-tps: make-stage-dir
 	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
 	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
 
-# This will get replaced by actual logic in a subsequent patch.
 stage-modules: make-stage-dir
-	$(TOUCH) $(PKG_STAGE)/modules/.dummy
+	$(NSINSTALL) -D $(PKG_STAGE)/modules
+	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
 
 stage-mozbase: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mozbase stage-package

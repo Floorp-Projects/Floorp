@@ -53,7 +53,7 @@ public:
                            bool aNotify);
   virtual void DestroyContent();
 
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  nsresult CopyInnerTo(nsGenericElement* aDest);
 
   // nsIDOMHTMLElement
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
