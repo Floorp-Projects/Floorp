@@ -508,7 +508,7 @@
 #endif
 
 ; ANGLE GLES-on-D3D rendering library
-#ifdef MOZ_ANGLE
+#ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
 @BINPATH@/@MOZ_D3DX9_DLL@
