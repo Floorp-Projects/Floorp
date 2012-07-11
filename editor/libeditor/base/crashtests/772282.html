@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var root = document.documentElement;
+  while(root.firstChild) { root.removeChild(root.firstChild); }
+  var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  body.setAttributeNS(null, "contenteditable", "true");
+  var img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+  body.appendChild(img);
+  root.appendChild(body);
+  document.removeChild(root);
+  document.appendChild(root);
+  document.execCommand("insertText", false, "5");
+  document.execCommand("selectAll", false, null);
+  document.execCommand("insertParagraph", false, null);
+  document.execCommand("increasefontsize", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
