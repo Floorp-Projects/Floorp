@@ -1252,6 +1252,21 @@ _pixman_bits_image_src_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 	iter->get_scanline = src_get_scanline_narrow;
     else
 	iter->get_scanline = src_get_scanline_wide;
+
+}
+
+static uint32_t *
+dest_get_scanline_16 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    pixman_image_t *image  = iter->image;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    uint32_t *	    buffer = iter->buffer;
+
+    image->bits.fetch_scanline_16 (image, x, y, width, buffer, mask);
+
+    return iter->buffer;
 }
 
 static uint32_t *
@@ -1332,6 +1347,20 @@ dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 }
 
 static void
+dest_write_back_16 (pixman_iter_t *iter)
+{
+    bits_image_t *  image  = &iter->image->bits;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    const uint32_t *buffer = iter->buffer;
+
+    image->store_scanline_16 (image, x, y, width, buffer);
+
+    iter->y++;
+}
+
+static void
 dest_write_back_narrow (pixman_iter_t *iter)
 {
     bits_image_t *  image  = &iter->image->bits;
@@ -1380,7 +1409,20 @@ dest_write_back_wide (pixman_iter_t *iter)
 void
 _pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 {
-    if (iter->flags & ITER_NARROW)
+    if (iter->flags & ITER_16)
+    {
+        if ((iter->flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
+	    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
+	{
+            iter->get_scanline = _pixman_iter_get_scanline_noop;
+        }
+        else
+        {
+	    iter->get_scanline = dest_get_scanline_16;
+        }
+	iter->write_back = dest_write_back_16;
+    }
+    else if (iter->flags & ITER_NARROW)
     {
 	if ((iter->flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
 	    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
@@ -1391,7 +1433,7 @@ _pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 	{
 	    iter->get_scanline = dest_get_scanline_narrow;
 	}
-	
+
 	iter->write_back = dest_write_back_narrow;
     }
     else
