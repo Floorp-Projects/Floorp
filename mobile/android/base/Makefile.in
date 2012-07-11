@@ -168,7 +168,7 @@ FENNEC_PP_XML_FILES = \
   res/menu/gecko_menu.xml \
   res/menu-v11/gecko_menu.xml \
   res/menu-v11/titlebar_contextmenu.xml \
-  res/menu-large/gecko_menu.xml \
+  res/menu-large-v11/gecko_menu.xml \
   $(NULL)
 
 
@@ -899,7 +899,7 @@ RES_DIRS= \
   res/color                   \
   res/menu                    \
   res/menu-v11                \
-  res/menu-large             \
+  res/menu-large-v11          \
   $(NULL)
 
 
