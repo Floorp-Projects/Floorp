@@ -340,23 +340,6 @@ class SetPropCompiler : public PICStubCompiler
         } else if (shape->hasDefaultSetter()) {
             Address address = masm.objPropAddress(obj, pic.objReg, shape->slot());
             masm.storeValue(pic.u.vr, address);
-        } else {
-            //   \ /        In general, two function objects with different JSFunctions
-            //    #         can have the same shape, thus we must not rely on the identity
-            // >--+--<      of 'fun' remaining the same. However, since:
-            //   |||         1. the shape includes all arguments and locals and their setters
-            //    \\     V     and getters, and
-            //      \===/    2. arguments and locals have different getters
-            //              then we can rely on fun->nargs remaining invariant.
-            JSFunction &fun = obj->asCall().callee();
-            uint16_t slot = uint16_t(shape->shortid());
-            if (shape->setterOp() == CallObject::setVarOp)
-                slot += fun.nargs;
-            slot += CallObject::RESERVED_SLOTS;
-            Address address = masm.objPropAddress(obj, pic.objReg, slot);
-            masm.storeValue(pic.u.vr, address);
-
-            pic.shapeRegHasBaseShape = false;
         }
 
         Jump done = masm.jump();
@@ -580,40 +563,7 @@ class SetPropCompiler : public PICStubCompiler
             if (pic.typeMonitored && !updateMonitoredTypes())
                 return Lookup_Uncacheable;
         } else {
-            if (shape->hasSetterValue())
-                return disable("scripted setter");
-            if (shape->setterOp() != CallObject::setArgOp &&
-                shape->setterOp() != CallObject::setVarOp) {
-                return disable("setter");
-            }
-            JS_ASSERT(obj->isCall());
-            if (pic.typeMonitored) {
-                /*
-                 * Update the types of the locals/args in the script according
-                 * to the possible RHS types of the assignment. Note that the
-                 * shape guards we have performed do not by themselves
-                 * guarantee that future call objects hit will be for the same
-                 * script. We also depend on the fact that the scope chains hit
-                 * at the same bytecode are all isomorphic: the same scripts,
-                 * in the same order (though the properties on their call
-                 * objects may differ due to eval(), DEFFUN, etc.).
-                 */
-                RecompilationMonitor monitor(cx);
-                JSFunction &fun = obj->asCall().callee();
-                JSScript *script = fun.script();
-                uint16_t slot = uint16_t(shape->shortid());
-                if (!script->ensureHasTypes(cx))
-                    return error();
-                {
-                    types::AutoEnterTypeInference enter(cx);
-                    if (shape->setterOp() == CallObject::setArgOp)
-                        pic.rhsTypes->addSubset(cx, types::TypeScript::ArgTypes(script, slot));
-                    else
-                        pic.rhsTypes->addSubset(cx, types::TypeScript::LocalTypes(script, slot));
-                }
-                if (monitor.recompiled())
-                    return Lookup_Uncacheable;
-            }
+            return disable("setter");
         }
 
         JS_ASSERT(obj == holder);
@@ -1563,15 +1513,9 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
-        CallObjPropKind kind;
         Shape *shape = getprop.shape;
-        if (shape->setterOp() == CallObject::setArgOp) {
-            kind = ARG;
-        } else if (shape->setterOp() == CallObject::setVarOp) {
-            kind = VAR;
-        } else {
+        if (!shape->hasDefaultGetter())
             return disable("unhandled callobj sprop getter");
-        }
 
         LookupStatus status = walkScopeChain(masm, fails);
         if (status != Lookup_Cacheable)
@@ -1584,13 +1528,7 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump finalShape = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
                                          ImmPtr(getprop.holder->lastProperty()));
-
-        JSFunction &fun = getprop.holder->asCall().callee();
-        unsigned slot = shape->shortid();
-        if (kind == VAR)
-            slot += fun.nargs;
-        slot += CallObject::RESERVED_SLOTS;
-        Address address = masm.objPropAddress(obj, pic.objReg, slot);
+        Address address = masm.objPropAddress(obj, pic.objReg, shape->slot());
 
         /* Safe because type is loaded first. */
         masm.loadValueAsComponents(address, pic.shapeReg, pic.objReg);
