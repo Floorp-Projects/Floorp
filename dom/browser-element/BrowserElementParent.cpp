@@ -193,7 +193,9 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   NS_ENSURE_TRUE(popupFrameElement, false);
 
   nsCAutoString spec;
-  aURI->GetSpec(spec);
+  if (aURI) {
+    aURI->GetSpec(spec);
+  }
   bool dispatchSucceeded =
     DispatchOpenWindowEvent(openerFrameElement, popupFrameElement,
                             NS_ConvertUTF8toUTF16(spec),
