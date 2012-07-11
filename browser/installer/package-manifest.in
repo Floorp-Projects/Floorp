@@ -474,6 +474,9 @@
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
+@BINPATH@/components/nsDOMIdentity.js
+@BINPATH@/components/nsIDService.js
+@BINPATH@/components/Identity.manifest
 
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
@@ -508,7 +511,7 @@
 #endif
 
 ; ANGLE GLES-on-D3D rendering library
-#ifdef MOZ_ANGLE
+#ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
 @BINPATH@/@MOZ_D3DX9_DLL@

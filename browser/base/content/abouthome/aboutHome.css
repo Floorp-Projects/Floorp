@@ -97,8 +97,8 @@ body[dir=rtl] #searchText {
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
   cursor: pointer;
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 150ms;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
 }
 
 body[dir=rtl] #searchSubmit {
@@ -129,7 +129,7 @@ body[dir=rtl] #searchSubmit {
 #searchText + #searchSubmit:hover:active {
   box-shadow: 0 1px 1px hsla(211,79%,6%,.1) inset,
               0 0 1px hsla(211,79%,6%,.2) inset;
-  -moz-transition-duration: 0ms;
+  transition-duration: 0ms;
 }
 
 #defaultSnippet1,
@@ -196,8 +196,8 @@ body[narrow] #launcher[session] {
   color: #525c66;
   font-size: 75%;
   cursor: pointer;
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 150ms;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
 }
 
 body[narrow] #launcher[session] > .launchButton {
@@ -214,7 +214,7 @@ body[narrow] #launcher[session] > .launchButton {
   border-color: hsla(210,54%,20%,.2) hsla(210,54%,20%,.23) hsla(210,54%,20%,.25);
   box-shadow: 0 1px 1px hsla(211,79%,6%,.05) inset,
               0 0 1px hsla(211,79%,6%,.1) inset;
-  -moz-transition-duration: 0ms;
+  transition-duration: 0ms;
 }
 
 .launchButton[hidden],
@@ -314,7 +314,7 @@ body[narrow] #restorePreviousSession::before {
   position: relative; /* pin wordmark to edge of document, not of viewport */
   -moz-box-ordinal-group: 0;
   opacity: .5;
-  -moz-transition: opacity 150ms;
+  transition: opacity 150ms;
 }
 
 #aboutMozilla:hover {

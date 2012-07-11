@@ -16,10 +16,6 @@ ok(applicationCache.mozItems.length == 0,
 
 function addFinished()
 {
-  // Check that the entry was added successfully
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
-                         true);
-
   OfflineTest.ok(applicationCache.mozLength == 1, "applicationCache should have one dynamic entry (deprecated API)");
   OfflineTest.ok(applicationCache.mozItem(0) == "http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
     "applicationCache's dynamic entry should be the one we expect (deprecated API)");
@@ -31,11 +27,17 @@ function addFinished()
   OfflineTest.ok(applicationCache.mozHasItem("http://mochi.test:8888/tests/SimpleTest/EventUtils.js"),
                  "applicationCache.mozHasItem() should see the dynamic entry");
 
+  // Check that the entry was added successfully
+  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+                         true,
+                         removeItem);
+}
+
+function removeItem()
+{
   // Now test that removes work
   applicationCache.mozRemove("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
 
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
-                         false);
   OfflineTest.ok(applicationCache.mozLength == 0,
                  "applicationCache should have no dynamic entries (deprecated API)");
   OfflineTest.ok(applicationCache.mozItems.length == 0,
@@ -43,11 +45,13 @@ function addFinished()
   OfflineTest.ok(!applicationCache.mozHasItem("http://mochi.test:8888/tests/SimpleTest/EventUtils.js"),
                  "applicationCache.mozHasItem() should not see the removed dynamic entry");
 
-  // We're done
-
-  OfflineTest.teardown();
-
-  OfflineTest.finish();
+  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+                         false,
+                         function() {
+                           // We're done
+                           OfflineTest.teardown();
+                           OfflineTest.finish();
+                         });
 }
 
 function manifestUpdated()
@@ -55,36 +59,41 @@ function manifestUpdated()
   OfflineTest.ok(gGotChecking, "Should get a checking event");
   OfflineTest.ok(gGotDownloading, "Should get a downloading event");
 
-  // The manifest itself should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
-
-  // The document that requested the manifest should be in the cache
-  OfflineTest.checkCache(window.location.href, true);
-
-  // The entries from the manifest should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-  // The bad entries from the manifest should not be in the cache
-  OfflineTest.checkCache("bad:/uri/invalid", false);
-
   OfflineTest.is(applicationCache.status, 1, "Cache status should be 1 (CACHED)");
 
-  try {
-    applicationCache.swapCache();
-    OfflineTest.ok(false, "application.swapCache() should fail after initial update.");
-  } catch(ex) {
-    OfflineTest.ok(true, "application.swapCache() should fail after initial update.");
-  }
+  var entries = [
+    // The manifest itself should be in the cache
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true],
 
-  // XXX: make sure that the previous version went away after the swapCache().
+    // The document that requested the manifest should be in the cache
+    [window.location.href, true],
 
-  // Now add a file using the applicationCache API
-  applicationCache.mozAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
+    // The entries from the manifest should be in the cache
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
 
-  // Wait for the add() to be downloaded
-  OfflineTest.waitForAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
-                         OfflineTest.priv(addFinished));
+    // The bad entries from the manifest should not be in the cache
+    ["bad:/uri/invalid", false]
+  ];
+  OfflineTest.checkCacheEntries(
+    entries,
+    function() {
+      try {
+        applicationCache.swapCache();
+        OfflineTest.ok(false, "application.swapCache() should fail after initial update.");
+      } catch(ex) {
+        OfflineTest.ok(true, "application.swapCache() should fail after initial update.");
+      }
+
+      // XXX: make sure that the previous version went away after the swapCache().
+
+      // Now add a file using the applicationCache API
+      applicationCache.mozAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
+
+      // Wait for the add() to be downloaded
+      OfflineTest.waitForAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
+                             OfflineTest.priv(addFinished));
+    });
 }
 
 if (OfflineTest.setup()) {

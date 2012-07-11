@@ -359,7 +359,7 @@
     border: 1px solid #b8d6fb;
     box-shadow: inset 0 0 1px white;
     background: -moz-linear-gradient(#fafbfd, #ebf3fd);
-    -moz-transition: .2s ease-in;
+    transition: .2s ease-in;
   }
 }
 
@@ -699,8 +699,8 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   box-shadow: 0 1px hsla(0,0%,100%,0) inset,
               0 1px hsla(210,54%,20%,0),
               0 0 2px hsla(210,54%,20%,0);
-  -moz-transition-property: background-color, border-color, box-shadow;
-  -moz-transition-duration: 150ms;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 150ms;
 }
 
 @navbarLargeIcons@ .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
@@ -779,7 +779,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 1px 0 hsla(210,54%,20%,0),
               0 0 2px hsla(210,54%,20%,0);
   text-shadow: none;
-  -moz-transition: none;
+  transition: none;
 }
 
 @navbarLargeIcons@ .toolbarbutton-1:-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
@@ -788,7 +788,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @navbarLargeIcons@ .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-color: rgba(90%,90%,90%,.4);
-  -moz-transition: background-color .4s;
+  transition: background-color .4s;
 }
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
@@ -863,7 +863,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
-  -moz-transition: opacity @forwardTransitionLength@ ease-out;
+  transition: opacity @forwardTransitionLength@ ease-out;
 }
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
@@ -898,8 +898,8 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 0 0 1px hsla(0,0%,100%,.3) inset,
               0 0 0 1px hsla(210,54%,20%,.25),
               0 1px 0 hsla(210,54%,20%,.35);
-  -moz-transition-property: background-color, box-shadow;
-  -moz-transition-duration: 250ms;
+  transition-property: background-color, box-shadow;
+  transition-duration: 250ms;
 }
 
 @conditionalForwardWithUrlbar@ > #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
@@ -918,13 +918,13 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 0 1px hsla(210,54%,20%,.2) inset,
               0 0 0 1px hsla(210,54%,20%,.4),
               0 1px 0 hsla(210,54%,20%,.2);
-  -moz-transition: none;
+  transition: none;
 }
 
 @conditionalForwardWithUrlbar@ > #back-button[disabled] > .toolbarbutton-icon {
   box-shadow: 0 0 0 1px hsla(210,54%,20%,.55),
               0 1px 0 hsla(210,54%,20%,.65);
-  -moz-transition: none;
+  transition: none;
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -1202,7 +1202,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) + #urlbar-container > #urlbar {
-  -moz-transition: margin-left @forwardTransitionLength@ ease-out;
+  transition: margin-left @forwardTransitionLength@ ease-out;
 }
 
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
@@ -1225,7 +1225,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) + #urlbar-container > #urlbar {
   /* delay the hiding of the forward button when hovered to avoid accidental clicks on the url bar */
-  -moz-transition-delay: 100s;
+  transition-delay: 100s;
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar {
@@ -1341,17 +1341,17 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   padding-left: 5px;
-  -moz-transition: padding-left;
+  transition: padding-left;
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 5px;
-  -moz-transition: padding-right;
+  transition: padding-right;
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled]:hover:not([switchingtabs]) + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box {
   /* forward button hiding is delayed when hovered */
-  -moz-transition-delay: 100s;
+  transition-delay: 100s;
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
@@ -1965,12 +1965,12 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  -moz-transition: 1s background-color ease-out;
+  transition: 1s background-color ease-out;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   background-color: Highlight;
-  -moz-transition: none;
+  transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]),

@@ -582,7 +582,7 @@ nsRoleMapEntry nsARIAMap::gEmptyRoleMap = {
  * The following state rules are applied to any accessible element,
  * whether there is an ARIA role or not:
  */
-EStateRule nsARIAMap::gWAIUnivStateMap[] = {
+static const EStateRule sWAIUnivStateMap[] = {
   eARIABusy,
   eARIADisabled,
   eARIAExpanded,  // Currently under spec review but precedent exists
@@ -635,7 +635,8 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                 }
 };
 
-PRUint32 nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
+PRUint32
+nsARIAMap::gWAIUnivAttrMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIUnivAttrMap);
 
 nsRoleMapEntry*
 aria::GetRoleMap(nsINode* aNode)
@@ -671,4 +672,15 @@ aria::GetRoleMap(nsINode* aNode)
   // Always use some entry if there is a non-empty role string
   // To ensure an accessible object is created
   return &sLandmarkRoleMap;
+}
+
+PRUint64
+aria::UniversalStatesFor(mozilla::dom::Element* aElement)
+{
+  PRUint64 state = 0;
+  PRUint32 index = 0;
+  while (MapToState(sWAIUnivStateMap[index], aElement, &state))
+    index++;
+
+  return state;
 }

@@ -96,24 +96,22 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     if (showArgs && callObj) {
         for (uint32_t i = 0; i < callProps.length; i++) {
             JSPropertyDesc* desc = &callProps.array[i];
-            if (desc->flags & JSPD_ARGUMENT) {
-                JSAutoByteString nameBytes;
-                const char* name = JSVAL2String(cx, desc->id, &isString, &nameBytes);
-                if (!isString)
-                    name = nsnull;
-                JSAutoByteString valueBytes;
-                const char* value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
+            JSAutoByteString nameBytes;
+            const char* name = JSVAL2String(cx, desc->id, &isString, &nameBytes);
+            if (!isString)
+                name = nsnull;
+            JSAutoByteString valueBytes;
+            const char* value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
 
-                buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
-                                        namedArgCount ? ", " : "",
-                                        name ? name :"",
-                                        name ? " = " : "",
-                                        isString ? "\"" : "",
-                                        value ? value : "?unknown?",
-                                        isString ? "\"" : "");
-                if (!buf) goto out;
-                namedArgCount++;
-            }
+            buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
+                                    namedArgCount ? ", " : "",
+                                    name ? name :"",
+                                    name ? " = " : "",
+                                    isString ? "\"" : "",
+                                    value ? value : "?unknown?",
+                                    isString ? "\"" : "");
+            if (!buf) goto out;
+            namedArgCount++;
         }
 
         // print any unnamed trailing args (found in 'arguments' object)
@@ -157,20 +155,18 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     if (showLocals && callProps.array) {
         for (uint32_t i = 0; i < callProps.length; i++) {
             JSPropertyDesc* desc = &callProps.array[i];
-            if (desc->flags & JSPD_VARIABLE) {
-                JSAutoByteString nameBytes;
-                JSAutoByteString valueBytes;
-                const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
-                const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
+            JSAutoByteString nameBytes;
+            JSAutoByteString valueBytes;
+            const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
+            const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
 
-                if (name && value) {
-                    buf = JS_sprintf_append(buf, TAB "%s = %s%s%s\n",
-                                            name,
-                                            isString ? "\"" : "",
-                                            value,
-                                            isString ? "\"" : "");
-                    if (!buf) goto out;
-                }
+            if (name && value) {
+                buf = JS_sprintf_append(buf, TAB "%s = %s%s%s\n",
+                                        name,
+                                        isString ? "\"" : "",
+                                        value,
+                                        isString ? "\"" : "");
+                if (!buf) goto out;
             }
         }
     }
