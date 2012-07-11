@@ -87,7 +87,6 @@ private:
     bool                   mInitialized;
 
     PRCList                mEvictionList[kQueueCount];
-    PRInt32                mEvictionThreshold;
 
     PRInt32                mHardLimit;
     PRInt32                mSoftLimit;
