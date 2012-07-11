@@ -16,7 +16,7 @@ panel {
 /* ::::: arrow panel ::::: */
 
 panel[type="arrow"] {
-  -moz-transition: opacity 300ms;
+  transition: opacity 300ms;
   -moz-appearance: none;
 }
 
