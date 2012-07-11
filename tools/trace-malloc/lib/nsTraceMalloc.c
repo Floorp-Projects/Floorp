@@ -893,7 +893,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
  * reverse it in calltree.
  */
 static void
-stack_callback(void *pc, void *closure)
+stack_callback(void *pc, void *sp, void *closure)
 {
     stack_buffer_info *info = (stack_buffer_info*) closure;
 

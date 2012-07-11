@@ -11,7 +11,9 @@ import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
+import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SurfaceTextureLayer;
+import org.mozilla.gecko.ui.PanZoomController;
 
 import java.io.*;
 import java.util.*;
@@ -1248,6 +1250,10 @@ abstract public class GeckoApp
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
+            } else if (event.equals("Share:Image")) {
+                String src = message.getString("url");
+                String type = message.getString("mime");
+                GeckoAppShell.shareImage(src, type);
             } else if (event.equals("Sanitize:ClearHistory")) {
                 handleClearHistory();
             }
@@ -1934,6 +1940,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Share:Image", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
@@ -2279,7 +2286,10 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Share:Image", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
+
+        deleteTempFiles();
 
         if (mFavicons != null)
             mFavicons.close();
@@ -2296,6 +2306,25 @@ abstract public class GeckoApp
             mBatteryReceiver.unregisterFor(mAppContext);
 
         ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
+    }
+
+    // Get/Create a temporary direcory
+    public static File getTempDirectory() {
+        File sdcard = Environment.getExternalStorageDirectory();
+        File dir = new File(sdcard.getAbsolutePath() + "/firefox");
+        dir.mkdirs();
+        return dir;
+    }
+
+    // Delete any files in our temporary directory
+    public static void deleteTempFiles() {
+        File[] files  = getTempDirectory().listFiles();
+        if (files == null)
+            return;
+
+        for (File file : files) {
+            file.delete();
+        }
     }
 
     @Override
@@ -3082,11 +3111,30 @@ abstract public class GeckoApp
         layerController.setLayerClient(mLayerClient);
 
         layerController.getView().getTouchEventHandler().setOnTouchListener(new View.OnTouchListener() {
+            private PointF initialPoint = null;
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
                     return true;
+
                 if (autoHideTabs())
                     return true;
+
+                int action = event.getAction();
+                PointF point = new PointF(event.getX(), event.getY());
+                if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+                    initialPoint = point;
+                }
+
+                if (initialPoint != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
+                    if (PointUtils.subtract(point, initialPoint).length() < PanZoomController.PAN_THRESHOLD) {
+                        // Don't send the touchmove event if if the users finger hasn't move far
+                        // Necessary for Google Maps to work correctlly. See bug 771099.
+                        return true;
+                    } else {
+                        initialPoint = null;
+                    }
+                }
+
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
                 return true;
             }

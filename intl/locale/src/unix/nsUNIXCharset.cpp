@@ -158,8 +158,6 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
 NS_IMETHODIMP 
 nsPlatformCharset::Init()
 {
-  nsresult res = NS_OK;
-
   //
   // remember default locale so we can use the
   // same charset when asked for the same locale

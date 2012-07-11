@@ -28,6 +28,7 @@ import java.util.Comparator;
  * @author Apache Software Foundation
  * @version $Id: StringEncoderComparator.java 1080701 2011-03-11 17:52:27Z ggregory $
  */
+@SuppressWarnings("rawtypes")
 public class StringEncoderComparator implements Comparator {
 
     /**
@@ -68,6 +69,7 @@ public class StringEncoderComparator implements Comparator {
      * @return the Comparable.compareTo() return code or 0 if an encoding error was caught.
      * @see Comparable
      */
+    @SuppressWarnings("unchecked")
     public int compare(Object o1, Object o2) {
 
         int compareCode = 0;
