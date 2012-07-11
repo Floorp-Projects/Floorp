@@ -5988,6 +5988,13 @@ var WebappsUI = {
     };
     favicon.onerror = function() {
       Cu.reportError("CreateShortcut: favicon image load error");
+
+      // if the image failed to load, and it was not our default icon, attempt to
+      // use our default as a fallback
+      let uri = Services.io.newURI(favicon.src, null, null);
+      if (!/^chrome$/.test(uri.scheme)) {
+        favicon.src = WebappsUI.getBiggestIcon(null);
+      }
     };
   
     favicon.src = aIconURL;
