@@ -1124,7 +1124,7 @@ if [ "$DEHYDRA_PATH" ]; then
   "
 fi
 
-if [ "$MOZ_ANGLE" ]; then
+if [ "$MOZ_ANGLE_RENDERER" ]; then
   add_makefiles "
     gfx/angle/src/libGLESv2/Makefile
     gfx/angle/src/libEGL/Makefile

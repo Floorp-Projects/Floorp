@@ -5757,7 +5757,7 @@ dnl = ANGLE OpenGL->D3D translator for WebGL
 dnl = * only applies to win32
 dnl = * enabled by default (shipping build); requires explicit --disable to disable
 dnl ========================================================
-MOZ_ANGLE=
+MOZ_ANGLE_RENDERER=
 MOZ_DIRECTX_SDK_PATH=
 MOZ_DIRECTX_SDK_CPU_SUFFIX=
 MOZ_D3DX9_VERSION=
@@ -5767,7 +5767,7 @@ MOZ_D3DX9_DLL=
 MOZ_D3DCOMPILER_DLL=
 case "$target_os" in
 *mingw*)
-    MOZ_ANGLE=1
+    MOZ_ANGLE_RENDERER=1
     ;;
 esac
 
@@ -5781,13 +5781,17 @@ x86_64)
   ;;
 esac
 
-if test -n "$MOZ_ANGLE"; then
-MOZ_ARG_DISABLE_BOOL(angle,
-[  --disable-angle     Disable building of ANGLE for WebGL->D3D translation],
-    MOZ_ANGLE=,
-    MOZ_ANGLE=1)
+MOZ_ARG_DISABLE_BOOL(webgl,
+[  --disable-webgl     Disable building of the WebGL implementation],
+    MOZ_WEBGL_DISABLED=1,
+    MOZ_WEBGL_DISABLED=)
 
-if test -n "$MOZ_ANGLE"; then
+if test -n "$MOZ_WEBGL_DISABLED"; then
+  MOZ_WEBGL=
+  MOZ_ANGLE_RENDERER=
+fi
+
+if test -n "$MOZ_ANGLE_RENDERER"; then
   # Get the SDK path from the registry.
   # First try to get the June 2010 SDK
   MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK (June 2010)' | head -n 1`
@@ -5797,41 +5801,31 @@ if test -n "$MOZ_ANGLE"; then
   fi
 
   if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
-    AC_MSG_ERROR([Found the February 2010 DirectX SDK. This is too old. We now require the June 2010 DirectX SDK, or newer.  Upgrade your SDK or to explicitly build without ANGLE, reconfigure with --disable-angle.])
+    AC_MSG_ERROR([Found the February 2010 DirectX SDK. Need the June 2010 DirectX SDK, or newer.  Upgrade your SDK or reconfigure with --disable-webgl.])
   else
     MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
   fi
 
-  MOZ_ANGLE=
-
-  if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
-    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
-      AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
-      MOZ_ANGLE=1
-    fi
+  if test -n "$MOZ_DIRECTX_SDK_PATH" &&
+     test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h &&
+	 test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+    AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
+  else
+    AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for WebGL. Either install it (June 2010 version or newer), or reconfigure with --disable-webgl.])
   fi
 
-  if test -z "$MOZ_ANGLE" ; then
-    AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (June 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
+  # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
+  MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+
+  if test -z "$MOZ_D3DX9_VERSION" ; then
+  	AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for WebGL. Either reinstall the DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
   fi
 
-  if test -n "$MOZ_ANGLE" ; then
-    # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
-    MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+  MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+  MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
 
-    if test -z "$MOZ_D3DX9_VERSION" ; then
-      AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for ANGLE. To explicitly build without ANGLE, reconfigure with --disable-angle.])
-    fi
-
-    if test -n "$MOZ_ANGLE" ; then
-      MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
-      MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
-
-      MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
-      MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
-    fi
-  fi
-fi
+  MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
+  MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
 fi
 
 dnl ========================================================
@@ -8357,7 +8351,7 @@ AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
-AC_SUBST(MOZ_ANGLE)
+AC_SUBST(MOZ_ANGLE_RENDERER)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 AC_SUBST(MOZ_D3DX9_VERSION)
