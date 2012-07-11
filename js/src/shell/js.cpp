@@ -4853,13 +4853,6 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('U'))
         JS_SetCStringsAreUTF8();
 
-#ifdef XP_WIN
-    // Set the timer calibration delay count to 0 so we get high
-    // resolution right away, which we need for precise benchmarking.
-    extern int CALIBRATION_DELAY_COUNT;
-    CALIBRATION_DELAY_COUNT = 0;
-#endif
-
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
     rt = JS_NewRuntime(32L * 1024L * 1024L);
     if (!rt)
