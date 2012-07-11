@@ -7019,31 +7019,38 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 #if JS_HAS_XML_SUPPORT
       case TOK_AT:
       case TOK_STAR:
+        if (!allowsXML())
+            goto syntaxerror;
         pn = starOrAtPropertyIdentifier(tt);
         break;
 
       case TOK_XMLSTAGO:
+        if (!allowsXML())
+            goto syntaxerror;
         pn = xmlElementOrListRoot(true);
         if (!pn)
             return NULL;
         break;
 
       case TOK_XMLCDATA:
-        JS_ASSERT(allowsXML());
+        if (!allowsXML())
+            goto syntaxerror;
         pn = atomNode(PNK_XMLCDATA, JSOP_XMLCDATA);
         if (!pn)
             return NULL;
         break;
 
       case TOK_XMLCOMMENT:
-        JS_ASSERT(allowsXML());
+        if (!allowsXML())
+            goto syntaxerror;
         pn = atomNode(PNK_XMLCOMMENT, JSOP_XMLCOMMENT);
         if (!pn)
             return NULL;
         break;
 
       case TOK_XMLPI: {
-        JS_ASSERT(allowsXML());
+        if (!allowsXML())
+            goto syntaxerror;
         const Token &tok = tokenStream.currentToken();
         pn = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
         if (!pn)
@@ -7112,6 +7119,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         /* The scanner or one of its subroutines reported the error. */
         return NULL;
 
+    syntaxerror:
       default:
         reportError(NULL, JSMSG_SYNTAX_ERROR);
         return NULL;
