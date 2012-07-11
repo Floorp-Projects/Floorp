@@ -18,9 +18,9 @@ class TestState(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         l = self.marionette.find_element("name", "myCheckBox")
-        self.assertTrue(l.displayed())
+        self.assertTrue(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
-        self.assertFalse(l.displayed())
+        self.assertFalse(l.is_displayed())
 
 class TestStateChrome(MarionetteTestCase):
     def setUp(self):
@@ -48,8 +48,8 @@ class TestStateChrome(MarionetteTestCase):
 
     def test_isDisplayed(self):
         l = self.marionette.find_element("id", "textInput")
-        self.assertTrue(l.displayed())
+        self.assertTrue(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
-        self.assertFalse(l.displayed())
+        self.assertFalse(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = false;", [l])
 

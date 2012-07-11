@@ -61,7 +61,7 @@ class HTMLElement(object):
     def enabled(self):
         return self.marionette._send_message('isElementEnabled', 'value', element=self.id)
 
-    def displayed(self):
+    def is_displayed(self):
         return self.marionette._send_message('isElementDisplayed', 'value', element=self.id)
 
 
