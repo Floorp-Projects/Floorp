@@ -52,19 +52,17 @@ js::ObjectImpl::nativeLookup(JSContext *cx, PropertyName *name)
     return nativeLookup(cx, PropertyId(name));
 }
 
-#ifdef DEBUG
 inline js::Shape *
-js::ObjectImpl::nativeLookupNoAllocation(JSContext *cx, PropertyId pid)
+js::ObjectImpl::nativeLookupNoAllocation(PropertyId pid)
 {
-    return nativeLookupNoAllocation(cx, pid.asId());
+    return nativeLookupNoAllocation(pid.asId());
 }
 
 inline js::Shape *
-js::ObjectImpl::nativeLookupNoAllocation(JSContext *cx, PropertyName *name)
+js::ObjectImpl::nativeLookupNoAllocation(PropertyName *name)
 {
-    return nativeLookupNoAllocation(cx, PropertyId(name));
+    return nativeLookupNoAllocation(PropertyId(name));
 }
-#endif
 
 inline bool
 js::ObjectImpl::isExtensible() const

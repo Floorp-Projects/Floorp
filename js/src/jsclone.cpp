@@ -41,6 +41,10 @@ ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *v
                     const JSStructuredCloneCallbacks *cb, void *cbClosure)
 {
     SCInput in(cx, data, nbytes);
+
+    /* XXX disallow callers from using internal pointers to GC things. */
+    SkipRoot skip(cx, &in);
+
     JSStructuredCloneReader r(in, cb, cbClosure);
     return r.read(vp);
 }

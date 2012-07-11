@@ -552,11 +552,12 @@ struct JSScript : public js::gc::Cell
     // and fullyInitTrivial() are responsible for notifying the debugger after
     // successfully creating any kind (function or other) of new JSScript.
     // However, callers of fullyInitFromEmitter() do not need to do this.
-    bool partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-                       uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
-                       uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets);
-    bool fullyInitTrivial(JSContext *cx);  // inits a JSOP_STOP-only script
-    bool fullyInitFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+    static bool partiallyInit(JSContext *cx, JS::Handle<JSScript*> script,
+                              uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+                              uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
+                              uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets);
+    static bool fullyInitTrivial(JSContext *cx, JS::Handle<JSScript*> script);  // inits a JSOP_STOP-only script
+    static bool fullyInitFromEmitter(JSContext *cx, JS::Handle<JSScript*> script, js::BytecodeEmitter *bce);
 
     void setVersion(JSVersion v) { version = v; }
 

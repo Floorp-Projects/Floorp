@@ -7552,7 +7552,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
         JSRuntime *rt = cx->runtime;
         JSLinearString *prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
         JSLinearString *uri = rt->atomState.functionNamespaceURIAtom;
-        JSObject *obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
+        RootedObject obj(cx, NewXMLNamespace(cx, prefix, uri, JS_FALSE));
         if (!obj)
             return false;
 
@@ -7563,7 +7563,7 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        if (!obj->clearType(cx))
+        if (!JSObject::clearType(cx, obj))
             return false;
 
         v.set(this, FUNCTION_NS, ObjectValue(*obj));

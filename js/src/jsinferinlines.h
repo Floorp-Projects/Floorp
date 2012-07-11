@@ -1517,6 +1517,8 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint3
 inline js::types::TypeObject *
 JSCompartment::getEmptyType(JSContext *cx)
 {
+    JS::MaybeCheckStackRoots(cx);
+
     if (!emptyTypeObject) {
         JS::RootedObject nullproto(cx, NULL);
         emptyTypeObject = types.newTypeObject(cx, NULL, JSProto_Object, nullproto, true);
