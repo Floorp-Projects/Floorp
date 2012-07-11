@@ -107,11 +107,6 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
 void GetPathToBinary(FilePath& exePath)
 {
-#if defined(OS_WIN)
-  exePath = FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
-  exePath = exePath.DirName();
-  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
-#elif defined(OS_POSIX)
   if (ShouldHaveDirectoryService()) {
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
     NS_ASSERTION(directoryService, "Expected XPCOM to be available");
@@ -119,8 +114,13 @@ void GetPathToBinary(FilePath& exePath)
       nsCOMPtr<nsIFile> greDir;
       nsresult rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
       if (NS_SUCCEEDED(rv)) {
+#ifdef OS_WIN
+        nsString path;
+        greDir->GetPath(path);
+#else
         nsCString path;
         greDir->GetNativePath(path);
+#endif
         exePath = FilePath(path.get());
 #ifdef MOZ_WIDGET_COCOA
         // We need to use an App Bundle on OS X so that we can hide
@@ -132,12 +132,15 @@ void GetPathToBinary(FilePath& exePath)
   }
 
   if (exePath.empty()) {
+#ifdef OS_WIN
+    exePath = FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
+#else
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
+#endif
     exePath = exePath.DirName();
   }
 
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
-#endif
 }
 
 #ifdef MOZ_WIDGET_COCOA

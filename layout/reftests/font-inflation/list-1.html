@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<head>
+<link rel="stylesheet" type="text/css" href="ahem.css" />
+<style>
+div { background: yellow; line-height: 1.0; border: 1px solid red; font-size: 12px; width: 480px; }
+ol { width: 480px;}
+li { font-family: ahem; }
+</style>
+</head>
+<!--
+In a 480px container, the minimum font size at 15em per line is 32px.
+This means we map 0px-48px into 32px-48px, so 12px gets mapped to 36px.
+-->
+<body>
+<div>
+  <ol>
+    <li>Separate interface design from internals</li>
+    <li>Enable multiple user-interface strategies</li>
+    <li>Enable multiple-platform support</li>
+  </ol>
+</div>
+</body>

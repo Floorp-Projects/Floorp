@@ -85,6 +85,45 @@ static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
   return frameNext && parentNext && frameNext->GetParent() == parentNext;
 }
 
+/**
+ * Adjusts the margin for a list (ol, ul), if necessary, depending on
+ * font inflation settings. Unfortunately, because bullets from a list are
+ * placed in the margin area, we only have ~40px in which to place the
+ * bullets. When they are inflated, however, this causes problems, since
+ * the text takes up more space than is available in the margin.
+ *
+ * This method will return a small amount (in app units) by which the
+ * margin can be adjusted, so that the space is available for list
+ * bullets to be rendered with font inflation enabled.
+ */
+static  nscoord
+FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
+{
+  float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
+  if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+    const nsBlockFrame* blockFrame = static_cast<const nsBlockFrame*>(aFrame);
+    const nsStyleList* styleList = aFrame->GetStyleList();
+
+    // We only want to adjust the margins if we're dealing with an ordered
+    // list.
+    if (inflation > 1.0f &&
+        blockFrame->HasBullet() &&
+        styleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE &&
+        styleList->mListStyleType != NS_STYLE_LIST_STYLE_DISC &&
+        styleList->mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
+        styleList->mListStyleType != NS_STYLE_LIST_STYLE_SQUARE &&
+        inflation > 1.0f) {
+
+      // The HTML spec states that the default padding for ordered lists begins
+      // at 40px, indicating that we have 40px of space to place a bullet. When
+      // performing font inflation calculations, we add space equivalent to this,
+      // but simply inflated at the same amount as the text, in app units.
+      return nsPresContext::CSSPixelsToAppUnits(40) * (inflation - 1);
+    }
+  }
+
+  return 0;
+}
 // Initialize a reflow state for a child frames reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
@@ -2336,6 +2375,18 @@ nsCSSOffsetState::ComputeMargin(nscoord aContainingBlockWidth)
       ComputeWidthDependentValue(aContainingBlockWidth,
                                  styleMargin->mMargin.GetBottom());
   }
+
+  nscoord marginAdjustment = FontSizeInflationListMarginAdjustment(frame);
+
+  if (marginAdjustment > 0) {
+    const nsStyleVisibility* visibility = frame->GetStyleVisibility();
+    if (visibility->mDirection == NS_STYLE_DIRECTION_RTL) {
+      mComputedMargin.right = mComputedMargin.right + marginAdjustment;
+    } else {
+      mComputedMargin.left = mComputedMargin.left + marginAdjustment;
+    }
+  }
+
   return isWidthDependent;
 }
 

@@ -19,7 +19,6 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-8.html height-constraint-percent-8-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == decoration-1.html decoration-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == bullet-1.html bullet-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == bullet-2.html bullet-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-height.html input-text-1-height-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-noheight.html input-text-1-noheight-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-height.html input-text-2-height-ref.html
@@ -63,6 +62,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineTh
 
 # The tests below use nonzero values of the lineThreshold preference.
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) HTTP(..) == list-1.html list-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1a.html threshold-1a.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1b.html threshold-1b-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) == threshold-1c.html threshold-1c-ref.html

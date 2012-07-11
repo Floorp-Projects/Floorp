@@ -2487,7 +2487,6 @@ nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
 {
     mozilla::Telemetry::ID lockerID;
     mozilla::Telemetry::ID generalID;
-    bool on;
 
     if (NS_IsMainThread()) {
         lockerID = mainThreadLockerID;

@@ -20,6 +20,8 @@ import org.mozilla.gecko.gfx.RectUtils;
 import java.io.*;
 import java.lang.reflect.*;
 import java.nio.*;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
@@ -1052,6 +1054,79 @@ public class GeckoAppShell
         if (subType == null)
             subType = "*";
         return type + "/" + subType;
+    }
+
+    static void safeStreamClose(Closeable stream) {
+        try {
+            if (stream != null)
+                stream.close();
+        } catch (IOException e) {}
+    }
+
+    static void shareImage(String aSrc, String aType) {
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        boolean isDataURI = aSrc.startsWith("data:");
+        OutputStream os = null;
+
+        File dir = GeckoApp.getTempDirectory();
+        GeckoApp.deleteTempFiles();
+
+        try {
+            // Create a temporary file for the image
+            File imageFile = File.createTempFile("image",
+                                                 "." + aType.replace("image/",""),
+                                                 dir);
+            os = new FileOutputStream(imageFile);
+
+            if (isDataURI) {
+                // We are dealing with a Data URI
+                int dataStart = aSrc.indexOf(',');
+                byte[] buf = Base64.decode(aSrc.substring(dataStart+1), Base64.DEFAULT);
+                os.write(buf);
+            } else {
+                // We are dealing with a URL
+                InputStream is = null;
+                try {
+                    URL url = new URL(aSrc);
+                    is = url.openStream();
+                    byte[] buf = new byte[2048];
+                    int length;
+
+                    while ((length = is.read(buf)) != -1) {
+                        os.write(buf, 0, length);
+                    }
+                } finally {
+                    safeStreamClose(is);
+                }
+            }
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+
+            // If we were able to determine the image type, send that in the intent. Otherwise,
+            // use a generic type.
+            if (aType.startsWith("image/")) {
+                intent.setType(aType);
+            } else {
+                intent.setType("image/*");
+            }
+        } catch (IOException e) {
+            if (!isDataURI) {
+               // If we failed, at least send through the URL link
+               intent.putExtra(Intent.EXTRA_TEXT, aSrc);
+               intent.setType("text/plain");
+            } else {
+               // Don't fail silently, tell the user that we weren't able to share the image
+               Toast toast = Toast.makeText(GeckoApp.mAppContext,
+                                            GeckoApp.mAppContext.getResources().getString(R.string.share_image_failed),
+                                            Toast.LENGTH_SHORT);
+               toast.show();
+               return;
+            }
+        } finally {
+            safeStreamClose(os);
+        }
+        GeckoApp.mAppContext.startActivity(Intent.createChooser(intent,
+                GeckoApp.mAppContext.getResources().getString(R.string.share_title)));
     }
 
     static boolean openUriExternal(String aUriSpec, String aMimeType, String aPackageName,
