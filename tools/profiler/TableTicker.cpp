@@ -891,8 +891,9 @@ void mozilla_sampler_init()
     return;
   }
 
+  const char* features = "js";
   mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                        PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
+                        &features, 1);
 }
 
 void mozilla_sampler_deinit()
