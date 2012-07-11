@@ -80,11 +80,6 @@ Wrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
     return true;
 }
 
-void
-Wrapper::leave(JSContext *cx, JSObject *wrapper)
-{
-}
-
 JS_FRIEND_API(JSObject *)
 js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 {
@@ -112,7 +107,6 @@ js::UnwrapObjectChecked(JSContext *cx, JSObject *obj)
             return rvOnFailure ? obj : NULL;
         obj = Wrapper::wrappedObject(obj);
         JS_ASSERT(obj);
-        handler->leave(cx, wrapper);
     }
     return obj;
 }
@@ -134,9 +128,7 @@ IndirectWrapper::IndirectWrapper(unsigned flags) : Wrapper(flags),
         bool status;                                                         \
         if (!enter(cx, wrapper, id, act, &status))                           \
             return status;                                                   \
-        bool ok = (op);                                                      \
-        leave(cx, wrapper);                                                  \
-        return ok;                                                           \
+        return (op);                                                         \
     JS_END_MACRO
 
 #define SET(action) CHECKED(action, SET)
@@ -338,7 +330,6 @@ DirectWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
         return NULL;
     }
     JSString *str = IndirectProxyHandler::obj_toString(cx, wrapper);
-    leave(cx, wrapper);
     return str;
 }
 
@@ -357,7 +348,6 @@ DirectWrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent)
         return NULL;
     }
     JSString *str = IndirectProxyHandler::fun_toString(cx, wrapper, indent);
-    leave(cx, wrapper);
     return str;
 }
 
