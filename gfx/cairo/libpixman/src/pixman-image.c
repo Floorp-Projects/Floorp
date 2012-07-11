@@ -456,6 +456,10 @@ compute_image_info (pixman_image_t *image)
 
 	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
 	    flags &= ~FAST_PATH_NARROW_FORMAT;
+
+	if (image->bits.format == PIXMAN_r5g6b5)
+	    flags |= FAST_PATH_16_FORMAT;
+
 	break;
 
     case RADIAL:

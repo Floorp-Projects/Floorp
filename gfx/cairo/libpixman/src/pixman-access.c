@@ -938,6 +938,44 @@ store_scanline_x2b10g10r10 (bits_image_t *  image,
     }
 }
 
+static void
+store_scanline_16 (bits_image_t *  image,
+		   int             x,
+		   int             y,
+		   int             width,
+		   const uint32_t *v)
+{
+    uint16_t *bits = (uint16_t*)(image->bits + image->rowstride * y);
+    uint16_t *values = (uint16_t *)v;
+    uint16_t *pixel = bits + x;
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	WRITE (image, pixel++, values[i]);
+    }
+}
+
+static void
+fetch_scanline_16 (pixman_image_t *image,
+                            int             x,
+                            int             y,
+                            int             width,
+                            uint32_t *      b,
+                            const uint32_t *mask)
+{
+    const uint16_t *bits = (uint16_t*)(image->bits.bits + y * image->bits.rowstride);
+    const uint16_t *pixel = bits + x;
+    int i;
+    uint16_t *buffer = (uint16_t *)b;
+
+    for (i = 0; i < width; ++i)
+    {
+	*buffer++ = READ (image, pixel++);
+    }
+}
+
+
 /*
  * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
  * store proc. Despite the type, this function expects a uint64_t buffer.
@@ -1049,10 +1087,12 @@ fetch_pixel_generic_lossy_32 (bits_image_t *image,
 typedef struct
 {
     pixman_format_code_t	format;
+    fetch_scanline_t		fetch_scanline_16;
     fetch_scanline_t		fetch_scanline_32;
     fetch_scanline_t		fetch_scanline_64;
     fetch_pixel_32_t		fetch_pixel_32;
     fetch_pixel_64_t		fetch_pixel_64;
+    store_scanline_t		store_scanline_16;
     store_scanline_t		store_scanline_32;
     store_scanline_t		store_scanline_64;
 } format_info_t;
@@ -1060,11 +1100,24 @@ typedef struct
 #define FORMAT_INFO(format) 						\
     {									\
 	PIXMAN_ ## format,						\
+	    NULL,							\
 	    fetch_scanline_ ## format,					\
 	    fetch_scanline_generic_64,					\
 	    fetch_pixel_ ## format, fetch_pixel_generic_64,		\
+	    NULL,							\
 	    store_scanline_ ## format, store_scanline_generic_64	\
     }
+#define FORMAT_INFO16(format) 						\
+    {									\
+	PIXMAN_ ## format,						\
+	    fetch_scanline_16,						\
+	    fetch_scanline_ ## format,					\
+	    fetch_scanline_generic_64,					\
+	    fetch_pixel_ ## format, fetch_pixel_generic_64,		\
+	    store_scanline_16,						\
+	    store_scanline_ ## format, store_scanline_generic_64	\
+    }
+
 
 static const format_info_t accessors[] =
 {
@@ -1084,8 +1137,8 @@ static const format_info_t accessors[] =
     FORMAT_INFO (b8g8r8),
     
 /* 16bpp formats */
-    FORMAT_INFO (r5g6b5),
-    FORMAT_INFO (b5g6r5),
+    FORMAT_INFO16 (r5g6b5),
+    FORMAT_INFO16 (b5g6r5),
     
     FORMAT_INFO (a1r5g5b5),
     FORMAT_INFO (x1r5g5b5),
@@ -1137,33 +1190,33 @@ static const format_info_t accessors[] =
 /* Wide formats */
     
     { PIXMAN_a2r10g10b10,
-      NULL, fetch_scanline_a2r10g10b10,
+      NULL, NULL, fetch_scanline_a2r10g10b10,
       fetch_pixel_generic_lossy_32, fetch_pixel_a2r10g10b10,
       NULL, store_scanline_a2r10g10b10 },
     
     { PIXMAN_x2r10g10b10,
-      NULL, fetch_scanline_x2r10g10b10,
+      NULL, NULL, fetch_scanline_x2r10g10b10,
       fetch_pixel_generic_lossy_32, fetch_pixel_x2r10g10b10,
       NULL, store_scanline_x2r10g10b10 },
     
     { PIXMAN_a2b10g10r10,
-      NULL, fetch_scanline_a2b10g10r10,
+      NULL, NULL, fetch_scanline_a2b10g10r10,
       fetch_pixel_generic_lossy_32, fetch_pixel_a2b10g10r10,
       NULL, store_scanline_a2b10g10r10 },
     
     { PIXMAN_x2b10g10r10,
-      NULL, fetch_scanline_x2b10g10r10,
+      NULL, NULL, fetch_scanline_x2b10g10r10,
       fetch_pixel_generic_lossy_32, fetch_pixel_x2b10g10r10,
       NULL, store_scanline_x2b10g10r10 },
     
 /* YUV formats */
     { PIXMAN_yuy2,
-      fetch_scanline_yuy2, fetch_scanline_generic_64,
+      NULL, fetch_scanline_yuy2, fetch_scanline_generic_64,
       fetch_pixel_yuy2, fetch_pixel_generic_64,
       NULL, NULL },
     
     { PIXMAN_yv12,
-      fetch_scanline_yv12, fetch_scanline_generic_64,
+      NULL, fetch_scanline_yv12, fetch_scanline_generic_64,
       fetch_pixel_yv12, fetch_pixel_generic_64,
       NULL, NULL },
     
@@ -1179,10 +1232,12 @@ setup_accessors (bits_image_t *image)
     {
 	if (info->format == image->format)
 	{
+	    image->fetch_scanline_16 = info->fetch_scanline_16;
 	    image->fetch_scanline_32 = info->fetch_scanline_32;
 	    image->fetch_scanline_64 = info->fetch_scanline_64;
 	    image->fetch_pixel_32 = info->fetch_pixel_32;
 	    image->fetch_pixel_64 = info->fetch_pixel_64;
+	    image->store_scanline_16 = info->store_scanline_16;
 	    image->store_scanline_32 = info->store_scanline_32;
 	    image->store_scanline_64 = info->store_scanline_64;
 	    
