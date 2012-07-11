@@ -299,6 +299,12 @@ JSBool
 ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                      MutableHandleObject objp, MutableHandleShape propp)
 {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
+        MarkNonNativePropertyFound(obj, propp);
+        objp.set(getArrayBuffer(obj));
+        return true;
+    }
+
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -380,6 +386,9 @@ JSBool
 ArrayBufferObject::obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v,
                                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
+        return true;
+
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
@@ -424,6 +433,11 @@ ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject 
     RootedObject nobj(cx, getArrayBuffer(obj));
     JS_ASSERT(nobj);
 
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
+        vp->setInt32(nobj->asArrayBuffer().byteLength());
+        return true;
+    }
+
     nobj = ArrayBufferDelegate(cx, nobj);
     if (!nobj)
         return false;
@@ -443,6 +457,11 @@ ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO, "ArrayBuffer", bs.ptr(), "object");
         return false;
+    }
+
+    if (name == cx->runtime->atomState.byteLengthAtom) {
+        vp->setInt32(nobj->asArrayBuffer().byteLength());
+        return true;
     }
 
     nobj = ArrayBufferDelegate(cx, nobj);
@@ -485,6 +504,9 @@ ArrayBufferObject::obj_getSpecial(JSContext *cx, HandleObject obj,
 JSBool
 ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict)
 {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
+        return true;
+
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -566,6 +588,11 @@ JSBool
 ArrayBufferObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
                                             HandleId id, unsigned *attrsp)
 {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
+        *attrsp = JSPROP_PERMANENT | JSPROP_READONLY;
+        return true;
+    }
+
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -602,6 +629,12 @@ JSBool
 ArrayBufferObject::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
                                             HandleId id, unsigned *attrsp)
 {
+    if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_SET_ARRAY_ATTRS);
+        return false;
+    }
+
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -638,6 +671,11 @@ JSBool
 ArrayBufferObject::obj_deleteProperty(JSContext *cx, HandleObject obj,
                                       HandlePropertyName name, Value *rval, JSBool strict)
 {
+    if (name == cx->runtime->atomState.byteLengthAtom) {
+        rval->setBoolean(false);
+        return true;
+    }
+
     RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
@@ -795,7 +833,9 @@ TypedArray::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId s
 JSBool
 TypedArray::obj_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
-    *attrsp = JSPROP_PERMANENT | JSPROP_ENUMERATE;
+    *attrsp = (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
+              ? JSPROP_PERMANENT | JSPROP_READONLY
+              : JSPROP_PERMANENT | JSPROP_ENUMERATE;
     return true;
 }
 
@@ -951,6 +991,13 @@ class TypedArrayTemplate
     obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
                     Value *vp)
     {
+        JSObject *tarray = getTypedArray(obj);
+
+        if (name == cx->runtime->atomState.lengthAtom) {
+            *vp = lengthValue(tarray);
+            return true;
+        }
+
         JSObject *proto = obj->getProto();
         if (!proto) {
             vp->setUndefined();
@@ -1107,6 +1154,11 @@ class TypedArrayTemplate
         RootedObject tarray(cx, getTypedArray(obj));
         JS_ASSERT(tarray);
 
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+            vp->setNumber(length(tarray));
+            return true;
+        }
+
         uint32_t index;
         // We can't just chain to js_SetPropertyHelper, because we're not a normal object.
         if (!isArrayIndex(cx, tarray, id, &index)) {
@@ -1159,6 +1211,9 @@ class TypedArrayTemplate
     obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
     {
+        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
+            return true;
+
         Value tmp = *v;
         return obj_setGeneric(cx, obj, id, &tmp, false);
     }
@@ -1190,6 +1245,11 @@ class TypedArrayTemplate
     static JSBool
     obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *rval, JSBool strict)
     {
+        if (name == cx->runtime->atomState.lengthAtom) {
+            rval->setBoolean(false);
+            return true;
+        }
+
         rval->setBoolean(true);
         return true;
     }
@@ -1223,9 +1283,18 @@ class TypedArrayTemplate
         JSObject *tarray = getTypedArray(obj);
         JS_ASSERT(tarray);
 
-        uint32_t index;
+        /*
+         * Iteration is "length" (if JSENUMERATE_INIT_ALL), then [0, length).
+         * *statep is JSVAL_TRUE if enumerating "length" and
+         * JSVAL_TO_INT(index) when enumerating index.
+         */
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
+            statep->setBoolean(true);
+            if (idp)
+                *idp = ::INT_TO_JSID(length(tarray) + 1);
+            break;
+
           case JSENUMERATE_INIT:
             statep->setInt32(0);
             if (idp)
@@ -1233,13 +1302,18 @@ class TypedArrayTemplate
             break;
 
           case JSENUMERATE_NEXT:
-            index = static_cast<uint32_t>(statep->toInt32());
-            if (index < length(tarray)) {
-                *idp = ::INT_TO_JSID(index);
-                statep->setInt32(index + 1);
+            if (statep->isTrue()) {
+                *idp = NameToId(cx->runtime->atomState.lengthAtom);
+                statep->setInt32(0);
             } else {
-                JS_ASSERT(index == length(tarray));
-                statep->setNull();
+                uint32_t index = statep->toInt32();
+                if (index < length(tarray)) {
+                    *idp = ::INT_TO_JSID(index);
+                    statep->setInt32(index + 1);
+                } else {
+                    JS_ASSERT(index == length(tarray));
+                    statep->setNull();
+                }
             }
             break;
 
@@ -1445,7 +1519,7 @@ class TypedArrayTemplate
     DefineGetter(JSContext *cx, PropertyName *name, HandleObject proto)
     {
         RootedId id(cx, NameToId(name));
-        unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT | JSPROP_ENUMERATE;
+        unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
 
         Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
         JSObject *getter = js_NewFunction(cx, NULL, Getter<ValueGetter>, 0, 0, global, NULL);
@@ -3056,7 +3130,7 @@ InitArrayBufferClass(JSContext *cx)
         return NULL;
 
     RootedId byteLengthId(cx, NameToId(cx->runtime->atomState.byteLengthAtom));
-    unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+    unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
     JSObject *getter = js_NewFunction(cx, NULL, ArrayBufferObject::byteLengthGetter, 0, 0, global, NULL);
     if (!getter)
         return NULL;
@@ -3152,7 +3226,7 @@ bool
 DefineDataViewGetter(JSContext *cx, PropertyName *name, HandleObject proto)
 {
     RootedId id(cx, NameToId(name));
-    unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+    unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
 
     Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
     JSObject *getter = js_NewFunction(cx, NULL, DataViewGetter<ValueGetter>, 0, 0, global, NULL);
