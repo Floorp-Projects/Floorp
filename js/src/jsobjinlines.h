@@ -1552,7 +1552,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj)
 
 JSObject *
 NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                  gc::AllocKind kind, Shape *shape);
+                  gc::AllocKind kind, HandleShape shape);
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
