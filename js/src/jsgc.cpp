@@ -4327,6 +4327,18 @@ JS::CheckStackRoots(JSContext *cx)
     // could happen.)
     JS_ASSERT(!cx->rootingUnnecessary);
 
+    // GCs can't happen when analysis/inference/compilation are active.
+    if (cx->compartment->activeAnalysis)
+        return;
+
+    // Can switch to the atoms compartment during analysis.
+    if (IsAtomsCompartment(cx->compartment)) {
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (c.get()->activeAnalysis)
+                return;
+        }
+    }
+
     AutoCopyFreeListToArenas copy(rt);
 
     JSTracer checker;
