@@ -33,13 +33,13 @@ panel[type="arrow"] {
   -moz-appearance: none;
   background: transparent;
   border: none;
-  -moz-transition: opacity 300ms;
+  transition: opacity 300ms;
 }
 
 .panel-arrowcontainer[panelopen] {
-  -moz-transition-duration: 250ms;
-  -moz-transition-property: opacity;
-  -moz-transition-timing-function: ease-out;
+  transition-duration: 250ms;
+  transition-property: opacity;
+  transition-timing-function: ease-out;
 }
 
 .panel-arrowcontainer:not([panelopen]) {
