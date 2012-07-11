@@ -21,6 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 
 "use strict";
 
+var comp = SpecialPowers.wrap(Components);
+comp.utils.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
 SpecialPowers.addPermission("websettings-read", true, document);
 SpecialPowers.addPermission("websettings-readwrite", true, document);
 
