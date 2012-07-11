@@ -874,12 +874,15 @@ void mozilla_sampler_init()
 #if defined(USE_LIBUNWIND) && defined(ANDROID)
   // Only try debug_frame and exidx unwinding
   putenv("UNW_ARM_UNWIND_METHOD=5");
+#endif
 
-  // Allow the profiler to be started and stopped using signals
-  OS::RegisterStartStopHandlers();
+  // Allow the profiler to be started using signals
+  OS::RegisterStartHandler();
 
-  // On Android, this is too soon in order to start up the
-  // profiler.
+#if defined(USE_LIBUNWIND) && defined(__arm__) && defined(MOZ_CRASHREPORTER)
+  // On ARM, libunwind defines a signal handler for segmentation faults.
+  // If SPS is enabled now, the crash reporter will override that signal
+  // handler, and libunwind will likely break.
   return;
 #endif
 
