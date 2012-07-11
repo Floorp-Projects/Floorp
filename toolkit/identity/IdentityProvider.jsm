@@ -24,10 +24,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
 function log(...aMessageArgs) {
-  Logger.log(["IDP"].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["IDP"].concat(aMessageArgs));
 }
 function reportError(...aMessageArgs) {
-  Logger.reportError(["IDP"].concat(aMessageArgs));
+  Logger.reportError.apply(Logger, ["IDP"].concat(aMessageArgs));
 }
 
 
@@ -232,7 +232,7 @@ IdentityProviderService.prototype = {
     jwcrypto.generateKeyPair(jwcrypto.ALGORITHMS.DS160, function gkpCb(err, kp) {
       log("in gkp callback");
       if (err) {
-        log("ERROR: genKeyPair:" + err);
+        log("ERROR: genKeyPair:", err);
         provFlow.callback(err);
         return;
       }

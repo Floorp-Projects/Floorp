@@ -16,10 +16,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this,
-                                  "IDLog",
-                                  "resource://gre/modules/identity/IdentityStore.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "IdentityCryptoService",
                                    "@mozilla.org/identity/crypto-service;1",
@@ -30,7 +26,7 @@ const EXPORTED_SYMBOLS = ["jwcrypto"];
 const ALGORITHMS = { RS256: "RS256", DS160: "DS160" };
 
 function log(...aMessageArgs) {
-  Logger.log(["jwcrypto"].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["jwcrypto"].concat(aMessageArgs));
 }
 
 function generateKeyPair(aAlgorithmName, aCallback) {

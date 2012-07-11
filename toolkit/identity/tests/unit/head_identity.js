@@ -74,7 +74,7 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
 // The following are utility functions for Identity testing
 
 function log(...aMessageArgs) {
-  Logger.log(["test"].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["test"].concat(aMessageArgs));
 }
 
 function get_idstore() {
