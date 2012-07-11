@@ -3724,6 +3724,32 @@ SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName, void* aClosure)
   return 0;
 }
 
+static int
+SetMemoryGCPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  PRInt32 pref = Preferences::GetInt(aPrefName, -1);
+  // handle overflow and negative pref values
+  if (pref > 0 && pref < 10000)
+    JS_SetGCParameter(nsJSRuntime::sRuntime, (JSGCParamKey)(long)aClosure, pref);
+  return 0;
+}
+
+static int
+SetMemoryGCDynamicHeapGrowthPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  bool pref = Preferences::GetBool(aPrefName);
+  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_DYNAMIC_HEAP_GROWTH, pref);
+  return 0;
+}
+
+static int
+SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  bool pref = Preferences::GetBool(aPrefName);
+  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_DYNAMIC_MARK_SLICE, pref);
+  return 0;
+}
+
 JSObject*
 NS_DOMReadStructuredClone(JSContext* cx,
                           JSStructuredCloneReader* reader,
@@ -3881,6 +3907,46 @@ nsJSRuntime::Init()
                                 "javascript.options.mem.gc_incremental_slice_ms");
   SetMemoryGCSliceTimePrefChangedCallback("javascript.options.mem.gc_incremental_slice_ms",
                                           nsnull);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_high_frequency_time_limit_ms");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_time_limit_ms",
+                                 (void *)JSGC_HIGH_FREQUENCY_TIME_LIMIT);
+
+  Preferences::RegisterCallback(SetMemoryGCDynamicMarkSlicePrefChangedCallback,
+                                "javascript.options.mem.gc_dynamic_mark_slice");
+  SetMemoryGCDynamicMarkSlicePrefChangedCallback("javascript.options.mem.gc_dynamic_mark_slice",
+                                                 nsnull);
+
+  Preferences::RegisterCallback(SetMemoryGCDynamicHeapGrowthPrefChangedCallback,
+                                "javascript.options.mem.gc_dynamic_heap_growth");
+  SetMemoryGCDynamicHeapGrowthPrefChangedCallback("javascript.options.mem.gc_dynamic_heap_growth",
+                                                  nsnull);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_low_frequency_heap_growth");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_low_frequency_heap_growth",
+                                 (void *)JSGC_LOW_FREQUENCY_HEAP_GROWTH);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_high_frequency_heap_growth_min");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_heap_growth_min",
+                                 (void *)JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_high_frequency_heap_growth_max");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_heap_growth_max",
+                                 (void *)JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_high_frequency_low_limit_mb");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_low_limit_mb",
+                                 (void *)JSGC_HIGH_FREQUENCY_LOW_LIMIT);
+
+  Preferences::RegisterCallback(SetMemoryGCPrefChangedCallback,
+                                "javascript.options.mem.gc_high_frequency_high_limit_mb");
+  SetMemoryGCPrefChangedCallback("javascript.options.mem.gc_high_frequency_high_limit_mb",
+                                 (void *)JSGC_HIGH_FREQUENCY_HIGH_LIMIT);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
