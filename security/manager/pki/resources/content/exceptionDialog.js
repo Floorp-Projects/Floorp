@@ -209,8 +209,8 @@ function updateCertStatus() {
       var mml = "addExceptionDomainMismatchLong";
       var exs = "addExceptionExpiredShort";
       var exl = "addExceptionExpiredLong";
-      var uts = "addExceptionUnverifiedShort";
-      var utl = "addExceptionUnverifiedLong";
+      var uts = "addExceptionUnverifiedOrBadSignatureShort";
+      var utl = "addExceptionUnverifiedOrBadSignatureLong";
       var use1 = false;
       if (gSSLStatus.isDomainMismatch) {
         use1 = true;
