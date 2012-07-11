@@ -70,7 +70,7 @@ SettingsServiceLock.prototype = {
           req.onerror = function(event) { callback ? callback.handleError(event.target.errorMessage) : null; };
           break;
         case "get":
-          req = store.getAll(name);
+          req = store.mozGetAll(name);
           req.onsuccess = function(event) {
             debug("Request successful. Record count:" + event.target.result.length);
             debug("result: " + JSON.stringify(event.target.result));

@@ -16,9 +16,8 @@ DIRS = \
 		html5lib_tree_construction \
 		$(NULL)
 
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	parser_datreader.js \
+MOCHITEST_FILES =	parser_datreader.js \
 		parser_web_testrunner.js \
 		html5_tree_construction_exceptions.js \
 		test_html5_tree_construction.html \
@@ -81,7 +80,7 @@ _TEST_FILES =	parser_datreader.js \
 # Test disabled on mobile. See bug 737020.
 ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
-		_TEST_FILES += test_bug709083.html
+		MOCHITEST_FILES += test_bug709083.html
 endif
 endif
 
@@ -96,5 +95,4 @@ endif
 # Disabled due to frequent orange (bug 739354)
 #		test_bug672453.html \
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

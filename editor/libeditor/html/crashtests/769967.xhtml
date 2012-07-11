@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true" style="-moz-user-select: all;"><sub>x</sub><script>
+function boom()
+{
+  window.getSelection().removeAllRanges();
+  var r = document.createRange();
+  r.setStart(document.documentElement, 0);
+  r.setEnd(document.documentElement, 0);
+  window.getSelection().addRange(r);
+
+  document.execCommand("subscript", false, null);
+  document.execCommand("insertText", false, "y");
+}
+
+window.addEventListener("load", boom, false);
+
+</script></html>

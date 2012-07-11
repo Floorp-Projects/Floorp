@@ -559,16 +559,16 @@ struct Shape : public js::gc::Cell
     class Range {
       protected:
         friend struct Shape;
-        const Shape *cursor;
+        Shape *cursor;
 
       public:
-        Range(const Shape *shape) : cursor(shape) { }
+        Range(Shape *shape) : cursor(shape) { }
 
         bool empty() const {
             return cursor->isEmptyShape();
         }
 
-        const Shape &front() const {
+        Shape &front() const {
             JS_ASSERT(!empty());
             return *cursor;
         }
@@ -598,7 +598,7 @@ struct Shape : public js::gc::Cell
         };
     };
 
-    Range all() const {
+    Range all() {
         return Range(this);
     }
 
@@ -700,8 +700,8 @@ struct Shape : public js::gc::Cell
                                      uint32_t aslot, unsigned aattrs, unsigned aflags,
                                      int ashortid) const;
 
-    bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
-    bool set(JSContext* cx, HandleObject obj, bool strict, js::Value* vp) const;
+    bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, js::Value* vp);
+    bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, js::Value* vp);
 
     BaseShape *base() const { return base_; }
 
@@ -847,20 +847,20 @@ struct Shape : public js::gc::Cell
     static Shape *setExtensibleParents(JSContext *cx, Shape *shape);
     bool extensibleParents() const { return !!(base()->flags & BaseShape::EXTENSIBLE_PARENTS); }
 
-    uint32_t entryCount() const {
+    uint32_t entryCount() {
         if (hasTable())
             return table().entryCount;
 
-        const js::Shape *shape = this;
+        js::Shape *shape = this;
         uint32_t count = 0;
         for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront())
             ++count;
         return count;
     }
 
-    bool isBigEnoughForAShapeTable() const {
+    bool isBigEnoughForAShapeTable() {
         JS_ASSERT(!hasTable());
-        const js::Shape *shape = this;
+        js::Shape *shape = this;
         uint32_t count = 0;
         for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront()) {
             ++count;
@@ -878,15 +878,15 @@ struct Shape : public js::gc::Cell
     void finalize(FreeOp *fop);
     void removeChild(js::Shape *child);
 
-    static inline void writeBarrierPre(const Shape *shape);
-    static inline void writeBarrierPost(const Shape *shape, void *addr);
+    static inline void writeBarrierPre(Shape *shape);
+    static inline void writeBarrierPost(Shape *shape, void *addr);
 
     /*
      * All weak references need a read barrier for incremental GC. This getter
      * method implements the read barrier. It's used to obtain initial shapes
      * from the compartment.
      */
-    static inline void readBarrier(const Shape *shape);
+    static inline void readBarrier(Shape *shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_SHAPE; }
 
@@ -1161,6 +1161,9 @@ Shape::searchNoAllocation(JSContext *cx, Shape *start, jsid id)
     return NULL;
 }
 #endif /* DEBUG */
+
+void
+MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);
 
 } // namespace js
 

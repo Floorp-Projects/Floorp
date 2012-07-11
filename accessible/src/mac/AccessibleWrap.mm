@@ -59,6 +59,9 @@ AccessibleWrap::GetNativeType ()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (IsXULDeck())
+    return [mozPaneAccessible class];
+  
   roles::Role role = Role();
   switch (role) {
     case roles::PUSHBUTTON:
@@ -81,15 +84,17 @@ AccessibleWrap::GetNativeType ()
 
     case roles::PAGETABLIST:
       return [mozTabsAccessible class];
-      
+
     case roles::ENTRY:
     case roles::STATICTEXT:
     case roles::CAPTION:
     case roles::ACCEL_LABEL:
-    case roles::TEXT_LEAF:
     case roles::PASSWORD_TEXT:
       // normal textfield (static or editable)
-      return [mozTextAccessible class]; 
+      return [mozTextAccessible class];
+
+    case roles::TEXT_LEAF:
+      return [mozTextLeafAccessible class];
 
     case roles::LINK:
       return [mozLinkAccessible class];

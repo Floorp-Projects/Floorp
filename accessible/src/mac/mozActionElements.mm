@@ -7,8 +7,10 @@
 
 #import "MacUtils.h"
 #include "Accessible-inl.h"
+#include "DocAccessible.h"
 #include "XULTabAccessible.h"
 
+#include "nsDeckFrame.h"
 #include "nsObjCExceptions.h"
 
 using namespace mozilla::a11y;
@@ -71,7 +73,7 @@ enum CheckboxValue {
 
 - (BOOL)accessibilityIsIgnored
 {
-  return mIsExpired;
+  return !mGeckoAccessible;
 }
 
 - (NSArray*)accessibilityActionNames
@@ -330,6 +332,33 @@ enum CheckboxValue {
 
   [mTabs release];
   mTabs = nil;
+}
+
+@end
+
+@implementation mozPaneAccessible
+
+- (NSArray*)children
+{
+  if (!mGeckoAccessible)
+    return nil;
+
+  nsDeckFrame* deckFrame = do_QueryFrame(mGeckoAccessible->GetFrame());
+  nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nsnull;
+
+  Accessible* selectedAcc = nsnull;
+  if (selectedFrame) {
+    nsINode* node = selectedFrame->GetContent();
+    selectedAcc = mGeckoAccessible->Document()->GetAccessible(node);
+  }
+
+  if (selectedAcc) {
+    mozAccessible *curNative = GetNativeFromGeckoAccessible(selectedAcc);
+    if (curNative)
+      return [NSArray arrayWithObjects:GetObjectOrRepresentedView(curNative), nil];
+  }
+
+  return nil;
 }
 
 @end

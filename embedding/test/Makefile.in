@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = embedding/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 	test_bug293834.html \
 	bug293834_form.html \
 	320x240.ogv \
@@ -23,5 +22,4 @@ _TEST_FILES = \
 	test_window_open_units.html \
 	$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

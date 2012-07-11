@@ -266,7 +266,7 @@ DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, PRUint32 flags,
 // (which isn't all of them).
 nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
-                                 const nsACString &pathPrefix,
+                                 const nsACString &rtPath,
                                  nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotal = NULL);
 

@@ -257,7 +257,7 @@ js::ObjectImpl::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
  */
 MOZ_NEVER_INLINE
 #endif
-const Shape *
+Shape *
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
@@ -266,7 +266,7 @@ js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 }
 
 #ifdef DEBUG
-const Shape *
+Shape *
 js::ObjectImpl::nativeLookupNoAllocation(JSContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
@@ -449,8 +449,8 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
     return true;
 }
 
-static JSObject *
-ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
+JSObject *
+js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
 {
     MOZ_ASSERT(obj->hasClass(&ArrayBufferClass));
     if (obj->getPrivate())
@@ -498,23 +498,23 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
 
     Rooted<PropertyId> pid(cx, pid_);
 
-    if (static_cast<JSObject *>(obj.value())->isProxy()) {
+    if (static_cast<JSObject *>(obj.get())->isProxy()) {
         MOZ_NOT_REACHED("NYI: proxy [[GetOwnProperty]]");
         return false;
     }
 
-    const Shape *shape = obj->nativeLookup(cx, pid);
+    Shape *shape = obj->nativeLookup(cx, pid);
     if (!shape) {
         /* Not found: attempt to resolve it. */
         Class *clasp = obj->getClass();
         JSResolveOp resolve = clasp->resolve;
         if (resolve != JS_ResolveStub) {
-            Rooted<jsid> id(cx, pid.reference().asId());
-            Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.value()));
+            Rooted<jsid> id(cx, pid.get().asId());
+            Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.get()));
             if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                 Rooted<JSObject*> obj2(cx, NULL);
                 JSNewResolveOp op = reinterpret_cast<JSNewResolveOp>(resolve);
-                if (!op(cx, robj, id, resolveFlags, obj2.address()))
+                if (!op(cx, robj, id, resolveFlags, &obj2))
                     return false;
             } else {
                 if (!resolve(cx, robj, id))

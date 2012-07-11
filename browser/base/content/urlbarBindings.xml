@@ -625,6 +625,8 @@
         ]]></body>
       </method>
 
+      <property name="maxRows" onget="return this.popup.maxResults;"/>
+
       <property name="textValue"
                 onget="return this.value;">
         <setter>
@@ -751,7 +753,7 @@
 
         Cc["@mozilla.org/widget/clipboardhelper;1"]
           .getService(Ci.nsIClipboardHelper)
-          .copyStringToClipboard(val, document, Ci.nsIClipboard.kSelectionClipboard);
+          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard, document);
       ]]></handler>
     </handlers>
 

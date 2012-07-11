@@ -348,15 +348,15 @@ CSS_PROP_FONT(
     eStyleAnimType_None)
 #endif
 CSS_PROP_SHORTHAND(
-    -moz-animation,
     animation,
-    CSS_PROP_DOMPROP_PREFIXED(Animation),
+    animation,
+    Animation,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_DISPLAY(
-    -moz-animation-delay,
+    animation-delay,
     animation_delay,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDelay),
+    AnimationDelay,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -365,9 +365,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-direction,
+    animation-direction,
     animation_direction,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDirection),
+    AnimationDirection,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -376,9 +376,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-duration,
+    animation-duration,
     animation_duration,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationDuration),
+    AnimationDuration,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -387,9 +387,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-fill-mode,
+    animation-fill-mode,
     animation_fill_mode,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationFillMode),
+    AnimationFillMode,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -398,9 +398,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-iteration-count,
+    animation-iteration-count,
     animation_iteration_count,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationIterationCount),
+    AnimationIterationCount,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         // nonnegative per
         // http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
@@ -412,9 +412,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-name,
+    animation-name,
     animation_name,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationName),
+    AnimationName,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -425,9 +425,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-play-state,
+    animation-play-state,
     animation_play_state,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationPlayState),
+    AnimationPlayState,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -436,9 +436,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-animation-timing-function,
+    animation-timing-function,
     animation_timing_function,
-    CSS_PROP_DOMPROP_PREFIXED(AnimationTimingFunction),
+    AnimationTimingFunction,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -1511,6 +1511,107 @@ CSS_PROP_TABLEBORDER(
     kEmptyCellsKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+#ifdef MOZ_FLEXBOX
+CSS_PROP_POSITION(
+    -moz-align-items,
+    align_items,
+    CSS_PROP_DOMPROP_PREFIXED(AlignItems),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignItemsKTable,
+    offsetof(nsStylePosition, mAlignItems),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
+    -moz-align-self,
+    align_self,
+    CSS_PROP_DOMPROP_PREFIXED(AlignSelf),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignSelfKTable,
+    offsetof(nsStylePosition, mAlignSelf),
+    eStyleAnimType_EnumU8)
+CSS_PROP_SHORTHAND(
+    -moz-flex,
+    flex,
+    CSS_PROP_DOMPROP_PREFIXED(Flex),
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_POSITION(
+    -moz-flex-basis,
+    flex_basis,
+    CSS_PROP_DOMPROP_PREFIXED(FlexBasis),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    offsetof(nsStylePosition, mFlexBasis),
+    eStyleAnimType_Coord)
+CSS_PROP_POSITION(
+    -moz-flex-direction,
+    flex_direction,
+    CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kFlexDirectionKTable,
+    offsetof(nsStylePosition, mFlexDirection),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
+    -moz-flex-grow,
+    flex_grow,
+    CSS_PROP_DOMPROP_PREFIXED(FlexGrow),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexGrow),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    -moz-flex-shrink,
+    flex_shrink,
+    CSS_PROP_DOMPROP_PREFIXED(FlexShrink),
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
+    // NOTE: The parsing implementation for the 'flex' shorthand property has
+    // its own code to parse each subproperty. It does not depend on the
+    // longhand parsing defined here.
+    VARIANT_HN,
+    nsnull,
+    offsetof(nsStylePosition, mFlexShrink),
+    eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    -moz-order,
+    order,
+    CSS_PROP_DOMPROP_PREFIXED(Order),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HI,
+    nsnull,
+    offsetof(nsStylePosition, mOrder),
+    eStyleAnimType_Custom) // <integer>
+CSS_PROP_POSITION(
+    -moz-justify-content,
+    justify_content,
+    CSS_PROP_DOMPROP_PREFIXED(JustifyContent),
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kJustifyContentKTable,
+    offsetof(nsStylePosition, mJustifyContent),
+    eStyleAnimType_EnumU8)
+#endif // MOZ_FLEXBOX
 CSS_PROP_DISPLAY(
     float,
     float,
@@ -2492,9 +2593,9 @@ CSS_PROP_TEXT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transform,
     transform,
-    CSS_PROP_DOMPROP_PREFIXED(Transform),
+    transform,
+    Transform,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
@@ -2502,9 +2603,9 @@ CSS_PROP_DISPLAY(
     offsetof(nsStyleDisplay, mSpecifiedTransform),
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
-    -moz-transform-origin,
+    transform-origin,
     transform_origin,
-    CSS_PROP_DOMPROP_PREFIXED(TransformOrigin),
+    TransformOrigin,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC,
     "",
@@ -2513,9 +2614,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
-    -moz-perspective-origin,
+    perspective-origin,
     perspective_origin,
-    CSS_PROP_DOMPROP_PREFIXED(PerspectiveOrigin),
+    PerspectiveOrigin,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC,
     "",
@@ -2524,9 +2625,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
-    -moz-perspective,
     perspective,
-    CSS_PROP_DOMPROP_PREFIXED(Perspective),
+    perspective,
+    Perspective,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH | VARIANT_POSITIVE_LENGTH,
@@ -2534,9 +2635,9 @@ CSS_PROP_DISPLAY(
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)
 CSS_PROP_DISPLAY(
-    -moz-transform-style,
+    transform-style,
     transform_style,
-    CSS_PROP_DOMPROP_PREFIXED(TransformStyle),
+    TransformStyle,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
@@ -2544,9 +2645,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-backface-visibility,
+    backface-visibility,
     backface_visibility,
-    CSS_PROP_DOMPROP_PREFIXED(BackfaceVisibility),
+    BackfaceVisibility,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
@@ -2565,15 +2666,15 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Top)
 CSS_PROP_SHORTHAND(
-    -moz-transition,
     transition,
-    CSS_PROP_DOMPROP_PREFIXED(Transition),
+    transition,
+    Transition,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_DISPLAY(
-    -moz-transition-delay,
+    transition-delay,
     transition_delay,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionDelay),
+    TransitionDelay,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2582,9 +2683,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-duration,
+    transition-duration,
     transition_duration,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionDuration),
+    TransitionDuration,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2593,9 +2694,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-property,
+    transition-property,
     transition_property,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionProperty),
+    TransitionProperty,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
@@ -2604,9 +2705,9 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-transition-timing-function,
+    transition-timing-function,
     transition_timing_function,
-    CSS_PROP_DOMPROP_PREFIXED(TransitionTimingFunction),
+    TransitionTimingFunction,
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",

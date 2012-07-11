@@ -31,7 +31,7 @@
   margin-top: -1px;
   margin-left: 8px;
   width: 20px;
-  height: 0;
+  height: 10px;
   border-left: 1px solid hsl(210,11%,10%);
   border-right: 1px solid hsl(210,11%,10%);
   background-color: hsl(210,11%,16%);
@@ -122,4 +122,10 @@
 
 .gcli-menu-typed {
   color: hsl(25,78%,50%);
+}
+
+.gcli-menu-more {
+  font-size: 80%;
+  text-align: right;
+  -moz-padding-end: 8px;
 }

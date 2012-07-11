@@ -307,8 +307,10 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return HandleText(aEvent);
   if (eventType.EqualsLiteral("compositionstart"))
     return HandleStartComposition(aEvent);
-  if (eventType.EqualsLiteral("compositionend"))
-    return HandleEndComposition(aEvent);
+  if (eventType.EqualsLiteral("compositionend")) {
+    HandleEndComposition(aEvent);
+    return NS_OK;
+  }
 
   return NS_OK;
 }
@@ -822,19 +824,19 @@ nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
   return mEditor->BeginIMEComposition();
 }
 
-NS_IMETHODIMP
+void
 nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+  MOZ_ASSERT(mEditor);
   if (!mEditor->IsAcceptableInputEvent(aCompositionEvent)) {
-    return NS_OK;
+    return;
   }
 
   // Transfer the event's trusted-ness to our editor
   nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aCompositionEvent);
   nsEditor::HandlingTrustedAction operation(mEditor, NSEvent);
 
-  return mEditor->EndIMEComposition();
+  mEditor->EndIMEComposition();
 }
 
 NS_IMETHODIMP

@@ -18,7 +18,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 
 #include "imgIContainer.h"
 

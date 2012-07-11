@@ -1256,12 +1256,14 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     COLORREF color;
     XFORM xform;
     DWORD pen_style;
+    DWORD pen_width;
     DWORD *dash_array;
     HGDIOBJ obj;
     unsigned int i;
     cairo_solid_pattern_t clear;
     cairo_matrix_t mat;
     double scale;
+    double scaled_width;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (status)
@@ -1293,7 +1295,11 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
 	pen_style |= PS_USERSTYLE;
 	dash_array = calloc (sizeof (DWORD), style->num_dashes);
 	for (i = 0; i < style->num_dashes; i++) {
-	    dash_array[i] = (DWORD) (scale * style->dash[i]);
+	    DWORD dashes = (DWORD) (scale * style->dash[i]);
+	    /* zero dash-lengths cause ExtCreatePen to fail. Make the dashes
+	     * longer if necessary.
+	     */
+	    dash_array[i] = MAX(1, dashes);
 	}
     } else {
 	pen_style |= PS_SOLID;
@@ -1315,8 +1321,19 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     brush.lbHatch = 0;
     pen_style |= _cairo_win32_line_cap (style->line_cap);
     pen_style |= _cairo_win32_line_join (style->line_join);
+    scaled_width = scale * style->line_width;
+    if (scaled_width == 0.0)
+        return status;
+    pen_width = (DWORD)scaled_width;
+    if (pen_width == 0) {
+        /* ExtCreatePen will fail if passed zero width. We have to choose
+         * between drawing something too wide, or drawing nothing at all.
+         * Let's draw something.
+         */
+        pen_width = 1;
+    }
     pen = ExtCreatePen(pen_style,
-		       scale * style->line_width,
+		       pen_width,
 		       &brush,
 		       style->num_dashes,
 		       dash_array);

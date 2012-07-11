@@ -13,51 +13,11 @@ using namespace mozilla::a11y;
 // ChildrenEnumVariant
 ////////////////////////////////////////////////////////////////////////////////
 
-STDMETHODIMP
-ChildrenEnumVariant::QueryInterface(REFIID aIID, void** aObject)
-{
-__try {
-  if (!aObject)
-    return E_INVALIDARG;
-
-  if (aIID == IID_IEnumVARIANT) {
-    *aObject = static_cast<IEnumVARIANT*>(this);
-    AddRef();
-    return S_OK;
-  }
-
-  if (aIID == IID_IUnknown) {
-    *aObject = static_cast<IUnknown*>(this);
-    AddRef();
-    return S_OK;
-  }
-
-  // Redirect QI to IAccessible this enum was retrieved for.
-  if (!mAnchorAcc->IsDefunct())
-    return mAnchorAcc->QueryInterface(aIID, aObject);
-
-} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(),
-                                                  GetExceptionInformation())) { }
-
-  return E_NOINTERFACE;
-}
-
-ULONG STDMETHODCALLTYPE
-ChildrenEnumVariant::AddRef()
-{
-  return ++mRefCnt;
-}
-
-ULONG STDMETHODCALLTYPE
-ChildrenEnumVariant::Release()
-{
-  mRefCnt--;
-  ULONG r = mRefCnt;
-  if (r == 0)
-    delete this;
-
-  return r;
-}
+IMPL_IUNKNOWN_QUERY_HEAD(ChildrenEnumVariant)
+IMPL_IUNKNOWN_QUERY_IFACE(IEnumVARIANT);
+IMPL_IUNKNOWN_QUERY_IFACE(IUnknown);
+IMPL_IUNKNOWN_QUERY_AGGR_COND(mAnchorAcc, !mAnchorAcc->IsDefunct());
+IMPL_IUNKNOWN_QUERY_TAIL
 
 STDMETHODIMP
 ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,

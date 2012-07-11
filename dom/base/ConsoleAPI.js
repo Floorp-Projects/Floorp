@@ -29,84 +29,83 @@ const MESSAGES_IN_INTERVAL = 1500;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-let gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
+/**
+ * The window.console API implementation. One instance is lazily created for
+ * every inner window, when the window.console object is accessed.
+ */
 function ConsoleAPI() {}
 ConsoleAPI.prototype = {
 
   classID: Components.ID("{b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
 
   _timerInitialized: false,
   _queuedCalls: null,
-  _timerCallback: null,
-  _destroyedWindows: null,
+  _window: null,
+  _innerID: null,
+  _outerID: null,
+  _windowDestroyed: false,
+  _timer: null,
 
   // nsIDOMGlobalPropertyInitializer
   init: function CA_init(aWindow) {
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "inner-window-destroyed", true);
 
-
-    let outerID;
-    let innerID;
     try {
       let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
 
-      outerID = windowUtils.outerWindowID;
-      innerID = windowUtils.currentInnerWindowID;
+      this._outerID = windowUtils.outerWindowID;
+      this._innerID = windowUtils.currentInnerWindowID;
     }
     catch (ex) {
       Cu.reportError(ex);
     }
 
-    let meta = {
-      outerID: outerID,
-      innerID: innerID,
-    };
-
     let self = this;
     let chromeObject = {
       // window.console API
       log: function CA_log() {
-        self.queueCall("log", arguments, meta);
+        self.queueCall("log", arguments);
       },
       info: function CA_info() {
-        self.queueCall("info", arguments, meta);
+        self.queueCall("info", arguments);
       },
       warn: function CA_warn() {
-        self.queueCall("warn", arguments, meta);
+        self.queueCall("warn", arguments);
       },
       error: function CA_error() {
-        self.queueCall("error", arguments, meta);
+        self.queueCall("error", arguments);
       },
       debug: function CA_debug() {
-        self.queueCall("debug", arguments, meta);
+        self.queueCall("debug", arguments);
       },
       trace: function CA_trace() {
-        self.queueCall("trace", arguments, meta);
+        self.queueCall("trace", arguments);
       },
       // Displays an interactive listing of all the properties of an object.
       dir: function CA_dir() {
-        self.queueCall("dir", arguments, meta);
+        self.queueCall("dir", arguments);
       },
       group: function CA_group() {
-        self.queueCall("group", arguments, meta);
+        self.queueCall("group", arguments);
       },
       groupCollapsed: function CA_groupCollapsed() {
-        self.queueCall("groupCollapsed", arguments, meta);
+        self.queueCall("groupCollapsed", arguments);
       },
       groupEnd: function CA_groupEnd() {
-        self.queueCall("groupEnd", arguments, meta);
+        self.queueCall("groupEnd", arguments);
       },
       time: function CA_time() {
-        self.queueCall("time", arguments, meta);
+        self.queueCall("time", arguments);
       },
       timeEnd: function CA_timeEnd() {
-        self.queueCall("timeEnd", arguments, meta);
+        self.queueCall("timeEnd", arguments);
       },
       __exposedProps__: {
         log: "r",
@@ -153,24 +152,24 @@ ConsoleAPI.prototype = {
     Cu.makeObjectPropsNormal(contentObj);
 
     this._queuedCalls = [];
-    this._destroyedWindows = [];
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._window = Cu.getWeakReference(aWindow);
+    this.timerRegistry = {};
 
     return contentObj;
   },
 
   observe: function CA_observe(aSubject, aTopic, aData)
   {
-    if (aTopic == "xpcom-shutdown") {
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      Services.obs.removeObserver(this, "inner-window-destroyed");
-      this._destroyedWindows = [];
-      this._queuedCalls = [];
-      gTimer = null;
-    }
-    else if (aTopic == "inner-window-destroyed") {
+    if (aTopic == "inner-window-destroyed") {
       let innerWindowID = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      delete this.timerRegistry[innerWindowID + ""];
-      this._destroyedWindows.push(innerWindowID);
+      if (innerWindowID == this._innerID) {
+        Services.obs.removeObserver(this, "inner-window-destroyed");
+        this._windowDestroyed = true;
+        if (!this._timerInitialized) {
+          this.timerRegistry = {};
+        }
+      }
     }
   },
 
@@ -181,15 +180,11 @@ ConsoleAPI.prototype = {
    *        The console method the code has invoked.
    * @param object aArguments
    *        The arguments passed to the console method.
-   * @param object aMeta
-   *        The associated call meta information. This needs to hold the inner
-   *        and outer window IDs from where the console method was called.
    */
-  queueCall: function CA_queueCall(aMethod, aArguments, aMeta)
+  queueCall: function CA_queueCall(aMethod, aArguments)
   {
     let metaForCall = {
-      outerID: aMeta.outerID,
-      innerID: aMeta.innerID,
+      isPrivate: PrivateBrowsingUtils.isWindowPrivate(this._window.get()),
       timeStamp: Date.now(),
       stack: this.getStackTrace(aMethod != "trace" ? 1 : null),
     };
@@ -197,8 +192,8 @@ ConsoleAPI.prototype = {
     this._queuedCalls.push([aMethod, aArguments, metaForCall]);
 
     if (!this._timerInitialized) {
-      gTimer.initWithCallback(this._timerCallback.bind(this), CALL_DELAY,
-                              Ci.nsITimer.TYPE_REPEATING_SLACK);
+      this._timer.initWithCallback(this._timerCallback.bind(this), CALL_DELAY,
+                                   Ci.nsITimer.TYPE_REPEATING_SLACK);
       this._timerInitialized = true;
     }
   },
@@ -214,8 +209,12 @@ ConsoleAPI.prototype = {
 
     if (!this._queuedCalls.length) {
       this._timerInitialized = false;
-      this._destroyedWindows = [];
-      gTimer.cancel();
+      this._timer.cancel();
+
+      if (this._windowDestroyed) {
+        ConsoleAPIStorage.clearEvents(this._innerID);
+        this.timerRegistry = {};
+      }
     }
   },
 
@@ -231,8 +230,7 @@ ConsoleAPI.prototype = {
     let [method, args, meta] = aCall;
 
     let notifyMeta = {
-      outerID: meta.outerID,
-      innerID: meta.innerID,
+      isPrivate: meta.isPrivate,
       timeStamp: meta.timeStamp,
       frame: meta.stack[0],
     };
@@ -259,10 +257,10 @@ ConsoleAPI.prototype = {
         notifyArguments = args;
         break;
       case "time":
-        notifyArguments = this.startTimer(meta.innerID, args[0], meta.timeStamp);
+        notifyArguments = this.startTimer(args[0], meta.timeStamp);
         break;
       case "timeEnd":
-        notifyArguments = this.stopTimer(meta.innerID, args[0], meta.timeStamp);
+        notifyArguments = this.stopTimer(args[0], meta.timeStamp);
         break;
       default:
         // unknown console API method!
@@ -281,15 +279,14 @@ ConsoleAPI.prototype = {
    *        The arguments given to the console API call.
    * @param object aMeta
    *        Object that holds metadata about the console API call:
-   *        - outerID - the outer ID of the window where the message came from.
-   *        - innerID - the inner ID of the window where the message came from.
+   *        - isPrivate - Whether the window is in private browsing mode.
    *        - frame - the youngest content frame in the call stack.
    *        - timeStamp - when the console API call occurred.
    */
   notifyObservers: function CA_notifyObservers(aLevel, aArguments, aMeta) {
     let consoleEvent = {
-      ID: aMeta.outerID,
-      innerID: aMeta.innerID,
+      ID: this._outerID,
+      innerID: this._innerID,
       level: aLevel,
       filename: aMeta.frame.filename,
       lineNumber: aMeta.frame.lineNumber,
@@ -300,13 +297,13 @@ ConsoleAPI.prototype = {
 
     consoleEvent.wrappedJSObject = consoleEvent;
 
-    // Store messages for which the inner window was not destroyed.
-    if (this._destroyedWindows.indexOf(aMeta.innerID) == -1) {
-      ConsoleAPIStorage.recordEvent(aMeta.innerID, consoleEvent);
+    // Store non-private messages for which the inner window was not destroyed.
+    if (!aMeta.isPrivate) {
+      ConsoleAPIStorage.recordEvent(this._innerID, consoleEvent);
     }
 
     Services.obs.notifyObservers(consoleEvent, "console-api-log-event",
-                                 aMeta.outerID);
+                                 this._outerID);
   },
 
   /**
@@ -386,19 +383,16 @@ ConsoleAPI.prototype = {
   },
 
   /*
-   * A registry of started timers. It contains a map of pages (defined by their
-   * inner window IDs) to timer maps. Timer maps are key-value pairs of timer
-   * names to timer start times, for all timers defined in that page. Timer
+   * A registry of started timers. Timer maps are key-value pairs of timer
+   * names to timer start times, for all timers defined in the page. Timer
    * names are prepended with the inner window ID in order to avoid conflicts
    * with Object.prototype functions.
    */
-  timerRegistry: {},
+  timerRegistry: null,
 
   /**
    * Create a new timer by recording the current time under the specified name.
    *
-   * @param number aWindowId
-   *        The inner ID of the window.
    * @param string aName
    *        The name of the timer.
    * @param number [aTimestamp=Date.now()]
@@ -409,30 +403,23 @@ ConsoleAPI.prototype = {
    *        an object with the single property "error" that contains the key
    *        for retrieving the localized error message.
    **/
-  startTimer: function CA_startTimer(aWindowId, aName, aTimestamp) {
+  startTimer: function CA_startTimer(aName, aTimestamp) {
     if (!aName) {
         return;
     }
-    let innerID = aWindowId + "";
-    if (!this.timerRegistry[innerID]) {
-        this.timerRegistry[innerID] = {};
-    }
-    let pageTimers = this.timerRegistry[innerID];
-    if (Object.keys(pageTimers).length > MAX_PAGE_TIMERS - 1) {
+    if (Object.keys(this.timerRegistry).length > MAX_PAGE_TIMERS - 1) {
         return { error: "maxTimersExceeded" };
     }
-    let key = aWindowId + "-" + aName.toString();
-    if (!pageTimers[key]) {
-        pageTimers[key] = aTimestamp || Date.now();
+    let key = this._innerID + "-" + aName.toString();
+    if (!(key in this.timerRegistry)) {
+        this.timerRegistry[key] = aTimestamp || Date.now();
     }
-    return { name: aName, started: pageTimers[key] };
+    return { name: aName, started: this.timerRegistry[key] };
   },
 
   /**
    * Stop the timer with the specified name and retrieve the elapsed time.
    *
-   * @param number aWindowId
-   *        The inner ID of the window.
    * @param string aName
    *        The name of the timer.
    * @param number [aTimestamp=Date.now()]
@@ -441,21 +428,16 @@ ConsoleAPI.prototype = {
    *        The name property holds the timer name and the duration property
    *        holds the number of milliseconds since the timer was started.
    **/
-  stopTimer: function CA_stopTimer(aWindowId, aName, aTimestamp) {
+  stopTimer: function CA_stopTimer(aName, aTimestamp) {
     if (!aName) {
         return;
     }
-    let innerID = aWindowId + "";
-    let pageTimers = this.timerRegistry[innerID];
-    if (!pageTimers) {
+    let key = this._innerID + "-" + aName.toString();
+    if (!(key in this.timerRegistry)) {
         return;
     }
-    let key = aWindowId + "-" + aName.toString();
-    if (!pageTimers[key]) {
-        return;
-    }
-    let duration = (aTimestamp || Date.now()) - pageTimers[key];
-    delete pageTimers[key];
+    let duration = (aTimestamp || Date.now()) - this.timerRegistry[key];
+    delete this.timerRegistry[key];
     return { name: aName, duration: duration };
   }
 };

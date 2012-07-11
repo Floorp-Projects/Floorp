@@ -19,6 +19,13 @@ public class Constants {
   public static final String DATA_ENABLE_ON_UPGRADE = "data.enableOnUpgrade";
 
   /**
+   * Name of file to pickle current account preferences to each sync.
+   * <p>
+   * Must not contain path separators!
+   */
+  public static final String ACCOUNT_PICKLE_FILENAME = "sync.account.json";
+
+  /**
    * Key in sync extras bundle specifying stages to sync this sync session.
    * <p>
    * Corresponding value should be a String JSON-encoding an object, the keys of
@@ -73,6 +80,11 @@ public class Constants {
   public static final String JSON_KEY_PASSWORD   = "password";
   public static final String JSON_KEY_SYNCKEY    = "synckey";
   public static final String JSON_KEY_SERVER     = "serverURL";
+  public static final String JSON_KEY_CLUSTER    = "clusterURL";
+  public static final String JSON_KEY_CLIENT_NAME = "clientName";
+  public static final String JSON_KEY_CLIENT_GUID = "clientGUID";
+  public static final String JSON_KEY_SYNC_AUTOMATICALLY = "syncAutomatically";
+  public static final String JSON_KEY_TIMESTAMP  = "timestamp";
 
   public static final String CRYPTO_KEY_GR1 = "gr1";
   public static final String CRYPTO_KEY_GR2 = "gr2";

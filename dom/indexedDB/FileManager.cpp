@@ -13,7 +13,6 @@
 
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
-#include "nsContentUtils.h"
 
 #include "FileInfo.h"
 #include "IndexedDatabaseManager.h"

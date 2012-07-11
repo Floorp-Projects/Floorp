@@ -3630,14 +3630,12 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
         return resumeAfter(init);
     }
 
-    JSObject *holder;
-    JSProperty *prop = NULL;
+    RootedObject holder(cx);
+    RootedShape shape(cx);
     RootedId id(cx, NameToId(name));
     DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, id,
-                                                  JSRESOLVE_QUALIFIED, &holder, &prop);
-    JS_ASSERT(res && prop && holder == baseObj);
-
-    Shape *shape = (Shape *)prop;
+                                                  JSRESOLVE_QUALIFIED, &holder, &shape);
+    JS_ASSERT(res && shape && holder == baseObj);
 
     if (baseObj->isFixedSlot(shape->slot())) {
         MStoreFixedSlot *store = MStoreFixedSlot::New(obj, shape->slot(), value);
@@ -3917,14 +3915,13 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownCo
         pobj = pobj->getProto();
     }
 
-    JSObject *holder;
-    JSProperty *prop = NULL;
-    if (!obj->lookupGeneric(cx, id, &holder, &prop))
+    RootedObject holder(cx);
+    RootedShape shape(cx);
+    if (!obj->lookupGeneric(cx, id, &holder, &shape))
         return false;
-    if (!prop)
+    if (!shape)
         return true;
 
-    Shape *shape = (Shape *)prop;
     if (!shape->hasDefaultGetter())
         return true;
     if (!shape->hasSlot())
@@ -4001,7 +3998,7 @@ TestSingletonPropertyTypes(JSContext *cx, types::TypeSet *types,
         return true;
     }
 
-    JSObject *proto;
+    RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
         return false;
 
@@ -4894,15 +4891,13 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             walker = walker->getProto();
         }
 
-        JSObject *proto;
-        JSProperty *prop;
-
-        if (!curObj->lookupGeneric(cx, id, &proto, &prop))
+        RootedObject proto(cx);
+        RootedShape shape(cx);
+        if (!curObj->lookupGeneric(cx, id, &proto, &shape))
             return false;
-        if (!prop)
-            return true;
 
-        Shape *shape = (Shape *)prop;
+        if (!shape)
+            return true;
 
         // We want to optimize specialized getters/setters. The defaults will
         // hit the slot optimization.
@@ -5386,7 +5381,7 @@ InDynamicScopeSlots(JSScript *script, jsbytecode *pc, unsigned *slot)
          // slots are either altogether in fixed slots or altogether in dynamic
          // slots (by having numFixed == RESERVED_SLOTS).
          if (script->bindings.lastShape()->numFixedSlots() <= *slot) {
-             *slot -= ScopeObject::CALL_BLOCK_RESERVED_SLOTS;
+             *slot -= CallObject::RESERVED_SLOTS;
              return true;
          }
     }
@@ -5405,7 +5400,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
     }
 
     MDefinition *obj = walkScopeChain(sc.hops);
-    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
+    unsigned slot = sc.slot;
 
     MInstruction *load;
     if (InDynamicScopeSlots(script, pc, &slot)) {
@@ -5428,7 +5423,7 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 {
     MDefinition *rval = current->peek(-1);
     MDefinition *obj = walkScopeChain(sc.hops);
-    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
+    unsigned slot = sc.slot;
 
     MInstruction *store;
     if (InDynamicScopeSlots(script, pc, &slot)) {

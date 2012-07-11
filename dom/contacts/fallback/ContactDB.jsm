@@ -14,7 +14,7 @@ if (DEBUG) {
   debug = function (s) {}
 }
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "contacts";
 
 function ContactDB(aGlobal) {
@@ -76,7 +76,7 @@ ContactDB.prototype = {
       } else if (currVersion == 1) {
         debug("upgrade 1");
 
-        // Create a new scheme for the tel field. We move from an array of tel-numbers to an array of 
+        // Create a new scheme for the tel field. We move from an array of tel-numbers to an array of
         // ContactTelephone.
         if (!objectStore) {
           objectStore = aTransaction.objectStore(STORE_NAME);
@@ -85,7 +85,7 @@ ContactDB.prototype = {
         objectStore.deleteIndex("tel");
 
         // Upgrade existing tel field in the DB.
-        objectStore.openCursor().onsuccess = function(event) {  
+        objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
           if (cursor) {
             debug("upgrade tel1: " + JSON.stringify(cursor.value));
@@ -95,12 +95,37 @@ ContactDB.prototype = {
             cursor.update(cursor.value);
             debug("upgrade tel2: " + JSON.stringify(cursor.value));
             cursor.continue();
-          } 
+          }
         };
 
         // Create new searchable indexes.
         objectStore.createIndex("tel", "search.tel", { unique: false, multiEntry: true });
         objectStore.createIndex("category", "properties.category", { unique: false, multiEntry: true });
+      } else if (currVersion == 2) {
+        debug("upgrade 2");
+        // Create a new scheme for the email field. We move from an array of emailaddresses to an array of 
+        // ContactEmail.
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        // Delete old email index.
+        objectStore.deleteIndex("email");
+
+        // Upgrade existing email field in the DB.
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            debug("upgrade email1: " + JSON.stringify(cursor.value));
+            cursor.value.properties.email =
+              cursor.value.properties.email.map(function(address) { return { address: address }; });
+            cursor.update(cursor.value);
+            debug("upgrade email2: " + JSON.stringify(cursor.value));
+            cursor.continue();
+          }
+        };
+
+        // Create new searchable indexes.
+        objectStore.createIndex("email", "search.email", { unique: false, multiEntry: true });
       }
     }
   },
@@ -155,7 +180,7 @@ ContactDB.prototype = {
         for (let i = 0; i <= aContact.properties[field].length; i++) {
           if (aContact.properties[field][i]) {
             if (field == "tel") {
-              // Special case telephone number. 
+              // Special case telephone number.
               // "+1-234-567" should also be found with 1234, 234-56, 23456
 
               // Chop off the first characters
@@ -172,8 +197,16 @@ ContactDB.prototype = {
                 }
               }
               debug("lookup: " + JSON.stringify(contact.search[field]));
+            } else if (field == "email") {
+              let address = aContact.properties[field][i].address;
+              if (address && typeof address == "string") {
+                contact.search[field].push(address.toLowerCase());
+              }
             } else {
-              contact.search[field].push(aContact.properties[field][i].toLowerCase());
+              let val = aContact.properties[field][i];
+              if (typeof val == "string") {
+                contact.search[field].push(val.toLowerCase());
+              }
             }
           }
         }
@@ -308,21 +341,23 @@ ContactDB.prototype = {
       let request;
       if (key == "id") {
         // store.get would return an object and not an array
-        request = store.getAll(options.filterValue);
+        request = store.mozGetAll(options.filterValue);
       } else if (key == "category") {
         let index = store.index(key);
-        request = index.getAll(options.filterValue, limit);
+        request = index.mozGetAll(options.filterValue, limit);
       } else if (options.filterOp == "equals") {
         debug("Getting index: " + key);
         // case sensitive
         let index = store.index(key);
-        request = index.getAll(options.filterValue, limit);
+        request = index.mozGetAll(options.filterValue, limit);
       } else {
         // not case sensitive
-        let tmp = options.filterValue.toLowerCase();
+        let tmp = typeof options.filterValue == "string"
+                  ? options.filterValue.toLowerCase()
+                  : options.filterValue.toString().toLowerCase();
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
-        request = index.getAll(range, limit);
+        request = index.mozGetAll(range, limit);
       }
       if (!txn.result)
         txn.result = {};
@@ -341,7 +376,7 @@ ContactDB.prototype = {
       txn.result = {};
     // Sorting functions takes care of limit if set.
     let limit = options.sortBy === 'undefined' ? options.filterLimit : null;
-    store.getAll(null, limit).onsuccess = function (event) {
+    store.mozGetAll(null, limit).onsuccess = function (event) {
       debug("Request successful. Record count:", event.target.result.length);
       for (let i in event.target.result)
         txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);

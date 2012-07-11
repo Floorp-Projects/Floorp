@@ -63,7 +63,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
+    Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
 
     if (monitor.recompiled()) {
         stubs::Name(f);
@@ -115,14 +115,14 @@ PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 }
 
 void
-SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, const Shape *shape)
+SetGlobalNameIC::patchInlineShapeGuard(Repatcher &repatcher, Shape *shape)
 {
     JSC::CodeLocationDataLabelPtr label = fastPathStart.dataLabelPtrAtOffset(shapeOffset);
     repatcher.repatch(label, shape);
 }
 
 static LookupStatus
-UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Shape *shape)
+UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, Shape *shape)
 {
     /* Give globals a chance to appear. */
     if (!shape)
@@ -159,7 +159,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
+    Shape *shape = obj.nativeLookup(f.cx, NameToId(name));
 
     if (!monitor.recompiled()) {
         LookupStatus status = UpdateSetGlobalName(f, ic, &obj, shape);
@@ -1047,7 +1047,7 @@ ic::SplatApplyArgs(VMFrame &f)
     JS_ASSERT(args.length() == 2);
     JS_ASSERT(IsNativeFunction(args.calleev(), js_fun_apply));
 
-    if (args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+    if (IsOptimizedArguments(f.fp(), &args[1])) {
         /* Mirror isMagic(JS_OPTIMIZED_ARGUMENTS) case in js_fun_apply. */
         /* Steps 4-6. */
         unsigned length = f.regs.fp()->numActualArgs();

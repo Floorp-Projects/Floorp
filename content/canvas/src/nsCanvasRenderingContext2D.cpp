@@ -16,7 +16,6 @@
 
 #include "nsContentUtils.h"
 
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
@@ -1422,7 +1421,7 @@ nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Save()
+nsCanvasRenderingContext2D::MozSave()
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -1435,7 +1434,7 @@ nsCanvasRenderingContext2D::Save()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Restore()
+nsCanvasRenderingContext2D::MozRestore()
 {
     if (!EnsureSurface()) 
         return NS_ERROR_FAILURE;
@@ -1951,7 +1950,7 @@ nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetShadowColor(const nsAString& aColor)
+nsCanvasRenderingContext2D:: SetMozShadowColor(const nsAString& aColor)
 {
     nscolor color;
     if (!ParseColor(aColor, &color)) {
@@ -1966,7 +1965,7 @@ nsCanvasRenderingContext2D::SetShadowColor(const nsAString& aColor)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
+nsCanvasRenderingContext2D::GetMozShadowColor(nsAString& color)
 {
     StyleColorToString(CurrentState().colorStyles[STYLE_SHADOW], color);
 
@@ -2217,7 +2216,7 @@ nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::BeginPath()
+nsCanvasRenderingContext2D::MozBeginPath()
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -2228,7 +2227,7 @@ nsCanvasRenderingContext2D::BeginPath()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::ClosePath()
+nsCanvasRenderingContext2D::MozClosePath()
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -2238,7 +2237,7 @@ nsCanvasRenderingContext2D::ClosePath()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Fill()
+nsCanvasRenderingContext2D::MozFill()
 {
     gfxRect dirty;
     nsresult rv = DrawPath(STYLE_FILL, &dirty);
@@ -2248,7 +2247,7 @@ nsCanvasRenderingContext2D::Fill()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Stroke()
+nsCanvasRenderingContext2D::MozStroke()
 {
     gfxRect dirty;
     nsresult rv = DrawPath(STYLE_STROKE, &dirty);
@@ -2258,7 +2257,7 @@ nsCanvasRenderingContext2D::Stroke()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Clip()
+nsCanvasRenderingContext2D::MozClip()
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -2487,7 +2486,7 @@ CreateFontStyleRule(const nsAString& aFont,
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetFont(const nsAString& font)
+nsCanvasRenderingContext2D::SetMozFont(const nsAString& font)
 {
     nsresult rv;
 
@@ -2616,7 +2615,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetFont(nsAString& font)
+nsCanvasRenderingContext2D::GetMozFont(nsAString& font)
 {
     /* will initilize the value if not set, else does nothing */
     GetCurrentFontStyle();
@@ -2626,7 +2625,7 @@ nsCanvasRenderingContext2D::GetFont(nsAString& font)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetTextAlign(const nsAString& ta)
+nsCanvasRenderingContext2D::SetMozTextAlign(const nsAString& ta)
 {
     if (ta.EqualsLiteral("start"))
         CurrentState().textAlign = TEXT_ALIGN_START;
@@ -2643,7 +2642,7 @@ nsCanvasRenderingContext2D::SetTextAlign(const nsAString& ta)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetTextAlign(nsAString& ta)
+nsCanvasRenderingContext2D::GetMozTextAlign(nsAString& ta)
 {
     switch (CurrentState().textAlign)
     {
@@ -2668,7 +2667,7 @@ nsCanvasRenderingContext2D::GetTextAlign(nsAString& ta)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetTextBaseline(const nsAString& tb)
+nsCanvasRenderingContext2D::SetMozTextBaseline(const nsAString& tb)
 {
     if (tb.EqualsLiteral("top"))
         CurrentState().textBaseline = TEXT_BASELINE_TOP;
@@ -2687,7 +2686,7 @@ nsCanvasRenderingContext2D::SetTextBaseline(const nsAString& tb)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
+nsCanvasRenderingContext2D::GetMozTextBaseline(nsAString& tb)
 {
     switch (CurrentState().textBaseline)
     {
@@ -3114,17 +3113,17 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
+nsCanvasRenderingContext2D::SetTextStyle(const nsAString& textStyle)
 {
     // font and mozTextStyle are the same value
-    return SetFont(textStyle);
+    return SetMozFont(textStyle);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetMozTextStyle(nsAString& textStyle)
+nsCanvasRenderingContext2D::GetTextStyle(nsAString& textStyle)
 {
     // font and mozTextStyle are the same value
-    return GetFont(textStyle);
+    return GetMozFont(textStyle);
 }
 
 gfxFontGroup*
@@ -3132,7 +3131,7 @@ nsCanvasRenderingContext2D::GetCurrentFontStyle()
 {
     // use lazy initilization for the font group since it's rather expensive
     if(!CurrentState().fontGroup) {
-        nsresult rv = SetMozTextStyle(kDefaultFontStyle);
+        nsresult rv = SetTextStyle(kDefaultFontStyle);
         if (NS_FAILED(rv)) {
             gfxFontStyle style;
             style.size = kDefaultFontSize;
@@ -3197,7 +3196,7 @@ nsCanvasRenderingContext2D::GetLineWidth(float *width)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
+nsCanvasRenderingContext2D::SetMozLineCap(const nsAString& capstyle)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3219,7 +3218,7 @@ nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
+nsCanvasRenderingContext2D::GetMozLineCap(nsAString& capstyle)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3239,7 +3238,7 @@ nsCanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
+nsCanvasRenderingContext2D::SetMozLineJoin(const nsAString& joinstyle)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3261,7 +3260,7 @@ nsCanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
+nsCanvasRenderingContext2D::GetMozLineJoin(nsAString& joinstyle)
 {
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
@@ -3422,7 +3421,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     nsRefPtr<gfxPattern> pattern;
     gfxIntSize imgSize;
     nsRefPtr<gfxASurface> imgsurf =
-      CanvasImageCache::Lookup(imgElt, mCanvasElement, &imgSize);
+      CanvasImageCache::Lookup(content->AsElement(), mCanvasElement, &imgSize);
 
     if (!imgsurf) {
         // The canvas spec says that drawImage should draw the first frame
@@ -3456,7 +3455,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
 
         if (res.mImageRequest) {
-            CanvasImageCache::NotifyDrawImage(imgElt, mCanvasElement,
+            CanvasImageCache::NotifyDrawImage(content->AsElement(), mCanvasElement,
                                               res.mImageRequest, imgsurf, imgSize);
         }
     }

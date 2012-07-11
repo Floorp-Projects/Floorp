@@ -101,20 +101,25 @@ public:
   }
 
   nsresult GetInternal(IDBKeyRange* aKeyRange,
+                       JSContext* aCx,
                        IDBRequest** _retval);
 
   nsresult GetKeyInternal(IDBKeyRange* aKeyRange,
+                          JSContext* aCx,
                           IDBRequest** _retval);
 
   nsresult GetAllInternal(IDBKeyRange* aKeyRange,
                           PRUint32 aLimit,
+                          JSContext* aCx,
                           IDBRequest** _retval);
 
   nsresult GetAllKeysInternal(IDBKeyRange* aKeyRange,
                               PRUint32 aLimit,
+                              JSContext* aCx,
                               IDBRequest** _retval);
 
   nsresult CountInternal(IDBKeyRange* aKeyRange,
+                         JSContext* aCx,
                          IDBRequest** _retval);
 
   nsresult OpenCursorFromChildProcess(
@@ -126,10 +131,12 @@ public:
 
   nsresult OpenKeyCursorInternal(IDBKeyRange* aKeyRange,
                                  size_t aDirection,
+                                 JSContext* aCx,
                                  IDBRequest** _retval);
 
   nsresult OpenCursorInternal(IDBKeyRange* aKeyRange,
                               size_t aDirection,
+                              JSContext* aCx,
                               IDBRequest** _retval);
 
   nsresult OpenCursorFromChildProcess(

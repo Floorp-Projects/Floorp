@@ -366,12 +366,6 @@ interface nsIXPCFunctionThisTranslator : nsISupports
 #define NS_XPCONNECT_CID \
 { 0xcb6593e0, 0xf9b2, 0x11d2, \
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
-enum nsGCType {
-    nsGCNormal,
-    nsGCShrinking,
-    nsGCIncremental
-};
 %}
 
 [uuid(26efd266-3e33-4dc9-8233-e13bb8d9c452)]
@@ -680,6 +674,13 @@ interface nsIXPConnect : nsISupports
     [noscript] void removeJSHolder(in voidPtr aHolder);
 
     /**
+     * Test to see if a JS holder is in our hashtable.
+     * Only available in debug builds.
+     * @param aHolder The object to test for.
+     */
+    [noscript] bool testJSHolder(in voidPtr aHolder);
+
+    /**
      * Note aJSContext as a child to the cycle collector.
      * @param aJSContext The JSContext to note.
      * @param aCb The cycle collection traversal callback.
@@ -698,9 +699,8 @@ interface nsIXPConnect : nsISupports
     /**
      * Trigger a JS garbage collection.
      * Use a js::gcreason::Reason from jsfriendapi.h for the kind.
-     * Use the nsGCType enum for the kind.
      */
-    void GarbageCollect(in PRUint32 reason, in PRUint32 kind);
+    void GarbageCollect(in PRUint32 reason);
 
     /**
      * Signals a good place to do an incremental GC slice, because the

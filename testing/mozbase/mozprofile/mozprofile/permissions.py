@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
 """
@@ -349,8 +349,12 @@ function FindProxyForURL(url, host)
     def clean_db(self):
         """Removed permissions added by mozprofile."""
 
+        sqlite_file = os.path.join(self._profileDir, "permissions.sqlite")
+        if not os.path.exists(sqlite_file):
+            return
+
         # Open database and create table
-        permDB = sqlite3.connect(os.path.join(self._profileDir, "permissions.sqlite"))
+        permDB = sqlite3.connect(sqlite_file)
         cursor = permDB.cursor();
 
         # TODO: only delete values that we add, this would require sending in the full permissions object

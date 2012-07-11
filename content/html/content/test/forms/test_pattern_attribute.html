@@ -261,11 +261,13 @@ var input = document.getElementById('i');
 // and |invalidTypes| are the ones which do not accept it.
 var validTypes = Array('text', 'password', 'search', 'tel', 'email', 'url');
 var barredTypes = Array('hidden', 'reset', 'button', 'submit', 'image');
-var invalidTypes = Array('checkbox', 'radio', 'file');
+var invalidTypes = Array('checkbox', 'radio', 'file', 'number');
 // TODO: 'datetime', 'date', 'month', 'week', 'time', 'datetime-local',
-//       'number', 'range', ande 'color' do not accept the @pattern too but are
-//       not implemented yet.
+//       'range', and 'color' do not accept the @pattern too but are not
+//       implemented yet.
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for each (type in validTypes) {
   input.type = type;
   completeValidityCheck(input, false);
@@ -281,6 +283,9 @@ for each (type in invalidTypes) {
   input.type = type;
   completeValidityCheck(input, true);
 }
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>

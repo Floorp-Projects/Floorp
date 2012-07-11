@@ -10,14 +10,11 @@
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
 #include "nsCOMPtr.h"
-#include "nsIFrame.h"
 #include "nsContentUtils.h"
-#include "nsSVGPathDataParser.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"
 #include "DOMSVGPoint.h"
 #include "gfxContext.h"
-#include "gfxPlatform.h"
 
 using namespace mozilla;
 

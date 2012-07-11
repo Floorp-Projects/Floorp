@@ -642,7 +642,7 @@ gfxASurface::RecordMemoryFreed()
     }
 }
 
-#ifdef MOZ_DUMP_PAINTING
+#ifdef MOZ_DUMP_IMAGES
 void
 gfxASurface::WriteAsPNG(const char* aFile)
 {
@@ -654,10 +654,10 @@ gfxASurface::WriteAsPNG(const char* aFile)
       NS_WARNING("Failed to create file!\n");
     }
 }
-    
-void 
-gfxASurface::DumpAsDataURL(FILE* aOutput) 
-{ 
+
+void
+gfxASurface::DumpAsDataURL(FILE* aOutput)
+{
   WriteAsPNG_internal(aOutput, false);
 }
 
@@ -668,9 +668,9 @@ gfxASurface::PrintAsDataURL()
   fprintf(stdout, "\n");
 }
 
-void 
-gfxASurface::CopyAsDataURL() 
-{ 
+void
+gfxASurface::CopyAsDataURL()
+{
   WriteAsPNG_internal(nsnull, false);
 }
 
@@ -692,7 +692,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
       return;
     }
 
-    imgsurf = 
+    imgsurf =
       new gfxImageSurface(gfxIntSize(size.width, size.height),
                           gfxASurface::ImageFormatARGB32);
 
@@ -728,9 +728,9 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   }
 
   nsresult rv = encoder->InitFromData(imgsurf->Data(),
-                                      size.width * size.height * 4, 
-                                      size.width, 
-                                      size.height, 
+                                      size.width * size.height * 4,
+                                      size.width,
+                                      size.height,
                                       imgsurf->Stride(),
                                       imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                       NS_LITERAL_STRING(""));
@@ -755,9 +755,9 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   if (!imgData)
     return;
   PRUint32 numReadThisTime = 0;
-  while ((rv = imgStream->Read(&imgData[imgSize], 
+  while ((rv = imgStream->Read(&imgData[imgSize],
                                bufSize - imgSize,
-                               &numReadThisTime)) == NS_OK && numReadThisTime > 0) 
+                               &numReadThisTime)) == NS_OK && numReadThisTime > 0)
   {
     imgSize += numReadThisTime;
     if (imgSize == bufSize) {
@@ -774,13 +774,13 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
 
   if (aBinary) {
     if (aFile) {
-      fwrite(imgData, 1, imgSize, aFile); 
+      fwrite(imgData, 1, imgSize, aFile);
     } else {
       NS_WARNING("Can't write binary image data without a file!");
     }
     return;
   }
-  
+
   // base 64, result will be NULL terminated
   char* encodedImg = PL_Base64Encode(imgData, imgSize, nsnull);
   PR_Free(imgData);
@@ -791,6 +791,20 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   string.Append(encodedImg);
 
   if (aFile) {
+#ifdef ANDROID
+     if (aFile == stdout || aFile == stderr) {
+       // ADB logcat cuts off long strings so we will break it down
+       const char* cStr = string.BeginReading();
+       size_t len = strlen(cStr);
+       while (true) {
+         printf_stderr("IMG: %.140s\n", cStr);
+         if (len <= 140)
+           break;
+         len -= 140;
+         cStr += 140;
+       }
+     }
+#endif
     fprintf(aFile, "%s", string.BeginReading());
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));

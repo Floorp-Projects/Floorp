@@ -81,4 +81,5 @@ CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
 CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
 #endif
 
+CSS_ANON_BOX(mozSVGOuterSVGAnonChild, ":-moz-svg-outer-svg-anon-child")
 CSS_ANON_BOX(mozSVGForeignContent, ":-moz-svg-foreign-content")

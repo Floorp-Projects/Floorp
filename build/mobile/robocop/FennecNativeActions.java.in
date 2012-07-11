@@ -36,6 +36,7 @@ public class FennecNativeActions implements Actions {
     private Solo mSolo;
     private Instrumentation mInstr;
     private Activity mGeckoApp;
+    private Assert mAsserter;
 
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
@@ -50,10 +51,11 @@ public class FennecNativeActions implements Actions {
     private Method mSetDrawListener;
     private static final String LOGTAG = "FennecNativeActions";
 
-    public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation) {
+    public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation, Assert asserter) {
         mSolo = robocop;
         mInstr = instrumentation;
         mGeckoApp = activity;
+        mAsserter = asserter;
         // Set up reflexive access of java classes and methods.
         try {
             mClassLoader = activity.getClassLoader();
@@ -117,6 +119,7 @@ public class FennecNativeActions implements Actions {
         private final String mGeckoEvent;
         private final Object[] mRegistrationParams;
         private boolean mEventReceived;
+        private static final int MAX_WAIT_MS = 90000;
 
         GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
             mGeckoEvent = geckoEvent;
@@ -124,12 +127,20 @@ public class FennecNativeActions implements Actions {
         }
 
         public synchronized void blockForEvent() {
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
             while (! mEventReceived) {
                 try {
-                    this.wait();
+                    this.wait(MAX_WAIT_MS);
                 } catch (InterruptedException ie) {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (!mEventReceived && (endTime - startTime >= MAX_WAIT_MS)) {
+                    mAsserter.ok(false, "GeckoEventExpecter", 
+                        "blockForEvent timeout: "+mGeckoEvent);
+                    return;
                 }
             }
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
@@ -222,6 +233,7 @@ public class FennecNativeActions implements Actions {
     class PaintExpecter implements RepeatedEventExpecter {
         private Object mLayerClient;
         private boolean mPaintDone;
+        private static final int MAX_WAIT_MS = 90000;
 
         PaintExpecter() throws IllegalAccessException, InvocationTargetException {
             mLayerClient = mGetLayerClient.invoke(mGeckoApp);
@@ -236,12 +248,19 @@ public class FennecNativeActions implements Actions {
         }
 
         public synchronized void blockForEvent() {
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
             while (!mPaintDone) {
                 try {
-                    this.wait();
+                    this.wait(MAX_WAIT_MS);
                 } catch (InterruptedException ie) {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
+                    mAsserter.ok(false, "PaintExpecter", "blockForEvent timeout");
+                    return;
                 }
             }
             try {
@@ -260,16 +279,23 @@ public class FennecNativeActions implements Actions {
                 throw new IllegalArgumentException("millis must be > 0");
             }
             // wait for at least one event
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
             while (!mPaintDone) {
                 try {
-                    this.wait();
+                    this.wait(MAX_WAIT_MS);
                 } catch (InterruptedException ie) {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
+                endTime = SystemClock.uptimeMillis();
+                if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
+                    mAsserter.ok(false, "PaintExpecter", "blockUtilClear timeout");
+                    return;
+                }
             }
             // now wait for a period of millis where we don't get an event
-            long startTime = SystemClock.uptimeMillis();
+            startTime = SystemClock.uptimeMillis();
             while (true) {
                 try {
                     this.wait(millis);
@@ -277,7 +303,7 @@ public class FennecNativeActions implements Actions {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
-                long endTime = SystemClock.uptimeMillis();
+                endTime = SystemClock.uptimeMillis();
                 if (endTime - startTime >= millis) {
                     // success
                     break;

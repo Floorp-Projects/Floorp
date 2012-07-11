@@ -229,12 +229,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     static bool IsSuccessfulRequest(nsIRequest* aRequest);
 
     /**
-     * Check if the given baseURI is contained in the same directory as the
-     * aOriginURI (or a child thereof)
-     */
-    static bool IsFileCodebaseAllowable(nsIURI* aBaseURI, nsIURI* aOriginURI);
-
-    /**
      * Check whether the URI can be handled internally.
      */
     static bool CanHandleURI(nsIURI* aURI);
@@ -279,6 +273,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * @return NS_ERROR_NOT_AVAILABLE Unsupported class ID.
      */
     nsresult TypeForClassID(const nsAString& aClassID, nsACString& aType);
+
+    /**
+     * Gets the base URI to be used for this object. This differs from
+     * nsIContent::GetBaseURI in that it takes codebase attributes into
+     * account.
+     */
+    void GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI);
+
 
     /**
      * Gets the frame that's associated with this content node.

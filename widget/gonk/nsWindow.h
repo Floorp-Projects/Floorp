@@ -6,10 +6,9 @@
 #define nsWindow_h
 
 #include "nsBaseWidget.h"
+#include "nsIIdleServiceInternal.h"
 
 extern nsIntRect gScreenBounds;
-
-class nsIdleService;
 
 namespace mozilla {
 namespace gl {
@@ -100,7 +99,7 @@ protected:
     bool mVisible;
     nsIntRegion mDirtyRegion;
     InputContext mInputContext;
-    nsCOMPtr<nsIdleService> mIdleService;
+    nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
     void BringToTop();
 

@@ -1,0 +1,180 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    let testGenerator = testSteps();
+
+    function ok(val, message) {
+      val = val ? "true" : "false";
+      window.parent.postMessage("SimpleTest.ok(" + val + ", '" + message +
+                                "');", "*");
+    }
+
+    function is(a, b, message) {
+      ok(a == b, message);
+    }
+
+    function grabEventAndContinueHandler(event) {
+      testGenerator.send(event);
+    }
+
+    function errorHandler(event) {
+      ok(false, "indexedDB error, code " + event.target.errorCode);
+      finishTest();
+    }
+
+    function unexpectedSuccessHandler(event) {
+      ok(false, "got success when it was not expected!");
+      finishTest();
+    }
+
+    function finishTest() {
+      // Let window.onerror have a chance to fire
+      setTimeout(function() {
+        setTimeout(function() {
+          testGenerator.close();
+          window.parent.postMessage("SimpleTest.finish();", "*");
+        }, 0);
+      }, 0);
+    }
+
+    window.onerror = function() {
+      return false;
+    };
+
+    function testSteps() {
+      // Test 1: Throwing an exception in an upgradeneeded handler should
+      // abort the versionchange transaction and fire an error at the request.
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onupgradeneeded = function () {
+        let transaction = request.transaction;
+        transaction.oncomplete = unexpectedSuccessHandler;
+        transaction.onabort = grabEventAndContinueHandler
+        throw "STOP";
+      };
+
+      let event = yield;
+      is(event.type, "abort",
+         "Throwing during an upgradeneeded event should abort the transaction.");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
+
+      request.onerror = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.type, "error",
+         "Throwing during an upgradeneeded event should fire an error.");
+
+      // Test 2: Throwing during a request's success handler should abort the
+      // transaction.
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onblocked = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let openrequest = request;
+      let event = yield;
+
+      request.onupgradeneeded = unexpectedSuccessHandler;
+
+      let db = event.target.result;
+      db.onerror = function(event) {
+        event.preventDefault();
+      };
+
+      event.target.transaction.oncomplete = unexpectedSuccessHandler;
+      event.target.transaction.onabort = grabEventAndContinueHandler;
+
+      is(db.version, 1, "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      let objectStore = db.createObjectStore("foo");
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      request = objectStore.add({}, 1);
+      request.onsuccess = function(event) {
+        throw "foo";
+      };
+
+      event = yield;
+
+      is(event.type, "abort", "Got transaction abort event");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
+      openrequest.onerror = grabEventAndContinueHandler;
+
+      event = yield;
+
+      is(event.type, "error", "Got IDBOpenDBRequest error event");
+      is(event.target, openrequest, "Right event target");
+      is(event.target.error.name, "AbortError", "Right error name");
+
+      // Test 3: Throwing during a request's error handler should abort the
+      // transaction, even if preventDefault is called on the error event.
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onblocked = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let openrequest = request;
+      let event = yield;
+
+      request.onupgradeneeded = unexpectedSuccessHandler;
+
+      let db = event.target.result;
+      db.onerror = function(event) {
+        event.preventDefault();
+      };
+
+      event.target.transaction.oncomplete = unexpectedSuccessHandler;
+      event.target.transaction.onabort = grabEventAndContinueHandler;
+
+      is(db.version, 1, "Correct version");
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+      let objectStore = db.createObjectStore("foo");
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
+
+      request = objectStore.add({}, 1);
+      request.onerror = errorHandler;
+      request = objectStore.add({}, 1);
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = function (event) {
+        event.preventDefault();
+        throw "STOP";
+      };
+
+      event = yield;
+
+      is(event.type, "abort", "Got transaction abort event");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
+      openrequest.onerror = grabEventAndContinueHandler;
+
+      event = yield;
+
+      is(event.type, "error", "Got IDBOpenDBRequest error event");
+      is(event.target, openrequest, "Right event target");
+      is(event.target.error.name, "AbortError", "Right error name");
+
+      finishTest();
+      yield;
+    }
+  </script>
+
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

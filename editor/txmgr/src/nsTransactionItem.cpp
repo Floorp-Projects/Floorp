@@ -82,14 +82,11 @@ nsTransactionItem::AddChild(nsTransactionItem *aTransactionItem)
   return NS_OK;
 }
 
-nsresult
-nsTransactionItem::GetTransaction(nsITransaction **aTransaction)
+already_AddRefed<nsITransaction>
+nsTransactionItem::GetTransaction()
 {
-  NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
-
-  NS_IF_ADDREF(*aTransaction = mTransaction);
-
-  return NS_OK;
+  nsCOMPtr<nsITransaction> txn = mTransaction;
+  return txn.forget();
 }
 
 nsresult
@@ -227,13 +224,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
         return NS_ERROR_FAILURE;
       }
 
-      nsCOMPtr<nsITransaction> t;
-
-      result = item->GetTransaction(getter_AddRefs(t));
-
-      if (NS_FAILED(result)) {
-        return result;
-      }
+      nsCOMPtr<nsITransaction> t = item->GetTransaction();
 
       bool doInterrupt = false;
 
@@ -306,13 +297,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsITransaction> t;
-
-    result = item->GetTransaction(getter_AddRefs(t));
-
-    if (NS_FAILED(result)) {
-      return result;
-    }
+    nsCOMPtr<nsITransaction> t = item->GetTransaction();
 
     bool doInterrupt = false;
 

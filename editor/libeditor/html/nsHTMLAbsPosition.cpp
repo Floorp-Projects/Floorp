@@ -7,7 +7,6 @@
 #include "nsHTMLEditor.h"
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
 

@@ -246,6 +246,8 @@ public class Tabs implements GeckoEventListener {
                     selectTab(tab.getId());
                 if (message.getBoolean("delayLoad"))
                     tab.setState(Tab.STATE_DELAYED);
+                if (message.getBoolean("desktopMode"))
+                    tab.setDesktopMode(true);
             } else if (event.equals("Tab:Close")) {
                 Tab tab = getTab(message.getInt("tabID"));
                 closeTab(tab);

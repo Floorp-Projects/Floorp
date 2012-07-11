@@ -38,6 +38,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
+interface mozIDOMApplication;
 
 [scriptable, uuid(858578f1-9653-4d5c-821a-07479bf2d9b2)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -181,9 +182,9 @@ interface nsIDOMWindowUtils : nsISupports {
   const long MODIFIER_CAPSLOCK   = 0x0020;
   const long MODIFIER_FN         = 0x0040;
   const long MODIFIER_NUMLOCK    = 0x0080;
-  const long MODIFIER_SCROLL     = 0x0100;
+  const long MODIFIER_SCROLLLOCK = 0x0100;
   const long MODIFIER_SYMBOLLOCK = 0x0200;
-  const long MODIFIER_WIN        = 0x0400;
+  const long MODIFIER_OS         = 0x0400;
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu
@@ -1165,4 +1166,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * or isn't the manifest URL of an installed application.
    */
   void setApp(in DOMString manifestURL);
+  /**
+    * Retrieves the Application object associated to this window.
+    * Can be null if |setApp()| has not been called.
+    */
+  mozIDOMApplication getApp();
 };

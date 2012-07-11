@@ -1,0 +1,760 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715041
+-->
+    <window title="Mozilla Bug 715041"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+    <!-- test results are displayed in the html:body -->
+    <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=715041"
+target="_blank">Mozilla Bug 715041</a>
+    </body>
+
+    <!-- test code goes here -->
+    <script type="application/javascript">
+    <![CDATA[
+
+  /** Mock Idle Service Test for Bug 715041 **/
+  SpecialPowers.setBoolPref("dom.idle-observers-api.fuzz_time.disabled", true);
+
+  //class mock javascript idle service
+  var idleServiceObj = {
+    observers: [],
+    windowObservers: [],
+    idleTimeInMS: 5000,   //in milli seconds
+
+    // takes note of the idle observers added as the minimum idle observer
+    // with the idle service
+    timesAdded: [],
+
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsISupports) ||
+          iid.equals(Components.interfaces.nsIFactory) ||
+          iid.equals(Components.interfaces.nsIIdleService)) {
+        return this;
+      }
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    createInstance: function(outer, iid) {
+      return this.QueryInterface(iid);
+    },
+
+    get idleTime() {
+      return this.idleTimeInMS; //in milli seconds
+    },
+
+    set idleTime(timeInMS) {
+      this.idleTimeInMS = timeInMS;
+    },
+
+    getWindowFromObserver: function(observer) {
+      try {
+        var interfaceRequestor = observer.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+        var window = interfaceRequestor.getInterface(Components.interfaces.nsIDOMWindow);
+        return window;
+      }
+      catch (e) {}
+
+      return null;
+    },
+
+    testIdleBackService: function(observer, topic) {
+      dump("\nJS FAKE IDLE SERVICE\n");
+      dump("JS NUM OBSERVERS: " + this.observers.length + "\n");
+
+      if (this.observers.length > 1) {
+        this.observers[1].observer.observe(observer, topic, '\0');
+        dump("JS CALLED OBSERVE FUNCTION!!!\n\n");
+      }
+    },
+
+    addIdleObserver: function(observer, time) {
+      dump("\nJS FAKE IDLE SERVICE add idle observer before\n");
+      dump("JS NUM OBSERVERS: " + this.observers.length + "\n");
+
+      var window = this.getWindowFromObserver(observer);
+      dump("window is: " + window + "\n");
+
+      if (window) {
+        this.observers.push({ observer: observer, time: time, });
+        addedIdleObserver = true;
+        numIdleObserversAdded++;
+        this.timesAdded.push(time);
+
+        dump ("\nMOCK IDLE SERVICE ADDING idle observer with time: " + time + "\n");
+        dump("MOCK IDLE SERVICE: num idle observers added: " + numIdleObserversAdded + "\n\n");
+      }
+      else {
+        dump("SHOULD NEVER GET HERE!");
+        oldIdleService.addIdleObserver(observer, time);
+        addedIdleObserver = false;
+      }
+
+      dump("\nJS FAKE IDLE SERVICE end of add idle observer\n");
+      dump("JS NUM OBSERVERS: " + this.observers.length + "\n");
+    },
+
+    removeIdleObserver: function(observer, time) {
+      dump("\nJS REMOVE IDLE OBSERVER () time to be removed: " + time + "\n");
+      var window = this.getWindowFromObserver(observer);
+      if (!window) {
+        oldIdleService.removeIdleObserver(observer, time);
+      }
+      else {
+        var observerIndex = -1;
+        for (var i=0; i<this.observers.length; i++) {
+          dump("JS removeIdleObserver() observer time: " + this.observers[i].time + "\n");
+          if (this.observers[i].time === time) {
+            observerIndex = i;
+            break;
+          }
+        }
+
+        if (observerIndex != -1 && this.observers.length > 0) {
+          numIdleObserversRemoved++;
+          this.observers.splice(observerIndex, 1);
+          removedIdleObserver = true;
+          dump("MOCK IDLE SERVICE REMOVING idle observer with time " + time + "\n");
+          dump("MOCK IDLE SERVICE numIdleObserversRemoved: " + numIdleObserversRemoved + " numIdleObserversAdded: " + numIdleObserversAdded + "\n\n");
+        }
+        else {
+          removedIdleObserver = false;
+        }
+      }
+      dump("\nJS FAKE IDLE SERVICE end of remove idle observer\n");
+      dump("JS NUM OBSERVERS: " + this.observers.length + "\n");
+    },
+  };
+
+  /** Test for Bug 715041 **/
+  dump("\n\n\nJS STARTING TESTING FOR BUG 715041\n");
+
+  //bool variables
+  var addedIdleObserver = removedIdleObserver = passed = cleanUp = false;
+
+  //test case enabled
+  var AddOutOfOrderActiveEnabled = AddOutOfOrderIdleEnabled =
+      AddShiftLocalEnabled = AddNewLocalWhileAllIdleEnabled =
+      ShiftLocalTimerBackEnabled =
+      AddRemoveIdleObserverWithInvalidTimeEnabled = true;
+
+  //msgXCount
+  var msg0Count = msg1Count = msg2Count = msg3Count = msg4Count = msg5Count =
+      msg6Count = tcZero = currTestCaseNum = prevMsgNum =
+      numIdleObserversRemoved = numIdleObserversAdded = 0;
+
+  //test case number
+  var tcZero = 0;
+  var tcAddOutOfOrderActive = 1;
+  var tcAddOutOfOrderIdle = 2;
+  var tcAddShiftLocal = 3;
+  var tcAddNewLocalWhileAllIdle = 4;
+  var tcShiftLocalTimerBack = 5;
+  var tcAddRemoveIdleObserverWithInvalidTime = 6;
+
+  function ResetMsgCounts() {
+    msg0Count = msg1Count = msg2Count = msg3Count = msg4Count = msg5Count =
+    msg6Count = prevMsgNum = 0;
+  }
+
+  function ResetVars() {
+    msg0Count = msg1Count = msg2Count = msg3Count = msg4Count = msg5Count =
+    msg6Count = prevMsgNum = 0;
+
+    numIdleObserversAdded = numIdleObserversRemoved = 0;
+    currTestCaseNum = -1;
+    addedIdleObserver = removedIdleObserver = passed = cleanUp = false;
+  }
+
+  /*
+   * - function printMsgCounts()
+   */
+  function printMsgCounts() {
+    dump("\nmsg0Count: " + msg0Count +
+         "\nmsg1Count: " + msg1Count +
+         "\nmsg2Count: " + msg2Count +
+         "\nmsg3Count: " + msg3Count +
+         "\nmsg5Count: " + msg5Count +
+         "\nmsg6Count: " + msg6Count +
+         "\n"
+         );
+  }
+
+  function performNextTest() {
+    dump("\nfunction performNextTest()\ncurrTestCaseNum: " + currTestCaseNum +
+         "\ncleanUp: " + cleanUp +
+         "\npassed: " + passed +
+         "\nnumIdleObserversRemoved: " + numIdleObserversRemoved +
+         "\nnumIdleObservesAdded: " + numIdleObserversAdded + "\n");
+
+    switch (currTestCaseNum) {
+      case tcZero:
+        ok(passed, "Test case 0 failed clean up!");
+        caseZeroCleanUp();
+        break;
+      case tcAddShiftLocal:
+        if (cleanUp && numIdleObserversRemoved === 1) {
+          passed = true;
+          ok(passed, "Failed test case AddShiftLocalCleanUp()");
+          if (AddNewLocalWhileAllIdleEnabled) {
+            AddNewLocalWhileAllIdle();
+          }
+          else {
+            SimpleTest.finish();
+          }
+        }
+        break;
+      case tcAddNewLocalWhileAllIdle:
+        ok(passed, "Failed test case: AddNewLocalWhileAllIdle()");
+        AddNewLocalWhileAllIdleCleanUp();
+        break;
+      default:
+        //do nothing.
+        break;
+    }
+  }
+
+  //Place Holder.
+  var idleHandler0 = function() { dump("rmsg 0, should never be used!\n"); };
+
+  //idleHandler1
+  function idleHandler1() {
+    msg1Count++;
+    dump("msg 1 Count: " + msg1Count + "\n");
+
+    switch (currTestCaseNum) {
+    case tcAddOutOfOrderIdle:
+      if (msg1Count === 1 && msg2Count === 1 && msg3Count === 1) {
+        idleServiceObj.idleTime = 0;
+        idleServiceObj.testIdleBackService(idleObserversArray[1], "active");
+      }
+      else if (msg1Count === 4 && msg2Count === 4 && msg3Count === 4) {
+        passed = true;
+        AddOutOfOrderIdleCleanUp();
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  //idleHandler2
+  function idleHandler2() {
+    msg2Count++;
+    dump("msg 2 Count: " + msg2Count + "\n");
+
+    switch (currTestCaseNum) {
+    case tcZero:
+      switch (msg2Count) {
+      case 2:
+        passed = true;
+        performNextTest();
+        break;
+      default:
+        break;
+      }
+      break;
+    case tcAddOutOfOrderIdle:
+      if (msg3Count === 1 && msg2Count === 1 && !msg1Count) {
+        idleServiceObj.idleTime = 4000;
+        window.navigator.addIdleObserver(idleObserversArray[1]);
+      }
+      break;
+    case tcAddShiftLocal:
+      if (!msg1Count && msg2Count === 1 && !msg3Count && !msg4Count) {
+        window.navigator.addIdleObserver(idleObserversArray[3]);
+      }
+      AddShiftLocalCleanUp();
+      break;
+    case tcAddNewLocalWhileAllIdle:
+      if (msg1Count === 1 && msg2Count === 2) {
+        idleServiceObj.idleTime = 3500;
+        window.navigator.addIdleObserver(idleObserversArray[5]);
+      }
+      break;
+    case (tcShiftLocalTimerBack):
+      if (!msg1Count && msg2Count === 1 && !msg3Count && !msg4Count && !msg5Count) {
+        window.navigator.addIdleObserver(idleObserversArray[5]);
+        window.navigator.addIdleObserver(idleObserversArray[4]);
+      }
+      break;
+    default:
+      //do nothing.
+      break;
+    }
+  }
+
+  //idleHandler3
+  function idleHandler3() {
+    msg3Count++;
+    dump("msg 3 Count: " + msg3Count + "\n");
+
+    switch (currTestCaseNum) {
+    case (tcAddOutOfOrderIdle):
+      if (msg3Count === 1) {
+        idleServiceObj.idleTime = 3500;
+        window.navigator.addIdleObserver(idleObserversArray[2]);
+      }
+      if (msg1Count === 2 && msg2Count === 2 && msg3Count === 2) {
+        idleServiceObj.idleTime = 1000;
+        idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");
+      }
+      else if (msg1Count === 3 && msg2Count === 3 && msg3Count === 3) {
+        AddOutOfOrderIdle();
+      }
+      else if (msg1Count === 3 && msg2Count === 3 && msg3Count === 4) {
+        passed = true;
+        AddOutOfOrderIdleCleanUp();
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  //idleHandler4
+  function idleHandler4() {
+    msg4Count++;
+    dump("msg 4 Count: " + msg4Count + "\n");
+
+    switch (currTestCaseNum) {
+    case tcAddOutOfOrderActive:
+      if (msg1Count && msg2Count && msg3Count && msg4Count) {
+        passed = true;
+        ok(passed, "idleHandler4: failed AddOutOfOrderActive()");
+        AddOutOfOrderActiveCleanUp();
+        cleanUp = true;
+      }
+      break;
+    case tcAddShiftLocal:
+      if (msg1Count === 1 && msg3Count === 1 && msg4Count === 1) {
+        idleServiceObj.idleTime = 3200;
+        window.navigator.addIdleObserver(idleObserversArray[2]);
+      }
+      break;
+    default:
+      //do nothing.
+      break;
+    }
+  }
+
+  //idleHandler5
+  function idleHandler5() {
+    msg5Count++;
+    dump("msg 5 Count: " + msg5Count + "\n");
+
+    switch (currTestCaseNum) {
+    case tcAddNewLocalWhileAllIdle:
+      if (msg1Count === 1 && msg2Count === 2 && msg5Count === 1) {
+        passed = true;
+        performNextTest();
+      }
+      break;
+    case tcShiftLocalTimerBack:
+      if (!msg1Count && msg2Count === 1 && !msg3Count && msg4Count === 1 && msg5Count === 1) {
+        passed = true;
+        ShiftLocalTimerBackCleanUp();
+      }
+      break;
+    default:
+      //do nothing.
+      break;
+    }
+  }
+
+  //idleHandler6
+  function idleHandler6() {
+    dump("msg 6 Count: " + msg6Count + "\n");
+  }
+
+  var  idleObserversArray = [];
+  idleObserversArray[0] = {time: 0, onidle: idleHandler0, onactive: idleHandler0};
+  idleObserversArray[1] = {time: 1, onidle: idleHandler1, onactive: idleHandler1};
+  idleObserversArray[2] = {time: 2, onidle: idleHandler2, onactive: idleHandler2};
+  idleObserversArray[3] = {time: 3, onidle: idleHandler3, onactive: idleHandler3};
+  idleObserversArray[4] = {time: 4, onidle: idleHandler4, onactive: idleHandler4};
+  idleObserversArray[5] = {time: 5, onidle: idleHandler5, onactive: idleHandler5};
+  idleObserversArray[6] = {time: 0, onidle: idleHandler6, onactive: idleHandler6};
+  idleObserversArray[7] = {time: 2, onidle: null, onactive: null};
+
+  idleServiceObj.observers.push( {observer: idleObserversArray[0], time: 0, } );
+
+  /*
+   * - case 0
+   * - AddSingleIdleObserver
+   * - takes care of adding duplicate local too
+   * - user is currently idle since the
+   *   requested idle time of 2s < current idle time of 5000ms set below.
+   */
+  function caseZero() {
+    dump("\n\nTESTING CASE 0\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcZero;
+    idleServiceObj.idleTime = 5000;
+
+    window.navigator.addIdleObserver(idleObserversArray[2]);
+    idleServiceObj.testIdleBackService(idleObserversArray[2], "idle");
+    window.navigator.addIdleObserver(idleObserversArray[2]);
+  }
+
+  function caseZeroCleanUp() {
+    dump("\ncaseZeroCleanUp()\n");
+    dump("==============\n");
+    ResetVars();
+    currTestCaseNum = tcZero;
+    cleanUp = false;
+
+    window.navigator.removeIdleObserver(idleObserversArray[2]);
+    window.navigator.removeIdleObserver(idleObserversArray[2]);
+
+    if (AddOutOfOrderActiveEnabled) {
+      AddOutOfOrderActive();
+    }
+    else {
+      dump("Finishing testing idle API.\n");
+      SimpleTest.finish();
+    }
+  }
+
+  /*
+    AddOutOfOrderActive()
+    - Tests if the idle observer with the min time is always registered correctly
+      with the idle service.
+  */
+  function AddOutOfOrderActive() {
+    dump("\n\nTESTING CASE AddOutOfOrderActive\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddOutOfOrderActive;
+    idleServiceObj.idleTime = 500;
+
+    window.navigator.addIdleObserver(idleObserversArray[3]); //msg3
+    window.navigator.addIdleObserver(idleObserversArray[4]); //msg4
+    window.navigator.addIdleObserver(idleObserversArray[1]); //msg1
+    window.navigator.addIdleObserver(idleObserversArray[2]); //msg2
+    passed = false;
+
+    idleServiceObj.idleTime = 1000;
+    idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");
+  }
+
+  /*
+    - AddOutOfOrderActiveCleanUp()
+  */
+  function AddOutOfOrderActiveCleanUp() {
+    dump("\nAddOutOfOrderActiveCleanUp()\n");
+    dump("==============================\n");
+    ResetVars();
+    currTestCaseNum = tcAddOutOfOrderActive;
+    cleanUp = false;
+    idleServiceObj.idleTime = 4500;
+
+    for (var i=1; i<5; i++) {
+      window.navigator.removeIdleObserver(idleObserversArray[i]);
+    }
+    dump("JS AddOutOfOrderActiveCleanUp() DONE\n");
+    if (AddOutOfOrderIdleEnabled) {
+      AddOutOfOrderIdle();
+    }
+    else {
+      dump("Finishing testing idle API.\n");
+      SimpleTest.finish();
+    }
+  }
+
+  /*
+    - AddOutOfOrderIdle()
+  */
+  function AddOutOfOrderIdle() {
+    dump("\nAddOutOfOrderIdle()\n");
+    dump("======================================================================\n");
+
+    dump("\nJS AddOutOfOrderIdle\n");
+    dump("JS NUM OBSERVERS: " + idleServiceObj.observers.length + "\n");
+
+    if (!msg1Count && !msg2Count && !msg3Count) {
+      ResetVars();
+    }
+    currTestCaseNum = tcAddOutOfOrderIdle;
+    cleanUp = false;
+
+    if (!msg1Count && !msg2Count && !msg3Count) {
+      idleServiceObj.idleTime = 3100;
+    }
+    window.navigator.addIdleObserver(idleObserversArray[3]);
+    if (!msg1Count && !msg2Count && !msg3Count) {
+      idleServiceObj.testIdleBackService(idleObserversArray[3], "idle");
+    }
+  }
+
+  /*
+   - AddOutOfOrderIdleCleanUp()
+  */
+  function AddOutOfOrderIdleCleanUp() {
+    ok(passed, "Failed test case: AddOutOfOrderIdle()");
+    dump("\nAddOutOfOrderIdleCleanUp()\n");
+    dump("==========================\n");
+    ResetVars();
+    currTestCaseNum = tcAddOutOfOrderIdle;
+    cleanUp = true;
+    idleServiceObj.idleTime = 4100;
+
+    for (var j=1; j<4; j++) {
+      window.navigator.removeIdleObserver(idleObserversArray[j]);
+    }
+    window.navigator.removeIdleObserver(idleObserversArray[3]);
+
+    if (idleServiceObj.observers.length === 1) {
+      passed = true;
+    }
+    else {
+      passed = false;
+    }
+    ok(passed, "Failed test case: AddOutOfOrderIdleCleanUp()");
+    if (AddShiftLocalEnabled) {
+      AddShiftLocal();
+    }
+    else {
+      dump("Finished AddOutOfOrderIdleCleanUp() test.\n");
+      SimpleTest.finish();
+    }
+  }
+
+  /*
+   * function AddShiftLocal()
+   * - user is idle
+   * - check that local idle timer is shifted correctly
+   * - msg 1 fired when user is idle
+   * - msg 3 fired when 3000
+   * - msg 2 fired immediately when added at 3200 ms
+   * - msg 4 fired by local timer.
+   */
+  function AddShiftLocal()
+  {
+    dump("\n\nTESTING CASE AddShiftLocal\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddShiftLocal;
+    idleServiceObj.idleTime = 500;
+
+    window.navigator.addIdleObserver(idleObserversArray[1]);
+    window.navigator.addIdleObserver(idleObserversArray[3]);
+    window.navigator.addIdleObserver(idleObserversArray[4]);
+
+    idleServiceObj.idleTime = 1000;
+    idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");
+  }
+
+  /*
+   * function AddShiftLocalCleanUp()
+   */
+  function AddShiftLocalCleanUp()
+  {
+    dump("\n\nTESTING CASE AddShiftLocalCleanUp\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddShiftLocal;
+
+    for (var i=1; i<5; i++) {
+      window.navigator.removeIdleObserver(idleObserversArray[i]);
+    }
+    dump("AddShiftLocalCleanUp() done clean up\n");
+    if (AddNewLocalWhileAllIdleEnabled) {
+      AddNewLocalWhileAllIdle();
+    }
+    else {
+      dump("Finished testing AddShiftLocal()\n");
+      SimpleTest.finish();
+    }
+  }
+
+  /*
+   * AddNewLocalWhileAllIdle()
+   * - no local idle timer exists because all of the idle observers that were added had a requested
+   *   idle time of < curr user idle time and so were fired immediately. No local timer was required.
+   * - now add an idle observer whose requested idle time is > current use idle time and > min idle
+   *   requested time in the list of idle observers.
+   */
+  function AddNewLocalWhileAllIdle()
+  {
+    dump("\n\nTESTING CASE AddNewLocalWhileAllIdle\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddNewLocalWhileAllIdle;
+    idleServiceObj.idleTime = 500;
+
+    window.navigator.addIdleObserver(idleObserversArray[1]);
+    window.navigator.addIdleObserver(idleObserversArray[2]);
+    window.navigator.addIdleObserver(idleObserversArray[2]);
+
+    idleServiceObj.idleTime = 1000;
+    idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");
+  }
+
+  function AddNewLocalWhileAllIdleCleanUp()
+  {
+    dump("\n\nTESTING CASE AddNewLocalWhileAllIdleCleanUp\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddNewLocalWhileAllIdle;
+
+    window.navigator.removeIdleObserver(idleObserversArray[1]);
+    window.navigator.removeIdleObserver(idleObserversArray[2]);
+    window.navigator.removeIdleObserver(idleObserversArray[2]);
+    window.navigator.removeIdleObserver(idleObserversArray[5]);
+
+    if (ShiftLocalTimerBackEnabled) {
+      ShiftLocalTimerBack();
+    }
+    else {
+      dump("Finished testing AddNewLocalWhileAllIdle()\n");
+      SimpleTest.finish();
+    }
+  }
+
+  /*
+   * ShiftLocalTimerBack()
+   * - add a new idle observer whose requested time is > current user idle time
+   *   but < the current local timer that has been set.
+   * - the local timer will need to be reset to fire the new msg added.
+   * RESULT
+   * - should print all of them in order
+   */
+  function ShiftLocalTimerBack()
+  {
+    dump("\n\nTESTING CASE ShiftLocalTimerBack()\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcShiftLocalTimerBack;
+    idleServiceObj.idleTime = 2100;
+
+    window.navigator.addIdleObserver(idleObserversArray[2]);
+    idleServiceObj.testIdleBackService(idleObserversArray[2], "idle");
+  }
+
+  function ShiftLocalTimerBackCleanUp()
+  {
+    dump("\n\nTESTING CASE ShiftLocalTimerBackCleanUp\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcShiftLocalTimerBack;
+    window.navigator.removeIdleObserver(idleObserversArray[2]);
+    window.navigator.removeIdleObserver(idleObserversArray[4]);
+    window.navigator.removeIdleObserver(idleObserversArray[5]);
+    dump("ShiftLocalTimerBackCleanUp() done clean up\n");
+
+    try {
+      componentMgr.unregisterFactory(idleServiceCID, idleServiceObj);
+    }
+    catch(err) {
+      dump("test_bug715041.xul: ShiftLocalTimerBackCleanUp() Failed to unregister factory, mock idle service!\n");
+    }
+
+    try {
+      componentMgr.registerFactory(oldIdleServiceCID, "Re registering old idle service", idleServiceContractID, oldIdleServiceFactoryObj);
+    }
+    catch(err) {
+      dump("test_bug715041.xul: ShiftLocalTimerBackCleanUp() Failed to register factory, original idle service!\n");
+    }
+
+    SimpleTest.finish();
+  }
+
+  /*
+   * function AddRemoveIdleObserverWithInvalidTime()
+   */
+  function AddRemoveIdleObserverWithInvalidTime()
+  {
+    dump("\n\nTESTING CASE AddRemoveIdleObserverWithInvalidTime()\n");
+    dump("==============\n");
+
+    ResetVars();
+    currTestCaseNum = tcAddRemoveIdleObserverWithInvalidTime;
+
+    //while idle
+    idleServiceObj.idleTime = 2100;
+    var rv = window.navigator.addIdleObserver(idleObserversArray[6]);
+    dump("rv: " + rv + "\n");
+    rv = window.navigator.removeIdleObserver(idleObserversArray[6]);
+
+    idleServiceObj.idleTime = 0;
+    window.navigator.addIdleObserver(idleObserversArray[6]);
+    window.navigator.removeIdleObserver(idleObserversArray[6]);
+
+    SimpleTest.finish();
+  }
+
+  try {
+    var idleServiceCID = Components.ID("287075a6-f968-4516-8043-406c46f503b4");
+    var idleServiceContractID = "@mozilla.org/widget/idleservice;1";
+    var oldIdleService = Components.classes[idleServiceContractID].getService(Components.interfaces.nsIIdleService);
+  }
+  catch(ex) {
+    dump("test_bug715041.xul: 1) Failed to get old idle service.\n");
+  }
+
+  try {
+    // Registering new moch JS idle service
+    var componentMgr = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  }
+  catch(err) {
+    dump("test_bug715041.xul: Failed to query component registrar interface.\n");
+  }
+
+  try {
+    var oldIdleServiceFactoryObj = componentMgr.getClassObjectByContractID(idleServiceContractID, Components.interfaces.nsIFactory);
+  }
+  catch(err) {
+    dump("test_bug715041.xul: Failed to get old idle service.\n");
+  }
+
+  try {
+    var oldIdleServiceCID = componentMgr.contractIDToCID(idleServiceContractID);
+  }
+  catch(err) {
+    dump("test_bug715041.xul: Failed to convert ID to CID for old idle service.\n");
+  }
+
+  try {
+    componentMgr.unregisterFactory(oldIdleServiceCID, oldIdleServiceFactoryObj);
+  }
+  catch(err) {
+    dump("test_bug715041.xul: Failed to unregister old idle service factory object!\n");
+  }
+
+  try {
+    componentMgr.registerFactory(idleServiceCID, "Test Simple Idle/Back Notifications", idleServiceContractID, idleServiceObj);
+  }
+  catch(err) {
+    dump("test_bug715041.xul: Failed to register mock idle service.\n");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestLongerTimeout(10);
+
+  AddOutOfOrderActiveEnabled = true;
+  AddOutOfOrderIdleEnabled = true;
+  AddNewLocalWhileAllIdleEnabled = true;
+  AddShiftLocalEnabled = true;
+  AddIdleObserverWithInvalidTimeEnabled = false;
+
+  caseZero();
+
+    ]]>
+    </script>
+    </window>
+

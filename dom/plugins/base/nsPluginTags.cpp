@@ -8,7 +8,6 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"
@@ -120,7 +119,7 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
   }
 
   for (PRUint32 i = 0; i < aVariantCount; i++) {
-    if (!aMimeTypes[i]) {
+    if (!aMimeTypes[i] || !nsPluginHost::IsTypeWhitelisted(aMimeTypes[i])) {
       continue;
     }
 

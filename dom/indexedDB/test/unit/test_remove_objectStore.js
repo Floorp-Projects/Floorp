@@ -13,7 +13,7 @@ function testSteps()
   const description = "My Test Database";
   const objectStoreName = "Objects";
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -42,7 +42,7 @@ function testSteps()
 
   db.close();
 
-  let request = mozIndexedDB.open(name, 2, description);
+  let request = indexedDB.open(name, 2, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -86,7 +86,7 @@ function testSteps()
 
   db.close();
 
-  let request = mozIndexedDB.open(name, 3, description);
+  let request = indexedDB.open(name, 3, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

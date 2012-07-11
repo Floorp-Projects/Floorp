@@ -69,7 +69,7 @@ nsSVGMarkerFrame::GetType() const
 // nsSVGContainerFrame methods:
 
 gfxMatrix
-nsSVGMarkerFrame::GetCanvasTM()
+nsSVGMarkerFrame::GetCanvasTM(PRUint32 aFor)
 {
   NS_ASSERTION(mMarkedFrame, "null nsSVGPathGeometry frame");
 
@@ -81,7 +81,7 @@ nsSVGMarkerFrame::GetCanvasTM()
   nsSVGMarkerElement *content = static_cast<nsSVGMarkerElement*>(mContent);
   
   mInUse2 = true;
-  gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
+  gfxMatrix markedTM = mMarkedFrame->GetCanvasTM(aFor);
   mInUse2 = false;
 
   gfxMatrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle);
@@ -125,7 +125,8 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, viewBox.x, viewBox.y,
                                       viewBox.width, viewBox.height);
-    nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
+    nsSVGUtils::SetClipRect(gfx, GetCanvasTM(nsISVGChildFrame::FOR_PAINTING),
+                            clipRect);
   }
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;

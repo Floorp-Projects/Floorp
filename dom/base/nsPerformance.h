@@ -13,7 +13,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsIDocument;
 class nsIURI;
 class nsDOMNavigationTiming;
 class nsITimedChannel;

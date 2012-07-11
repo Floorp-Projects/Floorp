@@ -433,7 +433,7 @@ public class Server11RepositorySession extends RepositorySession {
                                 ArrayList<byte[]> outgoing,
                                 ArrayList<String> outgoingGuids,
                                 long byteCount) {
-      Logger.info(LOG_TAG, "Preparing record upload for " +
+      Logger.debug(LOG_TAG, "Preparing record upload for " +
                   outgoing.size() + " records (" +
                   byteCount + " bytes).");
       this.outgoing = outgoing;
@@ -453,7 +453,7 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
-      Logger.info(LOG_TAG, "POST of " + outgoing.size() + " records done.");
+      Logger.trace(LOG_TAG, "POST of " + outgoing.size() + " records done.");
 
       ExtendedJSONObject body;
       try {
@@ -468,7 +468,7 @@ public class Server11RepositorySession extends RepositorySession {
       if (body.containsKey("modified")) {
         Long modified = body.getTimestamp("modified");
         if (modified != null) {
-          Logger.debug(LOG_TAG, "POST request success. Modified timestamp: " + modified.longValue());
+          Logger.trace(LOG_TAG, "POST request success. Modified timestamp: " + modified.longValue());
         } else {
           Logger.warn(LOG_TAG, "POST success body contains malformed 'modified': " + body.toJSONString());
         }
@@ -480,7 +480,7 @@ public class Server11RepositorySession extends RepositorySession {
         JSONArray          success = body.getArray("success");
         if ((success != null) &&
             (success.size() > 0)) {
-          Logger.debug(LOG_TAG, "Successful records: " + success.toString());
+          Logger.trace(LOG_TAG, "Successful records: " + success.toString());
           for (Object o : success) {
             try {
               delegate.onRecordStoreSucceeded((String) o);
@@ -491,7 +491,7 @@ public class Server11RepositorySession extends RepositorySession {
           }
 
           long normalizedTimestamp = getNormalizedTimestamp(response);
-          Logger.debug(LOG_TAG, "Passing back upload X-Weave-Timestamp: " + normalizedTimestamp);
+          Logger.trace(LOG_TAG, "Passing back upload X-Weave-Timestamp: " + normalizedTimestamp);
           bumpUploadTimestamp(normalizedTimestamp);
         }
         success = null; // Want to GC this ASAP.
@@ -511,7 +511,7 @@ public class Server11RepositorySession extends RepositorySession {
         // TODO
         return;
       }
-      Logger.info(LOG_TAG, "POST of " + outgoing.size() + " records handled.");
+      Logger.debug(LOG_TAG, "POST of " + outgoing.size() + " records handled.");
     }
 
     @Override
@@ -522,7 +522,7 @@ public class Server11RepositorySession extends RepositorySession {
 
     @Override
     public void handleRequestError(final Exception ex) {
-      Logger.warn(LOG_TAG, "Got request error: " + ex, ex);
+      Logger.warn(LOG_TAG, "Got request error.", ex);
 
       recordUploadFailed = true;
       ArrayList<String> failedOutgoingGuids = outgoingGuids;

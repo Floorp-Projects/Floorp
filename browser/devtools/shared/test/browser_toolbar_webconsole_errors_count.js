@@ -29,8 +29,8 @@ function test() {
   addTab(TEST_URI, openToolbar);
 
   function getErrorsCount() {
-    let match = webconsole.label.match(/\((\d+)\)$/);
-    return (match || [])[1];
+    let count = webconsole.getAttribute("error-count");
+    return count ? count : "0";
   }
 
   function onOpenToolbar() {
@@ -149,9 +149,21 @@ function test() {
       validator: function() {
         return hud.outputNode.textContent.indexOf("foobarBug762996click") > -1;
       },
-      success: doPageReload.bind(null, hud),
+      success: doClearConsoleButton.bind(null, hud),
       failure: finish,
     };
+  }
+
+  function doClearConsoleButton(hud) {
+    let clearButton = hud.HUDBox
+                      .querySelector(".webconsole-clear-console-button");
+    EventUtils.synthesizeMouse(clearButton, 2, 2, {}, window);
+
+    is(hud.outputNode.textContent.indexOf("foobarBug762996click"), -1,
+       "clear console button worked");
+    is(getErrorsCount(), 0, "page errors counter has been reset");
+
+    doPageReload(hud);
   }
 
   function doPageReload(hud) {
@@ -179,7 +191,7 @@ function test() {
       validator: function() {
         return hud.outputNode.querySelectorAll(".hud-exception").length;
       },
-      value: 4,
+      value: 3,
       success: function() {
         isnot(hud.outputNode.textContent.indexOf("foobarBug762996load"), -1,
               "foobarBug762996load found in console output after page reload");

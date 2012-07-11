@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script>
+    navigator.mozApps.install("http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/super_crazy.webapp", null);
+    document.location = "about:blank";
+  </script>
+</window>

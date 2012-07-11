@@ -18,6 +18,8 @@ namespace js {
 
 struct Definition;
 
+typedef InlineMap<JSAtom *, DefinitionList, 24> AtomDefnListMap;
+
 /*
  * A pool that permits the reuse of the backing storage for the defn, index, or
  * defn-or-header (multi) maps.
@@ -91,7 +93,7 @@ class ParseMapPool
         recycle((void *) map);
     }
 
-    void release(AtomDOHMap *map) {
+    void release(AtomDefnListMap *map) {
         recycle((void *) map);
     }
 }; /* ParseMapPool */
@@ -153,58 +155,155 @@ class OwnedAtomThingMapPtr : public AtomThingMapPtrT
 typedef OwnedAtomThingMapPtr<AtomDefnMapPtr> OwnedAtomDefnMapPtr;
 typedef OwnedAtomThingMapPtr<AtomIndexMapPtr> OwnedAtomIndexMapPtr;
 
-/* Node structure for chaining in AtomDecls. */
-struct AtomDeclNode
-{
-    Definition *defn;
-    AtomDeclNode *next;
-
-    explicit AtomDeclNode(Definition *defn)
-      : defn(defn), next(NULL)
-    {}
-};
-
 /*
- * Tagged union of a Definition and an AtomDeclNode, for use in AtomDecl's
- * internal map.
+ * A nonempty list containing one or more pointers to Definitions.
+ *
+ * By far the most common case is that the list contains exactly one
+ * Definition, so the implementation is optimized for that case.
+ *
+ * Nodes for the linked list (if any) are allocated from the tempPool of a
+ * context the caller passes into pushFront and pushBack. This means the
+ * DefinitionList does not own the memory for the nodes: the JSContext does.
+ * As a result, DefinitionList is a POD type; it can be safely and cheaply
+ * copied.
  */
-class DefnOrHeader
+class DefinitionList
 {
+  public:
+    class Range;
+
+  private:
+    friend class Range;
+
+    /* A node in a linked list of Definitions. */
+    struct Node
+    {
+        Definition *defn;
+        Node *next;
+
+        Node(Definition *defn, Node *next) : defn(defn), next(next) {}
+    };
+
     union {
-        Definition    *defn;
-        AtomDeclNode    *head;
-        uintptr_t       bits;
+        Definition *defn;
+        Node *head;
+        uintptr_t bits;
     } u;
 
-  public:
-    DefnOrHeader() {
-        u.bits = 0;
-    }
-
-    explicit DefnOrHeader(Definition *defn) {
-        u.defn = defn;
-        JS_ASSERT(!isHeader());
-    }
-
-    explicit DefnOrHeader(AtomDeclNode *node) {
-        u.head = node;
-        u.bits |= 0x1;
-        JS_ASSERT(isHeader());
-    }
-
-    bool isHeader() const {
-        return u.bits & 0x1;
-    }
-
     Definition *defn() const {
-        JS_ASSERT(!isHeader());
+        JS_ASSERT(!isMultiple());
         return u.defn;
     }
 
-    AtomDeclNode *header() const {
-        JS_ASSERT(isHeader());
-        return (AtomDeclNode *) (u.bits & ~0x1);
+    Node *firstNode() const {
+        JS_ASSERT(isMultiple());
+        return (Node *) (u.bits & ~0x1);
     }
+
+    static Node *
+    allocNode(JSContext *cx, Definition *head, Node *tail);
+            
+  public:
+    class Range
+    {
+        friend class DefinitionList;
+
+        Node *node;
+        Definition *defn;
+
+        explicit Range(const DefinitionList &list) {
+            if (list.isMultiple()) {
+                node = list.firstNode();
+                defn = node->defn;
+            } else {
+                node = NULL;
+                defn = list.defn();
+            }
+        }
+
+      public:
+        /* An empty Range. */
+        Range() : node(NULL), defn(NULL) {}
+
+        void popFront() {
+            JS_ASSERT(!empty());
+            if (!node) {
+                defn = NULL;
+                return;
+            }
+            node = node->next;
+            defn = node ? node->defn : NULL;
+        }
+
+        Definition *front() {
+            JS_ASSERT(!empty());
+            return defn;
+        }
+
+        bool empty() const {
+            JS_ASSERT_IF(!defn, !node);
+            return !defn;
+        }
+    };
+
+    DefinitionList() {
+        u.bits = 0;
+    }
+
+    explicit DefinitionList(Definition *defn) {
+        u.defn = defn;
+        JS_ASSERT(!isMultiple());
+    }
+
+    explicit DefinitionList(Node *node) {
+        u.head = node;
+        u.bits |= 0x1;
+        JS_ASSERT(isMultiple());
+    }
+
+    bool isMultiple() const { return (u.bits & 0x1) != 0; }
+
+    Definition *front() {
+        return isMultiple() ? firstNode()->defn : defn();
+    }
+
+    /*
+     * If there are multiple Definitions in this list, remove the first and
+     * return true. Otherwise there is exactly one Definition in the list; do
+     * nothing and return false.
+     */
+    bool popFront() {
+        if (!isMultiple())
+            return false;
+
+        Node *node = firstNode();
+        Node *next = node->next;
+        if (next->next)
+            *this = DefinitionList(next);
+        else
+            *this = DefinitionList(next->defn);
+        return true;
+    }
+
+    /*
+     * Add a definition to the front of this list.
+     *
+     * Return true on success. On OOM, report on cx and return false.
+     */
+    bool pushFront(JSContext *cx, Definition *val);
+
+    /* Like pushFront, but add the given val to the end of the list. */
+    bool pushBack(JSContext *cx, Definition *val);
+
+    /* Overwrite the first Definition in the list. */
+    void setFront(Definition *val) {
+        if (isMultiple())
+            firstNode()->defn = val;
+        else
+            *this = DefinitionList(val);
+    }
+
+    Range all() const { return Range(*this); }
 
 #ifdef DEBUG
     void dump();
@@ -213,7 +312,7 @@ class DefnOrHeader
 
 namespace tl {
 
-template <> struct IsPodType<DefnOrHeader> {
+template <> struct IsPodType<DefinitionList> {
     static const bool result = true;
 };
 
@@ -222,7 +321,7 @@ template <> struct IsPodType<DefnOrHeader> {
 /*
  * Multimap for function-scope atom declarations.
  *
- * Wraps an internal DeclOrHeader map with multi-map functionality.
+ * Wraps an internal DefinitionList map with multi-map functionality.
  *
  * In the common case, no block scoping is used, and atoms have a single
  * associated definition. In the uncommon (block scoping) case, we map the atom
@@ -230,27 +329,17 @@ template <> struct IsPodType<DefnOrHeader> {
  */
 class AtomDecls
 {
-    /* AtomDeclsIter needs to get at the DOHMap directly. */
+    /* AtomDeclsIter needs to get at the DefnListMap directly. */
     friend class AtomDeclsIter;
 
     JSContext   *cx;
-    AtomDOHMap  *map;
+    AtomDefnListMap  *map;
 
     AtomDecls(const AtomDecls &other) MOZ_DELETE;
     void operator=(const AtomDecls &other) MOZ_DELETE;
 
-    AtomDeclNode *allocNode(Definition *defn);
-
-    /*
-     * Fallibly return the value in |doh| as a node.
-     * Update the defn currently occupying |doh| to a node if necessary.
-     */
-    AtomDeclNode *lastAsNode(DefnOrHeader *doh);
-
   public:
-    explicit AtomDecls(JSContext *cx)
-      : cx(cx), map(NULL)
-    {}
+    explicit AtomDecls(JSContext *cx) : cx(cx), map(NULL) {}
 
     ~AtomDecls();
 
@@ -264,7 +353,7 @@ class AtomDecls
     inline Definition *lookupFirst(JSAtom *atom);
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
-    inline MultiDeclRange lookupMulti(JSAtom *atom);
+    inline DefinitionList::Range lookupMulti(JSAtom *atom);
 
     /* Add-or-update a known-unique definition for |atom|. */
     inline bool addUnique(JSAtom *atom, Definition *defn);
@@ -274,40 +363,26 @@ class AtomDecls
     /* Updating the definition for an entry that is known to exist is infallible. */
     void updateFirst(JSAtom *atom, Definition *defn) {
         JS_ASSERT(map);
-        AtomDOHMap::Ptr p = map->lookup(atom);
+        AtomDefnListMap::Ptr p = map->lookup(atom);
         JS_ASSERT(p);
-        if (p.value().isHeader())
-            p.value().header()->defn = defn;
-        else
-            p.value() = DefnOrHeader(defn);
+        p.value().setFront(defn);
     }
 
     /* Remove the node at the head of the chain for |atom|. */
     void remove(JSAtom *atom) {
         JS_ASSERT(map);
-        AtomDOHMap::Ptr p = map->lookup(atom);
+        AtomDefnListMap::Ptr p = map->lookup(atom);
         if (!p)
             return;
 
-        DefnOrHeader &doh = p.value();
-        if (!doh.isHeader()) {
+        DefinitionList &list = p.value();
+        if (!list.popFront()) {
             map->remove(p);
             return;
         }
-
-        AtomDeclNode *node = doh.header();
-        AtomDeclNode *newHead = node->next;
-        if (newHead) {
-            if (newHead->next)
-                p.value() = DefnOrHeader(newHead);
-            else
-                p.value() = DefnOrHeader(newHead->defn);
-        } else {
-            map->remove(p);
-        }
     }
 
-    AtomDOHMap::Range all() {
+    AtomDefnListMap::Range all() {
         JS_ASSERT(map);
         return map->all();
     }
@@ -317,85 +392,14 @@ class AtomDecls
 #endif
 };
 
-/*
- * Lookup state tracker for those situations where the caller wants to traverse
- * multiple definitions associated with a single atom. This occurs due to block
- * scoping.
- */
-class MultiDeclRange
-{
-    friend class AtomDecls;
-
-    AtomDeclNode *node;
-    Definition *defn;
-
-    explicit MultiDeclRange(Definition *defn) : node(NULL), defn(defn) {}
-    explicit MultiDeclRange(AtomDeclNode *node) : node(node), defn(node->defn) {}
-
-  public:
-    void popFront() {
-        JS_ASSERT(!empty());
-        if (!node) {
-            defn = NULL;
-            return;
-        }
-        node = node->next;
-        defn = node ? node->defn : NULL;
-    }
-
-    Definition *front() {
-        JS_ASSERT(!empty());
-        return defn;
-    }
-
-    bool empty() const {
-        JS_ASSERT_IF(!defn, !node);
-        return !defn;
-    }
-};
-
-/* Iterates over all the definitions in an AtomDecls. */
-class AtomDeclsIter
-{
-    AtomDOHMap::Range   r;     /* Range over the map. */
-    AtomDeclNode        *link; /* Optional next node in the current atom's chain. */
-
-  public:
-    explicit AtomDeclsIter(AtomDecls *decls) : r(decls->all()), link(NULL) {}
-
-    Definition *next() {
-        if (link) {
-            JS_ASSERT(link != link->next);
-            Definition *result = link->defn;
-            link = link->next;
-            JS_ASSERT(result);
-            return result;
-        }
-
-        if (r.empty())
-            return NULL;
-
-        const DefnOrHeader &doh = r.front().value();
-        r.popFront();
-
-        if (!doh.isHeader())
-            return doh.defn();
-
-        JS_ASSERT(!link);
-        AtomDeclNode *node = doh.header();
-        link = node->next;
-        return node->defn;
-    }
-};
-
 typedef AtomDefnMap::Range      AtomDefnRange;
 typedef AtomDefnMap::AddPtr     AtomDefnAddPtr;
 typedef AtomDefnMap::Ptr        AtomDefnPtr;
 typedef AtomIndexMap::AddPtr    AtomIndexAddPtr;
 typedef AtomIndexMap::Ptr       AtomIndexPtr;
-typedef AtomDOHMap::Ptr         AtomDOHPtr;
-typedef AtomDOHMap::AddPtr      AtomDOHAddPtr;
-typedef AtomDOHMap::Range       AtomDOHRange;
+typedef AtomDefnListMap::Ptr    AtomDefnListPtr;
+typedef AtomDefnListMap::AddPtr AtomDefnListAddPtr;
+typedef AtomDefnListMap::Range  AtomDefnListRange;
 
 } /* namepsace js */
 

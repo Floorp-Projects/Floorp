@@ -50,7 +50,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
-  virtual gfxMatrix GetCanvasTM() { return gfxMatrix(); }
+  virtual gfxMatrix GetCanvasTM(PRUint32 aFor) {
+    return gfxMatrix();
+  }
 
   /**
    * Returns true if the frame's content has a transform that applies only to

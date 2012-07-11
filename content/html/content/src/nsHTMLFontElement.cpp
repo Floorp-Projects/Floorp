@@ -14,7 +14,6 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 #include "nsRuleData.h"
-#include "nsIDocument.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 

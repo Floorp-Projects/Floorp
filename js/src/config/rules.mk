@@ -89,6 +89,10 @@ ifndef INCLUDED_TESTS_XPCSHELL_MK #{
   include $(topsrcdir)/config/makefiles/xpcshell.mk
 endif #}
 
+ifndef INCLUDED_TESTS_MOCHITEST_MK #{
+  include $(topsrcdir)/config/makefiles/mochitest.mk
+endif #}
+
 ifdef CPP_UNIT_TESTS
 
 # Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
@@ -1161,7 +1165,7 @@ ifndef NO_SUBMAKEFILES_RULE
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $@
+	$(if $(subsrcdir),cd $(subsrcdir) && )$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir)$(addprefix /,$(subsrcdir)) -d $(DEPTH) $(@:$(subsrcdir)/%=%)
 endif
 endif
 
@@ -1190,14 +1194,14 @@ endif
 ifndef NO_DIST_INSTALL
 ifneq (,$(EXPORTS))
 export:: $(EXPORTS)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/include
+	$(call install_cmd,$(IFLAGS1) $^ $(DIST)/include)
 endif
 endif # NO_DIST_INSTALL
 
 define EXPORT_NAMESPACE_RULE
 ifndef NO_DIST_INSTALL
 export:: $(EXPORTS_$(namespace))
-	$(INSTALL) $(IFLAGS1) $$^ $(DIST)/include/$(namespace)
+	$(call install_cmd,$(IFLAGS1) $$^ $(DIST)/include/$(namespace))
 endif # NO_DIST_INSTALL
 endef
 
@@ -1246,7 +1250,7 @@ $(FINAL_TARGET)/defaults/autoconfig::
 
 ifndef NO_DIST_INSTALL
 export:: $(AUTOCFG_JS_EXPORTS) $(FINAL_TARGET)/defaults/autoconfig
-	$(INSTALL) $(IFLAGS1) $^
+	$(call install_cmd,$(IFLAGS1) $^)
 endif
 
 endif
@@ -1312,7 +1316,7 @@ endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components
+	$(call install_cmd,$(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components)
 ifndef NO_INTERFACES_MANIFEST
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "manifest components/interfaces.manifest"
@@ -1340,7 +1344,7 @@ export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
 ifneq ($(XPIDLSRCS),)
 ifndef NO_DIST_INSTALL
 export-idl:: $(XPIDLSRCS) $(IDL_DIR)
-	$(INSTALL) $(IFLAGS1) $^
+	$(call install_cmd,$(IFLAGS1) $^)
 endif
 endif
 	$(LOOP_OVER_PARALLEL_DIRS)
@@ -1360,7 +1364,7 @@ endif
 ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/components
+	$(call install_cmd,$(IFLAGS1) $^ $(FINAL_TARGET)/components)
 endif
 
 endif
@@ -1390,7 +1394,7 @@ endif
 ifdef EXTRA_JS_MODULES
 libs:: $(EXTRA_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/modules
+	$(call install_cmd,$(IFLAGS1) $^ $(FINAL_TARGET)/modules)
 endif
 
 endif
@@ -1423,7 +1427,7 @@ GENERATED_DIRS += $(testmodulesdir)
 
 libs:: $(TESTING_JS_MODULES)
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS) $^ $(testmodulesdir)
+	$(call install_cmd,$(IFLAGS) $^ $(testmodulesdir))
 endif
 
 endif
@@ -1437,7 +1441,7 @@ $(SDK_LIB_DIR)::
 
 ifndef NO_DIST_INSTALL
 libs:: $(SDK_LIBRARY) $(SDK_LIB_DIR)
-	$(INSTALL) $(IFLAGS2) $^
+	$(call install_cmd,$(IFLAGS2) $^)
 endif
 
 endif # SDK_LIBRARY
@@ -1448,7 +1452,7 @@ $(SDK_BIN_DIR)::
 
 ifndef NO_DIST_INSTALL
 libs:: $(SDK_BINARY) $(SDK_BIN_DIR)
-	$(INSTALL) $(IFLAGS2) $^
+	$(call install_cmd,$(IFLAGS2) $^)
 endif
 
 endif # SDK_BINARY

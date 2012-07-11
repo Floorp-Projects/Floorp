@@ -4,33 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsIDOMHTMLAudioElement.h"
-#include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLAudioElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsSize.h"
-#include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsDOMError.h"
-#include "nsNodeInfoManager.h"
-#include "plbase64.h"
-#include "nsNetUtil.h"
-#include "prmem.h"
-#include "nsXPCOMStrings.h"
-#include "prlock.h"
-#include "nsThreadUtils.h"
-
-#include "nsIScriptSecurityManager.h"
-#include "nsIXPConnect.h"
-#include "jsapi.h"
 #include "jsfriendapi.h"
-#include "nsJSUtils.h"
-
-#include "nsITimer.h"
-
-#include "nsEventDispatcher.h"
-#include "nsIDOMProgressEvent.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla::dom;

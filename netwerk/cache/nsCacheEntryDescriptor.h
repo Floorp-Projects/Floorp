@@ -157,7 +157,7 @@ private:
              // XXX _HACK_ the storage stream needs this!
              Close();
              {
-             nsCacheServiceAutoLock lock;
+             nsCacheServiceAutoLock lock(LOCK_TELEM(NSOUTPUTSTREAMWRAPPER_CLOSE));
              mDescriptor->mOutput = nsnull;
              }
              NS_RELEASE(mDescriptor);

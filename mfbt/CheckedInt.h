@@ -242,23 +242,20 @@ struct MaxValue
  * Ideas taken from IntegerLib, code different.
  */
 
-// Bitwise ops may return a larger type, so it's good to use these inline
-// helpers guaranteeing that the result is really of type T.
-
 template<typename T>
-inline T
+inline bool
 HasSignBit(T x)
 {
   // In C++, right bit shifts on negative values is undefined by the standard.
   // Notice that signed-to-unsigned conversions are always well-defined in the
   // standard, as the value congruent modulo 2**n as expected. By contrast,
   // unsigned-to-signed is only well-defined if the value is representable.
-  // Here the unsigned-to-signed conversion is OK because the value
-  // (the result of the shift) is 0 or 1.
-  return T(typename UnsignedType<T>::Type(x)
-              >> PositionOfSignBit<T>::value);
+  return bool(typename UnsignedType<T>::Type(x)
+                >> PositionOfSignBit<T>::value);
 }
 
+// Bitwise ops may return a larger type, so it's good to use this inline
+// helper guaranteeing that the result is really of type T.
 template<typename T>
 inline T
 BinaryComplement(T x)
@@ -270,10 +267,46 @@ template<typename T,
          typename U,
          bool IsTSigned = IsSigned<T>::value,
          bool IsUSigned = IsSigned<U>::value>
-struct IsInRangeImpl {};
+struct DoesRangeContainRange
+{
+};
+
+template<typename T, typename U, bool Signedness>
+struct DoesRangeContainRange<T, U, Signedness, Signedness>
+{
+    static const bool value = sizeof(T) >= sizeof(U);
+};
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, true, true>
+struct DoesRangeContainRange<T, U, true, false>
+{
+    static const bool value = sizeof(T) > sizeof(U);
+};
+
+template<typename T, typename U>
+struct DoesRangeContainRange<T, U, false, true>
+{
+    static const bool value = false;
+};
+
+template<typename T,
+         typename U,
+         bool IsTSigned = IsSigned<T>::value,
+         bool IsUSigned = IsSigned<U>::value,
+         bool DoesTRangeContainURange = DoesRangeContainRange<T, U>::value>
+struct IsInRangeImpl {};
+
+template<typename T, typename U, bool IsTSigned, bool IsUSigned>
+struct IsInRangeImpl<T, U, IsTSigned, IsUSigned, true>
+{
+    static bool run(U)
+    {
+       return true;
+    }
+};
+
+template<typename T, typename U>
+struct IsInRangeImpl<T, U, true, true, false>
 {
     static bool run(U x)
     {
@@ -282,7 +315,7 @@ struct IsInRangeImpl<T, U, true, true>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, false, false>
+struct IsInRangeImpl<T, U, false, false, false>
 {
     static bool run(U x)
     {
@@ -291,7 +324,7 @@ struct IsInRangeImpl<T, U, false, false>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, true, false>
+struct IsInRangeImpl<T, U, true, false, false>
 {
     static bool run(U x)
     {
@@ -300,7 +333,7 @@ struct IsInRangeImpl<T, U, true, false>
 };
 
 template<typename T, typename U>
-struct IsInRangeImpl<T, U, false, true>
+struct IsInRangeImpl<T, U, false, true, false>
 {
     static bool run(U x)
     {
@@ -676,35 +709,19 @@ template<typename T>                                                  \
 inline CheckedInt<T> operator OP(const CheckedInt<T> &lhs,            \
                                  const CheckedInt<T> &rhs)            \
 {                                                                     \
-  T x = lhs.mValue;                                                   \
-  T y = rhs.mValue;                                                   \
-  T result = x OP y;                                                  \
-  T isOpValid = detail::Is##NAME##Valid(x, y);                        \
-  /* Help the compiler perform RVO (return value optimization). */    \
-  return CheckedInt<T>(result,                                        \
-                       lhs.mIsValid && rhs.mIsValid && isOpValid);    \
+  if (!detail::Is##NAME##Valid(lhs.mValue, rhs.mValue))               \
+    return CheckedInt<T>(0, false);                                   \
+                                                                      \
+  return CheckedInt<T>(lhs.mValue OP rhs.mValue,                      \
+                       lhs.mIsValid && rhs.mIsValid);                 \
 }
 
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Add, +)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Sub, -)
 MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Mul, *)
+MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(Div, /)
 
 #undef MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR
-
-// Division can't be implemented by MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR
-// because if rhs == 0, we are not allowed to even try to compute the quotient.
-template<typename T>
-inline CheckedInt<T> operator /(const CheckedInt<T> &lhs,
-                                const CheckedInt<T> &rhs)
-{
-  T x = lhs.mValue;
-  T y = rhs.mValue;
-  bool isOpValid = detail::IsDivValid(x, y);
-  T result = isOpValid ? (x / y) : 0;
-  /* give the compiler a good chance to perform RVO */
-  return CheckedInt<T>(result,
-                       lhs.mIsValid && rhs.mIsValid && isOpValid);
-}
 
 // Implement castToCheckedInt<T>(x), making sure that
 //  - it allows x to be either a CheckedInt<T> or any integer type

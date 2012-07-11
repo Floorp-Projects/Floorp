@@ -8,8 +8,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsContentList.h"
-#include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
 #include "nsCOMPtr.h"
 
 

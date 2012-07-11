@@ -188,7 +188,13 @@
     function runTests() {
       var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                              getService(Ci.nsIWindowMediator);
-      var testWin = windowMediator.getMostRecentWindow("navigator:browser");
+      var winType = gConfig.testRoot == "browser" ? "navigator:browser" :
+                    gConfig.testRoot == "webapprtChrome" ? "webapprt:webapp" :
+                    null;
+      if (!winType) {
+        throw new Error("Unrecognized gConfig.testRoot: " + gConfig.testRoot);
+      }
+      var testWin = windowMediator.getMostRecentWindow(winType);
 
       setStatus("Running...");
       testWin.focus();

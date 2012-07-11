@@ -415,7 +415,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
         Value outputValue;
         if (!obj->getGeneric(cx, id, &outputValue))
             return false;
-        if (!PreprocessValue(cx, obj, id.reference(), &outputValue, scx))
+        if (!PreprocessValue(cx, obj, id.get(), &outputValue, scx))
             return false;
         if (IsFilteredValue(outputValue))
             continue;
@@ -586,7 +586,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, String
 {
     RootedObject replacer(cx, replacer_);
     RootedValue spaceRoot(cx, space_);
-    Value &space = spaceRoot.reference();
+    Value &space = spaceRoot.get();
 
     /* Step 4. */
     AutoIdVector propertyList(cx);
@@ -734,7 +734,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, String
     if (!scx.init())
         return false;
 
-    if (!PreprocessValue(cx, wrapper, emptyId.reference(), vp, &scx))
+    if (!PreprocessValue(cx, wrapper, emptyId.get(), vp, &scx))
         return false;
     if (IsFilteredValue(*vp))
         return true;

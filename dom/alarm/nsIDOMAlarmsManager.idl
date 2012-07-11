@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIDOMDOMRequest;
+
+[scriptable, uuid(fea1e884-9b05-11e1-9b64-87a7016c3860)]
+interface nsIDOMMozAlarmsManager : nsISupports
+{
+  nsIDOMDOMRequest getAll();
+  nsIDOMDOMRequest add(in jsval date, in DOMString respectTimezone, [optional] in jsval data);
+  void remove(in unsigned long id);
+};

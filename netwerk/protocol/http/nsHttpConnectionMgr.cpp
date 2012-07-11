@@ -2861,7 +2861,7 @@ nsConnectionEntry::OnPipelineFeedbackInfo(
     
     if (mPipelineState == PS_GREEN && info == GoodCompletedOK) {
         PRInt32 depth = data;
-        LOG(("Transaction completed at pipeline depty of %d. Host = %s\n",
+        LOG(("Transaction completed at pipeline depth of %d. Host = %s\n",
              depth, mConnInfo->Host()));
 
         if (depth >= 3)

@@ -16,9 +16,8 @@ DIRS = \
   data \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser_keyevents_during_autoscrolling.js \
   browser_bug295977_autoscroll_overflow.js \
   browser_bug594509.js \
@@ -29,5 +28,4 @@ _BROWSER_TEST_FILES = \
   browser_Services.js \
   $(NULL)
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -9,7 +9,7 @@ function testSteps()
 {
   const data = { key: 5, index: 10 };
 
-  let request = mozIndexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

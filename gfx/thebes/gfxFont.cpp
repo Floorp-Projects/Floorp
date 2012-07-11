@@ -3979,8 +3979,9 @@ gfxFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh, PRInt32 aRunScript)
         gfxPlatformFontList::PlatformFontList()->
             SystemFindFontForChar(aCh, aRunScript, &mStyle);
     if (fe) {
-        // ignore bolder considerations in system fallback case...
-        nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, false);
+        bool wantBold = mStyle.ComputeWeight() >= 6;
+        nsRefPtr<gfxFont> font =
+            fe->FindOrMakeFont(&mStyle, wantBold && !fe->IsBold());
         return font.forget();
     }
 

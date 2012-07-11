@@ -8,7 +8,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDOMDocument.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIWindowMediator.h"

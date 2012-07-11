@@ -39,6 +39,7 @@ function testSteps()
     { keyPath: "fo o",    exception: true },
     { keyPath: "foo ",    exception: true },
     { keyPath: "foo[bar]",exception: true },
+    { keyPath: "foo[1]",  exception: true },
     { keyPath: "$('id').stuff", exception: true },
     { keyPath: "foo.2.bar", exception: true },
     { keyPath: "foo. .bar", exception: true },
@@ -65,7 +66,7 @@ function testSteps()
     { keyPath: ["x", "y ", "z"],      exception: true },
   ];
 
-  let openRequest = mozIndexedDB.open(name, 1);
+  let openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
@@ -118,12 +119,45 @@ function testSteps()
     is(e.type, "success", "inserted successfully" + test);
     is(e.target, request, "expected target" + test);
     ok(compareKeys(request.result, info.key), "found correct key" + test);
-    is(mozIndexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
+    is(indexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
 
     store.get(info.key).onsuccess = grabEventAndContinueHandler;
     e = yield;
     isnot(e.target.result, undefined, "Did find entry");
 
+    // Check that cursor.update work as expected
+    request = store.openCursor();
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    e = yield;
+    let cursor = e.target.result;
+    request = cursor.update(info.value);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    yield;
+    ok(true, "Successfully updated cursor" + test);
+
+    // Check that cursor.update throws as expected when key is changed
+    let newValue = cursor.value;
+    let destProp = Array.isArray(info.keyPath) ? info.keyPath[0] : info.keyPath;
+    if (destProp) {
+      eval("newValue." + destProp + " = 'newKeyValue'");
+    }
+    else {
+      newValue = 'newKeyValue';
+    }
+    let didThrow;
+    try {
+      cursor.update(newValue);
+    }
+    catch (ex) {
+      didThrow = ex;
+    }
+    ok(didThrow instanceof DOMException, "Got a DOMException" + test);
+    is(didThrow.name, "DataError", "expect a DataError" + test);
+    is(didThrow.code, 0, "expect zero" + test);
+
+    // Clear object store to prepare for next test
     store.clear().onsuccess = grabEventAndContinueHandler;
     yield;
   }

@@ -524,7 +524,8 @@
 
     # Turn on Use Library Dependency Inputs for linking chrome.dll on Windows
     # to get incremental linking to be faster in debug builds.
-    'incremental_chrome_dll%': '<!(python <(DEPTH)/tools/win/supalink/check_installed.py)',
+    # Disable for mozilla since we're not Chrome (and this should have been windows-only)
+    #'incremental_chrome_dll%': '<!(python <(DEPTH)/tools/win/supalink/check_installed.py)',
 
     # This is the location of the sandbox binary. Chrome looks for this before
     # running the zygote process. If found, and SUID, it will be used to

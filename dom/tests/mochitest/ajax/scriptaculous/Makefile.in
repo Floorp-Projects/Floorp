@@ -17,12 +17,9 @@ DIRS	= \
 	test/unit \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 	manifest.json \
 	test_Scriptaculous.html \
 	$(NULL)
 
-libs::	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

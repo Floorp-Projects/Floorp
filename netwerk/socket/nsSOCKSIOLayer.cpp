@@ -15,6 +15,9 @@
 #include "nsISocketProvider.h"
 #include "nsSOCKSIOLayer.h"
 #include "nsNetCID.h"
+#include "nsIDNSListener.h"
+#include "nsICancelable.h"
+#include "nsThreadUtils.h"
 
 static PRDescIdentity	nsSOCKSIOLayerIdentity;
 static PRIOMethods	nsSOCKSIOLayerMethods;
@@ -31,9 +34,12 @@ static PRLogModuleInfo *gSOCKSLog;
 #endif
 
 class nsSOCKSSocketInfo : public nsISOCKSSocketInfo
+                        , public nsIDNSListener
 {
     enum State {
         SOCKS_INITIAL,
+        SOCKS_DNS_IN_PROGRESS,
+        SOCKS_DNS_COMPLETE,
         SOCKS_CONNECTING_TO_PROXY,
         SOCKS4_WRITE_CONNECT_REQUEST,
         SOCKS4_READ_CONNECT_RESPONSE,
@@ -57,6 +63,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKSSOCKETINFO
+    NS_DECL_NSIDNSLISTENER
 
     void Init(PRInt32 version,
               const char *proxyHost,
@@ -71,6 +78,7 @@ public:
 
 private:
     void HandshakeFinished(PRErrorCode err = 0);
+    PRStatus StartDNS(PRFileDesc *fd);
     PRStatus ConnectToProxy(PRFileDesc *fd);
     PRStatus ContinueConnectingToProxy(PRFileDesc *fd, PRInt16 oflags);
     PRStatus WriteV4ConnectRequest();
@@ -106,7 +114,10 @@ private:
     PRUint32  mDataLength;
     PRUint32  mReadOffset;
     PRUint32  mAmountToRead;
-    nsCOMPtr<nsIDNSRecord> mDnsRec;
+    nsCOMPtr<nsIDNSRecord>  mDnsRec;
+    nsCOMPtr<nsICancelable> mLookup;
+    nsresult                mLookupStatus;
+    PRFileDesc             *mFD;
 
     nsCString mDestinationHost;
     nsCString mProxyHost;
@@ -146,7 +157,7 @@ nsSOCKSSocketInfo::Init(PRInt32 version, const char *proxyHost, PRInt32 proxyPor
     mFlags           = flags;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketInfo, nsISOCKSSocketInfo)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetExternalProxyAddr(PRNetAddr * *aExternalProxyAddr)
@@ -214,6 +225,50 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
     mDataLength = 0;
     mReadOffset = 0;
     mAmountToRead = 0;
+    if (mLookup) {
+        mLookup->Cancel(NS_ERROR_FAILURE);
+        mLookup = nsnull;
+    }
+}
+
+PRStatus
+nsSOCKSSocketInfo::StartDNS(PRFileDesc *fd)
+{
+    NS_ABORT_IF_FALSE(!mDnsRec && mState == SOCKS_INITIAL,
+                      "Must be in initial state to make DNS Lookup");
+
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    if (!dns)
+        return PR_FAILURE;
+
+    mFD  = fd;
+    nsresult rv = dns->AsyncResolve(mProxyHost, 0, this,
+                                    NS_GetCurrentThread(),
+                                    getter_AddRefs(mLookup));
+
+    if (NS_FAILED(rv)) {
+        LOGERROR(("socks: DNS lookup for SOCKS proxy %s failed",
+                  mProxyHost.get()));
+        return PR_FAILURE;
+    }
+    mState = SOCKS_DNS_IN_PROGRESS;
+    PR_SetError(PR_IN_PROGRESS_ERROR, 0);
+    return PR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSOCKSSocketInfo::OnLookupComplete(nsICancelable *aRequest,
+                                    nsIDNSRecord *aRecord,
+                                    nsresult aStatus)
+{
+    NS_ABORT_IF_FALSE(aRequest == mLookup, "wrong DNS query");
+    mLookup = nsnull;
+    mLookupStatus = aStatus;
+    mDnsRec = aRecord;
+    mState = SOCKS_DNS_COMPLETE;
+    ConnectToProxy(mFD);
+    mFD = nsnull;
+    return NS_OK;
 }
 
 PRStatus
@@ -222,21 +277,12 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
     PRStatus status;
     nsresult rv;
 
-    NS_ABORT_IF_FALSE(mState == SOCKS_INITIAL,
-                      "Must be in initial state to make connection!");
+    NS_ABORT_IF_FALSE(mState == SOCKS_DNS_COMPLETE,
+                      "Must have DNS to make connection!");
 
-    // If we haven't performed the DNS lookup, do that now.
-    if (!mDnsRec) {
-        nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-        if (!dns)
-            return PR_FAILURE;
-
-        rv = dns->Resolve(mProxyHost, 0, getter_AddRefs(mDnsRec));
-        if (NS_FAILED(rv)) {
-            LOGERROR(("socks: DNS lookup for SOCKS proxy %s failed",
-                     mProxyHost.get()));
-            return PR_FAILURE;
-        }
+    if (NS_FAILED(mLookupStatus)) {
+        PR_SetError(PR_BAD_ADDRESS_ERROR, 0);
+        return PR_FAILURE;
     }
 
     PRInt32 addresses = 0;
@@ -291,7 +337,7 @@ nsSOCKSSocketInfo::ContinueConnectingToProxy(PRFileDesc *fd, PRInt16 oflags)
         PRErrorCode c = PR_GetError();
         if (c != PR_WOULD_BLOCK_ERROR && c != PR_IN_PROGRESS_ERROR) {
             // A connection failure occured, try another address
-            mState = SOCKS_INITIAL;
+            mState = SOCKS_DNS_COMPLETE;
             return ConnectToProxy(fd);
         }
 
@@ -634,6 +680,11 @@ nsSOCKSSocketInfo::DoHandshake(PRFileDesc *fd, PRInt16 oflags)
 
     switch (mState) {
         case SOCKS_INITIAL:
+            return StartDNS(fd);
+        case SOCKS_DNS_IN_PROGRESS:
+            PR_SetError(PR_IN_PROGRESS_ERROR, 0);
+            return PR_FAILURE;
+        case SOCKS_DNS_COMPLETE:
             return ConnectToProxy(fd);
         case SOCKS_CONNECTING_TO_PROXY:
             return ContinueConnectingToProxy(fd, oflags);
@@ -696,6 +747,8 @@ PRInt16
 nsSOCKSSocketInfo::GetPollFlags() const
 {
     switch (mState) {
+        case SOCKS_DNS_IN_PROGRESS:
+        case SOCKS_DNS_COMPLETE:
         case SOCKS_CONNECTING_TO_PROXY:
             return PR_POLL_EXCEPT | PR_POLL_WRITE;
         case SOCKS4_WRITE_CONNECT_REQUEST:
@@ -1139,7 +1192,7 @@ nsSOCKSIOLayerAddToSocket(PRInt32 family,
         return NS_ERROR_FAILURE;
     }
 
-    *info = infoObject;
+    *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
     NS_ADDREF(*info);
     return NS_OK;
 }

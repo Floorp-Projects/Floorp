@@ -12,6 +12,7 @@ DOM_SRCDIRS = \
   dom/settings \
   dom/sms/src \
   dom/contacts \
+  dom/alarm \
   dom/src/events \
   dom/src/storage \
   dom/src/offline \

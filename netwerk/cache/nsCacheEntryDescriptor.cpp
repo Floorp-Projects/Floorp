@@ -51,7 +51,7 @@ nsCacheEntryDescriptor::GetClientID(char ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETCLIENTID));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return ClientIDFromCacheKey(*(mCacheEntry->Key()), result);
@@ -62,7 +62,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetDeviceID(char ** aDeviceID)
 {
     NS_ENSURE_ARG_POINTER(aDeviceID);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDEVICEID));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     const char* deviceID = mCacheEntry->GetDeviceID();
@@ -79,7 +79,7 @@ nsCacheEntryDescriptor::GetDeviceID(char ** aDeviceID)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetKey(nsACString &result)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETKEY));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return ClientKeyFromCacheKey(*(mCacheEntry->Key()), result);
@@ -90,7 +90,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetFetchCount(PRInt32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETFETCHCOUNT));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->FetchCount();
@@ -102,7 +102,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastFetched(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->LastFetched();
@@ -114,7 +114,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastModified(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTMODIFIED));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->LastModified();
@@ -126,7 +126,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETEXPIRATIONTIME));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->ExpirationTime();
@@ -137,7 +137,7 @@ nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetExpirationTime(PRUint32 expirationTime)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETEXPIRATIONTIME));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     mCacheEntry->SetExpirationTime(expirationTime);
@@ -149,7 +149,7 @@ nsCacheEntryDescriptor::SetExpirationTime(PRUint32 expirationTime)
 NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_ISSTREAMBASED));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->IsStreamData();
@@ -159,7 +159,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool *result)
 NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(PRInt64 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE));
     if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->PredictedDataSize();
@@ -169,7 +169,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(PRInt64 *result)
 NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(PRInt64
                                                            predictedSize)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETPREDICTEDDATASIZE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     mCacheEntry->SetPredictedDataSize(predictedSize);
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(PRInt64
 NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDATASIZE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     const char* val = mCacheEntry->GetMetaDataElement("uncompressed-len");
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
 NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSTORAGEDATASIZE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->DataSize();
@@ -208,7 +208,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(PRUint32 *result)
 nsresult
 nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_REQUESTDATASIZECHANGE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     nsresult  rv;
@@ -226,7 +226,7 @@ nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETDATASIZE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     // XXX review for signed/unsigned math errors
@@ -254,7 +254,7 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32 offset, nsIInputStream ** resul
     NS_ENSURE_ARG_POINTER(result);
 
     {
-        nsCacheServiceAutoLock lock;
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_OPENINPUTSTREAM));
         if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
         if (!mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_NOT_STREAM;
 
@@ -283,7 +283,7 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
     NS_ENSURE_ARG_POINTER(result);
 
     {
-        nsCacheServiceAutoLock lock;
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_OPENOUTPUTSTREAM));
         if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
         if (!mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_NOT_STREAM;
 
@@ -316,7 +316,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetCacheElement(nsISupports ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETCACHEELEMENT));
     if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
     if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
 
@@ -328,7 +328,7 @@ nsCacheEntryDescriptor::GetCacheElement(nsISupports ** result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETCACHEELEMENT));
     if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
     if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
 
@@ -349,7 +349,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSTORAGEPOLICY));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     
     *result = mCacheEntry->StoragePolicy();
@@ -360,7 +360,7 @@ nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETSTORAGEPOLICY));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     // XXX validate policy against session?
     
@@ -387,7 +387,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetFile(nsIFile ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETFILE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return nsCacheService::GetFileForEntry(mCacheEntry, result);
@@ -398,7 +398,7 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSECURITYINFO));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     *result = mCacheEntry->SecurityInfo();
@@ -410,7 +410,7 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetSecurityInfo(nsISupports * securityInfo)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETSECURITYINFO));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     mCacheEntry->SetSecurityInfo(securityInfo);
@@ -422,7 +422,7 @@ nsCacheEntryDescriptor::SetSecurityInfo(nsISupports * securityInfo)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Doom()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_DOOM));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return nsCacheService::DoomEntry(mCacheEntry);
@@ -432,7 +432,7 @@ nsCacheEntryDescriptor::Doom()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_DOOMANDFAILPENDINGREQUESTS));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -442,7 +442,7 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_MARKVALID));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     nsresult  rv = nsCacheService::ValidateEntry(mCacheEntry);
@@ -453,7 +453,7 @@ nsCacheEntryDescriptor::MarkValid()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Close()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_CLOSE));
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     // XXX perhaps closing descriptors should clear/sever transports
@@ -472,7 +472,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
     NS_ENSURE_ARG_POINTER(key);
     *result = nsnull;
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETMETADATAELEMENT));
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
     const char *value;
@@ -492,7 +492,7 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 {
     NS_ENSURE_ARG_POINTER(key);
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETMETADATAELEMENT));
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
     // XXX allow null value, for clearing key?
@@ -507,7 +507,8 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor * visitor)
 {
-    nsCacheServiceAutoLock lock;  // XXX check callers, we're calling out of module
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_VISITMETADATA)); 
+    // XXX check callers, we're calling out of module
     NS_ENSURE_ARG_POINTER(visitor);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
@@ -526,7 +527,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsInputStreamWrapper,
 nsresult nsCacheEntryDescriptor::
 nsInputStreamWrapper::LazyInit()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSINPUTSTREAMWRAPPER_LAZYINIT));
 
     nsCacheAccessMode mode;
     nsresult rv = mDescriptor->GetAccessGranted(&mode);
@@ -739,7 +740,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsOutputStreamWrapper,
 nsresult nsCacheEntryDescriptor::
 nsOutputStreamWrapper::LazyInit()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSOUTPUTSTREAMWRAPPER_LAZYINIT));
 
     nsCacheAccessMode mode;
     nsresult rv = mDescriptor->GetAccessGranted(&mode);

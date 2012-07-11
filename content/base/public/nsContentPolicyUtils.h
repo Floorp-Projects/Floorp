@@ -125,14 +125,16 @@ NS_CP_ContentTypeName(PRUint32 contentType)
         return NS_ERROR_FAILURE;                                              \
                                                                               \
     return policy-> action (contentType, contentLocation, requestOrigin,      \
-                            context, mimeType, extra, decision);              \
+                            context, mimeType, extra, originPrincipal,        \
+                            decision);                                        \
   PR_END_MACRO
 
 /* Passes on parameters from its "caller"'s context. */
 #define CHECK_CONTENT_POLICY_WITH_SERVICE(action, _policy)                    \
   PR_BEGIN_MACRO                                                              \
     return _policy-> action (contentType, contentLocation, requestOrigin,     \
-                             context, mimeType, extra, decision);             \
+                             context, mimeType, extra, originPrincipal,       \
+                             decision);                                       \
   PR_END_MACRO
 
 /**

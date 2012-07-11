@@ -829,7 +829,7 @@ FindKeyword(const jschar *s, size_t length);
  * Check that str forms a valid JS identifier name. The function does not
  * check if str is a JS keyword.
  */
-JSBool
+bool
 IsIdentifier(JSLinearString *str);
 
 /*

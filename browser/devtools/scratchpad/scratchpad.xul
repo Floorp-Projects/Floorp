@@ -30,6 +30,7 @@
 <commandset id="sp-commandset">
   <command id="sp-cmd-newWindow" oncommand="Scratchpad.openScratchpad();"/>
   <command id="sp-cmd-openFile" oncommand="Scratchpad.openFile();"/>
+  <command id="sp-cmd-clearRecentFiles" oncommand="Scratchpad.clearRecentFiles();"/>
   <command id="sp-cmd-save" oncommand="Scratchpad.saveFile();"/>
   <command id="sp-cmd-saveas" oncommand="Scratchpad.saveFileAs();"/>
 
@@ -117,6 +118,11 @@
                 command="sp-cmd-openFile"
                 key="sp-key-open"
                 accesskey="&openFileCmd.accesskey;"/>
+      <menu id="sp-open_recent-menu" label="&openRecentMenu.label;"
+            accesskey="&openRecentMenu.accesskey;"
+            disabled="true">
+        <menupopup id="sp-menu-open_recentPopup"/>
+      </menu>
       <menuitem id="sp-menu-save"
                 label="&saveFileCmd.label;"
                 accesskey="&saveFileCmd.accesskey;"

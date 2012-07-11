@@ -229,7 +229,7 @@ class CompartmentChecker
     {
         if (cx->compartment) {
             GlobalObject *global = GetGlobalForScopeChain(cx);
-            JS_ASSERT(cx->compartment->global() == *global);
+            JS_ASSERT(cx->compartment->maybeGlobal() == global);
         }
     }
 
@@ -328,7 +328,7 @@ class CompartmentChecker
  * depends on other objects not having been swept yet.
  */
 #define START_ASSERT_SAME_COMPARTMENT()                                       \
-    if (cx->runtime->gcRunning)                                               \
+    if (cx->runtime->isHeapBusy())                                            \
         return;                                                               \
     CompartmentChecker c(cx)
 
@@ -476,12 +476,6 @@ CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, un
     RootedId nid(cx, INT_TO_JSID(shortid));
 
     return CallJSPropertyOpSetter(cx, op, obj, nid, strict, vp);
-}
-
-static inline HeapPtrAtom *
-FrameAtomBase(JSContext *cx, js::StackFrame *fp)
-{
-    return fp->script()->atoms;
 }
 
 }  /* namespace js */

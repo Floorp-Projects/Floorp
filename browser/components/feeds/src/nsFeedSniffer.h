@@ -7,8 +7,10 @@
 #include "nsIContentSniffer.h"
 #include "nsIStreamListener.h"
 #include "nsStringAPI.h"
+#include "mozilla/Attributes.h"
 
-class nsFeedSniffer : public nsIContentSniffer, nsIStreamListener
+class nsFeedSniffer MOZ_FINAL : public nsIContentSniffer,
+                                       nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

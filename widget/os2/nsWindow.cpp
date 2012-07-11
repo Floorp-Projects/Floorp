@@ -22,6 +22,7 @@
  *  - Window Message Handlers
  *  - Drag & Drop - Target methods
  *  - Keyboard Handlers
+ *  - IME
  *  - Event Dispatch
  *
  */
@@ -42,11 +43,10 @@
 #include "nsTHashtable.h"
 #include "nsGkAtoms.h"
 #include "wdgtos2rc.h"
-
 #include "mozilla/Preferences.h"
+#include <os2im.h>
 
 using namespace mozilla;
-
 //=============================================================================
 //  Macros
 //=============================================================================
@@ -163,9 +163,16 @@ static PRUint32     sDragStatus = 0;
 #ifdef DEBUG_FOCUS
   int currentWindowIdentifier = 0;
 #endif
+// IME stuffs
+static HMODULE sIm32Mod = NULLHANDLE;
+static APIRET (APIENTRY *spfnImGetInstance)(HWND, PHIMI);
+static APIRET (APIENTRY *spfnImReleaseInstance)(HWND, HIMI);
+static APIRET (APIENTRY *spfnImGetConversionString)(HIMI, ULONG, PVOID,
+                                                    PULONG);
+static APIRET (APIENTRY *spfnImGetResultString)(HIMI, ULONG, PVOID, PULONG);
+static APIRET (APIENTRY *spfnImRequestIME)(HIMI, ULONG, ULONG, ULONG);
 
 //-----------------------------------------------------------------------------
-
 static PRUint32     WMChar2KeyCode(MPARAM mp1, MPARAM mp2);
 
 //=============================================================================
@@ -189,7 +196,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mClipWnd            = 0;
   mCssCursorHPtr      = 0;
   mThebesSurface      = 0;
-
+  mIsComposing        = false;
   if (!gOS2Flags) {
     InitGlobals();
   }
@@ -274,8 +281,48 @@ void nsWindow::InitGlobals()
   if (Preferences::GetBool("os2.trackpoint", false)) {
     gOS2Flags |= kIsTrackPoint;
   }
+
+  InitIME();
 }
 
+//-----------------------------------------------------------------------------
+// Determine whether to use IME
+static
+void InitIME()
+{
+  if (!getenv("MOZ_IME_OVERTHESPOT")) {
+    CHAR szName[CCHMAXPATH];
+    ULONG rc;
+
+    rc = DosLoadModule(szName, sizeof(szName), "os2im", &sIm32Mod);
+
+    if (!rc)
+      rc = DosQueryProcAddr(sIm32Mod, 104, NULL,
+                            (PFN *)&spfnImGetInstance);
+
+    if (!rc)
+      rc = DosQueryProcAddr(sIm32Mod, 106, NULL,
+                            (PFN *)&spfnImReleaseInstance);
+
+    if (!rc)
+      rc = DosQueryProcAddr(sIm32Mod, 118, NULL,
+                            (PFN *)&spfnImGetConversionString);
+
+    if (!rc)
+      rc = DosQueryProcAddr(sIm32Mod, 122, NULL,
+                            (PFN *)&spfnImGetResultString);
+
+    if (!rc)
+      rc = DosQueryProcAddr(sIm32Mod, 131, NULL,
+                            (PFN *)&spfnImRequestIME);
+
+    if (rc) {
+      DosFreeModule(sIm32Mod);
+
+      sIm32Mod = NULLHANDLE;
+    }
+  }
+}
 //-----------------------------------------------------------------------------
 // Release Module-level variables.
 
@@ -1837,8 +1884,15 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
       OnDragDropMsg(msg, mp1, mp2, mresult);
       isDone = true;
       break;
-  }
 
+    case WM_QUERYCONVERTPOS:
+      isDone = OnQueryConvertPos(mp1, mresult);
+      break;
+
+    case WM_IMEREQUEST:
+      isDone = OnImeRequest(mp1, mp2);
+      break;
+  }
   // If an event handler signalled that we should consume the event,
   // return.  Otherwise, pass it on to the default wndproc.
   if (!isDone) {
@@ -2384,6 +2438,185 @@ bool nsWindow::OnTranslateAccelerator(PQMSG pQmsg)
 
   return false;
 }
+bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
+{
+  PRECTL pCursorPos = (PRECTL)mp1;
+
+  nsIntPoint point(0, 0);
+
+  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  InitEvent(selection, &point);
+  DispatchWindowEvent(&selection);
+  if (!selection.mSucceeded)
+    return false;
+
+  nsQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
+  caret.InitForQueryCaretRect(selection.mReply.mOffset);
+  InitEvent(caret, &point);
+  DispatchWindowEvent(&caret);
+  if (!caret.mSucceeded)
+    return false;
+
+  pCursorPos->xLeft = caret.mReply.mRect.x;
+  pCursorPos->yBottom = caret.mReply.mRect.y;
+  pCursorPos->xRight = pCursorPos->xLeft + caret.mReply.mRect.width;
+  pCursorPos->yTop = pCursorPos->yBottom + caret.mReply.mRect.height;
+  NS2PM(*pCursorPos);
+
+  mresult = (MRESULT)QCP_CONVERT;
+
+  return true;
+}
+bool nsWindow::ImeResultString(HIMI himi)
+{
+  PCHAR pBuf;
+  ULONG ulBufLen;
+
+  // Get a buffer size
+  ulBufLen = 0;
+  if (spfnImGetResultString(himi, IMR_RESULT_RESULTSTRING, NULL, &ulBufLen))
+    return false;
+
+  pBuf = new CHAR[ulBufLen];
+  if (!pBuf)
+    return false;
+
+  if (spfnImGetResultString(himi, IMR_RESULT_RESULTSTRING, pBuf,
+                            &ulBufLen)) {
+    delete pBuf;
+
+    return false;
+  }
+
+  if (!mIsComposing) {
+    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    InitEvent(start);
+    DispatchWindowEvent(&start);
+
+    mIsComposing = true;
+  }
+
+  nsAutoChar16Buffer outBuf;
+  PRInt32 outBufLen;
+  MultiByteToWideChar(0, pBuf, ulBufLen, outBuf, outBufLen);
+
+  delete pBuf;
+
+  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  InitEvent(text);
+  text.theText = outBuf.Elements();
+  DispatchWindowEvent(&text);
+
+  nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+  InitEvent(end);
+  end.data = text.theText;
+  DispatchWindowEvent(&end);
+  mIsComposing = false;
+
+  return true;
+}
+
+bool nsWindow::ImeConversionString(HIMI himi)
+{
+  PCHAR pBuf;
+  ULONG ulBufLen;
+
+  // Get a buffer size
+  ulBufLen = 0;
+  if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONSTRING, NULL,
+                                &ulBufLen))
+    return false;
+
+  pBuf = new CHAR[ulBufLen];
+  if (!pBuf)
+    return false;
+
+  if (spfnImGetConversionString(himi, IMR_CONV_CONVERSIONSTRING, pBuf,
+                                &ulBufLen)) {
+    delete pBuf;
+
+    return false;
+  }
+
+  if (!mIsComposing) {
+    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    InitEvent(start);
+    DispatchWindowEvent(&start);
+
+    mIsComposing = true;
+  }
+
+  nsAutoChar16Buffer outBuf;
+  PRInt32 outBufLen;
+  MultiByteToWideChar(0, pBuf, ulBufLen, outBuf, outBufLen);
+
+  delete pBuf;
+
+  nsAutoTArray<nsTextRange, 4> textRanges;
+
+  // Is there a conversion string ?
+  if (outBufLen) {
+    nsTextRange newRange;
+    newRange.mStartOffset = 0;
+    newRange.mEndOffset = outBufLen;
+    newRange.mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
+    textRanges.AppendElement(newRange);
+
+    newRange.mStartOffset = outBufLen;
+    newRange.mEndOffset = newRange.mStartOffset;
+    newRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+    textRanges.AppendElement(newRange);
+  }
+
+  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  InitEvent(text);
+  text.theText = outBuf.Elements();
+  text.rangeArray = textRanges.Elements();
+  text.rangeCount = textRanges.Length();
+  DispatchWindowEvent(&text);
+
+  if (outBufLen) {
+    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    InitEvent(update);
+    update.data = text.theText;
+    DispatchWindowEvent(&update);
+  } else {  // IME conversion was canceled ?
+    nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+    InitEvent(end);
+    end.data = text.theText;
+    DispatchWindowEvent(&end);
+
+    mIsComposing = false;
+  }
+
+  return true;
+}
+
+bool nsWindow::OnImeRequest(MPARAM mp1, MPARAM mp2)
+{
+  HIMI himi;
+  bool rc;
+
+  if (!sIm32Mod)
+    return false;
+
+  if (SHORT1FROMMP(mp1) != IMR_CONVRESULT)
+    return false;
+
+  if (spfnImGetInstance(mWnd, &himi))
+    return false;
+
+  if (LONGFROMMP(mp2) & IMR_RESULT_RESULTSTRING)
+    rc = ImeResultString(himi);
+  else if (LONGFROMMP(mp2) & IMR_CONV_CONVERSIONSTRING)
+    rc = ImeConversionString(himi);
+  else
+    rc = true;
+
+  spfnImReleaseInstance(mWnd, himi);
+
+  return rc;
+}
 
 //-----------------------------------------------------------------------------
 // Key handler.  Specs for the various text messages are really confused;
@@ -2808,6 +3041,14 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
                      ? nsMouseEvent::eContextMenuKey
                      : nsMouseEvent::eNormal);
   event.button = aButton;
+  if (aEventType == NS_MOUSE_BUTTON_DOWN && mIsComposing) {
+    // If IME is composing, let it complete.
+    HIMI himi;
+
+    spfnImGetInstance(mWnd, &himi);
+    spfnImRequestIME(himi, REQ_CONVERSIONSTRING, CNV_COMPLETE, 0);
+    spfnImReleaseInstance(mWnd, himi);
+  }
 
   if (aEventType == NS_MOUSE_ENTER || aEventType == NS_MOUSE_EXIT) {
     // Ignore enter/leave msgs forwarded from the frame to FID_CLIENT
