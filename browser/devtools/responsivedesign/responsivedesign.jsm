@@ -34,6 +34,38 @@ let ResponsiveUIManager = {
       aTab.__responsiveUI = new ResponsiveUI(aWindow, aTab);
     }
   },
+
+  /**
+   * Handle gcli commands.
+   *
+   * @param aWindow the browser window.
+   * @param aTab the tab targeted.
+   * @param aCommand the command name.
+   * @param aArgs command arguments.
+   */
+  handleGcliCommand: function(aWindow, aTab, aCommand, aArgs) {
+    switch (aCommand) {
+      case "resize to":
+        if (!aTab.__responsiveUI) {
+          aTab.__responsiveUI = new ResponsiveUI(aWindow, aTab);
+        }
+        aTab.__responsiveUI.setSize(aArgs.width, aArgs.height);
+        break;
+      case "resize on":
+        if (!aTab.__responsiveUI) {
+          aTab.__responsiveUI = new ResponsiveUI(aWindow, aTab);
+        }
+        break;
+      case "resize off":
+        if (aTab.__responsiveUI) {
+          aTab.__responsiveUI.close();
+        }
+        break;
+      case "resize toggle":
+          this.toggle(aWindow, aTab);
+      default:
+    }
+  },
 }
 
 let presets = [
@@ -376,8 +408,8 @@ ResponsiveUI.prototype = {
    * @param aHeight height of the browser.
    */
   setSize: function RUI_setSize(aWidth, aHeight) {
-    this.currentWidth = aWidth;
-    this.currentHeight = aHeight;
+    this.currentWidth = Math.min(Math.max(aWidth, MIN_WIDTH), MAX_WIDTH);
+    this.currentHeight = Math.min(Math.max(aHeight, MIN_HEIGHT), MAX_WIDTH);
 
     // We resize the containing stack.
     let style = "max-width: %width;" +
