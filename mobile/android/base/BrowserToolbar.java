@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -65,6 +67,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private ImageButton mMenu;
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
+    private List<View> mFocusOrder;
 
     final private Context mContext;
     private LayoutInflater mInflater;
@@ -264,6 +267,8 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 }
             }
         }
+
+        mFocusOrder = Arrays.asList(mBack, mForward, mAwesomeBar, mReader, mSiteSecurity, mStop, mTabs);
     }
 
     public View getLayout() {
@@ -428,6 +433,24 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
         else
             mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[0], mPadding[3]);
+
+        updateFocusOrder();
+    }
+
+    private void updateFocusOrder() {
+        View prevView = null;
+
+        for (View view : mFocusOrder) {
+            if (view.getVisibility() != View.VISIBLE)
+                continue;
+
+            if (prevView != null) {
+                view.setNextFocusLeftId(prevView.getId());
+                prevView.setNextFocusRightId(view.getId());
+            }
+
+            prevView = view;
+        }
     }
 
     public void setShadowVisibility(boolean visible) {

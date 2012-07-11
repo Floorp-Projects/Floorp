@@ -1039,11 +1039,15 @@ shareuiinterface.h
 #if MOZ_NATIVE_LIBVPX==1
 vpx/vpx_codec.h
 vpx/vpx_decoder.h
+vpx/vpx_encoder.h
+vpx/vp8cx.h
 vpx/vp8dx.h
 #endif
 #ifdef XP_WIN
 vpx/vpx_codec.h
 vpx/vpx_decoder.h
+vpx/vpx_encoder.h
+vpx/vp8cx.h
 vpx/vp8dx.h
 sydneyaudio/sydney_audio.h
 speex/speex_resampler.h

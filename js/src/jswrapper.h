@@ -351,27 +351,27 @@ struct CompartmentFilter {
 };
 
 struct AllCompartments : public CompartmentFilter {
-    virtual bool match(JSCompartment *c) const { return true; };
+    virtual bool match(JSCompartment *c) const { return true; }
 };
 
 struct ContentCompartmentsOnly : public CompartmentFilter {
     virtual bool match(JSCompartment *c) const {
         return !IsSystemCompartment(c);
-    };
+    }
 };
 
 struct SingleCompartment : public CompartmentFilter {
     JSCompartment *ours;
-    SingleCompartment(JSCompartment *c) : ours(c) {};
-    virtual bool match(JSCompartment *c) const { return c == ours; };
+    SingleCompartment(JSCompartment *c) : ours(c) {}
+    virtual bool match(JSCompartment *c) const { return c == ours; }
 };
 
 struct CompartmentsWithPrincipals : public CompartmentFilter {
     JSPrincipals *principals;
-    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {};
+    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {}
     virtual bool match(JSCompartment *c) const {
         return JS_GetCompartmentPrincipals(c) == principals;
-    };
+    }
 };
 
 JS_FRIEND_API(bool)

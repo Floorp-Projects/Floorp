@@ -15,8 +15,11 @@
 
 PR_BEGIN_EXTERN_C
 
+// aSP will be the best approximation possible of what the stack pointer will be
+// pointing to when the execution returns to executing that at that PC.
+// If no approximation can be made it will be NULL.
 typedef void
-(* NS_WalkStackCallback)(void *aPC, void *aClosure);
+(* NS_WalkStackCallback)(void *aPC, void *aSP, void *aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from
