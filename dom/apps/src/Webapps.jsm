@@ -51,7 +51,7 @@ let DOMApplicationRegistry = {
                     "Webapps:GetSelf",
                     "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                     "Webapps:Launch", "Webapps:GetAll",
-                    "Webapps:InstallPackage"];
+                    "Webapps:InstallPackage", "Webapps:GetBasePath"];
 
     this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
@@ -187,6 +187,9 @@ let DOMApplicationRegistry = {
         break;
       case "Webapps:InstallPackage":
         this.installPackage(msg);
+        break;
+      case "Webapps:GetBasePath":
+        return FileUtils.getFile(DIRECTORY_NAME, ["webapps"], true).path;
         break;
     }
   },
