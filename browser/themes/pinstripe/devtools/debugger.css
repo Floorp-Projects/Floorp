@@ -105,17 +105,17 @@
   margin-top: 2px;
   border-bottom: 1px dotted #ddd;
   border-radius: 8px;
-  -moz-transition: background 1s ease-in-out;
+  transition: background 1s ease-in-out;
   background: #fff;
 }
 
 .variable[changed] {
-  -moz-transition-duration: 0.4s;
+  transition-duration: 0.4s;
   background: rgba(255, 255, 0, 0.65);
 }
 
 .variable[added] {
-  -moz-transition-duration: 0.4s;
+  transition-duration: 0.4s;
   background: rgba(0, 255, 0, 0.15);
 }
 

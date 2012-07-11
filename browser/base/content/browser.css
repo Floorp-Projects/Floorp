@@ -38,18 +38,18 @@ tabbrowser {
   max-width: 250px;
   min-width: 100px;
   width: 0;
-  -moz-transition: min-width 200ms ease-out,
-                   max-width 250ms ease-out,
-                   opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
+  transition: min-width 200ms ease-out,
+              max-width 250ms ease-out,
+              opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 0.1px;
   min-width: 0.1px;
   opacity: 0 !important;
-  -moz-transition: min-width 200ms ease-out,
-                   max-width 250ms ease-out,
-                   opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
+  transition: min-width 200ms ease-out,
+              max-width 250ms ease-out,
+              opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -377,8 +377,8 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 #full-screen-warning-container[fade-warning-out] {
-  -moz-transition-property: opacity !important;
-  -moz-transition-duration: 500ms !important;
+  transition-property: opacity !important;
+  transition-duration: 500ms !important;
   opacity: 0.0;
 }
 
@@ -518,17 +518,17 @@ statuspanel[type=status] {
 }
 
 statuspanel[type=overLink] {
-  -moz-transition: opacity 120ms ease-out;
+  transition: opacity 120ms ease-out;
   direction: ltr;
 }
 
 statuspanel[inactive] {
-  -moz-transition: none;
+  transition: none;
   opacity: 0;
 }
 
 statuspanel[inactive][previoustype=overLink] {
-  -moz-transition: opacity 200ms ease-out;
+  transition: opacity 200ms ease-out;
 }
 
 .statuspanel-inner {
@@ -589,14 +589,14 @@ vbox[anonid=browserContainer][responsivemode] {
 }
 
 stack[anonid=browserStack][responsivemode] {
-  -moz-transition-duration: 200ms;
-  -moz-transition-timing-function: linear;
+  transition-duration: 200ms;
+  transition-timing-function: linear;
 }
 
 stack[anonid=browserStack][responsivemode] {
-  -moz-transition-property: min-width, max-width, min-height, max-height;
+  transition-property: min-width, max-width, min-height, max-height;
 }
 
 stack[anonid=browserStack][responsivemode][notransition] {
-  -moz-transition: none;
+  transition: none;
 }
