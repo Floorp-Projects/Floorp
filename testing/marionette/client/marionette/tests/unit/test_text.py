@@ -32,7 +32,7 @@ class TestTextChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
-        self.win = self.marionette.get_window()
+        self.win = self.marionette.current_window_handle
         self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
 
     def tearDown(self):
@@ -41,7 +41,7 @@ class TestTextChrome(MarionetteTestCase):
         MarionetteTestCase.tearDown(self)
 
     def test_getText(self):
-        wins = self.marionette.get_windows()
+        wins = self.marionette.window_handles
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
@@ -49,7 +49,7 @@ class TestTextChrome(MarionetteTestCase):
         self.assertEqual("test", box.text())
 
     def test_clearText(self):
-        wins = self.marionette.get_windows()
+        wins = self.marionette.window_handles
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
@@ -59,7 +59,7 @@ class TestTextChrome(MarionetteTestCase):
         self.assertEqual("", box.text())
 
     def test_sendKeys(self):
-        wins = self.marionette.get_windows()
+        wins = self.marionette.window_handles
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
