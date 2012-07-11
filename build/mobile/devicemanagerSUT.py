@@ -44,12 +44,13 @@ class DeviceManagerSUT(DeviceManager):
   # The error would be set where appropriate--so sendCMD() could set socket errors,
   # pushFile() and other file-related commands could set filesystem errors, etc.
 
-  def __init__(self, host, port = 20701, retrylimit = 5):
+  def __init__(self, host, port = 20701, retrylimit = 5, deviceRoot = None):
     self.host = host
     self.port = port
     self.retrylimit = retrylimit
     self.retries = 0
     self._sock = None
+    self.deviceRoot = deviceRoot
     if self.getDeviceRoot() == None:
         raise BaseException("Failed to connect to SUT Agent and retrieve the device root.")
 
@@ -838,18 +839,22 @@ class DeviceManagerSUT(DeviceManager):
   #  success: path for device root
   #  failure: None
   def getDeviceRoot(self):
-    try:
-      data = self.runCmds([{ 'cmd': 'testroot' }])
-    except:
-      return None
+    if self.deviceRoot:
+      deviceRoot = self.deviceRoot
+    else:
+      try:
+        data = self.runCmds([{ 'cmd': 'testroot' }])
+      except:
+        return None
 
-    deviceRoot = data.strip() + '/tests'
+      deviceRoot = data.strip() + '/tests'
 
     if (not self.dirExists(deviceRoot)):
       if (self.mkDir(deviceRoot) == None):
         return None
 
-    return deviceRoot
+    self.deviceRoot = deviceRoot
+    return self.deviceRoot
 
   def getAppRoot(self, packageName):
     try:
