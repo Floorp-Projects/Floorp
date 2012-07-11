@@ -748,7 +748,7 @@ JSObject::putProperty(JSContext *cx, jsid id_,
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < self->slotSpan())
             self->freeSlot(cx, oldSlot);
-        JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
+        ++cx->runtime->propertyRemovals;
     }
 
     self->checkShapeConsistency();
@@ -851,7 +851,7 @@ JSObject::removeProperty(JSContext *cx, jsid id_)
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
         self->freeSlot(cx, shape->slot());
-        JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
+        ++cx->runtime->propertyRemovals;
     }
 
     /*
@@ -928,7 +928,7 @@ JSObject::clear(JSContext *cx)
 
     JS_ALWAYS_TRUE(setLastProperty(cx, shape));
 
-    JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
+    ++cx->runtime->propertyRemovals;
     checkShapeConsistency();
 }
 

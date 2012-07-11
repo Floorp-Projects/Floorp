@@ -4610,7 +4610,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
 
     Rooted<Shape *> shapeRoot(cx, shape);
 
-    int32_t sample = cx->runtime->propertyRemovals;
+    uint32_t sample = cx->runtime->propertyRemovals;
     if (!shapeRoot->set(cx, obj, receiver, strict, vp))
         return false;
 
