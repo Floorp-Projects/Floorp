@@ -55,22 +55,22 @@ var gAllowsExtra = {
 /* These are the reverse of the above list; they're the unusual values
    that do allow extra keywords afterwards */
 var gAllowsExtraUnusual = {
-  "-moz-transition": { "all": true, "0s": true, "0s 0s": true, "ease": true,
-                       "1s 2s linear": true, "1s linear 2s": true,
-                       "linear 1s 2s": true, "linear 1s": true,
-                       "1s linear": true, "1s 2s": true, "2s 1s": true,
-                       "linear": true, "1s": true, "2s": true,
-                       "ease-in-out": true, "2s ease-in": true,
-                       "ease-out 2s": true },
-  "-moz-animation": { "none": true, "0s": true, "ease": true,
-                      "normal": true, "running": true, "1.0": true,
-                      "1s 2s linear": true, "1s linear 2s": true,
-                      "linear 1s 2s": true, "linear 1s": true,
-                      "1s linear": true, "1s 2s": true, "2s 1s": true,
-                      "linear": true, "1s": true, "2s": true,
-                      "ease-in-out": true, "2s ease-in": true,
-                      "ease-out 2s": true, "1s bounce, 2s": true,
-                      "1s bounce, 2s none": true },
+  "transition": { "all": true, "0s": true, "0s 0s": true, "ease": true,
+                  "1s 2s linear": true, "1s linear 2s": true,
+                  "linear 1s 2s": true, "linear 1s": true,
+                  "1s linear": true, "1s 2s": true, "2s 1s": true,
+                  "linear": true, "1s": true, "2s": true,
+                  "ease-in-out": true, "2s ease-in": true,
+                  "ease-out 2s": true },
+  "animation": { "none": true, "0s": true, "ease": true,
+                 "normal": true, "running": true, "1.0": true,
+                 "1s 2s linear": true, "1s linear 2s": true,
+                 "linear 1s 2s": true, "linear 1s": true,
+                 "1s linear": true, "1s 2s": true, "2s 1s": true,
+                 "linear": true, "1s": true, "2s": true,
+                 "ease-in-out": true, "2s ease-in": true,
+                 "ease-out 2s": true, "1s bounce, 2s": true,
+                 "1s bounce, 2s none": true },
 };
 
 function test_property(property)

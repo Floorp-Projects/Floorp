@@ -56,7 +56,7 @@ public:
   }
 
   // nsSVGGeometryFrame methods:
-  virtual gfxMatrix GetCanvasTM() = 0;
+  virtual gfxMatrix GetCanvasTM(PRUint32 aFor) = 0;
   PRUint16 GetClipRule();
 
   float GetStrokeWidth();

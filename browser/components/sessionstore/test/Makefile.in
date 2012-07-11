@@ -9,14 +9,13 @@ VPATH		= @srcdir@
 relativesrcdir  = browser/components/sessionstore/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 # browser_506482.js is disabled because of frequent failures (bug 538672)
 # browser_526613.js is disabled because of frequent failures (bug 534489)
 # browser_589246.js is disabled for leaking browser windows (bug 752467)
 # browser_580512.js is disabled for leaking browser windows (bug 752467)
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_form_restore_events.js \
 	browser_form_restore_events_sample.html \
@@ -138,11 +137,10 @@ _BROWSER_TEST_FILES = \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)
-_BROWSER_TEST_FILES += \
+MOCHITEST_BROWSER_FILES += \
 	browser_597071.js \
 	browser_625016.js \
 	$(NULL)
 endif
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

@@ -10,11 +10,11 @@ relativesrcdir = toolkit/mozapps/update/test/chrome
 
 include $(DEPTH)/config/autoconf.mk
 
-_OTHER_FILES = \
+MOCHITEST_CHROME_FILES = \
   ../unit/data/simple_no_pib.mar \
   $(NULL)
 
-_CHROME_FILES = \
+MOCHITEST_CHROME_FILES += \
   test_0011_check_basic.xul \
   test_0012_check_basic_license.xul \
   test_0013_check_incompat_basic.xul \
@@ -75,13 +75,8 @@ _CHROME_FILES = \
   test_9999_cleanup.xul \
   $(NULL)
 
+
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(_OTHER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs:: 
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(srcdir)/utils.js > \

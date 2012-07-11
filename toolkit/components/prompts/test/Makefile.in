@@ -15,21 +15,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = test_prompter
 
 # Mochitest tests
-MOCHI_TESTS = \
+MOCHITEST_FILES = \
     test_modal_select.html \
     test_modal_prompts.html \
     test_bug619644.html \
     test_bug620145.html \
     test_bug625187.html \
-    $(NULL)
-
-MOCHI_CONTENT = \
     prompt_common.js \
     bug619644_inner.html \
     bug625187_iframe.html \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

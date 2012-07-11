@@ -8,7 +8,7 @@ var testGenerator = testSteps();
 function testSteps()
 {
   let name = this.window ? window.location.pathname : "Splendid Test";
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;

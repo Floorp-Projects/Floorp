@@ -30,6 +30,10 @@
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 class PCrashReporterParent;
@@ -52,7 +56,12 @@ class BrowserStreamParent;
  * child process needs to make these calls back into Gecko proper.
  * This class is responsible for "actually" making those function calls.
  */
-class PluginModuleParent : public PPluginModuleParent, PluginLibrary
+class PluginModuleParent
+    : public PPluginModuleParent
+    , public PluginLibrary
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+    , public CrashReporter::InjectorCrashCallback
+#endif
 {
 private:
     typedef mozilla::PluginLibrary PluginLibrary;
@@ -306,6 +315,15 @@ private:
 #endif
 
     friend class mozilla::dom::CrashReporterParent;
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+    void InitializeInjector();
+    
+    NS_OVERRIDE void OnCrash(DWORD processID, const nsAString& aDumpID);
+
+    DWORD mFlashProcess1;
+    DWORD mFlashProcess2;
+#endif
 };
 
 } // namespace plugins

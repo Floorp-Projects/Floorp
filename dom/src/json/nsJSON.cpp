@@ -177,32 +177,15 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
   JSAutoRequest ar(cx);
 
   JSAutoEnterCompartment ac;
-  nsIScriptSecurityManager *ssm = nsnull;
   if (value->isObject()) {
     JSObject *obj = &value->toObject();
     if (!ac.enter(cx, obj)) {
       return NS_ERROR_FAILURE;
     }
-
-    nsCOMPtr<nsIPrincipal> principal;
-    ssm = nsContentUtils::GetSecurityManager();
-    nsresult rv = ssm->GetObjectPrincipal(cx, obj, getter_AddRefs(principal));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSStackFrame *fp = nsnull;
-    rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsJSONWriter writer;
-  JSBool ok = JS_Stringify(cx, value, NULL, JSVAL_NULL,
-                           WriteCallback, &writer);
-
-  if (ssm) {
-    ssm->PopContextPrincipal(cx);
-  }
-
-  if (!ok) {
+  if (!JS_Stringify(cx, value, NULL, JSVAL_NULL, WriteCallback, &writer)) {
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 

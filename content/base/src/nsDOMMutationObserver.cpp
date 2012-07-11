@@ -133,23 +133,14 @@ nsDOMMutationRecord::GetOldValue(nsAString& aPrevValue)
 
 // Observer
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsMutationReceiver)
+NS_IMPL_ADDREF(nsMutationReceiver)
+NS_IMPL_RELEASE(nsMutationReceiver)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsMutationReceiver)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsMutationReceiver)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMutationReceiver)
+NS_INTERFACE_MAP_BEGIN(nsMutationReceiver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsMutationReceiver)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsMutationReceiver)
-  tmp->Disconnect(false);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsMutationReceiver)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void
 nsMutationReceiver::Disconnect(bool aRemoveFromObserver)

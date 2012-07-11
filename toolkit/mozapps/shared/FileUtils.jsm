@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDirService",
 var FileUtils = {
   MODE_RDONLY   : 0x01,
   MODE_WRONLY   : 0x02,
+  MODE_RDWR     : 0x04,
   MODE_CREATE   : 0x08,
   MODE_APPEND   : 0x10,
   MODE_TRUNCATE : 0x20,

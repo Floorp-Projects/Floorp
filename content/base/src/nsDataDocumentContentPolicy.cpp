@@ -37,6 +37,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
                                         nsISupports *aRequestingContext,
                                         const nsACString &aMimeGuess,
                                         nsISupports *aExtra,
+                                        nsIPrincipal *aRequestPrincipal,
                                         PRInt16 *aDecision)
 {
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -129,8 +130,10 @@ nsDataDocumentContentPolicy::ShouldProcess(PRUint32 aContentType,
                                            nsISupports *aRequestingContext,
                                            const nsACString &aMimeGuess,
                                            nsISupports *aExtra,
+                                           nsIPrincipal *aRequestPrincipal,
                                            PRInt16 *aDecision)
 {
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
-                    aRequestingContext, aMimeGuess, aExtra, aDecision);
+                    aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
+                    aDecision);
 }

@@ -421,13 +421,8 @@ CompositorParent::TransformShadowTree()
 
   // Translate fixed position layers so that they stay in the correct position
   // when mScrollOffset and metricsScrollOffset differ.
-  gfxPoint scaleDiff(tempScaleDiffX, tempScaleDiffY);
-  gfxPoint offset(clamped(mScrollOffset.x / tempScaleDiffX, mContentRect.x / tempScaleDiffX,
-                          (mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX)) -
-                  metricsScrollOffset.x,
-                  clamped(mScrollOffset.y / tempScaleDiffY, mContentRect.y / tempScaleDiffY,
-                          (mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY)) -
-                  metricsScrollOffset.y);
+  gfxPoint offset;
+  gfxPoint scaleDiff;
 
   // If the contents can fit entirely within the widget area on a particular
   // dimenson, we need to translate and scale so that the fixed layers remain
@@ -435,11 +430,21 @@ CompositorParent::TransformShadowTree()
   if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
     offset.x = -metricsScrollOffset.x;
     scaleDiff.x = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+  } else {
+    offset.x = clamped(mScrollOffset.x / tempScaleDiffX, (float)mContentRect.x,
+                       mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX) -
+               metricsScrollOffset.x;
+    scaleDiff.x = tempScaleDiffX;
   }
 
   if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
     offset.y = -metricsScrollOffset.y;
     scaleDiff.y = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+  } else {
+    offset.y = clamped(mScrollOffset.y / tempScaleDiffY, (float)mContentRect.y,
+                       mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY) -
+               metricsScrollOffset.y;
+    scaleDiff.y = tempScaleDiffY;
   }
 
   TransformFixedLayers(layer, offset, scaleDiff);

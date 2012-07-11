@@ -290,7 +290,7 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
 }
 
 static bool
-TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, JSObject *obj,
+TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, HandleObject obj,
                     HandlePropertyName name, bool *isCacheableNative)
 {
     JS_ASSERT(!*isCacheableNative);
@@ -304,12 +304,11 @@ TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, JSObject *obj,
     if (cache.idempotent() && !obj->hasIdempotentProtoChain())
         return true;
 
-    JSObject *holder;
-    JSProperty *prop;
-    if (!obj->lookupProperty(cx, name, &holder, &prop))
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    if (!obj->lookupProperty(cx, name, &holder, &shape))
         return false;
 
-    const Shape *shape = (const Shape *)prop;
     if (!IsCacheableGetProp(obj, holder, shape))
         return true;
 
@@ -678,12 +677,11 @@ bool
 IonCacheGetElement::attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name,
                                   Value *res)
 {
-    JSObject *holder;
-    JSProperty *prop;
-    if (!obj->lookupProperty(cx, name, &holder, &prop))
+    RootedObject holder(cx);
+    RootedShape shape(cx);
+    if (!obj->lookupProperty(cx, name, &holder, &shape))
         return false;
 
-    const Shape *shape = (const Shape *)prop;
     if (!IsCacheableGetProp(obj, holder, shape)) {
         IonSpew(IonSpew_InlineCaches, "GETELEM uncacheable property");
         return true;
@@ -900,7 +898,8 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         // guaranteed to be immutable (and thus cannot introduce shadowing
         // variables).
         CallObject *callObj = &scopeObj->asCall();
-        if (JSFunction *fun = callObj->getCalleeFunction()) {
+        if (!callObj->isForEval()) {
+            JSFunction *fun = &callObj->callee();
             JSScript *script = fun->script();
             if (!script->bindings.extensibleParents() && !script->funHasExtensibleScope)
                 return;
@@ -1070,10 +1069,14 @@ IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder
     unsigned slot;
     if (holder->isCall()) {
         slot = shape->shortid();
-        JSFunction *fun = holder->asCall().getCalleeFunction();
 
-        if (shape->setterOp() == CallObject::setVarOp)
-            slot += fun->nargs;
+        CallObject *callObj = &holder->asCall();
+        if (!callObj->isForEval()) {
+            JSFunction *fun = &callObj->callee();
+
+            if (shape->setterOp() == CallObject::setVarOp)
+                slot += fun->nargs;
+        }
         slot += CallObject::RESERVED_SLOTS;
     } else {
         JS_ASSERT(holder->isGlobal());
@@ -1129,16 +1132,15 @@ IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder
 
 static bool
 IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, HandleObject holder,
-               JSProperty *prop)
+                HandleShape shape)
 {
-    if (!prop)
+    if (!shape)
         return false;
     if (!obj->isNative())
         return false;
     if (obj != holder)
         return false;
 
-    Shape *shape = (Shape *)prop;
     if (obj->isGlobal()) {
         // Support only simple property lookups.
         if (!IsCacheableGetProp(obj, holder, shape))
@@ -1183,23 +1185,23 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
 
     RootedObject obj(cx);
     RootedObject holder(cx);
-    JSProperty *prop;
-    if (!FindProperty(cx, name, scopeChain, obj.address(), holder.address(), &prop))
+    RootedShape shape(cx);
+    if (!FindProperty(cx, name, scopeChain, &obj, &holder, &shape))
         return false;
 
     if (cache.stubCount() < MAX_STUBS &&
-        IsCacheableName(cx, scopeChain, obj, holder, prop))
+        IsCacheableName(cx, scopeChain, obj, holder, shape))
     {
-        if (!cache.attach(cx, scopeChain, obj, (Shape *)prop))
-            return false;
+        // if (!cache.attach(cx, scopeChain, obj, shape))
+        //     return false;
         cache.incrementStubCount();
     }
 
     if (cache.isTypeOf()) {
-        if (!FetchName<true>(cx, obj, holder, name, prop, vp))
+        if (!FetchName<true>(cx, obj, holder, name, shape, vp))
             return false;
     } else {
-        if (!FetchName<false>(cx, obj, holder, name, prop, vp))
+        if (!FetchName<false>(cx, obj, holder, name, shape, vp))
             return false;
     }
 

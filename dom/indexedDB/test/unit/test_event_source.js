@@ -11,7 +11,7 @@ function testSteps()
   const description = "My Test Database";
   const objectStoreName = "Objects";
 
-  var request = mozIndexedDB.open(name, 1, description);
+  var request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   var event = yield;

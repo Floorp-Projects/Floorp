@@ -405,7 +405,7 @@ SessionStore.prototype = {
       let data = { entries: entries, index: index };
 
       delete aBrowser.__SS_data;
-      this._collectTabData(aBrowser, data);
+      this._collectTabData(aWindow, aBrowser, data);
       this.saveStateNow();
     }
 
@@ -478,7 +478,7 @@ SessionStore.prototype = {
     return data;
   },
 
-  _collectTabData: function ss__collectTabData(aBrowser, aHistory) {
+  _collectTabData: function ss__collectTabData(aWindow, aBrowser, aHistory) {
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
       return;
@@ -489,6 +489,7 @@ SessionStore.prototype = {
     tabData.entries = aHistory.entries;
     tabData.index = aHistory.index;
     tabData.attributes = { image: aBrowser.mIconURL };
+    tabData.desktopMode = aWindow.BrowserApp.getTabForBrowser(aBrowser).desktopMode;
 
     aBrowser.__SS_data = tabData;
   },
@@ -948,7 +949,12 @@ SessionStore.prototype = {
           let entry = tabData.entries[tabData.index - 1];
 
           // Add a tab, but don't load the URL until we need to
-          let params = { selected: isSelected, delayLoad: true, title: entry.title };
+          let params = {
+            selected: isSelected,
+            delayLoad: true,
+            title: entry.title,
+            desktopMode: tabData.desktopMode == true
+          };
           let tab = window.BrowserApp.addTab(entry.url, params);
 
           if (isSelected) {

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMTextEvent.h"
-#include "nsContentUtils.h"
 #include "nsPrivateTextRange.h"
 
 nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext,

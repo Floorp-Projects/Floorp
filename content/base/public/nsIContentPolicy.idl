@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIPrincipal.idl"
 
 interface nsIURI;
 interface nsIDOMNode;
@@ -18,7 +19,7 @@ interface nsIDOMNode;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(344f9cb0-9a17-44c5-ab96-ee707884266c)]
+[scriptable,uuid(e590e74f-bac7-4876-8c58-54dde92befb2)]
 interface nsIContentPolicy : nsISupports
 {
   const unsigned long TYPE_OTHER       = 1;
@@ -209,7 +210,8 @@ interface nsIContentPolicy : nsISupports
                    in nsIURI        aRequestOrigin,
                    in nsISupports   aContext,
                    in ACString      aMimeTypeGuess,
-                   in nsISupports   aExtra);
+                   in nsISupports   aExtra,
+                   [optional] in nsIPrincipal  aRequestPrincipal);
 
   /**
    * Should the resource be processed?
@@ -251,6 +253,7 @@ interface nsIContentPolicy : nsISupports
                       in nsIURI        aRequestOrigin,
                       in nsISupports   aContext,
                       in ACString      aMimeType,
-                      in nsISupports   aExtra);
+                      in nsISupports   aExtra,
+                      [optional] in nsIPrincipal  aRequestPrincipal);
 
 };

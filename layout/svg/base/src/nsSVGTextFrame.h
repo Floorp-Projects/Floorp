@@ -63,7 +63,7 @@ public:
                                       PRUint32 aFlags);
   
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
   
   // nsSVGTextContainerFrame methods:
   virtual PRUint32 GetNumberOfChars();

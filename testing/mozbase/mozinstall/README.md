@@ -1,37 +1,58 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-[Mozinstall](https://github.com/mozilla/mozbase/tree/master/mozinstall)
-is a python package for installing Mozilla applications on various platforms.
+[Mozinstall](https://github.com/mozilla/mozbase/tree/master/mozinstall) is a
+python package for installing and uninstalling Mozilla applications on
+various platforms.
 
 For example, depending on the platform, Firefox can be distributed as a 
-zip, tar.bz2, exe or dmg file or cloned from a repository. Mozinstall takes the 
-hassle out of extracting and/or running these files and for convenience returns
-the full path to the application's binary in the install directory. In the case 
-that mozinstall is invoked from the command line, the binary path will be 
-printed to stdout.
+zip, tar.bz2, exe, or dmg file or cloned from a repository. Mozinstall takes
+the hassle out of extracting and/or running these files and for convenience
+returns the full path to the install directory. In the case that mozinstall
+is invoked from the command line, the binary path will be printed to stdout.
+
+To remove an installed application the uninstaller can be used. It requires
+the installation path of the application and will remove all the installed
+files. On Windows the uninstaller will be tried first.
 
 # Usage
+Mozinstall can be used as API or via the CLI commands.
 
-For command line options run mozinstall --help
-
-Mozinstall's main function is the install method
+## API
+An application can be installed by running the commands below. The install
+method will return the installation path of the application.
 
     import mozinstall
-    mozinstall.install('path_to_install_file', dest='path_to_install_folder')
+    path = mozinstall.install(%installer%, %install_folder%)
 
-The dest parameter defaults to the directory in which the install file is located.
-The install method accepts a third parameter called apps which tells mozinstall which 
-binary to search for. By default it will search for 'firefox', 'thunderbird' and 'fennec'
-so unless you are installing a different application, this parameter is unnecessary.
+To retrieve the real binary call get_binary with the path and
+the application name as arguments:
+
+    mozinstall.get_binary(path, 'firefox')
+
+If the application is not needed anymore the uninstaller will remove all
+traces from the system:
+
+    mozinstall.uninstall(path)
+
+## CLI
+The installer can also be used as a command line tool:
+
+    $ mozinstall -d firefox %installer%
+
+Whereby the directory option is optional and will default to the current
+working directory. If the installation was successful the path to the
+binary will be printed to stdout.
+
+Also the uninstaller can be called via the command line:
+
+    $ mozuninstall %install_path%
 
 # Error Handling
 
-Mozinstall throws two different types of exceptions:
+Mozinstall throws different types of exceptions:
 
-- mozinstall.InvalidSource is thrown when the source is not a recognized file type (zip, exe, tar.bz2, tar.gz, dmg)
 - mozinstall.InstallError is thrown when the installation fails for any reason. A traceback is provided.
+- mozinstall.InvalidBinary is thrown when the binary cannot be found.
+- mozinstall.InvalidSource is thrown when the source is not a recognized file type (zip, exe, tar.bz2, tar.gz, dmg).
+
 
 # Dependencies
 

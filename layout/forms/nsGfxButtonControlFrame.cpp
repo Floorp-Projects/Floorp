@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
+#include "nsContentList.h"
 #include "nsContentCreatorFunctions.h"
 
 #include "nsNodeInfoManager.h"

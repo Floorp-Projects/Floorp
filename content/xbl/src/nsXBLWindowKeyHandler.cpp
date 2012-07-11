@@ -25,7 +25,6 @@
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"

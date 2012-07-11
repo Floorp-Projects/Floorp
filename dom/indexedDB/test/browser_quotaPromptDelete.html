@@ -44,12 +44,12 @@
       function onReset() {
         db.close();
         // N.B. the spec provides no ordering guarantee w.r.t deleteDatabase.
-        let deleteRequest = mozIndexedDB.deleteDatabase(name);
+        let deleteRequest = indexedDB.deleteDatabase(name);
 
         deleteRequest.onerror = errorHandler;
         deleteRequest.onsuccess = function () {
           // It is imperative that we open a different database this time.
-          let request = mozIndexedDB.open("take2", 1);
+          let request = indexedDB.open("take2", 1);
           request.onerror = errorHandler;
           request.onupgradeneeded = function(event) {
             db = event.target.result;
@@ -67,7 +67,7 @@
         window.addEventListener("indexedDB-reset", onReset, true);
         window.addEventListener("indexedDB-done", onDone, true);
 
-        let request = mozIndexedDB.open(name, 1);
+        let request = indexedDB.open(name, 1);
         request.onerror = errorHandler;
         request.onupgradeneeded = grabEventAndContinueHandler;
         let event = yield;

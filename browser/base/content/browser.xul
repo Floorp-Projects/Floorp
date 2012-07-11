@@ -464,7 +464,6 @@
                  showcommentcolumn="true"
                  showimagecolumn="true"
                  enablehistory="true"
-                 maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
@@ -1038,21 +1037,21 @@
           </stack>
           <toolbarbutton id="developer-toolbar-webconsole"
                          label="&webConsoleButton.label;"
-                         class="devtools-toolbarbutton"
+                         class="developer-toolbar-button"
                          command="Tools:WebConsole"/>
           <toolbarbutton id="developer-toolbar-inspector"
                          label="&inspectorButton.label;"
-                         class="devtools-toolbarbutton"
+                         class="developer-toolbar-button"
                          hidden="true"
                          command="Tools:Inspect"/>
           <toolbarbutton id="developer-toolbar-styleeditor"
                          label="&styleeditor.label;"
-                         class="devtools-toolbarbutton"
+                         class="developer-toolbar-button"
                          hidden="true"
                          command="Tools:StyleEditor"/>
           <toolbarbutton id="developer-toolbar-debugger"
                          label="&debuggerMenu.label2;"
-                         class="devtools-toolbarbutton"
+                         class="developer-toolbar-button"
                          hidden="true"
                          command="Tools:Debugger"/>
 #ifndef XP_MACOSX

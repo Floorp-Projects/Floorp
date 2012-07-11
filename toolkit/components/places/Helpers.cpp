@@ -13,7 +13,6 @@
 #if defined(XP_OS2)
 #include "nsIRandomGenerator.h"
 #endif
-#include "nsContentUtils.h"
 
 // The length of guids that are used by history and bookmarks.
 #define GUID_LENGTH 12

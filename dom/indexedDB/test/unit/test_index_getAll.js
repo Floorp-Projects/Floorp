@@ -52,7 +52,7 @@ function testSteps()
     { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
   ];
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
@@ -90,7 +90,7 @@ function testSteps()
   objectStore = db.transaction(objectStoreName)
                   .objectStore(objectStoreName);
 
-  request = objectStore.index("height").getAllKeys(65);
+  request = objectStore.index("height").mozGetAllKeys(65);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -104,7 +104,7 @@ function testSteps()
        "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys(65, 0);
+  request = objectStore.index("height").mozGetAllKeys(65, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -118,7 +118,7 @@ function testSteps()
        "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys(65, null);
+  request = objectStore.index("height").mozGetAllKeys(65, null);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -132,7 +132,7 @@ function testSteps()
        "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys(65, undefined);
+  request = objectStore.index("height").mozGetAllKeys(65, undefined);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -146,7 +146,7 @@ function testSteps()
        "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys();
+  request = objectStore.index("height").mozGetAllKeys();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -160,7 +160,7 @@ function testSteps()
     is(event.target.result[i], objectStoreDataHeightSort[i].key, "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys(null, 4);
+  request = objectStore.index("height").mozGetAllKeys(null, 4);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -173,7 +173,7 @@ function testSteps()
     is(event.target.result[i], objectStoreDataHeightSort[i].key, "Correct key");
   }
 
-  request = objectStore.index("height").getAllKeys(65, 1);
+  request = objectStore.index("height").mozGetAllKeys(65, 1);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;

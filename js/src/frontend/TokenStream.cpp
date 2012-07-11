@@ -94,24 +94,24 @@ js::FindKeyword(const jschar *s, size_t length)
     return NULL;
 }
 
-JSBool
+bool
 js::IsIdentifier(JSLinearString *str)
 {
     const jschar *chars = str->chars();
     size_t length = str->length();
 
     if (length == 0)
-        return JS_FALSE;
+        return false;
     jschar c = *chars;
     if (!IsIdentifierStart(c))
-        return JS_FALSE;
+        return false;
     const jschar *end = chars + length;
     while (++chars != end) {
         c = *chars;
         if (!IsIdentifierPart(c))
-            return JS_FALSE;
+            return false;
     }
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef _MSC_VER
@@ -601,7 +601,7 @@ TokenStream::getXMLEntity()
 {
     ptrdiff_t offset, length, i;
     int c, d;
-    JSBool ispair;
+    bool ispair;
     jschar *bp, digit;
     char *bytes;
     JSErrNum msg;
@@ -782,7 +782,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
 
         tokenbuf.clear();
         if (IsXMLNamespaceStart(c)) {
-            JSBool sawColon = JS_FALSE;
+            bool sawColon = false;
 
             if (!tokenbuf.append(c))
                 goto error;
@@ -797,7 +797,7 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
                         reportError(JSMSG_BAD_XML_QNAME);
                         goto error;
                     }
-                    sawColon = JS_TRUE;
+                    sawColon = true;
                 }
 
                 if (!tokenbuf.append(c))
@@ -2127,13 +2127,13 @@ JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file)
 {
     int n, i, c;
-    JSBool crflag;
+    bool crflag;
 
     n = size - 1;
     if (n < 0)
         return -1;
 
-    crflag = JS_FALSE;
+    crflag = false;
     for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
         buf[i] = c;
         if (c == '\n') {        /* any \n ends a line */

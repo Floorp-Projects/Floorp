@@ -378,6 +378,9 @@ pref("dom.sms.enabled", true);
 // Temporary permission hack for WebContacts
 pref("dom.mozContacts.enabled", true);
 
+// WebAlarms
+pref("dom.mozAlarms.enabled", true);
+
 // WebSettings
 pref("dom.mozSettings.enabled", true);
 

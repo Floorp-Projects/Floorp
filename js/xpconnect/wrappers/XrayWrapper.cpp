@@ -458,7 +458,7 @@ static inline JSObject *
 FindWrapper(JSObject *wrapper)
 {
     while (!js::IsWrapper(wrapper) ||
-           !(AbstractWrapper::wrapperHandler(wrapper)->flags() &
+           !(Wrapper::wrapperHandler(wrapper)->flags() &
              WrapperFactory::IS_XRAY_WRAPPER_FLAG)) {
         if (js::IsWrapper(wrapper) &&
             js::GetProxyHandler(wrapper) == &sandboxProxyHandler) {

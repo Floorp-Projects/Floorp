@@ -216,10 +216,16 @@ public:
   bool     IsValueMissing() const;
   bool     HasTypeMismatch() const;
   bool     HasPatternMismatch() const;
+  bool     IsRangeOverflow() const;
+  bool     IsRangeUnderflow() const;
+  bool     HasStepMismatch() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
+  void     UpdateRangeOverflowValidityState();
+  void     UpdateRangeUnderflowValidityState();
+  void     UpdateStepMismatchValidityState();
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
@@ -464,6 +470,26 @@ protected:
   bool DoesPatternApply() const;
 
   /**
+   * Returns if the min and max attributes apply for the current type.
+   */
+  bool DoesMinMaxApply() const;
+
+  /**
+   * Returns if the step attribute apply for the current type.
+   */
+  bool DoesStepApply() const { return DoesMinMaxApply(); }
+
+  /**
+   * Returns if stepDown and stepUp methods apply for the current type.
+   */
+  bool DoStepDownStepUpApply() const { return DoesStepApply(); }
+
+  /**
+   * Returns if valueAsNumber attribute applies for the current type.
+   */
+  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+
+  /**
    * Returns if the maxlength attribute applies for the current type.
    */
   bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
@@ -533,6 +559,62 @@ protected:
    */
   nsIRadioGroupContainer* GetRadioGroupContainer() const;
 
+  /**
+   * Returns the input element's value as a double-precision float.
+   * Returns NaN if the current element's value is not a floating point number.
+   *
+   * @return the input element's value as a double-precision float.
+   */
+  double GetValueAsDouble() const;
+
+  /**
+   * Sets the value of the element to the string representation of the double.
+   *
+   * @param aValue The double that will be used to set the value.
+   */
+  void SetValue(double aValue);
+
+  /**
+   * Update the HAS_RANGE bit field value.
+   */
+  void UpdateHasRange();
+
+  /**
+   * Returns the min attribute as a double.
+   * Returns NaN if the min attribute isn't a valid floating point number.
+   */
+  double GetMinAsDouble() const;
+
+  /**
+   * Returns the max attribute as a double.
+   * Returns NaN if the max attribute isn't a valid floating point number.
+   */
+  double GetMaxAsDouble() const;
+
+  /**
+   * Returns the current step value.
+   * Returns kStepAny if the current step is "any" string.
+   *
+   * @return the current step value.
+   */
+  double GetStep() const;
+
+  /**
+   * Return the base used to compute if a value matches step.
+   * Basically, it's the min attribute if present and a default value otherwise.
+   *
+   * @return The step base.
+   */
+  double GetStepBase() const;
+
+  /**
+   * Apply a step change from stepUp or stepDown by multiplying aStep by the
+   * current step value.
+   *
+   * @param aStep The value used to be multiplied against the step value.
+   */
+  nsresult ApplyStep(PRInt32 aStep);
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /*
@@ -578,6 +660,11 @@ protected:
    */
   nsString mFocusedValue;  
 
+  // Default step base value when a type do not have specific one.
+  static const double kDefaultStepBase;
+  // Float alue returned by GetStep() when the step attribute is set to 'any'.
+  static const double kStepAny;
+
   /**
    * The type of this input (<input type=...>) as an integer.
    * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
@@ -596,6 +683,7 @@ protected:
   bool                     mInhibitRestoration  : 1;
   bool                     mCanShowValidUI      : 1;
   bool                     mCanShowInvalidUI    : 1;
+  bool                     mHasRange            : 1;
 
 private:
   struct nsFilePickerFilter {

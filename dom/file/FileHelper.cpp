@@ -14,6 +14,8 @@
 #include "FileHandle.h"
 #include "FileRequest.h"
 #include "FileService.h"
+#include "nsIRequest.h"
+#include "nsDOMError.h"
 
 USING_FILE_NAMESPACE
 

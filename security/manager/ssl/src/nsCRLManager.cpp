@@ -192,7 +192,7 @@ done:
     }
     
     nsCAutoString updateErrCntPrefStr(CRL_AUTOUPDATE_ERRCNT_PREF);
-    updateErrCntPrefStr.AppendWithConversion(crlKey);
+    LossyAppendUTF16toASCII(crlKey, updateErrCntPrefStr);
     if(importSuccessful){
       PRUnichar *updateTime;
       nsCAutoString updateTimeStr;
@@ -205,11 +205,11 @@ done:
       nsCAutoString updateUrlPrefStr(CRL_AUTOUPDATE_URL_PREF);
       nsCAutoString updateDayCntPrefStr(CRL_AUTOUPDATE_DAYCNT_PREF);
       nsCAutoString updateFreqCntPrefStr(CRL_AUTOUPDATE_FREQCNT_PREF);
-      updateTypePrefStr.AppendWithConversion(crlKey);
-      updateTimePrefStr.AppendWithConversion(crlKey);
-      updateUrlPrefStr.AppendWithConversion(crlKey);
-      updateDayCntPrefStr.AppendWithConversion(crlKey);
-      updateFreqCntPrefStr.AppendWithConversion(crlKey);
+      LossyAppendUTF16toASCII(crlKey, updateTypePrefStr);
+      LossyAppendUTF16toASCII(crlKey, updateTimePrefStr);
+      LossyAppendUTF16toASCII(crlKey, updateUrlPrefStr);
+      LossyAppendUTF16toASCII(crlKey, updateDayCntPrefStr);
+      LossyAppendUTF16toASCII(crlKey, updateFreqCntPrefStr);
 
       pref->GetIntPref(updateTypePrefStr.get(),&timingTypePref);
       
@@ -253,7 +253,7 @@ done:
       PRInt32 errCnt;
       nsCAutoString errMsg;
       nsCAutoString updateErrDetailPrefStr(CRL_AUTOUPDATE_ERRDETAIL_PREF);
-      updateErrDetailPrefStr.AppendWithConversion(crlKey);
+      LossyAppendUTF16toASCII(crlKey, updateErrDetailPrefStr);
       errMsg.AssignWithConversion(errorMessage.get());
       rv = pref->GetIntPref(updateErrCntPrefStr.get(),&errCnt);
       if(NS_FAILED(rv))

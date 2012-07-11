@@ -1,0 +1,258 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635553
+-->
+<head>
+  <title>Test for Bug 635553</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635499">Mozilla Bug 635499</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635553 **/
+
+var types = [
+  [ 'hidden',         false ],
+  [ 'text',           false ],
+  [ 'search',         false ],
+  [ 'tel',            false ],
+  [ 'url',            false ],
+  [ 'email',          false ],
+  [ 'password',       false ],
+  [ 'datetime',       true,  true ],
+  [ 'date',           true,  true ],
+  [ 'month',          true,  true ],
+  [ 'week',           true,  true ],
+  [ 'time',           true,  true ],
+  [ 'datetime-local', true,  true ],
+  [ 'number',         true ],
+  [ 'range',          true,  true ],
+  [ 'color',          false, true ],
+  [ 'checkbox',       false ],
+  [ 'radio',          false ],
+  [ 'file',           false ],
+  [ 'submit',         false ],
+  [ 'image',          false ],
+  [ 'reset',          false ],
+  [ 'button',         false ],
+];
+
+var input = document.createElement("input");
+document.getElementById('content').appendChild(input);
+
+function checkValidity(aElement, aValidity, aApply, aData)
+{
+  aValidity = aApply ? aValidity : true;
+
+  is(aElement.validity.valid, aValidity,
+     "element validity should be " + aValidity);
+  is(aElement.validity.stepMismatch, !aValidity,
+     "element step mismatch status should be " + !aValidity);
+
+  if (aValidity) {
+    is(aElement.validationMessage, "", "There should be no validation message.");
+  } else {
+    is(aElement.validationMessage, "Please select a valid value. "  +
+       "The two nearest valid values are " + aData.low + " and " + aData.high + ".",
+       "There should be a validation message.");
+  }
+
+  is(aElement.mozMatchesSelector(":valid"), aElement.willValidate && aValidity,
+     (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
+  is(aElement.mozMatchesSelector(":invalid"), aElement.willValidate && !aValidity,
+     (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+for each (var data in types) {
+  input.type = data[0];
+  var apply = data[1];
+
+  if (data[2]) {
+    todo_is(input.type, data[0], data[0] + " isn't implemented yet");
+    continue;
+  }
+
+  checkValidity(input, true, apply);
+
+  input.step = '0';
+  checkValidity(input, true, apply);
+
+  if (input.type == 'url') {
+    input.value = 'http://mozilla.org';
+    checkValidity(input, true, apply);
+  } else if (input.type == 'email') {
+    input.value = 'foo@bar.com';
+    checkValidity(input, true, apply);
+  } else if (input.type == 'file') {
+    // Need privileges to set a filename with .value.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                           .getService(Components.interfaces.nsIProperties);
+    var file = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+    file.append('635499_file');
+    var outStream = Components.
+                    classes["@mozilla.org/network/file-output-stream;1"].
+                    createInstance(Components.interfaces.nsIFileOutputStream);
+    outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write("foo", 3);
+    outStream.close();
+
+    input.value = file.path;
+    checkValidity(input, true, apply);
+
+    file.remove(false);
+  } else {
+    // When step=0, the allowed step is 1.
+    input.value = '1.2';
+    checkValidity(input, false, apply, { low: 1, high: 2 });
+
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    input.value = '0';
+    checkValidity(input, true, apply);
+
+    // When step is NaN, the allowed step value is 1.
+    input.step = 'foo';
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    input.value = '1.5';
+    checkValidity(input, false, apply, { low: 1, high: 2 });
+
+    // When step is negative, the allowed step value is 1.
+    input.step = '-0.1';
+    checkValidity(input, false, apply, { low: 1, high: 2 });
+
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    // When step is missing, the allowed step value is 1.
+    input.removeAttribute('step');
+    input.value = '1.5';
+    checkValidity(input, false, apply, { low: 1, high: 2 });
+
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    // When step is 'any', all values are fine wrt to step.
+    input.step = 'any';
+    checkValidity(input, true, apply);
+
+    input.step = 'aNy';
+    input.value = '1337';
+    checkValidity(input, true, apply);
+
+    input.step = 'AnY';
+    input.value = '0.1';
+    checkValidity(input, true, apply);
+
+    input.step = 'ANY';
+    input.value = '-13.37';
+    checkValidity(input, true, apply);
+
+    // When min is set to a valid float, there is a step base.
+    input.min = '1';
+    input.step = '2';
+    input.value = '3';
+    checkValidity(input, true, apply);
+
+    input.value = '2';
+    checkValidity(input, false, apply, { low: 1, high: 3 });
+
+    input.removeAttribute('step'); // step = 1
+    input.min = '0.5';
+    input.value = '5.5';
+    checkValidity(input, true, apply);
+
+    input.value = '1';
+    checkValidity(input, false, apply, { low: 0.5, high: 1.5 });
+
+    input.min = '-0.1';
+    input.step = '1';
+    input.value = '0.9';
+    checkValidity(input, true, apply);
+
+    input.value = '0.1';
+    checkValidity(input, false, apply, { low: -0.1, high: 0.9 });
+
+    // When min is set to NaN, there is no step base (step base=0 actually).
+    input.min = 'foo';
+    input.step = '1';
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    input.value = '0.5';
+    checkValidity(input, false, apply, { low: 0, high: 1 });
+
+    input.min = '';
+    input.value = '1';
+    checkValidity(input, true, apply);
+
+    input.value = '0.5';
+    checkValidity(input, false, apply, { low: 0, high: 1 });
+
+    input.removeAttribute('min');
+
+    // If value isn't a number, the element isn't invalid.
+    input.value = '';
+    checkValidity(input, true, apply);
+
+    // Regular situations.
+    input.step = '2';
+    input.value = '1.5';
+    checkValidity(input, false, apply, { low: 0, high: 2 });
+
+    input.value = '42.0';
+    checkValidity(input, true, apply);
+
+
+    input.step = '0.1';
+    input.value = '-0.1';
+    checkValidity(input, true, apply);
+
+    input.step = '2';
+    input.removeAttribute('min');
+    input.max = '10';
+    input.value = '-9';
+    checkValidity(input, false, apply, {low: -10, high: -8});
+  }
+
+  if (input.type == 'number') {
+    // Check that when the higher value is higher than max, we don't show it.
+    input.step = '2';
+    input.min = '1';
+    input.max = '10.9';
+    input.value = '10';
+
+    is(input.validationMessage, "Please select a valid value. " +
+                                "The nearest valid value is 9.",
+       "The validation message should not include the higher value.");
+  }
+
+  // Cleaning up,
+  input.removeAttribute('step');
+  input.removeAttribute('max');
+  input.removeAttribute('min');
+  input.value = '';
+}
+
+SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -282,7 +282,7 @@ TypeInferenceOracle::propertyReadIdempotent(JSScript *script, jsbytecode *pc, Ha
     if (script->analysis()->getCode(pc).notIdempotent)
         return false;
 
-    if (id.value() != MakeTypeId(cx, id.value()))
+    if (id.get() != MakeTypeId(cx, id))
         return false;
 
     TypeSet *types = script->analysis()->poppedTypes(pc, 0);

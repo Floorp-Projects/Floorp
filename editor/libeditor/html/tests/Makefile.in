@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir  = editor/libeditor/html/tests
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		green.png \
 		test_bug290026.html \
 		test_bug291780.html \
@@ -79,10 +78,11 @@ _TEST_FILES = \
 		test_root_element_replacement.html \
 		test_bug738366.html \
 		test_bug757371.html \
+		test_bug767684.html \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-_TEST_FILES +=  test_spellcheck_pref.html \
+MOCHITEST_FILES +=  test_spellcheck_pref.html \
 		$(NULL)
 endif
 
@@ -94,7 +94,7 @@ _DATA_FILES = \
 		data/cfhtml-nocontext.txt \
 		$(NULL)
 
-_CHROME_TEST_FILES = \
+MOCHITEST_CHROME_FILES = \
 		test_contenteditable_text_input_handling.html \
 		test_bug366682.html \
 		test_bug489202.xul \
@@ -105,13 +105,10 @@ _CHROME_TEST_FILES = \
 		green.png \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
+
+libs::
 	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
 
 libs:: $(_DATA_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/data
-
-libs:: $(_CHROME_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
-

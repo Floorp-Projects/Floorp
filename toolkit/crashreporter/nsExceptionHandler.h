@@ -111,6 +111,22 @@ bool CreatePairedMinidumps(ProcessHandle childPid,
 // Parent-side API for children
 const char* GetChildNotificationPipe();
 
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+// Inject a crash report client into an arbitrary process, and inform the
+// callback object when it crashes. Parent process only.
+
+class InjectorCrashCallback
+{
+public:
+  InjectorCrashCallback() { }
+
+  virtual void OnCrash(DWORD processID, const nsAString& aDumpID) = 0;
+};
+
+void InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb);
+void UnregisterInjectorCallback(DWORD processID);
+#endif
+
 // Child-side API
 bool SetRemoteExceptionHandler(const nsACString& crashPipe);
 

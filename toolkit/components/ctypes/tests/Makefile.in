@@ -29,7 +29,8 @@ EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
 
 XPCSHELL_TESTS = unit
 
-_CHROME_TEST_FILES = \
+# should be MOCHITEST_CHROME_FILES, see bug 770938
+MOCHITEST_CHROME_TESTS = \
   xpcshellTestHarnessAdaptor.js \
   ctypes_worker.js \
   test_ctypes.xul \
@@ -54,7 +55,7 @@ libs:: unit/test_jsctypes.js.in
 	$(INSTALL) $(xpctestdir)/$(SHARED_LIBRARY) $(chrometestdir)
 	$(RM) $(xpctestdir)/test_jsctypes.js.in
 
-libs:: $(_CHROME_TEST_FILES)
+libs:: $(MOCHITEST_CHROME_TESTS)
 	$(INSTALL) $(foreach f,$^,"$f") $(chrometestdir)
 
 GARBAGE += \

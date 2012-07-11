@@ -62,8 +62,7 @@ interface nsIWebSocketChannel : nsISupports
      * to the socket listener as they arrive.  The socket listener's methods
      * are called on the thread that calls asyncOpen and are not called until
      * after asyncOpen returns.  If asyncOpen returns successfully, the
-     * protocol implementation promises to call at least onStart and onStop of
-     * the listener.
+     * protocol implementation promises to call at least onStop on the listener.
      *
      * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
      * websocket connection is reopened.

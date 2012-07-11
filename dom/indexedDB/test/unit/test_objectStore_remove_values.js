@@ -41,7 +41,7 @@ function testSteps()
   for (let i = 0; i < data.length; i++) {
     let test = data[i];
 
-    let request = mozIndexedDB.open(name, i+1, description);
+    let request = indexedDB.open(name, i+1, description);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     let event = yield;

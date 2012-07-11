@@ -40,6 +40,10 @@ _BROWSER_FILES = \
 		browser_inspector_treePanel_menu.js \
 		browser_inspector_pseudoclass_lock.js \
 		browser_inspector_pseudoClass_menu.js \
+		browser_inspector_destroyselection.html \
+		browser_inspector_destroyselection.js \
+		browser_inspector_treePanel_navigation.html \
+		browser_inspector_treePanel_navigation.js \
 		head.js \
 		$(NULL)
 

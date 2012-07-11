@@ -9,12 +9,12 @@ function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
 
-  let request2 = mozIndexedDB.open(name, 2);
+  let request2 = indexedDB.open(name, 2);
   request2.onerror = errorHandler;
   request2.onupgradeneeded = unexpectedSuccessHandler;
   request2.onsuccess = unexpectedSuccessHandler;

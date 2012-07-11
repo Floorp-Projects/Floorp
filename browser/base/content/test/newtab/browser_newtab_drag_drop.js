@@ -9,7 +9,7 @@
  */
 function runTests() {
   // test a simple drag-and-drop scenario
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
 
   yield addNewTabPageTab();
@@ -19,7 +19,7 @@ function runTests() {
   checkGrid("1,0p,2,3,4,5,6,7,8");
 
   // drag a cell to its current cell and make sure it's not pinned afterwards
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
 
   yield addNewTabPageTab();
@@ -29,7 +29,7 @@ function runTests() {
   checkGrid("0,1,2,3,4,5,6,7,8");
 
   // ensure that pinned pages aren't moved if that's not necessary
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",1,2");
 
   yield addNewTabPageTab();
@@ -40,7 +40,7 @@ function runTests() {
 
   // pinned sites should always be moved around as blocks. if a pinned site is
   // moved around, neighboring pinned are affected as well
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("0,1");
 
   yield addNewTabPageTab();
@@ -51,7 +51,7 @@ function runTests() {
 
   // pinned sites should not be pushed out of the grid (unless there are only
   // pinned ones left on the grid)
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",,,,,,,7,8");
 
   yield addNewTabPageTab();
@@ -61,7 +61,7 @@ function runTests() {
   checkGrid("0,1,3,4,5,6,7p,8p,2p");
 
   // make sure that pinned sites are re-positioned correctly
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("0,1,2,,,5");
 
   yield addNewTabPageTab();
@@ -71,7 +71,7 @@ function runTests() {
   checkGrid("3,1p,2p,4,0p,5p,6,7,8");
 
   // drag a new site onto the very first cell
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",,,,,,,7,8");
 
   yield addNewTabPageTab();
@@ -82,7 +82,7 @@ function runTests() {
 
   // drag a new site onto the grid and make sure that pinned cells don't get
   // pushed out
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",,,,,,,7,8");
 
   yield addNewTabPageTab();
@@ -93,7 +93,7 @@ function runTests() {
 
   // drag a new site beneath a pinned cell and make sure the pinned cell is
   // not moved
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",,,,,,,,8");
 
   yield addNewTabPageTab();
@@ -104,7 +104,7 @@ function runTests() {
 
   // drag a new site onto a block of pinned sites and make sure they're shifted
   // around accordingly
-  setLinks("0,1,2,3,4,5,6,7,8");
+  yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("0,1,2,,,,,,");
 
   yield addNewTabPageTab();

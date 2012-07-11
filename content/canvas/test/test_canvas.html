@@ -19548,7 +19548,11 @@ ok(window.CanvasRenderingContext2D.prototype, "window.CanvasRenderingContext2D.p
 window.CanvasRenderingContext2D.prototype.fill = 1;
 ok(window.CanvasRenderingContext2D.prototype.fill === 1, "window.CanvasRenderingContext2D.prototype.fill === 1");
 delete window.CanvasRenderingContext2D.prototype.fill;
-todo(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
+if (IsAzureEnabled()) {
+  ok(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
+} else {
+  todo(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
+}
 
 //restore the original method to ensure that other tests can run successfully
 window.CanvasRenderingContext2D.prototype.fill = fill;

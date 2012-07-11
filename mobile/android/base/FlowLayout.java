@@ -11,8 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class FlowLayout extends ViewGroup {
-    private static final int DEFAULT_SPACING = 5;
-    private int mSpacing = DEFAULT_SPACING;
+    private int mSpacing;
 
     public FlowLayout(Context context) {
         super(context);
@@ -21,7 +20,7 @@ public class FlowLayout extends ViewGroup {
     public FlowLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, org.mozilla.gecko.R.styleable.FlowLayout);
-        mSpacing = a.getDimensionPixelSize(R.styleable.FlowLayout_spacing, DEFAULT_SPACING);
+        mSpacing = a.getDimensionPixelSize(R.styleable.FlowLayout_spacing, (int) context.getResources().getDimension(R.dimen.flow_layout_spacing));
         a.recycle();
     }
 

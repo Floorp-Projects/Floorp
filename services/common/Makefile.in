@@ -17,6 +17,7 @@ modules := \
   observers.js \
   preferences.js \
   rest.js \
+  storageservice.js \
   stringbundle.js \
   tokenserverclient.js \
   utils.js \
@@ -31,9 +32,8 @@ libs::
 
 TEST_DIRS += tests
 
-# TODO enable once build infra supports testing modules.
-#TESTING_JS_MODULES := aitcserver.js storageserver.js
-#TESTING_JS_MODULE_DIR := services-common
+TESTING_JS_MODULES := aitcserver.js storageserver.js
+TESTING_JS_MODULE_DIR := services-common
 
 # What follows is a helper to launch a standalone storage server instance.
 # Most of the code lives in a Python script in the tests directory. If we

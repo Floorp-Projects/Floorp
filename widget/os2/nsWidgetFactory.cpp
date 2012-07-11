@@ -26,12 +26,11 @@
 #include "nsIModule.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-
 // class definition headers
+#include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
 #include "nsBidiKeyboard.h"
-#include "nsWindow.h"
 #include "nsDragService.h"
 #include "nsIFile.h"
 #include "nsFilePicker.h"
@@ -70,7 +69,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOS2)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceOS2, 
+                                         nsIdleServiceOS2::GetInstance)
 
 // component definition, will be exported using XPCOM
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);

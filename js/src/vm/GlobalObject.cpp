@@ -14,12 +14,14 @@
 #include "json.h"
 #include "jsweakmap.h"
 
+#include "builtin/Eval.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
 #include "vm/GlobalObject-inl.h"
 
 #include "jsobjinlines.h"
+
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 
@@ -111,16 +113,15 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         JS_ASSERT(proto == functionProto);
         functionProto->flags |= JSFUN_PROTOTYPE;
 
-        Rooted<JSScript*> script(cx);
-        script = JSScript::Create(cx,
-                                  /* savedCallerFun = */ false,
-                                  /* principals = */ NULL,
-                                  /* originPrincipals = */ NULL,
-                                  /* compileAndGo = */ false,
-                                  /* noScriptRval = */ true,
-                                  /* globalObject = */ NULL,
-                                  JSVERSION_DEFAULT,
-                                  /* staticLevel = */ 0);
+        Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                      /* savedCallerFun = */ false,
+                                                      /* principals = */ NULL,
+                                                      /* originPrincipals = */ NULL,
+                                                      /* compileAndGo = */ false,
+                                                      /* noScriptRval = */ true,
+                                                      /* globalObject = */ NULL,
+                                                      JSVERSION_DEFAULT,
+                                                      /* staticLevel = */ 0));
         if (!script || !script->fullyInitTrivial(cx))
             return NULL;
 
@@ -161,8 +162,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Create |Function| so it and |Function.prototype| can be installed. */
     RootedFunction functionCtor(cx);
     {
-        JSObject *ctor =
-            NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
+        // Note that ctor is rooted purely for the JS_ASSERT at the end
+        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self));
         if (!ctor)
             return NULL;
         functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, self,
@@ -204,7 +205,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* ES5 15.1.2.1. */
     RootedId id(cx, NameToId(cx->runtime->atomState.evalAtom));
-    JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
+    JSObject *evalobj = js_DefineFunction(cx, self, id, IndirectEval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
     self->setOriginalEval(evalobj);
@@ -382,7 +383,7 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
     JS_ASSERT(clasp != &ObjectClass);
     JS_ASSERT(clasp != &FunctionClass);
 
-    JSObject *blankProto = NewObjectWithGivenProto(cx, clasp, &proto, &global);
+    RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global));
     if (!blankProto || !blankProto->setSingletonType(cx))
         return NULL;
 
@@ -392,11 +393,12 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {
+    Rooted<GlobalObject*> self(cx, this);
     JSObject *objectProto = getOrCreateObjectPrototype(cx);
     if (!objectProto)
         return NULL;
 
-    return CreateBlankProto(cx, clasp, *objectProto, *this);
+    return CreateBlankProto(cx, clasp, *objectProto, *self.get());
 }
 
 JSObject *

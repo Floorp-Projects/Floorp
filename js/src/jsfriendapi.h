@@ -524,6 +524,31 @@ GetPCCountScriptSummary(JSContext *cx, size_t script);
 JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
+/*
+ * A call stack can be specified to the JS engine such that all JS entry/exits
+ * to functions push/pop an entry to/from the specified stack.
+ *
+ * For more detailed information, see vm/SPSProfiler.h
+ */
+struct ProfileEntry {
+    /*
+     * These two fields are marked as 'volatile' so that the compiler doesn't
+     * re-order instructions which modify them. The operation in question is:
+     *
+     *    stack[i].string = str;
+     *    (*size)++;
+     *
+     * If the size increment were re-ordered before the store of the string,
+     * then if sampling occurred there would be a bogus entry on the stack.
+     */
+    const char * volatile string;
+    void * volatile sp;
+};
+
+JS_FRIEND_API(void)
+SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size,
+                         uint32_t max);
+
 #ifdef JS_THREADSAFE
 JS_FRIEND_API(void *)
 GetOwnerThread(const JSContext *cx);
@@ -632,6 +657,9 @@ PrepareCompartmentForGC(JSCompartment *comp);
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
+extern JS_FRIEND_API(void)
+PrepareForIncrementalGC(JSRuntime *rt);
+
 extern JS_FRIEND_API(bool)
 IsGCScheduled(JSRuntime *rt);
 
@@ -655,7 +683,7 @@ extern JS_FRIEND_API(void)
 IncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-SetGCSliceTimeBudget(JSContext *cx, int64_t millis);
+FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
 enum GCProgress {
     /*

@@ -57,7 +57,7 @@ exn_finalize(FreeOp *fop, JSObject *obj);
 
 static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp);
+            MutableHandleObject objp);
 
 Class js::ErrorClass = {
     js_Error_str,
@@ -388,7 +388,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 
 static JSBool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     JSExnPrivate *priv;
     JSString *str;
@@ -398,7 +398,7 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     jsval v;
     unsigned attrs;
 
-    *objp = NULL;
+    objp.set(NULL);
     priv = GetExnPrivate(obj);
     if (priv && JSID_IS_ATOM(id)) {
         str = JSID_TO_STRING(id);
@@ -453,7 +453,7 @@ exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
   define:
     if (!JS_DefineProperty(cx, obj, prop, v, NULL, NULL, attrs))
         return false;
-    *objp = obj;
+    objp.set(obj);
     return true;
 }
 
@@ -793,9 +793,8 @@ InitErrorClass(JSContext *cx, Handle<GlobalObject*> global, int type, HandleObje
     }
 
     /* Create the corresponding constructor. */
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, Exception, name, 1,
-                                     JSFunction::ExtendedFinalizeKind);
+    RootedFunction ctor(cx, global->createConstructor(cx, Exception, name, 1,
+                                                      JSFunction::ExtendedFinalizeKind));
     if (!ctor)
         return NULL;
     ctor->setExtendedSlot(0, Int32Value(int32_t(type)));
@@ -824,8 +823,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Initialize the base Error class first. */
-    RootedObject errorProto(cx);
-    errorProto = InitErrorClass(cx, global, JSEXN_ERR, objectProto);
+    RootedObject errorProto(cx, InitErrorClass(cx, global, JSEXN_ERR, objectProto));
     if (!errorProto)
         return NULL;
 
@@ -914,7 +912,6 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     const JSErrorFormatString *errorString;
     JSExnType exn;
     jsval tv[4];
-    JSObject *errProto;
 
     /*
      * Tell our caller to report immediately if this report is just a warning.
@@ -960,7 +957,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      * exception constructor name in the scope chain of the current context's
      * top stack frame, or in the global object if no frame is active.
      */
-    if (!js_GetClassPrototype(cx, NULL, GetExceptionProtoKey(exn), &errProto))
+    RootedObject errProto(cx);
+    if (!js_GetClassPrototype(cx, NullPtr(), GetExceptionProtoKey(exn), &errProto))
         return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
@@ -1018,7 +1016,6 @@ js_ReportUncaughtException(JSContext *cx)
 {
     jsval roots[6];
     JSErrorReport *reportp, report;
-    RootedString str(cx);
 
     if (!JS_IsExceptionPending(cx))
         return true;
@@ -1048,7 +1045,7 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = js_ErrorFromException(cx, exn);
 
     /* XXX L10N angels cry once again. see also everywhere else */
-    str = ToString(cx, exn);
+    RootedString str(cx, ToString(cx, exn));
     if (str)
         roots[1] = StringValue(str);
 

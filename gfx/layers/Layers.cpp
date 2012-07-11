@@ -769,12 +769,12 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix)
  
   fprintf(file, "<ul><li><a ");
 #ifdef MOZ_DUMP_PAINTING
-  WriteSnapshotLinkToDumpFile(this, aFile);
+  WriteSnapshotLinkToDumpFile(this, file);
 #endif
   fprintf(file, ">");
   DumpSelf(file, aPrefix);
 #ifdef MOZ_DUMP_PAINTING
-  fprintf(aFile, "</a>");
+  fprintf(file, "</a>");
 #endif
 
   nsCAutoString pfx(aPrefix);

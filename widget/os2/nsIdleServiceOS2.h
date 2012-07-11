@@ -15,19 +15,30 @@
 class nsIdleServiceOS2 : public nsIdleService
 {
 public:
-  NS_DECL_ISUPPORTS
-
-  nsIdleServiceOS2();
-  ~nsIdleServiceOS2();
+  NS_DECL_ISUPPORTS_INHERITED
 
   // ask the DSSaver DLL (sscore.dll) for the time of the last activity
   bool PollIdleTime(PRUint32 *aIdleTime);
 
+  static already_AddRefed<nsIdleServiceOS2> GetInstance()
+  {
+    nsIdleServiceOS2* idleService =
+      static_cast<nsIdleServiceOS2*>(nsIdleService::GetInstance().get());
+    if (!idleService) {
+      idleService = new nsIdleServiceOS2();
+      NS_ADDREF(idleService);
+    }
+    
+    return idleService;
+  }
+  
 private:
   HMODULE mHMod; // module handle for screensaver DLL
   bool mInitialized; // fully initialized (function found in screensaver DLL?)
 
 protected:
+  nsIdleServiceOS2();
+  ~nsIdleServiceOS2();
   bool UsePollMode();
 };
 

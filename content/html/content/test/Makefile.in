@@ -22,9 +22,8 @@ TEST_DIRS += bug649134
 # For form-related test suite.
 TEST_DIRS += forms
 
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_hidden.html \
 		test_bug589.html \
 		test_bug691.html \
@@ -268,14 +267,10 @@ _TEST_FILES = \
 		test_bug763626.html \
 		$(NULL)
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
 		browser_bug649778.js \
 		file_bug649778.html \
 		file_bug649778.html^headers^ \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

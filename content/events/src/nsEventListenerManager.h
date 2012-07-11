@@ -29,7 +29,13 @@ class nsEventTargetChainItem;
 class nsPIDOMWindow;
 class nsCxPusher;
 class nsIEventListenerInfo;
-class nsIDocument;
+
+typedef enum
+{
+    eNativeListener = 0,
+    eJSEventListener,
+    eWrappedJSListener
+} nsListenerType;
 
 struct nsListenerStruct
 {
@@ -37,17 +43,17 @@ struct nsListenerStruct
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
   PRUint16                      mFlags;
+  PRUint8                       mListenerType;
   bool                          mHandlerIsString;
-  bool                          mWrappedJS;
 
   nsIJSEventListener* GetJSListener() const {
-    return (mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) ?
+    return (mListenerType == eJSEventListener) ?
       static_cast<nsIJSEventListener *>(mListener.get()) : nsnull;
   }
 
   ~nsListenerStruct()
   {
-    if ((mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) && mListener) {
+    if ((mListenerType == eJSEventListener) && mListener) {
       static_cast<nsIJSEventListener*>(mListener.get())->Disconnect();
     }
   }

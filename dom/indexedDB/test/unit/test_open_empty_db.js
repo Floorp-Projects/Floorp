@@ -17,7 +17,7 @@ function testSteps()
   const version = 1;
 
   for each (let name in names) {
-    let request = mozIndexedDB.open(name, version);
+    let request = indexedDB.open(name, version);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     let event = yield;

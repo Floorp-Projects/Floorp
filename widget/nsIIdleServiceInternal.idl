@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIIdleService.idl"
+
+[scriptable, uuid(7b89a2e7-ed12-42e0-b86d-4984239abd7b)]
+interface nsIIdleServiceInternal : nsIIdleService
+{  
+ /**
+   * "Resets the idle time to the value specified."
+   *
+   * @param idleDelta the time (in milliseconds) since the last user inter
+   *                  action
+   **/
+  void resetIdleTimeOut(in unsigned long idleDeltaInMS);
+};
+

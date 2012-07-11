@@ -86,8 +86,6 @@ section .note.GNU-stack noalloc noexec nowrite progbits
 %define SEG_CONST   .rodata progbits alloc noexec nowrite align=16
 %endif
 
-%define STRICT_MEMORY_ACCESS 1
-
 ; To make the code position-independent, append -DPIC to the commandline
 ;
 %define GOT_SYMBOL  _GLOBAL_OFFSET_TABLE_	; ELF supports PIC

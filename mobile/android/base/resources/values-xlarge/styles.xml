@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <!--
+        Only overriden styles for Honeycomb/Ice cream sandwich tablets are specified here.
+        Please refer to values/styles.xml for default styles.
+    -->
+
+    <!-- AwesomeBar -->
+    <style name="AwesomeBar">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- Lists in AwesomeBar -->
+    <style name="AwesomeBarList" parent="android:style/Widget.Holo.ListView">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:paddingLeft">52dp</item>
+        <item name="android:paddingRight">52dp</item>
+        <item name="android:background">#EEF1F5</item>
+        <item name="android:divider">#D1D5DA</item>
+        <item name="android:dividerHeight">1dp</item>
+        <item name="android:cacheColorHint">#EEF1F5</item>
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+    </style>
+
+    <!-- AwesomeBar Tab Indicator Curve Left -->
+    <style name="AwesomeBarTabIndicatorCurve.Left">
+         <item name="android:layout_width">86dp</item>
+    </style>
+
+    <!-- AwesomeBar Tab Indicator Curve Right -->
+    <style name="AwesomeBarTabIndicatorCurve.Right">
+         <item name="android:layout_width">fill_parent</item>
+    </style>
+
+    <!-- TabWidget --> 
+    <style name="TabWidget">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">48dip</item>
+    </style>
+
+</resources>

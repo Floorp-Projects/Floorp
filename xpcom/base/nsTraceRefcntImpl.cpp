@@ -34,6 +34,7 @@
 #endif
 
 #include "mozilla/BlockingResourceBase.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
@@ -646,6 +647,7 @@ static bool InitLog(const char* envVar, const char* msg, FILE* *result)
       }
       stream = ::fopen(fname.get(), "w" FOPEN_NO_INHERIT);
       if (stream != NULL) {
+        MozillaRegisterDebugFD(fileno(stream));
         *result = stream;
         fprintf(stdout, "### %s defined -- logging %s to %s\n",
                 envVar, msg, fname.get());
@@ -1235,6 +1237,17 @@ nsTraceRefcntImpl::Startup()
 {
 }
 
+static void maybeUnregisterAndCloseFile(FILE *&f) {
+  if (!f)
+    return;
+
+  int fd = fileno(f);
+  fclose(f);
+  if (fd != 1 && fd != 2)
+    MozillaUnRegisterDebugFD(fd);
+  f = nsnull;
+}
+
 void
 nsTraceRefcntImpl::Shutdown()
 {
@@ -1256,26 +1269,11 @@ nsTraceRefcntImpl::Shutdown()
     PL_HashTableDestroy(gSerialNumbers);
     gSerialNumbers = nsnull;
   }
-  if (gBloatLog) {
-    fclose(gBloatLog);
-    gBloatLog = nsnull;
-  }
-  if (gRefcntsLog) {
-    fclose(gRefcntsLog);
-    gRefcntsLog = nsnull;
-  }
-  if (gAllocLog) {
-    fclose(gAllocLog);
-    gAllocLog = nsnull;
-  }
-  if (gLeakyLog) {
-    fclose(gLeakyLog);
-    gLeakyLog = nsnull;
-  }
-  if (gCOMPtrLog) {
-    fclose(gCOMPtrLog);
-    gCOMPtrLog = nsnull;
-  }
+  maybeUnregisterAndCloseFile(gBloatLog);
+  maybeUnregisterAndCloseFile(gRefcntsLog);
+  maybeUnregisterAndCloseFile(gAllocLog);
+  maybeUnregisterAndCloseFile(gLeakyLog);
+  maybeUnregisterAndCloseFile(gCOMPtrLog);
 #endif
 }
 

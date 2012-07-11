@@ -4,8 +4,18 @@ import os, sys, os.path, time
 from tempfile import mkdtemp
 from shutil import rmtree
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mozprocess import processhandler
 
 from nsinstall import nsinstall
+import nsinstall as nsinstall_module
+NSINSTALL_PATH = nsinstall_module.__file__
+
+# Run the non-ASCII tests on (a) Windows, or (b) any platform with
+# sys.stdin.encoding set to UTF-8
+import codecs
+RUN_NON_ASCII_TESTS = (sys.platform == "win32" or
+                       (sys.stdin.encoding is not None and
+                        codecs.lookup(sys.stdin.encoding) == codecs.lookup("utf-8")))
 
 class TestNsinstall(unittest.TestCase):
     """
@@ -15,7 +25,13 @@ class TestNsinstall(unittest.TestCase):
         self.tmpdir = mkdtemp()
 
     def tearDown(self):
-        rmtree(self.tmpdir)
+        # Unicode strings means non-ASCII children can be deleted properly on
+        # Windows
+        if sys.stdin.encoding is None:
+            tmpdir = unicode(self.tmpdir)
+        else:
+            tmpdir = unicode(self.tmpdir, sys.stdin.encoding)
+        rmtree(tmpdir)
 
     # utility methods for tests
     def touch(self, file, dir=None):
@@ -120,6 +136,36 @@ class TestNsinstall(unittest.TestCase):
         destdir = os.path.join(testdir, "subdir")
         self.assertEqual(nsinstall(["-d", testfile, destdir]), 0)
         self.assert_(os.path.isdir(os.path.join(destdir, "testfile")))
+
+    if RUN_NON_ASCII_TESTS:
+        def test_nsinstall_non_ascii(self):
+            "Test that nsinstall handles non-ASCII files"
+            filename = u"\u2325\u3452\u2415\u5081"
+            testfile = self.touch(filename)
+            testdir = self.mkdirs(u"\u4241\u1D04\u1414")
+            self.assertEqual(nsinstall([testfile.encode("utf-8"),
+                                        testdir.encode("utf-8")]), 0)
+
+            destfile = os.path.join(testdir, filename)
+            self.assert_(os.path.isfile(destfile))
+
+        def test_nsinstall_non_ascii_subprocess(self):
+            "Test that nsinstall as a subprocess handles non-ASCII files"
+            filename = u"\u2325\u3452\u2415\u5081"
+            testfile = self.touch(filename)
+            testdir = self.mkdirs(u"\u4241\u1D04\u1414")
+            # We don't use subprocess because it can't handle Unicode on
+            # Windows <http://bugs.python.org/issue1759845>. mozprocess calls
+            # CreateProcessW directly so it's perfect.
+            p = processhandler.ProcessHandlerMixin([sys.executable,
+                                                    NSINSTALL_PATH,
+                                                    testfile, testdir])
+            p.run()
+            rv = p.waitForFinish()
+
+            self.assertEqual(rv, 0)
+            destfile = os.path.join(testdir, filename)
+            self.assert_(os.path.isfile(destfile))
 
     #TODO: implement -R, -l, -L and test them!
 

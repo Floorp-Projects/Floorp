@@ -17,15 +17,12 @@
 #include "Statistics.h"
 
 #include "nsAttrName.h"
-#include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"
-
-#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -88,22 +85,13 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 {
   *ppv = nsnull;
 
-  static const GUID IID_SimpleDOMDeprecated = {0x0c539790,0x12e4,0x11cf,0xb6,0x61,0x00,0xaa,0x00,0x4c,0xd6,0xd8};
-
   // Provide a special service ID for getting the accessible for the browser tab
   // document that contains this accessible object. If this accessible object
   // is not inside a browser tab then the service fails with E_NOINTERFACE.
   // A use case for this is for screen readers that need to switch context or
   // 'virtual buffer' when focus moves from one browser tab area to another.
-  static const GUID SID_IAccessibleContentDocument = {0xa5d8e1f3,0x3571,0x4d8f,0x95,0x21,0x07,0xed,0x28,0xfb,0x07,0x2e};
-
-  if (guidService != IID_ISimpleDOMNode &&
-      guidService != IID_SimpleDOMDeprecated &&
-      guidService != IID_IAccessible &&  guidService != IID_IAccessible2 &&
-      guidService != IID_IAccessibleApplication &&
-      guidService != SID_IAccessibleContentDocument)
-    return E_INVALIDARG;
-
+  static const GUID SID_IAccessibleContentDocument =
+    { 0xa5d8e1f3,0x3571,0x4d8f,0x95,0x21,0x07,0xed,0x28,0xfb,0x07,0x2e };
   if (guidService == SID_IAccessibleContentDocument) {
     if (iid != IID_IAccessible)
       return E_NOINTERFACE;
@@ -140,7 +128,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
   }
 
   // Can get to IAccessibleApplication from any node via QS
-  if (iid == IID_IAccessibleApplication) {
+  if (guidService == IID_IAccessibleApplication) {
     ApplicationAccessible* applicationAcc = GetApplicationAccessible();
     if (!applicationAcc)
       return E_NOINTERFACE;
@@ -163,7 +151,14 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
    * }
    */
 
-  return QueryInterface(iid, ppv);
+  static const GUID IID_SimpleDOMDeprecated =
+    { 0x0c539790,0x12e4,0x11cf,0xb6,0x61,0x00,0xaa,0x00,0x4c,0xd6,0xd8 };
+  if (guidService == IID_ISimpleDOMNode ||
+      guidService == IID_SimpleDOMDeprecated ||
+      guidService == IID_IAccessible ||  guidService == IID_IAccessible2)
+    return QueryInterface(iid, ppv);
+
+  return E_INVALIDARG;
 }
 
 //-----------------------------------------------------

@@ -33,11 +33,10 @@ ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS += unit_ipc
 endif
 
-include $(topsrcdir)/config/rules.mk
 
 # Split files arbitrarily in two groups to not run into too-long command lines
 # which break on Windows (see bug 563151)
-_TEST_FILES1 = \
+MOCHITEST_FILES_A = \
 		responseIdentical.sjs \
 		test_bug5141.html \
 		test_bug51034.html \
@@ -258,7 +257,7 @@ _TEST_FILES1 = \
 		test_bug744830.html \
 		$(NULL)
 
-_TEST_FILES2 = \
+MOCHITEST_FILES_B = \
 		test_bug459424.html \
 		bug461735-redirect1.sjs \
 		bug461735-redirect2.sjs \
@@ -557,14 +556,17 @@ _TEST_FILES2 = \
 		test_XHR_parameters.html \
 		$(NULL)
 
-_CHROME_FILES =	\
+MOCHITEST_CHROME_FILES =	\
 		test_bug357450.js \
 		$(NULL)
 
+MOCHITEST_FILES_PARTS = $(foreach s,A B,MOCHITEST_FILES_$(s))
+
 # This test fails on the Mac for some reason
 ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
-_TEST_FILES2 += 	test_copyimage.html \
+MOCHITEST_FILES_C = 	test_copyimage.html \
 		$(NULL)
+MOCHITEST_FILES_PARTS += MOCHITEST_FILES_C
 endif
 
 # Disabled for now. Mochitest isn't reliable enough for these.
@@ -575,19 +577,9 @@ endif
 #		test_bug503473.html \
 #		file_bug503473-frame.sjs \
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
 		browser_bug593387.js \
 		$(NULL)
 
-libs:: $(_TEST_FILES1)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_TEST_FILES2)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
 

@@ -83,16 +83,13 @@ public:
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
 
-  gfxMatrix GetCanvasTM();
+  gfxMatrix GetCanvasTM(PRUint32 aFor);
 
 protected:
   // implementation helpers:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
 
-  // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
-  // painting, because children expect to paint to device space, not userspace.
-  gfxMatrix GetCanvasTMForChildren();
   void InvalidateDirtyRect(const nsRect& aRect, PRUint32 aFlags,
                            bool aDuringReflowSVG);
   void FlushDirtyRegion(PRUint32 aFlags, bool aDuringReflowSVG);

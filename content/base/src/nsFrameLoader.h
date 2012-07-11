@@ -330,6 +330,7 @@ private:
   bool mRemoteFrame : 1;
   bool mClipSubdocument : 1;
   bool mClampScrollPosition : 1;
+  bool mRemoteBrowserInitialized : 1;
 
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;

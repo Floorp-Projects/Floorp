@@ -243,29 +243,28 @@ nsRangeUpdater::SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition)
   return SelAdjCreateNode(aParent, aPosition);
 }
 
-
-nsresult
+void
 nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
 {
-  if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  if (mLock) {
+    // lock set by Will/DidReplaceParent, etc...
+    return;
+  }
+  MOZ_ASSERT(aNode);
   PRUint32 i, count = mArray.Length();
   if (!count) {
-    return NS_OK;
+    return;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset = 0;
-  
-  nsresult res = nsEditor::GetNodeLocation(aNode, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMNode> parent = nsEditor::GetNodeLocation(aNode, &offset);
   
   // check for range endpoints that are after aNode and in the same parent
   nsRangeStore *item;
   for (i=0; i<count; i++)
   {
     item = mArray[i];
-    NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
+    MOZ_ASSERT(item);
     
     if ((item->startNode.get() == parent) && (item->startOffset > offset))
       item->startOffset--;
@@ -300,7 +299,6 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
       item->endOffset = offset;
     }
   }
-  return NS_OK;
 }
 
 
@@ -314,13 +312,11 @@ nsRangeUpdater::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsID
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  nsresult result = nsEditor::GetNodeLocation(aOldRightNode, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(result, result);
+  nsCOMPtr<nsIDOMNode> parent = nsEditor::GetNodeLocation(aOldRightNode, &offset);
   
   // first part is same as inserting aNewLeftnode
-  result = SelAdjInsertNode(parent,offset-1);
+  nsresult result = SelAdjInsertNode(parent,offset-1);
   NS_ENSURE_SUCCESS(result, result);
 
   // next step is to check for range enpoints inside aOldRightNode

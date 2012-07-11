@@ -7,6 +7,9 @@ contract @mozilla.org/contactAddress;1 {eba48030-89e8-11e1-b0c4-0800200c9a66}
 component {82601b20-89e8-11e1-b0c4-0800200c9a66} ContactManager.js
 contract @mozilla.org/contactTelephone;1 {82601b20-89e8-11e1-b0c4-0800200c9a66}
 
+component {94811520-c11f-11e1-afa7-0800200c9a66} ContactManager.js
+contract @mozilla.org/contactEmail;1 {94811520-c11f-11e1-afa7-0800200c9a66}
+
 component {e31daea0-0cb6-11e1-be50-0800200c9a66} ContactManager.js
 contract @mozilla.org/contactFindOptions;1 {e31daea0-0cb6-11e1-be50-0800200c9a66}
 

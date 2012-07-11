@@ -5,13 +5,13 @@
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:bottom="2dip"
-          android:drawable="@drawable/awesomebar_tab"/>
-
-    <item android:top="46dip">
+    <item android:top="@dimen/awesomebar_tab_transparency_height">
         <shape android:shape="rectangle">
-            <solid android:color="#000000"/>
+            <solid android:color="#EEF1F5"/>
         </shape>
     </item>
+
+    <item android:bottom="2dip"
+          android:drawable="@drawable/awesomebar_tab_center"/>
 
 </layer-list>

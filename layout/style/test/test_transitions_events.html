@@ -12,12 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 
 .bar { margin: 10px; }
 
-#one { -moz-transition-duration: 500ms; -moz-transition-property: all; }
-#two { -moz-transition: margin-left 1s; }
-#three { -moz-transition: margin 0.5s 0.25s; }
+#one { transition-duration: 500ms; transition-property: all; }
+#two { transition: margin-left 1s; }
+#three { transition: margin 0.5s 0.25s; }
 
 #four, #five, #six, #seven::before, #seven::after {
-  -moz-transition: 500ms color;
+  transition: 500ms color;
   border-color: black; /* don't derive from color */
   -moz-column-rule-color: black; /* don't derive from color */
   -moz-text-decoration-color: black; /* don't derive from color */
@@ -26,14 +26,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 #four {
   /* give the reversing transition a long duration; the reversing will
      still be quick */
-  -moz-transition-duration: 30s;
-  -moz-transition-timing-function: cubic-bezier(0, 1, 1, 0);
+  transition-duration: 30s;
+  transition-timing-function: cubic-bezier(0, 1, 1, 0);
 }
 
 /* make sure we don't get events for the pseudo-elements */
 #seven::before, #seven::after {
   content: "x";
-  -moz-transition-duration: 50ms;
+  transition-duration: 50ms;
 }
 #seven[foo]::before, #seven[foo]::after { color: lime; }
 
@@ -272,9 +272,9 @@ setTimeout(function() {
                // The transition hasn't finished already.
                did_stops = true;
              }
-             $("five").style.MozTransitionProperty = "margin-left";
-             $("six").style.MozTransitionDuration = "0s";
-             $("six").style.MozTransitionDelay = "0s";
+             $("five").style.transitionProperty = "margin-left";
+             $("six").style.transitionDuration = "0s";
+             $("six").style.transitionDelay = "0s";
              $("six").style.color = "blue";
            }, 100);
 function poll_start_reversal() {

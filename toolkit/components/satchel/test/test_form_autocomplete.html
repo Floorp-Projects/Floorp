@@ -80,8 +80,14 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
-  <!-- normal, basic form (with fieldname='searchbar-history') -->
+  <!-- form with input type='number' -->
   <form id="form12" onsubmit="return false;">
+    <input  type="number" name="field10">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- normal, basic form (with fieldname='searchbar-history') -->
+  <form id="form13" onsubmit="return false;">
     <input  type="text" name="searchbar-history">
     <button type="submit">Submit</button>
   </form>
@@ -127,11 +133,12 @@ fh.addEntry("field6", "value");
 fh.addEntry("field7", "value");
 fh.addEntry("field8", "value");
 fh.addEntry("field9", "value");
+fh.addEntry("field10", "42");
 fh.addEntry("searchbar-history", "blacklist test");
 
 // All these non-implemeted types might need autocomplete tests in the future.
 var todoTypes = [ "datetime", "date", "month", "week", "time", "datetime-local",
-                  "number", "range", "color" ];
+                  "range", "color" ];
 var todoInput = document.createElement("input");
 for each (var type in todoTypes) {
   todoInput.type = type;
@@ -710,11 +717,23 @@ function runTest(testNum) {
         } else if (testNum == 402) {
           input = $_(11, "field9");
         } else if (testNum == 403) {
-          // Go to test 500.
-          fh.addEntry("field1", "value1");
-          input = $_(1, "field1");
-          testNum = 499;
+          input = $_(12, "field10");
         }
+
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 404:
+        checkMenuEntries(["42"]);
+        doKey("down");
+        doKey("return");
+        checkForm("42");
+
+        // Go to test 500.
+        fh.addEntry("field1", "value1");
+        input = $_(1, "field1");
+        testNum = 499;
 
         restoreForm();
         doKey("down");
@@ -738,7 +757,7 @@ function runTest(testNum) {
 
     case 600:
         // check we don't show autocomplete for searchbar-history
-        input = $_(12, "searchbar-history");
+        input = $_(13, "searchbar-history");
 
         // Trigger autocomplete popup
         checkForm("");

@@ -228,7 +228,7 @@ ParallelArray_construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* extract second argument, the elemental function */
-    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[1], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, ValueToCallable(cx, &args[1]));
     if (!elementalFun)
         return false;
 
@@ -274,7 +274,7 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
     }
 
     /* extract first argument, the elemental function */
-    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, ValueToCallable(cx, &args[0]));
     if (!elementalFun)
         return false;
 
@@ -352,7 +352,7 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
     }
 
     /* extract first argument, the elemental function */
-    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, ValueToCallable(cx, &args[0]));
     if (!elementalFun)
         return false;
 
@@ -417,7 +417,7 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* extract first argument, the elemental function */
-    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, ValueToCallable(cx, &args[0]));
     if (!elementalFun)
         return false;
 
@@ -505,7 +505,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject conflictFun(cx);
     /* conflict resolution function */
     if ((args.length() >= 3) && !args[2].isUndefined()) {
-        conflictFun = js_ValueToCallableObject(cx, &args[2], JSV2F_SEARCH_STACK);
+        conflictFun = ValueToCallable(cx, &args[2]);
         if (!conflictFun)
             return false;
     }
@@ -548,7 +548,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
 
         RootedValue previous(cx, resBuffer->getDenseArrayElement(targetIdx));
 
-        if (!previous.reference().isMagic(JS_ARRAY_HOLE)) {
+        if (!previous.get().isMagic(JS_ARRAY_HOLE)) {
             if (conflictFun) {
                 /* we have a conflict, so call the resolution function to resovle it */
                 InvokeArgsGuard ag;
@@ -672,16 +672,16 @@ IsDenseArrayId(JSContext *cx, JSObject *obj, HandleId id)
 }
 
 static JSBool
-ParallelArray_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
-                            JSProperty **propp)
+ParallelArray_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
+                            MutableHandleShape propp)
 {
     RootedObject buffer(cx, GetBuffer(obj));
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
         IsDenseArrayId(cx, buffer, id))
     {
-        *propp = (JSProperty *) 1; /* TRUE */
-        *objp = obj;
+        MarkNonNativePropertyFound(obj, propp);
+        objp.set(obj);
         return true;
     }
 
@@ -689,26 +689,26 @@ ParallelArray_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObje
     if (proto)
         return proto->lookupGeneric(cx, id, objp, propp);
 
-    *objp = NULL;
-    *propp = NULL;
+    objp.set(NULL);
+    propp.set(NULL);
     return true;
 }
 
 static JSBool
-ParallelArray_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
-                             JSProperty **propp)
+ParallelArray_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleObject objp,
+                             MutableHandleShape propp)
 {
     RootedId id(cx, NameToId(name));
     return ParallelArray_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-ParallelArray_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
-                            JSProperty **propp)
+ParallelArray_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
+                            MutableHandleShape propp)
 {
     if (IsDenseArrayIndex(GetBuffer(obj), index)) {
-        *propp = (JSProperty *) 1;  /* TRUE */
-        *objp = obj;
+        MarkNonNativePropertyFound(obj, propp);
+        objp.set(obj);
         return true;
     }
 
@@ -716,14 +716,14 @@ ParallelArray_lookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSO
     if (proto)
         return proto->lookupElement(cx, index, objp, propp);
 
-    *objp = NULL;
-    *propp = NULL;
+    objp.set(NULL);
+    propp.set(NULL);
     return true;
 }
 
 static JSBool
-ParallelArray_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
-                            JSProperty **propp)
+ParallelArray_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, MutableHandleObject objp,
+                            MutableHandleShape propp)
 {
     RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_lookupGeneric(cx, obj, id, objp, propp);

@@ -485,6 +485,11 @@ include $(topsrcdir)/config/rules.mk
 # recursively-expanded variable.
 ifdef VPX_NEED_OBJ_INT_EXTRACT
 
+# only for MSVC
+ifdef _MSC_VER
+asm_com_offsets.$(OBJ_SUFFIX): CFLAGS += -GL-
+endif
+
 asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
@@ -494,6 +499,10 @@ asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 OBJS := $(filter-out asm_com_offsets.$(OBJ_SUFFIX),$(OBJS))
 
 ifdef MOZ_VP8_ENCODER
+
+ifdef _MSC_VER
+asm_enc_offsets.$(OBJ_SUFFIX): CFLAGS += -GL-
+endif
 
 asm_enc_offsets.asm: asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \

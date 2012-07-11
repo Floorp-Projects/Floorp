@@ -5,11 +5,12 @@
 #include "nsCOMPtr.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsIObserver.h"
+#include "mozilla/Attributes.h"
 
 class nsIJSContextStack;
 
-class nsPrivateBrowsingServiceWrapper : public nsIPrivateBrowsingService,
-                                        public nsIObserver
+class nsPrivateBrowsingServiceWrapper MOZ_FINAL : public nsIPrivateBrowsingService,
+                                                  public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

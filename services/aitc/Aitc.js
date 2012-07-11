@@ -8,9 +8,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/preferences.js");
 
 function AitcService() {
   this.aitc = null;
@@ -20,7 +20,6 @@ AitcService.prototype = {
   classID: Components.ID("{a3d387ca-fd26-44ca-93be-adb5fda5a78d}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsINavHistoryObserver,
                                          Ci.nsISupportsWeakReference]),
 
   observe: function observe(subject, topic, data) {
@@ -34,7 +33,6 @@ AitcService.prototype = {
         Services.obs.removeObserver(this, "sessionstore-windows-restored");
 
         // Don't start AITC if classic sync is on.
-        Cu.import("resource://services-common/preferences.js");
         if (Preferences.get("services.sync.engine.apps", false)) {
           return;
         }
@@ -43,43 +41,32 @@ AitcService.prototype = {
           return;
         }
 
-        // Start AITC service if apps.enabled is true. If false, we look
-        // in the browser history to determine if they're an "apps user". If
-        // an entry wasn't found, we'll watch for navigation to either the
-        // marketplace or dashboard and switch ourselves on then.
-
-        if (Preferences.get("apps.enabled", false)) {
-          this.start();
-          return;
-        }
-
-        // Set commonly used URLs.
-        this.DASHBOARD_URL = CommonUtils.makeURI(
-          Preferences.get("services.aitc.dashboard.url")
-        );
-        this.MARKETPLACE_URL = CommonUtils.makeURI(
-          Preferences.get("services.aitc.marketplace.url")
-        );
-
-        if (this.hasUsedApps()) {
-          Preferences.set("apps.enabled", true);
+        // Start AITC service only if apps.enabled is true. If false, setup
+        // an observer in case the value changes as a result of an access to
+        // the DOM API.
+        if (Preferences.get("dom.mozApps.used", false)) {
           this.start();
           return;
         }
 
         // Wait and see if the user wants anything apps related.
-        PlacesUtils.history.addObserver(this, true);
+        Preferences.observe("dom.mozApps.used", function checkIfEnabled() {
+          if (Preferences.get("dom.mozApps.used", false)) {
+            Preferences.ignore("dom.mozApps.used", checkIfEnabled, this);
+            this.start();
+          }
+        }, this);
         break;
     }
   },
 
   start: function start() {
-    Cu.import("resource://services-aitc/main.js");
     if (this.aitc) {
       return;
     }
 
     // Log to stdout if enabled.
+    Cu.import("resource://services-aitc/main.js");
     Cu.import("resource://services-common/log4moz.js");
     let root = Log4Moz.repository.getLogger("Service.AITC");
     root.level = Log4Moz.Level[Preferences.get("services.aitc.log.level")];
@@ -87,44 +74,31 @@ AitcService.prototype = {
       root.addAppender(new Log4Moz.DumpAppender());
     }
     this.aitc = new Aitc();
+    Services.obs.notifyObservers(null, "service:aitc:started", null);
   },
 
-  hasUsedApps: function hasUsedApps() {
-    // There is no easy way to determine whether a user is "using apps".
-    // The best we can do right now is to see if they have visited either
-    // the Mozilla dashboard or Marketplace. See bug 760898.
-    let gh = PlacesUtils.ghistory2;
-    if (gh.isVisited(this.DASHBOARD_URL)) {
-      return true;
-    }
-    if (gh.isVisited(this.MARKETPLACE_URL)) {
-      return true;
-    }
-    return false;
-  },
-
-  // nsINavHistoryObserver. We are only interested in onVisit().
-  onBeforeDeleteURI: function() {},
-  onBeginUpdateBatch: function() {},
-  onClearHistory: function() {},
-  onDeleteURI: function() {},
-  onDeleteVisits: function() {},
-  onEndUpdateBatch: function() {},
-  onPageChanged: function() {},
-  onPageExpired: function() {},
-  onTitleChanged: function() {},
-
-  onVisit: function onVisit(uri) {
-    if (!uri.equals(this.MARKETPLACE_URL) && !uri.equals(this.DASHBOARD_URL)) {
-      return;
-    }
-
-    PlacesUtils.history.removeObserver(this);
-    Preferences.set("apps.enabled", true);
-    this.start();
-    return;
-  },
 };
 
-const components = [AitcService];
+function AboutApps() {
+}
+AboutApps.prototype = {
+  classID: Components.ID("{1de7cbe8-60f1-493e-b56b-9d099b3c018e}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIAboutModule]),
+
+  getURIFlags: function(aURI) {
+    return Ci.nsIAboutModule.ALLOW_SCRIPT;
+  },
+
+  newChannel: function(aURI) {
+    let channel = Services.io.newChannel(
+      Preferences.get("services.aitc.dashboard.url"), null, null
+    );
+    channel.originalURI = aURI;
+    return channel;
+  }
+};
+
+const components = [AitcService, AboutApps];
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

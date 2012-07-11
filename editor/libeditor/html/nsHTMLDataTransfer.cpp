@@ -541,9 +541,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
               rv = IsEmptyNode(parentNode, &isEmpty, true);
               if (NS_SUCCEEDED(rv) && isEmpty)
               {
-                nsCOMPtr<nsIDOMNode> listNode;
                 PRInt32 newOffset;
-                GetNodeLocation(parentNode, address_of(listNode), &newOffset);
+                nsCOMPtr<nsIDOMNode> listNode = GetNodeLocation(parentNode, &newOffset);
                 if (listNode)
                 {
                   DeleteNode(parentNode);
@@ -618,8 +617,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       }
       if (lastInsertNode)
       {
-        rv = GetNodeLocation(lastInsertNode, address_of(parentNode), &offsetOfNewNode);
-        NS_ENSURE_SUCCESS(rv, rv);
+        parentNode = GetNodeLocation(lastInsertNode, &offsetOfNewNode);
         offsetOfNewNode++;
       }
     }
@@ -658,9 +656,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       else // we need to find a container for selection.  Look up.
       {
         tmp = selNode;
-        rv = GetNodeLocation(tmp, address_of(selNode), &selOffset);
+        selNode = GetNodeLocation(tmp, &selOffset);
         ++selOffset;  // want to be *after* last leaf node in paste
-        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // make sure we don't end up with selection collapsed after an invisible break node
@@ -679,7 +676,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         {
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
-          rv = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
+          selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
           wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
@@ -694,7 +691,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           {
             // prior visible thing is an image or some other non-text thingy.  
             // We want to be right after it.
-            rv = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
+            selNode = GetNodeLocation(wsRunObj.mStartReasonNode, &selOffset);
             ++selOffset;
           }
         }
@@ -713,8 +710,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         PRInt32 linkOffset;
         rv = SplitNodeDeep(link, selNode, selOffset, &linkOffset, true, address_of(leftLink));
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = GetNodeLocation(leftLink, address_of(selNode), &selOffset);
-        NS_ENSURE_SUCCESS(rv, rv);
+        selNode = GetNodeLocation(leftLink, &selOffset);
         selection->Collapse(selNode, selOffset+1);
       }
     }
@@ -1339,20 +1335,37 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
                                        aDestinationNode, aDestOffset,
                                        aDoDeleteSelection,
                                        isSafe);
+        } else {
+          // In some platforms (like Linux), the clipboard might return data
+          // requested for unknown flavors (for example:
+          // application/x-moz-nativehtml).  In this case, treat the data
+          // to be pasted as mere HTML to get the best chance of pasting it
+          // correctly.
+          bestFlavor.AssignLiteral(kHTMLMime);
+          // Fall through the next case
         }
       }
     }
-    else if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime) ||
-             0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
-             0 == nsCRT::strcmp(bestFlavor, kMozTextInternal)) {
+    if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime) ||
+        0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
+        0 == nsCRT::strcmp(bestFlavor, kMozTextInternal)) {
       nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
-      if (textDataObj && len > 0)
-      {
+      if (textDataObj && len > 0) {
         nsAutoString text;
         textDataObj->GetData(text);
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign(text.get(), len / 2);
+      } else {
+        nsCOMPtr<nsISupportsCString> textDataObj(do_QueryInterface(genericDataObj));
+        if (textDataObj && len > 0) {
+          nsCAutoString text;
+          textDataObj->GetData(text);
+          NS_ASSERTION(text.Length() <= len, "Invalid length!");
+          stuffToPaste.Assign(NS_ConvertUTF8toUTF16(Substring(text, 0, len)));
+        }
+      }
 
+      if (!stuffToPaste.IsEmpty()) {
         nsAutoEditBatch beginBatching(this);
         if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime)) {
           rv = DoInsertHTMLWithContext(stuffToPaste,
@@ -1993,10 +2006,11 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode)
   {
-    nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    if (NS_SUCCEEDED(GetNodeLocation(newNode, address_of(parent), &offset)) && parent)
-      selection->Collapse(parent, offset+1);
+    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(newNode, &offset);
+    if (parent) {
+      selection->Collapse(parent, offset + 1);
+    }
   }
   return rv;
 }
@@ -2076,10 +2090,11 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && newNode)
   {
-    nsCOMPtr<nsIDOMNode> parent;
     PRInt32 offset;
-    if (NS_SUCCEEDED(GetNodeLocation(newNode, address_of(parent), &offset)) && parent)
-      selection->Collapse(parent, offset+1);
+    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(newNode, &offset);
+    if (parent) {
+      selection->Collapse(parent, offset + 1);
+    }
   }
   return rv;
 }

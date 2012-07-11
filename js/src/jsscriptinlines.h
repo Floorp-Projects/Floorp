@@ -76,6 +76,30 @@ Bindings::extensibleParents()
     return lastBinding && lastBinding->extensibleParents();
 }
 
+uint16_t
+Bindings::formalIndexToSlot(uint16_t i)
+{
+    JS_ASSERT(i < nargs);
+    return CallObject::RESERVED_SLOTS + i;
+}
+
+uint16_t
+Bindings::varIndexToSlot(uint16_t i)
+{
+    JS_ASSERT(i < nvars);
+    return CallObject::RESERVED_SLOTS + i + nargs;
+}
+
+unsigned
+Bindings::argumentsVarIndex(JSContext *cx) const
+{
+    PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
+    unsigned i;
+    DebugOnly<BindingKind> kind = lookup(cx, arguments, &i);
+    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+    return i;
+}
+
 extern void
 CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop, JSPrincipals **origin);
 
@@ -231,7 +255,7 @@ JSScript::writeBarrierPre(JSScript *script)
 
     JSCompartment *comp = script->compartment();
     if (comp->needsBarrier()) {
-        JS_ASSERT(!comp->rt->gcRunning);
+        JS_ASSERT(!comp->rt->isHeapBusy());
         JSScript *tmp = script;
         MarkScriptUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == script);
