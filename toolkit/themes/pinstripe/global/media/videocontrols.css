@@ -248,36 +248,36 @@ html|table {
 
 /* CSS Transitions */
 .clickToPlay {
-  -moz-transition-property: opacity, background-size;
-  -moz-transition-duration: 400ms, 400ms;
+  transition-property: opacity, background-size;
+  transition-duration: 400ms, 400ms;
 }
 .clickToPlay[fadeout] {
   background-size: auto, 192px 192px;
   opacity: 0;
 }
 .clickToPlay[fadeout][immediate] {
-  -moz-transition-property: opacity, background-size;
-  -moz-transition-duration: 0s, 0s;
+  transition-property: opacity, background-size;
+  transition-duration: 0s, 0s;
 }
 .controlBar:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 200ms;
+  transition-property: opacity;
+  transition-duration: 200ms;
 }
 .controlBar[fadeout] {
   opacity: 0;
 }
 .volumeStack:not([immediate]) {
-  -moz-transition-property: opacity, margin-top;
-  -moz-transition-duration: 200ms, 200ms;
+  transition-property: opacity, margin-top;
+  transition-duration: 200ms, 200ms;
 }
 .volumeStack[fadeout] {
   opacity: 0;
   margin-top: 0;
 }
 .statusOverlay:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 300ms;
-  -moz-transition-delay: 750ms;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-delay: 750ms;
 }
 .statusOverlay[fadeout] {
   opacity: 0;

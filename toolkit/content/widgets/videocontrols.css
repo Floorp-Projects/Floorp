@@ -41,24 +41,24 @@
  * (in case a 3rd party theme does not provide transitions).
  */
 .controlBar:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 1ms;
+  transition-property: opacity;
+  transition-duration: 1ms;
 }
 .controlBar[fadeout] {
   opacity: 0;
 }
 .volumeStack:not([immediate]) {
-  -moz-transition-property: opacity, margin-top;
-  -moz-transition-duration: 1ms, 1ms;
+  transition-property: opacity, margin-top;
+  transition-duration: 1ms, 1ms;
 }
 .volumeStack[fadeout] {
   opacity: 0;
   margin-top: 0;
 }
 .statusOverlay:not([immediate]) {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 1ms;
-  -moz-transition-delay: 750ms;
+  transition-property: opacity;
+  transition-duration: 1ms;
+  transition-delay: 750ms;
 }
 .statusOverlay[fadeout] {
   opacity: 0;
