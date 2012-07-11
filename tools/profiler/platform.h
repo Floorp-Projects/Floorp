@@ -98,8 +98,12 @@ class OS {
   static Mutex* CreateMutex();
 
   // On supported platforms, setup a signal handler which would start
-  // and stop the profiler.
-  static void RegisterStartStopHandlers();
+  // the profiler.
+#if defined(ANDROID)
+  static void RegisterStartHandler();
+#else
+  static void RegisterStartHandler() {}
+#endif
 
  private:
   static const int msPerSecond = 1000;
