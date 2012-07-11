@@ -13,6 +13,7 @@
 #include "nsExpirationTracker.h"
 #include "nsRect.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 class nsSHEntry;
 class nsISHEntry;
@@ -29,8 +30,8 @@ class nsDocShellEditorData;
 // back/forward cache.
 //
 // nsSHEntryShared is the vehicle for this sharing.
-class nsSHEntryShared : public nsIBFCacheEntry,
-                        public nsIMutationObserver
+class nsSHEntryShared MOZ_FINAL : public nsIBFCacheEntry,
+                                  public nsIMutationObserver
 {
   public:
     static void Startup();
