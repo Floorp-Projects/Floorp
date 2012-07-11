@@ -134,6 +134,9 @@ class Handle
     Handle() {}
 
     const T *ptr;
+
+    template <typename S>
+    void operator =(S v) MOZ_DELETE;
 };
 
 /* Defined in jsapi.h under Value definition */
@@ -167,7 +170,11 @@ class MutableHandle
     MutableHandle(Rooted<S> *root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
-    void set(T v) { *ptr = v; }
+    void set(T v)
+    {
+        JS_ASSERT(!RootMethods<T>::poisoned(v));
+        *ptr = v;
+    }
 
     T *address() const { return ptr; }
     T get() const { return *ptr; }

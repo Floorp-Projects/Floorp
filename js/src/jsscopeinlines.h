@@ -122,10 +122,14 @@ StackBaseShape::updateGetterSetter(uint8_t attrs,
                                    StrictPropertyOp rawSetter)
 {
     flags &= ~(BaseShape::HAS_GETTER_OBJECT | BaseShape::HAS_SETTER_OBJECT);
-    if ((attrs & JSPROP_GETTER) && rawGetter)
+    if ((attrs & JSPROP_GETTER) && rawGetter) {
+        JS_ASSERT(!IsPoisonedPtr(rawGetter));
         flags |= BaseShape::HAS_GETTER_OBJECT;
-    if ((attrs & JSPROP_SETTER) && rawSetter)
+    }
+    if ((attrs & JSPROP_SETTER) && rawSetter) {
+        JS_ASSERT(!IsPoisonedPtr(rawSetter));
         flags |= BaseShape::HAS_SETTER_OBJECT;
+    }
 
     this->rawGetter = rawGetter;
     this->rawSetter = rawSetter;

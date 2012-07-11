@@ -293,7 +293,7 @@ struct JSAtomState
 extern bool
 AtomIsInterned(JSContext *cx, JSAtom *atom);
 
-#define ATOM(name) cx->runtime->atomState.name##Atom
+#define ATOM(name) js::HandlePropertyName::fromMarkedLocation(&cx->runtime->atomState.name##Atom)
 
 #define COMMON_ATOM_INDEX(name)                                               \
     ((offsetof(JSAtomState, name##Atom) - JSAtomState::commonAtomsOffset)     \

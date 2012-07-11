@@ -1402,7 +1402,9 @@ stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
         attrs |= JSPROP_READONLY;
 
     Rooted<JSObject*> varobj(f.cx, &f.fp()->varObj());
-    if (!DefVarOrConstOperation(f.cx, varobj, dn, attrs))
+    RootedPropertyName name(f.cx, dn);
+
+    if (!DefVarOrConstOperation(f.cx, varobj, name, attrs))
         THROW();
 }
 

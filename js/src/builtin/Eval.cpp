@@ -351,15 +351,14 @@ static inline bool
 WarnOnTooManyArgs(JSContext *cx, const CallArgs &args)
 {
     if (args.length() > 1) {
-        if (JSScript *script = cx->stack.currentScript()) {
-            if (!script->warnedAboutTwoArgumentEval) {
-                static const char TWO_ARGUMENT_WARNING[] =
-                    "Support for eval(code, scopeObject) has been removed. "
-                    "Use |with (scopeObject) eval(code);| instead.";
-                if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
-                    return false;
-                script->warnedAboutTwoArgumentEval = true;
-            }
+        Rooted<JSScript*> script(cx, cx->stack.currentScript());
+        if (script && !script->warnedAboutTwoArgumentEval) {
+            static const char TWO_ARGUMENT_WARNING[] =
+                "Support for eval(code, scopeObject) has been removed. "
+                "Use |with (scopeObject) eval(code);| instead.";
+            if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
+                return false;
+            script->warnedAboutTwoArgumentEval = true;
         } else {
             // In the case of an indirect call without a caller frame, avoid a
             // potential warning-flood by doing nothing.
