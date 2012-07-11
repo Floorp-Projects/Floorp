@@ -27,7 +27,7 @@ function onTabViewShown() {
   // we need to stop the setBounds() css animation or else the test will
   // fail in single-mode because the group is newly created "ontabshown".
   let $container = contentWindow.iQ(currentActiveGroup.container);
-  $container.css("-moz-transition-property", "none");
+  $container.css("transition-property", "none");
 
   currentActiveGroup.setPosition(40, 40, true);
   currentActiveGroup.arrange({animate: false});

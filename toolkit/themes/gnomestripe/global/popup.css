@@ -16,7 +16,7 @@ panel {
 /* ::::: arrow panel ::::: */
 
 panel[type="arrow"] {
-  -moz-transition: opacity 300ms;
+  transition: opacity 300ms;
   -moz-appearance: none;
 }
 
@@ -52,7 +52,7 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrow[side="bottom"] {
-  -moz-transform: scaleY(-1);
+  transform: scaleY(-1);
   margin-top: -1px;
 }
 
@@ -69,7 +69,7 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrow[side="right"] {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
   margin-left: -1px;
 }
 

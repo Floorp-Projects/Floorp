@@ -58,12 +58,6 @@ RegExpObject::setShared(JSContext *cx, RegExpShared &shared)
 }
 
 inline void
-RegExpObject::setLastIndex(const Value &v)
-{
-    setSlot(LAST_INDEX_SLOT, v);
-}
-
-inline void
 RegExpObject::setLastIndex(double d)
 {
     setSlot(LAST_INDEX_SLOT, NumberValue(d));

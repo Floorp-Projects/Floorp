@@ -1,0 +1,9 @@
+# nsDOMIdentity.js
+component {8bcac6a3-56a4-43a4-a44c-cdf42763002f} nsDOMIdentity.js
+contract @mozilla.org/dom/identity;1 {8bcac6a3-56a4-43a4-a44c-cdf42763002f}
+category JavaScript-navigator-property id @mozilla.org/dom/identity;1
+
+# nsIDService.js (initialization on startup)
+component {baa581e5-8e72-406c-8c9f-dcd4b23a6f82} nsIDService.js
+contract @mozilla.org/dom/identity/service;1 {baa581e5-8e72-406c-8c9f-dcd4b23a6f82}
+category app-startup IDService @mozilla.org/dom/identity/service;1

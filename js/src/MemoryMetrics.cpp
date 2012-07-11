@@ -22,6 +22,13 @@ namespace JS {
 
 using namespace js;
 
+struct IteratorClosure
+{
+  RuntimeStats *rtStats;
+  ObjectPrivateVisitor *opv;
+  IteratorClosure(RuntimeStats *rt, ObjectPrivateVisitor *v) : rtStats(rt), opv(v) {}
+};
+
 size_t
 CompartmentStats::gcHeapThingsSize()
 {
@@ -54,7 +61,7 @@ static void
 StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 {
     // Append a new CompartmentStats to the vector.
-    RuntimeStats *rtStats = static_cast<RuntimeStats *>(data);
+    RuntimeStats *rtStats = static_cast<IteratorClosure *>(data)->rtStats;
 
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->compartmentStatsVector.growBy(1));
@@ -82,7 +89,7 @@ static void
 StatsArenaCallback(JSRuntime *rt, void *data, gc::Arena *arena,
                    JSGCTraceKind traceKind, size_t thingSize)
 {
-    RuntimeStats *rtStats = static_cast<RuntimeStats *>(data);
+    RuntimeStats *rtStats = static_cast<IteratorClosure *>(data)->rtStats;
 
     // The admin space includes (a) the header and (b) the padding between the
     // end of the header and the start of the first GC thing.
@@ -101,7 +108,8 @@ static void
 StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKind,
                   size_t thingSize)
 {
-    RuntimeStats *rtStats = static_cast<RuntimeStats *>(data);
+    IteratorClosure *closure = static_cast<IteratorClosure *>(data);
+    RuntimeStats *rtStats = closure->rtStats;
     CompartmentStats *cStats = rtStats->currCompartmentStats;
     switch (traceKind) {
     case JSTRACE_OBJECT:
@@ -118,6 +126,15 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         cStats->objectSlots += slotsSize;
         cStats->objectElements += elementsSize;
         cStats->objectMisc += miscSize;
+
+        if (ObjectPrivateVisitor *opv = closure->opv) {
+            js::Class *clazz = js::GetObjectClass(obj);
+            if (clazz->flags & JSCLASS_HAS_PRIVATE &&
+                clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
+            {
+                cStats->objectPrivate += opv->sizeOfIncludingThis(GetObjectPrivate(obj));
+            }
+        }
         break;
     }
     case JSTRACE_STRING:
@@ -178,7 +195,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 }
 
 JS_PUBLIC_API(bool)
-CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
+CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv)
 {
     if (!rtStats->compartmentStatsVector.reserve(rt->compartments.length()))
         return false;
@@ -193,7 +210,8 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     IterateChunks(rt, rtStats, StatsChunkCallback);
 
     // Take the per-compartment measurements.
-    IterateCompartmentsArenasCells(rt, rtStats, StatsCompartmentCallback,
+    IteratorClosure closure(rtStats, opv);
+    IterateCompartmentsArenasCells(rt, &closure, StatsCompartmentCallback,
                                    StatsArenaCallback, StatsCellCallback);
 
     // Take the "explicit/js/runtime/" measurements.

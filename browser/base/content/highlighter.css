@@ -25,9 +25,9 @@
 #highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox,
 #highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox > .highlighter-veil,
 #highlighter-veil-container:not([disable-transitions]) > #highlighter-veil-middlebox > #highlighter-veil-transparentbox {
-  -moz-transition-property: width, height;
-  -moz-transition-duration: 0.1s;
-  -moz-transition-timing-function: linear;
+  transition-property: width, height;
+  transition-duration: 0.1s;
+  transition-timing-function: linear;
 }
 
 #highlighter-veil-bottombox,
@@ -53,9 +53,9 @@
 }
 
 #highlighter-nodeinfobar-container:not([disable-transitions]) {
-  -moz-transition-property: top, left;
-  -moz-transition-duration: 0.1s;
-  -moz-transition-timing-function: linear;
+  transition-property: top, left;
+  transition-duration: 0.1s;
+  transition-timing-function: linear;
 }
 
 #highlighter-nodeinfobar-text {
@@ -120,8 +120,8 @@ html|*#highlighter-nodeinfobar-tagname {
 }
 
 #inspector-layoutview-container:not([disable-transitions]) > iframe {
-  -moz-transition-property: height;
-  -moz-transition-duration: 0.2s;
+  transition-property: height;
+  transition-duration: 0.2s;
 }
 
 #inspector-layoutview-container > iframe[open] {

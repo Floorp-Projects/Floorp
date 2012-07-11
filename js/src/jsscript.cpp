@@ -368,7 +368,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     uint32_t scriptBits = 0;
 
     JSContext *cx = xdr->cx();
-    JSScript *script;
+    Rooted<JSScript*> script(cx);
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = nClosedArgs = nClosedVars = 0;
     jssrcnote *notes = NULL;
 
@@ -572,9 +572,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                                   /* globalObject = */ NULL,
                                   version_,
                                   /* staticLevel = */ 0);
-        if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
-                                              nregexps, ntrynotes, nconsts, nClosedArgs,
-                                              nClosedVars, nTypeSets))
+        if (!script || !JSScript::partiallyInit(cx, script,
+                                                length, nsrcnotes, natoms, nobjects,
+                                                nregexps, ntrynotes, nconsts, nClosedArgs,
+                                                nClosedVars, nTypeSets))
             return JS_FALSE;
 
         script->bindings.transfer(&bindings);
@@ -1129,13 +1130,12 @@ AllocScriptData(JSContext *cx, size_t size)
     return data;
 }
 
-bool
-JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+/* static */ bool
+JSScript::partiallyInit(JSContext *cx, Handle<JSScript*> script,
+                        uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
                         uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
                         uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets)
 {
-    JSScript *script = this;
-
     size_t size = ScriptDataSize(length, nsrcnotes, natoms, nobjects, nregexps,
                                  ntrynotes, nconsts, nClosedArgs, nClosedVars);
     script->data = AllocScriptData(cx, size);
@@ -1146,7 +1146,7 @@ JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint
 
     new (&script->bindings) Bindings;
 
-    uint8_t *cursor = data;
+    uint8_t *cursor = script->data;
     if (nconsts != 0) {
         script->setHasArray(CONSTS);
         cursor += sizeof(ConstArray);
@@ -1223,17 +1223,15 @@ JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint
     script->nTypeSets = uint16_t(nTypeSets);
 
     script->code = (jsbytecode *)cursor;
-    JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == data + size);
+    JS_ASSERT(cursor + length * sizeof(jsbytecode) + nsrcnotes * sizeof(jssrcnote) == script->data + size);
 
     return true;
 }
 
-bool
-JSScript::fullyInitTrivial(JSContext *cx)
+/* static */ bool
+JSScript::fullyInitTrivial(JSContext *cx, Handle<JSScript*> script)
 {
-    JSScript *script = this;
-
-    if (!script->partiallyInit(cx, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0))
+    if (!partiallyInit(cx, script, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0))
         return false;
 
     script->code[0] = JSOP_STOP;
@@ -1242,11 +1240,9 @@ JSScript::fullyInitTrivial(JSContext *cx)
     return true;
 }
 
-bool
-JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
+/* static */ bool
+JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, BytecodeEmitter *bce)
 {
-    JSScript *script = this;
-
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
     JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
@@ -1263,10 +1259,10 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     JS_ASSERT(nClosedArgs == bce->closedArgs.length());
     uint16_t nClosedVars = uint16_t(bce->closedVars.length());
     JS_ASSERT(nClosedVars == bce->closedVars.length());
-    if (!script->partiallyInit(cx, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
-                               bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
-                               bce->constList.length(), nClosedArgs, nClosedVars,
-                               bce->typesetCount))
+    if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
+                       bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
+                       bce->constList.length(), nClosedArgs, nClosedVars,
+                       bce->typesetCount))
         return false;
 
     JS_ASSERT(script->mainOffset == 0);
@@ -1703,9 +1699,14 @@ js::CloneScript(JSContext *cx, HandleScript src)
     if (nobjects != 0) {
         HeapPtrObject *vector = src->objects()->vector;
         for (unsigned i = 0; i < nobjects; i++) {
-            JSObject *clone = vector[i]->isStaticBlock()
-                              ? CloneStaticBlockObject(cx, vector[i]->asStaticBlock(), objects, src)
-                              : CloneInterpretedFunction(cx, vector[i]->toFunction());
+            JSObject *clone;
+            if (vector[i]->isStaticBlock()) {
+                Rooted<StaticBlockObject*> block(cx, &vector[i]->asStaticBlock());
+                clone = CloneStaticBlockObject(cx, block, objects, src);
+            } else {
+                RootedFunction fun(cx, vector[i]->toFunction());
+                clone = CloneInterpretedFunction(cx, fun);
+            }
             if (!clone || !objects.append(clone))
                 return NULL;
         }
