@@ -38,6 +38,10 @@
           // will mean every test run is taking 30s longer than it should and
           // we'd like to know about that so we'll make it a failure.
           rect.setAttribute("fill", "red");
+          // We'll need to clear the animation for this to take effect
+          var anim = svg.getElementsByTagName('animate')[0];
+          anim.parentNode.removeChild(anim);
+          timeoutID = null;
           finish();
         }
 
