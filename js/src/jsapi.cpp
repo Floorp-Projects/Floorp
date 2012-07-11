@@ -1990,9 +1990,10 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
      * Check whether we need to bind 'undefined' and define it if so.
      * Since ES5 15.1.1.3 undefined can't be deleted.
      */
-    PropertyName *name = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
-    if (!obj->nativeContains(cx, NameToId(name)) &&
-        !obj->defineProperty(cx, name, UndefinedValue(),
+    RootedPropertyName undefinedName(cx, cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+    RootedId undefinedId(cx, NameToId(undefinedName));
+    if (!obj->nativeContains(cx, undefinedId) &&
+        !obj->defineProperty(cx, undefinedName, UndefinedValue(),
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return false;
@@ -2069,7 +2070,8 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, PropertyName *name, JSIdArray *ida,
                     int *ip, JSBool *foundp)
 {
-    *foundp = obj->nativeContains(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
+    *foundp = obj->nativeContains(cx, id);
     if (*foundp)
         ida = AddNameToArray(cx, name, ida, ip);
     return ida;
@@ -3357,7 +3359,8 @@ JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, *vp);
 
-    return js_CreateThis(cx, Valueify(clasp), JSVAL_TO_OBJECT(*vp));
+    RootedObject obj(cx, JSVAL_TO_OBJECT(*vp));
+    return js_CreateThis(cx, Valueify(clasp), obj);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5979,12 +5982,15 @@ JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data)
 {
+    RootedValue value(cx, *vp);
+
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, replacer, space);
     StringBuffer sb(cx);
-    if (!js_Stringify(cx, vp, replacer, space, sb))
+    if (!js_Stringify(cx, &value, replacer, space, sb))
         return false;
+    *vp = value;
     if (sb.empty()) {
         JSAtom *nullAtom = cx->runtime->atomState.nullAtom;
         return callback(nullAtom->chars(), nullAtom->length(), data);

@@ -1053,9 +1053,9 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                          JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                          parent, atom);
     if (fun && !compileAndGo) {
-        if (!fun->clearParent(context))
+        if (!JSObject::clearParent(context, fun))
             return NULL;
-        if (!fun->clearType(context))
+        if (!JSObject::clearType(context, fun))
             return NULL;
         fun->setEnvironment(NULL);
     }
@@ -2101,8 +2101,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
      * slot indexed by blockCount off the class-reserved slot base.
      */
     bool redeclared;
-    jsid id = AtomToId(atom);
-    Shape *shape = blockObj->addVar(cx, id, blockCount, &redeclared);
+    RootedId id(cx, AtomToId(atom));
+    Shape *shape = StaticBlockObject::addVar(cx, blockObj, id, blockCount, &redeclared);
     if (!shape) {
         if (redeclared)
             ReportRedeclaration(cx, parser, pn, false, atom);
@@ -2150,7 +2150,7 @@ PopStatementTC(TreeContext *tc)
 }
 
 static inline bool
-OuterLet(TreeContext *tc, StmtInfoTC *stmt, JSAtom *atom)
+OuterLet(TreeContext *tc, StmtInfoTC *stmt, HandleAtom atom)
 {
     while (stmt->downScope) {
         stmt = LexicalLookup(tc, atom, NULL, stmt->downScope);
@@ -2198,8 +2198,10 @@ BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, Tr
 }
 
 static bool
-BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
+BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
 {
+    RootedAtom atom(cx, atom_);
+
     TreeContext *tc = parser->tc;
     ParseNode *pn = data->pn;
 
@@ -2398,7 +2400,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc, unsigned dflag = PND
 static bool
 NoteNameUse(ParseNode *pn, Parser *parser)
 {
-    PropertyName *name = pn->pn_atom->asPropertyName();
+    RootedPropertyName name(parser->context, pn->pn_atom->asPropertyName());
     StmtInfoTC *stmt = LexicalLookup(parser->tc, name, NULL, (StmtInfoTC *)NULL);
 
     DefinitionList::Range defs = parser->tc->decls.lookupMulti(name);
@@ -2650,7 +2652,8 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, Parser *parse
      */
     if (toplevel && blockObj && blockCountBefore == blockObj->slotCount()) {
         bool redeclared;
-        if (!blockObj->addVar(cx, INT_TO_JSID(blockCountBefore), blockCountBefore, &redeclared))
+        RootedId id(cx, INT_TO_JSID(blockCountBefore));
+        if (!StaticBlockObject::addVar(cx, blockObj, id, blockCountBefore, &redeclared))
             return false;
         JS_ASSERT(!redeclared);
         JS_ASSERT(blockObj->slotCount() == blockCountBefore + 1);
@@ -5130,7 +5133,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
                 AdjustBlockId(dn, adjust, tc);
             }
 
-            JSAtom *atom = pn->pn_atom;
+            RootedAtom atom(parser->context, pn->pn_atom);
 #ifdef DEBUG
             StmtInfoTC *stmt = LexicalLookup(tc, atom, NULL, (StmtInfoTC *)NULL);
             JS_ASSERT(!stmt || stmt != tc->topStmt);
@@ -7074,9 +7077,9 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
             return NULL;
 
         if (!compileAndGo) {
-            if (!reobj->clearParent(context))
+            if (!JSObject::clearParent(context, reobj))
                 return NULL;
-            if (!reobj->clearType(context))
+            if (!JSObject::clearType(context, reobj))
                 return NULL;
         }
 

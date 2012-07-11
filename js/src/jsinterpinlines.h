@@ -313,9 +313,9 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
             ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
 #ifdef DEBUG
             if (entry->isOwnPropertyHit()) {
-                JS_ASSERT(obj->nativeLookupNoAllocation(cx, shape->propid()) == shape);
+                JS_ASSERT(obj->nativeLookupNoAllocation(shape->propid()) == shape);
             } else {
-                JS_ASSERT(obj2->nativeLookupNoAllocation(cx, shape->propid()) == shape);
+                JS_ASSERT(obj2->nativeLookupNoAllocation(shape->propid()) == shape);
                 JS_ASSERT(entry->isPrototypePropertyHit());
                 JS_ASSERT(entry->kshape != entry->pshape);
                 JS_ASSERT(!shape->hasSlot());
@@ -418,7 +418,7 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
 }
 
 inline bool
-DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, unsigned attrs)
+DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
 {
     JS_ASSERT(varobj->isVarObj());
     JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());

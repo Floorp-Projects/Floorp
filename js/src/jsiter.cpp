@@ -615,7 +615,7 @@ VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVec
         types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
     }
 
-    JSObject *iterobj = NewIteratorObject(cx, flags);
+    RootedObject iterobj(cx, NewIteratorObject(cx, flags));
     if (!iterobj)
         return false;
 

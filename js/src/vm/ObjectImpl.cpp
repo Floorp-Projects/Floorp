@@ -265,14 +265,12 @@ js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
     return Shape::search(cx, lastProperty(), id, &spp);
 }
 
-#ifdef DEBUG
 Shape *
-js::ObjectImpl::nativeLookupNoAllocation(JSContext *cx, jsid id)
+js::ObjectImpl::nativeLookupNoAllocation(jsid id)
 {
     MOZ_ASSERT(isNative());
-    return Shape::searchNoAllocation(cx, lastProperty(), id);
+    return Shape::searchNoAllocation(lastProperty(), id);
 }
-#endif
 
 void
 js::ObjectImpl::markChildren(JSTracer *trc)

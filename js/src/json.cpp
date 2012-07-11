@@ -80,14 +80,14 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 js_json_stringify(JSContext *cx, unsigned argc, Value *vp)
 {
-    *vp = (argc >= 1) ? vp[2] : UndefinedValue();
-    JSObject *replacer = (argc >= 2 && vp[3].isObject())
-                         ? &vp[3].toObject()
-                         : NULL;
-    Value space = (argc >= 3) ? vp[4] : UndefinedValue();
+    RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
+                              ? &vp[3].toObject()
+                              : NULL);
+    RootedValue value(cx, (argc >= 1) ? vp[2] : UndefinedValue());
+    RootedValue space(cx, (argc >= 3) ? vp[4] : UndefinedValue());
 
     StringBuffer sb(cx);
-    if (!js_Stringify(cx, vp, replacer, space, sb))
+    if (!js_Stringify(cx, &value, replacer, space, sb))
         return false;
 
     // XXX This can never happen to nsJSON.cpp, but the JSON object
@@ -272,15 +272,15 @@ class KeyStringifier<jsid> {
  */
 template<typename KeyType>
 static bool
-PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, StringifyContext *scx)
+PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, MutableHandleValue vp, StringifyContext *scx)
 {
     JSString *keyStr = NULL;
 
     /* Step 2. */
-    if (vp->isObject()) {
+    if (vp.get().isObject()) {
         Value toJSON;
         RootedId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
-        Rooted<JSObject*> obj(cx, &vp->toObject());
+        Rooted<JSObject*> obj(cx, &vp.get().toObject());
         if (!GetMethod(cx, obj, id, 0, &toJSON))
             return false;
 
@@ -294,12 +294,12 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
                 return false;
 
             args.calleev() = toJSON;
-            args.thisv() = *vp;
+            args.thisv() = vp;
             args[0] = StringValue(keyStr);
 
             if (!Invoke(cx, args))
                 return false;
-            *vp = args.rval();
+            vp.set(args.rval());
         }
     }
 
@@ -318,30 +318,30 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
         args.calleev() = ObjectValue(*scx->replacer);
         args.thisv() = ObjectValue(*holder);
         args[0] = StringValue(keyStr);
-        args[1] = *vp;
+        args[1] = vp;
 
         if (!Invoke(cx, args))
             return false;
-        *vp = args.rval();
+        vp.set(args.rval());
     }
 
     /* Step 4. */
-    if (vp->isObject()) {
-        JSObject &obj = vp->toObject();
+    if (vp.get().isObject()) {
+        JSObject &obj = vp.get().toObject();
         if (ObjectClassIs(obj, ESClass_Number, cx)) {
             double d;
-            if (!ToNumber(cx, *vp, &d))
+            if (!ToNumber(cx, vp, &d))
                 return false;
-            vp->setNumber(d);
+            vp.set(NumberValue(d));
         } else if (ObjectClassIs(obj, ESClass_String, cx)) {
-            JSString *str = ToStringSlow(cx, *vp);
+            JSString *str = ToStringSlow(cx, vp);
             if (!str)
                 return false;
-            vp->setString(str);
+            vp.set(StringValue(str));
         } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
-            if (!BooleanGetPrimitiveValue(cx, obj, vp))
+            if (!BooleanGetPrimitiveValue(cx, obj, vp.address()))
                 return false;
-            JS_ASSERT(vp->isBoolean());
+            JS_ASSERT(vp.get().isBoolean());
         }
     }
 
@@ -412,8 +412,8 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
          * which pass the filter.
          */
         id = propertyList[i];
-        Value outputValue;
-        if (!obj->getGeneric(cx, id, &outputValue))
+        RootedValue outputValue(cx);
+        if (!obj->getGeneric(cx, id, outputValue.address()))
             return false;
         if (!PreprocessValue(cx, obj, id.get(), &outputValue, scx))
             return false;
@@ -481,7 +481,7 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
             return JS_FALSE;
 
         /* Steps 7-10. */
-        Value outputValue;
+        RootedValue outputValue(cx);
         for (uint32_t i = 0; i < length; i++) {
             /*
              * Steps 8a-8c.  Again note how the call to the spec's Str method
@@ -489,7 +489,7 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
              * and the replacer and maybe unboxing, and interpreting some
              * values as |null| in separate steps.
              */
-            if (!obj->getElement(cx, i, &outputValue))
+            if (!obj->getElement(cx, i, outputValue.address()))
                 return JS_FALSE;
             if (!PreprocessValue(cx, obj, i, &outputValue, scx))
                 return JS_FALSE;
@@ -582,7 +582,8 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
 /* ES5 15.12.3. */
 JSBool
-js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, StringBuffer &sb)
+js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value space_,
+             StringBuffer &sb)
 {
     RootedObject replacer(cx, replacer_);
     RootedValue spaceRoot(cx, space_);
@@ -723,7 +724,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, String
 
     /* Step 10. */
     RootedId emptyId(cx, NameToId(cx->runtime->atomState.emptyAtom));
-    if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, JS_PropertyStub, JS_StrictPropertyStub,
+    if (!DefineNativeProperty(cx, wrapper, emptyId, vp, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
         return false;
@@ -736,10 +737,10 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer_, Value space_, String
 
     if (!PreprocessValue(cx, wrapper, emptyId.get(), vp, &scx))
         return false;
-    if (IsFilteredValue(*vp))
+    if (IsFilteredValue(vp))
         return true;
 
-    return Str(cx, *vp, &scx);
+    return Str(cx, vp, &scx);
 }
 
 /* ES5 15.12.2 Walk. */
