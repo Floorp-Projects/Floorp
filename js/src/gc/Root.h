@@ -12,7 +12,7 @@
 
 #include "mozilla/TypeTraits.h"
 
-#include "jspubtd.h"
+#include "jsapi.h"
 
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
@@ -97,8 +97,7 @@ class Handle
     }
 
     /* Create a handle for a NULL pointer. */
-    Handle(NullPtr)
-    {
+    Handle(NullPtr) {
         typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
         ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
     }
@@ -135,7 +134,14 @@ class Handle
     Handle() {}
 
     const T *ptr;
+
+    template <typename S>
+    void operator =(S v) MOZ_DELETE;
 };
+
+/* Defined in jsapi.h under Value definition */
+template <>
+class Handle<Value>;
 
 typedef Handle<JSObject*>    HandleObject;
 typedef Handle<JSFunction*>  HandleFunction;
@@ -164,7 +170,11 @@ class MutableHandle
     MutableHandle(Rooted<S> *root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
-    void set(T v) { *ptr = v; }
+    void set(T v)
+    {
+        JS_ASSERT(!RootMethods<T>::poisoned(v));
+        *ptr = v;
+    }
 
     T *address() const { return ptr; }
     T get() const { return *ptr; }

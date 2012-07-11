@@ -244,7 +244,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     if (Emit1(cx, &bce, JSOP_STOP) < 0)
         return NULL;
 
-    if (!script->fullyInitFromEmitter(cx, &bce))
+    if (!JSScript::fullyInitFromEmitter(cx, script, &bce))
         return NULL;
 
     bce.tellDebuggerAboutCompiledScript(cx);

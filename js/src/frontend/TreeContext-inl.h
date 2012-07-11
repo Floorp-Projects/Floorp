@@ -167,7 +167,7 @@ frontend::FinishPopStatement(ContextT *ct)
 
 template <class ContextT>
 typename ContextT::StmtInfo *
-frontend::LexicalLookup(ContextT *ct, JSAtom *atom, int *slotp, typename ContextT::StmtInfo *stmt)
+frontend::LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::StmtInfo *stmt)
 {
     if (!stmt)
         stmt = ct->topScopeStmt;
