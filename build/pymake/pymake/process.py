@@ -208,20 +208,26 @@ class PythonJob(Job):
                 return -127                
             m = sys.modules[self.module]
             if self.method not in m.__dict__:
-                print >>sys.stderr, "No method named '%s' in module %s" % (method, module)
+                print >>sys.stderr, "No method named '%s' in module %s" % (self.method, self.module)
                 return -127
-            m.__dict__[self.method](self.argv)
+            rv = m.__dict__[self.method](self.argv)
+            if rv != 0 and rv is not None:
+                print >>sys.stderr, (
+                    "Native command '%s %s' returned value '%s'" %
+                    (self.module, self.method, rv))
+                return (rv if isinstance(rv, int) else 1)
+
         except PythonException, e:
             print >>sys.stderr, e
             return e.exitcode
         except:
             e = sys.exc_info()[1]
-            if isinstance(e, SystemExit) and (e.code == 0 or e.code == '0'):
+            if isinstance(e, SystemExit) and (e.code == 0 or e.code is None):
                 pass # sys.exit(0) is not a failure
             else:
                 print >>sys.stderr, e
                 print >>sys.stderr, traceback.print_exc()
-                return -127
+                return (e.code if isinstance(e.code, int) else 1)
         finally:
             os.environ = oldenv
         return 0
