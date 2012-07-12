@@ -30,7 +30,7 @@
           android:hint="@string/awesomebar_default_text"
           android:textColorHighlight="@color/url_bar_text_highlight"
           android:inputType="textUri|textNoSuggestions"
-          android:imeOptions="actionSearch"
+          android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
           android:selectAllOnFocus="true"
           android:singleLine="true"
           android:gravity="center_vertical|left">
