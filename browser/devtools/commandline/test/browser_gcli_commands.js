@@ -11,8 +11,7 @@ const TEST_URI = "data:text/html;charset=utf-8,gcli-commands";
 function test() {
   DeveloperToolbarTest.test(TEST_URI, function(browser, tab) {
     testEcho();
-    testConsoleClear();
-    testConsoleOpenClose(tab);
+    testConsole(tab);
 
     imported = undefined;
     finish();
@@ -27,15 +26,7 @@ function testEcho() {
   });
 }
 
-function testConsoleClear() {
-  DeveloperToolbarTest.exec({
-    typed: "console clear",
-    args: {},
-    blankOutput: true,
-  });
-}
-
-function testConsoleOpenClose(tab) {
+function testConsole(tab) {
   DeveloperToolbarTest.exec({
     typed: "console open",
     args: {},
@@ -44,6 +35,24 @@ function testConsoleOpenClose(tab) {
 
   let hud = imported.HUDService.getHudByWindow(content);
   ok(hud.hudId in imported.HUDService.hudReferences, "console open");
+
+  hud.jsterm.execute("pprint(window)");
+
+  /*
+  // The web console is async and we can't force it with hud._flushMessageQueue
+  // So we are skipping the test for output until we have an event to wait on
+  let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
+  ok(labels.length > 0, "output for pprint(window)");
+  */
+
+  DeveloperToolbarTest.exec({
+    typed: "console clear",
+    args: {},
+    blankOutput: true,
+  });
+
+  let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
+  is(labels.length, 0, "no output in console");
 
   DeveloperToolbarTest.exec({
     typed: "console close",
