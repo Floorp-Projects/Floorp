@@ -12,8 +12,13 @@ webidl_files = \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
+  $(NULL)
+
+ifdef MOZ_WEBGL
+webidl_files += \
   WebGLRenderingContext.webidl \
   $(NULL)
+endif
 
 ifdef ENABLE_TESTS
 test_webidl_files := \
