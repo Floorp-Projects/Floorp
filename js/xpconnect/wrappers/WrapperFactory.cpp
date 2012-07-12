@@ -368,7 +368,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ExposedPropertiesOnly>::singleton;
         }
-    } else if (AccessCheck::isSameOrigin(origin, target)) {
+    } else if (AccessCheck::subsumes(target, origin)) {
         // For the same-origin case we use a transparent wrapper, unless one
         // of the following is true:
         // * The object is flagged as needing a SOW.
