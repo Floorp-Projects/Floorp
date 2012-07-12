@@ -38,6 +38,15 @@ class SharedImage;
 class CanvasSurface;
 class BasicTiledLayerBuffer;
 
+enum BufferCapabilities {
+  DEFAULT_BUFFER_CAPS = 0,
+  /** 
+   * The allocated buffer must be efficiently mappable as a
+   * gfxImageSurface.
+   */
+  MAP_AS_IMAGE_SURFACE = 1 << 0
+};
+
 /**
  * We want to share layer trees across thread contexts and address
  * spaces for several reasons; chief among them
@@ -281,6 +290,11 @@ public:
                      gfxASurface::gfxContentType aContent,
                      SurfaceDescriptor* aBuffer);
 
+  bool AllocBufferWithCaps(const gfxIntSize& aSize,
+                           gfxASurface::gfxContentType aContent,
+                           uint32_t aCaps,
+                           SurfaceDescriptor* aBuffer);
+
   static already_AddRefed<gfxASurface>
   OpenDescriptor(const SurfaceDescriptor& aSurface);
 
@@ -317,8 +331,9 @@ private:
                                    SurfaceDescriptor* aBackBuffer);
 
   bool PlatformAllocBuffer(const gfxIntSize& aSize,
-                             gfxASurface::gfxContentType aContent,
-                             SurfaceDescriptor* aBuffer);
+                           gfxASurface::gfxContentType aContent,
+                           uint32_t aCaps,
+                           SurfaceDescriptor* aBuffer);
 
   static already_AddRefed<gfxASurface>
   PlatformOpenDescriptor(const SurfaceDescriptor& aDescriptor);
