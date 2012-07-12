@@ -677,6 +677,8 @@ ifeq ($(CPU_ARCH),x86)
 # Workaround compiler bug on PGO (Bug 721284)
 MonoIC.$(OBJ_SUFFIX): CXXFLAGS += -GL-
 Compiler.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+# Ditto (Bug 772303)
+RegExp.$(OBJ_SUFFIX): CXXFLAGS += -GL-
 endif
 endif # _MSC_VER
 

@@ -516,7 +516,10 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
         return false;
 
     // Start with lastVariable(), not the last argument, for destructuring.
-    for (Shape::Range r = sc->bindings.lastVariable(); !r.empty(); r.popFront()) {
+    Shape::Range r = sc->bindings.lastVariable();
+    Shape::Range::AutoRooter root(cx, &r);
+
+    for (; !r.empty(); r.popFront()) {
         jsid id = r.front().propid();
         if (!JSID_IS_ATOM(id))
             continue;
