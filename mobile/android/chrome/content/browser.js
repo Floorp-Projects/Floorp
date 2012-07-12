@@ -3236,6 +3236,8 @@ Tab.prototype = {
   ])
 };
 
+const kTapHighlightDelay = 50; // milliseconds
+
 var BrowserEventHandler = {
   init: function init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
@@ -3467,12 +3469,22 @@ var BrowserEventHandler = {
 
   _highlightElement: null,
 
+  _highlightTimeout: null,
+
   _doTapHighlight: function _doTapHighlight(aElement) {
-    DOMUtils.setContentState(aElement, kStateActive);
-    this._highlightElement = aElement;
+    this._cancelTapHighlight();
+    this._highlightTimeout = setTimeout(function(self) {
+      DOMUtils.setContentState(aElement, kStateActive);
+      self._highlightElement = aElement;
+    }, kTapHighlightDelay, this);
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
+    if (this._highlightTimeout) {
+      clearTimeout(this._highlightTimeout);
+      this._highlightTimeout = null;
+    }
+
     if (!this._highlightElement)
       return;
 
