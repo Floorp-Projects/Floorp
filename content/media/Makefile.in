@@ -85,6 +85,7 @@ PARALLEL_DIRS += plugins
 endif
 
 PARALLEL_DIRS += webrtc
+
 TEST_DIRS += test
 
 FORCE_STATIC_LIB = 1
