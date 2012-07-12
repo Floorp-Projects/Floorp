@@ -3146,6 +3146,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
+#web-notifications-notification-icon {
+  list-style-image: url(chrome://browser/skin/notification-16.png);
+}
+@media (min-resolution: 2dppx) {
+  #web-notifications-notification-icon {
+    list-style-image: url(chrome://browser/skin/notification-16@2x.png);
+  }
+}
+
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -3158,6 +3167,15 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 @media (min-resolution: 2dppx) {
   .popup-notification-icon[popupid="geolocation"] {
     list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
+  }
+}
+
+.popup-notification-icon[popupid="web-notifications"] {
+  list-style-image: url(chrome://browser/skin/notification-64.png);
+}
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="web-notifications"] {
+    list-style-image: url(chrome://browser/skin/notification-64@2x.png);
   }
 }
 

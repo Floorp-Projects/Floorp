@@ -6,6 +6,7 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/Preferences.h"
 #include "TabChild.h"
 #include "nsContentUtils.h"
 #include "nsDOMEvent.h"
@@ -44,8 +45,8 @@ public:
   void IPDLRelease() { Release(); }
 
 protected:
-  nsresult DispatchCallback();
   nsresult CallCallback();
+  nsresult DispatchCallback();
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   NotificationPermission mPermission;
@@ -104,6 +105,28 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(NotificationPermissionRequest)
 NS_IMETHODIMP
 NotificationPermissionRequest::Run()
 {
+  // File are automatically granted permission.
+  nsCOMPtr<nsIURI> uri;
+  mPrincipal->GetURI(getter_AddRefs(uri));
+  bool isFile;
+  uri->SchemeIs("file", &isFile);
+  if (isFile) {
+    mPermission = NotificationPermission::Granted;
+  }
+
+  // Grant permission if pref'ed on.
+  if (Preferences::GetBool("notification.prompt.testing", false)) {
+    if (Preferences::GetBool("notification.prompt.testing.allow", true)) {
+      mPermission = NotificationPermission::Granted;
+    } else {
+      mPermission = NotificationPermission::Denied;
+    }
+  }
+
+  if (mPermission != NotificationPermission::Default) {
+    return DispatchCallback();
+  }
+
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild.
@@ -158,20 +181,26 @@ NS_IMETHODIMP
 NotificationPermissionRequest::Cancel()
 {
   mPermission = NotificationPermission::Denied;
-  nsCOMPtr<nsIRunnable> callbackRunnable = NS_NewRunnableMethod(this,
-    &NotificationPermissionRequest::CallCallback);
-  NS_DispatchToMainThread(callbackRunnable);
-  return NS_OK;
+  return DispatchCallback();
 }
 
 NS_IMETHODIMP
 NotificationPermissionRequest::Allow()
 {
   mPermission = NotificationPermission::Granted;
+  return DispatchCallback();
+}
+
+inline nsresult
+NotificationPermissionRequest::DispatchCallback()
+{
+  if (!mCallback) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIRunnable> callbackRunnable = NS_NewRunnableMethod(this,
     &NotificationPermissionRequest::CallCallback);
-  NS_DispatchToMainThread(callbackRunnable);
-  return NS_OK;
+  return NS_DispatchToMainThread(callbackRunnable);
 }
 
 nsresult
@@ -370,6 +399,24 @@ Notification::GetPermissionInternal(nsISupports* aGlobal, ErrorResult& aRv)
     return NotificationPermission::Denied;
   }
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+
+  // Allow files to show notifications by default.
+  nsCOMPtr<nsIURI> uri;
+  principal->GetURI(getter_AddRefs(uri));
+  bool isFile;
+  uri->SchemeIs("file", &isFile);
+  if (isFile) {
+    return NotificationPermission::Granted;
+  }
+
+  // We also allow notifications is they are pref'ed on.
+  if (Preferences::GetBool("notification.prompt.testing", false)) {
+    if (Preferences::GetBool("notification.prompt.testing.allow", true)) {
+      return NotificationPermission::Granted;
+    } else {
+      return NotificationPermission::Denied;
+    }
+  }
 
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
 
