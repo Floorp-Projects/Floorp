@@ -3,9 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-       android:shape="rectangle">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-     <solid android:color="@android:color/transparent"/>
+    <item android:state_pressed="true" android:drawable="@drawable/tabs_crop_expanded_pressed"/>
+    <item android:drawable="@drawable/tabs_crop_expanded_normal"/>
 
-</shape>
+</selector>
