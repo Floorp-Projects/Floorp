@@ -464,7 +464,7 @@ static unsigned finalizeCount = 0;
 static void
 finalize_counter_finalize(JSFreeOp *fop, JSObject *obj)
 {
-    ++finalizeCount;
+    JS_ATOMIC_INCREMENT(&finalizeCount);
 }
 
 static JSClass FinalizeCounterClass = {
