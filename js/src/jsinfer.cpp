@@ -4452,8 +4452,8 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
      * than we will use for subsequent new objects. Generate an object with the
      * appropriate final shape.
      */
-    baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind,
-                                baseobj->lastProperty());
+    RootedShape shape(cx, baseobj->lastProperty());
+    baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind, shape);
     if (!baseobj ||
         !type->addDefiniteProperties(cx, baseobj) ||
         !initializerList.append(done)) {
@@ -5023,13 +5023,15 @@ JSFunction::setTypeForScriptedFunction(JSContext *cx, bool singleton)
         if (!setSingletonType(cx))
             return false;
     } else {
+        RootedFunction self(cx, this);
+
         TypeObject *type = cx->compartment->types.newTypeObject(cx, script(),
                                                                 JSProto_Function, getProto());
         if (!type)
             return false;
 
-        setType(type);
-        type->interpretedFunction = this;
+        self->setType(type);
+        type->interpretedFunction = self;
     }
 
     return true;
@@ -5203,10 +5205,10 @@ JSObject::makeLazyType(JSContext *cx)
      * looking at the class prototype key.
      */
 
-    if (isSlowArray())
+    if (self->isSlowArray())
         type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
 
-    if (IsTypedArrayProto(this))
+    if (IsTypedArrayProto(self))
         type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
 
     self->type_ = type;
@@ -5259,7 +5261,7 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 }
 
 TypeObject *
-JSObject::getNewType(JSContext *cx, JSFunction *fun)
+JSObject::getNewType(JSContext *cx, JSFunction *fun_)
 {
     TypeObjectSet &table = cx->compartment->newTypeObjects;
 
@@ -5281,13 +5283,14 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
          * Object.create is called with a prototype object that is also the
          * 'prototype' property of some scripted function.
          */
-        if (type->newScript && type->newScript->fun != fun)
+        if (type->newScript && type->newScript->fun != fun_)
             type->clearNewScript(cx);
 
         return type;
     }
 
     RootedObject self(cx, this);
+    RootedFunction fun(cx, fun_);
 
     if (!setDelegate(cx))
         return NULL;
