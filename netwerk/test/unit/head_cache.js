@@ -36,7 +36,7 @@ function asyncOpenCacheEntry(key, sessionName, storagePolicy, access, callback)
                       sessionName,
                       storagePolicy,
                       Components.interfaces.nsICache.STREAM_BASED);
-      var cacheEntry = session.asyncOpenCacheEntry(key, access, this);
+      session.asyncOpenCacheEntry(key, access, this);
     }
   };
 

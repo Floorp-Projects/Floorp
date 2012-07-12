@@ -2816,7 +2816,7 @@ nsHTMLEditRules::DeleteNonTableElements(nsINode* aNode)
     return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
   }
 
-  for (nsIContent* child = aNode->GetLastChild();
+  for (nsCOMPtr<nsIContent> child = aNode->GetLastChild();
        child;
        child = child->GetPreviousSibling()) {
     nsresult rv = DeleteNonTableElements(child);

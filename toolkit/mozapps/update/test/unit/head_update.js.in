@@ -103,7 +103,7 @@ var gSwitchApp = false;
 var gDisableReplaceFallback = false;
 
 // Time to wait for the test helper process before continuing the test
-const TEST_HELPER_TIMEOUT = 1000;
+const TEST_HELPER_TIMEOUT = 2000;
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
