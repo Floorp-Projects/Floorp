@@ -1546,7 +1546,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isMember=False,
                                     isOptional=False,
                                     invalidEnumValueFatal=True,
-                                    defaultValue=None):
+                                    defaultValue=None,
+                                    treatNullAs="Default",
+                                    treatUndefinedAs="Default"):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -2130,14 +2132,22 @@ for (uint32_t i = 0; i < length; ++i) {
         # XXXbz Need to figure out string behavior based on extended args?  Also, how to
         # detect them?
 
-        # For nullable strings that are not otherwise annotated, null
-        # and undefined become null strings.
+        treatAs = {
+            "Default": "eStringify",
+            "EmptyString": "eEmpty",
+            "Null": "eNull"
+        }
         if type.nullable():
-            nullBehavior = "eNull"
-            undefinedBehavior = "eNull"
-        else:
-            nullBehavior = "eStringify"
-            undefinedBehavior = "eStringify"
+            # For nullable strings null becomes a null string.
+            treatNullAs = "Null"
+            # For nullable strings undefined becomes a null string unless
+            # specified otherwise.
+            if treatUndefinedAs == "Default":
+                treatUndefinedAs = "Null"
+        nullBehavior = treatAs[treatNullAs]
+        if treatUndefinedAs == "Missing":
+            raise TypeError("We don't support [TreatUndefinedAs=Missing]")
+        undefinedBehavior = treatAs[treatUndefinedAs]
 
         def getConversionCode(varName):
             conversionCode = (
@@ -2485,7 +2495,9 @@ class CGArgumentConverter(CGThing):
                                             self.descriptorProvider,
                                             isOptional=(self.argcAndIndex is not None),
                                             invalidEnumValueFatal=self.invalidEnumValueFatal,
-                                            defaultValue=self.argument.defaultValue),
+                                            defaultValue=self.argument.defaultValue,
+                                            treatNullAs=self.argument.treatNullAs,
+                                            treatUndefinedAs=self.argument.treatUndefinedAs),
             self.replacementVariables,
             self.argcAndIndex).define()
 
@@ -3262,6 +3274,8 @@ class FakeArgument():
         self.optional = False
         self.variadic = False
         self.defaultValue = None
+        self.treatNullAs = "Default"
+        self.treatUndefinedAs = "Default"
 
 class CGSetterCall(CGPerSignatureCall):
     """
@@ -4358,7 +4372,9 @@ class CGProxySpecialOperation(CGPerSignatureCall):
         if operation.isSetter() or operation.isCreator():
             # arguments[0] is the index or name of the item that we're setting.
             argument = arguments[1]
-            template = getJSToNativeConversionTemplate(argument.type, descriptor)
+            template = getJSToNativeConversionTemplate(argument.type, descriptor,
+                                                       treatNullAs=argument.treatNullAs,
+                                                       treatUndefinedAs=argument.treatUndefinedAs)
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
