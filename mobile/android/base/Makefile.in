@@ -76,6 +76,7 @@ FENNEC_JAVA_FILES = \
   MenuItemDefault.java \
   MultiChoicePreference.java \
   NSSBridge.java \
+  CustomEditText.java \
   PrivateDataPreference.java \
   PropertyAnimator.java \
   ProfileMigrator.java \

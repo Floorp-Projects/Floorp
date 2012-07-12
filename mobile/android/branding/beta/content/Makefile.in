@@ -15,7 +15,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 LINUX_BRANDING_FILES = \
-	fennec_40x40.png \
+	fennec_48x48.png \
 	fennec_72x72.png \
 	$(NULL)
 

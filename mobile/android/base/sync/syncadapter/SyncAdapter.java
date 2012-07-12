@@ -66,6 +66,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   private final AccountManager mAccountManager;
   private final Context        mContext;
 
+  protected long syncStartTimestamp;
+
   public SyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
     mContext = context;
@@ -254,7 +256,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                             final String authority,
                             final ContentProviderClient provider,
                             final SyncResult syncResult) {
-
     Logger.resetLogging();
     Utils.reseedSharedRandom(); // Make sure we don't work with the same random seed for too long.
 
@@ -380,6 +381,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
         long next = System.currentTimeMillis() + interval;
         Log.i(LOG_TAG, "Setting minimum next sync time to " + next + " (" + interval + "ms from now).");
         extendEarliestNextSync(next);
+        Log.i(LOG_TAG, "Sync took " + Utils.formatDuration(syncStartTimestamp, System.currentTimeMillis()) + ".");
       } catch (InterruptedException e) {
         Log.w(LOG_TAG, "Waiting on sync monitor interrupted.", e);
       } finally {
@@ -416,13 +418,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
    * @throws IOException
    * @throws CryptoException
    */
-  protected void performSync(Account account, Bundle extras, String authority,
-                             ContentProviderClient provider,
-                             SyncResult syncResult,
-                             String username, String password,
-                             String prefsPath,
-                             String serverURL,
-                             String syncKey)
+  protected void performSync(final Account account,
+                             final Bundle extras,
+                             final String authority,
+                             final ContentProviderClient provider,
+                             final SyncResult syncResult,
+                             final String username,
+                             final String password,
+                             final String prefsPath,
+                             final String serverURL,
+                             final String syncKey)
                                  throws NoSuchAlgorithmException,
                                         SyncConfigurationException,
                                         IllegalArgumentException,
@@ -430,6 +435,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                                         IOException, ParseException,
                                         NonObjectJSONException, CryptoException {
     Logger.trace(LOG_TAG, "Performing sync.");
+    syncStartTimestamp = System.currentTimeMillis();
 
     /**
      * Bug 769745: pickle Sync account parameters to JSON file. Un-pickle in
@@ -446,9 +452,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
         getClientName(),
         getAccountGUID());
 
-        final boolean syncAutomatically = ContentResolver.getSyncAutomatically(account, authority);
-
-        AccountPickler.pickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME, params, syncAutomatically);
+      // Bug 772971: pickle Sync account parameters on background thread to
+      // avoid strict mode warnings.
+      ThreadPool.run(new Runnable() {
+        @Override
+        public void run() {
+          final boolean syncAutomatically = ContentResolver.getSyncAutomatically(account, authority);
+          try {
+            AccountPickler.pickle(mContext, Constants.ACCOUNT_PICKLE_FILENAME, params, syncAutomatically);
+          } catch (Exception e) {
+            // Should never happen, but we really don't want to die in a background thread.
+            Logger.warn(LOG_TAG, "Got exception pickling current account details; ignoring.", e);
+          }
+        }
+      });
     } catch (IllegalArgumentException e) {
       // Do nothing.
     }

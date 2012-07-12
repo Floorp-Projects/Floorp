@@ -6,8 +6,8 @@
 #ifndef MOZZCONF_H
 #define MOZZCONF_H
 
-#if defined(XP_WIN) && defined(ZLIB_DLL)
-#undef ZLIB_DLL
+#if defined(XP_WIN)
+#define ZLIB_DLL 1
 #endif
 
 /* Exported Symbols */

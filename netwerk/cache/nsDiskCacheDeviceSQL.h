@@ -167,6 +167,8 @@ public:
 
   void                    SetCacheParentDirectory(nsIFile * parentDir);
   void                    SetCapacity(PRUint32  capacity);
+  void                    SetAutoShutdown() { mAutoShutdown = true; }
+  bool                    AutoShutdown(nsIApplicationCache * aAppCache);
 
   nsIFile *               BaseDirectory() { return mBaseDirectory; }
   nsIFile *               CacheDirectory() { return mCacheDirectory; }
@@ -257,6 +259,7 @@ private:
   nsCOMPtr<nsIFile>               mCacheDirectory;
   PRUint32                        mCacheCapacity; // in bytes
   PRInt32                         mDeltaCounter;
+  bool                            mAutoShutdown;
 
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;

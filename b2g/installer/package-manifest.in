@@ -43,6 +43,9 @@
 
 [xpcom]
 @BINPATH@/dependentlibs.list
+#ifdef XP_WIN32
+@BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
+#endif
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
@@ -472,6 +475,9 @@
 @BINPATH@/components/SystemMessageInternal.js
 @BINPATH@/components/SystemMessageManager.js
 @BINPATH@/components/SystemMessageManager.manifest
+
+@BINPATH@/components/AppProtocolHandler.js
+@BINPATH@/components/AppProtocolHandler.manifest
 
 ; Modules
 @BINPATH@/modules/*
