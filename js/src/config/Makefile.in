@@ -42,6 +42,11 @@ include $(topsrcdir)/config/config.mk
 # Do not install util programs
 NO_INSTALL=1
 
+# Force wrap zlib system header if building js as a shared library.
+ifdef JS_SHARED_LIBRARY
+DEFINES += -DMOZ_NATIVE_ZLIB=1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE

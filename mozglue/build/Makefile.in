@@ -56,6 +56,8 @@ ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_GLUE_LDFLAGS)))
 # Don't install the import library if we use mozcrt
 NO_INSTALL_IMPORT_LIBRARY = 1
 endif
+
+EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
 ifeq (Android,$(OS_TARGET))
