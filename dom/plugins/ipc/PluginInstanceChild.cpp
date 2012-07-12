@@ -108,6 +108,9 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mAsyncInvalidateTask(0)
     , mCachedWindowActor(nsnull)
     , mCachedElementActor(nsnull)
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    , mXEmbed(false)
+#endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -146,13 +149,15 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
+    mWindow.type = NPWindowTypeWindow;
     mData.ndata = (void*) this;
     mData.pdata = nsnull;
     mAsyncBitmaps.Init();
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
-    mWsInfo.display = DefaultXDisplay();
+    mWsInfo.display = NULL;
+    mXtClient.top_widget = NULL;
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
@@ -306,6 +311,15 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         *((NPNToolkitType*)aValue) = NPNVGtk2;
         return NPERR_NO_ERROR;
 
+    case NPNVxDisplay:
+        if (!mWsInfo.display) {
+            // We are called before Initialize() so we have to call it now.
+           Initialize();
+           NS_ASSERTION(mWsInfo.display, "We should have a valid display!");
+        }
+        *(void **)aValue = mWsInfo.display;
+        return NPERR_NO_ERROR;
+    
 #elif defined(OS_WIN)
     case NPNVToolkit:
         return NPERR_GENERIC_ERROR;
@@ -492,6 +506,19 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         if (!CallNPN_SetValue_NPPVpluginWindow(windowed, &rv))
             return NPERR_GENERIC_ERROR;
 
+        NPWindowType newWindowType = windowed ? NPWindowTypeWindow : NPWindowTypeDrawable;
+        if (mWindow.type != newWindowType && mWsInfo.display) {
+           // plugin type has been changed but we already have a valid display
+           // so update it for the recent plugin mode
+           if (mXEmbed || !windowed) {
+               // Use default GTK display for XEmbed and windowless plugins
+               mWsInfo.display = DefaultXDisplay();
+           }
+           else {
+               mWsInfo.display = xt_client_get_display();
+           }
+        }
+        mWindow.type = newWindowType;
         return rv;
     }
 
@@ -975,6 +1002,52 @@ PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
 #endif
 }
 
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+// Create a new window from NPWindow
+bool PluginInstanceChild::CreateWindow(const NPRemoteWindow& aWindow)
+{ 
+    PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                      FULLFUNCTION,
+                      aWindow.window,
+                      aWindow.x, aWindow.y,
+                      aWindow.width, aWindow.height));
+
+    if (mXEmbed) {
+        mWindow.window = reinterpret_cast<void*>(aWindow.window);
+    }
+    else {
+        Window browserSocket = (Window)(aWindow.window);
+        xt_client_init(&mXtClient, mWsInfo.visual, mWsInfo.colormap, mWsInfo.depth);
+        xt_client_create(&mXtClient, browserSocket, mWindow.width, mWindow.height); 
+        mWindow.window = (void *)XtWindow(mXtClient.child_widget);
+    }  
+
+    return true;
+}
+
+// Destroy window
+void PluginInstanceChild::DeleteWindow()
+{
+  PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                    FULLFUNCTION,
+                    mWindow.window,
+                    mWindow.x, mWindow.y,
+                    mWindow.width, mWindow.height));
+
+  if (!mWindow.window)
+      return;
+
+  if (mXtClient.top_widget) {     
+      xt_client_unrealize(&mXtClient);
+      xt_client_destroy(&mXtClient); 
+      mXtClient.top_widget = NULL;
+  }
+
+  // We don't have to keep the plug-in window ID any longer.
+  mWindow.window = nsnull;
+}
+#endif
+
 bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 {
@@ -988,10 +1061,11 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     AssertPluginThread();
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    NS_ASSERTION(mWsInfo.display, "We should have a valid display!");
+
     // The minimum info is sent over IPC to allow this
     // code to determine the rest.
 
-    mWindow.window = reinterpret_cast<void*>(aWindow.window);
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
     mWindow.width = aWindow.width;
@@ -1004,8 +1078,12 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
 
+    if (!mWindow.window && mWindow.type == NPWindowTypeWindow) {
+        CreateWindow(aWindow);
+    }
+
 #ifdef MOZ_WIDGET_GTK2
-    if (gtk_check_version(2,18,7) != NULL) { // older
+    if (mXEmbed && gtk_check_version(2,18,7) != NULL) { // older
         if (aWindow.type == NPWindowTypeWindow) {
             GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));
             if (socket_window) {
@@ -1136,6 +1214,33 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 bool
 PluginInstanceChild::Initialize()
 {
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    NPError rv;
+
+    if (mWsInfo.display) {
+        // Already initialized
+        return false;
+    }
+
+    // Request for windowless plugins is set in newp(), before this call.
+    if (mWindow.type == NPWindowTypeWindow) {
+        AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(&mXEmbed, &rv);
+
+        // Set up Xt loop for windowed plugins without XEmbed support
+        if (!mXEmbed) {
+           xt_client_xloop_create();
+        }
+    }
+
+    // Use default GTK display for XEmbed and windowless plugins
+    if (mXEmbed || mWindow.type != NPWindowTypeWindow) {
+        mWsInfo.display = DefaultXDisplay();
+    }
+    else {
+        mWsInfo.display = xt_client_get_display();
+    }
+#endif 
+
     return true;
 }
 
@@ -3995,6 +4100,13 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         NS_ERROR("Not all AsyncBitmaps were finalized by a plugin!");
         mAsyncBitmaps.Enumerate(DeleteSurface, this);
     }
+
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    if (mWindow.type == NPWindowTypeWindow && !mXEmbed) {
+      xt_client_xloop_destroy();
+    }
+    DeleteWindow();
+#endif
 
     return true;
 }
