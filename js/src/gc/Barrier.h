@@ -303,7 +303,7 @@ struct HeapPtrHasher
 template <class T>
 struct DefaultHasher< HeapPtr<T> > : HeapPtrHasher<T> { };
 
-class EncapsulatedValue
+class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
 {
   protected:
     Value value;
@@ -328,37 +328,9 @@ class EncapsulatedValue
     Value *unsafeGet() { return &value; }
     operator const Value &() const { return value; }
 
-    bool isUndefined() const { return value.isUndefined(); }
-    bool isNull() const { return value.isNull(); }
-    bool isBoolean() const { return value.isBoolean(); }
-    bool isTrue() const { return value.isTrue(); }
-    bool isFalse() const { return value.isFalse(); }
-    bool isNumber() const { return value.isNumber(); }
-    bool isInt32() const { return value.isInt32(); }
-    bool isDouble() const { return value.isDouble(); }
-    bool isString() const { return value.isString(); }
-    bool isObject() const { return value.isObject(); }
-    bool isMagic() const { return value.isMagic(); }
-    bool isMagic(JSWhyMagic why) const { return value.isMagic(why); }
-    bool isGCThing() const { return value.isGCThing(); }
-    bool isMarkable() const { return value.isMarkable(); }
-
-    bool toBoolean() const { return value.toBoolean(); }
-    double toNumber() const { return value.toNumber(); }
-    int32_t toInt32() const { return value.toInt32(); }
-    double toDouble() const { return value.toDouble(); }
-    JSString *toString() const { return value.toString(); }
-    JSObject &toObject() const { return value.toObject(); }
-    JSObject *toObjectOrNull() const { return value.toObjectOrNull(); }
-    void *toGCThing() const { return value.toGCThing(); }
-
     JSGCTraceKind gcKind() const { return value.gcKind(); }
 
     uint64_t asRawBits() const { return value.asRawBits(); }
-
-#ifdef DEBUG
-    JSWhyMagic whyMagic() const { return value.whyMagic(); }
-#endif
 
     static inline void writeBarrierPre(const Value &v);
     static inline void writeBarrierPre(JSCompartment *comp, const Value &v);
@@ -366,6 +338,10 @@ class EncapsulatedValue
   protected:
     inline void pre();
     inline void pre(JSCompartment *comp);
+
+  private:
+    friend class ValueOperations<EncapsulatedValue>;
+    const Value * extract() const { return &value; }
 };
 
 class HeapValue : public EncapsulatedValue

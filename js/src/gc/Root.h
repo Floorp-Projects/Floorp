@@ -79,13 +79,19 @@ struct NullPtr
     static void * const constNullValue;
 };
 
+template <typename T>
+class HandleBase {};
+
 /*
  * Reference to a T that has been rooted elsewhere. This is most useful
  * as a parameter type, which guarantees that the T lvalue is properly
  * rooted. See "Move GC Stack Rooting" above.
+ *
+ * If you want to add additional methods to Handle for a specific
+ * specialization, define a HandleBase<T> specialization containing them.
  */
 template <typename T>
-class Handle
+class Handle : public HandleBase<T>
 {
   public:
     /* Creates a handle from a handle of a type convertible to T. */
@@ -139,10 +145,6 @@ class Handle
     void operator =(S v) MOZ_DELETE;
 };
 
-/* Defined in jsapi.h under Value definition */
-template <>
-class Handle<Value>;
-
 typedef Handle<JSObject*>    HandleObject;
 typedef Handle<JSFunction*>  HandleFunction;
 typedef Handle<JSScript*>    HandleScript;
@@ -150,12 +152,19 @@ typedef Handle<JSString*>    HandleString;
 typedef Handle<jsid>         HandleId;
 typedef Handle<Value>        HandleValue;
 
+template <typename T>
+class MutableHandleBase {};
+
 /*
  * Similar to a handle, but the underlying storage can be changed. This is
  * useful for outparams.
+ *
+ * If you want to add additional methods to MutableHandle for a specific
+ * specialization, define a MutableHandleBase<T> specialization containing
+ * them.
  */
 template <typename T>
-class MutableHandle
+class MutableHandle : public MutableHandleBase<T>
 {
   public:
     template <typename S>
@@ -199,13 +208,20 @@ struct RootMethods<T *>
     static bool poisoned(T *v) { return IsPoisonedPtr(v); }
 };
 
+template <typename T>
+class RootedBase {};
+
 /*
  * Local variable of type T whose value is always rooted. This is typically
  * used for local variables, or for non-rooted values being passed to a
  * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
+ *
+ * If you want to add additional methods to MutableHandle for a specific
+ * specialization, define a MutableHandleBase<T> specialization containing
+ * them.
  */
 template <typename T>
-class Rooted
+class Rooted : public RootedBase<T>
 {
     void init(JSContext *cx_)
     {
