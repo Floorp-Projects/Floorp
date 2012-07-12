@@ -344,7 +344,7 @@ IonBuilder::build()
     // Recompile to inline calls if this function is hot.
     insertRecompileCheck();
 
-    if (script->argumentsHasVarBinding() && !script->needsArgsObj()) {
+    if (script->argumentsHasVarBinding()) {
         lazyArguments_ = MConstant::New(MagicValue(JS_OPTIMIZED_ARGUMENTS));
         current->add(lazyArguments_);
     }
