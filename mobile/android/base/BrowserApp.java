@@ -297,9 +297,7 @@ abstract public class BrowserApp extends GeckoApp
             int index = mMainLayout.indexOfChild(mBrowserToolbar.getLayout());
             mMainLayout.removeViewAt(index);
 
-            LinearLayout actionBar = (LinearLayout) LayoutInflater.from(mAppContext).inflate(R.layout.browser_toolbar, null);
-            actionBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
-                                                                    (int) mAppContext.getResources().getDimension(R.dimen.browser_toolbar_height)));
+            LinearLayout actionBar = (LinearLayout) getBrowserToolbar();
             mMainLayout.addView(actionBar, index);
             mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
@@ -307,6 +305,26 @@ abstract public class BrowserApp extends GeckoApp
 
         invalidateOptionsMenu();
         mTabsPanel.refresh();
+    }
+
+    @Override
+    public boolean isBrowserToolbarSupported() {
+        return true;
+    }
+
+    @Override
+    public View getBrowserToolbar() {
+        int actionBarRes;
+
+        if (GeckoApp.mAppContext.hasPermanentMenuKey())
+           actionBarRes = R.layout.browser_toolbar_menu;
+        else
+           actionBarRes = R.layout.browser_toolbar;
+
+        LinearLayout actionBar = (LinearLayout) LayoutInflater.from(GeckoApp.mAppContext).inflate(actionBarRes, null);
+        actionBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+                                                                (int) mAppContext.getResources().getDimension(R.dimen.browser_toolbar_height)));
+        return actionBar;
     }
 
     void addTab() {

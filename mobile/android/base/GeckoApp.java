@@ -128,6 +128,8 @@ abstract public class GeckoApp
     private CameraVideoResultHandler mCameraVideoResultHandler = new CameraVideoResultHandler();
 
     abstract public int getLayout();
+    abstract public boolean isBrowserToolbarSupported();
+    abstract public View getBrowserToolbar();
     abstract protected String getDefaultProfileName();
 
     public static boolean checkLaunchState(LaunchState checkState) {
@@ -948,6 +950,22 @@ abstract public class GeckoApp
 
     public boolean areTabsShown() { return false; }
 
+    public boolean hasPermanentMenuKey() {
+        boolean hasMenu = false;
+
+        if (Build.VERSION.SDK_INT >= 11)
+            hasMenu = true;
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            if (!ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey())
+                hasMenu = true;
+            else
+                hasMenu = false;
+        }
+
+        return hasMenu;
+    }
+
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
@@ -1757,6 +1775,10 @@ abstract public class GeckoApp
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
+
+        // add a browser-toolbar
+        if (isBrowserToolbarSupported())
+            mMainLayout.addView(getBrowserToolbar(), 0);
 
         // setup tabs panel
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);

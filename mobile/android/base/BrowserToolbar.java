@@ -225,17 +225,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         mMenu = (ImageButton) mLayout.findViewById(R.id.menu);
         mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
-        mHasSoftMenuButton = false;
-
-        if (Build.VERSION.SDK_INT >= 11)
-            mHasSoftMenuButton = true;
-
-        if (Build.VERSION.SDK_INT >= 14) {
-            if(!ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey())
-               mHasSoftMenuButton = true;
-            else
-               mHasSoftMenuButton = false;
-        }
+        mHasSoftMenuButton = GeckoApp.mAppContext.hasPermanentMenuKey();
 
         if (mHasSoftMenuButton) {
             mMenu.setVisibility(View.VISIBLE);
