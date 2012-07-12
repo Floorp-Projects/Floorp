@@ -34,9 +34,5 @@ CPPSRCS = \
   MediaManager.cpp \
   $(NULL)
 
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/media/webrtc/trunk/src \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
