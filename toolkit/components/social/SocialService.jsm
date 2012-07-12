@@ -69,6 +69,7 @@ const SocialService = {
   _setEnabled: function _setEnabled(enable) {
     SocialServiceInternal.providerArray.forEach(function (p) p.enabled = enable);
     SocialServiceInternal.enabled = enable;
+    Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
   },
 
   // Returns a single provider object with the specified origin.
