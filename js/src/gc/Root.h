@@ -216,9 +216,8 @@ class RootedBase {};
  * used for local variables, or for non-rooted values being passed to a
  * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
  *
- * If you want to add additional methods to MutableHandle for a specific
- * specialization, define a MutableHandleBase<T> specialization containing
- * them.
+ * If you want to add additional methods to Rooted for a specific
+ * specialization, define a RootedBase<T> specialization containing them.
  */
 template <typename T>
 class Rooted : public RootedBase<T>
