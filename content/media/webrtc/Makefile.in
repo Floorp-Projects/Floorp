@@ -22,10 +22,24 @@ CPPSRCS	= \
   MediaEngineDefault.cpp \
   $(NULL)
 
+ifdef MOZ_WEBRTC
+EXPORTS += \
+  MediaEngineWebRTC.h \
+  $(NULL)
+
+CPPSRCS += \
+  MediaEngineWebRTC.cpp \
+  MediaEngineWebRTCVideo.cpp \
+  MediaEngineWebRTCAudio.cpp \
+  $(NULL)
+endif
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/media/webrtc/trunk/src \
   $(NULL)
+endif
