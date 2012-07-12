@@ -1155,6 +1155,11 @@ NS_METHOD nsWindow::Show(bool bState)
         ::SendMessageW(mWnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
       }
     } else {
+      // Clear contents to avoid ghosting of old content if we display
+      // this window again.
+      if (wasVisible && mTransparencyMode == eTransparencyTransparent) {
+        ClearTranslucentWindow();
+      }
       if (mWindowType != eWindowType_dialog) {
         ::ShowWindow(mWnd, SW_HIDE);
       } else {
@@ -7452,6 +7457,16 @@ void nsWindow::SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode)
     mTransparentSurface = nsnull;
     mMemoryDC = NULL;
   }
+}
+
+void nsWindow::ClearTranslucentWindow()
+{
+  if (mTransparentSurface) {
+    nsRefPtr<gfxContext> thebesContext = new gfxContext(mTransparentSurface);
+    thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+    thebesContext->Paint();
+    UpdateTranslucentWindow();
+ }
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()

@@ -13,13 +13,6 @@ include $(srcdir)/objs.mk
 
 MODULE		= zlib
 LIBRARY_NAME	= mozz
-GRE_MODULE	= 1
-LIBXUL_LIBRARY = 1
-DIST_INSTALL = 1
-
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
-DEFINES	+= -DZLIB_DLL=1
-endif
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
 

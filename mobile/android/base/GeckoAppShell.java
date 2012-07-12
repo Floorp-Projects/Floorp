@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
+import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;

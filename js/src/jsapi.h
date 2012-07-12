@@ -3717,7 +3717,37 @@ typedef enum JSGCParamKey {
     JSGC_SLICE_TIME_BUDGET = 9,
 
     /* Maximum size the GC mark stack can grow to. */
-    JSGC_MARK_STACK_LIMIT = 10
+    JSGC_MARK_STACK_LIMIT = 10,
+
+    /*
+     * GCs less than this far apart in time will be considered 'high-frequency GCs'.
+     * See setGCLastBytes in jsgc.cpp.
+     */
+    JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
+
+    /* Start of dynamic heap growth. */
+    JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
+
+    /* End of dynamic heap growth. */
+    JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
+
+    /* Upper bound of heap growth. */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
+
+    /* Lower bound of heap growth. */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
+
+    /* Heap growth for low frequency GCs. */
+    JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
+
+    /*
+     * If false, the heap growth factor is fixed at 3. If true, it is determined
+     * based on whether GCs are high- or low- frequency.
+     */
+    JSGC_DYNAMIC_HEAP_GROWTH = 17,
+
+    /* If true, high-frequency GCs will use a longer mark slice. */
+    JSGC_DYNAMIC_MARK_SLICE = 18
 } JSGCParamKey;
 
 typedef enum JSGCMode {

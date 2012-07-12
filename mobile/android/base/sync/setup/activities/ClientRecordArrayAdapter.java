@@ -1,8 +1,10 @@
 package org.mozilla.gecko.sync.setup.activities;
 
-import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 
 import android.content.Context;
 import android.view.View;
@@ -31,20 +33,27 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<Object> {
   @Override
   public View getView(final int position, View convertView, ViewGroup parent) {
     final Context context = this.getContext();
-    View view = View.inflate(context, R.layout.sync_list_item, null);
-    setSelectable(view, true);
-    view.setBackgroundResource(android.R.drawable.menuitem_background);
+
+    // Reuse View objects if they exist.
+    View row = convertView;
+    if (row == null) {
+      row = View.inflate(context, R.layout.sync_list_item, null);
+      setSelectable(row, true);
+      row.setBackgroundResource(android.R.drawable.menuitem_background);
+    }
 
     final ClientRecord clientRecord = clientRecordList[position];
-    ImageView clientType = (ImageView) view.findViewById(R.id.img);
-    TextView clientName = (TextView) view.findViewById(R.id.client_name);
-    CheckBox checkbox = (CheckBox) view.findViewById(R.id.check);
+    ImageView clientType = (ImageView) row.findViewById(R.id.img);
+    TextView clientName = (TextView) row.findViewById(R.id.client_name);
+    // Set up checkbox and restore stored state.
+    CheckBox checkbox = (CheckBox) row.findViewById(R.id.check);
+    checkbox.setChecked(checkedItems[position]);
     setSelectable(checkbox, false);
 
     clientName.setText(clientRecord.name);
     clientType.setImageResource(getImage(clientRecord));
 
-    view.setOnClickListener(new OnClickListener() {
+    row.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
         CheckBox item = (CheckBox) view.findViewById(R.id.check);
@@ -64,14 +73,14 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<Object> {
 
     });
 
-    return view;
+    return row;
   }
 
-  public String[] getCheckedGUIDs() {
-    String[] guids = new String[numCheckedGUIDs];
-    for (int i = 0, j = 0; i < checkedItems.length; i++) {
+  public List<String> getCheckedGUIDs() {
+    final List<String> guids = new ArrayList<String>();
+    for (int i = 0; i < checkedItems.length; i++) {
       if (checkedItems[i]) {
-        guids[j++] = clientRecordList[i].guid;
+        guids.add(clientRecordList[i].guid);
       }
     }
     return guids;

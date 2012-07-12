@@ -53,6 +53,9 @@ tier_base_dirs += memory/jemalloc
 endif
 tier_base_dirs += memory/build
 endif
+ifndef MOZ_NATIVE_ZLIB
+tier_base_dirs += modules/zlib
+endif
 tier_base_dirs += \
   mozglue \
   memory/mozalloc \

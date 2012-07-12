@@ -21,6 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 
 "use strict";
 
+var comp = SpecialPowers.wrap(Components);
+comp.utils.import("resource://gre/modules/ContactService.jsm");
+SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 SpecialPowers.addPermission("webcontacts-manage", true, document);
 
 // For Sorting

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <EditText android:id="@+id/find_text"
+    <view class="org.mozilla.gecko.CustomEditText"
+              android:id="@+id/find_text"
               android:contentDescription="@string/find_text"
               android:background="@drawable/address_bar_url"
               android:singleLine="true"

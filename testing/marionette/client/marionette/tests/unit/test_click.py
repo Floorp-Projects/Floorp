@@ -13,6 +13,12 @@ class TestClick(MarionetteTestCase):
         link.click()
         self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
 
+    def testClickingALinkMadeUpOfNumbersIsHandledCorrectly(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element("link text", "333333").click()
+        self.assertEqual(self.marionette.title, "XHTML Test Page")
+
 class TestClickChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)

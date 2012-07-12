@@ -5,29 +5,5 @@ components/CapturePicker.js
 #if MOZ_UPDATE_CHANNEL != beta
 extensions/feedback@mobile.mozilla.org.xpi
 #endif
-#ifdef XP_WIN
-  #if _MSC_VER != 1400
-    Microsoft.VC80.CRT.manifest
-    msvcm80.dll
-    msvcp80.dll
-    msvcr80.dll
-  #endif
-  #if _MSC_VER != 1500
-    Microsoft.VC90.CRT.manifest
-    msvcm90.dll
-    msvcp90.dll
-    msvcr90.dll
-  #endif
-  #if _MSC_VER != 1600
-    msvcp100.dll
-    msvcr100.dll
-  #endif
-  #if _MSC_VER != 1700
-    msvcp110.dll
-    msvcr110.dll
-  #endif
-  mozcrt19.dll
-  mozcpp19.dll
-#endif
 @DLL_PREFIX@mozutils@DLL_SUFFIX@
 jssubloader/

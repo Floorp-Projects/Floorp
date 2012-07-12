@@ -14,14 +14,6 @@
 
 #filter substitution
 
-#ifdef XP_MACOSX
-; Mac bundle stuff
-@APPNAME@/Contents/Info.plist
-@APPNAME@/Contents/PkgInfo
-@APPNAME@/Contents/Plug-Ins/
-@APPNAME@/Contents/Resources/
-#endif
-
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
@@ -37,9 +29,6 @@
 #endif
 @BINPATH@/dictionaries/*
 @BINPATH@/hyphenation/*
-#ifdef XP_WIN32
-@BINPATH@/uninstall/helper.exe
-#endif
 
 [xpcom]
 @BINPATH@/dependentlibs.list
@@ -52,38 +41,9 @@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
-#ifdef XP_MACOSX
-@BINPATH@/XUL
-#else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
-#endif
-#ifdef XP_MACOSX
-@BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
-#else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
-#endif
-#ifdef XP_WIN32
-#if _MSC_VER == 1400
-@BINPATH@/Microsoft.VC80.CRT.manifest
-@BINPATH@/msvcm80.dll
-@BINPATH@/msvcp80.dll
-@BINPATH@/msvcr80.dll
-#elif _MSC_VER == 1500
-@BINPATH@/Microsoft.VC90.CRT.manifest
-@BINPATH@/msvcm90.dll
-@BINPATH@/msvcp90.dll
-@BINPATH@/msvcr90.dll
-#elif _MSC_VER == 1600
-@BINPATH@/msvcp100.dll
-@BINPATH@/msvcr100.dll
-#elif _MSC_VER == 1700
-@BINPATH@/msvcp110.dll
-@BINPATH@/msvcr110.dll
-#endif
 
-#endif
-
-#ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
 @BINPATH@/package-name.txt
@@ -92,11 +52,6 @@
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
 @BINPATH@/recommended-addons.json
-#endif
-
-#ifdef MOZ_PLATFORM_MAEMO
-@BINPATH@/res/drawable
-#endif
 
 [browser]
 ; [Base Browser Files]
@@ -108,27 +63,17 @@
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
-#ifndef XP_OS2
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
-#else
-@BINPATH@/mozsqlt3@DLL_SUFFIX@
-#endif
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
 @BINPATH@/run-mozilla.sh
-#ifndef XP_MACOSX
 @BINPATH@/mozilla-xremote-client
-#endif
 #endif
 
 ; [Components]
 @BINPATH@/components/components.manifest
 @BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
-#ifdef XP_WIN32
-@BINPATH@/AccessibleMarshal.dll
-@BINPATH@/components/accessibility-msaa.xpt
-#endif
 @BINPATH@/components/accessibility.xpt
 #endif
 @BINPATH@/components/appshell.xpt
@@ -275,12 +220,7 @@
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
-#ifdef XP_MACOSX
-@BINPATH@/components/widget_cocoa.xpt
-#endif
-#ifdef ANDROID
 @BINPATH@/components/widget_android.xpt
-#endif
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
 @BINPATH@/components/xpcom_base.xpt
@@ -364,11 +304,7 @@
 @BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.manifest
 @BINPATH@/components/nsURLFormatter.js
-#ifndef XP_OS2
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
-#else
-@BINPATH@/components/brwsrcmp@DLL_SUFFIX@
-#endif
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsDefaultCLH.manifest
@@ -395,9 +331,6 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
-#ifdef XP_MACOSX
-@BINPATH@/components/libalerts.dylib
-#endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
@@ -433,14 +366,6 @@
 @BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif
 
-; ANGLE on Win32
-#ifdef XP_WIN32
-#ifndef HAVE_64BIT_OS
-@BINPATH@/libEGL.dll
-@BINPATH@/libGLESv2.dll
-#endif
-#endif
-
 ; [Browser Chrome Files]
 @BINPATH@/chrome/browser@JAREXT@
 @BINPATH@/chrome/browser.manifest
@@ -453,20 +378,16 @@
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
 @BINPATH@/chrome/icons/default/default16.png
 @BINPATH@/chrome/icons/default/default32.png
 @BINPATH@/chrome/icons/default/default48.png
-#endif
 #endif
 
 
 ; shell icons
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
-#endif
 #endif
 
 ; [Default Preferences]
@@ -508,18 +429,12 @@
 @BINPATH@/res/table-remove-row-hover.gif
 @BINPATH@/res/table-remove-row.gif
 @BINPATH@/res/grabber.gif
-#ifdef XP_MACOSX
-@BINPATH@/res/cursors/*
-#endif
 @BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
-#ifdef XP_MACOSX
-@BINPATH@/res/MainMenu.nib/
-#endif
 
 ; svg
 @BINPATH@/res/svg.css
@@ -564,25 +479,17 @@ bin/libfreebl_32int64_3.so
 ; [Updater]
 ;
 #ifdef MOZ_UPDATER
-#ifdef XP_MACOSX
-@BINPATH@/updater.app/
-#else
 @BINPATH@/updater@BIN_SUFFIX@
-#endif
 #endif
 
 ; [Crash Reporter]
 ;
 #ifdef MOZ_CRASHREPORTER
-#ifdef XP_MACOSX
-@BINPATH@/crashreporter.app/
-#else
 @BINPATH@/crashreporter@BIN_SUFFIX@
 @BINPATH@/crashreporter.crt
 @BINPATH@/crashreporter.ini
 #ifdef XP_UNIX
 @BINPATH@/Throbber-small.gif
-#endif
 #endif
 @BINPATH@/crashreporter-override.ini
 #endif
@@ -591,11 +498,6 @@ bin/libfreebl_32int64_3.so
 ;
 #ifdef MOZ_ENABLE_GNOMEVFS
 bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
-#endif
-
-; [OS/2]
-#ifdef XP_OS2
-@BINPATH@/MozSounds.cmd
 #endif
 
 [mobile]

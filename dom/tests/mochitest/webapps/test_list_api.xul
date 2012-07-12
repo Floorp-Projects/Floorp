@@ -28,6 +28,7 @@ var expectedMethods = ['navigator.mozApps.QueryInterface',
                        'navigator.mozApps.getNotInstalled',
                        'navigator.mozApps.getSelf',
                        'navigator.mozApps.install',
+                       'navigator.mozApps.installPackage',
                        'navigator.mozApps.mgmt.QueryInterface',
                        'navigator.mozApps.mgmt.getAll'];
 var actualMethods = [];

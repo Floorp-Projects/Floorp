@@ -10,7 +10,7 @@
 /**
  * Interface implemented by channels that support application caches.
  */
-[scriptable, uuid(8d9024e6-ab01-442d-8119-2f55d55d91b0)]
+[scriptable, uuid(6FA816B1-6D5F-4380-9704-054D0908CFA3)]
 interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
 {
     /**
@@ -49,4 +49,10 @@ interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
      * action handling in nsContentSink.
      */
     void markOfflineCacheEntryAsForeign();
+
+    /**
+     * Set offline application cache object to instruct the channel
+     * to cache for offline use using this application cache.
+     */
+    attribute nsIApplicationCache applicationCacheForWrite;
 };
