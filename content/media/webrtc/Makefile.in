@@ -16,10 +16,14 @@ LIBXUL_LIBRARY = 1
 EXPORTS	+= \
   MediaEngine.h \
   MediaEngineDefault.h \
+  MediaEngineWebRTC.h \
   $(NULL)
 
 CPPSRCS	= \
   MediaEngineDefault.cpp \
+  MediaEngineWebRTC.cpp \
+  MediaEngineWebRTCVideo.cpp \
+  MediaEngineWebRTCAudio.cpp \
   $(NULL)
 
 FORCE_STATIC_LIB = 1
