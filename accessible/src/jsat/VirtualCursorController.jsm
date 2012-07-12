@@ -404,11 +404,8 @@ var TraversalRules = {
 };
 
 var VirtualCursorController = {
-  NOT_EDITABLE: 0,
-  SINGLE_LINE_EDITABLE: 1,
-  MULTI_LINE_EDITABLE: 2,
-
   exploreByTouch: false,
+  editableState: 0,
 
   attach: function attach(aWindow) {
     this.chromeWin = aWindow;
@@ -463,7 +460,7 @@ var VirtualCursorController = {
         // an alphanumeric key was pressed, handle it separately.
         // If it was pressed with either alt or ctrl, just pass through.
         // If it was pressed with meta, pass the key on without the meta.
-        if (this._isEditableText(target) ||
+        if (this.editableState ||
             aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
           return;
 
@@ -477,13 +474,29 @@ var VirtualCursorController = {
         this[methodName](document, false, rule);
         break;
       case aEvent.DOM_VK_END:
+        if (this.editableState) {
+          if (target.selectionEnd != target.textLength)
+            // Don't move forward if caret is not at end of entry.
+            // XXX: Fix for rtl
+            return;
+          else
+            target.blur();
+        }
         this.moveForward(document, true);
         break;
       case aEvent.DOM_VK_HOME:
+        if (this.editableState) {
+          if (target.selectionEnd != 0)
+            // Don't move backward if caret is not at start of entry.
+            // XXX: Fix for rtl
+            return;
+          else
+            target.blur();
+        }
         this.moveBackward(document, true);
         break;
       case aEvent.DOM_VK_RIGHT:
-        if (this._isEditableText(target)) {
+        if (this.editableState) {
           if (target.selectionEnd != target.textLength)
             // Don't move forward if caret is not at end of entry.
             // XXX: Fix for rtl
@@ -494,7 +507,7 @@ var VirtualCursorController = {
         this.moveForward(document, aEvent.shiftKey);
         break;
       case aEvent.DOM_VK_LEFT:
-        if (this._isEditableText(target)) {
+        if (this.editableState) {
           if (target.selectionEnd != 0)
             // Don't move backward if caret is not at start of entry.
             // XXX: Fix for rtl
@@ -505,7 +518,7 @@ var VirtualCursorController = {
         this.moveBackward(document, aEvent.shiftKey);
         break;
       case aEvent.DOM_VK_UP:
-        if (this._isEditableText(target) == this.MULTI_LINE_EDITABLE) {
+        if (this.editableState & Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE) {
           if (target.selectionEnd != 0)
             // Don't blur content if caret is not at start of text area.
             return;
@@ -521,7 +534,7 @@ var VirtualCursorController = {
         break;
       case aEvent.DOM_VK_RETURN:
       case aEvent.DOM_VK_ENTER:
-        if (this._isEditableText(target))
+        if (this.editableState)
           return;
         this.activateCurrent(document);
         break;
@@ -536,18 +549,6 @@ var VirtualCursorController = {
   moveToPoint: function moveToPoint(aDocument, aX, aY) {
     this.getVirtualCursor(aDocument).moveToPoint(TraversalRules.Simple,
                                                  aX, aY, true);
-  },
-
-  _isEditableText: function _isEditableText(aElement) {
-    // XXX: Support contentEditable and design mode
-    if (aElement instanceof Ci.nsIDOMHTMLInputElement &&
-        aElement.mozIsTextField(false))
-      return this.SINGLE_LINE_EDITABLE;
-
-    if (aElement instanceof Ci.nsIDOMHTMLTextAreaElement)
-      return this.MULTI_LINE_EDITABLE;
-
-    return this.NOT_EDITABLE;
   },
 
   moveForward: function moveForward(aDocument, aLast, aRule) {

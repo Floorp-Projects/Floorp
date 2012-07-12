@@ -586,7 +586,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
-  -moz-transition: @forwardTransitionLength@ ease-out;
+  transition: @forwardTransitionLength@ ease-out;
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] {
@@ -938,8 +938,8 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) + #urlbar-container > #urlbar {
-  -moz-transition: margin-left @forwardTransitionLength@ ease-out,
-                   margin-right @forwardTransitionLength@ ease-out;
+  transition: margin-left @forwardTransitionLength@ ease-out,
+              margin-right @forwardTransitionLength@ ease-out;
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar:-moz-locale-dir(ltr) {
@@ -1642,13 +1642,13 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-border-start: 2px solid transparent;
   -moz-border-end: 0;
-  -moz-transition: 1s box-shadow ease-out;
+  transition: 1s box-shadow ease-out;
   border-radius: 4px;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   box-shadow: 0 0 5px 5px Highlight inset;
-  -moz-transition: none;
+  transition: none;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):-moz-locale-dir(ltr),

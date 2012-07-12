@@ -41,6 +41,15 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_SetVisible.html \
 		browserElement_KeyEvents.js \
 		test_browserElement_inproc_KeyEvents.html \
+		browserElement_XFrameOptions.js \
+		test_browserElement_inproc_XFrameOptions.html \
+		file_browserElement_XFrameOptions.sjs \
+		browserElement_XFrameOptionsDeny.js \
+		test_browserElement_inproc_XFrameOptionsDeny.html \
+		file_browserElement_XFrameOptionsDeny.html \
+		browserElement_XFrameOptionsSameOrigin.js \
+		test_browserElement_inproc_XFrameOptionsSameOrigin.html \
+		file_browserElement_XFrameOptionsSameOrigin.html \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
 		browserElement_AlertInFrame.js \
@@ -53,6 +62,9 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_PromptConfirm.html \
 		browserElement_Close.js \
 		test_browserElement_inproc_Close.html \
+		browserElement_CloseFromOpener.js \
+		test_browserElement_inproc_CloseFromOpener.html \
+		file_browserElement_CloseFromOpener.html \
 		browserElement_OpenWindow.js \
 		test_browserElement_inproc_OpenWindow.html \
 		file_browserElement_Open1.html \
@@ -85,11 +97,15 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_KeyEvents.html \
+		test_browserElement_oop_XFrameOptions.html \
+		test_browserElement_oop_XFrameOptionsDeny.html \
+		test_browserElement_oop_XFrameOptionsSameOrigin.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_PromptCheck.html \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \
+		test_browserElement_oop_CloseFromOpener.html \
 		test_browserElement_oop_OpenWindow.html \
 		test_browserElement_oop_OpenWindowInFrame.html \
 		test_browserElement_oop_OpenWindowRejected.html \

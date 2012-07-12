@@ -172,6 +172,7 @@
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
                   android:theme="@style/Gecko.TitleBar.Preferences"
                   android:label="@string/settings_title"
+                  android:configChanges="orientation|screenSize"
                   android:excludeFromRecents="true"/>
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"

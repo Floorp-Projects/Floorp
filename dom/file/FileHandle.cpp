@@ -124,7 +124,7 @@ FileHandle::Open(const nsAString& aMode,
 }
 
 NS_IMETHODIMP
-FileHandle::GetFile(nsIDOMFileRequest** _retval)
+FileHandle::GetFile(nsIDOMDOMRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -137,19 +137,21 @@ FileHandle::GetFile(nsIDOMFileRequest** _retval)
     LockedFile::Create(this, LockedFile::READ_ONLY, LockedFile::PARALLEL);
   NS_ENSURE_TRUE(lockedFile, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
 
-  nsRefPtr<FileRequest> fileRequest =
-    FileRequest::Create(GetOwner(), lockedFile);
+  nsRefPtr<FileRequest> request =
+    FileRequest::Create(GetOwner(), lockedFile, false);
 
   nsRefPtr<MetadataParameters> params = new MetadataParameters();
   params->Init(true, false);
 
   nsRefPtr<GetFileHelper> helper =
-    new GetFileHelper(lockedFile, fileRequest, params, this);
+    new GetFileHelper(lockedFile, request, params, this);
 
   nsresult rv = helper->Enqueue();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
 
-  fileRequest.forget(_retval);
+  nsCOMPtr<nsIDOMDOMRequest> result = static_cast<DOMRequest*>(request);
+  result.forget(_retval);
+
   return NS_OK;
 }
 

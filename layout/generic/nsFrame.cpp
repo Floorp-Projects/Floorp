@@ -2257,16 +2257,15 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
                      nsEventStatus*  aEventStatus)
 {
 
-  if (aEvent->message == NS_MOUSE_MOVE || aEvent->message == NS_TOUCH_MOVE) {
+  if (aEvent->message == NS_MOUSE_MOVE) {
     return HandleDrag(aPresContext, aEvent, aEventStatus);
   }
 
-  if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
-      aEvent->eventStructType == NS_TOUCH_EVENT) {
-    if (aEvent->message == NS_MOUSE_BUTTON_DOWN || aEvent->message == NS_TOUCH_START) {
+  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
+      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
+    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
       HandlePress(aPresContext, aEvent, aEventStatus);
-    } else if (aEvent->message == NS_MOUSE_BUTTON_UP || aEvent->message == NS_TOUCH_END) {
+    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
   }

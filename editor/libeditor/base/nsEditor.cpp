@@ -617,19 +617,7 @@ NS_IMETHODIMP
 nsEditor::DoTransaction(nsITransaction* aTxn)
 {
   if (mPlaceHolderBatch && !mPlaceHolderTxn) {
-    // it's pretty darn amazing how many different types of pointers this
-    // transaction goes through here.  I bet this is a record.
-
-    // We start off with an EditTxn since that's what the factory returns.
-    nsRefPtr<EditTxn> editTxn = new PlaceholderTxn();
-
-    // Then we QI to an nsIAbsorbingTransaction to get at placeholder
-    // functionality
-    nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
-    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction),
-                            getter_AddRefs(plcTxn));
-    // have to use line above instead of "plcTxn = do_QueryInterface(editTxn);"
-    // due to our broken interface model for transactions.
+    nsCOMPtr<nsIAbsorbingTransaction> plcTxn = new PlaceholderTxn();
 
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = do_GetWeakReference(plcTxn);
@@ -637,8 +625,7 @@ nsEditor::DoTransaction(nsITransaction* aTxn)
     // placeholder txn took ownership of this pointer
     mSelState = nsnull;
 
-    // finally we QI to an nsITransaction since that's what DoTransaction()
-    // expects
+    // QI to an nsITransaction since that's what DoTransaction() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
     // we will recurse, but will not hit this case in the nested call
     DoTransaction(theTxn);
@@ -1743,10 +1730,11 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
     aOffset--;  // this is because when we delete aNode, it will make the offsets after it off by one
   }
 
-  // put aNode in new parent
-  res = DeleteNode(aNode);
+  // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
+  nsCOMPtr<nsIDOMNode> node = aNode;
+  res = DeleteNode(node);
   NS_ENSURE_SUCCESS(res, res);
-  return InsertNode(aNode, aParent, aOffset);
+  return InsertNode(node, aParent, aOffset);
 }
 
 
@@ -3124,6 +3112,7 @@ already_AddRefed<nsIDOMNode>
 nsEditor::GetNodeLocation(nsIDOMNode* aChild, PRInt32* outOffset)
 {
   MOZ_ASSERT(aChild && outOffset);
+  NS_ENSURE_TRUE(aChild && outOffset, nsnull);
   *outOffset = -1;
 
   nsCOMPtr<nsIDOMNode> parent;

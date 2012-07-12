@@ -29,7 +29,7 @@ class Location(object):
 
         if start == end:
             return self
-        
+
         skiplines = s.count('\n', start, end)
         line = self.line + skiplines
         if skiplines:
@@ -98,11 +98,14 @@ def parsecommandlineargs(args):
 
 class Statement(object):
     """
-    A statement is an abstract object representing a single "chunk" of makefile syntax. Subclasses
-    must implement the following method:
+    Represents parsed make file syntax.
 
-    def execute(self, makefile, context)
+    This is an abstract base class. Child classes are expected to implement
+    `execute()`.
     """
+
+    def execute(self, makefile, context):
+        raise Exception("Must implement execute() in child classes.")
 
 class DummyRule(object):
     __slots__ = ()
@@ -111,12 +114,27 @@ class DummyRule(object):
         pass
 
 class Rule(Statement):
+    """
+    Rules represent how to make specific targets.
+
+    See https://www.gnu.org/software/make/manual/make.html#Rules.
+
+    An individual rule is composed of a target, dependencies, and a recipe.
+    This class only contains references to the first 2. The recipe will be
+    contained in Command classes which follow this one in a stream of Statement
+    instances.
+
+    Instances also contain a boolean property `doublecolon` which says whether
+    this is a doublecolon rule. Doublecolon rules are rules that are always
+    executed, if they are evaluated. Normally, rules are only executed if their
+    target is out of date.
+    """
     __slots__ = ('targetexp', 'depexp', 'doublecolon')
 
     def __init__(self, targetexp, depexp, doublecolon):
         assert isinstance(targetexp, (data.Expansion, data.StringExpansion))
         assert isinstance(depexp, (data.Expansion, data.StringExpansion))
-        
+
         self.targetexp = targetexp
         self.depexp = depexp
         self.doublecolon = doublecolon
@@ -154,6 +172,15 @@ class Rule(Statement):
         print >>fd, "%sRule %s: %s" % (indent, self.targetexp, self.depexp)
 
 class StaticPatternRule(Statement):
+    """
+    Static pattern rules are rules which specify multiple targets based on a
+    string pattern.
+
+    See https://www.gnu.org/software/make/manual/make.html#Static-Pattern
+
+    They are like `Rule` instances except an added property, `patternexp` is
+    present. It contains the Expansion which represents the rule pattern.
+    """
     __slots__ = ('targetexp', 'patternexp', 'depexp', 'doublecolon')
 
     def __init__(self, targetexp, patternexp, depexp, doublecolon):
@@ -200,6 +227,16 @@ class StaticPatternRule(Statement):
         print >>fd, "%sStaticPatternRule %s: %s: %s" % (indent, self.targetexp, self.patternexp, self.depexp)
 
 class Command(Statement):
+    """
+    Commands are things that get executed by a rule.
+
+    A rule's recipe is composed of 0 or more Commands.
+
+    A command is simply an expansion. Commands typically represent strings to
+    be executed in a shell (e.g. via system()). Although, since make files
+    allow arbitrary shells to be used for command execution, this isn't a
+    guarantee.
+    """
     __slots__ = ('exp',)
 
     def __init__(self, exp):
@@ -217,6 +254,26 @@ class Command(Statement):
         print >>fd, "%sCommand %s" % (indent, self.exp,)
 
 class SetVariable(Statement):
+    """
+    Represents a variable assignment.
+
+    Variable assignment comes in two different flavors.
+
+    Simple assignment has the form:
+
+      <Expansion> <Assignment Token> <string>
+
+    e.g. FOO := bar
+
+    These correspond to the fields `vnameexp`, `token`, and `value`. In
+    addition, `valueloc` will be a Location and `source` will be a
+    pymake.data.Variables.SOURCE_* constant.
+
+    There are also target-specific variables. These are variables that only
+    apply in the context of a specific target. They are like the aforementioned
+    assignment except the `targetexp` field is set to an Expansion representing
+    the target they apply to.
+    """
     __slots__ = ('vnameexp', 'token', 'value', 'valueloc', 'targetexp', 'source')
 
     def __init__(self, vnameexp, token, value, valueloc, targetexp, source=None):
@@ -280,12 +337,25 @@ class SetVariable(Statement):
 
 class Condition(object):
     """
-    An abstract "condition", either ifeq or ifdef, perhaps negated. Subclasses must implement:
+    An abstract "condition", either ifeq or ifdef, perhaps negated.
+
+    See https://www.gnu.org/software/make/manual/make.html#Conditional-Syntax
+
+    Subclasses must implement:
 
     def evaluate(self, makefile)
     """
 
 class EqCondition(Condition):
+    """
+    Represents an ifeq or ifneq conditional directive.
+
+    This directive consists of two Expansions which are compared for equality.
+
+    The `expected` field is a bool indicating what the condition must evaluate
+    to in order for its body to be executed. If True, this is an "ifeq"
+    conditional directive. If False, an "ifneq."
+    """
     __slots__ = ('exp1', 'exp2', 'expected')
 
     def __init__(self, exp1, exp2):
@@ -305,6 +375,15 @@ class EqCondition(Condition):
         return "ifeq (expected=%s) %s %s" % (self.expected, self.exp1, self.exp2)
 
 class IfdefCondition(Condition):
+    """
+    Represents an ifdef or ifndef conditional directive.
+
+    This directive consists of a single expansion which represents the name of
+    a variable (without the leading '$') which will be checked for definition.
+
+    The `expected` field is a bool and has the same behavior as EqCondition.
+    If it is True, this represents a "ifdef" conditional. If False, "ifndef."
+    """
     __slots__ = ('exp', 'expected')
 
     def __init__(self, exp):
@@ -325,6 +404,9 @@ class IfdefCondition(Condition):
         return "ifdef (expected=%s) %s" % (self.expected, self.exp)
 
 class ElseCondition(Condition):
+    """
+    Represents the transition between branches in a ConditionBlock.
+    """
     __slots__ = ()
 
     def evaluate(self, makefile):
@@ -335,7 +417,18 @@ class ElseCondition(Condition):
 
 class ConditionBlock(Statement):
     """
-    A list of conditions: each condition has an associated list of statements.
+    A set of related Conditions.
+
+    This is essentially a list of 2-tuples of (Condition, list(Statement)).
+
+    The parser creates a ConditionBlock for all statements related to the same
+    conditional group. If iterating over the parser's output, where you think
+    you would see an ifeq, you will see a ConditionBlock containing an IfEq. In
+    other words, the parser collapses separate statements into this container
+    class.
+
+    ConditionBlock instances may exist within other ConditionBlock if the
+    conditional logic is multiple levels deep.
     """
     __slots__ = ('loc', '_groups')
 
@@ -389,6 +482,15 @@ class ConditionBlock(Statement):
         return self._groups[i]
 
 class Include(Statement):
+    """
+    Represents the include directive.
+
+    See https://www.gnu.org/software/make/manual/make.html#Include
+
+    The file to be included is represented by the Expansion defined in the
+    field `exp`. `required` is a bool indicating whether execution should fail
+    if the specified file could not be processed.
+    """
     __slots__ = ('exp', 'required', 'deps')
 
     def __init__(self, exp, required, weak):
@@ -406,6 +508,11 @@ class Include(Statement):
         print >>fd, "%sInclude %s" % (indent, self.exp)
 
 class VPathDirective(Statement):
+    """
+    Represents the vpath directive.
+
+    See https://www.gnu.org/software/make/manual/make.html#Selective-Search
+    """
     __slots__ = ('exp',)
 
     def __init__(self, exp):
@@ -434,6 +541,18 @@ class VPathDirective(Statement):
         print >>fd, "%sVPath %s" % (indent, self.exp)
 
 class ExportDirective(Statement):
+    """
+    Represents the "export" directive.
+
+    This is used to control exporting variables to sub makes.
+
+    See https://www.gnu.org/software/make/manual/make.html#Variables_002fRecursion
+
+    The `single` field defines whether this statement occurred with or without
+    a variable assignment. If True, no variable assignment was present. If
+    False, the SetVariable immediately following this statement originally came
+    from this export directive (the parser splits it into multiple statements).
+    """
     __slots__ = ('exp', 'single')
 
     def __init__(self, exp, single):
@@ -456,6 +575,11 @@ class ExportDirective(Statement):
         print >>fd, "%sExport (single=%s) %s" % (indent, self.single, self.exp)
 
 class UnexportDirective(Statement):
+    """
+    Represents the "unexport" directive.
+
+    This is the opposite of ExportDirective.
+    """
     __slots__ = ('exp',)
 
     def __init__(self, exp):
@@ -470,6 +594,14 @@ class UnexportDirective(Statement):
         print >>fd, "%sUnexport %s" % (indent, self.exp)
 
 class EmptyDirective(Statement):
+    """
+    Represents a standalone statement, usually an Expansion.
+
+    You will encounter EmptyDirective instances if there is a function
+    or similar at the top-level of a make file (e.g. outside of a rule or
+    variable assignment). You can also find them as the bodies of
+    ConditionBlock branches.
+    """
     __slots__ = ('exp',)
 
     def __init__(self, exp):
@@ -491,6 +623,14 @@ class _EvalContext(object):
         self.weak = weak
 
 class StatementList(list):
+    """
+    A list of Statement instances.
+
+    This is what is generated by the parser when a make file is parsed.
+
+    Consumers can iterate over all Statement instances in this collection to
+    statically inspect (and even modify) make files before they are executed.
+    """
     __slots__ = ('mtime',)
 
     def append(self, statement):

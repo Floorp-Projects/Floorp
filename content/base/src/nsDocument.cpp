@@ -9542,7 +9542,8 @@ nsDocument::UpdateVisibilityState()
   if (oldState != mVisibilityState) {
     nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                          NS_LITERAL_STRING("mozvisibilitychange"),
-                                         false, false);
+                                         /* bubbles = */ true,
+                                         /* cancelable = */ false);
   }
 }
 

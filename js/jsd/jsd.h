@@ -255,7 +255,6 @@ struct JSDProperty
     JSDValue*   val;
     JSDValue*   name;
     JSDValue*   alias;
-    unsigned       slot;
     unsigned       flags;
 };
 
@@ -990,9 +989,6 @@ jsd_GetPropertyAlias(JSDContext* jsdc, JSDProperty* jsdprop);
 
 extern unsigned
 jsd_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop);
-
-extern unsigned
-jsd_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop);
 
 /**************************************************/
 /* Stepping Functions */

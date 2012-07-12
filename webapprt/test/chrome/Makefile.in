@@ -16,6 +16,9 @@ MOCHITEST_WEBAPPRT_CHROME_FILES = \
   browser_sample.js \
     sample.webapp \
     sample.html \
+  browser_window-title.js \
+    window-title.webapp \
+    window-title.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

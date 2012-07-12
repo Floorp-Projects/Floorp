@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+        <ImageButton android:id="@+id/menu"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="78dip"
+                     android:layout_alignParentRight="true"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/menu"
+                     android:contentDescription="@string/menu"
+                     android:background="@drawable/menu_normal"
+                     android:paddingLeft="42dip"
+                     android:paddingRight="12dip"
+                     android:enabled="false"/>
+
+        <View android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@drawable/tabs_tray_bg_repeat"
+              android:layout_marginRight="95dip"/>
+
+        <LinearLayout android:layout_width="fill_parent"
+                      android:layout_height="fill_parent"
+                      android:layout_marginRight="19dip">
+
+            <TextView android:id="@+id/title"
+                      android:layout_width="wrap_content"
+                      android:layout_height="fill_parent"
+                      android:layout_weight="1.0"
+                      style="@style/TabRowTextAppearance"
+                      android:gravity="center_vertical"
+                      android:padding="10dip"
+                      android:textSize="16sp"/>
+
+            <ImageButton android:id="@+id/remote_tabs"
+                         android:layout_width="@dimen/browser_toolbar_height"
+                         android:layout_height="@dimen/browser_toolbar_height"
+                         android:gravity="center_vertical"
+                         android:padding="12dip"
+                         android:src="@drawable/remote_tabs_level"
+                         android:contentDescription="@string/remote_tabs"
+                         android:background="@drawable/action_bar_button"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/add_tab"
+                         android:layout_width="78dip"
+                         android:layout_height="@dimen/browser_toolbar_height"
+                         android:gravity="center_vertical"
+                         android:paddingLeft="12dip"
+                         android:paddingRight="42dip"
+                         android:src="@drawable/tab_new"
+                         android:contentDescription="@string/new_tab"
+                         android:background="@drawable/tab_new_button"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</merge>

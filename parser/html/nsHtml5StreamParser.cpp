@@ -899,6 +899,8 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
                                    false : mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
+  mTreeBuilder->SetPreventScriptExecution(!((mMode == NORMAL) &&
+                                            scriptingEnabled));
   mTokenizer->start();
   mExecutor->Start();
   mExecutor->StartReadingFromStage();
@@ -1360,7 +1362,10 @@ nsHtml5StreamParser::ParseAvailableData()
       // Terminate, but that never happens together with script.
       // Can't assert that here, though, because it's possible that the main
       // thread has called Terminate() while this thread was parsing.
-      if (mMode == NORMAL && mTreeBuilder->HasScript()) {
+      if (mTreeBuilder->HasScript()) {
+        // HasScript() cannot return true if the tree builder is preventing
+        // script execution.
+        MOZ_ASSERT(mMode == NORMAL);
         mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
         nsHtml5Speculation* speculation = 
           new nsHtml5Speculation(mFirstBuffer,

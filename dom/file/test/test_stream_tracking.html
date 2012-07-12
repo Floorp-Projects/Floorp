@@ -55,6 +55,10 @@
           is(e.name, "LockedFileInactiveError", "Good error.");
           is(e.code, 0, "Good error code.");
         }
+
+        if (resultBuffer2) {
+          testGenerator.next();
+        }
       }
 
       let reader2 = new FileReader();
@@ -63,10 +67,23 @@
       reader2.onload = function(event)
       {
         resultBuffer2 = event.target.result;
+
+        let reader = new FileReader();
+        try {
+          reader.readAsArrayBuffer(file);
+          ok(false, "Should have thrown!");
+        }
+        catch (e) {
+          ok(e instanceof DOMException, "Got exception.");
+          is(e.name, "LockedFileInactiveError", "Good error.");
+          is(e.code, 0, "Good error code.");
+        }
+
+        if (resultBuffer1) {
+          testGenerator.next();
+        }
       }
 
-      lockedFile = event.target.lockedFile;
-      lockedFile.oncomplete = grabEventAndContinueHandler;
       yield;
 
       ok(compareBuffers(resultBuffer1, testBuffer), "Correct data");

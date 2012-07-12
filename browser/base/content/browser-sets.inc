@@ -89,6 +89,7 @@
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
     <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();" disabled="true"/>
+    <command id="Tools:DevToolbarFocus" oncommand="DeveloperToolbar.focus();" disabled="true"/>
     <command id="Tools:WebConsole" oncommand="HUDConsoleUI.toggleHUD();"/>
     <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();" disabled="true"/>
     <command id="Tools:Debugger" oncommand="DebuggerUI.toggleDebugger();" disabled="true"/>
@@ -225,6 +226,8 @@
 #endif
     <key id="key_openAddons" key="&addons.commandkey;" command="Tools:Addons" modifiers="accel,shift"/>
     <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift" disabled="true"/>
+    <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift"
+         keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
     <key id="key_webConsole" key="&webConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();"
 #ifdef XP_MACOSX
         modifiers="accel,alt"

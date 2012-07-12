@@ -49,9 +49,9 @@ struct ImmPayload : Imm64
 
 class PunboxAssembler : public JSC::MacroAssembler
 {
+  public:
     static const uint32_t PAYLOAD_OFFSET = 0;
 
-  public:
     static const JSC::MacroAssembler::Scale JSVAL_SCALE = JSC::MacroAssembler::TimesEight;
 
     template <typename T>

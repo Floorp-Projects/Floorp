@@ -27,6 +27,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
   , mHandlesUsed(0)
   , mSpeculativeLoadStage(aStage)
   , mCurrentHtmlScriptIsAsyncOrDefer(false)
+  , mPreventScriptExecution(false)
 #ifdef DEBUG
   , mActive(false)
 #endif
@@ -470,6 +471,10 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   // we now have only SVG and HTML
   if (aName == nsHtml5Atoms::script) {
+    if (mPreventScriptExecution) {
+      mOpQueue.AppendElement()->Init(eTreeOpPreventScriptExecution, aElement);
+      return;
+    }
     if (mCurrentHtmlScriptIsAsyncOrDefer) {
       NS_ASSERTION(aNamespace == kNameSpaceID_XHTML, 
                    "Only HTML scripts may be async/defer.");

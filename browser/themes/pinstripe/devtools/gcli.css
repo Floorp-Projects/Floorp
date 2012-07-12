@@ -131,3 +131,8 @@
   text-align: right;
   -moz-padding-end: 8px;
 }
+
+.gcli-addon-disabled {
+  opacity: 0.6;
+  text-decoration: line-through;
+}

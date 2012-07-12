@@ -108,9 +108,9 @@ html[dir=rtl] .close {
   width: 16px;
   height: 16px;
   background: url(chrome://global/skin/icons/resizer.png) no-repeat;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
+  transition-property: opacity;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-out;
   opacity: 0.2;
 }
 
@@ -122,9 +122,9 @@ html[dir=rtl] .expander {
 
 .expander:hover,
 .appTabIcon:hover {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 0.5s;
-  -moz-transition-timing-function: ease-out;
+  transition-property: opacity;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-out;
   opacity: 1.0;
 }
 

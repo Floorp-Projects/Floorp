@@ -365,6 +365,21 @@ var AccessFu = {
         if (acc.role != Ci.nsIAccessibleRole.ROLE_DOCUMENT &&
             doc.role != Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW)
           VirtualCursorController.moveCursorToObject(acc);
+
+        let [,extState] = Utils.getStates(acc);
+        let editableState = extState &
+          (Ci.nsIAccessibleStates.EXT_STATE_EDITABLE |
+           Ci.nsIAccessibleStates.EXT_STATE_MULTI_LINE);
+
+        if (editableState != VirtualCursorController.editableState) {
+          if (!VirtualCursorController.editableState)
+            this.presenters.forEach(
+              function(p) {
+                p.editingModeChanged(true);
+              }
+            );
+        }
+        VirtualCursorController.editableState = editableState;
         break;
       }
       default:

@@ -1,5 +1,3 @@
-Cu.import("resource://gre/modules/Services.jsm");
-
 // A helper to run a suite of tests.
 // The "test object" should be an object with function names as keys and a
 // function as the value.  The functions will be called with a "cbnext" param
@@ -48,4 +46,3 @@ function runTests(tests, cbPreTest, cbPostTest) {
   }
   runNextTest();
 }
-

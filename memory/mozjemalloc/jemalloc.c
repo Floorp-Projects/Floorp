@@ -1970,7 +1970,8 @@ pages_commit(void *addr, size_t size)
 {
 
 #  ifdef MOZ_MEMORY_WINDOWS
-	VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
+	if (!VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE))
+		abort();
 #  else
 	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
 	    MAP_ANON, -1, 0) == MAP_FAILED)
