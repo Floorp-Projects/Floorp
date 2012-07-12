@@ -89,16 +89,6 @@ SurfaceDescriptorX11::OpenForeign() const
 }
 
 bool
-ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
-                                                gfxASurface::gfxContentType aContent,
-                                                SurfaceDescriptor* aFrontBuffer,
-                                                SurfaceDescriptor* aBackBuffer)
-{
-  return (PlatformAllocBuffer(aSize, aContent, DEFAULT_BUFFER_CAPS, aFrontBuffer) &&
-          PlatformAllocBuffer(aSize, aContent, DEFAULT_BUFFER_CAPS, aBackBuffer));
-}
-
-bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
                                           gfxASurface::gfxContentType aContent,
                                           uint32_t aCaps,
