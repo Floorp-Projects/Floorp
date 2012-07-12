@@ -442,8 +442,7 @@ struct JSObject : public js::ObjectImpl
 
     inline void setType(js::types::TypeObject *newType);
 
-    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
-                                      bool isDOM = false);
+    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL);
 
 #ifdef DEBUG
     bool hasNewType(js::types::TypeObject *newType);
@@ -532,7 +531,7 @@ struct JSObject : public js::ObjectImpl
      */
     bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
-    static bool isSealedOrFrozen(JSContext *cx, js::HandleObject obj, ImmutabilityType it, bool *resultp);
+    bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
 
     static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
 
@@ -544,12 +543,8 @@ struct JSObject : public js::ObjectImpl
     /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
     bool freeze(JSContext *cx) { return sealOrFreeze(cx, FREEZE); }
 
-    static inline bool isSealed(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, SEAL, resultp);
-    }
-    static inline bool isFrozen(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, FREEZE, resultp);
-    }
+    bool isSealed(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, SEAL, resultp); }
+    bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
 
     /* Accessors for elements. */
 

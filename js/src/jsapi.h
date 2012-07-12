@@ -3840,7 +3840,7 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
-#define JSCLASS_IS_DOMJSCLASS           (1<<4)  /* objects are DOM */
+/* (1<<4) is unused */
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  /* Correctly implements GC read
                                                    and write barriers */
 #define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
@@ -4645,10 +4645,6 @@ extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
                       unsigned nargs, unsigned attrs);
 
-/*
- * Clone a top-level function into a new scope. This function will dynamically
- * fail if funobj was lexically nested inside some other function.
- */
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 

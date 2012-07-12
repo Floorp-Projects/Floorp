@@ -1472,7 +1472,7 @@ SetThrowHook(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 LineToPC(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedScript script(cx);
+    JSScript *script;
     int32_t lineArg = 0;
     uint32_t lineno;
     jsbytecode *pc;

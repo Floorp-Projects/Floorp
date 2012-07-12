@@ -221,7 +221,7 @@ class Debugger::FrameRange
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
-  : script(script), pc(pc), enabledCount(0),
+  : script(script), pc(pc), scriptGlobal(NULL), enabledCount(0),
     trapHandler(NULL), trapClosure(UndefinedValue())
 {
     JS_ASSERT(!script->hasBreakpointsAt(pc));
@@ -2105,10 +2105,9 @@ class Debugger::ScriptQuery {
         for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
             for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
-                if (script->hasGlobal() && !script->isForEval()) {
-                    if (!consider(script, &script->global(), vector))
-                        return false;
-                }
+                GlobalObject *global = script->getGlobalObjectOrNull();
+                if (global && !consider(script, global, vector))
+                    return false;
             }
         }
 
@@ -2121,10 +2120,11 @@ class Debugger::ScriptQuery {
                 JSScript *script = fri.script();
 
                 /*
-                 * Eval scripts were not considered above so we don't need to
-                 * check the existing script vector for duplicates.
+                 * If eval scripts never have global objects set, then we don't need
+                 * to check the existing script vector for duplicates, since we only
+                 * include scripts with globals above.
                  */
-                JS_ASSERT(script->isForEval());
+                JS_ASSERT(!script->getGlobalObjectOrNull());
 
                 GlobalObject *global = &fri.fp()->global();
                 if (!consider(script, global, vector))
@@ -2861,7 +2861,19 @@ Debugger::observesScript(JSScript *script) const
 {
     if (!enabled)
         return false;
-    return observesGlobal(&script->global());
+
+    /* Does the script have a global stored in it? */
+    if (GlobalObject *global = script->getGlobalObjectOrNull())
+        return observesGlobal(global);
+
+    /* Is the script in a compartment this Debugger is debugging? */
+    JSCompartment *comp = script->compartment();
+    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        if (r.front()->compartment() == comp)
+            return true;
+    }
+
+    return false;
 }
 
 static JSBool
@@ -2885,7 +2897,8 @@ DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     jsbytecode *pc = script->code + offset;
-    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc);
+    Rooted<GlobalObject *> scriptGlobal(cx, script->getGlobalObjectOrNull());
+    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, scriptGlobal);
     if (!site)
         return false;
     site->inc(cx->runtime->defaultFreeOp());
@@ -3177,7 +3190,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
     Value arg;
     if (unsigned(i) < fp->numActualArgs()) {
         if (unsigned(i) < fp->numFormalArgs() && fp->script()->formalLivesInCallObject(i))
-            arg = fp->callObj().formal(i);
+            arg = fp->callObj().arg(i);
         else if (fp->script()->argsObjAliasesFormals() && fp->hasArgsObj())
             arg = fp->argsObj().arg(i);
         else
@@ -3409,8 +3422,9 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
     JSPrincipals *prin = fp->scopeChain()->principals(cx);
     bool compileAndGo = true;
     bool noScriptRval = false;
+    bool needScriptGlobal = true;
     JSScript *script = frontend::CompileScript(cx, env, fp, prin, prin,
-                                               compileAndGo, noScriptRval,
+                                               compileAndGo, noScriptRval, needScriptGlobal,
                                                chars, length, filename, lineno,
                                                cx->findVersion(), NULL, /* staticLimit = */ 1);
     if (!script)
@@ -4026,10 +4040,10 @@ DebuggerObject_isSealedHelper(JSContext *cx, unsigned argc, Value *vp, SealHelpe
     ErrorCopier ec(ac, dbg->toJSObject());
     bool r;
     if (op == Seal) {
-        if (!JSObject::isSealed(cx, obj, &r))
+        if (!obj->isSealed(cx, &r))
             return false;
     } else if (op == Freeze) {
-        if (!JSObject::isFrozen(cx, obj, &r))
+        if (!obj->isFrozen(cx, &r))
             return false;
     } else {
         r = obj->isExtensible();

@@ -535,6 +535,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
                     if (releaseTypes) {
                         script->types->destroy();
                         script->types = NULL;
+                        script->typesPurged = true;
                     }
                 }
             }

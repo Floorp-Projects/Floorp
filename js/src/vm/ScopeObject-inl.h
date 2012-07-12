@@ -10,8 +10,6 @@
 
 #include "ScopeObject.h"
 
-#include "jsscriptinlines.h"
-
 namespace js {
 
 inline
@@ -74,14 +72,14 @@ CallObject::callee() const
 }
 
 inline const Value &
-CallObject::formal(unsigned i, MaybeCheckAliasing checkAliasing) const
+CallObject::arg(unsigned i, MaybeCheckAliasing checkAliasing) const
 {
     JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
     return getSlot(RESERVED_SLOTS + i);
 }
 
 inline void
-CallObject::setFormal(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
+CallObject::setArg(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
     setSlot(RESERVED_SLOTS + i, v);
@@ -101,6 +99,25 @@ CallObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
     JSFunction &fun = callee();
     JS_ASSERT_IF(checkAliasing, fun.script()->varIsAliased(i));
     setSlot(RESERVED_SLOTS + fun.nargs + i, v);
+}
+
+inline HeapSlotArray
+CallObject::argArray()
+{
+#ifdef DEBUG
+    JSFunction &fun = callee();
+    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun.nargs));
+#endif
+    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS));
+}
+
+inline HeapSlotArray
+CallObject::varArray()
+{
+    JSFunction &fun = callee();
+    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun.nargs,
+                                 fun.script()->bindings.numVars()));
+    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS + fun.nargs));
 }
 
 inline uint32_t
@@ -154,36 +171,17 @@ BlockObject::setSlotValue(unsigned i, const Value &v)
     setSlot(RESERVED_SLOTS + i, v);
 }
 
-inline void
-StaticBlockObject::initPrevBlockChainFromParser(StaticBlockObject *prev)
-{
-    setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(prev));
-}
-
-inline void
-StaticBlockObject::resetPrevBlockChainFromParser()
-{
-    setReservedSlot(SCOPE_CHAIN_SLOT, UndefinedValue());
-}
-
-inline void
-StaticBlockObject::initEnclosingStaticScope(JSObject *obj)
-{
-    JS_ASSERT(getReservedSlot(SCOPE_CHAIN_SLOT).isUndefined());
-    setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(obj));
-}
-
 inline StaticBlockObject *
 StaticBlockObject::enclosingBlock() const
 {
     JSObject *obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    return obj && obj->isStaticBlock() ? &obj->asStaticBlock() : NULL;
+    return obj ? &obj->asStaticBlock() : NULL;
 }
 
-inline JSObject *
-StaticBlockObject::enclosingStaticScope() const
+inline void
+StaticBlockObject::setEnclosingBlock(StaticBlockObject *blockObj)
 {
-    return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
+    setFixedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(blockObj));
 }
 
 inline void

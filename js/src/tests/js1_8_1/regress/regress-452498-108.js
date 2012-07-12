@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 300079;
-var summary = "precompiled functions should inherit from current window's Function.prototype";
+var BUGNUMBER = 452498;
+var summary = 'TM: upvar2 regression tests';
 var actual = '';
 var expect = '';
 
@@ -20,28 +20,14 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  if (typeof clone == 'undefined') {
-    expect = 'SKIPPED';
-    actual = 'SKIPPED';
-  }
-  else {
-    expect = 'PASSED';
+// ------- Comment #108 From Jesse Ruderman
 
-    f = Function("a", "return (function () { return a * a;});")();
-    g = clone(f, {a: 3});
-    f = null;
-    gc();
-    try {
-      a_squared = g(2);
-      if (a_squared != 9)
-        throw "Unexpected return from g: a_squared == " + a_squared;
-      actual = "PASSED";
-    } catch (e) {
-      actual = "FAILED: " + e;
-    }
-  }
- 
-  reportCompare(expect, actual, summary);
+  function p(){p}
+
+  expect = 'function p(){p;}';
+  actual = p + '';
+
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }

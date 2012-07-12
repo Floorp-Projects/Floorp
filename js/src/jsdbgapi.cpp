@@ -185,7 +185,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handle
     if (!CheckDebugMode(cx))
         return false;
 
-    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc);
+    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, NULL);
     if (!site)
         return false;
     site->setTrap(cx->runtime->defaultFreeOp(), handler, closure);
