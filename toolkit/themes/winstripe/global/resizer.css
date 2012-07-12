@@ -20,7 +20,7 @@ resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
 resizer[dir="left"],
 resizer[dir="bottomleft"],
 resizer[dir="bottomstart"] {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 resizer[dir="bottomleft"],

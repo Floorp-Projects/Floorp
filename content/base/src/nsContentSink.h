@@ -303,8 +303,6 @@ protected:
   // True if this is parser is a fragment parser or an HTML DOMParser.
   // XML DOMParser leaves this to false for now!
   PRUint8 mRunsToCompletion : 1;
-  // True to call prevent script execution in the fragment mode.
-  PRUint8 mPreventScriptExecution : 1;
   
   //
   // -- Can interrupt parsing members --

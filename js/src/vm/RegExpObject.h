@@ -341,7 +341,6 @@ class RegExpObject : public JSObject
     const Value &getLastIndex() const {
         return getSlot(LAST_INDEX_SLOT);
     }
-    inline void setLastIndex(const Value &v);
     inline void setLastIndex(double d);
     inline void zeroLastIndex();
 

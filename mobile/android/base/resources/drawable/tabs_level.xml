@@ -7,8 +7,6 @@
 
     <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
 
-    <item android:maxLevel="1" android:drawable="@drawable/tabs_carat_contracted"/>
-
-    <item android:maxLevel="2" android:drawable="@drawable/tabs_carat_expanded"/>
+    <item android:maxLevel="1" android:drawable="@drawable/tabs_carat"/>
 
 </level-list>

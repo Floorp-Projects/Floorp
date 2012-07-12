@@ -8,6 +8,28 @@ const Cu = Components.utils;
 
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gAppBrowser",
+                            function() document.getElementById("content"));
+
+let progressListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference]),
+  onLocationChange: function onLocationChange(progress, request, location,
+                                              flags) {
+    // Set the title of the window to the name of the webapp, adding the origin
+    // of the page being loaded if it's from a different origin than the app
+    // (per security bug 741955, which specifies that other-origin pages loaded
+    // in runtime windows must be identified in chrome).
+    let title = WebappRT.config.app.manifest.name;
+    let origin = location.prePath;
+    if (origin != WebappRT.config.app.origin) {
+      title = origin + " - " + title;
+    }
+    document.documentElement.setAttribute("title", title);
+  }
+};
 
 function onLoad() {
   window.removeEventListener("load", onLoad, false);
@@ -19,34 +41,50 @@ function onLoad() {
   // In test mode, listen for test app installations and load the -test-mode URL
   // if present.
   if (cmdLineArgs && cmdLineArgs.hasKey("test-mode")) {
+    // This observer is only present until the first app gets installed.
+    // It adds the progress listener, which can't happen until then because
+    // the progress listener needs to access the app manifest, which isn't
+    // available beforehand.
+    Services.obs.addObserver(function observeOnce(subj, topic, data) {
+      Services.obs.removeObserver(observeOnce, "webapprt-test-did-install");
+      gAppBrowser.webProgress.
+        addProgressListener(progressListener,Ci.nsIWebProgress.NOTIFY_LOCATION);
+    }, "webapprt-test-did-install", false);
+
+    // This observer is present for the lifetime of the runtime.
     Services.obs.addObserver(function observe(subj, topic, data) {
-      // The observer is present for the lifetime of the runtime.
       initWindow(false);
     }, "webapprt-test-did-install", false);
+
     let testURL = cmdLineArgs.get("test-mode");
     if (testURL) {
-      document.getElementById("content").loadURI(testURL);
+      gAppBrowser.loadURI(testURL);
     }
+
     return;
   }
 
+  gAppBrowser.webProgress.
+    addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_LOCATION);
+
   initWindow(!!cmdLineArgs);
 }
-
 window.addEventListener("load", onLoad, false);
 
+function onUnload() {
+  gAppBrowser.removeProgressListener(progressListener);
+}
+window.addEventListener("unload", onUnload, false);
+
 function initWindow(isMainWindow) {
-  // Set the title of the window to the name of the webapp
   let manifest = WebappRT.config.app.manifest;
-  document.documentElement.setAttribute("title", manifest.name);
 
   updateMenuItems();
 
   // Listen for clicks to redirect <a target="_blank"> to the browser.
   // This doesn't capture clicks so content can capture them itself and do
   // something different if it doesn't want the default behavior.
-  document.getElementById("content").addEventListener("click", onContentClick,
-                                                      false, true);
+  gAppBrowser.addEventListener("click", onContentClick, false, true);
 
   // Only load the webapp on the initially launched main window
   if (isMainWindow) {
@@ -55,7 +93,7 @@ function initWindow(isMainWindow) {
     let url = Services.io.newURI(installRecord.origin, null, null);
     if (manifest.launch_path)
       url = Services.io.newURI(manifest.launch_path, null, url);
-    document.getElementById("content").setAttribute("src", url.spec);
+    gAppBrowser.setAttribute("src", url.spec);
   }
 }
 

@@ -59,6 +59,16 @@ var Utils = {
       default:
         return null;
     }
+  },
+
+  getStates: function getStates(aAccessible) {
+    if (!aAccessible)
+      return [0, 0];
+
+    let state = {};
+    let extState = {};
+    aAccessible.getState(state, extState);
+    return [state.value, extState.value];
   }
 };
 

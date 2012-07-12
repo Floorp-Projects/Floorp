@@ -18,7 +18,7 @@
 USING_FILE_NAMESPACE
 
 FileRequest::FileRequest(nsIDOMWindow* aWindow)
-: DOMRequest(aWindow)
+: DOMRequest(aWindow), mIsFileRequest(true)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -31,12 +31,14 @@ FileRequest::~FileRequest()
 // static
 already_AddRefed<FileRequest>
 FileRequest::Create(nsIDOMWindow* aOwner,
-                    LockedFile* aLockedFile)
+                    LockedFile* aLockedFile,
+                    bool aIsFileRequest)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<FileRequest> request = new FileRequest(aOwner);
   request->mLockedFile = aLockedFile;
+  request->mIsFileRequest = aIsFileRequest;
 
   return request.forget();
 }
@@ -125,8 +127,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileRequest, DOMRequest)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFileRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileRequest)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFileRequest, mIsFileRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(FileRequest, mIsFileRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(DOMRequest, !mIsFileRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 
 NS_IMPL_ADDREF_INHERITED(FileRequest, DOMRequest)

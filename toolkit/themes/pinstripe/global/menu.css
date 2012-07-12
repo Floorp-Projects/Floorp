@@ -95,7 +95,7 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
 }
 
 .menu-right:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 /* ::::: menu/menuitems in menubar ::::: */

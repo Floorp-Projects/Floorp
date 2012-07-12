@@ -10,11 +10,21 @@
           android:layout_width="fill_parent"
           android:layout_height="@dimen/browser_toolbar_height"/>
 
-    <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
-          android:id="@+id/list_container"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent"
-          android:orientation="vertical"
-          android:background="@drawable/tabs_tray_bg_repeat"/>
+    <RelativeLayout android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+        <view class="org.mozilla.gecko.TabsPanel$TabsListContainer"
+              android:id="@+id/list_container"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical"
+              android:background="@drawable/tabs_tray_bg_repeat"/>
+
+        <View android:layout_width="fill_parent"
+              android:layout_height="3dp"
+              android:layout_alignParentTop="true"
+              android:background="@drawable/tabs_shadow"/>
+
+    </RelativeLayout>
 
 </merge>

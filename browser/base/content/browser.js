@@ -1394,6 +1394,7 @@ var gBrowserInit = {
     if (devToolbarEnabled) {
       document.getElementById("menu_devToolbar").hidden = false;
       document.getElementById("Tools:DevToolbar").removeAttribute("disabled");
+      document.getElementById("Tools:DevToolbarFocus").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
       document.getElementById("appmenu_devToolbar").hidden = false;
 #endif

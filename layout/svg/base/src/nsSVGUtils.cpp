@@ -591,8 +591,7 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
     return aPreFilterRect;
   }
 
-  return filter->GetPostFilterBounds(aFrame, nsnull, &aPreFilterRect) -
-           aFrame->GetPosition();
+  return filter->GetPostFilterBounds(aFrame, nsnull, &aPreFilterRect);
 }
 
 bool

@@ -66,8 +66,8 @@ typedef struct axisStruct {
 
 // Represents the configuration of a type of sensor.
 typedef struct sensorSpec {
-	char *model;				// Prefix of model to be tested
-	char *name;					// Name of device to be read
+	const char *model;			// Prefix of model to be tested
+	const char *name;			// Name of device to be read
 	unsigned int function;		// Kernel function index
 	int recordSize;				// Size of record to be sent/received
 	axisStruct axes[3];			// Description of three axes (X, Y, Z)
@@ -273,7 +273,7 @@ static int debugging = NO;		// True if debugging (synthetic data)
 static io_connect_t connection;	// Connection for reading accel values
 static int running = NO;		// True if we successfully started
 static int sensorNum = 0;		// The current index into sensors[]
-static char *serviceName;		// The name of the current service
+static const char *serviceName;	// The name of the current service
 static char *iRecord, *oRecord;	// Pointers to read/write records for sensor
 static int recordSize;			// Size of read/write records
 static unsigned int function;	// Which kernel function should be used
@@ -417,7 +417,7 @@ int smsStartup(id logObject, SEL logSelector) {
 			}
 			continue;
 		} else if (connection == 0) {
-			LOG_ARG(@"'success', but didn't get a connection.\n", result);
+			LOG_ARG(@"'success', but didn't get a connection (return value was: 0x%x).\n", result);
 			IOObjectRelease(device);
 			if (failure_result < SMS_FAIL_CONNECTION) {
 				failure_result = SMS_FAIL_CONNECTION;
@@ -803,7 +803,7 @@ int getData(sms_acceleration *accel, int calibrated, id logObject, SEL logSelect
 	memset(iRecord, 1, iSize);
 	memset(oRecord, 0, oSize);
 	
-	LOG_2ARG(@"    Querying device: ", 
+	LOG_2ARG(@"    Querying device (%u, %d): ", 
 			 sensors[sensorNum].function, sensors[sensorNum].recordSize);
 	
 #if __MAC_OS_X_VERSION_MIN_REQUIRED  >= 1050

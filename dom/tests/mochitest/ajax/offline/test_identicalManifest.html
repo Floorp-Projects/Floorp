@@ -11,20 +11,25 @@
 var gGotChecking = false;
 var gGotDownloading = false;
 
+function finishTest()
+{
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
 function noUpdate()
 {
   OfflineTest.ok(gGotChecking, "Should get a checking event");
   OfflineTest.ok(!gGotDownloading, "Should not get a downloading event");
 
-  // The document that requested the manifest should be in the cache
-  OfflineTest.checkCache(window.location.href, true);
+  var entries = [
+    // The document that requested the manifest should be in the cache
+    [window.location.href, true],
 
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-  
-  OfflineTest.teardown();
-
-  OfflineTest.finish();
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true]
+  ];
+  OfflineTest.checkCacheEntries(entries, finishTest);
 }
 
 function manifestUpdated()
@@ -32,19 +37,25 @@ function manifestUpdated()
   OfflineTest.ok(gGotChecking, "Should get a checking event");
   OfflineTest.ok(gGotDownloading, "Should get a downloading event");
 
-  // The manifest itself should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
+  var entries = [
+    // The manifest itself should be in the cache
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true],
 
-  // The document that requested the manifest should be in the cache
-  OfflineTest.checkCache(window.location.href, true);
+    // The document that requested the manifest should be in the cache
+    [window.location.href, true],
 
-  // The entries from the manifest should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+    // The entries from the manifest should be in the cache
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
 
-  // The bad entries from the manifest should not be in the cache
-  OfflineTest.checkCache("bad:/uri/invalid", false);
+    // The bad entries from the manifest should not be in the cache
+    ["bad:/uri/invalid", false]
+  ];
+  OfflineTest.checkCacheEntries(entries, manifestUpdatedContinue);
+}
 
+function manifestUpdatedContinue()
+{
   // Now make sure applicationCache.update() does what we expect.
   applicationCache.oncached = OfflineTest.failEvent;
   applicationCache.onnoupdate = OfflineTest.priv(noUpdate);
@@ -53,7 +64,6 @@ function manifestUpdated()
   gGotDownloading = false;
   applicationCache.update();
 }
-
 
 if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.failEvent;

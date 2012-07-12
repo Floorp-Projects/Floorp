@@ -818,15 +818,6 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->setter() == CallObject::setArgOp) {
-        pd->slot = shape->shortid();
-        pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->setter() == CallObject::setVarOp) {
-        pd->slot = shape->shortid();
-        pd->flags |= JSPD_VARIABLE;
-    } else {
-        pd->slot = 0;
-    }
     pd->alias = JSVAL_VOID;
 
     return JS_TRUE;

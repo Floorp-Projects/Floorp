@@ -125,9 +125,9 @@ function store_entries(cb)
     session.isPrivate = true;
   }
 
-  var cacheEntry = session.asyncOpenCacheEntry(entries[store_idx][0],
-                                               Ci.nsICache.ACCESS_WRITE,
-                                               store_data);
+  session.asyncOpenCacheEntry(entries[store_idx][0],
+                              Ci.nsICache.ACCESS_WRITE,
+                              store_data);
 }
 
 var store_data = {
@@ -172,9 +172,9 @@ function check_entries(cb, pbExited)
     session.isPrivate = true;
   }
 
-  var cacheEntry = session.asyncOpenCacheEntry(entries[check_idx][0],
-                                               Ci.nsICache.ACCESS_READ,
-                                               check_data);
+  session.asyncOpenCacheEntry(entries[check_idx][0],
+                              Ci.nsICache.ACCESS_READ,
+                              check_data);
 }
 
 var check_data = {

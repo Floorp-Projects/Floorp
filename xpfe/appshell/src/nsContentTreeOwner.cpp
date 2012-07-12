@@ -851,14 +851,14 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
       !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                         nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
-    bool openSucceeded =
+    *aWindowIsNew =
       BrowserElementParent::OpenWindowInProcess(aParent, aURI, aName,
                                                 aFeatures, aReturn);
 
     // If OpenWindowInProcess failed (perhaps because the embedder blocked the
     // popup), tell our caller not to proceed trying to create a new window
     // through other means.
-    return openSucceeded ? NS_OK : NS_ERROR_ABORT;
+    return *aWindowIsNew ? NS_OK : NS_ERROR_ABORT;
   }
 
   // Where should we open this?

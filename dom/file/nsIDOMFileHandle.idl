@@ -18,11 +18,11 @@ class FileInfo;
 
 [ptr] native FileInfo(mozilla::dom::indexedDB::FileInfo);
 
+interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
-interface nsIDOMFileRequest;
 interface nsIDOMLockedFile;
 
-[scriptable, builtinclass, uuid(0dc9c73c-4e44-4430-8898-85f61a70b1d2)]
+[scriptable, builtinclass, uuid(882ad3d0-6fb1-4841-8e17-0ba17b11edc8)]
 interface nsIDOMFileHandle : nsISupports
 {
   readonly attribute DOMString name;
@@ -34,7 +34,7 @@ interface nsIDOMFileHandle : nsISupports
   nsIDOMLockedFile
   open([optional /* "readonly" */] in DOMString mode);
 
-  nsIDOMFileRequest
+  nsIDOMDOMRequest
   getFile();
 
   [notxpcom]

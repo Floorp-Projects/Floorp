@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for navigator.id identity provider (IDP) provisioning basics</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank">navigator.id identity provider (IDP) provisioning basics</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+"use strict"
+
+let IDP = Cu.import("resource://gre/modules/identity/IdentityProvider.jsm").IdentityProvider;
+
+function setupProv() {
+  info("setupProv");
+  // Add a provisioning flow so the DOM calls succeed
+  IDP._provisionFlows[outerWinId] = {
+    sandbox: {},
+    callback: function doCallback(aErr) {
+      info("provisioning callback: " + aErr);
+    },
+  }
+}
+
+function resetAndNext() {
+  info("resetAndNext");
+  // reset DOM state for the next test
+  // Give the flow some time to cross the IPC boundary
+  setTimeout(function() {
+    let provContext = IDP._provisionFlows[outerWinId];
+    if (!provContext) {
+      SimpleTest.executeSoon(next);
+      return;
+    }
+    makeObserver("identity-DOM-state-reset", function() {
+      info("reset done");
+      SimpleTest.executeSoon(next);
+    });
+    DOMIdentity._resetFrameState(provContext.caller);
+  }, 700);
+}
+
+let steps = [
+  // genKeyPair tests
+  function genKeyPairExists() {
+    is(typeof(identity.genKeyPair), "function",
+       "Check genKeyPair is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function genKeyPairOutsideProv() {
+    expectException(function(){
+      identity.genKeyPair(function(){});
+    }, "Check genKeyPair outside of a prov. flow");
+    SimpleTest.executeSoon(next);
+  },
+  function genKeyPairNoArgs() {
+    setupProv();
+    identity.beginProvisioning(function() {
+      expectException(function() {
+        identity.genKeyPair();
+      }, "genKeyPair with no arguments");
+      SimpleTest.executeSoon(resetAndNext);
+    });
+  },
+  function genKeyPairInvalidArg() {
+    setupProv();
+    identity.beginProvisioning(function() {
+      expectException(function() {
+        identity.genKeyPair(999);
+      }, "Check genKeyPair with non-function object argument");
+      SimpleTest.executeSoon(resetAndNext);
+    });
+  },
+
+  // registerCertificate tests
+  function registerCertificateExists() {
+    is(typeof(identity.registerCertificate), "function",
+       "Check registerCertificate is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function registerCertificateNoArgs() {
+    setupProv();
+    identity.beginProvisioning(function() {
+      expectException(function() {
+        identity.registerCertificate();
+      }, "Check registerCertificate with no arguments");
+    });
+    SimpleTest.executeSoon(resetAndNext);
+  },
+  function registerCertificateOutsideProv() {
+    expectException(function(){
+      identity.registerCertificate("foo");
+    }, "Check registerCertificate outside of a prov. flow");
+    SimpleTest.executeSoon(next);
+  },
+
+  // raiseProvisioningFailure tests
+  function raiseProvisioningFailureExists() {
+    is(typeof(identity.raiseProvisioningFailure), "function",
+       "Check raiseProvisioningFailure is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function raiseProvisioningFailureNoArgs() {
+    expectException(function() {
+      identity.raiseProvisioningFailure();
+    }, "raiseProvisioningFailure with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+  function raiseProvisioningFailureWithReason() {
+    identity.raiseProvisioningFailure("my test reason");
+    SimpleTest.executeSoon(next);
+  },
+
+  // beginProvisioning tests
+  function beginProvisioningExists() {
+    is(typeof(identity.beginProvisioning), "function",
+       "Check beginProvisioning is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function beginProvisioningNoArgs() {
+    expectException(function() {
+      identity.beginProvisioning();
+    }, "beginProvisioning with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+  function beginProvisioningInvalidArg() {
+    expectException(function() {
+      identity.beginProvisioning(999);
+    }, "beginProvisioning with a non-function argument");
+    SimpleTest.executeSoon(next);
+  },
+  function beginProvisioningArgs() {
+    function beginProvisioningCb() {
+      SimpleTest.executeSoon(resetAndNext);
+    }
+    is(identity.beginProvisioning(beginProvisioningCb), undefined,
+       "Check minimum beginProvisioning arguments");
+  },
+
+  finish_tests,
+];
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+
+</script>
+</pre>
+</body>
+</html>

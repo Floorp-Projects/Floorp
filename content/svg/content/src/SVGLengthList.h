@@ -308,6 +308,10 @@ public:
     mList = nsnull;
   }
 
+  bool IsEmpty() const {
+    return !mList || mList->IsEmpty();
+  }
+
   PRUint32 Length() const {
     return mList ? mList->Length() : 0;
   }

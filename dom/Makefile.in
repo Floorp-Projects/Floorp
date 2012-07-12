@@ -67,6 +67,7 @@ DIRS += \
   indexedDB \
   system \
   ipc \
+  identity \
   workers \
   $(NULL)
 

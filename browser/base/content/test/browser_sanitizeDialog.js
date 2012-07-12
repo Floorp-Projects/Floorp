@@ -465,12 +465,6 @@ var gAllTests = [
     var cs = Components.classes["@mozilla.org/network/cache-service;1"]
              .getService(Components.interfaces.nsICacheService);
     var session = cs.createSession(URL + "/manifest", nsICache.STORE_OFFLINE, nsICache.STREAM_BASED);
-    var cacheEntry = session.openCacheEntry(URL, nsICache.ACCESS_READ_WRITE, false);
-    var stream = cacheEntry.openOutputStream(0);
-    var content = "content";
-    stream.write(content, content.length);
-    stream.close();
-    cacheEntry.close();
 
     // Open the dialog
     let wh = new WindowHelper();
@@ -506,7 +500,20 @@ var gAllTests = [
       cs.visitEntries(visitor);
       is(size, 0, "offline application cache entries evicted");
     };
-    wh.open();
+
+    var cacheListener = {
+      onCacheEntryAvailable: function (entry, access, status) {
+        is(status, Cr.NS_OK);
+        var stream = entry.openOutputStream(0);
+        var content = "content";
+        stream.write(content, content.length);
+        stream.close();
+        entry.close();
+        wh.open();
+      }
+    };
+
+    session.asyncOpenCacheEntry(URL, nsICache.ACCESS_READ_WRITE, cacheListener);
   },
   function () {
     // Test for offline apps permission deletion

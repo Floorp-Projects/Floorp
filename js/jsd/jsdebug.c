@@ -1226,14 +1226,6 @@ JSD_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop)
     return jsd_GetPropertyFlags(jsdc, jsdprop);
 }
 
-JSD_PUBLIC_API(unsigned)
-JSD_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop)
-{
-    JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JSD_ASSERT_VALID_PROPERTY(jsdprop);
-    return jsd_GetPropertyVarArgSlot(jsdc, jsdprop);
-}
-
 /**************************************************/
 /* Object Functions */
 

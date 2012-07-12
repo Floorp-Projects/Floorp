@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<head>
+<style>
+div { background: yellow; line-height: 1.0; font-size: 12px; width: 480px; border: 1px solid red; }
+ol { padding-left: 120px; width: 400px;}
+li { font-size: 36px; }
+</style>
+</head>
+<!--
+In a 480px container, the minimum font size at 15em per line is 32px.
+This means we map 0px-48px into 32px-48px, so 12px gets mapped to 36px.
+The margins will be a little bit screwy, since we're fiddling with them
+to make the list rendering better.
+-->
+<body>
+<div>
+  <ol>
+    <li>Separate interface design from internals</li>
+    <li>Enable multiple user-interface strategies</li>
+    <li>Enable multiple-platform support</li>
+  </ol>
+</div>
+</body>
