@@ -1,6 +1,6 @@
 #T gmake skip
 
-CMD = %pycmd asplode
+CMD = %pycmd asplode_return
 PYCOMMANDPATH = $(TESTPATH) $(TESTPATH)/subdir
 
 all:
