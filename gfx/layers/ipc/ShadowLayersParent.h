@@ -44,18 +44,24 @@ public:
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
 protected:
-  NS_OVERRIDE virtual bool RecvUpdate(const EditArray& cset,
-                                      const bool& isFirstPaint,
-                                      EditReplyArray* reply);
+  virtual bool RecvUpdate(const EditArray& cset,
+                          const bool& isFirstPaint,
+                          EditReplyArray* reply) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual bool RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
-                                             SurfaceDescriptor* surfaceOut);
+  virtual bool RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
+                                 SurfaceDescriptor* surfaceOut) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual bool RecvUpdateNoSwap(const EditArray& cset,
-                                            const bool& isFirstPaint);
+  virtual bool RecvUpdateNoSwap(const EditArray& cset,
+                                const bool& isFirstPaint) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual PLayerParent* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerParent* actor);
+  virtual PGrallocBufferParent*
+  AllocPGrallocBuffer(const gfxIntSize& aSize, const gfxContentType& aContent,
+                      MaybeMagicGrallocBufferHandle* aOutHandle) MOZ_OVERRIDE;
+  virtual bool
+  DeallocPGrallocBuffer(PGrallocBufferParent* actor) MOZ_OVERRIDE;
+
+  virtual PLayerParent* AllocPLayer() MOZ_OVERRIDE;
+  virtual bool DeallocPLayer(PLayerParent* actor) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<ShadowLayerManager> mLayerManager;

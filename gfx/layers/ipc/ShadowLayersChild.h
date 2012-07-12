@@ -29,8 +29,13 @@ public:
   void Destroy();
 
 protected:
-  NS_OVERRIDE virtual PLayerChild* AllocPLayer();
-  NS_OVERRIDE virtual bool DeallocPLayer(PLayerChild* actor);
+  virtual PGrallocBufferChild*
+  AllocPGrallocBuffer(const gfxIntSize&, const gfxContentType&,
+                      MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
+  virtual bool
+  DeallocPGrallocBuffer(PGrallocBufferChild* actor) MOZ_OVERRIDE;
+  virtual PLayerChild* AllocPLayer() MOZ_OVERRIDE;
+  virtual bool DeallocPLayer(PLayerChild* actor) MOZ_OVERRIDE;
 };
 
 } // namespace layers
