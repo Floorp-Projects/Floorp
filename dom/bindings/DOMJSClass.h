@@ -21,8 +21,7 @@
 #define DOM_PROTOTYPE_SLOT (JSCLASS_GLOBAL_SLOT_COUNT + 1)
 
 // We use these flag bits for the new bindings.
-#define JSCLASS_IS_DOMJSCLASS JSCLASS_USERBIT1
-#define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT2
+#define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1
 
 namespace mozilla {
 namespace dom {
