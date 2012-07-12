@@ -6051,6 +6051,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
         if (fun->hasDefaults()) {
             ParseNode *rest = NULL;
+            bool restIsDefn = false;
             if (fun->hasRest()) {
                 JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
                 // Defaults with a rest parameter need special handling. The
@@ -6062,28 +6063,35 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 rest = pn->pn_head;
                 while (rest->pn_next != pnlast)
                     rest = rest->pn_next;
+                restIsDefn = rest->isDefn();
                 if (Emit1(cx, bce, JSOP_REST) < 0)
                     return false;
                 CheckTypeSet(cx, bce, JSOP_REST);
-                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
-                    return false;
-                if (!BindNameToSlot(cx, bce, rest))
-                    return false;
-                if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
-                    return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)
-                    return false;
+                // Only set the rest parameter if it's not aliased by a nested
+                // function in the body.
+                if (restIsDefn) {
+                    if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+                        return false;
+                    if (!BindNameToSlot(cx, bce, rest))
+                        return false;
+                    if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
+                        return false;
+                    if (Emit1(cx, bce, JSOP_POP) < 0)
+                        return false;
+                }
             }
             if (!EmitDefaults(cx, bce, pn))
                 return false;
             if (fun->hasRest()) {
-                if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
+                if (restIsDefn && !EmitVarOp(cx, rest, JSOP_SETARG, bce))
                     return false;
                 if (Emit1(cx, bce, JSOP_POP) < 0)
                     return false;
             }
         }
         for (ParseNode *pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
+            // Only bind the parameter if it's not aliased by a nested function
+            // in the body.
             if (!pn2->isDefn())
                 continue;
             if (!BindNameToSlot(cx, bce, pn2))
