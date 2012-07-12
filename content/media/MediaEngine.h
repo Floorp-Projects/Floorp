@@ -50,7 +50,7 @@ public:
   virtual void GetUUID(nsAString&) = 0;
 
   /* This call reserves but does not start the device. */
-  virtual nsresult Allocate() = 0;
+  virtual already_AddRefed<nsDOMMediaStream> Allocate() = 0;
 
   /* Release the device back to the system. */
   virtual nsresult Deallocate() = 0;
