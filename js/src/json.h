@@ -17,7 +17,8 @@ extern JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_Stringify(JSContext *cx, js::Value *vp, JSObject *replacer, js::Value space,
+js_Stringify(JSContext *cx, js::MutableHandleValue vp,
+	     JSObject *replacer, js::Value space, 
              js::StringBuffer &sb);
 
 // Avoid build errors on certain platforms that define these names as constants

@@ -25,8 +25,7 @@ using namespace js::gc;
 ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, StackFrame *fp)
 {
-    JSFunction &callee = fp->callee();
-    RootedObject proto(cx, callee.global().getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, fp->callee().global().getOrCreateObjectPrototype(cx));
     if (!proto)
         return NULL;
 
@@ -34,7 +33,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
     if (!type)
         return NULL;
 
-    bool strict = callee.inStrictMode();
+    bool strict = fp->callee().inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, proto,
@@ -56,7 +55,7 @@ ArgumentsObject::create(JSContext *cx, StackFrame *fp)
         return NULL;
 
     data->numArgs = numArgs;
-    data->callee.init(ObjectValue(callee));
+    data->callee.init(ObjectValue(fp->callee()));
     data->script = fp->script();
 
     /* Copy [0, numArgs) into data->slots. */

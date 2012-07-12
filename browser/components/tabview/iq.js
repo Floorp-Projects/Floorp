@@ -568,9 +568,9 @@ iQClass.prototype = {
     });
 
     this.css({
-      '-moz-transition-property': Object.keys(css).join(", "),
-      '-moz-transition-duration': (duration / 1000) + 's',
-      '-moz-transition-timing-function': easing
+      'transition-property': Object.keys(css).join(", "),
+      'transition-duration': (duration / 1000) + 's',
+      'transition-timing-function': easing
     });
 
     this.css(css);
@@ -578,9 +578,9 @@ iQClass.prototype = {
     let self = this;
     setTimeout(function() {
       self.css({
-        '-moz-transition-property': 'none',
-        '-moz-transition-duration': '',
-        '-moz-transition-timing-function': ''
+        'transition-property': 'none',
+        'transition-duration': '',
+        'transition-timing-function': ''
       });
 
       if (typeof options.complete == "function")

@@ -23,10 +23,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
 function log(...aMessageArgs) {
-  Logger.log(["RP"].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["RP"].concat(aMessageArgs));
 }
 function reportError(...aMessageArgs) {
-  Logger.reportError(["RP"].concat(aMessageArgs));
+  Logger.reportError.apply(Logger, ["RP"].concat(aMessageArgs));
 }
 
 function IdentityRelyingParty() {

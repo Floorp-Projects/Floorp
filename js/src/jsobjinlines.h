@@ -691,16 +691,16 @@ JSObject::getType(JSContext *cx)
     return self->type_;
 }
 
-inline bool
-JSObject::clearType(JSContext *cx)
+/* static */ inline bool
+JSObject::clearType(JSContext *cx, js::HandleObject obj)
 {
-    JS_ASSERT(!hasSingletonType());
+    JS_ASSERT(!obj->hasSingletonType());
 
     js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
     if (!type)
         return false;
 
-    type_ = type;
+    obj->type_ = type;
     return true;
 }
 
@@ -965,15 +965,27 @@ JSObject::nativeSetSlotWithType(JSContext *cx, js::Shape *shape, const js::Value
 }
 
 inline bool
-JSObject::nativeContains(JSContext *cx, jsid id)
+JSObject::nativeContains(JSContext *cx, js::HandleId id)
 {
     return nativeLookup(cx, id) != NULL;
 }
 
 inline bool
-JSObject::nativeContains(JSContext *cx, const js::Shape &shape)
+JSObject::nativeContains(JSContext *cx, js::HandleShape shape)
 {
-    return nativeLookup(cx, shape.propid()) == &shape;
+    return nativeLookup(cx, shape->propid()) == shape;
+}
+
+inline bool
+JSObject::nativeContainsNoAllocation(jsid id)
+{
+    return nativeLookupNoAllocation(id) != NULL;
+}
+
+inline bool
+JSObject::nativeContainsNoAllocation(const js::Shape &shape)
+{
+    return nativeLookupNoAllocation(shape.propid()) == &shape;
 }
 
 inline bool
@@ -1604,7 +1616,7 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     JS_ASSERT(proto);
 
     jsid id = NameToId(cx->runtime->atomState.classAtoms[key]);
-    JS_ASSERT(!global->nativeLookupNoAllocation(cx, id));
+    JS_ASSERT(!global->nativeLookupNoAllocation(id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));
