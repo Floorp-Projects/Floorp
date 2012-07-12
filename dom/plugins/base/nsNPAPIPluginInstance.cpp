@@ -992,7 +992,7 @@ nsNPAPIPluginInstance::UseAsyncPainting(bool* aIsAsync)
   if (!library)
     return NS_ERROR_FAILURE;
 
-  *aIsAsync = library->UseAsyncPainting();
+  *aIsAsync = library->IsOOP();
   return NS_OK;
 }
 

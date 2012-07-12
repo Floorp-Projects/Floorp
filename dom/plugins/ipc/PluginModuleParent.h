@@ -244,7 +244,7 @@ private:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
-    NS_OVERRIDE virtual bool UseAsyncPainting() { return true; }
+    NS_OVERRIDE virtual bool IsOOP() { return true; }
     NS_OVERRIDE
     virtual nsresult SetBackgroundUnknown(NPP instance);
     NS_OVERRIDE

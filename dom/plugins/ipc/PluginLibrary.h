@@ -70,7 +70,7 @@ public:
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
   virtual nsresult GetImageContainer(NPP instance, ImageContainer** aContainer) = 0;
   virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize) = 0;
-  virtual bool UseAsyncPainting() = 0;
+  virtual bool IsOOP() = 0;
 #if defined(XP_MACOSX)
   virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) = 0;
 #endif
