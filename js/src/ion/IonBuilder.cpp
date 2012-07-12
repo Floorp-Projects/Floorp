@@ -4886,7 +4886,7 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
         // will end up calling it mid-compilation.
         JSObject *walker = curObj;
         while (walker) {
-            if (walker->getClass()->ops.lookupProperty)
+            if (!walker->isNative() || walker->getClass()->ops.lookupProperty)
                 return true;
             walker = walker->getProto();
         }
@@ -4928,6 +4928,18 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
             foundProto = proto;
         else if (foundProto != proto)
             return true;
+
+        // Check here to make sure that everyone has Type Objects which known
+        // properties between them and the proto we found the accessor on. We
+        // need those to add freezes safely. NOTE: We do not do this above, as
+        // we may be able to freeze all the types up to where we found the
+        // property, even if there are unknown types higher in the prototype
+        // chain.
+        while (curObj != foundProto) {
+            if (curObj->getType(cx)->unknownProperties())
+                return true;
+            curObj = curObj->getProto();
+        }
     }
 
     // No need to add a freeze if we didn't find anything
@@ -4936,8 +4948,13 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
 
     JS_ASSERT(foundProto);
 
+    // Freeze the input types
     types->addFreeze(cx);
 
+    // Add a shape guard on the prototype we found the property on. The rest of
+    // the prototype chain is guarded by TI freezes. Note that a shape guard is
+    // good enough here, even in the proxy case, because we have ensured there
+    // are no lookup hooks for this property.
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
     MGuardShape *guard = MGuardShape::New(wrapper, foundProto->lastProperty());
@@ -4948,24 +4965,34 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
     types::TypeObject *curType;
     for (unsigned i = 0; i < types->getObjectCount(); i++) {
         curType = types->getTypeObject(i);
-
+        JSObject *obj = NULL;
         if (!curType) {
-            JSObject *obj = types->getSingleObject(i);
+            obj = types->getSingleObject(i);
             if (!obj)
                 continue;
 
             curType = obj->getType(cx);
         }
 
-        // Walk the prototype chain. Everyone has to have the property, since we
-        // just checked, so propSet cannot be NULL.
-        jsid typeId = types::MakeTypeId(cx, id);
-        types::TypeSet *propSet = curType->getProperty(cx, typeId, false);
-        JS_ASSERT(propSet);
-        while (!propSet->isOwnProperty(cx, curType, false)) {
-            curType = curType->proto->getType(cx);
-            propSet = curType->getProperty(cx, id, false);
-            JS_ASSERT(propSet);
+        // If we found a Singleton object's own-property, there's nothing to
+        // freeze.
+        if (obj != foundProto) {
+            // Walk the prototype chain. Everyone has to have the property, since we
+            // just checked, so propSet cannot be NULL.
+            jsid typeId = types::MakeTypeId(cx, id);
+            while (true) {
+                types::TypeSet *propSet = curType->getProperty(cx, typeId, false);
+                JS_ASSERT(propSet);
+                // Asking the question adds the freeze
+                bool isOwn = propSet->isOwnProperty(cx, curType, false);
+                JS_ASSERT(!isOwn);
+                // Don't mark the proto. It will be held down by the shape
+                // guard. This allows us tp use properties found on prototypes
+                // with properties unknown to TI.
+                if (curType->proto == foundProto)
+                    break;
+                curType = curType->proto->getType(cx);
+            }
         }
     }
 
