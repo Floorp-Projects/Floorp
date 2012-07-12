@@ -37,9 +37,8 @@ var cookieListHtml = "" +
   "    <td>${cookie.key}</td>" +
   "    <td>${cookie.value}</td>" +
   "    <td>" +
-  "      <span class='gcli-out-shortcut'" +
-  "          onclick='${onclick}' ondblclick='${ondblclick}'" +
-  "          data-command='cookie set ${cookie.key}'" +
+  "      <span class='gcli-out-shortcut' onclick='${onclick}'" +
+  "          data-command='cookie set ${cookie.key} '" +
   "          >" + gcli.lookup("cookieListOutEdit") + "</span>" +
   "      <span class='gcli-out-shortcut'" +
   "          onclick='${onclick}' ondblclick='${ondblclick}'" +
