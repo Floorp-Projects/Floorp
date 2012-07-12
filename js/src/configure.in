@@ -3325,6 +3325,14 @@ if test -n "$MOZ_NATIVE_NSPR"; then
 fi
 
 dnl ========================================================
+dnl system zlib Support
+dnl ========================================================
+dnl Standalone js defaults to system zlib
+ZLIB_DIR=yes
+
+MOZ_ZLIB_CHECK([1.2.3])
+
+dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(system-ffi,
