@@ -14,22 +14,46 @@
     EXPECTED RESULTS: The box begins moving from the center.
     -->
     <script>
+        var timeoutID;
+
         function animate()
         {
-          var svg = document.getElementsByTagName('svg')[0];
           addAnimation();
-          setTimeout('document.documentElement.removeAttribute("class")', 150);
+          var svg = document.getElementsByTagName('svg')[0];
+          var anim = svg.getElementsByTagName('animate')[0];
+          // We should pass quickly and fail slowly.
+          // In the pass case, we'll get an end event almost immediately.
+          // In the failure case, wait 30s before giving up.
+          timeoutID = window.setTimeout(giveUp, 30000);
+          anim.addEventListener('end', finish, true);
+        }
+
+        function giveUp() {
+          var svg = document.getElementsByTagName('svg')[0];
+          var rect = svg.getElementsByTagName('rect')[0];
+          rect.setAttribute("fill", "red");
+          var anim = svg.getElementsByTagName('animate')[0];
+          anim.parentNode.removeChild(anim);
+          timeoutID = null;
+          finish();
+        }
+
+        function finish() {
+          if (timeoutID) {
+            window.clearTimeout(timeoutID);
+            timeoutID = null;
+          }
+          document.documentElement.removeAttribute('class');
         }
 
         function addAnimation()
         {
           const svgns="http://www.w3.org/2000/svg";
           var anim = document.createElementNS(svgns,'animate');
-          anim.setAttribute('attributeName','x');
-          anim.setAttribute('from','0');
-          anim.setAttribute('to','90');
+          anim.setAttribute('attributeName','fill');
+          anim.setAttribute('to','green');
           anim.setAttribute('begin','0s');
-          anim.setAttribute('dur','0.01s');
+          anim.setAttribute('dur','0.001s');
           anim.setAttribute('fill','freeze');
           var target = document.getElementById('target');
           target.appendChild(anim);
@@ -39,10 +63,7 @@
 
   <body onload="animate()">
     <svg xmlns="http://www.w3.org/2000/svg" width="200px" height="200px">
-      <rect x="1" y="1" width="198" height="198"
-        style="fill: none; stroke: black"/>
-      <rect x="-20" y="80" width="40" height="40" fill="royalblue"
-        stroke="black" stroke-width="1" id="target"/>
+      <rect width="199" height="199" fill="red" id="target"/>
     </svg>
   </body>
 </html>

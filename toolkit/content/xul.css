@@ -201,7 +201,7 @@ notificationbox {
 
 notification {
   -moz-binding: url("chrome://global/content/bindings/notification.xml#notification");
-  -moz-transition: margin-top 300ms, opacity 300ms;
+  transition: margin-top 300ms, opacity 300ms;
 }
 
 /*********** popup notification ************/

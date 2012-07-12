@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+
+    <RelativeLayout android:layout_width="@dimen/site_identity_popup_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dip"
+                    android:layout_alignParentTop="true"
+                    android:background="@drawable/doorhanger_popup_bg">
+
+      <LinearLayout android:id="@+id/identity_info"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dip"
+                    android:background="@drawable/doorhanger_bg"
+                    android:orientation="vertical">
+
+          <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:text="@string/identity_connected_to"/>
+
+          <TextView android:id="@+id/host"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textStyle="bold"/>
+
+          <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:text="@string/identity_run_by"/>
+
+          <TextView android:id="@+id/owner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textStyle="bold"/>
+
+          <TextView android:id="@+id/supplemental"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+          <TextView android:id="@+id/verifier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+
+      </LinearLayout>
+
+      <ImageView android:id="@+id/larry"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:padding="12dip"
+                 android:layout_alignParentRight="true"/>
+
+      <TextView android:id="@+id/encrypted"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/identity_info"
+                android:padding="12dip"
+                android:gravity="right"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="?android:attr/textColorPrimary"/>
+
+    </RelativeLayout>
+
+    <ImageView android:id="@+id/arrow"
+               android:layout_width="@dimen/doorhanger_arrow_width"
+               android:layout_height="16dip"
+               android:layout_marginTop="9dip"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/doorhanger_arrow"
+               android:scaleType="fitXY"/>
+
+</RelativeLayout>

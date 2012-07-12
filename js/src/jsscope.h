@@ -506,9 +506,7 @@ struct Shape : public js::gc::Cell
     static inline Shape *search(JSContext *cx, Shape *start, jsid id,
                                 Shape ***pspp, bool adding = false);
 
-#ifdef DEBUG
-    static inline Shape *searchNoAllocation(JSContext *cx, Shape *start, jsid id);
-#endif
+    static inline Shape *searchNoAllocation(Shape *start, jsid id);
 
     inline void removeFromDictionary(JSObject *obj);
     inline void insertIntoDictionary(HeapPtrShape *dictp);
@@ -918,7 +916,10 @@ class AutoRooterGetterSetter
             : AutoGCRooter(cx, GETTERSETTER), attrs(attrs),
               pgetter(pgetter_), psetter(psetter_),
               getterRoot(cx, pgetter_), setterRoot(cx, psetter_)
-        {}
+        {
+            JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
+            JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
+        }
 
         friend void AutoGCRooter::trace(JSTracer *trc);
 
@@ -1104,6 +1105,14 @@ namespace js {
 inline Shape *
 Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 {
+#ifdef DEBUG
+    {
+        SkipRoot skip0(cx, &start);
+        SkipRoot skip1(cx, &id);
+        MaybeCheckStackRoots(cx);
+    }
+#endif
+
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);
         return SHAPE_FETCH(*pspp);
@@ -1121,7 +1130,7 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
             RootedShape startRoot(cx, start);
             RootedId idRoot(cx, id);
             if (startRoot->hashify(cx)) {
-                Shape **spp = startRoot->table().search(id, adding);
+                Shape **spp = startRoot->table().search(idRoot, adding);
                 return SHAPE_FETCH(spp);
             }
             start = startRoot;
@@ -1144,9 +1153,8 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
     return NULL;
 }
 
-#ifdef DEBUG
 /* static */ inline Shape *
-Shape::searchNoAllocation(JSContext *cx, Shape *start, jsid id)
+Shape::searchNoAllocation(Shape *start, jsid id)
 {
     if (start->hasTable()) {
         Shape **spp = start->table().search(id, false);
@@ -1160,7 +1168,6 @@ Shape::searchNoAllocation(JSContext *cx, Shape *start, jsid id)
 
     return NULL;
 }
-#endif /* DEBUG */
 
 void
 MarkNonNativePropertyFound(HandleObject obj, MutableHandleShape propp);

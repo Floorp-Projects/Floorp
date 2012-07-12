@@ -942,12 +942,15 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
 
 CompileStatus
 mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
-                   bool construct, CompileRequest request)
+                   bool construct, CompileRequest request, StackFrame *frame)
 {
   restart:
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
+    if (frame->hasPushedSPSFrame())
+        return Compile_Skipped;
+		
     if (IonGetsFirstChance(cx, script, request))
         return Compile_Skipped;
 

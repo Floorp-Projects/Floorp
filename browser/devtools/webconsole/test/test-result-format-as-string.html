@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Web Console test: jsterm eval format as a string</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <p>Make sure js eval results are formatted as strings.</p>
+    <script>
+      document.querySelector("p").toSource = function() {
+        var element = document.createElement("div");
+        element.textContent = "bug772506_content";
+        element.setAttribute("onmousemove",
+          "(function () {" +
+          "  gBrowser._bug772506 = 'foobar';" +
+          "})();"
+        );
+        return element;
+      };
+    </script>
+  </body>
+</html>

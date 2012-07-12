@@ -94,7 +94,6 @@ private:
   struct nsThreadShutdownContext *mShutdownContext;
 
   bool mShutdownRequired;
-  bool mShutdownPending;
   // Set to true when events posted to this thread will never run.
   bool mEventsAreDoomed;
   MainThreadFlag mIsMainThread;

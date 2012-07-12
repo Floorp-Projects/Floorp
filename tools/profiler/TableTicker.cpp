@@ -15,7 +15,10 @@
 #include "prenv.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
+
+// JSON
 #include "JSObjectBuilder.h"
+#include "nsIJSRuntimeService.h"
 
 // Meta
 #include "nsXPCOM.h"
@@ -24,6 +27,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULAppInfo.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
@@ -421,6 +426,15 @@ private:
 
 std::string GetSharedLibraryInfoString();
 
+static JSBool
+WriteCallback(const jschar *buf, uint32_t len, void *data)
+{
+  std::ofstream& stream = *static_cast<std::ofstream*>(data);
+  nsCAutoString profile = NS_ConvertUTF16toUTF8(buf, len);
+  stream << profile.Data();
+  return JS_TRUE;
+}
+
 /**
  * This is an event used to save the profile on the main thread
  * to be sure that it is not being modified while saving.
@@ -432,42 +446,81 @@ public:
   NS_IMETHOD Run() {
     TableTicker *t = tlsTicker.get();
 
-    char buff[MAXPATHLEN];
-#ifdef ANDROID
-  #define FOLDER "/sdcard/"
-#elif defined(XP_WIN)
-  #define FOLDER "%TEMP%\\"
-#else
-  #define FOLDER "/tmp/"
-#endif
-
-    snprintf(buff, MAXPATHLEN, "%sprofile_%i_%i.txt", FOLDER, XRE_GetProcessType(), getpid());
-
-#ifdef XP_WIN
-    // Expand %TEMP% on Windows
-    {
-      char tmp[MAXPATHLEN];
-      ExpandEnvironmentStringsA(buff, tmp, mozilla::ArrayLength(tmp));
-      strcpy(buff, tmp);
-    }
-#endif
-
     // Pause the profiler during saving.
     // This will prevent us from recording sampling
     // regarding profile saving. This will also
     // prevent bugs caused by the circular buffer not
     // being thread safe. Bug 750989.
-    std::ofstream stream;
-    stream.open(buff);
     t->SetPaused(true);
-    if (stream.is_open()) {
-      stream << *(t->GetPrimaryThreadProfile());
-      stream << "h-" << GetSharedLibraryInfoString() << std::endl;
-      stream.close();
-      LOGF("Saved to %s", buff);
-    } else {
-      LOG("Fail to open profile log file.");
+
+    // Get file path
+    nsCOMPtr<nsIFile> tmpFile;
+    nsCAutoString tmpPath;
+    if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
+      LOG("Failed to find temporary directory.");
+      return NS_ERROR_FAILURE;
     }
+    tmpPath.AppendPrintf("profile_%i_%i.txt", XRE_GetProcessType(), getpid());
+
+    nsresult rv = tmpFile->AppendNative(tmpPath);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = tmpFile->GetNativePath(tmpPath);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Create a JSContext to run a JSObjectBuilder :(
+    // Based on XPCShellEnvironment
+    JSRuntime *rt;
+    JSContext *cx;
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    if (!rtsvc || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
+      LOG("failed to get RuntimeService");
+      return NS_ERROR_FAILURE;;
+    }
+
+    cx = JS_NewContext(rt, 8192);
+    if (!cx) {
+      LOG("Failed to get context");
+      return NS_ERROR_FAILURE;
+    }
+
+    {
+      JSAutoRequest ar(cx);
+      static JSClass c = {
+          "global", JSCLASS_GLOBAL_FLAGS,
+          JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+      };
+      JSObject *obj = JS_NewGlobalObject(cx, &c, NULL);
+
+      std::ofstream stream;
+      stream.open(tmpPath.get());
+      // Pause the profiler during saving.
+      // This will prevent us from recording sampling
+      // regarding profile saving. This will also
+      // prevent bugs caused by the circular buffer not
+      // being thread safe. Bug 750989.
+      t->SetPaused(true);
+      if (stream.is_open()) {
+        JSAutoEnterCompartment autoComp;
+        if (autoComp.enter(cx, obj)) {
+          JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
+          jsval val = OBJECT_TO_JSVAL(profileObj);
+          JS_Stringify(cx, &val, nsnull, JSVAL_NULL, WriteCallback, &stream);
+        } else {
+          LOG("Failed to enter compartment");
+        }
+        stream.close();
+        LOGF("Saved to %s", tmpPath.get());
+      } else {
+        LOG("Fail to open profile log file.");
+      }
+    }
+    JS_EndRequest(cx);
+    JS_DestroyContext(cx);
+
     t->SetPaused(false);
 
     return NS_OK;
@@ -545,6 +598,10 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
 
   JSObject *profile = b.CreateObject();
 
+  // Put shared library info
+  JSObject *libs = GetMetaJSObject(b);
+  b.DefineProperty(profile, "libs", GetSharedLibraryInfoString().c_str());
+
   // Put meta data
   JSObject *meta = GetMetaJSObject(b);
   b.DefineProperty(profile, "meta", meta);
@@ -562,6 +619,33 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   return profile;
 }
 
+static
+void addProfileEntry(ProfileStack *aStack, ThreadProfile &aProfile, int i)
+{
+  // First entry has tagName 's' (start)
+  // Check for magic pointer bit 1 to indicate copy
+  const char* sampleLabel = aStack->mStack[i].mLabel;
+  if (aStack->mStack[i].isCopyLabel()) {
+    // Store the string using 1 or more 'd' (dynamic) tags
+    // that will happen to the preceding tag
+
+    aProfile.addTag(ProfileEntry('c', ""));
+    // Add one to store the null termination
+    size_t strLen = strlen(sampleLabel) + 1;
+    for (size_t j = 0; j < strLen;) {
+      // Store as many characters in the void* as the platform allows
+      char text[sizeof(void*)];
+      for (size_t pos = 0; pos < sizeof(void*) && j+pos < strLen; pos++) {
+        text[pos] = sampleLabel[j+pos];
+      }
+      j += sizeof(void*)/sizeof(char);
+      // Cast to *((void**) to pass the text data to a void*
+      aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
+    }
+  } else {
+    aProfile.addTag(ProfileEntry('c', sampleLabel));
+  }
+}
 
 #ifdef USE_BACKTRACE
 void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
@@ -582,19 +666,22 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 #ifdef USE_NS_STACKWALK
 typedef struct {
   void** array;
+  void** sp_array;
   size_t size;
   size_t count;
 } PCArray;
 
 static
-void StackWalkCallback(void* aPC, void* aClosure)
+void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
   PCArray* array = static_cast<PCArray*>(aClosure);
   if (array->count >= array->size) {
     // too many frames, ignore
     return;
   }
-  array->array[array->count++] = aPC;
+  array->sp_array[array->count] = aSP;
+  array->array[array->count] = aPC;
+  array->count++;
 }
 
 void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
@@ -604,14 +691,16 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   MOZ_ASSERT(thread);
 #endif
   void* pc_array[1000];
+  void* sp_array[1000];
   PCArray array = {
     pc_array,
+    sp_array,
     mozilla::ArrayLength(pc_array),
     0
   };
 
   // Start with the current function.
-  StackWalkCallback(aSample->pc, &array);
+  StackWalkCallback(aSample->pc, aSample->sp, &array);
 
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
@@ -625,8 +714,39 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   if (NS_SUCCEEDED(rv)) {
     aProfile.addTag(ProfileEntry('s', "(root)"));
 
+    ProfileStack* stack = aProfile.GetStack();
+    int pseudoStackPos = 0;
+
+    /* We have two stacks, the native C stack we extracted from unwinding,
+     * and the pseudostack we managed during execution. We want to consolidate
+     * the two in order. We do so by merging using the approximate stack address
+     * when each entry was push. When pushing JS entry we may not now the stack
+     * address in which case we have a NULL stack address in which case we assume
+     * that it follows immediatly the previous element.
+     *
+     *  C Stack | Address    --  Pseudo Stack | Address
+     *  main()  | 0x100          run_js()     | 0x40
+     *  start() | 0x80           jsCanvas()   | NULL
+     *  timer() | 0x50           drawLine()   | NULL
+     *  azure() | 0x10
+     *
+     * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
+     */
+    // i is the index in C stack starting at main and decreasing
+    // pseudoStackPos is the position in the Pseudo stack starting
+    // at the first frame (run_js in the example) and increasing.
     for (size_t i = array.count; i > 0; --i) {
-      aProfile.addTag(ProfileEntry('l', (void*)array.array[i - 1]));
+      while (pseudoStackPos < stack->mStackPointer) {
+        volatile StackEntry& entry = stack->mStack[pseudoStackPos];
+
+        if (entry.mStackAddress < array.sp_array[i-1] && entry.mStackAddress)
+          break;
+
+        addProfileEntry(stack, aProfile, pseudoStackPos);
+        pseudoStackPos++;
+      }
+
+      aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
     }
   }
 }
@@ -690,29 +810,7 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   for (mozilla::sig_safe_t i = 0;
        i < aStack->mStackPointer && i < mozilla::ArrayLength(aStack->mStack);
        i++) {
-    // First entry has tagName 's' (start)
-    // Check for magic pointer bit 1 to indicate copy
-    const char* sampleLabel = aStack->mStack[i].mLabel;
-    if (aStack->mStack[i].isCopyLabel()) {
-      // Store the string using 1 or more 'd' (dynamic) tags
-      // that will happen to the preceding tag
-
-      aProfile.addTag(ProfileEntry('c', ""));
-      // Add one to store the null termination
-      size_t strLen = strlen(sampleLabel) + 1;
-      for (size_t j = 0; j < strLen;) {
-        // Store as many characters in the void* as the platform allows
-        char text[sizeof(void*)];
-        for (size_t pos = 0; pos < sizeof(void*) && j+pos < strLen; pos++) {
-          text[pos] = sampleLabel[j+pos];
-        }
-        j += sizeof(void*);
-        // Take '*((void**)(&text[0]))' to pass the char[] as a single void*
-        aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
-      }
-    } else {
-      aProfile.addTag(ProfileEntry('c', sampleLabel));
-    }
+    addProfileEntry(aStack, aProfile, i);
   }
 #ifdef ENABLE_SPS_LEAF_DATA
   if (sample) {
@@ -834,12 +932,15 @@ void mozilla_sampler_init()
 #if defined(USE_LIBUNWIND) && defined(ANDROID)
   // Only try debug_frame and exidx unwinding
   putenv("UNW_ARM_UNWIND_METHOD=5");
+#endif
 
-  // Allow the profiler to be started and stopped using signals
-  OS::RegisterStartStopHandlers();
+  // Allow the profiler to be started using signals
+  OS::RegisterStartHandler();
 
-  // On Android, this is too soon in order to start up the
-  // profiler.
+#if defined(USE_LIBUNWIND) && defined(__arm__) && defined(MOZ_CRASHREPORTER)
+  // On ARM, libunwind defines a signal handler for segmentation faults.
+  // If SPS is enabled now, the crash reporter will override that signal
+  // handler, and libunwind will likely break.
   return;
 #endif
 
@@ -851,8 +952,9 @@ void mozilla_sampler_init()
     return;
   }
 
+  const char* features = "js";
   mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                        PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
+                        &features, 1);
 }
 
 void mozilla_sampler_deinit()
@@ -939,7 +1041,7 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS())
-      stack->installJSSampling();
+      stack->enableJSSampling();
 }
 
 void mozilla_sampler_stop()
@@ -952,7 +1054,7 @@ void mozilla_sampler_stop()
     return;
   }
 
-  bool uninstallJS = t->ProfileJS();
+  bool disableJS = t->ProfileJS();
 
   t->Stop();
   delete t;
@@ -960,8 +1062,8 @@ void mozilla_sampler_stop()
   ProfileStack *stack = tlsStack.get();
   ASSERT(stack != NULL);
 
-  if (uninstallJS)
-    stack->uninstallJSSampling();
+  if (disableJS)
+    stack->disableJSSampling();
 }
 
 bool mozilla_sampler_is_active()

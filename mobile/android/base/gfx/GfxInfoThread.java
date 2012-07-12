@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.gfx;
 
 import android.util.Log;
 import java.util.concurrent.SynchronousQueue;
@@ -90,6 +90,11 @@ public class GfxInfoThread extends Thread {
 
         // get the first config
         int numConfigs = returnedNumberOfConfigs[0];
+        if (numConfigs == 0) {
+            error("eglChooseConfig returned zero configs");
+            return;
+        }
+
         EGLConfig[] returnedConfigs = new EGLConfig[numConfigs];
         if (!egl.eglChooseConfig(eglDisplay,
                                  configAttribs,

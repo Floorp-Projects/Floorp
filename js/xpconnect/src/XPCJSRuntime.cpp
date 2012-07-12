@@ -1306,36 +1306,37 @@ namespace xpc {
 
 static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
-                       const nsACString &pathPrefix,
+                       const nsACString &cJSPathPrefix,
+                       const nsACString &cDOMPathPrefix,
                        nsIMemoryMultiReporterCallback *cb,
                        nsISupports *closure, size_t *gcTotalOut = NULL)
 {
     size_t gcTotal = 0, gcHeapSundries = 0, otherSundries = 0;
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/arena-admin"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/arena-admin"),
                      cStats.gcHeapArenaAdmin,
                      "Memory on the garbage-collected JavaScript "
                      "heap, within arenas, that is used (a) to hold internal "
                      "bookkeeping information, and (b) to provide padding to "
                      "align GC things.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/unused-gc-things"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/unused-gc-things"),
                      cStats.gcHeapUnusedGcThings,
                      "Memory on the garbage-collected JavaScript "
                      "heap taken by empty GC thing slots within non-empty "
                      "arenas.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/non-function"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/non-function"),
                      cStats.gcHeapObjectsNonFunction,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds non-function objects.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/function"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/function"),
                      cStats.gcHeapObjectsFunction,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds function objects.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/strings"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/strings"),
                      cStats.gcHeapStrings,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds string headers.  String headers contain "
@@ -1344,41 +1345,41 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "string characters;  characters in longer strings are "
                      "counted under 'gc-heap/string-chars' instead.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/scripts"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/scripts"),
                      cStats.gcHeapScripts,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds JSScript instances. A JSScript is "
                      "created for each user-defined function in a script. One "
                      "is also created for the top-level code in a script.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/tree"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/tree"),
                      cStats.gcHeapShapesTree,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds shapes that are in a property tree.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/dict"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/dict"),
                      cStats.gcHeapShapesDict,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds shapes that are in dictionary mode.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/base"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/base"),
                      cStats.gcHeapShapesBase,
                      "Memory on the garbage-collected JavaScript "
                      "heap that collates data common to many shapes.");
 
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/type-objects"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/type-objects"),
                      cStats.gcHeapTypeObjects,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds type inference information.");
 
 #if JS_HAS_XML_SUPPORT
-    CREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/xml"),
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/xml"),
                      cStats.gcHeapXML,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds E4X XML objects.");
 #endif
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("objects/slots"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/slots"),
                   cStats.objectSlots,
                   "Memory allocated for the non-fixed object "
                   "slot arrays, which are used to represent object properties. "
@@ -1386,18 +1387,26 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "stored on the JavaScript heap; those slots "
                   "are not counted here, but in 'gc-heap/objects' instead.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("objects/elements"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/elements"),
                   cStats.objectElements,
                   "Memory allocated for object element "
                   "arrays, which are used to represent indexed object "
                   "properties.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("objects/misc"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/misc"),
                   cStats.objectMisc,
                   "Memory allocated for various small, miscellaneous "
                   "structures that hang off certain kinds of objects.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("string-chars"),
+    // Note that we use cDOMPathPrefix here.  This is because we measure orphan
+    // DOM nodes in the JS multi-reporter, but we want to report them in a
+    // "dom" sub-tree rather than a "js" sub-tree.
+    CREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
+                  cStats.objectPrivate,
+                  "Memory used by orphan DOM nodes that are only reachable "
+                  "from JavaScript objects.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("string-chars"),
                   cStats.stringChars,
                   "Memory allocated to hold string "
                   "characters.  Sometimes more memory is allocated than "
@@ -1406,64 +1415,64 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "compartment's JavaScript heap;  that header is not counted "
                   "here, but in 'gc-heap/strings' instead.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes-extra/tree-tables"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes-extra/tree-tables"),
                   cStats.shapesExtraTreeTables,
                   "Memory allocated for the property tables "
                   "that belong to shapes that are in a property tree.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes-extra/dict-tables"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes-extra/dict-tables"),
                   cStats.shapesExtraDictTables,
                   "Memory allocated for the property tables "
                   "that belong to shapes that are in dictionary mode.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes-extra/tree-shape-kids"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes-extra/tree-shape-kids"),
                   cStats.shapesExtraTreeShapeKids,
                   "Memory allocated for the kid hashes that "
                   "belong to shapes that are in a property tree.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes-extra/compartment-tables"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes-extra/compartment-tables"),
                   cStats.shapesCompartmentTables,
                   "Memory used by compartment-wide tables storing shape "
                   "information for use during object construction.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("script-data"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("script-data"),
                   cStats.scriptData,
                   "Memory allocated for JSScript bytecode and various "
                   "variable-length tables.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("mjit-data"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("mjit-data"),
                   cStats.mjitData,
                   "Memory used by the method JIT for "
                   "compilation data: JITScripts, native maps, and inline "
                   "cache structs.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrappers"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrappers"),
                   cStats.crossCompartmentWrappers,
                   "Memory used by cross-compartment wrappers.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-inference/script-main"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/script-main"),
                   cStats.typeInferenceSizes.scripts,
                   "Memory used during type inference to store type sets of "
                   "variables and dynamically observed types.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-inference/object-main"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-main"),
                   cStats.typeInferenceSizes.objects,
                   "Memory used during type inference to store types and "
                   "possible property types of JS objects.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-inference/tables"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/tables"),
                   cStats.typeInferenceSizes.tables,
                   "Memory used during type inference for compartment-wide "
                   "tables.");
 
-    CREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("analysis-temporary"),
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("analysis-temporary"),
                   cStats.typeInferenceSizes.temporary,
                   "Memory used during type inference and compilation to hold "
                   "transient analysis information.  Cleared on GC.");
 
     if (gcHeapSundries > 0) {
         // We deliberately don't use CREPORT_GC_BYTES here.
-        REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/sundries"),
+        REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/sundries"),
                         gcHeapSundries,
                         "The sum of all the gc-heap "
                         "measurements that are too small to be worth showing "
@@ -1472,7 +1481,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
 
     if (otherSundries > 0) {
         // We deliberately don't use CREPORT_BYTES here.
-        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("other-sundries"),
+        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("other-sundries"),
                      nsIMemoryReporter::KIND_HEAP, otherSundries,
                      "The sum of all the non-gc-heap "
                      "measurements that are too small to be worth showing "
@@ -1499,21 +1508,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     size_t gcTotal = 0;
     for (size_t i = 0; i < rtStats.compartmentStatsVector.length(); i++) {
         JS::CompartmentStats cStats = rtStats.compartmentStatsVector[i];
-        const char *cPathPrefix = static_cast<char *>(cStats.extra1);
-        const char *cName       = static_cast<char *>(cStats.extra2);
+        nsCString cJSPathPrefix(static_cast<char *>(cStats.extra1));
+        nsCString cDOMPathPrefix(static_cast<char *>(cStats.extra2));
 
-        // If cPathPrefix is NULL, cPath is "<rtPath>compartment(<cName>)/"
-        //              otherwise, cPath is "<cPathPrefix>compartment(<cName>)/"
-        nsCString cPath;
-        if (cPathPrefix) {
-            cPath.Assign(nsDependentCString(cPathPrefix));
-        } else {
-            cPath.Assign(rtPath);
-        }
-        cPath += NS_LITERAL_CSTRING("compartment(") +
-                 nsDependentCString(cName) + NS_LITERAL_CSTRING(")/");
-
-        rv = ReportCompartmentStats(cStats, cPath, cb, closure, &gcTotal);
+        rv = ReportCompartmentStats(cStats, cJSPathPrefix, cDOMPathPrefix, cb, closure, &gcTotal);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1685,7 +1683,48 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(JSCompartmentsMultiReporter
                               , nsIMemoryMultiReporter
                               )
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(OrphanSizeOf, "orphans")
+
 namespace xpc {
+
+static size_t
+SizeOfTreeIncludingThis(nsINode *tree)
+{       
+    size_t n = tree->SizeOfIncludingThis(OrphanSizeOf);
+    for (nsIContent* child = tree->GetFirstChild(); child; child = child->GetNextNode(tree)) {
+        n += child->SizeOfIncludingThis(OrphanSizeOf);
+    }   
+    return n;
+}
+
+class OrphanReporter : public JS::ObjectPrivateVisitor
+{
+public:
+    OrphanReporter()
+    {
+        mAlreadyMeasuredOrphanTrees.Init();
+    }
+
+    virtual size_t sizeOfIncludingThis(void *aSupports)
+    {
+        size_t n = 0;
+        nsCOMPtr<nsINode> node = do_QueryInterface(static_cast<nsISupports*>(aSupports));
+        if (node && !node->IsInDoc()) {
+            // This is an orphan node.  If we haven't already handled the
+            // sub-tree that this node belongs to, measure the sub-tree's size
+            // and then record its root so we don't measure it again.
+            nsCOMPtr<nsINode> orphanTree = node->SubtreeRoot();
+            if (!mAlreadyMeasuredOrphanTrees.Contains(orphanTree)) {
+                n += SizeOfTreeIncludingThis(orphanTree);
+                mAlreadyMeasuredOrphanTrees.PutEntry(orphanTree);
+            }
+        }
+        return n;
+    }
+
+private:
+    nsTHashtable <nsISupportsHashKey> mAlreadyMeasuredOrphanTrees;
+};
 
 class XPCJSRuntimeStats : public JS::RuntimeStats
 {
@@ -1713,7 +1752,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
 
     virtual void initExtraCompartmentStats(JSCompartment *c,
                                            JS::CompartmentStats *cstats) MOZ_OVERRIDE {
-        nsCAutoString cName, cPathPrefix;
+        nsCAutoString cJSPathPrefix, cDOMPathPrefix;
+        nsCString cName;
         GetCompartmentName(c, cName);
 
         // Get the compartment's global.
@@ -1722,20 +1762,38 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.
-                if (mWindowPaths->Get(piwindow->WindowID(), &cPathPrefix)) {
-                    cPathPrefix.AppendLiteral("/js/");
+                if (mWindowPaths->Get(piwindow->WindowID(), &cJSPathPrefix)) {
+                    cDOMPathPrefix.Assign(cJSPathPrefix);
+                    cDOMPathPrefix.AppendLiteral("/dom/");
+                    cJSPathPrefix.AppendLiteral("/js/");
                 } else {
-                    cPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
+                    cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
+                    cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
                 }
             } else {
-                cPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
+                cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
+                cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
             }
         } else {
-            cPathPrefix.AssignLiteral("explicit/js-non-window/compartments/no-global/");
+            cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/no-global/");
+            cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
         }
 
-        cstats->extra1 = strdup(cPathPrefix.get());
-        cstats->extra2 = strdup(cName.get());
+        cJSPathPrefix += NS_LITERAL_CSTRING("compartment(") + cName + NS_LITERAL_CSTRING(")/");
+
+        // cJSPathPrefix is used for almost all the compartment-specific
+        // reports.  At this point it has the form
+        // "<something>/compartment/(<cname>)/".
+        //
+        // cDOMPathPrefix is used for DOM orphan nodes, which are counted by
+        // the JS multi-reporter but reported as part of the DOM measurements.
+        // At this point it has the form "<something>/dom/" if this compartment
+        // belongs to an nsGlobalWindow, and "explicit/dom/?!/" otherwise (in
+        // which case it shouldn't be used, because non-nsGlobalWindow
+        // compartments shouldn't have orphan DOM nodes).
+
+        cstats->extra1 = strdup(cJSPathPrefix.get());
+        cstats->extra2 = strdup(cDOMPathPrefix.get());
     }
 };
     
@@ -1756,7 +1814,8 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     if (!rtStats.init(xpcrt))
         return NS_ERROR_FAILURE;
 
-    if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
+    OrphanReporter orphanReporter;
+    if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
 
     size_t xpconnect =
@@ -1776,6 +1835,7 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     // Report the sums of the compartment numbers.
     rv = ReportCompartmentStats(rtStats.totals,
                                 NS_LITERAL_CSTRING("js-main-runtime/compartments/"),
+                                NS_LITERAL_CSTRING("window-objects/dom/"),
                                 cb, closure);
     NS_ENSURE_SUCCESS(rv, rv);
 

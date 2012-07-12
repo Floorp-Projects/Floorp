@@ -8,7 +8,7 @@
 }
 
 .hud-box.animated {
-  -moz-transition: height 100ms;
+  transition: height 100ms;
 }
 
 .hud-splitter {
@@ -203,6 +203,15 @@
 
 .webconsole-msg-console.webconsole-msg-info {
   -moz-image-region: rect(24px, 32px, 32px, 24px);
+}
+
+.webconsole-mixed-content {
+  color: #FF0000;
+}
+
+.webconsole-mixed-content-link {
+  color: #0000EE;
+  margin: 0;
 }
 
 /* Input and output styles */

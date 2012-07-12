@@ -31,8 +31,7 @@ import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.PropertyAnimator.Property;
 
 public class TabsTray extends LinearLayout 
-                      implements TabsPanel.PanelView,
-                                 Tabs.OnTabsChangedListener {
+                      implements TabsPanel.PanelView {
     private static final String LOGTAG = "GeckoTabsTray";
 
     private Context mContext;
@@ -65,6 +64,10 @@ public class TabsTray extends LinearLayout
 
         mList = (ListView) findViewById(R.id.list);
         mList.setItemsCanFocus(true);
+
+        mTabsAdapter = new TabsAdapter(mContext);
+        mList.setAdapter(mTabsAdapter);
+
         mListener = new TabSwipeGestureListener(mList);
         mGestureDetector = new GestureDetector(context, mListener);
 
@@ -105,60 +108,16 @@ public class TabsTray extends LinearLayout
     @Override
     public void show() {
         mWaitingForClose = false;
-
-        Tabs.registerOnTabsChangedListener(this);
         Tabs.getInstance().refreshThumbnails();
-        onTabChanged(null, null, null);
+        Tabs.registerOnTabsChangedListener(mTabsAdapter);
+        mTabsAdapter.refreshTabsData();
     }
 
     @Override
     public void hide() {
-        Tabs.unregisterOnTabsChangedListener(this);
+        Tabs.unregisterOnTabsChangedListener(mTabsAdapter);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
         mTabsAdapter.clear();
-        mTabsAdapter.notifyDataSetChanged();
-    }
-
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
-        if (mTabsAdapter == null) {
-            mTabsAdapter = new TabsAdapter(mContext, Tabs.getInstance().getTabsInOrder());
-            mList.setAdapter(mTabsAdapter);
-
-            int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
-            if (selected == -1)
-                return;
-
-            mList.setSelection(selected);
-            return;
-        }
-
-        int index = Tabs.getInstance().getIndexOf(tab);
-        if (msg == Tabs.TabEvents.ADDED) {
-            if (index == -1) // If the tab has already been removed, do nothing.
-                return;
-            if (index > mTabsAdapter.getCount())
-                index = mTabsAdapter.getCount();
-            mTabsAdapter.addTab(index, tab);
-            mTabsAdapter.notifyDataSetChanged();
-            return;
-        }
-
-        int position = mTabsAdapter.getPositionForTab(tab);
-        if (position == -1)
-            return;
-
-        if (index == -1) {
-            mWaitingForClose = false;
-            mTabsAdapter.removeTab(tab);
-            mTabsAdapter.notifyDataSetChanged();
-        } else {
-            View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
-            if (view == null)
-                return;
-
-            TabRow row = (TabRow) view.getTag();
-            mTabsAdapter.assignValues(row, tab);
-        }
     }
 
     void autoHideTabs() {
@@ -182,23 +141,15 @@ public class TabsTray extends LinearLayout
     }
 
     // Adapter to bind tabs into a list
-    private class TabsAdapter extends BaseAdapter {
+    private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
         private Context mContext;
         private ArrayList<Tab> mTabs;
         private LayoutInflater mInflater;
         private Button.OnClickListener mOnCloseClickListener;
 
-        public TabsAdapter(Context context, ArrayList<Tab> tabs) {
+        public TabsAdapter(Context context) {
             mContext = context;
             mInflater = LayoutInflater.from(mContext);
-            mTabs = new ArrayList<Tab>();
-
-            if (tabs == null)
-                return;
-
-            for (int i = 0; i < tabs.size(); i++) {
-                mTabs.add(tabs.get(i));
-            }
 
             mOnCloseClickListener = new Button.OnClickListener() {
                 public void onClick(View v) {
@@ -208,8 +159,60 @@ public class TabsTray extends LinearLayout
             };
         }
 
+        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+            switch (msg) {
+                case ADDED:
+                    // Refresh the list to make sure the new tab is added in the right position.
+                    refreshTabsData();
+                    break;
+
+                case CLOSED:
+                    mWaitingForClose = false;
+                    removeTab(tab);
+                    break;
+
+                case SELECTED:
+                    // Update the selected position, then fall through...
+                    updateSelectedPosition();
+                case UNSELECTED:
+                    // We just need to update the style for the unselected tab...
+                case THUMBNAIL:
+                case TITLE:
+                    View view = mList.getChildAt(getPositionForTab(tab) - mList.getFirstVisiblePosition());
+                    if (view == null)
+                        return;
+
+                    TabRow row = (TabRow) view.getTag();
+                    assignValues(row, tab);
+                    break;
+            }
+        }
+
+        private void refreshTabsData() {
+            // Store a different copy of the tabs, so that we don't have to worry about
+            // accidentally updating it on the wrong thread.
+            mTabs = new ArrayList<Tab>();
+            ArrayList<Tab> tabs = Tabs.getInstance().getTabsInOrder();
+            for (Tab tab : tabs) {
+                mTabs.add(tab);
+            }
+
+            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
+            updateSelectedPosition();
+        }
+
+        // Updates the selected position in the list so that it will be scrolled to the right place.
+        private void updateSelectedPosition() {
+            int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
+            if (selected == -1)
+                return;
+
+            mList.setSelection(selected);
+        }
+
         public void clear() {
             mTabs = null;
+            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
         }
 
         public int getCount() {
@@ -224,22 +227,19 @@ public class TabsTray extends LinearLayout
             return position;
         }
 
-        public int getPositionForTab(Tab tab) {
+        private int getPositionForTab(Tab tab) {
             if (mTabs == null || tab == null)
                 return -1;
 
             return mTabs.indexOf(tab);
         }
 
-        public void addTab(int index, Tab tab) {
-            mTabs.add(index, tab);
-        }
-
-        public void removeTab(Tab tab) {
+        private void removeTab(Tab tab) {
             mTabs.remove(tab);
+            notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
         }
 
-        public void assignValues(TabRow row, Tab tab) {
+        private void assignValues(TabRow row, Tab tab) {
             if (row == null || tab == null)
                 return;
 
@@ -344,11 +344,11 @@ public class TabsTray extends LinearLayout
                 // if the user was dragging horizontally, check to see if we should close the tab
                 if (dir == DragDirection.HORIZONTAL) {
                     int finalPos = 0;
-                    // if the swipe started on the left and ended in the right 1/4 of the tray
+                    // if the swipe started on the left and ended in the right 25% of the tray
                     // or vice versa, close the tab
-                    if ((start.x > mList.getWidth() / 2 && e.getX() < mList.getWidth() / 4)) {
+                    if ((start.x > mList.getWidth() / 2 && e.getX() < mList.getWidth() * 0.25 )) {
                         finalPos = -1 * mView.getWidth();
-                    } else if (start.x < mList.getWidth() / 2 && e.getX() > mList.getWidth() * (3 / 4)) {
+                    } else if (start.x < mList.getWidth() / 2 && e.getX() > mList.getWidth() * 0.75) {
                         finalPos = mView.getWidth();
                     }
     

@@ -253,7 +253,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         return true;
     }
 
-    JSAtom *source;
+    RootedAtom source(cx);
     if (sourceValue.isUndefined()) {
         source = cx->runtime->emptyString;
     } else {
@@ -571,11 +571,9 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
         return false;
 
     /* Step 3. */
-    JSLinearString *linearInput = input->ensureLinear(cx);
+    Rooted<JSLinearString*> linearInput(cx, input->ensureLinear(cx));
     if (!linearInput)
         return false;
-    const jschar *chars = linearInput->chars();
-    size_t length = input->length();
 
     /* Step 4. */
     const Value &lastIndex = reobj->getLastIndex();
@@ -588,6 +586,9 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     /* Steps 6-7 (with sticky extension). */
     if (!re->global() && !re->sticky())
         i = 0;
+
+    const jschar *chars = linearInput->chars();
+    size_t length = input->length();
 
     /* Step 9a. */
     if (i < 0 || i > length) {

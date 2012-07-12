@@ -44,7 +44,7 @@
   border: 1px solid;
   border-color: rgba(8,22,37,.12) rgba(8,22,37,.14) rgba(8,22,37,.16);
   border-radius: 1px;
-  -moz-transition: border-color 100ms ease-out;
+  transition: border-color 100ms ease-out;
 }
 
 .newtab-cell:empty {
@@ -63,7 +63,7 @@
 /* SITES */
 .newtab-site {
   text-decoration: none;
-  -moz-transition-property: top, left, opacity, box-shadow, background-color;
+  transition-property: top, left, opacity, box-shadow, background-color;
 }
 
 .newtab-site:hover,
@@ -72,7 +72,7 @@
 }
 
 .newtab-site[dragged] {
-  -moz-transition-property: box-shadow, background-color;
+  transition-property: box-shadow, background-color;
   background-color: rgb(242,242,242);
 }
 

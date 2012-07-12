@@ -1831,6 +1831,15 @@ ProcessReplaceRequest()
   NS_tchar sourceDir[MAXPATHLEN];
   NS_tsnprintf(sourceDir, sizeof(sourceDir)/sizeof(sourceDir[0]),
                NS_T("%s/Contents"), installDir);
+#elif XP_WIN
+  // Windows preserves the case of the file/directory names.  We use the
+  // GetLongPathName API in order to get the correct case for the directory
+  // name, so that if the user has used a different case when launching the
+  // application, the installation directory's name does not change.
+  NS_tchar sourceDir[MAXPATHLEN];
+  if (!GetLongPathNameW(installDir, sourceDir, sizeof(sourceDir)/sizeof(sourceDir[0]))) {
+    return NO_INSTALLDIR_ERROR;
+  }
 #else
   NS_tchar* sourceDir = installDir;
 #endif

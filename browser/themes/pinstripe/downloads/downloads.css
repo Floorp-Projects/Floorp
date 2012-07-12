@@ -20,7 +20,7 @@
 }
 
 #downloadsHistory {
-  background: inherit;
+  background: transparent;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   color: hsl(210,100%,75%);

@@ -335,10 +335,7 @@ private:
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   bool                                      mSentInitialTopLevelWindowEvent;
 #endif
-  // We need to know if async hide window is required since we
-  // can not check UseAsyncRendering when executing StopPlugin
-  bool                                      mAsyncHidePluginWindow;
-  
+
   // Initially, the event loop nesting level we were created on, it's updated
   // if we detect the appshell is on a lower level as long as we're not stopped.
   // We delay DoStopPlugin() until the appshell reaches this level or lower.

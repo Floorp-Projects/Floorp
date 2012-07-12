@@ -94,10 +94,6 @@ class JS_FRIEND_API(Wrapper)
      * on the underlying object's |id| property. In the case when |act| is CALL,
      * |id| is generally JSID_VOID.
      *
-     * leave() allows the policy to undo various scoped state changes taken in
-     * enter(). If enter() succeeds, leave() must be called upon completion of
-     * the approved action.
-     *
      * The |act| parameter to enter() specifies the action being performed. GET,
      * SET, and CALL are self-explanatory, but PUNCTURE requires more
      * explanation:
@@ -119,8 +115,6 @@ class JS_FRIEND_API(Wrapper)
      */
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
                        bool *bp);
-
-    virtual void leave(JSContext *cx, JSObject *wrapper);
 };
 
 /*
