@@ -263,6 +263,8 @@ public:
     void RegisterCompositor();
     EGLSurface ProvideEGLSurface();
 
+    static bool HaveValidSurface(JNIEnv* env);
+
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nsnull);
 
     bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt, JNIEnv* env = nsnull);

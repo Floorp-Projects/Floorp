@@ -1168,7 +1168,7 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 }
 
 static AndroidGLController sController;
-
+static jobject sGLController;
 void
 AndroidBridge::RegisterCompositor()
 {
@@ -1181,11 +1181,14 @@ AndroidBridge::RegisterCompositor()
 
     jmethodID registerCompositor = env->GetStaticMethodID(jLayerView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
-    jobject glController = env->CallStaticObjectMethod(jLayerView, registerCompositor);
+    if (sGLController)
+        env->DeleteGlobalRef(sGLController);
+
+    sGLController = env->NewGlobalRef(env->CallStaticObjectMethod(jLayerView, registerCompositor));
     if (jniFrame.CheckForException())
         return;
 
-    sController.Acquire(env, glController);
+    sController.Acquire(env, sGLController);
     sController.SetGLVersion(2);
 }
 
@@ -1194,6 +1197,20 @@ AndroidBridge::ProvideEGLSurface()
 {
     sController.WaitForValidSurface();
     return sController.ProvideEGLSurface();
+}
+
+bool
+AndroidBridge::HaveValidSurface(JNIEnv* env) {
+    AutoLocalJNIFrame jniFrame(env);
+    if (!sGLController)
+        return false;
+    jclass gLControllerCls = env->FindClass("org/mozilla/gecko/gfx/GLController");
+    if (!gLControllerCls)
+        return false;
+    jfieldID mSurfaceValidFld =  env->GetFieldID(gLControllerCls, "mSurfaceValid", "Z");
+    if (!mSurfaceValidFld)
+        return false;
+    return env->GetBooleanField(sGLController, mSurfaceValidFld);
 }
 
 bool
