@@ -297,20 +297,14 @@ gcli.addCommand({
   name: "console clear",
   description: gcli.lookup("consoleclearDesc"),
   exec: function Command_consoleClear(args, context) {
-    let window = context.environment.chromeDocument.defaultView;
-    let hud = HUDService.getHudReferenceById(context.environment.hudId);
-
-    // Use a timeout so we also clear the reporting of the clear command
-    let threadManager = Cc["@mozilla.org/thread-manager;1"]
-        .getService(Ci.nsIThreadManager);
-    threadManager.mainThread.dispatch({
-      run: function() {
-        hud.gcliterm.clearOutput();
-      }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    let window = context.environment.contentDocument.defaultView;
+    let hud = HUDService.getHudByWindow(window);
+    // hud will be null if the web console has not been opened for this window
+    if (hud) {
+      hud.jsterm.clearOutput();
+    }
   }
 });
-
 
 /**
  * 'console close' command

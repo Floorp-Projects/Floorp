@@ -360,9 +360,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
 
         mTabsCount.setText(String.valueOf(count));
+        mTabs.setContentDescription((count > 1) ?
+                                    mContext.getString(R.string.num_tabs, count) :
+                                    mContext.getString(R.string.one_tab));
         mCount = count;
-        mTabs.setContentDescription(mContext.getString(R.string.num_tabs, count));
-
         mHandler.postDelayed(new Runnable() {
             public void run() {
                 ((TextView) mTabsCount.getCurrentView()).setTextColor(mContext.getResources().getColor(R.color.url_bar_text_highlight));
@@ -378,7 +379,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void updateTabCount(int count) {
         mTabsCount.setCurrentText(String.valueOf(count));
-        mTabs.setContentDescription(mContext.getString(R.string.num_tabs, count));
+        mTabs.setContentDescription((count > 1) ?
+                                    mContext.getString(R.string.num_tabs, count) :
+                                    mContext.getString(R.string.one_tab));
         mCount = count;
         updateTabs(GeckoApp.mAppContext.areTabsShown());
     }

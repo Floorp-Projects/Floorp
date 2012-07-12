@@ -732,8 +732,18 @@ JSRuntime::JSRuntime()
     gcVerifyData(NULL),
     gcChunkAllocationSinceLastGC(false),
     gcNextFullGCTime(0),
+    gcLastGCTime(0),
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
+    gcHighFrequencyGC(false),
+    gcHighFrequencyTimeThreshold(1000),
+    gcHighFrequencyLowLimitBytes(100 * 1024 * 1024),
+    gcHighFrequencyHighLimitBytes(500 * 1024 * 1024),
+    gcHighFrequencyHeapGrowthMax(3.0),
+    gcHighFrequencyHeapGrowthMin(1.5),
+    gcLowFrequencyHeapGrowth(1.5),
+    gcDynamicHeapGrowth(false),
+    gcDynamicMarkSlice(false),
     gcShouldCleanUpEverything(false),
     gcIsNeeded(0),
     gcWeakMapList(NULL),
@@ -774,6 +784,7 @@ JSRuntime::JSRuntime()
     positiveInfinityValue(UndefinedValue()),
     emptyString(NULL),
     debugMode(false),
+    spsProfiler(thisFromCtor()),
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
@@ -2933,6 +2944,30 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_MARK_STACK_LIMIT:
         js::SetMarkStackLimit(rt, value);
         break;
+      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
+        rt->gcHighFrequencyTimeThreshold = value;
+        break;
+      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
+        rt->gcHighFrequencyLowLimitBytes = value * 1024 * 1024;
+        break;
+      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
+        rt->gcHighFrequencyHighLimitBytes = value * 1024 * 1024;
+        break;
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
+        rt->gcHighFrequencyHeapGrowthMax = value / 100.0;
+        break;
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
+        rt->gcHighFrequencyHeapGrowthMin = value / 100.0;
+        break;
+      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
+        rt->gcLowFrequencyHeapGrowth = value / 100.0;
+        break;
+      case JSGC_DYNAMIC_HEAP_GROWTH:
+        rt->gcDynamicHeapGrowth = value;
+        break;
+      case JSGC_DYNAMIC_MARK_SLICE:
+        rt->gcDynamicMarkSlice = value;
+        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -2963,6 +2998,22 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return uint32_t(rt->gcSliceBudget > 0 ? rt->gcSliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
         return rt->gcMarker.sizeLimit();
+      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
+        return rt->gcHighFrequencyTimeThreshold;
+      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
+        return rt->gcHighFrequencyLowLimitBytes / 1024 / 1024;
+      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
+        return rt->gcHighFrequencyHighLimitBytes / 1024 / 1024;
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
+        return uint32_t(rt->gcHighFrequencyHeapGrowthMax * 100);
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
+        return uint32_t(rt->gcHighFrequencyHeapGrowthMin * 100);
+      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
+        return uint32_t(rt->gcLowFrequencyHeapGrowth * 100);
+      case JSGC_DYNAMIC_HEAP_GROWTH:
+        return rt->gcDynamicHeapGrowth;
+      case JSGC_DYNAMIC_MARK_SLICE:
+        return rt->gcDynamicMarkSlice;
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(rt->gcNumber);

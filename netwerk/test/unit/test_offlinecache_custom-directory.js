@@ -64,6 +64,22 @@ function finish_test(customDir)
   file2.append("0B457F75198B29-0");
   do_check_eq(file2.exists(), true);
 
+  // This must not throw an exception.  After the update has finished
+  // the index file can be freely removed.  This way we check this process
+  // is no longer keeping the file open.  Check like this will probably
+  // work only Windows systems.
+
+  // This test could potentially randomaly fail when we start closing
+  // the offline cache database off the main thread.  Tries in a loop
+  // may be a solution then.
+  try {
+    indexSqlFile.remove(false);
+    do_check_true(true);
+  }
+  catch (ex) {
+    do_throw("Could not remove the sqlite.index file, we still keep it open \n" + ex + "\n");
+  }
+
   httpServer.stop(do_test_finished);
 }
 
