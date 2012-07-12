@@ -112,6 +112,13 @@ public:
     // Create a media stream.
     nsCOMPtr<nsDOMMediaStream> stream = nsDOMMediaStream::CreateInputStream();
 
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetOuterWindowWithId(mWindowID));
+
+    if (window && window->GetExtantDoc()) {
+      stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
+    }
+
     // Add our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
