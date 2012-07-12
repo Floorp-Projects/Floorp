@@ -196,14 +196,14 @@
   border-bottom: 0;
   height: 0;
   opacity: 0;
-  -moz-transition-property: height, opacity;
-  -moz-transition-duration: 1s, 0.8s;
+  transition-property: height, opacity;
+  transition-duration: 1s, 0.8s;
 }
 
 .category:not([disabled]) {
   height: 52px;
-  -moz-transition-property: height, opacity;
-  -moz-transition-duration: 1s, 0.8s;
+  transition-property: height, opacity;
+  transition-duration: 1s, 0.8s;
 }
 
 .category[selected] {
@@ -560,14 +560,14 @@
   height: 0;
   overflow: hidden;
   opacity: 0;
-  -moz-transition-property: height, opacity;
-  -moz-transition-duration: 0.5s, 0.5s;
+  transition-property: height, opacity;
+  transition-duration: 0.5s, 0.5s;
 }
 
 .addon[show-relnotes] .relnotes-container {
   opacity: 1;
-  -moz-transition-property: height, opacity;
-  -moz-transition-duration: 0.5s, 0.5s;
+  transition-property: height, opacity;
+  transition-duration: 0.5s, 0.5s;
 }
 
 .addon .relnotes-header {
@@ -712,8 +712,8 @@
 
 #detail-view[loading-extended] .loading {
   opacity: 1;
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 1s;
+  transition-property: opacity;
+  transition-duration: 1s;
 }
 
 .detail-view-container {
@@ -830,9 +830,9 @@
   background-color: #0459F7;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1),
               0 0 3.5px hsl(190, 90%, 80%);
-  -moz-transition: background-color .4s ease-in,
-                   border-color .3s ease-in,
-                   box-shadow .3s ease-in
+  transition: background-color .4s ease-in,
+              border-color .3s ease-in,
+              box-shadow .3s ease-in;
 }
 
 #detail-contrib-btn:active:hover {

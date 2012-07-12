@@ -1340,7 +1340,6 @@
 
       <!--  -->
       <method name="clearTimer">
-        <parameter name=""/>
         <body><![CDATA[
           if (this.mAutoCompleteTimer) {
             clearTimeout(this.mAutoCompleteTimer);

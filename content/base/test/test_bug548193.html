@@ -82,8 +82,8 @@ var testFile = "file_bug548193.sjs";
 window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
   // correct violating request
-  is(cspReport["request"],
-     "GET http://mochi.test:8888/tests/content/base/test/" + testFile + " HTTP/1.1",
+  is(cspReport["document-uri"],
+     "http://mochi.test:8888/tests/content/base/test/" + testFile,
      "Incorrect violating request");
   // correct blocked-uri
   is(cspReport["blocked-uri"],

@@ -42,6 +42,9 @@ public class testSearchSuggestions extends BaseTest {
         final int suggestionLayoutId = mDriver.findElement(getActivity(), "suggestion_layout").getId();
         final int suggestionTextId = mDriver.findElement(getActivity(), "suggestion_text").getId();
 
+        // workaround for bug 769524
+        mSolo.sleep(5000);
+
         Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
         final Activity awesomeBarActivity = clickOnAwesomeBar();
         enginesEventExpecter.blockForEvent();

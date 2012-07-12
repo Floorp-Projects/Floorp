@@ -12,10 +12,15 @@ var gCurrentManifestVersion = 1;
 
 function manifestCached()
 {
-  OfflineTest.checkCache(
-    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs", false);
-  OfflineTest.checkCache(
-    "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs", true);
+  var entries = [
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs", true],
+  ];
+  OfflineTest.checkCacheEntries(entries, manifestCachedContinue);
+}
+
+function manifestCachedContinue()
+{
   OfflineTest.is(gCurrentManifestVersion, 1, "Cached event for manifest version one");
 
   // Now add one dynamic entry (now with content overriden redirect sjs)
@@ -28,21 +33,23 @@ function manifestCached()
     function() {
       // ...check it is there...
       OfflineTest.checkCache(
-        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs", true);
-
-      // ...revert state of the dynamic entry on the server, now we get the redirect...
-      OfflineTest.setSJSState(
         "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs",
-        "");
+        true,
+        function() {
+          // ...revert state of the dynamic entry on the server, now we get the redirect...
+          OfflineTest.setSJSState(
+            "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs",
+            "");
 
-      // ...update manifest to the new version on the server...
-      OfflineTest.setSJSState(
-        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/redirects.sjs",
-        "second");
-      gCurrentManifestVersion = 2;
+          // ...update manifest to the new version on the server...
+          OfflineTest.setSJSState(
+            "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/redirects.sjs",
+            "second");
+          gCurrentManifestVersion = 2;
 
-      // ...and finally invoke the cache update.
-      applicationCache.update();
+          // ...and finally invoke the cache update.
+          applicationCache.update();
+        });
     });
 }
 
@@ -53,21 +60,24 @@ function manifestUpdated()
     case 2:
       // Check the dynamic entry was removed from the cache (because of the redirect)...
       OfflineTest.checkCache(
-        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs", false);
+        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/dynamicRedirect.sjs",
+        false,
+        function () {
+          // ...return back redirect for the explicit entry...
+          OfflineTest.setSJSState(
+            "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs",
+            "");
 
-      // ...return back redirect for the explicit entry...
-      OfflineTest.setSJSState(
-        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/explicitRedirect.sjs",
-        "");
+          // ...update the manifest to the third version...
+          OfflineTest.setSJSState(
+            "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/redirects.sjs",
+            "third");
+          gCurrentManifestVersion = 3;
 
-      // ...update the manifest to the third version...
-      OfflineTest.setSJSState(
-        "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/redirects.sjs",
-        "third");
-      gCurrentManifestVersion = 3;
+          // ...and invoke the cache update, now we must get error.
+          applicationCache.update();
+        });
 
-      // ...and invoke the cache update, now we must get error.
-      applicationCache.update();
       break;
 
     case 3:

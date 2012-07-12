@@ -143,23 +143,8 @@ function implicitCached()
 {
   // Checking first version of the manifest + another implict page caching
 
-  // Explicit entries
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-  // Fallback entries
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false);
-
   // Whitelist entries
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
   checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
-
-  // Implicit entries
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
-
-  // Dynamic entries
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true);
 
   // Fallback URI selection check
   checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
@@ -173,12 +158,34 @@ function implicitCached()
 
   OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1");
 
-  ++gStep;
+  var entries = [
+    // Explicit entries
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
 
-  OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs", "second");
+    // Fallback entries
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", false],
 
-  applicationCache.update();
-  // Invokes manifestUpdated()
+    // Whitelist entries
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false],
+
+    // Implicit entries
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true],
+
+    // Dynamic entries
+    ["http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true]
+  ];
+  OfflineTest.checkCacheEntries(
+    entries,
+    function() {
+      ++gStep;
+
+      OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs", "second");
+
+      applicationCache.update();
+      // Invokes manifestUpdated()
+    });
 }
 
 function manifestUpdated()
@@ -190,23 +197,8 @@ function manifestUpdated()
   case 1:
     // Processing second version of the manifest.
 
-    // Explicit entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-    // Fallback entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true);
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true);
-
     // Whitelist entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
     checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", false);
-
-    // Implicit entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
-
-    // Dynamic entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true);
 
     // Fallback URI selection check
     checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
@@ -218,37 +210,44 @@ function manifestUpdated()
     OfflineTest.is(applicationCache.status, Components.interfaces.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (2)");
 
-    ++gStep;
+    var entries = [
+      // Explicit entries
+      ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
 
-    OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs", "third");
-    OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", "second");
+      // Fallback entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", true],
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true],
 
-    gGotFrameVersion = 0;
-    gCallOnUpdatingFrameLoad = function() {applicationCache.update();};
-    updatingFrame.location.reload();
+      // Whitelist entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false],
+
+      // Implicit entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true],
+
+      // Dynamic entries
+      ["http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true]
+    ];
+    OfflineTest.checkCacheEntries(
+      entries,
+      function() {
+        ++gStep;
+
+        OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs", "third");
+        OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", "second");
+
+        gGotFrameVersion = 0;
+        gCallOnUpdatingFrameLoad = function() {applicationCache.update();};
+        updatingFrame.location.reload();
+      });
 
     break;
 
   case 2:
     // Processing third version of the manifest.
 
-    // Explicit entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-    // Fallback entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false);
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true);
-
     // Whitelist entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false);
     checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", "", true);
-
-    // Implicit entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true);
-
-    // Dynamic entries
-    OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true);
 
     // Fallback URI selection check
     checkFallbackAndWhitelisting("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/opp.html",
@@ -262,11 +261,33 @@ function manifestUpdated()
 
     OfflineTest.is(gGotFrameVersion, 1, "IFrame version 1 because cache was not swapped");
 
-    ++gStep;
+    var entries = [
+      // Explicit entries
+      ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false],
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
 
-    applicationCache.onnoupdate = OfflineTest.priv(manifestNoUpdate);
-    applicationCache.update();
-    // Invokes manifestNoUpdate()
+      // Fallback entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html", false],
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback2.html", true],
+
+      // Whitelist entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/onwhitelist.html", false],
+
+      // Implicit entries
+      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true],
+
+      // Dynamic entries
+      ["http://mochi.test:8888/tests/SimpleTest/EventUtils.js", true]
+    ];
+    OfflineTest.checkCacheEntries(
+      entries,
+      function() {
+        ++gStep;
+
+        applicationCache.onnoupdate = OfflineTest.priv(manifestNoUpdate);
+        applicationCache.update();
+        // Invokes manifestNoUpdate()
+      });
 
     break;
   }

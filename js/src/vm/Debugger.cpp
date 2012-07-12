@@ -1127,6 +1127,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
                 return JSTRAP_ERROR;
 
             Value argv[1];
+            AutoValueArray ava(cx, argv, 1);
             if (!dbg->getScriptFrame(cx, fp, &argv[0]))
                 return dbg->handleUncaughtException(ac, vp, false);
             Value rv;
@@ -1222,6 +1223,21 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
             JS_ASSERT(stepperCount <= trappingScript->stepModeCount());
     }
 #endif
+
+    /* Preserve the debuggee's iterValue while handlers run. */
+    class PreserveIterValue {
+        JSContext *cx;
+        RootedValue savedIterValue;
+
+      public:
+        PreserveIterValue(JSContext *cx) : cx(cx), savedIterValue(cx, cx->iterValue) {
+            cx->iterValue.setMagic(JS_NO_ITER_VALUE);
+        }
+        ~PreserveIterValue() {
+            cx->iterValue = savedIterValue;
+        }
+    };
+    PreserveIterValue piv(cx);
 
     /* Call all the onStep handlers we found. */
     for (JSObject **p = frames.begin(); p != frames.end(); p++) {
@@ -1970,7 +1986,7 @@ class Debugger::ScriptQuery {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
     ScriptQuery(JSContext *cx, Debugger *dbg):
-        cx(cx), debugger(dbg), compartments(cx), innermostForGlobal(cx) {}
+        cx(cx), debugger(dbg), compartments(cx), urlRoot(cx), url(urlRoot.get()), innermostForGlobal(cx) {}
 
     /*
      * Initialize this ScriptQuery. Raise an error and return false if we
@@ -1992,7 +2008,7 @@ class Debugger::ScriptQuery {
      * Parse the query object |query|, and prepare to match only the scripts
      * it specifies.
      */
-    bool parseQuery(JSObject *query) {
+    bool parseQuery(HandleObject query) {
         /*
          * Check for a 'global' property, which limits the results to those
          * scripts scoped to a particular global object.
@@ -2151,7 +2167,8 @@ class Debugger::ScriptQuery {
     CompartmentSet compartments;
 
     /* If this is a string, matching scripts have urls equal to it. */
-    Value url;
+    RootedValue urlRoot;
+    Value &url;
 
     /* url as a C string. */
     JSAutoByteString urlCString;
@@ -2294,7 +2311,7 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     if (argc >= 1) {
-        JSObject *queryObject = NonNullObject(cx, args[0]);
+        RootedObject queryObject(cx, NonNullObject(cx, args[0]));
         if (!queryObject || !query.parseQuery(queryObject))
             return false;
     } else {
@@ -2594,8 +2611,8 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     using BytecodeRange::frontOpcode;
     using BytecodeRange::frontOffset;
 
-    BytecodeRangeWithLineNumbers(JSScript *script)
-      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code)
+    BytecodeRangeWithLineNumbers(JSContext *cx, JSScript *script)
+      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code), skip(cx, this)
     {
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
@@ -2633,6 +2650,8 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     size_t lineno;
     jssrcnote *sn;
     jsbytecode *snpc;
+
+    SkipRoot skip;
 };
 
 static const size_t NoEdges = -1;
@@ -2685,7 +2704,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
         size_t prevLine = script->lineno;
         JSOp prevOp = JSOP_NOP;
-        for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
+        for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
             size_t lineno = r.frontLineNumber();
             JSOp op = r.frontOpcode();
 
@@ -2745,10 +2764,10 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Second pass: build the result array. */
-    JSObject *result = NewDenseEmptyArray(cx);
+    RootedObject result(cx, NewDenseEmptyArray(cx));
     if (!result)
         return false;
-    for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
+    for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
         size_t offset = r.frontOffset();
         size_t lineno = r.frontLineNumber();
 
@@ -2820,7 +2839,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, unsigned argc, Value *vp)
     RootedObject result(cx, NewDenseEmptyArray(cx));
     if (!result)
         return false;
-    for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
+    for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
         size_t offset = r.frontOffset();
 
         /* If the op at offset is an entry point, append offset to result. */
@@ -3894,7 +3913,7 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperties", args, dbg, obj);
     REQUIRE_ARGC("Debugger.Object.defineProperties", 1);
-    JSObject *props = ToObject(cx, &args[0]);
+    RootedObject props(cx, ToObject(cx, &args[0]));
     if (!props)
         return false;
 

@@ -111,6 +111,19 @@ DeveloperToolbar.prototype.toggle = function DT_toggle()
 };
 
 /**
+ * Called from browser.xul in response to menu-click or keyboard shortcut to
+ * toggle the toolbar
+ */
+DeveloperToolbar.prototype.focus = function DT_focus()
+{
+  if (this.visible) {
+    this._input.focus();
+  } else {
+    this.show(true);
+  }
+};
+
+/**
  * Even if the user has not clicked on 'Got it' in the intro, we only show it
  * once per session.
  * Warning this is slightly messed up because this.DeveloperToolbar is not the

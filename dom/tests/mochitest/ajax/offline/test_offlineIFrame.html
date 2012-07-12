@@ -8,28 +8,29 @@
 
 <script type="text/javascript">
 
+
+function checkEntries() {
+  var entries = [
+    // The manifest itself should be in the cache
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true],
+
+    // The entries from the manifest should be in the cache
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true]
+  ];
+  OfflineTest.checkCacheEntries(entries, function() { window.frames["offlineChild"].doneLoading(); });
+}
+
 function childFinished()
 {
   OfflineTest.teardown();
   OfflineTest.finish();
 }
 
-function manifestUpdated()
-{
-  // The manifest itself should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
-
-  // The entries from the manifest should be in the cache
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-  window.frames["offlineChild"].doneLoading();
-}
-
 if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.failEvent;
 
-  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+  applicationCache.oncached = OfflineTest.priv(checkEntries);
 }
 
 SimpleTest.waitForExplicitFinish();

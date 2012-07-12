@@ -25,10 +25,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
 function log(...aMessageArgs) {
-  Logger.log([null].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["core"].concat(aMessageArgs));
 }
 function reportError(...aMessageArgs) {
-  Logger.reportError([null].concat(aMessageArgs));
+  Logger.reportError.apply(Logger, ["core"].concat(aMessageArgs));
 }
 
 function IDService() {
@@ -53,7 +53,7 @@ IDService.prototype = {
         if (!aSubject || !aSubject.wrappedJSObject)
           break;
         let subject = aSubject.wrappedJSObject;
-        log("NOW SELECT", aSubject.wrappedJSObject);
+        log("Auth complete:", aSubject.wrappedJSObject);
         // We have authenticated in order to provision an identity.
         // So try again.
         this.selectIdentity(subject.rpId, subject.identity);

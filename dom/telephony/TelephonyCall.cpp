@@ -232,12 +232,6 @@ TelephonyCall::HangUp()
     return NS_OK;
   }
 
-  if (mCallState == nsIRadioInterfaceLayer::CALL_STATE_HOLDING ||
-      mCallState == nsIRadioInterfaceLayer::CALL_STATE_HELD) {
-    NS_WARNING("HangUp on non-active call ignored!");
-    return NS_OK;
-  }
-
   nsresult rv = mCallState == nsIRadioInterfaceLayer::CALL_STATE_INCOMING ?
                 mTelephony->RIL()->RejectCall(mCallIndex) :
                 mTelephony->RIL()->HangUp(mCallIndex);

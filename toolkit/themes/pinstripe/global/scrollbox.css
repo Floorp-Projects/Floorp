@@ -40,11 +40,11 @@
 }
 
 .autorepeatbutton-up:not([orient="horizontal"]) > .autorepeatbutton-icon {
-  -moz-transform: rotate(-90deg);
+  transform: rotate(-90deg);
 }
 
 .autorepeatbutton-down:not([orient="horizontal"]) > .autorepeatbutton-icon {
-  -moz-transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .scrollbutton-up {

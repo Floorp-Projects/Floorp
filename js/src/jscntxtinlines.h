@@ -112,21 +112,6 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
         return obj;
     }
 
-    /* Copy the entry to the stack first in case it is purged by a GC. */
-    size_t nbytes = entry->nbytes;
-    char stackObject[sizeof(JSObject_Slots16)];
-    JS_ASSERT(nbytes <= sizeof(stackObject));
-    js_memcpy(&stackObject, &entry->templateObject, nbytes);
-
-    JSObject *baseobj = (JSObject *) stackObject;
-
-    obj = js_NewGCObject(cx, entry->kind);
-    if (obj) {
-        copyCachedToObject(obj, baseobj);
-        Probes::createObject(cx, obj);
-        return obj;
-    }
-
     return NULL;
 }
 
@@ -229,7 +214,7 @@ class CompartmentChecker
     {
         if (cx->compartment) {
             GlobalObject *global = GetGlobalForScopeChain(cx);
-            JS_ASSERT(cx->compartment->maybeGlobal() == global);
+            JS_ASSERT(cx->global() == global);
         }
     }
 

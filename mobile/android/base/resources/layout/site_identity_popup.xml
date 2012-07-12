@@ -75,11 +75,10 @@
     </RelativeLayout>
 
     <ImageView android:id="@+id/arrow"
-               android:layout_width="44dip"
+               android:layout_width="@dimen/doorhanger_arrow_width"
                android:layout_height="16dip"
                android:layout_marginTop="9dip"
                android:layout_alignParentTop="true"
-               android:layout_alignParentRight="true"
                android:src="@drawable/doorhanger_arrow"
                android:scaleType="fitXY"/>
 

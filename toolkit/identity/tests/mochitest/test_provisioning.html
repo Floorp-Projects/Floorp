@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<!--
+Test of Identity Provider (IDP) Provisioning using the DOM APIs
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test of Identity Provider (IDP) Provisioning using the DOM APIs</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+</head>
+<body onload="run_next_test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753238">Test of Identity Provider (IDP) Provisioning using the DOM APIs</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+/** Test of Identity Provider (IDP) Provisioning using the DOM APIs **/
+/** Most tests are ported from test_provisioning.js */
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const DOMIdentity = Cu.import("resource://gre/modules/DOMIdentity.jsm")
+                      .DOMIdentity;
+let outerWinId = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+
+function check_provision_flow_done(provId) {
+  do_check_null(IdentityProvider._provisionFlows[provId]);
+}
+
+/**
+ * Allow specifying aProvFlow so we can reset after the _provisionFlows is cleaned up.
+ */
+function run_next_prov_test(aProvFlow) {
+  // Reset the DOM state then run the next test
+  let provContext = aProvFlow || IdentityProvider._provisionFlows[outerWinId];
+  if (provContext && provContext.caller) {
+    makeObserver("identity-DOM-state-reset", function() {
+      SimpleTest.executeSoon(run_next_test);
+    });
+    DOMIdentity._resetFrameState(provContext.caller);
+  } else {
+    SimpleTest.executeSoon(run_next_test);
+  }
+}
+
+function test_begin_provisioning() {
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      // call .beginProvisioning()
+      // TODO: should probably throw outside of a prov. sandbox?
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    }, function() {},
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        is(email, TEST_USER);
+        ok(duration_s > 0);
+        ok(duration_s <= (24 * 3600));
+
+        run_next_prov_test();
+      }
+    });
+}
+
+function test_raise_provisioning_failure() {
+  let _callerId = null;
+
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      // call .beginProvisioning()
+      _callerId = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    }, function(err) {
+      // this should be invoked with a populated error
+      isnot(err, null);
+      ok(err.indexOf("can't authenticate this email") > -1);
+
+      run_next_prov_test();
+    },
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        // raise the failure as if we can't provision this email
+        identity.raiseProvisioningFailure("can't authenticate this email");
+      }
+  });
+}
+
+function test_genkeypair_before_begin_provisioning() {
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      try {
+        // call genKeyPair without beginProvisioning
+        identity.genKeyPair(caller.genKeyPairCallback);
+      } catch (ex) {
+        ok(ex, "Caught exception for calling genKeyPair without beginProvisioning: " + ex);
+        run_next_prov_test();
+      }
+    },
+    // expect this to be called with an error
+    function(err) {
+      ok(false, "Shoudn't reach here as DOM code should have caught the problem");
+
+      run_next_prov_test();
+    },
+    {
+      // this should not be called at all!
+      genKeyPairCallback: function(pk) {
+        // a test that will surely fail because we shouldn't be here.
+        ok(false);
+
+        run_next_prov_test();
+      }
+    }
+  );
+}
+
+function test_genkeypair() {
+  let _callerId = null;
+
+  function gkpCallback(kp) {
+    isnot(kp, null);
+
+    // yay!
+    run_next_prov_test();
+  }
+
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      _callerId = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    },
+    function(err) {
+      // should not be called!
+      ok(false);
+
+      run_next_prov_test();
+    },
+    {
+      beginProvisioningCallback: function(email, time_s) {
+        identity.genKeyPair(gkpCallback);
+      },
+      genKeyPairCallback: gkpCallback,
+    }
+  );
+}
+
+// we've already ensured that genkeypair can't be called
+// before beginProvisioning, so this test should be enough
+// to ensure full sequential call of the 3 APIs.
+function test_register_certificate_before_genkeypair() {
+  let _callerID = null;
+
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      // do the right thing for beginProvisioning
+      _callerID = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    },
+    // expect this to be called with an error
+    function(err) {
+      ok(false, "Shoudn't reach here as DOM code should have caught the problem");
+
+      run_next_prov_test();
+    },
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        try {
+          // now we try to register cert but no keygen has been done
+          identity.registerCertificate("fake-cert");
+        } catch (ex) {
+          ok(ex, "Caught exception for calling genKeyPair without beginProvisioning: " + ex);
+          run_next_prov_test();
+        }
+
+      }
+    }
+  );
+}
+
+function test_register_certificate() {
+  let _callerId = null;
+  let provFlow = null;
+
+  function gkpCallback(pk) {
+    // Hold on to the provFlow so we have access to .caller to cleanup later
+    provFlow = IdentityProvider._provisionFlows[outerWinId];
+
+    identity.registerCertificate("fake-cert-42");
+  }
+
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      _callerId = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    },
+    function(err) {
+      // we should be cool!
+      do_check_null(err);
+
+      // check that the cert is there
+      let identity = get_idstore().fetchIdentity(TEST_USER);
+      isnot(identity,null);
+      is(identity.cert, "fake-cert-42");
+
+      SimpleTest.executeSoon(function check_done() {
+        // cleanup will happen after the callback is called
+        check_provision_flow_done(_callerId);
+
+        run_next_prov_test(provFlow);
+      });
+    },
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        identity.genKeyPair(gkpCallback);
+      },
+      genKeyPairCallback: gkpCallback,
+    }
+  );
+}
+
+function test_get_assertion_after_provision() {
+  let _callerId = null;
+  let provFlow = null;
+
+  function gkpCallback(pk) {
+    // Hold on to the provFlow so we have access to .caller to cleanup later
+    provFlow = IdentityProvider._provisionFlows[outerWinId];
+    identity.registerCertificate("fake-cert-42");
+  }
+
+  setup_provisioning(
+    TEST_USER,
+    function(caller) {
+      _callerId = caller.id;
+      identity.beginProvisioning(caller.beginProvisioningCallback);
+    },
+    function(err) {
+      // we should be cool!
+      do_check_null(err);
+
+      // check that the cert is there
+      let identity = get_idstore().fetchIdentity(TEST_USER);
+      isnot(identity,null);
+      is(identity.cert, "fake-cert-42");
+
+      SimpleTest.executeSoon(function check_done() {
+        // cleanup will happen after the callback is called
+        check_provision_flow_done(_callerId);
+
+        run_next_prov_test(provFlow);
+      });
+    },
+    {
+      beginProvisioningCallback: function(email, duration_s) {
+        identity.genKeyPair(gkpCallback);
+      },
+      genKeyPairCallback: gkpCallback,
+    }
+  );
+}
+
+TESTS.push(test_genkeypair_before_begin_provisioning);
+TESTS.push(test_begin_provisioning);
+TESTS.push(test_raise_provisioning_failure);
+TESTS.push(test_register_certificate_before_genkeypair);
+TESTS.push(test_genkeypair);
+TESTS.push(test_register_certificate);
+TESTS.push(test_get_assertion_after_provision);
+
+</script>
+</pre>
+</body>
+</html>

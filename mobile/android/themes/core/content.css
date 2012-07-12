@@ -8,19 +8,6 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* make clicking on links stand out a bit (bug 532206) */
-* > *:not(embed):focus, * > *:focus > font {
-  outline: 2px solid @color_background_highlight@ !important;
-  /*
-    XXX How do I preserve mac focusring without blowing focus color on other platforms?
-    outline-color: -moz-mac-focusring !important;
-  */
-}
-
-*:-moz-any-link:focus {
-  outline-offset: -2px;
-}
-
 ::-moz-selection {
   background-color: @color_background_highlight@;
   color: @color_text_highlight@;

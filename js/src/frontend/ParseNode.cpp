@@ -478,7 +478,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
 
       case PN_FUNC:
         NULLCHECK(pn->pn_funbox =
-                  parser->newFunctionBox(opn->pn_funbox->object, pn, tc));
+                  parser->newFunctionBox(opn->pn_funbox->object, pn, tc, opn->pn_funbox->strictModeState));
         NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
         pn->pn_cookie = opn->pn_cookie;
         pn->pn_dflags = opn->pn_dflags;

@@ -27,6 +27,7 @@
 #include "mozilla/Util.h"
 #include "nsContentUtils.h"
 #include "nsIMemoryReporter.h"
+#include "mozilla/Attributes.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -1248,7 +1249,7 @@ private:
 /**
  * Adds download-specific annotations to a download page.
  */
-class SetDownloadAnnotations : public mozIVisitInfoCallback
+class SetDownloadAnnotations MOZ_FINAL : public mozIVisitInfoCallback
 {
 public:
   NS_DECL_ISUPPORTS
