@@ -442,7 +442,8 @@ struct JSObject : public js::ObjectImpl
 
     inline void setType(js::types::TypeObject *newType);
 
-    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL);
+    js::types::TypeObject *getNewType(JSContext *cx, JSFunction *fun = NULL,
+                                      bool isDOM = false);
 
 #ifdef DEBUG
     bool hasNewType(js::types::TypeObject *newType);
