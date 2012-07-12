@@ -148,13 +148,15 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 class MarionetteTestRunner(object):
 
     def __init__(self, address=None, emulator=None, emulatorBinary=None,
-                 emulator_res='480x800', homedir=None, bin=None, profile=None,
-                 autolog=False, revision=None, es_server=None,
-                 rest_server=None, logger=None, testgroup="marionette",
-                 noWindow=False, logcat_dir=None, xml_output=None):
+                 emulatorImg=None, emulator_res='480x800', homedir=None,
+                 bin=None, profile=None, autolog=False, revision=None,
+                 es_server=None, rest_server=None, logger=None,
+                 testgroup="marionette", noWindow=False, logcat_dir=None,
+                 xml_output=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
+        self.emulatorImg = emulatorImg
         self.emulator_res = emulator_res
         self.homedir = homedir
         self.bin = bin
@@ -233,6 +235,7 @@ class MarionetteTestRunner(object):
         elif self.emulator:
             self.marionette = Marionette(emulator=self.emulator,
                                          emulatorBinary=self.emulatorBinary,
+                                         emulatorImg=self.emulatorImg,
                                          emulator_res=self.emulator_res,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
@@ -514,6 +517,10 @@ if __name__ == "__main__":
                       default = None,
                       help = "Launch a specific emulator binary rather than "
                       "launching from the B2G built emulator")
+    parser.add_option('--emulator-img',
+                      action = 'store', dest = 'emulatorImg',
+                      default = None,
+                      help = "Use a specific image file instead of a fresh one")
     parser.add_option('--emulator-res',
                       action = 'store', dest = 'emulator_res',
                       default = '480x800', type= 'str',
@@ -586,6 +593,7 @@ if __name__ == "__main__":
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
                                   emulatorBinary=options.emulatorBinary,
+                                  emulatorImg=options.emulatorImg,
                                   emulator_res=res,
                                   homedir=options.homedir,
                                   logcat_dir=options.logcat_dir,
