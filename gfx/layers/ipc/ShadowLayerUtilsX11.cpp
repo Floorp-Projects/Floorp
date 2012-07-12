@@ -123,12 +123,38 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
 }
 
 /*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor& aSurface)
+ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
+                                             const SurfaceDescriptor& aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface.type()) {
     return nsnull;
   }
   return aSurface.get_SurfaceDescriptorX11().OpenForeign();
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor& aDescriptor)
+{
+  // XIDs don't need to be "closed".
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
+  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
+  gfxContentType* aContent,
+  gfxASurface** aSurface)
+{
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
+  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
+  gfxIntSize* aSize,
+  gfxASurface** aSurface)
+{
+  return false;
 }
 
 bool
