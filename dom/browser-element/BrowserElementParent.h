@@ -53,8 +53,6 @@ public:
    *    set aPopupTabParent's frame element to event.detail.frameElement.
    *    Otherwise, we return false.
    *
-   * @param aURL the absolute URL the new window should load.  The empty string
-   *        is allowed indicates we shouldn't load anything.
    * @param aOpenerTabParent the TabParent whose TabChild called window.open.
    * @param aPopupTabParent the TabParent inside which the opened window will
    *                        live.
@@ -77,9 +75,6 @@ public:
    *
    * (These parameter types are silly, but they match what our caller has in
    * hand.  Feel free to add an override, if they are inconvenient to you.)
-   *
-   * @param aURI the URI the new window should load.  May be null, which
-   *        indicates that we shouldn't load anything.
    */
   static bool
   OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
