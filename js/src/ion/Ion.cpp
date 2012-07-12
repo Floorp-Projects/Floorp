@@ -879,7 +879,7 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
     types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
     AutoCompilerRoots roots(script->compartment()->rt);
 
-    IonBuilder builder(cx, fp->scopeChain(), temp, graph, &oracle, *info);
+    IonBuilder builder(cx, temp, graph, &oracle, *info);
     if (!TestCompiler(builder, graph)) {
         IonSpew(IonSpew_Abort, "IM Compilation failed.");
         return false;
