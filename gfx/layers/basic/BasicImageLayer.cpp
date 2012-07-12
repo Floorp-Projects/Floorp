@@ -41,7 +41,8 @@ public:
                            gfxContext* aContext,
                            Layer* aMaskLayer);
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
+  virtual bool GetAsSurface(gfxASurface** aSurface,
+                            SurfaceDescriptor* aDescriptor);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -85,9 +86,6 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   if (!surface || surface->CairoStatus()) {
     return nsnull;
   }
-
-  NS_ASSERTION(surface->GetContentType() != gfxASurface::CONTENT_ALPHA,
-               "Image layer has alpha image");
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   if (!pat) {
@@ -154,15 +152,18 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
   aPattern->SetExtend(extend);
 }
 
-already_AddRefed<gfxASurface>
-BasicImageLayer::GetAsSurface()
+bool
+BasicImageLayer::GetAsSurface(gfxASurface** aSurface,
+                              SurfaceDescriptor* aDescriptor)
 {
   if (!mContainer) {
-    return nsnull;
+    return false;
   }
 
   gfxIntSize dontCare;
-  return mContainer->GetCurrentAsSurface(&dontCare);
+  nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&dontCare);
+  *aSurface = surface.forget().get();
+  return true;
 }
 
 class BasicShadowableImageLayer : public BasicImageLayer,
@@ -295,8 +296,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
       }
     }
 
-    nsRefPtr<gfxASurface> dyas = BasicManager()->OpenDescriptor(mBackBufferY);
-    nsRefPtr<gfxImageSurface> dy = dyas->GetAsImageSurface();
+    AutoOpenSurface dyas(OPEN_READ_WRITE, mBackBufferY);
+    gfxImageSurface* dy = dyas.GetAsImage();
 
     for (int i = 0; i < data->mYSize.height; i++) {
       memcpy(dy->Data() + i * dy->Stride(),
@@ -304,10 +305,10 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
              data->mYSize.width);
     }
 
-    nsRefPtr<gfxASurface> duas = BasicManager()->OpenDescriptor(mBackBufferU);
-    nsRefPtr<gfxImageSurface> du = duas->GetAsImageSurface();
-    nsRefPtr<gfxASurface> dvas = BasicManager()->OpenDescriptor(mBackBufferV);
-    nsRefPtr<gfxImageSurface> dv = dvas->GetAsImageSurface();
+    AutoOpenSurface duas(OPEN_READ_WRITE, mBackBufferU);
+    gfxImageSurface* du = duas.GetAsImage();
+    AutoOpenSurface dvas(OPEN_READ_WRITE, mBackBufferV);
+    gfxImageSurface* dv = dvas.GetAsImage();
 
     for (int i = 0; i < data->mCbCrSize.height; i++) {
       memcpy(du->Data() + i * du->Stride(),
@@ -352,9 +353,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
   }
 
-  nsRefPtr<gfxASurface> backSurface =
-    BasicManager()->OpenDescriptor(mBackBuffer);
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
+  AutoOpenSurface backSurface(OPEN_READ_WRITE, mBackBuffer);
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface.Get());
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
@@ -393,7 +393,8 @@ public:
   }
 
   virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
-  already_AddRefed<gfxASurface> GetAsSurface();
+  virtual bool GetAsSurface(gfxASurface** aSurface,
+                            SurfaceDescriptor* aDescriptor);
 
 protected:
   BasicShadowLayerManager* BasicManager()
@@ -409,18 +410,17 @@ void
 BasicShadowImageLayer::Swap(const SharedImage& aNewFront,
                             SharedImage* aNewBack)
 {
-  nsRefPtr<gfxASurface> surface =
-    BasicManager()->OpenDescriptor(aNewFront);
+  AutoOpenSurface autoSurface(OPEN_READ_ONLY, aNewFront);
   // Destroy mFrontBuffer if size different or image type is different
-  bool surfaceConfigChanged = surface->GetSize() != mSize;
+  bool surfaceConfigChanged = autoSurface.Size() != mSize;
   if (IsSurfaceDescriptorValid(mFrontBuffer)) {
-    nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontBuffer);
+    AutoOpenSurface autoFront(OPEN_READ_ONLY, mFrontBuffer);
     surfaceConfigChanged = surfaceConfigChanged ||
-                           surface->GetContentType() != front->GetContentType();
+                           autoSurface.ContentType() != autoFront.ContentType();
   }
   if (surfaceConfigChanged) {
     DestroyFrontBuffer();
-    mSize = surface->GetSize();
+    mSize = autoSurface.Size();
   }
 
   // If mFrontBuffer
@@ -429,7 +429,7 @@ BasicShadowImageLayer::Swap(const SharedImage& aNewFront,
   } else {
     *aNewBack = null_t();
   }
-  mFrontBuffer = aNewFront.get_SurfaceDescriptor();
+  mFrontBuffer = aNewFront;
 }
 
 void
@@ -439,9 +439,8 @@ BasicShadowImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  nsRefPtr<gfxASurface> surface =
-    BasicManager()->OpenDescriptor(mFrontBuffer);
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
+  AutoOpenSurface autoSurface(OPEN_READ_ONLY, mFrontBuffer);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(autoSurface.Get());
   pat->SetFilter(mFilter);
 
   // The visible region can extend outside the image, so just draw
@@ -453,14 +452,16 @@ BasicShadowImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
                                 aMaskLayer);
 }
 
-already_AddRefed<gfxASurface>
-BasicShadowImageLayer::GetAsSurface()
+bool
+BasicShadowImageLayer::GetAsSurface(gfxASurface** aSurface,
+                                    SurfaceDescriptor* aDescriptor)
 {
   if (!IsSurfaceDescriptorValid(mFrontBuffer)) {
-    return nsnull;
+    return false;
   }
 
-  return BasicManager()->OpenDescriptor(mFrontBuffer);
+  *aDescriptor = mFrontBuffer;
+  return true;
  }
 
 already_AddRefed<ImageLayer>

@@ -172,6 +172,16 @@ protected:
   }
 
   /**
+   * Set the buffer only.  This is intended to be used with the
+   * shadow-layer Open/CloseDescriptor interface, to ensure we don't
+   * accidentally touch a buffer when it's not mapped.
+   */
+  void SetBuffer(gfxASurface* aBuffer)
+  {
+    mBuffer = aBuffer;
+  }
+
+  /**
    * Get a context at the specified resolution for updating |aBounds|,
    * which must be contained within a single quadrant.
    */

@@ -58,6 +58,27 @@ public:
     gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
     const nsIntRegion& aUpdateRegion);
 
+  /**
+   * When BasicThebesLayerBuffer is used with layers that hold
+   * SurfaceDescriptor, this buffer only has a valid gfxASurface in
+   * the scope of an AutoOpenSurface for that SurfaceDescriptor.  That
+   * is, it's sort of a "virtual buffer" that's only mapped an
+   * unmapped within the scope of AutoOpenSurface.  None of the
+   * underlying buffer attributes (rect, rotation) are affected by
+   * mapping/unmapping.
+   *
+   * These helpers just exist to provide more descriptive names of the
+   * map/unmap process.
+   */
+  void MapBuffer(gfxASurface* aBuffer)
+  {
+    SetBuffer(aBuffer);
+  }
+  void UnmapBuffer()
+  {
+    SetBuffer(nsnull);
+  }
+
 private:
   BasicThebesLayerBuffer(gfxASurface* aBuffer,
                          const nsIntRect& aRect, const nsIntPoint& aRotation)
@@ -87,18 +108,25 @@ public:
     MOZ_COUNT_DTOR(ShadowThebesLayerBuffer);
   }
 
-  void Swap(gfxASurface* aNewBuffer,
-            const nsIntRect& aNewRect, const nsIntPoint& aNewRotation,
-            gfxASurface** aOldBuffer,
+  /**
+   * Swap in the old "virtual buffer" (see above) attributes in aNew*
+   * and return the old ones in aOld*.
+   *
+   * Swap() must only be called when the buffer is in its "unmapped"
+   * state, that is the underlying gfxASurface is not available.  It
+   * is expected that the owner of this buffer holds an unmapped
+   * SurfaceDescriptor as the backing storage for this buffer.  That's
+   * why no gfxASurface or SurfaceDescriptor parameters appear here.
+   */
+  void Swap(const nsIntRect& aNewRect, const nsIntPoint& aNewRotation,
             nsIntRect* aOldRect, nsIntPoint* aOldRotation)
   {
     *aOldRect = BufferRect();
     *aOldRotation = BufferRotation();
 
     nsRefPtr<gfxASurface> oldBuffer;
-    oldBuffer = SetBuffer(aNewBuffer,
-                          aNewRect, aNewRotation);
-    oldBuffer.forget(aOldBuffer);
+    oldBuffer = SetBuffer(nsnull, aNewRect, aNewRotation);
+    MOZ_ASSERT(!oldBuffer);
   }
 
 protected:
