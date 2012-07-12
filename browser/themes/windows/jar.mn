@@ -42,6 +42,8 @@ browser.jar:
         skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
+        skin/classic/browser/notification-16.png
+        skin/classic/browser/notification-64.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
@@ -273,6 +275,8 @@ browser.jar:
         skin/classic/aero/browser/mixed-content-blocked-64.png
         skin/classic/aero/browser/monitor.png
         skin/classic/aero/browser/monitor_16-10.png
+        skin/classic/aero/browser/notification-16.png
+        skin/classic/aero/browser/notification-64.png
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png                       (pageInfo-aero.png)
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
