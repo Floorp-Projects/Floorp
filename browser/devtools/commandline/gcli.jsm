@@ -8420,7 +8420,9 @@ function getListTemplateData(args, context) {
     }
     return true;
   });
-  matchingCommands.sort();
+  matchingCommands.sort(function(c1, c2) {
+    return c1.name.localeCompare(c2.name);
+  });
 
   var heading;
   if (matchingCommands.length === 0) {
@@ -8493,7 +8495,9 @@ function getManTemplateData(command, context) {
         return subcommand.name.indexOf(command.name) === 0 &&
                 subcommand.name !== command.name;
       });
-      matching.sort();
+      matching.sort(function(c1, c2) {
+        return c1.name.localeCompare(c2.name);
+      });
       return matching;
     },
     enumerable: true
