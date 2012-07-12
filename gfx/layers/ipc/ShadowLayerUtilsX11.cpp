@@ -94,19 +94,25 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
                                                 SurfaceDescriptor* aFrontBuffer,
                                                 SurfaceDescriptor* aBackBuffer)
 {
-  return (PlatformAllocBuffer(aSize, aContent, aFrontBuffer) &&
-          PlatformAllocBuffer(aSize, aContent, aBackBuffer));
+  return (PlatformAllocBuffer(aSize, aContent, DEFAULT_BUFFER_CAPS, aFrontBuffer) &&
+          PlatformAllocBuffer(aSize, aContent, DEFAULT_BUFFER_CAPS, aBackBuffer));
 }
 
 bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
                                           gfxASurface::gfxContentType aContent,
+                                          uint32_t aCaps,
                                           SurfaceDescriptor* aBuffer)
 {
   if (!UsingXCompositing()) {
     // If we're not using X compositing, we're probably compositing on
     // the client side, in which case X surfaces would just slow
     // things down.  Use Shmem instead.
+    return false;
+  }
+  if (MAP_AS_IMAGE_SURFACE & aCaps) {
+    // We can't efficiently map pixmaps as gfxImageSurface, in
+    // general.  Fall back on Shmem.
     return false;
   }
 

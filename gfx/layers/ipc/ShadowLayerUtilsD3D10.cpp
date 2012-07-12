@@ -28,6 +28,7 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
 bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
+                                          uint32_t,
                                           SurfaceDescriptor*)
 {
   return false;
