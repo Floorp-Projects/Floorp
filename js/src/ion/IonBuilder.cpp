@@ -57,11 +57,10 @@
 using namespace js;
 using namespace js::ion;
 
-IonBuilder::IonBuilder(JSContext *cx, HandleObject scopeChain, TempAllocator &temp, MIRGraph &graph,
-                       TypeOracle *oracle, CompileInfo &info, size_t inliningDepth, uint32 loopDepth)
+IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
+                       CompileInfo &info, size_t inliningDepth, uint32 loopDepth)
   : MIRGenerator(cx, temp, graph, info),
     script(info.script()),
-    initialScopeChain_(scopeChain),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),
     callerBuilder_(NULL),
@@ -582,7 +581,7 @@ IonBuilder::initScopeChain()
                 return false;
         }
     } else {
-        scope = MConstant::New(ObjectValue(*initialScopeChain_));
+        scope = MConstant::New(ObjectValue(*script->global()));
         current->add(scope);
     }
 
@@ -2807,10 +2806,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     if (!oracle.init(cx, callee->script()))
         return false;
 
-    RootedObject scopeChain(NULL);
-
-    IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
-                             *info, inliningDepth + 1, loopDepth_);
+    IonBuilder inlineBuilder(cx, temp(), graph(), &oracle, *info, inliningDepth + 1, loopDepth_);
 
     // Create |this| on the caller-side for inlined constructors.
     MDefinition *thisDefn = NULL;
