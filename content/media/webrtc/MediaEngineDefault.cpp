@@ -39,15 +39,15 @@ MediaEngineDefaultVideoSource::GetUUID(nsAString& aUUID)
   return;
 }
 
-already_AddRefed<nsDOMMediaStream>
+nsresult
 MediaEngineDefaultVideoSource::Allocate()
 {
   if (mState != kReleased) {
-    return NULL;
+    return NS_ERROR_FAILURE;
   }
 
   mState = kAllocated;
-  return nsDOMMediaStream::CreateInputStream();
+  return NS_OK;
 }
 
 nsresult
@@ -115,7 +115,6 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   // SetData copies data, so we can free the frame
   mImage->SetData(data);
   PR_Free(frame);
-
 
   // AddTrack takes ownership of segment
   VideoSegment *segment = new VideoSegment();
@@ -209,14 +208,15 @@ MediaEngineDefaultAudioSource::GetUUID(nsAString& aUUID)
   return;
 }
 
-already_AddRefed<nsDOMMediaStream>
+nsresult
 MediaEngineDefaultAudioSource::Allocate()
 {
   if (mState != kReleased) {
-    return NULL;
+    return NS_ERROR_FAILURE;
   }
+
   mState = kAllocated;
-  return nsDOMMediaStream::CreateInputStream();
+  return NS_OK;
 }
 
 nsresult
@@ -233,12 +233,12 @@ nsresult
 MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   if (mState != kAllocated) {
-    return NULL;
+    return NS_ERROR_FAILURE;
   }
 
   mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   if (!mTimer) {
-    return NULL;
+    return NS_ERROR_FAILURE;
   }
 
   mSource = aStream;

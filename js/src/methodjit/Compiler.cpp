@@ -911,11 +911,14 @@ MakeJITScript(JSContext *cx, JSScript *script)
 
 CompileStatus
 mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
-                   bool construct, CompileRequest request)
+                   bool construct, CompileRequest request, StackFrame *frame)
 {
   restart:
     if (!cx->methodJitEnabled)
         return Compile_Abort;
+
+    if (frame->hasPushedSPSFrame())
+        return Compile_Skipped;
 
     if (script->hasJITInfo()) {
         JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());

@@ -40,15 +40,6 @@ pref("toolkit.storage.synchronous", 0);
 pref("browser.viewport.scaleRatio", -1);
 pref("browser.viewport.desktopWidth", 980);
 
-#ifndef ANDROID
-#ifndef MOZ_PLATFORM_MAEMO
-// On desktop builds, simulate an MDPI tablet by default.
-pref("layout.css.dpi", 160);
-#else
-// Maemo X11 lies about its dpi
-pref("layout.css.dpi", 240);
-#endif
-#endif
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
@@ -90,9 +81,6 @@ pref("network.http.max-connections", 20);
 pref("network.http.max-connections-per-server", 15);
 pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 8);
-#ifdef MOZ_PLATFORM_MAEMO
-pref("network.autodial-helper.enabled", true);
-#endif
 
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
@@ -333,7 +321,6 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // disable color management
 pref("gfx.color_management.mode", 0);
 
-#ifdef ANDROID
 // 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins, 4=prediction bias
 pref("gfx.displayport.strategy", 1);
 // all of the following displayport strategy prefs will be divided by 1000
@@ -352,7 +339,6 @@ pref("gfx.displayport.strategy_vb.danger_x_incr", -1); // additional danger zone
 pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone on y-axis when multiplied by viewport height and velocity
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
-#endif
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
@@ -379,10 +365,6 @@ pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 pref("privacy.item.syncAccount", true);
-
-#ifdef MOZ_PLATFORM_MAEMO
-pref("plugins.force.wmode", "opaque");
-#endif
 
 // URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
@@ -426,30 +408,14 @@ pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
-#if MOZ_PLATFORM_MAEMO == 6
-pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", true);
-#elifdef ANDROID
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
-#else
-pref("plugin.disable", true);
-pref("dom.ipc.plugins.enabled", true);
-#endif
 
 pref("plugins.click_to_play", true);
 // Disabled because of thread safety problem
 // in getting the bits from the surface.
 // Bug 756253
 pref("plugins.use_placeholder", 0);
-
-// process priority
-// higher values give content process less CPU time
-#if MOZ_PLATFORM_MAEMO == 5
-pref("dom.ipc.content.nice", 10);
-#else
-pref("dom.ipc.content.nice", 1);
-#endif
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -547,16 +513,6 @@ pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);
 
-#ifdef MOZ_PLATFORM_MAEMO
-// update fonts for better readability
-pref("font.default.x-baltic", "SwissA");
-pref("font.default.x-central-euro", "SwissA");
-pref("font.default.x-cyrillic", "SwissA");
-pref("font.default.x-unicode", "SwissA");
-pref("font.default.x-user-def", "SwissA");
-pref("font.default.x-western", "SwissA");
-#endif
-
 #ifdef MOZ_SERVICES_SYNC
 // sync service
 pref("services.sync.client.type", "mobile");
@@ -582,14 +538,7 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 
-#if MOZ_PLATFORM_MAEMO == 6
 pref("layers.acceleration.disabled", false);
-#elifdef ANDROID
-pref("layers.acceleration.disabled", false);
-#else
-pref("layers.acceleration.disabled", true);
-#endif
-
 pref("layers.offmainthreadcomposition.enabled", true);
 
 pref("notification.feature.enabled", true);

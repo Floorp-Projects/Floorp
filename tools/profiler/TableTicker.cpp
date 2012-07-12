@@ -15,7 +15,10 @@
 #include "prenv.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
+
+// JSON
 #include "JSObjectBuilder.h"
+#include "nsIJSRuntimeService.h"
 
 // Meta
 #include "nsXPCOM.h"
@@ -423,6 +426,15 @@ private:
 
 std::string GetSharedLibraryInfoString();
 
+static JSBool
+WriteCallback(const jschar *buf, uint32_t len, void *data)
+{
+  std::ofstream& stream = *static_cast<std::ofstream*>(data);
+  nsCAutoString profile = NS_ConvertUTF16toUTF8(buf, len);
+  stream << profile.Data();
+  return JS_TRUE;
+}
+
 /**
  * This is an event used to save the profile on the main thread
  * to be sure that it is not being modified while saving.
@@ -441,6 +453,7 @@ public:
     // being thread safe. Bug 750989.
     t->SetPaused(true);
 
+    // Get file path
     nsCOMPtr<nsIFile> tmpFile;
     nsCAutoString tmpPath;
     if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile)))) {
@@ -457,16 +470,57 @@ public:
     if (NS_FAILED(rv))
       return rv;
 
-    std::ofstream stream;
-    stream.open(tmpPath.get());
-    if (stream.is_open()) {
-      stream << *(t->GetPrimaryThreadProfile());
-      stream << "h-" << GetSharedLibraryInfoString() << std::endl;
-      stream.close();
-      LOGF("Saved to %s", tmpPath.get());
-    } else {
-      LOG("Fail to open profile log file.");
+    // Create a JSContext to run a JSObjectBuilder :(
+    // Based on XPCShellEnvironment
+    JSRuntime *rt;
+    JSContext *cx;
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    if (!rtsvc || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
+      LOG("failed to get RuntimeService");
+      return NS_ERROR_FAILURE;;
     }
+
+    cx = JS_NewContext(rt, 8192);
+    if (!cx) {
+      LOG("Failed to get context");
+      return NS_ERROR_FAILURE;
+    }
+
+    {
+      JSAutoRequest ar(cx);
+      static JSClass c = {
+          "global", JSCLASS_GLOBAL_FLAGS,
+          JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+          JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+      };
+      JSObject *obj = JS_NewGlobalObject(cx, &c, NULL);
+
+      std::ofstream stream;
+      stream.open(tmpPath.get());
+      // Pause the profiler during saving.
+      // This will prevent us from recording sampling
+      // regarding profile saving. This will also
+      // prevent bugs caused by the circular buffer not
+      // being thread safe. Bug 750989.
+      t->SetPaused(true);
+      if (stream.is_open()) {
+        JSAutoEnterCompartment autoComp;
+        if (autoComp.enter(cx, obj)) {
+          JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
+          jsval val = OBJECT_TO_JSVAL(profileObj);
+          JS_Stringify(cx, &val, nsnull, JSVAL_NULL, WriteCallback, &stream);
+        } else {
+          LOG("Failed to enter compartment");
+        }
+        stream.close();
+        LOGF("Saved to %s", tmpPath.get());
+      } else {
+        LOG("Fail to open profile log file.");
+      }
+    }
+    JS_EndRequest(cx);
+    JS_DestroyContext(cx);
+
     t->SetPaused(false);
 
     return NS_OK;
@@ -543,6 +597,10 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   JSObjectBuilder b(aCx);
 
   JSObject *profile = b.CreateObject();
+
+  // Put shared library info
+  JSObject *libs = GetMetaJSObject(b);
+  b.DefineProperty(profile, "libs", GetSharedLibraryInfoString().c_str());
 
   // Put meta data
   JSObject *meta = GetMetaJSObject(b);
@@ -874,12 +932,15 @@ void mozilla_sampler_init()
 #if defined(USE_LIBUNWIND) && defined(ANDROID)
   // Only try debug_frame and exidx unwinding
   putenv("UNW_ARM_UNWIND_METHOD=5");
+#endif
 
-  // Allow the profiler to be started and stopped using signals
-  OS::RegisterStartStopHandlers();
+  // Allow the profiler to be started using signals
+  OS::RegisterStartHandler();
 
-  // On Android, this is too soon in order to start up the
-  // profiler.
+#if defined(USE_LIBUNWIND) && defined(__arm__) && defined(MOZ_CRASHREPORTER)
+  // On ARM, libunwind defines a signal handler for segmentation faults.
+  // If SPS is enabled now, the crash reporter will override that signal
+  // handler, and libunwind will likely break.
   return;
 #endif
 
@@ -980,7 +1041,7 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS())
-      stack->installJSSampling();
+      stack->enableJSSampling();
 }
 
 void mozilla_sampler_stop()
@@ -993,7 +1054,7 @@ void mozilla_sampler_stop()
     return;
   }
 
-  bool uninstallJS = t->ProfileJS();
+  bool disableJS = t->ProfileJS();
 
   t->Stop();
   delete t;
@@ -1001,8 +1062,8 @@ void mozilla_sampler_stop()
   ProfileStack *stack = tlsStack.get();
   ASSERT(stack != NULL);
 
-  if (uninstallJS)
-    stack->uninstallJSSampling();
+  if (disableJS)
+    stack->disableJSSampling();
 }
 
 bool mozilla_sampler_is_active()

@@ -700,6 +700,8 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/webapprt/chrome.manifest
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
 @BINPATH@/webapprt/chrome/webapprt.manifest
+@BINPATH@/webapprt/chrome/@AB_CD@@JAREXT@
+@BINPATH@/webapprt/chrome/@AB_CD@.manifest
 @BINPATH@/webapprt/components/CommandLineHandler.js
 @BINPATH@/webapprt/components/ContentPermission.js
 @BINPATH@/webapprt/components/ContentPolicy.js

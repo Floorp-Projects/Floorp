@@ -79,7 +79,7 @@ interface nsIApplicationCacheNamespace : nsISupports
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(231e1e53-05c1-41b6-b9de-dbbcce9385c9)]
+[scriptable, uuid(C3A17414-763B-4235-8BB7-B48324F95DF8)]
 interface nsIApplicationCache : nsISupports
 {
     /**
@@ -195,5 +195,5 @@ interface nsIApplicationCache : nsISupports
      * If set, this offline cache is placed in a different directory
      * than the current application profile.
      */
-    readonly attribute nsIFile cacheDirectory;
+    readonly attribute nsIFile profileDirectory;
 };

@@ -111,6 +111,7 @@
   <string name="close_tab">&close_tab;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
+  <string name="one_tab">&one_tab;</string>
   <string name="num_tabs">&num_tabs;</string>
   <string name="addons">&addons;</string>
   <string name="downloads">&downloads;</string>
