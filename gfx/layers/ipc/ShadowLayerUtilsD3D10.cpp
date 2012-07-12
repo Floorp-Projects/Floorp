@@ -26,9 +26,36 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
 }
 
 /*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
+ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode,
+                                             const SurfaceDescriptor&)
 {
   return nsnull;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor&)
+{
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxContentType*,
+  gfxASurface**)
+{
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxIntSize*,
+  gfxASurface**)
+{
+  return false;
 }
 
 bool
