@@ -1901,21 +1901,51 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.variadic = variadic
         self.dictionaryMember = dictionaryMember
         self._isComplete = False
+        self.treatNullAs = "Default"
+        self.treatUndefinedAs = "Default"
 
         assert not variadic or optional
 
     def addExtendedAttributes(self, attrs):
-        if self.dictionaryMember:
-            for (attr, value) in attrs:
-                if attr == "TreatUndefinedAs":
-                    raise WebIDLError("[TreatUndefinedAs] is not allowed for "
-                                      "dictionary members", [self.location])
-                elif attr == "TreatNullAs":
+        for (attr, value) in attrs:
+            if attr == "TreatNullAs":
+                if not self.type.isString() or self.type.nullable():
+                    raise WebIDLError("[TreatNullAs] is only allowed on "
+                                      "arguments whose type is DOMString",
+                                      [self.location])
+                if self.dictionaryMember:
                     raise WebIDLError("[TreatNullAs] is not allowed for "
                                       "dictionary members", [self.location])
-
-        # But actually, we can't handle this at all, so far.
-        assert len(attrs) == 0
+                if value != 'EmptyString':
+                    raise WebIDLError("[TreatNullAs] must take the identifier "
+                                      "EmptyString", [self.location])
+                self.treatNullAs = value
+            elif attr == "TreatUndefinedAs":
+                if not self.type.isString():
+                    raise WebIDLError("[TreatUndefinedAs] is only allowed on "
+                                      "arguments whose type is DOMString or "
+                                      "DOMString?", [self.location])
+                if self.dictionaryMember:
+                    raise WebIDLError("[TreatUndefinedAs] is not allowed for "
+                                      "dictionary members", [self.location])
+                if value == 'Null':
+                    if not self.type.nullable():
+                        raise WebIDLError("[TreatUndefinedAs=Null] is only "
+                                          "allowed on arguments whose type is "
+                                          "DOMString?", [self.location])
+                elif value == 'Missing':
+                    if not self.optional:
+                        raise WebIDLError("[TreatUndefinedAs=Missing] is only "
+                                          "allowed on optional arguments",
+                                          [self.location])
+                elif value != 'EmptyString':
+                    raise WebIDLError("[TreatUndefinedAs] must take the "
+                                      "identifiers EmptyString or Null or "
+                                      "Missing", [self.location])
+                self.treatUndefinedAs = value
+            else:
+                raise WebIDLError("Unhandled extended attribute on an argument",
+                                  [self.location])
 
     def isComplete(self):
         return self._isComplete
