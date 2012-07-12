@@ -62,6 +62,7 @@ function test_tracking() {
     store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
+    tracker._lazySave.clear();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 }
@@ -100,6 +101,7 @@ function test_onItemChanged() {
     store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
+    tracker._lazySave.clear();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 }
@@ -152,6 +154,7 @@ function test_onItemMoved() {
     store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
+    tracker._lazySave.clear();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 

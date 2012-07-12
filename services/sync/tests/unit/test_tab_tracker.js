@@ -108,4 +108,7 @@ function run_test() {
   do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                  [Clients.localID]));
   do_check_eq(logs.length, idx); // test that setTabValue isn't called
+  if (tracker._lazySave) {
+    tracker._lazySave.clear();
+  }
 }
