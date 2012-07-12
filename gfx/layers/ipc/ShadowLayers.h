@@ -236,8 +236,8 @@ public:
    * The basic lifecycle is
    *
    *  - a Layer needs a buffer.  Its ShadowableLayer subclass calls
-   *    AllocDoubleBuffer(), then calls one of the Created*Buffer()
-   *    methods above to transfer the (temporary) front buffer to its
+   *    AllocBuffer(), then calls one of the Created*Buffer() methods
+   *    above to transfer the (temporary) front buffer to its
    *    ShadowLayer in the other process.  The Layer needs a
    *    gfxASurface to paint, so the ShadowableLayer uses
    *    OpenDescriptor(backBuffer) to get that surface, and hands it
@@ -264,31 +264,12 @@ public:
    * Shmem (gfxSharedImageSurface) buffers are available on all
    * platforms, but they may not be optimal.
    *
-   * NB: this interface is being deprecated in favor of the
-   * SurfaceDescriptor variant below.
-   */
-  bool AllocDoubleBuffer(const gfxIntSize& aSize,
-                           gfxASurface::gfxContentType aContent,
-                           gfxSharedImageSurface** aFrontBuffer,
-                           gfxSharedImageSurface** aBackBuffer);
-  void DestroySharedSurface(gfxSharedImageSurface* aSurface);
-
-  bool AllocBuffer(const gfxIntSize& aSize,
-                     gfxASurface::gfxContentType aContent,
-                     gfxSharedImageSurface** aBuffer);
-
-  /**
    * In the absence of platform-specific buffers these fall back to
    * Shmem/gfxSharedImageSurface.
    */
-  bool AllocDoubleBuffer(const gfxIntSize& aSize,
-                           gfxASurface::gfxContentType aContent,
-                           SurfaceDescriptor* aFrontBuffer,
-                           SurfaceDescriptor* aBackBuffer);
-
   bool AllocBuffer(const gfxIntSize& aSize,
-                     gfxASurface::gfxContentType aContent,
-                     SurfaceDescriptor* aBuffer);
+                   gfxASurface::gfxContentType aContent,
+                   SurfaceDescriptor* aBuffer);
 
   bool AllocBufferWithCaps(const gfxIntSize& aSize,
                            gfxASurface::gfxContentType aContent,
@@ -325,10 +306,9 @@ protected:
   PLayersChild* mShadowManager;
 
 private:
-  bool PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
-                                   gfxASurface::gfxContentType aContent,
-                                   SurfaceDescriptor* aFrontBuffer,
-                                   SurfaceDescriptor* aBackBuffer);
+  bool AllocBuffer(const gfxIntSize& aSize,
+                   gfxASurface::gfxContentType aContent,
+                   gfxSharedImageSurface** aBuffer);
 
   bool PlatformAllocBuffer(const gfxIntSize& aSize,
                            gfxASurface::gfxContentType aContent,
