@@ -382,22 +382,6 @@ OptimalShmemType()
 }
 
 bool
-ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
-                                        gfxASurface::gfxContentType aContent,
-                                        gfxSharedImageSurface** aFrontBuffer,
-                                        gfxSharedImageSurface** aBackBuffer)
-{
-  return AllocBuffer(aSize, aContent, aFrontBuffer) &&
-         AllocBuffer(aSize, aContent, aBackBuffer);
-}
-
-void
-ShadowLayerForwarder::DestroySharedSurface(gfxSharedImageSurface* aSurface)
-{
-  mShadowManager->DeallocShmem(aSurface->GetShmem());
-}
-
-bool
 ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
                                   gfxASurface::gfxContentType aContent,
                                   gfxSharedImageSurface** aBuffer)
@@ -414,33 +398,6 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
 
   *aBuffer = nsnull;
   back.swap(*aBuffer);
-  return true;
-}
-
-bool
-ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
-                                        gfxASurface::gfxContentType aContent,
-                                        SurfaceDescriptor* aFrontBuffer,
-                                        SurfaceDescriptor* aBackBuffer)
-{
-  bool tryPlatformSurface = true;
-#ifdef DEBUG
-  tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
-#endif
-  if (tryPlatformSurface &&
-      PlatformAllocDoubleBuffer(aSize, aContent, aFrontBuffer, aBackBuffer)) {
-    return true;
-  }
-
-  nsRefPtr<gfxSharedImageSurface> front;
-  nsRefPtr<gfxSharedImageSurface> back;
-  if (!AllocDoubleBuffer(aSize, aContent,
-                         getter_AddRefs(front), getter_AddRefs(back))) {
-    return false;
-  }
-
-  *aFrontBuffer = front->GetShmem();
-  *aBackBuffer = back->GetShmem();
   return true;
 }
 
@@ -554,15 +511,6 @@ ShadowLayerManager::DestroySharedSurface(SurfaceDescriptor* aSurface,
 
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
-
-bool
-ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
-                                                gfxASurface::gfxContentType,
-                                                SurfaceDescriptor*,
-                                                SurfaceDescriptor*)
-{
-  return false;
-}
 
 bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
