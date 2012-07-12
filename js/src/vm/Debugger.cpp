@@ -4026,10 +4026,10 @@ DebuggerObject_isSealedHelper(JSContext *cx, unsigned argc, Value *vp, SealHelpe
     ErrorCopier ec(ac, dbg->toJSObject());
     bool r;
     if (op == Seal) {
-        if (!obj->isSealed(cx, &r))
+        if (!JSObject::isSealed(cx, obj, &r))
             return false;
     } else if (op == Freeze) {
-        if (!obj->isFrozen(cx, &r))
+        if (!JSObject::isFrozen(cx, obj, &r))
             return false;
     } else {
         r = obj->isExtensible();
