@@ -1521,8 +1521,7 @@ class MUnbox : public MUnaryInstruction
                   type == MIRType_Int32   ||
                   type == MIRType_Double  || 
                   type == MIRType_String  ||
-                  type == MIRType_Object  ||
-                  type == MIRType_ArgObj);
+                  type == MIRType_Object);
 
         setResultType(type);
         setMovable();
@@ -4722,49 +4721,21 @@ class MInstanceOf
     }
 };
 
-// This is just a fake MIR Instruction wrapping a MConstant which has a
-// different MIRType than the Value type. This is used to prevent magic
-// unboxing.
-class MLazyArguments : public MConstant
+class MArgumentsLength : public MNullaryInstruction
 {
-    MLazyArguments()
-      : MConstant(MagicValue(JS_OPTIMIZED_ARGUMENTS))
-    {
-        setResultType(MIRType_ArgObj);
-    }
-
-  public:
-    // No INSTRUCTION_HEADER because this is a wrapper.
-
-    static MLazyArguments *New() {
-        return new MLazyArguments();
-    }
-};
-
-class MArgumentsLength
-  : public MUnaryInstruction,
-    public ArgumentsPolicy<0>
-{
-    MArgumentsLength(MDefinition *arguments)
-      : MUnaryInstruction(arguments)
+    MArgumentsLength()
     {
         setResultType(MIRType_Int32);
         setMovable();
     }
+
   public:
     INSTRUCTION_HEADER(ArgumentsLength);
 
-    static MArgumentsLength *New(MDefinition *arguments) {
-        return new MArgumentsLength(arguments);
+    static MArgumentsLength *New() {
+        return new MArgumentsLength();
     }
 
-    MDefinition *arguments() const {
-        return getOperand(0);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }

@@ -79,6 +79,8 @@ TypeInferenceOracle::getMIRType(TypeSet *types)
         return MIRType_String;
       case JSVAL_TYPE_OBJECT:
         return MIRType_Object;
+      case JSVAL_TYPE_MAGIC:
+        return MIRType_Magic;
       default:
         return MIRType_Value;
     }

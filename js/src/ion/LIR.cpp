@@ -60,17 +60,10 @@ LIRGraph::LIRGraph(MIRGraph &mir)
 }
 
 bool
-LIRGraph::addConstantToPool(double d, uint32 *index)
+LIRGraph::addConstantToPool(const Value &v, uint32 *index)
 {
     *index = constantPool_.length();
-    return constantPool_.append(DoubleValue(d));
-}
-
-bool
-LIRGraph::addConstantToPool(MConstant *ins, uint32 *index)
-{
-    *index = constantPool_.length();
-    return constantPool_.append(ins->value());
+    return constantPool_.append(v);
 }
 
 bool

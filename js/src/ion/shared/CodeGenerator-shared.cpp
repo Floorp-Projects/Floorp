@@ -147,28 +147,19 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
                     snapshots_.addInt32Slot(v.toInt32());
                 } else {
                     uint32 index;
-                    if (!graph.addConstantToPool(constant, &index))
+                    if (!graph.addConstantToPool(constant->value(), &index))
                         return false;
                     snapshots_.addConstantPoolSlot(index);
                 }
             }
             break;
           }
-          case MIRType_ArgObj:
+          case MIRType_Magic:
           {
-            LAllocation *payload = snapshot->payloadOfSlot(i);
-            if (payload->isMemory()) {
-                snapshots_.addArgObjSlot(ToStackIndex(payload));
-            } else if (payload->isGeneralReg()) {
-                snapshots_.addArgObjSlot(ToRegister(payload));
-            } else {
-                MConstant *constant = mir->toConstant();
-                uint32 index;
-
-                if (!graph.addConstantToPool(constant, &index))
-                    return false;
-                snapshots_.addConstantPoolSlot(index);
-            }
+            uint32 index;
+            if (!graph.addConstantToPool(MagicValue(JS_OPTIMIZED_ARGUMENTS), &index))
+                return false;
+            snapshots_.addConstantPoolSlot(index);
             break;
           }
           default:
