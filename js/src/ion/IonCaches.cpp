@@ -1192,8 +1192,8 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     if (cache.stubCount() < MAX_STUBS &&
         IsCacheableName(cx, scopeChain, obj, holder, shape))
     {
-        // if (!cache.attach(cx, scopeChain, obj, shape))
-        //     return false;
+        if (!cache.attach(cx, scopeChain, obj, shape))
+            return false;
         cache.incrementStubCount();
     }
 
