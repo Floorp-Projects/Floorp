@@ -120,6 +120,15 @@ typedef struct _WidgetRec {
     CorePart    core;
  } WidgetRec, CoreRec;   
 
+/* Exported functions, used by Xt plugins */
+void xt_client_create(XtClient * xtclient, Window embeder, int height, int width);
+void xt_client_unrealize(XtClient* xtclient);
+void xt_client_destroy(XtClient* xtclient);
+void xt_client_init(XtClient * xtclient, Visual *xtvisual, Colormap xtcolormap, int xtdepth);
+void xt_client_xloop_create(void);
+void xt_client_xloop_destroy(void);
+Display * xt_client_get_display(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
