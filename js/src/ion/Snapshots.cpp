@@ -575,21 +575,3 @@ SnapshotWriter::addConstantPoolSlot(uint32 index)
     }
 }
 
-void
-SnapshotWriter::addArgObjSlot(const Register &reg)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: argument object (%s)", slotsWritten_, reg.name());
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, ESC_REG_FIELD_CONST);
-    writer_.writeUnsigned(reg.code());
-}
-
-void
-SnapshotWriter::addArgObjSlot(int32 stackIndex)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: argument object (stack %d)", slotsWritten_, stackIndex);
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, ESC_REG_FIELD_CONST);
-    writer_.writeUnsigned(ESC_REG_FIELD_INDEX);
-    writer_.writeSigned(stackIndex);
-}

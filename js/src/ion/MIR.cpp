@@ -351,9 +351,6 @@ MConstant::printOpcode(FILE *fp)
       case MIRType_Magic:
         fprintf(fp, "magic");
         break;
-      case MIRType_ArgObj:
-        fprintf(fp, "lazy arguments");
-        break;
       default:
         JS_NOT_REACHED("unexpected type");
         break;

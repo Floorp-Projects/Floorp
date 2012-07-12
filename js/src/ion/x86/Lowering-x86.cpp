@@ -64,7 +64,7 @@ bool
 LIRGeneratorX86::lowerConstantDouble(double d, MInstruction *mir)
 {
     uint32 index;
-    if (!lirGraph_.addConstantToPool(d, &index))
+    if (!lirGraph_.addConstantToPool(DoubleValue(d), &index))
         return false;
 
     LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
@@ -79,7 +79,7 @@ LIRGeneratorX86::visitConstant(MConstant *ins)
 
     if (ins->type() == MIRType_Double) {
         uint32 index;
-        if (!lirGraph_.addConstantToPool(ins, &index))
+        if (!lirGraph_.addConstantToPool(ins->value(), &index))
             return false;
         LDouble *lir = new LDouble(LConstantIndex::FromIndex(index));
         return define(lir, ins);
