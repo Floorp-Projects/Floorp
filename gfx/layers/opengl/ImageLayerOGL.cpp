@@ -674,12 +674,12 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
   } else {
     YUVImage yuv = aFront.get_YUVImage();
 
-    nsRefPtr<gfxSharedImageSurface> surfY =
-      gfxSharedImageSurface::Open(yuv.Ydata());
-    nsRefPtr<gfxSharedImageSurface> surfU =
-      gfxSharedImageSurface::Open(yuv.Udata());
-    nsRefPtr<gfxSharedImageSurface> surfV =
-      gfxSharedImageSurface::Open(yuv.Vdata());
+    nsRefPtr<gfxASurface> asurfY =
+      ShadowLayerForwarder::OpenDescriptor(yuv.Ydata());
+    nsRefPtr<gfxImageSurface> surfY = asurfY->GetAsImageSurface();
+    nsRefPtr<gfxASurface> asurfU =
+      ShadowLayerForwarder::OpenDescriptor(yuv.Udata());
+    nsRefPtr<gfxImageSurface> surfU = asurfU->GetAsImageSurface();
 
     mSize = surfY->GetSize();
     mCbCrSize = surfU->GetSize();
@@ -723,12 +723,16 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
     } else {
       const YUVImage& yuv = aNewFront.get_YUVImage();
 
-      nsRefPtr<gfxSharedImageSurface> surfY =
-        gfxSharedImageSurface::Open(yuv.Ydata());
-      nsRefPtr<gfxSharedImageSurface> surfU =
-        gfxSharedImageSurface::Open(yuv.Udata());
-      nsRefPtr<gfxSharedImageSurface> surfV =
-        gfxSharedImageSurface::Open(yuv.Vdata());
+      nsRefPtr<gfxASurface> asurfY =
+        ShadowLayerForwarder::OpenDescriptor(yuv.Ydata());
+      nsRefPtr<gfxImageSurface> surfY = asurfY->GetAsImageSurface();
+      nsRefPtr<gfxASurface> asurfU =
+        ShadowLayerForwarder::OpenDescriptor(yuv.Udata());
+      nsRefPtr<gfxImageSurface> surfU = asurfU->GetAsImageSurface();
+      // XXX do we really need to open this?
+      nsRefPtr<gfxASurface> asurfV =
+        ShadowLayerForwarder::OpenDescriptor(yuv.Vdata());
+      nsRefPtr<gfxImageSurface> surfV = asurfV->GetAsImageSurface();
       mPictureRect = yuv.picture();
 
       gfxIntSize size = surfY->GetSize();
