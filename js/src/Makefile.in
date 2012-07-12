@@ -738,6 +738,9 @@ ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 
+CFLAGS += $(MOZ_ZLIB_CFLAGS)
+EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
+
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER
 # XXX We should add this to CXXFLAGS, too?

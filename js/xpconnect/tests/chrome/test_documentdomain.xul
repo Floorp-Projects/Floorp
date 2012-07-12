@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601277
+-->
+<window title="Mozilla Bug 601277"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=601277"
+     target="_blank">Mozilla Bug 601277</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Tests for document.domain. **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Wait for the frames to load.
+  var gFramesLoaded = 0;
+  function frameLoaded() {
+    gFramesLoaded++;
+    if (gFramesLoaded == document.getElementsByTagName('iframe').length)
+      startTest();
+  }
+
+  function startTest() {
+
+    // Grab all the content windows and waive Xray. Xray waivers only apply to
+    // chrome, so we can pass these references directly to content.
+    var win1A = document.getElementById('test1A').contentWindow.wrappedJSObject;
+    var win1B = document.getElementById('test1B').contentWindow.wrappedJSObject;
+    var win2 = document.getElementById('test2').contentWindow.wrappedJSObject;
+    var winBase = document.getElementById('base').contentWindow.wrappedJSObject;
+
+    // Check the basics.
+    ok(win1A.tryToAccess(win1B),
+       "Same-origin windows should grant access");
+    ok(!win1A.tryToAccess(win2),
+       "Cross-origin windows should not grant access");
+    ok(!win1A.tryToAccess(winBase),
+       "Subdomain windows should not receive access");
+
+    // Store references now, while test1A and test1B are same-origin.
+    win1A.storeReference(win1B);
+    win1B.storeReference(win1A);
+    ok(win1A.tryToAccessStored(), "Stored references work when same-origin");
+
+    // Set document.domain on test1A. This should grant no access, since nobody
+    // else set it.
+    win1A.setDomain('example.org');
+    ok(!win1A.tryToAccess(winBase), "base must collaborate too");
+    ok(!winBase.tryToAccess(win1A), "base must collaborate too");
+    ok(!win1A.tryToAccess(win1B), "No longer same-origin");
+    ok(!win1A.tryToAccessStored(), "No longer same-origin");
+    ok(!win1B.tryToAccess(win1A), "No longer same-origin");
+    ok(!win1B.tryToAccessStored(), "No longer same-origin");
+
+    // Set document.domain on test1B. Now we're cooking with gas.
+    win1B.setDomain('example.org');
+    ok(!win1B.tryToAccess(winBase), "base must collaborate too");
+    ok(!winBase.tryToAccess(win1B), "base must collaborate too");
+    ok(win1A.tryToAccess(win1B), "same-origin");
+    ok(win1A.tryToAccessStored(), "same-origin");
+    ok(win1B.tryToAccess(win1A), "same-origin");
+    ok(win1B.tryToAccessStored(), "same-origin");
+
+    // Explicitly collaborate with base.
+    winBase.setDomain('example.org');
+    ok(winBase.tryToAccess(win1A), "base collaborates");
+    ok(win1A.tryToAccess(winBase), "base collaborates");
+
+    // All done.
+    SimpleTest.finish();
+  }
+
+
+  ]]>
+  </script>
+
+  <iframe id="test1A" onload="frameLoaded();" type="content"
+          src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_documentdomain.html" />
+  <iframe id="test1B" onload="frameLoaded();" type="content"
+          src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_documentdomain.html" />
+  <iframe id="test2" onload="frameLoaded();" type="content"
+          src="http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_documentdomain.html" />
+  <iframe id="base" onload="frameLoaded();" type="content"
+          src="http://example.org/tests/js/xpconnect/tests/mochitest/file_documentdomain.html" />
+</window>

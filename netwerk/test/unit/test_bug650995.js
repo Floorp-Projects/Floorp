@@ -27,10 +27,9 @@ function SyncWithCacheThread(aFunc) {
                   Ci.nsICache.STORE_ANYWHERE,
                   Ci.nsICache.STREAM_BASED);
 
-  var cacheEntry = session.asyncOpenCacheEntry(
-                     "nonexistententry",
-                     Ci.nsICache.ACCESS_READ,
-                     sync_with_cache_IO_thread_cb);
+  session.asyncOpenCacheEntry("nonexistententry",
+                              Ci.nsICache.ACCESS_READ,
+                              sync_with_cache_IO_thread_cb);
 }
 var sync_with_cache_IO_thread_cb = {
   listener: null,

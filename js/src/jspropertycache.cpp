@@ -195,7 +195,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
             *objp = scopeObj;
 #ifdef DEBUG
         PropertyName *name = GetNameFromBytecode(cx, script, pc, op);
-        JS_ASSERT(pobj->nativeContains(cx, NameToId(name)));
+        JS_ASSERT(pobj->nativeContainsNoAllocation(NameToId(name)));
 #endif
         *pobjp = pobj;
         return NULL;

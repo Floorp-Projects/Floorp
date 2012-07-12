@@ -155,7 +155,7 @@ pref("media.raw.enabled", true);
 pref("media.ogg.enabled", true);
 #endif
 #ifdef MOZ_OPUS
-pref("media.opus.enabled", false);
+pref("media.opus.enabled", true);
 #endif
 #ifdef MOZ_WAVE
 pref("media.wave.enabled", true);
@@ -696,6 +696,15 @@ pref("javascript.options.mem.gc_incremental_slice_ms", 10);
 pref("javascript.options.mem.log", false);
 pref("javascript.options.gc_on_memory_pressure", true);
 
+pref("javascript.options.mem.gc_high_frequency_time_limit_ms", 1000);
+pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 100);
+pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 500);
+pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 300);
+pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
+pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
+pref("javascript.options.mem.gc_dynamic_heap_growth", true);
+pref("javascript.options.mem.gc_dynamic_mark_slice", true);
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
@@ -876,6 +885,8 @@ pref("network.http.spdy.coalesce-hostnames", true);
 pref("network.http.spdy.use-alternate-protocol", true);
 pref("network.http.spdy.ping-threshold", 44);
 pref("network.http.spdy.ping-timeout", 8);
+
+pref("network.http.diagnostics", false);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -3620,3 +3631,5 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 // likely leak)?  This should be longer than it usually takes for an eligible
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
+
+pref("social.enabled", false);

@@ -10,6 +10,7 @@
     <RelativeLayout android:id="@+id/menu_panel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
                     android:background="@drawable/menu_popup_bg">
 
         <!-- MenuPanel will be added here dynamically -->
@@ -20,7 +21,8 @@
                android:layout_width="28dip"
                android:layout_height="10dip"
                android:layout_marginTop="2dip"
-               android:layout_alignParentRight="true"
+               android:layout_marginRight="8dip"
+               android:layout_alignRight="@id/menu_panel"
                android:src="@drawable/menu_popup_arrow"
                android:scaleType="fitXY"/>
 

@@ -6,6 +6,7 @@
 #include "mozilla/Services.h"
 
 #include "nsHashKeys.h"
+#include "nsGlobalWindow.h"
 #include "nsClassHashtable.h"
 #include "nsObserverService.h"
 
@@ -27,7 +28,7 @@ public:
     nsDOMMediaStream* aStream, TrackID aListenId)
     : mSource(aSource)
     , mStream(aStream)
-    , mId(aListenId)
+    , mID(aListenId)
     , mValid(true) {}
 
   void
@@ -46,8 +47,8 @@ public:
   NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming)
   {
     if (aConsuming == CONSUMED) {
-      nsRefPtr<SourceMediaStream> stream = mStream->GetStream()->AsSourceStream();
-      mSource->Start(stream, mId);
+      SourceMediaStream* stream = mStream->GetStream()->AsSourceStream();
+      mSource->Start(stream, mID);
       return;
     }
 
@@ -62,12 +63,11 @@ public:
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
     TrackRate aTrackRate, TrackTicks aTrackOffset,
     PRUint32 aTrackEvents, const MediaSegment& aQueuedMedia) {}
-  nsresult Run() { return NS_OK; }
 
 private:
-  nsCOMPtr<MediaEngineSource> mSource;
+  nsRefPtr<MediaEngineSource> mSource;
   nsCOMPtr<nsDOMMediaStream> mStream;
-  TrackID mId;
+  TrackID mID;
   bool mValid;
 };
 
@@ -89,10 +89,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  Mutex* GetLock() {
-    return mLock;
-  }
-
   MediaEngine* GetBackend();
   WindowTable* GetActiveWindows();
 
@@ -106,20 +102,17 @@ private:
   MediaManager()
   : mBackend(nsnull)
   , mMediaThread(nsnull) {
-    mLock = new mozilla::Mutex("MediaManager::StreamListenersLock");
     mActiveWindows.Init();
   };
   MediaManager(MediaManager const&) {};
 
   ~MediaManager() {
-    delete mLock;
     delete mBackend;
   };
 
   MediaEngine* mBackend;
   nsCOMPtr<nsIThread> mMediaThread;
 
-  Mutex* mLock;
   WindowTable mActiveWindows;
 
   static nsRefPtr<MediaManager> sSingleton;

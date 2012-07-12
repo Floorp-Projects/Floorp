@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync.synchronizer;
 
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
@@ -74,6 +75,9 @@ implements RecordsChannelDelegate,
   private boolean flowAToBCompleted = false;
   private boolean flowBToACompleted = false;
 
+  protected final AtomicInteger numInboundRecords = new AtomicInteger(-1);
+  protected final AtomicInteger numOutboundRecords = new AtomicInteger(-1);
+
   /*
    * Public API: constructor, init, synchronize.
    */
@@ -98,6 +102,30 @@ implements RecordsChannelDelegate,
     this.getSynchronizer().repositoryA.createSession(this, context);
   }
 
+  /**
+   * Get the number of records fetched from the first repository (usually the
+   * server, hence inbound).
+   * <p>
+   * Valid only after first flow has completed.
+   *
+   * @return number of records, or -1 if not valid.
+   */
+  public int getInboundCount() {
+    return numInboundRecords.get();
+  }
+
+  /**
+   * Get the number of records fetched from the second repository (usually the
+   * local store, hence outbound).
+   * <p>
+   * Valid only after second flow has completed.
+   *
+   * @return number of records, or -1 if not valid.
+   */
+  public int getOutboundCount() {
+    return numOutboundRecords.get();
+  }
+
   // These are accessed by `abort` and `synchronize`, both of which are synchronized.
   // Guarded by `this`.
   protected RecordsChannel channelAToB;
@@ -107,6 +135,9 @@ implements RecordsChannelDelegate,
    * Please don't call this until you've been notified with onInitialized.
    */
   public synchronized void synchronize() {
+    numInboundRecords.set(-1);
+    numOutboundRecords.set(-1);
+
     // First thing: decide whether we should.
     if (!sessionA.dataAvailable() &&
         !sessionB.dataAvailable()) {
@@ -178,6 +209,7 @@ implements RecordsChannelDelegate,
     Logger.debug(LOG_TAG, "Fetch end is " + fetchEnd + ". Store end is " + storeEnd + ". Starting next.");
     pendingATimestamp = fetchEnd;
     storeEndBTimestamp = storeEnd;
+    numInboundRecords.set(recordsChannel.getFetchCount());
     flowAToBCompleted = true;
     channelBToA.flow();
   }
@@ -196,6 +228,7 @@ implements RecordsChannelDelegate,
 
     pendingBTimestamp = fetchEnd;
     storeEndATimestamp = storeEnd;
+    numOutboundRecords.set(recordsChannel.getFetchCount());
     flowBToACompleted = true;
 
     // Finish the two sessions.

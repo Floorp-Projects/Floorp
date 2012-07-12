@@ -425,7 +425,7 @@ Probes::exitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
 #endif
 
     JSRuntime *rt = cx->runtime;
-    if (rt->spsProfiler.enabled() && fp->hasPushedSPSFrame())
+    if (fp->hasPushedSPSFrame())
         rt->spsProfiler.exit(cx, script, maybeFun);
     return ok;
 }

@@ -413,20 +413,53 @@ enum TokenStreamFlags
 
 struct Parser;
 
+struct CompileError {
+    JSContext *cx;
+    JSErrorReport report;
+    char *message;
+    bool hasCharArgs;
+    CompileError(JSContext *cx)
+     : cx(cx), message(NULL), hasCharArgs(false)
+    {
+        PodZero(&report);
+    }
+    ~CompileError();
+    void throwError();
+};
+
+namespace StrictMode {
+/* For an explanation of how these are used, see the comment in the FunctionBox definition. */
+enum StrictModeState {
+    NOTSTRICT,
+    UNKNOWN,
+    STRICT
+};
+}
+
+inline StrictMode::StrictModeState
+StrictModeFromContext(JSContext *cx)
+{
+    return cx->hasRunOption(JSOPTION_STRICT_MODE) ? StrictMode::STRICT : StrictMode::UNKNOWN;
+}
+
 // Ideally, tokenizing would be entirely independent of context.  But the
 // strict mode flag, which is in SharedContext, affects tokenizing, and
 // TokenStream needs to see it.
 //
-// This class constitutes a tiny back-channel from TokenStream to the strict
-// mode flag that avoids exposing the rest of SharedContext to TokenStream.  
-// get() is implemented in Parser.cpp.
+// This class is a tiny back-channel from TokenStream to the strict mode flag
+// that avoids exposing the rest of SharedContext to TokenStream. get()
+// returns the current strict mode state. The other two methods get and set
+// the queuedStrictModeError member of TreeContext. StrictModeGetter's
+// non-inline methods are implemented in Parser.cpp.
 //
 class StrictModeGetter {
     Parser *parser;
   public:
     StrictModeGetter(Parser *p) : parser(p) { }
 
-    bool get() const;
+    StrictMode::StrictModeState get() const;
+    CompileError *queuedStrictModeError() const;
+    void setQueuedStrictModeError(CompileError *e);
 };
 
 class TokenStream
@@ -437,7 +470,7 @@ class TokenStream
         PARA_SEPARATOR = 0x2029
     };
 
-    static const size_t ntokens = 4;                /* 1 current + 2 lookahead, rounded
+    static const size_t ntokens = 4;                /* 1 current + 3 lookahead, rounded
                                                        to power of 2 to avoid divmod by 3 */
     static const unsigned ntokensMask = ntokens - 1;
 
@@ -467,7 +500,9 @@ class TokenStream
     /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool allowsXML() const { return allowXML && !isStrictMode(); }
+    // TokenStream::allowsXML() can be true even if Parser::allowsXML() is
+    // false. Read the comment at Parser::allowsXML() to find out why.
+    bool allowsXML() const { return allowXML && strictModeState() != StrictMode::STRICT; }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
 
@@ -491,14 +526,15 @@ class TokenStream
     void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
-    void setOctalCharacterEscape(bool enabled = true) { setFlag(enabled, TSF_OCTAL_CHAR); }
 
-    bool isStrictMode() const { return strictModeGetter ? strictModeGetter->get() : false; }
+    StrictMode::StrictModeState strictModeState() const
+    {
+        return strictModeGetter ? strictModeGetter->get() : StrictMode::NOTSTRICT;
+    }
     bool isXMLTagMode() const { return !!(flags & TSF_XMLTAGMODE); }
     bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
-    bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
@@ -576,7 +612,7 @@ class TokenStream
 
     TokenKind peekToken() {
         if (lookahead != 0) {
-            JS_ASSERT(lookahead == 1);
+            JS_ASSERT(lookahead <= 2);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
         TokenKind tt = getTokenInternal();
@@ -594,7 +630,7 @@ class TokenStream
             return TOK_EOL;
 
         if (lookahead != 0) {
-            JS_ASSERT(lookahead == 1);
+            JS_ASSERT(lookahead <= 2);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
 

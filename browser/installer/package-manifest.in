@@ -95,6 +95,9 @@
 #elif MOZ_MSVC_REDIST == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
+#ifdef MOZ_METRO
+@BINPATH@/vccorlib110.dll
+#endif
 #endif
 #endif
 #endif
@@ -471,6 +474,9 @@
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
 @BINPATH@/components/AppsService.manifest
+@BINPATH@/components/nsDOMIdentity.js
+@BINPATH@/components/nsIDService.js
+@BINPATH@/components/Identity.manifest
 
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
@@ -505,7 +511,7 @@
 #endif
 
 ; ANGLE GLES-on-D3D rendering library
-#ifdef MOZ_ANGLE
+#ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
 @BINPATH@/@MOZ_D3DX9_DLL@
@@ -694,6 +700,8 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/webapprt/chrome.manifest
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
 @BINPATH@/webapprt/chrome/webapprt.manifest
+@BINPATH@/webapprt/chrome/@AB_CD@@JAREXT@
+@BINPATH@/webapprt/chrome/@AB_CD@.manifest
 @BINPATH@/webapprt/components/CommandLineHandler.js
 @BINPATH@/webapprt/components/ContentPermission.js
 @BINPATH@/webapprt/components/ContentPolicy.js

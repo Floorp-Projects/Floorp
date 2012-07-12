@@ -374,17 +374,17 @@ RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
     }
 
     DebugOnly<JSAtomState *> atomState = &cx->runtime->atomState;
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->lastIndexAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->lastIndexAtom))->slot() ==
               LAST_INDEX_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->sourceAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->sourceAtom))->slot() ==
               SOURCE_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->globalAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->globalAtom))->slot() ==
               GLOBAL_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->ignoreCaseAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->ignoreCaseAtom))->slot() ==
               IGNORE_CASE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->multilineAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->multilineAtom))->slot() ==
               MULTILINE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookupNoAllocation(cx, NameToId(atomState->stickyAtom))->slot() ==
+    JS_ASSERT(self->nativeLookupNoAllocation(NameToId(atomState->stickyAtom))->slot() ==
               STICKY_FLAG_SLOT);
 
     /*
@@ -684,13 +684,13 @@ js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
         return false;
     if (mode == XDR_DECODE) {
         RegExpFlag flags = RegExpFlag(flagsword);
-        RegExpObject *reobj = RegExpObject::createNoStatics(xdr->cx(), source, flags, NULL);
+        Rooted<RegExpObject*> reobj(xdr->cx(), RegExpObject::createNoStatics(xdr->cx(), source, flags, NULL));
         if (!reobj)
             return false;
 
-        if (!reobj->clearParent(xdr->cx()))
+        if (!JSObject::clearParent(xdr->cx(), reobj))
             return false;
-        if (!reobj->clearType(xdr->cx()))
+        if (!JSObject::clearType(xdr->cx(), reobj))
             return false;
         objp->init(reobj);
     }
@@ -709,12 +709,12 @@ js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
     /* NB: Keep this in sync with XDRScriptRegExpObject. */
 
     RootedAtom source(cx, reobj.getSource());
-    RegExpObject *clone = RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL);
+    Rooted<RegExpObject*> clone(cx, RegExpObject::createNoStatics(cx, source, reobj.getFlags(), NULL));
     if (!clone)
         return NULL;
-    if (!clone->clearParent(cx))
+    if (!JSObject::clearParent(cx, clone))
         return NULL;
-    if (!clone->clearType(cx))
+    if (!JSObject::clearType(cx, clone))
         return NULL;
     return clone;
 }

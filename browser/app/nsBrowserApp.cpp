@@ -240,40 +240,13 @@ int main(int argc, char* argv[])
   struct rusage initialRUsage;
   gotCounters = !getrusage(RUSAGE_SELF, &initialRUsage);
 #elif defined(XP_WIN)
-  // Don't change the order of these enumeration constants, the order matters
-  // for reporting telemetry data.  If new values are added adjust the
-  // STARTUP_USING_PRELOAD_TRIAL histogram.
-  enum PreloadType{ PREFETCH_PRELOAD,
-                    PREFETCH_NO_PRELOAD,
-                    NO_PREFETCH_PRELOAD,
-                    NO_PREFETCH_NO_PRELOAD };
-  PreloadType preloadType;
-
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
-
-  srand(time(NULL));
-  bool shouldUsePreload = rand() % 2 == 0;
-
-  if (IsPrefetchDisabledViaService()) {
-    if (shouldUsePreload) {
-      preloadType = NO_PREFETCH_PRELOAD;
-    }  else {
-      preloadType = NO_PREFETCH_NO_PRELOAD;
-    }
-  } else {
-    if (shouldUsePreload) {
-      preloadType = PREFETCH_PRELOAD;
-    }  else {
-      preloadType = PREFETCH_NO_PRELOAD;
-    }
-  }
-
-  if (shouldUsePreload)
 #endif
-  {
-      XPCOMGlueEnablePreload();
-  }
+
+#if !defined(XP_WIN)
+  XPCOMGlueEnablePreload();
+#endif
 
   rv = XPCOMGlueStartup(exePath);
   if (NS_FAILED(rv)) {
@@ -293,11 +266,6 @@ int main(int argc, char* argv[])
 
 #ifdef XRE_HAS_DLL_BLOCKLIST
   XRE_SetupDllBlocklist();
-#endif
-
-#if defined(XP_WIN)
-  XRE_TelemetryAccumulate(mozilla::Telemetry::STARTUP_USING_PRELOAD_TRIAL,
-                          preloadType);
 #endif
 
   if (gotCounters) {

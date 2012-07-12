@@ -36,10 +36,10 @@ const TRANSITION_CLASS = "moz-styleeditor-transitioning";
 const TRANSITION_DURATION_MS = 500;
 const TRANSITION_RULE = "\
 :root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
--moz-transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
--moz-transition-delay: 0ms !important;\
--moz-transition-timing-function: ease-out !important;\
--moz-transition-property: all !important;\
+transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
+transition-delay: 0ms !important;\
+transition-timing-function: ease-out !important;\
+transition-property: all !important;\
 }";
 
 /**

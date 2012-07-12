@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
   let manifests = [
     { // normal provider
@@ -18,14 +20,16 @@ function run_test() {
   manifests.forEach(function (manifest) {
     MANIFEST_PREFS.setCharPref(manifest.origin, JSON.stringify(manifest));
   });
-  do_register_cleanup(function () MANIFEST_PREFS.deleteBranch(""));
 
+  // Enable the service for this test
+  Services.prefs.setBoolPref("social.enabled", true);
   Cu.import("resource://gre/modules/SocialService.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
   runner.appendIterator(testGetProvider(manifests, next));
   runner.appendIterator(testGetProviderList(manifests, next));
+  runner.appendIterator(testEnabled(manifests, next));
   runner.next();
 }
 
@@ -48,7 +52,31 @@ function testGetProviderList(manifests, next) {
     let providerIdx = providers.map(function (p) p.origin).indexOf(manifests[i].origin);
     let provider = providers[providerIdx];
     do_check_true(!!provider);
+    do_check_true(provider.enabled);
     do_check_eq(provider.workerURL, manifests[i].workerURL);
     do_check_eq(provider.name, manifests[i].name);
   }
+}
+
+function testEnabled(manifests, next) {
+  let providers = yield SocialService.getProviderList(next);
+  do_check_true(providers.length >= manifests.length);
+  do_check_true(SocialService.enabled);
+  providers.forEach(function (provider) {
+    do_check_true(provider.enabled);
+  });
+
+  SocialService.enabled = false;
+  do_check_true(!Services.prefs.getBoolPref("social.enabled"));
+  do_check_true(!SocialService.enabled);
+  providers.forEach(function (provider) {
+    do_check_true(!provider.enabled);
+  });
+
+  // Check that setting the pref directly updates things accordingly
+  Services.prefs.setBoolPref("social.enabled", true);
+  do_check_true(SocialService.enabled);
+  providers.forEach(function (provider) {
+    do_check_true(provider.enabled);
+  });
 }

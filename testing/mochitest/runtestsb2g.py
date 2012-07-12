@@ -183,6 +183,7 @@ class B2GMochitest(Mochitest):
     _automation = None
     _dm = None
     localProfile = None
+    testDir = '/data/local/tests'
 
     def __init__(self, automation, devmgr, options):
         self._automation = automation
@@ -193,7 +194,6 @@ class B2GMochitest(Mochitest):
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.userJS = '/data/local/user.js'
-        self.testDir = '/data/local/tests'
         self.remoteMozillaPath = '/data/b2g/mozilla'
         self.remoteProfilesIniPath = os.path.join(self.remoteMozillaPath, 'profiles.ini')
         self.originalProfilesIni = None
@@ -405,7 +405,8 @@ def main():
     auto.marionette = marionette
 
     # create the DeviceManager
-    kwargs = {'adbPath': options.adbPath}
+    kwargs = {'adbPath': options.adbPath,
+              'deviceRoot': B2GMochitest.testDir}
     if options.deviceIP:
         kwargs.update({'host': options.deviceIP,
                        'port': options.devicePort})
@@ -420,10 +421,6 @@ def main():
     auto.setProduct("b2g")
 
     mochitest = B2GMochitest(auto, dm, options)
-
-    # Create /data/local/tests, to force its use by DeviceManagerADB;
-    # B2G won't run correctly with the profile installed to /mnt/sdcard.
-    dm.mkDirs(mochitest.testDir)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):

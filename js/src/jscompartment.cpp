@@ -48,6 +48,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcPreserveCode(false),
     gcBytes(0),
     gcTriggerBytes(0),
+    gcHeapGrowthFactor(3.0),
     hold(false),
     isSystemCompartment(false),
     lastCodeRelease(0),

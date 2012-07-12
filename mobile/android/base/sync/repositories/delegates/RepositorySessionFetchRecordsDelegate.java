@@ -23,20 +23,5 @@ public interface RepositorySessionFetchRecordsDelegate {
    */
   public void onFetchCompleted(final long fetchEnd);
 
-  /**
-   * Shorthand for calling onFetchedRecord for each record in turn, then
-   * calling onFetchCompleted.
-   *
-   * @param records
-   *        An array of fetched records. Can be empty.
-   *
-   * @param fetchEnd
-   *        A millisecond-resolution timestamp indicating the *remote* timestamp
-   *        at the end of the range of records. Usually this is the timestamp at
-   *        which the request was received.
-   *        E.g., the (normalized) value of the X-Weave-Timestamp header.
-   */
-  public void onFetchSucceeded(Record[] records, final long fetchEnd);
-
   public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor);
 }
