@@ -831,7 +831,7 @@ ROLE(COMBOBOX_OPTION,
 ROLE(IMAGE_MAP,
      "image map",
      ATK_ROLE_IMAGE,
-     NSAccessibilityImageRole,
+     NSAccessibilityUnknownRole,
      ROLE_SYSTEM_GRAPHIC,
      ROLE_SYSTEM_GRAPHIC)
 

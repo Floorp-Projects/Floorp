@@ -92,6 +92,16 @@
     [super accessibilityPerformAction:action];
 }
 
+- (NSString*)customDescription
+{
+  return @"";
+}
+
+- (NSString*)value
+{
+  return @"";
+}
+
 - (NSURL*)url
 {
   if (!mGeckoAccessible || mGeckoAccessible->IsDefunct())
