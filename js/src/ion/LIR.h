@@ -564,8 +564,6 @@ class LDefinition
             return LDefinition::GENERAL;
           case MIRType_StackFrame:
             return LDefinition::GENERAL;
-          case MIRType_ArgObj:
-            return LDefinition::GENERAL;
           default:
             JS_NOT_REACHED("unexpected type");
             return LDefinition::GENERAL;
@@ -1149,8 +1147,7 @@ class LIRGraph
     uint32 argumentSlotCount() const {
         return argumentSlotCount_;
     }
-    bool addConstantToPool(double d, uint32 *index);
-    bool addConstantToPool(MConstant *ins, uint32 *index);
+    bool addConstantToPool(const Value &v, uint32 *index);
     size_t numConstants() const {
         return constantPool_.length();
     }

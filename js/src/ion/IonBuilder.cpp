@@ -67,7 +67,8 @@ IonBuilder::IonBuilder(JSContext *cx, HandleObject scopeChain, TempAllocator &te
     callerBuilder_(NULL),
     oracle(oracle),
     inliningDepth(inliningDepth),
-    failedBoundsCheck_(script->failedBoundsCheck)
+    failedBoundsCheck_(script->failedBoundsCheck),
+    lazyArguments_(NULL)
 {
     pc = info.startPC();
 }
@@ -342,6 +343,11 @@ IonBuilder::build()
 
     // Recompile to inline calls if this function is hot.
     insertRecompileCheck();
+
+    if (script->argumentsHasVarBinding() && !script->needsArgsObj()) {
+        lazyArguments_ = MConstant::New(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+        current->add(lazyArguments_);
+    }
 
     if (!traverseBytecode())
         return false;
@@ -3322,12 +3328,7 @@ IonBuilder::jsop_funapply(uint32 argc)
     // Pop apply function.
     current->pop();
 
-    // Call without inlining.
-    // return makeCall(target, argc, false);
-    MLazyArguments *lazyArgs = MLazyArguments::New();
-    current->add(lazyArgs);
-
-    MArgumentsLength *numArgs = MArgumentsLength::New(lazyArgs);
+    MArgumentsLength *numArgs = MArgumentsLength::New();
     current->add(numArgs);
 
     MApplyArgs *apply = MApplyArgs::New(target, argFunc, numArgs, argThis);
@@ -3789,12 +3790,20 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
         MIRType type = slotTypes[i];
         // Unbox the MOsrValue if it is known to be unboxable.
-        if (type != MIRType_Value && type != MIRType_Undefined && type != MIRType_Null) {
+        if (type != MIRType_Value &&
+            type != MIRType_Undefined &&
+            type != MIRType_Null &&
+            type != MIRType_Magic)
+        {
             MDefinition *def = osrBlock->getSlot(i);
             JS_ASSERT(def->type() == MIRType_Value);
+
             MInstruction *actual = MUnbox::New(def, slotTypes[i], MUnbox::Infallible);
             osrBlock->add(actual);
             osrBlock->rewriteSlot(i, actual);
+        } else if (type == MIRType_Magic) {
+            JS_ASSERT(lazyArguments_);
+            osrBlock->rewriteSlot(i, lazyArguments_);
         }
     }
 
@@ -4753,17 +4762,18 @@ IonBuilder::jsop_length_fastPath()
 bool
 IonBuilder::jsop_arguments()
 {
-    MInstruction *ins = MLazyArguments::New();
-    current->add(ins);
-    current->push(ins);
+    JS_ASSERT(lazyArguments_);
+    current->push(lazyArguments_);
     return true;
 }
 
 bool
 IonBuilder::jsop_arguments_length()
 {
-    MDefinition *args = current->pop();
-    MInstruction *ins = MArgumentsLength::New(args);
+    // Type Inference has guaranteed this is an optimized arguments object.
+    current->pop();
+
+    MInstruction *ins = MArgumentsLength::New();
     current->add(ins);
     current->push(ins);
     return true;
@@ -4776,10 +4786,12 @@ IonBuilder::jsop_arguments_getelem()
     types::TypeSet *types = oracle->propertyRead(script, pc);
 
     MDefinition *idx = current->pop();
-    MDefinition *args = current->pop();
+
+    // Type Inference has guaranteed this is an optimized arguments object.
+    current->pop();
 
     // To ensure that we are not looking above the number of actual arguments.
-    MArgumentsLength *length = MArgumentsLength::New(args);
+    MArgumentsLength *length = MArgumentsLength::New();
     current->add(length);
 
     // Ensure idx is an integer.

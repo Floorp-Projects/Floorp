@@ -1034,19 +1034,6 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
     MUnbox *mir = unbox->mir();
     Register type = ToRegister(unbox->type());
 
-    if (mir->type() == MIRType_ArgObj) {
-        Register payload = ToRegister(unbox->payload());
-        if (mir->fallible()) {
-            masm.ma_cmp(type, ImmTag(JSVAL_TAG_MAGIC));
-            if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
-                return false;
-            masm.ma_cmp(payload, Imm32(JS_OPTIMIZED_ARGUMENTS));
-            if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
-            return false;
-        }
-        return true;
-    }
-
     if (mir->fallible()) {
         masm.ma_cmp(type, Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))

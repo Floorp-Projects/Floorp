@@ -125,7 +125,7 @@ IsPhiRedundant(MPhi *phi)
     MDefinition *first = phi->getOperand(0);
 
     for (size_t i = 1; i < phi->numOperands(); i++) {
-        if (first != phi->getOperand(i))
+        if (phi->getOperand(i) != first && phi->getOperand(i) != phi)
             return NULL;
     }
 
