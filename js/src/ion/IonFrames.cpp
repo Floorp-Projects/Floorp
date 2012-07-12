@@ -693,11 +693,6 @@ SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
         return StringValue(reinterpret_cast<JSString *>(payload));
       case JSVAL_TYPE_OBJECT:
         return ObjectValue(*reinterpret_cast<JSObject *>(payload));
-      case JSVAL_TYPE_MAGIC:
-        // This is an argument object.
-        if (payload == 0)
-            return MagicValue(JS_OPTIMIZED_ARGUMENTS);
-        return ObjectValue(*reinterpret_cast<JSObject *>(payload));
       default:
         JS_NOT_REACHED("unexpected type - needs payload");
         return UndefinedValue();
