@@ -196,9 +196,9 @@ public:
     mBackBuffer = aBuffer;
   }
 
-  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
-                                     gfxSharedImageSurface* aUBuffer,
-                                     gfxSharedImageSurface* aVBuffer)
+  virtual void SetBackBufferYUVImage(const SurfaceDescriptor& aYBuffer,
+                                     const SurfaceDescriptor& aUBuffer,
+                                     const SurfaceDescriptor& aVBuffer)
   {
     mBackBufferY = aYBuffer;
     mBackBufferU = aUBuffer;
@@ -207,7 +207,9 @@ public:
 
   virtual void Disconnect()
   {
-    mBackBufferY = mBackBufferU = mBackBufferV = nsnull;
+    mBackBufferY = SurfaceDescriptor();
+    mBackBufferU = SurfaceDescriptor();
+    mBackBufferV = SurfaceDescriptor();
     mBackBuffer = SurfaceDescriptor();
     BasicShadowableLayer::Disconnect();
   }
@@ -217,11 +219,11 @@ public:
     if (IsSurfaceDescriptorValid(mBackBuffer)) {
       BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     }
-    if (mBackBufferY) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferY);
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferU);
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferV);
-    }
+    if (IsSurfaceDescriptorValid(mBackBufferY)) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBufferY);
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBufferU);
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBufferV);
+}
   }
 
 private:
@@ -234,9 +236,9 @@ private:
   // for RGB images only mBackSurface is used.
   SurfaceDescriptor mBackBuffer;
   bool mBufferIsOpaque;
-  nsRefPtr<gfxSharedImageSurface> mBackBufferY;
-  nsRefPtr<gfxSharedImageSurface> mBackBufferU;
-  nsRefPtr<gfxSharedImageSurface> mBackBufferV;
+  SurfaceDescriptor mBackBufferY;
+  SurfaceDescriptor mBackBufferU;
+  SurfaceDescriptor mBackBufferV;
   gfxIntSize mCbCrSize;
 };
  
@@ -271,38 +273,52 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
     NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");
 
-    if (mSize != data->mYSize || mCbCrSize != data->mCbCrSize || !mBackBufferY) {
+    if (mSize != data->mYSize || mCbCrSize != data->mCbCrSize || !IsSurfaceDescriptorValid(mBackBufferY)) {
       DestroyBackBuffer();
       mSize = data->mYSize;
       mCbCrSize = data->mCbCrSize;
 
-      if (!BasicManager()->AllocBuffer(mSize, gfxASurface::CONTENT_ALPHA,
-                                       getter_AddRefs(mBackBufferY)) ||
-          !BasicManager()->AllocBuffer(mCbCrSize, gfxASurface::CONTENT_ALPHA,
-                                       getter_AddRefs(mBackBufferU)) ||
-          !BasicManager()->AllocBuffer(mCbCrSize, gfxASurface::CONTENT_ALPHA,
-                                       getter_AddRefs(mBackBufferV))) {
+      // We either allocate all three planes or none.
+      if (!BasicManager()->AllocBufferWithCaps(mSize,
+                                               gfxASurface::CONTENT_ALPHA,
+                                               MAP_AS_IMAGE_SURFACE,
+                                               &mBackBufferY) ||
+          !BasicManager()->AllocBufferWithCaps(mCbCrSize,
+                                               gfxASurface::CONTENT_ALPHA,
+                                               MAP_AS_IMAGE_SURFACE,
+                                               &mBackBufferU) ||
+          !BasicManager()->AllocBufferWithCaps(mCbCrSize,
+                                               gfxASurface::CONTENT_ALPHA,
+                                               MAP_AS_IMAGE_SURFACE,
+                                               &mBackBufferV)) {
         NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
       }
     }
 
+    nsRefPtr<gfxASurface> dyas = BasicManager()->OpenDescriptor(mBackBufferY);
+    nsRefPtr<gfxImageSurface> dy = dyas->GetAsImageSurface();
+
     for (int i = 0; i < data->mYSize.height; i++) {
-      memcpy(mBackBufferY->Data() + i * mBackBufferY->Stride(),
+      memcpy(dy->Data() + i * dy->Stride(),
              data->mYChannel + i * data->mYStride,
              data->mYSize.width);
     }
+
+    nsRefPtr<gfxASurface> duas = BasicManager()->OpenDescriptor(mBackBufferU);
+    nsRefPtr<gfxImageSurface> du = duas->GetAsImageSurface();
+    nsRefPtr<gfxASurface> dvas = BasicManager()->OpenDescriptor(mBackBufferV);
+    nsRefPtr<gfxImageSurface> dv = dvas->GetAsImageSurface();
+
     for (int i = 0; i < data->mCbCrSize.height; i++) {
-      memcpy(mBackBufferU->Data() + i * mBackBufferU->Stride(),
+      memcpy(du->Data() + i * du->Stride(),
              data->mCbChannel + i * data->mCbCrStride,
              data->mCbCrSize.width);
-      memcpy(mBackBufferV->Data() + i * mBackBufferV->Stride(),
+      memcpy(dv->Data() + i * dv->Stride(),
              data->mCrChannel + i * data->mCbCrStride,
              data->mCbCrSize.width);
     }
 
-    YUVImage yuv(mBackBufferY->GetShmem(),
-                 mBackBufferU->GetShmem(),
-                 mBackBufferV->GetShmem(),
+    YUVImage yuv(mBackBufferY, mBackBufferU, mBackBufferV,
                  data->GetPictureRect());
 
     BasicManager()->PaintedImage(BasicManager()->Hold(this),
