@@ -117,7 +117,7 @@ TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
     return res;
 }
 
-TypeOracle::Binary
+TypeOracle::BinaryTypes
 TypeInferenceOracle::incslot(JSScript *script, jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
@@ -126,18 +126,18 @@ TypeInferenceOracle::incslot(JSScript *script, jsbytecode *pc)
     TypeSet *types = NULL;
     if (js_CodeSpec[op].type() == JOF_LOCAL) {
         if (script->analysis()->trackSlot(LocalSlot(script, index)))
-            return binaryOp(script, pc);
+            return binaryTypes(script, pc);
         types = TypeScript::LocalTypes(script, index);
     } else {
         if (script->analysis()->trackSlot(ArgSlot(index)))
-            return binaryOp(script, pc);
+            return binaryTypes(script, pc);
         types = TypeScript::ArgTypes(script, index);
     }
 
-    Binary b;
-    b.lhs = getMIRType(types);
-    b.rhs = MIRType_Int32;
-    b.rval = getMIRType(script->analysis()->pushedTypes(pc, 0));
+    BinaryTypes b;
+    b.lhsTypes = types;
+    b.rhsTypes = NULL;
+    b.outTypes = script->analysis()->pushedTypes(pc, 0);
     return b;
 }
 

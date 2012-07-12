@@ -3467,7 +3467,7 @@ IonBuilder::jsop_incslot(JSOp op, uint32 slot)
 {
     int32 amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
     bool post = !!(js_CodeSpec[op].format & JOF_POST);
-    TypeOracle::Binary b = oracle->incslot(script, pc);
+    TypeOracle::BinaryTypes types = oracle->incslot(script, pc);
 
     // Grab the value at the local slot, and convert it to a number. Currently,
     // we use ToInt32 or ToNumber which are fallible but idempotent. This whole
@@ -3476,9 +3476,11 @@ IonBuilder::jsop_incslot(JSOp op, uint32 slot)
     current->pushSlot(slot);
     MDefinition *value = current->pop();
     MInstruction *lhs;
-    if (b.lhs == MIRType_Int32) {
+
+    JSValueType knownType = types.lhsTypes->getKnownTypeTag(cx);
+    if (knownType == JSVAL_TYPE_INT32) {
         lhs = MToInt32::New(value);
-    } else if (b.lhs == MIRType_Double) {
+    } else if (knownType == JSVAL_TYPE_DOUBLE) {
         lhs = MToDouble::New(value);
     } else {
         // Don't compile effectful incslot ops.
@@ -3493,7 +3495,6 @@ IonBuilder::jsop_incslot(JSOp op, uint32 slot)
     MConstant *rhs = MConstant::New(Int32Value(amt));
     current->add(rhs);
 
-    TypeOracle::BinaryTypes types = oracle->binaryTypes(script, pc);
     MAdd *result = MAdd::New(lhs, rhs);
     current->add(result);
     result->infer(cx, types);
