@@ -126,9 +126,6 @@ ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
 
-# OTS uses uncompress2() from libz, so we need to link with this
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
-
 ifdef MOZ_WEBRTC
 EXTRA_DSO_LDOPTS += \
   -LIBPATH:"$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)" \

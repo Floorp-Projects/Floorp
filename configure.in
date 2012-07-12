@@ -54,7 +54,6 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10511
-MOZZLIB=1.2.3
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -1085,8 +1084,6 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/media/libjpeg)'
-MOZ_ZLIB_CFLAGS=
-MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)'
 MOZ_BZ2_CFLAGS=
 MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
 MOZ_PNG_CFLAGS=
@@ -4034,51 +4031,22 @@ if test -n "${JPEG_DIR}" -a -d "${JPEG_DIR}" -a "$MOZ_NATIVE_JPEG" = 1; then
     MOZ_JPEG_CFLAGS="-I${JPEG_DIR}/include"
     MOZ_JPEG_LIBS="-L${JPEG_DIR}/lib ${MOZ_JPEG_LIBS}"
 fi
+fi # SKIP_LIBRARY_CHECKS
 
 dnl system ZLIB support
 dnl ========================================================
-MOZ_ARG_WITH_STRING(system-zlib,
-[  --with-system-zlib[=PFX]
-                          Use system libz [installed at prefix PFX]],
-    ZLIB_DIR=$withval)
+MOZ_ZLIB_CHECK([1.2.3])
 
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-if test -n "${ZLIB_DIR}" -a "${ZLIB_DIR}" != "yes"; then
-    CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
-    LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
-fi
-if test -z "$ZLIB_DIR" -o "$ZLIB_DIR" = no; then
-    MOZ_NATIVE_ZLIB=
-else
-    AC_CHECK_LIB(z, gzread, [MOZ_NATIVE_ZLIB=1 MOZ_ZLIB_LIBS="-lz"],
-	[MOZ_NATIVE_ZLIB=])
-fi
-if test "$MOZ_NATIVE_ZLIB" = 1; then
-    MOZZLIBNUM=`echo $MOZZLIB | awk -F. '{printf "0x%x\n", ((($1 * 16 + $2) * 16) + $3) * 16 + $4}'`
-    AC_TRY_COMPILE([ #include <stdio.h>
-                     #include <string.h>
-                     #include <zlib.h> ],
-                   [ #if ZLIB_VERNUM < $MOZZLIBNUM
-                     #error "Insufficient zlib version ($MOZZLIBNUM required)."
-                     #endif ],
-                   MOZ_NATIVE_ZLIB=1,
-                   AC_MSG_ERROR([Insufficient zlib version for --with-system-zlib ($MOZZLIB required)]))
-fi
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$MOZ_NATIVE_ZLIB" = 1; then
-    MOZ_ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
-    MOZ_ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
+if test "$MOZ_NATIVE_ZLIB" != 1; then
+    MOZ_ZLIB_CFLAGS=
+    MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,'"$_objdir"'/modules/zlib/src)'
 fi
 
 if test "$MOZ_LINKER" = 1 -a "$MOZ_NATIVE_ZLIB" != 1; then
     AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
+if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system BZIP2 Support
 dnl ========================================================
 MOZ_ARG_WITH_STRING(system-bz2,
@@ -8524,14 +8492,11 @@ AC_SUBST(MOZ_NATIVE_MAKEDEPEND)
 AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)
-AC_SUBST(MOZ_NATIVE_ZLIB)
 AC_SUBST(MOZ_NATIVE_BZ2)
 
 AC_SUBST(MOZ_FLEXBOX)
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
-AC_SUBST(MOZ_ZLIB_CFLAGS)
-AC_SUBST(MOZ_ZLIB_LIBS)
 AC_SUBST(MOZ_BZ2_CFLAGS)
 AC_SUBST(MOZ_BZ2_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
@@ -9187,6 +9152,12 @@ fi
 if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
    export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
+if test "$MOZ_NATIVE_ZLIB" != 1 -a "$OS_ARCH" = "WINNT"; then
+   MOZ_ZLIB_LIBS=
+fi
+export MOZ_NATIVE_ZLIB
+export MOZ_ZLIB_CFLAGS
+export MOZ_ZLIB_LIBS
 export MOZ_APP_NAME
 export STLPORT_CPPFLAGS
 export STLPORT_LDFLAGS
