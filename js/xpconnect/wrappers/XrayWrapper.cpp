@@ -1155,10 +1155,7 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
     // Redirect access straight to the wrapper if UniversalXPConnect is enabled.
     // We don't need to check for system principal here, because only content
     // scripts have Partially Transparent wrappers.
-    if (ContentScriptHasUniversalXPConnect())
-        return true;
-
-    return AccessCheck::documentDomainMakesSameOrigin(cx, UnwrapObject(wrapper));
+    return ContentScriptHasUniversalXPConnect();
 }
 
 JSObject *

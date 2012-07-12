@@ -46,7 +46,7 @@ AccessCheck::subsumes(JSCompartment *a, JSCompartment *b)
         return true;
 
     bool subsumes;
-    nsresult rv = aprin->SubsumesIgnoringDomain(bprin, &subsumes);
+    nsresult rv = aprin->Subsumes(bprin, &subsumes);
     NS_ENSURE_SUCCESS(rv, false);
 
     return subsumes;
@@ -74,10 +74,8 @@ AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
     obj = JS_ObjectToInnerObject(cx, obj);
 
     // Which lets us compare the current compartment against the old one.
-    return obj &&
-           (subsumes(js::GetObjectCompartment(wrapper),
-                     js::GetObjectCompartment(obj)) ||
-            documentDomainMakesSameOrigin(cx, obj));
+    return obj && subsumes(js::GetObjectCompartment(wrapper),
+                           js::GetObjectCompartment(obj));
 }
 
 bool
@@ -193,67 +191,6 @@ IsWindow(const char *name)
     return name[0] == 'W' && !strcmp(name, "Window");
 }
 
-static bool
-IsLocation(const char *name)
-{
-    return name[0] == 'L' && !strcmp(name, "Location");
-}
-
-static nsIPrincipal *
-GetPrincipal(JSObject *obj)
-{
-    NS_ASSERTION(!IS_SLIM_WRAPPER(obj), "global object is a slim wrapper?");
-    NS_ASSERTION(js::GetObjectClass(obj)->flags & JSCLASS_IS_GLOBAL,
-                 "Not a global object?");
-    NS_ASSERTION(!(js::GetObjectClass(obj)->flags & JSCLASS_IS_DOMJSCLASS),
-                 "Not sure what we should do with these yet!");
-    if (!IS_WN_WRAPPER(obj)) {
-        NS_ASSERTION(!(~js::GetObjectClass(obj)->flags &
-                       (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)),
-                     "bad object");
-        nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-            do_QueryInterface((nsISupports*)xpc_GetJSPrivate(obj));
-        NS_ASSERTION(objPrin, "global isn't nsIScriptObjectPrincipal?");
-        return objPrin->GetPrincipal();
-    }
-
-    nsIXPConnect *xpc = nsXPConnect::GetRuntimeInstance()->GetXPConnect();
-    return xpc->GetPrincipal(obj, true);
-}
-
-bool
-AccessCheck::documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj)
-{
-    JSObject *scope = JS_GetScriptedGlobal(cx);
-
-    nsIPrincipal *subject;
-    nsIPrincipal *object;
-
-    {
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(cx, scope))
-            return false;
-
-        subject = GetPrincipal(scope);
-    }
-
-    if (!subject)
-        return false;
-
-    {
-        JSAutoEnterCompartment ac;
-
-        if (!ac.enter(cx, obj))
-            return false;
-
-        object = GetPrincipal(JS_GetGlobalForObject(cx, obj));
-    }
-
-    bool subsumes;
-    return NS_SUCCEEDED(subject->Subsumes(object, &subsumes)) && subsumes;
-}
-
 bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid id,
                                           Wrapper::Action act)
@@ -266,13 +203,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
 
     JSObject *obj = Wrapper::wrappedObject(wrapper);
 
-    // LocationPolicy checks PUNCTURE first, so we should never get here for
-    // Location wrappers. For all other wrappers interested in cross-origin
-    // semantics, we want to allow puncturing only for the same-origin
-    // document.domain case.
+    // PUNCTURE Is always denied for cross-origin access.
     if (act == Wrapper::PUNCTURE) {
-        MOZ_ASSERT(!WrapperFactory::IsLocationObject(obj));
-        return documentDomainMakesSameOrigin(cx, obj);
+        return nsContentUtils::CallerHasUniversalXPConnect();
     }
 
     const char *name;
@@ -289,16 +222,6 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
     }
 
     if (IsWindow(name) && IsFrameId(cx, obj, id))
-        return true;
-
-    // Do the dynamic document.domain check.
-    //
-    // Location also needs a dynamic access check, but it's a different one, and
-    // we do it in LocationPolicy::check. Before LocationPolicy::check does that
-    // though, it first calls this function to check whether the property is
-    // accessible to anyone regardless of origin. So make sure not to do the
-    // document.domain check in that case.
-    if (!IsLocation(name) && documentDomainMakesSameOrigin(cx, obj))
         return true;
 
     return (act == Wrapper::SET)
