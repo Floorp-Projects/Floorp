@@ -2475,6 +2475,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
+  NS_ENSURE_ARG_POINTER(aEvent);
+  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    return NS_OK;
+  }
+
   //We often get out of sync state issues with mousedown events that
   //get interrupted by alerts/dialogs.
   //Check with the ESM to see if we should process this one
