@@ -278,7 +278,7 @@ class JarMaker(object):
     # chromebasepath is used for chrome registration manifests
     # %s is getting replaced with chrome/ for chrome.manifest, and with
     # an empty string for jarfile.manifest
-    chromebasepath = '%s' + jarfile
+    chromebasepath = '%s' + os.path.basename(jarfile)
     if self.outputFormat == 'jar':
       chromebasepath = 'jar:' + chromebasepath + '.jar!'
     chromebasepath += '/'
