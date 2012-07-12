@@ -10,6 +10,7 @@
 #include "gfxSharedImageSurface.h"
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
+#include "nsXULAppAPI.h"
 #include "RenderTrace.h"
 #include "sampler.h"
 
@@ -950,7 +951,8 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 
     // If we have a non-default target, we need to let our shadow manager draw
     // to it. This will happen at the end of the transaction.
-    if (aTarget && (aTarget != mDefaultTarget)) {
+    if (aTarget && (aTarget != mDefaultTarget) &&
+        XRE_GetProcessType() == GeckoProcessType_Default) {
       mShadowTarget = aTarget;
 
       // Create a temporary target for ourselves, so that mShadowTarget is only
