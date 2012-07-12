@@ -112,13 +112,6 @@ public:
     // Create a media stream.
     nsCOMPtr<nsDOMMediaStream> stream = nsDOMMediaStream::CreateInputStream();
 
-    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetOuterWindowWithId(mWindowID));
-
-    if (window && window->GetExtantDoc()) {
-      stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
-    }
-
     // Add our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
@@ -357,7 +350,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParam
 
   nsresult rv = aParams->GetPicture(&picture);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   /**
    * If we were asked to get a picture, before getting a snapshot, we check if
    * the calling page is allowed to open a popup. We do this because

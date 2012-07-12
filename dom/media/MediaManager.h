@@ -6,7 +6,6 @@
 #include "mozilla/Services.h"
 
 #include "nsHashKeys.h"
-#include "nsGlobalWindow.h"
 #include "nsClassHashtable.h"
 #include "nsObserverService.h"
 
