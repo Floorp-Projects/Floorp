@@ -66,7 +66,14 @@ function testEnabled(manifests, next) {
     do_check_true(provider.enabled);
   });
 
+  let notificationDisabledCorrect = false;
+  Services.obs.addObserver(function obs1(subj, topic, data) {
+    Services.obs.removeObserver(obs1, "social:pref-changed");
+    notificationDisabledCorrect = data == "disabled";
+  }, "social:pref-changed", false);
+
   SocialService.enabled = false;
+  do_check_true(notificationDisabledCorrect);
   do_check_true(!Services.prefs.getBoolPref("social.enabled"));
   do_check_true(!SocialService.enabled);
   providers.forEach(function (provider) {
@@ -74,7 +81,15 @@ function testEnabled(manifests, next) {
   });
 
   // Check that setting the pref directly updates things accordingly
+  let notificationEnabledCorrect = false;
+  Services.obs.addObserver(function obs2(subj, topic, data) {
+    Services.obs.removeObserver(obs2, "social:pref-changed");
+    notificationEnabledCorrect = data == "enabled";
+  }, "social:pref-changed", false);
+
   Services.prefs.setBoolPref("social.enabled", true);
+
+  do_check_true(notificationEnabledCorrect);
   do_check_true(SocialService.enabled);
   providers.forEach(function (provider) {
     do_check_true(provider.enabled);
