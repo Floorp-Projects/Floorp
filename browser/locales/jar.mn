@@ -120,6 +120,7 @@
     locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
     locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)
 #ifdef MOZ_WEBAPP_RUNTIME
+../webapprt/chrome/@AB_CD@.jar:
 % locale webapprt @AB_CD@ %locale/webapprt/
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
     locale/webapprt/webapp.properties              (%webapprt/webapp.properties)

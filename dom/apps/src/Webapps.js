@@ -51,6 +51,7 @@ WebappsRegistry.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
   __exposedProps__: {
                       install: 'r',
+                      installPackage: 'r',
                       getSelf: 'r',
                       getInstalled: 'r',
                       getNotInstalled: 'r',
@@ -61,7 +62,6 @@ WebappsRegistry.prototype = {
    * only the name property is mandatory
    */
   checkManifest: function(aManifest, aInstallOrigin) {
-    // TODO : check for install_allowed_from
     if (aManifest.name == undefined)
       return false;
 
@@ -87,7 +87,7 @@ WebappsRegistry.prototype = {
                                                                      app.installOrigin, app.installTime));
         break;
       case "Webapps:Install:Return:KO":
-        Services.DOMRequest.fireError(req, "DENIED");
+        Services.DOMRequest.fireError(req, msg.error || "DENIED");
         break;
       case "Webapps:GetSelf:Return:OK":
         if (msg.apps.length) {
@@ -181,6 +181,21 @@ WebappsRegistry.prototype = {
     cpmm.sendAsyncMessage("Webapps:GetNotInstalled", { origin: this._getOrigin(this._window.location.href),
                                                        oid: this._id,
                                                        requestID: this.getRequestId(request) });
+    return request;
+  },
+
+  installPackage: function(aPackageURL, aParams) {
+    let request = this.createRequest();
+    let requestID = this.getRequestId(request);
+
+    let receipts = (aParams && aParams.receipts &&
+                    Array.isArray(aParams.receipts)) ? aParams.receipts : [];
+    cpmm.sendAsyncMessage("Webapps:InstallPackage", { url: aPackageURL,
+                                                      receipts: receipts,
+                                                      requestID: requestID,
+                                                      oid: this._id,
+                                                      from: this._window.location.href,
+                                                      installOrigin: this._getOrigin(this._window.location.href) });
     return request;
   },
 

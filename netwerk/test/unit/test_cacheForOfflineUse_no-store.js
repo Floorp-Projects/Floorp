@@ -5,7 +5,7 @@ do_load_httpd_js();
 
 var httpServer = null;
 const testFileName = "test_nsHttpChannel_CacheForOfflineUse-no-store";
-const cacheClientID = testFileName;
+const cacheClientID = testFileName + "|fake-group-id";
 const basePath = "/" + testFileName + "/";
 const baseURI = "http://localhost:4444" + basePath;
 const normalEntry = "normal";
@@ -17,9 +17,13 @@ function make_channel_for_offline_use(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var chan = ios.newChannel(url, "", null);
-  var cachingChan = chan.QueryInterface(Ci.nsICachingChannel);
-  cachingChan.cacheForOfflineUse = true;
-  cachingChan.offlineCacheClientID = cacheClientID;
+  
+  var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
+                     getService(Components.interfaces.nsIApplicationCacheService);
+  var appCache = cacheService.getApplicationCache(cacheClientID);
+  
+  var appCacheChan = chan.QueryInterface(Ci.nsIApplicationCacheChannel);
+  appCacheChan.applicationCacheForWrite = appCache;
   return chan;
 }
 

@@ -23,6 +23,7 @@ SPSProfiler::~SPSProfiler()
 void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
+    JS_ASSERT(!enabled());
     if (!strings.initialized())
         strings.init(max);
     stack_ = stack;
@@ -30,11 +31,22 @@ SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max
     max_   = max;
 }
 
+void
+SPSProfiler::enable(bool enabled)
+{
+    JS_ASSERT(installed());
+    enabled_ = enabled;
+    /*
+     * Ensure all future generated code will be instrumented, or that all
+     * currently instrumented code is discarded
+     */
+    ReleaseAllJITCode(rt->defaultFreeOp());
+}
+
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
 SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 {
-    JS_ASSERT(enabled());
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
@@ -71,25 +83,18 @@ SPSProfiler::onScriptFinalized(JSScript *script)
 bool
 SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 {
-    JS_ASSERT(enabled());
     const char *str = profileString(cx, script, maybeFun);
     if (str == NULL)
         return false;
 
-    if (*size_ < max_) {
-        stack_[*size_].string = str;
-        stack_[*size_].sp     = NULL;
-    }
-    (*size_)++;
+    push(str, NULL);
     return true;
 }
 
 void
 SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 {
-    JS_ASSERT(enabled());
-    (*size_)--;
-    JS_ASSERT(*(int*)size_ >= 0);
+    pop();
 
 #ifdef DEBUG
     /* Sanity check to make sure push/pop balanced */
@@ -102,6 +107,25 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
         stack_[*size_].sp     = NULL;
     }
 #endif
+}
+
+void
+SPSProfiler::push(const char *string, void *sp)
+{
+    JS_ASSERT(enabled());
+    if (*size_ < max_) {
+        stack_[*size_].string = string;
+        stack_[*size_].sp = sp;
+    }
+    (*size_)++;
+}
+
+void
+SPSProfiler::pop()
+{
+    JS_ASSERT(installed());
+    (*size_)--;
+    JS_ASSERT(*(int*)size_ >= 0);
 }
 
 /*
@@ -149,24 +173,19 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
     return cstr;
 }
 
-SPSEntryMarker::SPSEntryMarker(JSRuntime *rt) : profiler(&rt->spsProfiler), pushed(false)
+SPSEntryMarker::SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM_NO_INIT)
+    : profiler(&rt->spsProfiler)
 {
-    if (!profiler->enabled())
+    JS_GUARD_OBJECT_NOTIFIER_INIT;
+    if (!profiler->enabled()) {
+        profiler = NULL;
         return;
-    uint32_t *size = profiler->size_;
-    size_before = *size;
-    if (*size < profiler->max_) {
-        profiler->stack_[*size].string = "js::RunScript";
-        profiler->stack_[*size].sp = this;
     }
-    (*size)++;
-    pushed = true;
+    profiler->push("js::RunScript", this);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
-    if (!pushed || !profiler->enabled())
-        return;
-    (*profiler->size_)--;
-    JS_ASSERT(*profiler->size_ == size_before);
+    if (profiler != NULL)
+        profiler->pop();
 }

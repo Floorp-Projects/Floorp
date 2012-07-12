@@ -1893,7 +1893,7 @@ Parser::processDirectives(ParseNode *stmts)
         const Token directive = tokenStream.currentToken();
         bool isDirective = IsEscapeFreeStringLiteral(directive);
         JSAtom *atom = directive.atom();
-        TokenKind next = tokenStream.peekTokenSameLine(TSF_OPERAND);
+        TokenKind next = tokenStream.peekTokenSameLine();
         if (next != TOK_EOF && next != TOK_EOL && next != TOK_SEMI && next != TOK_RC) {
             freeTree(stringNode);
             if (next == TOK_ERROR)

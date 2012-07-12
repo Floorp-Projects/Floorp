@@ -431,6 +431,7 @@ private:
   nsTransparencyMode      GetWindowTranslucencyInner() const { return mTransparencyMode; }
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, bool force = false);
   nsresult                UpdateTranslucentWindow();
+  void                    ClearTranslucentWindow();
   void                    SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode);
   void                    UpdateGlass();
 protected:

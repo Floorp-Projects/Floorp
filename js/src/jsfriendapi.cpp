@@ -871,7 +871,12 @@ SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size,
                          uint32_t max)
 {
     rt->spsProfiler.setProfilingStack(stack, size, max);
-    ReleaseAllJITCode(rt->defaultFreeOp());
+}
+
+JS_FRIEND_API(void)
+EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
+{
+    rt->spsProfiler.enable(enabled);
 }
 
 } // namespace js

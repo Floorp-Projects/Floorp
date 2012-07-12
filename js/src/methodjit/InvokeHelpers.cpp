@@ -259,7 +259,8 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         return false;
 
     /* Try to compile if not already compiled. */
-    CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct, CompileRequest_Interpreter);
+    CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct,
+                                        CompileRequest_Interpreter, f.fp());
     if (status == Compile_Error) {
         /* A runtime exception was thrown, get out. */
         return false;
@@ -657,7 +658,7 @@ stubs::CrossChunkShim(VMFrame &f, void *edge_)
     JS_ASSERT(script->code + edge->target == f.pc());
 
     CompileStatus status = CanMethodJIT(f.cx, script, f.pc(), f.fp()->isConstructing(),
-                                        CompileRequest_Interpreter);
+                                        CompileRequest_Interpreter, f.fp());
     if (status == Compile_Error)
         THROW();
 

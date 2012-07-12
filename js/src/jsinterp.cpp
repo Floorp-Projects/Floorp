@@ -290,7 +290,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
-                                mjit::CompileRequest_Interpreter);
+                                mjit::CompileRequest_Interpreter, fp);
     if (status == mjit::Compile_Error)
         return false;
 
@@ -1488,7 +1488,7 @@ check_backedge:
         DO_OP();
     mjit::CompileStatus status =
         mjit::CanMethodJIT(cx, script, regs.pc, regs.fp()->isConstructing(),
-                           mjit::CompileRequest_Interpreter);
+                           mjit::CompileRequest_Interpreter, regs.fp());
     if (status == mjit::Compile_Error)
         goto error;
     if (status == mjit::Compile_Okay) {
@@ -2475,7 +2475,8 @@ BEGIN_CASE(JSOP_FUNCALL)
         /* Try to ensure methods are method JIT'd.  */
         mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
                                                         construct,
-                                                        mjit::CompileRequest_Interpreter);
+                                                        mjit::CompileRequest_Interpreter,
+                                                        regs.fp());
         if (status == mjit::Compile_Error)
             goto error;
         if (status == mjit::Compile_Okay) {

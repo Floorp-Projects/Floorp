@@ -16,8 +16,6 @@ LIBXUL_LIBRARY = 1
 EXPORTS = \
   AudioSegment.h \
   FileBlockCache.h \
-  MediaEngine.h \
-  MediaEngineDefault.h \
   MediaResource.h \
   MediaSegment.h \
   MediaStreamGraph.h \
@@ -39,7 +37,6 @@ EXPORTS = \
 CPPSRCS = \
   AudioSegment.cpp \
   FileBlockCache.cpp \
-  MediaEngineDefault.cpp \
   MediaResource.cpp \
   MediaStreamGraph.cpp \
   nsAudioAvailableEventManager.cpp \
@@ -86,6 +83,8 @@ endif
 ifdef MOZ_MEDIA_PLUGINS
 PARALLEL_DIRS += plugins
 endif
+
+PARALLEL_DIRS += webrtc
 
 TEST_DIRS += test
 

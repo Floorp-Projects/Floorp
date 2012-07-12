@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncLayout" >
+  style="@style/SyncLayout.Vertical" >
   <LinearLayout
     android:id="@+id/sendtab_top"
-    style="@style/SyncTop">
+    style="@style/SyncTop" >
     <ImageView
       style="@style/SyncTopIcon" />
     <TextView
@@ -11,20 +11,16 @@
       android:text="@string/sync_title_send_tab" />
   </LinearLayout>
 
-  <LinearLayout
-    android:id="@+id/device_list_layout"
+  <ListView
+    android:id="@+id/device_list"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:layout_below="@id/sendtab_top"
-    android:layout_above="@+id/send_button"
-    style="@style/SyncLayout.Vertical" >
-
-    <ListView
-      android:id="@+id/device_list"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content" >
-    </ListView>
-  </LinearLayout>
+    android:layout_above="@+id/sendtab_bottom" >
+  </ListView>
 
   <LinearLayout
+    android:id="@id/sendtab_bottom"
     style="@style/SyncBottom" >
     <Button
       style="@style/SyncButton"

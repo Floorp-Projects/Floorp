@@ -90,6 +90,7 @@ function startListeners() {
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
+  addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
@@ -148,6 +149,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
+  removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getUrl", getUrl);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
@@ -508,6 +510,13 @@ function goUrl(msg) {
  */
 function getUrl(msg) {
   sendResponse({value: curWindow.location.href});
+}
+
+/**
+ * Get the current Title of the window
+ */
+function getTitle(msg) {
+  sendResponse({value: curWindow.top.document.title});
 }
 
 /**

@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS = \
   about \
+  app \
   data \
   device \
   file \

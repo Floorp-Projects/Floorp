@@ -147,7 +147,7 @@ AsyncAddonListCallback.prototype = {
 
   handleResult: function(aResults) {
     let row = null;
-    while (row = aResults.getNextRow()) {
+    while ((row = aResults.getNextRow())) {
       this.count++;
       let self = this;
       XPIDatabase.makeAddonFromRowAsync(row, function(aAddon) {
@@ -296,118 +296,6 @@ function copyRowProperties(aRow, aProperties, aTarget) {
   });
   return aTarget;
 }
-
-/**
- * A helper function to log an SQL error.
- *
- * @param  aError
- *         The storage error code associated with the error
- * @param  aErrorString
- *         An error message
- */
-function logSQLError(aError, aErrorString) {
-  ERROR("SQL error " + aError + ": " + aErrorString);
-}
-
-/**
- * A helper function to log any errors that occur during async statements.
- *
- * @param  aError
- *         A mozIStorageError to log
- */
-function asyncErrorLogger(aError) {
-  logSQLError(aError.result, aError.message);
-}
-
-/**
- * A helper function to execute a statement synchronously and log any error
- * that occurs.
- *
- * @param  aStatement
- *         A mozIStorageStatement to execute
- */
-function executeStatement(aStatement) {
-  try {
-    aStatement.execute();
-  }
-  catch (e) {
-    logSQLError(XPIDatabase.connection.lastError,
-                XPIDatabase.connection.lastErrorString);
-    throw e;
-  }
-}
-
-/**
- * A helper function to step a statement synchronously and log any error that
- * occurs.
- *
- * @param  aStatement
- *         A mozIStorageStatement to execute
- */
-function stepStatement(aStatement) {
-  try {
-    return aStatement.executeStep();
-  }
-  catch (e) {
-    logSQLError(XPIDatabase.connection.lastError,
-                XPIDatabase.connection.lastErrorString);
-    throw e;
-  }
-}
-
-/**
- * A mozIStorageStatementCallback that will asynchronously build DBAddonInternal
- * instances from the results it receives. Once the statement has completed
- * executing and all of the metadata for all of the add-ons has been retrieved
- * they will be passed as an array to aCallback.
- *
- * @param  aCallback
- *         A callback function to pass the array of DBAddonInternals to
- */
-function AsyncAddonListCallback(aCallback) {
-  this.callback = aCallback;
-  this.addons = [];
-}
-
-AsyncAddonListCallback.prototype = {
-  callback: null,
-  complete: false,
-  count: 0,
-  addons: null,
-
-  handleResult: function(aResults) {
-    let row = null;
-    while (row = aResults.getNextRow()) {
-      this.count++;
-      let self = this;
-      XPIDatabase.makeAddonFromRowAsync(row, function(aAddon) {
-        function completeAddon(aRepositoryAddon) {
-          aAddon._repositoryAddon = aRepositoryAddon;
-          aAddon.compatibilityOverrides = aRepositoryAddon ?
-                                            aRepositoryAddon.compatibilityOverrides :
-                                            null;
-          self.addons.push(aAddon);
-          if (self.complete && self.addons.length == self.count)
-            self.callback(self.addons);
-        }
-
-        if ("getCachedAddonByID" in AddonRepository)
-          AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
-        else
-          completeAddon(null);
-      });
-    }
-  },
-
-  handleError: asyncErrorLogger,
-
-  handleCompletion: function(aReason) {
-    this.complete = true;
-    if (this.addons.length == this.count)
-      this.callback(this.addons);
-  }
-};
-
 
 var XPIDatabase = {
   // true if the database connection has been opened
@@ -1203,7 +1091,7 @@ var XPIDatabase = {
       stmt.executeAsync({
         handleResult: function(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let type = row.getResultByName("type");
             if (!(type in aLocale))
               aLocale[type] = [];
@@ -1254,7 +1142,7 @@ var XPIDatabase = {
       stmt.executeAsync({
         handleResult: function(aResults) {
           let row = null;
-          while (row = aResults.getNextRow()) {
+          while ((row = aResults.getNextRow())) {
             let locale = {
               id: row.getResultByName("id"),
               locales: [row.getResultByName("locale")]
@@ -1289,7 +1177,7 @@ var XPIDatabase = {
       stmt.executeAsync({
         handleResult: function(aResults) {
           let row = null;
-          while (row = aResults.getNextRow())
+          while ((row = aResults.getNextRow()))
             aAddon.targetApplications.push(copyRowProperties(row, PROP_TARGETAPP));
         },
 
@@ -1310,7 +1198,7 @@ var XPIDatabase = {
       stmt.executeAsync({
         handleResult: function(aResults) {
           let row = null;
-          while (row = aResults.getNextRow())
+          while ((row = aResults.getNextRow()))
             aAddon.targetPlatforms.push(copyRowProperties(row, ["os", "abi"]));
         },
 
@@ -1627,7 +1515,7 @@ var XPIDatabase = {
 
     let stmt = this.getStatement("getAddons");
 
-    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];;
+    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];
   },
 
   /**
