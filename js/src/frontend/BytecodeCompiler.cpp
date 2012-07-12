@@ -21,10 +21,54 @@
 using namespace js;
 using namespace js::frontend;
 
+bool
+MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
+{
+    AssertRootingUnnecessary safe(cx);
+
+    Vector<JSScript *, 16> worklist(cx);
+    if (!worklist.append(script))
+        return false;
+
+    while (worklist.length()) {
+        JSScript *outer = worklist.back();
+        worklist.popBack();
+
+        if (outer->hasObjects()) {
+            ObjectArray *arr = outer->objects();
+
+            /*
+             * If this is an eval script, don't treat the saved caller function
+             * stored in the first object slot as an inner function.
+             */
+            size_t start = outer->savedCallerFun ? 1 : 0;
+
+            for (size_t i = start; i < arr->length; i++) {
+                JSObject *obj = arr->vector[i];
+                if (!obj->isFunction())
+                    continue;
+                JSFunction *fun = obj->toFunction();
+                JS_ASSERT(fun->isInterpreted());
+                JSScript *inner = fun->script();
+                if (outer->function() && outer->function()->isHeavyweight()) {
+                    outer->isOuterFunction = true;
+                    inner->isInnerFunction = true;
+                }
+                if (!inner->hasObjects())
+                    continue;
+                if (!worklist.append(inner))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 JSScript *
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
                         JSPrincipals *principals, JSPrincipals *originPrincipals,
-                        bool compileAndGo, bool noScriptRval,
+                        bool compileAndGo, bool noScriptRval, bool needScriptGlobal,
                         const jschar *chars, size_t length,
                         const char *filename, unsigned lineno, JSVersion version,
                         JSString *source_ /* = NULL */,
@@ -64,13 +108,14 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
+    GlobalObject *globalObject = needScriptGlobal ? GetCurrentGlobal(cx) : NULL;
     Rooted<JSScript*> script(cx, JSScript::Create(cx,
-                                                  /* enclosingScope = */ NullPtr(),
                                                   savedCallerFun,
                                                   principals,
                                                   originPrincipals,
                                                   compileAndGo,
                                                   noScriptRval,
+                                                  globalObject,
                                                   version,
                                                   staticLevel));
     if (!script)
@@ -204,6 +249,9 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     bce.tellDebuggerAboutCompiledScript(cx);
 
+    if (!MarkInnerAndOuterFunctions(cx, script))
+        return NULL;
+
     return script;
 }
 
@@ -231,13 +279,14 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun,
     if (!funtc.init())
         return false;
 
+    GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
     Rooted<JSScript*> script(cx, JSScript::Create(cx,
-                                                  /* enclosingScope = */ NullPtr(),
                                                   /* savedCallerFun = */ false,
                                                   principals,
                                                   originPrincipals,
                                                   /* compileAndGo = */ false,
                                                   /* noScriptRval = */ false,
+                                                  globalObject,
                                                   version,
                                                   staticLevel));
     if (!script)

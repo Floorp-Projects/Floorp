@@ -145,6 +145,7 @@ frontend::FinishPushBlockScope(ContextT *ct, typename ContextT::StmtInfo *stmt,
                                StaticBlockObject &blockObj)
 {
     stmt->isBlockScope = true;
+    blockObj.setEnclosingBlock(ct->blockChain);
     stmt->downScope = ct->topScopeStmt;
     ct->topScopeStmt = stmt;
     ct->blockChain = &blockObj;

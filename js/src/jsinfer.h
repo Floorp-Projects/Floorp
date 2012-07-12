@@ -277,17 +277,17 @@ enum {
     /* Whether any objects this represents are not typed arrays. */
     OBJECT_FLAG_NON_TYPED_ARRAY       = 0x00040000,
 
-    /* Whether any objects this represents are not DOM objects */
-    OBJECT_FLAG_NON_DOM               = 0x00080000,
-
     /* Whether any represented script is considered uninlineable. */
-    OBJECT_FLAG_UNINLINEABLE          = 0x00100000,
+    OBJECT_FLAG_UNINLINEABLE          = 0x00080000,
 
     /* Whether any objects have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00200000,
+    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00100000,
 
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x00400000,
+    OBJECT_FLAG_ITERATED              = 0x00200000,
+
+    /* Outer function which has been marked reentrant. */
+    OBJECT_FLAG_REENTRANT_FUNCTION    = 0x00400000,
 
     /* For a global object, whether flags were set on the RegExpStatics. */
     OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00800000,
@@ -802,7 +802,7 @@ struct TypeObject : gc::Cell
      * Get the global object which all objects of this type are parented to,
      * or NULL if there is none known.
      */
-    //inline JSObject *getGlobal();
+    inline JSObject *getGlobal();
 
     /* Helpers */
 
@@ -907,6 +907,89 @@ struct TypeCallsite
                         bool isNew, unsigned argumentCount);
 };
 
+/*
+ * Information attached to outer and inner function scripts nested in one
+ * another for tracking the reentrance state for outer functions. This state is
+ * used to generate fast accesses to the args and vars of the outer function.
+ *
+ * A function is non-reentrant if, at any point in time, only the most recent
+ * activation (i.e. call object) is live. An activation is live if either the
+ * activation is on the stack, or a transitive inner function parented to the
+ * activation is on the stack.
+ *
+ * Because inner functions can be (and, quite often, are) stored in object
+ * properties and it is difficult to build a fast and robust escape analysis
+ * to cope with such flow, we detect reentrance dynamically. For the outer
+ * function, we keep track of the call object for the most recent activation,
+ * and the number of frames for the function and its inner functions which are
+ * on the stack.
+ *
+ * If the outer function is called while frames associated with a previous
+ * activation are on the stack, the outer function is reentrant. If an inner
+ * function is called whose scope does not match the most recent activation,
+ * the outer function is reentrant.
+ *
+ * The situation gets trickier when there are several levels of nesting.
+ *
+ * function foo() {
+ *   var a;
+ *   function bar() {
+ *     var b;
+ *     function baz() { return a + b; }
+ *   }
+ * }
+ *
+ * At calls to 'baz', we don't want to do the scope check for the activations
+ * of both 'foo' and 'bar', but rather 'bar' only. For this to work, a call to
+ * 'baz' which is a reentrant call on 'foo' must also be a reentrant call on
+ * 'bar'. When 'foo' is called, we clear the most recent call object for 'bar'.
+ */
+struct TypeScriptNesting
+{
+    /*
+     * If this is an inner function, the outer function. If non-NULL, this will
+     * be the immediate nested parent of the script (even if that parent has
+     * been marked reentrant). May be NULL even if the script has a nested
+     * parent, if NAME accesses cannot be tracked into the parent (either the
+     * script extends its scope with eval() etc., or the parent can make new
+     * scope chain objects with 'let' or 'with').
+     */
+    JSScript *parent;
+
+    /* If this is an outer function, list of inner functions. */
+    JSScript *children;
+
+    /* Link for children list of parent. */
+    JSScript *next;
+
+    /* If this is an outer function, the most recent activation. */
+    CallObject *activeCall;
+
+    /*
+     * If this is an outer function, pointers to the most recent activation's
+     * arguments and variables arrays. These could be referring either to stack
+     * values in activeCall's frame (if it has not finished yet) or to the
+     * internal slots of activeCall (if the frame has finished). Pointers to
+     * these fields can be embedded directly in JIT code (though remember to
+     * use 'addDependency == true' when calling resolveNameAccess).
+     */
+    const Value *argArray;
+    const Value *varArray;
+
+    /* Number of frames for this function on the stack. */
+    uint32_t activeFrames;
+
+    TypeScriptNesting() { PodZero(this); }
+    ~TypeScriptNesting();
+};
+
+/* Construct nesting information for script wrt its parent. */
+bool CheckScriptNesting(JSContext *cx, JSScript *script);
+
+/* Track nesting state when calling or finishing an outer/inner function. */
+void NestingPrologue(JSContext *cx, StackFrame *fp);
+void NestingEpilogue(StackFrame *fp);
+
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
 {
@@ -915,9 +998,27 @@ class TypeScript
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
 
+    /*
+     * Information about the scope in which a script executes. This information
+     * is not set until the script has executed at least once and SetScope
+     * called, before that 'global' will be poisoned per GLOBAL_MISSING_SCOPE.
+     */
+    static const size_t GLOBAL_MISSING_SCOPE = 0x1;
+
+    /* Global object for the script, if compileAndGo. */
+    HeapPtr<GlobalObject> global;
+
   public:
+
+    /* Nesting state for outer or inner function scripts. */
+    TypeScriptNesting *nesting;
+
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
+
+    inline TypeScript();
+
+    bool hasScope() { return size_t(global.get()) != GLOBAL_MISSING_SCOPE; }
 
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
@@ -981,6 +1082,7 @@ class TypeScript
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value);
 
     static void Sweep(FreeOp *fop, JSScript *script);
+    inline void trace(JSTracer *trc);
     void destroy();
 };
 
@@ -1101,8 +1203,7 @@ struct TypeCompartment
      * js_ObjectClass).
      */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              JSProtoKey kind, JSObject *proto,
-                              bool unknown = false, bool isDOM = false);
+                              JSProtoKey kind, JSObject *proto, bool unknown = false);
 
     /* Make an object for an allocation site. */
     TypeObject *newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);

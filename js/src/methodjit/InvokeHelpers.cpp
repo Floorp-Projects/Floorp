@@ -562,7 +562,7 @@ js_InternalThrow(VMFrame &f)
      */
     cx->jaegerRuntime().setLastUnfinished(Jaeger_Unfinished);
 
-    if (!script->ensureRanAnalysis(cx)) {
+    if (!script->ensureRanAnalysis(cx, NULL)) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
@@ -736,7 +736,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
-    if (!script->ensureRanAnalysis(cx)) {
+    if (!script->ensureRanAnalysis(cx, NULL)) {
         js_ReportOutOfMemory(cx);
         return js_InternalThrow(f);
     }
