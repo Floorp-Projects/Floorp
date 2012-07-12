@@ -24,10 +24,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
 function log(...aMessageArgs) {
-  Logger.log(["IDP"].concat(aMessageArgs));
+  Logger.log.apply(Logger, ["IDP"].concat(aMessageArgs));
 }
 function reportError(...aMessageArgs) {
-  Logger.reportError(["IDP"].concat(aMessageArgs));
+  Logger.reportError.apply(Logger, ["IDP"].concat(aMessageArgs));
 }
 
 
@@ -42,6 +42,7 @@ function IdentityProviderService() {
 
 IdentityProviderService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
+  _sandboxConfigured: false,
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -83,6 +84,14 @@ IdentityProviderService.prototype = {
 
   shutdown: function RP_shutdown() {
     this.reset();
+
+    if (this._sandboxConfigured) {
+      // Tear down message manager listening on the hidden window
+      Cu.import("resource://gre/modules/DOMIdentity.jsm");
+      DOMIdentity._configureMessages(Services.appShell.hiddenDOMWindow, false);
+      this._sandboxConfigured = false;
+    }
+
     Services.obs.removeObserver(this, "quit-application-granted");
   },
 
@@ -232,7 +241,7 @@ IdentityProviderService.prototype = {
     jwcrypto.generateKeyPair(jwcrypto.ALGORITHMS.DS160, function gkpCb(err, kp) {
       log("in gkp callback");
       if (err) {
-        log("ERROR: genKeyPair:" + err);
+        log("ERROR: genKeyPair:", err);
         provFlow.callback(err);
         return;
       }
@@ -432,6 +441,14 @@ IdentityProviderService.prototype = {
    */
   _createProvisioningSandbox: function _createProvisioningSandbox(aURL, aCallback) {
     log("_createProvisioningSandbox:", aURL);
+
+    if (!this._sandboxConfigured) {
+      // Configure message manager listening on the hidden window
+      Cu.import("resource://gre/modules/DOMIdentity.jsm");
+      DOMIdentity._configureMessages(Services.appShell.hiddenDOMWindow, true);
+      this._sandboxConfigured = true;
+    }
+
     new Sandbox(aURL, aCallback);
   },
 

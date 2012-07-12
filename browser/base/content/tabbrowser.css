@@ -51,5 +51,5 @@ tabpanels {
 }
 
 .tabbrowser-tabs:not(:hover) > .tabbrowser-arrowscrollbox > .closing-tabs-spacer {
-  -moz-transition: width .15s ease-out;
+  transition: width .15s ease-out;
 }
