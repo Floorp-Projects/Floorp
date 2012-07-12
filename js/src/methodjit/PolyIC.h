@@ -243,10 +243,10 @@ struct GetElementIC : public BasePolyIC {
     }
 
     void purge(Repatcher &repatcher);
-    LookupStatus update(VMFrame &f, HandleObject obj, HandleValue v, HandleId id, Value *vp);
-    LookupStatus attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandlePropertyName name,
+    LookupStatus update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachGetProp(VMFrame &f, JSObject *obj, const Value &v, PropertyName *name,
                                Value *vp);
-    LookupStatus attachTypedArray(VMFrame &f, HandleObject obj, HandleValue v, HandleId id, Value *vp);
+    LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus disable(VMFrame &f, const char *reason);
     LookupStatus error(JSContext *cx);
     bool shouldUpdate(JSContext *cx);

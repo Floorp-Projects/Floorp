@@ -479,7 +479,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!script->ensureRanAnalysis(cx, &scopeChain))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
@@ -839,7 +839,7 @@ TryNoteIter::settle()
  * in *expr.
  */
 static bool
-DoIncDec(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &v, Value *slot, Value *expr)
+DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value *slot, Value *expr)
 {
     const JSCodeSpec &cs = js_CodeSpec[*pc];
 
@@ -2765,7 +2765,6 @@ BEGIN_CASE(JSOP_GETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(regs.pc);
     PUSH_COPY(regs.fp()->aliasedVarScope(sc).aliasedVar(sc));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETALIASEDVAR)
 

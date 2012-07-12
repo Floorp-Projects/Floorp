@@ -170,6 +170,7 @@ void JS_FASTCALL Exception(VMFrame &f);
 
 void JS_FASTCALL StrictEvalPrologue(VMFrame &f);
 void JS_FASTCALL HeavyweightFunctionPrologue(VMFrame &f);
+void JS_FASTCALL TypeNestingPrologue(VMFrame &f);
 
 void JS_FASTCALL AnyFrameEpilogue(VMFrame &f);
 void JS_FASTCALL Epilogue(VMFrame &f);
