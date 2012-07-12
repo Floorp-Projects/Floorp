@@ -1013,7 +1013,7 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
     if (!arr)
         return;
 
-    jsize len = env->GetArrayLength(arr);
+    PRUint32 len = static_cast<PRUint32>(env->GetArrayLength(arr));
     jint *elements = env->GetIntArrayElements(arr, 0);
 
     PRUint32 colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
@@ -1027,7 +1027,7 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
         PRUint32 androidColor = static_cast<PRUint32>(elements[i]);
         PRUint8 r = (androidColor & 0x00ff0000) >> 16;
         PRUint8 b = (androidColor & 0x000000ff);
-        colors[i] = androidColor & 0xff00ff00 | b << 16 | r;
+        colors[i] = (androidColor & 0xff00ff00) | (b << 16) | r;
     }
 
     env->ReleaseIntArrayElements(arr, elements, 0);
@@ -1060,7 +1060,7 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSiz
     if (!arr)
         return;
 
-    jsize len = env->GetArrayLength(arr);
+    PRUint32 len = static_cast<PRUint32>(env->GetArrayLength(arr));
     jbyte *elements = env->GetByteArrayElements(arr, 0);
 
     PRUint32 bufSize = aIconSize * aIconSize * 4;
@@ -1518,7 +1518,7 @@ AndroidBridge::ValidateBitmap(jobject bitmap, int width, int height)
         return false;
     }
 
-    if (info.width != width || info.height != height)
+    if ((int)info.width != width || (int)info.height != height)
         return false;
 
     return true;
@@ -1968,7 +1968,7 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
 
     // Very similar to the above, but the 'usage' field is included. We use this
     // in the fallback case when NDK support is not available
-    typedef struct SurfaceInfo {
+    struct SurfaceInfo {
         uint32_t    w;
         uint32_t    h;
         uint32_t    s;
