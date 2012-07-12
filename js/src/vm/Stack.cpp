@@ -356,10 +356,13 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
             return false;
 
         pushOnScopeChain(*clone);
+
+        blockChain_ = blockHandle;
+    } else {
+        blockChain_ = &block;
     }
 
     flags_ |= HAS_BLOCKCHAIN;
-    blockChain_ = &block;
     return true;
 }
 

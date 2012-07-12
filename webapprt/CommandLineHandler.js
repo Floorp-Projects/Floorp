@@ -30,13 +30,13 @@ CommandLineHandler.prototype = {
     Cu.import("resource://gre/modules/Webapps.jsm");
 
     if (!inTestMode) {
-      startUp();
+      startUp(inTestMode);
     } else {
       // startUp() accesses WebappRT.config, which in test mode is not valid
       // until WebappRT.jsm observes an app installation.
       Services.obs.addObserver(function onInstall(subj, topic, data) {
         Services.obs.removeObserver(onInstall, "webapprt-test-did-install");
-        startUp();
+        startUp(inTestMode);
       }, "webapprt-test-did-install", false);
     }
 

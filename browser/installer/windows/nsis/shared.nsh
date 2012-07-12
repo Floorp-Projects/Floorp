@@ -114,7 +114,7 @@
       ; In the worst case, in case there is some edge case with the 
       ; IsAdmin check and the permissions check, the maintenance service
       ; will just fail to be attempted to be installed. 
-      nsExec::Exec "$INSTDIR\maintenanceservice_installer.exe" 
+      nsExec::Exec "$\"$INSTDIR\maintenanceservice_installer.exe$\""
     ${EndIf}
   ${EndIf}
 !endif

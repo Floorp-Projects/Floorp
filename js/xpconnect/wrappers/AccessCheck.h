@@ -15,7 +15,7 @@ namespace xpc {
 
 class AccessCheck {
   public:
-    static bool isSameOrigin(JSCompartment *a, JSCompartment *b);
+    static bool subsumes(JSCompartment *a, JSCompartment *b);
     static bool isChrome(JSCompartment *compartment);
     static bool callerIsChrome();
     static nsIPrincipal *getPrincipal(JSCompartment *compartment);
@@ -23,7 +23,6 @@ class AccessCheck {
                                              js::Wrapper::Action act);
     static bool isSystemOnlyAccessPermitted(JSContext *cx);
     static bool isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper);
-    static bool documentDomainMakesSameOrigin(JSContext *cx, JSObject *obj);
 
     static bool needsSystemOnlyWrapper(JSObject *obj);
 

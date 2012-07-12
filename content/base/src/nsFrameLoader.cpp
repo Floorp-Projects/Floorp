@@ -1377,6 +1377,12 @@ nsFrameLoader::ShouldUseRemoteProcess()
     return false;
   }
 
+  // If we're inside a content process, don't use a remote process for this
+  // frame; it won't work properly until bug 761935 is fixed.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return false;
+  }
+
   // If we're an <iframe mozbrowser> and we don't have a "remote" attribute,
   // fall back to the default.
   if (OwnerIsBrowserFrame() &&

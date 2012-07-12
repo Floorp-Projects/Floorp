@@ -79,10 +79,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/widget/windows
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-DEFINES += -DZLIB_DLL=1
-endif
-
 ifeq ($(OS_ARCH),OS2)
 
 CPPSRCS += \
@@ -356,7 +352,9 @@ ifdef MOZ_NATIVE_PNG
 EXTRA_DSO_LDOPTS += $(MOZ_PNG_LIBS)
 endif
 
+ifneq (WINNT,$(OS_ARCH))
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+endif
 
 ifdef MOZ_NATIVE_HUNSPELL
 EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)

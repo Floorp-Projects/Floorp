@@ -562,6 +562,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       aBuilder->RunScript(node);
       return rv;
     }
+    case eTreeOpPreventScriptExecution: {
+      nsIContent* node = *(mOne.node);
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
+      MOZ_ASSERT(sele);
+      sele->PreventExecution();
+      return rv;
+    }
     case eTreeOpDoneAddingChildren: {
       nsIContent* node = *(mOne.node);
       node->DoneAddingChildren(aBuilder->HaveNotified(node));

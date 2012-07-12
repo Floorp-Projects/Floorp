@@ -22,6 +22,8 @@
 #include "nsIClassInfoImpl.h"
 #include "nsDOMError.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsContentUtils.h"
+#include "jswrapper.h"
 
 #include "nsPrincipal.h"
 
@@ -962,6 +964,18 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
+
+  // Recompute all wrappers between compartments using this principal and other
+  // non-chrome compartments.
+  JSContext *cx = nsContentUtils::GetSafeJSContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  JSPrincipals *principals = nsJSPrincipals::get(static_cast<nsIPrincipal*>(this));
+  bool success = js::RecomputeWrappers(cx, js::ContentCompartmentsOnly(),
+                                       js::CompartmentsWithPrincipals(principals));
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+  success = js::RecomputeWrappers(cx, js::CompartmentsWithPrincipals(principals),
+                                  js::ContentCompartmentsOnly());
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   return NS_OK;
 }

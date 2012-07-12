@@ -19,6 +19,7 @@
 #include "nsITimer.h"
 #include "Database.h"
 #include "mozilla/storage.h"
+#include "mozilla/Attributes.h"
 
 #include "AsyncFaviconHelpers.h"
 
@@ -50,9 +51,9 @@ public:
   PRTime created;
 };
 
-class nsFaviconService : public nsIFaviconService
-                       , public mozIAsyncFavicons
-                       , public nsITimerCallback
+class nsFaviconService MOZ_FINAL : public nsIFaviconService
+                                 , public mozIAsyncFavicons
+                                 , public nsITimerCallback
 {
 public:
   nsFaviconService();

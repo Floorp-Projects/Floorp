@@ -48,8 +48,6 @@ public:
     virtual gfxPlatformFontList* CreatePlatformFontList();
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            const PRUint8 *aFontData, PRUint32 aLength);
-    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
-                                          const nsAString& aFontName);
 
     virtual nsresult GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,

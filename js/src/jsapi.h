@@ -614,6 +614,75 @@ IsPoisonedValue(const Value &v)
 
 /************************************************************************/
 
+/* This is a specialization of the general Handle template in gc/Root.h */
+template <>
+class Handle<Value>
+{
+  public:
+    /*
+     * Construct a handle from an explicitly rooted location. This is the
+     * normal way to create a handle, and normally happens implicitly.
+     */
+    inline Handle(Rooted<Value> &root) {
+        ptr = root.address();
+    }
+
+    /*
+     * This may be called only if the location of the T is guaranteed
+     * to be marked (for some reason other than being a Rooted),
+     * e.g., if it is guaranteed to be reachable from an implicit root.
+     *
+     * Create a Handle from a raw location of a T.
+     */
+    static Handle fromMarkedLocation(const Value *p) {
+        Handle h;
+        h.ptr = p;
+        return h;
+    }
+
+    const Value *address() const { return ptr; }
+    const Value &get() const { return *ptr; }
+    operator const Value &() const { return *ptr; }
+
+    bool operator==(const Handle &h) const { return *ptr == *h.ptr; }
+    bool operator!=(const Handle &h) const { return *ptr != *h.ptr; }
+
+    bool isUndefined() const { return ptr->isUndefined(); }
+    bool isNull() const { return ptr->isNull(); }
+    bool isBoolean() const { return ptr->isBoolean(); }
+    bool isTrue() const { return ptr->isTrue(); }
+    bool isFalse() const { return ptr->isFalse(); }
+    bool isNumber() const { return ptr->isNumber(); }
+    bool isInt32() const { return ptr->isInt32(); }
+    bool isDouble() const { return ptr->isDouble(); }
+    bool isString() const { return ptr->isString(); }
+    bool isObject() const { return ptr->isObject(); }
+    bool isMagic() const { return ptr->isMagic(); }
+    bool isMagic(JSWhyMagic why) const { return ptr->isMagic(why); }
+    bool isGCThing() const { return ptr->isGCThing(); }
+    bool isMarkable() const { return ptr->isMarkable(); }
+
+    bool toBoolean() const { return ptr->toBoolean(); }
+    double toNumber() const { return ptr->toNumber(); }
+    int32_t toInt32() const { return ptr->toInt32(); }
+    double toDouble() const { return ptr->toDouble(); }
+    JSString *toString() const { return ptr->toString(); }
+    JSObject &toObject() const { return ptr->toObject(); }
+    JSObject *toObjectOrNull() const { return ptr->toObjectOrNull(); }
+    void *toGCThing() const { return ptr->toGCThing(); }
+
+#ifdef DEBUG
+    JSWhyMagic whyMagic() const { return ptr->whyMagic(); }
+#endif
+
+  private:
+    Handle() {}
+
+    const Value *ptr;
+};
+
+/************************************************************************/
+
 static JS_ALWAYS_INLINE Value
 NullValue()
 {
@@ -3651,7 +3720,37 @@ typedef enum JSGCParamKey {
     JSGC_SLICE_TIME_BUDGET = 9,
 
     /* Maximum size the GC mark stack can grow to. */
-    JSGC_MARK_STACK_LIMIT = 10
+    JSGC_MARK_STACK_LIMIT = 10,
+
+    /*
+     * GCs less than this far apart in time will be considered 'high-frequency GCs'.
+     * See setGCLastBytes in jsgc.cpp.
+     */
+    JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
+
+    /* Start of dynamic heap growth. */
+    JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
+
+    /* End of dynamic heap growth. */
+    JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
+
+    /* Upper bound of heap growth. */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
+
+    /* Lower bound of heap growth. */
+    JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
+
+    /* Heap growth for low frequency GCs. */
+    JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
+
+    /*
+     * If false, the heap growth factor is fixed at 3. If true, it is determined
+     * based on whether GCs are high- or low- frequency.
+     */
+    JSGC_DYNAMIC_HEAP_GROWTH = 17,
+
+    /* If true, high-frequency GCs will use a longer mark slice. */
+    JSGC_DYNAMIC_MARK_SLICE = 18
 } JSGCParamKey;
 
 typedef enum JSGCMode {

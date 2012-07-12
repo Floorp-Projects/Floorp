@@ -1085,13 +1085,11 @@ var gApplicationsPane = {
    * enabledPlugin property.  But if there's a plugin for a type, we need
    * to know about it even if it isn't enabled, since we're going to give
    * the user an option to enable it.
-   * 
-   * I'll also note that my reading of nsPluginTag::RegisterWithCategoryManager
-   * suggests that enabledPlugin is only determined during registration
-   * and does not get updated when plugin.disable_full_page_plugin_for_types
-   * changes (unless modification of that preference spawns reregistration).
-   * So even if we could use enabledPlugin to get the plugin that would be used,
-   * we'd still need to check the pref ourselves to find out if it's enabled.
+   *
+   * Also note that enabledPlugin does not get updated when
+   * plugin.disable_full_page_plugin_for_types changes, so even if we could use
+   * enabledPlugin to get the plugin that would be used, we'd still need to
+   * check the pref ourselves to find out if it's enabled.
    */
   _loadPluginHandlers: function() {
     for (let i = 0; i < navigator.plugins.length; ++i) {

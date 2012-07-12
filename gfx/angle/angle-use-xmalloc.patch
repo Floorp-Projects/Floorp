@@ -14,7 +14,7 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
  
 +EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB)
 +
- ifdef MOZ_ANGLE
+ ifdef MOZ_ANGLE_RENDERER
  
  # libEGL depends on (links against!) libGLESv2!
  DIRS = src/libGLESv2 src/libEGL

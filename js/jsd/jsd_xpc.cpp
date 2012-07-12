@@ -911,13 +911,6 @@ jsdProperty::GetValue(jsdIValue **_rval)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-jsdProperty::GetVarArgSlot(PRUint32 *_rval)
-{
-    *_rval = JSD_GetPropertyVarArgSlot (mCx, mProperty);
-    return NS_OK;
-}
-
 /* Scripts */
 NS_IMPL_THREADSAFE_ISUPPORTS2(jsdScript, jsdIScript, jsdIEphemeral)
 

@@ -384,9 +384,6 @@ pref("dom.mozAlarms.enabled", true);
 // WebSettings
 pref("dom.mozSettings.enabled", true);
 
-// Ignore X-Frame-Options headers.
-pref("b2g.ignoreXFrameOptions", true);
-
 // controls if we want camera support
 pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);

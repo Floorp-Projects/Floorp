@@ -1388,6 +1388,9 @@ xpicleanup@BIN_SUFFIX@
   #if MOZ_MSVC_REDIST != 1700
     msvcp110.dll
     msvcr110.dll
+    #ifdef MOZ_METRO
+      vccorlib110.dll
+    #endif
   #endif
   plugins/npnul32.dll
 #endif

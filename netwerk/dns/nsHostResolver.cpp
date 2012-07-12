@@ -149,8 +149,7 @@ private:
 #define RES_KEY_FLAGS(_f) ((_f) & nsHostResolver::RES_CANON_NAME)
 
 nsHostRecord::nsHostRecord(const nsHostKey *key)
-    : _refc(1)
-    , addr_info_lock("nsHostRecord.addr_info_lock")
+    : addr_info_lock("nsHostRecord.addr_info_lock")
     , addr_info_gencnt(0)
     , addr_info(nsnull)
     , addr(nsnull)
@@ -164,7 +163,6 @@ nsHostRecord::nsHostRecord(const nsHostKey *key)
     flags = key->flags;
     af = key->af;
 
-    NS_LOG_ADDREF(this, 1, "nsHostRecord", sizeof(nsHostRecord));
     expiration = NowInMinutes();
 
     PR_INIT_CLIST(this);
@@ -181,6 +179,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
     // allocated after it.
     void *place = ::operator new(size);
     *result = new(place) nsHostRecord(key);
+    NS_ADDREF(*result);
     return NS_OK;
 }
 

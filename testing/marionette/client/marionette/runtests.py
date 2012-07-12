@@ -15,6 +15,7 @@ import sys
 import time
 import platform
 import datazilla
+import xml.dom.minidom as dom
 
 try:
     from manifestparser import TestManifest
@@ -36,10 +37,12 @@ class MarionetteTestResult(unittest._TextTestResult):
         super(MarionetteTestResult, self).__init__(*args)
         self.passed = 0
         self.perfdata = None
+        self.tests_passed = []
 
     def addSuccess(self, test):
         super(MarionetteTestResult, self).addSuccess(test)
         self.passed += 1
+        self.tests_passed.append(test)
 
     def getInfo(self, test):
         if hasattr(test, 'jsFile'):
@@ -145,13 +148,15 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 class MarionetteTestRunner(object):
 
     def __init__(self, address=None, emulator=None, emulatorBinary=None,
-                 emulator_res='480x800', homedir=None, bin=None, profile=None,
-                 autolog=False, revision=None, es_server=None,
-                 rest_server=None, logger=None, testgroup="marionette",
-                 noWindow=False, logcat_dir=None):
+                 emulatorImg=None, emulator_res='480x800', homedir=None,
+                 bin=None, profile=None, autolog=False, revision=None,
+                 es_server=None, rest_server=None, logger=None,
+                 testgroup="marionette", noWindow=False, logcat_dir=None,
+                 xml_output=None):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
+        self.emulatorImg = emulatorImg
         self.emulator_res = emulator_res
         self.homedir = homedir
         self.bin = bin
@@ -168,6 +173,7 @@ class MarionetteTestRunner(object):
         self.marionette = None
         self.logcat_dir = logcat_dir
         self.perfrequest = None
+        self.xml_output = xml_output
 
         self.reset_test_stats()
 
@@ -179,6 +185,9 @@ class MarionetteTestRunner(object):
         if self.logcat_dir:
             if not os.access(self.logcat_dir, os.F_OK):
                 os.mkdir(self.logcat_dir)
+
+        # for XML output
+        self.results = []
 
     def reset_test_stats(self):
         self.passed = 0
@@ -226,6 +235,7 @@ class MarionetteTestRunner(object):
         elif self.emulator:
             self.marionette = Marionette(emulator=self.emulator,
                                          emulatorBinary=self.emulatorBinary,
+                                         emulatorImg=self.emulatorImg,
                                          emulator_res=self.emulator_res,
                                          homedir=self.homedir,
                                          baseurl=self.baseurl,
@@ -287,9 +297,9 @@ class MarionetteTestRunner(object):
         self.logger.info('passed: %d' % self.passed)
         self.logger.info('failed: %d' % self.failed)
         self.logger.info('todo: %d' % self.todo)
-        elapsedtime = datetime.utcnow() - starttime
+        self.elapsedtime = datetime.utcnow() - starttime
         if self.autolog:
-            self.post_to_autolog(elapsedtime)
+            self.post_to_autolog(self.elapsedtime)
         if self.perfrequest and options.perf:
             try:
                 self.perfrequest.submit()
@@ -300,6 +310,10 @@ class MarionetteTestRunner(object):
             self.marionette.emulator.close()
             self.marionette.emulator = None
         self.marionette = None
+
+        if self.xml_output:
+            with open(self.xml_output, 'w') as f:
+                f.write(self.generate_xml(self.results))
 
     def run_test(self, test, testtype):
         if not self.httpd:
@@ -379,6 +393,8 @@ class MarionetteTestRunner(object):
 
         if suite.countTestCases():
             results = MarionetteTextTestRunner(verbosity=3).run(suite)
+            self.results.append(results)
+
             self.failed += len(results.failures) + len(results.errors)
             if results.perfdata and options.perf:
                 self.perfrequest.add_datazilla_result(results.perfdata)
@@ -397,6 +413,86 @@ class MarionetteTestRunner(object):
             self.httpd.stop()
 
     __del__ = cleanup
+
+    def generate_xml(self, results_list):
+
+        def _extract_xml(test, text='', result='Pass'):
+            cls_name = test.__class__.__name__
+
+            # if the test class is not already created, create it
+            if cls_name not in classes:
+                cls = doc.createElement('class')
+                cls.setAttribute('name', cls_name)
+                assembly.appendChild(cls)
+                classes[cls_name] = cls
+
+            t = doc.createElement('test')
+            t.setAttribute('name', unicode(test).split()[0])
+            t.setAttribute('result', result)
+
+            if result == 'Fail':
+                f = doc.createElement('failure')
+                st = doc.createElement('stack-trace')
+                st.appendChild(doc.createTextNode(text))
+
+                f.appendChild(st)
+                t.appendChild(f)
+
+            elif result == 'Skip':
+                r = doc.createElement('reason')
+                msg = doc.createElement('message')
+                msg.appendChild(doc.createTextNode(text))
+
+                r.appendChild(msg)
+                t.appendChild(f)
+
+            cls = classes[cls_name]
+            cls.appendChild(t)
+
+        doc = dom.Document()
+
+        assembly = doc.createElement('assembly')
+        assembly.setAttribute('name', 'Tests')
+        assembly.setAttribute('time', str(self.elapsedtime))
+        assembly.setAttribute('total', str(sum([results.testsRun for
+                                                    results in results_list])))
+        assembly.setAttribute('passed', str(sum([results.passed for
+                                                     results in results_list])))
+        assembly.setAttribute('failed', str(sum([len(results.failures) +
+                                                 len(results.errors) +
+                                                 len(results.unexpectedSuccesses)
+                                                 for results in results_list])))
+        assembly.setAttribute('skipped', str(sum([len(results.skipped) +
+                                                  len(results.expectedFailures)
+                                                  for results in results_list])))
+
+        for results in results_list:
+            classes = {} # str -> xml class element
+
+            for tup in results.errors:
+                _extract_xml(*tup, result='Fail')
+
+            for tup in results.failures:
+                _extract_xml(*tup, result='Fail')
+
+            for test in results.unexpectedSuccesses:
+                # unexpectedSuccesses is a list of Testcases only, no tuples
+                _extract_xml(test, text='TEST-UNEXPECTED-PASS', result='Fail')
+
+            for tup in results.skipped:
+                _extract_xml(*tup, result='Skip')
+
+            for tup in results.expectedFailures:
+                _extract_xml(*tup, result='Skip')
+
+            for test in results.tests_passed:
+                _extract_xml(test)
+
+            for cls in classes.itervalues():
+                assembly.appendChild(cls)
+
+        doc.appendChild(assembly)
+        return doc.toxml(encoding='utf-8')
 
 
 if __name__ == "__main__":
@@ -421,6 +517,10 @@ if __name__ == "__main__":
                       default = None,
                       help = "Launch a specific emulator binary rather than "
                       "launching from the B2G built emulator")
+    parser.add_option('--emulator-img',
+                      action = 'store', dest = 'emulatorImg',
+                      default = None,
+                      help = "Use a specific image file instead of a fresh one")
     parser.add_option('--emulator-res',
                       action = 'store', dest = 'emulator_res',
                       default = '480x800', type= 'str',
@@ -461,6 +561,8 @@ if __name__ == "__main__":
                       'will overwrite the perfserv value in any passed .ini files.')
     parser.add_option('--repeat', dest='repeat', action='store', type=int,
                       default=0, help='number of times to repeat the test(s).')
+    parser.add_option('-x', '--xml-output', action='store', dest='xml_output',
+                      help='XML output.')
  
     options, tests = parser.parse_args()
 
@@ -491,6 +593,7 @@ if __name__ == "__main__":
     runner = MarionetteTestRunner(address=options.address,
                                   emulator=options.emulator,
                                   emulatorBinary=options.emulatorBinary,
+                                  emulatorImg=options.emulatorImg,
                                   emulator_res=res,
                                   homedir=options.homedir,
                                   logcat_dir=options.logcat_dir,
@@ -499,7 +602,8 @@ if __name__ == "__main__":
                                   noWindow=options.noWindow,
                                   revision=options.revision,
                                   testgroup=options.testgroup,
-                                  autolog=options.autolog)
+                                  autolog=options.autolog,
+                                  xml_output=options.xml_output)
     runner.run_tests(tests, testtype=options.type)
     if runner.failed > 0:
         sys.exit(10)

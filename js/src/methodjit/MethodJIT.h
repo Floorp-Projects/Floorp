@@ -865,7 +865,7 @@ enum CompileRequest
 
 CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
-             bool construct, CompileRequest request);
+             bool construct, CompileRequest request, StackFrame *sp);
 
 inline void
 ReleaseScriptCode(FreeOp *fop, JSScript *script)

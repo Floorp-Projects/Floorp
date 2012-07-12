@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for navigator.id relying party (RP) basics</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank">navigator.id RP basics</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+const RP = Cu.import("resource://gre/modules/identity/RelyingParty.jsm").RelyingParty;
+
+function resetAndNext() {
+  // reset DOM state for the next test
+  makeObserver("identity-DOM-state-reset", function() {
+    SimpleTest.executeSoon(next);
+  });
+  // Give the flow some time to cross the IPC boundary
+  setTimeout(function() {
+    let rpContext = RP._rpFlows[outerWinId];
+    if (!rpContext) {
+      SimpleTest.executeSoon(next);
+      return;
+    }
+    DOMIdentity._resetFrameState(rpContext);
+  }, 700);
+}
+
+let steps = [
+  function nonExistentProp() {
+    is(identity.foobarbaz, undefined, "Check that foobarbaz does not exist");
+    expectException(function() {
+      identity.foobarbaz()
+    }, "Check for exception calling non-existent method", "TypeError");
+    SimpleTest.executeSoon(next);
+  },
+
+  // test request before watch throws an exception
+  function requestBeforeWatch() {
+    expectException(function() {
+      identity.request();
+    });
+    SimpleTest.executeSoon(next);
+  },
+
+  // watch tests
+  function watchExists() {
+    is(typeof(identity.watch), "function", "Check watch is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function watchNoArgs() {
+    expectException(function() {
+      identity.watch();
+    }, "watch with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+  function watchEmptyObj() {
+    expectException(function() {
+      identity.watch({});
+    }, "watch with empty object argument");
+    SimpleTest.executeSoon(next);
+  },
+  function watchOnLoginBool() {
+    expectException(function() {
+      identity.watch({onlogin: true});
+    }, "watch with invalid onlogin member");
+    SimpleTest.executeSoon(next);
+  },
+  function watchOnLoginLogoutBool() {
+    expectException(function() {
+      identity.watch({onlogin: true, onlogout: false});
+    }, "watch with invalid onlogin and onlogout members");
+    SimpleTest.executeSoon(next);
+  },
+  function watchMinimumArgs() {
+    function onLoginLogoutCb() {
+      throw "onlogin/onlogout callback shouldn't have been called";
+    }
+    is(identity.watch({onlogin: onLoginLogoutCb, onlogout: onLoginLogoutCb}),
+       undefined, "Check minimum watch argument members");
+    resetAndNext();
+  },
+  function watchOnReadyType() {
+    function onLoginLogoutCb() {
+      throw "onlogin/onlogout callback shouldn't have been called";
+    }
+    let options = {
+      onlogin: onLoginLogoutCb,
+      onlogout: onLoginLogoutCb,
+      onready: 999,
+    }
+    expectException(function() {
+      identity.watch(options)
+    }, "Check onready type");
+    resetAndNext();
+  },
+  function watchLoggedInEmailType() {
+    function onLoginLogoutCb() {
+      throw "onlogin/onlogout callback shouldn't have been called";
+    }
+    let options = {
+      onlogin: onLoginLogoutCb,
+      onlogout: onLoginLogoutCb,
+      loggedInEmail: {},
+    }
+    expectException(function() {
+      identity.watch(options)
+    }, "Check loggedInEmail type");
+    resetAndNext();
+  },
+  function watchOnReadyCalled() {
+    let onLogoutCalled = false;
+    let options = {
+      loggedInEmail: "loggedOut@user.com",
+      onlogin: function onLoginCb(assertion) {
+        throw "onlogin/onlogout callback shouldn't have been called";
+      },
+      onlogout: function onLogoutCb() {
+        is(arguments.length, 0, "Check onlogout argument length");
+        onLogoutCalled = true;
+      },
+      onready: function onReady() {
+        is(arguments.length, 0, "Check onready argument length");
+        ok(onLogoutCalled, "onlogout callback should be called before onready");
+        SimpleTest.executeSoon(next);
+      },
+    }
+    is(identity.watch(options), undefined, "Check onready is called");
+  },
+
+  // request tests
+  function requestExists() {
+    is(typeof(identity.request), "function", "Check request is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function requestNoArgs() {
+    is(identity.request(), undefined, "Check request with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+  function requestEmptyObj() {
+    is(identity.request({}), undefined, "Check request with empty object argument");
+    SimpleTest.executeSoon(next);
+  },
+
+  // logout tests
+  function logoutExists() {
+    is(typeof(identity.logout), "function", "Check logout is a function");
+    SimpleTest.executeSoon(next);
+  },
+
+  finish_tests,
+];
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+
+</script>
+</pre>
+</body>
+</html>

@@ -123,6 +123,7 @@ struct JSCompartment
     JSPrincipals                 *principals;
 
   private:
+    friend struct JSContext;
     js::GlobalObject             *global_;
   public:
     // Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
@@ -232,6 +233,7 @@ struct JSCompartment
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
+    double                       gcHeapGrowthFactor;
 
     bool                         hold;
     bool                         isSystemCompartment;
@@ -458,6 +460,12 @@ JSContext::setCompartment(JSCompartment *compartment)
 {
     this->compartment = compartment;
     this->inferenceEnabled = compartment ? compartment->types.inferenceEnabled : false;
+}
+
+inline js::Handle<js::GlobalObject*>
+JSContext::global() const
+{
+    return js::Handle<js::GlobalObject*>::fromMarkedLocation(&compartment->global_);
 }
 
 namespace js {

@@ -123,6 +123,13 @@ ToStringSlow(JSContext *cx, const Value &v);
 static JS_ALWAYS_INLINE JSString *
 ToString(JSContext *cx, const js::Value &v)
 {
+#ifdef DEBUG
+    {
+        SkipRoot skip(cx, &v);
+        MaybeCheckStackRoots(cx);
+    }
+#endif
+
     if (v.isString())
         return v.toString();
     return ToStringSlow(cx, v);

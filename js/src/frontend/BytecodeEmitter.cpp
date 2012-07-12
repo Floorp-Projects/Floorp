@@ -2623,7 +2623,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
     if (Emit1(cx, bce, JSOP_STOP) < 0)
         return false;
 
-    if (!bce->script->fullyInitFromEmitter(cx, bce))
+    if (!JSScript::fullyInitFromEmitter(cx, bce->script, bce))
         return false;
 
     // Initialize fun->script() so that the debugger has a valid fun->script().
@@ -4826,11 +4826,12 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         FunctionBox *funbox = pn->pn_funbox;
-        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox);
+        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
         sc.cxFlags = funbox->cxFlags;
         if (bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         sc.bindings.transfer(&funbox->bindings);
+        JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
         // Inherit most things (principals, version, etc) from the parent.
         GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
@@ -5966,7 +5967,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_ARGSBODY:
       {
-        JSFunction *fun = bce->sc->fun();
+        RootedFunction fun(cx, bce->sc->fun());
         ParseNode *pnlast = pn->last();
 
         // Carefully emit everything in the right order:

@@ -115,7 +115,13 @@ function runTest() {
     }
   }
 
+  var gotError = false;
   function errorTriggered(msg) {
+    if (gotError) {
+      return;
+    }
+
+    gotError = true;
     ok(true, 'An error in the callback triggers window.onerror');
     SimpleTest.finish();
   }
