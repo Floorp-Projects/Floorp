@@ -969,7 +969,7 @@ ShadowThebesLayerOGL::~ShadowThebesLayerOGL()
 bool
 ShadowThebesLayerOGL::ShouldDoubleBuffer()
 {
-#ifdef ANDROID
+#ifdef MOZ_JAVA_COMPOSITOR
   /* Enable double-buffering on Android so that we don't block for as long
    * when uploading textures. This is a work-around for the lack of an
    * asynchronous texture upload facility.
