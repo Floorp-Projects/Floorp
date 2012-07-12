@@ -64,6 +64,7 @@ function test_tracking() {
     store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
+    tracker._lazySave.clear();
     Svc.Obs.notify("weave:engine:stop-tracking");
   }
 }
