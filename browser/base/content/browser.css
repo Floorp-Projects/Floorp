@@ -578,6 +578,12 @@ html|*#gcli-output-frame,
   -moz-box-pack: center;
 }
 
+/* We don't show the Style Editor button in the developer toolbar for now.
+   See bug 771203 */
+#developer-toolbar-styleeditor {
+  display: none;
+}
+
 /* Responsive Mode */
 
 vbox[anonid=browserContainer][responsivemode] {

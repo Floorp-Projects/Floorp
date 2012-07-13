@@ -88,16 +88,16 @@
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
-    <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();" disabled="true"/>
+    <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();"/>
     <command id="Tools:DevToolbarFocus" oncommand="DeveloperToolbar.focus();" disabled="true"/>
     <command id="Tools:WebConsole" oncommand="HUDConsoleUI.toggleHUD();"/>
-    <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();" disabled="true"/>
-    <command id="Tools:Debugger" oncommand="DebuggerUI.toggleDebugger();" disabled="true"/>
-    <command id="Tools:RemoteDebugger" oncommand="DebuggerUI.toggleRemoteDebugger();" disabled="true"/>
-    <command id="Tools:ChromeDebugger" oncommand="DebuggerUI.toggleChromeDebugger();" disabled="true"/>
-    <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();" disabled="true"/>
-    <command id="Tools:StyleEditor" oncommand="StyleEditor.toggle();" disabled="true"/>
-    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();" disabled="true"/>
+    <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();"/>
+    <command id="Tools:Debugger" oncommand="DebuggerUI.toggleDebugger();"/>
+    <command id="Tools:RemoteDebugger" oncommand="DebuggerUI.toggleRemoteDebugger();"/>
+    <command id="Tools:ChromeDebugger" oncommand="DebuggerUI.toggleChromeDebugger();"/>
+    <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();"/>
+    <command id="Tools:StyleEditor" oncommand="StyleEditor.toggle();"/>
+    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
@@ -181,6 +181,71 @@
     <broadcaster id="sync-syncnow-state"/>
 #endif
     <broadcaster id="workOfflineMenuitemState"/>
+
+    <!-- DevTools broadcasters -->
+    <broadcaster id="devtoolsMenuBroadcaster_DevToolbar"
+                 label="&devToolbarMenu.label;"
+                 type="checkbox" autocheck="false"
+                 command="Tools:DevToolbar"
+                 key="key_devToolbar"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_WebConsole"
+                 label="&webConsoleCmd.label;"
+                 type="checkbox" autocheck="false"
+                 key="key_webConsole"
+                 command="Tools:WebConsole"/>
+    <broadcaster id="devtoolsMenuBroadcaster_Inspect"
+                 label="&inspectMenu.label;"
+                 type="checkbox" autocheck="false"
+                 command="Tools:Inspect"
+                 key="key_inspect"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_Debugger"
+                 label="&debuggerMenu.label2;"
+                 type="checkbox" autocheck="false"
+                 command="Tools:Debugger"
+                 key="key_debugger"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_RemoteDebugger"
+                 label="&remoteDebuggerMenu.label;"
+                 command="Tools:RemoteDebugger"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_ChromeDebugger"
+                 label="&chromeDebuggerMenu.label;"
+                 command="Tools:ChromeDebugger"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_Scratchpad"
+                 label="&scratchpad.label;"
+                 command="Tools:Scratchpad"
+                 key="key_scratchpad"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_StyleEditor"
+                 label="&styleeditor.label;"
+                 type="checkbox" autocheck="false"
+                 command="Tools:StyleEditor"
+                 key="key_styleeditor"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_ResponsiveUI"
+                 label="&responsiveDesignTool.label;"
+                 type="checkbox" autocheck="false"
+                 command="Tools:ResponsiveUI"
+                 key="key_responsiveUI"
+                 disabled="true" hidden="true"/>
+    <broadcaster id="devtoolsMenuBroadcaster_PageSource"
+                 accesskey="&pageSourceCmd.accesskey;"
+                 label="&pageSourceCmd.label;"
+                 key="key_viewSource"
+                 command="View:PageSource"/>
+    <broadcaster id="devtoolsMenuBroadcaster_ErrorConsole"
+                 hidden="true"
+                 label="&errorConsoleCmd.label;"
+                 accesskey="&errorConsoleCmd.accesskey;"
+                 key="key_errorConsole"
+                 oncommand="toJavaScriptConsole();"/>
+    <broadcaster id="devtoolsMenuBroadcaster_GetMoreTools"
+                 label="&getMoreDevtoolsCmd.label;"
+                 accesskey="&getMoreDevtoolsCmd.accesskey;"
+                 oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
