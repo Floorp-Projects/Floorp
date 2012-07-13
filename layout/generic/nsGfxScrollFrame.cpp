@@ -1971,16 +1971,18 @@ RestrictToLayerPixels(nscoord aDesired, nscoord aLower,
                       nscoord aUpper, nscoord aAppUnitsPerPixel,
                       double aRes, double aCurrentLayerOffset)
 {
-  // convert the result to layer pixels
-  double layerVal = aRes * double(aDesired) / aAppUnitsPerPixel;
-
-  // Correct value using current layer offset
-  layerVal -= aCurrentLayerOffset;
+  // Convert the result to layer pixels --- coordinates in the space of
+  // a ThebesLayer.
+  // aCurrentLayerOffset is the coordinates of the top-left of the scrolled frame,
+  // in ThebesLayer space.
+  double layerVal = (aRes*aDesired)/aAppUnitsPerPixel + aCurrentLayerOffset;
 
   // Try nearest pixel bound first
   double nearestVal = NS_round(layerVal);
+  // Convert back from ThebesLayer space to appunits relative to the top-left
+  // of the scrolled frame.
   nscoord nearestAppUnitVal =
-    NSToCoordRoundWithClamp(nearestVal * aAppUnitsPerPixel / aRes);
+    NSToCoordRoundWithClamp((nearestVal - aCurrentLayerOffset)*aAppUnitsPerPixel/aRes);
 
   // Check if nearest layer pixel result fit into allowed and scroll range
   if (nearestAppUnitVal >= aLower && nearestAppUnitVal <= aUpper) {
@@ -1989,7 +1991,7 @@ RestrictToLayerPixels(nscoord aDesired, nscoord aLower,
     // Check if opposite pixel boundary fit into scroll range
     double oppositeVal = nearestVal + ((nearestVal < layerVal) ? 1 : -1);
     nscoord oppositeAppUnitVal =
-      NSToCoordRoundWithClamp(oppositeVal * aAppUnitsPerPixel / aRes);
+      NSToCoordRoundWithClamp((oppositeVal - aCurrentLayerOffset)*aAppUnitsPerPixel/aRes);
     if (oppositeAppUnitVal >= aLower && oppositeAppUnitVal <= aUpper) {
       return oppositeAppUnitVal;
     }
