@@ -121,8 +121,6 @@ abstract public class GeckoApp
                              Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.Launching;
 
-    ActivityHandlerHelper mActivityHelper = new ActivityHandlerHelper();
-
     abstract public int getLayout();
     abstract public boolean isBrowserToolbarSupported();
     abstract public View getBrowserToolbar();
@@ -2659,7 +2657,7 @@ abstract public class GeckoApp
             }
         }
 
-        int requestCode = mActivityHelper.makeRequestCodeForAwesomebar();
+        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
         startActivityForResult(intent, requestCode);
         return true;
     }
@@ -2721,7 +2719,7 @@ abstract public class GeckoApp
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (!mActivityHelper.handleActivityResult(requestCode, resultCode, data)) {
+        if (!GeckoAppShell.sActivityHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
