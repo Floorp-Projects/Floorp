@@ -1830,7 +1830,8 @@ TypeCompartment::init(JSContext *cx)
 
 TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
-                               JSProtoKey key, JSObject *proto_, bool unknown)
+                               JSProtoKey key, JSObject *proto_, bool unknown,
+                               bool isDOM)
 {
     RootedObject proto(cx, proto_);
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
@@ -1838,10 +1839,17 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
         return NULL;
     new(object) TypeObject(proto, key == JSProto_Function, unknown);
 
-    if (!cx->typeInferenceEnabled())
+    if (!cx->typeInferenceEnabled()) {
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
-    else
-        object->setFlagsFromKey(cx, key);
+    } else {
+        if (isDOM) {
+            object->setFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY
+                               | OBJECT_FLAG_NON_TYPED_ARRAY
+                               | OBJECT_FLAG_NON_PACKED_ARRAY);
+        } else {
+            object->setFlagsFromKey(cx, key);
+        }
+    }
 
     return object;
 }
@@ -5261,7 +5269,7 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 }
 
 TypeObject *
-JSObject::getNewType(JSContext *cx, JSFunction *fun_)
+JSObject::getNewType(JSContext *cx, JSFunction *fun_, bool isDOM)
 {
     TypeObjectSet &table = cx->compartment->newTypeObjects;
 
@@ -5286,6 +5294,9 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun_)
         if (type->newScript && type->newScript->fun != fun_)
             type->clearNewScript(cx);
 
+        if (!isDOM && !type->hasAnyFlags(OBJECT_FLAG_NON_DOM))
+            type->setFlags(cx, OBJECT_FLAG_NON_DOM);
+
         return type;
     }
 
@@ -5298,7 +5309,8 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun_)
     bool markUnknown = self->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
     RootedTypeObject type(cx);
-    type = cx->compartment->types.newTypeObject(cx, NULL, JSProto_Object, self, markUnknown);
+    type = cx->compartment->types.newTypeObject(cx, NULL, JSProto_Object, self,
+                                                markUnknown, isDOM);
     if (!type)
         return NULL;
 

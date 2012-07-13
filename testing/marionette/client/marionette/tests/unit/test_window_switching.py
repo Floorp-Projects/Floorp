@@ -11,11 +11,11 @@ class TestWindowSwitching(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
 
-        current_window = self.marionette.get_window()
+        current_window = self.marionette.current_window_handle
         link = self.marionette.find_element("link text", "Open new window")
         link.click()
 
-        windows = self.marionette.get_windows()
+        windows = self.marionette.window_handles
         windows.remove(current_window)
         self.marionette.switch_to_window(windows[0])
 
@@ -27,7 +27,7 @@ class TestWindowSwitching(MarionetteTestCase):
         #ensure navigate works in our current window
         other_page = self.marionette.absolute_url("test.html")
         self.marionette.navigate(other_page)
-        other_window = self.marionette.get_window()
+        other_window = self.marionette.current_window_handle
 
         #try to access its dom
         #since Bug 720714 stops us from checking DOMContentLoaded, we wait a bit
@@ -39,7 +39,7 @@ class TestWindowSwitching(MarionetteTestCase):
                 pass
             time.sleep(1)
 
-        self.assertEqual(other_window, self.marionette.get_window())
+        self.assertEqual(other_window, self.marionette.current_window_handle)
         self.marionette.switch_to_window(current_window)
-        self.assertEqual(current_window, self.marionette.get_window())
+        self.assertEqual(current_window, self.marionette.current_window_handle)
 

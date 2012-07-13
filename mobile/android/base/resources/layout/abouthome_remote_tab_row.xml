@@ -3,15 +3,26 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:id="@+id/remote_tab_title"
-          android:layout_width="fill_parent"
-          android:layout_height="47dip"
-          android:paddingLeft="12dip"
-          android:paddingRight="12dip"
-          android:gravity="center_vertical"
-          android:textSize="15sp"
-          android:textColor="#222222"
-          android:singleLine="true"
-          android:ellipsize="middle"
-          android:background="@drawable/abouthome_separator"/>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="47dip"
+                android:orientation="vertical"
+                android:background="@drawable/action_bar_button">
+
+    <TextView android:id="@+id/remote_tab_title"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:paddingLeft="12dip"
+              android:paddingRight="12dip"
+              android:gravity="center_vertical"
+              android:textSize="15sp"
+              android:textColor="#222222"
+              android:singleLine="true"
+              android:ellipsize="middle"/>
+
+    <View android:layout_width="fill_parent"
+          android:layout_height="2dp"
+          android:background="@drawable/abouthome_divider"
+          android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>

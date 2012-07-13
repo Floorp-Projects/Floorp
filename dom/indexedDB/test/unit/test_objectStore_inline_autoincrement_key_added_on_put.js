@@ -9,9 +9,8 @@ function testSteps()
 {
   const IDBObjectStore = Components.interfaces.nsIIDBObjectStore;
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
 
-  var request = indexedDB.open(name, 1, description);
+  var request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   var event = yield;

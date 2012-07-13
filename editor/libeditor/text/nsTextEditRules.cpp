@@ -648,7 +648,8 @@ nsTextEditRules::WillInsertText(nsEditor::OperationID aAction,
         mTimer = do_CreateInstance("@mozilla.org/timer;1", &res);
         NS_ENSURE_SUCCESS(res, res);
       }
-      mTimer->InitWithCallback(this, 600, nsITimer::TYPE_ONE_SHOT);
+      mTimer->InitWithCallback(this, LookAndFeel::GetPasswordMaskDelay(),
+                               nsITimer::TYPE_ONE_SHOT);
     } 
     else 
     {

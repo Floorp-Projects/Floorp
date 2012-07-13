@@ -10,10 +10,9 @@ function testSteps()
   const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
 
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
   const objectStoreName = "Objects";
 
-  let request = indexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -42,7 +41,7 @@ function testSteps()
 
   db.close();
 
-  let request = indexedDB.open(name, 2, description);
+  let request = indexedDB.open(name, 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -86,7 +85,7 @@ function testSteps()
 
   db.close();
 
-  let request = indexedDB.open(name, 3, description);
+  let request = indexedDB.open(name, 3);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

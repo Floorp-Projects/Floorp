@@ -26,7 +26,6 @@
         <View android:id="@+id/curve"
               android:layout_width="60dip"
               android:layout_height="fill_parent"
-              android:layout_marginRight="35dip"
               android:layout_alignParentRight="true"
               android:background="@drawable/address_bar_bg_curve"/>
 
@@ -38,30 +37,21 @@
               android:background="@drawable/address_bar_bg"/>
 
         <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="65dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu_level"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/menu_button"
-                     android:paddingLeft="35dip"
-                     android:paddingRight="10dip"/>
+                     style="@style/AddressBar.ImageButton.Unused"/>
 
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="80dip"
-                     android:layout_marginRight="15dip"
+                     android:layout_width="60dip"
                      android:layout_alignParentRight="true"
-                     android:background="@drawable/tabs_button"
+                     android:background="@drawable/tabs_crop_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
                      android:paddingLeft="30dip"
-                     android:paddingRight="30dip"/>
+                     android:paddingRight="10dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="80dip"
+                     android:layout_width="39dip"
                      android:layout_height="wrap_content"
                      android:layout_marginTop="4.5dp"
                      android:layout_alignRight="@id/tabs"
@@ -73,7 +63,7 @@
                 android:layout_marginTop="3dp"
                 android:layout_marginBottom="3dp"
                 android:layout_marginLeft="4dp"
-                android:layout_marginRight="80dp"
+                android:layout_marginRight="45dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
