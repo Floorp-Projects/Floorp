@@ -6471,7 +6471,7 @@ let Reader = {
     });
   },
 
-  _dowloadDocument: function Reader_downloadDocument(url, callback) {
+  _downloadDocument: function Reader_downloadDocument(url, callback) {
     // We want to parse those arbitrary pages safely, outside the privileged
     // context of chrome. We create a hidden browser element to fetch the
     // loaded page's document object then discard the browser element.
@@ -6516,7 +6516,7 @@ let Reader = {
     try {
       this.log("Needs to fetch page, creating request: " + url);
 
-      request.browser = this._dowloadDocument(url, function(doc) {
+      request.browser = this._downloadDocument(url, function(doc) {
         this.log("Finished loading page: " + doc);
 
         // Delete reference to the browser element as we're
