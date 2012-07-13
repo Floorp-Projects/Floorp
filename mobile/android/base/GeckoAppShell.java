@@ -1845,7 +1845,7 @@ public class GeckoAppShell
             }
 
             try {
-                sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
+                sCamera.setPreviewDisplay(GeckoApp.mAppContext.cameraView.getHolder());
             } catch(IOException e) {
                 Log.e(LOGTAG, "Error setPreviewDisplay:", e);
             } catch(RuntimeException e) {
@@ -2346,7 +2346,12 @@ class ScreenshotHandler {
 
 
             Tab tab = Tabs.getInstance().getSelectedTab();
-            ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+            if (tab == null)
+                return;
+            LayerController layerController = GeckoApp.mAppContext.getLayerController();
+            if (layerController == null)
+                return;
+            ImmutableViewportMetrics viewport = layerController.getViewportMetrics();
             
             if (RectUtils.fuzzyEquals(sCheckerboardPageRect, viewport.getCssPageRect())) {
                 float width = right - left;
