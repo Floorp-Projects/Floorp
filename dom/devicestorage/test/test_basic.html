@@ -43,7 +43,7 @@ function deleteSuccess(e) {
   ok(e.target.result == gFileName, "File name should match");
   dump(e.target.result + "\n")
 
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage[0].get(e.target.result);
   request.onsuccess = getAfterDeleteSuccess;
   request.onerror = getAfterDeleteError;
@@ -56,7 +56,7 @@ function deleteError(e) {
 }
 
 function getSuccess(e) {
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
   ok(e.target.result.name == gFileName, "File name should match");
@@ -92,7 +92,7 @@ function addSuccess(e) {
 
   ok(e.target.result == gFileName, "File name should match");
 
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage[0].get(gFileName);
   request.onsuccess = getSuccess;
   request.onerror = getError;
@@ -107,7 +107,7 @@ function addError(e) {
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-var storage = navigator.getDeviceStorage("profile");
+var storage = navigator.getDeviceStorage("testing");
 ok(storage, "Should have gotten a storage");
 
 request = storage[0].addNamed(gDataBlob, "devicestorage/hi");
