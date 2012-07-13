@@ -3321,8 +3321,9 @@ var BrowserEventHandler = {
       // round the scroll amounts because they come in as floats and might be
       // subject to minor rounding errors because of zoom values. I've seen values
       // like 0.99 come in here and get truncated to 0; this avoids that problem.
-      data.x = Math.round(data.x);
-      data.y = Math.round(data.y);
+      let zoom = BrowserApp.selectedTab._zoom;
+      data.x = Math.round(data.x / zoom);
+      data.y = Math.round(data.y / zoom);
 
       if (this._firstScrollEvent) {
         while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
