@@ -14,18 +14,22 @@ Array.prototype.remove = function(from, to) {
 
 function devicestorage_setup() {
   SimpleTest.waitForExplicitFinish();
-  try {
-    oldVal = SpecialPowers.getBoolPref("device.storage.enabled");
-  } catch(e) {}
-  SpecialPowers.setBoolPref("device.storage.enabled", true);
-  SpecialPowers.setBoolPref("device.storage.testing", true);
-  SpecialPowers.setBoolPref("device.storage.prompt.testing", true);
+  if (SpecialPowers.isMainProcess()) {
+    try {
+      oldVal = SpecialPowers.getBoolPref("device.storage.enabled");
+    } catch(e) {}
+    SpecialPowers.setBoolPref("device.storage.enabled", true);
+    SpecialPowers.setBoolPref("device.storage.testing", true);
+    SpecialPowers.setBoolPref("device.storage.prompt.testing", true);
+  }
 }
 
 function devicestorage_cleanup() {
-  SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
-  SpecialPowers.setBoolPref("device.storage.testing", false);
-  SpecialPowers.setBoolPref("device.storage.prompt.testing", false);
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
+    SpecialPowers.setBoolPref("device.storage.testing", false);
+    SpecialPowers.setBoolPref("device.storage.prompt.testing", false);
+  }
   SimpleTest.finish();
 }
 
@@ -40,7 +44,7 @@ function getRandomBuffer() {
 }
 
 function createRandomBlob() {
- return blob = new Blob([getRandomBuffer()], {type: 'binary/random'});
+  return blob = new Blob([getRandomBuffer()], {type: 'binary/random'});
 }
 
 function randomFilename(l) {
