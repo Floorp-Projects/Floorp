@@ -3369,15 +3369,11 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto_, JSObject *parent
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    if (proto && !proto->setNewTypeUnknown(cx))
-        return NULL;
-
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     AssertRootingUnnecessary safe(cx);
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
-        MarkTypeObjectUnknownProperties(cx, obj->type());
     }
 
     JS_ASSERT_IF(obj, obj->getParent());

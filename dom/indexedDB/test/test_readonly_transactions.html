@@ -13,10 +13,9 @@
     function testSteps()
     {
       const name = window.location.pathname;
-      const description = "My Test Database";
       const osName = "foo";
 
-      let request = indexedDB.open(name, 1, description);
+      let request = indexedDB.open(name, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;

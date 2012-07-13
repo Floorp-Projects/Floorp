@@ -15,7 +15,7 @@
    <LinearLayout android:id="@+id/main_layout"
                  style="@style/Screen.Transparent">
  
-        <include layout="@layout/browser_toolbar"/>
+        <!-- BrowserToolbar will be added dynamically -->
 
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="fill_parent"

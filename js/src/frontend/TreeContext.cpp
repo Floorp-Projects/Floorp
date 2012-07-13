@@ -30,6 +30,7 @@ frontend::GenerateBlockId(TreeContext *tc, uint32_t &blockid)
         JS_ReportErrorNumber(tc->sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
         return false;
     }
+    JS_ASSERT(tc->blockidGen < JS_BIT(20));
     blockid = tc->blockidGen++;
     return true;
 }

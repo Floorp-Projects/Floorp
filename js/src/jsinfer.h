@@ -277,20 +277,23 @@ enum {
     /* Whether any objects this represents are not typed arrays. */
     OBJECT_FLAG_NON_TYPED_ARRAY       = 0x00040000,
 
+    /* Whether any objects this represents are not DOM objects. */
+    OBJECT_FLAG_NON_DOM               = 0x00080000,
+
     /* Whether any represented script is considered uninlineable. */
-    OBJECT_FLAG_UNINLINEABLE          = 0x00080000,
+    OBJECT_FLAG_UNINLINEABLE          = 0x00100000,
 
     /* Whether any objects have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00100000,
+    OBJECT_FLAG_SPECIAL_EQUALITY      = 0x00200000,
 
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x00200000,
+    OBJECT_FLAG_ITERATED              = 0x00400000,
 
     /* For a global object, whether flags were set on the RegExpStatics. */
-    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00400000,
+    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00800000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x007f0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
 
     /*
      * Whether all properties of this object are considered unknown.
@@ -1098,7 +1101,8 @@ struct TypeCompartment
      * js_ObjectClass).
      */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              JSProtoKey kind, JSObject *proto, bool unknown = false);
+                              JSProtoKey kind, JSObject *proto,
+                              bool unknown = false, bool isDOM = false);
 
     /* Make an object for an allocation site. */
     TypeObject *newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
