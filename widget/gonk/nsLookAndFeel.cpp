@@ -374,3 +374,9 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
     aFontStyle.systemFont = true;
     return true;
 }
+
+/*virtual*/
+bool
+nsLookAndFeel::GetEchoPasswordImpl() {
+    return true;
+}
