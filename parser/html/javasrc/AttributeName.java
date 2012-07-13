@@ -442,7 +442,7 @@ public final class AttributeName
     /**
      * The C++ destructor.
      */
-    @SuppressWarnings("unused") private void destructor() {
+    @SuppressWarnings("unused") @Virtual private void destructor() {
         Portability.deleteArray(local);
     }
 
