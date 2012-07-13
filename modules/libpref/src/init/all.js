@@ -693,6 +693,7 @@ pref("javascript.options.mem.disable_explicit_compartment_gc", true);
 pref("javascript.options.mem.gc_incremental", true);
 pref("javascript.options.mem.gc_incremental_slice_ms", 10);
 pref("javascript.options.mem.log", false);
+pref("javascript.options.mem.notify", false);
 pref("javascript.options.gc_on_memory_pressure", true);
 
 pref("javascript.options.mem.gc_high_frequency_time_limit_ms", 1000);
