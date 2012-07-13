@@ -242,6 +242,10 @@ private:
 #define NS_EVENT_STATE_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(38)
 // Content is in the sub-suboptimal region.
 #define NS_EVENT_STATE_SUB_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(39)
+// Handler for click to play plugin (vulnerable w/update)
+#define NS_EVENT_STATE_VULNERABLE_UPDATABLE NS_DEFINE_EVENT_STATE_MACRO(40)
+// Handler for click to play plugin (vulnerable w/no update)
+#define NS_EVENT_STATE_VULNERABLE_NO_UPDATE NS_DEFINE_EVENT_STATE_MACRO(41)
 
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!

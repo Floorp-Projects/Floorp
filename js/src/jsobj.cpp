@@ -2183,16 +2183,16 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
     return true;
 }
 
-bool
-JSObject::isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp)
+/* static */ bool
+JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it, bool *resultp)
 {
-    if (isExtensible()) {
+    if (obj->isExtensible()) {
         *resultp = false;
         return true;
     }
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, this, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
     RootedId id(cx);
@@ -2200,7 +2200,7 @@ JSObject::isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp)
         id = props[i];
 
         unsigned attrs;
-        if (!getGenericAttributes(cx, id, &attrs))
+        if (!obj->getGenericAttributes(cx, id, &attrs))
             return false;
 
         /*
@@ -2241,7 +2241,7 @@ obj_isFrozen(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     bool frozen;
-    if (!obj->isFrozen(cx, &frozen))
+    if (!JSObject::isFrozen(cx, obj, &frozen))
         return false;
     vp->setBoolean(frozen);
     return true;
@@ -2267,7 +2267,7 @@ obj_isSealed(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     bool sealed;
-    if (!obj->isSealed(cx, &sealed))
+    if (!JSObject::isSealed(cx, obj, &sealed))
         return false;
     vp->setBoolean(sealed);
     return true;
@@ -2509,7 +2509,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
 
 JSObject *
 js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                      gc::AllocKind kind, Shape *shape)
+                      gc::AllocKind kind, HandleShape shape)
 {
     RootedObject res(cx, NewObjectWithType(cx, type, parent, kind));
     if (!res)
@@ -2612,16 +2612,20 @@ js_CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
     JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
 
     if (obj && newType) {
+        RootedObject nobj(cx, obj);
+
         /*
          * Reshape the object and give it a (lazily instantiated) singleton
          * type before passing it as the 'this' value for the call.
          */
-        obj->clear(cx);
-        if (!obj->setSingletonType(cx))
+        nobj->clear(cx);
+        if (!nobj->setSingletonType(cx))
             return NULL;
 
         JSScript *calleeScript = callee->toFunction()->script();
-        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(obj));
+        TypeScript::SetThis(cx, calleeScript, types::Type::ObjectType(nobj));
+
+        return nobj;
     }
 
     return obj;
@@ -3527,10 +3531,12 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
         gc::AllocKind kind = type()->newScript->allocKind;
         unsigned newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == numFixedSlots() && gc::TryIncrementAllocKind(&kind)) {
+            AutoEnterTypeInference enter(cx);
+
             Rooted<TypeObject*> typeObj(cx, type());
+            RootedShape shape(cx, typeObj->newScript->shape);
             JSObject *obj = NewReshapedObject(cx, typeObj,
-                                              getParent(), kind,
-                                              typeObj->newScript->shape);
+                                              getParent(), kind, shape);
             if (!obj)
                 return false;
 

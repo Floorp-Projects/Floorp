@@ -101,11 +101,14 @@ public:
 
   /**
    * Return a surface for this layer. Will use an existing surface, if
-   * possible, or may create a temporary surface.
-   * Implement this method for any layers that might be used as a mask.
-   * Should only return null if a surface cannor be created.
+   * possible, or may create a temporary surface.  Implement this
+   * method for any layers that might be used as a mask.  Should only
+   * return false if a surface cannot be created.  If true is
+   * returned, only one of |aSurface| or |aDescriptor| is valid.
    */
-  virtual already_AddRefed<gfxASurface> GetAsSurface() { return nsnull; }
+  virtual bool GetAsSurface(gfxASurface** aSurface,
+                            SurfaceDescriptor* aDescriptor)
+  { return false; }
 
   bool GetClipToVisibleRegion() { return mClipToVisibleRegion; }
   void SetClipToVisibleRegion(bool aClip) { mClipToVisibleRegion = aClip; }

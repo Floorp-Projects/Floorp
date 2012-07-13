@@ -38,7 +38,9 @@ enum PluginSupportState {
   ePluginOutdated,     // The plugin is considered outdated, but not disabled
   ePluginOtherState,   // Something else (e.g. uninitialized or not a plugin)
   ePluginCrashed,
-  ePluginClickToPlay   // The plugin is disabled until the user clicks on it
+  ePluginClickToPlay,  // The plugin is disabled until the user clicks on it
+  ePluginVulnerableUpdatable, // The plugin is vulnerable (update available)
+  ePluginVulnerableNoUpdate   // The plugin is vulnerable (no update available)
 };
 
 /**
@@ -372,9 +374,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // it may lose the flag.
     bool                        mNetworkCreated : 1;
 
-    // Used to keep track of whether or not a plugin should be played.
-    // This is used for click-to-play plugins.
-    bool                        mShouldPlay : 1;
+    // Used to keep track of if a plugin is blocked by click-to-play.
+    // True indicates the plugin is not click-to-play or it has been clicked by
+    // the user.
+    // False indicates the plugin is click-to-play and has not yet been clicked.
+    bool                        mCTPPlayable    : 1;
 
     // Used to keep track of whether or not a plugin has been played.
     // This is used for click-to-play plugins.

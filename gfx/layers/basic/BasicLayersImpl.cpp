@@ -4,41 +4,91 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicLayersImpl.h"
+#include "mozilla/layers/PLayers.h"
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
 
-already_AddRefed<gfxASurface>
-GetMaskSurfaceAndTransform(Layer* aMaskLayer, gfxMatrix* aMaskTransform)
+void
+AutoMaskData::Construct(const gfxMatrix& aTransform,
+                        gfxASurface* aSurface)
 {
-   if (aMaskLayer) {
-     nsRefPtr<gfxASurface> maskSurface =
-       static_cast<BasicImplData*>(aMaskLayer->ImplData())->GetAsSurface();
-     if (maskSurface) {
-       bool maskIs2D =
-         aMaskLayer->GetEffectiveTransform().CanDraw2D(aMaskTransform);
-       NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-       return maskSurface.forget();
-     }
-   }
-   return nsnull;
+  MOZ_ASSERT(!IsConstructed());
+  mTransform = aTransform;
+  mSurface = aSurface;
+}
+
+void
+AutoMaskData::Construct(const gfxMatrix& aTransform,
+                        const SurfaceDescriptor& aSurface)
+{
+  MOZ_ASSERT(!IsConstructed());
+  mTransform = aTransform;
+  mSurfaceOpener.construct(OPEN_READ_ONLY, aSurface);
+}
+
+gfxASurface*
+AutoMaskData::GetSurface()
+{
+  MOZ_ASSERT(IsConstructed());
+  if (mSurface) {
+    return mSurface.get();
+  }
+  return mSurfaceOpener.ref().Get();
+}
+
+const gfxMatrix&
+AutoMaskData::GetTransform()
+{
+  MOZ_ASSERT(IsConstructed());
+  return mTransform;
+}
+
+bool
+AutoMaskData::IsConstructed()
+{
+  return !!mSurface || !mSurfaceOpener.empty();
+}
+
+
+bool
+GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
+{
+  if (aMaskLayer) {
+    nsRefPtr<gfxASurface> surface;
+    SurfaceDescriptor descriptor;
+    if (static_cast<BasicImplData*>(aMaskLayer->ImplData())
+        ->GetAsSurface(getter_AddRefs(surface), &descriptor) &&
+        (surface || IsSurfaceDescriptorValid(descriptor))) {
+      gfxMatrix transform;
+      DebugOnly<bool> maskIs2D =
+        aMaskLayer->GetEffectiveTransform().CanDraw2D(&transform);
+      NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+      if (surface) {
+        aMaskData->Construct(transform, surface);
+      } else {
+        aMaskData->Construct(transform, descriptor);
+      }
+      return true;
+    }
+  }
+  return false;
 }
 
 void
 PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 {
-  gfxMatrix maskTransform;
-  if (nsRefPtr<gfxASurface> maskSurface =
-        GetMaskSurfaceAndTransform(aMaskLayer, &maskTransform)) {
+  AutoMaskData mask;
+  if (GetMaskData(aMaskLayer, &mask)) {
     if (aOpacity < 1.0) {
       aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
       aContext->Paint(aOpacity);
       aContext->PopGroupToSource();
     }
-    aContext->SetMatrix(maskTransform);
-    aContext->Mask(maskSurface);
+    aContext->SetMatrix(mask.GetTransform());
+    aContext->Mask(mask.GetSurface());
     return;
   }
 
@@ -49,20 +99,19 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 void
 FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 {
-  gfxMatrix maskTransform;
-  if (nsRefPtr<gfxASurface> maskSurface =
-        GetMaskSurfaceAndTransform(aMaskLayer, &maskTransform)) {
+  AutoMaskData mask;
+  if (GetMaskData(aMaskLayer, &mask)) {
     if (aOpacity < 1.0) {
       aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
       aContext->FillWithOpacity(aOpacity);
       aContext->PopGroupToSource();
-      aContext->SetMatrix(maskTransform);
-      aContext->Mask(maskSurface);
+      aContext->SetMatrix(mask.GetTransform());
+      aContext->Mask(mask.GetSurface());
     } else {
       aContext->Save();
       aContext->Clip();
-      aContext->SetMatrix(maskTransform);
-      aContext->Mask(maskSurface);
+      aContext->SetMatrix(mask.GetTransform());
+      aContext->Mask(mask.GetSurface());
       aContext->NewPath();
       aContext->Restore();
     }
