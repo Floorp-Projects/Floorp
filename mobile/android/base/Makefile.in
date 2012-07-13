@@ -941,11 +941,7 @@ RES_DIRS= \
   res/color                   \
   res/menu                    \
   res/menu-v11                \
-<<<<<<< local
-  res/menu-large              \
-=======
   res/menu-large-v11          \
->>>>>>> other
   $(NULL)
 
 
