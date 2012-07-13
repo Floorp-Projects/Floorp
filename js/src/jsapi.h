@@ -920,12 +920,12 @@ class HandleBase<Value> : public ValueOperations<Handle<Value> >
 template <>
 class MutableHandleBase<Value> : public MutableValueOperations<MutableHandle<Value> >
 {
-    friend class ValueOperations<Handle<Value> >;
+    friend class ValueOperations<MutableHandle<Value> >;
     const Value * extract() const {
         return static_cast<const MutableHandle<Value>*>(this)->address();
     }
 
-    friend class MutableValueOperations<Handle<Value> >;
+    friend class MutableValueOperations<MutableHandle<Value> >;
     Value * extractMutable() {
         return static_cast<MutableHandle<Value>*>(this)->address();
     }
