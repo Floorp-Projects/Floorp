@@ -14,6 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_BROWSER_FILES = \
   browser_gcli_addon.js \
   browser_gcli_break.js \
+  browser_gcli_calllog.js \
   browser_gcli_commands.js \
   browser_gcli_cookie.js \
   browser_gcli_edit.js \
