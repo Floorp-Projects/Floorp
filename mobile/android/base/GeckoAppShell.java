@@ -128,6 +128,8 @@ public class GeckoAppShell
 
     public static GfxInfoThread sGfxInfoThread = null;
 
+    static ActivityHandlerHelper sActivityHelper = new ActivityHandlerHelper();
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -1370,13 +1372,11 @@ public class GeckoAppShell
     }
 
     public static String showFilePickerForExtensions(String aExtensions) {
-        return GeckoApp.mAppContext.mActivityHelper.showFilePicker(
-            GeckoApp.mAppContext, getMimeTypeFromExtensions(aExtensions));
+        return sActivityHelper.showFilePicker(GeckoApp.mAppContext, getMimeTypeFromExtensions(aExtensions));
     }
 
     public static String showFilePickerForMimeType(String aMimeType) {
-        return GeckoApp.mAppContext.mActivityHelper.showFilePicker(
-            GeckoApp.mAppContext, aMimeType);
+        return sActivityHelper.showFilePicker(GeckoApp.mAppContext, aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -2289,8 +2289,7 @@ public class GeckoAppShell
 
     /* Called by JNI from AndroidBridge */
     public static void showFilePickerAsync(String aMimeType, long id) {
-        if (!GeckoApp.mAppContext.mActivityHelper.showFilePicker(
-                GeckoApp.mAppContext, aMimeType, new AsyncResultHandler(id))) {
+        if (!sActivityHelper.showFilePicker(GeckoApp.mAppContext, aMimeType, new AsyncResultHandler(id))) {
             GeckoAppShell.notifyFilePickerResult("", id);
         }
     }
