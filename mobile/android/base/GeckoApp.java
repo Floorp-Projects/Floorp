@@ -82,9 +82,9 @@ abstract public class GeckoApp
     protected LinearLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
-    public static SurfaceView cameraView;
+    public SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public static boolean mDOMFullScreen = false;
+    public boolean mDOMFullScreen = false;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     private static GeckoThread sGeckoThread;
@@ -97,15 +97,15 @@ abstract public class GeckoApp
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
 
-    public static DoorHangerPopup mDoorHangerPopup;
-    public static FormAssistPopup mFormAssistPopup;
+    public DoorHangerPopup mDoorHangerPopup;
+    public FormAssistPopup mFormAssistPopup;
     public TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
-    private static LayerController mLayerController;
-    private static GeckoLayerClient mLayerClient;
-    private static AbsoluteLayout mPluginContainer;
-    private static FindInPageBar mFindInPageBar;
+    private LayerController mLayerController;
+    private GeckoLayerClient mLayerClient;
+    private AbsoluteLayout mPluginContainer;
+    private FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -2325,6 +2325,15 @@ abstract public class GeckoApp
 
         deleteTempFiles();
 
+        if (mLayerController != null)
+            mLayerController.destroy();
+        if (mLayerClient != null)
+            mLayerClient.destroy();
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.destroy();
+        if (mPromptService != null)
+            mPromptService.destroy();
+
         if (mFavicons != null)
             mFavicons.close();
 
@@ -2885,8 +2894,6 @@ abstract public class GeckoApp
 
         moveTaskToBack(true);
     }
-
-    static int kCaptureIndex = 0;
 
     public interface ActivityResultHandler {
         public void onActivityResult(int resultCode, Intent data);
