@@ -28,7 +28,7 @@ function enumerateSuccess(e) {
 
   if (e.target.result == null) {
     ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
-    dump("We still have length = " + files.length);
+    dump("We still have length = " + files.length + "\n");
     devicestorage_cleanup();
     return;
   }
