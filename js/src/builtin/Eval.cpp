@@ -79,42 +79,47 @@ EvalCacheHashPolicy::match(JSScript *script, const EvalCacheLookup &l)
 // with calls to JS_GetScriptObject for scripts in the eval cache.
 class EvalScriptGuard
 {
-    JSContext *cx_;
+    JSContext *context;
     Rooted<JSScript*> script_;
 
-    /* These fields are only valid if lookup_.str is non-NULL. */
-    EvalCacheLookup lookup_;
-    EvalCache::AddPtr p_;
+    /* Components of the EvalCacheLookup for this eval. */
+    Rooted<JSLinearString*> str;
+    RootedFunction caller;
+    unsigned staticLevel;
 
   public:
     EvalScriptGuard(JSContext *cx)
-      : cx_(cx), script_(cx)
-    {
-        lookup_.str = NULL;
-    }
+      : context(cx), script_(cx),
+        str(cx), caller(cx), staticLevel(0)
+    {}
 
     ~EvalScriptGuard() {
         if (script_) {
-            CallDestroyScriptHook(cx_->runtime->defaultFreeOp(), script_);
+            CallDestroyScriptHook(context->runtime->defaultFreeOp(), script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
-            if (lookup_.str && IsEvalCacheCandidate(script_))
-                cx_->runtime->evalCache.relookupOrAdd(p_, lookup_, script_);
+            if (str && IsEvalCacheCandidate(script_)) {
+                EvalCacheLookup key(str, caller, staticLevel,
+                                    context->findVersion(), context->compartment);
+                EvalCache::AddPtr p = context->runtime->evalCache.lookupForAdd(key);
+                if (p)
+                    context->runtime->evalCache.add(p, script_);
+            }
         }
     }
 
     void lookupInEvalCache(JSLinearString *str, JSFunction *caller, unsigned staticLevel)
     {
-        lookup_.str = str;
-        lookup_.caller = caller;
-        lookup_.staticLevel = staticLevel;
-        lookup_.version = cx_->findVersion();
-        lookup_.compartment = cx_->compartment;
-        p_ = cx_->runtime->evalCache.lookupForAdd(lookup_);
-        if (p_) {
-            script_ = *p_;
-            cx_->runtime->evalCache.remove(p_);
-            js_CallNewScriptHook(cx_, script_, NULL);
+        this->str = str;
+        this->caller = caller;
+        this->staticLevel = staticLevel;
+        EvalCacheLookup key(str, caller, staticLevel,
+                            context->findVersion(), context->compartment);
+        EvalCache::Ptr p = context->runtime->evalCache.lookupForAdd(key);
+        if (p) {
+            script_ = *p;
+            context->runtime->evalCache.remove(p);
+            js_CallNewScriptHook(context, script_, NULL);
             script_->isCachedEval = false;
             script_->isActiveEval = true;
         }
