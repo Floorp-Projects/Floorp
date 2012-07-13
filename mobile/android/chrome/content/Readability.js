@@ -1066,7 +1066,7 @@ Readability.prototype = {
             this._appendNextPage(nextPageLink);
         }
       });
-    }).bind(this).(nextPageLink, articlePage);
+    }).bind(this)(nextPageLink, articlePage);
   },
 
   /**
