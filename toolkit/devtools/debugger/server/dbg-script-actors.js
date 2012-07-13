@@ -543,7 +543,7 @@ ThreadActor.prototype = {
   /**
    * Handle a protocol request to pause the debuggee.
    */
-  onInterrupt: function TA_onScripts(aRequest) {
+  onInterrupt: function TA_onInterrupt(aRequest) {
     if (this.state == "exited") {
       return { type: "exited" };
     } else if (this.state == "paused") {
