@@ -8,7 +8,6 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
   const objectStoreName = "People";
 
   const objectStoreData = [
@@ -52,7 +51,7 @@ function testSteps()
     { key: "237-23-7734", value: { name: "Ron", height: 73, weight: 180 } }
   ];
 
-  let request = indexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;

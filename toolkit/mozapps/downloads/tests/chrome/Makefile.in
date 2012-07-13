@@ -52,7 +52,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 MOCHITEST_CHROME_FILES += \
   test_taskbarprogress_downloadstates.xul \
-  test_taskbarprogress_service.xul \
+  $(warning test_taskbarprogress_service.xul disabled due to very frequent orange, see bug 630567) \
   $(NULL)
 endif
 

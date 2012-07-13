@@ -36,7 +36,7 @@ class TestSwitchFrameChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
-        self.win = self.marionette.get_window()
+        self.win = self.marionette.current_window_handle
         self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
 
     def tearDown(self):

@@ -31,9 +31,9 @@ Services.obs.addObserver(function observeCmdLine(subj, topic, data) {
     // observeInstall is present for the lifetime of the runtime.
     let config = JSON.parse(data);
     config.registryDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    DOMApplicationRegistry.confirmInstall(config);
     delete WebappRT.config;
     WebappRT.config = deepFreeze(config);
-    DOMApplicationRegistry.confirmInstall(config);
     Services.obs.notifyObservers(null, "webapprt-test-did-install",
                                  JSON.stringify(config));
   }, "webapps-ask-install", false);

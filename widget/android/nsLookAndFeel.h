@@ -19,6 +19,7 @@ public:
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle);
     virtual bool GetEchoPasswordImpl();
+    virtual PRUint32 GetPasswordMaskDelayImpl();
 
 protected:
     static bool mInitializedSystemColors;

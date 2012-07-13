@@ -16,7 +16,7 @@ class TestGetAttributeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
-        self.win = self.marionette.get_window()
+        self.win = self.marionette.current_window_handle
         self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
 
     def tearDown(self):
@@ -26,6 +26,5 @@ class TestGetAttributeChrome(MarionetteTestCase):
 
     def test_getAttribute(self):
         el = self.marionette.execute_script("return window.document.getElementById('textInput');")
-        found_el = self.marionette.find_element("id", "textInput")
         self.assertEqual(el.get_attribute("id"), "textInput")
 

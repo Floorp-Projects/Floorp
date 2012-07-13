@@ -32,12 +32,12 @@ class TestSwitchWindow(MarionetteTestCase):
         self.marionette.set_context("content")
 
     def test_windows(self):
-        orig_win = self.marionette.get_window()
-        orig_available = self.marionette.get_windows()
+        orig_win = self.marionette.current_window_handle
+        orig_available = self.marionette.window_handles
         self.open_new_window()
         #assert we're still in the original window
-        self.assertEqual(self.marionette.get_window(), orig_win)
-        now_available = self.marionette.get_windows()
+        self.assertEqual(self.marionette.current_window_handle, orig_win)
+        now_available = self.marionette.window_handles
         #assert we can find the new window
         self.assertEqual(len(now_available), len(orig_available) + 1) 
         #assert that our window is there
@@ -48,12 +48,12 @@ class TestSwitchWindow(MarionetteTestCase):
                 new_win = orig_win
         #switch to another window
         self.marionette.switch_to_window(new_win)
-        self.assertEqual(self.marionette.get_window(), new_win)
+        self.assertEqual(self.marionette.current_window_handle, new_win)
         #switch back
         self.marionette.switch_to_window(orig_win)
         self.close_new_window()
-        self.assertEqual(self.marionette.get_window(), orig_win)
-        self.assertEqual(len(self.marionette.get_windows()), len(orig_available))
+        self.assertEqual(self.marionette.current_window_handle, orig_win)
+        self.assertEqual(len(self.marionette.window_handles), len(orig_available))
 
     def tearDown(self):
         #ensure that we close the window, regardless of pass/failure

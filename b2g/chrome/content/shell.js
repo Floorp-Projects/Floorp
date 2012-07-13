@@ -43,6 +43,10 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
   return DebuggerServer;
 });
 
+function getContentWindow() {
+  return shell.contentBrowser.contentWindow;
+}
+
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
 // the pre-installed web applications

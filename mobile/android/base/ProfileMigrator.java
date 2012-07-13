@@ -201,7 +201,7 @@ public class ProfileMigrator {
         "       places.title            AS p_title, "     +
         "       places.guid             AS p_guid, "      +
         "       MAX(history.visit_date) AS h_date, "      +
-        "       COUNT(*) AS h_visits, "                   +
+        "       COUNT(*)                AS h_visits, "    +
         // see BrowserDB.filterAllSites for this formula
         "       MAX(1, 100 * 225 / (" +
         "          ((MAX(history.visit_date)/1000 - ?) / 86400000) * " +

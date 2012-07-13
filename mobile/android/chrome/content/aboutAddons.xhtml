@@ -72,11 +72,12 @@
         </div>
         <div class="description-full"></div>
       </div>
+      <div class="status status-uninstalled show-on-uninstall"></div>
       <div class="buttons">
         <button id="enable-btn" class="show-on-disable hide-on-enable hide-on-uninstall" onclick="Addons.enable();">&addonAction.enable;</button>
         <button id="disable-btn" class="show-on-enable hide-on-disable hide-on-uninstall" onclick="Addons.disable();">&addonAction.disable;</button>
         <button id="uninstall-btn" class="hide-on-uninstall" onclick="Addons.uninstall();">&addonAction.uninstall;</button>
-        <button id="cancel-btn" class="show-on-uninstall" onclick="Addons.cancelUninstall();">&addonAction.cancel;</button>
+        <button id="cancel-btn" class="show-on-uninstall" onclick="Addons.cancelUninstall();">&addonAction.undo;</button>
       </div>
       <div class="options-header">&aboutAddons.options;</div>
       <div class="options-box"></div>
