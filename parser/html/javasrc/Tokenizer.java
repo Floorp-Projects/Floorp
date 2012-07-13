@@ -497,9 +497,9 @@ public class Tokenizer implements Locator {
 
     private final boolean newAttributesEachTime;
 
-    // ]NOCPP]
-
     private int mappingLangToXmlLang;
+
+    // ]NOCPP]
 
     private boolean shouldSuspend;
 
