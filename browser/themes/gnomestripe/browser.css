@@ -1290,7 +1290,7 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 .ac-comment {
-  font-size: 1.15em;
+  font-size: 1.05em;
 }
 
 .ac-extra > .ac-comment {
@@ -1300,6 +1300,7 @@ toolbar[iconsize="small"] #feed-button {
 .ac-url-text,
 .ac-action-text {
   color: -moz-nativehyperlinktext;
+  font-size: 0.9em;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
