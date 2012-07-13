@@ -92,6 +92,7 @@ abstract public class GeckoApp
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
+    private boolean mIsRestoringActivity;
 
     private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
@@ -1762,10 +1763,16 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
-        sGeckoThread = new GeckoThread();
-        String uri = getURIFromIntent(getIntent());
-        if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
-            sGeckoThread.start();
+        if (sGeckoThread == null) {
+            sGeckoThread = new GeckoThread();
+            String uri = getURIFromIntent(getIntent());
+            if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
+                sGeckoThread.start();
+        } else {
+            // this happens when the GeckoApp activity is destroyed by android
+            // without killing the entire application (see bug 769269)
+            mIsRestoringActivity = true;
+        }
 
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
@@ -2012,6 +2019,16 @@ abstract public class GeckoApp
                 }
             }
         }, 50);
+
+        if (mIsRestoringActivity) {
+            setLaunchState(GeckoApp.LaunchState.GeckoRunning);
+            Tab selectedTab = Tabs.getInstance().getSelectedTab();
+            if (selectedTab != null)
+                Tabs.getInstance().selectTab(selectedTab.getId());
+            connectGeckoLayerClient();
+            GeckoAppShell.setLayerClient(getLayerClient());
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+        }
     }
 
     public GeckoProfile getProfile() {
