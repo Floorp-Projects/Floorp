@@ -3483,6 +3483,10 @@ pref("webgl.msaa-force", false);
 pref("network.tcp.sendbuffer", 131072);
 #endif
 
+// Asynchonous video compositing using the ImageBridge IPDL protocol.
+// requires off-main-thread compositing.
+pref("layers.async-video.enabled",false);
+
 // Whether to disable acceleration for all widgets.
 #ifdef MOZ_E10S_COMPAT
 pref("layers.acceleration.disabled", true);
