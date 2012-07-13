@@ -409,7 +409,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       unit[2] = GetCommonUnit(aProperty, triplet1->mZValue.GetUnit(),
                               triplet2->mZValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[2] == eCSSUnit_Null) {
+          unit[0] == eCSSUnit_URL) {
         return false;
       }
 
@@ -1758,7 +1758,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       unit[2] = GetCommonUnit(aProperty, triplet1.mZValue.GetUnit(),
                               triplet2.mZValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[2] == eCSSUnit_Null) {
+          unit[0] == eCSSUnit_Null || unit[0] == eCSSUnit_URL) {
         return false;
       }
 
