@@ -26,6 +26,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "Debugger", function() {
+  let JsDebugger = {};
+  Components.utils.import("resource://gre/modules/jsdebugger.jsm", JsDebugger);
+
+  let global = Components.utils.getGlobalForObject({});
+  JsDebugger.addDebuggerToGlobal(global);
+
+  return global.Debugger;
+});
+
 let prefSvc = "@mozilla.org/preferences-service;1";
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Cc[prefSvc].getService(Ci.nsIPrefService);
@@ -277,6 +287,87 @@ gcli.addCommand({
     persist.saveURI(source, null, null, null, null, file);
 
     return "Saved to " + filename;
+  }
+});
+
+
+let callLogDebuggers = [];
+
+/**
+ * 'calllog' command
+ */
+gcli.addCommand({
+  name: "calllog",
+  description: gcli.lookup("calllogDesc")
+})
+
+/**
+ * 'calllog start' command
+ */
+gcli.addCommand({
+  name: "calllog start",
+  description: gcli.lookup("calllogStartDesc"),
+
+  exec: function(args, context) {
+    let contentWindow = context.environment.contentDocument.defaultView;
+
+    let dbg = new Debugger(contentWindow);
+    dbg.onEnterFrame = function(frame) {
+      // BUG 773652 -  Make the output from the GCLI calllog command nicer
+      contentWindow.console.log("Method call: " + this.callDescription(frame));
+    }.bind(this);
+
+    callLogDebuggers.push(dbg);
+
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab;
+    HUDService.activateHUDForContext(tab);
+
+    return gcli.lookup("calllogStartReply");
+  },
+
+  callDescription: function(frame) {
+    let name = "<anonymous>";
+    if (frame.callee.name) {
+      name = frame.callee.name;
+    }
+    else {
+      let desc = frame.callee.getOwnPropertyDescriptor("displayName");
+      if (desc && desc.value && typeof desc.value == "string") {
+        name = desc.value;
+      }
+    }
+
+    let args = frame.arguments.map(this.valueToString).join(", ");
+    return name + "(" + args + ")";
+  },
+
+  valueToString: function(value) {
+    if (typeof value !== "object" || value === null) {
+      return uneval(value);
+    }
+    return "[object " + value.class + "]";
+  }
+});
+
+/**
+ * 'calllog stop' command
+ */
+gcli.addCommand({
+  name: "calllog stop",
+  description: gcli.lookup("calllogStopDesc"),
+
+  exec: function(args, context) {
+    let numDebuggers = callLogDebuggers.length;
+    if (numDebuggers == 0) {
+      return gcli.lookup("calllogStopNoLogging");
+    }
+
+    for (let dbg of callLogDebuggers) {
+      dbg.onEnterFrame = undefined;
+    }
+    callLogDebuggers = [];
+
+    return gcli.lookupFormat("calllogStopReply", [ numDebuggers ]);
   }
 });
 
