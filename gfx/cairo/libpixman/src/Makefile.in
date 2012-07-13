@@ -81,6 +81,7 @@ CSRCS	= \
 	pixman-access-accessors.c \
 	pixman-bits-image.c \
 	pixman.c \
+	pixman-combine16.c \
 	pixman-combine32.c \
 	pixman-combine64.c \
 	pixman-conical-gradient.c \

@@ -82,9 +82,9 @@ abstract public class GeckoApp
     protected LinearLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
-    public static SurfaceView cameraView;
+    public SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public static boolean mDOMFullScreen = false;
+    public boolean mDOMFullScreen = false;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     private static GeckoThread sGeckoThread;
@@ -92,20 +92,21 @@ abstract public class GeckoApp
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
+    private boolean mIsRestoringActivity;
 
     private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
 
-    public static DoorHangerPopup mDoorHangerPopup;
-    public static FormAssistPopup mFormAssistPopup;
+    public DoorHangerPopup mDoorHangerPopup;
+    public FormAssistPopup mFormAssistPopup;
     public TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
-    private static LayerController mLayerController;
-    private static GeckoLayerClient mLayerClient;
-    private static AbsoluteLayout mPluginContainer;
-    private static FindInPageBar mFindInPageBar;
+    private LayerController mLayerController;
+    private GeckoLayerClient mLayerClient;
+    private AbsoluteLayout mPluginContainer;
+    private FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -1762,10 +1763,16 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
-        sGeckoThread = new GeckoThread();
-        String uri = getURIFromIntent(getIntent());
-        if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
-            sGeckoThread.start();
+        if (sGeckoThread == null) {
+            sGeckoThread = new GeckoThread();
+            String uri = getURIFromIntent(getIntent());
+            if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
+                sGeckoThread.start();
+        } else {
+            // this happens when the GeckoApp activity is destroyed by android
+            // without killing the entire application (see bug 769269)
+            mIsRestoringActivity = true;
+        }
 
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
@@ -2012,6 +2019,16 @@ abstract public class GeckoApp
                 }
             }
         }, 50);
+
+        if (mIsRestoringActivity) {
+            setLaunchState(GeckoApp.LaunchState.GeckoRunning);
+            Tab selectedTab = Tabs.getInstance().getSelectedTab();
+            if (selectedTab != null)
+                Tabs.getInstance().selectTab(selectedTab.getId());
+            connectGeckoLayerClient();
+            GeckoAppShell.setLayerClient(getLayerClient());
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+        }
     }
 
     public GeckoProfile getProfile() {
@@ -2294,17 +2311,22 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Start", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Tab:ViewportMetadata", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
@@ -2319,6 +2341,15 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
 
         deleteTempFiles();
+
+        if (mLayerController != null)
+            mLayerController.destroy();
+        if (mLayerClient != null)
+            mLayerClient.destroy();
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.destroy();
+        if (mPromptService != null)
+            mPromptService.destroy();
 
         if (mFavicons != null)
             mFavicons.close();
@@ -2880,8 +2911,6 @@ abstract public class GeckoApp
 
         moveTaskToBack(true);
     }
-
-    static int kCaptureIndex = 0;
 
     public interface ActivityResultHandler {
         public void onActivityResult(int resultCode, Intent data);
