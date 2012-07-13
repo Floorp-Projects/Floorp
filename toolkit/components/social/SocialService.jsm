@@ -72,6 +72,34 @@ const SocialService = {
     Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
   },
 
+  // Adds a provider given a manifest, and returns the added provider.
+  addProvider: function addProvider(manifest, onDone) {
+    if (SocialServiceInternal.providers[manifest.origin])
+      throw new Error("SocialService.addProvider: provider with this origin already exists");
+
+    let provider = new SocialProvider(manifest, SocialServiceInternal.enabled);
+    SocialServiceInternal.providers[provider.origin] = provider;
+
+    schedule(function () {
+      onDone(provider);
+    });
+  },
+
+  // Removes a provider with the given origin, and notifies when the removal is
+  // complete.
+  removeProvider: function removeProvider(origin, onDone) {
+    if (!(origin in SocialServiceInternal.providers))
+      throw new Error("SocialService.removeProvider: no provider with this origin exists!");
+
+    let provider = SocialServiceInternal.providers[origin];
+    provider.enabled = false;
+
+    delete SocialServiceInternal.providers[origin];
+
+    if (onDone)
+      schedule(onDone);
+  },
+
   // Returns a single provider object with the specified origin.
   getProvider: function getProvider(origin, onDone) {
     schedule((function () {
