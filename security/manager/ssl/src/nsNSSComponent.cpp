@@ -55,6 +55,7 @@
 #include "nsNSSShutDown.h"
 #include "nsSmartCardEvent.h"
 #include "nsIKeyModule.h"
+#include "ScopedNSSTypes.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -2028,7 +2029,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
   *aPrincipal = nullptr;
 
   nsNSSShutDownPreventionLock locker;
-  SEC_PKCS7ContentInfo * p7_info = nullptr; 
+  ScopedSEC_PKCS7ContentInfo p7_info; 
   unsigned char hash[SHA1_LENGTH]; 
 
   SECItem item;
@@ -2126,8 +2127,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
       certPrincipal.swap(*aPrincipal);
     } while (0);
   }
-
-  SEC_PKCS7DestroyContentInfo(p7_info);
 
   return rv2;
 }
