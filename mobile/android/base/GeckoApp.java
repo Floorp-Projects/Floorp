@@ -31,7 +31,6 @@ import org.json.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
-import android.text.format.Time;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
@@ -122,11 +121,13 @@ abstract public class GeckoApp
                              Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.Launching;
 
+    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
+
     private ActivityResultHandlerMap mActivityResultHandlerMap = new ActivityResultHandlerMap();
-    private FilePickerResultHandlerSync mFilePickerResultHandlerSync = new FilePickerResultHandlerSync();
+    private FilePickerResultHandlerSync mFilePickerResultHandlerSync = new FilePickerResultHandlerSync(mFilePickerResult);
     private AwesomebarResultHandler mAwesomebarResultHandler = new AwesomebarResultHandler();
-    private CameraImageResultHandler mCameraImageResultHandler = new CameraImageResultHandler();
-    private CameraVideoResultHandler mCameraVideoResultHandler = new CameraVideoResultHandler();
+    private CameraImageResultHandler mCameraImageResultHandler = new CameraImageResultHandler(mFilePickerResult);
+    private CameraVideoResultHandler mCameraVideoResultHandler = new CameraVideoResultHandler(mFilePickerResult);
 
     abstract public int getLayout();
     abstract public boolean isBrowserToolbarSupported();
@@ -2682,12 +2683,6 @@ abstract public class GeckoApp
         return addIntentActivitiesToList(intent, aItems, aIntents);
     }
 
-    static private String generateImageName() {
-        Time now = new Time();
-        now.setToNow();
-        return now.format("%Y-%m-%d %H.%M.%S") + ".jpg";
-    }
-
     private PromptService.PromptListItem[] getItemsAndIntentsForFilePicker(String aMimeType, ArrayList<Intent> aIntents) {
         ArrayList<PromptService.PromptListItem> items = new ArrayList<PromptService.PromptListItem>();
 
@@ -2696,11 +2691,10 @@ abstract public class GeckoApp
                 AddFilePickingActivities(items, "*/*", aIntents);
             }
         } else if (aMimeType.equals("image/*")) {
-            mImageFilePath = generateImageName();
             Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  mImageFilePath)));
+                                                  CameraImageResultHandler.generateImageName())));
             addIntentActivitiesToList(intent, items, aIntents);
 
             if (AddFilePickingActivities(items, "image/*", aIntents) <= 0) {
@@ -2714,11 +2708,10 @@ abstract public class GeckoApp
               AddFilePickingActivities(items, "*/*", aIntents);
             }
         } else {
-            mImageFilePath = generateImageName();
             Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  mImageFilePath)));
+                                                  CameraImageResultHandler.generateImageName())));
             addIntentActivitiesToList(intent, items, aIntents);
 
             intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
@@ -2778,9 +2771,6 @@ abstract public class GeckoApp
 
         return intents.get(itemId);
     }
-
-    private String mImageFilePath = "";
-    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
 
     public boolean showFilePicker(String aMimeType, ActivityResultHandler handler) {
         Intent intent = getFilePickerIntent(aMimeType);
@@ -2912,24 +2902,6 @@ abstract public class GeckoApp
         moveTaskToBack(true);
     }
 
-    public interface ActivityResultHandler {
-        public void onActivityResult(int resultCode, Intent data);
-    }
-
-    class ActivityResultHandlerMap {
-        private Map<Integer, ActivityResultHandler> mMap = new HashMap<Integer, ActivityResultHandler>();
-        private int mCounter = 0;
-
-        synchronized int put(ActivityResultHandler handler) {
-            mMap.put(mCounter, handler);
-            return mCounter++;
-        }
-
-        synchronized ActivityResultHandler getAndRemove(int i) {
-            return mMap.remove(i);
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
@@ -2938,123 +2910,6 @@ abstract public class GeckoApp
             handler.onActivityResult(resultCode, data);
         else
             super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    static abstract class FilePickerResultHandler implements ActivityResultHandler {
-        String handleActivityResult(int resultCode, Intent data) {
-            if (data == null || resultCode != RESULT_OK)
-                return "";
-            Uri uri = data.getData();
-            if (uri == null)
-                return "";
-            if ("file".equals(uri.getScheme())) {
-                String path = uri.getPath();
-                return path == null ? "" : path;
-            }
-            try {
-                ContentResolver cr = GeckoApp.mAppContext.getContentResolver();
-                Cursor cursor = cr.query(uri, new String[] { OpenableColumns.DISPLAY_NAME },
-                                         null, null, null);
-                String name = null;
-                if (cursor != null) {
-                    try {
-                        if (cursor.moveToNext()) {
-                            name = cursor.getString(0);
-                        }
-                    } finally {
-                        cursor.close();
-                    }
-                }
-                String fileName = "tmp_";
-                String fileExt = null;
-                int period;
-                if (name == null || (period = name.lastIndexOf('.')) == -1) {
-                    String mimeType = cr.getType(uri);
-                    fileExt = "." + GeckoAppShell.getExtensionFromMimeType(mimeType);
-                } else {
-                    fileExt = name.substring(period);
-                    fileName = name.substring(0, period);
-                }
-                File file = File.createTempFile(fileName, fileExt, GeckoAppShell.getGREDir(GeckoApp.mAppContext));
-                FileOutputStream fos = new FileOutputStream(file);
-                InputStream is = cr.openInputStream(uri);
-                byte[] buf = new byte[4096];
-                int len = is.read(buf);
-                while (len != -1) {
-                    fos.write(buf, 0, len);
-                    len = is.read(buf);
-                }
-                fos.close();
-                String path = file.getAbsolutePath();
-                return path == null ? "" : path;
-            } catch (Exception e) {
-                Log.e(LOGTAG, "showing file picker", e);
-            }
-            return "";
-        }
-    }
-
-    class FilePickerResultHandlerSync extends FilePickerResultHandler {
-        public void onActivityResult(int resultCode, Intent data) {
-            try {
-                mFilePickerResult.put(handleActivityResult(resultCode, data));
-            } catch (InterruptedException e) {
-                Log.i(LOGTAG, "error returning file picker result", e);
-            }
-
-        }
-    }
-
-    class AwesomebarResultHandler implements ActivityResultHandler {
-        public void onActivityResult(int resultCode, Intent data) {
-            if (data != null) {
-                String url = data.getStringExtra(AwesomeBar.URL_KEY);
-                AwesomeBar.Target target = AwesomeBar.Target.valueOf(data.getStringExtra(AwesomeBar.TARGET_KEY));
-                String searchEngine = data.getStringExtra(AwesomeBar.SEARCH_KEY);
-                boolean userEntered = data.getBooleanExtra(AwesomeBar.USER_ENTERED_KEY, false);
-                if (url != null && url.length() > 0)
-                    loadRequest(url, target, searchEngine, userEntered);
-            }
-        }
-    }
-
-    class CameraImageResultHandler implements ActivityResultHandler {
-        public void onActivityResult(int resultCode, Intent data) {
-            try {
-                if (resultCode != Activity.RESULT_OK) {
-                    mFilePickerResult.put("");
-                    return;
-                }
-
-                File file = new File(Environment.getExternalStorageDirectory(), mImageFilePath);
-                mImageFilePath = "";
-                mFilePickerResult.put(file.getAbsolutePath());
-            } catch (InterruptedException e) {
-                Log.i(LOGTAG, "error returning file picker result", e);
-            }
-        }
-    }
-
-    class CameraVideoResultHandler implements ActivityResultHandler {
-        public void onActivityResult(int resultCode, Intent data) {
-            try {
-                if (data == null || resultCode != Activity.RESULT_OK) {
-                    mFilePickerResult.put("");
-                    return;
-                }
-
-                Cursor cursor = managedQuery(data.getData(),
-                                             new String[] { MediaStore.Video.Media.DATA },
-                                             null,
-                                             null,
-                                             null);
-                cursor.moveToFirst();
-                mFilePickerResult.put(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)));
-            } catch (InterruptedException e) {
-                Log.i(LOGTAG, "error returning file picker result", e);
-            }
-
-        }
     }
 
     // If searchEngine is provided, url will be used as the search query.

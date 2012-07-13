@@ -2271,9 +2271,10 @@ public class GeckoAppShell
         msg.recycle();
     }
 
-    static class AsyncResultHandler extends GeckoApp.FilePickerResultHandler {
+    static class AsyncResultHandler extends FilePickerResultHandler {
         private long mId;
         AsyncResultHandler(long id) {
+            super(null);
             mId = id;
         }
 
