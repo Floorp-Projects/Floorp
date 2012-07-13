@@ -204,6 +204,10 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
         mListener = listener;
     }
 
+    Listener getListener() {
+        return mListener;
+    }
+
     public GLController getGLController() {
         return mGLController;
     }
