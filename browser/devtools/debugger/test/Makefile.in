@@ -57,6 +57,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_pause-exceptions.js \
 	browser_dbg_multiple-windows.js \
 	browser_dbg_menustatus.js \
+	browser_dbg_bfcache.js \
 	head.js \
 	$(NULL)
 
