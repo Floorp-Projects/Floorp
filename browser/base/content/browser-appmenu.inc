@@ -142,68 +142,19 @@
       <menu id="appmenu_webDeveloper"
             label="&appMenuWebDeveloper.label;">
         <menupopup id="appmenu_webDeveloper_popup">
-          <menuitem id="appmenu_devToolbar"
-                    type="checkbox"
-                    autocheck="false"
-                    hidden="true"
-                    label="&devToolbarMenu.label;"
-                    command="Tools:DevToolbar"
-                    key="key_devToolbar"/>
-          <menuitem id="appmenu_webConsole"
-                    label="&webConsoleCmd.label;"
-                    type="checkbox"
-                    command="Tools:WebConsole"
-                    key="key_webConsole"/>
-          <menuitem id="appmenu_pageInspect"
-                    hidden="true"
-                    label="&inspectMenu.label;"
-                    type="checkbox"
-                    command="Tools:Inspect"
-                    key="key_inspect"/>
-          <menuitem id="appmenu_responsiveUI"
-                    hidden="true"
-                    label="&responsiveDesignTool.label;"
-                    type="checkbox"
-                    command="Tools:ResponsiveUI"
-                    key="key_responsiveUI"/>
-          <menuitem id="appmenu_debugger"
-                    hidden="true"
-                    type="checkbox"
-                    label="&debuggerMenu.label2;"
-                    key="key_debugger"
-                    command="Tools:Debugger"/>
-          <menuitem id="appmenu_remoteDebugger"
-                    hidden="true"
-                    label="&remoteDebuggerMenu.label;"
-                    command="Tools:RemoteDebugger"/>
-          <menuitem id="appmenu_chromeDebugger"
-                    hidden="true"
-                    label="&chromeDebuggerMenu.label;"
-                    command="Tools:ChromeDebugger"/>
-          <menuitem id="appmenu_scratchpad"
-                    hidden="true"
-                    label="&scratchpad.label;"
-                    key="key_scratchpad"
-                    command="Tools:Scratchpad"/>
-          <menuitem id="appmenu_styleeditor"
-                    hidden="true"
-                    type="checkbox"
-                    label="&styleeditor.label;"
-                    key="key_styleeditor"
-                    command="Tools:StyleEditor"/>
-          <menuitem id="appmenu_pageSource"
-                    label="&viewPageSourceCmd.label;"
-                    command="View:PageSource"
-                    key="key_viewSource"/>
-          <menuitem id="appmenu_errorConsole"
-                    hidden="true"
-                    label="&errorConsoleCmd.label;"
-                    key="key_errorConsole"
-                    oncommand="toJavaScriptConsole();"/>
+          <menuitem id="appmenu_devToolbar" observes="devtoolsMenuBroadcaster_DevToolbar"/>
+          <menuitem id="appmenu_webConsole" observes="devtoolsMenuBroadcaster_WebConsole"/>
+          <menuitem id="appmenu_pageinspect" observes="devtoolsMenuBroadcaster_Inspect"/>
+          <menuitem id="appmenu_responsiveUI" observes="devtoolsMenuBroadcaster_ResponsiveUI"/>
+          <menuitem id="appmenu_debugger" observes="devtoolsMenuBroadcaster_Debugger"/>
+          <menuitem id="appmenu_remoteDebugger" observes="devtoolsMenuBroadcaster_RemoteDebugger"/>
+          <menuitem id="appmenu_chromeDebugger" observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
+          <menuitem id="appmenu_scratchpad" observes="devtoolsMenuBroadcaster_Scratchpad"/>
+          <menuitem id="appmenu_styleeditor" observes="devtoolsMenuBroadcaster_StyleEditor"/>
+          <menuitem id="appmenu_pageSource" observes="devtoolsMenuBroadcaster_PageSource"/>
+          <menuitem id="appmenu_errorConsole" observes="devtoolsMenuBroadcaster_ErrorConsole"/>
           <menuseparator id="appmenu_devToolsEndSeparator"/>
-          <menuitem id="appmenu_getMoreDevtools"
-                    label="&getMoreDevtoolsCmd.label;"
-                    oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
+          <menuitem id="appmenu_getMoreDevtools" observes="devtoolsMenuBroadcaster_GetMoreTools"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
 #define OMIT_ACCESSKEYS
