@@ -488,6 +488,8 @@ public:
       mBindingParent = aBindingParent;
     }
 
+    const nsAttrValue* GetAttrValue(const nsAString& aName);
+
     /**
      * Get the attr info for the given namespace ID and attribute name.
      * The namespace ID must not be kNameSpaceID_Unknown and the name
