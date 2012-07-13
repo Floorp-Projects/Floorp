@@ -3059,9 +3059,76 @@ NS_IMPL_ISUPPORTS0(Identity)
 
 xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 
+// A proxy handler that lets us wrap callables and invoke them with
+// the correct this object, while forwarding all other operations down
+// to them directly.
+class SandboxCallableProxyHandler : public js::DirectWrapper {
+public:
+    SandboxCallableProxyHandler() : js::DirectWrapper(0)
+    {
+    }
+
+    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc,
+                      Value *vp);
+};
+
+bool
+SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
+                                  Value *vp)
+{
+    // We forward the call to our underlying callable. The callable to forward
+    // to can be gotten via GetProxyCall.
+
+    // The parent of our proxy is the SandboxProxyHandler proxy
+    JSObject *sandboxProxy = JS_GetParent(proxy);
+    MOZ_ASSERT(js::IsProxy(sandboxProxy) &&
+               js::GetProxyHandler(sandboxProxy) == &xpc::sandboxProxyHandler);
+
+    // The parent of the sandboxProxy is the sandbox global, and the
+    // target object is the original proto.
+    JSObject *sandboxGlobal = JS_GetParent(sandboxProxy);
+    MOZ_ASSERT(js::GetObjectJSClass(sandboxGlobal) == &SandboxClass);
+
+    // If our this object is the sandbox global, we call with this set to the
+    // original proto instead.  Note that we very carefully avoid using JS_THIS
+    // or JS_THIS_OBJECT here, because we do NOT want to box undefined into the
+    // global.  Instead, we just pass it through to our callable, and it will
+    // compute the global based on its own scope chain, which will do the right
+    // thing.
+    JS::Value thisVal = JS_THIS_VALUE(cx, vp);
+    if (thisVal == ObjectValue(*sandboxGlobal)) {
+        thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
+    }
+
+    return JS::Call(cx, thisVal, js::GetProxyCall(proxy), argc,
+                    JS_ARGV(cx, vp), vp);
+}
+
+static SandboxCallableProxyHandler sandboxCallableProxyHandler;
+
+// Wrap a callable such that if we're called with oldThisObj as the
+// "this" we will instead call it with newThisObj as the this.
+static JSObject*
+WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
+{
+    MOZ_ASSERT(JS_ObjectIsCallable(cx, callable));
+    // Our proxy is wrapping the callable.  So we need to use the
+    // callable as the private.  We use the given sandboxProtoProxy as
+    // the parent, and our call() hook depends on that.
+    MOZ_ASSERT(js::IsProxy(sandboxProtoProxy) &&
+               js::GetProxyHandler(sandboxProtoProxy) ==
+                 &xpc::sandboxProxyHandler);
+
+    // We need to pass the given callable in as the "call" and
+    // "construct" so we get a function proxy.
+    return js::NewProxyObject(cx, &sandboxCallableProxyHandler,
+                              ObjectValue(*callable), nsnull,
+                              sandboxProtoProxy, callable, callable);
+}
+
 template<typename Op>
-bool BindPropertyOp(JSContext *cx, JSObject *targetObj, Op& op,
-                    PropertyDescriptor *desc, jsid id, unsigned attrFlag)
+bool BindPropertyOp(JSContext *cx, Op& op, PropertyDescriptor *desc, jsid id,
+                    unsigned attrFlag, JSObject *sandboxProtoProxy)
 {
     if (!op) {
         return true;
@@ -3079,7 +3146,7 @@ bool BindPropertyOp(JSContext *cx, JSObject *targetObj, Op& op,
         if (!func)
             return false;
     }
-    func = JS_BindCallable(cx, func, targetObj);
+    func = WrapCallable(cx, func, sandboxProtoProxy);
     if (!func)
         return false;
     op = JS_DATA_TO_FUNC_PTR(Op, func);
@@ -3123,16 +3190,16 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
     // access to expandos when we're not doing Xrays.
     if (desc->getter != xpc::holder_get &&
         desc->getter != XPC_WN_Helper_GetProperty &&
-        !BindPropertyOp(cx, obj, desc->getter, desc, id, JSPROP_GETTER))
+        !BindPropertyOp(cx, desc->getter, desc, id, JSPROP_GETTER, proxy))
         return false;
     if (desc->setter != xpc::holder_set &&
         desc->setter != XPC_WN_Helper_SetProperty &&
-        !BindPropertyOp(cx, obj, desc->setter, desc, id, JSPROP_SETTER))
+        !BindPropertyOp(cx, desc->setter, desc, id, JSPROP_SETTER, proxy))
         return false;
     if (desc->value.isObject()) {
         JSObject* val = &desc->value.toObject();
         if (JS_ObjectIsCallable(cx, val)) {
-            val = JS_BindCallable(cx, val, obj);
+            val = WrapCallable(cx, val, proxy);
             if (!val)
                 return false;
             desc->value = ObjectValue(*val);
