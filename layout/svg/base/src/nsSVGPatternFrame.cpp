@@ -144,6 +144,7 @@ nsSVGPatternFrame::GetCanvasTM(PRUint32 aFor)
 nsresult
 nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
                                 gfxMatrix* patternMatrix,
+                                const gfxMatrix &aContextMatrix,
                                 nsIFrame *aSource,
                                 nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                 float aGraphicOpacity,
@@ -189,16 +190,15 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // Get all of the information we need from our "caller" -- i.e.
   // the geometry that is being rendered with a pattern
   gfxRect callerBBox;
-  gfxMatrix callerCTM;
-  if (NS_FAILED(GetTargetGeometry(&callerCTM,
-                                  &callerBBox,
+  if (NS_FAILED(GetTargetGeometry(&callerBBox,
                                   aSource,
+                                  aContextMatrix,
                                   aOverrideBounds)))
     return NS_ERROR_FAILURE;
 
   // Construct the CTM that we will provide to our children when we
   // render them into the tile.
-  gfxMatrix ctm = ConstructCTM(callerBBox, callerCTM, aSource);
+  gfxMatrix ctm = ConstructCTM(callerBBox, aContextMatrix, aSource);
   if (ctm.IsSingular()) {
     return NS_ERROR_FAILURE;
   }
@@ -215,7 +215,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // Get the bounding box of the pattern.  This will be used to determine
   // the size of the surface, and will also be used to define the bounding
   // box for the pattern tile.
-  gfxRect bbox = GetPatternRect(callerBBox, callerCTM, aSource);
+  gfxRect bbox = GetPatternRect(callerBBox, aContextMatrix, aSource);
 
   // Get the pattern transform
   gfxMatrix patternTransform = GetPatternTransform();
@@ -228,7 +228,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
   *patternMatrix = GetPatternMatrix(patternTransform,
-                                    bbox, callerBBox, callerCTM);
+                                    bbox, callerBBox, aContextMatrix);
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
@@ -621,9 +621,9 @@ nsSVGPatternFrame::GetPatternMatrix(const gfxMatrix &patternTransform,
 }
 
 nsresult
-nsSVGPatternFrame::GetTargetGeometry(gfxMatrix *aCTM,
-                                     gfxRect *aBBox,
+nsSVGPatternFrame::GetTargetGeometry(gfxRect *aBBox,
                                      nsIFrame *aTarget,
+                                     const gfxMatrix &aContextMatrix,
                                      const gfxRect *aOverrideBounds)
 {
   *aBBox = aOverrideBounds ? *aOverrideBounds : nsSVGUtils::GetBBox(aTarget);
@@ -635,14 +635,10 @@ nsSVGPatternFrame::GetTargetGeometry(gfxMatrix *aCTM,
       return NS_ERROR_FAILURE;
     }
   }
-
-  // Get the transformation matrix from our calling geometry
-  *aCTM = nsSVGUtils::GetCanvasTM(aTarget, nsISVGChildFrame::FOR_PAINTING);
-
   // OK, now fix up the bounding box to reflect user coordinates
   // We handle device unit scaling in pattern matrix
   {
-    float scale = nsSVGUtils::MaxExpansion(*aCTM);
+    float scale = nsSVGUtils::MaxExpansion(aContextMatrix);
     if (scale <= 0) {
       return NS_ERROR_FAILURE;
     }
@@ -656,6 +652,7 @@ nsSVGPatternFrame::GetTargetGeometry(gfxMatrix *aCTM,
 
 already_AddRefed<gfxPattern>
 nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
+                                         const gfxMatrix& aContextMatrix,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                          float aGraphicOpacity,
                                          const gfxRect *aOverrideBounds)
@@ -668,7 +665,7 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
   // Paint it!
   nsRefPtr<gfxASurface> surface;
   gfxMatrix pMatrix;
-  nsresult rv = PaintPattern(getter_AddRefs(surface), &pMatrix,
+  nsresult rv = PaintPattern(getter_AddRefs(surface), &pMatrix, aContextMatrix,
                              aSource, aFillOrStroke, aGraphicOpacity, aOverrideBounds);
 
   if (NS_FAILED(rv)) {
