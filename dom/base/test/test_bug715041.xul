@@ -140,7 +140,7 @@ target="_blank">Mozilla Bug 715041</a>
   //test case enabled
   var AddOutOfOrderActiveEnabled = AddOutOfOrderIdleEnabled =
       AddShiftLocalEnabled = AddNewLocalWhileAllIdleEnabled =
-      ShiftLocalTimerBackEnabled =
+      TestActiveToActiveNotification = ShiftLocalTimerBackEnabled =
       AddRemoveIdleObserverWithInvalidTimeEnabled = true;
 
   //msgXCount
@@ -156,6 +156,7 @@ target="_blank">Mozilla Bug 715041</a>
   var tcAddNewLocalWhileAllIdle = 4;
   var tcShiftLocalTimerBack = 5;
   var tcAddRemoveIdleObserverWithInvalidTime = 6;
+  var tcTestActiveToActiveNotification = 7;
 
   function ResetMsgCounts() {
     msg0Count = msg1Count = msg2Count = msg3Count = msg4Count = msg5Count =
@@ -238,6 +239,25 @@ target="_blank">Mozilla Bug 715041</a>
         AddOutOfOrderIdleCleanUp();
       }
       break;
+    case tcTestActiveToActiveNotification:
+      if (msg1Count === 1 && !msg2Count && !msg3Count && !msg4Count && !msg5Count) {
+        idleServiceObj.idleTime = 500;
+        idleServiceObj.testIdleBackService(idleObserversArray[1], "active");
+        return;
+      }
+      
+      if (msg1Count === 2 && !msg2Count && !msg3Count && !msg4Count && !msg5Count) {        
+        idleServiceObj.idleTime = 1000;
+        idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");
+        return;
+      }
+
+      if (msg1Count === 3 && !msg2Count && !msg3Count && !msg4Count && !msg5Count) {
+        return;
+      }
+      ok(false, "Failed test active to active notification.");
+      SimpleTest.finish();
+      break;  
     default:
       break;
     }
@@ -361,6 +381,14 @@ target="_blank">Mozilla Bug 715041</a>
         ShiftLocalTimerBackCleanUp();
       }
       break;
+    case tcTestActiveToActiveNotification:
+      passed = false;
+      if (msg1Count === 3 && !msg2Count && !msg3Count && !msg4Count && msg5Count === 1) {
+        passed = true;
+      }
+      ok(passed, "Failed TestActiveToActiveNotification.");
+          TestActiveNotificationCleanUp();
+      break;  
     default:
       //do nothing.
       break;
@@ -619,7 +647,7 @@ target="_blank">Mozilla Bug 715041</a>
       ShiftLocalTimerBack();
     }
     else {
-      dump("Finished testing AddNewLocalWhileAllIdle()\n");
+      dump("Finished testing TestActiveToActiveNotificationCleanUp()\n");
       SimpleTest.finish();
     }
   }
@@ -656,6 +684,35 @@ target="_blank">Mozilla Bug 715041</a>
     window.navigator.removeIdleObserver(idleObserversArray[4]);
     window.navigator.removeIdleObserver(idleObserversArray[5]);
     dump("ShiftLocalTimerBackCleanUp() done clean up\n");
+
+    if (TestActiveToActiveNotificationEnabled) {
+      TestActiveNotification();
+    }
+    else {
+      dump("Finished testing AddNewLocalWhileAllIdle()\n");
+      SimpleTest.finish();
+    }   
+  }
+
+  function TestActiveNotification()
+  {
+    dump("\n\nTESTING CASE TestActiveNotification\n");
+    dump("===============================================\n");
+
+    ResetVars();
+    currTestCaseNum = tcTestActiveToActiveNotification;
+
+    idleServiceObj.idleTime = 500;
+    window.navigator.addIdleObserver(idleObserversArray[1]);
+    window.navigator.addIdleObserver(idleObserversArray[5]);
+    idleServiceObj.idleTime = 1000;
+    idleServiceObj.testIdleBackService(idleObserversArray[1], "idle");    
+  }
+
+  function TestActiveNotificationCleanUp()
+  {
+    dump("\n\nTESTING CASE TestActiveNotificationCleanUp\n");
+    dump("===============================================\n");
 
     try {
       componentMgr.unregisterFactory(idleServiceCID, idleServiceObj);
@@ -749,11 +806,12 @@ target="_blank">Mozilla Bug 715041</a>
   AddOutOfOrderActiveEnabled = true;
   AddOutOfOrderIdleEnabled = true;
   AddNewLocalWhileAllIdleEnabled = true;
+  TestActiveToActiveNotificationEnabled = true;
   AddShiftLocalEnabled = true;
   AddIdleObserverWithInvalidTimeEnabled = false;
-
-  caseZero();
-
+  
+  caseZero();  
+  
     ]]>
     </script>
     </window>
