@@ -1370,12 +1370,13 @@ public class GeckoAppShell
     }
 
     public static String showFilePickerForExtensions(String aExtensions) {
-        return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aExtensions));
+        return GeckoApp.mAppContext.mActivityHelper.showFilePicker(
+            GeckoApp.mAppContext, getMimeTypeFromExtensions(aExtensions));
     }
 
     public static String showFilePickerForMimeType(String aMimeType) {
-        return GeckoApp.mAppContext.showFilePicker(aMimeType);
+        return GeckoApp.mAppContext.mActivityHelper.showFilePicker(
+            GeckoApp.mAppContext, aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -2288,9 +2289,12 @@ public class GeckoAppShell
 
     /* Called by JNI from AndroidBridge */
     public static void showFilePickerAsync(String aMimeType, long id) {
-        if (!GeckoApp.mAppContext.showFilePicker(aMimeType, new AsyncResultHandler(id)))
+        if (!GeckoApp.mAppContext.mActivityHelper.showFilePicker(
+                GeckoApp.mAppContext, aMimeType, new AsyncResultHandler(id))) {
             GeckoAppShell.notifyFilePickerResult("", id);
+        }
     }
+
     public static void screenshotWholePage(Tab tab) {
         ScreenshotHandler.screenshotWholePage(tab);
     }
