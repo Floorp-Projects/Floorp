@@ -6,7 +6,8 @@
 #ifndef nsInternetCiter_h__
 #define nsInternetCiter_h__
 
-#include "nsString.h"
+#include "nscore.h"
+#include "prtypes.h"
 
 /** Mail citations using standard Internet style.
   */

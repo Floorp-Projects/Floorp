@@ -4,17 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsInternetCiter.h"
-#include "nsCRT.h"
-
+#include "nsAString.h"
 #include "nsCOMPtr.h"
-
-// Line breaker stuff
-#include "nsIServiceManager.h"
-#include "nsLWBrkCIID.h"
+#include "nsCRT.h"
+#include "nsDebug.h"
+#include "nsDependentSubstring.h"
+#include "nsError.h"
 #include "nsILineBreaker.h"
+#include "nsInternetCiter.h"
+#include "nsLWBrkCIID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsString.h"
+#include "nsStringIterator.h"
 
 const PRUnichar gt ('>');
 const PRUnichar space (' ');
