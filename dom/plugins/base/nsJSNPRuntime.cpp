@@ -1812,8 +1812,13 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   }
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
-    // Found a live NPObject wrapper, return it.
-    return entry->mJSObj;
+    // Found a live NPObject wrapper. It may not be in the same compartment
+    // as cx, so we need to wrap it before returning it.
+    JSObject *obj = entry->mJSObj;
+    if (!JS_WrapObject(cx, &obj)) {
+      return NULL;
+    }
+    return obj;
   }
 
   entry->mNPObj = npobj;

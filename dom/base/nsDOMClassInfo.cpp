@@ -9890,7 +9890,13 @@ NS_IMETHODIMP
 nsHTMLPluginObjElementSH::PostTransplant(nsIXPConnectWrappedNative *wrapper,
                                          JSContext *cx, JSObject *obj)
 {
-  // XXXbholley - Implement me!
+  // Call through to PostCreate to do the prototype setup all over again. We
+  // may reuse the same prototype, in which case our prototype will be a wrapped
+  // version of the original.
+  nsresult rv = PostCreate(wrapper, cx, obj);
+  if (NS_FAILED(rv)) {
+      NS_WARNING("Calling PostCreate during PostTransplant for plugin element failed.");
+  }
   return NS_OK;
 }
 
