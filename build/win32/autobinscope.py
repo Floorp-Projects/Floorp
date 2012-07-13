@@ -70,6 +70,3 @@ if proc.returncode != 0:
   print "TEST-UNEXPECTED-FAIL | autobinscope.py | %s is missing a needed Windows protection, such as /GS or ASLR" % binary_path
 else:
   print "TEST-PASS | autobinscope.py | %s succeeded" % binary_path
-
-
-
