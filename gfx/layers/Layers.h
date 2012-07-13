@@ -411,8 +411,21 @@ public:
 
   /**
    * Can be called anytime, from any thread.
+   *
+   * Creates an Image container which forwards its images to the compositor within
+   * layer transactions on the main thread.
    */
   static already_AddRefed<ImageContainer> CreateImageContainer();
+  
+  /**
+   * Can be called anytime, from any thread.
+   *
+   * Tries to create an Image container which forwards its images to the compositor 
+   * asynchronously using the ImageBridge IPDL protocol. If the protocol is not
+   * available, the returned ImageContainer will forward images within layer 
+   * transactions, just like if it was created with CreateImageContainer().
+   */
+  static already_AddRefed<ImageContainer> CreateAsynchronousImageContainer();
 
   /**
    * Type of layer manager his is. This is to be used sparsely in order to

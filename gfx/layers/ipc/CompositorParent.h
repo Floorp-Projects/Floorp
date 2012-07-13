@@ -81,6 +81,13 @@ public:
   void SchedulePauseOnCompositorThread();
   void ScheduleResumeOnCompositorThread(int width, int height);
 
+  virtual void ScheduleComposition();
+  
+  /**
+   * Returns a pointer to the compositor corresponding to the given ID. 
+   */
+  static CompositorParent* GetCompositor(PRUint64 id);
+
   /**
    * Returns the compositor thread's message loop.
    *
@@ -103,7 +110,6 @@ protected:
   virtual bool DeallocPLayers(PLayersParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
-  virtual void ScheduleComposition();
   virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
@@ -118,6 +124,16 @@ private:
   void TransformShadowTree();
 
   inline PlatformThreadId CompositorThreadID();
+
+  /**
+   * Creates a global map referencing each compositor by ID.
+   *
+   * This map is used by the ImageBridge protocol to trigger
+   * compositions without having to keep references to the 
+   * compositor
+   */
+  static void CreateCompositorMap();
+  static void DestroyCompositorMap();
 
   /**
    * Creates the compositor thread.
@@ -138,6 +154,16 @@ private:
    * This function is not thread-safe.
    */
   static void DestroyThread();
+
+  /**
+   * Add a compositor to the global compositor map.
+   */
+  static void AddCompositor(CompositorParent* compositor, PRUint64* id);
+  /**
+   * Remove a compositor from the global compositor map.
+   */
+  static CompositorParent* RemoveCompositor(PRUint64 id);
+
 
   // Platform specific functions
   /**
@@ -188,6 +214,8 @@ private:
 
   mozilla::Monitor mPauseCompositionMonitor;
   mozilla::Monitor mResumeCompositionMonitor;
+
+  PRUint64 mCompositorID;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

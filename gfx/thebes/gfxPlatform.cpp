@@ -8,6 +8,7 @@
 #endif
 
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 
 #include "prlog.h"
 #include "prenv.h"
@@ -273,6 +274,10 @@ gfxPlatform::Init()
     if (useOffMainThreadCompositing && (XRE_GetProcessType() == 
                                         GeckoProcessType_Default)) {
         CompositorParent::StartUp();
+        if (Preferences::GetBool("layers.async-video.enabled",false)) {
+            ImageBridgeChild::StartUp();
+        }
+
     }
 
     /* Initialize the GfxInfo service.
@@ -390,6 +395,10 @@ gfxPlatform::Shutdown()
     // WebGL on Optimus.
     mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
+
+    // This will block this thread untill the ImageBridge protocol is completely
+    // deleted.
+    ImageBridgeChild::ShutDown();
 
     CompositorParent::ShutDown();
 

@@ -18,6 +18,8 @@
 #include <android/log.h>
 #endif
 
+#include <map>
+
 using base::Thread;
 
 namespace mozilla {
@@ -27,12 +29,14 @@ static Thread* sCompositorThread = nsnull;
 
 void CompositorParent::StartUp()
 {
+  CreateCompositorMap();
   CreateThread();
 }
 
 void CompositorParent::ShutDown()
 {
   DestroyThread();
+  DestroyCompositorMap();
 }
 
 bool CompositorParent::CreateThread()
@@ -82,6 +86,12 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   NS_ABORT_IF_FALSE(sCompositorThread != nsnull, 
                     "The compositor thread must be Initialized before instanciating a COmpositorParent.");
   MOZ_COUNT_CTOR(CompositorParent);
+  mCompositorID = 0;
+  // FIXME: This holds on the the fact that right now the only thing that 
+  // can destroy this instance is initialized on the compositor thread after 
+  // this task has been processed.
+  CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor, 
+                                                          this, &mCompositorID));
 }
 
 PlatformThreadId
@@ -109,6 +119,7 @@ bool
 CompositorParent::RecvWillStop()
 {
   mPaused = true;
+  RemoveCompositor(mCompositorID);
 
   // Ensure that the layer manager is destroyed before CompositorChild.
   mLayerManager->Destroy();
@@ -545,7 +556,11 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextu
       new LayerManagerOGL(mWidget, mEGLSurfaceSize.width, mEGLSurfaceSize.height, mRenderToEGLSurface);
     mWidget = NULL;
     mLayerManager = layerManager;
-
+    ShadowLayerManager* shadowManager = layerManager->AsShadowManager();
+    if (shadowManager) {
+      shadowManager->SetCompositorID(mCompositorID);  
+    }
+    
     if (!layerManager->Initialize()) {
       NS_ERROR("Failed to init OGL Layers");
       return NULL;
@@ -579,6 +594,53 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
   delete actor;
   return true;
 }
+
+
+typedef std::map<PRUint64,CompositorParent*> CompositorMap;
+static CompositorMap* sCompositorMap;
+
+void CompositorParent::CreateCompositorMap()
+{
+  if (sCompositorMap == nsnull) {
+    sCompositorMap = new CompositorMap;
+  }
+}
+
+void CompositorParent::DestroyCompositorMap()
+{
+  if (sCompositorMap != nsnull) {
+    NS_ASSERTION(sCompositorMap->empty(), 
+                 "The Compositor map should be empty when destroyed>");
+    delete sCompositorMap;
+    sCompositorMap = nsnull;
+  }
+}
+
+CompositorParent* CompositorParent::GetCompositor(PRUint64 id)
+{
+  CompositorMap::iterator it = sCompositorMap->find(id);
+  return it != sCompositorMap->end() ? it->second : nsnull;
+}
+
+void CompositorParent::AddCompositor(CompositorParent* compositor, PRUint64* outID)
+{
+  static PRUint64 sNextID = 1;
+  
+  ++sNextID;
+  (*sCompositorMap)[sNextID] = compositor;
+  *outID = sNextID;
+}
+
+CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
+{
+  CompositorMap::iterator it = sCompositorMap->find(id);
+  if (it == sCompositorMap->end()) {
+    return nsnull;
+  }
+  sCompositorMap->erase(it);
+  return it->second;
+}
+
 
 } // namespace layers
 } // namespace mozilla
