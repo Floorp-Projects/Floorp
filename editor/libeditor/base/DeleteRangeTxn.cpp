@@ -3,13 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "DeleteNodeTxn.h"
 #include "DeleteRangeTxn.h"
 #include "DeleteTextTxn.h"
-#include "DeleteNodeTxn.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Selection.h"
+#include "mozilla/mozalloc.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsEditor.h"
+#include "nsError.h"
+#include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsComponentManagerUtils.h"
+#include "nsIDOMCharacterData.h"
+#include "nsINode.h"
+#include "nsAString.h"
 
-#include "mozilla/Util.h"
+class nsIDOMRange;
 
 using namespace mozilla;
 

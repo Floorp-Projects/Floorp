@@ -7,17 +7,22 @@
 
 #include <stdio.h>
 
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "TextEditorTest.h"
-#include "nsISelection.h"
+#include "nsDebug.h"
+#include "nsEditProperty.h"
+#include "nsError.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsEditProperty.h"
-#include "nsString.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIPlaintextEditor.h"
+#include "nsISelection.h"
+#include "nsLiteralString.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
 
 #define TEST_RESULT(r) { if (NS_FAILED(r)) {printf("FAILURE result=%X\n", r); return r; } }
 #define TEST_POINTER(p) { if (!p) {printf("FAILURE null pointer\n"); return NS_ERROR_NULL_POINTER; } }

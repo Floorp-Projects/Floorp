@@ -3,24 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "./../../mozilla-config.h"     // for MOZ_MEDIA
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Util.h"               // for ArrayLength
+#include "mozilla/dom/Element.h"        // for Element
+#include "nsAString.h"                  // for nsAString_internal::IsEmpty
+#include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc
+#include "nsCaseTreatment.h"
+#include "nsDebug.h"                    // for NS_PRECONDITION, etc
+#include "nsEditProperty.h"             // for nsEditProperty, etc
+#include "nsEditor.h"                   // for nsEditor
+#include "nsError.h"                    // for NS_SUCCEEDED
+#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc
 #include "nsHTMLEditUtils.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Util.h"
-#include "mozilla/dom/Element.h"
-
-#include "nsTextEditUtils.h"
-
-#include "nsString.h"
-#include "nsUnicharUtils.h"
-#include "nsEditor.h"
-#include "nsEditProperty.h"
-#include "nsIAtom.h"
-#include "nsIDOMNode.h"
-#include "nsIContent.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsHTMLTags.h"
+#include "nsIAtom.h"                    // for nsIAtom
+#include "nsIDOMHTMLAnchorElement.h"    // for nsIDOMHTMLAnchorElement
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsINameSpaceManager.h"        // for kNameSpaceID_None
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING
+#include "nsString.h"                   // for nsAutoString
+#include "nsTextEditUtils.h"            // for nsTextEditUtils
 
 using namespace mozilla;
 
