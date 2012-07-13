@@ -198,6 +198,10 @@ pixman-lowres-interp.patch: Use lower quality interpolation for more speed.
 
 pixman-bilinear-fastpath.patch: Bilinear fast paths for non-neon
 
+pixman-16-bit-pipeline.patch: 16 bit pipeline for dithering
+
+pixman-dither.patch: Add dithering of 16 bit gradients
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.

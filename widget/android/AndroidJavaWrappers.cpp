@@ -663,7 +663,7 @@ void
 AndroidGeckoLayerClient::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
-    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
+    JNIEnv *env = AndroidBridge::GetJNIForCompositorThread();
     if (!env)
         return;
 
@@ -677,7 +677,7 @@ void
 AndroidGeckoLayerClient::SetPageRect(const gfx::Rect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetPageRect called on null layer client!");
-    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
+    JNIEnv *env = AndroidBridge::GetJNIForCompositorThread();
     if (!env)
         return;
 
@@ -691,7 +691,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
                                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
-    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
+    JNIEnv *env = AndroidBridge::GetJNIForCompositorThread();
     if (!env)
         return;
 
