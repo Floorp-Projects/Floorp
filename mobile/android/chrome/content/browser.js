@@ -6302,6 +6302,13 @@ let Reader = {
 
       let tab = BrowserApp.getTabForId(tabId);
       let url = tab.browser.contentWindow.location.href;
+      let uri = Services.io.newURI(url, null, null);
+
+      if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+        this.log("Not parsing URI scheme: " + uri.scheme);
+        callback(null);
+        return;
+      }
 
       // First, try to find a cached parsed article in the DB
       this.getArticleFromCache(url, function(article) {
@@ -6315,7 +6322,6 @@ let Reader = {
         // changes the document object in several ways to find the article
         // in it.
         let doc = tab.browser.contentWindow.document.cloneNode(true);
-        let uri = Services.io.newURI(url, null, null);
 
         let readability = new Readability(uri, doc);
         article = readability.parse();
