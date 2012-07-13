@@ -2238,7 +2238,7 @@ nsWindow::GetIMEUpdatePreference()
 void
 nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 {
-    JNIEnv *env = GetJNIForThread();
+    JNIEnv *env = AndroidBridge::GetJNIForCompositorThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
     if (!env)
         return;
@@ -2256,7 +2256,7 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 void
 nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
-    JNIEnv *env = GetJNIForThread();
+    JNIEnv *env = AndroidBridge::GetJNIForCompositorThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
     if (!env)
         return;

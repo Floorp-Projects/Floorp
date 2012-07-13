@@ -128,6 +128,48 @@ public:
         }
         return nsnull;
     }
+
+    static JNIEnv* GetJNIForCompositorThread() {
+        if (NS_LIKELY(sBridge)) {
+            if (sBridge->mCompositorThread) {
+                if ((void*)pthread_self() != sBridge->mCompositorThread) {
+                    __android_log_print(ANDROID_LOG_ERROR, "AndroidBridge", "Non-compositor thread calling GetJNIForCompositorThread!");
+                    NS_ABORT();
+                    return NULL;
+                }
+                return sBridge->mJNIForCompositorThread;
+            }
+
+            // first time this is being called, so create the JNI object for the compositor thread.
+            // make sure to do it in a thread-safe manner in case two different threads call this function
+            // at the same time during startup.
+            MutexAutoLock lock(sBridge->mCompositorJNICreationMutex);
+
+            if (sBridge->mCompositorThread) {
+                // this means that another thread executed this function between the time we started executing
+                // it and the time we acquired the mutex. fail.
+                __android_log_print(ANDROID_LOG_ERROR, "AndroidBridge", "Two threads called GetJNIForCompositorThread on startup!");
+                NS_ABORT();
+                return NULL;
+            }
+
+            JavaVM *jVm = mozilla::AndroidBridge::GetVM();
+            if (!jVm) {
+                __android_log_print(ANDROID_LOG_ERROR, "AndroidBridge", "Null VM in GetJNIForCompositorThread");
+                return NULL;
+            }
+            JNIEnv* env;
+            if (jVm->AttachCurrentThread(&env, NULL)) {
+                __android_log_print(ANDROID_LOG_ERROR, "AndroidBridge", "Unable to attach to VM in GetJNIForCompositorThread");
+                return NULL;
+            }
+
+            sBridge->mCompositorThread = (void*)pthread_self();
+            sBridge->mJNIForCompositorThread = env;
+            return env;
+        }
+        return NULL;
+    }
     
     static jclass GetGeckoAppShellClass() {
         return sBridge->mGeckoAppShellClass;
@@ -174,7 +216,7 @@ public:
 
     void ScheduleRestart();
 
-    void SetLayerClient(jobject jobj);
+    void SetLayerClient(JNIEnv* env, jobject jobj);
     AndroidGeckoLayerClient &GetLayerClient() { return *mLayerClient; }
 
     void SetSurfaceView(jobject jobj);
@@ -260,7 +302,7 @@ public:
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
     // Switch Java to composite with the Gecko Compositor thread
-    void RegisterCompositor();
+    void RegisterCompositor(JNIEnv* env = NULL, bool resetting = false);
     EGLSurface ProvideEGLSurface();
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nsnull);
@@ -368,6 +410,11 @@ protected:
     // the JNIEnv for the main thread
     JNIEnv *mJNIEnv;
     void *mThread;
+
+    // the JNIEnv for the compositor thread and the lock used when creating it
+    JNIEnv *mJNIForCompositorThread;
+    void* mCompositorThread;
+    Mutex mCompositorJNICreationMutex;
 
     // the GeckoSurfaceView
     AndroidGeckoSurfaceView mSurfaceView;

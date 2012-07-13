@@ -155,14 +155,13 @@ class Compiler : public BaseCompiler
     };
 
     struct BaseICInfo {
-        BaseICInfo(JSOp op) : op(op), canCallHook(false), forcedTypeBarrier(false)
+        BaseICInfo() : canCallHook(false), forcedTypeBarrier(false)
         { }
         Label fastPathStart;
         Label fastPathRejoin;
         Label slowPathStart;
         Call slowPathCall;
         DataLabelPtr paramAddr;
-        JSOp op;
         bool canCallHook;
         bool forcedTypeBarrier;
 
@@ -173,14 +172,10 @@ class Compiler : public BaseCompiler
             to.slowPathCall = stub.locationOf(slowPathCall);
             to.canCallHook = canCallHook;
             to.forcedTypeBarrier = forcedTypeBarrier;
-            to.op = op;
-            JS_ASSERT(to.op == op);
         }
     };
 
     struct GetElementICInfo : public BaseICInfo {
-        GetElementICInfo(JSOp op) : BaseICInfo(op)
-        { }
         RegisterID  typeReg;
         RegisterID  objReg;
         ValueRemat  id;
@@ -189,8 +184,6 @@ class Compiler : public BaseCompiler
     };
 
     struct SetElementICInfo : public BaseICInfo {
-        SetElementICInfo(JSOp op) : BaseICInfo(op)
-        { }
         RegisterID  objReg;
         StateRemat  objRemat;
         ValueRemat  vr;
@@ -202,8 +195,8 @@ class Compiler : public BaseCompiler
     };
 
     struct PICGenInfo : public BaseICInfo {
-        PICGenInfo(ic::PICInfo::Kind kind, JSOp op)
-          : BaseICInfo(op), kind(kind), typeMonitored(false)
+        PICGenInfo(ic::PICInfo::Kind kind, jsbytecode *pc)
+          : kind(kind), pc(pc), typeMonitored(false)
         { }
         ic::PICInfo::Kind kind;
         Label typeCheck;
