@@ -7,13 +7,17 @@
 #define TypeInState_h__
 
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsISelection.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsISelectionListener.h"
-#include "nsEditProperty.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsCycleCollectionParticipant.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsIAtom;
+class nsIDOMNode;
+class nsISelection;
 
 struct PropItem
 {

@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// IWYU pragma: private, include "nsStyleStructFwd.h"
+
 /*
  * list of structs that contain the data provided by nsStyleContext, the
  * internal API for computed style data for an element

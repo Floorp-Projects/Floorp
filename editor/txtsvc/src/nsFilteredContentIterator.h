@@ -6,12 +6,17 @@
 #ifndef nsFilteredContentIterator_h__
 #define nsFilteredContentIterator_h__
 
-#include "nsIContentIterator.h"
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
-#include "nsITextServicesFilter.h"
-#include "nsRange.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIContentIterator.h"
+#include "nsISupportsImpl.h"
+#include "nscore.h"
+
+class nsIAtom;
+class nsIDOMNode;
+class nsIDOMRange;
+class nsINode;
+class nsITextServicesFilter;
 
 /**
  * 

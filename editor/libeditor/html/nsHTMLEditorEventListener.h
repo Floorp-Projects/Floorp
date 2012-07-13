@@ -7,8 +7,11 @@
 #define nsHTMLEditorEventListener_h__
 
 #include "nsEditorEventListener.h"
+#include "nscore.h"
 
+class nsEditor;
 class nsHTMLEditor;
+class nsIDOMEvent;
 
 class nsHTMLEditorEventListener : public nsEditorEventListener
 {

@@ -4,25 +4,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
-#include "nsIHTMLAbsPosEditor.h"
+#include <stdio.h>                      // for printf
 
-#include "nsIDOMElement.h"
-#include "nsIAtom.h"
-#include "nsGkAtoms.h"
-
-#include "nsIClipboard.h"
-
-#include "nsCOMPtr.h"
-
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "nsAString.h"
+#include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
+#include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComposerCommands.h"
-#include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
-#include "nsICommandParams.h"
-#include "nsComponentManagerUtils.h"
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::font, etc
+#include "nsIAtom.h"                    // for nsIAtom, etc
+#include "nsIClipboard.h"               // for nsIClipboard, etc
+#include "nsICommandParams.h"           // for nsICommandParams, etc
+#include "nsID.h"
+#include "nsIDOMElement.h"              // for nsIDOMElement
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsIHTMLAbsPosEditor.h"        // for nsIHTMLAbsPosEditor
+#include "nsIHTMLEditor.h"              // for nsIHTMLEditor, etc
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING
+#include "nsReadableUtils.h"            // for EmptyString
+#include "nsString.h"                   // for nsAutoString, nsString, etc
+#include "nsStringFwd.h"                // for nsAFlatString
+#include "prtypes.h"                    // for PRInt32
 
-#include "mozilla/Assertions.h"
+class nsISupports;
 
 //prototype
 nsresult GetListState(nsIHTMLEditor* aEditor, bool* aMixed,

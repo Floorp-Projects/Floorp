@@ -2,15 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLEditor.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIPresShell.h"
-#include "nsIDocumentObserver.h"
-#include "nsIContent.h"
-#include "nsHTMLEditUtils.h"
-#include "nsReadableUtils.h"
 #include "mozilla/dom/Element.h"
+#include "nsAString.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsHTMLEditUtils.h"
+#include "nsHTMLEditor.h"
+#include "nsIContent.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMNode.h"
+#include "nsIHTMLEditor.h"
+#include "nsIHTMLObjectResizer.h"
+#include "nsIPresShell.h"
+#include "nsLiteralString.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nscore.h"
+#include "prtypes.h"
 
 // Uncomment the following line if you want to disable
 // table deletion when the only column/row is removed

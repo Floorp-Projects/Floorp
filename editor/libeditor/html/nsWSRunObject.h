@@ -6,16 +6,19 @@
 #ifndef __wsrunobject_h__
 #define __wsrunobject_h__
 
-#include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIDOMNode.h"
 #include "nsIEditor.h"
-#include "nsEditorUtils.h"
+#include "nsINode.h"
+#include "nscore.h"
+#include "prtypes.h"
 
+class nsHTMLEditor;
 class nsIDOMDocument;
 class nsIDOMNode;
-class nsHTMLEditor;
+struct DOMPoint;
 
 // class nsWSRunObject represents the entire whitespace situation
 // around a given point.  It collects up a list of nodes that contain

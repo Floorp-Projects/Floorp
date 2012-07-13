@@ -4,17 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "mozFlushType.h"
+#include "mozilla/Assertions.h"
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsString.h"
-
-#include "nsIEditor.h"
-#include "nsIPlaintextEditor.h"
-#include "nsIEditorMailSupport.h"
-#include "nsISelectionController.h"
-#include "nsIClipboard.h"
-
+#include "nsDebug.h"
 #include "nsEditorCommands.h"
+#include "nsError.h"
+#include "nsIClipboard.h"
+#include "nsICommandParams.h"
+#include "nsID.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIEditor.h"
+#include "nsIEditorMailSupport.h"
+#include "nsIPlaintextEditor.h"
+#include "nsISelection.h"
+#include "nsISelectionController.h"
+#include "nsITransferable.h"
+#include "nsString.h"
+#include "nsAString.h"
+#include "prtypes.h"
+
+class nsISupports;
 
 
 #define STATE_ENABLED  "state_enabled"

@@ -2,25 +2,29 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsHTMLEditorEventListener.h"
-#include "nsHTMLEditor.h"
-#include "nsString.h"
-
-#include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsISelection.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
-#include "nsIContent.h"
-
-#include "nsIHTMLObjectResizer.h"
-#include "nsEditProperty.h"
-#include "nsTextEditUtils.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsEditor.h"
+#include "nsError.h"
 #include "nsHTMLEditUtils.h"
+#include "nsHTMLEditor.h"
+#include "nsHTMLEditorEventListener.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIHTMLInlineTableEditor.h"
+#include "nsIHTMLObjectResizer.h"
+#include "nsISelection.h"
+#include "nsISupportsImpl.h"
+#include "nsLiteralString.h"
+#include "prtypes.h"
 
 /*
  * nsHTMLEditorEventListener implementation
