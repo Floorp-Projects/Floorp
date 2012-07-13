@@ -37,7 +37,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(782d317e-0727-4ccd-8a5b-f5d237f3b03c)]
+[uuid(c4788e02-3239-490a-8aeb-60fad08303fd)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -88,8 +88,15 @@ interface nsIXPCScriptable : nsISupports
     void   create(in nsIXPConnectWrappedNative wrapper,
                   in JSContextPtr cx, in JSObjectPtr obj);
 
+    // Both methods here are protected by WANT_POSTCREATE. If you want to do
+    // something after a wrapper is created, there's a good chance you also
+    // want to do something when the wrapper is transplanted to a new
+    // compartment.
     void   postCreate(in nsIXPConnectWrappedNative wrapper,
                       in JSContextPtr cx, in JSObjectPtr obj);
+
+    void postTransplant(in nsIXPConnectWrappedNative wrapper,
+                        in JSContextPtr cx, in JSObjectPtr obj);
 
     boolean addProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
