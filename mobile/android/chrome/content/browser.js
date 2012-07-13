@@ -4443,6 +4443,8 @@ var ViewportHandler = {
       case "Window:Resize":
         if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
           break;
+        if (window.outerWidth == 0 || window.outerHeight == 0)
+          break;
 
         let oldScreenWidth = gScreenWidth;
         gScreenWidth = window.outerWidth;
