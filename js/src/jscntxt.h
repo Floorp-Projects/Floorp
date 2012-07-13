@@ -180,6 +180,12 @@ struct EvalCacheLookup
     unsigned staticLevel;
     JSVersion version;
     JSCompartment *compartment;
+
+    EvalCacheLookup(JSLinearString *str, JSFunction *caller,
+                    unsigned staticLevel, JSVersion version, JSCompartment *compartment)
+        : str(str), caller(caller),
+          staticLevel(staticLevel), version(version), compartment(compartment)
+    {}
 };
 
 struct EvalCacheHashPolicy
