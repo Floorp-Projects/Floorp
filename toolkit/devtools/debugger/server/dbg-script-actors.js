@@ -945,11 +945,13 @@ ThreadActor.prototype = {
     // Set any stored breakpoints.
     let existing = this._breakpointStore[aScript.url];
     if (existing) {
+      let endLine = aScript.startLine + aScript.lineCount - 1;
       // Iterate over the lines backwards, so that sliding breakpoints don't
       // affect the loop.
       for (let line = existing.length - 1; line >= 0; line--) {
         let bp = existing[line];
-        if (bp) {
+        // Limit search to the line numbers contained in the new script.
+        if (bp && line >= aScript.startLine && line <= endLine) {
           this._setBreakpoint(bp);
         }
       }
