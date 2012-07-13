@@ -47,6 +47,21 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
 
 AndroidBridge *AndroidBridge::sBridge = 0;
 
+AndroidBridge::AndroidBridge()
+  : mLayerClient(NULL)
+  , mJavaVM(NULL)
+  , mJNIEnv(NULL)
+  , mThread(NULL)
+  , mJNIForCompositorThread(NULL)
+  , mCompositorThread(NULL)
+  , mCompositorJNICreationMutex("AndroidBridge.CompositorJNICreation")
+{
+}
+
+AndroidBridge::~AndroidBridge()
+{
+}
+
 AndroidBridge *
 AndroidBridge::ConstructBridge(JNIEnv *jEnv,
                                jclass jGeckoAppShellClass)
@@ -76,8 +91,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     AutoLocalJNIFrame jniFrame(jEnv);
 
-    mJNIEnv = nsnull;
-    mThread = nsnull;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
@@ -1120,7 +1133,7 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 {
     ALOG_BRIDGE("AndroidBridge::CallEglCreateWindowSurface");
 
-    JNIEnv *env = GetJNIForThread();        // called on the compositor thread
+    JNIEnv *env = GetJNIForCompositorThread();
     if (!env)
         return NULL;
 
@@ -1173,7 +1186,7 @@ void
 AndroidBridge::RegisterCompositor()
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
-    JNIEnv *env = GetJNIForThread();    // called on the compositor thread
+    JNIEnv *env = GetJNIForCompositorThread();
     if (!env)
         return;
 
@@ -2077,15 +2090,6 @@ AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayRes
         return;
 
     client->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated, aScrollOffset, aScaleX, aScaleY);
-}
-
-AndroidBridge::AndroidBridge()
-  : mLayerClient(NULL)
-{
-}
-
-AndroidBridge::~AndroidBridge()
-{
 }
 
 /* Implementation file */
