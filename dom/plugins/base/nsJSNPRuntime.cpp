@@ -466,8 +466,28 @@ JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant)
     return true;
   }
 
-  NPObject *npobj =
-    nsJSObjWrapper::GetNewOrUsed(npp, cx, JSVAL_TO_OBJECT(val));
+  // The reflected plugin object may be in another compartment if the plugin
+  // element has since been adopted into a new document. We don't bother
+  // transplanting the plugin objects, and just do a unwrap with security
+  // checks if we encounter one of them as an argument. If the unwrap fails,
+  // we clear the pending exception and just run with the original wrapped object,
+  // since sometimes there are legitimate cases where a security wrapper ends
+  // up here (for example, Location objects, which are _always_ behind security
+  // wrappers).
+  //
+  // NB: In addition to clearing the pending exception, we also have to temporarily
+  // disable the error reporter, because SpiderMonkey calls it directly if there's
+  // no JS code on the stack, which might be the case here.
+  JSObject *obj = JSVAL_TO_OBJECT(val);
+  JSErrorReporter reporter = JS_SetErrorReporter(cx, NULL);
+  obj = js::UnwrapObjectChecked(cx, obj);
+  JS_SetErrorReporter(cx, reporter);
+  if (!obj) {
+    JS_ClearPendingException(cx);
+    obj = JSVAL_TO_OBJECT(val);
+  }
+
+  NPObject *npobj = nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
   if (!npobj) {
     return false;
   }
