@@ -125,12 +125,12 @@ let gFlexShorthandTestcases = [
     "-moz-flex-basis":  "-moz-fit-content",
   },
   {
-    "-moz-flex":        "-moz-calc(5px + 6px)",
+    "-moz-flex":        "calc(5px + 6px)",
     "-moz-flex-basis":  "11px",
   },
   {
-    "-moz-flex":        "-moz-calc(15% + 30px)",
-    "-moz-flex-basis":  "-moz-calc(30px + 15%)",
+    "-moz-flex":        "calc(15% + 30px)",
+    "-moz-flex-basis":  "calc(30px + 15%)",
   },
 
   // Two Values (numeric) --> sets flex-grow, flex-shrink
@@ -199,9 +199,9 @@ let gFlexShorthandTestcases = [
     "-moz-flex-basis":  "-moz-fit-content",
   },
   {
-    "-moz-flex":        "-moz-calc(5% + 10px) 3",
+    "-moz-flex":        "calc(5% + 10px) 3",
     "-moz-flex-grow":   "3",
-    "-moz-flex-basis":  "-moz-calc(10px + 5%)",
+    "-moz-flex-basis":  "calc(10px + 5%)",
   },
 
   // Three Values --> Sets all three subproperties

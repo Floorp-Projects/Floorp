@@ -4618,7 +4618,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   }
   if ((aVariantMask & VARIANT_CALC) &&
       (eCSSToken_Function == tk->mType) &&
-      tk->mIdent.LowerCaseEqualsLiteral("-moz-calc")) {
+      (tk->mIdent.LowerCaseEqualsLiteral("calc") ||
+       tk->mIdent.LowerCaseEqualsLiteral("-moz-calc"))) {
     // calc() currently allows only lengths and percents inside it.
     return ParseCalc(aValue, aVariantMask & VARIANT_LP);
   }
@@ -5250,7 +5251,8 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
     break;
 
   case eCSSToken_Function:
-    if (aId.LowerCaseEqualsLiteral("-moz-calc")) {
+    if (aId.LowerCaseEqualsLiteral("calc") ||
+        aId.LowerCaseEqualsLiteral("-moz-calc")) {
       haveGradientLine = true;
       break;
     }
@@ -6248,7 +6250,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
                tt == eCSSToken_Number ||
                tt == eCSSToken_Percentage ||
                (tt == eCSSToken_Function &&
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc"))) {
+                (mToken.mIdent.LowerCaseEqualsLiteral("calc") ||
+                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc")))) {
       if (havePosition)
         return false;
       havePosition = true;

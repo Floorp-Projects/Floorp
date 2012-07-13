@@ -537,7 +537,7 @@ function test_length_percent_calc_transition(prop) {
      + v2v + "'");
 
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "-moz-calc(25% + 100px)", "");
+  div.style.setProperty(prop, "calc(25% + 100px)", "");
   v1v = cs.getPropertyValue(prop);
   is(any_unit_to_num(v1v) * 4, b + 4*c,
      "computed value before transition for " + prop + ": '" + v1v + "'");
@@ -554,17 +554,17 @@ function test_length_percent_calc_transition(prop) {
   is(any_unit_to_num(v1v) * 2, c * 3,
      "computed value before transition for " + prop + ": '" + v1v + "'");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "-moz-calc(50% + 50px)", "");
+  div.style.setProperty(prop, "calc(50% + 50px)", "");
   v2v = cs.getPropertyValue(prop);
   is(any_unit_to_num(v2v) * 8, 7 * a + b + 10*c,
      "interpolation between length and calc() for " + prop + ": '" +
      v2v + "'");
 
-  check_distance(prop, "50%", "-moz-calc(37.5% + 50px)", "200px");
-  check_distance(prop, "-moz-calc(25% + 100px)", "-moz-calc(37.5% + 75px)",
+  check_distance(prop, "50%", "calc(37.5% + 50px)", "200px");
+  check_distance(prop, "calc(25% + 100px)", "calc(37.5% + 75px)",
                        "75%");
-  check_distance(prop, "150px", "-moz-calc(125px + 12.5%)",
-                       "-moz-calc(50% + 50px)");
+  check_distance(prop, "150px", "calc(125px + 12.5%)",
+                       "calc(50% + 50px)");
 }
 
 function test_color_transition(prop) {
@@ -839,7 +839,7 @@ function test_radius_transition(prop) {
   is(cs.getPropertyValue(prop), "28px",
      "radius-valued property " + prop + ": interpolation of radius with mixed units");
   check_distance(prop, "6.25% 12.5%",
-                 "-moz-calc(4.6875% + 16px) -moz-calc(9.375% + 4px)",
+                 "calc(4.6875% + 16px) calc(9.375% + 4px)",
                  "64px 16px");
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
@@ -1241,20 +1241,20 @@ function test_background_position_size_common(prop) {
   is(cs.getPropertyValue(prop), "20% 40%, 8px 12px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "12px 20px, 40% 16%", "");
-  is(cs.getPropertyValue(prop), "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
+  is(cs.getPropertyValue(prop), "calc(3px + 15%) calc(5px + 30%), calc(6px + 10%) calc(9px + 4%)",
      "property " + prop + ": interpolation that computes to calc()");
   check_distance(prop, "20% 40%, 8px 12px",
-                       "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
+                       "calc(3px + 15%) calc(5px + 30%), calc(6px + 10%) calc(9px + 4%)",
                        "12px 20px, 40% 16%");
-  div.style.setProperty(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)", "");
-  is(cs.getPropertyValue(prop), "-moz-calc(40px + 20%) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
+  div.style.setProperty(prop, "calc(20% + 40px) calc(40px + 40%), 8px 12%, calc(20px + 12%) calc(24px + 8%)", "");
+  is(cs.getPropertyValue(prop), "calc(40px + 20%) calc(40px + 40%), 8px 12%, calc(20px + 12%) calc(24px + 8%)",
      "property " + prop + ": computed value before transition");
-  div.style.setProperty(prop, "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)", "");
-  is(cs.getPropertyValue(prop), "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
+  div.style.setProperty(prop, "12px 20%, calc(20%) calc(16px + 60%), calc(8px + 20%) calc(40px + 16%)", "");
+  is(cs.getPropertyValue(prop), "calc(33px + 15%) calc(30px + 35%), calc(6px + 5%) calc(4px + 24%), calc(17px + 14%) calc(28px + 10%)",
      "property " + prop + ": interpolation that computes to calc()");
-  check_distance(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
-                       "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
-                       "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)");
+  check_distance(prop, "calc(20% + 40px) calc(40px + 40%), 8px 12%, calc(20px + 12%) calc(24px + 8%)",
+                       "calc(33px + 15%) calc(30px + 35%), calc(6px + 5%) calc(4px + 24%), calc(17px + 14%) calc(28px + 10%)",
+                       "12px 20%, calc(20%) calc(16px + 60%), calc(8px + 20%) calc(40px + 16%)");
 }
 
 function test_transform_transition(prop) {
@@ -1383,11 +1383,11 @@ function test_transform_transition(prop) {
     // to 300px (width) and 50px (height) per the prerequisites in
     // property_database.js
     { start: 'translateX(20%)', /* 60px */
-      end: 'translateX(-moz-calc(10% + 1em))', /* 30px + 20px = 50px */
-      expected_uncomputed: 'translateX(-moz-calc(17.5% + 0.25em))',
+      end: 'translateX(calc(10% + 1em))', /* 30px + 20px = 50px */
+      expected_uncomputed: 'translateX(calc(17.5% + 0.25em))',
       expected: 'matrix(1, 0, 0, 1, 57.5, 0)' },
-    { start: 'translate(-moz-calc(0.75 * 3em + 1.5 * 10%), -moz-calc(0.5 * 5em + 0.5 * 8%))', /* 90px, 52px */
-      end: 'rotate(90deg) translateY(20%) rotate(90deg) translateY(-moz-calc(10% + 0.5em)) rotate(180deg)', /* -10px, -15px */
+    { start: 'translate(calc(0.75 * 3em + 1.5 * 10%), calc(0.5 * 5em + 0.5 * 8%))', /* 90px, 52px */
+      end: 'rotate(90deg) translateY(20%) rotate(90deg) translateY(calc(10% + 0.5em)) rotate(180deg)', /* -10px, -15px */
       expected: 'matrix(1, 0, 0, 1, 65, 35.25)' },
 
     // scale

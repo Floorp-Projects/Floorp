@@ -1351,7 +1351,7 @@ SetValueToCalc(const nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
   nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
   nsAutoString tmp, result;
 
-  result.AppendLiteral("-moz-calc(");
+  result.AppendLiteral("calc(");
 
   val->SetAppUnits(aCalc->mLength);
   val->GetCssText(tmp);
