@@ -214,14 +214,13 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   // in testing, we have access to a few more directory locations
   if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
 
-    // Temp directory
-    if (aType.Equals(NS_LITERAL_STRING("temp")) && aIndex == 0) {
+    // testing directory
+    if (aType.Equals(NS_LITERAL_STRING("testing")) && aIndex == 0) {
       dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
-    }
-
-    // Profile directory
-    else if (aType.Equals(NS_LITERAL_STRING("profile")) && aIndex == 0) {
-      dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
+      if (f) {
+	f->AppendRelativeNativePath(NS_LITERAL_CSTRING("device-storage-testing"));
+	f->Create(nsIFile::DIRECTORY_TYPE, 0777);
+      }
     }
   } 
 
