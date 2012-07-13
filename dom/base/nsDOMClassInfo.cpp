@@ -85,7 +85,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsScriptNameSpaceManager.h"
-#include "nsIScriptObjectOwner.h"
+#include "nsIScriptEventHandlerOwner.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsJSEnvironment.h"
 
@@ -5799,23 +5799,6 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
     }
   }
 
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
-  if (owner) {
-    nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
-    if (!context) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JSObject* new_obj;
-    rv = owner->GetScriptObject(context, (void**)&new_obj);
-
-    if (NS_SUCCEEDED(rv)) {
-      *rval = OBJECT_TO_JSVAL(new_obj);
-    }
-
-    return rv;
-  }
-
   return WrapNative(cx, obj, native, true, rval);
 }
 
@@ -6950,23 +6933,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     jsval prop_val = JSVAL_VOID; // Property value.
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
-    if (owner) {
-      nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
-      NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-
-      JSObject *prop_obj = nsnull;
-      rv = owner->GetScriptObject(context, (void**)&prop_obj);
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && prop_obj, NS_ERROR_UNEXPECTED);
-
-      prop_val = OBJECT_TO_JSVAL(prop_obj);
-    } else {
-      nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-
-      if (gpi) {
-        rv = gpi->Init(aWin, &prop_val);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+    if (gpi) {
+      rv = gpi->Init(aWin, &prop_val);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
