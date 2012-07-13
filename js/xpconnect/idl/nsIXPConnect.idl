@@ -423,9 +423,6 @@ interface nsIXPConnect : nsISupports
     *     as an nsIXPConnectWrappedNative.
     *  2) The xpcom object is in fact a nsIXPConnectWrappedJS and thus already
     *     has an underlying JSObject.
-    *  3) The xpcom object implements nsIScriptObjectOwner; i.e. is an idlc
-    *     style DOM object for which we can call GetScriptObject to get the
-    *     JSObject it uses to represent itself into JavaScript.
     *
     * It *might* be possible to QueryInterface the nsIXPConnectJSObjectHolder
     * returned by the method into a nsIXPConnectWrappedNative or a
