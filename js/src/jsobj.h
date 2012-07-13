@@ -531,7 +531,7 @@ struct JSObject : public js::ObjectImpl
      */
     bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
-    bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
+    static bool isSealedOrFrozen(JSContext *cx, js::HandleObject obj, ImmutabilityType it, bool *resultp);
 
     static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
 
@@ -543,8 +543,12 @@ struct JSObject : public js::ObjectImpl
     /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
     bool freeze(JSContext *cx) { return sealOrFreeze(cx, FREEZE); }
 
-    bool isSealed(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, SEAL, resultp); }
-    bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
+    static inline bool isSealed(JSContext *cx, js::HandleObject obj, bool *resultp) {
+        return isSealedOrFrozen(cx, obj, SEAL, resultp);
+    }
+    static inline bool isFrozen(JSContext *cx, js::HandleObject obj, bool *resultp) {
+        return isSealedOrFrozen(cx, obj, FREEZE, resultp);
+    }
 
     /* Accessors for elements. */
 

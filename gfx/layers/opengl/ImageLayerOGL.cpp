@@ -5,6 +5,7 @@
 
 #include "gfxSharedImageSurface.h"
 
+#include "ipc/AutoOpenSurface.h"
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
@@ -660,12 +661,10 @@ bool
 ShadowImageLayerOGL::Init(const SharedImage& aFront)
 {
   if (aFront.type() == SharedImage::TSurfaceDescriptor) {
-    SurfaceDescriptor desc = aFront.get_SurfaceDescriptor();
-    nsRefPtr<gfxASurface> surf =
-      ShadowLayerForwarder::OpenDescriptor(desc);
-    mSize = surf->GetSize();
+    AutoOpenSurface autoSurf(OPEN_READ_ONLY, aFront.get_SurfaceDescriptor());
+    mSize = autoSurf.Size();
     mTexImage = gl()->CreateTextureImage(nsIntSize(mSize.width, mSize.height),
-                                         surf->GetContentType(),
+                                         autoSurf.ContentType(),
                                          LOCAL_GL_CLAMP_TO_EDGE,
                                          mForceSingleTile
                                           ? TextureImage::ForceSingleTile
@@ -674,15 +673,11 @@ ShadowImageLayerOGL::Init(const SharedImage& aFront)
   } else {
     YUVImage yuv = aFront.get_YUVImage();
 
-    nsRefPtr<gfxSharedImageSurface> surfY =
-      gfxSharedImageSurface::Open(yuv.Ydata());
-    nsRefPtr<gfxSharedImageSurface> surfU =
-      gfxSharedImageSurface::Open(yuv.Udata());
-    nsRefPtr<gfxSharedImageSurface> surfV =
-      gfxSharedImageSurface::Open(yuv.Vdata());
+    AutoOpenSurface surfY(OPEN_READ_ONLY, yuv.Ydata());
+    AutoOpenSurface surfU(OPEN_READ_ONLY, yuv.Udata());
 
-    mSize = surfY->GetSize();
-    mCbCrSize = surfU->GetSize();
+    mSize = surfY.Size();
+    mCbCrSize = surfU.Size();
 
     if (!mYUVTexture[0].IsAllocated()) {
       mYUVTexture[0].Allocate(gl());
@@ -710,25 +705,24 @@ ShadowImageLayerOGL::Swap(const SharedImage& aNewFront,
 {
   if (!mDestroyed) {
     if (aNewFront.type() == SharedImage::TSurfaceDescriptor) {
-      nsRefPtr<gfxASurface> surf =
-        ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
-      gfxIntSize size = surf->GetSize();
+      AutoOpenSurface surf(OPEN_READ_ONLY, aNewFront.get_SurfaceDescriptor());
+      gfxIntSize size = surf.Size();
       if (mSize != size || !mTexImage ||
-          mTexImage->GetContentType() != surf->GetContentType()) {
+          mTexImage->GetContentType() != surf.ContentType()) {
         Init(aNewFront);
       }
       // XXX this is always just ridiculously slow
       nsIntRegion updateRegion(nsIntRect(0, 0, size.width, size.height));
-      mTexImage->DirectUpdate(surf, updateRegion);
+      mTexImage->DirectUpdate(surf.Get(), updateRegion);
     } else {
       const YUVImage& yuv = aNewFront.get_YUVImage();
 
-      nsRefPtr<gfxSharedImageSurface> surfY =
-        gfxSharedImageSurface::Open(yuv.Ydata());
-      nsRefPtr<gfxSharedImageSurface> surfU =
-        gfxSharedImageSurface::Open(yuv.Udata());
-      nsRefPtr<gfxSharedImageSurface> surfV =
-        gfxSharedImageSurface::Open(yuv.Vdata());
+      AutoOpenSurface asurfY(OPEN_READ_ONLY, yuv.Ydata());
+      AutoOpenSurface asurfU(OPEN_READ_ONLY, yuv.Udata());
+      AutoOpenSurface asurfV(OPEN_READ_ONLY, yuv.Vdata());
+      nsRefPtr<gfxImageSurface> surfY = asurfY.GetAsImage();
+      nsRefPtr<gfxImageSurface> surfU = asurfU.GetAsImage();
+      nsRefPtr<gfxImageSurface> surfV = asurfV.GetAsImage();
       mPictureRect = yuv.picture();
 
       gfxIntSize size = surfY->GetSize();
