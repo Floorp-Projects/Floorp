@@ -22,6 +22,8 @@
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
 
+#include "mozilla/Preferences.h"
+
 using namespace mozilla;
 
 // required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
@@ -72,6 +74,50 @@ SortPropertyAndCount(const void* s1, const void* s2, void *closure)
   return pc2->property - pc1->property;
 }
 
+// We need eCSSAliasCount so we can make gAliases nonzero size when there
+// are no aliases.
+enum {
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
+  eCSSAliasCountBefore_##aliasmethod_,
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+
+  eCSSAliasCount
+};
+
+enum {
+  // We want the largest sizeof(#aliasname_).  To find that, we use the
+  // auto-incrementing behavior of C++ enums (a value without an
+  // initializer is one larger than the previous value, or 0 at the
+  // start of the enum), and for each alias we define two values:
+  //   eMaxCSSAliasNameSizeBefore_##aliasmethod_ is the largest
+  //     sizeof(#aliasname_) before that alias.  The first one is
+  //     conveniently zero.
+  //   eMaxCSSAliasNameSizeWith_##aliasmethod_ is **one less than** the
+  //     largest sizeof(#aliasname_) before or including that alias.
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
+  eMaxCSSAliasNameSizeBefore_##aliasmethod_,                                  \
+  eMaxCSSAliasNameSizeWith_##aliasmethod_ =                                   \
+    PR_MAX(sizeof(#aliasname_), eMaxCSSAliasNameSizeBefore_##aliasmethod_) - 1,
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+
+  eMaxCSSAliasNameSize
+};
+
+struct CSSPropertyAlias {
+  const char name[PR_MAX(eMaxCSSAliasNameSize, 1)];
+  const nsCSSProperty id;
+  bool enabled;
+};
+
+static CSSPropertyAlias gAliases[PR_MAX(eCSSAliasCount, 1)] = {
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
+  { #aliasname_, eCSSProperty_##propid_, true },
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+};
+
 void
 nsCSSProps::AddRefTable(void)
 {
@@ -116,6 +162,40 @@ nsCSSProps::AddRefTable(void)
     }
 
     BuildShorthandsContainingTable();
+
+    static bool prefObserversInited = false;
+    if (!prefObserversInited) {
+      prefObserversInited = true;
+      
+      #define OBSERVE_PROP(pref_, id_)                                        \
+        if (pref_[0]) {                                                       \
+          Preferences::AddBoolVarCache(&gPropertyEnabled[eCSSProperty_##id_], \
+                                       pref_);                                \
+        }
+
+      #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
+                       kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+        OBSERVE_PROP(pref_, id_)
+      #include "nsCSSPropList.h"
+      #undef CSS_PROP
+
+      #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+        OBSERVE_PROP(pref_, id_)
+      #include "nsCSSPropList.h"
+      #undef CSS_PROP_SHORTHAND
+
+      #undef OBSERVE_PROP
+
+      size_t aliasIndex = 0;
+      #define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)    \
+        if (pref_[0]) {                                                   \
+          Preferences::AddBoolVarCache(&gAliases[aliasIndex].enabled,     \
+                                       pref_);                            \
+        }                                                                 \
+        ++aliasIndex;
+      #include "nsCSSPropAliasList.h"
+      #undef CSS_PROP_ALIAS
+    }
   }
 }
 
@@ -282,51 +362,9 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
-// We need eCSSAliasCount so we can make gAliases nonzero size when there
-// are no aliases.
-enum {
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
-  eCSSAliasCountBefore_##aliasmethod_,
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-
-  eCSSAliasCount
-};
-
-enum {
-  // We want the largest sizeof(#aliasname_).  To find that, we use the
-  // auto-incrementing behavior of C++ enums (a value without an
-  // initializer is one larger than the previous value, or 0 at the
-  // start of the enum), and for each alias we define two values:
-  //   eMaxCSSAliasNameSizeBefore_##aliasmethod_ is the largest
-  //     sizeof(#aliasname_) before that alias.  The first one is
-  //     conveniently zero.
-  //   eMaxCSSAliasNameSizeWith_##aliasmethod_ is **one less than** the
-  //     largest sizeof(#aliasname_) before or including that alias.
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)              \
-  eMaxCSSAliasNameSizeBefore_##aliasmethod_,                                  \
-  eMaxCSSAliasNameSizeWith_##aliasmethod_ =                                   \
-    PR_MAX(sizeof(#aliasname_), eMaxCSSAliasNameSizeBefore_##aliasmethod_) - 1,
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-
-  eMaxCSSAliasNameSize
-};
-
-struct CSSPropertyAlias {
-  char name[PR_MAX(eMaxCSSAliasNameSize, 1)];
-  nsCSSProperty id;
-};
-
-static const CSSPropertyAlias gAliases[PR_MAX(eCSSAliasCount, 1)] = {
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
-  { #aliasname_, eCSSProperty_##propid_ },
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-};
-
 nsCSSProperty
-nsCSSProps::LookupProperty(const nsACString& aProperty)
+nsCSSProps::LookupProperty(const nsACString& aProperty,
+                           EnabledState aEnabled)
 {
   NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
 
@@ -337,17 +375,21 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
     for (const CSSPropertyAlias *alias = gAliases,
                             *alias_end = ArrayEnd(gAliases);
          alias < alias_end; ++alias) {
-      if (aProperty.LowerCaseEqualsASCII(alias->name)) {
+      if (aProperty.LowerCaseEqualsASCII(alias->name) &&
+          (alias->enabled || aEnabled == eAny)) {
         res = alias->id;
         break;
       }
     }
   }
+  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
+    res = eCSSProperty_UNKNOWN;
+  }
   return res;
 }
 
 nsCSSProperty
-nsCSSProps::LookupProperty(const nsAString& aProperty)
+nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
 {
   // This is faster than converting and calling
   // LookupProperty(nsACString&).  The table will do its own
@@ -360,11 +402,15 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
     for (const CSSPropertyAlias *alias = gAliases,
                             *alias_end = ArrayEnd(gAliases);
          alias < alias_end; ++alias) {
-      if (aProperty.LowerCaseEqualsASCII(alias->name)) {
+      if (aProperty.LowerCaseEqualsASCII(alias->name) &&
+          (alias->enabled || aEnabled == eAny)) {
         res = alias->id;
         break;
       }
     }
+  }
+  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
+    res = eCSSProperty_UNKNOWN;
   }
   return res;
 }
@@ -2375,4 +2421,18 @@ nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
   #undef CSS_PROP
   #undef CSS_PROP_BACKENDONLY
 
+};
+
+/* static */ bool
+nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT] = {
+  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
+                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+    true,
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP
+
+  #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+    true,
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_SHORTHAND
 };
