@@ -58,6 +58,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_multiple-windows.js \
 	browser_dbg_menustatus.js \
 	browser_dbg_bfcache.js \
+	browser_dbg_breakpoint-new-script.js \
 	head.js \
 	$(NULL)
 
@@ -76,6 +77,7 @@ MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_iframes.html \
 	browser_dbg_with-frame.html \
 	browser_dbg_pause-exceptions.html \
+	browser_dbg_breakpoint-new-script.html \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
