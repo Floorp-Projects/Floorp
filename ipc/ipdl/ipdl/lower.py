@@ -666,6 +666,9 @@ class _StructField(_CompoundTypeComponent):
         if self.recursive:
             return [ StmtExpr(ExprAssn(self.memberVar(),
                                        ExprNew(self.bareType()))) ]
+        elif self.ipdltype.isIPDL() and self.ipdltype.isActor():
+            return [ StmtExpr(ExprAssn(self.memberVar(),
+                                       ExprLiteral.NULL)) ]
         else:
             return []
 

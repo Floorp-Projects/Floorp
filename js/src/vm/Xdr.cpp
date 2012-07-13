@@ -123,7 +123,10 @@ XDRState<mode>::codeFunction(JSObject **objp)
     if (mode == XDR_DECODE)
         *objp = NULL;
 
-    return VersionCheck(this) && XDRInterpretedFunction(this, objp, NULL);
+    if (!VersionCheck(this))
+        return false;
+
+    return XDRInterpretedFunction(this, NullPtr(), NullPtr(), objp);
 }
 
 template<XDRMode mode>
@@ -138,12 +141,14 @@ XDRState<mode>::codeScript(JSScript **scriptp)
         script = *scriptp;
     }
 
-    if (!VersionCheck(this) || !XDRScript(this, &script, NULL))
+    if (!VersionCheck(this))
+        return false;
+
+    if (!XDRScript(this, NullPtr(), NullPtr(), NullPtr(), &script))
         return false;
 
     if (mode == XDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);
-        script->globalObject = GetCurrentGlobal(cx());
         js_CallNewScriptHook(cx(), script, NULL);
         Debugger::onNewScript(cx(), script, NULL);
         *scriptp = script;

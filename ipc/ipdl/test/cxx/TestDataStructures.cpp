@@ -153,6 +153,23 @@ bool TestDataStructuresParent::RecvTest5(
     return true;
 }
 
+bool
+TestDataStructuresParent::RecvTest7_0(const ActorWrapper& i1,
+                                      ActorWrapper* o1)
+{
+    if (i1.actorChild() != nsnull)
+        fail("child side actor should always be null");
+
+    if (i1.actorParent() != mKids[0])
+        fail("should have got back same actor on parent side");
+
+    o1->actorParent() = mKids[0];
+    // malicious behavior
+    o1->actorChild() =
+        reinterpret_cast<PTestDataStructuresSubChild*>(0xdeadbeef);
+    return true;
+}
+
 bool TestDataStructuresParent::RecvTest6(
         const InfallibleTArray<IntDoubleArrays>& i1,
         InfallibleTArray<IntDoubleArrays>* o1)
@@ -465,6 +482,7 @@ TestDataStructuresChild::RecvStart()
     Test4();
     Test5();
     Test6();
+    Test7_0();
     Test7();
     Test8();
     Test9();
@@ -608,6 +626,28 @@ TestDataStructuresChild::Test6()
     assert_arrays_equal(id3, od3);
 
     printf("  passed %s\n", __FUNCTION__);
+}
+
+void
+TestDataStructuresChild::Test7_0()
+{
+    ActorWrapper iaw;
+    if (iaw.actorChild() != nsnull || iaw.actorParent() != nsnull)
+        fail("actor members should be null initially");
+
+    iaw.actorChild() = mKids[0];
+    if (iaw.actorParent() != nsnull)
+        fail("parent should be null on child side after set");
+
+    ActorWrapper oaw;
+    if (!SendTest7_0(iaw, &oaw))
+        fail("sending Test7_0");
+
+    if (oaw.actorParent() != nsnull)
+        fail("parent accessor on actor-struct members should always be null in child");
+
+    if (oaw.actorChild() != mKids[0])
+        fail("should have got back same child-side actor");
 }
 
 void

@@ -88,7 +88,8 @@ public:
         FILTER_BEST,
         FILTER_NEAREST,
         FILTER_BILINEAR,
-        FILTER_GAUSSIAN
+        FILTER_GAUSSIAN,
+        FILTER_SENTINEL
     };
 
     void SetFilter(GraphicsFilter filter);

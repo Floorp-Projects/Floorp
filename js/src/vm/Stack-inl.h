@@ -186,19 +186,7 @@ StackFrame::jitHeavyweightFunctionPrologue(JSContext *cx)
     pushOnScopeChain(*callobj);
     flags_ |= HAS_CALL_OBJ;
 
-    if (script()->nesting()) {
-        types::NestingPrologue(cx, this);
-        flags_ |= HAS_NESTING;
-    }
-
     return true;
-}
-
-inline void
-StackFrame::jitTypeNestingPrologue(JSContext *cx)
-{
-    types::NestingPrologue(cx, this);
-    flags_ |= HAS_NESTING;
 }
 
 inline void

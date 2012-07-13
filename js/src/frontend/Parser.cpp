@@ -102,14 +102,6 @@ PushStatementTC(TreeContext *tc, StmtInfoTC *stmt, StmtType type)
     stmt->isFunctionBodyBlock = false;
 }
 
-// Push a block scope statement and link blockObj into tc->blockChain.
-static void
-PushBlockScopeTC(TreeContext *tc, StmtInfoTC *stmt, StaticBlockObject &blockObj)
-{
-    PushStatementTC(tc, stmt, STMT_BLOCK);
-    FinishPushBlockScope(tc, stmt, blockObj);
-}
-
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
                const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
                bool foldConstants, bool compileAndGo)
@@ -524,7 +516,10 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
         return false;
 
     // Start with lastVariable(), not the last argument, for destructuring.
-    for (Shape::Range r = sc->bindings.lastVariable(); !r.empty(); r.popFront()) {
+    Shape::Range r = sc->bindings.lastVariable();
+    Shape::Range::AutoRooter root(cx, &r);
+
+    for (; !r.empty(); r.popFront()) {
         jsid id = r.front().propid();
         if (!JSID_IS_ATOM(id))
             continue;
@@ -670,12 +665,15 @@ Parser::functionBody(FunctionBodyType type)
         if (atom == arguments) {
             /*
              * Turn 'dn' into a proper definition so uses will be bound as
-             * GETLOCAL in the emitter.
+             * GETLOCAL in the emitter. The PND_IMPLICITARGUMENTS flag informs
+             * CompExprTransplanter (and anyone else) that this definition node
+             * has no proper declaration in the parse tree.
              */
             if (!BindLocalVariable(context, tc, dn, VARIABLE))
                 return NULL;
             dn->setOp(JSOP_GETLOCAL);
             dn->pn_dflags &= ~PND_PLACEHOLDER;
+            dn->pn_dflags |= PND_IMPLICITARGUMENTS;
 
             /* NB: this leaves r invalid so we must break immediately. */
             tc->lexdeps->remove(arguments);
@@ -2141,12 +2139,16 @@ struct RemoveDecl {
 static void
 PopStatementTC(TreeContext *tc)
 {
-    if (tc->topStmt->isBlockScope) {
-        StaticBlockObject &blockObj = *tc->topStmt->blockObj;
-        JS_ASSERT(!blockObj.inDictionaryMode());
-        ForEachLetDef(tc, blockObj, RemoveDecl());
-    }
+    StaticBlockObject *blockObj = tc->topStmt->blockObj;
+    JS_ASSERT(!!blockObj == (tc->topStmt->isBlockScope));
+
     FinishPopStatement(tc);
+
+    if (blockObj) {
+        JS_ASSERT(!blockObj->inDictionaryMode());
+        ForEachLetDef(tc, *blockObj, RemoveDecl());
+        blockObj->resetPrevBlockChainFromParser();
+    }
 }
 
 static inline bool
@@ -2755,22 +2757,27 @@ Parser::returnOrYield(bool useAssignExpr)
 }
 
 static ParseNode *
-PushLexicalScope(JSContext *cx, Parser *parser, StaticBlockObject &obj, StmtInfoTC *stmt)
+PushLexicalScope(JSContext *cx, Parser *parser, StaticBlockObject &blockObj, StmtInfoTC *stmt)
 {
     ParseNode *pn = LexicalScopeNode::create(PNK_LEXICALSCOPE, parser);
     if (!pn)
         return NULL;
 
-    ObjectBox *blockbox = parser->newObjectBox(&obj);
+    ObjectBox *blockbox = parser->newObjectBox(&blockObj);
     if (!blockbox)
         return NULL;
 
-    PushBlockScopeTC(parser->tc, stmt, obj);
+    TreeContext *tc = parser->tc;
+
+    PushStatementTC(tc, stmt, STMT_BLOCK);
+    blockObj.initPrevBlockChainFromParser(tc->blockChain);
+    FinishPushBlockScope(tc, stmt, blockObj);
+
     pn->setOp(JSOP_LEAVEBLOCK);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
     pn->pn_dflags = 0;
-    if (!GenerateBlockId(parser->tc, stmt->blockid))
+    if (!GenerateBlockId(tc, stmt->blockid))
         return NULL;
     pn->pn_blockid = stmt->blockid;
     return pn;
@@ -3772,7 +3779,7 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            blockObj->setEnclosingBlock(tc->blockChain);
+            blockObj->initPrevBlockChainFromParser(tc->blockChain);
             tc->blockChain = blockObj;
             stmt->blockObj = blockObj;
 
@@ -4901,11 +4908,16 @@ class CompExprTransplanter {
     bool            genexp;
     unsigned        adjust;
     unsigned        funcLevel;
+    HashSet<Definition *> visitedImplicitArguments;
 
   public:
     CompExprTransplanter(ParseNode *pn, Parser *parser, bool ge, unsigned adj)
-      : root(pn), parser(parser), genexp(ge), adjust(adj), funcLevel(0)
-    {
+      : root(pn), parser(parser), genexp(ge), adjust(adj), funcLevel(0),
+        visitedImplicitArguments(parser->context)
+    {}
+
+    bool init() {
+        return visitedImplicitArguments.init();
     }
 
     bool transplant(ParseNode *pn);
@@ -5180,6 +5192,21 @@ CompExprTransplanter::transplant(ParseNode *pn)
                     tc->parent->lexdeps->remove(atom);
                     if (!tc->lexdeps->put(atom, dn))
                         return false;
+                } else if (dn->isImplicitArguments()) {
+                    /*
+                     * Implicit 'arguments' Definition nodes (see
+                     * PND_IMPLICITARGUMENTS in Parser::functionBody) are only
+                     * reachable via the lexdefs of their uses. Unfortunately,
+                     * there may be multiple uses, so we need to maintain a set
+                     * to only bump the definition once.
+                     */
+                    if (genexp && !visitedImplicitArguments.has(dn)) {
+                        if (!BumpStaticLevel(dn, tc))
+                            return false;
+                        AdjustBlockId(dn, adjust, tc);
+                        if (!visitedImplicitArguments.put(dn))
+                            return false;
+                    }
                 }
             }
         }
@@ -5262,6 +5289,9 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
     pnp = &pn->pn_expr;
 
     CompExprTransplanter transplanter(kid, this, kind == PNK_SEMI, adjust);
+    if (!transplanter.init())
+        return NULL;
+
     transplanter.transplant(kid);
 
     JS_ASSERT(tc->blockChain && tc->blockChain == pn->pn_objbox->object);
