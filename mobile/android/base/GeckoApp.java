@@ -121,13 +121,7 @@ abstract public class GeckoApp
                              Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.Launching;
 
-    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
-
-    private ActivityResultHandlerMap mActivityResultHandlerMap = new ActivityResultHandlerMap();
-    private FilePickerResultHandlerSync mFilePickerResultHandlerSync = new FilePickerResultHandlerSync(mFilePickerResult);
-    private AwesomebarResultHandler mAwesomebarResultHandler = new AwesomebarResultHandler();
-    private CameraImageResultHandler mCameraImageResultHandler = new CameraImageResultHandler(mFilePickerResult);
-    private CameraVideoResultHandler mCameraVideoResultHandler = new CameraVideoResultHandler(mFilePickerResult);
+    ActivityHandlerHelper mActivityHelper = new ActivityHandlerHelper();
 
     abstract public int getLayout();
     abstract public boolean isBrowserToolbarSupported();
@@ -2631,186 +2625,8 @@ abstract public class GeckoApp
         }
     }
 
-    /**
-     * The FilePickerPromptRunnable has to be called to show an intent-like
-     * context menu UI using the PromptService.
-     */
-    private class FilePickerPromptRunnable implements Runnable {
-        public FilePickerPromptRunnable(String aTitle, PromptService.PromptListItem[] aItems) {
-            super();
-            mTitle = aTitle;
-            mItems = aItems;
-        }
-
-        public void run() {
-            mPromptService.show(mTitle, "", null, mItems, false);
-        }
-
-        private String mTitle;
-        private PromptService.PromptListItem[] mItems;
-    }
-
-    private int addIntentActivitiesToList(Intent intent, ArrayList<PromptService.PromptListItem> items, ArrayList<Intent> aIntents) {
-        PackageManager pm = mAppContext.getPackageManager();
-        final List<ResolveInfo> lri =
-            pm.queryIntentActivityOptions(GeckoApp.mAppContext.getComponentName(), null, intent, 0);
-
-        if (lri == null) {
-            return 0;
-        }
-
-        for (int i=0; i<lri.size(); i++) {
-            final ResolveInfo ri = lri.get(i);
-            Intent rintent = new Intent(intent);
-            rintent.setComponent(new ComponentName(
-                    ri.activityInfo.applicationInfo.packageName,
-                    ri.activityInfo.name));
-
-            PromptService.PromptListItem item = new PromptService.PromptListItem(ri.loadLabel(pm).toString());
-            item.icon = ri.loadIcon(pm);
-            items.add(item);
-            aIntents.add(rintent);
-        }
-
-        return lri.size();
-    }
-
-    private int AddFilePickingActivities(ArrayList<PromptService.PromptListItem> aItems, String aType, ArrayList<Intent> aIntents) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType(aType);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        return addIntentActivitiesToList(intent, aItems, aIntents);
-    }
-
-    private PromptService.PromptListItem[] getItemsAndIntentsForFilePicker(String aMimeType, ArrayList<Intent> aIntents) {
-        ArrayList<PromptService.PromptListItem> items = new ArrayList<PromptService.PromptListItem>();
-
-        if (aMimeType.equals("audio/*")) {
-            if (AddFilePickingActivities(items, "audio/*", aIntents) <= 0) {
-                AddFilePickingActivities(items, "*/*", aIntents);
-            }
-        } else if (aMimeType.equals("image/*")) {
-            Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT,
-                            Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  CameraImageResultHandler.generateImageName())));
-            addIntentActivitiesToList(intent, items, aIntents);
-
-            if (AddFilePickingActivities(items, "image/*", aIntents) <= 0) {
-              AddFilePickingActivities(items, "*/*", aIntents);
-            }
-        } else if (aMimeType.equals("video/*")) {
-            Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
-            addIntentActivitiesToList(intent, items, aIntents);
-
-            if (AddFilePickingActivities(items, "video/*", aIntents) <= 0) {
-              AddFilePickingActivities(items, "*/*", aIntents);
-            }
-        } else {
-            Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT,
-                            Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  CameraImageResultHandler.generateImageName())));
-            addIntentActivitiesToList(intent, items, aIntents);
-
-            intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
-            addIntentActivitiesToList(intent, items, aIntents);
-
-            AddFilePickingActivities(items, "*/*", aIntents);
-        }
-
-        return items.toArray(new PromptService.PromptListItem[] {});
-    }
-
-    private String getFilePickerTitle(String aMimeType) {
-        if (aMimeType.equals("audio/*")) {
-            return getString(R.string.filepicker_audio_title);
-        } else if (aMimeType.equals("image/*")) {
-            return getString(R.string.filepicker_image_title);
-        } else if (aMimeType.equals("video/*")) {
-            return getString(R.string.filepicker_video_title);
-        } else {
-            return getString(R.string.filepicker_title);
-        }
-    }
-
-    private Intent getFilePickerIntent(String aMimeType) {
-        ArrayList<Intent> intents = new ArrayList<Intent>();
-        PromptService.PromptListItem[] items = getItemsAndIntentsForFilePicker(aMimeType, intents);
-
-        if (intents.size() == 0) {
-            Log.i(LOGTAG, "no activities for the file picker!");
-            return null;
-        }
-
-        if (intents.size() == 1)
-            return intents.get(0);
-
-        GeckoAppShell.getHandler().post(new FilePickerPromptRunnable(getFilePickerTitle(aMimeType), items));
-
-        String promptServiceResult = "";
-        try {
-            promptServiceResult = PromptService.waitForReturn();
-        } catch (InterruptedException e) {
-            Log.e(LOGTAG, "showing prompt failed: ",  e);
-            return null;
-        }
-
-        int itemId = -1;
-        try {
-            itemId = new JSONObject(promptServiceResult).getInt("button");
-
-            if (itemId == -1) {
-                return null;
-            }
-        } catch (org.json.JSONException e) {
-            Log.e(LOGTAG, "result from promptservice was invalid: ", e);
-            return null;
-        }
-
-        return intents.get(itemId);
-    }
-
-    public boolean showFilePicker(String aMimeType, ActivityResultHandler handler) {
-        Intent intent = getFilePickerIntent(aMimeType);
-
-        if (intent == null) {
-            return false;
-        }
-        startActivityForResult(intent, mActivityResultHandlerMap.put(handler));
-        return true;
-    }
-
-    public String showFilePicker(String aMimeType) {
-        Intent intent = getFilePickerIntent(aMimeType);
-
-        if (intent == null) {
-            return "";
-        }
-
-        if (intent.getAction().equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)) {
-            startActivityForResult(intent, mActivityResultHandlerMap.put(mCameraImageResultHandler));
-        } else if (intent.getAction().equals(android.provider.MediaStore.ACTION_VIDEO_CAPTURE)) {
-            startActivityForResult(intent, mActivityResultHandlerMap.put(mCameraVideoResultHandler));
-        } else if (intent.getAction().equals(Intent.ACTION_GET_CONTENT)) {
-            startActivityForResult(intent, mActivityResultHandlerMap.put(mFilePickerResultHandlerSync));
-        } else {
-            Log.e(LOGTAG, "We should not get an intent with another action!");
-            return "";
-        }
-
-        String filePickerResult = "";
-
-        try {
-            while (null == (filePickerResult = mFilePickerResult.poll(1, TimeUnit.MILLISECONDS))) {
-                GeckoAppShell.processNextNativeEvent();
-            }
-        } catch (InterruptedException e) {
-            Log.e(LOGTAG, "showing file picker failed: ",  e);
-        }
-
-        return filePickerResult;
+    PromptService getPromptService() {
+        return mPromptService;
     }
 
     @Override
@@ -2843,7 +2659,8 @@ abstract public class GeckoApp
             }
         }
 
-        startActivityForResult(intent, mActivityResultHandlerMap.put(mAwesomebarResultHandler));
+        int requestCode = mActivityHelper.makeRequestCodeForAwesomebar();
+        startActivityForResult(intent, requestCode);
         return true;
     }
 
@@ -2903,13 +2720,10 @@ abstract public class GeckoApp
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent data) {
-        ActivityResultHandler handler = mActivityResultHandlerMap.getAndRemove(requestCode);
-        if (handler != null)
-            handler.onActivityResult(resultCode, data);
-        else
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (!mActivityHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     // If searchEngine is provided, url will be used as the search query.
