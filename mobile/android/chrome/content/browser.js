@@ -159,6 +159,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
+    Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
@@ -931,6 +932,8 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
+    } else if (aTopic == "Viewport:Flush") {
+      this.displayedDocumentChanged();
     } else if (aTopic == "Passwords:Init") {
       let storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
         getService(Components.interfaces.nsILoginManagerStorage);
