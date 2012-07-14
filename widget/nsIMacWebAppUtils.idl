@@ -17,9 +17,4 @@ interface nsIMacWebAppUtils : nsISupports {
    */
   AString pathForAppWithIdentifier(in AString bundleIdentifier);
 
-  /**
-   * Launch the app with the given identifier, if it exists.
-   */
-  void launchAppWithIdentifier(in AString bundleIdentifier);
-
 };

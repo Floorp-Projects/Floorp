@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES	= \
     bug_765063.xul \
-    bug_771294.xul \
     include.html \
     wild_crazy.webapp \
     wild_crazy.webapp^headers^ \

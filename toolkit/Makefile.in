@@ -24,7 +24,6 @@ PARALLEL_DIRS = \
   obsolete \
   profile \
   themes \
-  webapps \
   $(NULL)
 
 DIRS += \
