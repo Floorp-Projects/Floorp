@@ -1742,21 +1742,24 @@ var SelectionHandler = {
     if (this._view) {
       let selection = this._view.getSelection();
       if (selection) {
-        selectedText = selection.toString().trim();
+        // Get the text to copy if the tap is in the selection
+        if (arguments.length == 2 && this._pointInSelection(aX, aY))
+          selectedText = selection.toString().trim();
+
         selection.removeAllRanges();
         selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
       }
     }
 
     // Only try copying text if there's text to copy!
-    if (arguments.length == 2 && selectedText.length) {
+    if (selectedText.length) {
       let contentWindow = BrowserApp.selectedBrowser.contentWindow;
       let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
       if (!element)
         element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
 
       // Only try copying text if the tap happens in the same view
-      if (element.ownerDocument.defaultView == this._view && this._pointInSelection(aX, aY)) {
+      if (element.ownerDocument.defaultView == this._view) {
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
         clipboard.copyString(selectedText, element.ownerDocument);
         NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
@@ -1784,20 +1787,18 @@ var SelectionHandler = {
       win = win.parent;
     }
 
+    let rangeRect = this._view.getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
-    return (aX - offset.x > this.cache.rect.left - radius.left &&
-            aX - offset.x < this.cache.rect.right + radius.right &&
-            aY - offset.y > this.cache.rect.top - radius.top &&
-            aY - offset.y < this.cache.rect.bottom + radius.bottom);
+    return (aX - offset.x > rangeRect.left - radius.left &&
+            aX - offset.x < rangeRect.right + radius.right &&
+            aY - offset.y > rangeRect.top - radius.top &&
+            aY - offset.y < rangeRect.bottom + radius.bottom);
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
   // param to decide whether the selection has been reversed.
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
-    let range = this._view.getSelection().getRangeAt(0);
-    this.cache.rect = range.getBoundingClientRect();
-
-    let rects = range.getClientRects();
+    let rects = this._view.getSelection().getRangeAt(0).getClientRects();
     let start = { x: rects[0].left, y: rects[0].bottom };
     let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
