@@ -191,7 +191,7 @@ AitcClient.prototype = {
     try {
       cb(null, apps);
       // Don't update lastModified until we know cb succeeded.
-      this._appsLastModified = parseInt(req.response.headers["X-Timestamp"], 10);
+      this._appsLastModified = parseInt(req.response.headers["x-timestamp"], 10);
       this._state.set("lastModified", ""  + this._appsLastModified);
     } catch (e) {
       this._log.error("Exception in getApps callback " + e);
@@ -376,7 +376,7 @@ AitcClient.prototype = {
   // Set values from X-Backoff and Retry-After headers, if present.
   _setBackoff: function _setBackoff(req) {
     let backoff = 0;
-    let successfulStatusCodes = [200, 201, 204, 304, 401];
+    let statusCodesWithoutBackoff = [200, 201, 204, 304, 401];
 
     let val;
     if (req.response.headers["Retry-After"]) {
