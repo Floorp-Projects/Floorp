@@ -120,6 +120,13 @@ private:
     NS_OVERRIDE virtual PHalParent* AllocPHal();
     NS_OVERRIDE virtual bool DeallocPHal(PHalParent*);
 
+    virtual PIndexedDBParent* AllocPIndexedDB();
+
+    virtual bool DeallocPIndexedDB(PIndexedDBParent* aActor);
+
+    virtual bool
+    RecvPIndexedDBConstructor(PIndexedDBParent* aActor);
+
     virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
     virtual bool DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor);
 
