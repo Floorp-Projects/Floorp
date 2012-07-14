@@ -32,6 +32,11 @@
   font-weight: bold;
 }
 
+#alertImage {
+  max-width: 48px;
+  max-height: 48px;
+}
+
 .alertText {
   -moz-margin-end: 6px;
 }
