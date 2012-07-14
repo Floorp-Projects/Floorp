@@ -29,10 +29,12 @@ let webappsUI = {
 
     switch(aTopic) {
       case "webapps-ask-install":
-        let [chromeWin, browser] = this._getBrowserForId(data.oid);
-        if (chromeWin)
-          this.doInstall(data, browser, chromeWin);
+        let win = this._getWindowForId(data.oid);
+        if (win && win.location.href == data.from) {
+          this.doInstall(data, win);
+        }
         break;
+
       case "webapps-launch":
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
           if (!aManifest)
@@ -83,27 +85,14 @@ let webappsUI = {
     }
   },
 
-  _getBrowserForId: function(aId) {
-    let someWindow = Services.wm.getMostRecentWindow(null);
+  doInstall: function(aData, aWindow) {
+    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell)
+                         .chromeEventHandler;
 
-    if (someWindow) {
-      let windowUtils = someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDOMWindowUtils);
-      let content = windowUtils.getOuterWindowWithId(aId);
-      if (content) {
-        let browser = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
-        let win = browser.ownerDocument.defaultView;
-        return [win, browser];
-      }
-    }
-
-    return [null, null];
-  },
-
-  doInstall: function(aData, aBrowser, aWindow) {
-    let bundle = aWindow.gNavigatorBundle;
+    let chromeWin = browser.ownerDocument.defaultView;
+    let bundle = chromeWin.gNavigatorBundle;
 
     let mainAction = {
       label: bundle.getString("webapps.install"),
@@ -117,14 +106,14 @@ let webappsUI = {
           }
 
           DOMApplicationRegistry.confirmInstall(aData, false, localDir);
-          installationSuccessNotification(app, aWindow);
+          installationSuccessNotification(app, chromeWin);
         } else {
           DOMApplicationRegistry.denyInstall(aData);
         }
       }
     };
 
-    let requestingURI = aWindow.makeURI(aData.from);
+    let requestingURI = chromeWin.makeURI(aData.from);
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
 
     let host;
@@ -135,11 +124,18 @@ let webappsUI = {
     }
 
     let message = bundle.getFormattedString("webapps.requestInstall",
-                                            [manifest.name, host], 2);
+                                            [manifest.name, host]);
 
-    aWindow.PopupNotifications.show(aBrowser, "webapps-install", message,
-                                    "webapps-notification-icon", mainAction);
+    chromeWin.PopupNotifications.show(browser, "webapps-install", message,
+                                      "webapps-notification-icon", mainAction);
+  },
 
+  _getWindowForId: function(aId) {
+     let someWindow = Services.wm.getMostRecentWindow(null);
+     return someWindow &&
+            someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils)
+                      .getOuterWindowWithId(aId);
   }
 }
 
