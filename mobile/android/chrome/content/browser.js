@@ -1627,23 +1627,6 @@ var SelectionHandler = {
 
   // aX/aY are in top-level window browser coordinates
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    /* XXX bug 765367: Because the handles are in the document, the element
-       will always be the handle the user touched. These checks are disabled
-       until we can figure out a way to get the element under the handle.
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
-
-    // The element can be null if it's outside the viewport. We also want
-    // to avoid setting focus in a textbox [Bugs 654352 & 667243] and limit
-    // the selection to the initial content window (don't leave or enter iframes).
-    if (!element || element instanceof Ci.nsIDOMHTMLInputElement ||
-                    element instanceof Ci.nsIDOMHTMLTextAreaElement ||
-                    element.ownerDocument.defaultView != this._view)
-      return;
-    */
-
     // Update the handle position as it's dragged
     let leftTop = "left:" + (aX + this._view.scrollX - this._viewOffset.left) + "px;" +
                   "top:" + (aY + this._view.scrollY - this._viewOffset.top) + "px;";
@@ -1716,11 +1699,7 @@ var SelectionHandler = {
   },
 
   _sendMouseEvents: function sh_sendMouseEvents(cwu, useShift, x, y) {
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, x, y);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, x, y);
-
+    let element = cwu.elementFromPoint(x, y, false, false);
     // Don't send mouse events to the other handle
     if (element instanceof Ci.nsIDOMHTMLHtmlElement)
       return;
@@ -1752,11 +1731,7 @@ var SelectionHandler = {
 
     // Only try copying text if there's text to copy!
     if (selectedText.length) {
-      let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-      let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-      if (!element)
-        element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
-
+      let element = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY);
       // Only try copying text if the tap happens in the same view
       if (element.ownerDocument.defaultView == this._view) {
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
