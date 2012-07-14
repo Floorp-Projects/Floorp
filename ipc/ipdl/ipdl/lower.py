@@ -1772,8 +1772,9 @@ def _generateMessageClass(clsname, msgid, typedefs, prettyName):
         StmtExpr(ExprCall(
             ExprVar('StringAppendF'),
             args=[ ExprAddrOf(msgvar),
-                   ExprLiteral.String('[time:%" PRId64 "]'),
-                   ExprCall(ExprVar('PR_Now')) ])),
+                   ExprLiteral.String('[time:%" PRId64 "][%d]'),
+                   ExprCall(ExprVar('PR_Now')),
+                   ExprCall(ExprVar('base::GetCurrentProcId')) ])),
         appendToMsg(pfxvar),
         appendToMsg(ExprLiteral.String(clsname +'(')),
         Whitespace.NL
