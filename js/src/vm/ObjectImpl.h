@@ -1043,8 +1043,6 @@ class ObjectImpl : public gc::Cell
     friend struct Shape;
     friend class NewObjectCache;
 
-    inline bool hasContiguousSlots(uint32_t start, uint32_t count) const;
-
     inline void invalidateSlotRange(uint32_t start, uint32_t count);
     inline void initializeSlotRange(uint32_t start, uint32_t count);
 

@@ -37,9 +37,17 @@
         <item>true</item>
         <item>false</item>
     </string-array>
-    <string-array name="pref_android_import_select">
+    <string-array name="pref_import_android_entries">
         <item>@string/awesomebar_bookmarks_title</item>
         <item>@string/awesomebar_history_title</item>
+    </string-array>
+    <string-array name="pref_import_android_values">
+        <item>true</item>
+        <item>true</item>
+    </string-array>
+    <string-array name="pref_import_android_keys">
+        <item>android_import.data.bookmarks</item>
+        <item>android_import.data.history</item>
     </string-array>
     <string-array name="pref_private_data_entries">
         <item>@string/pref_private_data_history</item>

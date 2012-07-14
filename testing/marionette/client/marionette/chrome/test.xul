@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+]>
+
+<dialog id="dia"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <vbox id="things">
+    <checkbox id="testBox"  label="box" />
+    <textbox id="textInput"  size="6" value="test" label="input" />
+    <textbox id="textInput2"  size="6" value="test" label="input" />
+    <textbox id="textInput3" class="asdf" size="6" value="test" label="input" />
+  </vbox>
+     
+  <iframe id="iframe" name="iframename" src="chrome://marionette/content/test2.xul"/>
+  <iframe id="iframe" name="iframename" src="chrome://marionette/content/test_nested_iframe.xul"/>
+</dialog>

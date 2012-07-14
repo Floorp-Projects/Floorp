@@ -8,14 +8,20 @@ embed:-moz-handler-disabled,
 embed:-moz-handler-blocked,
 embed:-moz-handler-crashed,
 embed:-moz-handler-clicktoplay,
+embed:-moz-handler-vulnerable-updatable,
+embed:-moz-handler-vulnerable-no-update,
 applet:-moz-handler-disabled,
 applet:-moz-handler-blocked,
 applet:-moz-handler-crashed,
 applet:-moz-handler-clicktoplay,
+applet:-moz-handler-vulnerable-updatable,
+applet:-moz-handler-vulnerable-no-update,
 object:-moz-has-handlerref:-moz-handler-disabled,
 object:-moz-has-handlerref:-moz-handler-blocked,
 object:-moz-handler-crashed,
-object:-moz-handler-clicktoplay {
+object:-moz-handler-clicktoplay,
+object:-moz-handler-vulnerable-updatable,
+object:-moz-handler-vulnerable-no-update {
     display: inline-block;
     overflow: hidden;
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;

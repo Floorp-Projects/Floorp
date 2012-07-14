@@ -6,7 +6,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="146dip"
                 android:layout_height="wrap_content"
-                android:paddingTop="4dip">
+                android:paddingTop="4dip"
+                android:background="@drawable/action_bar_button">
 
     <ImageView android:id="@+id/thumbnail"
                android:layout_width="136dip"
@@ -32,7 +33,7 @@
              android:layout_below="@id/shadow"
              android:singleLine="true"
              android:textColor="#000000"
-             android:textSize="9dip"
+             android:textSize="9sp"
              android:gravity="center_horizontal"/>
 
 </RelativeLayout>

@@ -485,6 +485,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
       case SEC_ERROR_UNTRUSTED_CERT:
       case SEC_ERROR_INADEQUATE_KEY_USAGE:
+      case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
         // We group all these errors as "cert not trusted"
         collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
         if (errorCodeTrust == SECSuccess) {

@@ -272,7 +272,7 @@ float fakeData(NSTimeInterval time);
 static int debugging = NO;		// True if debugging (synthetic data)
 static io_connect_t connection;	// Connection for reading accel values
 static int running = NO;		// True if we successfully started
-static int sensorNum = 0;		// The current index into sensors[]
+static unsigned int sensorNum = 0;		// The current index into sensors[]
 static const char *serviceName;	// The name of the current service
 static char *iRecord, *oRecord;	// Pointers to read/write records for sensor
 static int recordSize;			// Size of read/write records

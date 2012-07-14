@@ -736,6 +736,10 @@ struct ParseNode {
                                            optimizable via an upvar opcode */
 #define PND_CLOSED      0x200           /* variable is closed over */
 #define PND_DEFAULT     0x400           /* definition is an arg with a default */
+#define PND_IMPLICITARGUMENTS 0x800     /* the definition is a placeholder for
+                                           'arguments' that has been converted
+                                           into a definition after the function
+                                           body has been parsed. */
 
 /* Flags to propagate from uses to definition. */
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_CLOSED)
@@ -782,6 +786,7 @@ struct ParseNode {
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
     bool isAssigned() const     { return test(PND_ASSIGNED); }
     bool isClosed() const       { return test(PND_CLOSED); }
+    bool isImplicitArguments() const { return test(PND_IMPLICITARGUMENTS); }
 
     /*
      * True iff this definition creates a top-level binding in the overall

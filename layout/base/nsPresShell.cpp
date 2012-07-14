@@ -5901,6 +5901,47 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
     PresShell* shell =
         static_cast<PresShell*>(frame->PresContext()->PresShell());
 
+    switch (aEvent->message) {
+      case NS_TOUCH_MOVE:
+      case NS_TOUCH_CANCEL:
+      case NS_TOUCH_END: {
+        // Remove the changed touches
+        // need to make sure we only remove touches that are ending here
+        nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+        nsTArray<nsCOMPtr<nsIDOMTouch> >  &touches = touchEvent->touches;
+        for (PRUint32 i = 0; i < touches.Length(); ++i) {
+          nsIDOMTouch *touch = touches[i];
+          if (!touch) {
+            break;
+          }
+  
+          PRInt32 id;
+          touch->GetIdentifier(&id);
+          nsCOMPtr<nsIDOMTouch> oldTouch;
+          gCaptureTouchList.Get(id, getter_AddRefs(oldTouch));
+          if (!oldTouch) {
+            break;
+          }
+  
+          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          oldTouch->GetTarget(getter_AddRefs(targetPtr));
+          nsCOMPtr<nsIContent> content = do_QueryInterface(targetPtr);
+          if (!content) {
+            break;
+          }
+
+          nsIFrame* contentFrame = content->GetPrimaryFrame();
+          if (!contentFrame) {
+            break;
+          }
+
+          shell = static_cast<PresShell*>(
+                      contentFrame->PresContext()->PresShell());
+        }
+        break;
+      }
+    }
+
     // Check if we have an active EventStateManager which isn't the
     // EventStateManager of the current PresContext.
     // If that is the case, and mouse is over some ancestor document,
@@ -6477,7 +6518,22 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
                             touchEvent);
       newEvent.target = targetPtr;
 
-      nsCOMPtr<nsIContent> content(do_QueryInterface(targetPtr));
+      // If someone is capturing, all touch events are filtered to their target
+      nsCOMPtr<nsIContent> content = GetCapturingContent();
+
+      // if no one is capturing, set the capturing target
+      if (!content) {
+        content = do_QueryInterface(targetPtr);
+      }
+      PresShell* contentPresShell = nsnull;
+      if (content && content->OwnerDoc() == mDocument) {
+        contentPresShell = static_cast<PresShell*>
+            (content->OwnerDoc()->GetShell());
+        if (contentPresShell) {
+          contentPresShell->PushCurrentEventInfo(
+              content->GetPrimaryFrame(), content);
+        }
+      }
       nsPresContext *context = nsContentUtils::GetContextForContent(content);
       if (!context) {
         context = mPresContext;
@@ -6487,6 +6543,9 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
                                   &newEvent, nsnull, &tmpStatus, aEventCB);
       if (nsEventStatus_eConsumeNoDefault == tmpStatus) {
         preventDefault = true;
+      }
+      if (contentPresShell) {
+        contentPresShell->PopCurrentEventInfo();
       }
     }
   } else {

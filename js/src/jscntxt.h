@@ -173,17 +173,24 @@ class ToSourceCache
     void purge();
 };
 
-class EvalCache
+struct EvalCacheLookup
 {
-    static const unsigned SHIFT = 6;
-    static const unsigned LENGTH = 1 << SHIFT;
-    JSScript *table_[LENGTH];
-
-  public:
-    EvalCache() { PodArrayZero(table_); }
-    JSScript **bucket(JSLinearString *str);
-    void purge();
+    JSLinearString *str;
+    JSFunction *caller;
+    unsigned staticLevel;
+    JSVersion version;
+    JSCompartment *compartment;
 };
+
+struct EvalCacheHashPolicy
+{
+    typedef EvalCacheLookup Lookup;
+
+    static HashNumber hash(const Lookup &l);
+    static bool match(JSScript *script, const EvalCacheLookup &l);
+};
+
+typedef HashSet<JSScript *, EvalCacheHashPolicy, SystemAllocPolicy> EvalCache;
 
 class NativeIterCache
 {

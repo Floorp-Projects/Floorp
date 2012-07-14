@@ -11,6 +11,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import android.view.MenuItem;
+import android.view.View;
 import android.util.Log;
 import android.os.Bundle;
 import android.content.Intent;
@@ -21,6 +22,12 @@ public class WebApp extends GeckoApp {
 
     @Override
     public int getLayout() { return R.layout.web_app; }
+
+    @Override
+    public boolean isBrowserToolbarSupported() { return false; }
+
+    @Override
+    public View getBrowserToolbar() { return null; }
 
     @Override
     public void onCreate(Bundle savedInstanceState)

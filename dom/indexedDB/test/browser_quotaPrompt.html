@@ -51,12 +51,11 @@
       function testSteps()
       {
         const name = window.location.pathname;
-        const description = "My Test Database";
 
         window.addEventListener("indexedDB-addMore", onAddMore, true);
         window.addEventListener("indexedDB-done", onDone, true);
 
-        let request = indexedDB.open(name, version++, description);
+        let request = indexedDB.open(name, version++);
         request.onerror = errorHandler;
         request.onupgradeneeded = grabEventAndContinueHandler;
         let event = yield;

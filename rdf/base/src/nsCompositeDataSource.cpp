@@ -365,8 +365,6 @@ protected:
 private:
     nsIRDFNode* mNode;
     Type        mType;
-    bool	    mAllowNegativeAssertions;
-    bool        mCoalesceDuplicateArcs;
 
     // Hide so that only Create() and Destroy() can be used to
     // allocate and deallocate from the heap
@@ -383,9 +381,7 @@ CompositeArcsInOutEnumeratorImpl::CompositeArcsInOutEnumeratorImpl(
                 bool aCoalesceDuplicateArcs)
     : CompositeEnumeratorImpl(aCompositeDataSource, aAllowNegativeAssertions, aCoalesceDuplicateArcs),
       mNode(aNode),
-      mType(aType),
-      mAllowNegativeAssertions(aAllowNegativeAssertions),
-      mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
+      mType(aType)
 {
     NS_ADDREF(mNode);
 }
@@ -483,8 +479,6 @@ private:
     nsIRDFResource* mProperty;
     nsIRDFNode*     mTarget;
     bool            mTruthValue;
-    bool            mAllowNegativeAssertions;
-    bool            mCoalesceDuplicateArcs;
 
     // Hide so that only Create() and Destroy() can be used to
     // allocate and deallocate from the heap
@@ -505,9 +499,7 @@ CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
       mSource(aSource),
       mProperty(aProperty),
       mTarget(aTarget),
-      mTruthValue(aTruthValue),
-      mAllowNegativeAssertions(aAllowNegativeAssertions),
-      mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
+      mTruthValue(aTruthValue)
 {
     NS_IF_ADDREF(mSource);
     NS_ADDREF(mProperty); // always must be specified

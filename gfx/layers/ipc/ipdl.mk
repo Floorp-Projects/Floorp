@@ -4,6 +4,7 @@
 
 IPDLSRCS = \
   PCompositor.ipdl \
+  PGrallocBuffer.ipdl \
   PLayer.ipdl \
   PLayers.ipdl \
   $(NULL)

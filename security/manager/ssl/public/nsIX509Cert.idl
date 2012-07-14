@@ -151,6 +151,7 @@ interface nsIX509Cert : nsISupports {
   const unsigned long ISSUER_UNKNOWN       = 1 << 5;
   const unsigned long INVALID_CA           = 1 << 6;
   const unsigned long USAGE_NOT_ALLOWED    = 1 << 7;
+  const unsigned long SIGNATURE_ALGORITHM_DISABLED = 1 << 8;
   
   /**
    *  Constants that describe the certified usages of a certificate.

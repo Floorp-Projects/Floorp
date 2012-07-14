@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "ShadowBufferD3D9.h"
@@ -551,19 +552,17 @@ ShadowImageLayerD3D9::Swap(const SharedImage& aNewFront,
     if (!mBuffer) {
       mBuffer = new ShadowBufferD3D9(this);
     }
-    nsRefPtr<gfxASurface> surf =
-      ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
-
-    mBuffer->Upload(surf, GetVisibleRegion().GetBounds());
+    AutoOpenSurface surf(OPEN_READ_ONLY, aNewFront.get_SurfaceDescriptor());
+    mBuffer->Upload(surf.Get(), GetVisibleRegion().GetBounds());
   } else {
     const YUVImage& yuv = aNewFront.get_YUVImage();
 
-    nsRefPtr<gfxSharedImageSurface> surfY =
-      gfxSharedImageSurface::Open(yuv.Ydata());
-    nsRefPtr<gfxSharedImageSurface> surfU =
-      gfxSharedImageSurface::Open(yuv.Udata());
-    nsRefPtr<gfxSharedImageSurface> surfV =
-      gfxSharedImageSurface::Open(yuv.Vdata());
+    AutoOpenSurface asurfY(OPEN_READ_ONLY, yuv.Ydata());
+    AutoOpenSurface asurfU(OPEN_READ_ONLY, yuv.Udata());
+    AutoOpenSurface asurfV(OPEN_READ_ONLY, yuv.Vdata());
+    gfxImageSurface* surfY = asurfY.GetAsImage();
+    gfxImageSurface* surfU = asurfU.GetAsImage();
+    gfxImageSurface* surfV = asurfV.GetAsImage();
 
     PlanarYCbCrImage::Data data;
     data.mYChannel = surfY->Data();
