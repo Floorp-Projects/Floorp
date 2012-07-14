@@ -56,7 +56,7 @@ EXPORTS = \
   nsIScriptGlobalObject.h \
   nsIScriptGlobalObjectOwner.h \
   nsIScriptNameSpaceManager.h \
-  nsIScriptObjectOwner.h \
+  nsIScriptEventHandlerOwner.h \
   nsIScriptObjectPrincipal.h \
   nsIScriptRuntime.h \
   nsIScriptTimeoutHandler.h \
