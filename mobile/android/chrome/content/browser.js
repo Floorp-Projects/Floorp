@@ -1531,6 +1531,7 @@ var SelectionHandler = {
     this._viewOffset = { top: parseInt(computedStyle.getPropertyValue("margin-top").replace("px", "")),
                          left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")),
                          zoom: BrowserApp.selectedTab.getViewport().zoom };
+    this.updateViewOffsetScroll();
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
@@ -1628,8 +1629,8 @@ var SelectionHandler = {
   // aX/aY are in top-level window browser coordinates
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
     // Update the handle position as it's dragged
-    let leftTop = "left:" + (aX + this._view.scrollX - this._viewOffset.left) + "px;" +
-                  "top:" + (aY + this._view.scrollY - this._viewOffset.top) + "px;";
+    let leftTop = "left:" + (aX + this._viewOffset.scrollX - this._viewOffset.left) + "px;" +
+                  "top:" + (aY + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
     if (aIsStartHandle) {
       this._start.style.cssText = this._start.style.cssText + leftTop;
       this.cache.start.left = aX;
@@ -1808,6 +1809,15 @@ var SelectionHandler = {
     this.cache.end.top = end.top;
   },
 
+  updateViewOffsetScroll: function sh_updateViewOffsetScroll() {
+    let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+
+    this._viewOffset.scrollX = scrollX.value;
+    this._viewOffset.scrollY = scrollY.value;
+  },
+
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles(adjustScale) {
@@ -1822,13 +1832,13 @@ var SelectionHandler = {
       endCss += heightWidth;
     }
 
-    startCss += "left:" + (this.cache.start.x + this._view.scrollX - this._viewOffset.left -
+    startCss += "left:" + (this.cache.start.x + this._viewOffset.scrollX - this._viewOffset.left -
                            this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - this.HANDLE_WIDTH / this._viewOffset.zoom) + "px;" +
-                "top:" + (this.cache.start.y + this._view.scrollY - this._viewOffset.top) + "px;";
+                "top:" + (this.cache.start.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
 
-    endCss += "left:" + (this.cache.end.x + this._view.scrollX - this._viewOffset.left -
+    endCss += "left:" + (this.cache.end.x + this._viewOffset.scrollX - this._viewOffset.left -
                          this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px;" +
-              "top:" + (this.cache.end.y + this._view.scrollY - this._viewOffset.top) + "px;";
+              "top:" + (this.cache.end.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
 
     this._start.style.cssText = startCss;
     this._end.style.cssText = endCss;
@@ -1899,6 +1909,7 @@ var SelectionHandler = {
 
         // Update the cache in case the page panned since last touch
         this.updateCacheForHandleRects();
+        this.updateViewOffsetScroll();
 
         aEvent.target.addEventListener("touchmove", this, false);
         break;
