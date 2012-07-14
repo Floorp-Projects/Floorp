@@ -29,7 +29,7 @@ function run_test()
              if (is_windows) {
                ['SystemMemoryUsePercentage', 'TotalVirtualMemory', 'AvailableVirtualMemory',
                 'AvailablePageFile', 'AvailablePhysicalMemory'].forEach(function(prop) {
-                  do_check_true(extra[prop].toString().match(/^\d+$/));
+                  do_check_true(/^\d+$/.test(extra[prop].toString()));
                });
              }
              if (is_win7_or_newer)

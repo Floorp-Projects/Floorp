@@ -207,7 +207,7 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
     INITIAL_CONSTRUCT      =       0x40, /* == StackFrame::CONSTRUCTING, asserted below */
-    INITIAL_LOWERED        =   0x200000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
+    INITIAL_LOWERED        =   0x100000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -245,25 +245,24 @@ class StackFrame
         /* Function prologue state */
         HAS_CALL_OBJ       =      0x800,  /* CallObject created for heavyweight fun */
         HAS_ARGS_OBJ       =     0x1000,  /* ArgumentsObject created for needsArgsObj script */
-        HAS_NESTING        =     0x2000,  /* NestingPrologue called for frame */
 
         /* Lazy frame initialization */
-        HAS_HOOK_DATA      =     0x4000,  /* frame has hookData_ set */
-        HAS_ANNOTATION     =     0x8000,  /* frame has annotation_ set */
-        HAS_RVAL           =    0x10000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =    0x20000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =    0x40000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =    0x80000,  /* frame has blockChain_ set */
+        HAS_HOOK_DATA      =     0x2000,  /* frame has hookData_ set */
+        HAS_ANNOTATION     =     0x4000,  /* frame has annotation_ set */
+        HAS_RVAL           =     0x8000,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =    0x10000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =    0x20000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =    0x40000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x200000,  /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED =  0x80000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   = 0x100000,  /* Pushed by a lowered call/apply */
 
         /* Debugger state */
-        PREV_UP_TO_DATE    =   0x400000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE    =   0x200000,  /* see DebugScopes::updateLiveScopes */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME = 0x800000  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME = 0x400000  /* SPS was notified of enty */
     };
 
   private:
@@ -370,7 +369,6 @@ class StackFrame
 
     /* Subsets of 'prologue' called from jit code. */
     inline bool jitHeavyweightFunctionPrologue(JSContext *cx);
-    inline void jitTypeNestingPrologue(JSContext *cx);
     bool jitStrictEvalPrologue(JSContext *cx);
 
     /* Initialize local variables of newly-pushed frame. */

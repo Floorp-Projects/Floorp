@@ -666,6 +666,9 @@ class _StructField(_CompoundTypeComponent):
         if self.recursive:
             return [ StmtExpr(ExprAssn(self.memberVar(),
                                        ExprNew(self.bareType()))) ]
+        elif self.ipdltype.isIPDL() and self.ipdltype.isActor():
+            return [ StmtExpr(ExprAssn(self.memberVar(),
+                                       ExprLiteral.NULL)) ]
         else:
             return []
 
@@ -3086,16 +3089,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
 
             dumpvar = ExprVar('aDump')
+            seqvar = ExprVar('aSequence')
             getdump = MethodDefn(MethodDecl(
                 'TakeMinidump',
-                params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name) ],
+                params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name),
+                         Decl(Type.UINT32PTR, seqvar.name)],
                 ret=Type.BOOL,
                 const=1))
             getdump.addstmts([
                 CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
                 StmtReturn(ExprCall(
                     ExprVar('XRE_TakeMinidumpForChild'),
-                    args=[ ExprCall(otherpidvar), dumpvar ])),
+                    args=[ ExprCall(otherpidvar), dumpvar, seqvar ])),
                 CppDirective('else'),
                 StmtReturn.FALSE,
                 CppDirective('endif')

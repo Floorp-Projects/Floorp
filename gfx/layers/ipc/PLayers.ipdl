@@ -6,20 +6,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCompositor;
+include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
 
 include "gfxipc/ShadowLayerUtils.h";
 
 using gfx3DMatrix;
+using gfxIntSize;
 using gfxPoint;
 using gfxRGBA;
 using nsIntPoint;
 using nsIntRect;
 using nsIntRegion;
 using nsIntSize;
+using mozilla::gfxContentType;
 using mozilla::GraphicsFilterType;
 using mozilla::layers::FrameMetrics;
+using mozilla::layers::MagicGrallocBufferHandle;
 using mozilla::layers::SurfaceDescriptorX11;
 using mozilla::null_t;
 using mozilla::WindowsHandle;
@@ -42,20 +46,30 @@ struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
 
+union MaybeMagicGrallocBufferHandle {
+  MagicGrallocBufferHandle;
+  null_t;
+};
+
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
+};
+
+struct SurfaceDescriptorGralloc {
+  PGrallocBuffer buffer;
 };
 
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorD3D10;
+  SurfaceDescriptorGralloc;
   SurfaceDescriptorX11;
 };
 
 struct YUVImage {
-  Shmem Ydata;
-  Shmem Udata;
-  Shmem Vdata;
+  SurfaceDescriptor Ydata;
+  SurfaceDescriptor Udata;
+  SurfaceDescriptor Vdata;
   nsIntRect picture;
 };
 
@@ -206,9 +220,17 @@ union EditReply {
 
 sync protocol PLayers {
   manager PRenderFrame or PCompositor;
+  manages PGrallocBuffer;
   manages PLayer;
 
 parent:
+  /**
+   * Only the parent side has privileges to allocate the buffer.
+   * Allocation may fail (pmem is a scarce resource), and if so null_t
+   * is returned.
+   */
+  sync PGrallocBuffer(gfxIntSize size, gfxContentType content)
+    returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
 
   // The isFirstPaint flag can be used to indicate that this is the first update

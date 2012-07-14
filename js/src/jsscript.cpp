@@ -51,8 +51,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-namespace js {
-
 BindingKind
 Bindings::lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const
 {
@@ -124,7 +122,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         id = AtomToId(name);
     }
 
-    StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ);
+    StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ);
     base.updateGetterSetter(attrs, getter, setter);
 
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
@@ -247,8 +245,6 @@ Bindings::trace(JSTracer *trc)
         MarkShape(trc, &lastBinding, "shape");
 }
 
-} /* namespace js */
-
 template<XDRMode mode>
 static bool
 XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
@@ -342,9 +338,25 @@ XDRScriptConst(XDRState<mode> *xdr, HeapValue *vp)
     return true;
 }
 
+static inline uint32_t
+FindBlockIndex(JSScript *script, StaticBlockObject &block)
+{
+    ObjectArray *objects = script->objects();
+    HeapPtrObject *vector = objects->vector;
+    unsigned length = objects->length;
+    for (unsigned i = 0; i < length; ++i) {
+        if (vector[i] == &block)
+            return i;
+    }
+
+    JS_NOT_REACHED("Block not found");
+    return UINT32_MAX;
+}
+
 template<XDRMode mode>
 bool
-js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
+js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+              HandleFunction fun, JSScript **scriptp)
 {
     /* NB: Keep this in sync with CloneScript. */
 
@@ -372,16 +384,12 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = nClosedArgs = nClosedVars = 0;
     jssrcnote *notes = NULL;
 
-    /* XDR arguments, var vars, and upvars. */
-    uint16_t nargs, nvars;
-#if defined(DEBUG) || defined(__GNUC__) /* quell GCC overwarning */
-    script = NULL;
-    nargs = nvars = Bindings::BINDING_COUNT_LIMIT;
-#endif
-    uint32_t argsVars;
+    /* XDR arguments and vars. */
+    uint16_t nargs = 0, nvars = 0;
+    uint32_t argsVars = 0;
     if (mode == XDR_ENCODE) {
         script = *scriptp;
-        JS_ASSERT_IF(parentScript, parentScript->compartment() == script->compartment());
+        JS_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
 
         nargs = script->bindings.numArgs();
         nvars = script->bindings.numVars();
@@ -515,7 +523,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         if (script->analyzedArgsUsage() && script->needsArgsObj())
             scriptBits |= (1 << NeedsArgsObj);
         if (script->filename) {
-            scriptBits |= (parentScript && parentScript->filename == script->filename)
+            scriptBits |= (enclosingScript && enclosingScript->filename == script->filename)
                           ? (1 << ParentFilename)
                           : (1 << OwnFilename);
         }
@@ -564,12 +572,12 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
         // staticLevel is set below.
         script = JSScript::Create(cx,
+                                  enclosingScope,
                                   !!(scriptBits & (1 << SavedCallerFun)),
                                   /* principals = */ NULL,
                                   /* originPrincipals = */ NULL,
                                   /* compileAndGo = */ false,
                                   !!(scriptBits & (1 << NoScriptRval)),
-                                  /* globalObject = */ NULL,
                                   version_,
                                   /* staticLevel = */ 0);
         if (!script || !JSScript::partiallyInit(cx, script,
@@ -622,9 +630,9 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                 return false;
         }
     } else if (scriptBits & (1 << ParentFilename)) {
-        JS_ASSERT(parentScript);
+        JS_ASSERT(enclosingScript);
         if (mode == XDR_DECODE)
-            script->filename = parentScript->filename;
+            script->filename = enclosingScript->filename;
     }
 
     if (mode == XDR_DECODE) {
@@ -648,10 +656,9 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
     }
 
     /*
-     * Here looping from 0-to-length to xdr objects is essential. It ensures
-     * that block objects from the script->objects array will be written and
-     * restored in the outer-to-inner order. js_XDRBlockObject relies on this
-     * to restore the parent chain.
+     * Here looping from 0-to-length to xdr objects is essential to ensure that
+     * all references to enclosing blocks (via FindBlockIndex below) happen
+     * after the enclosing block has been XDR'd.
      */
     for (i = 0; i != nobjects; ++i) {
         HeapPtr<JSObject> *objp = &script->objects()->vector[i];
@@ -664,14 +671,58 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         if (!xdr->codeUint32(&isBlock))
             return false;
         if (isBlock == 0) {
+            /* Code the nested function's enclosing scope. */
+            uint32_t funEnclosingScopeIndex = 0;
+            if (mode == XDR_ENCODE) {
+                StaticScopeIter ssi((*objp)->toFunction()->script()->enclosingStaticScope());
+                if (ssi.done() || ssi.type() == StaticScopeIter::FUNCTION) {
+                    JS_ASSERT(ssi.done() == !fun);
+                    funEnclosingScopeIndex = UINT32_MAX;
+                } else {
+                    funEnclosingScopeIndex = FindBlockIndex(script, ssi.block());
+                    JS_ASSERT(funEnclosingScopeIndex < i);
+                }
+            }
+            if (!xdr->codeUint32(&funEnclosingScopeIndex))
+                return false;
+            Rooted<JSObject*> funEnclosingScope(cx);
+            if (mode == XDR_DECODE) {
+                if (funEnclosingScopeIndex == UINT32_MAX) {
+                    funEnclosingScope = fun;
+                } else {
+                    JS_ASSERT(funEnclosingScopeIndex < i);
+                    funEnclosingScope = script->objects()->vector[funEnclosingScopeIndex];
+                }
+            }
+
             JSObject *tmp = *objp;
-            if (!XDRInterpretedFunction(xdr, &tmp, parentScript))
+            if (!XDRInterpretedFunction(xdr, funEnclosingScope, script, &tmp))
                 return false;
             *objp = tmp;
         } else {
+            /* Code the nested block's enclosing scope. */
             JS_ASSERT(isBlock == 1);
+            uint32_t blockEnclosingScopeIndex = 0;
+            if (mode == XDR_ENCODE) {
+                if (StaticBlockObject *block = (*objp)->asStaticBlock().enclosingBlock())
+                    blockEnclosingScopeIndex = FindBlockIndex(script, *block);
+                else
+                    blockEnclosingScopeIndex = UINT32_MAX;
+            }
+            if (!xdr->codeUint32(&blockEnclosingScopeIndex))
+                return false;
+            Rooted<JSObject*> blockEnclosingScope(cx);
+            if (mode == XDR_DECODE) {
+                if (blockEnclosingScopeIndex != UINT32_MAX) {
+                    JS_ASSERT(blockEnclosingScopeIndex < i);
+                    blockEnclosingScope = script->objects()->vector[blockEnclosingScopeIndex];
+                } else {
+                    blockEnclosingScope = fun;
+                }
+            }
+
             StaticBlockObject *tmp = static_cast<StaticBlockObject *>(objp->get());
-            if (!XDRStaticBlockObject(xdr, script, &tmp))
+            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, &tmp))
                 return false;
             *objp = tmp;
         }
@@ -738,10 +789,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 }
 
 template bool
-js::XDRScript(XDRState<XDR_ENCODE> *xdr, JSScript **scriptp, JSScript *parentScript);
+js::XDRScript(XDRState<XDR_ENCODE> *, HandleObject, HandleScript, HandleFunction, JSScript **);
 
 template bool
-js::XDRScript(XDRState<XDR_DECODE> *xdr, JSScript **scriptp, JSScript *parentScript);
+js::XDRScript(XDRState<XDR_DECODE> *, HandleObject, HandleScript, HandleFunction, JSScript **);
 
 bool
 JSScript::initScriptCounts(JSContext *cx)
@@ -1074,17 +1125,17 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 }
 
 JSScript *
-JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
-                 JSPrincipals *originPrincipals, bool compileAndGo, bool noScriptRval,
-                 GlobalObject *globalObject_, JSVersion version, unsigned staticLevel)
+JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun,
+                 JSPrincipals *principals, JSPrincipals *originPrincipals,
+                 bool compileAndGo, bool noScriptRval, JSVersion version, unsigned staticLevel)
 {
-    Rooted<GlobalObject*> globalObject(cx, globalObject_);
     JSScript *script = js_NewGCScript(cx);
     if (!script)
         return NULL;
 
     PodZero(script);
 
+    script->enclosingScope_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
 
     /* Establish invariant: principals implies originPrincipals. */
@@ -1100,8 +1151,6 @@ JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
 
     script->compileAndGo = compileAndGo;
     script->noScriptRval = noScriptRval;
- 
-    script->globalObject = globalObject;
 
     script->version = version;
     JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
@@ -1318,7 +1367,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         if (bce->sc->funArgumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below
             script->setArgumentsHasVarBinding();
-            if (bce->sc->funDefinitelyNeedsArgsObj())        
+            if (bce->sc->funDefinitelyNeedsArgsObj())
                 script->setNeedsArgsObj(true);
         } else {
             JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
@@ -1650,7 +1699,7 @@ Rebase(JSScript *dst, JSScript *src, T *srcp)
 }
 
 JSScript *
-js::CloneScript(JSContext *cx, HandleScript src)
+js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
 {
     /* NB: Keep this in sync with XDRScript. */
 
@@ -1699,13 +1748,29 @@ js::CloneScript(JSContext *cx, HandleScript src)
     if (nobjects != 0) {
         HeapPtrObject *vector = src->objects()->vector;
         for (unsigned i = 0; i < nobjects; i++) {
+            JSObject &obj = *vector[i];
             JSObject *clone;
-            if (vector[i]->isStaticBlock()) {
-                Rooted<StaticBlockObject*> block(cx, &vector[i]->asStaticBlock());
-                clone = CloneStaticBlockObject(cx, block, objects, src);
+            if (obj.isStaticBlock()) {
+                Rooted<StaticBlockObject*> innerBlock(cx, &obj.asStaticBlock());
+
+                Rooted<JSObject*> enclosingScope(cx);
+                if (StaticBlockObject *enclosingBlock = innerBlock->enclosingBlock())
+                    enclosingScope = objects[FindBlockIndex(src, *enclosingBlock)];
+                else
+                    enclosingScope = fun;
+
+                clone = CloneStaticBlockObject(cx, enclosingScope, innerBlock);
             } else {
-                RootedFunction fun(cx, vector[i]->toFunction());
-                clone = CloneInterpretedFunction(cx, fun);
+                Rooted<JSFunction*> innerFun(cx, obj.toFunction());
+
+                StaticScopeIter ssi(innerFun->script()->enclosingStaticScope());
+                Rooted<JSObject*> enclosingScope(cx);
+                if (!ssi.done() && ssi.type() == StaticScopeIter::BLOCK)
+                    enclosingScope = objects[FindBlockIndex(src, ssi.block())];
+                else
+                    enclosingScope = fun;
+
+                clone = CloneInterpretedFunction(cx, enclosingScope, innerFun);
             }
             if (!clone || !objects.append(clone))
                 return NULL;
@@ -1726,11 +1791,10 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
-    JSScript *dst = JSScript::Create(cx, src->savedCallerFun,
+    JSScript *dst = JSScript::Create(cx, enclosingScope, src->savedCallerFun,
                                      cx->compartment->principals, src->originPrincipals,
                                      src->compileAndGo, src->noScriptRval,
-                                     /* globalObject = */ NULL, src->getVersion(),
-                                     src->staticLevel);
+                                     src->getVersion(), src->staticLevel);
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1949,8 +2013,7 @@ JSScript::changeStepModeCount(JSContext *cx, int delta)
 }
 
 BreakpointSite *
-JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
-                                    GlobalObject *scriptGlobal)
+JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc)
 {
     JS_ASSERT(size_t(pc - code) < length);
 
@@ -1968,11 +2031,6 @@ JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
         }
         debug->numSites++;
     }
-
-    if (site->scriptGlobal)
-        JS_ASSERT_IF(scriptGlobal, site->scriptGlobal == scriptGlobal);
-    else
-        site->scriptGlobal = scriptGlobal;
 
     return site;
 }
@@ -2060,16 +2118,13 @@ JSScript::markChildren(JSTracer *trc)
     if (function())
         MarkObject(trc, &function_, "function");
 
-    if (!isCachedEval && globalObject)
-        MarkObject(trc, &globalObject, "object");
+    if (enclosingScope_)
+        MarkObject(trc, &enclosingScope_, "enclosing");
 
     if (IS_GC_MARKING_TRACER(trc) && filename)
         MarkScriptFilename(trc->runtime, filename);
 
     bindings.trace(trc);
-
-    if (types)
-        types->trace(trc);
 
 #ifdef JS_METHODJIT
     for (int constructing = 0; constructing <= 1; constructing++) {

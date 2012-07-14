@@ -8,10 +8,9 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
 
   // Open a datbase for the first time.
-  let request = indexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1);
 
   // Sanity checks
   ok(request instanceof IDBRequest, "Request should be an IDBRequest");
@@ -46,7 +45,7 @@ function testSteps()
   }, false);
 
   // Open the database again and trigger an upgrade that should succeed
-  request = indexedDB.open(name, 2, description);
+  request = indexedDB.open(name, 2);
   request.onerror = errorHandler;
   request.onsuccess = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -84,7 +83,7 @@ function testSteps()
   }, false);
 
   // Test opening the existing version again
-  request = indexedDB.open(name, 2, description);
+  request = indexedDB.open(name, 2);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   if (SpecialPowers.isMainProcess()) {
@@ -98,7 +97,7 @@ function testSteps()
   db3 = event.target.result;
 
   // Test an upgrade that should fail
-  request = indexedDB.open(name, 3, description);
+  request = indexedDB.open(name, 3);
   request.onerror = errorHandler;
   request.onsuccess = errorHandler;
   request.onupgradeneeded = errorHandler;

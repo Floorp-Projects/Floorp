@@ -288,6 +288,7 @@ private:
     CrashReporterParent* CrashReporter();
 
 #ifdef MOZ_CRASHREPORTER
+    void ProcessFirstMinidump();
     void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
 #endif
     void CleanupFromTimeout();
@@ -319,7 +320,7 @@ private:
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     void InitializeInjector();
     
-    NS_OVERRIDE void OnCrash(DWORD processID, const nsAString& aDumpID);
+    NS_OVERRIDE void OnCrash(DWORD processID);
 
     DWORD mFlashProcess1;
     DWORD mFlashProcess2;

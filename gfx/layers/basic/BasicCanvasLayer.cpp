@@ -339,9 +339,8 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
   // canvas resizes
 
   if (IsSurfaceDescriptorValid(mBackBuffer)) {
-    nsRefPtr<gfxASurface> backSurface =
-      BasicManager()->OpenDescriptor(mBackBuffer);
-    if (gfxIntSize(mBounds.width, mBounds.height) != backSurface->GetSize()) {
+    AutoOpenSurface backSurface(OPEN_READ_ONLY, mBackBuffer);
+    if (gfxIntSize(mBounds.width, mBounds.height) != backSurface.Size()) {
       DestroyBackBuffer();
     }
   }
@@ -368,15 +367,13 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
   }
 
-  nsRefPtr<gfxASurface> backSurface =
-    BasicManager()->OpenDescriptor(mBackBuffer);
-
+  AutoOpenSurface autoBackSurface(OPEN_READ_WRITE, mBackBuffer);
 
   if (aMaskLayer) {
     static_cast<BasicImplData*>(aMaskLayer->ImplData())
       ->Paint(aContext, nsnull);
   }
-  UpdateSurface(backSurface, nsnull);
+  UpdateSurface(autoBackSurface.Get(), nsnull);
   FireDidTransactionCallback();
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
@@ -437,15 +434,14 @@ void
 BasicShadowCanvasLayer::Swap(const CanvasSurface& aNewFront, bool needYFlip,
                              CanvasSurface* aNewBack)
 {
-  nsRefPtr<gfxASurface> surface =
-    BasicManager()->OpenDescriptor(aNewFront);
+  AutoOpenSurface autoSurface(OPEN_READ_ONLY, aNewFront);
   // Destroy mFrontBuffer if size different
-  gfxIntSize sz = surface->GetSize();
+  gfxIntSize sz = autoSurface.Size();
   bool surfaceConfigChanged = sz != gfxIntSize(mBounds.width, mBounds.height);
   if (IsSurfaceDescriptorValid(mFrontSurface)) {
-    nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontSurface);
+    AutoOpenSurface autoFront(OPEN_READ_ONLY, mFrontSurface);
     surfaceConfigChanged = surfaceConfigChanged ||
-                           surface->GetContentType() != front->GetContentType();
+                           autoSurface.ContentType() != autoFront.ContentType();
   }
   if (surfaceConfigChanged) {
     DestroyFrontBuffer();
@@ -459,7 +455,7 @@ BasicShadowCanvasLayer::Swap(const CanvasSurface& aNewFront, bool needYFlip,
   } else {
     *aNewBack = null_t();
   }
-  mFrontSurface = aNewFront.get_SurfaceDescriptor();
+  mFrontSurface = aNewFront;
 }
 
 void
@@ -472,9 +468,8 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  nsRefPtr<gfxASurface> surface =
-    BasicManager()->OpenDescriptor(mFrontSurface);
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
+  AutoOpenSurface autoSurface(OPEN_READ_ONLY, mFrontSurface);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(autoSurface.Get());
 
   pat->SetFilter(mFilter);
   pat->SetExtend(gfxPattern::EXTEND_PAD);

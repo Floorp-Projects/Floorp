@@ -1,0 +1,57 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>selection expanding test</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="div1" class="testingDiv">
+  aaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaa
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var div1 = document.getElementById("div1");
+
+function sendTouch(aType, aX, aY) {
+  var cwu = SpecialPowers.getDOMWindowUtils(window);
+  cwu.sendTouchEvent(aType, [0], [aX], [aY], [1], [1], [0], [1], 1, 0, true);
+}
+
+function test()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var selection = window.getSelection();
+  selection.removeAllRanges();
+  var rect = div1.getBoundingClientRect();
+
+  // Position the caret using a fake mouse click
+  var cwu = SpecialPowers.getDOMWindowUtils(window);
+  cwu.sendMouseEventToWindow("mousedown", rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
+  cwu.sendMouseEventToWindow("mouseup",   rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
+  var selectionController = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                   getInterface(Components.interfaces.nsIWebNavigation).
+                                   QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                   getInterface(Components.interfaces.nsISelectionDisplay).
+                                   QueryInterface(Components.interfaces.nsISelectionController);
+
+  selectionController.wordMove(false, false);
+  selectionController.wordMove(true, true);
+  isnot(selection.rangeCount, 0, "Something should be selected");
+  var string = selection.toString();
+
+  sendTouch("touchstart", rect.right, rect.top + rect.height/2);
+  sendTouch("touchmove",  rect.left, rect.top + rect.height/2);
+  sendTouch("touchend",   rect.left, rect.top + rect.height/2);
+  is(selection.toString(), string, "touch events should not affect the selection");
+
+  SimpleTest.finish();
+}
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

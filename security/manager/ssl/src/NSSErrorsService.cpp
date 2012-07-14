@@ -102,6 +102,7 @@ NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode, PRUint32 *aErrorClass)
     case SEC_ERROR_INADEQUATE_KEY_USAGE:
     case SSL_ERROR_BAD_CERT_DOMAIN:
     case SEC_ERROR_EXPIRED_CERTIFICATE:
+    case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
       *aErrorClass = ERROR_CLASS_BAD_CERT;
       break;
     default:

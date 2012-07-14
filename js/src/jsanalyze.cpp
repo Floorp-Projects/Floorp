@@ -314,33 +314,25 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
+          case JSOP_GETALIASEDVAR:
+          case JSOP_CALLALIASEDVAR:
+          case JSOP_SETALIASEDVAR:
             usesScopeChain_ = true;
             isInlineable = false;
             break;
-
-          case JSOP_GETALIASEDVAR:
-          case JSOP_CALLALIASEDVAR:
-          case JSOP_SETALIASEDVAR: {
-            JS_ASSERT(!isInlineable);
-            usesScopeChain_ = true;
-            break;
-          }
 
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
-            extendsScope_ = true;
             isInlineable = canTrackVars = false;
             break;
 
           case JSOP_EVAL:
-            extendsScope_ = true;
             isInlineable = canTrackVars = false;
             break;
 
           case JSOP_ENTERWITH:
-            addsScopeObjects_ = true;
             isJaegerCompileable = isInlineable = canTrackVars = false;
             break;
 
@@ -348,7 +340,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
-            addsScopeObjects_ = true;
             isInlineable = false;
             break;
 

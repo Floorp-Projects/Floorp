@@ -320,6 +320,30 @@ nsPluginTag::SetBlocklisted(bool aBlocklisted)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPluginTag::GetClicktoplay(bool *aClicktoplay)
+{
+  *aClicktoplay = HasFlag(NS_PLUGIN_FLAG_CLICKTOPLAY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::SetClicktoplay(bool aClicktoplay)
+{
+  if (HasFlag(NS_PLUGIN_FLAG_CLICKTOPLAY) == aClicktoplay) {
+    return NS_OK;
+  }
+  
+  if (aClicktoplay) {
+    Mark(NS_PLUGIN_FLAG_CLICKTOPLAY);
+  } else {
+    UnMark(NS_PLUGIN_FLAG_CLICKTOPLAY);
+  }
+  
+  mPluginHost->UpdatePluginInfo(nsnull);
+  return NS_OK;
+}
+
 void nsPluginTag::Mark(PRUint32 mask)
 {
   bool wasEnabled = IsEnabled();

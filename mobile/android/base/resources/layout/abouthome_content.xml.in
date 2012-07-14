@@ -125,6 +125,11 @@
                        android:layout_alignParentLeft="true"
                        android:src="@drawable/abouthome_logo"/>
 
+            <View android:layout_width="fill_parent"
+                  android:layout_height="2dp"
+                  android:background="@drawable/abouthome_divider"
+                  android:layout_alignParentBottom="true"/>
+
         </RelativeLayout>
 
         <org.mozilla.gecko.AboutHomeSection android:id="@+id/last_tabs"

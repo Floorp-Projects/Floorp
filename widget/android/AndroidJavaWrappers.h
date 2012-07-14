@@ -630,15 +630,15 @@ protected:
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
                       jfieldID field,
-                      PRUint32 count);
+                      PRInt32 count);
     void ReadFloatArray(nsTArray<float> &aVals,
                         JNIEnv *jenv,
                         jfieldID field,
-                        PRUint32 count);
+                        PRInt32 count);
     void ReadPointArray(nsTArray<nsIntPoint> &mPoints,
                         JNIEnv *jenv,
                         jfieldID field,
-                        PRUint32 count);
+                        PRInt32 count);
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);

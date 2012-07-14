@@ -8,13 +8,12 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
   const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
   const sortedKeys = [-1, 0, 1, 10, 2000, "a", "b", "q", "two", "z"];
 
   is(keys.length, sortedKeys.length, "Good key setup");
 
-  let request = indexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

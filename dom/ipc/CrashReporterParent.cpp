@@ -99,6 +99,15 @@ CrashReporterParent::GenerateHangCrashReport(const AnnotationTable* processNotes
 }
 
 bool
+CrashReporterParent::GenerateCrashReportForMinidump(nsIFile* minidump,
+    const AnnotationTable* processNotes)
+{
+    if (!CrashReporter::GetIDFromMinidump(minidump, mChildDumpID))
+        return false;
+    return GenerateChildData(processNotes);
+}
+
+bool
 CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
 {
     MOZ_ASSERT(mInitialized);

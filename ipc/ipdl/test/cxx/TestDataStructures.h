@@ -91,6 +91,10 @@ protected:
             InfallibleTArray<IntDoubleArrays>* o1);
 
     NS_OVERRIDE
+    virtual bool RecvTest7_0(const ActorWrapper& i1,
+                             ActorWrapper* o1);
+
+    NS_OVERRIDE
     virtual bool RecvTest7(
             const Actors& i1,
             const Actors& i2,
@@ -226,6 +230,7 @@ private:
     void Test4();
     void Test5();
     void Test6();
+    void Test7_0();
     void Test7();
     void Test8();
     void Test9();

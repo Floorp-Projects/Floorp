@@ -671,6 +671,9 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
       case SEC_ERROR_UNTRUSTED_ISSUER:
         errorID = "certErrorTrust_Issuer";
         break;
+      case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+        errorID = "certErrorTrust_SignatureAlgorithmDisabled";
+        break;
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
         errorID = "certErrorTrust_ExpiredIssuer";
         break;

@@ -145,7 +145,7 @@ class SPSProfiler
 class SPSEntryMarker
 {
     SPSProfiler *profiler;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
     SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM);
     ~SPSEntryMarker();
