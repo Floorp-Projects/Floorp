@@ -1497,7 +1497,7 @@ var SelectionHandler = {
         if (zoom != this._viewOffset.zoom) {
           this._viewOffset.zoom = zoom;
           this.updateCacheForSelection();
-          this.positionHandles();
+          this.positionHandles(true);
         }
         break;
       }
@@ -1604,7 +1604,7 @@ var SelectionHandler = {
                                              QueryInterface(Ci.nsISelectionController);
         selectionController.selectAll();
         this.updateCacheForSelection();
-        this.positionHandles();
+        this.positionHandles(false);
         break;
       }
       case COPY: {
@@ -1645,13 +1645,12 @@ var SelectionHandler = {
     */
 
     // Update the handle position as it's dragged
-    if (aIsStartHandle) {
-      this._start.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
-      this._start.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
-    } else {
-      this._end.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
-      this._end.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
-    }
+    let leftTop = "left:" + (aX + this._view.scrollX - this._viewOffset.left) + "px;" +
+                  "top:" + (aY + this._view.scrollY - this._viewOffset.top) + "px;";
+    if (aIsStartHandle)
+      this._start.style.cssText = this._start.style.cssText + leftTop;
+    else
+      this._end.style.cssText = this._end.style.cssText + leftTop;
 
     let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
@@ -1742,21 +1741,24 @@ var SelectionHandler = {
     if (this._view) {
       let selection = this._view.getSelection();
       if (selection) {
-        selectedText = selection.toString().trim();
+        // Get the text to copy if the tap is in the selection
+        if (arguments.length == 2 && this._pointInSelection(aX, aY))
+          selectedText = selection.toString().trim();
+
         selection.removeAllRanges();
         selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
       }
     }
 
     // Only try copying text if there's text to copy!
-    if (arguments.length == 2 && selectedText.length) {
+    if (selectedText.length) {
       let contentWindow = BrowserApp.selectedBrowser.contentWindow;
       let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
       if (!element)
         element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
 
       // Only try copying text if the tap happens in the same view
-      if (element.ownerDocument.defaultView == this._view && this._pointInSelection(aX, aY)) {
+      if (element.ownerDocument.defaultView == this._view) {
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
         clipboard.copyString(selectedText, element.ownerDocument);
         NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
@@ -1784,20 +1786,18 @@ var SelectionHandler = {
       win = win.parent;
     }
 
+    let rangeRect = this._view.getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
-    return (aX - offset.x > this.cache.rect.left - radius.left &&
-            aX - offset.x < this.cache.rect.right + radius.right &&
-            aY - offset.y > this.cache.rect.top - radius.top &&
-            aY - offset.y < this.cache.rect.bottom + radius.bottom);
+    return (aX - offset.x > rangeRect.left - radius.left &&
+            aX - offset.x < rangeRect.right + radius.right &&
+            aY - offset.y > rangeRect.top - radius.top &&
+            aY - offset.y < rangeRect.bottom + radius.bottom);
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
   // param to decide whether the selection has been reversed.
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
-    let range = this._view.getSelection().getRangeAt(0);
-    this.cache.rect = range.getBoundingClientRect();
-
-    let rects = range.getClientRects();
+    let rects = this._view.getSelection().getRangeAt(0).getClientRects();
     let start = { x: rects[0].left, y: rects[0].bottom };
     let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
@@ -1816,22 +1816,28 @@ var SelectionHandler = {
 
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
-  positionHandles: function sh_positionHandles() {
-    let height = this.HANDLE_HEIGHT / this._viewOffset.zoom;
-    this._start.style.height = height + "px";
-    this._end.style.height = height + "px";
+  positionHandles: function sh_positionHandles(adjustScale) {
+    let startCss = this._start.style.cssText;
+    let endCss = this._end.style.cssText;
 
-    let width = this.HANDLE_WIDTH/ this._viewOffset.zoom;
-    this._start.style.width = width + "px";
-    this._end.style.width = width + "px";
+    if (adjustScale) { 
+      let heightWidth = "height:" + this.HANDLE_HEIGHT / this._viewOffset.zoom + "px;" + 
+                        "width:" + this.HANDLE_WIDTH / this._viewOffset.zoom + "px;";
 
-    this._start.style.left = (this.cache.start.x + this._view.scrollX - this._viewOffset.left -
-                              this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - width) + "px";
-    this._start.style.top = (this.cache.start.y + this._view.scrollY - this._viewOffset.top) + "px";
+      startCss += heightWidth;
+      endCss += heightWidth;
+    }
 
-    this._end.style.left = (this.cache.end.x + this._view.scrollX - this._viewOffset.left -
-                            this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px";
-    this._end.style.top = (this.cache.end.y + this._view.scrollY - this._viewOffset.top) + "px";
+    startCss += "left:" + (this.cache.start.x + this._view.scrollX - this._viewOffset.left -
+                           this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - this.HANDLE_WIDTH / this._viewOffset.zoom) + "px;" +
+                "top:" + (this.cache.start.y + this._view.scrollY - this._viewOffset.top) + "px;";
+
+    endCss += "left:" + (this.cache.end.x + this._view.scrollX - this._viewOffset.left -
+                         this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px;" +
+              "top:" + (this.cache.end.y + this._view.scrollY - this._viewOffset.top) + "px;";
+
+    this._start.style.cssText = startCss;
+    this._end.style.cssText = endCss;
   },
 
   showHandles: function sh_showHandles() {
@@ -1845,7 +1851,7 @@ var SelectionHandler = {
       return;
     }
 
-    this.positionHandles();
+    this.positionHandles(true);
 
     this._start.setAttribute("showing", "true");
     this._end.setAttribute("showing", "true");
@@ -1906,7 +1912,7 @@ var SelectionHandler = {
         this._touchDelta = null;
 
         // Adjust the handles to be in the correct spot relative to the text selection
-        this.positionHandles();
+        this.positionHandles(false);
         break;
 
       case "touchmove":

@@ -83,6 +83,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/Preferences.h"
 
+#include "IDBFactory.h"
+#include "IndexedDatabaseManager.h"
+#include "IndexedDBParent.h"
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -95,6 +99,7 @@ using mozilla::unused; // heh
 using base::KillProcess;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
+using namespace mozilla::dom::indexedDB;
 
 namespace mozilla {
 namespace dom {
@@ -827,6 +832,42 @@ ContentParent::DeallocPHal(PHalParent* aHal)
 {
     delete aHal;
     return true;
+}
+
+PIndexedDBParent*
+ContentParent::AllocPIndexedDB()
+{
+  return new IndexedDBParent();
+}
+
+bool
+ContentParent::DeallocPIndexedDB(PIndexedDBParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+bool
+ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
+{
+  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
+  NS_ENSURE_TRUE(mgr, false);
+
+  if (!IndexedDatabaseManager::IsMainProcess()) {
+    NS_RUNTIMEABORT("Not supported yet!");
+  }
+
+  nsRefPtr<IDBFactory> factory;
+  nsresult rv = IDBFactory::Create(getter_AddRefs(factory));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  NS_ASSERTION(factory, "This should never be null!");
+
+  IndexedDBParent* actor = static_cast<IndexedDBParent*>(aActor);
+  actor->mFactory = factory;
+  actor->mASCIIOrigin = factory->GetASCIIOrigin();
+
+  return true;
 }
 
 PMemoryReportRequestParent*
