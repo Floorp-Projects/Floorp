@@ -135,6 +135,9 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 webapprt_stub_path = $(TARGET_DIST)/bin/webapprt-stub$(BIN_SUFFIX)
 endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+webapprt_stub_path = $(TARGET_DIST)/bin/webapprt-stub$(BIN_SUFFIX)
+endif
 
 ifdef webapprt_stub_path
 webapprt-test-content:
