@@ -32,6 +32,9 @@ MOCHITEST_FILES	= \
 	test_bug744719.html \
 	744719.cacheManifest \
 	744719.cacheManifest^headers^ \
+	test_bug765203.html \
+	unknownSection.cacheManifest \
+	unknownSection.cacheManifest^headers^ \
 	test_bug744719-cancel.html \
 	744719-cancel.cacheManifest \
 	744719-cancel.cacheManifest^headers^ \

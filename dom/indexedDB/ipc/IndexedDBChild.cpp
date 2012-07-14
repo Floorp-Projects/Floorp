@@ -48,20 +48,17 @@ public:
 
 class IPCSetVersionHelper : public AsyncConnectionHelper
 {
-  IndexedDBTransactionChild* mActor;
   nsRefPtr<IDBOpenDBRequest> mOpenRequest;
   uint64_t mOldVersion;
   uint64_t mRequestedVersion;
 
 public:
-  IPCSetVersionHelper(IndexedDBTransactionChild* aActor,
-                      IDBTransaction* aTransaction, IDBOpenDBRequest* aRequest,
+  IPCSetVersionHelper(IDBTransaction* aTransaction, IDBOpenDBRequest* aRequest,
                       uint64_t aOldVersion, uint64_t aRequestedVersion)
-  : AsyncConnectionHelper(aTransaction, aRequest),mActor(aActor),
+  : AsyncConnectionHelper(aTransaction, aRequest),
     mOpenRequest(aRequest), mOldVersion(aOldVersion),
     mRequestedVersion(aRequestedVersion)
   {
-    MOZ_ASSERT(aActor);
     MOZ_ASSERT(aTransaction);
     MOZ_ASSERT(aRequest);
   }
@@ -467,7 +464,7 @@ IndexedDBDatabaseChild::RecvPIndexedDBTransactionConstructor(
   NS_ENSURE_TRUE(transaction, false);
 
   nsRefPtr<IPCSetVersionHelper> versionHelper =
-    new IPCSetVersionHelper(actor, transaction, mRequest, oldVersion, mVersion);
+    new IPCSetVersionHelper(transaction, mRequest, oldVersion, mVersion);
 
   mDatabase->EnterSetVersionTransaction();
   mDatabase->mPreviousDatabaseInfo->version = oldVersion;

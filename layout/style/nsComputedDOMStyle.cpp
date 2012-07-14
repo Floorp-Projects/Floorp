@@ -429,7 +429,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
   document->FlushPendingLinkUpdates();
 
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
+  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
+                                                  nsCSSProps::eEnabled);
 
   const ComputedStyleMapEntry* propEntry = nsnull;
   {
@@ -1351,7 +1352,7 @@ SetValueToCalc(const nsStyleCoord::Calc *aCalc, nsROCSSPrimitiveValue *aValue)
   nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue();
   nsAutoString tmp, result;
 
-  result.AppendLiteral("-moz-calc(");
+  result.AppendLiteral("calc(");
 
   val->SetAppUnits(aCalc->mLength);
   val->GetCssText(tmp);

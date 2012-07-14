@@ -77,6 +77,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/toolkit/xre \
 	-I$(topsrcdir)/hal/sandbox \
 	-I$(topsrcdir)/dom/sms/src/ipc \
+	-I$(topsrcdir)/dom/devicestorage \
 	$(NULL)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

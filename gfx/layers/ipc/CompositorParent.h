@@ -23,6 +23,10 @@
 
 class nsIWidget;
 
+namespace base {
+class Thread;
+}
+
 namespace mozilla {
 namespace layers {
 
@@ -53,8 +57,8 @@ class CompositorParent : public PCompositorParent,
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 public:
-  CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
-                   PlatformThreadId aThreadID, bool aRenderToEGLSurface = false,
+  CompositorParent(nsIWidget* aWidget,
+                   bool aRenderToEGLSurface = false,
                    int aSurfaceWidth = -1, int aSurfaceHeight = -1);
 
   virtual ~CompositorParent();
@@ -77,6 +81,23 @@ public:
   void SchedulePauseOnCompositorThread();
   void ScheduleResumeOnCompositorThread(int width, int height);
 
+  /**
+   * Returns the compositor thread's message loop.
+   *
+   * This message loop is used by CompositorParent and ImageBridgeParent.
+   */
+  static MessageLoop* CompositorLoop();
+
+  /**
+   * Creates the compositor thread and the global compositor map.
+   */
+  static void StartUp();
+
+  /**
+   * Destroys the compositor thread and the global compositor map.
+   */
+  static void ShutDown();
+
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
@@ -96,8 +117,27 @@ private:
 
   void TransformShadowTree();
 
-  inline MessageLoop* CompositorLoop();
   inline PlatformThreadId CompositorThreadID();
+
+  /**
+   * Creates the compositor thread.
+   *
+   * All compositors live on the same thread.
+   * The thread is not lazily created on first access to avoid dealing with 
+   * thread safety. Therefore it's best to create and destroy the thread when
+   * we know we areb't using it (So creating/destroying along with gfxPlatform 
+   * looks like a good place).
+   */
+  static bool CreateThread();
+
+  /**
+   * Destroys the compositor thread.
+   *
+   * It is safe to call this fucntion more than once, although the second call
+   * will have no effect.
+   * This function is not thread-safe.
+   */
+  static void DestroyThread();
 
   // Platform specific functions
   /**
@@ -143,8 +183,6 @@ private:
   // after a layers update has it set. It is cleared after that first composition.
   bool mLayersUpdated;
 
-  MessageLoop* mCompositorLoop;
-  PlatformThreadId mThreadID;
   bool mRenderToEGLSurface;
   nsIntSize mEGLSurfaceSize;
 
