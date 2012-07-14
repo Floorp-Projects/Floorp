@@ -16,7 +16,6 @@
 #include "nscore.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
-#include "nsCaseTreatment.h"
 
 class nsINode;
 class nsIContent;
@@ -72,10 +71,6 @@ public:
 
   PRUint32 AttrCount() const;
   const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
-  // Get an nsAttrValue by qualified name.  Can optionally do
-  // ASCII-case-insensitive name matching.
-  const nsAttrValue* GetAttr(const nsAString& aName,
-                             nsCaseTreatment aCaseSensitive) const;
   const nsAttrValue* AttrAt(PRUint32 aPos) const;
   nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
   nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
