@@ -1536,30 +1536,22 @@ nsresult
 nsGenericElement::GetAttribute(const nsAString& aName,
                                nsAString& aReturn)
 {
-  // I hate XUL
-  if (IsXUL()) {
-    const nsAttrValue* val =
-      nsXULElement::FromContent(this)->GetAttrValue(aName);
-    if (val) {
-      val->ToString(aReturn);
-    }
-    else {
+  const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
+
+  if (!name) {
+    if (mNodeInfo->NamespaceID() == kNameSpaceID_XUL) {
       // XXX should be SetDOMStringToNull(aReturn);
       // See bug 232598
       aReturn.Truncate();
     }
+    else {
+      SetDOMStringToNull(aReturn);
+    }
+
     return NS_OK;
   }
-  
-  const nsAttrValue* val =
-    mAttrsAndChildren.GetAttr(aName,
-                              IsHTML() && IsInHTMLDocument() ?
-                                eIgnoreCase : eCaseMatters);
-  if (val) {
-    val->ToString(aReturn);
-  } else {
-    SetDOMStringToNull(aReturn);
-  }
+
+  GetAttr(name->NamespaceID(), name->LocalName(), aReturn);
 
   return NS_OK;
 }
