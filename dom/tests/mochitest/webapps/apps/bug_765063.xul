@@ -6,6 +6,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script>
     navigator.mozApps.install("http://www.example.com:80/chrome/dom/tests/mochitest/webapps/apps/super_crazy.webapp", null);
-    history.pushState({}, "", "modified-url");
+    document.location = "about:blank";
   </script>
 </window>

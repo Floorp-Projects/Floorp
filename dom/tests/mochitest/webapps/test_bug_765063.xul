@@ -18,22 +18,19 @@
 <script> 
 SimpleTest.waitForExplicitFinish();
 
-var mmListener = {
-  receiveMessage: function(aMessage) {
-    ppmm.removeMessageListener("Webapps:Install", mmListener);
-
-    var msg = aMessage.json;
-    is(msg.from.indexOf("modified-url"), -1, "the install origin didn't change");
-
+// Observe app installation and confirm that the install origin didn't change.
+var observer = {
+  observe: function observe(subject, topic, data) {
+    Services.obs.removeObserver(observer, "webapps-sync-install");
+    ok(JSON.parse(data).installOrigin == "http://www.example.com",
+       "the install origin didn't change");
     tearDown();
     SimpleTest.finish();
   }
 };
 
-var ppmm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
-                     .getService(Components.interfaces.nsIFrameMessageManager);
-
-ppmm.addMessageListener("Webapps:Install", mmListener);
+Components.utils.import("resource://gre/modules/Services.jsm");
+Services.obs.addObserver(observer, "webapps-sync-install", false);
 </script> 
 
   <!-- Load a page that initiates an app installation and then immediately
