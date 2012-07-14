@@ -42,7 +42,7 @@ function AitcManager(cb, premadeClient, premadeToken) {
   this._tokenDuration = INITIAL_TOKEN_DURATION;
   this._premadeToken = premadeToken || null;
   this._invalidTokenFlag = false;
-  
+
   this._lastEmail = null;
   this._dashboardWindow = null;
 
@@ -67,13 +67,9 @@ function AitcManager(cb, premadeClient, premadeToken) {
       cb(null, true);
       return;
     }
-    // Schedule them, but only if we can get a silent assertion.
-    self._makeClient(function(err, client) {
-      if (!err && client) {
-        self._client = client;
-        self._processQueue();
-      }
-    }, false);
+
+    // Caller will invoke initialSchedule which will process any items in the
+    // queue, if present.
   });
 }
 AitcManager.prototype = {
@@ -170,6 +166,71 @@ AitcManager.prototype = {
   },
 
   /**
+   * Initial schedule for the manager. It is the responsibility of the
+   * caller who created this object to call this function if it wants to
+   * do an initial sync (i.e. upload local apps on a device that has never
+   * communicated with AITC before).
+   *
+   * The callback will be invoked with the number of local apps that were
+   * queued to be uploaded, or -1 if this client has already synced and a
+   * local upload is not required.
+   *
+   * Try to schedule PUTs but only if we can get a silent assertion, and if
+   * the queue in non-empty, or we've never done a GET (first run).
+   */
+  initialSchedule: function initialSchedule(cb) {
+    let self = this;
+
+    function startProcessQueue(num) {
+      self._makeClient(function(err, client) {
+        if (!err && client) {
+          self._client = client;
+          self._processQueue();
+          return;
+        }
+      });
+      cb(num);
+    }
+
+    // If we've already done a sync with AITC, it means we've already done
+    // an initial upload. Resume processing the queue, if there are items in it.
+    if (Preferences.get("services.aitc.client.lastModified", "0") != "0") {
+      if (this._pending.length) {
+        startProcessQueue(-1);
+      } else {
+        cb(-1);
+      }
+      return;
+    }
+
+    DOMApplicationRegistry.getAllWithoutManifests(function gotAllApps(apps) {
+      let done = 0;
+      let appids = Object.keys(apps);
+      let total = appids.length;
+      self._log.info("First run, queuing all local apps: " + total + " found");
+
+      function appQueued(err) {
+        if (err) {
+          self._log.error("Error queuing app " + apps[appids[done]].origin);
+        }
+
+        if (done == total) {
+          self._log.info("Finished queuing all initial local apps");
+          startProcessQueue(total);
+          return;
+        }
+
+        let app = apps[appids[done]];
+        let obj = {type: "install", app: app, retries: 0, lastTime: 0};
+
+        done += 1;
+        self._pending.enqueue(obj, appQueued);
+      }
+      appQueued();
+    });
+  },
+
+  /**
    * Poll the AITC server for any changes and process them. It is safe to call
    * this function multiple times. Last caller wins. The function will
    * grab the current user state from _state and act accordingly.
@@ -197,7 +258,7 @@ AitcManager.prototype = {
       this._processQueue();
       return;
     }
-    
+
     // Do one GET soon, but only if user is active.
     let getFreq;
     if (this._state == this._ACTIVE) {
@@ -481,14 +542,14 @@ AitcManager.prototype = {
         cb(err, null);
         return;
       }
-      
+
       // Prompt user to login.
       self._makeClient(function(err, client) {
         if (err) {
           cb(err, null);
           return;
         }
-      
+
         // makeClient sets an updated token.
         self._client = client;
         self._invalidTokenFlag = false;
@@ -541,7 +602,7 @@ AitcManager.prototype = {
       return;
     }
 
-    let msg = err.name + " in _getToken: " + err.error;
+    let msg = "Error in _getToken: " + err;
     this._log.error(msg);
     cb(msg, null);
   },
