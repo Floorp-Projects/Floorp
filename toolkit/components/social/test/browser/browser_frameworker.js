@@ -8,9 +8,12 @@ function makeWorkerUrl(runner) {
 
 var getFrameWorkerHandle;
 function test() {
+  waitForExplicitFinish();
+
   let scope = {};
   Cu.import("resource://gre/modules/FrameWorker.jsm", scope);
   getFrameWorkerHandle = scope.getFrameWorkerHandle;
+
   runTests(tests);
 }
 
