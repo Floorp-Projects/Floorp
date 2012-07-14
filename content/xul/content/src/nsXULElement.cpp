@@ -209,7 +209,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
     if (element) {
         NS_ADDREF(element);
 
-        element->mPrototype = aPrototype;
         if (aPrototype->mHasIdAttribute) {
             element->SetHasID();
         }
@@ -220,6 +219,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
             element->SetMayHaveStyle();
         }
 
+        element->MakeHeavyweight(aPrototype);
         if (aIsScriptable) {
             // Check each attribute on the prototype to see if we need to do
             // any additional processing and hookup that would otherwise be
@@ -267,7 +267,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    NS_ADDREF(*aResult = element.get());
+    element.forget(aResult);
 
     return NS_OK;
 }
@@ -303,7 +303,6 @@ NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNod
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
                                                   nsStyledElement)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrototype)
     {
         nsXULSlots* slots = static_cast<nsXULSlots*>(tmp->GetExistingSlots());
         if (slots) {
@@ -339,19 +338,8 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
     *aResult = nsnull;
 
-    // If we have a prototype, so will our clone.
-    nsRefPtr<nsXULElement> element;
-    if (mPrototype) {
-        element = nsXULElement::Create(mPrototype, aNodeInfo, true);
-    }
-    else {
-        nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-        element = new nsXULElement(ni.forget());
-    }
-
-    if (!element) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+    nsRefPtr<nsXULElement> element = new nsXULElement(ni.forget());
 
     // XXX TODO: set up RDF generic builder n' stuff if there is a
     // 'datasources' attribute? This is really kind of tricky,
@@ -362,7 +350,7 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
     nsresult rv = const_cast<nsXULElement*>(this)->CopyInnerTo(element);
     if (NS_SUCCEEDED(rv)) {
-        NS_ADDREF(*aResult = element);
+        element.forget(aResult);
     }
 
     return rv;
@@ -851,10 +839,8 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 {
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::accesskey &&
         IsInDoc()) {
-        const nsAttrValue* attrVal = FindLocalOrProtoAttr(aNamespaceID, aName);
-        if (attrVal) {
-            nsAutoString oldValue;
-            attrVal->ToString(oldValue);
+        nsAutoString oldValue;
+        if (GetAttr(aNamespaceID, aName, oldValue)) {
             UnregisterAccessKey(oldValue);
         }
     } 
@@ -987,133 +973,6 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
     return true;
 }
 
-const nsAttrName*
-nsXULElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
-{
-    const nsAttrName* attrName =
-        mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
-    if (attrName) {
-        return attrName;
-    }
-
-    if (mPrototype) {
-        PRUint32 i;
-        for (i = 0; i < mPrototype->mNumAttributes; ++i) {
-            attrName = &mPrototype->mAttributes[i].mName;
-            if (attrName->QualifiedNameEquals(aStr)) {
-                return attrName;
-            }
-        }
-    }
-
-    return nsnull;
-}
-
-const nsAttrValue*
-nsXULElement::GetAttrValue(const nsAString& aName)
-{
-  const nsAttrValue* val =
-      mAttrsAndChildren.GetAttr(aName, eCaseMatters);
-  if (val) {
-      return val;
-  }
-
-  if (mPrototype) {
-      PRUint32 i, count = mPrototype->mNumAttributes;
-      for (i = 0; i < count; ++i) {
-          nsXULPrototypeAttribute *protoAttr = &mPrototype->mAttributes[i];
-          if (protoAttr->mName.QualifiedNameEquals(aName)) {
-              return &protoAttr->mValue;
-          }
-      }
-  }
-
-  return nsnull;
-}
-
-bool
-nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                      nsAString& aResult) const
-{
-    NS_ASSERTION(nsnull != aName, "must have attribute name");
-    NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-                 "must have a real namespace ID!");
-
-    const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
-
-    if (!val) {
-        // Since we are returning a success code we'd better do
-        // something about the out parameters (someone may have
-        // given us a non-empty string).
-        aResult.Truncate();
-        return false;
-    }
-
-    val->ToString(aResult);
-
-    return true;
-}
-
-bool
-nsXULElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
-{
-    NS_ASSERTION(nsnull != aName, "must have attribute name");
-    NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-                 "must have a real namespace ID!");
-
-    return mAttrsAndChildren.GetAttr(aName, aNameSpaceID) ||
-           FindPrototypeAttribute(aNameSpaceID, aName);
-}
-
-bool
-nsXULElement::AttrValueIs(PRInt32 aNameSpaceID,
-                          nsIAtom* aName,
-                          const nsAString& aValue,
-                          nsCaseTreatment aCaseSensitive) const
-{
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-
-  const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
-  return val && val->Equals(aValue, aCaseSensitive);
-}
-
-bool
-nsXULElement::AttrValueIs(PRInt32 aNameSpaceID,
-                          nsIAtom* aName,
-                          nsIAtom* aValue,
-                          nsCaseTreatment aCaseSensitive) const
-{
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-  NS_ASSERTION(aValue, "Null value atom");
-
-  const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
-  return val && val->Equals(aValue, aCaseSensitive);
-}
-
-PRInt32
-nsXULElement::FindAttrValueIn(PRInt32 aNameSpaceID,
-                              nsIAtom* aName,
-                              AttrValuesArray* aValues,
-                              nsCaseTreatment aCaseSensitive) const
-{
-  NS_ASSERTION(aName, "Must have attr name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-  NS_ASSERTION(aValues, "Null value array");
-  
-  const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
-  if (val) {
-    for (PRInt32 i = 0; aValues[i]; ++i) {
-      if (val->Equals(*aValues[i], aCaseSensitive)) {
-        return i;
-      }
-    }
-    return ATTR_VALUE_NO_MATCH;
-  }
-  return ATTR_MISSING;
-}
-
 nsresult
 nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
 {
@@ -1121,24 +980,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
     
     NS_ASSERTION(nsnull != aName, "must have attribute name");
     nsresult rv;
-
-    // Because It's Hard to maintain a magic ``unset'' value in
-    // the local attributes, we'll fault all the attributes,
-    // unhook ourselves from the prototype, and then remove the
-    // local copy of the attribute that we want to unset. In
-    // other words, we'll become ``heavyweight''.
-    //
-    // We can avoid this if the attribute isn't in the prototype,
-    // then we just need to remove it locally
-
-    nsXULPrototypeAttribute *protoattr =
-        FindPrototypeAttribute(aNameSpaceID, aName);
-    if (protoattr) {
-        // We've got an attribute on the prototype, so we need to
-        // fully fault and remove the local copy.
-        rv = MakeHeavyweight();
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     nsIDocument* doc = GetCurrentDoc();
     mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
@@ -1152,9 +993,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
 
     PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID);
     if (index < 0) {
-        NS_ASSERTION(!protoattr, "we used to have a protoattr, we should now "
-                                 "have a normal one");
-
         return NS_OK;
     }
 
@@ -1299,102 +1137,6 @@ nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
               NS_LITERAL_STRING("*"));
         }
     }
-}
-
-const nsAttrName*
-nsXULElement::GetAttrNameAt(PRUint32 aIndex) const
-{
-    PRUint32 localCount = mAttrsAndChildren.AttrCount();
-    PRUint32 protoCount = mPrototype ? mPrototype->mNumAttributes : 0;
-
-    if (localCount > protoCount) {
-        // More local than proto, put local first
-
-        // Is the index low enough to just grab a local attr?
-        if (aIndex < localCount) {
-            return mAttrsAndChildren.AttrNameAt(aIndex);
-        }
-
-        aIndex -= localCount;
-
-        // Search though prototype attributes while skipping names that exist in
-        // the local array.
-        for (PRUint32 i = 0; i < protoCount; i++) {
-            const nsAttrName* name = &mPrototype->mAttributes[i].mName;
-            if (mAttrsAndChildren.GetAttr(name->LocalName(), name->NamespaceID())) {
-                aIndex++;
-            }
-            if (i == aIndex) {
-                return name;
-            }
-        }
-    }
-    else {
-        // More proto than local, put proto first
-
-        // Is the index low enough to just grab a proto attr?
-        if (aIndex < protoCount) {
-            return &mPrototype->mAttributes[aIndex].mName;
-        }
-
-        aIndex -= protoCount;
-
-        // Search though local attributes while skipping names that exist in
-        // the prototype array.
-        for (PRUint32 i = 0; i < localCount; i++) {
-            const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
-
-            for (PRUint32 j = 0; j < protoCount; j++) {
-                if (mPrototype->mAttributes[j].mName.Equals(*name)) {
-                    aIndex++;
-                    break;
-                }
-            }
-            if (i == aIndex) {
-                return name;
-            }
-        }
-    }
-
-    return nsnull;
-}
-
-PRUint32
-nsXULElement::GetAttrCount() const
-{
-    PRUint32 localCount = mAttrsAndChildren.AttrCount();
-    PRUint32 protoCount = mPrototype ? mPrototype->mNumAttributes : 0;
-
-    if (localCount > protoCount) {
-        // More local than proto, remove dups from proto array
-        PRUint32 count = localCount;
-
-        for (PRUint32 i = 0; i < protoCount; i++) {
-            const nsAttrName* name = &mPrototype->mAttributes[i].mName;
-            if (!mAttrsAndChildren.GetAttr(name->LocalName(), name->NamespaceID())) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    // More proto than local, remove dups from local array
-    PRUint32 count = protoCount;
-
-    for (PRUint32 i = 0; i < localCount; i++) {
-        const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
-
-        count++;
-        for (PRUint32 j = 0; j < protoCount; j++) {
-            if (mPrototype->mAttributes[j].mName.Equals(*name)) {
-                count--;
-                break;
-            }
-        }
-    }
-
-    return count;
 }
 
 void
@@ -1560,51 +1302,10 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 //----------------------------------------------------------------------
 // Implementation methods
 
-// XXX DoGetID and DoGetClasses must be defined here because we have proto
-// attributes.
-nsIAtom*
-nsXULElement::DoGetID() const
-{
-    NS_ASSERTION(HasID(), "Unexpected call");
-    const nsAttrValue* attr =
-        FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::id);
-
-    // We need the nullcheck here because during unlink the prototype loses
-    // all of its attributes. We might want to change that.
-    // The nullcheck would also be needed if we make UnsetAttr use
-    // nsGenericElement::UnsetAttr as that calls out to various code between
-    // removing the attribute and calling ClearHasID().
-
-    return attr ? attr->GetAtomValue() : nsnull;
-}
-
-const nsAttrValue*
-nsXULElement::DoGetClasses() const
-{
-    NS_ASSERTION(HasFlag(NODE_MAY_HAVE_CLASS), "Unexpected call");
-    return FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::_class);
-}
-
 NS_IMETHODIMP
 nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
     return NS_OK;
-}
-
-css::StyleRule*
-nsXULElement::GetInlineStyleRule()
-{
-    if (!MayHaveStyle()) {
-        return nsnull;
-    }
-    // Fetch the cached style rule from the attributes.
-    const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::style);
-
-    if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-        return attrVal->GetCSSStyleRuleValue();
-    }
-
-    return nsnull;
 }
 
 nsChangeHint
@@ -1736,35 +1437,6 @@ NS_IMPL_XUL_STRING_ATTR(Datasources, datasources)
 NS_IMPL_XUL_STRING_ATTR(Ref, ref)
 NS_IMPL_XUL_STRING_ATTR(TooltipText, tooltiptext)
 NS_IMPL_XUL_STRING_ATTR(StatusText, statustext)
-
-nsresult
-nsXULElement::EnsureLocalStyle()
-{
-    // Clone the prototype rule, if we don't have a local one.
-    if (mPrototype &&
-        !mAttrsAndChildren.GetAttr(nsGkAtoms::style, kNameSpaceID_None)) {
-
-        nsXULPrototypeAttribute *protoattr =
-                  FindPrototypeAttribute(kNameSpaceID_None, nsGkAtoms::style);
-        if (protoattr && protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsRefPtr<css::Rule> ruleClone =
-                protoattr->mValue.GetCSSStyleRuleValue()->Clone();
-
-            nsString stringValue;
-            protoattr->mValue.ToString(stringValue);
-
-            nsAttrValue value;
-            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
-            value.SetTo(styleRule, &stringValue);
-
-            nsresult rv =
-                mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-    }
-
-    return NS_OK;
-}
 
 nsresult
 nsXULElement::LoadSrc()
@@ -2044,76 +1716,17 @@ nsXULElement::IntrinsicState() const
 
 //----------------------------------------------------------------------
 
-nsGenericElement::nsAttrInfo
-nsXULElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom *aName) const
+nsresult
+nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
 {
-
-    nsAttrInfo info(nsStyledElement::GetAttrInfo(aNamespaceID, aName));
-    if (!info.mValue) {
-        nsXULPrototypeAttribute *protoattr =
-            FindPrototypeAttribute(aNamespaceID, aName);
-        if (protoattr) {
-            return nsAttrInfo(&protoattr->mName, &protoattr->mValue);
-        }
+    if (!aPrototype) {
+        return NS_OK;
     }
-
-    return info;
-}
-
-
-nsXULPrototypeAttribute *
-nsXULElement::FindPrototypeAttribute(PRInt32 aNamespaceID,
-                                     nsIAtom* aLocalName) const
-{
-    if (!mPrototype) {
-        return nsnull;
-    }
-
-    PRUint32 i, count = mPrototype->mNumAttributes;
-    if (aNamespaceID == kNameSpaceID_None) {
-        // Common case so optimize for this
-        for (i = 0; i < count; ++i) {
-            nsXULPrototypeAttribute *protoattr = &mPrototype->mAttributes[i];
-            if (protoattr->mName.Equals(aLocalName)) {
-                return protoattr;
-            }
-        }
-    }
-    else {
-        for (i = 0; i < count; ++i) {
-            nsXULPrototypeAttribute *protoattr = &mPrototype->mAttributes[i];
-            if (protoattr->mName.Equals(aLocalName, aNamespaceID)) {
-                return protoattr;
-            }
-        }
-    }
-
-    return nsnull;
-}
-
-nsresult nsXULElement::MakeHeavyweight()
-{
-    if (!mPrototype)
-        return NS_OK;           // already heavyweight
-
-    nsRefPtr<nsXULPrototypeElement> proto;
-    proto.swap(mPrototype);
-
-    bool hadAttributes = mAttrsAndChildren.AttrCount() > 0;
 
     PRUint32 i;
     nsresult rv;
-    for (i = 0; i < proto->mNumAttributes; ++i) {
-        nsXULPrototypeAttribute* protoattr = &proto->mAttributes[i];
-
-        // We might have a local value for this attribute, in which case
-        // we don't want to copy the prototype's value.
-        if (hadAttributes &&
-            mAttrsAndChildren.GetAttr(protoattr->mName.LocalName(),
-                                      protoattr->mName.NamespaceID())) {
-            continue;
-        }
-
+    for (i = 0; i < aPrototype->mNumAttributes; ++i) {
+        nsXULPrototypeAttribute* protoattr = &aPrototype->mAttributes[i];
         nsAttrValue attrValue;
         
         // Style rules need to be cloned.
@@ -2295,7 +1908,7 @@ bool
 nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
 {
     const nsAttrValue* attr =
-        FindLocalOrProtoAttr(kNameSpaceID_None, aName);
+        GetAttrInfo(kNameSpaceID_None, aName).mValue;
 
     return attr && attr->Type() == nsAttrValue::eAtom &&
            attr->GetAtomValue() == nsGkAtoms::_true;
@@ -2305,7 +1918,6 @@ void
 nsXULElement::RecompileScriptEventListeners()
 {
     PRInt32 i, count = mAttrsAndChildren.AttrCount();
-    bool haveLocalAttributes = (count > 0);
     for (i = 0; i < count; ++i) {
         const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
 
@@ -2322,34 +1934,6 @@ nsXULElement::RecompileScriptEventListeners()
         nsAutoString value;
         GetAttr(kNameSpaceID_None, attr, value);
         AddScriptEventListener(attr, value, true);
-    }
-
-    if (mPrototype) {
-
-        count = mPrototype->mNumAttributes;
-        for (i = 0; i < count; ++i) {
-            const nsAttrName &name = mPrototype->mAttributes[i].mName;
-
-            // Eventlistenener-attributes are always in the null namespace
-            if (!name.IsAtom()) {
-                continue;
-            }
-
-            nsIAtom *attr = name.Atom();
-
-            // Don't clobber a locally modified attribute.
-            if (haveLocalAttributes && mAttrsAndChildren.GetAttr(attr)) {
-                continue;
-            }
-
-            if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
-                continue;
-            }
-
-            nsAutoString value;
-            GetAttr(kNameSpaceID_None, attr, value);
-            AddScriptEventListener(attr, value, true);
-        }
     }
 }
 
