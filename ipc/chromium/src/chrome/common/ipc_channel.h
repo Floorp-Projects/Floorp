@@ -5,6 +5,7 @@
 #ifndef CHROME_COMMON_IPC_CHANNEL_H_
 #define CHROME_COMMON_IPC_CHANNEL_H_
 
+#include <queue>
 #include "chrome/common/ipc_message.h"
 
 namespace IPC {
@@ -31,6 +32,10 @@ class Channel : public Message::Sender {
     // Called when an error is detected that causes the channel to close.
     // This method is not called when a channel is closed normally.
     virtual void OnChannelError() {}
+
+    // If the listener has queued messages, swap them for |queue| like so
+    //   swap(impl->my_queued_messages, queue);
+    virtual void GetQueuedMessages(std::queue<Message>& queue) {}
   };
 
   enum Mode {
