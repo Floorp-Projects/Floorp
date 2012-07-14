@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -472,160 +472,303 @@ interface WebGLRenderingContext {
     const unsigned long UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     const unsigned long BROWSER_DEFAULT_WEBGL          = 0x9244;
 
+    [Infallible]
     readonly attribute HTMLCanvasElement canvas;
+
+    [Infallible]
     readonly attribute long drawingBufferWidth;
+
+    [Infallible]
     readonly attribute long drawingBufferHeight;
 
     [WebGLHandlesContextLoss] WebGLContextAttributes getContextAttributes();
-    [WebGLHandlesContextLoss] boolean isContextLost();
-    
+    [WebGLHandlesContextLoss, Infallible] boolean isContextLost();
+
+    [Infallible]
     sequence<DOMString>? getSupportedExtensions();
+
     // XXXbz In the spec, this is "object?"; I'm making it
     // WebGLExtension? just for ease of implementation.
+    [Infallible]
     WebGLExtension? getExtension(DOMString name);
 
+    [Infallible]
     void activeTexture(unsigned long texture);
+
+    [Infallible]
     void attachShader(WebGLProgram? program, WebGLShader? shader);
+
+    [Infallible]
     void bindAttribLocation(WebGLProgram? program, unsigned long index, DOMString name);
+
+    [Infallible]
     void bindBuffer(unsigned long target, WebGLBuffer? buffer);
+
+    [Infallible]
     void bindFramebuffer(unsigned long target, WebGLFramebuffer? framebuffer);
+
+    [Infallible]
     void bindRenderbuffer(unsigned long target, WebGLRenderbuffer? renderbuffer);
+
+    [Infallible]
     void bindTexture(unsigned long target, WebGLTexture? texture);
+
+    [Infallible]
     void blendColor(float red, float green, float blue, float alpha);
+
+    [Infallible]
     void blendEquation(unsigned long mode);
+
+    [Infallible]
     void blendEquationSeparate(unsigned long modeRGB, unsigned long modeAlpha);
+
+    [Infallible]
     void blendFunc(unsigned long sfactor, unsigned long dfactor);
+
+    [Infallible]
     void blendFuncSeparate(unsigned long srcRGB, unsigned long dstRGB, 
                            unsigned long srcAlpha, unsigned long dstAlpha);
 
+    [Infallible]
     void bufferData(unsigned long target, long long size, unsigned long usage);
+    [Infallible]
     void bufferData(unsigned long target, ArrayBufferView data, unsigned long usage);
+    [Infallible]
     void bufferData(unsigned long target, ArrayBuffer? data, unsigned long usage);
+    [Infallible]
     void bufferSubData(unsigned long target, long long offset, ArrayBufferView data);
+    [Infallible]
     void bufferSubData(unsigned long target, long long offset, ArrayBuffer? data);
 
-    [WebGLHandlesContextLoss] unsigned long checkFramebufferStatus(unsigned long target);
+    [WebGLHandlesContextLoss, Infallible]
+    unsigned long checkFramebufferStatus(unsigned long target);
+
+    [Infallible]
     void clear(unsigned long mask);
+
+    [Infallible]
     void clearColor(float red, float green, float blue, float alpha);
+
+    [Infallible]
     void clearDepth(float depth);
+
+    [Infallible]
     void clearStencil(long s);
+
+    [Infallible]
     void colorMask(boolean red, boolean green, boolean blue, boolean alpha);
+
+    [Infallible]
     void compileShader(WebGLShader? shader);
 
+    [Infallible]
     void compressedTexImage2D(unsigned long target, long level, unsigned long internalformat,
                               long width, long height, long border,
                               ArrayBufferView data);
+    [Infallible]
     void compressedTexSubImage2D(unsigned long target, long level,
                                  long xoffset, long yoffset,
                                  long width, long height, unsigned long format,
                                  ArrayBufferView data);
 
+    [Infallible]
     void copyTexImage2D(unsigned long target, long level, unsigned long internalformat, 
                         long x, long y, long width, long height, 
                         long border);
+    [Infallible]
     void copyTexSubImage2D(unsigned long target, long level, long xoffset, long yoffset, 
                            long x, long y, long width, long height);
 
+    [Infallible]
     WebGLBuffer? createBuffer();
+
+    [Infallible]
     WebGLFramebuffer? createFramebuffer();
+
+    [Infallible]
     WebGLProgram? createProgram();
+
+    [Infallible]
     WebGLRenderbuffer? createRenderbuffer();
+
+    [Infallible]
     WebGLShader? createShader(unsigned long type);
+
+    [Infallible]
     WebGLTexture? createTexture();
 
+    [Infallible]
     void cullFace(unsigned long mode);
 
+    [Infallible]
     void deleteBuffer(WebGLBuffer? buffer);
+    [Infallible]
     void deleteFramebuffer(WebGLFramebuffer? framebuffer);
+    [Infallible]
     void deleteProgram(WebGLProgram? program);
+    [Infallible]
     void deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
+    [Infallible]
     void deleteShader(WebGLShader? shader);
+    [Infallible]
     void deleteTexture(WebGLTexture? texture);
 
+    [Infallible]
     void depthFunc(unsigned long func);
+    [Infallible]
     void depthMask(boolean flag);
+    [Infallible]
     void depthRange(float zNear, float zFar);
+    [Infallible]
     void detachShader(WebGLProgram? program, WebGLShader? shader);
+    [Infallible]
     void disable(unsigned long cap);
+    [Infallible]
     void disableVertexAttribArray(unsigned long index);
+    [Infallible]
     void drawArrays(unsigned long mode, long first, long count);
+    [Infallible]
     void drawElements(unsigned long mode, long count, unsigned long type, long long offset);
 
+    [Infallible]
     void enable(unsigned long cap);
+    [Infallible]
     void enableVertexAttribArray(unsigned long index);
+    [Infallible]
     void finish();
+    [Infallible]
     void flush();
+
+    [Infallible]
     void framebufferRenderbuffer(unsigned long target, unsigned long attachment, 
                                  unsigned long renderbuffertarget, 
                                  WebGLRenderbuffer? renderbuffer);
+    [Infallible]
     void framebufferTexture2D(unsigned long target, unsigned long attachment, unsigned long textarget, 
                               WebGLTexture? texture, long level);
+    [Infallible]
     void frontFace(unsigned long mode);
 
+    [Infallible]
     void generateMipmap(unsigned long target);
 
+    [Infallible]
     WebGLActiveInfo? getActiveAttrib(WebGLProgram? program, unsigned long index);
+    [Infallible]
     WebGLActiveInfo? getActiveUniform(WebGLProgram? program, unsigned long index);
+    [Infallible]
     sequence<WebGLShader>? getAttachedShaders(WebGLProgram? program);
 
-    [WebGLHandlesContextLoss] long getAttribLocation(WebGLProgram? program, DOMString name);
+    [WebGLHandlesContextLoss, Infallible]
+    long getAttribLocation(WebGLProgram? program, DOMString name);
 
+    [Infallible]
     any getBufferParameter(unsigned long target, unsigned long pname);
     any getParameter(unsigned long pname);
 
-    [WebGLHandlesContextLoss] unsigned long getError();
+    [WebGLHandlesContextLoss, Infallible] unsigned long getError();
 
     any getFramebufferAttachmentParameter(unsigned long target, unsigned long attachment, 
                                           unsigned long pname);
+    [Infallible]
     any getProgramParameter(WebGLProgram? program, unsigned long pname);
+    [Infallible]
     DOMString? getProgramInfoLog(WebGLProgram? program);
+    [Infallible]
     any getRenderbufferParameter(unsigned long target, unsigned long pname);
+    [Infallible]
     any getShaderParameter(WebGLShader? shader, unsigned long pname);
+    [Infallible]
     WebGLShaderPrecisionFormat? getShaderPrecisionFormat(unsigned long shadertype, unsigned long precisiontype);
+    [Infallible]
     DOMString? getShaderInfoLog(WebGLShader? shader);
 
+    [Infallible]
     DOMString? getShaderSource(WebGLShader? shader);
 
+    [Infallible]
     any getTexParameter(unsigned long target, unsigned long pname);
 
     any getUniform(WebGLProgram? program, WebGLUniformLocation? location);
 
-    [Creator]
+    [Creator, Infallible]
     WebGLUniformLocation? getUniformLocation(WebGLProgram? program, DOMString name);
 
     any getVertexAttrib(unsigned long index, unsigned long pname);
 
-    [WebGLHandlesContextLoss] long long getVertexAttribOffset(unsigned long index, unsigned long pname);
+    [WebGLHandlesContextLoss, Infallible]
+    long long getVertexAttribOffset(unsigned long index, unsigned long pname);
 
+    [Infallible]
     void hint(unsigned long target, unsigned long mode);
-    [WebGLHandlesContextLoss] boolean isBuffer(WebGLBuffer? buffer);
-    [WebGLHandlesContextLoss] boolean isEnabled(unsigned long cap);
-    [WebGLHandlesContextLoss] boolean isFramebuffer(WebGLFramebuffer? framebuffer);
-    [WebGLHandlesContextLoss] boolean isProgram(WebGLProgram? program);
-    [WebGLHandlesContextLoss] boolean isRenderbuffer(WebGLRenderbuffer? renderbuffer);
-    [WebGLHandlesContextLoss] boolean isShader(WebGLShader? shader);
-    [WebGLHandlesContextLoss] boolean isTexture(WebGLTexture? texture);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isBuffer(WebGLBuffer? buffer);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isEnabled(unsigned long cap);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isFramebuffer(WebGLFramebuffer? framebuffer);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isProgram(WebGLProgram? program);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isRenderbuffer(WebGLRenderbuffer? renderbuffer);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isShader(WebGLShader? shader);
+
+    [WebGLHandlesContextLoss, Infallible]
+    boolean isTexture(WebGLTexture? texture);
+
+    [Infallible]
     void lineWidth(float width);
+
+    [Infallible]
     void linkProgram(WebGLProgram? program);
+
+    [Infallible]
     void pixelStorei(unsigned long pname, long param);
+
+    [Infallible]
     void polygonOffset(float factor, float units);
 
     void readPixels(long x, long y, long width, long height, 
                     unsigned long format, unsigned long type, ArrayBufferView? pixels);
 
+    [Infallible]
     void renderbufferStorage(unsigned long target, unsigned long internalformat, 
                              long width, long height);
+
+    [Infallible]
     void sampleCoverage(float value, boolean invert);
+
+    [Infallible]
     void scissor(long x, long y, long width, long height);
 
+    [Infallible]
     void shaderSource(WebGLShader? shader, DOMString source);
 
+    [Infallible]
     void stencilFunc(unsigned long func, long ref, unsigned long mask);
+
+    [Infallible]
     void stencilFuncSeparate(unsigned long face, unsigned long func, long ref, unsigned long mask);
+
+    [Infallible]
     void stencilMask(unsigned long mask);
+
+    [Infallible]
     void stencilMaskSeparate(unsigned long face, unsigned long mask);
+
+    [Infallible]
     void stencilOp(unsigned long fail, unsigned long zfail, unsigned long zpass);
+
+    [Infallible]
     void stencilOpSeparate(unsigned long face, unsigned long fail, unsigned long zfail, unsigned long zpass);
+
 
     void texImage2D(unsigned long target, long level, unsigned long internalformat, 
                     long width, long height, long border, unsigned long format, 
@@ -639,7 +782,9 @@ interface WebGLRenderingContext {
     void texImage2D(unsigned long target, long level, unsigned long internalformat,
                     unsigned long format, unsigned long type, HTMLVideoElement video); // May throw DOMException
 
+    [Infallible]
     void texParameterf(unsigned long target, unsigned long pname, float param);
+    [Infallible]
     void texParameteri(unsigned long target, unsigned long pname, long param);
 
     void texSubImage2D(unsigned long target, long level, long xoffset, long yoffset, 
@@ -654,62 +799,108 @@ interface WebGLRenderingContext {
     void texSubImage2D(unsigned long target, long level, long xoffset, long yoffset, 
                        unsigned long format, unsigned long type, HTMLVideoElement video); // May throw DOMException
 
+    [Infallible]
     void uniform1f(WebGLUniformLocation? location, float x);
+    [Infallible]
     void uniform1fv(WebGLUniformLocation? location, Float32Array v);
+    [Infallible]
     void uniform1fv(WebGLUniformLocation? location, sequence<float> v);
+    [Infallible]
     void uniform1i(WebGLUniformLocation? location, long x);
+    [Infallible]
     void uniform1iv(WebGLUniformLocation? location, Int32Array v);
+    [Infallible]
     void uniform1iv(WebGLUniformLocation? location, sequence<long> v);
+    [Infallible]
     void uniform2f(WebGLUniformLocation? location, float x, float y);
+    [Infallible]
     void uniform2fv(WebGLUniformLocation? location, Float32Array v);
+    [Infallible]
     void uniform2fv(WebGLUniformLocation? location, sequence<float> v);
+    [Infallible]
     void uniform2i(WebGLUniformLocation? location, long x, long y);
+    [Infallible]
     void uniform2iv(WebGLUniformLocation? location, Int32Array v);
+    [Infallible]
     void uniform2iv(WebGLUniformLocation? location, sequence<long> v);
+    [Infallible]
     void uniform3f(WebGLUniformLocation? location, float x, float y, float z);
+    [Infallible]
     void uniform3fv(WebGLUniformLocation? location, Float32Array v);
+    [Infallible]
     void uniform3fv(WebGLUniformLocation? location, sequence<float> v);
+    [Infallible]
     void uniform3i(WebGLUniformLocation? location, long x, long y, long z);
+    [Infallible]
     void uniform3iv(WebGLUniformLocation? location, Int32Array v);
+    [Infallible]
     void uniform3iv(WebGLUniformLocation? location, sequence<long> v);
+    [Infallible]
     void uniform4f(WebGLUniformLocation? location, float x, float y, float z, float w);
+    [Infallible]
     void uniform4fv(WebGLUniformLocation? location, Float32Array v);
+    [Infallible]
     void uniform4fv(WebGLUniformLocation? location, sequence<float> v);
+    [Infallible]
     void uniform4i(WebGLUniformLocation? location, long x, long y, long z, long w);
+    [Infallible]
     void uniform4iv(WebGLUniformLocation? location, Int32Array v);
+    [Infallible]
     void uniform4iv(WebGLUniformLocation? location, sequence<long> v);
 
+    [Infallible]
     void uniformMatrix2fv(WebGLUniformLocation? location, boolean transpose, 
                           Float32Array value);
+    [Infallible]
     void uniformMatrix2fv(WebGLUniformLocation? location, boolean transpose, 
                           sequence<float> value);
+    [Infallible]
     void uniformMatrix3fv(WebGLUniformLocation? location, boolean transpose, 
                           Float32Array value);
+    [Infallible]
     void uniformMatrix3fv(WebGLUniformLocation? location, boolean transpose, 
                           sequence<float> value);
+    [Infallible]
     void uniformMatrix4fv(WebGLUniformLocation? location, boolean transpose, 
                           Float32Array value);
+    [Infallible]
     void uniformMatrix4fv(WebGLUniformLocation? location, boolean transpose, 
                           sequence<float> value);
 
+    [Infallible]
     void useProgram(WebGLProgram? program);
+    [Infallible]
     void validateProgram(WebGLProgram? program);
 
+    [Infallible]
     void vertexAttrib1f(unsigned long indx, float x);
+    [Infallible]
     void vertexAttrib1fv(unsigned long indx, Float32Array values);
+    [Infallible]
     void vertexAttrib1fv(unsigned long indx, sequence<float> values);
+    [Infallible]
     void vertexAttrib2f(unsigned long indx, float x, float y);
+    [Infallible]
     void vertexAttrib2fv(unsigned long indx, Float32Array values);
+    [Infallible]
     void vertexAttrib2fv(unsigned long indx, sequence<float> values);
+    [Infallible]
     void vertexAttrib3f(unsigned long indx, float x, float y, float z);
+    [Infallible]
     void vertexAttrib3fv(unsigned long indx, Float32Array values);
+    [Infallible]
     void vertexAttrib3fv(unsigned long indx, sequence<float> values);
+    [Infallible]
     void vertexAttrib4f(unsigned long indx, float x, float y, float z, float w);
+    [Infallible]
     void vertexAttrib4fv(unsigned long indx, Float32Array values);
+    [Infallible]
     void vertexAttrib4fv(unsigned long indx, sequence<float> values);
+    [Infallible]
     void vertexAttribPointer(unsigned long indx, long size, unsigned long type, 
                              boolean normalized, long stride, long long offset);
 
+    [Infallible]
     void viewport(long x, long y, long width, long height);
 };
 

@@ -161,7 +161,8 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
                                       nsAString& aReturn)
 {
-  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName,
+                                                          nsCSSProps::eEnabled);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
     return NS_OK;
@@ -190,7 +191,8 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aPriority)
 {
   // In the common (and fast) cases we can use the property id
-  nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName,
+                                                    nsCSSProps::eEnabled);
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
   }
@@ -218,7 +220,8 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                     nsAString& aReturn)
 {
-  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName);
+  const nsCSSProperty propID = nsCSSProps::LookupProperty(aPropertyName,
+                                                          nsCSSProps::eEnabled);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
     return NS_OK;

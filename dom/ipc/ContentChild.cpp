@@ -79,12 +79,14 @@
 #endif
 
 #include "mozilla/dom/sms/SmsChild.h"
+#include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using namespace mozilla::docshell;
+using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 
 namespace mozilla {
@@ -468,6 +470,19 @@ ContentChild::DeallocPAudio(PAudioChild* doomed)
     AudioChild *child = static_cast<AudioChild*>(doomed);
     NS_RELEASE(child);
 #endif
+    return true;
+}
+
+PDeviceStorageRequestChild*
+ContentChild::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
+{
+    return new DeviceStorageRequestChild();
+}
+
+bool
+ContentChild::DeallocPDeviceStorageRequest(PDeviceStorageRequestChild* aDeviceStorage)
+{
+    delete aDeviceStorage;
     return true;
 }
 

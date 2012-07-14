@@ -215,7 +215,8 @@ inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
 NS_IMETHODIMP
 inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
 {
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
+  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
+                                                  nsCSSProps::eAny);
   if (prop == eCSSProperty_UNKNOWN) {
     *_retval = false;
     return NS_OK;
