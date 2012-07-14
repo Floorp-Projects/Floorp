@@ -1925,7 +1925,7 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
-  NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_OWN_LAYER)
+  NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 };
 
 /**
