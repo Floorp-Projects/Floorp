@@ -56,11 +56,13 @@ MOCHITEST_FILES =	parser_datreader.js \
 		iframe_bug599584.html \
 		test_bug613662.html \
 		test_bug613662.xhtml \
+		test_bug639362.html \
 		test_bug642908.html \
 		file_bug642908.sjs \
 		test_bug645115.html \
 		test_bug655682.html \
 		file_bug655682.sjs \
+		test_bug667533.html \
 		file_bug672453_not_declared.html \
 		file_bug672453_late_meta.html \
 		file_bug672453_meta_restart.html \
