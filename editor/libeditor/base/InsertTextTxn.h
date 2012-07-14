@@ -6,10 +6,19 @@
 #ifndef InsertTextTxn_h__
 #define InsertTextTxn_h__
 
-#include "EditTxn.h"
-#include "nsIDOMCharacterData.h"
-#include "nsIEditor.h"
-#include "nsCOMPtr.h"
+#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "nsCOMPtr.h"                   // for nsCOMPtr
+#include "nsCycleCollectionParticipant.h"
+#include "nsID.h"                       // for nsIID
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
+#include "nsString.h"                   // for nsString
+#include "nscore.h"                     // for NS_IMETHOD, nsAString
+#include "prtypes.h"                    // for PRUint32
+
+class nsIEditor;
+class nsITransaction;
+
 
 #define INSERT_TEXT_TXN_CID \
 {/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \

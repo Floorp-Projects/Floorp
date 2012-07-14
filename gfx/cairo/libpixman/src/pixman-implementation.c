@@ -106,6 +106,7 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
 
     for (i = 0; i < PIXMAN_N_OPERATORS; ++i)
     {
+	imp->combine_16[i] = NULL;
 	imp->combine_32[i] = NULL;
 	imp->combine_64[i] = NULL;
 	imp->combine_32_ca[i] = NULL;
@@ -119,7 +120,8 @@ pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_op_t		 op,
 					pixman_bool_t		 component_alpha,
-					pixman_bool_t		 narrow)
+					pixman_bool_t		 narrow,
+					pixman_bool_t		 rgb16)
 {
     pixman_combine_32_func_t f;
 
@@ -131,10 +133,14 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 	    (pixman_combine_32_func_t *)imp->combine_64_ca,
 	    imp->combine_32,
 	    imp->combine_32_ca,
+	    (pixman_combine_32_func_t *)imp->combine_16,
+	    NULL,
 	};
-
-	f = combiners[component_alpha | (narrow << 1)][op];
-
+        if (rgb16) {
+            f = combiners[4][op];
+        } else {
+            f = combiners[component_alpha + (narrow << 1)][op];
+        }
 	imp = imp->delegate;
     }
     while (!f);

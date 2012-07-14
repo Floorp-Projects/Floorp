@@ -7,13 +7,15 @@
 #define __selectionstate_h__
 
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsINode.h"
+#include "nsTArray.h"
+#include "nscore.h"
+#include "prtypes.h"
 
+class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
+class nsIDOMRange;
 class nsISelection;
 class nsRange;
 

@@ -20,6 +20,7 @@
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
+#include "nsDataHashtable.h"
 
 class nsFrameMessageManager;
 namespace mozilla {
@@ -44,6 +45,15 @@ private:
 
 public:
     static ContentParent* GetNewOrUsed();
+
+    /**
+     * Get or create a content process for the given app.  A given app
+     * (identified by its manifest URL) gets one process all to itself.
+     *
+     * If the given manifest is the empty string, then this method is equivalent
+     * to GetNewOrUsed().
+     */
+    static ContentParent* GetForApp(const nsAString& aManifestURL);
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
     NS_DECL_ISUPPORTS
@@ -83,7 +93,8 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
-    static nsTArray<ContentParent*>* gContentParents;
+    static nsDataHashtable<nsStringHashKey, ContentParent*> *gAppContentParents;
+    static nsTArray<ContentParent*>* gNonAppContentParents;
     static nsTArray<ContentParent*>* gPrivateContent;
 
     // Hide the raw constructor methods since we don't want client code
@@ -91,7 +102,7 @@ private:
     using PContentParent::SendPBrowserConstructor;
     using PContentParent::SendPTestShellConstructor;
 
-    ContentParent();
+    ContentParent(const nsAString& aAppManifestURL);
     virtual ~ContentParent();
 
     void Init();
@@ -211,6 +222,7 @@ private:
     bool mIsAlive;
     bool mSendPermissionUpdates;
 
+    const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
 
     friend class CrashReporterParent;

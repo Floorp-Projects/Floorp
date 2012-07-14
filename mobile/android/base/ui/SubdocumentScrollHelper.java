@@ -56,6 +56,12 @@ class SubdocumentScrollHelper implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener(MESSAGE_SCROLL_ACK, this);
     }
 
+    void destroy() {
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PANNING_OVERRIDE, this);
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_CANCEL_OVERRIDE, this);
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_SCROLL_ACK, this);
+    }
+
     boolean scrollBy(PointF displacement) {
         if (! mOverridePanning) {
             return false;

@@ -134,6 +134,12 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
   return new tmp.Tilt(window);
 });
 
+XPCOMUtils.defineLazyGetter(this, "Social", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/Social.jsm", tmp);
+  return tmp.Social;
+});
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -148,6 +154,7 @@ let gInitialPages = [
 #include browser-fullZoom.js
 #include browser-places.js
 #include browser-plugins.js
+#include browser-social.js
 #include browser-tabPreviews.js
 #include browser-tabview.js
 #include browser-thumbnails.js
@@ -1246,6 +1253,7 @@ var gBrowserInit = {
     OfflineApps.init();
     IndexedDBPromptHelper.init();
     gFormSubmitObserver.init();
+    SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
 
     gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
@@ -1617,6 +1625,7 @@ var gBrowserInit = {
       OfflineApps.uninit();
       IndexedDBPromptHelper.uninit();
       AddonManager.removeAddonListener(AddonsMgrListener);
+      SocialUI.uninit();
     }
 
     // Final window teardown, do this last.
@@ -3562,6 +3571,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     URLBarSetURI();
     XULBrowserWindow.asyncUpdateUI();
     PlacesStarButton.updateState();
+    SocialShareButton.updateShareState();
   }
 
   TabsInTitlebar.allowedBy("customizing-toolbars", true);
@@ -4040,6 +4050,7 @@ var XULBrowserWindow = {
 
         // Update starring UI
         PlacesStarButton.updateState();
+        SocialShareButton.updateShareState();
       }
 
       // Show or hide browser chrome based on the whitelist

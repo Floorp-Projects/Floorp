@@ -4,14 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChangeCSSInlineStyleTxn.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsAString.h"                  // for nsAString_internal::Append, etc
+#include "nsCRT.h"                      // for nsCRT
+#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
+#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc
+#include "nsGkAtoms.h"                  // for nsGkAtoms, etc
+#include "nsIAtom.h"                    // for nsIAtom
+#include "nsIDOMCSSStyleDeclaration.h"  // for nsIDOMCSSStyleDeclaration
+#include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMElementCSSInlineStyle.h"
-#include "nsReadableUtils.h"
+#include "nsISupportsImpl.h"            // for EditTxn::QueryInterface, etc
+#include "nsISupportsUtils.h"           // for NS_ADDREF
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc
+#include "nsReadableUtils.h"            // for ToNewUnicode
+#include "nsString.h"                   // for nsAutoString, nsString, etc
 #include "nsUnicharUtils.h"
-#include "nsCRT.h"
-#include "nsIAtom.h"
-#include "nsGkAtoms.h"
+#include "nsXPCOM.h"                    // for NS_Free
+#include "prtypes.h"                    // for PRUnichar, PRUint32
+
+class nsIEditor;
 
 #define kNullCh (PRUnichar('\0'))
 
