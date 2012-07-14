@@ -10,6 +10,7 @@ include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
 include protocol PHal;
+include protocol PIndexedDB;
 include protocol PMemoryReportRequest;
 include protocol PNecko;
 include protocol PSms;
@@ -102,6 +103,7 @@ rpc protocol PContent
     manages PDeviceStorageRequest;
     manages PExternalHelperApp;
     manages PHal;
+    manages PIndexedDB;
     manages PMemoryReportRequest;
     manages PNecko;
     manages PSms;
@@ -166,6 +168,8 @@ parent:
     sync PCrashReporter(NativeThreadId tid, PRUint32 processType);
 
     PHal();
+
+    PIndexedDB();
 
     PNecko();
 
