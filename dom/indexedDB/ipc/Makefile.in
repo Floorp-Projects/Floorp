@@ -33,10 +33,11 @@ DEFINES += -D_IMPL_NS_LAYOUT
 
 MOCHITEST_FILES = test_ipc.html
 
-XPCSHELL_TESTS = unit
+# Need to enable these tests sometime soon.
+#XPCSHELL_TESTS = unit
 
 # We're copying tests from another directory so this check is wrong for us.
-NO_XPCSHELL_MANIFEST_CHECK = 1
+#NO_XPCSHELL_MANIFEST_CHECK = 1
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
