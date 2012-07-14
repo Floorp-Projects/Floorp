@@ -1,0 +1,44 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test SVG clipPath clipping of transformed HTML elements</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=773197 -->
+  <style type="text/css">
+
+* { margin: 0; border: 0; padding: 0;}
+
+div {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  width: 150px;
+  height: 150px;
+  transform: scale(2,2);
+  transform-origin: 0 0;
+}
+
+  </style>
+</head>
+<body bgcolor="lime">
+
+  <svg xmlns="http://www.w3.org/2000/svg" width="350" height="350"
+       style="display:block; position:absolute;">
+    <clipPath id="cp1" x="0" y="0" width="1" height="1" clipPathUnits="objectBoundingBox">
+      <circle cx="0.5" cy="0.5" r="0.01" fill="white"/>
+      <circle cx="0.5" cy="0.5" r="0.48" fill="white"/>
+    </clipPath>
+    <clipPath id="cp2" x="0" y="0" width="1" height="1" clipPathUnits="objectBoundingBox">
+      <circle cx="0.5" cy="0.5" r="0.01" fill="white"/>
+      <circle cx="0.5" cy="0.5" r="0.50" fill="white"/>
+    </clipPath>
+    <circle cx="200" cy="200" r="147" fill="red"/>
+  </svg>
+
+  <div style="background: red; clip-path: url(#cp1);"/>
+  <div style="background: lime; clip-path: url(#cp2);"/>
+
+</body>
+</html>

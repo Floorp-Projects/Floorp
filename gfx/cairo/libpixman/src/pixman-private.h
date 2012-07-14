@@ -157,6 +157,8 @@ struct bits_image
     fetch_scanline_t           get_scanline_32;
     fetch_scanline_t           get_scanline_64;
 
+    fetch_scanline_t           fetch_scanline_16;
+
     fetch_scanline_t           fetch_scanline_32;
     fetch_pixel_32_t	       fetch_pixel_32;
     store_scanline_t           store_scanline_32;
@@ -164,6 +166,8 @@ struct bits_image
     fetch_scanline_t           fetch_scanline_64;
     fetch_pixel_64_t	       fetch_pixel_64;
     store_scanline_t           store_scanline_64;
+
+    store_scanline_t           store_scanline_16;
 
     /* Used for indirect access to the bits */
     pixman_read_memory_func_t  read_func;
@@ -207,7 +211,14 @@ typedef enum
      */
     ITER_LOCALIZED_ALPHA =	(1 << 1),
     ITER_IGNORE_ALPHA =		(1 << 2),
-    ITER_IGNORE_RGB =		(1 << 3)
+    ITER_IGNORE_RGB =		(1 << 3),
+
+    /* With the addition of ITER_16 we now have two flags that to represent
+     * 3 pipelines. This means that there can be an invalid state when
+     * both ITER_NARROW and ITER_16 are set. In this case
+     * ITER_16 overrides NARROW and we should use the 16 bit pipeline.
+     * Note: ITER_16 still has a 32 bit mask, which is a bit weird. */
+    ITER_16 =			(1 << 4)
 } iter_flags_t;
 
 struct pixman_iter_t
@@ -434,6 +445,7 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 typedef void (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
                                          pixman_iter_t           *iter);
 
+void _pixman_setup_combiner_functions_16 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
 
@@ -464,6 +476,7 @@ struct pixman_implementation_t
     pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t	combine_16[PIXMAN_N_OPERATORS];
 };
 
 uint32_t
@@ -479,7 +492,8 @@ pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_op_t		 op,
 					pixman_bool_t		 component_alpha,
-					pixman_bool_t		 wide);
+					pixman_bool_t		 wide,
+					pixman_bool_t		 rgb16);
 
 pixman_bool_t
 _pixman_implementation_blt (pixman_implementation_t *imp,
@@ -618,6 +632,7 @@ _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 #define FAST_PATH_SAMPLES_COVER_CLIP_NEAREST	(1 << 23)
 #define FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR	(1 << 24)
 #define FAST_PATH_BITS_IMAGE			(1 << 25)
+#define FAST_PATH_16_FORMAT			(1 << 26)
 
 #define FAST_PATH_PAD_REPEAT						\
     (FAST_PATH_NO_NONE_REPEAT		|				\

@@ -3,13 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "nsAString.h"                  // for nsAString_internal::Length
+#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsEditor.h"                   // for nsEditor
+#include "nsEditorUtils.h"              // for nsEditorUtils
+#include "nsError.h"                    // for NS_OK, etc
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsIDOMRange.h"                // for nsIDOMRange, etc
+#include "nsISelection.h"               // for nsISelection
+#include "nsISupportsImpl.h"            // for nsRange::Release
+#include "nsRange.h"                    // for nsRange
 #include "nsSelectionState.h"
-#include "nsIDOMCharacterData.h"
-#include "nsIDOMNode.h"
-#include "nsRange.h"
-#include "nsISelection.h"
-#include "nsEditor.h"
-#include "nsEditorUtils.h"
 
 
 /***************************************************************************

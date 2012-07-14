@@ -176,29 +176,6 @@ var shell = {
 #endif
   },
 
-  changeVolume: function shell_changeVolume(delta) {
-    let steps = 10;
-    try {
-      steps = Services.prefs.getIntPref("media.volume.steps");
-      if (steps <= 0)
-        steps = 1;
-    } catch(e) {}
-
-    let audioManager = Services.audioManager;
-    if (!audioManager)
-      return;
-
-    let currentVolume = audioManager.masterVolume;
-    let newStep = Math.round(steps * Math.sqrt(currentVolume)) + delta;
-    let volume = (newStep / steps) * (newStep / steps);
-
-    if (volume > 1)
-      volume = 1;
-    if (volume < 0)
-      volume = 0;
-    audioManager.masterVolume = volume;
-  },
-
   forwardKeyToContent: function shell_forwardKeyToContent(evt) {
     let content = shell.contentBrowser.contentWindow;
     let generatedEvent = content.document.createEvent('KeyboardEvent');
@@ -215,20 +192,6 @@ var shell = {
       case 'keydown':
       case 'keyup':
       case 'keypress':
-        // For debug purposes and because some of the APIs are not yet exposed
-        // to the content, let's react on some of the keyup events.
-        if (evt.type == 'keyup' && evt.eventPhase == evt.BUBBLING_PHASE) {
-          switch (evt.keyCode) {
-            case evt.DOM_VK_PAGE_DOWN:
-              this.changeVolume(-1);
-              break;
-
-            case evt.DOM_VK_PAGE_UP:
-              this.changeVolume(1);
-              break;
-          }
-        }
-
         // Redirect the HOME key to System app and stop the applications from
         // handling it.
         let rootContentEvt = (evt.target.ownerDocument.defaultView == content);

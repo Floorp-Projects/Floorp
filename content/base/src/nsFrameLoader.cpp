@@ -1370,6 +1370,27 @@ nsFrameLoader::OwnerIsBrowserFrame()
 }
 
 bool
+nsFrameLoader::OwnerIsAppFrame()
+{
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
+  bool isApp = false;
+  if (browserFrame) {
+    browserFrame->GetReallyIsApp(&isApp);
+  }
+  return isApp;
+}
+
+void
+nsFrameLoader::GetOwnerAppManifestURL(nsAString& aOut)
+{
+  aOut.Truncate();
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
+  if (browserFrame) {
+    browserFrame->GetAppManifestURL(aOut);
+  }
+}
+
+bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
@@ -1916,7 +1937,12 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  ContentParent* parent = ContentParent::GetNewOrUsed();
+  // If our owner has no app manifest URL, then this is equivalent to
+  // ContentParent::GetNewOrUsed().
+  nsAutoString appManifest;
+  GetOwnerAppManifestURL(appManifest);
+  ContentParent* parent = ContentParent::GetForApp(appManifest);
+
   NS_ASSERTION(parent->IsAlive(), "Process parent should be alive; something is very wrong!");
   mRemoteBrowser = parent->CreateTab(chromeFlags,
                                      /* aIsBrowserFrame = */ OwnerIsBrowserFrame());

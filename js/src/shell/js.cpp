@@ -3431,6 +3431,22 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (argc > 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
+                             "relaxRootChecks");
+        return false;
+    }
+
+#ifdef DEBUG
+    cx->runtime->relaxRootChecks = true;
+#endif
+
+    return true;
+}
+
+static JSBool
 GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
@@ -3734,6 +3750,12 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "enableProfilingAssertions(enabled)",
 "  Enables or disables the assertions related to SPS profiling. This is fairly\n"
 "  expensive, so it shouldn't be enabled normally."),
+
+    JS_FN_HELP("relaxRootChecks", RelaxRootChecks, 0, 0,
+"relaxRootChecks()",
+"  Tone down the frequency with which the dynamic rooting analysis checks for\n"
+"  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
+"  heavily numeric code."),
 
     JS_FS_END
 };

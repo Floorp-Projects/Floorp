@@ -159,6 +159,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
+    Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
@@ -931,6 +932,8 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
+    } else if (aTopic == "Viewport:Flush") {
+      this.displayedDocumentChanged();
     } else if (aTopic == "Passwords:Init") {
       let storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
         getService(Components.interfaces.nsILoginManagerStorage);
@@ -1988,7 +1991,7 @@ var UserAgent = {
         }
 
         // Send desktop UA if "Request Desktop Site" is enabled
-        if (tab.desktopMode && (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
+        if (tab.desktopMode)
           channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
 
         break;
@@ -2634,20 +2637,6 @@ Tab.prototype = {
           }
         });
 
-        // Once document is fully loaded, we can do a readability check to
-        // possibly enable reader mode for this page
-        Reader.checkTabReadability(this.id, function(isReadable) {
-          if (!isReadable)
-            return;
-
-          sendMessageToJava({
-            gecko: {
-              type: "Content:ReaderEnabled",
-              tabID: this.id
-            }
-          });
-        }.bind(this));
-
         // Attach a listener to watch for "click" events bubbling up from error
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
@@ -2846,6 +2835,20 @@ Tab.prototype = {
             tabID: this.id
           }
         });
+
+        // Once document is fully loaded, we can do a readability check to
+        // possibly enable reader mode for this page
+        Reader.checkTabReadability(this.id, function(isReadable) {
+          if (!isReadable)
+            return;
+
+          sendMessageToJava({
+            gecko: {
+              type: "Content:ReaderEnabled",
+              tabID: this.id
+            }
+          });
+        }.bind(this));
       }
     }
   },
@@ -3318,8 +3321,9 @@ var BrowserEventHandler = {
       // round the scroll amounts because they come in as floats and might be
       // subject to minor rounding errors because of zoom values. I've seen values
       // like 0.99 come in here and get truncated to 0; this avoids that problem.
-      data.x = Math.round(data.x);
-      data.y = Math.round(data.y);
+      let zoom = BrowserApp.selectedTab._zoom;
+      data.x = Math.round(data.x / zoom);
+      data.y = Math.round(data.y / zoom);
 
       if (this._firstScrollEvent) {
         while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
@@ -4442,6 +4446,8 @@ var ViewportHandler = {
     switch (aTopic) {
       case "Window:Resize":
         if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
+          break;
+        if (window.outerWidth == 0 || window.outerHeight == 0)
           break;
 
         let oldScreenWidth = gScreenWidth;
@@ -6297,6 +6303,13 @@ let Reader = {
 
       let tab = BrowserApp.getTabForId(tabId);
       let url = tab.browser.contentWindow.location.href;
+      let uri = Services.io.newURI(url, null, null);
+
+      if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+        this.log("Not parsing URI scheme: " + uri.scheme);
+        callback(null);
+        return;
+      }
 
       // First, try to find a cached parsed article in the DB
       this.getArticleFromCache(url, function(article) {
@@ -6310,7 +6323,6 @@ let Reader = {
         // changes the document object in several ways to find the article
         // in it.
         let doc = tab.browser.contentWindow.document.cloneNode(true);
-        let uri = Services.io.newURI(url, null, null);
 
         let readability = new Readability(uri, doc);
         article = readability.parse();
@@ -6466,7 +6478,7 @@ let Reader = {
     });
   },
 
-  _dowloadDocument: function Reader_downloadDocument(url, callback) {
+  _downloadDocument: function Reader_downloadDocument(url, callback) {
     // We want to parse those arbitrary pages safely, outside the privileged
     // context of chrome. We create a hidden browser element to fetch the
     // loaded page's document object then discard the browser element.
@@ -6511,7 +6523,7 @@ let Reader = {
     try {
       this.log("Needs to fetch page, creating request: " + url);
 
-      request.browser = this._dowloadDocument(url, function(doc) {
+      request.browser = this._downloadDocument(url, function(doc) {
         this.log("Finished loading page: " + doc);
 
         // Delete reference to the browser element as we're

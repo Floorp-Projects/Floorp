@@ -76,7 +76,7 @@ class nsHtml5ElementName
     nsHtml5ElementName(nsIAtom* name);
   public:
     virtual void release();
-    ~nsHtml5ElementName();
+    virtual ~nsHtml5ElementName();
     virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
     static nsHtml5ElementName* ELT_A;
     static nsHtml5ElementName* ELT_B;

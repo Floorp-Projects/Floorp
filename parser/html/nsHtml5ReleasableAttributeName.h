@@ -6,10 +6,11 @@
 #define nsHtml5ReleasableAttributeName_h__
 
 #include "nsHtml5AttributeName.h"
+#include "mozilla/Attributes.h"
 
 class nsHtml5AtomTable;
 
-class nsHtml5ReleasableAttributeName : public nsHtml5AttributeName
+class nsHtml5ReleasableAttributeName MOZ_FINAL : public nsHtml5AttributeName
 {
   public:
     nsHtml5ReleasableAttributeName(PRInt32* uri, nsIAtom** local, nsIAtom** prefix);

@@ -384,6 +384,7 @@ class SkipRoot
 #ifdef DEBUG
 JS_FRIEND_API(bool) IsRootingUnnecessaryForContext(JSContext *cx);
 JS_FRIEND_API(void) SetRootingUnnecessaryForContext(JSContext *cx, bool value);
+JS_FRIEND_API(bool) RelaxRootChecksForContext(JSContext *cx);
 #endif
 
 class AssertRootingUnnecessary {
@@ -417,11 +418,13 @@ CheckStackRoots(JSContext *cx);
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
  */
-inline void MaybeCheckStackRoots(JSContext *cx)
+inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
 #ifdef DEBUG
     JS_ASSERT(!IsRootingUnnecessaryForContext(cx));
 # if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+    if (relax && RelaxRootChecksForContext(cx))
+        return;
     CheckStackRoots(cx);
 # endif
 #endif

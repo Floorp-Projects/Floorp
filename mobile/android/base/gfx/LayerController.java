@@ -82,6 +82,10 @@ public class LayerController {
         layerClient.setLayerController(this);
     }
 
+    public void destroy() {
+        mPanZoomController.destroy();
+    }
+
     public void setForceRedraw() {
         mForceRedraw = true;
     }

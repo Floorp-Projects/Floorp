@@ -106,6 +106,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
     }
 
+    public void destroy() {
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:Update", this);
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:PageSize", this);
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:CalculateDisplayPort", this);
+        GeckoAppShell.unregisterGeckoEventListener("Checkerboard:Toggle", this);
+        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+    }
+
     DisplayPortMetrics getDisplayPort() {
         return mDisplayPort;
     }
