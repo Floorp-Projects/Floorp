@@ -7,11 +7,16 @@
 #define IMETextTxn_h__
 
 #include "EditTxn.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsID.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIPrivateTextRange.h"
-#include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
-#include "nsIAtom.h"
+#include "nsString.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsITransaction;
 
 // {D4D25721-2813-11d3-9EA3-0060089FE59B}
 #define IME_TEXT_TXN_CID							\

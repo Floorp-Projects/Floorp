@@ -411,7 +411,7 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
         js::gc::RunDebugGC(cx);
 #endif
 
-    MaybeCheckStackRoots(cx);
+    MaybeCheckStackRoots(cx, /* relax = */ false);
 
     JSCompartment *comp = cx->compartment;
     void *t = comp->arenas.allocateFromFreeList(kind, thingSize);

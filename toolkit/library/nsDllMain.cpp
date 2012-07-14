@@ -88,10 +88,18 @@ FARPROC WINAPI DelayDllLoadHook(unsigned dliNotify, PDelayLoadInfo pdli)
       "Attempting to load winrt libs in non-metro environment. "
       "(Winrt variable type placed in global scope?)");
   }
+  if (dliNotify == dliFailGetProc && IsWinRTDLLPresent(pdli, kvccorlib)) {
+    NS_WARNING("Attempting to access winrt vccorlib entry point in non-metro environment.");
+    NS_WARNING(pdli->szDll);
+    NS_WARNING(pdli->dlp.szProcName);
+    NS_ABORT();
+  }
   return NULL;
 }
 
 ExternC PfnDliHook __pfnDliNotifyHook2 = DelayDllLoadHook;
+ExternC PfnDliHook __pfnDliFailureHook2 = DelayDllLoadHook;
+
 #endif // MOZ_METRO
 
 #if defined(__GNUC__)

@@ -1,3 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+let SocialService = Components.utils.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+
+function ensureSocialEnabled() {
+  let initiallyEnabled = SocialService.enabled;
+  SocialService.enabled = true;
+  registerCleanupFunction(function () {
+    SocialService.enabled = initiallyEnabled;
+  });
+}
+
 // A helper to run a suite of tests.
 // The "test object" should be an object with function names as keys and a
 // function as the value.  The functions will be called with a "cbnext" param

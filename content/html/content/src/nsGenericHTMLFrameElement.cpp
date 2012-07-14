@@ -9,6 +9,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIAppsService.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIDOMApplicationRegistry.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -265,8 +268,9 @@ nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
 }
 
 /**
- * Return true if this frame element has permission to send mozbrowser
- * events, and false otherwise.
+ * Return true if this frame element really is a mozbrowser or mozapp.  (It
+ * needs to have the right attributes, and its creator must have the right
+ * permissions.)
  */
 nsresult
 nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
@@ -298,6 +302,50 @@ nsGenericHTMLFrameElement::GetReallyIsBrowser(bool *aOut)
 
   // Otherwise, succeed.
   *aOut = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
+{
+  nsAutoString manifestURL;
+  GetAppManifestURL(manifestURL);
+
+  *aOut = !manifestURL.IsEmpty();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
+{
+  aOut.Truncate();
+
+  // At the moment, you can't be an app without being a browser.
+  bool isBrowser = false;
+  GetReallyIsBrowser(&isBrowser);
+  if (!isBrowser) {
+    return NS_OK;
+  }
+
+  // TODO: We surely need a permissions check here, particularly once we no
+  // longer rely on the mozbrowser permission check.
+
+  nsAutoString manifestURL;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::mozapp, manifestURL);
+  if (manifestURL.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  NS_ENSURE_STATE(appsService);
+
+  nsCOMPtr<mozIDOMApplication> app;
+  appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
+
+  if (app) {
+    aOut.Assign(manifestURL);
+  }
+
   return NS_OK;
 }
 

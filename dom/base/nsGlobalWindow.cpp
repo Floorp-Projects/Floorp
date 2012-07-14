@@ -4486,9 +4486,15 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
   // gone full screen, the state trap above works.
   mFullScreen = aFullScreen;
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  if (widget)
-    widget->MakeFullScreen(aFullScreen);
+  // Sometimes we don't want the top-level widget to actually go fullscreen,
+  // for example in the B2G desktop client, we don't want the emulated screen
+  // dimensions to appear to increase when entering fullscreen mode; we just
+  // want the content to fill the entire client area of the emulator window.
+  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false)) {
+    nsCOMPtr<nsIWidget> widget = GetMainWidget();
+    if (widget)
+      widget->MakeFullScreen(aFullScreen);
+  }
 
   if (!mFullScreen) {
     // Force exit from DOM full-screen mode. This is so that if we're in

@@ -3,11 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdio.h>                      // for printf
+
 #include "InsertElementTxn.h"
-#include "nsISelection.h"
-#include "nsIContent.h"
-#include "nsIDOMNodeList.h"
-#include "nsReadableUtils.h"
+#include "nsAString.h"
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc
+#include "nsIContent.h"                 // for nsIContent
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsINode.h"                    // for nsINode
+#include "nsISelection.h"               // for nsISelection
+#include "nsMemory.h"                   // for nsMemory
+#include "nsReadableUtils.h"            // for ToNewCString
+#include "nsString.h"                   // for nsString
 
 #ifdef DEBUG
 static bool gNoisy = false;

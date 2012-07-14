@@ -67,9 +67,10 @@ output = proc.communicate()[0]
 
 # is this a PASS or a FAIL ? 
 if proc.returncode != 0:
+  print "Error count: %d" % proc.returncode
   print "TEST-UNEXPECTED-FAIL | autobinscope.py | %s is missing a needed Windows protection, such as /GS or ASLR" % binary_path
+  logfile = open(log_file_path, "r")
+  for line in logfile:
+    print(line),
 else:
   print "TEST-PASS | autobinscope.py | %s succeeded" % binary_path
-
-
-

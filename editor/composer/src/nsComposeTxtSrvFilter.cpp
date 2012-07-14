@@ -3,11 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCaseTreatment.h"
 #include "nsComposeTxtSrvFilter.h"
-#include "nsIContent.h"
-#include "nsIDOMNode.h"
-#include "nsString.h"
-#include "nsINameSpaceManager.h"
+#include "nsError.h"                    // for NS_OK
+#include "nsIContent.h"                 // for nsIContent
+#include "nsID.h"
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsINameSpaceManager.h"        // for kNameSpaceID_None
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING
+#include "nscore.h"                     // for NS_IMETHODIMP
 
 nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mIsForMail(false)

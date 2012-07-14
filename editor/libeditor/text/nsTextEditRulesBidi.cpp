@@ -3,15 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTextEditRules.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsPresContext.h"
-#include "nsIFrame.h"
-#include "nsISelectionPrivate.h"
+#include "nsDebug.h"
+#include "nsError.h"
 #include "nsFrameSelection.h"
+#include "nsIContent.h"
+#include "nsIDOMNode.h"
+#include "nsIEditor.h"
+#include "nsIPresShell.h"
+#include "nsISelection.h"
+#include "nsISelectionPrivate.h"
+#include "nsISupportsImpl.h"
+#include "nsPlaintextEditor.h"
+#include "nsPresContext.h"
+#include "nsTextEditRules.h"
+#include "nscore.h"
+#include "prtypes.h"
 
 // Test for distance between caret and text that will be deleted
 nsresult
