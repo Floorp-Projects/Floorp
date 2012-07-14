@@ -11,7 +11,7 @@
                style="@style/AddressBar.ImageButton"
                android:layout_width="84dip"
                android:layout_alignParentLeft="true"
-               android:background="@drawable/tabs_normal"
+               android:background="@drawable/tabs_crop_normal"
                android:gravity="center_vertical"/>
 
     <view class="org.mozilla.gecko.CustomEditText"

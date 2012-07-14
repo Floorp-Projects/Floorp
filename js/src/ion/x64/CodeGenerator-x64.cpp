@@ -299,7 +299,7 @@ CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
 
     // The implicit |this| is always |undefined| if the function's environment
     // is the current global.
-    GlobalObject *global = gen->info().script()->global();
+    GlobalObject *global = &gen->info().script()->global();
     masm.cmpPtr(Operand(callee, JSFunction::offsetOfEnvironment()), ImmGCPtr(global));
 
     // TODO: OOL stub path.

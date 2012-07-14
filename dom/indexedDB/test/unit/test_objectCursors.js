@@ -8,7 +8,6 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
 
   const objectStores = [
     { name: "a", autoIncrement: false },
@@ -22,7 +21,7 @@ function testSteps()
 
   var j = 0;
   for (let i in objectStores) {
-    let request = indexedDB.open(name, ++j, description);
+    let request = indexedDB.open(name, ++j);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     let event = yield;
@@ -55,7 +54,7 @@ function testSteps()
   executeSoon(function() { testGenerator.next(); });
   yield;
 
-  let request = indexedDB.open(name, j, description);
+  let request = indexedDB.open(name, j);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;

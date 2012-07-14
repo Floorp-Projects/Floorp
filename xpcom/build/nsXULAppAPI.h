@@ -367,7 +367,8 @@ XRE_API(GeckoProcessType,
 #if defined(MOZ_CRASHREPORTER)
 // Used in the "master" parent process hosting the crash server
 XRE_API(bool,
-        XRE_TakeMinidumpForChild, (PRUint32 aChildPid, nsIFile** aDump))
+        XRE_TakeMinidumpForChild, (PRUint32 aChildPid, nsIFile** aDump,
+                                   PRUint32* aSequence))
 
 // Used in child processes.
 XRE_API(bool,

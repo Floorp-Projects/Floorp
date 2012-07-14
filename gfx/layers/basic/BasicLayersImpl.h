@@ -6,6 +6,7 @@
 #ifndef GFX_BASICLAYERSIMPL_H
 #define GFX_BASICLAYERSIMPL_H
 
+#include "ipc/AutoOpenSurface.h"
 #include "ipc/ShadowLayerChild.h"
 #include "BasicLayers.h"
 #include "BasicImplData.h"
@@ -62,14 +63,58 @@ protected:
   }
 };
 
+/**
+ * Drawing with a mask requires a mask surface and a transform.
+ * Sometimes the mask surface is a direct gfxASurface, but other times
+ * it's a SurfaceDescriptor.  For SurfaceDescriptor, we need to use a
+ * scoped AutoOpenSurface to get a gfxASurface for the
+ * SurfaceDescriptor.
+ *
+ * This helper class manages the gfxASurface-or-SurfaceDescriptor
+ * logic.
+ */
+class NS_STACK_CLASS AutoMaskData {
+public:
+  AutoMaskData() { }
+  ~AutoMaskData() { }
+
+  /**
+   * Construct this out of either a gfxASurface or a
+   * SurfaceDescriptor.  Construct() must only be called once.
+   * GetSurface() and GetTransform() must not be called until this has
+   * been constructed.
+   */
+
+  void Construct(const gfxMatrix& aTransform,
+                 gfxASurface* aSurface);
+
+  void Construct(const gfxMatrix& aTransform,
+                 const SurfaceDescriptor& aSurface);
+
+  /** The returned surface can't escape the scope of |this|. */
+  gfxASurface* GetSurface();
+  const gfxMatrix& GetTransform();
+
+private:
+  bool IsConstructed();
+
+  gfxMatrix mTransform;
+  nsRefPtr<gfxASurface> mSurface;
+  Maybe<AutoOpenSurface> mSurfaceOpener;
+
+  AutoMaskData(const AutoMaskData&) MOZ_DELETE;
+  AutoMaskData& operator=(const AutoMaskData&) MOZ_DELETE;
+};
+
 /*
  * Extract a mask surface for a mask layer
- * Returns a surface for the mask layer if a mask layer is present and has a
- * valid surface and transform; nsnull otherwise.
- * The transform for the layer will be put in aMaskTransform
+ * Returns true and through outparams a surface for the mask layer if
+ * a mask layer is present and has a valid surface and transform;
+ * false otherwise.
+ * The transform for the layer will be put in aMaskData
  */
-already_AddRefed<gfxASurface>
-GetMaskSurfaceAndTransform(Layer* aMaskLayer, gfxMatrix* aMaskTransform);
+bool
+GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData);
 
 // Paint the current source to a context using a mask, if present
 void

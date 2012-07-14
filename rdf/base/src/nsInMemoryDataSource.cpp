@@ -413,7 +413,6 @@ private:
     nsIRDFResource* mProperty;
     nsIRDFNode*     mTarget;
     nsIRDFNode*     mValue;
-    PRInt32         mCount;
     bool            mTruthValue;
     Assertion*      mNextAssertion;
     nsCOMPtr<nsISupportsArray> mHashArcs;
@@ -478,7 +477,6 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mProperty(aProperty),
       mTarget(aTarget),
       mValue(nsnull),
-      mCount(0),
       mTruthValue(aTruthValue),
       mNextAssertion(nsnull)
 {

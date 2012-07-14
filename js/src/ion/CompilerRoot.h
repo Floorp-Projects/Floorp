@@ -84,6 +84,7 @@ class CompilerRoot : public CompilerRootNode
 typedef CompilerRoot<JSObject*>   CompilerRootObject;
 typedef CompilerRoot<JSFunction*> CompilerRootFunction;
 typedef CompilerRoot<PropertyName*> CompilerRootPropertyName;
+typedef CompilerRoot<Value> CompilerRootValue;
 
 // Automatically clears the compiler root list when compilation finishes.
 class AutoCompilerRoots

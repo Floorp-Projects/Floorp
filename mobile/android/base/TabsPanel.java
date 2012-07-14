@@ -120,7 +120,14 @@ public class TabsPanel extends LinearLayout {
             setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
                                                           (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
 
-            LayoutInflater.from(context).inflate(R.layout.tabs_panel_toolbar, this);
+            int panelToolbarRes;
+
+            if (GeckoApp.mAppContext.hasPermanentMenuKey())
+                panelToolbarRes = R.layout.tabs_panel_toolbar_menu;
+            else
+                panelToolbarRes = R.layout.tabs_panel_toolbar;
+
+            LayoutInflater.from(context).inflate(panelToolbarRes, this);
         }
     }
 

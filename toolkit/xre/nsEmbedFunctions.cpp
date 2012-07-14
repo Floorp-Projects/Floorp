@@ -226,9 +226,10 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 // IPDL wants access to this crashreporter interface, and
 // crashreporter is built in such a way to make that awkward
 bool
-XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump)
+XRE_TakeMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump,
+                         PRUint32* aSequence)
 {
-  return CrashReporter::TakeMinidumpForChild(aChildPid, aDump);
+  return CrashReporter::TakeMinidumpForChild(aChildPid, aDump, aSequence);
 }
 
 bool

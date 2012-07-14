@@ -600,19 +600,20 @@ TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::Type
 }
 
 TypeSet *
+TypeInferenceOracle::aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::TypeSet **barrier)
+{
+    *barrier = script->analysis()->bytecodeTypes(pc);
+    return script->analysis()->pushedTypes(pc, 0);
+}
+
+TypeSet *
 TypeInferenceOracle::globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id)
 {
-    TypeObject *type = script->global()->getType(cx);
+    TypeObject *type = script->global().getType(cx);
     if (type->unknownProperties())
         return NULL;
 
     return type->getProperty(cx, id, false);
-}
-
-MIRType
-TypeInferenceOracle::aliasedVarType(JSScript *script, jsbytecode *pc)
-{
-    return getMIRType(script->analysis()->pushedTypes(pc, 0));
 }
 
 LazyArgumentsType

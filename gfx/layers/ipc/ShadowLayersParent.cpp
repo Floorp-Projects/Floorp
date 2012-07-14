@@ -7,20 +7,18 @@
 
 #include <vector>
 
-#include "ShadowLayersParent.h"
-#include "ShadowLayerParent.h"
-#include "ShadowLayers.h"
-#include "RenderTrace.h"
-
-#include "mozilla/unused.h"
-
-#include "mozilla/layout/RenderFrameParent.h"
+#include "AutoOpenSurface.h"
 #include "CompositorParent.h"
-
 #include "gfxSharedImageSurface.h"
-
-#include "TiledLayerBuffer.h"
 #include "ImageLayers.h"
+#include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/unused.h"
+#include "RenderTrace.h"
+#include "ShadowLayerParent.h"
+#include "ShadowLayersParent.h"
+#include "ShadowLayers.h"
+#include "ShadowLayerUtils.h"
+#include "TiledLayerBuffer.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -420,19 +418,44 @@ ShadowLayersParent::RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
     return true;
   }
 
-  nsRefPtr<gfxASurface> sharedSurface = ShadowLayerForwarder::OpenDescriptor(surfaceIn);
+  AutoOpenSurface sharedSurface(OPEN_READ_WRITE, surfaceIn);
 
   nsRefPtr<gfxASurface> localSurface =
-    gfxPlatform::GetPlatform()->CreateOffscreenSurface(sharedSurface->GetSize(),
-                                                       sharedSurface->GetContentType());
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(sharedSurface.Size(),
+                                                       sharedSurface.ContentType());
   nsRefPtr<gfxContext> context = new gfxContext(localSurface);
 
   layer_manager()->BeginTransactionWithTarget(context);
   layer_manager()->EndTransaction(NULL, NULL);
-  nsRefPtr<gfxContext> contextForCopy = new gfxContext(sharedSurface);
+  nsRefPtr<gfxContext> contextForCopy = new gfxContext(sharedSurface.Get());
   contextForCopy->SetOperator(gfxContext::OPERATOR_SOURCE);
   contextForCopy->DrawSurface(localSurface, localSurface->GetSize());
   return true;
+}
+
+PGrallocBufferParent*
+ShadowLayersParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
+                                        const gfxContentType& aContent,
+                                        MaybeMagicGrallocBufferHandle* aOutHandle)
+{
+#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  return GrallocBufferActor::Create(aSize, aContent, aOutHandle);
+#else
+  NS_RUNTIMEABORT("No gralloc buffers for you");
+  return nsnull;
+#endif
+}
+
+bool
+ShadowLayersParent::DeallocPGrallocBuffer(PGrallocBufferParent* actor)
+{
+#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  delete actor;
+  return true;
+#else
+  NS_RUNTIMEABORT("Um, how did we get here?");
+  return false;
+#endif
 }
 
 PLayerParent*

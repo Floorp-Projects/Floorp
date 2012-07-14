@@ -887,6 +887,9 @@ JSRuntime::init(uint32_t maxbytes)
     if (!scriptFilenameTable.init())
         return false;
 
+    if (!evalCache.init())
+        return false;
+
     debugScopes = this->new_<DebugScopes>(this);
     if (!debugScopes || !debugScopes->init()) {
         Foreground::delete_(debugScopes);
@@ -3388,15 +3391,11 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto_, JSObject *parent
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    if (proto && !proto->setNewTypeUnknown(cx))
-        return NULL;
-
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     AssertRootingUnnecessary safe(cx);
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
-        MarkTypeObjectUnknownProperties(cx, obj->type());
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -4685,8 +4684,15 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
         return NULL;
     }
 
+    /*
+     * If a function was compiled as compile-and-go or was compiled to be
+     * lexically nested inside some other script, we cannot clone it without
+     * breaking the compiler's assumptions.
+     */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() && fun->script()->compileAndGo) {
+    if (fun->isInterpreted() &&
+        (fun->script()->compileAndGo || fun->script()->enclosingStaticScope()))
+    {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;
@@ -4924,10 +4930,9 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj_,
 
     bool compileAndGo = cx->hasRunOption(JSOPTION_COMPILE_N_GO);
     bool noScriptRval = cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL);
-    bool needScriptGlobal = true;
     return frontend::CompileScript(cx, obj, NULL, principals, originPrincipals,
-                                   compileAndGo, noScriptRval, needScriptGlobal,
-                                   chars, length, filename, lineno, version);
+                                   compileAndGo, noScriptRval, chars, length,
+                                   filename, lineno, version);
 }
 
 extern JS_PUBLIC_API(JSScript *)
@@ -5130,10 +5135,9 @@ CompileUTF8FileHelper(JSContext *cx, JSObject *obj_, JSPrincipals *principals,
     if (JS_DecodeUTF8(cx, buf, len, decodebuf, &decodelen)) {
         bool compileAndGo = cx->hasRunOption(JSOPTION_COMPILE_N_GO);
         bool noScriptRval = cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL);
-        bool needScriptGlobal = true;
         script = frontend::CompileScript(cx, obj, NULL, principals, NULL,
-                                         compileAndGo, noScriptRval, needScriptGlobal,
-                                         decodebuf, decodelen, filename, 1, cx->findVersion());
+                                         compileAndGo, noScriptRval, decodebuf, decodelen,
+                                         filename, 1, cx->findVersion());
     } else {
         script = NULL;
     }
@@ -5203,9 +5207,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
     JS_ASSERT(!script->isCachedEval);
-    JS_ASSERT(script->globalObject);
-
-    return script->globalObject;
+    return &script->global();
 }
 
 static JSFunction *
@@ -5400,7 +5402,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg_, jsval *rval
      * mozilla, but there doesn't seem to be one, so we handle it here.
      */
     if (scriptArg->compartment() != obj->compartment()) {
-        script = CloneScript(cx, scriptArg);
+        script = CloneScript(cx, NullPtr(), NullPtr(), scriptArg);
         if (!script.get())
             return false;
     } else {
@@ -5431,13 +5433,12 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj_,
 
     bool compileAndGo = true;
     bool noScriptRval = !rval;
-    bool needScriptGlobal = true;
 
     CHECK_REQUEST(cx);
     AutoLastFrameCheck lfc(cx);
     JSScript *script = frontend::CompileScript(cx, obj, NULL, principals, originPrincipals,
-                                               compileAndGo, noScriptRval, needScriptGlobal,
-                                               chars, length, filename, lineno, compileVersion);
+                                               compileAndGo, noScriptRval, chars, length,
+                                               filename, lineno, compileVersion);
     if (!script)
         return false;
 

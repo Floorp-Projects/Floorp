@@ -742,7 +742,7 @@ IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &
     MacroAssembler masm;
 
     // Guard object is a dense array.
-    Shape *shape = GetDenseArrayShape(cx, script->global());
+    RootedShape shape(cx, GetDenseArrayShape(cx, &script->global()));
     if (!shape)
         return false;
     masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);

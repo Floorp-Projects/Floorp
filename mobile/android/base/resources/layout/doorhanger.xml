@@ -6,6 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <TextView android:id="@+id/doorhanger_title"
+              android:focusable="true"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceMedium"
