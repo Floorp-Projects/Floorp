@@ -2630,7 +2630,7 @@ CSS_PROP_DISPLAY(
     Perspective,
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH | VARIANT_POSITIVE_LENGTH,
+    VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH | VARIANT_POSITIVE_DIMENSION,
     nsnull,
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)
