@@ -88,6 +88,7 @@ using namespace mozilla::places;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
+using namespace mozilla::dom::indexedDB;
 
 namespace mozilla {
 namespace dom {
@@ -427,6 +428,20 @@ ContentChild::DeallocPHal(PHalChild* aHal)
 {
     delete aHal;
     return true;
+}
+
+PIndexedDBChild*
+ContentChild::AllocPIndexedDB()
+{
+  NS_NOTREACHED("Should never get here!");
+  return NULL;
+}
+
+bool
+ContentChild::DeallocPIndexedDB(PIndexedDBChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 PTestShellChild*

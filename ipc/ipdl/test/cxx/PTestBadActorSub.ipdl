@@ -1,0 +1,17 @@
+include protocol PTestBadActor;
+
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestBadActorSub {
+  manager PTestBadActor;
+
+child:
+  rpc __delete__();
+
+parent:
+  Ping();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

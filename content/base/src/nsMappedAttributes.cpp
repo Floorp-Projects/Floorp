@@ -113,9 +113,22 @@ nsMappedAttributes::GetAttr(nsIAtom* aAttrName) const
 {
   NS_PRECONDITION(aAttrName, "null name");
 
-  PRInt32 i = IndexOfAttr(aAttrName, kNameSpaceID_None);
-  if (i >= 0) {
-    return &Attrs()[i].mValue;
+  for (PRUint32 i = 0; i < mAttrCount; ++i) {
+    if (Attrs()[i].mName.Equals(aAttrName)) {
+      return &Attrs()[i].mValue;
+    }
+  }
+
+  return nsnull;
+}
+
+const nsAttrValue*
+nsMappedAttributes::GetAttr(const nsAString& aAttrName) const
+{
+  for (PRUint32 i = 0; i < mAttrCount; ++i) {
+    if (Attrs()[i].mName.Atom()->Equals(aAttrName)) {
+      return &Attrs()[i].mValue;
+    }
   }
 
   return nsnull;
@@ -228,22 +241,12 @@ nsMappedAttributes::GetExistingAttrNameFromQName(const nsAString& aName) const
 }
 
 PRInt32
-nsMappedAttributes::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
+nsMappedAttributes::IndexOfAttr(nsIAtom* aLocalName) const
 {
   PRUint32 i;
-  if (aNamespaceID == kNameSpaceID_None) {
-    // This should be the common case so lets make an optimized loop
-    for (i = 0; i < mAttrCount; ++i) {
-      if (Attrs()[i].mName.Equals(aLocalName)) {
-        return i;
-      }
-    }
-  }
-  else {
-    for (i = 0; i < mAttrCount; ++i) {
-      if (Attrs()[i].mName.Equals(aLocalName, aNamespaceID)) {
-        return i;
-      }
+  for (i = 0; i < mAttrCount; ++i) {
+    if (Attrs()[i].mName.Equals(aLocalName)) {
+      return i;
     }
   }
 

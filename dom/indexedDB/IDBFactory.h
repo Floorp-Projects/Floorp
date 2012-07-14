@@ -36,10 +36,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBFactory)
   NS_DECL_NSIIDBFACTORY
 
+  // Called when using IndexedDB from a window in a different process.
   static nsresult Create(nsPIDOMWindow* aWindow,
                          const nsACString& aASCIIOrigin,
                          IDBFactory** aFactory);
 
+  // Called when using IndexedDB from a window in the current process.
   static nsresult Create(nsPIDOMWindow* aWindow,
                          nsIIDBFactory** aFactory)
   {
@@ -51,9 +53,15 @@ public:
     return NS_OK;
   }
 
+  // Called when using IndexedDB from a JS component or a JSM in the current
+  // process.
   static nsresult Create(JSContext* aCx,
                          JSObject* aOwningObject,
                          IDBFactory** aFactory);
+
+  // Called when using IndexedDB from a JS component or a JSM in a different
+  // process.
+  static nsresult Create(IDBFactory** aFactory);
 
   static already_AddRefed<mozIStorageConnection>
   GetConnection(const nsAString& aDatabaseFilePath);
@@ -90,6 +98,12 @@ public:
     mActorParent = aActorParent;
   }
 
+  const nsCString&
+  GetASCIIOrigin() const
+  {
+    return mASCIIOrigin;
+  }
+
 private:
   IDBFactory();
   ~IDBFactory();
@@ -103,6 +117,8 @@ private:
 
   IndexedDBChild* mActorChild;
   IndexedDBParent* mActorParent;
+
+  bool mRootedOwningObject;
 };
 
 END_INDEXEDDB_NAMESPACE
