@@ -25,7 +25,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
-#include "nsIScriptEventHandlerOwner.h"
 #include "nsBindingManager.h"
 #include "nsIURI.h"
 #include "nsIXULTemplateBuilder.h"
@@ -616,8 +615,6 @@ protected:
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
            bool aIsScriptable);
-
-    friend class nsScriptEventHandlerOwnerTearoff;
 
     bool IsReadWriteTextElement() const
     {
