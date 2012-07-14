@@ -25,8 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 devicestorage_setup();
 
 var gFileName = "devicestorage/hi";
-var gData = "My name is Doug Turner.  My IRC nick is DougT.  I like Maple cookies."
-var gDataBlob = new Blob([gData], {type: 'text/plain'});
 
 function getAfterDeleteSuccess(e) {
   ok(false, "file was deleted not successfully");
@@ -41,9 +39,8 @@ function getAfterDeleteError(e) {
 function deleteSuccess(e) {
 
   ok(e.target.result == gFileName, "File name should match");
-  dump(e.target.result + "\n")
 
-  var storage = navigator.getDeviceStorage("testing");
+  var storage = navigator.getDeviceStorage("profile");
   request = storage[0].get(e.target.result);
   request.onsuccess = getAfterDeleteSuccess;
   request.onerror = getAfterDeleteError;
@@ -56,43 +53,27 @@ function deleteError(e) {
 }
 
 function getSuccess(e) {
-  var storage = navigator.getDeviceStorage("testing");
+  var storage = navigator.getDeviceStorage("profile");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
   ok(e.target.result.name == gFileName, "File name should match");
 
-  var name = e.target.result.name;
-
-  var reader = new FileReader();
-  reader.readAsArrayBuffer(gDataBlob);
-  reader.onload = function(e) {
-    readerCallback(e);
-
-    request = storage[0].delete(name)
-    request.onsuccess = deleteSuccess;
-    request.onerror = deleteError;
-  }
-}
-
-function readerCallback(e) {
-
-  ab = e.target.result;
-
-  is(ab.byteLength, gData.length, "wrong arraybuffer byteLength");
-  var u8v = new Uint8Array(ab);
-  is(String.fromCharCode.apply(String, u8v), gData, "wrong values");
+  request = storage[0].delete(e.target.result.name)
+  request.onsuccess = deleteSuccess;
+  request.onerror = deleteError;
 }
 
 function getError(e) {
   ok(false, "getError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
 
   ok(e.target.result == gFileName, "File name should match");
 
-  var storage = navigator.getDeviceStorage("testing");
+  var storage = navigator.getDeviceStorage("profile");
   request = storage[0].get(gFileName);
   request.onsuccess = getSuccess;
   request.onerror = getError;
@@ -105,12 +86,10 @@ function addError(e) {
   devicestorage_cleanup();
 }
 
+var storage = navigator.getDeviceStorage("profile");
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
-var storage = navigator.getDeviceStorage("testing");
-ok(storage, "Should have gotten a storage");
-
-request = storage[0].addNamed(gDataBlob, "devicestorage/hi");
+request = storage[0].addNamed(createRandomBlob(), "devicestorage/hi");
 ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;
