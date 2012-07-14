@@ -920,12 +920,12 @@ class HandleBase<Value> : public ValueOperations<Handle<Value> >
 template <>
 class MutableHandleBase<Value> : public MutableValueOperations<MutableHandle<Value> >
 {
-    friend class ValueOperations<Handle<Value> >;
+    friend class ValueOperations<MutableHandle<Value> >;
     const Value * extract() const {
         return static_cast<const MutableHandle<Value>*>(this)->address();
     }
 
-    friend class MutableValueOperations<Handle<Value> >;
+    friend class MutableValueOperations<MutableHandle<Value> >;
     Value * extractMutable() {
         return static_cast<MutableHandle<Value>*>(this)->address();
     }
@@ -5727,6 +5727,13 @@ JS_NewDateObjectMsec(JSContext *cx, double msec);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsDate(JSContext *cx, JSObject *obj);
+
+/*
+ * Clears the cache of calculated local time from each Date object.
+ * Call to propagate a system timezone change.
+ */
+extern JS_PUBLIC_API(void)
+JS_ClearDateCaches(JSContext *cx);
 
 /************************************************************************/
 

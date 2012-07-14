@@ -24,15 +24,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 
 devicestorage_setup();
 
-function profileStorage() {
-  return navigator.getDeviceStorage("profile")[0];
+function testingStorage() {
+  return navigator.getDeviceStorage("testing")[0];
 }
 
 var tests = [
-  function () { return profileStorage().addNamed(createRandomBlob(), gFileName); },
-  function () { return profileStorage().delete(gFileName); },
-  function () { return profileStorage().get(gFileName); },
-  function () { var r = profileStorage().enumerate("../"); return r; }
+  function () { return testingStorage().addNamed(createRandomBlob(), gFileName); },
+  function () { return testingStorage().delete(gFileName); },
+  function () { return testingStorage().get(gFileName); },
+  function () { var r = testingStorage().enumerate("../"); return r; }
 ];
 
 var gFileName = "../owned";
