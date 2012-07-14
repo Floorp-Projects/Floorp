@@ -16,6 +16,13 @@ const IDBIndex = Ci.nsIIDBIndex
 const IDBObjectStore = Ci.nsIIDBObjectStore
 const IDBRequest = Ci.nsIIDBRequest
 
+// XPCShell does not get a profile by default.
+do_get_profile();
+
+var idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"].
+                 getService(Ci.nsIIndexedDatabaseManager);
+idbManager.initWindowless(this);
+
 function is(a, b, msg) {
   dump("is(" + a + ", " + b + ", \"" + msg + "\")");
   do_check_eq(a, b, Components.stack.caller);
@@ -45,13 +52,6 @@ function run_test() {
 
 function runTest()
 {
-  // XPCShell does not get a profile by default.
-  do_get_profile();
-
-  var idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"].
-                   getService(Ci.nsIIndexedDatabaseManager);
-  idbManager.initWindowless(this);
-
   do_test_pending();
   testGenerator.next();
 }
