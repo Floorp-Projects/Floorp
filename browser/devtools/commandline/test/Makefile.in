@@ -17,6 +17,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_gcli_calllog.js \
   browser_gcli_commands.js \
   browser_gcli_cookie.js \
+  browser_gcli_dbg.js \
   browser_gcli_edit.js \
   browser_gcli_inspect.js \
   browser_gcli_integrate.js \
@@ -32,6 +33,7 @@ MOCHITEST_BROWSER_FILES = \
 MOCHITEST_BROWSER_FILES += \
   browser_gcli_break.html \
   browser_gcli_inspect.html \
+  resources_dbg.html \
   resources_inpage.js \
   resources_inpage1.css \
   resources_inpage2.css \
