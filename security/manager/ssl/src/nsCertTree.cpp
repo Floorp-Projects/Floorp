@@ -1206,6 +1206,9 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
       case nsIX509Cert::INVALID_CA:
         rv = mNSSComponent->GetPIPNSSBundleString("VerifyInvalidCA", _retval);
         break;
+      case nsIX509Cert::SIGNATURE_ALGORITHM_DISABLED:
+        rv = mNSSComponent->GetPIPNSSBundleString("VerifyDisabledAlgorithm", _retval);
+        break;
       case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
       case nsIX509Cert::USAGE_NOT_ALLOWED:
       default:

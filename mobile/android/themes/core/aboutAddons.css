@@ -89,6 +89,15 @@ body {
   text-overflow: ellipsis;
 }
 
+.status {
+  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+  border-top: 2px solid;
+  -moz-border-top-colors: #bac2ac #ffffff;
+  font-weight: bold;
+  padding: 8px;
+  width: 100%;
+}
+
 .buttons {
   display: -moz-box;
   -moz-box-orient: horizontal;

@@ -39,6 +39,9 @@ parent:
     sync Test6(IntDoubleArrays[] i1)
         returns (IntDoubleArrays[] o1);
 
+    sync Test7_0(ActorWrapper a1)
+        returns (ActorWrapper o1);
+
     sync Test7(Actors i1,
                Actors i2,
                Actors i3)

@@ -43,7 +43,7 @@
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="72dip"
                      android:layout_alignParentRight="true"
-                     android:background="@drawable/tabs_button"
+                     android:background="@drawable/tabs_crop_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
                      android:paddingLeft="38dip"

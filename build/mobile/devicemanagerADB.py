@@ -95,24 +95,13 @@ class DeviceManagerADB(DeviceManager):
   # success: <return code>
   # failure: None
   def shell(self, cmd, outputfile, env=None, cwd=None):
-    # need to quote and escape special characters here
-    for (index, arg) in enumerate(cmd):
-      arg.replace('&', '\&')
-
-      needsQuoting = False
-      for char in [ ' ', '(', ')', '"', '&' ]:
-        if arg.find(char):
-          needsQuoting = True
-          break
-      if needsQuoting:
-        cmd[index] = '\'%s\'' % arg
-
-    # This is more complex than you'd think because adb doesn't actually
-    # return the return code from a process, so we have to capture the output
-    # to get it
     # FIXME: this function buffers all output of the command into memory,
     # always. :(
-    cmdline = " ".join(cmd) + "; echo $?"
+
+    # Getting the return code is more complex than you'd think because adb
+    # doesn't actually return the return code from a process, so we have to
+    # capture the output to get it
+    cmdline = "%s; echo $?" % self._escapedCommandLine(cmd)
 
     # prepend cwd and env to command if necessary
     if cwd:

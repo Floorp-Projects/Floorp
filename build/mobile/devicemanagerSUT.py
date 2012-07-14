@@ -260,7 +260,7 @@ class DeviceManagerSUT(DeviceManager):
   # success: <return code>
   # failure: None
   def shell(self, cmd, outputfile, env=None, cwd=None):
-    cmdline = subprocess.list2cmdline(cmd)
+    cmdline = self._escapedCommandLine(cmd)
     if env:
       cmdline = '%s %s' % (self.formatEnvString(env), cmdline)
 

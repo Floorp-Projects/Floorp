@@ -717,7 +717,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                     values.put(History.DATE_LAST_VISITED, date);
                 }
             } else {
-                values.put(History.VISITS, 1);
+                values.put(History.VISITS, visits);
                 values.put(History.DATE_LAST_VISITED, date);
             }
             if (title != null) {

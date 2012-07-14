@@ -928,6 +928,8 @@ public:
   void RemoveElementsAt(index_type start, size_type count) {
     MOZ_ASSERT(count == 0 || start < Length(), "Invalid start index");
     MOZ_ASSERT(start + count <= Length(), "Invalid length");
+    // Check that the previous assert didn't overflow
+    MOZ_ASSERT(start <= start + count, "Start index plus length overflows");
     DestructRange(start, count);
     this->ShiftData(start, count, 0, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }

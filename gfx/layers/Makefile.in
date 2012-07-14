@@ -140,6 +140,14 @@ EXPORTS_mozilla/layers += ShadowLayerUtilsD3D10.h
 DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
+# NB: Gralloc is available on other platforms that use the android GL
+# libraries, but only Gonk is able to use it reliably because Gecko
+# has full system permissions there.
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+EXPORTS_mozilla/layers += ShadowLayerUtilsGralloc.h
+CPPSRCS += ShadowLayerUtilsGralloc.cpp
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

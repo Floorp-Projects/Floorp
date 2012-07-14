@@ -27,9 +27,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
-#ifdef MOZ_CRASHREPORTER
-#include "mozilla/dom/CrashReporterParent.h"
-#endif
 #include "nsNPAPIPlugin.h"
 #include "nsIFile.h"
 
@@ -48,6 +45,12 @@ using mozilla::dom::CrashReporterParent;
 using namespace mozilla;
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
+
+#ifdef MOZ_CRASHREPORTER
+#include "mozilla/dom/CrashReporterParent.h"
+
+using namespace CrashReporter;
+#endif
 
 static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
 static const char kParentTimeoutPref[] = "dom.ipc.plugins.parentTimeoutSecs";
@@ -133,9 +136,9 @@ PluginModuleParent::~PluginModuleParent()
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     if (mFlashProcess1)
-        CrashReporter::UnregisterInjectorCallback(mFlashProcess1);
+        UnregisterInjectorCallback(mFlashProcess1);
     if (mFlashProcess2)
-        CrashReporter::UnregisterInjectorCallback(mFlashProcess2);
+        UnregisterInjectorCallback(mFlashProcess2);
 #endif
 
     Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
@@ -144,7 +147,7 @@ PluginModuleParent::~PluginModuleParent()
 
 #ifdef MOZ_CRASHREPORTER
 void
-PluginModuleParent::WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes)
+PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
 {
     typedef nsDependentCString CS;
 
@@ -200,19 +203,17 @@ bool
 PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
 #ifdef MOZ_CRASHREPORTER
-    if (mPluginDumpID.IsEmpty()) {
-        CrashReporterParent* crashReporter = CrashReporter();
-        if (crashReporter->GeneratePairedMinidump(this)) {
-            mBrowserDumpID = crashReporter->ParentDumpID();
-            mPluginDumpID = crashReporter->ChildDumpID();
-            PLUGIN_LOG_DEBUG(
-                    ("generated paired browser/plugin minidumps: %s/%s (ID=%s)",
-                     NS_ConvertUTF16toUTF8(mBrowserDumpID).get(),
-                     NS_ConvertUTF16toUTF8(mPluginDumpID).get(),
-                     NS_ConvertUTF16toUTF8(crashReporter->HangID()).get()));
-        } else {
-            NS_WARNING("failed to capture paired minidumps from hang");
-        }
+    CrashReporterParent* crashReporter = CrashReporter();
+    if (crashReporter->GeneratePairedMinidump(this)) {
+        mBrowserDumpID = crashReporter->ParentDumpID();
+        mPluginDumpID = crashReporter->ChildDumpID();
+        PLUGIN_LOG_DEBUG(
+                ("generated paired browser/plugin minidumps: %s/%s (ID=%s)",
+                 NS_ConvertUTF16toUTF8(mBrowserDumpID).get(),
+                 NS_ConvertUTF16toUTF8(mPluginDumpID).get(),
+                 NS_ConvertUTF16toUTF8(crashReporter->HangID()).get()));
+    } else {
+        NS_WARNING("failed to capture paired minidumps from hang");
     }
 #endif
 
@@ -237,33 +238,99 @@ PluginModuleParent::CrashReporter()
 }
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+static void
+RemoveMinidump(nsIFile* minidump)
+{
+    if (!minidump)
+        return;
+
+    minidump->Remove(false);
+    nsCOMPtr<nsIFile> extraFile;
+    if (GetExtraFileForMinidump(minidump,
+                                getter_AddRefs(extraFile))) {
+        extraFile->Remove(true);
+    }
+}
+
+void
+PluginModuleParent::ProcessFirstMinidump()
+{
+    CrashReporterParent* crashReporter = CrashReporter();
+    if (!crashReporter)
+        return;
+
+    AnnotationTable notes;
+    notes.Init(4);
+    WriteExtraDataForMinidump(notes);
+        
+    if (!mPluginDumpID.IsEmpty() && !mBrowserDumpID.IsEmpty()) {
+        crashReporter->GenerateHangCrashReport(&notes);
+        return;
+    }
+
+    PRUint32 sequence = PR_UINT32_MAX;
+    nsCOMPtr<nsIFile> dumpFile;
+    nsCAutoString flashProcessType;
+    TakeMinidump(getter_AddRefs(dumpFile), &sequence);
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+    nsCOMPtr<nsIFile> childDumpFile;
+    PRUint32 childSequence;
+
+    if (mFlashProcess1 &&
+        TakeMinidumpForChild(mFlashProcess1,
+                             getter_AddRefs(childDumpFile),
+                             &childSequence)) {
+        if (childSequence < sequence) {
+            RemoveMinidump(dumpFile);
+            dumpFile = childDumpFile;
+            sequence = childSequence;
+            flashProcessType.AssignLiteral("Broker");
+        }
+        else {
+            RemoveMinidump(childDumpFile);
+        }
+    }
+    if (mFlashProcess2 &&
+        TakeMinidumpForChild(mFlashProcess2,
+                             getter_AddRefs(childDumpFile),
+                             &childSequence)) {
+        if (childSequence < sequence) {
+            RemoveMinidump(dumpFile);
+            dumpFile = childDumpFile;
+            sequence = childSequence;
+            flashProcessType.AssignLiteral("Sandbox");
+        }
+        else {
+            RemoveMinidump(childDumpFile);
+        }
+    }
+#endif
+
+    if (!dumpFile) {
+        NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
+        return;
+    }
+
+    PLUGIN_LOG_DEBUG(("got child minidump: %s",
+                      NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
+
+    GetIDFromMinidump(dumpFile, mPluginDumpID);
+    if (!flashProcessType.IsEmpty()) {
+        notes.Put(NS_LITERAL_CSTRING("FlashProcessDump"), flashProcessType);
+    }
+    crashReporter->GenerateCrashReportForMinidump(dumpFile, &notes);
+}
+#endif
+
 void
 PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown: {
 #ifdef MOZ_CRASHREPORTER
-        CrashReporterParent* crashReporter = CrashReporter();
-
-        CrashReporter::AnnotationTable notes;
-        notes.Init(4);
-        WriteExtraDataForMinidump(notes);
-        
-        if (!mPluginDumpID.IsEmpty() && !mBrowserDumpID.IsEmpty()) {
-            crashReporter->GenerateHangCrashReport(&notes);
-        }
-        else if (!mPluginDumpID.IsEmpty()) {
-            // Nothing to do, we've already written this minidump in
-            // PluginModuleParent::OnCrash
-        }
-        else if (crashReporter->GenerateCrashReport(this, &notes)) {
-            mPluginDumpID = crashReporter->ChildDumpID();
-            PLUGIN_LOG_DEBUG(("got child minidump: %s",
-                              NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
-        }
-        else {
-            NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
-        }
+        ProcessFirstMinidump();
 #endif
 
         mShutdown = true;
@@ -1248,33 +1315,8 @@ PluginModuleParent::InitializeInjector()
 }
 
 void
-PluginModuleParent::OnCrash(DWORD processID, const nsAString& aDumpID)
+PluginModuleParent::OnCrash(DWORD processID)
 {
-    if (!mPluginDumpID.IsEmpty()) {
-        // One process has already crashed: we assume that the first-to-crash
-        // is the interesting one
-        return;
-    }
-
-    mPluginDumpID = aDumpID;
-
-    CrashReporter::AnnotationTable notes;
-    notes.Init(4);
-    WriteExtraDataForMinidump(notes);
-    notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("plugin"));
-    if (processID == mFlashProcess1) {
-        notes.Put(NS_LITERAL_CSTRING("FlashProcessDump"),
-                  NS_LITERAL_CSTRING("Broker"));
-    }
-    else if (processID == mFlashProcess2) {
-        notes.Put(NS_LITERAL_CSTRING("FlashProcessDump"),
-                  NS_LITERAL_CSTRING("Sandbox"));
-    }
-    else {
-        NS_ERROR("Got minidump for Flash process neither broker nor sandbox.");
-    }
-    CrashReporter::AppendExtraData(aDumpID, notes);
-
     GetIPCChannel()->CloseWithError();
     KillProcess(OtherProcess(), 1, false);
 }

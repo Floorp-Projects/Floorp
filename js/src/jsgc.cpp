@@ -3056,7 +3056,7 @@ PurgeRuntime(JSTracer *trc)
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
     rt->toSourceCache.purge();
-    rt->evalCache.purge();
+    rt->evalCache.clear();
 
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->purge();
@@ -4326,6 +4326,18 @@ JS::CheckStackRoots(JSContext *cx)
     // a portion of a function, so the callers were already assuming that GC
     // could happen.)
     JS_ASSERT(!cx->rootingUnnecessary);
+
+    // GCs can't happen when analysis/inference/compilation are active.
+    if (cx->compartment->activeAnalysis)
+        return;
+
+    // Can switch to the atoms compartment during analysis.
+    if (IsAtomsCompartment(cx->compartment)) {
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (c.get()->activeAnalysis)
+                return;
+        }
+    }
 
     AutoCopyFreeListToArenas copy(rt);
 

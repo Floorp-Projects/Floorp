@@ -45,6 +45,9 @@ const DEFAULT_SEVERITY                = 3;
 const DEFAULT_LEVEL                   = 2;
 const MAX_BLOCK_LEVEL                 = 3;
 const SEVERITY_OUTDATED               = 0;
+const VULNERABILITYSTATUS_NONE             = 0;
+const VULNERABILITYSTATUS_UPDATE_AVAILABLE = 1;
+const VULNERABILITYSTATUS_NO_UPDATE        = 2;
 
 var gLoggingEnabled = null;
 var gBlocklistEnabled = true;
@@ -831,8 +834,14 @@ Blocklist.prototype = {
                                                 toolkitVersion)) {
           if (blockEntryVersion.severity >= gBlocklistLevel)
             return Ci.nsIBlocklistService.STATE_BLOCKED;
-          if (blockEntryVersion.severity == SEVERITY_OUTDATED)
+          if (blockEntryVersion.severity == SEVERITY_OUTDATED) {
+            let vulnerabilityStatus = blockEntryVersion.vulnerabilityStatus;
+            if (vulnerabilityStatus == VULNERABILITYSTATUS_UPDATE_AVAILABLE)
+              return Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE;
+            if (vulnerabilityStatus == VULNERABILITYSTATUS_NO_UPDATE)
+              return Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE;
             return Ci.nsIBlocklistService.STATE_OUTDATED;
+          }
           return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
         }
       }
@@ -946,7 +955,8 @@ Blocklist.prototype = {
           if (state == Ci.nsIBlocklistService.STATE_OUTDATED) {
             gPref.setBoolPref(PREF_PLUGINS_NOTIFYUSER, true);
           }
-          else {
+          else if (state != Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE &&
+                   state != Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
             addonList.push({
               name: plugin.name,
               version: plugin.version,
@@ -959,6 +969,9 @@ Blocklist.prototype = {
           }
         }
         plugin.blocklisted = state == Ci.nsIBlocklistService.STATE_BLOCKED;
+        if (state == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
+            state == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
+          plugin.clicktoplay = true;
       }
 
       if (addonList.length == 0) {
@@ -1039,6 +1052,11 @@ function BlocklistItemData(versionRangeElement) {
     this.severity = versionRangeElement.getAttribute("severity");
   else
     this.severity = DEFAULT_SEVERITY;
+  if (versionRangeElement && versionRangeElement.hasAttribute("vulnerabilitystatus")) {
+    this.vulnerabilityStatus = versionRangeElement.getAttribute("vulnerabilitystatus");
+  } else {
+    this.vulnerabilityStatus = VULNERABILITYSTATUS_NONE;
+  }
   this.targetApps = { };
   var found = false;
 

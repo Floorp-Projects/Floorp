@@ -95,7 +95,8 @@ public:
     typedef enum {
         CONTENT_COLOR       = 0x1000,
         CONTENT_ALPHA       = 0x2000,
-        CONTENT_COLOR_ALPHA = 0x3000
+        CONTENT_COLOR_ALPHA = 0x3000,
+        CONTENT_SENTINEL    = 0xffff
     } gfxContentType;
 
     /** Wrap the given cairo surface and return a gfxASurface for it.

@@ -17,26 +17,45 @@ namespace layers {
 // Platform-specific shadow-layers interfaces.  See ShadowLayers.h.
 // D3D10 doesn't need all these yet.
 bool
-ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
-                                                gfxASurface::gfxContentType,
-                                                SurfaceDescriptor*,
-                                                SurfaceDescriptor*)
-{
-  return false;
-}
-
-bool
 ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
                                           gfxASurface::gfxContentType,
+                                          uint32_t,
                                           SurfaceDescriptor*)
 {
   return false;
 }
 
 /*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(const SurfaceDescriptor&)
+ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode,
+                                             const SurfaceDescriptor&)
 {
   return nsnull;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor&)
+{
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxContentType*,
+  gfxASurface**)
+{
+  return false;
+}
+
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxIntSize*,
+  gfxASurface**)
+{
+  return false;
 }
 
 bool

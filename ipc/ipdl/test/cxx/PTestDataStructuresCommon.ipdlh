@@ -28,6 +28,10 @@ struct SIntDoubleArrays {
     double[] ad;
 };
 
+struct ActorWrapper {
+    PTestDataStructuresSub actor;
+};
+
 union Actors {
     int;
     int[];

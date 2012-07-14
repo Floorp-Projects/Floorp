@@ -355,13 +355,6 @@ class BreakpointSite {
     jsbytecode * const pc;
 
   private:
-    /*
-     * The holder object for script, if known, else NULL.  This is NULL for
-     * cached eval scripts and for JSD1 traps. It is always non-null for JSD2
-     * breakpoints in held scripts.
-     */
-    GlobalObject *scriptGlobal;
-
     JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
     JSTrapHandler trapHandler;  /* jsdbgapi trap state */
@@ -374,7 +367,6 @@ class BreakpointSite {
     Breakpoint *firstBreakpoint() const;
     bool hasBreakpoint(Breakpoint *bp);
     bool hasTrap() const { return !!trapHandler; }
-    GlobalObject *getScriptGlobal() const { return scriptGlobal; }
 
     void inc(FreeOp *fop);
     void dec(FreeOp *fop);

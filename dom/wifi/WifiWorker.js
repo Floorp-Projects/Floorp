@@ -236,9 +236,14 @@ var WifiManager = (function() {
 
   function scanCommand(forceActive, callback) {
     if (forceActive && !scanModeActive) {
-      doSetScanModeCommand(true, function(ok) {
-        ok && doBooleanCommand("SCAN", "OK", function(ok) {
-          ok && doSetScanModeCommand(false, callback);
+      // Note: we ignore errors from doSetScanMode.
+      doSetScanModeCommand(true, function(ignore) {
+        doBooleanCommand("SCAN", "OK", function(ok) {
+          doSetScanModeCommand(false, function(ignore) {
+            // The result of scanCommand is the result of the actual SCAN
+            // request.
+            callback(ok);
+          });
         });
       });
       return;
@@ -603,7 +608,7 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
-    debug("detected SDK version " + sdkVersion);
+    debug("detected SDK version " + sdkVersion + " and device " + device);
 
     // If we reconnected to an already-running supplicant, then manager.state
     // will have already been updated to the supplicant's state. Otherwise, we
