@@ -203,7 +203,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
-    if (target->getParent() != script->global()) {
+    if (target->getParent() != &script->global()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to scope mismatch");
         return false;
     }
@@ -573,7 +573,7 @@ IonBuilder::initScopeChain()
 
         if (fun->isHeavyweight()) {
             // We don't yet support inlining of DeclEnv objects.
-            if (js_IsNamedLambda(fun))
+            if (fun->isNamedLambda())
                 return abort("DeclEnv scope objects are not yet supported");
 
             scope = createCallObject(callee, scope);
@@ -581,7 +581,7 @@ IonBuilder::initScopeChain()
                 return false;
         }
     } else {
-        scope = MConstant::New(ObjectValue(*script->global()));
+        scope = MConstant::New(ObjectValue(script->global()));
         current->add(scope);
     }
 
@@ -947,7 +947,7 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_BINDGNAME:
-        return pushConstant(ObjectValue(*script->global()));
+        return pushConstant(ObjectValue(script->global()));
 
       case JSOP_SETGNAME:
       {
@@ -4130,7 +4130,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     if (name == cx->runtime->atomState.InfinityAtom)
         return pushConstant(cx->runtime->positiveInfinityValue);
 
-    JSObject *globalObj = script->global();
+    RootedObject globalObj(cx, &script->global());
     JS_ASSERT(globalObj->isNative());
 
     RootedId id(cx, NameToId(name));
@@ -4201,7 +4201,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
 bool
 IonBuilder::jsop_setgname(HandlePropertyName name)
 {
-    RootedObject globalObj(cx, script->global());
+    RootedObject globalObj(cx, &script->global());
     RootedId id(cx, NameToId(name));
 
     JS_ASSERT(globalObj->isNative());
@@ -4274,7 +4274,7 @@ IonBuilder::jsop_getname(HandlePropertyName name)
 {
     MDefinition *object;
     if (js_CodeSpec[*pc].format & JOF_GNAME) {
-        MInstruction *global = MConstant::New(ObjectValue(*script->global()));
+        MInstruction *global = MConstant::New(ObjectValue(script->global()));
         current->add(global);
         object = global;
     } else {
@@ -5052,7 +5052,7 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     JSObject *singleton = types ? types->getSingleton(cx) : NULL;
     if (singleton && !barrier) {
         bool isKnownConstant, testObject;
-        RootedObject global(cx, script->global());
+        RootedObject global(cx, &script->global());
         if (!TestSingletonPropertyTypes(cx, unaryTypes.inTypes,
                                         global, id,
                                         &isKnownConstant, &testObject))
@@ -5400,58 +5400,40 @@ IonBuilder::walkScopeChain(unsigned hops)
     return scope;
 }
 
-static inline bool
-InDynamicScopeSlots(JSScript *script, jsbytecode *pc, unsigned *slot)
-{
-    if (ScopeCoordinateBlockChain(script, pc)) {
-         // Block objects use a fixed AllocKind which means an invariant number
-         // of fixed slots. Any slot below the fixed slot count is inline, any
-         // slot over is in the dynamic slots.
-        uint32 nfixed = gc::GetGCKindSlots(BlockObject::FINALIZE_KIND);
-        if (nfixed <= *slot) {
-            *slot -= nfixed;
-            return true;
-        }
-    } else {
-         // Using special-case hackery in Shape::getChildBinding, CallObject
-         // slots are either altogether in fixed slots or altogether in dynamic
-         // slots (by having numFixed == RESERVED_SLOTS).
-         if (script->bindings.lastShape()->numFixedSlots() <= *slot) {
-             *slot -= CallObject::RESERVED_SLOTS;
-             return true;
-         }
-    }
-    return false;
-}
-
 bool
 IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
 {
-    MIRType type = oracle->aliasedVarType(script, pc);
-
-    if (type == MIRType_Null || type == MIRType_Undefined) {
-        if (type == MIRType_Null)
-            return pushConstant(NullValue());
-        return pushConstant(UndefinedValue());
-    }
+    types::TypeSet *barrier;
+    types::TypeSet *actual = oracle->aliasedVarBarrier(script, pc, &barrier);
 
     MDefinition *obj = walkScopeChain(sc.hops);
-    unsigned slot = sc.slot;
+
+    RootedShape shape(cx, ScopeCoordinateToStaticScope(script, pc).scopeShape());
 
     MInstruction *load;
-    if (InDynamicScopeSlots(script, pc, &slot)) {
+    if (shape->numFixedSlots() <= sc.slot) {
         MInstruction *slots = MSlots::New(obj);
         current->add(slots);
 
-        load = MLoadSlot::New(slots, slot);
+        load = MLoadSlot::New(slots, sc.slot - shape->numFixedSlots());
     } else {
-        load = MLoadFixedSlot::New(obj, slot);
+        load = MLoadFixedSlot::New(obj, sc.slot);
     }
-    load->setResultType(type);
+
+    if (!barrier) {
+        JSValueType type = actual->getKnownTypeTag(cx);
+        if (type != JSVAL_TYPE_UNKNOWN &&
+            type != JSVAL_TYPE_UNDEFINED &&
+            type != JSVAL_TYPE_NULL)
+        {
+            load->setResultType(MIRTypeFromValueType(type));
+        }
+    }
+
     current->add(load);
     current->push(load);
 
-    return true;
+    return pushTypeBarrier(load, actual, barrier);
 }
 
 bool
@@ -5459,15 +5441,17 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 {
     MDefinition *rval = current->peek(-1);
     MDefinition *obj = walkScopeChain(sc.hops);
-    unsigned slot = sc.slot;
+
+    RootedShape shape(cx, ScopeCoordinateToStaticScope(script, pc).scopeShape());
 
     MInstruction *store;
-    if (InDynamicScopeSlots(script, pc, &slot)) {
+    if (shape->numFixedSlots() <= sc.slot) {
         MInstruction *slots = MSlots::New(obj);
         current->add(slots);
-        store = MStoreSlot::NewBarriered(slots, slot, rval);
+
+        store = MStoreSlot::NewBarriered(slots, sc.slot - shape->numFixedSlots(), rval);
     } else {
-        store = MStoreFixedSlot::NewBarriered(obj, slot, rval);
+        store = MStoreFixedSlot::NewBarriered(obj, sc.slot, rval);
     }
 
     current->add(store);

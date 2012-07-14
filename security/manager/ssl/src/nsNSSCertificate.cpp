@@ -1334,6 +1334,10 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
         *verificationResult = ISSUER_UNKNOWN;
         break;
         
+      case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+        *verificationResult = SIGNATURE_ALGORITHM_DISABLED;
+        break;
+
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
         *verificationResult = INVALID_CA;
         break;

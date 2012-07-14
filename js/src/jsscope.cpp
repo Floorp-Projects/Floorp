@@ -278,35 +278,12 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
 {
     JS_ASSERT(!inDictionary());
 
-    Shape *shape = cx->propertyTree().getChild(cx, this, numFixedSlots(), child);
-    if (shape) {
-        //JS_ASSERT(shape->parent == this); // XXX 'this' is not rooted here
+    /* Try to allocate all slots inline. */
+    uint32_t slots = child.slotSpan();
+    gc::AllocKind kind = gc::GetGCObjectKind(slots);
+    uint32_t nfixed = gc::GetGCKindSlots(kind);
 
-        /*
-         * Update the number of fixed slots which bindings of this shape will
-         * have. Bindings are constructed as new properties come in, so the
-         * call object allocation class is not known ahead of time. Compute
-         * the fixed slot count here, which will feed into call objects created
-         * off of the bindings.
-         */
-        uint32_t slots = child.slotSpan();
-        gc::AllocKind kind = gc::GetGCObjectKind(slots);
-
-        /*
-         * Make sure that the arguments and variables in the call object all
-         * end up in a contiguous range of slots. We need this to be able to
-         * embed the args/vars arrays in the TypeScriptNesting for the function
-         * after the call object's frame has finished.
-         */
-        uint32_t nfixed = gc::GetGCKindSlots(kind);
-        if (nfixed < slots) {
-            nfixed = CallObject::RESERVED_SLOTS;
-            JS_ASSERT(gc::GetGCKindSlots(gc::GetGCObjectKind(nfixed)) == CallObject::RESERVED_SLOTS);
-        }
-
-        shape->setNumFixedSlots(nfixed);
-    }
-    return shape;
+    return cx->propertyTree().getChild(cx, this, nfixed, child);
 }
 
 /* static */ Shape *
@@ -1204,31 +1181,6 @@ Bindings::setExtensibleParents(JSContext *cx)
     if (!newShape)
         return false;
     lastBinding = newShape;
-    return true;
-}
-
-bool
-Bindings::setParent(JSContext *cx, JSObject *obj_)
-{
-    RootedObject obj(cx, obj_);
-
-    /*
-     * This may be invoked on GC heap allocated bindings, in which case this
-     * is pointing to an internal value of a JSScript that can't itself be
-     * relocated. The script itself will be rooted, and will not be moved, so
-     * mark the stack value as non-relocatable for the stack root analysis.
-     */
-    Bindings *self = this;
-    SkipRoot root(cx, &self);
-
-    if (!ensureShape(cx))
-        return false;
-
-    /* This is only used for Block objects, which have a NULL proto. */
-    Shape *newShape = Shape::setObjectParent(cx, obj, NULL, self->lastBinding);
-    if (!newShape)
-        return false;
-    self->lastBinding = newShape;
     return true;
 }
 

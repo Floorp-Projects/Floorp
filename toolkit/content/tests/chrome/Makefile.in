@@ -100,6 +100,7 @@ MOCHITEST_CHROME_FILES = 	findbar_window.xul \
 		test_popup_preventdefault.xul \
 		test_notificationbox.xul \
 		test_scale.xul \
+		test_scaledrag.xul \
 		test_radio.xul \
 		test_tabbox.xul \
 		test_progressmeter.xul \

@@ -509,7 +509,28 @@ class DeviceManager:
     success: True
     failure: False
     """
-    
+
+  @staticmethod
+  def _escapedCommandLine(cmd):
+    """ Utility function to return escaped and quoted version of command line """
+    quotedCmd = []
+
+    for arg in cmd:
+      arg.replace('&', '\&')
+
+      needsQuoting = False
+      for char in [ ' ', '(', ')', '"', '&' ]:
+        if arg.find(char) >= 0:
+          needsQuoting = True
+          break
+      if needsQuoting:
+        arg = '\'%s\'' % arg
+
+      quotedCmd.append(arg)
+
+    return " ".join(quotedCmd)
+
+
 class NetworkTools:
   def __init__(self):
     pass

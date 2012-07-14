@@ -97,7 +97,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  nsresult StartDrag(nsIDOMEvent* aEvent);
 
   static PRInt32 GetCurrentPosition(nsIContent* content);
   static PRInt32 GetMinPosition(nsIContent* content);
@@ -138,6 +138,16 @@ private:
                                   bool aIsSmooth, bool aImmediateRedraw);
   nsresult CurrentPositionChanged(nsPresContext* aPresContext,
                                   bool aImmediateRedraw);
+
+  // Get the point associated with this event. Returns true if a valid point
+  // was found. Otherwise false.
+  bool GetEventPoint(nsGUIEvent *aEvent, nsPoint &aPoint);
+
+  // Get the point associated with this touch event. Returns true if a valid point
+  // was found. False if there is more than one touch present on the page, or
+  // if a point could not be found for the given touch.
+  bool GetTouchPoint(nsTouchEvent *aEvent, nsIntPoint &aPoint);
+
   void DragThumb(bool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();

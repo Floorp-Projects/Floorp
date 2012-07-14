@@ -22,4 +22,5 @@ function run_test() {
   _("Adding without time defaults to current time");
   tracker.addChangedID(id);
   do_check_true(tracker.changedIDs[id] > 10);
+  tracker._lazySave.clear()
 }

@@ -24,6 +24,9 @@
 <!-- LOCALIZATION NOTE (tapToPlayPlugin): Mobile (used for touch interfaces) only has one type of plugin possible. -->
 <!ENTITY tapToPlayPlugin                                     "Tap here to activate plugin.">
 <!ENTITY clickToPlayPlugin                                   "Click here to activate plugin.">
+<!ENTITY clickToPlayPluginVulnerableUpdateAvailable          "Click here to activate vulnerable plugin.">
+<!ENTITY clickToPlayPluginVulnerableNoUpdate                 "Click here to activate vulnerable plugin (no update available).">
+<!ENTITY checkForUpdates                                     "Check for updates…">
 <!ENTITY disabledPlugin                                      "This plugin is disabled.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
 

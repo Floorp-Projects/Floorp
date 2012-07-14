@@ -188,10 +188,10 @@ private:
   bool EqualsRangeAtPoint(nsINode* aBeginNode, PRInt32 aBeginOffset,
                             nsINode* aEndNode, PRInt32 aEndOffset,
                             PRInt32 aRangeIndex);
-  void GetIndicesForInterval(nsINode* aBeginNode, PRInt32 aBeginOffset,
-                             nsINode* aEndNode, PRInt32 aEndOffset,
-                             bool aAllowAdjacent,
-                             PRInt32 *aStartIndex, PRInt32 *aEndIndex);
+  nsresult GetIndicesForInterval(nsINode* aBeginNode, PRInt32 aBeginOffset,
+                                 nsINode* aEndNode, PRInt32 aEndOffset,
+                                 bool aAllowAdjacent,
+                                 PRInt32* aStartIndex, PRInt32* aEndIndex);
   RangeData* FindRangeData(nsIDOMRange* aRange);
 
   // These are the ranges inside this selection. They are kept sorted in order

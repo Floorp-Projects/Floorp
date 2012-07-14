@@ -1380,7 +1380,7 @@ CodeGeneratorARM::visitImplicitThis(LImplicitThis *lir)
     // The implicit |this| is always |undefined| if the function's environment
     // is the current global.
     masm.ma_ldr(DTRAddr(callee, DtrOffImm(JSFunction::offsetOfEnvironment())), out.typeReg());
-    masm.ma_cmp(out.typeReg(), ImmGCPtr(gen->info().script()->global()));
+    masm.ma_cmp(out.typeReg(), ImmGCPtr(&gen->info().script()->global()));
 
     // TODO: OOL stub path.
     if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))

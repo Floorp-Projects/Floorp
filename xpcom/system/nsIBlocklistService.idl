@@ -9,7 +9,7 @@
 interface nsIPluginTag;
 interface nsIVariant;
 
-[scriptable, uuid(31845f85-718a-4581-a672-a45c0327cb21)]
+[scriptable, uuid(cbba15b8-316d-4ae6-8ed9-fe9cf8386730)]
 interface nsIBlocklistService : nsISupports
 {
   // Indicates that the item does not appear in the blocklist.
@@ -22,6 +22,10 @@ interface nsIBlocklistService : nsISupports
   // Indicates that the item is considered outdated, and there is a known
   // update available.
   const unsigned long STATE_OUTDATED    = 3;
+  // Indicates that the item is vulnerable and there is an update.
+  const unsigned long STATE_VULNERABLE_UPDATE_AVAILABLE = 4;
+  // Indicates that the item is vulnerable and there is no update.
+  const unsigned long STATE_VULNERABLE_NO_UPDATE = 5;
 
   /**
    * Determine if an item is blocklisted
