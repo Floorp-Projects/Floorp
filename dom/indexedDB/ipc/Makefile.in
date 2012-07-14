@@ -31,20 +31,10 @@ LOCAL_INCLUDES += \
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-MOCHITEST_FILES = test_ipc.html
-
-XPCSHELL_TESTS = unit
-
-# We're copying tests from another directory so this check is wrong for us.
-NO_XPCSHELL_MANIFEST_CHECK = 1
+MOCHITEST_FILES = \
+  test_ipc.html \
+  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
-
-# Copy all the normal xpcshell tests from the regular unit directory.
-copy-xpcshell-tests:
-	$(DIR_INSTALL) $(wildcard $(topsrcdir)/dom/indexedDB/test/unit/test_*.js) \
-    $(testxpcobjdir)/$(relativesrcdir)/$(XPCSHELL_TESTS)
-
-libs-xpcshell-tests: copy-xpcshell-tests
