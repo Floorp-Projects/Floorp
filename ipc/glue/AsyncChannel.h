@@ -208,7 +208,10 @@ protected:
 
     bool Connected() const {
         mMonitor->AssertCurrentThreadOwns();
-        return ChannelConnected == mChannelState;
+        // The transport layer allows us to send messages before
+        // receiving the "connected" ack from the remote side.
+        return (ChannelOpening == mChannelState ||
+                ChannelConnected == mChannelState);
     }
 
     // Return true if |msg| is a special message targeted at the IO
