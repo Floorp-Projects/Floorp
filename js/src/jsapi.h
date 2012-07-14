@@ -5728,6 +5728,13 @@ JS_NewDateObjectMsec(JSContext *cx, double msec);
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsDate(JSContext *cx, JSObject *obj);
 
+/*
+ * Clears the cache of calculated local time from each Date object.
+ * Call to propagate a system timezone change.
+ */
+extern JS_PUBLIC_API(void)
+JS_ClearDateCaches(JSContext *cx);
+
 /************************************************************************/
 
 /*
