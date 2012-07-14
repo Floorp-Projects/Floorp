@@ -382,7 +382,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
-    VARIANT_TIME, // used by list parsing
+    VARIANT_TIME | VARIANT_NONNEGATIVE_DIMENSION, // used by list parsing
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
@@ -2689,7 +2689,7 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
-    VARIANT_TIME, // used by list parsing
+    VARIANT_TIME | VARIANT_NONNEGATIVE_DIMENSION, // used by list parsing
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
