@@ -71,6 +71,9 @@ public:
     NS_OVERRIDE virtual PHalChild* AllocPHal();
     NS_OVERRIDE virtual bool DeallocPHal(PHalChild*);
 
+    virtual PIndexedDBChild* AllocPIndexedDB();
+    virtual bool DeallocPIndexedDB(PIndexedDBChild* aActor);
+
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequest();
 
