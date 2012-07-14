@@ -198,3 +198,5 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY bookmarkhistory_import_history "Importing history
                                          from Android">
 <!ENTITY bookmarkhistory_import_wait "Please wait...">
+
+<!ENTITY webapp_generic_name "App">

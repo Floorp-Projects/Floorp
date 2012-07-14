@@ -1079,7 +1079,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
 
   *aChanged = false;
 
-  if (eCSSProperty_UNKNOWN == aPropID) { // unknown property
+  // Check for unknown or preffed off properties
+  if (eCSSProperty_UNKNOWN == aPropID || !nsCSSProps::IsEnabled(aPropID)) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
       propName.get()
@@ -4062,7 +4063,8 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   }
 
   // Map property name to its ID and then parse the property
-  nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName);
+  nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
+                                                    nsCSSProps::eEnabled);
   if (eCSSProperty_UNKNOWN == propID) { // unknown property
     if (!NonMozillaVendorIdentifier(propertyName)) {
       const PRUnichar *params[] = {
