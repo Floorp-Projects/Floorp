@@ -36,9 +36,15 @@ public:
 
   /**
    * Constructs a gfxPattern of the paint server rendering.
+   *
+   * @param aContextMatrix The transform matrix that is currently applied to
+   *   the gfxContext that is being drawn to. This is needed by SVG patterns so
+   *   that surfaces of the correct size can be created. (SVG gradients are
+   *   vector based, so it's not used there.)
    */
   virtual already_AddRefed<gfxPattern>
     GetPaintServerPattern(nsIFrame *aSource,
+                          const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
                           const gfxRect *aOverrideBounds = nsnull) = 0;
