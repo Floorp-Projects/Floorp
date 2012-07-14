@@ -141,7 +141,7 @@ let gSyncUI = {
   },
 
   onSetupComplete: function SUI_onSetupComplete() {
-    onLoginFinish();
+    this.onLoginFinish();
   },
 
   onLoginError: function SUI_onLoginError() {

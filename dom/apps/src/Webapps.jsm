@@ -609,7 +609,7 @@ let DOMApplicationRegistry = {
   getAppById: function(aId) {
     if (!this.webapps[aId])
       return null;
-    
+
     let app = this._cloneAppObject(this.webapps[aId]);
     return app;
   },
