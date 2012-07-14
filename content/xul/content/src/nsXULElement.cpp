@@ -104,32 +104,6 @@
 
 namespace css = mozilla::css;
 
-/**
- * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.
- */
-class nsScriptEventHandlerOwnerTearoff MOZ_FINAL : public nsIScriptEventHandlerOwner
-{
-public:
-    nsScriptEventHandlerOwnerTearoff(nsXULElement* aElement)
-    : mElement(aElement) {}
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(nsScriptEventHandlerOwnerTearoff)
-
-    // nsIScriptEventHandlerOwner
-    virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                         nsIAtom *aName,
-                                         const nsAString& aBody,
-                                         const char* aURL,
-                                         PRUint32 aLineNo,
-                                         nsScriptObjectHolder<JSObject>& aHandler);
-    virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
-                                             nsScriptObjectHolder<JSObject>& aHandler);
-
-private:
-    nsRefPtr<nsXULElement> mElement;
-};
-
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
@@ -350,8 +324,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
         NS_INTERFACE_TABLE_ENTRY(nsXULElement, nsIDOMXULElement)
     NS_OFFSET_AND_INTERFACE_TABLE_END
     NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
-    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIScriptEventHandlerOwner,
-                                   new nsScriptEventHandlerOwnerTearoff(this))
     NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMElementCSSInlineStyle,
                                    new nsXULElementTearoff(this))
     NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFrameLoaderOwner,
@@ -643,130 +615,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     }
 }
 
-
 //----------------------------------------------------------------------
-// nsIScriptEventHandlerOwner interface
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptEventHandlerOwnerTearoff)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptEventHandlerOwnerTearoff)
-  tmp->mElement = nsnull;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptEventHandlerOwnerTearoff)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mElement");
-  cb.NoteXPCOMChild(static_cast<nsIContent*>(tmp->mElement));
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScriptEventHandlerOwnerTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptEventHandlerOwner)
-NS_INTERFACE_MAP_END_AGGREGATED(mElement)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsScriptEventHandlerOwnerTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsScriptEventHandlerOwnerTearoff)
-
-nsresult
-nsScriptEventHandlerOwnerTearoff::GetCompiledEventHandler(
-                                                nsIAtom *aName,
-                                                nsScriptObjectHolder<JSObject>& aHandler)
-{
-    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
-    aHandler.drop();
-
-    nsXULPrototypeAttribute *attr =
-        mElement->FindPrototypeAttribute(kNameSpaceID_None, aName);
-    if (attr) {
-        XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheHits);
-        aHandler.set(attr->mEventHandler);
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
-                                                nsIScriptContext* aContext,
-                                                nsIAtom *aName,
-                                                const nsAString& aBody,
-                                                const char* aURL,
-                                                PRUint32 aLineNo,
-                                                nsScriptObjectHolder<JSObject>& aHandler)
-{
-    nsresult rv;
-
-    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
-
-    // XXX sXBL/XBL2 issue! Owner or current document?
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->OwnerDoc());
-
-    nsIScriptContext* context = NULL;
-    nsXULPrototypeElement* elem = mElement->mPrototype;
-    if (elem && xuldoc) {
-        // It'll be shared among the instances of the prototype.
-
-        // Use the prototype document's special context.  Because
-        // scopeObject is null, the JS engine has no other source of
-        // <the-new-shared-event-handler>.__proto__ than to look in
-        // cx->globalObject for Function.prototype.  That prototype
-        // keeps the global object alive, so if we use this document's
-        // global object, we'll be putting something in the prototype
-        // that protects this document's global object from GC.
-        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-        rv = xuldoc->GetScriptGlobalObjectOwner(getter_AddRefs(globalOwner));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(globalOwner, NS_ERROR_UNEXPECTED);
-
-        nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
-        NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
-
-        context = global->GetScriptContext();
-        // It could be possible the language has been setup on aContext but
-        // not on the global - we don't demand-create language contexts on the
-        // nsGlobalWindow
-        NS_ASSERTION(context,
-                     "Failed to get a language context from the global!?");
-        NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-    }
-    else {
-        context = aContext;
-    }
-
-    // Compile the event handler
-    PRUint32 argCount;
-    const char **argNames;
-    nsContentUtils::GetEventArgNames(kNameSpaceID_XUL, aName, &argCount,
-                                     &argNames);
-
-    nsCxPusher pusher;
-    if (!pusher.Push(context->GetNativeContext())) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = context->CompileEventHandler(aName, argCount, argNames,
-                                      aBody, aURL, aLineNo,
-                                      SCRIPTVERSION_DEFAULT,  // for now?
-                                      aHandler);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXULPrototypeAttribute *attr =
-        mElement->FindPrototypeAttribute(kNameSpaceID_None, aName);
-    if (attr) {
-        XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
-        // take a copy of the event handler, and tell the language about it.
-        if (aHandler) {
-            NS_ASSERTION(!attr->mEventHandler, "Leaking handler.");
-
-            if (!elem->mHoldsScriptObject) {
-                rv = nsContentUtils::HoldJSObjects(
-                    elem, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
-
-            elem->mHoldsScriptObject = true;
-        }
-        attr->mEventHandler = aHandler.get();
-    }
-
-    return NS_OK;
-}
 
 void
 nsXULElement::AddListenerFor(const nsAttrName& aName,
