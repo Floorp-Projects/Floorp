@@ -13,34 +13,19 @@ Array.prototype.remove = function(from, to) {
 };
 
 function devicestorage_setup() {
-
-  // ensure that the directory we are writing into is empty
-  try {
-    const Cc = SpecialPowers.wrap(Components).classes;
-    const Ci = Components.interfaces;
-    var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var f = directoryService.get("TmpD", Ci.nsIFile);
-    f.appendRelativePath("device-storage-testing");
-    f.remove(true);
-  } catch(e) {}
-
   SimpleTest.waitForExplicitFinish();
-  if (SpecialPowers.isMainProcess()) {
-    try {
-      oldVal = SpecialPowers.getBoolPref("device.storage.enabled");
-    } catch(e) {}
-    SpecialPowers.setBoolPref("device.storage.enabled", true);
-    SpecialPowers.setBoolPref("device.storage.testing", true);
-    SpecialPowers.setBoolPref("device.storage.prompt.testing", true);
-  }
+  try {
+    oldVal = SpecialPowers.getBoolPref("device.storage.enabled");
+  } catch(e) {}
+  SpecialPowers.setBoolPref("device.storage.enabled", true);
+  SpecialPowers.setBoolPref("device.storage.testing", true);
+  SpecialPowers.setBoolPref("device.storage.prompt.testing", true);
 }
 
 function devicestorage_cleanup() {
-  if (SpecialPowers.isMainProcess()) {
-    SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
-    SpecialPowers.setBoolPref("device.storage.testing", false);
-    SpecialPowers.setBoolPref("device.storage.prompt.testing", false);
-  }
+  SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
+  SpecialPowers.setBoolPref("device.storage.testing", false);
+  SpecialPowers.setBoolPref("device.storage.prompt.testing", false);
   SimpleTest.finish();
 }
 
@@ -55,7 +40,7 @@ function getRandomBuffer() {
 }
 
 function createRandomBlob() {
-  return blob = new Blob([getRandomBuffer()], {type: 'binary/random'});
+ return blob = new Blob([getRandomBuffer()], {type: 'binary/random'});
 }
 
 function randomFilename(l) {
