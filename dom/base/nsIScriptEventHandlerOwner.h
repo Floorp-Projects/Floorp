@@ -3,61 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIScriptObjectOwner_h__
-#define nsIScriptObjectOwner_h__
+#ifndef nsIScriptEventHandlerOwner_h__
+#define nsIScriptEventHandlerOwner_h__
 
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
 #include "nsAString.h"
 
 template<class> class nsScriptObjectHolder;
-
-#define NS_ISCRIPTOBJECTOWNER_IID \
-{ /* 8f6bca7e-ce42-11d1-b724-00600891d8c9 */ \
-0x8f6bca7e, 0xce42, 0x11d1, \
-  {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} } \
-
-/**
- * Creates a link between the script object and its native implementation
- *<P>
- * Every object that wants to be exposed in a script environment should
- * implement this interface. This interface should guarantee that the same
- * script object is returned in the context of the same script.
- * <P><I>It does have a bit too much java script information now, that
- * should be removed in a short time. Ideally this interface will be
- * language neutral</I>
- */
-class nsIScriptObjectOwner : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTOWNER_IID)
-
-  /**
-   * Return the script object associated with this object.
-   * Create a script object if not present.
-   *
-   * @param aContext the context the script object has to be created in
-   * @param aScriptObject on return will contain the script object
-   *
-   * @return nsresult NS_OK if the script object is successfully returned
-   *
-   **/
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject) = 0;
-
-  /**
-   * Set the script object associated with this object.
-   * Often used to either reset the object to null or initially
-   * set it in cases where the object comes before the owner.
-   *
-   * @param aScriptObject the script object to set
-   *
-   * @return nsresult NS_OK if the script object is successfully set
-   *
-   **/
-  NS_IMETHOD SetScriptObject(void* aScriptObject) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectOwner,
-                              NS_ISCRIPTOBJECTOWNER_IID)
 
 class nsIAtom;
 
@@ -108,4 +61,4 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptEventHandlerOwner,
                               NS_ISCRIPTEVENTHANDLEROWNER_IID)
 
-#endif // nsIScriptObjectOwner_h__
+#endif // nsIScriptEventHandlerOwner_h__

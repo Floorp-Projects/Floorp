@@ -16,7 +16,6 @@
 #include "jsdbgapi.h"
 #include "prprf.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"

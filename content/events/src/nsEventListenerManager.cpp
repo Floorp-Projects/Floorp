@@ -40,7 +40,7 @@
 #include "nsMutationEvent.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
-#include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
+#include "nsIScriptEventHandlerOwner.h"
 #include "nsFocusManager.h"
 #include "nsIDOMElement.h"
 #include "nsContentUtils.h"
