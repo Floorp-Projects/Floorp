@@ -117,6 +117,7 @@ let webappsUI = {
           }
 
           DOMApplicationRegistry.confirmInstall(aData, false, localDir);
+          installationSuccessNotification(app, aWindow);
         } else {
           DOMApplicationRegistry.denyInstall(aData);
         }
@@ -139,5 +140,23 @@ let webappsUI = {
     aWindow.PopupNotifications.show(aBrowser, "webapps-install", message,
                                     "webapps-notification-icon", mainAction);
 
+  }
+}
+
+function installationSuccessNotification(app, aWindow) {
+  let bundle = aWindow.gNavigatorBundle;
+
+  if (("@mozilla.org/alerts-service;1" in Cc)) {
+    let notifier;
+    try {
+      notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+
+      notifier.showAlertNotification(app.iconURI.spec,
+                                    bundle.getString("webapps.install.success"),
+                                    app.appNameAsFilename,
+                                    false, null, null);
+
+    } catch (ex) {}
   }
 }
