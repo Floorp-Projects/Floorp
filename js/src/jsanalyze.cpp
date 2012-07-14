@@ -314,12 +314,17 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
-          case JSOP_GETALIASEDVAR:
-          case JSOP_CALLALIASEDVAR:
-          case JSOP_SETALIASEDVAR:
             usesScopeChain_ = true;
             isInlineable = false;
             break;
+
+          case JSOP_GETALIASEDVAR:
+          case JSOP_CALLALIASEDVAR:
+          case JSOP_SETALIASEDVAR: {
+            JS_ASSERT(!isInlineable);
+            usesScopeChain_ = true;
+            break;
+          }
 
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
