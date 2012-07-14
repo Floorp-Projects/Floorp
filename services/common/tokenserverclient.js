@@ -114,6 +114,7 @@ TokenServerClient.prototype = {
    *   key      (string) HTTP MAC shared symmetric key.
    *   endpoint (string) URL where service can be connected to.
    *   uid      (string) user ID for requested service.
+   *   duration (string) the validity duration of the issued token. 
    *
    * e.g.
    *
@@ -128,7 +129,9 @@ TokenServerClient.prototype = {
    *       return;
    *     }
    *
-   *     let {id: id, key: key, uid: uid, endpoint: endpoint} = result;
+   *     let {
+   *       id: id, key: key, uid: uid, endpoint: endpoint, duration: duration
+   *     } = result;
    *     // Do stuff with data and carry on.
    *   });
    *
