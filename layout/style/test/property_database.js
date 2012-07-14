@@ -73,8 +73,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
-		other_values: [ "1s", "250ms", "1s, 250ms, 2.3s"],
-		invalid_values: [ "0", "0px", "-1ms", "-2s" ]
+		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
+		invalid_values: [ "0", "0px" ]
 	},
 	"animation-fill-mode": {
 		domProp: "animationFillMode",
@@ -3310,8 +3310,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0s", "0ms" ],
-		other_values: [ "1s", "250ms", "1s, 250ms, 2.3s"],
-		invalid_values: [ "0", "0px", "-1ms", "-2s" ]
+		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
+		invalid_values: [ "0", "0px" ]
 	},
 	"transition-property": {
 		domProp: "transitionProperty",
