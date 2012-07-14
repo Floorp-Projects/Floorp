@@ -21,15 +21,44 @@ import android.util.SparseBooleanArray;
 
 import org.mozilla.gecko.R;
 
-class AndroidImportPreference extends DialogPreference {
+class AndroidImportPreference extends MultiChoicePreference {
     static final private String LOGTAG = "AndroidImport";
+    private static final String PREF_KEY_PREFIX = "import_android.data.";
     private Context mContext;
-    private boolean mBookmarksChecked;
-    private boolean mHistoryChecked;
 
     public AndroidImportPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
+    }
+
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        super.onDialogClosed(positiveResult);
+
+        if (!positiveResult)
+            return;
+
+        boolean bookmarksChecked = false;
+        boolean historyChecked = false;
+
+        CharSequence keys[] = getEntryKeys();
+        boolean values[] = getValues();
+
+        for (int i = 0; i < keys.length; i++) {
+            // Privacy pref checkbox values are stored in Android prefs to
+            // remember their check states. The key names are import_android.data.X
+            String key = keys[i].toString().substring(PREF_KEY_PREFIX.length());
+            boolean value = values[i];
+
+            if (key.equals("bookmarks") && value) {
+                bookmarksChecked = true;
+            }
+            if (key.equals("history") && value) {
+                historyChecked = true;
+            }
+        }
+
+        runImport(bookmarksChecked, historyChecked);
     }
 
     protected void runImport(final boolean doBookmarks, final boolean doHistory) {
@@ -72,35 +101,5 @@ class AndroidImportPreference extends DialogPreference {
                 }
             }
         );
-    }
-
-    @Override
-    protected void onPrepareDialogBuilder(Builder builder) {
-        super.onPrepareDialogBuilder(builder);
-        mBookmarksChecked = true;
-        mHistoryChecked = true;
-        builder.setMultiChoiceItems(R.array.pref_android_import_select,
-                                    new boolean[] { mBookmarksChecked, mHistoryChecked },
-            new DialogInterface.OnMultiChoiceClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog,
-                                    int which,
-                                    boolean isChecked) {
-                    Log.i(LOGTAG, "which = " + which + ", checked=" + isChecked);
-                    if (which == 0) {
-                        mBookmarksChecked = isChecked;
-                    } else if (which == 1) {
-                        mHistoryChecked = isChecked;
-                    }
-                }
-            }
-       );
-    }
-
-    @Override
-    protected void onDialogClosed(boolean positiveResult) {
-        if (!positiveResult)
-            return;
-        runImport(mBookmarksChecked, mHistoryChecked);
     }
 }

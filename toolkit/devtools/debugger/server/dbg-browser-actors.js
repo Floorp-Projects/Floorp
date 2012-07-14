@@ -287,6 +287,7 @@ BrowserTabActor.prototype = {
 
     // Watch for globals being created in this tab.
     this.browser.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    this.browser.addEventListener("pageshow", this._onWindowCreated, true);
 
     this._attached = true;
   },
@@ -339,6 +340,7 @@ BrowserTabActor.prototype = {
     }
 
     this.browser.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    this.browser.removeEventListener("pageshow", this._onWindowCreated, true);
 
     this._popContext();
 
@@ -407,6 +409,11 @@ BrowserTabActor.prototype = {
    */
   onWindowCreated: function BTA_onWindowCreated(evt) {
     if (evt.target === this.browser.contentDocument) {
+      // pageshow events for non-persisted pages have already been handled by a
+      // prior DOMWindowCreated event.
+      if (evt.type == "pageshow" && !evt.persisted) {
+        return;
+      }
       if (this._attached) {
         this.conn.send({ from: this.actorID, type: "tabNavigated",
                          url: this.browser.contentDocument.URL });

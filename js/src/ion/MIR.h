@@ -635,7 +635,7 @@ class MOsrEntry : public MNullaryInstruction
 // A constant js::Value.
 class MConstant : public MNullaryInstruction
 {
-    js::Value value_;
+    Value value_;
 
   protected:
     MConstant(const Value &v);

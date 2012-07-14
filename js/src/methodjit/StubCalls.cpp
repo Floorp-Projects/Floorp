@@ -123,7 +123,7 @@ stubs::SetElem(VMFrame &f)
 
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
-    Value rval    = regs.sp[-1];
+    RootedValue rval(cx, regs.sp[-1]);
 
     RootedId id(cx);
 
@@ -155,7 +155,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setGeneric(cx, obj, id, &rval, strict))
+    if (!obj->setGeneric(cx, obj, id, rval.address(), strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -337,13 +337,13 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     Rooted<JSObject*> parent(cx, &fp->varObj());
 
     /* ES5 10.5 (NB: with subsequent errata). */
-    PropertyName *name = fun->atom->asPropertyName();
+    RootedPropertyName name(cx, fun->atom->asPropertyName());
     RootedShape shape(cx);
     RootedObject pobj(cx);
     if (!parent->lookupProperty(cx, name, &pobj, &shape))
         THROW();
 
-    Value rval = ObjectValue(*fun);
+    RootedValue rval(cx, ObjectValue(*fun));
 
     do {
         /* Steps 5d, 5f. */
@@ -386,7 +386,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, parent, name, &rval, strict))
+        if (!parent->setProperty(cx, parent, name, rval.address(), strict))
             THROW();
     } while (false);
 }
@@ -465,8 +465,9 @@ StubEqualityOp(VMFrame &f)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
+    RootedValue rval_(cx, regs.sp[-1]);
+    RootedValue lval_(cx, regs.sp[-2]);
+    Value &rval = rval_.get(), &lval = lval_.get();
 
     bool cond;
 
@@ -575,8 +576,9 @@ stubs::Add(VMFrame &f)
 {
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
+    RootedValue rval_(cx, regs.sp[-1]);
+    RootedValue lval_(cx, regs.sp[-2]);
+    Value &rval = rval_.get(), &lval = lval_.get();
 
     /* The string + string case is easily the hottest;  try it first. */
     bool lIsString = lval.isString();
@@ -861,11 +863,11 @@ stubs::Neg(VMFrame &f)
 void JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32_t count)
 {
+    Rooted<TypeObject*> type(f.cx, (TypeObject *) f.scratch);
     RootedObject obj(f.cx, NewDenseAllocatedArray(f.cx, count));
     if (!obj)
         THROW();
 
-    TypeObject *type = (TypeObject *) f.scratch;
     if (type) {
         obj->setType(type);
     } else {
@@ -881,7 +883,7 @@ void JS_FASTCALL
 stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 {
     JSContext *cx = f.cx;
-    TypeObject *type = (TypeObject *) f.scratch;
+    Rooted<TypeObject*> type(f.cx, (TypeObject *) f.scratch);
 
     RootedObject obj(cx);
     if (baseobj) {
@@ -919,7 +921,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
     JS_ASSERT(lref.isObject());
-    JSObject *obj = &lref.toObject();
+    RootedObject obj(cx, &lref.toObject());
 
     /* Fetch id now that we have obj. */
     RootedId id(cx);
@@ -978,8 +980,8 @@ stubs::GetProp(VMFrame &f, PropertyName *name)
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
-    Value rval;
-    if (!GetPropertyOperation(cx, f.script(), f.pc(), f.regs.sp[-1], &rval))
+    RootedValue rval(cx);
+    if (!GetPropertyOperation(cx, f.script(), f.pc(), f.regs.sp[-1], rval.address()))
         THROW();
 
     regs.sp[-1] = rval;
@@ -1022,8 +1024,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
 
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.stackDepth() >= 2);
-    Value rval;
-    rval = regs.sp[-1];
+    RootedValue rval(f.cx, regs.sp[-1]);
 
     /* Load the object being initialized into lval/obj. */
     RootedObject obj(cx, &regs.sp[-2].toObject());
@@ -1033,7 +1034,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     RootedId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, rval.address(), false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();
@@ -1434,7 +1435,7 @@ stubs::In(VMFrame &f)
         THROWV(JS_FALSE);
     }
 
-    JSObject *obj = &rref.toObject();
+    RootedObject obj(cx, &rref.toObject());
     RootedId id(cx);
     if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id.address(), &f.regs.sp[-2]))
         THROWV(JS_FALSE);
@@ -1616,12 +1617,6 @@ stubs::HeavyweightFunctionPrologue(VMFrame &f)
 {
     if (!f.fp()->jitHeavyweightFunctionPrologue(f.cx))
         THROW();
-}
-
-void JS_FASTCALL
-stubs::TypeNestingPrologue(VMFrame &f)
-{
-    f.fp()->jitTypeNestingPrologue(f.cx);
 }
 
 void JS_FASTCALL

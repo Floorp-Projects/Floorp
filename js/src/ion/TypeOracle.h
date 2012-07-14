@@ -191,9 +191,6 @@ class TypeOracle
     virtual bool canEnterInlinedFunction(JSFunction *callee) {
         return false;
     }
-    virtual MIRType aliasedVarType(JSScript *script, jsbytecode *pc)  {
-        return MIRType_Value;
-    }
 
     virtual LazyArgumentsType isArgumentObject(types::TypeSet *obj) {
         return MaybeArguments;
@@ -209,6 +206,9 @@ class TypeOracle
     }
     virtual BinaryTypes incslot(JSScript *script, jsbytecode *pc) {
         return binaryTypes(script, pc);
+    }
+    virtual types::TypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::TypeSet **barrier) {
+        return NULL;
     }
 };
 
@@ -287,7 +287,7 @@ class TypeInferenceOracle : public TypeOracle
     bool canInlineCalls();
     bool canInlineCall(JSScript *caller, jsbytecode *pc);
     bool canEnterInlinedFunction(JSFunction *callee);
-    MIRType aliasedVarType(JSScript *script, jsbytecode *pc);
+    types::TypeSet *aliasedVarBarrier(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
 
     LazyArgumentsType isArgumentObject(types::TypeSet *obj);
     LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc);

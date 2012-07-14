@@ -184,6 +184,7 @@ mDocChangeRange(nsnull)
   mCachedStyles[16] = StyleCache(nsEditProperty::cssBackgroundColor, EmptyString(), EmptyString());
   mCachedStyles[17] = StyleCache(nsEditProperty::sub, EmptyString(), EmptyString());
   mCachedStyles[18] = StyleCache(nsEditProperty::sup, EmptyString(), EmptyString());
+  mRangeItem = new nsRangeStore();
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
@@ -287,17 +288,17 @@ nsHTMLEditRules::BeforeEdit(nsEditor::OperationID action,
     PRInt32 selOffset;
     res = mHTMLEditor->GetStartNodeAndOffset(selection, getter_AddRefs(selStartNode), &selOffset);
     NS_ENSURE_SUCCESS(res, res);
-    mRangeItem.startNode = selStartNode;
-    mRangeItem.startOffset = selOffset;
+    mRangeItem->startNode = selStartNode;
+    mRangeItem->startOffset = selOffset;
 
     // get the selection end location
     res = mHTMLEditor->GetEndNodeAndOffset(selection, getter_AddRefs(selEndNode), &selOffset);
     NS_ENSURE_SUCCESS(res, res);
-    mRangeItem.endNode = selEndNode;
-    mRangeItem.endOffset = selOffset;
+    mRangeItem->endNode = selEndNode;
+    mRangeItem->endOffset = selOffset;
 
     // register this range with range updater to track this as we perturb the doc
-    (mHTMLEditor->mRangeUpdater).RegisterRangeItem(&mRangeItem);
+    (mHTMLEditor->mRangeUpdater).RegisterRangeItem(mRangeItem);
 
     // clear deletion state bool
     mDidDeleteSelection = false;
@@ -361,7 +362,7 @@ nsHTMLEditRules::AfterEdit(nsEditor::OperationID action,
     res = AfterEditInner(action, aDirection);
 
     // free up selectionState range item
-    (mHTMLEditor->mRangeUpdater).DropRangeItem(&mRangeItem);
+    (mHTMLEditor->mRangeUpdater).DropRangeItem(mRangeItem);
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
@@ -453,11 +454,13 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
       NS_ENSURE_SUCCESS(res, res);
       
       // also do this for original selection endpoints. 
-      nsWSRunObject(mHTMLEditor, mRangeItem.startNode, mRangeItem.startOffset).AdjustWhitespace();
+      nsWSRunObject(mHTMLEditor, mRangeItem->startNode,
+                    mRangeItem->startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
-      if ((mRangeItem.startNode != mRangeItem.endNode) || (mRangeItem.startOffset != mRangeItem.endOffset))
-      {
-        nsWSRunObject(mHTMLEditor, mRangeItem.endNode, mRangeItem.endOffset).AdjustWhitespace();
+      if (mRangeItem->startNode != mRangeItem->endNode ||
+          mRangeItem->startOffset != mRangeItem->endOffset) {
+        nsWSRunObject(mHTMLEditor, mRangeItem->endNode,
+                      mRangeItem->endOffset).AdjustWhitespace();
       }
     }
     
@@ -494,7 +497,8 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
   }
 
   res = mHTMLEditor->HandleInlineSpellCheck(action, selection, 
-                                            mRangeItem.startNode, mRangeItem.startOffset,
+                                            mRangeItem->startNode,
+                                            mRangeItem->startOffset,
                                             rangeStartParent, rangeStartOffset,
                                             rangeEndParent, rangeEndOffset);
   NS_ENSURE_SUCCESS(res, res);
@@ -5572,7 +5576,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   
   if (!aDontTouchContent)
   {
-    nsAutoTArray<nsRangeStore, 16> rangeItemArray;
+    nsTArray<nsRefPtr<nsRangeStore> > rangeItemArray;
     if (!rangeItemArray.AppendElements(rangeCount)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5584,21 +5588,21 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     for (i = 0; i < rangeCount; i++)
     {
       opRange = inArrayOfRanges[0];
-      nsRangeStore *item = rangeItemArray.Elements() + i;
-      item->StoreRange(opRange);
-      mHTMLEditor->mRangeUpdater.RegisterRangeItem(item);
+      rangeItemArray[i] = new nsRangeStore();
+      rangeItemArray[i]->StoreRange(opRange);
+      mHTMLEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
       inArrayOfRanges.RemoveObjectAt(0);
     }    
     // now bust up inlines.  Safe to start at rangeCount-1, since we
     // asserted we have enough items above.
     for (i = rangeCount-1; i >= 0 && NS_SUCCEEDED(res); i--)
     {
-      res = BustUpInlinesAtRangeEndpoints(rangeItemArray[i]);
+      res = BustUpInlinesAtRangeEndpoints(*rangeItemArray[i]);
     } 
     // then unregister the ranges
     for (i = 0; i < rangeCount; i++)
     {
-      nsRangeStore *item = rangeItemArray.Elements() + i;
+      nsRangeStore* item = rangeItemArray[i];
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
       nsRefPtr<nsRange> range;
       nsresult res2 = item->GetRange(getter_AddRefs(range));

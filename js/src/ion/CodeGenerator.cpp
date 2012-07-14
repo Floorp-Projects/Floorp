@@ -215,8 +215,8 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 bool
 CodeGenerator::visitRegExp(LRegExp *lir)
 {
-    GlobalObject *global = gen->info().script()->global();
-    JSObject *proto = global->getOrCreateRegExpPrototype(gen->cx);
+    GlobalObject *global = &gen->info().script()->global();
+    RootedObject proto(gen->cx, global->getOrCreateRegExpPrototype(gen->cx));
 
     typedef JSObject *(*pf)(JSContext *, JSObject *, JSObject *);
     static const VMFunction CloneRegExpObjectInfo = FunctionInfo<pf>(CloneRegExpObject);
@@ -1349,9 +1349,10 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     typedef JSObject *(*pf)(JSContext *, HandleShape, HandleTypeObject, HeapSlot *, HandleObject);
     static const VMFunction NewCallObjectInfo = FunctionInfo<pf>(NewCallObject);
 
+    RootedObject global(gen->cx, gen->cx->compartment->maybeGlobal());
     RootedObject templateObj(gen->cx, lir->mir()->templateObj());
     if (lir->isCall()) {
-        pushArg(ImmGCPtr(&templateObj->global()));
+        pushArg(ImmGCPtr(global));
         if (lir->slots()->isRegister())
             pushArg(ToRegister(lir->slots()));
         else
@@ -1368,14 +1369,14 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
                         (ArgList(), ImmGCPtr(templateObj->lastProperty()),
                                     ImmGCPtr(templateObj->type()),
                                     ToRegister(lir->slots()),
-                                    ImmGCPtr(&templateObj->global())),
+                                    ImmGCPtr(global)),
                         StoreRegisterTo(obj));
     } else {
         ool = oolCallVM(NewCallObjectInfo, lir,
                         (ArgList(), ImmGCPtr(templateObj->lastProperty()),
                                     ImmGCPtr(templateObj->type()),
                                     ImmWord((void *)NULL),
-                                    ImmGCPtr(&templateObj->global())),
+                                    ImmGCPtr(global)),
                         StoreRegisterTo(obj));
     }
     if (!ool)

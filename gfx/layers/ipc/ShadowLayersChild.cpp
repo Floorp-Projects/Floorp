@@ -7,6 +7,7 @@
 
 #include "ShadowLayerChild.h"
 #include "ShadowLayersChild.h"
+#include "ShadowLayerUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -18,6 +19,31 @@ ShadowLayersChild::Destroy()
                     "layers should have been cleaned up by now");
   PLayersChild::Send__delete__(this);
   // WARNING: |this| has gone to the great heap in the sky
+}
+
+PGrallocBufferChild*
+ShadowLayersChild::AllocPGrallocBuffer(const gfxIntSize&,
+                                       const gfxContentType&,
+                                       MaybeMagicGrallocBufferHandle*)
+{
+#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  return GrallocBufferActor::Create();
+#else
+  NS_RUNTIMEABORT("No gralloc buffers for you");
+  return nsnull;
+#endif
+}
+
+bool
+ShadowLayersChild::DeallocPGrallocBuffer(PGrallocBufferChild* actor)
+{
+#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  delete actor;
+  return true;
+#else
+  NS_RUNTIMEABORT("Um, how did we get here?");
+  return false;
+#endif
 }
 
 PLayerChild*

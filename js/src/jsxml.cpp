@@ -1717,7 +1717,7 @@ GetCurrentScopeChain(JSContext *cx)
 }
 
 static JSXML *
-ParseXMLSource(JSContext *cx, JSString *src)
+ParseXMLSource(JSContext *cx, HandleString src)
 {
     jsval nsval;
     JSLinearString *uri;
@@ -1856,7 +1856,7 @@ ToXML(JSContext *cx, jsval v)
     JSObject *obj;
     JSXML *xml;
     Class *clasp;
-    JSString *str;
+    RootedString str(cx);
     uint32_t length;
 
     if (JSVAL_IS_PRIMITIVE(v)) {
@@ -1937,7 +1937,7 @@ ToXMLList(JSContext *cx, jsval v)
     JSObject *obj, *listobj;
     JSXML *xml, *list, *kid;
     Class *clasp;
-    JSString *str;
+    RootedString str(cx);
     uint32_t i, length;
 
     if (JSVAL_IS_PRIMITIVE(v)) {

@@ -15,4 +15,8 @@ ifdef ENABLE_MARIONETTE
             $(NULL)
 endif
 
+ifdef ENABLE_TESTS
+    DEFINES += -DENABLE_TESTS
+endif
+
 include $(topsrcdir)/config/rules.mk

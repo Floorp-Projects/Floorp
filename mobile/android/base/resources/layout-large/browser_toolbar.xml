@@ -15,7 +15,7 @@
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="84dip"
                      android:layout_alignParentLeft="true"
-                     android:background="@drawable/tabs_button"
+                     android:background="@drawable/tabs_crop_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
                      android:paddingLeft="6dip"
@@ -30,22 +30,13 @@
                      android:gravity="center_horizontal"/>
 
         <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="56dip"
-                     android:layout_alignParentRight="true"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu"
-                     android:contentDescription="@string/menu"
-                     android:background="@drawable/action_bar_button"
-                     android:paddingLeft="14dip"
-                     android:paddingRight="14dip"
-                     android:visibility="gone"/>
+                     style="@style/AddressBar.ImageButton.Unused"/>
 
         <LinearLayout android:id="@+id/menu_items"
                       android:layout_width="wrap_content"
                       android:layout_height="fill_parent"
                       android:orientation="horizontal"
-                      android:layout_toLeftOf="@id/menu"/>
+                      android:layout_alignParentRight="true"/>
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
