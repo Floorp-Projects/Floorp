@@ -150,6 +150,7 @@ public:
     
         void OnCloseChannel();
         void OnChannelOpened();
+        void OnTakeConnectedChannel();
         void OnEchoMessage(Message* msg);
 
         void AssertIOThread() const
