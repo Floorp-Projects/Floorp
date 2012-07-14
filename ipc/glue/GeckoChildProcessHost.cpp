@@ -254,7 +254,9 @@ bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs, base::ProcessArchitecture arch)
 {
 #ifdef MOZ_CRASHREPORTER
-  CrashReporter::OOPInit();
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
 #endif
 
 #ifdef XP_WIN
@@ -299,7 +301,9 @@ bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
 #ifdef MOZ_CRASHREPORTER
-  CrashReporter::OOPInit();
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
 #endif
 
 #ifdef XP_WIN
