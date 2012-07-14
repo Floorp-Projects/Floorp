@@ -194,115 +194,162 @@ AitcStorageImpl.prototype = {
     // _processApps will check for the validity of remoteApps.
     DOMApplicationRegistry.getAllWithoutManifests(
       function _processAppsGotLocalApps(localApps) {
-        self._processApps(remoteApps, localApps, callback);
+        let changes = self._determineLocalChanges(localApps, remoteApps);
+        self._processChanges(changes, callback);
       }
     );
   },
 
   /**
-   * Take a list of remote and local apps and figured out what changes (if any)
-   * are to be made to the local DOMApplicationRegistry.
+   * Determine the set of changes needed to reconcile local with remote data.
    *
-   * General algorithm:
-   *  1. Put all remote apps in a dictionary of origin->app.
-   *  2. Put all local apps in a dictionary of origin->app.
-   *  3. Mark all local apps as "to be deleted".
-   *  4. Go through each remote app:
-   *    4a. If remote app is not marked as hidden, remove from the "to be
-   *        deleted" set.
-   *    4b. If remote app is marked as hidden, but isn't present locally,
-   *        process the next remote app.
-   *    4c. If remote app is not marked as hidden and isn't present locally,
-   *        add to the "to be installed" set.
-   *  5. For each app either in the "to be installed" or "to be deleted" set,
-   *     apply the changes locally. For apps to be installed, we must also
-   *     fetch the manifest.
+   * The return value is a mapping describing the actions that need to be
+   * performed. It has the following keys:
    *
+   *   deleteIDs
+   *     (Array) String app IDs of applications that need to be uninstalled.
+   *   installs
+   *     (Object) Maps app ID to the remote app record. The app ID may exist
+   *       locally. If the app did not exist previously, a new ID will be
+   *       generated and used here.
+   *
+   * @param localApps
+   *        (Object) Mapping of App ID to minimal application record (from
+   *        DOMApplicationRegistry.getAllWithoutManifests()).
+   * @param remoteApps
+   *        (Array) Application records from the server.
    */
-  _processApps: function _processApps(remoteApps, lApps, callback) {
-    let toDelete = {};
-    let localApps = {};
+  _determineLocalChanges: function _determineChanges(localApps, remoteApps) {
+    let changes = new Map();
+    changes.deleteIDs = [];
+    changes.installs  = {};
 
-    // If remoteApps is empty, do nothing. The correct thing to do is to
-    // delete all local apps, but we'll play it safe for now since we are
-    // marking apps as deleted anyway. In a subsequent version (when the
-    // hidden flag is no longer in use), this check can be removed.
+    // If there are no remote apps, do nothing.
+    //
+    // Arguably, the correct thing to do is to delete all local apps. The
+    // server is the authoritative source, after all. But, we play it safe.
     if (!Object.keys(remoteApps).length) {
-      this._log.warn("Empty set of remote apps to _processApps, returning");
-      callback();
-      return;
+      this._log.warn("Empty set of remote apps. Not taking any action.");
+      return changes;
     }
 
-    // Convert lApps to a dictionary of origin -> app (instead of id -> app).
-    for (let [id, app] in Iterator(lApps)) {
-      app.id = id;
-      toDelete[app.origin] = app;
-      localApps[app.origin] = app;
+    // This is all to avoid potential duplicates. Once JS Sets are iterable, we
+    // should switch everything to use them.
+    let deletes       = {};
+    let remoteOrigins = {};
+
+    let localOrigins = {};
+    for (let [id, app] in Iterator(localApps)) {
+      localOrigins[app.origin] = id;
     }
 
-    // Iterate over remote apps, and find out what changes we must apply.
-    let toInstall = [];
-    for each (let app in remoteApps) {
-      // Don't delete apps that are both local & remote.
-      let origin = app.origin;
-      if (!app.hidden) {
-        delete toDelete[origin];
-      }
+    for (let remoteApp of remoteApps) {
+      let origin = remoteApp.origin;
+      remoteOrigins[origin] = true;
 
-      // A remote app that was hidden, but also isn't present locally is NOP.
-      if (app.hidden && !localApps[origin]) {
+      // If the app is hidden on the remote server, that translates to a local
+      // delete/uninstall, but only if the app is present locally.
+      if (remoteApp.hidden) {
+        if (origin in localOrigins) {
+          deletes[localOrigins[origin]] = true;
+        }
+
         continue;
       }
 
-      // If there is a remote app that isn't local or if the remote app was
-      // installed or updated later.
-      let id;
+      // If the remote app isn't present locally, we install it under a
+      // newly-generated ID.
       if (!localApps[origin]) {
-        id = DOMApplicationRegistry.makeAppId();
-      }
-      if (localApps[origin] &&
-          (localApps[origin].installTime < app.installTime)) {
-        id = localApps[origin].id;
+        changes.installs[DOMApplicationRegistry.makeAppId()] = remoteApp;
+        continue;
       }
 
-      // We should (re)install this app locally
-      if (id) {
-        toInstall.push({id: id, value: app});
+      // If the remote app is newer, we force a re-install using the existing
+      // ID.
+      if (localApps[origin].installTime < remoteApp.installTime) {
+        changes.installs[localApps[origin]] = remoteApp;
+        continue;
       }
     }
 
-    // Uninstalls only need the ID & hidden flag.
-    let toUninstall = [];
-    for (let origin in toDelete) {
-      toUninstall.push({id: toDelete[origin].id, hidden: true});
+    // If we have local apps not on the server, we need to delete them, as the
+    // server is authoritative.
+    for (let [id, app] in Iterator(localApps)) {
+      if (!(app.origin in remoteOrigins)) {
+        deletes[id] = true;
+      }
     }
 
-    // Apply uninstalls first, we do not need to fetch manifests.
-    if (toUninstall.length) {
-      this._log.info("Applying uninstalls to registry");
+    changes.deleteIDs = Object.keys(deletes);
 
-      let self = this;
-      DOMApplicationRegistry.updateApps(toUninstall, function() {
-        // If there are installs, proceed to apply each on in parallel. 
-        if (toInstall.length) {
-          self._applyInstalls(toInstall, callback);
-          return;
+    return changes;
+  },
+
+  /**
+   * Process changes so local client is in sync with server.
+   *
+   * This takes the output from _determineLocalChanges() and applies it.
+   *
+   * The supplied callback is invoked with no arguments when all operations
+   * have completed.
+   */
+  _processChanges: function _processChanges(changes, cb) {
+
+    if (!changes.deleteIDs.length && !Object.keys(changes.installs).length) {
+      this._log.info("No changes to be applied.");
+      cb();
+      return;
+    }
+
+    // First, we assemble all the changes in the right format.
+    let installs = [];
+    for (let [id, record] in Iterator(changes.installs)) {
+      installs.push({id: id, value: record});
+    }
+
+    let uninstalls = [];
+    for (let id of changes.deleteIDs) {
+      this._log.info("Uninstalling app: " + id);
+      uninstalls.push({id: id, hidden: true});
+    }
+
+    // Now we need to perform actions.
+    //
+    // We want to perform all the uninstalls followed by all the installs.
+    // However, this is somewhat complicated because uninstalls are
+    // asynchronous and there may not even be any uninstalls. So, we simply
+    // define a clojure to invoke installation and we call it whenever we're
+    // ready.
+    let doInstalls = function doInstalls() {
+      if (!installs.length) {
+        if (cb) {
+          try {
+            cb();
+          } catch (ex) {
+            this._log.warn("Exception when invoking callback: " +
+                           CommonUtils.exceptionStr(ex));
+          } finally {
+            cb = null;
+          }
         }
-        callback();
+        return;
+      }
+
+      this._applyInstalls(installs, cb);
+
+      // Prevent double invoke, just in case.
+      installs = [];
+      cb       = null;
+    }.bind(this);
+
+    if (uninstalls.length) {
+      DOMApplicationRegistry.updateApps(uninstalls, function onComplete() {
+        doInstalls();
+        return;
       });
-
-      return;
+    } else {
+      doInstalls();
     }
-
-    // If there were no uninstalls, only apply installs
-    if (toInstall.length) {
-      this._applyInstalls(toInstall, callback);
-      return;
-    }
-
-    this._log.info("There were no changes to be applied, returning");
-    callback();
-    return;
   },
 
   /**

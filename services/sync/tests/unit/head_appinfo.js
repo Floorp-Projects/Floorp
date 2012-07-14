@@ -1,6 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+
 let gSyncProfile;
 
-do_load_httpd_js();
 gSyncProfile = do_get_profile();
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
