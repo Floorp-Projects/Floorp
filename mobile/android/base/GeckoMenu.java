@@ -21,13 +21,13 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
-public class GeckoMenu extends LinearLayout 
-                       implements Menu, GeckoMenuItem.OnShowAsActionChangedListener {
+final class GeckoMenu extends LinearLayout
+                      implements Menu, GeckoMenuItem.OnShowAsActionChangedListener {
     private static final String LOGTAG = "GeckoMenu";
 
     private Context mContext;
 
-    public static interface ActionItemBarPresenter {
+    public interface ActionItemBarPresenter {
         public void addActionItem(View actionItem);
         public void removeActionItem(int index);
         public int getActionItemsCount();

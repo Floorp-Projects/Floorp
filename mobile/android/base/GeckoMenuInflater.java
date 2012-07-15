@@ -23,8 +23,8 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 
-public class GeckoMenuInflater extends MenuInflater 
-                               implements MenuItem.OnMenuItemClickListener {
+final class GeckoMenuInflater extends MenuInflater
+                              implements MenuItem.OnMenuItemClickListener {
     private static final String LOGTAG = "GeckoMenuInflater";
 
     private static final String TAG_ITEM = "item";
@@ -32,8 +32,8 @@ public class GeckoMenuInflater extends MenuInflater
 
     private Context mContext;
 
-    // Private class to hold the parsed menu item. 
-    private class ParsedItem {
+    // Private class to hold the parsed menu item.
+    private static final class ParsedItem {
         public int id;
         public int order;
         public CharSequence title;

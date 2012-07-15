@@ -522,7 +522,7 @@ abstract public class GeckoApp
     }
 
     // MenuPanel holds the scrollable Menu
-    public static class MenuPanel extends ScrollView {
+    public static final class MenuPanel extends ScrollView {
         public MenuPanel(Context context, AttributeSet attrs) {
             super(context, attrs);
             setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -2063,7 +2063,7 @@ abstract public class GeckoApp
     abstract public String getDefaultUAString();
     abstract public String getUAStringForHost(String host);
 
-    class RedirectorRunnable implements Runnable {
+    private final class RedirectorRunnable implements Runnable {
         Intent mIntent;
         RedirectorRunnable(Intent intent) {
             mIntent = intent;
@@ -2867,8 +2867,7 @@ abstract public class GeckoApp
         return false;
     }
 
-    private class FullScreenHolder extends FrameLayout {
-
+    private final class FullScreenHolder extends FrameLayout {
         public FullScreenHolder(Context ctx) {
             super(ctx);
         }
@@ -3000,7 +2999,7 @@ abstract public class GeckoApp
     }
 
     // SDK version 15 accessibility methods retrieved through reflection.
-    private static class AccessibilityCompat {
+    private static final class AccessibilityCompat {
         private static boolean mInitialized = false;
         private static Method mAccessibilityEvent_setMaxScrollX = null;
         private static Method mAccessibilityEvent_setMaxScrollY = null;

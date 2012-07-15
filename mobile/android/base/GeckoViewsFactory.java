@@ -11,7 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
-public final class GeckoViewsFactory implements LayoutInflater.Factory {
+final class GeckoViewsFactory implements LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoViewsFactory";
 
     private static final String GECKO_VIEW_IDENTIFIER = "org.mozilla.gecko.";

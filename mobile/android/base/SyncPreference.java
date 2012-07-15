@@ -17,7 +17,7 @@ import android.util.Log;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 
-class SyncPreference extends Preference {
+final class SyncPreference extends Preference {
     private Context mContext;
 
     public SyncPreference(Context context, AttributeSet attrs) {

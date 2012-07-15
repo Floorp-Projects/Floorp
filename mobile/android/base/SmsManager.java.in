@@ -9,8 +9,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.GeckoSmsManager;
 #endif
 
-class SmsManager
-{
+final class SmsManager {
   static private ISmsManager sInstance = null;
 
   static public ISmsManager getInstance() {

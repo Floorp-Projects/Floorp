@@ -19,7 +19,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.db.BrowserDB;
 
-class GlobalHistory {
+final class GlobalHistory {
     private static final String LOGTAG = "GeckoGlobalHistory";
 
     private static GlobalHistory sInstance = new GlobalHistory();

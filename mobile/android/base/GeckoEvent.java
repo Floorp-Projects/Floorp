@@ -35,7 +35,7 @@ import android.util.Log;
 /* This class is referenced by Robocop via reflection; use care when 
  * modifying the signature.
  */
-public class GeckoEvent {
+public final class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
     private static final int INVALID = -1;

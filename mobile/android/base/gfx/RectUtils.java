@@ -14,6 +14,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class RectUtils {
+    private RectUtils() {}
+
     public static Rect create(JSONObject json) {
         try {
             int x = json.getInt("x");

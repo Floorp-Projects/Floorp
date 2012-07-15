@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.app.Application;
 
-public class GeckoApplication extends Application {
-
+public final class GeckoApplication extends Application {
     private boolean mInBackground = false;
     private ArrayList<ApplicationLifecycleCallbacks> mListeners;
 

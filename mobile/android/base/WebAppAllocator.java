@@ -12,7 +12,7 @@ import android.content.SharedPreferences;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-public class WebAppAllocator {
+public final class WebAppAllocator {
     // The number of WebApp# and WEBAPP# activites/apps/intents
     private final static int MAX_WEB_APPS = 100;
 

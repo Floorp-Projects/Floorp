@@ -34,7 +34,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class GeckoPreferences
+public final class GeckoPreferences
     extends PreferenceActivity
     implements OnPreferenceChangeListener, GeckoEventListener
 {
@@ -181,7 +181,7 @@ public class GeckoPreferences
         return input;
     }
 
-    private class PasswordTextWatcher implements TextWatcher {
+    private static final class PasswordTextWatcher implements TextWatcher {
         EditText input1 = null;
         EditText input2 = null;
         AlertDialog dialog = null;

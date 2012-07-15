@@ -24,7 +24,7 @@ import org.json.JSONException;
  * SiteIdentityPopup is a singleton class that displays site identity data in
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
-public class SiteIdentityPopup extends PopupWindow {
+final class SiteIdentityPopup extends PopupWindow {
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
     public static final String UNKNOWN = "unknown";
@@ -50,7 +50,7 @@ public class SiteIdentityPopup extends PopupWindow {
         mInflated = false;
     }
 
-    private static class InstanceHolder {
+    private static final class InstanceHolder {
         private static final SiteIdentityPopup INSTANCE = new SiteIdentityPopup();
     }
 

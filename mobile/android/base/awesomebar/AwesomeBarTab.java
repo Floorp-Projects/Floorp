@@ -28,7 +28,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 
-abstract public class AwesomeBarTab {
+abstract class AwesomeBarTab {
     abstract public String getTag();
     abstract public int getTitleStringId();
     abstract public void destroy();
@@ -53,7 +53,7 @@ abstract public class AwesomeBarTab {
         mListListener = listener;
     }
 
-    protected class AwesomeEntryViewHolder {
+    protected static final class AwesomeEntryViewHolder {
         public TextView titleView;
         public TextView urlView;
         public ImageView faviconView;

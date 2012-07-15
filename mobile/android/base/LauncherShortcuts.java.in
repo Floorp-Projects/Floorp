@@ -26,9 +26,7 @@ import android.view.*;
 import android.net.Uri;
 import android.graphics.*;
 
-
-public class LauncherShortcuts extends Activity {
-
+public final class LauncherShortcuts extends Activity {
     private ArrayList <HashMap<String, String>> mWebappsList;
     private File mWebappsFolder;
 
@@ -109,7 +107,7 @@ public class LauncherShortcuts extends Activity {
         finish();
     }
     
-    private class FetchWebApps extends AsyncTask<Void, Void, Void> {
+    private final class FetchWebApps extends AsyncTask<Void, Void, Void> {
         
         @Override
         protected Void doInBackground(Void... unused) {

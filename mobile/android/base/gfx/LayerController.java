@@ -26,7 +26,7 @@ import android.view.View.OnTouchListener;
  *
  * Many methods require that the monitor be held, with a synchronized (controller) { ... } block.
  */
-public class LayerController {
+public final class LayerController {
     private static final String LOGTAG = "GeckoLayerController";
 
     private Layer mRootLayer;                   /* The root layer. */

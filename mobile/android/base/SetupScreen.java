@@ -15,8 +15,7 @@ import android.widget.ImageView;
 
 import org.mozilla.gecko.R;
 
-public class SetupScreen extends Dialog
-{
+final class SetupScreen extends Dialog {
     private static final String LOGTAG = "SetupScreen";
     private AnimationDrawable mProgressSpinner;
 

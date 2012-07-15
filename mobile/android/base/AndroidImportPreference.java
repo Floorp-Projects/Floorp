@@ -21,8 +21,8 @@ import android.util.SparseBooleanArray;
 
 import org.mozilla.gecko.R;
 
-class AndroidImportPreference extends MultiChoicePreference {
-    static final private String LOGTAG = "AndroidImport";
+final class AndroidImportPreference extends MultiChoicePreference {
+    private static final String LOGTAG = "AndroidImport";
     private static final String PREF_KEY_PREFIX = "import_android.data.";
     private Context mContext;
 
