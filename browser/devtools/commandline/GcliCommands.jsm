@@ -141,6 +141,7 @@ function loadCommandFile(aFile, aSandboxPrincipal) {
 gcli.addCommand({
   name: "cmd",
   description: gcli.lookup("cmdDesc"),
+  hidden: true
 });
 
 /**
@@ -149,6 +150,7 @@ gcli.addCommand({
 gcli.addCommand({
   name: "cmd refresh",
   description: gcli.lookup("cmdRefreshDesc"),
+  hidden: true,
   exec: function Command_cmdRefresh(args, context) {
     GcliCommands.refreshAutoCommands(context.environment.chromeDocument.defaultView);
   }
@@ -168,6 +170,7 @@ gcli.addCommand({
     }
   ],
   returnType: "string",
+  hidden: true,
   exec: function Command_echo(args, context) {
     return args.message;
   }
@@ -1429,6 +1432,7 @@ gcli.addCommand({
   name: 'jsb',
   description: gcli.lookup('jsbDesc'),
   returnValue:'string',
+  hidden: true,
   params: [
     {
       name: 'url',
