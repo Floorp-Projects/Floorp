@@ -3084,6 +3084,18 @@ BeginMarkPhase(JSRuntime *rt, bool isIncremental)
 {
     int64_t currentTime = PRMJ_Now();
 
+    /*
+     * At the end of each incremental slice, we call prepareForIncrementalGC,
+     * which marks objects in all arenas that we're currently allocating
+     * into. This can cause leaks if unreachable objects are in these
+     * arenas. This purge call ensures that we only mark arenas that have had
+     * allocations after the incremental GC started.
+     */
+    if (isIncremental) {
+        for (GCCompartmentsIter c(rt); !c.done(); c.next())
+            c->arenas.purge();
+    }
+
     rt->gcIsFull = true;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (!c->isCollecting())
