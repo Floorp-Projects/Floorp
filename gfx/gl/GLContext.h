@@ -1726,7 +1726,12 @@ protected:
         GLsizei samples;
     };
 
-    GLFormats ChooseGLFormats(ContextFormat& aCF);
+    enum ColorByteOrder {
+      ForceRGBA,
+      DefaultByteOrder
+    };
+
+    GLFormats ChooseGLFormats(ContextFormat& aCF, GLContext::ColorByteOrder aByteOrder = GLContext::DefaultByteOrder);
     void CreateTextureForOffscreen(const GLFormats& aFormats, const gfxIntSize& aSize,
                                    GLuint& texture);
     void CreateRenderbuffersForOffscreen(const GLContext::GLFormats& aFormats, const gfxIntSize& aSize,
