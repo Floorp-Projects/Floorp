@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 final class GeckoMessageReceiver extends BroadcastReceiver {
     @Override

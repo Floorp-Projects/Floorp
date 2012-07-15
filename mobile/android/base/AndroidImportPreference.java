@@ -5,21 +5,10 @@
 
 package org.mozilla.gecko;
 
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.preference.DialogPreference;
-import android.preference.ListPreference;
-import android.preference.Preference;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.SparseBooleanArray;
-
-import org.mozilla.gecko.R;
 
 final class AndroidImportPreference extends MultiChoicePreference {
     private static final String LOGTAG = "AndroidImport";

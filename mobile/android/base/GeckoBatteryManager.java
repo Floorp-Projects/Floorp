@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.lang.Math;
-import java.util.Date;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
