@@ -32,7 +32,7 @@ import java.util.Stack;
  *
  *   - It doesn't take pressure into account, which results in smoother scaling.
  */
-public class SimpleScaleGestureDetector {
+public final class SimpleScaleGestureDetector {
     private static final String LOGTAG = "GeckoSimpleScaleGestureDetector";
 
     private SimpleScaleGestureListener mListener;
@@ -230,7 +230,7 @@ public class SimpleScaleGestureDetector {
     }
 
     /* Encapsulates information about one of the two fingers involved in the gesture. */
-    private static class PointerInfo {
+    private static final class PointerInfo {
         /* A free list that recycles pointer info objects, to reduce GC pauses. */
         private static Stack<PointerInfo> sPointerInfoFreeList;
 
@@ -301,10 +301,9 @@ public class SimpleScaleGestureDetector {
         }
     }
 
-    public static interface SimpleScaleGestureListener {
-        public boolean onScale(SimpleScaleGestureDetector detector);
-        public boolean onScaleBegin(SimpleScaleGestureDetector detector);
-        public void onScaleEnd(SimpleScaleGestureDetector detector);
+    public interface SimpleScaleGestureListener {
+        boolean onScale(SimpleScaleGestureDetector detector);
+        boolean onScaleBegin(SimpleScaleGestureDetector detector);
+        void onScaleEnd(SimpleScaleGestureDetector detector);
     }
 }
-

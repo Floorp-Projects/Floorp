@@ -13,7 +13,7 @@ import android.graphics.RectF;
  * in way that we can access a version of them from multiple threads
  * without having to take a lock
  */
-public class ImmutableViewportMetrics {
+public final class ImmutableViewportMetrics {
 
     // We need to flatten the RectF and FloatSize structures
     // because Java doesn't have the concept of const classes

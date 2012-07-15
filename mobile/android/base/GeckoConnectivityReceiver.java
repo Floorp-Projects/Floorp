@@ -14,7 +14,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
-public class GeckoConnectivityReceiver extends BroadcastReceiver {
+final class GeckoConnectivityReceiver extends BroadcastReceiver {
     /*
      * Keep the below constants in sync with
      * http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl

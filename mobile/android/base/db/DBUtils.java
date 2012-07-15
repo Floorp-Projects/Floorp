@@ -19,10 +19,10 @@ import java.util.UUID;
 
 import java.util.Random;
 
-public class DBUtils {
+public final class DBUtils {
     private static final String LOGTAG = "GeckoDBUtils";
 
-    public static final String qualifyColumn(String table, String column) {
+    public static String qualifyColumn(String table, String column) {
         return table + "." + column;
     }
 

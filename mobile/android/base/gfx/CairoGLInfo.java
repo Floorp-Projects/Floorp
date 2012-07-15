@@ -8,7 +8,7 @@ package org.mozilla.gecko.gfx;
 import javax.microedition.khronos.opengles.GL10;
 
 /** Information needed to render Cairo bitmaps using OpenGL ES. */
-public class CairoGLInfo {
+final class CairoGLInfo {
     public final int internalFormat;
     public final int format;
     public final int type;
@@ -32,4 +32,3 @@ public class CairoGLInfo {
         }
     }
 }
-

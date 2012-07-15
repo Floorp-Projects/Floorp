@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 import java.util.HashMap;
 import java.util.Map;
 
-class ActivityResultHandlerMap {
+final class ActivityResultHandlerMap {
     private Map<Integer, ActivityResultHandler> mMap = new HashMap<Integer, ActivityResultHandler>();
     private int mCounter = 0;
 

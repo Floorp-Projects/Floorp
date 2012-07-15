@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.mozilla.gecko.gfx.GfxInfoThread;
 
-public class GeckoThread extends Thread {
+final class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
 
     Intent mIntent;

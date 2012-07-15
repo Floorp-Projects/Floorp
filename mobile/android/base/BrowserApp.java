@@ -61,7 +61,7 @@ import android.content.pm.*;
 import android.content.pm.PackageManager.*;
 import dalvik.system.*;
 
-abstract public class BrowserApp extends GeckoApp
+public abstract class BrowserApp extends GeckoApp
                                  implements TabsPanel.TabsLayoutChangeListener,
                                             PropertyAnimator.PropertyAnimationListener {
     private static final String LOGTAG = "GeckoBrowserApp";
@@ -509,7 +509,7 @@ abstract public class BrowserApp extends GeckoApp
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public class AboutHomeRunnable implements Runnable {
+    private final class AboutHomeRunnable implements Runnable {
         boolean mShow;
         AboutHomeRunnable(boolean show) {
             mShow = show;

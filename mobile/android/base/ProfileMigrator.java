@@ -65,7 +65,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-public class ProfileMigrator {
+public final class ProfileMigrator {
     private static final String LOGTAG = "ProfileMigrator";
     private static final String PREFS_NAME = "ProfileMigrator";
     private ContentResolver mCr;
@@ -432,8 +432,7 @@ public class ProfileMigrator {
         setBooleanPrefTrue(PREFS_MIGRATE_MOVE_PROFILE_DONE);
     }
 
-    private class MoveProfileTask implements Runnable {
-
+    private final class MoveProfileTask implements Runnable {
         protected void moveProfilesToAppInstallLocation() {
             if (Build.VERSION.SDK_INT >= 8) {
                 // if we're on API >= 8, it's possible that
@@ -544,7 +543,7 @@ public class ProfileMigrator {
         }
     }
 
-    private class SyncTask implements Runnable, GeckoEventListener {
+    private final class SyncTask implements Runnable, GeckoEventListener {
         private List<String> mSyncSettingsList;
         private Map<String, String> mSyncSettingsMap;
 
@@ -734,7 +733,7 @@ public class ProfileMigrator {
         }
     }
 
-    private class MiscTask implements Runnable {
+    private final class MiscTask implements Runnable {
         protected void cleanupXULLibCache() {
             File cacheFile = GeckoAppShell.getCacheDir(mContext);
             File[] files = cacheFile.listFiles();
@@ -756,7 +755,7 @@ public class ProfileMigrator {
         }
     }
 
-    private class PlacesRunnable implements Runnable {
+    private final class PlacesRunnable implements Runnable {
         private File mProfileDir;
         private Map<Long, Long> mRerootMap;
         private Long mTagsPlacesFolderId;

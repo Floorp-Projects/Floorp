@@ -11,7 +11,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 
-public class CustomEditText extends EditText {
+final class CustomEditText extends EditText {
     public CustomEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         mOnKeyPreImeListener = null;

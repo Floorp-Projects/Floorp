@@ -22,7 +22,7 @@ import java.nio.IntBuffer;
 /**
  * Draws text on a layer. This is used for the frame rate meter.
  */
-public class TextLayer extends SingleTileLayer {
+final class TextLayer extends SingleTileLayer {
     private final ByteBuffer mBuffer;   // this buffer is owned by the BufferedCairoImage
     private final IntSize mSize;
 
@@ -70,4 +70,3 @@ public class TextLayer extends SingleTileLayer {
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 }
-

@@ -22,7 +22,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
-class ActivityHandlerHelper {
+final class ActivityHandlerHelper {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
 
     private final SynchronousQueue<String> mFilePickerResult;
@@ -222,7 +222,7 @@ class ActivityHandlerHelper {
      * The FilePickerPromptRunnable has to be called to show an intent-like
      * context menu UI using the PromptService.
      */
-    private static class FilePickerPromptRunnable implements Runnable {
+    private static final class FilePickerPromptRunnable implements Runnable {
         private final String mTitle;
         private final PromptService.PromptListItem[] mItems;
 

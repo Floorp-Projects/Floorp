@@ -59,7 +59,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.text.TextUtils;
 
-public class AboutHomeContent extends ScrollView
+final class AboutHomeContent extends ScrollView
        implements TabsAccessor.OnQueryTabsCompleteListener {
     private static final String LOGTAG = "GeckoAboutHome";
 
@@ -626,7 +626,7 @@ public class AboutHomeContent extends ScrollView
         mRemoteTabs.show();
     }
 
-    public static class TopSitesGridView extends GridView {
+    private static final class TopSitesGridView extends GridView {
         /** From layout xml:
          *  80dip image height 
          * + 2dip image paddingTop
@@ -676,7 +676,7 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
-    public class TopSitesCursorAdapter extends SimpleCursorAdapter {
+    private final class TopSitesCursorAdapter extends SimpleCursorAdapter {
         public TopSitesCursorAdapter(Context context, int layout, Cursor c,
                                      String[] from, int[] to) {
             super(context, layout, c, from, to);
@@ -695,7 +695,7 @@ public class AboutHomeContent extends ScrollView
         }
     }
 
-    class TopSitesViewBinder implements SimpleCursorAdapter.ViewBinder {
+    private static final class TopSitesViewBinder implements SimpleCursorAdapter.ViewBinder {
         private boolean updateThumbnail(View view, Cursor cursor, int thumbIndex) {
             byte[] b = cursor.getBlob(thumbIndex);
             ImageView thumbnail = (ImageView) view;

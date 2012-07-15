@@ -30,7 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FormAssistPopup extends RelativeLayout implements GeckoEventListener {
+public final class FormAssistPopup extends RelativeLayout implements GeckoEventListener {
     private Context mContext;
     private Animation mAnimation; 
 
@@ -297,7 +297,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         }
     }
 
-    private class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
+    private final class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
         private LayoutInflater mInflater;
         private int mTextViewResourceId;
 

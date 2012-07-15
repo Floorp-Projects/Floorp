@@ -10,7 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.lang.Math;
 
-public class IntSize {
+public final class IntSize {
     public final int width, height;
 
     public IntSize(IntSize size) { width = size.width; height = size.height; }
@@ -78,4 +78,3 @@ public class IntSize {
         return (value & (value - 1)) == 0;
     }
 }
-

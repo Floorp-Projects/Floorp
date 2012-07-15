@@ -12,7 +12,7 @@ import android.graphics.Bitmap;
 import java.nio.ByteBuffer;
 
 /** A Cairo image that simply saves a buffer of pixel data. */
-public class BufferedCairoImage extends CairoImage {
+public final class BufferedCairoImage extends CairoImage {
     private ByteBuffer mBuffer;
     private IntSize mSize;
     private int mFormat;
@@ -68,4 +68,3 @@ public class BufferedCairoImage extends CairoImage {
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 }
-

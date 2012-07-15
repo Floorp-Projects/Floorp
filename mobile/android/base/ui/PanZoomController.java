@@ -36,7 +36,7 @@ import java.util.TimerTask;
  * Many ideas are from Joe Hewitt's Scrollability:
  *   https://github.com/joehewitt/scrollability/
  */
-public class PanZoomController
+public final class PanZoomController
     extends GestureDetector.SimpleOnGestureListener
     implements SimpleScaleGestureDetector.SimpleScaleGestureListener, GeckoEventListener
 {
@@ -651,7 +651,7 @@ public class PanZoomController
     }
 
     /* The callback that performs the bounce animation. */
-    private class BounceRunnable extends AnimationRunnable {
+    private final class BounceRunnable extends AnimationRunnable {
         /* The current frame of the bounce-back animation */
         private int mBounceFrame;
         /*
@@ -711,7 +711,7 @@ public class PanZoomController
     }
 
     // The callback that performs the fling animation.
-    private class FlingRunnable extends AnimationRunnable {
+    private final class FlingRunnable extends AnimationRunnable {
         protected void animateFrame() {
             /*
              * The pan/zoom controller might have signaled to us that it wants to abort the
@@ -831,7 +831,7 @@ public class PanZoomController
         return viewportMetrics;
     }
 
-    private class AxisX extends Axis {
+    private final class AxisX extends Axis {
         AxisX(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
         public float getOrigin() { return mController.getOrigin().x; }
@@ -843,7 +843,7 @@ public class PanZoomController
         protected float getPageLength() { return mController.getPageRect().width(); }
     }
 
-    private class AxisY extends Axis {
+    private final class AxisY extends Axis {
         AxisY(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
         public float getOrigin() { return mController.getOrigin().y; }

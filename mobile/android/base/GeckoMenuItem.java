@@ -16,10 +16,10 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 
-public class GeckoMenuItem implements MenuItem, View.OnClickListener {
+final class GeckoMenuItem implements MenuItem, View.OnClickListener {
     private static final String LOGTAG = "GeckoMenuItem";
 
-    public static interface Layout {
+    public interface Layout {
         public void setId(int id);
         public void setIcon(Drawable icon);
         public void setIcon(int iconRes);
@@ -32,7 +32,7 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
         public View getLayout();
     }
 
-    public static interface OnShowAsActionChangedListener {
+    public interface OnShowAsActionChangedListener {
         public boolean hasActionItemBar();
         public void onShowAsActionChanged(GeckoMenuItem item, boolean isActionItem);
     }

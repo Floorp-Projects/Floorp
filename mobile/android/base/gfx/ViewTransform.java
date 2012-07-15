@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-public class ViewTransform {
+public final class ViewTransform {
     public float x;
     public float y;
     public float scale;
@@ -16,4 +16,3 @@ public class ViewTransform {
         scale = inScale;
     }
 }
-

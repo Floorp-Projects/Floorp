@@ -14,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.text.TextUtils;
 
-public class AboutHomeSection extends LinearLayout {
+final class AboutHomeSection extends LinearLayout {
     private static final String LOGTAG = "GeckoAboutHomeSection";
 
     private TitleView mTitle;
@@ -100,7 +100,7 @@ public class AboutHomeSection extends LinearLayout {
         mMoreText.setVisibility(View.GONE);
     }
 
-    public static class TitleView extends LinearLayout {
+    private static final class TitleView extends LinearLayout {
         private TextView mText;
 
         public TitleView(Context context, AttributeSet attrs) {
@@ -117,7 +117,7 @@ public class AboutHomeSection extends LinearLayout {
         }
     }
 
-    public static class SubTitleView extends LinearLayout {
+    private static final class SubTitleView extends LinearLayout {
         private TextView mText;
 
         public SubTitleView(Context context, AttributeSet attrs) {
@@ -134,7 +134,7 @@ public class AboutHomeSection extends LinearLayout {
         }
     }
 
-    public static class MoreTextView extends LinearLayout {
+    private static final class MoreTextView extends LinearLayout {
         private TextView mText;
 
         public MoreTextView(Context context, AttributeSet attrs) {

@@ -23,7 +23,7 @@ import android.util.Log;
  * ViewportMetrics manages state and contains some utility functions related to
  * the page viewport for the Gecko layer client to use.
  */
-public class ViewportMetrics {
+public final class ViewportMetrics {
     private static final String LOGTAG = "GeckoViewportMetrics";
 
     private RectF mPageRect;
@@ -231,4 +231,3 @@ public class ViewportMetrics {
         return buff.toString();
     }
 }
-

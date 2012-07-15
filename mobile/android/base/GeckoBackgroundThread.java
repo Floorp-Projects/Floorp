@@ -9,7 +9,7 @@ import android.os.Looper;
 
 import java.util.concurrent.SynchronousQueue;
 
-public class GeckoBackgroundThread extends Thread {
+public final class GeckoBackgroundThread extends Thread {
     private static final String LOOPER_NAME = "GeckoBackgroundThread";
 
     // Guarded by 'this'.

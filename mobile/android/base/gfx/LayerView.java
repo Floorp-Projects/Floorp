@@ -39,8 +39,8 @@ import javax.microedition.khronos.opengles.GL10;
  *
  * Note that LayerView is accessed by Robocop via reflection.
  */
-public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
-    private static String LOGTAG = "GeckoLayerView";
+public final class LayerView extends SurfaceView implements SurfaceHolder.Callback {
+    private static final String LOGTAG = "GeckoLayerView";
 
     private Context mContext;
     private LayerController mController;
@@ -254,6 +254,4 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
         void compositionResumeRequested(int width, int height);
         void surfaceChanged(int width, int height);
     }
-
-
 }

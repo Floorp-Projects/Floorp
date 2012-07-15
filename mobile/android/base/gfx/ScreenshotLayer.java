@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.FloatBuffer;
 
-public class ScreenshotLayer extends SingleTileLayer {
+public final class ScreenshotLayer extends SingleTileLayer {
     private static final int SCREENSHOT_SIZE_LIMIT = 1048576;
     private static final int BYTES_FOR_16BPP = 2;
     private ScreenshotImage mImage;
@@ -36,7 +36,8 @@ public class ScreenshotLayer extends SingleTileLayer {
     private IntSize mImageSize;
     // Whether we have an up-to-date image to draw
     private boolean mHasImage;
-    private static String LOGTAG = "GeckoScreenshot";
+
+    private static final String LOGTAG = "GeckoScreenshot";
 
     public static int getMaxNumPixels() {
         return SCREENSHOT_SIZE_LIMIT;
@@ -107,7 +108,7 @@ public class ScreenshotLayer extends SingleTileLayer {
     }
 
     /** A Cairo image that simply saves a buffer of pixel data. */
-    static class ScreenshotImage extends CairoImage {
+    private static final class ScreenshotImage extends CairoImage {
         private ByteBuffer mBuffer;
         private IntSize mSize;
         private int mFormat;
