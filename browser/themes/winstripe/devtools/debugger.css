@@ -21,6 +21,14 @@
 }
 
 /**
+ * This hardcoded width likely due to a toolkit Windows specific bug.
+ * See http://hg.mozilla.org/mozilla-central/annotate/f38d6df93cad/toolkit/themes/winstripe/global/textbox-aero.css#l7
+ */
+#scripts-search {
+  width: 200px;
+}
+
+/**
  * Lists and headers
  */
 
