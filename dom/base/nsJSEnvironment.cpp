@@ -121,7 +121,7 @@ static PRLogModuleInfo* gJSDiagnostics;
 #define NS_CC_FORCED_PURPLE_LIMIT   10
 
 // Don't allow an incremental GC to lock out the CC for too long.
-#define NS_MAX_CC_LOCKEDOUT_TIME    (5 * PR_USEC_PER_SEC) // 5 seconds
+#define NS_MAX_CC_LOCKEDOUT_TIME    (15 * PR_USEC_PER_SEC) // 15 seconds
 
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 #define NS_CC_PURPLE_LIMIT          200
@@ -3221,7 +3221,10 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     return;
   }
 
+  static PRUint32 ccDelay = NS_CC_DELAY;
   if (sCCLockedOut) {
+    ccDelay = NS_CC_DELAY / 3;
+
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
       sCCLockedOutTime = now;
@@ -3241,7 +3244,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   // During early timer fires, we only run forgetSkippable. During the first
   // late timer fire, we decide if we are going to have a second and final
   // late timer fire, where we may run the CC.
-  const PRUint32 numEarlyTimerFires = NS_CC_DELAY / NS_CC_SKIPPABLE_DELAY - 2;
+  const PRUint32 numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
   bool isLateTimerFire = sCCTimerFireCount > numEarlyTimerFires;
   PRUint32 suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
@@ -3263,6 +3266,8 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   }
 
   if (isLateTimerFire) {
+    ccDelay = NS_CC_DELAY;
+
     // We have either just run the CC or decided we don't want to run the CC
     // next time, so kill the timer.
     sPreviousSuspectedCount = 0;
