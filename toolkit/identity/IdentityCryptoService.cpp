@@ -208,7 +208,7 @@ private:
   void operator=(const SignRunnable &) MOZ_DELETE;
 };
 
-class IdentityCryptoService : public nsIIdentityCryptoService
+class IdentityCryptoService MOZ_FINAL : public nsIIdentityCryptoService
 {
 public:
   NS_DECL_ISUPPORTS
