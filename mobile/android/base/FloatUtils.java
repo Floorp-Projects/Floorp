@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.lang.Math;
 import android.graphics.PointF;
 
 public final class FloatUtils {

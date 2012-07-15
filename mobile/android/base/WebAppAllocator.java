@@ -5,12 +5,8 @@
 
 package org.mozilla.gecko;
 
-import android.util.Log;
 import android.content.Context;
 import android.content.SharedPreferences;
-
-import org.json.JSONObject;
-import org.json.JSONException;
 
 public final class WebAppAllocator {
     // The number of WebApp# and WEBAPP# activites/apps/intents
