@@ -15,6 +15,7 @@ public:
 
     virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle);
     virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
+    virtual bool GetEchoPasswordImpl();
 
 protected:
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aColor);
