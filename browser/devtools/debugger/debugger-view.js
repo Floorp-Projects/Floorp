@@ -461,7 +461,7 @@ ScriptsView.prototype = {
     if (line > -1) {
       editor.setCaretPosition(line - 1);
     }
-    if (token) {
+    if (token.length) {
       let offset = editor.find(token, { ignoreCase: true });
       if (offset > -1) {
         editor.setSelection(offset, offset + token.length)
@@ -480,6 +480,10 @@ ScriptsView.prototype = {
 
     if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
       let token = this._getSearchboxInfo()[2];
+      if (!token.length) {
+        return;
+      }
+
       let editor = DebuggerView.editor;
       let offset = editor.findNext(true);
       if (offset > -1) {
