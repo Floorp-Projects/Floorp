@@ -1248,6 +1248,15 @@ js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 {
+    /*
+     * Sometimes Firefox will hold weak references to objects and then convert
+     * them to strong references by calling AddRoot (e.g., via PreserveWrapper,
+     * or ModifyBusyCount in workers). We need a read barrier to cover these
+     * cases.
+     */
+    if (rt->gcIncrementalState == MARK)
+        IncrementalValueBarrier(*vp);
+
     return !!rt->gcRootsHash.put((void *)vp,
                                  RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
@@ -1255,6 +1264,15 @@ js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 {
+    /*
+     * Sometimes Firefox will hold weak references to objects and then convert
+     * them to strong references by calling AddRoot (e.g., via PreserveWrapper,
+     * or ModifyBusyCount in workers). We need a read barrier to cover these
+     * cases.
+     */
+    if (rt->gcIncrementalState == MARK)
+        IncrementalReferenceBarrier(*rp);
+
     return !!rt->gcRootsHash.put((void *)rp,
                                  RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
@@ -1742,6 +1760,15 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
     if (!thing)
         return true;
+
+    /*
+     * Sometimes Firefox will hold weak references to objects and then convert
+     * them to strong references by calling AddRoot (e.g., via PreserveWrapper,
+     * or ModifyBusyCount in workers). We need a read barrier to cover these
+     * cases.
+     */
+    if (rt->gcIncrementalState == MARK)
+        IncrementalReferenceBarrier(thing);
 
     if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
         p->value++;
