@@ -67,7 +67,7 @@ function addScriptsAndCheckOrder(method, callback) {
     case 1:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc });
+        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc });
       });
       vs.commitScripts();
       break;
@@ -75,7 +75,7 @@ function addScriptsAndCheckOrder(method, callback) {
     case 2:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
       });
       break;
 
@@ -84,14 +84,14 @@ function addScriptsAndCheckOrder(method, callback) {
       for (; i < urls.length / 2; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc });
+        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc });
       }
       vs.commitScripts();
 
       for (; i < urls.length; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
       }
       break;
   }
