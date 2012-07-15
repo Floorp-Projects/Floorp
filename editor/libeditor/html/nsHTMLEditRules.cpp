@@ -836,7 +836,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
       // let's get the value(s) of text-align or margin-left/margin-right
       mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(
         blockParentContent, dummyProperty, &typeAttrName, value,
-        nsHTMLCSSUtils::eComputed);
+        COMPUTED_STYLE_TYPE);
       if (value.EqualsLiteral("center") ||
           value.EqualsLiteral("-moz-center") ||
           value.EqualsLiteral("auto auto"))
@@ -2834,8 +2834,10 @@ nsHTMLEditRules::DeleteNonTableElements(nsINode* aNode)
     return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
   }
 
-  for (PRInt32 i = aNode->GetChildCount() - 1; i >= 0; --i) {
-    nsresult rv = DeleteNonTableElements(aNode->GetChildAt(i));
+  for (nsCOMPtr<nsIContent> child = aNode->GetLastChild();
+       child;
+       child = child->GetPreviousSibling()) {
+    nsresult rv = DeleteNonTableElements(child);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -7164,9 +7166,8 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
     }
     else
     {
-      mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode,
-        mCachedStyles[j].tag, &(mCachedStyles[j].attr), isSet, outValue,
-        nsHTMLCSSUtils::eComputed);
+      mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr),
+                                                    isSet, outValue, COMPUTED_STYLE_TYPE);
     }
     if (isSet)
     {
@@ -7212,7 +7213,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
         // check computed style first in css case
         bAny = mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           selNode, mCachedStyles[i].tag, &(mCachedStyles[i].attr), curValue,
-          nsHTMLCSSUtils::eComputed);
+          COMPUTED_STYLE_TYPE);
       }
       if (!bAny) {
         // then check typeinstate and html style

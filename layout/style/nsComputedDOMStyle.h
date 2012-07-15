@@ -32,13 +32,15 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsComputedDOMStyle,
                                                      nsICSSDeclaration)
 
+  NS_IMETHOD Init(nsIDOMElement *aElement,
+                  const nsAString& aPseudoElt,
+                  nsIPresShell *aPresShell);
+
   NS_DECL_NSICSSDECLARATION
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
 
-  nsComputedDOMStyle(mozilla::dom::Element* aElement,
-                     const nsAString& aPseudoElt,
-                     nsIPresShell* aPresShell);
+  nsComputedDOMStyle();
   virtual ~nsComputedDOMStyle();
 
   static void Shutdown();
@@ -509,10 +511,10 @@ private:
 #endif
 };
 
-already_AddRefed<nsComputedDOMStyle>
-NS_NewComputedDOMStyle(mozilla::dom::Element* aElement,
-                       const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell);
+nsresult
+NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
+                       nsIPresShell *aPresShell,
+                       nsComputedDOMStyle **aComputedStyle);
 
 #endif /* nsComputedDOMStyle_h__ */
 
