@@ -39,7 +39,7 @@ public:
 
 private:
     struct NodePointer {
-        NodePointer() : mNode(nsnull) {};
+        NodePointer() : mNode(nsnull) {}
         NodePointer(nsINode *aNode, bool aBeforeNode);
 
         typedef bool (NodePointer::*MoveToMethodType)(nsINode*);
