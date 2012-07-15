@@ -180,6 +180,9 @@ void ChildProcessHost::ListenerHook::OnChannelError() {
   host_->OnChannelError();
 }
 
+void ChildProcessHost::ListenerHook::GetQueuedMessages(std::queue<IPC::Message>& queue) {
+  host_->GetQueuedMessages(queue);
+}
 
 ChildProcessHost::Iterator::Iterator() : all_(true) {
   iterator_ = Singleton<ChildProcessList>::get()->begin();
