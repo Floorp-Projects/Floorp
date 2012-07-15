@@ -53,7 +53,7 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   if (!audioManager)
     return;
 
-  audioManager.masterVolume = Math.min(0, Math.max(value, 1));
+  audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
 });
 
 
