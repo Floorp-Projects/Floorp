@@ -3,6 +3,7 @@ function test() {
                    "test/resources_jsb_script.js";
 
   DeveloperToolbarTest.test("about:blank", function GJT_test() {
+    /* Commented out by bug 774057, re-enable with un-hidden jsb command
     DeveloperToolbarTest.exec({
       typed: "jsb AAA",
       outputMatch: /valid/
@@ -41,5 +42,7 @@ function test() {
                     "}";
       is(aResult, correct, "JS has been correctly prettified");
     }
+    */
+    finish();
   });
 }
