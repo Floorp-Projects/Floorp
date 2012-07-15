@@ -60,9 +60,10 @@ using namespace mozilla::dom;
 
 static nsComputedDOMStyle *sCachedComputedDOMStyle;
 
-already_AddRefed<nsComputedDOMStyle>
-NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell)
+nsresult
+NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
+                       nsIPresShell *aPresShell,
+                       nsComputedDOMStyle **aComputedStyle)
 {
   nsRefPtr<nsComputedDOMStyle> computedStyle;
   if (sCachedComputedDOMStyle) {
@@ -70,17 +71,23 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
     // But before we use it, re-initialize the object.
 
     // Oh yeah baby, placement new!
-    computedStyle = new (sCachedComputedDOMStyle)
-      nsComputedDOMStyle(aElement, aPseudoElt, aPresShell);
+    computedStyle = new (sCachedComputedDOMStyle) nsComputedDOMStyle();
 
     sCachedComputedDOMStyle = nsnull;
   } else {
     // No nsComputedDOMStyle cached, create a new one.
 
-    computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell);
+    computedStyle = new nsComputedDOMStyle();
+    NS_ENSURE_TRUE(computedStyle, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return computedStyle.forget();
+  nsresult rv = computedStyle->Init(aElement, aPseudoElt, aPresShell);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aComputedStyle = nsnull;
+  computedStyle.swap(*aComputedStyle);
+
+  return NS_OK;
 }
 
 static nsIFrame*
@@ -91,46 +98,11 @@ GetContainingBlockFor(nsIFrame* aFrame) {
   return aFrame->GetContainingBlock();
 }
 
-nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
-                                       const nsAString& aPseudoElt,
-                                       nsIPresShell* aPresShell)
+nsComputedDOMStyle::nsComputedDOMStyle()
   : mDocumentWeak(nsnull), mOuterFrame(nsnull),
     mInnerFrame(nsnull), mPresShell(nsnull),
     mExposeVisitedStyle(false)
 {
-  MOZ_ASSERT(aElement && aPresShell);
-
-  mDocumentWeak = do_GetWeakReference(aPresShell->GetDocument());
-
-  mContent = aElement;
-
-  if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty() &&
-      aPseudoElt.First() == PRUnichar(':')) {
-    // deal with two-colon forms of aPseudoElt
-    nsAString::const_iterator start, end;
-    aPseudoElt.BeginReading(start);
-    aPseudoElt.EndReading(end);
-    NS_ASSERTION(start != end, "aPseudoElt is not empty!");
-    ++start;
-    bool haveTwoColons = true;
-    if (start == end || *start != PRUnichar(':')) {
-      --start;
-      haveTwoColons = false;
-    }
-    mPseudo = do_GetAtom(Substring(start, end));
-    MOZ_ASSERT(mPseudo);
-
-    // There aren't any non-CSS2 pseudo-elements with a single ':'
-    if (!haveTwoColons &&
-        !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo)) {
-      // XXXbz I'd really rather we threw an exception or something, but
-      // the DOM spec sucks.
-      mPseudo = nsnull;
-    }
-  }
-
-  nsPresContext *presCtx = aPresShell->GetPresContext();
-  MOZ_ASSERT(presCtx);
 }
 
 
@@ -195,6 +167,54 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsComputedDOMStyle,
                                               doDestroyComputedDOMStyle(this))
 
+
+NS_IMETHODIMP
+nsComputedDOMStyle::Init(nsIDOMElement *aElement,
+                         const nsAString& aPseudoElt,
+                         nsIPresShell *aPresShell)
+{
+  NS_ENSURE_ARG_POINTER(aElement);
+  NS_ENSURE_ARG_POINTER(aPresShell);
+
+  mDocumentWeak = do_GetWeakReference(aPresShell->GetDocument());
+
+  mContent = do_QueryInterface(aElement);
+  if (!mContent) {
+    // This should not happen, all our elements support nsIContent!
+
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty() &&
+      aPseudoElt.First() == PRUnichar(':')) {
+    // deal with two-colon forms of aPseudoElt
+    nsAString::const_iterator start, end;
+    aPseudoElt.BeginReading(start);
+    aPseudoElt.EndReading(end);
+    NS_ASSERTION(start != end, "aPseudoElt is not empty!");
+    ++start;
+    bool haveTwoColons = true;
+    if (start == end || *start != PRUnichar(':')) {
+      --start;
+      haveTwoColons = false;
+    }
+    mPseudo = do_GetAtom(Substring(start, end));
+    NS_ENSURE_TRUE(mPseudo, NS_ERROR_OUT_OF_MEMORY);
+
+    // There aren't any non-CSS2 pseudo-elements with a single ':'
+    if (!haveTwoColons &&
+        !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo)) {
+      // XXXbz I'd really rather we threw an exception or something, but
+      // the DOM spec sucks.
+      mPseudo = nsnull;
+    }
+  }
+
+  nsPresContext *presCtx = aPresShell->GetPresContext();
+  NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsCSSProperty aPropID,

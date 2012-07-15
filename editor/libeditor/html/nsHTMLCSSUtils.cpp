@@ -7,15 +7,12 @@
 #include "EditTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/css/Declaration.h"
-#include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
-#include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
@@ -573,85 +570,94 @@ nsresult
 nsHTMLCSSUtils::GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
                                      nsAString & aValue)
 {
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eSpecified);
+  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, nsnull, SPECIFIED_STYLE_TYPE);
 }
 
 nsresult
 nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
                                     nsAString & aValue)
 {
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eComputed);
-}
+  nsCOMPtr<nsIDOMWindow> window;
+  nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(res, res);
 
-nsresult
-nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
-                                         nsAString& aValue,
-                                         StyleType aStyleType)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return GetCSSInlinePropertyBase(node, aProperty, aValue, aStyleType);
+  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, window, COMPUTED_STYLE_TYPE);
 }
 
 nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
                                          nsAString& aValue,
-                                         StyleType aStyleType)
+                                         nsIDOMWindow* aWindow,
+                                         PRUint8 aStyleType)
 {
-  MOZ_ASSERT(aNode && aProperty);
-  aValue.Truncate();
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  return GetCSSInlinePropertyBase(node, aProperty, aValue, aWindow, aStyleType);
+}
 
-  nsCOMPtr<dom::Element> element = GetElementContainerOrSelf(aNode);
+nsresult
+nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
+                                         nsAString& aValue,
+                                         nsIDOMWindow* aWindow,
+                                         PRUint8 aStyleType)
+{
+  aValue.Truncate();
+  NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMElement> element = GetElementContainerOrSelf(aNode);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
-  if (aStyleType == eComputed) {
-    // Get the all the computed css styles attached to the element node
-    nsRefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
-    NS_ENSURE_STATE(cssDecl);
-
-    // from these declarations, get the one we want and that one only
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      cssDecl->GetPropertyValue(nsDependentAtomString(aProperty), aValue)));
-
-    return NS_OK;
+  switch (aStyleType) {
+    case COMPUTED_STYLE_TYPE:
+      if (element && aWindow) {
+        nsAutoString value, propString;
+        nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+        aProperty->ToString(propString);
+        // Get the all the computed css styles attached to the element node
+        nsresult res = aWindow->GetComputedStyle(element, EmptyString(), getter_AddRefs(cssDecl));
+        if (NS_FAILED(res) || !cssDecl)
+          return res;
+        // from these declarations, get the one we want and that one only
+        res = cssDecl->GetPropertyValue(propString, value);
+        NS_ENSURE_SUCCESS(res, res);
+        aValue.Assign(value);
+      }
+      break;
+    case SPECIFIED_STYLE_TYPE:
+      if (element) {
+        nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+        PRUint32 length;
+        nsresult res = GetInlineStyles(element, getter_AddRefs(cssDecl), &length);
+        if (NS_FAILED(res) || !cssDecl) return res;
+        nsAutoString value, propString;
+        aProperty->ToString(propString);
+        res = cssDecl->GetPropertyValue(propString, value);
+        NS_ENSURE_SUCCESS(res, res);
+        aValue.Assign(value);
+      }
+      break;
   }
-
-  MOZ_ASSERT(aStyleType == eSpecified);
-  nsRefPtr<css::StyleRule> rule = element->GetInlineStyleRule();
-  if (!rule) {
-    return NS_OK;
-  }
-  nsCSSProperty prop =
-    nsCSSProps::LookupProperty(nsDependentAtomString(aProperty));
-  MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
-  rule->GetDeclaration()->GetValue(prop, aValue);
-
   return NS_OK;
 }
 
-already_AddRefed<nsComputedDOMStyle>
-nsHTMLCSSUtils::GetComputedStyle(nsIDOMElement* aElement)
+nsresult
+nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMWindow **aViewCSS)
 {
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  return GetComputedStyle(element);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+  return GetDefaultViewCSS(node, aViewCSS);
 }
 
-already_AddRefed<nsComputedDOMStyle>
-nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
+nsresult
+nsHTMLCSSUtils::GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aViewCSS)
 {
-  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aNode);
+  dom::Element* element = GetElementContainerOrSelf(aNode);
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
-  nsIDocument* doc = aElement->GetCurrentDoc();
-  NS_ASSERTION(doc, "Trying to compute style of detached element");
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  nsIPresShell* presShell = doc->GetShell();
-  NS_ASSERTION(presShell, "Trying to compute style without PresShell");
-  NS_ENSURE_TRUE(presShell, nsnull);
-
-  nsRefPtr<nsComputedDOMStyle> style =
-    NS_NewComputedDOMStyle(aElement, EmptyString(), presShell);
-
-  return style.forget();
+  nsCOMPtr<nsIDOMWindow> window = element->OwnerDoc()->GetWindow();
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  window.forget(aViewCSS);
+  return NS_OK;
 }
 
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the whole node
@@ -1060,7 +1066,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                      nsIAtom *aHTMLProperty,
                                                      const nsAString *aAttribute,
                                                      nsAString & aValueString,
-                                                     StyleType aStyleType)
+                                                     PRUint8 aStyleType)
 {
   aValueString.Truncate();
   nsCOMPtr<dom::Element> theElement = GetElementContainerOrSelf(aNode);
@@ -1072,6 +1078,12 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
   }
 
   // Yes, the requested HTML style has a CSS equivalence in this implementation
+  // Retrieve the default ViewCSS if we are asked for computed styles
+  nsCOMPtr<nsIDOMWindow> window;
+  if (COMPUTED_STYLE_TYPE == aStyleType) {
+    nsresult res = GetDefaultViewCSS(theElement, getter_AddRefs(window));
+    NS_ENSURE_SUCCESS(res, res);
+  }
   nsTArray<nsIAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
   // get the CSS equivalence with last param true indicating we want only the
@@ -1083,7 +1095,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
     nsAutoString valueString;
     // retrieve the specified/computed value of the property
     nsresult res = GetCSSInlinePropertyBase(theElement, cssPropertyArray[index],
-                                            valueString, aStyleType);
+                                            valueString, window, aStyleType);
     NS_ENSURE_SUCCESS(res, res);
     // append the value to aValueString (possibly with a leading whitespace)
     if (index) {
@@ -1106,9 +1118,11 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIContent* aContent,
                                                     nsIAtom* aProperty,
                                                     const nsAString* aAttribute,
                                                     const nsAString& aValue,
-                                                    StyleType aStyleType)
+                                                    PRUint8 aStyleType)
 {
   MOZ_ASSERT(aContent && aProperty);
+  MOZ_ASSERT(aStyleType == SPECIFIED_STYLE_TYPE ||
+             aStyleType == COMPUTED_STYLE_TYPE);
   bool isSet;
   nsAutoString value(aValue);
   nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aContent->AsDOMNode(),
@@ -1125,7 +1139,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
                                                     const nsAString *aHTMLAttribute,
                                                     bool& aIsSet,
                                                     nsAString& valueString,
-                                                    StyleType aStyleType)
+                                                    PRUint8 aStyleType)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
