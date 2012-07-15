@@ -89,9 +89,9 @@ let DebuggerView = {
 function RemoteDebuggerPrompt() {
 
   /**
-   * The remote uri the user wants to connect to.
+   * The remote host and port the user wants to connect to.
    */
-  this.uri = null;
+  this.remote = {};
 }
 
 RemoteDebuggerPrompt.prototype = {
@@ -104,8 +104,8 @@ RemoteDebuggerPrompt.prototype = {
    */
   show: function RDP_show(aIsReconnectingFlag) {
     let check = { value: Prefs.remoteAutoConnect };
-    let input = { value: "http://" + Prefs.remoteHost +
-                               ":" + Prefs.remotePort + "/" };
+    let input = { value: Prefs.remoteHost + ":" + Prefs.remotePort };
+    let parts;
 
     while (true) {
       let result = Services.prompt.prompt(null,
@@ -117,15 +117,17 @@ RemoteDebuggerPrompt.prototype = {
 
       Prefs.remoteAutoConnect = check.value;
 
-      try {
-        let uri = Services.io.newURI(input.value, null, null);
-        let url = uri.QueryInterface(Ci.nsIURL);
-
-        // If a url could be successfully retrieved, then the uri is correct.
-        this.uri = uri;
-        return result;
+      if (!result) {
+        return false;
       }
-      catch(e) { }
+      if ((parts = input.value.split(":")).length === 2) {
+        let [host, port] = parts;
+
+        if (host.length && port.length) {
+          this.remote = { host: host, port: port };
+          return true;
+        }
+      }
     }
   }
 };
