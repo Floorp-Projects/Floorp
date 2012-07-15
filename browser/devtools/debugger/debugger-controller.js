@@ -113,8 +113,8 @@ let DebuggerController = {
         this.dispatchEvent("Debugger:Close");
         return false;
       }
-      Prefs.remoteHost = prompt.uri.host;
-      Prefs.remotePort = prompt.uri.port;
+      Prefs.remoteHost = prompt.remote.host;
+      Prefs.remotePort = prompt.remote.port;
     }
 
     // If this debugger is connecting remotely to a server, we need to check
