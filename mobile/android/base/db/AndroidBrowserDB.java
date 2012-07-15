@@ -22,7 +22,7 @@ import android.provider.Browser;
 import android.provider.Browser.BookmarkColumns;
 import android.util.Log;
 
-public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
+final class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
     private static final String LOGTAG = "AndroidBrowserDB";
     private static final String URL_COLUMN_ID = "_id";
     private static final String URL_COLUMN_THUMBNAIL = "thumbnail";
@@ -392,7 +392,7 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return b;
     }
 
-    private static class AndroidDBCursor extends CursorWrapper {
+    private static final class AndroidDBCursor extends CursorWrapper {
         public AndroidDBCursor(Cursor c) {
             super(c);
         }

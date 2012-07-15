@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 import java.util.concurrent.SynchronousQueue;
 import android.content.Intent;
 
-class AwesomebarResultHandler implements ActivityResultHandler {
+final class AwesomebarResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoAwesomebarResultHandler";
 
     public void onActivityResult(int resultCode, Intent data) {

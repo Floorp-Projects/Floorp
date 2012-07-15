@@ -322,7 +322,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         }
     }
 
-    private class ListenerTimeoutProcessor implements Runnable {
+    private final class ListenerTimeoutProcessor implements Runnable {
         /* This MUST be run on the UI thread */
         public void run() {
             if (mProcessingBalance < 0) {

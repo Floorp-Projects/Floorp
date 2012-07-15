@@ -14,7 +14,7 @@ import android.graphics.PointF;
 import android.os.Handler;
 import android.util.Log;
 
-class SubdocumentScrollHelper implements GeckoEventListener {
+final class SubdocumentScrollHelper implements GeckoEventListener {
     private static final String LOGTAG = "GeckoSubdocumentScrollHelper";
 
     private static String MESSAGE_PANNING_OVERRIDE = "Panning:Override";

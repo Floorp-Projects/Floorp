@@ -12,7 +12,7 @@ import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 /** A Cairo image that displays a tinted checkerboard. */
-public class CheckerboardImage extends CairoImage {
+final class CheckerboardImage extends CairoImage {
     // The width and height of the checkerboard tile.
     private static final int SIZE = 16;
     // The pixel format of the checkerboard tile.
@@ -136,4 +136,3 @@ public class CheckerboardImage extends CairoImage {
         return FORMAT;
     }
 }
-

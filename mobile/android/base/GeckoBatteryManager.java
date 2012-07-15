@@ -18,9 +18,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class GeckoBatteryManager
-  extends BroadcastReceiver
-{
+final class GeckoBatteryManager extends BroadcastReceiver {
   private static final String LOGTAG = "GeckoBatteryManager";
 
   // Those constants should be keep in sync with the ones in:

@@ -18,7 +18,7 @@ import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.util.Log;
 
-class PrivateDataPreference extends MultiChoicePreference {
+final class PrivateDataPreference extends MultiChoicePreference {
     private static final String LOGTAG = "GeckoPrivateDataPreference";
     private static final String PREF_KEY_PREFIX = "private.data.";
 

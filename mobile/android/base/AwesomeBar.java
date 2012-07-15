@@ -41,7 +41,7 @@ import java.net.URLEncoder;
 
 import org.mozilla.gecko.db.BrowserDB;
 
-public class AwesomeBar extends GeckoActivity {
+public final class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     static final String URL_KEY = "url";
@@ -385,7 +385,7 @@ public class AwesomeBar extends GeckoActivity {
         cancelAndFinish();
     }
 
-    static public class ContextMenuSubject {
+    static final class ContextMenuSubject {
         public int id;
         public String url;
         public byte[] favicon;

@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Utility methods useful when displaying Cairo bitmaps using OpenGL ES.
  */
-public class CairoUtils {
+final class CairoUtils {
     private CairoUtils() { /* Don't call me. */ }
 
     public static int bitsPerPixelForCairoFormat(int cairoFormat) {
@@ -50,4 +50,3 @@ public class CairoUtils {
         }
     }
 }
-

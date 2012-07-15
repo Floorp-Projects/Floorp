@@ -11,7 +11,7 @@ import android.database.Cursor;
 import android.provider.MediaStore;
 import android.util.Log;
 
-class CameraVideoResultHandler implements ActivityResultHandler {
+final class CameraVideoResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoCameraVideoResultHandler";
 
     private final SynchronousQueue<String> mFilePickerResult;

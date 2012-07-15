@@ -36,7 +36,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 
-public class Favicons {
+final class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
 
     public static final long NOT_LOADING = 0;
@@ -50,10 +50,10 @@ public class Favicons {
     private AndroidHttpClient mHttpClient;
 
     public interface OnFaviconLoadedListener {
-        public void onFaviconLoaded(String url, Drawable favicon);
+        void onFaviconLoaded(String url, Drawable favicon);
     }
 
-    private class DatabaseHelper extends SQLiteOpenHelper {
+    private final class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "favicon_urls.db";
         private static final String TABLE_NAME = "favicon_urls";
         private static final int DATABASE_VERSION = 1;
@@ -213,7 +213,7 @@ public class Favicons {
             mHttpClient.close();
     }
 
-    private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
+    private final class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
         private long mId;
         private String mPageUrl;
         private String mFaviconUrl;

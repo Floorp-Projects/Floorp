@@ -8,7 +8,7 @@ import java.util.concurrent.SynchronousQueue;
 import android.content.Intent;
 import android.util.Log;
 
-class FilePickerResultHandlerSync extends FilePickerResultHandler {
+final class FilePickerResultHandlerSync extends FilePickerResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandlerSync";
 
     FilePickerResultHandlerSync(SynchronousQueue<String> resultQueue) {

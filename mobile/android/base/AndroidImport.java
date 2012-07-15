@@ -28,7 +28,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 
-class AndroidImport implements Runnable {
+final class AndroidImport implements Runnable {
     static final private String LOGTAG = "AndroidImport";
     private Context mContext;
     private Runnable mOnDoneRunnable;

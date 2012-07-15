@@ -38,9 +38,9 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class FormHistoryProvider extends GeckoProvider {
-    static final String TABLE_FORM_HISTORY = "moz_formhistory";
-    static final String TABLE_DELETED_FORM_HISTORY = "moz_deleted_formhistory";
+public final class FormHistoryProvider extends GeckoProvider {
+    private static final String TABLE_FORM_HISTORY = "moz_formhistory";
+    private static final String TABLE_DELETED_FORM_HISTORY = "moz_deleted_formhistory";
 
     private static final int FORM_HISTORY = 100;
     private static final int DELETED_FORM_HISTORY = 101;

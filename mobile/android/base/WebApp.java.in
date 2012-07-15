@@ -92,5 +92,4 @@ public class WebApp extends GeckoApp {
         return true;
     }
 #endif
-};
-
+}

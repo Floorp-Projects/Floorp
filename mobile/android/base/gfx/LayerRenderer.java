@@ -42,7 +42,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * The layer renderer implements the rendering logic for a layer view.
  */
-public class LayerRenderer {
+public final class LayerRenderer {
     private static final String LOGTAG = "GeckoLayerRenderer";
     private static final String PROFTAG = "GeckoLayerRendererProf";
 
@@ -380,7 +380,7 @@ public class LayerRenderer {
         return new Frame(metrics);
     }
 
-    class FadeRunnable implements Runnable {
+    private final class FadeRunnable implements Runnable {
         private boolean mStarted;
         private long mRunAt;
 
@@ -416,7 +416,7 @@ public class LayerRenderer {
         }
     }
 
-    public class Frame {
+    public final class Frame {
         // The timestamp recording the start of this frame.
         private long mFrameStartTime;
         // A fixed snapshot of the viewport metrics that this frame is using to render content.

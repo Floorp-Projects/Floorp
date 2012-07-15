@@ -15,8 +15,7 @@ import android.widget.RemoteViews;
 import java.net.*;
 import java.text.NumberFormat;
 
-public class AlertNotification
-    extends Notification
+final class AlertNotification extends Notification
 {
     private static final String LOGTAG = "GeckoAlertNotification";
 

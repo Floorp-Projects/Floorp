@@ -24,7 +24,7 @@ import java.util.ArrayList;
 /**
  * Use network-based search suggestions.
  */
-public class SuggestClient {
+final class SuggestClient {
     private static final String LOGTAG = "GeckoSuggestClient";
     private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
 
