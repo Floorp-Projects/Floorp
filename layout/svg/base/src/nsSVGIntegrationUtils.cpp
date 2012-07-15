@@ -511,11 +511,9 @@ nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 class PaintFrameCallback : public gfxDrawingCallback {
 public:
   PaintFrameCallback(nsIFrame* aFrame,
-                     nsIFrame* aTarget,
                      const nsSize aPaintServerSize,
                      const gfxIntSize aRenderSize)
    : mFrame(aFrame)
-   , mTarget(aTarget)
    , mPaintServerSize(aPaintServerSize)
    , mRenderSize(aRenderSize)
   {}
@@ -525,7 +523,6 @@ public:
                             const gfxMatrix& aTransform);
 private:
   nsIFrame* mFrame;
-  nsIFrame* mTarget;
   nsSize mPaintServerSize;
   gfxIntSize mRenderSize;
 };
@@ -633,7 +630,7 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
   nsRefPtr<gfxDrawingCallback> cb =
-    new PaintFrameCallback(aFrame, aTarget, aPaintServerSize, aRenderSize);
+    new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize);
   nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
   return drawable.forget();
 }
