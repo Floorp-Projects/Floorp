@@ -623,7 +623,7 @@ public:
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise.  In this case, AppendFrames empties out
-   *            aChildList in the process of moving the frames over to its own
+   *            aFrameList in the process of moving the frames over to its own
    *            child list.
    */
   NS_IMETHOD AppendFrames(ChildListID     aListID,
@@ -642,7 +642,7 @@ public:
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise.  In this case, InsertFrames empties out
-   *            aChildList in the process of moving the frames over to its own
+   *            aFrameList in the process of moving the frames over to its own
    *            child list.
    */
   NS_IMETHOD InsertFrames(ChildListID     aListID,
