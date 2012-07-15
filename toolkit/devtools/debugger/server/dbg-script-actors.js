@@ -935,6 +935,10 @@ ThreadActor.prototype = {
     if (aScript.url.indexOf("chrome://") == 0) {
       return;
     }
+    // Ignore about:* pages for content debugging.
+    if (aScript.url.indexOf("about:") == 0) {
+      return;
+    }
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
     if (!this._scripts[aScript.url]) {
