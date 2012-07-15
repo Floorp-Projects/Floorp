@@ -933,6 +933,7 @@ SourceScripts.prototype = {
   _onScriptsCleared: function SS__onScriptsCleared() {
     DebuggerView.Scripts.empty();
     DebuggerView.Breakpoints.emptyText();
+    DebuggerView.editor.setText("");
   },
 
   /**
