@@ -46,7 +46,7 @@ static bool sInitialized = false;
 static bool sIsShuttingDown = false;
 
 namespace {
-class ClearHashtableOnShutdown : public nsIObserver {
+class ClearHashtableOnShutdown MOZ_FINAL : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
