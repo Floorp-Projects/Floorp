@@ -165,6 +165,15 @@ function setupSearchEngine()
     logoElt.alt = gSearchEngine.name;
   }
 
+  // The "autofocus" attribute doesn't focus the form element
+  // immediately when the element is first drawn, so the
+  // attribute is also used for styling when the page first loads.
+  let searchText = document.getElementById("searchText");
+  searchText.addEventListener("blur", function searchText_onBlur() {
+    searchText.removeEventListener("blur", searchText_onBlur);
+    searchText.removeAttribute("autofocus");
+  });
+
 }
 
 function loadSnippets()
