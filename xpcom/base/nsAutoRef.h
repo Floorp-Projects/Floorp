@@ -467,7 +467,7 @@ public:
     // The handle is a pointer to T.
     typedef T* RawRef;
     // A NULL pointer does not have a resource.
-    static RawRef Void() { return nsnull; };
+    static RawRef Void() { return nsnull; }
 };
 
 /**
