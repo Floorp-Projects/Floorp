@@ -5,29 +5,12 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.CairoImage;
-import org.mozilla.gecko.gfx.BufferedCairoImage;
-import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.GeckoLayerClient;
-import org.mozilla.gecko.gfx.IntSize;
-import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PluginLayer;
-import org.mozilla.gecko.gfx.RectUtils;
-import org.mozilla.gecko.gfx.SurfaceTextureLayer;
-import org.mozilla.gecko.gfx.ViewportMetrics;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.zip.*;
-import java.net.URL;
 import java.nio.*;
-import java.nio.channels.FileChannel;
 import java.util.concurrent.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -37,20 +20,15 @@ import org.json.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
-import android.text.format.Time;
 import android.view.*;
 import android.view.inputmethod.*;
-import android.view.ViewGroup.LayoutParams;
 import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
-import android.view.accessibility.AccessibilityManager;
-import android.view.accessibility.AccessibilityEvent;
 
 import android.util.*;
 import android.net.*;

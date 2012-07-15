@@ -6,7 +6,6 @@ package org.mozilla.gecko;
 
 import java.util.ArrayList;
 
-import android.app.Activity;
 import android.app.Application;
 
 public final class GeckoApplication extends Application {

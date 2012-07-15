@@ -22,9 +22,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 
-import org.json.JSONArray;
-
-import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 
