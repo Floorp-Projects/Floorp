@@ -1388,7 +1388,7 @@ public:
    *
    * @param aStates the changed states
    */
-  virtual void ContentStatesChanged(nsEventStates aStates) { };
+  virtual void ContentStatesChanged(nsEventStates aStates) { }
 
   /**
    * Return how your frame can be split.
@@ -2684,7 +2684,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   // XXX take this out after we've branched
-  virtual bool GetMouseThrough() const { return false; };
+  virtual bool GetMouseThrough() const { return false; }
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug)=0;
