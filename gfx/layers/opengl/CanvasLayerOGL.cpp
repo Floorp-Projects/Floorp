@@ -376,8 +376,8 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     mOGLManager->GetProgram(mTexImage->GetShaderProgramType(),
                             GetMaskLayer());
 
-
   gfx3DMatrix effectiveTransform = GetEffectiveTransform();
+  gfxPattern::GraphicsFilter filter = mFilter;
 #ifdef ANDROID
   // Bug 691354
   // Using the LINEAR filter we get unexplained artifacts.
@@ -385,14 +385,9 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gfxMatrix matrix;
   bool is2D = GetEffectiveTransform().Is2D(&matrix);
   if (is2D && !matrix.HasNonTranslationOrFlip()) {
-    mTexImage->SetFilter(gfxPattern::FILTER_NEAREST);
-  } else {
-    mTexImage->SetFilter(mFilter);
+    filter = gfxPattern::FILTER_NEAREST;
   }
-#else
-  mTexImage->SetFilter(mFilter);
 #endif
-
 
   program->Activate();
   program->SetLayerTransform(effectiveTransform);
@@ -401,6 +396,7 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetTextureUnit(0);
   program->LoadMask(GetMaskLayer());
 
+  mTexImage->SetFilter(filter);
   mTexImage->BeginTileIteration();
   if (gl()->CanUploadNonPowerOfTwo()) {
     do {
