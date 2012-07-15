@@ -755,7 +755,7 @@ GLContextEGL::CreateSharedHandle(TextureImage::TextureShareType aType)
     MakeCurrent();
     GLuint texture = 0;
     ContextFormat fmt = ActualFormat();
-    CreateTextureForOffscreen(ChooseGLFormats(fmt), mOffscreenSize, texture);
+    CreateTextureForOffscreen(ChooseGLFormats(fmt, GLContext::ForceRGBA), mOffscreenSize, texture);
     // texture ownership moved to EGLTextureWrapper after  this point
     // and texture will be deleted in EGLTextureWrapper dtor
     EGLTextureWrapper* tex = new EGLTextureWrapper(this, texture);
