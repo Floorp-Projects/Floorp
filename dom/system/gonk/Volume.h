@@ -6,10 +6,11 @@
 #define mozilla_system_volume_h__
 
 #include "VolumeCommand.h"
+#include "nsIVolume.h"
 #include "nsString.h"
-#include "nsWhitespaceTokenizer.h"
 #include "mozilla/Observer.h"
 #include "mozilla/RefPtr.h"
+#include "nsWhitespaceTokenizer.h"
 
 namespace mozilla {
 namespace system {
@@ -26,39 +27,11 @@ namespace system {
 class Volume : public RefCounted<Volume>
 {
 public:
-  // These MUST match the states from android's system/vold/Volume.h header
-  enum STATE
-  {
-    STATE_INIT        = -1,
-    STATE_NOMEDIA     = 0,
-    STATE_IDLE        = 1,
-    STATE_PENDING     = 2,
-    STATE_CHECKING    = 3,
-    STATE_MOUNTED     = 4,
-    STATE_UNMOUNTING  = 5,
-    STATE_FORMATTING  = 6,
-    STATE_SHARED      = 7,
-    STATE_SHAREDMNT   = 8
-  };
-
   Volume(const nsCSubstring &aVolumeName);
 
-  const char *StateStr(STATE aState) const
-  {
-    switch (aState) {
-      case STATE_INIT:        return "Init";
-      case STATE_NOMEDIA:     return "NoMedia";
-      case STATE_IDLE:        return "Idle";
-      case STATE_PENDING:     return "Pending";
-      case STATE_CHECKING:    return "Checking";
-      case STATE_MOUNTED:     return "Mounted";
-      case STATE_UNMOUNTING:  return "Unmounting";
-      case STATE_FORMATTING:  return "Formatting";
-      case STATE_SHARED:      return "Shared";
-      case STATE_SHAREDMNT:   return "Shared-Mounted";
-    }
-    return "???";
-  }
+  typedef long STATE; // States are now defined in nsIVolume.idl
+
+  static const char *StateStr(STATE aState) { return NS_VolumeStateStr(aState); }
   const char *StateStr() const  { return StateStr(mState); }
   STATE State() const           { return mState; }
 
@@ -75,8 +48,8 @@ public:
   typedef mozilla::ObserverList<Volume *> EventObserverList;
 
   // NOTE: that observers must live in the IOThread.
-  void RegisterObserver(EventObserver *aObserver);
-  void UnregisterObserver(EventObserver *aObserver);
+  static void RegisterObserver(EventObserver *aObserver);
+  static void UnregisterObserver(EventObserver *aObserver);
 
 private:
   friend class AutoMounter;         // Calls StartXxx
@@ -102,7 +75,8 @@ private:
   STATE             mState;
   const nsCString   mName;
   nsCString         mMountPoint;
-  EventObserverList mEventObserverList;
+
+  static EventObserverList mEventObserverList;
 };
 
 } // system
