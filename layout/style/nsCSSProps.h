@@ -92,8 +92,7 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // should enforce that the value of this property must be 1 or larger.
 #define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
 
-// Does this property suppor the hashless hex color quirk in quirks mode?
-#define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
+// NOTE: next free bit is (1<<15)
 
 /**
  * Types of animatable values.
