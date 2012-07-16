@@ -18,22 +18,21 @@ include "gfxMatrix.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "IPC/nsGUIEventIPC.h";
 
-using IPC::URI;
 using gfxMatrix;
-using mozilla::WindowsHandle;
-using nscolor;
+using IPC::URI;
 using nsCompositionEvent;
 using nsIMEUpdatePreference;
 using nsIntSize;
-using nsKeyEvent;
-using nsMouseEvent;
-using nsMouseScrollEvent;
 using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;
 using nsTextEvent;
-using nsTouchEvent;
+using nsMouseEvent;
+using nsMouseScrollEvent;
+using nsKeyEvent;
 using RemoteDOMEvent;
+using mozilla::WindowsHandle;
+using nscolor;
 
 namespace mozilla {
 namespace dom {
@@ -260,7 +259,6 @@ child:
     RealMouseEvent(nsMouseEvent event);
     RealKeyEvent(nsKeyEvent event);
     MouseScrollEvent(nsMouseScrollEvent event);
-    RealTouchEvent(nsTouchEvent event);
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

@@ -18,9 +18,6 @@ EXPORTS		= \
 		nsEventStateManager.h \
 		nsEventListenerManager.h \
 		nsDOMEventTargetHelper.h \
-		nsDOMEvent.h \
-		nsDOMTouchEvent.h \
-		nsDOMUIEvent.h \
 		$(NULL)
 
 CPPSRCS		= \
