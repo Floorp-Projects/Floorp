@@ -4403,7 +4403,7 @@ AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
 static void
 CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, JSFunction *fun)
 {
-    if (type->unknownProperties())
+    if (type->unknownProperties() || fun->script()->enclosingStaticScope())
         return;
 
     /* Strawman object to add properties to and watch for duplicates. */
