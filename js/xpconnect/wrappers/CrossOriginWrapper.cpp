@@ -15,16 +15,16 @@
 
 namespace xpc {
 
-CrossOriginWrapper::CrossOriginWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags)
+WaiveXrayWrapper::WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags)
 {
 }
 
-CrossOriginWrapper::~CrossOriginWrapper()
+WaiveXrayWrapper::~WaiveXrayWrapper()
 {
 }
 
 bool
-CrossOriginWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                           bool set, js::PropertyDescriptor *desc)
 {
     return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, set, desc) &&
@@ -32,7 +32,7 @@ CrossOriginWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid
 }
 
 bool
-CrossOriginWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                              bool set, js::PropertyDescriptor *desc)
 {
     return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, set, desc) &&
@@ -40,7 +40,7 @@ CrossOriginWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, j
 }
 
 bool
-CrossOriginWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
+WaiveXrayWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                         js::Value *vp)
 {
     return CrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&
@@ -48,14 +48,14 @@ CrossOriginWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, js
 }
 
 bool
-CrossOriginWrapper::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
+WaiveXrayWrapper::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
 {
     return CrossCompartmentWrapper::call(cx, wrapper, argc, vp) &&
            WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
-CrossOriginWrapper::construct(JSContext *cx, JSObject *wrapper,
+WaiveXrayWrapper::construct(JSContext *cx, JSObject *wrapper,
                               unsigned argc, js::Value *argv, js::Value *rval)
 {
     return CrossCompartmentWrapper::construct(cx, wrapper, argc, argv, rval) &&
