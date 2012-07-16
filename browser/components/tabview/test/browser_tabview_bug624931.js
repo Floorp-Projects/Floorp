@@ -38,7 +38,7 @@ function checkForFrontAddition(aEvent) {
 }
 
 function checkForTransformAddition(aEvent) {
-  if (aEvent.attrName == "style" && aEvent.target.style.MozTransform) {
+  if (aEvent.attrName == "style" && aEvent.target.style.transform) {
     transformChanged = true;
   }
 }
@@ -47,7 +47,7 @@ function onTabViewHidden() {
   window.removeEventListener("tabviewhidden", onTabViewHidden, false);
 
   ok(frontChanged, "the CSS class 'front' was added while zooming in");
-  ok(transformChanged, "the CSS class '-moz-transform' was modified while " +
+  ok(transformChanged, "the CSS class 'transform' was modified while " +
      "zooming in");
 
   frontChanged = transformChanged = false;

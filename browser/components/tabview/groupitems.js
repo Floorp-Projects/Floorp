@@ -619,7 +619,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     } else {
       iQ(this.container).animate({
         opacity: 0,
-        "-moz-transform": "scale(.3)",
+        "transform": "scale(.3)",
       }, {
         duration: 170,
         complete: destroyGroup
@@ -641,7 +641,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       iQ(this.container).animate({
          opacity: 0,
-         "-moz-transform": "scale(.3)",
+         "transform": "scale(.3)",
       }, {
         duration: 170,
         complete: function() {
@@ -727,14 +727,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (!options || !options.immediately) {
       $container.animate({
-        "-moz-transform": "scale(1)",
+        "transform": "scale(1)",
         "opacity": 1
       }, {
         duration: 170,
         complete: finalize
       });
     } else {
-      $container.css({"-moz-transform": "none", opacity: 1});
+      $container.css({"transform": "none", opacity: 1});
       finalize();
     }
 
@@ -875,7 +875,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer.css({
       left: this.bounds.left + this.bounds.width/2 - iQ(self.$undoContainer).width()/2,
       top:  this.bounds.top + this.bounds.height/2 - iQ(self.$undoContainer).height()/2,
-      "-moz-transform": "scale(.1)",
+      "transform": "scale(.1)",
       opacity: 0
     });
     this.hidden = true;
@@ -883,7 +883,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // hide group item and show undo container.
     setTimeout(function() {
       self.$undoContainer.animate({
-        "-moz-transform": "scale(1)",
+        "transform": "scale(1)",
         "opacity": 1
       }, {
         easing: "tabviewBounce",

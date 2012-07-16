@@ -837,7 +837,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #forward-button:-moz-locale-dir(rtl),
 #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-text {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 @conditionalForwardWithUrlbar@ {
@@ -1236,7 +1236,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
   /* let winstripe-urlbar-back-button-mask clip the urlbar's right side for RTL */
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
@@ -1578,7 +1578,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #go-button,
@@ -1600,7 +1600,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #urlbar-stop-button {
@@ -1922,7 +1922,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .tab-close-button:-moz-system-metric(touch-enabled) {
-  -moz-transform: scale(1.2);
+  transform: scale(1.2);
 }
 
 .tab-close-button:hover,
@@ -1982,7 +1982,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
@@ -2104,7 +2104,7 @@ toolbarbutton.chevron {
 }
 
 toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 toolbarbutton.chevron > .toolbarbutton-text,
@@ -2318,7 +2318,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #notification-popup-box:-moz-locale-dir(rtl),
 .notification-anchor-icon:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .notification-anchor-icon {
@@ -2771,7 +2771,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   width: 14px;
   height: 14px;
   -moz-margin-start: -moz-calc(50% - 7px);
-  -moz-transform: rotate(-45deg);
+  transform: rotate(-45deg);
   border: 1px solid transparent;
   background-clip: padding-box;
   background-repeat: no-repeat;
@@ -2879,7 +2879,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 #inspector-breadcrumbs > .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
 #inspector-breadcrumbs > .scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .inspector-breadcrumbs-button {
@@ -3205,7 +3205,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 7px;
   height: 24px;
   cursor: ew-resize;
-  -moz-transform: translate(12px, -12px);
+  transform: translate(12px, -12px);
   background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
 }
 
@@ -3213,7 +3213,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 16px;
   height: 16px;
   cursor: se-resize;
-  -moz-transform: translate(12px, 12px);
+  transform: translate(12px, 12px);
   background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 

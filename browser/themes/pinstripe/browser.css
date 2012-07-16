@@ -118,7 +118,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 /* ----- BOOKMARK BUTTONS ----- */
@@ -459,7 +459,7 @@ toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
 toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl):-moz-lwtheme,
 toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
@@ -929,7 +929,7 @@ toolbar[mode="icons"] #zoom-in-button {
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
   /* let pinstripe-urlbar-back-button-clip-path clip the urlbar's right side for RTL */
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #identity-box {
@@ -1208,7 +1208,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 #go-button:-moz-locale-dir(rtl),
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #urlbar-reload-button {
@@ -1220,7 +1220,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 }
 
 #urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #urlbar-stop-button {
@@ -2020,7 +2020,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-down,
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
-  -moz-transform: scaleY(-1);
+  transform: scaleY(-1);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
@@ -2301,7 +2301,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #notification-popup-box:-moz-locale-dir(rtl),
 .notification-anchor-icon:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .notification-anchor-icon {
@@ -2849,7 +2849,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   width: 14px;
   height: 14px;
   -moz-margin-start: -moz-calc(50% - 7px);
-  -moz-transform: rotate(-45deg);
+  transform: rotate(-45deg);
   border: 1px solid transparent;
   background-clip: padding-box;
   background-repeat: no-repeat;
@@ -2957,7 +2957,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 #inspector-breadcrumbs > .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
 #inspector-breadcrumbs > .scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .inspector-breadcrumbs-button {
@@ -3278,7 +3278,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 7px;
   height: 24px;
   cursor: ew-resize;
-  -moz-transform: translate(12px, -12px);
+  transform: translate(12px, -12px);
   background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
 }
 
@@ -3286,7 +3286,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 16px;
   height: 16px;
   cursor: se-resize;
-  -moz-transform: translate(12px, 12px);
+  transform: translate(12px, 12px);
   background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 
