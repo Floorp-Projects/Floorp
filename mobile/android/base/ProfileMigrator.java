@@ -179,10 +179,48 @@ public class ProfileMigrator {
     private static final String FAVICON_URL       = "f_url";
     private static final String FAVICON_GUID      = "f_guid";
 
-    // Helper constants
+    // Query for extra bookmark information
+    private static final String BOOKMARK_QUERY_EXTRAS =
+        "SELECT annos.item_id          AS a_item_id, "    +
+        "       attributes.name        AS t_name, "       +
+        "       annos.content          AS a_content "     +
+        "FROM (moz_items_annos AS annos "                 +
+        "      JOIN moz_anno_attributes AS attributes "   +
+        "      ON annos.anno_attribute_id = attributes.id)";
+
+    // Result columns of extra information query
+    private static final String ANNO_ITEM_ID   = "a_item_id";
+    private static final String ATTRIBUTE_NAME = "t_name";
+    private static final String ANNO_CONTENT   = "a_content";
+
+    private class AttributePair {
+        final String name;
+        final String content;
+
+        public AttributePair(String aName, String aContent) {
+            name = aName;
+            content = aContent;
+        }
+    }
+
+    // Places attribute names for bookmarks
+    private static final String PLACES_ATTRIB_QUERY = "Places/SmartBookmark";
+    private static final String PLACES_ATTRIB_LIVEMARK_FEED = "livemark/feedURI";
+    private static final String PLACES_ATTRIB_LIVEMARK_SITE = "livemark/siteURI";
+
+    // Helper constants. They enumerate the different types of bookmarks we
+    // have to deal with, and we should have as many types as BrowserContract
+    // knows about, though the actual values don't necessarily match up. We do
+    // the translation between both values elsewhere.
+    // The first 3 correspond to real types that exist in places, and match
+    // values with the places types.
     private static final int PLACES_TYPE_BOOKMARK  = 1;
     private static final int PLACES_TYPE_FOLDER    = 2;
     private static final int PLACES_TYPE_SEPARATOR = 3;
+    // These aren't used in the type field in places, but we use them
+    // internally because we need to distinguish them from the above types.
+    private static final int PLACES_TYPE_LIVEMARK  = 4;
+    private static final int PLACES_TYPE_QUERY     = 5;
 
     /*
       For statistics keeping.
@@ -986,17 +1024,113 @@ public class ProfileMigrator {
                                    long parent, long added,
                                    long modified, long position,
                                    String keyword, int type) {
-            // Translate the parent pointer if needed
+            // Translate the parent pointer if needed.
             if (mRerootMap.containsKey(parent)) {
                 parent = mRerootMap.get(parent);
             }
-            // The bookmark can only be one of three valid types
-            int newtype = (type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
-                           type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
-                           Bookmarks.TYPE_SEPARATOR);
+            // The bookmark can only be one of the valid types.
+            final int newtype = (type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
+                                 type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
+                                 type == PLACES_TYPE_SEPARATOR ? Bookmarks.TYPE_SEPARATOR :
+                                 type == PLACES_TYPE_LIVEMARK ? Bookmarks.TYPE_LIVEMARK :
+                                 Bookmarks.TYPE_QUERY);
             mDB.updateBookmarkInBatch(mCr, mOperations,
                                       url, title, guid, parent, added,
                                       modified, position, keyword, newtype);
+        }
+
+        protected Map<Long, List<AttributePair>> getBookmarkAttributes(SQLiteBridge db) {
+
+            Map<Long, List<AttributePair>> attributes =
+                new HashMap<Long, List<AttributePair>>();
+            Cursor cursor = null;
+
+            try {
+                cursor = db.rawQuery(BOOKMARK_QUERY_EXTRAS, null);
+
+                final int idCol = cursor.getColumnIndex(ANNO_ITEM_ID);
+                final int nameCol = cursor.getColumnIndex(ATTRIBUTE_NAME);
+                final int contentCol = cursor.getColumnIndex(ANNO_CONTENT);
+
+                cursor.moveToFirst();
+                while (!cursor.isAfterLast()) {
+                    final long id = cursor.getLong(idCol);
+                    final String attName = cursor.getString(nameCol);
+                    final String content = cursor.getString(contentCol);
+
+                    if (PLACES_ATTRIB_QUERY.equals(attName) ||
+                        PLACES_ATTRIB_LIVEMARK_FEED.equals(attName) ||
+                        PLACES_ATTRIB_LIVEMARK_SITE.equals(PLACES_ATTRIB_LIVEMARK_SITE)) {
+                        AttributePair pair = new AttributePair(attName, content);
+
+                        List<AttributePair> list = null;
+                        if (attributes.containsKey(id)) {
+                            list = attributes.get(id);
+                        } else {
+                            list = new ArrayList<AttributePair>();
+                        }
+                        list.add(pair);
+                        attributes.put(id, list);
+                    }
+                    cursor.moveToNext();
+                }
+            } catch (SQLiteBridgeException e) {
+                Log.e(LOGTAG, "Failed to get bookmark attributes: ", e);
+                // Do not make this fatal.
+            } finally {
+                if (cursor != null)
+                    cursor.close();
+            }
+
+            return attributes;
+        }
+
+        // Some bookmarks are normal folders in Places but actually have
+        // extra attributes turning them into something "special". In Firefox
+        // for Android these special bookmarks have a specific type, so we need
+        // to change the type from folder into this type if needed.
+        // We also need to translate the extra attributes from the Places
+        // database into extra parameters that are stored in the URL, hence
+        // "augmenting" the bookmark.
+        protected int augmentBookmark(final Map<Long, List<AttributePair>> attributes,
+                                      long id,
+                                      int type,
+                                      StringBuilder urlBuffer) {
+            // Queries don't necessarily have extra attributes,
+            // but are guaranteed to start like this.
+            if (urlBuffer.toString().startsWith("place:")) {
+                type = PLACES_TYPE_QUERY;
+            }
+
+            // No extra attributes, return immediately
+            if (!attributes.containsKey(id)) {
+                return type;
+            }
+
+            final List<AttributePair> list = attributes.get(id);
+            for (AttributePair pair: list) {
+                if (PLACES_ATTRIB_QUERY.equals(pair.name)) {
+                    type = PLACES_TYPE_QUERY;
+                    if (!TextUtils.isEmpty(pair.content)) {
+                        if (urlBuffer.length() > 0) urlBuffer.append("&");
+                        urlBuffer.append("queryId=" + Uri.encode(pair.content));
+                    }
+                } else if (PLACES_ATTRIB_LIVEMARK_FEED.equals(pair.name)) {
+                    type = PLACES_TYPE_LIVEMARK;
+                    if (!TextUtils.isEmpty(pair.content)) {
+                        if (urlBuffer.length() > 0) urlBuffer.append("&");
+                        urlBuffer.append("feedUri=" + Uri.encode(pair.content));
+                   }
+                } else if (PLACES_ATTRIB_LIVEMARK_SITE.equals(pair.name)) {
+                    type = PLACES_TYPE_LIVEMARK;
+                    if (!TextUtils.isEmpty(pair.content)) {
+                        if (urlBuffer.length() > 0) urlBuffer.append("&");
+                        urlBuffer.append("siteUri=" + Uri.encode(pair.content));
+                   }
+                }
+            }
+
+            return type;
         }
 
         protected void migrateBookmarks(SQLiteBridge db) {
@@ -1031,6 +1165,9 @@ public class ProfileMigrator {
                 Telemetry.HistogramAdd("BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS",
                                        bookmarkCount);
 
+                // Get the extra bookmark attributes
+                Map<Long, List<AttributePair>> attributes = getBookmarkAttributes(db);
+
                 // The keys are places IDs.
                 Set<Long> openFolders = new HashSet<Long>();
                 Set<Long> knownFolders = new HashSet<Long>(mRerootMap.keySet());
@@ -1063,15 +1200,6 @@ public class ProfileMigrator {
                         }
 
                         int type = cursor.getInt(typeCol);
-
-                        // Only add bookmarks with a known type
-                        if (!(type == PLACES_TYPE_BOOKMARK ||
-                              type == PLACES_TYPE_FOLDER ||
-                              type == PLACES_TYPE_SEPARATOR)) {
-                            cursor.moveToNext();
-                            continue;
-                        }
-
                         long parent = cursor.getLong(parentCol);
 
                         // Places has an explicit root folder, id=1 parent=0. Skip that.
@@ -1097,6 +1225,20 @@ public class ProfileMigrator {
                         String faviconGuid = null;
                         if (mHasFaviconGUID) {
                             faviconGuid = cursor.getString(faviconGuidCol);
+                        }
+
+                        StringBuilder urlBuffer;
+                        if (url != null) {
+                            urlBuffer = new StringBuilder(url);
+                        } else {
+                            urlBuffer = new StringBuilder();
+                        }
+                        type = augmentBookmark(attributes, id, type, urlBuffer);
+                        // It's important we don't turn null URLs into empty
+                        // URLs here, because null URL means the bookmark
+                        // is identified by something else than the URL.
+                        if (!TextUtils.isEmpty(urlBuffer)) {
+                            url = urlBuffer.toString();
                         }
 
                         // Is the parent for this bookmark already added?
