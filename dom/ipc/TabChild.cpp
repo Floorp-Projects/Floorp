@@ -665,6 +665,51 @@ TabChild::RecvMouseScrollEvent(const nsMouseScrollEvent& event)
   return true;
 }
 
+bool
+TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
+{
+    // FIXME/bug 774458: make this behavior comply with spec
+    nsTouchEvent localEvent(aEvent);
+    nsEventStatus status = DispatchWidgetEvent(localEvent);
+    if (status == nsEventStatus_eConsumeNoDefault) {
+        return true;
+    }
+
+    // Synthesize a phony mouse event.
+    PRUint32 msg;
+    switch (aEvent.message) {
+    case NS_TOUCH_START:
+        msg = NS_MOUSE_BUTTON_DOWN;
+        break;
+    case NS_TOUCH_MOVE:
+        msg = NS_MOUSE_MOVE;
+        break;
+    case NS_TOUCH_END:
+    case NS_TOUCH_CANCEL:
+        msg = NS_MOUSE_BUTTON_UP;
+        break;
+    default:
+        MOZ_NOT_REACHED("Unknown touch event message");
+    }
+
+    nsIntPoint refPoint(0, 0);
+    if (aEvent.touches.Length()) {
+        refPoint = aEvent.touches[0]->mRefPoint;
+    }
+
+    nsMouseEvent event(true, msg, NULL,
+                       nsMouseEvent::eReal, nsMouseEvent::eNormal);
+    event.refPoint = refPoint;
+    event.time = aEvent.time;
+    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    event.button = nsMouseEvent::eLeftButton;
+    if (msg != NS_MOUSE_MOVE) {
+        event.clickCount = 1;
+    }
+
+    DispatchWidgetEvent(event);
+    return true;
+}
 
 bool
 TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
@@ -715,16 +760,17 @@ TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
   return true;
 }
 
-bool
+nsEventStatus
 TabChild::DispatchWidgetEvent(nsGUIEvent& event)
 {
   if (!mWidget)
-    return false;
+    return nsEventStatus_eConsumeNoDefault;
 
   nsEventStatus status;
   event.widget = mWidget;
-  NS_ENSURE_SUCCESS(mWidget->DispatchEvent(&event, status), false);
-  return true;
+  NS_ENSURE_SUCCESS(mWidget->DispatchEvent(&event, status),
+                    nsEventStatus_eConsumeNoDefault);
+  return status;
 }
 
 PDocumentRendererChild*

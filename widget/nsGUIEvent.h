@@ -1623,6 +1623,9 @@ public:
 class nsTouchEvent : public nsInputEvent
 {
 public:
+  nsTouchEvent()
+  {
+  }
   nsTouchEvent(bool isTrusted, nsTouchEvent *aEvent)
     : nsInputEvent(isTrusted,
                    aEvent->message,
