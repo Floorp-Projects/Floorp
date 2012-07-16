@@ -6,6 +6,7 @@
 #include "VolumeCommand.h"
 #include "VolumeManager.h"
 #include "VolumeManagerLog.h"
+#include "nsIVolume.h"
 #include "nsXULAppAPI.h"
 
 #include <vold/ResponseCode.h>
@@ -13,11 +14,13 @@
 namespace mozilla {
 namespace system {
 
+Volume::EventObserverList Volume::mEventObserverList;
+
 // We don't get media inserted/removed events at startup. So we
 // assume it's present, and we'll be told that it's missing.
 Volume::Volume(const nsCSubstring &aName)
   : mMediaPresent(true),
-    mState(STATE_INIT),
+    mState(nsIVolume::STATE_INIT),
     mName(aName)
 {
   DBG("Volume %s: created", NameStr());
@@ -67,7 +70,7 @@ Volume::SetState(Volume::STATE aNewState)
       NameStr(), StateStr(mState),
       StateStr(aNewState), mEventObserverList.Length());
 
-  if (aNewState == STATE_NOMEDIA) {
+  if (aNewState == nsIVolume::STATE_NOMEDIA) {
     // Cover the startup case where we don't get insertion/removal events
     mMediaPresent = false;
   }
@@ -115,16 +118,22 @@ Volume::StartCommand(VolumeCommand *aCommand)
   VolumeManager::PostCommand(aCommand);
 }
 
+//static
 void
 Volume::RegisterObserver(Volume::EventObserver *aObserver)
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
   mEventObserverList.AddObserver(aObserver);
-  // Send an initial event to the observer
-  aObserver->Notify(this);
+  // Send an initial event to the observer (for each volume)
+  size_t numVolumes = VolumeManager::NumVolumes();
+  for (size_t volIndex = 0; volIndex < numVolumes; volIndex++) {
+    RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+    aObserver->Notify(vol);
+  }
 }
 
+//static
 void
 Volume::UnregisterObserver(Volume::EventObserver *aObserver)
 {
