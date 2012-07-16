@@ -296,7 +296,6 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
-  Thread*           mCompositorThread;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

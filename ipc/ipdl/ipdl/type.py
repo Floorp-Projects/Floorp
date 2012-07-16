@@ -271,6 +271,7 @@ class ProtocolType(IPDLType):
         self.manages = [ ]
         self.stateless = stateless
         self.hasDelete = False
+        self.hasReentrantDelete = False
     def isProtocol(self): return True
 
     def name(self):
@@ -827,6 +828,8 @@ class GatherDecls(TcheckVisitor):
                 "destructor declaration `%s(...)' required for managed protocol `%s'",
                 _DELETE_MSG, p.name)
 
+        p.decl.type.hasReentrantDelete = p.decl.type.hasDelete and self.symtab.lookup(_DELETE_MSG).type.isRpc()
+
         for managed in p.managesStmts:
             mgdname = managed.name
             ctordecl = self.symtab.lookup(mgdname +'Constructor')
@@ -845,13 +848,17 @@ class GatherDecls(TcheckVisitor):
             if 0 == len(p.startStates):
                 p.startStates = [ p.transitionStmts[0] ]
 
-        # declare implicit "any" and "dead" states
+        # declare implicit "any", "dead", and "dying" states
         self.declare(loc=State.ANY.loc,
                      type=StateType(p.decl.type, State.ANY.name, start=False),
                      progname=State.ANY.name)
         self.declare(loc=State.DEAD.loc,
                      type=StateType(p.decl.type, State.DEAD.name, start=False),
                      progname=State.DEAD.name)
+        if p.decl.type.hasReentrantDelete:
+            self.declare(loc=State.DYING.loc,
+                         type=StateType(p.decl.type, State.DYING.name, start=False),
+                         progname=State.DYING.name)
 
         # declare each state before decorating their mention
         for trans in p.transitionStmts:
@@ -871,6 +878,9 @@ class GatherDecls(TcheckVisitor):
             # add a special state |state DEAD: null goto DEAD;|
             deadtrans = TransitionStmt.makeNullStmt(State.DEAD)
             p.states[State.DEAD] = deadtrans           
+            if p.decl.type.hasReentrantDelete:
+                dyingtrans = TransitionStmt.makeNullStmt(State.DYING)
+                p.states[State.DYING] = dyingtrans
 
         # visit the message decls once more and resolve the state names
         # attached to actor params and returns

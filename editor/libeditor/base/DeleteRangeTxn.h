@@ -7,10 +7,18 @@
 #define DeleteRangeTxn_h__
 
 #include "EditAggregateTxn.h"
+#include "EditTxn.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsID.h"
+#include "nsIEditor.h"
+#include "nsISupportsImpl.h"
 #include "nsRange.h"
-#include "nsEditor.h"
-#include "nsCOMPtr.h"
+#include "nscore.h"
+#include "prtypes.h"
 
+class nsEditor;
+class nsINode;
 class nsRangeUpdater;
 
 /**

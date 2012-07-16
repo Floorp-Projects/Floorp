@@ -511,11 +511,9 @@ nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 class PaintFrameCallback : public gfxDrawingCallback {
 public:
   PaintFrameCallback(nsIFrame* aFrame,
-                     nsIFrame* aTarget,
                      const nsSize aPaintServerSize,
                      const gfxIntSize aRenderSize)
    : mFrame(aFrame)
-   , mTarget(aTarget)
    , mPaintServerSize(aPaintServerSize)
    , mRenderSize(aRenderSize)
   {}
@@ -525,7 +523,6 @@ public:
                             const gfxMatrix& aTransform);
 private:
   nsIFrame* mFrame;
-  nsIFrame* mTarget;
   nsSize mPaintServerSize;
   gfxIntSize mRenderSize;
 };
@@ -590,7 +587,8 @@ static already_AddRefed<gfxDrawable>
 DrawableFromPaintServer(nsIFrame*         aFrame,
                         nsIFrame*         aTarget,
                         const nsSize&     aPaintServerSize,
-                        const gfxIntSize& aRenderSize)
+                        const gfxIntSize& aRenderSize,
+                        const gfxMatrix&  aContextMatrix)
 {
   // aPaintServerSize is the size that would be filled when using
   // background-repeat:no-repeat and background-size:auto. For normal background
@@ -609,7 +607,8 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
     nsRefPtr<gfxPattern> pattern =
-      server->GetPaintServerPattern(aTarget, &nsStyleSVG::mFill, 1.0, &overrideBounds);
+      server->GetPaintServerPattern(aTarget, aContextMatrix,
+                                    &nsStyleSVG::mFill, 1.0, &overrideBounds);
 
     if (!pattern)
       return nsnull;
@@ -631,7 +630,7 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
   nsRefPtr<gfxDrawingCallback> cb =
-    new PaintFrameCallback(aFrame, aTarget, aPaintServerSize, aRenderSize);
+    new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize);
   nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
   return drawable.forget();
 }
@@ -655,7 +654,8 @@ nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
   nsIntSize roundedOut = destSize.ToOutsidePixels(appUnitsPerDevPixel).Size();
   gfxIntSize imageSize(roundedOut.width, roundedOut.height);
   nsRefPtr<gfxDrawable> drawable =
-    DrawableFromPaintServer(aPaintServer, aTarget, aPaintServerSize, imageSize);
+    DrawableFromPaintServer(aPaintServer, aTarget, aPaintServerSize, imageSize,
+                          aRenderingContext->ThebesContext()->CurrentMatrix());
 
   if (drawable) {
     nsLayoutUtils::DrawPixelSnapped(aRenderingContext, drawable, aFilter,

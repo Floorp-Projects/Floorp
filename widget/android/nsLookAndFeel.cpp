@@ -472,3 +472,10 @@ nsLookAndFeel::GetEchoPasswordImpl()
     }
     return mShowPassword;
 }
+
+PRUint32
+nsLookAndFeel::GetPasswordMaskDelayImpl()
+{
+  // This value is hard-coded in PasswordTransformationMethod.java
+  return 1500;
+}

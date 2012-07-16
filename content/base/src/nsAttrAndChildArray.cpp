@@ -320,6 +320,39 @@ nsAttrAndChildArray::GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
 }
 
 const nsAttrValue*
+nsAttrAndChildArray::GetAttr(const nsAString& aName,
+                             nsCaseTreatment aCaseSensitive) const
+{
+  // Check whether someone is being silly and passing non-lowercase
+  // attr names.
+  if (aCaseSensitive == eIgnoreCase &&
+      nsContentUtils::StringContainsASCIIUpper(aName)) {
+    // Try again with a lowercased name, but make sure we can't reenter this
+    // block by passing eCaseSensitive for aCaseSensitive.
+    nsAutoString lowercase;
+    nsContentUtils::ASCIIToLower(aName, lowercase);
+    return GetAttr(lowercase, eCaseMatters);
+  }
+
+  PRUint32 i, slotCount = AttrSlotCount();
+  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
+    if (ATTRS(mImpl)[i].mName.QualifiedNameEquals(aName)) {
+      return &ATTRS(mImpl)[i].mValue;
+    }
+  }
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    const nsAttrValue* val =
+      mImpl->mMappedAttrs->GetAttr(aName);
+    if (val) {
+      return val;
+    }
+  }
+
+  return nsnull;
+}
+
+const nsAttrValue*
 nsAttrAndChildArray::AttrAt(PRUint32 aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),
@@ -490,8 +523,8 @@ PRInt32
 nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
 {
   PRInt32 idx;
-  if (mImpl && mImpl->mMappedAttrs) {
-    idx = mImpl->mMappedAttrs->IndexOfAttr(aLocalName, aNamespaceID);
+  if (mImpl && mImpl->mMappedAttrs && aNamespaceID == kNameSpaceID_None) {
+    idx = mImpl->mMappedAttrs->IndexOfAttr(aLocalName);
     if (idx >= 0) {
       return idx;
     }

@@ -9,17 +9,32 @@
 
 interface nsITabParent;
 
-[scriptable, uuid(0acd92dd-2902-48ee-adcf-082d3bb3ec45)]
+[scriptable, uuid(6f043e42-02c9-4e8f-8f8d-1b83c6102827)]
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 {
   /**
-   * Gets whether this frame really is a browser frame.
+   * Gets whether this frame really is a browser or app frame.
    *
    * In order to really be a browser frame, this frame's
    * nsIDOMMozBrowserFrame::mozbrowser attribute must be true, and the frame
    * may have to pass various security checks.
    */
   readonly attribute boolean reallyIsBrowser;
+
+  /**
+   * Gets whether this frame really is an app frame.
+   *
+   * In order to really be an app frame, this frame must really be a browser
+   * frame (this requirement will go away eventually), and the frame's mozapp
+   * attribute must point to the manifest of a valid app.
+   */
+  readonly attribute boolean reallyIsApp;
+
+  /**
+   * Gets this frame's app manifest URL, if the frame really is an app frame.
+   * Otherwise, returns the empty string.
+   */
+  readonly attribute AString appManifestURL;
 
   /**
    * Normally, a frame tries to create its frame loader when its src is

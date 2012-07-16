@@ -1489,45 +1489,52 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 .ac-comment {
-  font-size: 1.15em;
+  font-size: 1.06em;
 }
 
 .ac-extra > .ac-comment {
-  font-size: inherit;
+  font-size: 1em;
 }
 
 .ac-url-text,
 .ac-action-text {
+  font-size: 1em;
   color: -moz-nativehyperlinktext;
 }
 
 %ifndef WINSTRIPE_AERO
 @media (-moz-windows-default-theme) {
-  .ac-url-text,
-  .ac-action-text {
-    color: #006600;
+  .ac-url-text:not([selected="true"]),
+  .ac-action-text:not([selected="true"]) {
+    color: #008800;
   }
 }
 %endif
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-image-region: rect(0, 16px, 11px, 0);
   padding: 0 3px;
 }
 
-richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(16px, 16px, 32px, 0);
+%ifdef WINSTRIPE_AERO
+@media not all and (-moz-windows-default-theme) {
+%endif
+  richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
+    -moz-image-region: rect(11px, 16px, 22px, 0);
+  }
+
+  .ac-comment[selected="true"],
+  .ac-url-text[selected="true"],
+  .ac-action-text[selected="true"] {
+    color: inherit !important;
+  }
+%ifdef WINSTRIPE_AERO
 }
+%endif
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: GrayText;
-}
-
-.ac-comment[selected="true"],
-.ac-url-text[selected="true"],
-.ac-action-text[selected="true"] {
-  color: inherit !important;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment),
@@ -1624,6 +1631,20 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 #page-report-button:hover:active,
 #page-report-button[open="true"] {
   -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+/* social recommending panel */
+
+#share-button {
+  list-style-image: url(chrome://browser/skin/share-button.png);
+}
+
+#share-button:not([shared]):not([disabled]):hover {
+  list-style-image: url(chrome://browser/skin/share-button-active.png);
+}
+
+#share-button[shared] {
+  list-style-image: url(chrome://browser/skin/share-button-shared.png);
 }
 
 /* star button */

@@ -3,13 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "nsAString.h"                  // for nsAString_internal::Length
+#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsEditor.h"                   // for nsEditor
+#include "nsEditorUtils.h"              // for nsEditorUtils
+#include "nsError.h"                    // for NS_OK, etc
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsIDOMRange.h"                // for nsIDOMRange, etc
+#include "nsISelection.h"               // for nsISelection
+#include "nsISupportsImpl.h"            // for nsRange::Release
+#include "nsRange.h"                    // for nsRange
 #include "nsSelectionState.h"
-#include "nsIDOMCharacterData.h"
-#include "nsIDOMNode.h"
-#include "nsRange.h"
-#include "nsISelection.h"
-#include "nsEditor.h"
-#include "nsEditorUtils.h"
 
 
 /***************************************************************************
@@ -29,13 +37,13 @@ nsSelectionState::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
   for (PRUint32 i = 0, iEnd = mArray.Length(); i < iEnd; ++i)
   {
-    nsRangeStore &item = mArray[i];
+    nsRangeStore* item = mArray[i];
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                        "selection state mArray[i].startNode");
-    cb.NoteXPCOMChild(item.startNode);
+    cb.NoteXPCOMChild(item->startNode);
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                        "selection state mArray[i].endNode");
-    cb.NoteXPCOMChild(item.endNode);
+    cb.NoteXPCOMChild(item->endNode);
   }
 }
 
@@ -53,6 +61,7 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
     for (i=0; i<count; i++)
     {
       mArray.AppendElement();
+      mArray[i] = new nsRangeStore();
     }
   }
   
@@ -71,7 +80,7 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
   {
     nsCOMPtr<nsIDOMRange> range;
     res = aSel->GetRangeAt(i, getter_AddRefs(range));
-    mArray[i].StoreRange(range);
+    mArray[i]->StoreRange(range);
   }
   
   return res;
@@ -91,7 +100,7 @@ nsSelectionState::RestoreSelection(nsISelection *aSel)
   for (i=0; i<arrayCount; i++)
   {
     nsRefPtr<nsRange> range;
-    mArray[i].GetRange(getter_AddRefs(range));
+    mArray[i]->GetRange(getter_AddRefs(range));
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
    
     res = aSel->AddRange(range);
@@ -106,7 +115,7 @@ nsSelectionState::IsCollapsed()
 {
   if (1 != mArray.Length()) return false;
   nsRefPtr<nsRange> range;
-  mArray[0].GetRange(getter_AddRefs(range));
+  mArray[0]->GetRange(getter_AddRefs(range));
   NS_ENSURE_TRUE(range, false);
   bool bIsCollapsed = false;
   range->GetCollapsed(&bIsCollapsed);
@@ -124,8 +133,8 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
   for (i=0; i<myCount; i++)
   {
     nsRefPtr<nsRange> myRange, itsRange;
-    mArray[i].GetRange(getter_AddRefs(myRange));
-    aSelState->mArray[i].GetRange(getter_AddRefs(itsRange));
+    mArray[i]->GetRange(getter_AddRefs(myRange));
+    aSelState->mArray[i]->GetRange(getter_AddRefs(itsRange));
     NS_ENSURE_TRUE(myRange && itsRange, false);
   
     PRInt16 compResult;
@@ -190,7 +199,7 @@ nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
 
   for (i=0; i<theCount; i++)
   {
-    RegisterRangeItem(&aSelState.mArray[i]);
+    RegisterRangeItem(aSelState.mArray[i]);
   }
 
   return NS_OK;
@@ -204,7 +213,7 @@ nsRangeUpdater::DropSelectionState(nsSelectionState &aSelState)
 
   for (i=0; i<theCount; i++)
   {
-    DropRangeItem(&aSelState.mArray[i]);
+    DropRangeItem(aSelState.mArray[i]);
   }
 
   return NS_OK;

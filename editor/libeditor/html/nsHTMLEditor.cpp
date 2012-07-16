@@ -17,17 +17,18 @@
 #include "nsHTMLURIRefObject.h"
 
 #include "nsIDOMText.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventTarget.h" 
 #include "nsIDOMKeyEvent.h"
-#include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsISelectionController.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsILinkHandler.h"
+#include "nsIInlineSpellChecker.h"
 
 #include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
@@ -63,6 +64,7 @@
 
 #include "nsIFrame.h"
 #include "nsIParserService.h"
+#include "mozilla/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "nsTextFragment.h"
 

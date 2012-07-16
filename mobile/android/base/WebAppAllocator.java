@@ -14,7 +14,7 @@ import org.json.JSONException;
 
 public class WebAppAllocator {
     // The number of WebApp# and WEBAPP# activites/apps/intents
-    private final static int MAX_WEB_APPS = 10;
+    private final static int MAX_WEB_APPS = 100;
 
     protected static GeckoApp sContext = null;
     protected static WebAppAllocator sInstance = null;

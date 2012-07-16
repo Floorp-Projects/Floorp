@@ -3,86 +3,115 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "pratom.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMNSEvent.h"
-#include "nsIMEStateManager.h"
-#include "nsFocusManager.h"
-#include "nsUnicharUtils.h"
-#include "nsReadableUtils.h"
-#include "nsIObserverService.h"
-#include "mozilla/Services.h"
+#include <stdio.h>                      // for NULL, stdout
+#include <string.h>                     // for strcmp
+
+#include "ChangeAttributeTxn.h"         // for ChangeAttributeTxn
+#include "CreateElementTxn.h"           // for CreateElementTxn
+#include "DeleteNodeTxn.h"              // for DeleteNodeTxn
+#include "DeleteRangeTxn.h"             // for DeleteRangeTxn
+#include "DeleteTextTxn.h"              // for DeleteTextTxn
+#include "EditAggregateTxn.h"           // for EditAggregateTxn
+#include "EditTxn.h"                    // for EditTxn
+#include "IMETextTxn.h"                 // for IMETextTxn
+#include "InsertElementTxn.h"           // for InsertElementTxn
+#include "InsertTextTxn.h"              // for InsertTextTxn
+#include "JoinElementTxn.h"             // for JoinElementTxn
+#include "PlaceholderTxn.h"             // for PlaceholderTxn
+#include "SplitElementTxn.h"            // for SplitElementTxn
+#include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozISpellCheckingEngine.h"
-#include "nsIEditorSpellCheck.h"
-#include "mozInlineSpellChecker.h"
-
-#include "nsIDOMText.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMAttr.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMDocumentFragment.h"
-#include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMHTMLBRElement.h"
-#include "nsIDocument.h"
-#include "nsITransactionManager.h"
-#include "nsIAbsorbingTransaction.h"
-#include "nsIPresShell.h"
-#include "nsISelection.h"
-#include "nsISelectionPrivate.h"
-#include "nsISelectionController.h"
-#include "nsIEnumerator.h"
-#include "nsEditProperty.h"
-#include "nsIAtom.h"
-#include "nsCaret.h"
-#include "nsIWidget.h"
-#include "nsIPlaintextEditor.h"
-#include "nsGUIEvent.h"
-
-#include "nsIFrame.h"  // Needed by IME code
-
-#include "nsCSSStyleSheet.h"
-
-#include "nsIContent.h"
-#include "nsDOMString.h"
-#include "nsServiceManagerUtils.h"
-
-// transactions the editor knows how to build
-#include "EditAggregateTxn.h"
-#include "PlaceholderTxn.h"
-#include "ChangeAttributeTxn.h"
-#include "CreateElementTxn.h"
-#include "InsertElementTxn.h"
-#include "DeleteNodeTxn.h"
-#include "InsertTextTxn.h"
-#include "DeleteTextTxn.h"
-#include "DeleteRangeTxn.h"
-#include "SplitElementTxn.h"
-#include "JoinElementTxn.h"
-#include "nsStyleSheetTxns.h"
-#include "IMETextTxn.h"
-#include "nsString.h"
-
+#include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
+#include "mozilla/FunctionTimer.h"      // for NS_TIME_FUNCTION
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/Selection.h"          // for Selection, etc
+#include "mozilla/Services.h"           // for GetObserverService
+#include "mozilla/Util.h"               // for DebugOnly
+#include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAString.h"                  // for nsAString_internal::Length, etc
+#include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
+#include "nsCaret.h"                    // for nsCaret, StCaretHider
+#include "nsCaseTreatment.h"
+#include "nsCharTraits.h"               // for NS_IS_HIGH_SURROGATE, etc
+#include "nsComponentManagerUtils.h"    // for do_CreateInstance
+#include "nsComputedDOMStyle.h"         // for nsComputedDOMStyle
+#include "nsContentUtils.h"             // for nsContentUtils
+#include "nsDOMString.h"                // for DOMStringIsNull
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsEditProperty.h"             // for nsEditProperty, etc
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
-#include "nsEditorEventListener.h"
-#include "nsISelectionDisplay.h"
-#include "nsIInlineSpellChecker.h"
-#include "nsINameSpaceManager.h"
-#include "nsIParserService.h"
+#include "nsEditorEventListener.h"      // for nsEditorEventListener
+#include "nsEditorUtils.h"              // for nsAutoRules, etc
+#include "nsError.h"                    // for NS_OK, etc
+#include "nsEvent.h"                    // for nsEventStatus, etc
+#include "nsFocusManager.h"             // for nsFocusManager
+#include "nsFrameSelection.h"           // for nsFrameSelection
+#include "nsGUIEvent.h"                 // for nsKeyEvent, nsEvent, etc
+#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::dir
+#include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
+#include "nsIAtom.h"                    // for nsIAtom
+#include "nsIContent.h"                 // for nsIContent
+#include "nsIDOMAttr.h"                 // for nsIDOMAttr
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDOMElement.h"              // for nsIDOMElement
+#include "nsIDOMEvent.h"                // for nsIDOMEvent
+#include "nsIDOMEventListener.h"        // for nsIDOMEventListener
+#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
+#include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
+#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent, etc
+#include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
+#include "nsIDOMNSEvent.h"              // for nsIDOMNSEvent
+#include "nsIDOMNamedNodeMap.h"         // for nsIDOMNamedNodeMap
+#include "nsIDOMNode.h"                 // for nsIDOMNode, etc
+#include "nsIDOMNodeList.h"             // for nsIDOMNodeList
+#include "nsIDOMRange.h"                // for nsIDOMRange
+#include "nsIDOMText.h"                 // for nsIDOMText
+#include "nsIDocument.h"                // for nsIDocument
+#include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
+#include "nsIEditActionListener.h"      // for nsIEditActionListener
+#include "nsIEditorObserver.h"          // for nsIEditorObserver
+#include "nsIEditorSpellCheck.h"        // for nsIEditorSpellCheck
+#include "nsIEnumerator.h"              // for nsIEnumerator, etc
+#include "nsIFrame.h"                   // for nsIFrame
+#include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
+#include "nsIMEStateManager.h"          // for nsIMEStateManager
+#include "nsINameSpaceManager.h"        // for kNameSpaceID_None, etc
+#include "nsINode.h"                    // for nsINode, etc
+#include "nsIObserverService.h"         // for nsIObserverService
+#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsIPresShell.h"               // for nsIPresShell
+#include "nsIPrivateTextRange.h"        // for nsIPrivateTextRange, etc
+#include "nsISelection.h"               // for nsISelection, etc
+#include "nsISelectionController.h"     // for nsISelectionController, etc
+#include "nsISelectionDisplay.h"        // for nsISelectionDisplay, etc
+#include "nsISelectionPrivate.h"        // for nsISelectionPrivate, etc
+#include "nsISupportsBase.h"            // for nsISupports
+#include "nsISupportsUtils.h"           // for NS_ADDREF, NS_IF_ADDREF
+#include "nsITransaction.h"             // for nsITransaction
+#include "nsITransactionManager.h"
+#include "nsIWeakReference.h"           // for nsISupportsWeakReference
+#include "nsIWidget.h"                  // for nsIWidget, IMEState, etc
+#include "nsPIDOMWindow.h"              // for nsPIDOMWindow
+#include "nsPresContext.h"              // for nsPresContext
+#include "nsRange.h"                    // for nsRange
+#include "nsReadableUtils.h"            // for EmptyString, ToNewCString
+#include "nsString.h"                   // for nsAutoString, nsString, etc
+#include "nsStringFwd.h"                // for nsAFlatString
+#include "nsStyleConsts.h"              // for NS_STYLE_DIRECTION_RTL, etc
+#include "nsStyleContext.h"             // for nsStyleContext
+#include "nsStyleSheetTxns.h"           // for AddStyleSheetTxn, etc
+#include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
+#include "nsStyleStructFwd.h"           // for nsIFrame::GetStyleUIReset, etc
+#include "nsTextEditUtils.h"            // for nsTextEditUtils
+#include "nsThreadUtils.h"              // for nsRunnable
+#include "nsTransactionManager.h"       // for nsTransactionManager
+#include "prtime.h"                     // for PR_Now
 
-#include "nsITransferable.h"
-#include "nsComputedDOMStyle.h"
-#include "nsTextEditUtils.h"
-#include "nsComputedDOMStyle.h"
-
-#include "mozilla/FunctionTimer.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/dom/Element.h"
-#include "nsContentUtils.h"
-#include "nsCCUncollectableMarker.h"
+class nsIOutputStream;
+class nsIParserService;
+class nsITransferable;
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -92,7 +121,7 @@ static bool gNoisy = false;
 #endif
 
 #ifdef DEBUG
-#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #endif
 
 using namespace mozilla;
@@ -698,6 +727,7 @@ nsEditor::EnableUndo(bool aEnable)
     if (!mTxnMgr) {
       mTxnMgr = new nsTransactionManager();
     }
+    mTxnMgr->SetMaxTransactionCount(-1);
   } else if (mTxnMgr) {
     // disable the transaction manager if it is enabled
     mTxnMgr->Clear();

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/browser_toolbar"
+              style="@style/BrowserToolbar">
+
+    <RelativeLayout android:id="@+id/address_bar"
+                    style="@style/AddressBar"
+                    android:background="@drawable/address_bar_bg">
+
+        <ImageButton android:id="@+id/tabs"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="84dip"
+                     android:layout_alignParentLeft="true"
+                     android:background="@drawable/tabs_crop_button"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/tabs_level"
+                     android:paddingLeft="6dip"
+                     android:paddingRight="32dip"/>
+
+        <TextSwitcher android:id="@+id/tabs_count"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="52dip"
+                     android:layout_height="wrap_content"
+                     android:layout_marginTop="8dp"
+                     android:layout_alignLeft="@id/tabs"
+                     android:gravity="center_horizontal"/>
+
+        <ImageButton android:id="@+id/menu"
+                     style="@style/AddressBar.ImageButton.Unused"/>
+
+        <LinearLayout android:id="@+id/menu_items"
+                      android:layout_width="wrap_content"
+                      android:layout_height="fill_parent"
+                      android:orientation="horizontal"
+                      android:layout_alignParentRight="true"/>
+        
+        <Button android:id="@+id/awesome_bar"
+                style="@style/AddressBar.Button"
+                android:layout_width="fill_parent"
+                android:layout_marginLeft="0dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginRight="6dp"
+                android:layout_toRightOf="@id/tabs"
+                android:layout_toLeftOf="@id/menu_items"
+                android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/address_bar_url"
+                android:singleLine="true"
+                android:gravity="center_vertical|left"
+                android:hint="@string/awesomebar_default_text"
+                android:textColor="#222222"
+                android:paddingLeft="105dip"
+                android:paddingRight="10dip"/>
+
+        <ImageButton android:id="@+id/forward"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="64dip"
+                     android:layout_height="40dip"
+                     android:layout_centerVertical="true"
+                     android:layout_alignLeft="@id/awesome_bar"
+                     android:paddingLeft="22dp"
+                     android:src="@drawable/ic_menu_forward"
+                     android:contentDescription="@string/forward"
+                     android:background="@drawable/address_bar_forward_button"/>
+
+        <ImageButton android:id="@+id/back"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="50dip"
+                     android:layout_height="50dip"
+                     android:layout_centerVertical="true"
+                     android:layout_marginLeft="-28dp"
+                     android:layout_alignLeft="@id/awesome_bar"
+                     android:src="@drawable/ic_menu_back"
+                     android:contentDescription="@string/back"
+                     android:background="@drawable/address_bar_back_button"/>
+
+        <ImageButton android:id="@+id/favicon"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="21.33dip"
+                     android:layout_height="21.33dip"
+                     android:layout_marginLeft="10dip"
+                     android:layout_centerVertical="true"
+                     android:src="@drawable/favicon"
+                     android:layout_toRightOf="@id/forward"/>
+
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_centerVertical="true"
+                      android:layout_alignRight="@id/awesome_bar"
+                      android:orientation="horizontal">
+
+            <ImageButton android:id="@+id/reader"
+                         style="@style/AddressBar.ImageButton.Icon"
+                         android:padding="14dip"
+                         android:src="@drawable/reader"
+                         android:contentDescription="@string/reader_mode"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/site_security"
+                         style="@style/AddressBar.ImageButton.Icon"
+                         android:padding="14dip"
+                         android:src="@drawable/site_security_level"
+                         android:contentDescription="@string/site_security"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/stop"
+                         style="@style/AddressBar.ImageButton.Icon"
+                         android:padding="14dip"
+                         android:src="@drawable/urlbar_stop"
+                         android:contentDescription="@string/stop"
+                         android:visibility="gone"/>
+
+        </LinearLayout>
+
+         <ImageView android:id="@+id/shadow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="2dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="@drawable/address_bar_bg_shadow_repeat"
+                    android:visibility="gone"/>
+
+    </RelativeLayout>
+
+</LinearLayout>

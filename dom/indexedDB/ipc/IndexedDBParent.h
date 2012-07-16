@@ -22,6 +22,7 @@
 
 namespace mozilla {
 namespace dom {
+class ContentParent;
 class TabParent;
 }
 }
@@ -129,6 +130,7 @@ public:
 
 class IndexedDBParent : public PIndexedDBParent
 {
+  friend class mozilla::dom::ContentParent;
   friend class mozilla::dom::TabParent;
 
   nsRefPtr<IDBFactory> mFactory;

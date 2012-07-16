@@ -9,15 +9,19 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsISelection.h"
-#include "nsIEditor.h"
-#include "nsIAtom.h"
+#include "nsDebug.h"
 #include "nsEditor.h"
-#include "nsIContentIterator.h"
-#include "nsCOMArray.h"
+#include "nsIDOMNode.h"
+#include "nsIEditor.h"
+#include "nscore.h"
+#include "prtypes.h"
 
-class nsPlaintextEditor;
+class nsIAtom;
+class nsIContentIterator;
+class nsIDOMDocument;
+class nsIDOMRange;
+class nsISelection;
+template <class E> class nsCOMArray;
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a 
@@ -226,9 +230,9 @@ class nsEditorUtils
 };
 
 
-class nsITransferable;
 class nsIDOMEvent;
 class nsISimpleEnumerator;
+class nsITransferable;
 
 class nsEditorHookUtils
 {

@@ -15,6 +15,7 @@
 #include "jsscript.h"
 #include "jsscope.h"
 
+#include "vm/ScopeObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -26,20 +27,6 @@ inline
 Bindings::Bindings()
     : lastBinding(NULL), nargs(0), nvars(0), hasDup_(false)
 {}
-
-inline BindingKind
-Bindings::slotToFrameIndex(unsigned slot, unsigned *index)
-{
-    slot -= CallObject::RESERVED_SLOTS;
-    if (slot < numArgs()) {
-        *index = slot;
-        return ARGUMENT;
-    }
-
-    *index = slot - numArgs();
-    JS_ASSERT(*index < numVars());
-    return VARIABLE;
-}
 
 inline void
 Bindings::transfer(Bindings *bindings)

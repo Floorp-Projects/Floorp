@@ -1573,6 +1573,15 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(target));
 
+    /*
+     * Transplantation typically allocates new wrappers in every compartment. If
+     * an incremental GC is active, this causes every compartment to be leaked
+     * for that GC. Hence, we finish any ongoing incremental GC before the
+     * transplant to avoid leaks.
+     */
+    if (cx->runtime->gcIncrementalState != NO_INCREMENTAL)
+        FinishIncrementalGC(cx->runtime, gcreason::TRANSPLANT);
+
     JSCompartment *destination = target->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
     Value origv = ObjectValue(*origobj);
@@ -3369,15 +3378,11 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto_, JSObject *parent
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    if (proto && !proto->setNewTypeUnknown(cx))
-        return NULL;
-
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     AssertRootingUnnecessary safe(cx);
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
-        MarkTypeObjectUnknownProperties(cx, obj->type());
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -6411,6 +6416,14 @@ JS_ObjectIsDate(JSContext *cx, JSObject *obj)
     AssertHeapIsIdle(cx);
     JS_ASSERT(obj);
     return obj->isDate();
+}
+
+JS_PUBLIC_API(void)
+JS_ClearDateCaches(JSContext *cx)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    js_ClearDateCaches();
 }
 
 /************************************************************************/

@@ -94,8 +94,6 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
     float prefPercent = 0.0f;
     bool hasSpecifiedWidth = false;
 
-    // XXXldb Should we consider -moz-box-sizing?
-
     const nsStylePosition *stylePos = aFrame->GetStylePosition();
     const nsStyleCoord &width = stylePos->mWidth;
     nsStyleUnit unit = width.GetUnit();
@@ -198,7 +196,32 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         nsIFrame::IntrinsicWidthOffsetData offsets =
             aFrame->IntrinsicWidthOffsets(aRenderingContext);
         // XXX Should we ignore percentage padding?
-        nscoord add = offsets.hPadding + offsets.hBorder;
+
+        // In quirks mode, table cell width should be content-box,
+        // but height should be border box.
+        // Because of this historic anomaly, we do not use quirk.css.
+        // (We can't specify one value of box-sizing for width and another
+        // for height).
+        // For this reason, we also do not use box-sizing for just one of
+        // them, as this may be confusing.
+        nscoord add = 0;
+        if (aFrame->PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
+          add = offsets.hPadding + offsets.hBorder;
+        }
+        else
+        {
+          switch (stylePos->mBoxSizing) {
+            case NS_STYLE_BOX_SIZING_CONTENT:
+              add = offsets.hPadding + offsets.hBorder;
+              break;
+            case NS_STYLE_BOX_SIZING_PADDING:
+              add = offsets.hBorder;
+              break;
+            default:
+              // NS_STYLE_BOX_SIZING_BORDER
+              break;
+          }
+        }
         minCoord += add;
         prefCoord = NSCoordSaturatingAdd(prefCoord, add);
     }
@@ -234,7 +257,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsRenderingContext* aRend
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
 
     mozilla::AutoStackArena arena;
-    SpanningCellSorter spanningCells(tableFrame->PresContext()->PresShell());
+    SpanningCellSorter spanningCells;
 
     // Loop over the columns to consider the columns and cells *without*
     // a colspan.

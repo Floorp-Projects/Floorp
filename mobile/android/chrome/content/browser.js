@@ -159,6 +159,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
+    Services.obs.addObserver(this, "Viewport:Flush", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
@@ -931,6 +932,8 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
+    } else if (aTopic == "Viewport:Flush") {
+      this.displayedDocumentChanged();
     } else if (aTopic == "Passwords:Init") {
       let storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].
         getService(Components.interfaces.nsILoginManagerStorage);
@@ -1494,7 +1497,7 @@ var SelectionHandler = {
         if (zoom != this._viewOffset.zoom) {
           this._viewOffset.zoom = zoom;
           this.updateCacheForSelection();
-          this.positionHandles();
+          this.positionHandles(true);
         }
         break;
       }
@@ -1528,6 +1531,7 @@ var SelectionHandler = {
     this._viewOffset = { top: parseInt(computedStyle.getPropertyValue("margin-top").replace("px", "")),
                          left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")),
                          zoom: BrowserApp.selectedTab.getViewport().zoom };
+    this.updateViewOffsetScroll();
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
@@ -1568,7 +1572,7 @@ var SelectionHandler = {
     selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
 
     // Initialize the cache
-    this.cache = {};
+    this.cache = { start: {}, end: {}};
     this.updateCacheForSelection();
 
     this.showHandles();
@@ -1601,7 +1605,7 @@ var SelectionHandler = {
                                              QueryInterface(Ci.nsISelectionController);
         selectionController.selectAll();
         this.updateCacheForSelection();
-        this.positionHandles();
+        this.positionHandles(false);
         break;
       }
       case COPY: {
@@ -1624,30 +1628,17 @@ var SelectionHandler = {
 
   // aX/aY are in top-level window browser coordinates
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    /* XXX bug 765367: Because the handles are in the document, the element
-       will always be the handle the user touched. These checks are disabled
-       until we can figure out a way to get the element under the handle.
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
-
-    // The element can be null if it's outside the viewport. We also want
-    // to avoid setting focus in a textbox [Bugs 654352 & 667243] and limit
-    // the selection to the initial content window (don't leave or enter iframes).
-    if (!element || element instanceof Ci.nsIDOMHTMLInputElement ||
-                    element instanceof Ci.nsIDOMHTMLTextAreaElement ||
-                    element.ownerDocument.defaultView != this._view)
-      return;
-    */
-
     // Update the handle position as it's dragged
+    let leftTop = "left:" + (aX + this._viewOffset.scrollX - this._viewOffset.left) + "px;" +
+                  "top:" + (aY + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
     if (aIsStartHandle) {
-      this._start.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
-      this._start.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
+      this._start.style.cssText = this._start.style.cssText + leftTop;
+      this.cache.start.left = aX;
+      this.cache.start.top = aY;
     } else {
-      this._end.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
-      this._end.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
+      this._end.style.cssText = this._end.style.cssText + leftTop;
+      this.cache.end.left = aX;
+      this.cache.end.top = aY;
     }
 
     let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -1684,6 +1675,9 @@ var SelectionHandler = {
       this._start = oldEnd;
       this._end = oldStart;
 
+      // We need to update the cache for the new handles
+      this.updateCacheForHandleRects();
+
       // Re-send mouse events to update the selection corresponding to the new handles
       if (this._isRTL) {
         this._sendEndMouseEvents(cwu, false);
@@ -1696,29 +1690,23 @@ var SelectionHandler = {
   },
 
   _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu, useShift) {
-    let start = this._start.getBoundingClientRect();
-    let x = start.right - this.HANDLE_PADDING;
+    let x = this.cache.start.left + this.HANDLE_PADDING + this.HANDLE_WIDTH;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = start.top - 1;
+    let y = this.cache.start.top - 1;
 
     this._sendMouseEvents(cwu, useShift, x, y);
   },
 
   _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu, useShift) {
-    let end = this._end.getBoundingClientRect();
-    let x = end.left + this.HANDLE_PADDING;
+    let x = this.cache.end.left + this.HANDLE_PADDING;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = end.top - 1;
+    let y = this.cache.end.top - 1;
 
     this._sendMouseEvents(cwu, useShift, x, y);
   },
 
   _sendMouseEvents: function sh_sendMouseEvents(cwu, useShift, x, y) {
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, x, y);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, x, y);
-
+    let element = cwu.elementFromPoint(x, y, false, true);
     // Don't send mouse events to the other handle
     if (element instanceof Ci.nsIDOMHTMLHtmlElement)
       return;
@@ -1739,21 +1727,20 @@ var SelectionHandler = {
     if (this._view) {
       let selection = this._view.getSelection();
       if (selection) {
-        selectedText = selection.toString().trim();
+        // Get the text to copy if the tap is in the selection
+        if (arguments.length == 2 && this._pointInSelection(aX, aY))
+          selectedText = selection.toString().trim();
+
         selection.removeAllRanges();
         selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
       }
     }
 
     // Only try copying text if there's text to copy!
-    if (arguments.length == 2 && selectedText.length) {
-      let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-      let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-      if (!element)
-        element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
-
+    if (selectedText.length) {
+      let element = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY);
       // Only try copying text if the tap happens in the same view
-      if (element.ownerDocument.defaultView == this._view && this._pointInSelection(aX, aY)) {
+      if (element.ownerDocument.defaultView == this._view) {
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
         clipboard.copyString(selectedText, element.ownerDocument);
         NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
@@ -1781,20 +1768,18 @@ var SelectionHandler = {
       win = win.parent;
     }
 
+    let rangeRect = this._view.getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
-    return (aX - offset.x > this.cache.rect.left - radius.left &&
-            aX - offset.x < this.cache.rect.right + radius.right &&
-            aY - offset.y > this.cache.rect.top - radius.top &&
-            aY - offset.y < this.cache.rect.bottom + radius.bottom);
+    return (aX - offset.x > rangeRect.left - radius.left &&
+            aX - offset.x < rangeRect.right + radius.right &&
+            aY - offset.y > rangeRect.top - radius.top &&
+            aY - offset.y < rangeRect.bottom + radius.bottom);
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
   // param to decide whether the selection has been reversed.
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
-    let range = this._view.getSelection().getRangeAt(0);
-    this.cache.rect = range.getBoundingClientRect();
-
-    let rects = range.getClientRects();
+    let rects = this._view.getSelection().getRangeAt(0).getClientRects();
     let start = { x: rects[0].left, y: rects[0].bottom };
     let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
@@ -1805,30 +1790,58 @@ var SelectionHandler = {
                           (!aIsStartHandle && (start.y < this.cache.start.y || (start.y == this.cache.start.y && start.x < this.cache.start.x)));
     }
 
-    this.cache.start = start;
-    this.cache.end = end;
+    this.cache.start.x = start.x;
+    this.cache.start.y = start.y;
+    this.cache.end.x = end.x;
+    this.cache.end.y = end.y;
 
     return selectionReversed;
   },
 
+  // Updates the cached client rect left/top values for the handles.
+  updateCacheForHandleRects: function sh_updateCacheForHandleRects() {
+    let start = this._start.getBoundingClientRect();
+    this.cache.start.left = start.left;
+    this.cache.start.top = start.top;
+
+    let end = this._end.getBoundingClientRect();
+    this.cache.end.left = end.left;
+    this.cache.end.top = end.top;
+  },
+
+  updateViewOffsetScroll: function sh_updateViewOffsetScroll() {
+    let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+
+    this._viewOffset.scrollX = scrollX.value;
+    this._viewOffset.scrollY = scrollY.value;
+  },
+
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
-  positionHandles: function sh_positionHandles() {
-    let height = this.HANDLE_HEIGHT / this._viewOffset.zoom;
-    this._start.style.height = height + "px";
-    this._end.style.height = height + "px";
+  positionHandles: function sh_positionHandles(adjustScale) {
+    let startCss = this._start.style.cssText;
+    let endCss = this._end.style.cssText;
 
-    let width = this.HANDLE_WIDTH/ this._viewOffset.zoom;
-    this._start.style.width = width + "px";
-    this._end.style.width = width + "px";
+    if (adjustScale) { 
+      let heightWidth = "height:" + this.HANDLE_HEIGHT / this._viewOffset.zoom + "px;" + 
+                        "width:" + this.HANDLE_WIDTH / this._viewOffset.zoom + "px;";
 
-    this._start.style.left = (this.cache.start.x + this._view.scrollX - this._viewOffset.left -
-                              this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - width) + "px";
-    this._start.style.top = (this.cache.start.y + this._view.scrollY - this._viewOffset.top) + "px";
+      startCss += heightWidth;
+      endCss += heightWidth;
+    }
 
-    this._end.style.left = (this.cache.end.x + this._view.scrollX - this._viewOffset.left -
-                            this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px";
-    this._end.style.top = (this.cache.end.y + this._view.scrollY - this._viewOffset.top) + "px";
+    startCss += "left:" + (this.cache.start.x + this._viewOffset.scrollX - this._viewOffset.left -
+                           this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - this.HANDLE_WIDTH / this._viewOffset.zoom) + "px;" +
+                "top:" + (this.cache.start.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
+
+    endCss += "left:" + (this.cache.end.x + this._viewOffset.scrollX - this._viewOffset.left -
+                         this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px;" +
+              "top:" + (this.cache.end.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
+
+    this._start.style.cssText = startCss;
+    this._end.style.cssText = endCss;
   },
 
   showHandles: function sh_showHandles() {
@@ -1842,7 +1855,8 @@ var SelectionHandler = {
       return;
     }
 
-    this.positionHandles();
+    this.positionHandles(true);
+    this.updateCacheForHandleRects();
 
     this._start.setAttribute("showing", "true");
     this._end.setAttribute("showing", "true");
@@ -1893,6 +1907,10 @@ var SelectionHandler = {
         this._touchDelta = { x: touch.clientX - rect.left,
                              y: touch.clientY - rect.top };
 
+        // Update the cache in case the page panned since last touch
+        this.updateCacheForHandleRects();
+        this.updateViewOffsetScroll();
+
         aEvent.target.addEventListener("touchmove", this, false);
         break;
 
@@ -1903,7 +1921,7 @@ var SelectionHandler = {
         this._touchDelta = null;
 
         // Adjust the handles to be in the correct spot relative to the text selection
-        this.positionHandles();
+        this.positionHandles(false);
         break;
 
       case "touchmove":
@@ -1988,7 +2006,7 @@ var UserAgent = {
         }
 
         // Send desktop UA if "Request Desktop Site" is enabled
-        if (tab.desktopMode && (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
+        if (tab.desktopMode)
           channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
 
         break;
@@ -2634,20 +2652,6 @@ Tab.prototype = {
           }
         });
 
-        // Once document is fully loaded, we can do a readability check to
-        // possibly enable reader mode for this page
-        Reader.checkTabReadability(this.id, function(isReadable) {
-          if (!isReadable)
-            return;
-
-          sendMessageToJava({
-            gecko: {
-              type: "Content:ReaderEnabled",
-              tabID: this.id
-            }
-          });
-        }.bind(this));
-
         // Attach a listener to watch for "click" events bubbling up from error
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
@@ -2846,6 +2850,20 @@ Tab.prototype = {
             tabID: this.id
           }
         });
+
+        // Once document is fully loaded, we can do a readability check to
+        // possibly enable reader mode for this page
+        Reader.checkTabReadability(this.id, function(isReadable) {
+          if (!isReadable)
+            return;
+
+          sendMessageToJava({
+            gecko: {
+              type: "Content:ReaderEnabled",
+              tabID: this.id
+            }
+          });
+        }.bind(this));
       }
     }
   },
@@ -3318,8 +3336,9 @@ var BrowserEventHandler = {
       // round the scroll amounts because they come in as floats and might be
       // subject to minor rounding errors because of zoom values. I've seen values
       // like 0.99 come in here and get truncated to 0; this avoids that problem.
-      data.x = Math.round(data.x);
-      data.y = Math.round(data.y);
+      let zoom = BrowserApp.selectedTab._zoom;
+      data.x = Math.round(data.x / zoom);
+      data.y = Math.round(data.y / zoom);
 
       if (this._firstScrollEvent) {
         while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
@@ -4442,6 +4461,8 @@ var ViewportHandler = {
     switch (aTopic) {
       case "Window:Resize":
         if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
+          break;
+        if (window.outerWidth == 0 || window.outerHeight == 0)
           break;
 
         let oldScreenWidth = gScreenWidth;
@@ -6297,6 +6318,13 @@ let Reader = {
 
       let tab = BrowserApp.getTabForId(tabId);
       let url = tab.browser.contentWindow.location.href;
+      let uri = Services.io.newURI(url, null, null);
+
+      if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+        this.log("Not parsing URI scheme: " + uri.scheme);
+        callback(null);
+        return;
+      }
 
       // First, try to find a cached parsed article in the DB
       this.getArticleFromCache(url, function(article) {
@@ -6310,7 +6338,6 @@ let Reader = {
         // changes the document object in several ways to find the article
         // in it.
         let doc = tab.browser.contentWindow.document.cloneNode(true);
-        let uri = Services.io.newURI(url, null, null);
 
         let readability = new Readability(uri, doc);
         article = readability.parse();
@@ -6466,7 +6493,7 @@ let Reader = {
     });
   },
 
-  _dowloadDocument: function Reader_downloadDocument(url, callback) {
+  _downloadDocument: function Reader_downloadDocument(url, callback) {
     // We want to parse those arbitrary pages safely, outside the privileged
     // context of chrome. We create a hidden browser element to fetch the
     // loaded page's document object then discard the browser element.
@@ -6511,7 +6538,7 @@ let Reader = {
     try {
       this.log("Needs to fetch page, creating request: " + url);
 
-      request.browser = this._dowloadDocument(url, function(doc) {
+      request.browser = this._downloadDocument(url, function(doc) {
         this.log("Finished loading page: " + doc);
 
         // Delete reference to the browser element as we're

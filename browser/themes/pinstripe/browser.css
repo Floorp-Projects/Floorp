@@ -1114,7 +1114,7 @@ toolbar[mode="icons"] #zoom-in-button {
   height: 12px;
 }
 
-richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
+richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
   -moz-image-region: rect(0, 64px, 16px, 48px);
@@ -1139,20 +1139,20 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-image-region: rect(0, 16px, 11px, 0);
   padding: 0 3px;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(16px, 16px, 32px, 0);
+  -moz-image-region: rect(11px, 16px, 22px, 0);
 }
 
 window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  -moz-image-region: rect(0, 32px, 11px, 16px);
 }
 
 window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  -moz-image-region: rect(11px, 32px, 22px, 16px);
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
@@ -1240,6 +1240,20 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #page-report-button:hover:active,
 #page-report-button[open="true"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+/* social recommending panel */
+
+#share-button {
+  list-style-image: url(chrome://browser/skin/share-button.png);
+}
+
+#share-button:not([shared]):not([disabled]):hover {
+  list-style-image: url(chrome://browser/skin/share-button-active.png);
+}
+
+#share-button[shared] {
+  list-style-image: url(chrome://browser/skin/share-button-shared.png);
 }
 
 /* STAR BUTTON */

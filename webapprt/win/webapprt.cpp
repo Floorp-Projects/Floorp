@@ -41,6 +41,7 @@ namespace {
   wchar_t backupFilePath[MAXPATHLEN];
   wchar_t iconPath[MAXPATHLEN];
   char profile[MAXPATHLEN];
+  bool isProfileOverridden = false;
   int* pargc;
   char*** pargv;
 
@@ -277,8 +278,10 @@ namespace {
       rv = webShellAppData.create(rtINI);
       NS_ENSURE_SUCCESS(rv, false);
 
-      SetAllocatedString(webShellAppData->profile, profile);
-      SetAllocatedString(webShellAppData->name, profile);
+      if (!isProfileOverridden) {
+        SetAllocatedString(webShellAppData->profile, profile);
+        SetAllocatedString(webShellAppData->name, profile);
+      }
 
       nsCOMPtr<nsIFile> directory;
       rv = XRE_GetFileFromPath(rtPath, getter_AddRefs(directory));
@@ -441,6 +444,21 @@ main(int argc, char* argv[])
     return 255;
   }
 
+  // Check if the runtime was executed with the "-profile" argument
+  for (int i = 1; i < argc; i++) {
+    if (!strcmp(argv[i], "-profile")) {
+      isProfileOverridden = true;
+      break;
+    }
+  }
+
+  // First attempt at loading Firefox binaries:
+  //   Check if the webapprt is in the same directory as the Firefox binary.
+  //   This is the case during WebappRT chrome and content tests.
+  if (AttemptLoadFromDir(buffer)) {
+    return 0;
+  }
+
   // Set up appIniPath with path to webapp.ini.
   // This should be in the same directory as the running executable.
   char appIniPath[MAXPATHLEN];
@@ -466,18 +484,20 @@ main(int argc, char* argv[])
     return 255;
   }
 
-  // Get profile dir from webapp.ini
-  if (NS_FAILED(parser.GetString("Webapp",
-                                 "Profile",
-                                 profile,
-                                 MAXPATHLEN))) {
-    Output("Unable to retrieve profile from web app INI file");
-    return 255;
+  if (!isProfileOverridden) {
+    // Get profile dir from webapp.ini
+    if (NS_FAILED(parser.GetString("Webapp",
+                                   "Profile",
+                                   profile,
+                                   MAXPATHLEN))) {
+      Output("Unable to retrieve profile from web app INI file");
+      return 255;
+    }
   }
 
   char firefoxDir[MAXPATHLEN];
 
-  // First attempt at loading Firefox binaries:
+  // Second attempt at loading Firefox binaries:
   //   Get the location of Firefox from our webapp.ini
 
   // XXX: This string better be UTF-8...
@@ -491,7 +511,7 @@ main(int argc, char* argv[])
     }
   }
 
-  // Second attempt at loading Firefox binaries:
+  // Third attempt at loading Firefox binaries:
   //   Get the location of Firefox from the registry
   if (GetFirefoxDirFromRegistry(firefoxDir)) {
     if (AttemptLoadFromDir(firefoxDir)) {
