@@ -21,11 +21,23 @@
 }
 
 /**
+ * This hardcoded width likely due to a toolkit Windows specific bug.
+ * See http://hg.mozilla.org/mozilla-central/annotate/f38d6df93cad/toolkit/themes/winstripe/global/textbox-aero.css#l7
+ */
+#scripts-search {
+  width: 200px;
+}
+
+/**
  * Lists and headers
  */
 
 .list-item {
   padding: 2px;
+}
+
+.list-item:not(.selected):not(.empty):hover {
+  background: #cddae5;
 }
 
 .list-item.selected {
@@ -35,6 +47,7 @@
 
 .list-item.empty {
   color: GrayText;
+  padding: 4px;
 }
 
 /**
@@ -53,6 +66,22 @@
 .dbg-stackframe-name {
   -moz-padding-end: 4px;
   font-weight: 600;
+}
+
+/**
+ * Breakpoints view
+ */
+
+#breakpoints {
+  background-color: white;
+}
+
+.dbg-breakpoint-info {
+  font-weight: 600;
+}
+
+.dbg-breakpoint-text {
+  font: 8pt monospace;
 }
 
 /**

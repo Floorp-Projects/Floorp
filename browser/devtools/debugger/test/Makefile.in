@@ -42,6 +42,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_stack-04.js \
 	browser_dbg_stack-05.js \
 	browser_dbg_location-changes.js \
+	browser_dbg_location-changes-blank.js \
 	browser_dbg_script-switching.js \
 	browser_dbg_scripts-sorting.js \
 	browser_dbg_scripts-searching-01.js \
@@ -51,6 +52,7 @@ MOCHITEST_BROWSER_TESTS = \
 	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \
 	browser_dbg_clean-exit.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
+	browser_dbg_bug723071_editor-breakpoints-pane.js \
 	browser_dbg_bug731394_editor-contextmenu.js \
 	browser_dbg_displayName.js \
 	browser_dbg_iframes.js \
@@ -58,6 +60,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_multiple-windows.js \
 	browser_dbg_menustatus.js \
 	browser_dbg_bfcache.js \
+	browser_dbg_breakpoint-new-script.js \
 	head.js \
 	$(NULL)
 
@@ -76,6 +79,7 @@ MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_iframes.html \
 	browser_dbg_with-frame.html \
 	browser_dbg_pause-exceptions.html \
+	browser_dbg_breakpoint-new-script.html \
 	$(NULL)
 
 MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
