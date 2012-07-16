@@ -307,11 +307,6 @@ bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
   return PBrowserParent::SendRealKeyEvent(event);
 }
 
-bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
-{
-  return PBrowserParent::SendRealTouchEvent(event);
-}
-
 bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const nsString& aJSON,

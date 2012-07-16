@@ -87,7 +87,8 @@ public:
     mTarget = aTarget;
   }
   bool Equals(nsIDOMTouch* aTouch);
-
+protected:
+  bool mPointsInitialized;
   PRInt32 mIdentifier;
   nsIntPoint mPagePoint;
   nsIntPoint mClientPoint;
@@ -95,8 +96,6 @@ public:
   nsIntPoint mRadius;
   float mRotationAngle;
   float mForce;
-protected:
-  bool mPointsInitialized;
 };
 
 class nsDOMTouchList MOZ_FINAL : public nsIDOMTouchList,
