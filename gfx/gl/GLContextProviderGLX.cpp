@@ -922,7 +922,7 @@ public:
 
     virtual GLuint GetTextureID() {
         return mTexture;
-    };
+    }
 
 private:
    TextureImageGLX(GLuint aTexture,
