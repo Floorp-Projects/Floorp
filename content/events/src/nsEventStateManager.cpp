@@ -1635,41 +1635,28 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   }// if end. bubble up process
 }// end of HandleAccessKey
 
-bool
-nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
-                                               nsIFrameLoader* aFrameLoader,
-                                               nsEventStatus *aStatus) {
-  nsFrameLoader* fml = static_cast<nsFrameLoader*>(aFrameLoader);
+void
+nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* frameLoader) {
+  nsFrameLoader* fml = static_cast<nsFrameLoader*>(frameLoader);
   PBrowserParent* remoteBrowser = fml->GetRemoteBrowser();
   TabParent* remote = static_cast<TabParent*>(remoteBrowser);
   if (!remote) {
-    return false;
+    return;
   }
 
-  switch (aEvent->eventStructType) {
-  case NS_MOUSE_EVENT: {
+  if (aEvent->eventStructType == NS_MOUSE_EVENT) {
     nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
-    return remote->SendRealMouseEvent(*mouseEvent);
+    remote->SendRealMouseEvent(*mouseEvent);
   }
-  case NS_KEY_EVENT: {
+
+  if (aEvent->eventStructType == NS_KEY_EVENT) {
     nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aEvent);
-    return remote->SendRealKeyEvent(*keyEvent);
+    remote->SendRealKeyEvent(*keyEvent);
   }
-  case NS_MOUSE_SCROLL_EVENT: {
+
+  if (aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
     nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(aEvent);
-    return remote->SendMouseScrollEvent(*scrollEvent);
-  }
-  case NS_TOUCH_EVENT: {
-    // Let the child process synthesize a mouse event if needed, and
-    // ensure we don't synthesize one in this process.
-    *aStatus = nsEventStatus_eConsumeNoDefault;
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
-    return remote->SendRealTouchEvent(*touchEvent);
-  }
-  default: {
-    MOZ_NOT_REACHED("Attempt to send non-whitelisted event?");
-    return false;
-  }
+    remote->SendMouseScrollEvent(*scrollEvent);
   }
 }
 
@@ -1701,44 +1688,26 @@ nsEventStateManager::IsRemoteTarget(nsIContent* target) {
   return false;
 }
 
-bool
-CrossProcessSafeEvent(const nsEvent& aEvent)
-{
-  switch (aEvent.eventStructType) {
-  case NS_KEY_EVENT:
-  case NS_MOUSE_SCROLL_EVENT:
-    return true;
-  case NS_MOUSE_EVENT:
-    switch (aEvent.message) {
-    case NS_MOUSE_BUTTON_DOWN:
-    case NS_MOUSE_BUTTON_UP:
-    case NS_MOUSE_MOVE:
-      return true;
-    default:
-      return false;
-    }
-  case NS_TOUCH_EVENT:
-    switch (aEvent.message) {
-    case NS_TOUCH_START:
-    case NS_TOUCH_MOVE:
-    case NS_TOUCH_END:
-    case NS_TOUCH_CANCEL:
-      return true;
-    default:
-      return false;
-    }
-  default:
-    return false;
-  }
-}
 
 bool
 nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
                                              nsIFrame* aTargetFrame,
                                              nsEventStatus *aStatus) {
-  if (!CrossProcessSafeEvent(*aEvent)) {
-    return false;
+
+  switch (aEvent->eventStructType) {
+    case NS_KEY_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+      break;
+    case NS_MOUSE_EVENT:
+      if (aEvent->message == NS_MOUSE_BUTTON_DOWN ||
+          aEvent->message == NS_MOUSE_BUTTON_UP ||
+          aEvent->message == NS_MOUSE_MOVE) {
+        break;
+      }
+    default:
+      return false;
   }
+
   nsIContent* target = mCurrentTargetContent;
   if (!target && aTargetFrame) {
     target = aTargetFrame->GetContent();
@@ -1769,7 +1738,8 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
   nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
   aEvent->refPoint = pt.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
 
-  return DispatchCrossProcessEvent(aEvent, frameLoader, aStatus);
+  DispatchCrossProcessEvent(aEvent, frameLoader);
+  return true;
 }
 
 //
