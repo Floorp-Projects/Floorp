@@ -7,6 +7,7 @@
 #define nsGUIEventIPC_h__
 
 #include "IPC/IPCMessageUtils.h"
+#include "nsDOMTouchEvent.h"
 #include "nsGUIEvent.h"
 
 namespace IPC
@@ -146,6 +147,55 @@ struct ParamTraits<nsMouseEvent>
     aResult->context = static_cast<nsMouseEvent::contextType>(context);
     aResult->exit = static_cast<nsMouseEvent::exitType>(exit);
     return rv;
+  }
+};
+
+template<>
+struct ParamTraits<nsTouchEvent>
+{
+  typedef nsTouchEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<const nsInputEvent&>(aParam));
+    // Sigh, nsDOMTouch bites us again!  We want to be able to do
+    //   WriteParam(aMsg, aParam.touches);
+    const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = aParam.touches;
+    WriteParam(aMsg, touches.Length());
+    for (uint32_t i = 0; i < touches.Length(); ++i) {
+      nsDOMTouch* touch = static_cast<nsDOMTouch*>(touches[i].get());
+      WriteParam(aMsg, touch->mIdentifier);
+      WriteParam(aMsg, touch->mRefPoint);
+      WriteParam(aMsg, touch->mRadius);
+      WriteParam(aMsg, touch->mRotationAngle);
+      WriteParam(aMsg, touch->mForce);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    uint32_t numTouches;
+    if (!ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) ||
+        !ReadParam(aMsg, aIter, &numTouches)) {
+      return false;
+    }
+    for (uint32_t i = 0; i < numTouches; ++i) {
+        PRInt32 identifier;
+        nsIntPoint refPoint;
+        nsIntPoint radius;
+        float rotationAngle;
+        float force;
+        if (!ReadParam(aMsg, aIter, &identifier) ||
+            !ReadParam(aMsg, aIter, &refPoint) ||
+            !ReadParam(aMsg, aIter, &radius) ||
+            !ReadParam(aMsg, aIter, &rotationAngle) ||
+            !ReadParam(aMsg, aIter, &force)) {
+          return false;
+        }
+        aResult->touches.AppendElement(
+          new nsDOMTouch(identifier, refPoint, radius, rotationAngle, force));
+    }
+    return true;
   }
 };
 
