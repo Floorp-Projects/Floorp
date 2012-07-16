@@ -1205,6 +1205,7 @@ class ObjectImpl : public gc::Cell
 
     inline void setSlot(uint32_t slot, const Value &value);
     inline void initSlot(uint32_t slot, const Value &value);
+    inline void initCrossCompartmentSlot(uint32_t slot, const js::Value &value);
     inline void initSlotUnchecked(uint32_t slot, const Value &value);
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */
@@ -1270,7 +1271,7 @@ class ObjectImpl : public gc::Cell
     static inline void writeBarrierPre(ObjectImpl *obj);
     static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
-    inline void privateWriteBarrierPost(void **oldval);
+    inline void privateWriteBarrierPost(void **pprivate);
     void markChildren(JSTracer *trc);
 
     /* Private data accessors. */
@@ -1280,6 +1281,7 @@ class ObjectImpl : public gc::Cell
     inline bool hasPrivate() const;
     inline void *getPrivate() const;
     inline void setPrivate(void *data);
+    inline void setPrivateGCThing(gc::Cell *cell);
     inline void setPrivateUnbarriered(void *data);
     inline void initPrivate(void *data);
 

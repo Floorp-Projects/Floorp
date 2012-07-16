@@ -666,10 +666,10 @@ class GCHelperThread {
     /* Must be called with the GC lock taken. */
     void startBackgroundShrink();
 
-    /* Must be called with the GC lock taken. */
+    /* Must be called without the GC lock taken. */
     void waitBackgroundSweepEnd();
 
-    /* Must be called with the GC lock taken. */
+    /* Must be called without the GC lock taken. */
     void waitBackgroundSweepOrAllocEnd();
 
     /* Must be called with the GC lock taken. */

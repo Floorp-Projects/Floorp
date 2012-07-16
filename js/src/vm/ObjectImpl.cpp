@@ -455,7 +455,7 @@ js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
     if (obj->getPrivate())
         return static_cast<JSObject *>(obj->getPrivate());
     JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
-    obj->setPrivate(delegate);
+    obj->setPrivateGCThing(delegate);
     return delegate;
 }
 

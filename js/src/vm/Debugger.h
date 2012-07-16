@@ -70,16 +70,18 @@ class Debugger {
      * that way, but since stack frames are not gc-things, the implementation
      * has to be different.
      */
-    typedef HashMap<StackFrame *, HeapPtrObject, DefaultHasher<StackFrame *>, RuntimeAllocPolicy>
-        FrameMap;
+    typedef HashMap<StackFrame *,
+                    RelocatablePtrObject,
+                    DefaultHasher<StackFrame *>,
+                    RuntimeAllocPolicy> FrameMap;
     FrameMap frames;
 
     /* An ephemeral map from JSScript* to Debugger.Script instances. */
-    typedef WeakMap<HeapPtrScript, HeapPtrObject> ScriptWeakMap;
+    typedef WeakMap<EncapsulatedPtrScript, RelocatablePtrObject> ScriptWeakMap;
     ScriptWeakMap scripts;
 
     /* The map from debuggee objects to their Debugger.Object instances. */
-    typedef WeakMap<HeapPtrObject, HeapPtrObject> ObjectWeakMap;
+    typedef WeakMap<EncapsulatedPtrObject, RelocatablePtrObject> ObjectWeakMap;
     ObjectWeakMap objects;
 
     /* The map from debuggee Envs to Debugger.Environment instances. */
