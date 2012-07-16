@@ -23,6 +23,7 @@ include ../../content/media/test/crashtests/crashtests.list
 include ../../docshell/base/crashtests/crashtests.list
 
 include ../../dom/base/crashtests/crashtests.list
+include ../../dom/bindings/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/src/offline/crashtests/crashtests.list
 include ../../dom/src/jsurl/crashtests/crashtests.list
