@@ -1096,7 +1096,7 @@ class nsIWidget : public nsISupports {
      *
      * @param aOpaqueRegion the region of the window that is opaque.
      */
-    virtual void UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion) {};
+    virtual void UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion) {}
 
     /** 
      * Internal methods
