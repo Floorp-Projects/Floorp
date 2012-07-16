@@ -136,6 +136,7 @@ FrameWorker.prototype = {
     let worker = this;
 
     workerWindow.addEventListener("load", function loadListener() {
+      workerWindow.removeEventListener("load", loadListener);
       // the iframe has loaded the js file as text - first inject the magic
       // port-handling code into the sandbox.
       function getProtoSource(ob) {
