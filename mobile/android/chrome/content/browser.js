@@ -3748,7 +3748,7 @@ const ElementTouchHelper = {
   },
 
   isElementClickable: function isElementClickable(aElement, aUnclickableCache, aAllowBodyListeners) {
-    const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
+    const selector = "a,:link,:visited,[role=button],button,input,select,textarea";
 
     let stopNode = null;
     if (!aAllowBodyListeners && aElement && aElement.ownerDocument)
@@ -3760,6 +3760,8 @@ const ElementTouchHelper = {
       if (this._hasMouseListener(elem))
         return true;
       if (elem.mozMatchesSelector && elem.mozMatchesSelector(selector))
+        return true;
+      if (elem instanceof HTMLLabelElement && elem.control != null)
         return true;
       if (aUnclickableCache)
         aUnclickableCache.push(elem);
