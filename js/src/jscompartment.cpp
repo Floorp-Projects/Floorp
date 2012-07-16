@@ -606,7 +606,7 @@ JSCompartment::sweepCrossCompartmentWrappers()
         JS_ASSERT_IF(!keyMarked && valMarked, key.kind == CrossCompartmentKey::StringWrapper);
         if (!keyMarked || !valMarked || !dbgMarked)
             e.removeFront();
-        else
+        else if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger)
             e.rekeyFront(key);
     }
 }

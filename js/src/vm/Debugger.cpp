@@ -633,7 +633,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
         envobj = NewObjectWithGivenProto(cx, &DebuggerEnv_class, proto, NULL);
         if (!envobj)
             return false;
-        envobj->setPrivate(env);
+        envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
         if (!environments.relookupOrAdd(p, env, envobj)) {
             js_ReportOutOfMemory(cx);
@@ -669,12 +669,13 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
                 NewObjectWithGivenProto(cx, &DebuggerObject_class, proto, NULL);
             if (!dobj)
                 return false;
-            dobj->setPrivate(obj);
+            dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
             if (!objects.relookupOrAdd(p, obj, dobj)) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
+            HashTableWriteBarrierPost(cx->compartment, &objects, obj);
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
@@ -1256,29 +1257,25 @@ Debugger::markKeysInCompartment(JSTracer *tracer)
      * enumerating WeakMap keys. However in this case we need access, so we
      * make a base-class reference. Range is public in HashMap.
      */
-    typedef HashMap<HeapPtrObject, HeapPtrObject, DefaultHasher<HeapPtrObject>, RuntimeAllocPolicy>
-        ObjectMap;
-    const ObjectMap &objStorage = objects;
-    for (ObjectMap::Range r = objStorage.all(); !r.empty(); r.popFront()) {
-        const HeapPtrObject &key = r.front().key;
+    ObjectWeakMap::Base &objStorage = objects;
+    for (ObjectWeakMap::Base::Range r = objStorage.all(); !r.empty(); r.popFront()) {
+        const EncapsulatedPtrObject key = r.front().key;
         HeapPtrObject tmp(key);
         gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
         JS_ASSERT(tmp == key);
     }
 
-    const ObjectMap &envStorage = environments;
-    for (ObjectMap::Range r = envStorage.all(); !r.empty(); r.popFront()) {
-        const HeapPtrObject &key = r.front().key;
+    ObjectWeakMap::Base &envStorage = environments;
+    for (ObjectWeakMap::Base::Range r = envStorage.all(); !r.empty(); r.popFront()) {
+        const EncapsulatedPtrObject &key = r.front().key;
         HeapPtrObject tmp(key);
         js::gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
         JS_ASSERT(tmp == key);
     }
 
-    typedef HashMap<HeapPtrScript, HeapPtrObject, DefaultHasher<HeapPtrScript>, RuntimeAllocPolicy>
-        ScriptMap;
-    const ScriptMap &scriptStorage = scripts;
-    for (ScriptMap::Range r = scriptStorage.all(); !r.empty(); r.popFront()) {
-        const HeapPtrScript &key = r.front().key;
+    const ScriptWeakMap::Base &scriptStorage = scripts;
+    for (ScriptWeakMap::Base::Range r = scriptStorage.all(); !r.empty(); r.popFront()) {
+        const EncapsulatedPtrScript &key = r.front().key;
         HeapPtrScript tmp(key);
         gc::MarkScript(tracer, &tmp, "cross-compartment WeakMap key");
         JS_ASSERT(tmp == key);
@@ -1348,7 +1345,7 @@ Debugger::markAllIteratively(GCMarker *trc)
             GlobalObject *global = e.front();
             if (!IsObjectMarked(&global))
                 continue;
-            else
+            else if (global != e.front())
                 e.rekeyFront(global);
 
             /*
@@ -1424,7 +1421,7 @@ Debugger::trace(JSTracer *trc)
      * frames.)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        HeapPtrObject &frameobj = r.front().value;
+        RelocatablePtrObject &frameobj = r.front().value;
         JS_ASSERT(frameobj->getPrivate());
         MarkObject(trc, &frameobj, "live Debugger.Frame");
     }
@@ -1465,7 +1462,7 @@ Debugger::sweepAll(FreeOp *fop)
             GlobalObject *global = e.front();
             if (!IsObjectMarked(&global))
                 detachAllDebuggersFromGlobal(fop, global, &e);
-            else
+            else if (global != e.front())
                 e.rekeyFront(global);
         }
     }
@@ -2374,7 +2371,7 @@ static inline void
 SetScriptReferent(JSObject *obj, JSScript *script)
 {
     JS_ASSERT(obj->getClass() == &DebuggerScript_class);
-    obj->setPrivate(script);
+    obj->setPrivateGCThing(script);
 }
 
 static void
@@ -2411,7 +2408,7 @@ Debugger::newDebuggerScript(JSContext *cx, HandleScript script)
     if (!scriptobj)
         return NULL;
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
-    scriptobj->setPrivate(script);
+    scriptobj->setPrivateGCThing(script);
 
     return scriptobj;
 }

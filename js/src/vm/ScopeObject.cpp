@@ -1596,6 +1596,7 @@ DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &
         js_ReportOutOfMemory(cx);
         return false;
     }
+    HashTableWriteBarrierPost(debugScope.compartment(), &proxiedScopes, &scope);
     return true;
 }
 
