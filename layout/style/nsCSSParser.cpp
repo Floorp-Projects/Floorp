@@ -653,9 +653,6 @@ protected:
   // True if we are in quirks mode; false in standards or almost standards mode
   bool          mNavQuirkMode : 1;
 
-  // True when the hashless color quirk applies.
-  bool mHashlessColorQuirk : 1;
-
   // True if unsafe rules should be allowed
   bool mUnsafeRulesEnabled : 1;
 
@@ -749,7 +746,6 @@ CSSParserImpl::CSSParserImpl()
     mNameSpaceMap(nsnull),
     mHavePushBack(false),
     mNavQuirkMode(false),
-    mHashlessColorQuirk(false),
     mUnsafeRulesEnabled(false),
     mHTMLMediaMode(false),
     mParsingCompoundProperty(false)
@@ -3756,7 +3752,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
   }
 
   // try 'xxyyzz' without '#' prefix for compatibility with IE and Nav4x (bug 23236 and 45804)
-  if (mHashlessColorQuirk) {
+  if (mNavQuirkMode && !IsParsingCompoundProperty()) {
     // - If the string starts with 'a-f', the nsCSSScanner builds the
     //   token as a eCSSToken_Ident and we can parse the string as a
     //   'xxyyzz' RGB color.
@@ -4557,7 +4553,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     return ParseElement(aValue);
   }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
-    if (mHashlessColorQuirk || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
+    if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
         (eCSSToken_ID == tk->mType) ||
         (eCSSToken_Ref == tk->mType) ||
         (eCSSToken_Ident == tk->mType) ||
@@ -5618,58 +5614,36 @@ static const nsCSSProperty kOutlineRadiusIDs[] = {
 bool
 CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 {
-  // Can't use AutoRestore<bool> because it's a bitfield.
-  NS_ABORT_IF_FALSE(!mHashlessColorQuirk,
-                    "hashless color quirk should not be set");
-  if (mNavQuirkMode) {
-    mHashlessColorQuirk =
-      nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_HASHLESS_COLOR_QUIRK);
-  }
-
   NS_ASSERTION(aPropID < eCSSProperty_COUNT, "index out of range");
-  bool result;
   switch (nsCSSProps::PropertyParseType(aPropID)) {
     case CSS_PROPERTY_PARSE_INACCESSIBLE: {
       // The user can't use these
       REPORT_UNEXPECTED(PEInaccessibleProperty2);
-      result = false;
-      break;
+      return false;
     }
     case CSS_PROPERTY_PARSE_FUNCTION: {
-      result = ParsePropertyByFunction(aPropID);
-      break;
+      return ParsePropertyByFunction(aPropID);
     }
     case CSS_PROPERTY_PARSE_VALUE: {
-      result = false;
       nsCSSValue value;
       if (ParseSingleValueProperty(value, aPropID)) {
         if (ExpectEndProperty()) {
           AppendValue(aPropID, value);
-          result = true;
+          return true;
         }
         // XXX Report errors?
       }
       // XXX Report errors?
-      break;
+      return false;
     }
     case CSS_PROPERTY_PARSE_VALUE_LIST: {
-      result = ParseValueList(aPropID);
-      break;
-    }
-    default: {
-      result = false;
-      NS_ABORT_IF_FALSE(false,
-                        "Property's flags field in nsCSSPropList.h is missing "
-                        "one of the CSS_PROPERTY_PARSE_* constants");
-      break;
+      return ParseValueList(aPropID);
     }
   }
-
-  if (mNavQuirkMode) {
-    mHashlessColorQuirk = false;
-  }
-
-  return result;
+  NS_ABORT_IF_FALSE(false,
+                    "Property's flags field in nsCSSPropList.h is missing "
+                    "one of the CSS_PROPERTY_PARSE_* constants");
+  return false;
 }
 
 bool
