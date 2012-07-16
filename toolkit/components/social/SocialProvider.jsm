@@ -7,10 +7,8 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
+Cu.import("resource://gre/modules/FrameWorker.jsm");
+Cu.import("resource://gre/modules/WorkerAPI.jsm");
 
 const EXPORTED_SYMBOLS = ["SocialProvider"];
 
@@ -92,22 +90,11 @@ SocialProvider.prototype = {
     if (!profile.displayName)
       profile.displayName = profile.userName;
 
-    // if no userName, consider this a logged out state, emtpy the
-    // users ambient notifications.  notify both profile and ambient
-    // changes to clear everything
-    if (!profile.userName) {
-      this.profile = {};
-      this.ambientNotificationIcons = {};
-      Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
-    }
-
     Services.obs.notifyObservers(null, "social:profile-changed", this.origin);
   },
 
   // Called by the workerAPI to add/update a notification icon.
   setAmbientNotification: function(notification) {
-    if (!this.profile.userName)
-      throw new Error("unable to set notifications while logged out");
     this.ambientNotificationIcons[notification.name] = notification;
 
     Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
