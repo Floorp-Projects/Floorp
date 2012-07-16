@@ -5191,6 +5191,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
                     *pnup = NULL;
                     if (!tc->lexdeps->put(atom, dn2))
                         return false;
+                    if (dn->isClosed())
+                        dn2->pn_dflags |= PND_CLOSED;
                 } else if (dn->isPlaceholder()) {
                     /*
                      * The variable first occurs free in the 'yield' expression;
