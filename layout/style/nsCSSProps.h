@@ -95,9 +95,6 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // Does this property suppor the hashless hex color quirk in quirks mode?
 #define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
 
-// Does this property suppor the unitless length quirk in quirks mode?
-#define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
-
 /**
  * Types of animatable values.
  */
