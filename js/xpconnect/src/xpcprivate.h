@@ -3887,8 +3887,11 @@ class NS_STACK_CLASS AutoResolveName
 public:
     AutoResolveName(XPCCallContext& ccx, jsid name
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-          mOld(XPCJSRuntime::Get()->SetResolveName(name)),
-          mCheck(name) {
+          mOld(XPCJSRuntime::Get()->SetResolveName(name))
+#ifdef DEBUG
+          ,mCheck(name)
+#endif
+    {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
     ~AutoResolveName()
@@ -3902,7 +3905,9 @@ public:
 
 private:
     jsid mOld;
+#ifdef DEBUG
     jsid mCheck;
+#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
