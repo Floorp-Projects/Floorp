@@ -6,11 +6,11 @@
 #ifndef SetDocTitleTxn_h__
 #define SetDocTitleTxn_h__
 
-#include "EditTxn.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
-#include "nsITransaction.h"
-#include "nsCOMPtr.h"
+#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "nsString.h"                   // for nsString
+#include "nscore.h"                     // for NS_IMETHOD, nsAString, etc
+
+class nsIHTMLEditor;
 
 /**
  * A transaction that changes the document's title,

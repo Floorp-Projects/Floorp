@@ -2826,6 +2826,8 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETLOCAL)
           BEGIN_CASE(JSOP_CALLLOCAL)
+          BEGIN_CASE(JSOP_GETALIASEDVAR)
+          BEGIN_CASE(JSOP_CALLALIASEDVAR)
           {
             /*
              * Update the var type unless we are about to pop the variable.
@@ -2837,27 +2839,26 @@ mjit::Compiler::generateMethod()
                 restoreVarType();
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
+            else if (JOF_OPTYPE(*PC) == JOF_SCOPECOORD)
+                jsop_aliasedVar(ScopeCoordinate(PC), /* get = */ true);
             else
                 frame.pushLocal(GET_SLOTNO(PC));
+
+            PC += GetBytecodeLength(PC);
+            break;
           }
           END_CASE(JSOP_GETLOCAL)
-
-          BEGIN_CASE(JSOP_GETALIASEDVAR)
-          BEGIN_CASE(JSOP_CALLALIASEDVAR)
-            jsop_aliasedVar(ScopeCoordinate(PC), /* get = */ true);
-          END_CASE(JSOP_GETALIASEDVAR);
 
           BEGIN_CASE(JSOP_SETLOCAL)
           BEGIN_CASE(JSOP_SETALIASEDVAR)
           {
             jsbytecode *next = &PC[GetBytecodeLength(PC)];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            if (JOF_OPTYPE(*PC) == JOF_SCOPECOORD) {
+            if (JOF_OPTYPE(*PC) == JOF_SCOPECOORD)
                 jsop_aliasedVar(ScopeCoordinate(PC), /* get = */ false, pop);
-            } else {
+            else
                 frame.storeLocal(GET_SLOTNO(PC), pop);
-                updateVarType();
-            }
+            updateVarType();
 
             if (pop) {
                 frame.pop();
@@ -3791,7 +3792,7 @@ void
 mjit::Compiler::prepareStubCall(Uses uses)
 {
     JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
-    frame.syncAndKill(Registers(Registers::TempAnyRegs), uses);
+    frame.syncAndKill(Registers(Registers::AvailAnyRegs), uses);
     JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
 }
 
@@ -4985,7 +4986,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
     RESERVE_IC_SPACE(masm);
 
-    PICGenInfo pic(ic::PICInfo::GET, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::GET, PC);
 
     /*
      * If this access has been on a shape with a getter hook, make preparations
@@ -5412,19 +5413,17 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     if (script->hasScriptCounts)
         bumpPropCount(PC, PCCounts::PROP_OTHER);
 
-    JSOp op = JSOp(*PC);
-
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. We don't have type information for JSOP_SETNAME. */
     if (cx->compartment->needsBarrier() &&
-        (!types || op == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
+        (!types || JSOp(*PC) == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
     {
         jsop_setprop_slow(name);
         return true;
     }
 #endif
 
-    PICGenInfo pic(ic::PICInfo::SET, op);
+    PICGenInfo pic(ic::PICInfo::SET, PC);
     pic.name = name;
 
     if (monitored(PC)) {
@@ -5541,7 +5540,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 void
 mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
 {
-    PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::NAME, PC);
 
     RESERVE_IC_SPACE(masm);
 
@@ -5597,7 +5596,7 @@ mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
 bool
 mjit::Compiler::jsop_xname(PropertyName *name)
 {
-    PICGenInfo pic(ic::PICInfo::XNAME, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::XNAME, PC);
 
     FrameEntry *fe = frame.peek(-1);
     if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
@@ -5659,7 +5658,7 @@ mjit::Compiler::jsop_xname(PropertyName *name)
 void
 mjit::Compiler::jsop_bindname(PropertyName *name)
 {
-    PICGenInfo pic(ic::PICInfo::BIND, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::BIND, PC);
 
     // This code does not check the frame flags to see if scopeChain has been
     // set. Rather, it relies on the up-front analysis statically determining
@@ -5799,7 +5798,12 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
     for (unsigned i = 0; i < sc.hops; i++)
         masm.loadPayload(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 
-    Shape *shape = ScopeCoordinateToStaticScope(script, PC).scopeShape();
+    Shape *shape;
+    if (StaticBlockObject *block = ScopeCoordinateBlockChain(script, PC))
+        shape = block->lastProperty();
+    else
+        shape = script->bindings.lastShape();
+
     Address addr;
     if (shape->numFixedSlots() <= sc.slot) {
         masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
@@ -5809,15 +5813,12 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
     }
 
     if (get) {
-        JSValueType type = knownPushedType(0);
-        RegisterID typeReg, dataReg;
-        frame.loadIntoRegisters(addr, /* reuseBase = */ true, &typeReg, &dataReg);
-        frame.pushRegs(typeReg, dataReg, type);
-        BarrierState barrier = testBarrier(typeReg, dataReg,
-                                           /* testUndefined = */ false,
-                                           /* testReturn */ false,
-                                           /* force */ true);
-        finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
+        unsigned index;
+        FrameEntry *fe = ScopeCoordinateToFrameIndex(script, PC, &index) == FrameIndex_Local
+                         ? frame.getLocal(index)
+                         : frame.getArg(index);
+        JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        frame.push(addr, type, true /* = reuseBase */);
     } else {
 #ifdef JSGC_INCREMENTAL_MJ
         if (cx->compartment->needsBarrier()) {

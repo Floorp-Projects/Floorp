@@ -412,7 +412,7 @@ GetClosestInterestingAccessible(id anObject)
   if (!mGeckoAccessible)
     return nil;
 
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(mGeckoAccessible),
                "Does not support nsIAccessibleText when it should");
 #endif

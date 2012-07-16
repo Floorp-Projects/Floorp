@@ -81,16 +81,10 @@ let AlarmService = {
         this._db.getAll(
           function getAllSuccessCb(aAlarms) {
             debug("Callback after getting alarms from database: " + JSON.stringify(aAlarms));
-            ppmm.sendAsyncMessage(
-              "AlarmsManager:GetAll:Return:OK", 
-              { requestID: json.requestID, alarms: aAlarms }
-            ); 
+            this._sendAsyncMessage("GetAll:Return:OK", json.requestId, aAlarms);
           }.bind(this),
           function getAllErrorCb(aErrorMsg) {
-            ppmm.sendAsyncMessage(
-              "AlarmsManager:GetAll:Return:KO", 
-              { requestID: json.requestID, errorMsg: aErrorMsg }
-            );
+            this._sendAsyncMessage("GetAll:Return:KO", json.requestId, aErrorMsg);
           }.bind(this)
         );
         break;
@@ -116,6 +110,7 @@ let AlarmService = {
             if (newAlarmTime <= Date.now()) {
               debug("Adding a alarm that has past time. Don't set it in system.");
               this._debugCurrentAlarm();
+              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
               return;
             }
 
@@ -123,6 +118,7 @@ let AlarmService = {
             if (this._currentAlarm == null) {
               this._currentAlarm = newAlarm;
               this._debugCurrentAlarm();
+              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
               return;
             }
 
@@ -134,6 +130,7 @@ let AlarmService = {
               alarmQueue.unshift(this._currentAlarm);
               this._currentAlarm = newAlarm;
               this._debugCurrentAlarm();
+              this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
               return;
             }
 
@@ -141,17 +138,10 @@ let AlarmService = {
             alarmQueue.push(newAlarm);
             alarmQueue.sort(this._sortAlarmByTimeStamps.bind(this));
             this._debugCurrentAlarm();
-
-            ppmm.sendAsyncMessage(
-              "AlarmsManager:Add:Return:OK", 
-              { requestID: json.requestID, id: aNewId }
-            );
+            this._sendAsyncMessage("Add:Return:OK", json.requestId, aNewId);
           }.bind(this),
           function addErrorCb(aErrorMsg) {
-            ppmm.sendAsyncMessage(
-              "AlarmsManager:Add:Return:KO", 
-              { requestID: json.requestID, errorMsg: aErrorMsg }
-            );
+            this._sendAsyncMessage("Add:Return:KO", json.requestId, aErrorMsg);
           }.bind(this)
         );
         break;
@@ -203,6 +193,34 @@ let AlarmService = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         break;
     }
+  },
+
+  _sendAsyncMessage: function _sendAsyncMessage(aMessageName, aRequestId, aData) {
+    debug("_sendAsyncMessage()");
+
+    let json = null;
+    switch (aMessageName)
+    {
+      case "Add:Return:OK":
+        json = { requestId: aRequestId, id: aData };
+        break;
+
+      case "GetAll:Return:OK":
+        json = { requestId: aRequestId, alarms: aData };
+        break;
+
+      case "Add:Return:KO":
+      case "GetAll:Return:KO":
+        json = { requestId: aRequestId, errorMsg: aData };
+        break;
+
+      default:
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        break;
+    }
+
+    if (aMessageName && json)
+      ppmm.sendAsyncMessage("AlarmsManager:" + aMessageName, json);
   },
 
   _onAlarmFired: function _onAlarmFired() {

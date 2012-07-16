@@ -27,8 +27,10 @@ function SocialProvider(input, enabled) {
     throw new Error("SocialProvider must be passed an origin");
 
   this.name = input.name;
+  this.iconURL = input.iconURL;
   this.workerURL = input.workerURL;
   this.origin = input.origin;
+  this.ambientNotificationIcons = {};
 
   // If enabled is |undefined|, default to true.
   this._enabled = !(enabled == false);
@@ -65,13 +67,46 @@ SocialProvider.prototype = {
   // no FrameWorker, or is disabled.
   workerAPI: null,
 
+  // Contains information related to the user's profile. Populated by the
+  // workerAPI via updateUserProfile. Null if the provider has no FrameWorker.
+  // Properties:
+  //   iconURL, portrait, userName, displayName, profileURL
+  // See https://github.com/mozilla/socialapi-dev/blob/develop/docs/socialAPI.md
+  profile: null,
+
+  // Map of objects describing the provider's notification icons, whose
+  // properties include:
+  //   name, iconURL, counter, contentPanel
+  // See https://github.com/mozilla/socialapi-dev/blob/develop/docs/socialAPI.md
+  ambientNotificationIcons: null,
+
+  // Called by the workerAPI to update our profile information.
+  updateUserProfile: function(profile) {
+    this.profile = profile;
+
+    if (profile.iconURL)
+      this.iconURL = profile.iconURL;
+
+    if (!profile.displayName)
+      profile.displayName = profile.userName;
+
+    Services.obs.notifyObservers(null, "social:profile-changed", this.origin);
+  },
+
+  // Called by the workerAPI to add/update a notification icon.
+  setAmbientNotification: function(notification) {
+    this.ambientNotificationIcons[notification.name] = notification;
+
+    Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
+  },
+
   // Internal helper methods
   _activate: function _activate() {
     // Initialize the workerAPI and its port first, so that its initialization
     // occurs before any other messages are processed by other ports.
     let workerAPIPort = this._getWorkerPort();
     if (workerAPIPort)
-      this.workerAPI = new WorkerAPI(workerAPIPort);
+      this.workerAPI = new WorkerAPI(this, workerAPIPort);
 
     this.port = this._getWorkerPort();
   },

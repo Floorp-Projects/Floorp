@@ -142,7 +142,7 @@ public:
   bool operator==(const nsStyleGradient& aOther) const;
   bool operator!=(const nsStyleGradient& aOther) const {
     return !(*this == aOther);
-  };
+  }
 
   bool IsOpaque();
 

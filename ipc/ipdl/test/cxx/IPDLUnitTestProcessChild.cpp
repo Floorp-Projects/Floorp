@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsRegion.h"
-
 #include "mozilla/ipc/IOThreadChild.h"
 
 #include "IPDLUnitTestProcessChild.h"
 #include "IPDLUnitTests.h"
+
+#include "nsRegion.h"
 
 using mozilla::ipc::IOThreadChild;
 

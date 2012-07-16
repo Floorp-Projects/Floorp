@@ -275,10 +275,23 @@ private:
   bool ShouldUseRemoteProcess();
 
   /**
-   * Is this a frameloader for a bona fide <iframe mozbrowser>?  (I.e., does
-   * the frame return true for nsIMozBrowserFrame::GetReallyIsBrowser()?)
+   * Is this a frameloader for a bona fide <iframe mozbrowser> or
+   * <iframe mozapp>?  (I.e., does the frame return true for
+   * nsIMozBrowserFrame::GetReallyIsBrowser()?)
    */
   bool OwnerIsBrowserFrame();
+
+  /**
+   * Is this a frameloader for a bona fide <iframe mozapp>?  (I.e., does the
+   * frame return true for nsIMozBrowserFrame::GetReallyIsApp()?)
+   */
+  bool OwnerIsAppFrame();
+
+  /**
+   * Get our owning element's app manifest URL, or return the empty string if
+   * our owning element doesn't have an app manifest URL.
+   */
+  void GetOwnerAppManifestURL(nsAString& aOut);
 
   /**
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and

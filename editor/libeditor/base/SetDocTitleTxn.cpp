@@ -4,12 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SetDocTitleTxn.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMText.h"
-#include "nsIDOMElement.h"
-#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Element.h"        // for Element
+#include "nsAString.h"
+#include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
+#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
+#include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDOMElement.h"              // for nsIDOMElement
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsIDOMNodeList.h"             // for nsIDOMNodeList
+#include "nsIDOMText.h"                 // for nsIDOMText
+#include "nsIDocument.h"                // for nsIDocument
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsIHTMLEditor.h"              // for nsIHTMLEditor
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING
+#include "prtypes.h"                    // for PRUint32
 
 using namespace mozilla;
 

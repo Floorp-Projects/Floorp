@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsIURIRefObject.h"
-
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNamedNodeMap.h"
-#include "nsString.h"
+#include "nsISupportsImpl.h"
+#include "nsIURIRefObject.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsIDOMNamedNodeMap;
+class nsIDOMNode;
 
 #ifndef nsHTMLURIRefObject_h__
 #define nsHTMLURIRefObject_h__

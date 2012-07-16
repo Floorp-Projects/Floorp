@@ -244,7 +244,7 @@ protected:
     virtual PIndexedDBChild* AllocPIndexedDB(const nsCString& aASCIIOrigin,
                                              bool* /* aAllowed */);
 
-    virtual bool DeallocPIndexedDB(PIndexedDBChild* actor);
+    virtual bool DeallocPIndexedDB(PIndexedDBChild* aActor);
 
 private:
     void ActorDestroy(ActorDestroyReason why);

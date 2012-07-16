@@ -230,7 +230,7 @@
           }
         }
 
-        synthesizeMouse(node, x + 1, y + 1, {}, targetWindow);
+        synthesizeMouseAtCenter(node, {}, targetWindow);
       }
 
       this.getID = function selectByClick_getID()

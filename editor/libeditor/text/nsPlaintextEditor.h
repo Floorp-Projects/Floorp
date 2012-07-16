@@ -7,19 +7,30 @@
 #define nsPlaintextEditor_h__
 
 #include "nsCOMPtr.h"
-
-#include "nsIPlaintextEditor.h"
-#include "nsIEditorMailSupport.h"
-
-#include "nsEditor.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEventListener.h"
-
-#include "nsEditRules.h"
 #include "nsCycleCollectionParticipant.h"
- 
-class nsITransferable;
+#include "nsEditor.h"
+#include "nsIEditor.h"
+#include "nsIEditorMailSupport.h"
+#include "nsIPlaintextEditor.h"
+#include "nsISupportsImpl.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsIContent;
+class nsIDOMDataTransfer;
+class nsIDOMDocument;
+class nsIDOMElement;
+class nsIDOMEvent;
+class nsIDOMEventTarget;
+class nsIDOMKeyEvent;
+class nsIDOMNode;
 class nsIDocumentEncoder;
+class nsIEditRules;
+class nsIOutputStream;
+class nsIPrivateTextRangeList;
+class nsISelection;
+class nsISelectionController;
+class nsITransferable;
 
 /**
  * The text editor implementation.

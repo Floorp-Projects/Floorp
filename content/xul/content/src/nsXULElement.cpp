@@ -1160,6 +1160,28 @@ nsXULElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
     return nsnull;
 }
 
+const nsAttrValue*
+nsXULElement::GetAttrValue(const nsAString& aName)
+{
+  const nsAttrValue* val =
+      mAttrsAndChildren.GetAttr(aName, eCaseMatters);
+  if (val) {
+      return val;
+  }
+
+  if (mPrototype) {
+      PRUint32 i, count = mPrototype->mNumAttributes;
+      for (i = 0; i < count; ++i) {
+          nsXULPrototypeAttribute *protoAttr = &mPrototype->mAttributes[i];
+          if (protoAttr->mName.QualifiedNameEquals(aName)) {
+              return &protoAttr->mValue;
+          }
+      }
+  }
+
+  return nsnull;
+}
+
 bool
 nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                       nsAString& aResult) const

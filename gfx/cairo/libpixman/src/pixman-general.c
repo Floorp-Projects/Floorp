@@ -111,6 +111,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     pixman_combine_32_func_t compose;
     pixman_bool_t component_alpha;
     iter_flags_t narrow, src_flags;
+    iter_flags_t rgb16;
     int Bpp;
     int i;
 
@@ -127,6 +128,20 @@ general_composite_rect  (pixman_implementation_t *imp,
 	Bpp = 8;
     }
 
+    // XXX: This special casing is bad. Ideally, we'd keep the general code general perhaps
+    // by having it deal more specifically with different intermediate formats
+    if (
+	(dest_image->common.flags & FAST_PATH_16_FORMAT && (src_image->type == LINEAR || src_image->type == RADIAL)) &&
+	( op == PIXMAN_OP_SRC ||
+         (op == PIXMAN_OP_OVER && (src_image->common.flags & FAST_PATH_IS_OPAQUE))
+	)
+	) {
+	rgb16 = ITER_16;
+    } else {
+	rgb16 = 0;
+    }
+
+
     if (width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
 	scanline_buffer = pixman_malloc_abc (width, 3, Bpp);
@@ -140,7 +155,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     dest_buffer = mask_buffer + width * Bpp;
 
     /* src iter */
-    src_flags = narrow | op_flags[op].src;
+    src_flags = narrow | op_flags[op].src | rgb16;
 
     _pixman_implementation_src_iter_init (imp->toplevel, &src_iter, src_image,
 					  src_x, src_y, width, height,
@@ -169,10 +184,10 @@ general_composite_rect  (pixman_implementation_t *imp,
     /* dest iter */
     _pixman_implementation_dest_iter_init (
 	imp->toplevel, &dest_iter, dest_image, dest_x, dest_y, width, height,
-	dest_buffer, narrow | op_flags[op].dst);
+	dest_buffer, narrow | op_flags[op].dst | rgb16);
 
     compose = _pixman_implementation_lookup_combiner (
-	imp->toplevel, op, component_alpha, narrow);
+	imp->toplevel, op, component_alpha, narrow, !!rgb16);
 
     if (!compose)
 	return;
@@ -239,6 +254,7 @@ _pixman_implementation_create_general (void)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (NULL, general_fast_path);
 
+    _pixman_setup_combiner_functions_16 (imp);
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);
 

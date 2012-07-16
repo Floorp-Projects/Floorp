@@ -209,11 +209,12 @@ FrameWorker.prototype = {
       }
     }
 
+    delete workerCache[this.url];
+
     // let pending events get delivered before actually removing the frame
     Services.tm.mainThread.dispatch(function deleteWorkerFrame() {
       // now nuke the iframe itself and forget everything about this worker.
       this.frame.parentNode.removeChild(this.frame);
-      delete workerCache[this.url];
     }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   }
 };

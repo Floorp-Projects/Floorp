@@ -163,6 +163,28 @@ add_test(function test_invalid_request_method() {
       do_check_true(allowed.has(method));
     }
 
-    run_next_test();
+    server.stop(run_next_test);
+  });
+});
+add_test(function test_respond_with_mock_status() {
+  let username = "123"
+  let server = get_server_with_user(username);
+  server.mockStatus = {
+    code: 405,
+    method: "Method Not Allowed"
+  };
+  let request = new RESTRequest(server.url);
+  request.dispatch("GET", null, function onComplete(error){
+    do_check_eq(this.response.status, 405);
+    
+    server.mockStatus = {
+      code: 399,
+      method: "Self Destruct"
+    };
+    let request2 = new RESTRequest(server.url);
+    request2.dispatch("GET", null, function onComplete(error){
+      do_check_eq(this.response.status, 399);
+      server.stop(run_next_test);
+    });
   });
 });

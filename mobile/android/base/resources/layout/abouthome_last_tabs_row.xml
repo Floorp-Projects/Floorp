@@ -3,54 +3,44 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="fill_parent"
-             android:layout_height="wrap_content"
-             android:background="@drawable/abouthome_separator">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:id="@+id/last_tab_row"
-                  android:layout_width="fill_parent"
-                  android:layout_height="47dip"
-                  android:paddingLeft="12dip"
-                  android:paddingRight="12dip"
-                  android:gravity="center_vertical"
-                  android:background="@android:drawable/list_selector_background"
-                  android:orientation="horizontal"
-                  android:clickable="true">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="47dip"
+                android:gravity="left|center_vertical"
+                android:background="@drawable/action_bar_button">
 
-        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-                   android:id="@+id/last_tab_favicon"
-                   android:layout_width="32dip"
-                   android:layout_height="32dip"
-                   android:src="@drawable/favicon"
-                   android:layout_centerVertical="true"/>
+    <ImageView android:id="@+id/last_tab_favicon"
+               android:layout_width="32dip"
+               android:layout_height="32dip"
+               android:layout_centerVertical="true"
+               android:layout_marginLeft="12dip"
+               android:src="@drawable/favicon"/>
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:paddingLeft="10dip"
-                      android:orientation="vertical">
+    <TextView android:id="@+id/last_tab_title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/last_tab_favicon"
+              android:layout_marginLeft="12dip"
+              android:layout_marginRight="12dip"
+              android:textSize="15sp"
+              android:singleLine="true"
+              android:textColor="#222222"/>
 
-            <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                      android:id="@+id/last_tab_title"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:textSize="15sp"
-                      android:singleLine="true"
-                      android:textColor="#222222"/>
+    <TextView android:id="@+id/last_tab_url"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginLeft="12dip"
+              android:layout_marginRight="12dip"
+              android:layout_toRightOf="@id/last_tab_favicon"
+              android:layout_below="@id/last_tab_title"
+              android:textSize="12sp"
+              android:singleLine="true"
+              android:textColor="#666666"/>
 
-            <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                      android:id="@+id/last_tab_url"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:textSize="12sp"
-                      android:singleLine="true"
-                      android:layout_marginTop="-2dip"
-                      android:textColor="#666666"/>
+    <View android:layout_width="fill_parent"
+          android:layout_height="2dp"
+          android:background="@drawable/abouthome_divider"
+          android:layout_alignParentBottom="true"/>
 
-        </LinearLayout>
-
-    </LinearLayout>
-
-</FrameLayout>
+</RelativeLayout>

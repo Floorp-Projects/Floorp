@@ -11,6 +11,8 @@
 == clipPath-html-06.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
+== clipPath-transformed-html-01.xhtml ../pass.svg
+== clipPath-transformed-html-02.xhtml ../pass.svg
 == conditions-outer-svg-01.xhtml ../pass.svg
 == conditions-outer-svg-02.xhtml ../pass.svg
 == dynamic-conditions-outer-svg-01.xhtml ../pass.svg
@@ -27,5 +29,6 @@
 == mask-html-xbl-bound-01.html mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg
-
+== patterned-svg-under-transformed-html-01.xhtml ../pass.svg
+== patterned-svg-under-transformed-html-02.xhtml ../pass.svg
 

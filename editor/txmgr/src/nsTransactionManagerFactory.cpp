@@ -3,10 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stddef.h>
+
+#include "mozilla/Module.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsTransactionManagerCID.h"
-#include "nsTransactionStack.h"
+#include "nsID.h"
+#include "nsITransactionManager.h"
 #include "nsTransactionManager.h"
+#include "nsTransactionManagerCID.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects

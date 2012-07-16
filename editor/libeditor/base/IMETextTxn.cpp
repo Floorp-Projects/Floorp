@@ -4,14 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMETextTxn.h"
-#include "nsIDOMCharacterData.h"
-#include "nsRange.h"
-#include "nsIPrivateTextRange.h"
-#include "nsISelection.h"
-#include "nsISelectionPrivate.h"
-#include "nsISelectionController.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIEditor.h"
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsAString.h"                  // for nsAString_internal::Length, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsDebug.h"                    // for NS_ASSERTION, etc
+#include "nsError.h"                    // for NS_SUCCEEDED, NS_FAILED, etc
+#include "nsGUIEvent.h"                 // for nsTextRangeStyle
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIDOMRange.h"                // for nsRange::SetEnd, etc
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsIPresShell.h"               // for SelectionType
+#include "nsIPrivateTextRange.h"        // for nsIPrivateTextRange, etc
+#include "nsISelection.h"               // for nsISelection
+#include "nsISelectionController.h"     // for nsISelectionController, etc
+#include "nsISelectionPrivate.h"        // for nsISelectionPrivate
+#include "nsISupportsImpl.h"            // for nsRange::AddRef, etc
+#include "nsISupportsUtils.h"           // for NS_ADDREF_THIS, NS_RELEASE
+#include "nsITransaction.h"             // for nsITransaction
+#include "nsRange.h"                    // for nsRange
+#include "nsString.h"                   // for nsString
 
 // #define DEBUG_IMETXN
 

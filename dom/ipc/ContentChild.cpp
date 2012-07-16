@@ -79,13 +79,16 @@
 #endif
 
 #include "mozilla/dom/sms/SmsChild.h"
+#include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using namespace mozilla::docshell;
+using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
+using namespace mozilla::dom::indexedDB;
 
 namespace mozilla {
 namespace dom {
@@ -427,6 +430,20 @@ ContentChild::DeallocPHal(PHalChild* aHal)
     return true;
 }
 
+PIndexedDBChild*
+ContentChild::AllocPIndexedDB()
+{
+  NS_NOTREACHED("Should never get here!");
+  return NULL;
+}
+
+bool
+ContentChild::DeallocPIndexedDB(PIndexedDBChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
 PTestShellChild*
 ContentChild::AllocPTestShell()
 {
@@ -468,6 +485,19 @@ ContentChild::DeallocPAudio(PAudioChild* doomed)
     AudioChild *child = static_cast<AudioChild*>(doomed);
     NS_RELEASE(child);
 #endif
+    return true;
+}
+
+PDeviceStorageRequestChild*
+ContentChild::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
+{
+    return new DeviceStorageRequestChild();
+}
+
+bool
+ContentChild::DeallocPDeviceStorageRequest(PDeviceStorageRequestChild* aDeviceStorage)
+{
+    delete aDeviceStorage;
     return true;
 }
 

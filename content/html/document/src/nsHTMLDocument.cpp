@@ -555,6 +555,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   bool xhtml = !html && contentType.EqualsLiteral(APPLICATION_XHTML_XML);
   bool plainText = !html && !xhtml && (contentType.EqualsLiteral(TEXT_PLAIN) ||
     contentType.EqualsLiteral(TEXT_CSS) ||
+    contentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
     contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
     contentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
     contentType.EqualsLiteral(TEXT_ECMASCRIPT) ||

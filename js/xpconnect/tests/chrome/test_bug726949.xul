@@ -31,6 +31,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=726949
           is(desc.value, Cu, "Should have the right value");
           var loc = Cu.evalInSandbox('location', s);
           is(loc.href, location.href, "Should have the right location");
+          var display = Cu.evalInSandbox('getComputedStyle(document.documentElement, "").display', s);
+          is(display, "block", "Should be able to call getComputedStyle");
       } catch (e) {
           ok(false, "Should not get an exception: " + e);
       }

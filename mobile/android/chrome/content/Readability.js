@@ -373,15 +373,17 @@ Readability.prototype = {
       // Turn all divs that don't have children block level elements into p's
       if (node.tagName === "DIV") {
         if (node.innerHTML.search(this.REGEXPS.divToPElements) === -1) {
-          let newNode = doc.createElement('p');
-          newNode.innerHTML = node.innerHTML;
-          node.parentNode.replaceChild(newNode, node);
-          nodeIndex-=1;
+          if (!isChecking) {
+            let newNode = doc.createElement('p');
+            newNode.innerHTML = node.innerHTML;
+            node.parentNode.replaceChild(newNode, node);
+            nodeIndex -= 1;
+          }
 
           nodesToScore[nodesToScore.length] = node;
-        } else {
+        } else if (!isChecking) {
           // EXPERIMENTAL
-          for (let i = 0, il = doc.childNodes.length; i < il; i += 1) {
+          for (let i = 0, il = node.childNodes.length; i < il; i += 1) {
             let childNode = node.childNodes[i];
             if (!childNode)
               continue;
@@ -1064,7 +1066,7 @@ Readability.prototype = {
             this._appendNextPage(nextPageLink);
         }
       });
-    }).bind(this).(nextPageLink, articlePage);
+    }).bind(this)(nextPageLink, articlePage);
   },
 
   /**
@@ -1299,9 +1301,9 @@ Readability.prototype = {
   },
 
   check: function() {
-    // Set proper flags for parsing document in readability check mode
-    this._flags = this.FLAG_READABILITY_CHECK |
-                  this.FLAG_STRIP_UNLIKELYS;
+    // Set proper flags for parsing document in readability check mode, skipping
+    // any DOM manipulation.
+    this._flags = this.FLAG_READABILITY_CHECK;
 
     return (this.parse() != null);
   }

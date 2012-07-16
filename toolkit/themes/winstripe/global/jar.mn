@@ -190,7 +190,7 @@ toolkit.jar:
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css
         skin/classic/aero/global/arrow.css
-        skin/classic/aero/global/autocomplete.css
+*       skin/classic/aero/global/autocomplete.css                        (autocomplete-aero.css)
         skin/classic/aero/global/button.css
         skin/classic/aero/global/checkbox.css
         skin/classic/aero/global/colorpicker.css

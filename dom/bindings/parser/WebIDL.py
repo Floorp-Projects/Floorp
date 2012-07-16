@@ -1746,6 +1746,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
     def __init__(self, location, identifier, tag):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
         self.tag = tag
+        self._extendedAttrDict = {}
 
     def isMethod(self):
         return self.tag == IDLInterfaceMember.Tags.Method
@@ -1757,7 +1758,6 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
         return self.tag == IDLInterfaceMember.Tags.Const
 
     def addExtendedAttributes(self, attrs):
-        self._extendedAttrDict = {}
         for attr in attrs:
             attrlist = list(attr)
             identifier = attrlist.pop(0)
@@ -2111,16 +2111,21 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def addOverload(self, method):
         assert len(method._overloads) == 1
 
+        if self._extendedAttrDict != method ._extendedAttrDict:
+            raise WebIDLError("Extended attributes differ on different "
+                              "overloads of %s" % method.identifier,
+                              [self.location, method.location])
+
         self._overloads.extend(method._overloads)
 
         self._hasOverloads = True
 
         if self.isStatic() != method.isStatic():
-            raise WebIDLError("Overloaded identifier %s appears with different values of the 'static' attribute" % method1.identifier,
+            raise WebIDLError("Overloaded identifier %s appears with different values of the 'static' attribute" % method.identifier,
                               [method.location])
 
         if self.isLegacycaller() != method.isLegacycaller():
-            raise WebIDLError("Overloaded identifier %s appears with different values of the 'legacycaller' attribute" % method1.identifier,
+            raise WebIDLError("Overloaded identifier %s appears with different values of the 'legacycaller' attribute" % method.identifier,
                               [method.location])
 
         # Can't overload special things!
