@@ -119,9 +119,20 @@ class nsACString;
  */
 class nsStringContainer;
 
+
+/**
+ * This struct is never used directly. It is designed to have the same
+ * size as nsString. It can be stack and heap allocated and the internal
+ * functions cast it to nsString.
+ * While this practice is a strict aliasing violation, it doesn't seem to
+ * cause problems since the the struct is only accessed via the casts to
+ * nsString.
+ * We use protected instead of private to avoid compiler warnings about
+ * the members being unused.
+ */
 struct nsStringContainer_base
 {
-private:
+protected:
   void *d1;
   PRUint32 d2;
   PRUint32 d3;
