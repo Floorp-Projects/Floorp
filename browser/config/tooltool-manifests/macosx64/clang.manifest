@@ -9,8 +9,8 @@
 "filename": "setup.sh"
 },
 {
-"size": 63764795,
-"digest": "c1f4c990ecd8a4fecb2712a0e116c9edd032ca75e729b48859ee70689791d02ec1fbba752c8638425d305657b0e357baf32ac8c4042fbfbdd42b96f47a4a57ba",
+"size": 54380118,
+"digest": "cbdb00bdd601987f34a76a217c638f162668b5361244254d6d698240267b4bfc9058614205c1b7d3b901ca7204e6dda8609cbe8c46ba495deaafde6ef8f4e600",
 "algorithm": "sha512",
 "filename": "clang.tar.bz2"
 }
