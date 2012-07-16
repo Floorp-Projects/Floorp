@@ -573,6 +573,9 @@ TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
     if (script->analysis()->usesScopeChain())
         return false;
 
+    if (target->getType(cx)->unknownProperties())
+        return false;
+
     // TI calls ObjectStateChange to trigger invalidation of the caller.
     TypeSet::WatchObjectStateChange(cx, target->getType(cx));
     return true;
