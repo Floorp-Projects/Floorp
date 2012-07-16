@@ -378,7 +378,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParam
 
     PRUint32 permission;
     nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-    pm->TestPermission(doc->GetDocumentURI(), &permission);
+    pm->TestPermission(doc->NodePrincipal(), &permission);
     if (aWindow && (permission == nsIPopupWindowManager::DENY_POPUP)) {
       nsCOMPtr<nsIDOMDocument> domDoc = aWindow->GetExtantDocument();
       nsGlobalWindow::FirePopupBlockedEvent(
