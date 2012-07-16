@@ -9,7 +9,7 @@
 
 #include "XPCWrapper.h"
 
-#include "CrossOriginWrapper.h"
+#include "WaiveXrayWrapper.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
