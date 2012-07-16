@@ -71,8 +71,9 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
     if (fun->isInterpreted() && !fun->script()->canIonCompile()) {
         JSScript *script = GetTopIonJSScript(cx);
         if (script->hasIonScript() && ++script->ion->slowCallCount >= js_IonOptions.slowCallLimit) {
-            Vector<types::RecompileInfo> scripts(cx);
-            if (!scripts.append(types::RecompileInfo(script)))
+            Vector<types::CompilerOutput> scripts(cx);
+            types::CompilerOutput co(script);
+            if (!scripts.append(co))
                 return false;
 
             Invalidate(cx->runtime->defaultFreeOp(), scripts);

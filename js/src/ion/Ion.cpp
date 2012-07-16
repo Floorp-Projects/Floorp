@@ -876,7 +876,8 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
     if (!oracle.init(cx, script))
         return false;
 
-    types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
+    types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
+    enterCompiler.init(script, false, 0);
     AutoCompilerRoots roots(script->compartment()->rt);
 
     IonBuilder builder(cx, temp, graph, &oracle, *info);
@@ -1309,18 +1310,29 @@ ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
 }
 
 void
-ion::Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses)
+ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool resetUses)
 {
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
+    bool anyInvalidation = false;
     for (size_t i = 0; i < invalid.length(); i++) {
-        JSScript *script = invalid[i].script;
-        if (script->hasIonScript()) {
+        const types::CompilerOutput &co = invalid[i];
+        JS_ASSERT(co.isValid());
+        if (co.isIon()) {
+            JS_ASSERT(co.script->hasIonScript() && co.out.ion == co.script->ionScript());
             IonSpew(IonSpew_Invalidate, " Invalidate %s:%u, IonScript %p",
-                    script->filename, script->lineno, script->ion);
-            script->ion->incref();
+                    co.script->filename, co.script->lineno, co.out.ion);
+
+            // Cause the IonScript to be invalidated in InvalidateActivation.
+            co.out.ion->incref();
+            anyInvalidation = true;
         }
+    }
+
+    if (!anyInvalidation) {
+        IonSpew(IonSpew_Invalidate, " No IonScript invalidation.");
+        return;
     }
 
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter)
@@ -1361,8 +1373,9 @@ ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
 {
     JS_ASSERT(script->hasIonScript());
 
-    Vector<types::RecompileInfo> scripts(cx);
-    if (!scripts.append(types::RecompileInfo(script)))
+    Vector<types::CompilerOutput> scripts(cx);
+    types::CompilerOutput co(script);
+    if (!scripts.append(co))
         return false;
 
     Invalidate(cx->runtime->defaultFreeOp(), scripts, resetUses);

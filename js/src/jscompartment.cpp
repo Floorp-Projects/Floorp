@@ -601,6 +601,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
                 JSScript *script = i.get<JSScript>();
                 script->clearAnalysis();
             }
+
+            if (types.constrainedOutputs) {
+                fop->delete_(types.constrainedOutputs);
+                types.constrainedOutputs = NULL;
+            }
         }
 
         {
