@@ -6,6 +6,7 @@
 #include "VolumeCommand.h"
 #include "VolumeManager.h"
 #include "VolumeManagerLog.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace system {
@@ -20,21 +21,25 @@ Volume::Volume(const nsCSubstring &aName)
 void
 Volume::SetState(Volume::STATE aNewState)
 {
-  if (aNewState != mState) {
-    LOG("Volume %s: changing state from %s to %s",
-         NameStr(), StateStr(mState), StateStr(aNewState));
-
-    mState = aNewState;
+  if (aNewState == mState) {
+    return;
   }
+  LOG("Volume %s: changing state from %s to %s (%d observers)",
+      NameStr(), StateStr(mState),
+      StateStr(aNewState), mEventObserverList.Length());
+
+  mState = aNewState;
+  mEventObserverList.Broadcast(this);
 }
 
 void
 Volume::SetMountPoint(const nsCSubstring &aMountPoint)
 {
-  if (!mMountPoint.Equals(aMountPoint)) {
-    mMountPoint = aMountPoint;
-    DBG("Volume %s: Setting mountpoint to '%s'", NameStr(), mMountPoint.get());
+  if (mMountPoint.Equals(aMountPoint)) {
+    return;
   }
+  mMountPoint = aMountPoint;
+  DBG("Volume %s: Setting mountpoint to '%s'", NameStr(), mMountPoint.get());
 }
 
 void
@@ -65,6 +70,24 @@ void
 Volume::StartCommand(VolumeCommand *aCommand)
 {
   VolumeManager::PostCommand(aCommand);
+}
+
+void
+Volume::RegisterObserver(Volume::EventObserver *aObserver)
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
+  mEventObserverList.AddObserver(aObserver);
+  // Send an initial event to the observer
+  aObserver->Notify(this);
+}
+
+void
+Volume::UnregisterObserver(Volume::EventObserver *aObserver)
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
+  mEventObserverList.RemoveObserver(aObserver);
 }
 
 } // namespace system
