@@ -332,15 +332,7 @@ class SkipRoot
 
   public:
     template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr
-             JS_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        init(ContextFriendFields::get(cx), ptr, 1);
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr, size_t count
+    SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
              JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         init(ContextFriendFields::get(cx), ptr, count);
@@ -363,14 +355,7 @@ class SkipRoot
 
   public:
     template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr
-              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr, size_t count
+    SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
               JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
