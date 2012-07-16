@@ -138,7 +138,7 @@ public:
      * |aRegion| is an inout param.
      */
     virtual void GetUpdateRegion(nsIntRegion& aForRegion) {
-    };
+    }
     /**
      * Finish the active update and synchronize with the server, if
      * necessary.
@@ -153,11 +153,11 @@ public:
      * These functions iterate over each sub texture image tile.
      */
     virtual void BeginTileIteration() {
-    };
+    }
 
     virtual bool NextTile() {
         return false;
-    };
+    }
 
     // Function prototype for a tile iteration callback. Returning false will
     // cause iteration to be interrupted (i.e. the corresponding NextTile call
@@ -169,17 +169,17 @@ public:
     // Sets a callback to be called every time NextTile is called.
     virtual void SetIterationCallback(TileIterationCallback aCallback,
                                       void* aCallbackData) {
-    };
+    }
 
     virtual nsIntRect GetTileRect() {
         return nsIntRect(nsIntPoint(0,0), mSize);
-    };
+    }
 
     virtual GLuint GetTextureID() = 0;
 
     virtual PRUint32 GetTileCount() {
         return 1;
-    };
+    }
 
     /**
      * Set this TextureImage's size, and ensure a texture has been
@@ -210,7 +210,7 @@ public:
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0)) = 0;
 
     virtual void BindTexture(GLenum aTextureUnit) = 0;
-    virtual void ReleaseTexture() {};
+    virtual void ReleaseTexture() {}
 
     void BindTextureAndApplyFilter(GLenum aTextureUnit) {
         BindTexture(aTextureUnit);
@@ -305,7 +305,7 @@ protected:
 
     virtual nsIntRect GetSrcTileRect() {
         return nsIntRect(nsIntPoint(0,0), mSize);
-    };
+    }
 
     nsIntSize mSize;
     GLenum mWrapMode;
@@ -350,7 +350,7 @@ public:
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
-    virtual GLuint GetTextureID() { return mTexture; };
+    virtual GLuint GetTextureID() { return mTexture; }
     // Returns a surface to draw into
     virtual already_AddRefed<gfxASurface>
       GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt);
@@ -407,9 +407,9 @@ public:
     virtual nsIntRect GetTileRect();
     virtual GLuint GetTextureID() {
         return mImages[mCurrentImage]->GetTextureID();
-    };
+    }
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
-    virtual bool InUpdate() const { return mInUpdate; };
+    virtual bool InUpdate() const { return mInUpdate; }
     virtual void BindTexture(GLenum);
     virtual void ApplyFilter();
 
@@ -1306,7 +1306,7 @@ public:
                 TextureImage::Flags aFlags = TextureImage::NoFlags)
     {
         return nsnull;
-    };
+    }
 
     /**
      * Read the image data contained in aTexture, and return it as an ImageSurface.
@@ -1450,15 +1450,15 @@ public:
          */
         float* vertexPointer() {
             return &vertexCoords[0].x;
-        };
+        }
 
         float* texCoordPointer() {
             return &texCoords[0].u;
-        };
+        }
 
         unsigned int elements() {
             return vertexCoords.Length();
-        };
+        }
 
         typedef struct { GLfloat x,y; } vert_coord;
         typedef struct { GLfloat u,v; } tex_coord;
@@ -2366,7 +2366,7 @@ public:
         BEFORE_GL_CALL;
         mSymbols.fGetTexImage(target, level, format, type, img);
         AFTER_GL_CALL;
-    };
+    }
 
     void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
     {  
