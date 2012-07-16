@@ -1128,7 +1128,7 @@ public class GeckoInputConnection
 
                     if (mIMEState != IME_STATE_DISABLED) {
                         imm.showSoftInput(v, 0);
-                    } else {
+                    } else if (imm.isActive(v)) {
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     }
                 }
