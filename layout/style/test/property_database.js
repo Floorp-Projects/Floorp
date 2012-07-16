@@ -29,6 +29,8 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //	   may not be the same as for the property's initial value.
 //	 invalid_values: Things that are not values for the property and
 //	   should be rejected.
+//	 quirks_values: Values that should be accepted in quirks mode only,
+//	   mapped to the values they are equivalent to.
 
 // Helper functions used to construct gCSSProperties.
 
@@ -148,7 +150,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
 	},
 	"-moz-border-end": {
 		domProp: "MozBorderEnd",
@@ -166,7 +168,7 @@ var gCSSProperties = {
 		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
 	},
 	"-moz-border-end-style": {
 		domProp: "MozBorderEndStyle",
@@ -279,7 +281,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
 	},
 	"border-radius": {
 		domProp: "borderRadius",
@@ -385,7 +387,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
 	},
 	"-moz-border-start": {
 		domProp: "MozBorderStart",
@@ -403,7 +405,7 @@ var gCSSProperties = {
 		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
 	},
 	"-moz-border-start-style": {
 		domProp: "MozBorderStartStyle",
@@ -440,7 +442,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red" ]
+		invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
 	},
 	"-moz-box-align": {
 		domProp: "MozBoxAlign",
@@ -829,7 +831,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "green" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "red", "blue", "#ffff00" ],
-		invalid_values: [ ]
+		invalid_values: [ "ffff00" ]
 	},
 	"-moz-column-width": {
 		domProp: "MozColumnWidth",
@@ -1468,6 +1470,8 @@ var gCSSProperties = {
 		invalid_values: [
 			/* mixes with keywords have to be in correct order */
 			"50% left", "top 50%",
+			/* no quirks mode colors */
+			"-moz-radial-gradient(10% bottom, ffffff, black) scroll no-repeat",
 			/* bug 258080: don't accept background-position separated */
 			"left url(404.png) top", "top url(404.png) left",
 			/* not allowed to have color in non-bottom layer */
@@ -1512,7 +1516,8 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
 		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(255.0,0.387,3489)" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(255.0,0.387,3489)" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"background-image": {
 		domProp: "backgroundImage",
@@ -1793,6 +1798,8 @@ var gCSSProperties = {
 			"-moz-element(#a a)",
 			"-moz-element(#a+a)",
 			"-moz-element(#a()",
+			/* no quirks mode colors */
+			"linear-gradient(red, ff00ff)",
 			/* Old syntax */
 			"-moz-linear-gradient(10px 10px, 20px, 30px 30px, 40px, from(blue), to(red))",
 			"-moz-radial-gradient(20px 20px, 10px 10px, from(green), to(#ff00ff))",
@@ -2105,7 +2112,7 @@ var gCSSProperties = {
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "-moz-border-top-colors", "-moz-border-right-colors", "-moz-border-bottom-colors", "-moz-border-left-colors", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat" ],
 		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor", "calc(4px - 1px) none" ],
 		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid", "calc(2px) solid blue" ],
-		invalid_values: [ "5%" ]
+		invalid_values: [ "5%", "medium solid ff00ff" ]
 	},
 	"border-bottom": {
 		domProp: "borderBottom",
@@ -2123,7 +2130,8 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"border-bottom-style": {
 		domProp: "borderBottomStyle",
@@ -2167,7 +2175,8 @@ var gCSSProperties = {
 		subproperties: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
 		initial_values: [ "currentColor", "currentColor currentColor", "currentColor currentColor currentColor", "currentColor currentColor currentcolor CURRENTcolor" ],
 		other_values: [ "green", "currentColor green", "currentColor currentColor green", "currentColor currentColor currentColor green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"border-left": {
 		domProp: "borderLeft",
@@ -2185,7 +2194,8 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"border-left-style": {
 		domProp: "borderLeftStyle",
@@ -2230,7 +2240,8 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"border-right-style": {
 		domProp: "borderRightStyle",
@@ -2293,7 +2304,8 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
 	},
 	"border-top-style": {
 		domProp: "borderTopStyle",
@@ -2403,7 +2415,8 @@ var gCSSProperties = {
 		/* XXX should test currentColor, but may or may not be initial */
 		initial_values: [ "black", "#000" ],
 		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)" ],
-		invalid_values: [ "fff", "ffffff", "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ]
+		invalid_values: [ "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ],
+		quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a", "fff": "#ffffff", "ffffff": "#ffffff", },
 	},
 	"content": {
 		domProp: "content",
@@ -2925,7 +2938,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ], // XXX should be invert
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "cc00ff" ]
 	},
 	"outline-offset": {
 		domProp: "outlineOffset",
@@ -3198,7 +3211,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "black" },
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff" ]
 	},
 	"-moz-text-decoration-line": {
 		domProp: "MozTextDecorationLine",
@@ -3569,7 +3582,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor" ],
-		invalid_values: []
+		invalid_values: [ "000000", "ff00ff" ]
 	},
 	"fill-opacity": {
 		domProp: "fillOpacity",
@@ -3602,7 +3615,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3", "currentColor" ],
-		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "000000", "ff00ff" ]
 	},
 	"flood-opacity": {
 		domProp: "floodOpacity",
@@ -3627,7 +3640,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "blue" },
 		initial_values: [ "white", "#fff", "#ffffff", "rgb(255,255,255)", "rgba(255,255,255,1.0)", "rgba(255,255,255,42.0)" ],
 		other_values: [ "green", "#fc3", "currentColor" ],
-		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "000000", "ff00ff" ]
 	},
 	"marker": {
 		domProp: "marker",
@@ -3685,7 +3698,7 @@ var gCSSProperties = {
 		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3", "currentColor" ],
-		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "000000", "ff00ff" ]
 	},
 	"stop-opacity": {
 		domProp: "stopOpacity",
@@ -3701,7 +3714,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "currentColor" ],
-		invalid_values: []
+		invalid_values: [ "000000", "ff00ff" ]
 	},
 	"stroke-dasharray": {
 		domProp: "strokeDasharray",
