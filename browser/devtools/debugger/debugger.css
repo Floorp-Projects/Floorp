@@ -13,6 +13,20 @@
 }
 
 /**
+ * Breakpoints view
+ */
+
+#breakpoints {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dbg-breakpoint > .state,
+.dbg-breakpoint > .content {
+  overflow: hidden;
+}
+
+/**
  * Properties elements
  */
 

@@ -68,7 +68,7 @@ function testScriptLabelShortening() {
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
       });
     });
 

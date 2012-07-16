@@ -33,7 +33,7 @@ function test() {
       ok(content.Prefs.variablesWidth,
         "The debugger preferences should have a saved variablesWidth value.");
 
-      stackframes = content.document.getElementById("stackframes");
+      stackframes = content.document.getElementById("stackframes+breakpoints");
       variables = content.document.getElementById("variables");
 
       is(content.Prefs.stackframesWidth, stackframes.getAttribute("width"),

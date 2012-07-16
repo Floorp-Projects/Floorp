@@ -543,7 +543,7 @@ ThreadActor.prototype = {
   /**
    * Handle a protocol request to pause the debuggee.
    */
-  onInterrupt: function TA_onScripts(aRequest) {
+  onInterrupt: function TA_onInterrupt(aRequest) {
     if (this.state == "exited") {
       return { type: "exited" };
     } else if (this.state == "paused") {
@@ -935,6 +935,10 @@ ThreadActor.prototype = {
     if (aScript.url.indexOf("chrome://") == 0) {
       return;
     }
+    // Ignore about:* pages for content debugging.
+    if (aScript.url.indexOf("about:") == 0) {
+      return;
+    }
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
     if (!this._scripts[aScript.url]) {
@@ -945,11 +949,13 @@ ThreadActor.prototype = {
     // Set any stored breakpoints.
     let existing = this._breakpointStore[aScript.url];
     if (existing) {
+      let endLine = aScript.startLine + aScript.lineCount - 1;
       // Iterate over the lines backwards, so that sliding breakpoints don't
       // affect the loop.
       for (let line = existing.length - 1; line >= 0; line--) {
         let bp = existing[line];
-        if (bp) {
+        // Limit search to the line numbers contained in the new script.
+        if (bp && line >= aScript.startLine && line <= endLine) {
           this._setBreakpoint(bp);
         }
       }
