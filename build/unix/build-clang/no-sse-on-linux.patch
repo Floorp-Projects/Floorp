@@ -1,0 +1,13 @@
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 59196b2..a32c154 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -1115,7 +1115,7 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
+       if (getToolChain().getArch() == llvm::Triple::x86_64)
+         CPUName = "x86-64";
+       else if (getToolChain().getArch() == llvm::Triple::x86)
+-        CPUName = "pentium4";
++        CPUName = "i686";
+     }
+   }
+ 
