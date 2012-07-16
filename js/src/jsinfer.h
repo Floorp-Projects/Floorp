@@ -28,6 +28,14 @@ namespace js {
 
 class CallObject;
 
+namespace mjit {
+    struct JITScript;
+}
+
+namespace ion {
+    struct IonScript;
+}
+
 namespace types {
 
 /* Type set entry for either a JSObject with singleton type or a non-singleton TypeObject. */
@@ -1003,31 +1011,47 @@ typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey,SystemAllocPolicy
 struct AllocationSiteKey;
 typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,SystemAllocPolicy> AllocationSiteTable;
 
-struct RecompileInfo
+/*
+ * Information about the result of the compilation of a script.  This structure
+ * stored in the TypeCompartment is indexed by the RecompileInfo. This
+ * indirection enable the invalidation of all constraints related to the same
+ * compilation. The compiler output is built by the AutoEnterCompilation.
+ */
+struct CompilerOutput
 {
     JSScript *script;
+    bool isIonFlag : 1;
     bool constructing : 1;
     bool barriers : 1;
-    uint32_t chunkIndex:30;
+    uint32_t chunkIndex:29;
+
+    /* Result of the compilation */
+    union {
+        mjit::JITScript *mjit;
+        ion::IonScript *ion;
+    } out;
+
+    CompilerOutput();
+    explicit CompilerOutput(JSScript *script, bool isIonFlag = true);
+
+    bool isJM() const { return !isIonFlag; }
+    bool isIon() const { return isIonFlag; }
+    bool isValid() const;
+
+    void invalidate() {
+        out.ion = NULL;
+    }
+};
+
+struct RecompileInfo
+{
+    static const uint32_t NoCompilerRunning = uint32_t(-1);
+    uint32_t outputIndex;
 
     bool operator == (const RecompileInfo &o) const {
-        return script == o.script
-            && constructing == o.constructing
-            && barriers == o.barriers
-            && chunkIndex == o.chunkIndex;
+        return outputIndex == o.outputIndex;
     }
-
-    RecompileInfo()
-    {
-    }
-
-    explicit RecompileInfo(JSScript *script)
-      : script(script),
-        constructing(false),
-        barriers(false),
-        chunkIndex(0)
-    {
-    }
+    CompilerOutput *compilerOutput(JSContext *cx) const;
 };
 
 /* Type information for a compartment. */
@@ -1064,8 +1088,11 @@ struct TypeCompartment
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
 
+    /* Valid & Invalid script referenced by type constraints. */
+    Vector<CompilerOutput> *constrainedOutputs;
+
     /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<RecompileInfo> *pendingRecompiles;
+    Vector<CompilerOutput> *pendingRecompiles;
 
     /*
      * Number of recompilation events and inline frame expansions that have
@@ -1136,6 +1163,7 @@ struct TypeCompartment
     void setPendingNukeTypesNoReport();
 
     /* Mark a script as needing recompilation once inference has finished. */
+    void addPendingRecompile(JSContext *cx, CompilerOutput &co);
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
     void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 

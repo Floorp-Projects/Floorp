@@ -21,12 +21,62 @@
 #ifndef jsinferinlines_h___
 #define jsinferinlines_h___
 
+namespace js {
+namespace types {
+
+/////////////////////////////////////////////////////////////////////
+// CompilerOutput & RecompileInfo
+/////////////////////////////////////////////////////////////////////
+
+inline
+CompilerOutput::CompilerOutput()
+  : script(script),
+    isIonFlag(false),
+    constructing(false),
+    barriers(false),
+    chunkIndex(false)
+{
+    out.mjit = NULL;
+}
+
+inline
+CompilerOutput::CompilerOutput(JSScript *script, bool isIonFlag)
+  : script(script),
+    isIonFlag(isIonFlag),
+    constructing(false),
+    barriers(false),
+    chunkIndex(false)
+{
+    out.mjit = NULL;
+#ifdef JS_METHODJIT
+    if (isJM() && script->hasJITInfo())
+        out.mjit = script->getJIT(constructing, barriers);
+#endif
+    if (isIon() && script->hasIonScript())
+        out.ion = script->ionScript();
+}
+
+inline bool
+CompilerOutput::isValid() const
+{
+#ifdef JS_METHODJIT
+    if (isJM() && out.mjit != NULL && script->getJIT(constructing, barriers) == out.mjit)
+        return true;
+#endif
+    if (isIon() && script->hasIonScript() && script->ionScript() == out.ion)
+        return true;
+    return false;
+}
+
+inline CompilerOutput*
+RecompileInfo::compilerOutput(JSContext *cx) const
+{
+    return &(*cx->compartment->types.constrainedOutputs)[outputIndex];
+}
+
 /////////////////////////////////////////////////////////////////////
 // Types
 /////////////////////////////////////////////////////////////////////
-
-namespace js {
-namespace types {
 
 /* static */ inline Type
 Type::ObjectType(JSObject *obj)
@@ -243,25 +293,62 @@ struct AutoEnterTypeInference
  */
 struct AutoEnterCompilation
 {
+    JSContext *cx;
     RecompileInfo &info;
+    enum Compiler { JM, Ion };
+    Compiler mode;
 
-    AutoEnterCompilation(JSContext *cx, JSScript *script, bool constructing, unsigned chunkIndex)
-        : info(cx->compartment->types.compiledInfo)
+    AutoEnterCompilation(JSContext *cx, Compiler mode)
+      : cx(cx),
+        info(cx->compartment->types.compiledInfo),
+        mode(mode)
     {
-        JS_ASSERT(!info.script);
-        info.script = script;
-        info.constructing = constructing;
-        info.barriers = cx->compartment->needsBarrier();
-        info.chunkIndex = chunkIndex;
+        JS_ASSERT(info.outputIndex == RecompileInfo::NoCompilerRunning);
+    }
+
+    bool init(JSScript *script, bool constructing, unsigned chunkIndex)
+    {
+        CompilerOutput co;
+        co.script = script;
+        co.constructing = constructing;
+        co.barriers = cx->compartment->needsBarrier();
+        co.chunkIndex = chunkIndex;
+
+        TypeCompartment &types = cx->compartment->types;
+        if (!types.constrainedOutputs) {
+            types.constrainedOutputs = cx->new_< Vector<CompilerOutput> >(cx);
+            if (!types.constrainedOutputs) {
+                types.setPendingNukeTypes(cx);
+                return false;
+            }
+        }
+
+        info.outputIndex = cx->compartment->types.constrainedOutputs->length();
+        // I hope we GC before we reach 64k of compilation attempts.
+        if (info.outputIndex >= RecompileInfo::NoCompilerRunning)
+            return false;
+
+        if (!cx->compartment->types.constrainedOutputs->append(co))
+            return false;
+        return true;
     }
 
     ~AutoEnterCompilation()
     {
-        JS_ASSERT(info.script);
-        info.script = NULL;
-        info.constructing = false;
-        info.barriers = false;
-        info.chunkIndex = 0;
+        CompilerOutput *co = info.compilerOutput(cx);
+#ifdef JS_METHODJIT
+        if (mode == JM) {
+            co->isIonFlag = false;
+            if (co->script->hasJITInfo())
+                co->out.mjit = co->script->getJIT(co->constructing, co->barriers);
+        }
+#endif
+        if (mode == Ion) {
+            co->isIonFlag = true;
+            if (co->script->hasIonScript())
+                co->out.ion = co->script->ionScript();
+        }
+        info.outputIndex = RecompileInfo::NoCompilerRunning;
     }
 };
 
