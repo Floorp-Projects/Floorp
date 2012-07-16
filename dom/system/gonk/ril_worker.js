@@ -49,7 +49,6 @@ let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
 let RILQUIRKS_V5_LEGACY = true;
 let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = false;
 let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = false;
-let RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME = false;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -717,10 +716,6 @@ let RIL = {
       case "Qualcomm RIL 1.0":
         let product_model = libcutils.property_get("ro.product.model");
         if (DEBUG) debug("Detected product model " + product_model);
-        if (product_model == "otoro1") {
-          if (DEBUG) debug("Enabling RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME.");
-          RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME = true;
-        }
         if (DEBUG) {
           debug("Detected Qualcomm RIL 1.0, " +
                 "disabling RILQUIRKS_V5_LEGACY and " +
@@ -3320,9 +3315,7 @@ RIL.readDataCall_v6 = function readDataCall_v6(options) {
     options = {};
   }
   options.status = Buf.readUint32();  // DATACALL_FAIL_*
-  if (!RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME) {
-    options.suggestedRetryTime = Buf.readUint32();
-  }
+  options.suggestedRetryTime = Buf.readUint32();
   options.cid = Buf.readUint32().toString();
   options.active = Buf.readUint32();  // DATACALL_ACTIVE_*
   options.type = Buf.readString();
