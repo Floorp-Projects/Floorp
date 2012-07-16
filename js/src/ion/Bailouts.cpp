@@ -108,6 +108,25 @@ IonBailoutIterator::dump() const
     }
 }
 
+static JSScript*
+GetBailedJSScript(JSContext *cx)
+{
+    // Just after the frame conversion, we can safely interpret the ionTop as JS
+    // frame because it targets the bailed JS frame converted to an exit frame.
+    IonJSFrameLayout *frame = reinterpret_cast<IonJSFrameLayout*>(cx->runtime->ionTop);
+    switch (GetCalleeTokenTag(frame->calleeToken())) {
+      case CalleeToken_Function: {
+        JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
+        return fun->script();
+      }
+      case CalleeToken_Script:
+        return CalleeTokenToScript(frame->calleeToken());
+      default:
+        JS_NOT_REACHED("unexpected callee token kind");
+        return NULL;
+    }
+}
+
 void
 StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 {
@@ -521,7 +540,7 @@ uint32
 ion::BoundsCheckFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    JSScript *script = cx->fp()->script();
+    JSScript *script = GetBailedJSScript(cx);
 
     IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename,
             script->lineno);
@@ -530,8 +549,9 @@ ion::BoundsCheckFailure()
         script->failedBoundsCheck = true;
 
         // Invalidate the script to force a recompile.
-        Vector<types::RecompileInfo> scripts(cx);
-        if (!scripts.append(types::RecompileInfo(script)))
+        Vector<types::CompilerOutput> scripts(cx);
+        types::CompilerOutput co(script);
+        if (!scripts.append(co))
             return BAILOUT_RETURN_FATAL_ERROR;
 
         IonSpew(IonSpew_Invalidate, "Invalidating due to bounds check failure");

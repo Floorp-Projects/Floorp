@@ -506,7 +506,11 @@ mjit::Compiler::performCompilation()
     JS_ASSERT(cx->compartment->activeInference);
 
     {
-        types::AutoEnterCompilation enter(cx, outerScript, isConstructing, chunkIndex);
+        types::AutoEnterCompilation enter(cx, types::AutoEnterCompilation::JM);
+        if (!enter.init(outerScript, isConstructing, chunkIndex)) {
+            js_ReportOutOfMemory(cx);
+            return Compile_Error;
+        }
 
         CHECK_STATUS(checkAnalysis(outerScript));
         if (inlining())
