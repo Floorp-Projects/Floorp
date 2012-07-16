@@ -123,6 +123,7 @@ public:
     bool SendRealMouseEvent(nsMouseEvent& event);
     bool SendMouseScrollEvent(nsMouseScrollEvent& event);
     bool SendRealKeyEvent(nsKeyEvent& event);
+    bool SendRealTouchEvent(nsTouchEvent& event);
 
     virtual PDocumentRendererParent*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
