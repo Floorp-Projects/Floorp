@@ -175,6 +175,7 @@ public:
     virtual bool RecvRealMouseEvent(const nsMouseEvent& event);
     virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
     virtual bool RecvMouseScrollEvent(const nsMouseScrollEvent& event);
+    virtual bool RecvRealTouchEvent(const nsTouchEvent& event);
     virtual bool RecvKeyEvent(const nsString& aType,
                               const PRInt32&  aKeyCode,
                               const PRInt32&  aCharCode,
@@ -239,7 +240,7 @@ protected:
     NS_OVERRIDE
     virtual bool RecvDestroy();
 
-    bool DispatchWidgetEvent(nsGUIEvent& event);
+    nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
 
     virtual PIndexedDBChild* AllocPIndexedDB(const nsCString& aASCIIOrigin,
                                              bool* /* aAllowed */);
