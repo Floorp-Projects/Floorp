@@ -8,7 +8,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/SocialProvider.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SocialProvider", "resource://gre/modules/SocialProvider.jsm");
 
 // Internal helper methods and state
 let SocialServiceInternal = {
