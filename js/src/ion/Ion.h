@@ -263,7 +263,7 @@ static inline bool IsEnabled(JSContext *cx)
     return cx->hasRunOption(JSOPTION_ION) && cx->typeInferenceEnabled();
 }
 
-void forbidIonCompilation(JSScript *script);
+void ForbidCompilation(JSScript *script);
 
 } // namespace ion
 } // namespace js
