@@ -5,6 +5,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const CC = Components.Constructor;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 let EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
@@ -73,9 +76,6 @@ let WebappOSUtils = {
     } catch (e) {}
 
     return false;
-#else
-    Services.obs.notifyObservers(this, "webapps-launch", JSON.stringify(aData));
-    return true;
 #endif
   }
 }
