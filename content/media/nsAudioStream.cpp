@@ -880,13 +880,13 @@ private:
     return static_cast<nsBufferedAudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
   }
 
-  static int StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
+  static void StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
   {
-    return static_cast<nsBufferedAudioStream*>(aThis)->StateCallback(aState);
+    static_cast<nsBufferedAudioStream*>(aThis)->StateCallback(aState);
   }
 
   long DataCallback(void* aBuffer, long aFrames);
-  int StateCallback(cubeb_state aState);
+  void StateCallback(cubeb_state aState);
 
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
@@ -1268,7 +1268,7 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   return aFrames - (bytesWanted / mBytesPerFrame);
 }
 
-int
+void
 nsBufferedAudioStream::StateCallback(cubeb_state aState)
 {
   MonitorAutoLock mon(mMonitor);
@@ -1278,7 +1278,6 @@ nsBufferedAudioStream::StateCallback(cubeb_state aState)
     mState = ERRORED;
   }
   mon.NotifyAll();
-  return CUBEB_OK;
 }
 #endif
 
