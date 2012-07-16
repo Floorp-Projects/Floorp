@@ -31,7 +31,8 @@ LOCAL_INCLUDES += \
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-MOCHITEST_FILES = test_ipc.html
+# Bug 770046 - Cannot fail.
+# MOCHITEST_FILES = test_ipc.html
 
 # Need to enable these tests sometime soon.
 #XPCSHELL_TESTS = unit
