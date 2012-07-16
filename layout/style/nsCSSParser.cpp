@@ -7291,9 +7291,6 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   NS_ASSERTION(!(aVariantMask & VARIANT_NUMBER), "unexpected variant mask");
   NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
 
-  bool oldUnitlessLengthQuirk = mUnitlessLengthQuirk;
-  mUnitlessLengthQuirk = false;
-
   // One-iteration loop so we can break to the error-handling case.
   do {
     // The toplevel of a calc() is always an nsCSSValue::Array of length 1.
@@ -7306,12 +7303,10 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
       break;
 
     aValue.SetArrayValue(arr, eCSSUnit_Calc);
-    mUnitlessLengthQuirk = oldUnitlessLengthQuirk;
     return true;
   } while (false);
 
   SkipUntil(')');
-  mUnitlessLengthQuirk = oldUnitlessLengthQuirk;
   return false;
 }
 
