@@ -831,7 +831,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   ::JS_SetOperationCallback(cx, DOMOperationCallback);
 
-  if (NS_FAILED(rv) || (buttonPressed == 0)) {
+  if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
     // Allow the script to continue running
 
     if (neverShowDlgChk) {
