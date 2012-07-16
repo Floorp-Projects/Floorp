@@ -7,6 +7,8 @@
 #include <alsa/asoundlib.h>
 #include "sydney_audio.h"
 
+#define ALSA_PA_PLUGIN "ALSA <-> PulseAudio PCM I/O Plugin"
+
 /* ALSA implementation based heavily on sydney_audio_mac.c */
 
 pthread_mutex_t sa_alsa_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -143,9 +145,8 @@ sa_stream_open(sa_stream_t *s) {
   snd_output_buffer_open(&out);
   snd_pcm_dump(s->output_unit, out);
   bufsz = snd_output_buffer_string(out, &buf);
-  if (strncmp(buf, "ALSA <-> PulseAudio PCM I/O Plugin", bufsz) > 0 ) {
-    s->pulseaudio = 1;
-  }
+  s->pulseaudio = bufsz >= strlen(ALSA_PA_PLUGIN) &&
+                  strncmp(buf, ALSA_PA_PLUGIN, strlen(ALSA_PA_PLUGIN)) == 0;
   snd_output_close(out);
 
   snd_pcm_hw_params_alloca(&hwparams);
