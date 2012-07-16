@@ -116,7 +116,7 @@ private:
   static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
     NS_CI_INTERFACE_GETTER_NAME(_class),                                \
     _getlanguagehelper,                                                 \
-    _flags,                                                             \
+    _flags | nsIClassInfo::SINGLETON_CLASSINFO,                         \
     _cid,                                                               \
   };                                                                    \
   static char k##_class##ClassInfoDataPlace[sizeof(GenericClassInfo)];  \

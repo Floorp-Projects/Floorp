@@ -7,12 +7,15 @@
 #define DeleteNodeTxn_h__
 
 #include "EditTxn.h"
-
-#include "nsIContent.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIContent.h"
+#include "nsINode.h"
+#include "nsISupportsImpl.h"
+#include "nscore.h"
 
-class nsRangeUpdater;
 class nsEditor;
+class nsRangeUpdater;
 
 /**
  * A transaction that deletes a single element

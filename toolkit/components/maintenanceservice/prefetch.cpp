@@ -37,23 +37,10 @@ WritePrefetchClearedReg()
   return TRUE;
 }
 
-static BOOL
-PrefetchFileAlreadyCleared(LPCWSTR prefetchPath)
-{
-  DWORD attributes = GetFileAttributes(prefetchPath);
-  BOOL alreadyCleared = attributes != INVALID_FILE_ATTRIBUTES &&
-                        attributes & FILE_ATTRIBUTE_READONLY;
-
-  nsAutoHandle prefetchFile(CreateFile(prefetchPath, GENERIC_READ, 0, NULL,
-                                       OPEN_EXISTING, 0, NULL));
-  LARGE_INTEGER fileSize = { 0, 0 };
-  alreadyCleared &= prefetchFile != INVALID_HANDLE_VALUE &&
-                    GetFileSizeEx(prefetchFile, &fileSize) &&
-                    fileSize.QuadPart == 0;
-  return alreadyCleared;
-}
-
 /** 
+  * Update: We found that prefetch clearing was a net negative, so this
+  * function has been updated to delete the read only prefetch files.
+  * -----------------------------------------------------------------------
   * We found that prefetch actually causes large applications like Firefox
   * to startup slower.  This will get rid of the Windows prefetch files for
   * applications like firefox (FIREFOX-*.pf files) and instead replace them
@@ -159,40 +146,34 @@ ClearPrefetch(LPCWSTR prefetchProcessName)
       continue;
     }
 
-    if (PrefetchFileAlreadyCleared(prefetchPath)) {
-      ++deletedCount;
-      LOG(("Prefetch file already cleared: %ls\n", prefetchPath));
-      continue;
-    }
-
-    // Delete the prefetch file and replace it with a blank read only file
-    HANDLE prefetchFile =
-      CreateFile(prefetchPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    if (INVALID_HANDLE_VALUE == prefetchFile) {
-      LOG(("Error replacing prefetch path %ls. (%d)\n", findFileData.cFileName, 
-           GetLastError()));
-      deletedAllFFPrefetch = FALSE;
-      continue;
-    }
-
-    CloseHandle(prefetchFile);
-
-    DWORD attributes = GetFileAttributes(prefetchPath);
+    DWORD attributes = GetFileAttributesW(prefetchPath);
     if (INVALID_FILE_ATTRIBUTES == attributes) {
       LOG(("Could not get/set attributes on prefetch file: %ls. (%d)\n", 
            findFileData.cFileName, GetLastError()));
       continue;
     }
+    
+    if (!(attributes & FILE_ATTRIBUTE_READONLY)) {
+      LOG(("Prefetch file is not read-only, don't clear: %ls.\n", 
+           findFileData.cFileName));
+      continue;
+    }
 
-    if (!SetFileAttributes(prefetchPath, 
-                          attributes | FILE_ATTRIBUTE_READONLY)) {
+    // Remove the read only attribute so a DeleteFile call will work.
+    if (!SetFileAttributesW(prefetchPath,
+                            attributes & (~FILE_ATTRIBUTE_READONLY))) {
       LOG(("Could not set read only on prefetch file: %ls. (%d)\n", 
            findFileData.cFileName, GetLastError()));
       continue;
     } 
 
+    if (!DeleteFileW(prefetchPath)) {
+      LOG(("Could not delete read only prefetch file: %ls. (%d)\n",
+            findFileData.cFileName, GetLastError()));
+    }
+
     ++deletedCount;
-    LOG(("Prefetch file cleared and set to read-only successfully: %ls\n", 
+    LOG(("Prefetch file cleared successfully: %ls\n",
          prefetchPath));
   } while (FindNextFileW(findHandle, &findFileData));
   LOG(("Done searching prefetch paths. (%d)\n", GetLastError()));

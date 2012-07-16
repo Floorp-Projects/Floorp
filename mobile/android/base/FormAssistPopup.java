@@ -75,6 +75,12 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         GeckoAppShell.registerGeckoEventListener("FormAssist:Hide", this);
     }
 
+    void destroy() {
+        GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", this);
+        GeckoAppShell.unregisterGeckoEventListener("FormAssist:ValidationMessage", this);
+        GeckoAppShell.unregisterGeckoEventListener("FormAssist:Hide", this);
+    }
+
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("FormAssist:AutoComplete")) {

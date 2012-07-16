@@ -21,7 +21,7 @@ Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://services-common/utils.js");
 
 const PREFS = new Preferences("services.aitc.");
-const TOKEN_TIMEOUT = 240000; // 4 minutes
+const INITIAL_TOKEN_DURATION = 240000; // 4 minutes
 const DASHBOARD_URL = PREFS.get("dashboard.url");
 const MARKETPLACE_URL = PREFS.get("marketplace.url");
 
@@ -29,14 +29,20 @@ const MARKETPLACE_URL = PREFS.get("marketplace.url");
  * The constructor for the manager takes a callback, which will be invoked when
  * the manager is ready (construction is asynchronous). *DO NOT* call any
  * methods on this object until the callback has been invoked, doing so will
- * lead to undefined behaviour.
+ * lead to undefined behaviour. The premadeClient and premadeToken are used
+ * to bypass BrowserID for xpcshell tests, since the window object in not
+ * available.
  */
-function AitcManager(cb) {
+function AitcManager(cb, premadeClient, premadeToken) {
   this._client = null;
   this._getTimer = null;
   this._putTimer = null;
 
-  this._lastToken = 0;
+  this._lastTokenTime = 0;
+  this._tokenDuration = INITIAL_TOKEN_DURATION;
+  this._premadeToken = premadeToken || null;
+  this._invalidTokenFlag = false;
+
   this._lastEmail = null;
   this._dashboardWindow = null;
 
@@ -55,13 +61,15 @@ function AitcManager(cb) {
       self._log.error(new Error("AitC manager callback threw " + e));
     }
 
-    // Schedule them, but only if we can get a silent assertion.
-    self._makeClient(function(err, client) {
-      if (!err && client) {
-        self._client = client;
-        self._processQueue();
-      }
-    }, false);
+    // Used for testing.
+    if (premadeClient) {
+      self._client = premadeClient;
+      cb(null, true);
+      return;
+    }
+
+    // Caller will invoke initialSchedule which will process any items in the
+    // queue, if present.
   });
 }
 AitcManager.prototype = {
@@ -158,6 +166,71 @@ AitcManager.prototype = {
   },
 
   /**
+   * Initial schedule for the manager. It is the responsibility of the
+   * caller who created this object to call this function if it wants to
+   * do an initial sync (i.e. upload local apps on a device that has never
+   * communicated with AITC before).
+   *
+   * The callback will be invoked with the number of local apps that were
+   * queued to be uploaded, or -1 if this client has already synced and a
+   * local upload is not required.
+   *
+   * Try to schedule PUTs but only if we can get a silent assertion, and if
+   * the queue in non-empty, or we've never done a GET (first run).
+   */
+  initialSchedule: function initialSchedule(cb) {
+    let self = this;
+
+    function startProcessQueue(num) {
+      self._makeClient(function(err, client) {
+        if (!err && client) {
+          self._client = client;
+          self._processQueue();
+          return;
+        }
+      });
+      cb(num);
+    }
+
+    // If we've already done a sync with AITC, it means we've already done
+    // an initial upload. Resume processing the queue, if there are items in it.
+    if (Preferences.get("services.aitc.client.lastModified", "0") != "0") {
+      if (this._pending.length) {
+        startProcessQueue(-1);
+      } else {
+        cb(-1);
+      }
+      return;
+    }
+
+    DOMApplicationRegistry.getAllWithoutManifests(function gotAllApps(apps) {
+      let done = 0;
+      let appids = Object.keys(apps);
+      let total = appids.length;
+      self._log.info("First run, queuing all local apps: " + total + " found");
+
+      function appQueued(err) {
+        if (err) {
+          self._log.error("Error queuing app " + apps[appids[done]].origin);
+        }
+
+        if (done == total) {
+          self._log.info("Finished queuing all initial local apps");
+          startProcessQueue(total);
+          return;
+        }
+
+        let app = apps[appids[done]];
+        let obj = {type: "install", app: app, retries: 0, lastTime: 0};
+
+        done += 1;
+        self._pending.enqueue(obj, appQueued);
+      }
+      appQueued();
+    });
+  },
+
+  /**
    * Poll the AITC server for any changes and process them. It is safe to call
    * this function multiple times. Last caller wins. The function will
    * grab the current user state from _state and act accordingly.
@@ -185,7 +258,7 @@ AitcManager.prototype = {
       this._processQueue();
       return;
     }
-    
+
     // Do one GET soon, but only if user is active.
     let getFreq;
     if (this._state == this._ACTIVE) {
@@ -217,11 +290,14 @@ AitcManager.prototype = {
    * not be called and an error will be logged.
    */
   _validateToken: function _validateToken(func) {
-    if (Date.now() - this._lastToken < TOKEN_TIMEOUT) {
+    let timeSinceLastToken = Date.now() - this._lastTokenTime;
+    if (!this._invalidTokenFlag && timeSinceLastToken < this._tokenDuration) {
+      this._log.info("Current token is valid");
       func();
       return;
     }
 
+    this._log.info("Current token is invalid");
     let win;
     if (this._state == this.ACTIVE) {
       win = this._dashboardWindow;
@@ -230,10 +306,10 @@ AitcManager.prototype = {
     let self = this;
     this._refreshToken(function(err, done) {
       if (!done) {
-        this._log.warn("_checkServer could not refresh token, aborting");
+        self._log.warn("_checkServer could not refresh token, aborting");
         return;
       }
-      func();
+      func(err);
     }, win);
   },
 
@@ -252,7 +328,14 @@ AitcManager.prototype = {
       return;
     }
 
-    this._validateToken(this._getApps.bind(this));
+    let self = this;
+    this._validateToken(function validation(err) {
+      if (err) {
+        self._log.error(err);
+      } else {
+        self._getApps();
+      }
+    });
   },
 
   _getApps: function _getApps() {
@@ -263,7 +346,16 @@ AitcManager.prototype = {
     this._client.getApps(function gotApps(err, apps) {
       if (err) {
         // Error was logged in client.
-        return;
+        if (err.authfailure) {
+          self._invalidTokenFlag = true;
+          self._validateToken(function revalidated(err) {
+            if (!err) {
+              self._getApps();
+            }
+          });
+        } else {
+          return;
+        }
       }
       if (!apps) {
         // No changes, got 304.
@@ -302,7 +394,14 @@ AitcManager.prototype = {
       return;
     }
 
-    this._validateToken(this._putApps.bind(this));
+    let self = this;
+    this._validateToken(function validation(err) {
+      if (err) {
+        self._log.error(err);
+      } else {
+        self._putApps();
+      }
+    });
   },
 
   _putApps: function _putApps() {
@@ -316,6 +415,17 @@ AitcManager.prototype = {
       // Send to end of queue if unsuccessful or err.removeFromQueue is false.
       if (err && !err.removeFromQueue) {
         self._log.info("PUT failed, re-adding to queue");
+        // Error was logged in client.
+        if (err.authfailure) {
+          self._invalidTokenFlag = true;
+          self._validateToken(function validation(err) {
+            if (err) {
+              self._log.error("Failed to obtain an updated token");
+            }
+            _reschedule();
+          });
+          return;
+        }
 
         // Update retries and time
         record.retries += 1;
@@ -419,8 +529,9 @@ AitcManager.prototype = {
             cb(err, null);
             return;
           }
-          self._lastToken = Date.now();
+          self._lastTokenTime = Date.now();
           self._client.updateToken(token);
+          self._invalidTokenFlag = false;
           cb(null, true);
         });
         return;
@@ -431,16 +542,17 @@ AitcManager.prototype = {
         cb(err, null);
         return;
       }
-      
+
       // Prompt user to login.
       self._makeClient(function(err, client) {
         if (err) {
           cb(err, null);
           return;
         }
-      
+
         // makeClient sets an updated token.
         self._client = client;
+        self._invalidTokenFlag = false;
         cb(null, true);
       }, win);
     }
@@ -451,7 +563,15 @@ AitcManager.prototype = {
     } else {
       options.sameEmailAs = MARKETPLACE_URL;
     }
-    BrowserID.getAssertion(refreshedAssertion, options);
+    if (this._premadeToken) {
+      this._client.updateToken(this._premadeToken);
+      this._tokenDuration = parseInt(this._premadeToken.duration, 10);
+      this._lastTokenTime = Date.now();
+      this._invalidTokenFlag = false;
+      cb(null, true);
+    } else {
+      BrowserID.getAssertion(refreshedAssertion, options);
+    }
   },
 
   /* Obtain a token from Sagrada token server, given a BrowserID assertion
@@ -477,11 +597,12 @@ AitcManager.prototype = {
   _gotToken: function _gotToken(err, tok, cb) {
     if (!err) {
       this._log.info("Got token from server: " + JSON.stringify(tok));
+      this._tokenDuration = parseInt(tok.duration, 10);
       cb(null, tok);
       return;
     }
 
-    let msg = err.name + " in _getToken: " + err.error;
+    let msg = "Error in _getToken: " + err;
     this._log.error(msg);
     cb(msg, null);
   },
@@ -531,7 +652,7 @@ AitcManager.prototype = {
         }
 
         // Store when we got the token so we can refresh it as needed.
-        self._lastToken = Date.now();
+        self._lastTokenTime = Date.now();
 
         // We only create one client instance, store values in a pref tree
         cb(null, new AitcClient(

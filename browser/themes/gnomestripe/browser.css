@@ -1290,7 +1290,7 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 .ac-comment {
-  font-size: 1.15em;
+  font-size: 1.05em;
 }
 
 .ac-extra > .ac-comment {
@@ -1300,6 +1300,7 @@ toolbar[iconsize="small"] #feed-button {
 .ac-url-text,
 .ac-action-text {
   color: -moz-nativehyperlinktext;
+  font-size: 0.9em;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
@@ -1363,6 +1364,20 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 /* Popup blocker button */
 #page-report-button {
   list-style-image: url("chrome://browser/skin/Info.png");
+}
+
+/* social recommending panel */
+
+#share-button {
+  list-style-image: url(chrome://browser/skin/share-button.png);
+}
+
+#share-button:not([shared]):not([disabled]):hover {
+  list-style-image: url(chrome://browser/skin/share-button-active.png);
+}
+
+#share-button[shared] {
+  list-style-image: url(chrome://browser/skin/share-button-shared.png);
 }
 
 /* Star button */

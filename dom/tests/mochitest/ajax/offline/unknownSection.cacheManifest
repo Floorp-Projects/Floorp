@@ -1,0 +1,10 @@
+CACHE MANIFEST
+http://mochi.test:8888/tests/SimpleTest/SimpleTest.js
+
+UNKNOWN-SECTION:
+http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/jupiter.jpg
+here can be anything the current implementaion
+is not able to parse at all and is just silently ignored
+
+CACHE:
+http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js

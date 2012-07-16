@@ -47,6 +47,15 @@ var SettingsListener = {
 
 SettingsListener.init();
 
+// =================== Audio ====================
+SettingsListener.observe('audio.volume.master', 0.5, function(value) {
+  let audioManager = Services.audioManager;
+  if (!audioManager)
+    return;
+
+  audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
+});
+
 
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {

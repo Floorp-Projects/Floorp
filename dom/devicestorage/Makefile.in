@@ -17,8 +17,17 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXPORTS_NAMESPACES = mozilla/dom/devicestorage
+
+EXPORTS_mozilla/dom/devicestorage = \
+  DeviceStorageRequestChild.h \
+  DeviceStorageRequestParent.h \
+  $(NULL)
+
 CPPSRCS		= \
 		nsDeviceStorage.cpp \
+		DeviceStorageRequestParent.cpp \
+		DeviceStorageRequestChild.cpp \
 		$(NULL)
 
 EXPORTS         = \
@@ -32,7 +41,7 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/content/events/src \
 		$(NULL)
 
-TEST_DIRS += test
+TEST_DIRS += test ipc
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

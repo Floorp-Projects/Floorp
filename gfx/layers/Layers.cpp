@@ -7,6 +7,7 @@
 
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/ImageBridgeChild.h" // TODO: temp
 
 #include "ImageLayers.h"
 #include "Layers.h"
@@ -205,7 +206,14 @@ LayerManager::Mutated(Layer* aLayer)
 already_AddRefed<ImageContainer>
 LayerManager::CreateImageContainer()
 {
-  nsRefPtr<ImageContainer> container = new ImageContainer();
+  nsRefPtr<ImageContainer> container = new ImageContainer(ImageContainer::DISABLE_ASYNC);
+  return container.forget();
+}
+
+already_AddRefed<ImageContainer>
+LayerManager::CreateAsynchronousImageContainer()
+{
+  nsRefPtr<ImageContainer> container = new ImageContainer(ImageContainer::ENABLE_ASYNC);
   return container.forget();
 }
 

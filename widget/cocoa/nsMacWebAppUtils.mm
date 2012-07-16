@@ -37,3 +37,22 @@ NS_IMETHODIMP nsMacWebAppUtils::PathForAppWithIdentifier(const nsAString& bundle
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+NS_IMETHODIMP nsMacWebAppUtils::LaunchAppWithIdentifier(const nsAString& bundleIdentifier) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
+
+  // Note this might return false, meaning the app wasnt launched for some reason. 
+  BOOL success = [[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:
+                        [NSString stringWithCharacters:((nsString)bundleIdentifier).get() length:((nsString)bundleIdentifier).Length()]
+                        options: nil
+                        additionalEventParamDescriptor: nil
+                        launchIdentifier: NULL];
+
+
+  [ap release];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}

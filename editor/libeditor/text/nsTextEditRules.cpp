@@ -3,40 +3,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTextEditRules.h"
-
-#include "nsEditor.h"
-#include "nsTextEditUtils.h"
-#include "nsCRT.h"
-
+#include "mozilla/Assertions.h"
+#include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Selection.h"
+#include "mozilla/dom/Element.h"
+#include "nsAString.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
+#include "nsCRT.h"
+#include "nsCRTGlue.h"
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsDebug.h"
+#include "nsEditor.h"
+#include "nsEditorUtils.h"
+#include "nsError.h"
+#include "nsGkAtoms.h"
+#include "nsIContent.h"
+#include "nsIDOMCharacterData.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMText.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeFilter.h"
+#include "nsIDOMNodeIterator.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMText.h"
+#include "nsINameSpaceManager.h"
+#include "nsINode.h"
+#include "nsIPlaintextEditor.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsISelectionController.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMCharacterData.h"
-#include "nsIContent.h"
-#include "nsIContentIterator.h"
-#include "nsEditorUtils.h"
-#include "EditTxn.h"
-#include "nsEditProperty.h"
-#include "nsUnicharUtils.h"
-#include "DeleteTextTxn.h"
+#include "nsISupportsBase.h"
+#include "nsLiteralString.h"
 #include "nsNodeIterator.h"
-#include "nsIDOMNodeFilter.h"
-#include "nsContentUtils.h"
-
-// for IBMBIDI
-#include "nsFrameSelection.h"
-
-#include "mozilla/Preferences.h"
-#include "mozilla/LookAndFeel.h"
-#include "mozilla/dom/Element.h"
+#include "nsTextEditRules.h"
+#include "nsTextEditUtils.h"
+#include "nsUnicharUtils.h"
 
 using namespace mozilla;
 
@@ -648,7 +651,8 @@ nsTextEditRules::WillInsertText(nsEditor::OperationID aAction,
         mTimer = do_CreateInstance("@mozilla.org/timer;1", &res);
         NS_ENSURE_SUCCESS(res, res);
       }
-      mTimer->InitWithCallback(this, 600, nsITimer::TYPE_ONE_SHOT);
+      mTimer->InitWithCallback(this, LookAndFeel::GetPasswordMaskDelay(),
+                               nsITimer::TYPE_ONE_SHOT);
     } 
     else 
     {

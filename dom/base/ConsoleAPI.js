@@ -107,6 +107,28 @@ ConsoleAPI.prototype = {
       timeEnd: function CA_timeEnd() {
         self.queueCall("timeEnd", arguments);
       },
+      profile: function CA_profile() {
+        // Send a notification picked up by the profiler if installed.
+        // This must happen right away otherwise we will miss samples
+        let consoleEvent = {
+          action: "profile",
+          arguments: arguments
+        };
+        consoleEvent.wrappedJSObject = consoleEvent;
+        Services.obs.notifyObservers(consoleEvent, "console-api-profiler",
+                                     null);  
+      },
+      profileEnd: function CA_profileEnd() {
+        // Send a notification picked up by the profiler if installed.
+        // This must happen right away otherwise we will miss samples
+        let consoleEvent = {
+          action: "profileEnd",
+          arguments: arguments
+        };
+        consoleEvent.wrappedJSObject = consoleEvent;
+        Services.obs.notifyObservers(consoleEvent, "console-api-profiler",
+                                     null);  
+      },
       __exposedProps__: {
         log: "r",
         info: "r",
@@ -119,7 +141,9 @@ ConsoleAPI.prototype = {
         groupCollapsed: "r",
         groupEnd: "r",
         time: "r",
-        timeEnd: "r"
+        timeEnd: "r",
+        profile: "r",
+        profileEnd: "r"
       }
     };
 
@@ -143,6 +167,8 @@ ConsoleAPI.prototype = {
       groupEnd: genPropDesc('groupEnd'),
       time: genPropDesc('time'),
       timeEnd: genPropDesc('timeEnd'),
+      profile: genPropDesc('profile'),
+      profileEnd: genPropDesc('profileEnd'),
       __noSuchMethod__: { enumerable: true, configurable: true, writable: true,
                           value: function() {} },
       __mozillaConsole__: { value: true }

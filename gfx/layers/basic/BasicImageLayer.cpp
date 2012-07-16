@@ -7,6 +7,7 @@
 #include "BasicLayersImpl.h"
 #include "gfxUtils.h"
 #include "gfxSharedImageSurface.h"
+#include "mozilla/layers/ImageContainerChild.h"
 
 using namespace mozilla::gfx;
 
@@ -252,6 +253,13 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   }
 
   if (!mContainer) {
+    return;
+  }
+
+  if (mContainer->IsAsync()) {
+    PRUint32 containerID = mContainer->GetAsyncContainerID();
+    BasicManager()->PaintedImage(BasicManager()->Hold(this), 
+                                 SharedImageID(containerID));
     return;
   }
 

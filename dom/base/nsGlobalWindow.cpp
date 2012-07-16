@@ -4486,9 +4486,15 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
   // gone full screen, the state trap above works.
   mFullScreen = aFullScreen;
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  if (widget)
-    widget->MakeFullScreen(aFullScreen);
+  // Sometimes we don't want the top-level widget to actually go fullscreen,
+  // for example in the B2G desktop client, we don't want the emulated screen
+  // dimensions to appear to increase when entering fullscreen mode; we just
+  // want the content to fill the entire client area of the emulator window.
+  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false)) {
+    nsCOMPtr<nsIWidget> widget = GetMainWidget();
+    if (widget)
+      widget->MakeFullScreen(aFullScreen);
+  }
 
   if (!mFullScreen) {
     // Force exit from DOM full-screen mode. This is so that if we're in
@@ -8472,12 +8478,15 @@ private:
 };
 
 void
-nsGlobalWindow::NotifyIdleObserver(nsIIdleObserver* aIdleObserver,
-                                   PRUint32 aIdleObserverTimeInS,
+nsGlobalWindow::NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                                    bool aCallOnidle)
 {
+  MOZ_ASSERT(aIdleObserverHolder);
+  aIdleObserverHolder->mPrevNotificationIdle = aCallOnidle;
+
   nsCOMPtr<nsIRunnable> caller =
-    new NotifyIdleObserverRunnable(aIdleObserver, aIdleObserverTimeInS,
+    new NotifyIdleObserverRunnable(aIdleObserverHolder->mIdleObserver,
+                                   aIdleObserverHolder->mTimeInS,
                                    aCallOnidle, this);
   if (NS_FAILED(NS_DispatchToCurrentThread(caller))) {
     NS_WARNING("Failed to dispatch thread for idle observer notification.");
@@ -8506,7 +8515,7 @@ IdleActiveTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsRefPtr<nsGlobalWindow> idleWindow = static_cast<nsGlobalWindow*>(aClosure);
   MOZ_ASSERT(idleWindow, "Idle window has not been instantiated.");
-  idleWindow->NotifyIdleObserversOfIdleActiveEvent();
+  idleWindow->HandleIdleActiveEvent();
 }
 
 void
@@ -8523,11 +8532,8 @@ nsGlobalWindow::HandleIdleObserverCallback()
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
   MOZ_ASSERT(static_cast<PRUint32>(mIdleCallbackIndex) < mIdleObservers.Length(),
                                   "Idle callback index exceeds array bounds!");
-  IdleObserverHolder idleObserver =
-             mIdleObservers.ElementAt(mIdleCallbackIndex);
-  NotifyIdleObserver(idleObserver.mIdleObserver,
-                     idleObserver.mTimeInS,
-                     true);
+  IdleObserverHolder& idleObserver = mIdleObservers.ElementAt(mIdleCallbackIndex);
+  NotifyIdleObserver(&idleObserver, true);
   mIdleCallbackIndex++;
   if (NS_FAILED(ScheduleNextIdleObserverCallback())) {
     NS_WARNING("Failed to set next idle observer callback.");
@@ -8584,7 +8590,7 @@ nsGlobalWindow::GetFuzzTimeMS()
   }
 
   if (randNum > MAX_IDLE_FUZZ_TIME_MS) {
-    (randNum) %= MAX_IDLE_FUZZ_TIME_MS;
+    randNum %= MAX_IDLE_FUZZ_TIME_MS;
   }
 
   return randNum;
@@ -8596,10 +8602,8 @@ nsGlobalWindow::ScheduleActiveTimerCallback()
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
 
   if (!mAddActiveEventFuzzTime) {
-    return NotifyIdleObserversOfIdleActiveEvent();
+    return HandleIdleActiveEvent();
   }
-
-  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
 
   MOZ_ASSERT(mIdleTimer);
   mIdleTimer->Cancel();
@@ -8614,7 +8618,7 @@ nsGlobalWindow::ScheduleActiveTimerCallback()
 }
 
 nsresult
-nsGlobalWindow::NotifyIdleObserversOfIdleActiveEvent()
+nsGlobalWindow::HandleIdleActiveEvent()
 {
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
 
@@ -8632,7 +8636,9 @@ nsGlobalWindow::NotifyIdleObserversOfIdleActiveEvent()
   nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
   while (iter.HasMore()) {
     IdleObserverHolder& idleObserver = iter.GetNext();
-    NotifyIdleObserver(idleObserver.mIdleObserver, idleObserver.mTimeInS, false);
+    if (idleObserver.mPrevNotificationIdle) {
+      NotifyIdleObserver(&idleObserver, false);
+    }
   }
 
   return NS_OK;
@@ -8714,9 +8720,8 @@ nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
   MOZ_ASSERT(mIdleCallbackIndex >= 0);
 
   if (static_cast<PRInt32>(insertAtIndex) < mIdleCallbackIndex) {
-    NotifyIdleObserver(tmpIdleObserver.mIdleObserver,
-                       tmpIdleObserver.mTimeInS,
-                       true);
+    IdleObserverHolder& idleObserver = mIdleObservers.ElementAt(insertAtIndex);
+    NotifyIdleObserver(&idleObserver, true);
     mIdleCallbackIndex++;
     return NS_OK;
   }
@@ -8796,8 +8801,6 @@ nsGlobalWindow::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
     return NS_OK;
   }
 
-  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
-
   mIdleTimer->Cancel();
 
   // If the last element in the array had been notified then decrement
@@ -8839,7 +8842,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       mNotifyIdleObserversIdleOnThaw = true;
       mNotifyIdleObserversActiveOnThaw = false;
     } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
-      NotifyIdleObserversOfIdleActiveEvent();
+      HandleIdleActiveEvent();
     }
     return NS_OK;
   }
@@ -9025,7 +9028,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 
   if (mNotifyIdleObserversIdleOnThaw) {
     mNotifyIdleObserversIdleOnThaw = false;
-    NotifyIdleObserversOfIdleActiveEvent();    
+    HandleIdleActiveEvent();
   }
 
   if (mNotifyIdleObserversActiveOnThaw) {

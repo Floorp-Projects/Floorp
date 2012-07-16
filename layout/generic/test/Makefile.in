@@ -73,6 +73,7 @@ MOCHITEST_FILES = \
   test_plugin_mouse_coords.html \
   test_plugin_position.xhtml \
   test_selection_expanding.html \
+  test_selection_touchevents.html \
   selection_expanding_xbl.xml \
   file_BrokenImageReference.png \
   file_Dolske.png \

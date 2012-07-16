@@ -8,10 +8,9 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
   const objectStoreName = "Objects";
 
-  var request = indexedDB.open(name, 1, description);
+  var request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   var event = yield;

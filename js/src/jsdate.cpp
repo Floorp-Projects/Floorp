@@ -128,6 +128,14 @@ using namespace js::types;
  * general going-over.
  */
 
+/* Constants defined by ES5 15.9.1.10. */
+const double HoursPerDay = 24.0;
+const double MinutesPerHour = 60;
+const double SecondsPerMinute = 60;
+const double msPerSecond = 1000;
+const double msPerMinute = msPerSecond * SecondsPerMinute;
+const double msPerHour = msPerMinute * MinutesPerHour;
+
 /* ES5 15.9.1.2. */
 const double msPerDay = 86400000;
 
@@ -310,8 +318,14 @@ WeekDay(double t)
     return result;
 }
 
-/* ES5 15.9.1.7. */
-static double LocalTZA; // set by js_InitDateClass
+/* ES5 15.9.1.7. Set by UpdateLocalTZA(). */
+static double LocalTZA;
+
+inline void
+UpdateLocalTZA()
+{
+    LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
+}
 
 inline int
 DayFromMonth(int month, bool isLeapYear)
@@ -450,13 +464,6 @@ UTC(double t, JSContext *cx)
 }
 
 /* ES5 15.9.1.10. */
-const double HoursPerDay = 24.0;
-const double MinutesPerHour = 60;
-const double SecondsPerMinute = 60;
-const double msPerSecond = 1000;
-const double msPerMinute = msPerSecond * SecondsPerMinute;
-const double msPerHour = msPerMinute * MinutesPerHour;
-
 static double
 HourFromTime(double t)
 {
@@ -1288,9 +1295,19 @@ SetDateToNaN(JSContext *cx, JSObject *obj, Value *vp = NULL)
  * slots will be set to the UTC time without conversion.
  */
 static bool
-FillLocalTimes(JSContext *cx, JSObject *obj)
+CacheLocalTime(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isDate());
+
+    /* Check if the cache is already populated. */
+    if (!obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined() &&
+        obj->getSlot(JSObject::JSSLOT_DATE_TZA).toDouble() == LocalTZA)
+    {
+        return true;
+    }
+
+    /* Remember timezone used to generate the local cache. */
+    obj->setSlot(JSObject::JSSLOT_DATE_TZA, DoubleValue(LocalTZA));
 
     double utcTime = obj->getDateUTCTime().toNumber();
 
@@ -1400,42 +1417,24 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_DATE, Int32Value(day - step));
 
     int weekday = WeekDay(localTime);
-
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_DAY, Int32Value(weekday));
 
     int seconds = yearSeconds % 60;
-
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS, Int32Value(seconds));
 
     int minutes = (yearSeconds / 60) % 60;
-
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES, Int32Value(minutes));
 
     int hours = (yearSeconds / (60 * 60)) % 24;
-
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS, Int32Value(hours));
 
     return true;
 }
 
-/* Cache the local times in obj, if necessary. */
-static inline bool
-GetAndCacheLocalTime(JSContext *cx, JSObject *obj)
+inline bool
+GetCachedLocalTime(JSContext *cx, JSObject *obj, double *time)
 {
-    JS_ASSERT(obj->isDate());
-
-    /* If the local time is undefined, we need to fill in the cached values. */
-    if (obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined()) {
-        if (!FillLocalTimes(cx, obj))
-            return false;
-    }
-    return true;
-}
-
-static inline bool
-GetAndCacheLocalTime(JSContext *cx, JSObject *obj, double *time)
-{
-    if (!obj || !GetAndCacheLocalTime(cx, obj))
+    if (!obj || !CacheLocalTime(cx, obj))
         return false;
 
     *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
@@ -1471,7 +1470,7 @@ date_getYear(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     Value yearVal = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
@@ -1497,7 +1496,7 @@ date_getFullYear(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
@@ -1534,7 +1533,7 @@ date_getMonth(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH);
@@ -1568,7 +1567,7 @@ date_getDate(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE);
@@ -1605,7 +1604,7 @@ date_getDay(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY);
@@ -1642,7 +1641,7 @@ date_getHours(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS);
@@ -1679,7 +1678,7 @@ date_getMinutes(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES);
@@ -1718,7 +1717,7 @@ date_getUTCSeconds(JSContext *cx, unsigned argc, Value *vp)
     if (!thisObj)
         return true;
 
-    if (!GetAndCacheLocalTime(cx, thisObj))
+    if (!CacheLocalTime(cx, thisObj))
         return false;
 
     args.rval() = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS);
@@ -1760,7 +1759,7 @@ date_getTimezoneOffset(JSContext *cx, unsigned argc, Value *vp)
     double utctime = thisObj->getDateUTCTime().toNumber();
 
     double localtime;
-    if (!GetAndCacheLocalTime(cx, thisObj, &localtime))
+    if (!GetCachedLocalTime(cx, thisObj, &localtime))
         return false;
 
     /*
@@ -3069,8 +3068,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    /* Set the static LocalTZA. */
-    LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
+    UpdateLocalTZA();
 
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
@@ -3136,6 +3134,12 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     return obj;
 }
 
+void
+js_ClearDateCaches()
+{
+    UpdateLocalTZA();
+}
+
 JS_FRIEND_API(JSBool)
 js_DateIsValid(JSContext *cx, JSObject* obj)
 {
@@ -3148,7 +3152,7 @@ js_DateGetYear(JSContext *cx, JSObject* obj)
     double localtime;
 
     /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    if (!GetAndCacheLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) YearFromTime(localtime);
@@ -3159,7 +3163,7 @@ js_DateGetMonth(JSContext *cx, JSObject* obj)
 {
     double localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MonthFromTime(localtime);
@@ -3170,7 +3174,7 @@ js_DateGetDate(JSContext *cx, JSObject* obj)
 {
     double localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) DateFromTime(localtime);
@@ -3181,7 +3185,7 @@ js_DateGetHours(JSContext *cx, JSObject* obj)
 {
     double localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) HourFromTime(localtime);
@@ -3192,7 +3196,7 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 {
     double localtime;
 
-    if (!GetAndCacheLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MinFromTime(localtime);

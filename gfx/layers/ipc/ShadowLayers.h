@@ -12,6 +12,7 @@
 
 #include "ImageLayers.h"
 #include "Layers.h"
+#include "mozilla/ipc/SharedMemory.h"
 
 class gfxSharedImageSurface;
 
@@ -400,10 +401,22 @@ public:
 
   static void PlatformSyncBeforeReplyUpdate();
 
+  void SetCompositorID(PRUint32 aID)
+  {
+    NS_ASSERTION(mCompositorID==0, "The compositor ID must be set only once.");
+    mCompositorID = aID;
+  }
+  PRUint32 GetCompositorID() const
+  {
+    return mCompositorID;
+  }
+
 protected:
-  ShadowLayerManager() {}
+  ShadowLayerManager()
+  : mCompositorID(0) {}
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
+  PRUint32 mCompositorID;
 };
 
 
@@ -627,8 +640,14 @@ public:
 
 protected:
   ShadowImageLayer(LayerManager* aManager, void* aImplData)
-    : ImageLayer(aManager, aImplData)
+    : ImageLayer(aManager, aImplData), 
+      mImageContainerID(0),
+      mImageVersion(0)
   {}
+
+  // ImageBridge protocol:
+  PRUint32 mImageContainerID;
+  PRUint32 mImageVersion;
 };
 
 
@@ -647,6 +666,9 @@ protected:
 };
 
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
+
+ipc::SharedMemory::SharedMemoryType OptimalShmemType();
+
 
 } // namespace layers
 } // namespace mozilla

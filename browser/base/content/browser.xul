@@ -182,6 +182,45 @@
       </hbox>
     </panel>
 
+    <panel id="editSharePopup"
+           type="arrow"
+           orient="vertical"
+           ignorekeys="true"
+           hidden="true"
+           onpopupshown="SocialShareButton.panelShown(event);"
+           consumeoutsideclicks="true"
+           level="top">
+      <hbox id="editSharePopupBottomButtons" pack="end">
+#ifdef XP_UNIX
+        <button id="editSharePopupUndoButton"
+                class="editSharePopupBottomButton"
+                label="&social.sharePopup.undo.label;"
+                accesskey="&social.sharePopup.undo.accesskey;"
+                command="Social:UnsharePage"/>
+        <button id="editSharePopupOkButton"
+                class="editSharePopupBottomButton"
+                default="true"
+                autofocus="autofocus"
+                label="&social.sharePopup.ok.label;"
+                accesskey="&social.sharePopup.ok.accesskey;"
+                oncommand="SocialShareButton.dismissSharePopup();"/>
+#else
+        <button id="editSharePopupOkButton"
+                class="editSharePopupBottomButton"
+                default="true"
+                autofocus="autofocus"
+                label="&social.sharePopup.ok.label;"
+                accesskey="&social.sharePopup.ok.accesskey;"
+                oncommand="SocialShareButton.dismissSharePopup();"/>
+        <button id="editSharePopupUndoButton"
+                class="editSharePopupBottomButton"
+                label="&social.sharePopup.undo.label;"
+                accesskey="&social.sharePopup.undo.accesskey;"
+                command="Social:UnsharePage"/>
+#endif
+      </hbox>
+    </panel>
+
     <menupopup id="inspector-node-popup">
       <menuitem id="inspectorHTMLCopyInner"
                 label="&inspectorHTMLCopyInner.label;"
@@ -464,6 +503,7 @@
                  showcommentcolumn="true"
                  showimagecolumn="true"
                  enablehistory="true"
+                 maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
@@ -506,6 +546,12 @@
                    hidden="true"
                    tooltiptext="&pageReportIcon.tooltip;"
                    onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+
+            <label id="share-button-status" collapsed="true" role="status"/>
+            <image id="share-button"
+                   class="urlbar-icon"
+                   hidden="true"
+                   onclick="SocialShareButton.onClick(event);"/>
 
             <image id="star-button"
                    class="urlbar-icon"

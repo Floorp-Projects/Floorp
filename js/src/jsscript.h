@@ -103,9 +103,6 @@ class Bindings
     uint16_t numVars() const { return nvars; }
     unsigned count() const { return nargs + nvars; }
 
-    /* Convert a CallObject slot to either a formal or local variable index. */
-    inline BindingKind slotToFrameIndex(unsigned slot, unsigned *index);
-
     /*
      * The VM's StackFrame allocates a Value for each formal and variable.
      * A (formal|var)Index is the index passed to fp->unaliasedFormal/Var to

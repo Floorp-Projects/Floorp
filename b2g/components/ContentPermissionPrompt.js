@@ -34,7 +34,7 @@ ContentPermissionPrompt.prototype = {
        return;
 
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
-    let content = browser.content;
+    let content = browser.getContentWindow();
     if (!content)
       return;
 
@@ -42,8 +42,8 @@ ContentPermissionPrompt.prototype = {
     content.addEventListener("mozContentEvent", function contentEvent(evt) {
       if (evt.detail.id != requestId)
         return;
+      evt.target.removeEventListener(evt.type, contentEvent);
 
-      content.removeEventListener(evt.type, contentEvent);
       if (evt.detail.type == "permission-allow") {
         request.allow();
         return;
@@ -52,10 +52,15 @@ ContentPermissionPrompt.prototype = {
       request.cancel();
     });
 
-    browser.shell.sendEvent(browser.content, "mozChromeEvent", {
-      "type": "permission-prompt", "permission": request.type,
-      "id": requestId, "url": request.uri.spec
-    });
+    let details = {
+      "type": "permission-prompt",
+      "permission": request.type,
+      "id": requestId,
+      "url": request.uri.spec
+    };
+    let event = content.document.createEvent("CustomEvent");
+    event.initCustomEvent("mozChromeEvent", true, true, details);
+    content.dispatchEvent(event);
   },
 
   classID: Components.ID("{8c719f03-afe0-4aac-91ff-6c215895d467}"),
