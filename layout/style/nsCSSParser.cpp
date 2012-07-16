@@ -656,6 +656,9 @@ protected:
   // True when the hashless color quirk applies.
   bool mHashlessColorQuirk : 1;
 
+  // True when the unitless length quirk applies.
+  bool mUnitlessLengthQuirk : 1;
+
   // True if unsafe rules should be allowed
   bool mUnsafeRulesEnabled : 1;
 
@@ -750,6 +753,7 @@ CSSParserImpl::CSSParserImpl()
     mHavePushBack(false),
     mNavQuirkMode(false),
     mHashlessColorQuirk(false),
+    mUnitlessLengthQuirk(false),
     mUnsafeRulesEnabled(false),
     mHTMLMediaMode(false),
     mParsingCompoundProperty(false)
@@ -4395,9 +4399,15 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
                             PRInt32 aVariantMask,
                             const PRInt32 aKeywordTable[])
 {
-  NS_ASSERTION(IsParsingCompoundProperty() ||
-               ((~aVariantMask) & (VARIANT_LENGTH|VARIANT_COLOR)),
-               "cannot distinguish lengths and colors in quirks mode");
+  NS_ASSERTION(!(mHashlessColorQuirk && (aVariantMask & VARIANT_COLOR)) ||
+               !(aVariantMask & VARIANT_NUMBER),
+               "can't distinguish colors from numbers");
+  NS_ASSERTION(!(mHashlessColorQuirk && (aVariantMask & VARIANT_COLOR)) ||
+               !(mUnitlessLengthQuirk && (aVariantMask & VARIANT_LENGTH)),
+               "can't distinguish colors from lengths");
+  NS_ASSERTION(!(mUnitlessLengthQuirk && (aVariantMask & VARIANT_LENGTH)) ||
+               !(aVariantMask & VARIANT_NUMBER),
+               "can't distinguish lengths from numbers");
   NS_ABORT_IF_FALSE(!(aVariantMask & VARIANT_IDENTIFIER) ||
                     !(aVariantMask & VARIANT_IDENTIFIER_NO_INHERIT),
                     "must not set both VARIANT_IDENTIFIER and "
@@ -4501,7 +4511,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     aValue.SetPercentValue(tk->mNumber);
     return true;
   }
-  if (mNavQuirkMode && !IsParsingCompoundProperty()) { // NONSTANDARD: Nav interprets unitless numbers as px
+  if (mUnitlessLengthQuirk) { // NONSTANDARD: Nav interprets unitless numbers as px
     if (((aVariantMask & VARIANT_LENGTH) != 0) &&
         (eCSSToken_Number == tk->mType)) {
       aValue.SetFloatValue(tk->mNumber, eCSSUnit_Pixel);
@@ -5621,9 +5631,13 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
   // Can't use AutoRestore<bool> because it's a bitfield.
   NS_ABORT_IF_FALSE(!mHashlessColorQuirk,
                     "hashless color quirk should not be set");
+  NS_ABORT_IF_FALSE(!mUnitlessLengthQuirk,
+                    "unitless length quirk should not be set");
   if (mNavQuirkMode) {
     mHashlessColorQuirk =
       nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_HASHLESS_COLOR_QUIRK);
+    mUnitlessLengthQuirk =
+      nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_UNITLESS_LENGTH_QUIRK);
   }
 
   NS_ASSERTION(aPropID < eCSSProperty_COUNT, "index out of range");
@@ -5667,6 +5681,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 
   if (mNavQuirkMode) {
     mHashlessColorQuirk = false;
+    mUnitlessLengthQuirk = false;
   }
 
   return result;
