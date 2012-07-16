@@ -537,6 +537,29 @@ Terminate(JSContext *cx, unsigned arg, jsval *vp)
     return JS_FALSE;
 }
 
+static JSBool
+EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
+{
+    jsval arg = JS_ARGV(cx, vp)[0];
+    if (argc == 0 || !JSVAL_IS_BOOLEAN(arg)) {
+        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(),
+                         "Must have one boolean argument");
+        return false;
+    }
+
+    static ProfileEntry stack[1000];
+    static uint32_t stack_size = 0;
+
+    if (JSVAL_TO_BOOLEAN(arg))
+        SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
+    else
+        SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 0);
+    cx->runtime->spsProfiler.enableSlowAssertions(JSVAL_TO_BOOLEAN(arg));
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
 static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -623,6 +646,11 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "terminate()",
 "  Terminate JavaScript execution, as if we had run out of\n"
 "  memory or been terminated by the slow script dialog."),
+
+    JS_FN_HELP("enableSPSProfilingAssertions", EnableSPSProfilingAssertions, 1, 0,
+"enableSPSProfilingAssertions(enabled)",
+"  Enables or disables the assertions related to SPS profiling. This is fairly\n"
+"  expensive, so it shouldn't be enabled normally."),
 
     JS_FS_END
 };
