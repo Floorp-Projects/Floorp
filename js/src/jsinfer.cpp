@@ -5956,7 +5956,7 @@ TypeCompartment::sweep(FreeOp *fop)
             bool valMarked = IsTypeObjectMarked(e.front().value.unsafeGet());
             if (!keyMarked || !valMarked)
                 e.removeFront();
-            else
+            else if (key.script != e.front().key.script)
                 e.rekeyFront(key);
         }
     }

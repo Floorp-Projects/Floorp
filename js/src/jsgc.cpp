@@ -1248,6 +1248,7 @@ RecordNativeStackTopForGC(JSRuntime *rt)
 bool
 js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, gc::AllocKind *thingKind, void **thing)
 {
+    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
     return js::IsAddressableGCThing(rt, w, false, thingKind, NULL, thing) == CGCT_VALID;
 }
 
@@ -5409,6 +5410,8 @@ EndVerifyPostBarriers(JSRuntime *rt)
         goto oom;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->gcStoreBuffer.hasOverflowed())
+            continue;
         if (!c->gcStoreBuffer.coalesceForVerification())
             goto oom;
     }

@@ -3036,7 +3036,7 @@ DeepCopy(JSContext *cx, JSXML *xml, JSObject *obj, unsigned flags)
     if (copy) {
         if (obj) {
             /* Caller provided the object for this copy, hook 'em up. */
-            obj->setPrivate(copy);
+            obj->setPrivateGCThing(copy);
             copy->object = obj;
         } else if (!js_GetXMLObject(cx, copy)) {
             copy = NULL;
@@ -7308,7 +7308,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
     obj = NewObjectWithClassProto(cx, &XMLClass, NULL, cx->global());
     if (!obj)
         return NULL;
-    obj->setPrivate(xml);
+    obj->setPrivateGCThing(xml);
     return obj;
 }
 
@@ -7410,7 +7410,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     Rooted<JSXML*> xml(cx, js_NewXML(cx, JSXML_CLASS_TEXT));
     if (!xml)
         return NULL;
-    xmlProto->setPrivate(xml);
+    xmlProto->setPrivateGCThing(xml);
     xml->object = xmlProto;
 
     /* Don't count this as a real content-created XML object. */

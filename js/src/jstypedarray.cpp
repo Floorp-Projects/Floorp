@@ -327,6 +327,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
      */
     JSObject *delegate = static_cast<JSObject*>(obj->getPrivate());
     if (delegate) {
+        JS_SET_TRACING_LOCATION(trc, &obj->privateRef(obj->numFixedSlots()));
         MarkObjectUnbarriered(trc, &delegate, "arraybuffer.delegate");
         obj->setPrivateUnbarriered(delegate);
     }
@@ -1273,13 +1274,7 @@ class TypedArrayTemplate
         JS_ASSERT(bufobj->isArrayBuffer());
         Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
 
-        /*
-         * N.B. The base of the array's data is stored in the object's
-         * private data rather than a slot, to avoid alignment restrictions
-         * on private Values.
-         */
-        obj->setPrivate(buffer->dataPointer() + byteOffset);
-
+        InitTypedArrayDataPointer(obj, buffer, byteOffset);
         obj->setSlot(FIELD_LENGTH, Int32Value(len));
         obj->setSlot(FIELD_BYTEOFFSET, Int32Value(byteOffset));
         obj->setSlot(FIELD_BYTELENGTH, Int32Value(len * sizeof(NativeType)));
