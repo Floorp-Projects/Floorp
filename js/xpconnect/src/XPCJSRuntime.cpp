@@ -1728,22 +1728,14 @@ private:
 
 class XPCJSRuntimeStats : public JS::RuntimeStats
 {
-    JSContext   *mCx;
     WindowPaths *mWindowPaths;
 
   public:
     XPCJSRuntimeStats(WindowPaths *windowPaths)
-      : JS::RuntimeStats(JsMallocSizeOf), mCx(NULL), mWindowPaths(windowPaths)
+      : JS::RuntimeStats(JsMallocSizeOf), mWindowPaths(windowPaths)
     { }
 
-    bool init(XPCJSRuntime *xpcrt) {
-        mCx = JS_NewContext(xpcrt->GetJSRuntime(), 0);
-        return !!mCx;
-    }
-    
     ~XPCJSRuntimeStats() {
-        JS_DestroyContextNoGC(mCx);
-
         for (size_t i = 0; i != compartmentStatsVector.length(); ++i) {
             free(compartmentStatsVector[i].extra1);
             free(compartmentStatsVector[i].extra2);
@@ -1757,8 +1749,10 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         GetCompartmentName(c, cName);
 
         // Get the compartment's global.
-        if (JSObject *global = JS_GetGlobalForCompartmentOrNull(mCx, c)) {
-            nsISupports *native = nsXPConnect::GetXPConnect()->GetNativeOfWrapper(mCx, global);
+        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        JSContext *cx = xpc->GetSafeJSContext();
+        if (JSObject *global = JS_GetGlobalForCompartmentOrNull(cx, c)) {
+            nsISupports *native = xpc->GetNativeOfWrapper(cx, global);
             if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.
@@ -1811,9 +1805,6 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     // stats seems like a bad idea.
 
     XPCJSRuntimeStats rtStats(windowPaths);
-    if (!rtStats.init(xpcrt))
-        return NS_ERROR_FAILURE;
-
     OrphanReporter orphanReporter;
     if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
