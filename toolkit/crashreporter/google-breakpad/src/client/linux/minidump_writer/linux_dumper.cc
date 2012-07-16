@@ -247,18 +247,24 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
   int fd = sys_open(mapping.name, O_RDONLY, 0);
   if (fd < 0)
     return false;
+
+#if defined(__x86_64)
+#define sys_mmap2 sys_mmap
   struct kernel_stat st;
   if (sys_fstat(fd, &st) != 0) {
+#else
+  struct kernel_stat64 st;
+  if (sys_fstat64(fd, &st) != 0) {
+#endif
     sys_close(fd);
     return false;
   }
-#if defined(__x86_64)
-#define sys_mmap2 sys_mmap
-#endif
+
   void* base = sys_mmap2(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   sys_close(fd);
-  if (base == MAP_FAILED)
+  if (base == MAP_FAILED) {
     return false;
+  }
 
   bool success = FileID::ElfFileIdentifierFromMappedFile(base, identifier);
   sys_munmap(base, st.st_size);
