@@ -33,7 +33,9 @@ MarionetteLogObj.prototype = {
    * Return all logged messages.
    */
   getLogs: function ML_getLogs() {
-    return this.logs;
+    let logs = this.logs;
+    this.clearLogs();
+    return logs;
   },
 
   /**
