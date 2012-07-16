@@ -208,10 +208,11 @@ public:
       mMode(AUTOMOUNTER_DISABLE)
   {
     VolumeManager::RegisterStateObserver(&mVolumeManagerStateObserver);
+    Volume::RegisterObserver(&mVolumeEventObserver);
 
     for (size_t i = 0; i < NS_ARRAY_LENGTH(sAutoVolumeName); i++) {
       RefPtr<Volume> vol = VolumeManager::FindAddVolumeByName(sAutoVolumeName[i]);
-      if (vol != NULL) {
+      if (vol) {
         vol->RegisterObserver(&mVolumeEventObserver);
         mAutoVolume.AppendElement(vol);
       }
@@ -228,6 +229,7 @@ public:
     for (volIndex = 0; volIndex < numVolumes; volIndex++) {
       mAutoVolume[volIndex]->UnregisterObserver(&mVolumeEventObserver);
     }
+    Volume::UnregisterObserver(&mVolumeEventObserver);
     VolumeManager::UnregisterStateObserver(&mVolumeManagerStateObserver);
   }
 
@@ -377,14 +379,14 @@ AutoMounter::UpdateState()
     if (tryToShare) {
       // We're going to try to unmount and share the volumes
       switch (volState) {
-        case Volume::STATE_MOUNTED: {
+        case nsIVolume::STATE_MOUNTED: {
           // Volume is mounted, we need to unmount before
           // we can share.
           DBG("UpdateState: Unmounting %s", vol->NameStr());
           vol->StartUnmount(mResponseCallback);
           return;
         }
-        case Volume::STATE_IDLE: {
+        case nsIVolume::STATE_IDLE: {
           // Volume is unmounted. We can go ahead and share.
           DBG("UpdateState: Sharing %s", vol->NameStr());
           vol->StartShare(mResponseCallback);
@@ -398,13 +400,13 @@ AutoMounter::UpdateState()
     } else {
       // We're going to try and unshare and remount the volumes
       switch (volState) {
-        case Volume::STATE_SHARED: {
+        case nsIVolume::STATE_SHARED: {
           // Volume is shared. We can go ahead and unshare.
           DBG("UpdateState: Unsharing %s", vol->NameStr());
           vol->StartUnshare(mResponseCallback);
           return;
         }
-        case Volume::STATE_IDLE: {
+        case nsIVolume::STATE_IDLE: {
           // Volume is unmounted, try to mount.
 
           DBG("UpdateState: Mounting %s", vol->NameStr());

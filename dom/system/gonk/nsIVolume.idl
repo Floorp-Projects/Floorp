@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVolumeStat.idl"
+
+[scriptable, uuid(3c9cae8d-9da2-4aa1-b8bf-4db8c8620808)]
+interface nsIVolume : nsISupports
+{
+  // These MUST match the states from android's system/vold/Volume.h header
+  const long STATE_INIT        = -1;
+  const long STATE_NOMEDIA     = 0;
+  const long STATE_IDLE        = 1;
+  const long STATE_PENDING     = 2;
+  const long STATE_CHECKING    = 3;
+  const long STATE_MOUNTED     = 4;
+  const long STATE_UNMOUNTING  = 5;
+  const long STATE_FORMATTING  = 6;
+  const long STATE_SHARED      = 7;
+  const long STATE_SHAREDMNT   = 8;
+
+  readonly attribute DOMString name;
+
+  readonly attribute DOMString mountPoint;
+
+  readonly attribute long state;
+
+  nsIVolumeStat getStats();
+};
+
+%{C++
+// For use with the ObserverService
+#define NS_VOLUME_STATE_CHANGED  "volume-state-changed"
+
+namespace mozilla {
+namespace system {
+
+// Convert a state into a loggable/printable string.
+const char *NS_VolumeStateStr(PRInt32 aState);
+
+} // system
+} // mozilla
+%}
