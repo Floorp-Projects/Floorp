@@ -1,0 +1,44 @@
+<html>
+<head>
+  <script type="application/javascript;version=1.7"/>
+    let output;
+
+    function init() {
+      output = document.querySelector("input");
+      output.value = "";
+    }
+
+    function doit() {
+      debugger;
+      stepIntoMe();             // step in
+
+      output.value = "dbg continue";
+      debugger;
+    }
+
+    function stepIntoMe() {
+      output.value = "step in";   // step in
+      stepOverMe();               // step over
+      let x = 0;                  // step out
+      output.value = "step out";
+    }
+
+    function stepOverMe() {
+      output.value = "step over";
+    }
+  </script>
+</head>
+<body onload="init()">
+  <input type="text" value=""/>
+  <input type="button" value="DOIT" onclick="doit()"/>
+  <br />
+  Use this file to test the following commands:
+  <ul>
+    <li>dbg interrupt</li>
+    <li>dbg continue</li>
+    <li>dbg step over</li>
+    <li>dbg step in</li>
+    <li>dbg step out</li>
+  </ul>
+</body>
+</html>

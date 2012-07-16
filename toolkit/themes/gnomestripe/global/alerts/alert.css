@@ -27,6 +27,11 @@
   min-width: 46px;
 }
 
+#alertImage {
+  max-width: 48px;
+  max-height: 48px;
+}
+
 .alertTitle {
   font-weight: bold;
 }

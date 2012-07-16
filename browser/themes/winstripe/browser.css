@@ -3270,3 +3270,134 @@ stack[anonid=browserStack][responsivemode] {
   background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
   border-radius: 1px;
 }
+
+
+/* === social toolbar button === */
+
+.social-statusarea-container {
+  -moz-appearance: toolbarbutton;
+  margin: 0 2px;
+  padding: 3px;
+}
+
+.social-statusarea-container {
+  -moz-appearance: none;
+  margin: 2px; /* make sure we have the correct platform spacing*/
+  padding: 1px;
+}
+
+/* aero look for hover */
+#social-toolbar-button[open="true"] > .social-statusarea-container,
+.social-statusarea-container:hover {
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+  box-shadow: 0 1px hsla(0,0%,100%,.85) inset,
+              0 1px hsla(210,54%,20%,.1),
+              0 0 2px hsla(210,54%,20%,.4);
+}
+
+/* favicon for the service */
+#social-provider-image {
+  width: 20px;
+  height: 20px;
+  max-height: 20px;
+  max-width: 20px;
+  padding: 2px;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+/* hbox that hold notification icons */
+#social-status-iconbox {
+  margin: 0px;
+  padding: 0px;
+}
+
+/* hbox that surrounds an image and its counter */
+.social-notification-icon-container {
+  cursor: pointer;
+  padding: 0px;
+  margin: 0px;
+  position: relative;
+}
+
+/* notification counter box */
+.social-notification-icon-counter {
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
+  padding-right: 1px;
+  padding-left: 1px;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  z-index: 1;
+  text-align: center;
+}
+
+/* notification image */
+.social-notification-icon-image {
+  padding: 2px;
+  margin: 0px;
+  min-width: 20px;
+  max-width: 32px;
+  max-height: 20px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+/* === end of social toolbar button === */
+
+/* === social toolbar provider menu  === */
+
+/* popups that hang off our toolbaritem */
+#social-statusarea-popup {
+  margin-top:0px;
+  margin-left: -12px;
+  margin-right: -12px;
+}
+
+#social-statusarea-user {
+  border-bottom:1px solid rgb(221,221,221);
+  background-color:-moz-Dialog;
+  color:black;
+  cursor:default;
+  position:relative;
+  font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
+  font-size:12px;
+}
+
+#social-statusarea-user-portrait {
+  width:32px;
+  height:32px;
+  border-radius:2px;
+  margin:10px;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+#social-statusarea-username {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  color: -moz-nativehyperlinktext;
+  cursor: pointer;
+  min-width: 0;
+  margin: 0 6px;
+}
+#social-statusarea-username:hover {
+  text-decoration: underline;
+}
+
+/* === end of social toolbar provider menu === */
+
+/* === end of social toolbar panels === */
+
+#social-notification-panel {
+  min-height: 100px;
+  min-width: 100px;
+  max-height: 600px;
+  max-width: 400px;
+}
+
+/* === end of social toolbar panels === */
