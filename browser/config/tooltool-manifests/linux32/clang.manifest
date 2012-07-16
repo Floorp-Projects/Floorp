@@ -9,8 +9,8 @@
 "filename": "setup.sh"
 },
 {
-"size": 74268386,
-"digest": "d69bfd727f4f29a029329642a20d7f1cb413742f22717c12ca21adfb25f3628ef27c05208bd849a20adc6df4e91d77aa11bb3905ef63ce4ca85b2b6ce44f5d82",
+"size": 64924871,
+"digest": "d11f4a03c8d931db11a6e919f475968b55a7a668fa9d00e516d2dc35922e14c5341c17a660098cf70a26a8d9783287fd89ae939d6eb7dea19c104c3e125b530b",
 "algorithm": "sha512",
 "filename": "clang.tar.bz2"
 }
