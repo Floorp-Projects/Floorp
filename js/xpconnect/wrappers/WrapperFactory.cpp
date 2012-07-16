@@ -29,7 +29,7 @@ namespace xpc {
 // transparent wrapper in the origin (non-chrome) compartment. When
 // an object with that special wrapper applied crosses into chrome,
 // we know to not apply an X-ray wrapper.
-DirectWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+DirectWrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
@@ -81,7 +81,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
             if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
                 return nsnull;
             wobj = Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
-                                &WaiveXrayWrapperWrapper);
+                                &XrayWaiver);
             if (!wobj)
                 return nsnull;
 
@@ -291,7 +291,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                        unsigned flags)
 {
     NS_ASSERTION(!IsWrapper(obj) ||
-                 GetProxyHandler(obj) == &WaiveXrayWrapperWrapper ||
+                 GetProxyHandler(obj) == &XrayWaiver ||
                  js::GetObjectClass(obj)->ext.innerObject,
                  "wrapped object passed to rewrap");
     NS_ASSERTION(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
