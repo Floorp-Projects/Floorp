@@ -77,6 +77,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     inst_dir = stage_dir + "/clang"
 
     configure_opts = ["--enable-optimized",
+                      "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
     if is_stage_one:
