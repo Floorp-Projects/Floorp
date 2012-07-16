@@ -2455,6 +2455,8 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
+    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+
     JSScript *newScript = fun->script();
 
     if (newScript->compileAndGo && newScript->hasClearedGlobal()) {
@@ -2467,8 +2469,6 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     SET_SCRIPT(regs.fp()->script());
     RESET_USE_METHODJIT();
-
-    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
 
 #ifdef JS_METHODJIT
     if (!newType) {
