@@ -16,7 +16,11 @@ class SVGFEUnstyledLeafFrame : public SVGFEUnstyledLeafFrameBase
   friend nsIFrame*
   NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGFEUnstyledLeafFrame(nsStyleContext* aContext) : SVGFEUnstyledLeafFrameBase(aContext) {}
+  SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
+    : SVGFEUnstyledLeafFrameBase(aContext)
+  {
+    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  }
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
