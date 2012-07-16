@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import select
 import socket
 import SocketServer
 import time, datetime
@@ -211,7 +212,9 @@ class DeviceManagerSUT(DeviceManager):
 
           # Get our response
           try:
-            temp = self._sock.recv(1024)
+             # Wait up to a second for socket to become ready for reading...
+            if select.select([self._sock], [], [], 1)[0]:
+                temp = self._sock.recv(1024)
             if (self.debug >= 4): print "response: " + str(temp)
           except socket.error, msg:
             self._sock.close()
