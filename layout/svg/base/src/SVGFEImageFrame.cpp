@@ -20,7 +20,11 @@ class SVGFEImageFrame : public SVGFEImageFrameBase
   friend nsIFrame*
   NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGFEImageFrame(nsStyleContext* aContext) : SVGFEImageFrameBase(aContext) {}
+  SVGFEImageFrame(nsStyleContext* aContext)
+    : SVGFEImageFrameBase(aContext)
+  {
+    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  }
 
 public:
   NS_DECL_FRAMEARENA_HELPERS

@@ -20,7 +20,11 @@ class SVGFELeafFrame : public SVGFELeafFrameBase
   friend nsIFrame*
   NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  SVGFELeafFrame(nsStyleContext* aContext) : SVGFELeafFrameBase(aContext) {}
+  SVGFELeafFrame(nsStyleContext* aContext)
+    : SVGFELeafFrameBase(aContext)
+  {
+    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  }
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
