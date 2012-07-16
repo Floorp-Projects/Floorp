@@ -752,11 +752,6 @@ castNative(JSContext *cx,
         QITableEntry *entries;
         js::Class* clasp = js::GetObjectClass(cur);
         if (dom::IsDOMClass(clasp)) {
-            dom::DOMJSClass* domClass = dom::DOMJSClass::FromJSClass(clasp);
-            if (!domClass->mDOMObjectIsISupports) {
-                *pThisRef = nsnull;
-                return NS_ERROR_ILLEGAL_VALUE;
-            }
             native = dom::UnwrapDOMObject<nsISupports>(cur);
             entries = nsnull;
         } else if (dom::binding::instanceIsProxy(cur)) {
