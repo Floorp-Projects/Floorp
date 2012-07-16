@@ -38,10 +38,6 @@ let Social = {
     return SocialService.enabled;
   },
 
-  get uiVisible() {
-    return this.provider && this.provider.enabled && this.provider.port;
-  },
-
   sendWorkerMessage: function Social_sendWorkerMessage(message) {
     // Responses aren't handled yet because there is no actions to perform
     // based on the response from the provider at this point.

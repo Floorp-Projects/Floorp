@@ -77,21 +77,5 @@ let tests = {
     }
     Services.obs.addObserver(ob, "social:ambient-notification-changed", false);
     provider.workerAPI._port.postMessage({topic: "test-ambient", data: expect});
-  },
-
-  testProfileCleared: function(next) {
-    let sent = {
-      userName: ""
-    };
-    function ob(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(ob, "social:profile-changed", false);
-      is(aData, provider.origin, "update of profile from our provider");
-      is(Object.keys(provider.profile).length, 0, "profile was cleared by empty username");
-      is(Object.keys(provider.ambientNotificationIcons).length, 0, "icons were cleared by empty username");
-
-      next();
-    }
-    Services.obs.addObserver(ob, "social:profile-changed", false);
-    provider.workerAPI._port.postMessage({topic: "test-profile", data: sent});
   }
 };
