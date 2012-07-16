@@ -392,7 +392,7 @@ MarionetteDriverActor.prototype = {
   getLogs: function MDA_getLogs() {
     this.sendResponse(this.marionetteLog.getLogs());
   },
-
+  
   /**
    * Log some performance data
    */
