@@ -5304,7 +5304,7 @@ Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
         return NULL;
 
     if (!transplanter.transplant(kid))
-        return false;
+        return NULL;
 
     JS_ASSERT(tc->blockChain && tc->blockChain == pn->pn_objbox->object);
     data.initLet(HoistVars, *tc->blockChain, JSMSG_ARRAY_INIT_TOO_BIG);
