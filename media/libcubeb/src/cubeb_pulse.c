@@ -116,9 +116,9 @@ stream_request_callback(pa_stream * s, size_t nbytes, void * u)
 
     if ((size_t) got < size / frame_size) {
       size_t buffer_fill = pa_stream_get_buffer_attr(s)->maxlength - pa_stream_writable_size(s);
-      double buffer_time = (double) buffer_fill / stm->sample_spec.rate;
+      pa_usec_t buffer_time = pa_bytes_to_usec(buffer_fill, &stm->sample_spec);
       /* pa_stream_drain is useless, see PA bug# 866. this is a workaround. */
-      stm->drain_timer = pa_context_rttime_new(stm->context->context, pa_rtclock_now() + buffer_time * 1e6, stream_drain_callback, stm);
+      stm->drain_timer = pa_context_rttime_new(stm->context->context, pa_rtclock_now() + buffer_time, stream_drain_callback, stm);
       stm->shutdown = 1;
       return;
     }
@@ -211,6 +211,12 @@ cubeb_init(cubeb ** context, char const * context_name)
   return CUBEB_OK;
 }
 
+char const *
+cubeb_get_backend_id(cubeb * ctx)
+{
+  return "pulse";
+}
+
 void
 cubeb_destroy(cubeb * ctx)
 {
@@ -295,7 +301,7 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   battr.maxlength = -1;
   battr.tlength = pa_usec_to_bytes(latency * PA_USEC_PER_MSEC, &stm->sample_spec);
   battr.prebuf = -1;
-  battr.minreq = battr.tlength / 2;
+  battr.minreq = battr.tlength / 4;
   battr.fragsize = -1;
 
   pa_threaded_mainloop_lock(stm->context->mainloop);
