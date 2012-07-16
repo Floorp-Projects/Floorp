@@ -90,7 +90,7 @@ public:
     PLDHashNumber Hash() const
     {
       PLDHashNumber hash = HashBytes(&mRect.x, 4*sizeof(gfxFloat));
-      AddToHash(hash, HashBytes(mRadii, 8*sizeof(gfxFloat)));
+      hash = AddToHash(hash, HashBytes(mRadii, 8*sizeof(gfxFloat)));
 
       return hash;
     }
@@ -130,7 +130,7 @@ public:
       PLDHashNumber hash = 0;
 
       for (PRUint32 i = 0; i < mRoundedClipRects.Length(); ++i) {
-        AddToHash(hash, mRoundedClipRects[i].Hash());
+        hash = AddToHash(hash, mRoundedClipRects[i].Hash());
       }
 
       return hash;
