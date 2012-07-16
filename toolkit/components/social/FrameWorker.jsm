@@ -99,7 +99,7 @@ FrameWorker.prototype = {
                      'atob', 'btoa', 'clearInterval', 'clearTimeout', 'dump',
                      'setInterval', 'setTimeout', 'XMLHttpRequest',
                      'MozBlobBuilder', 'FileReader', 'Blob',
-                     'navigator', 'location'];
+                     'location'];
     workerAPI.forEach(function(fn) {
       try {
         // XXX Need to unwrap for this to work - find out why!
@@ -109,6 +109,25 @@ FrameWorker.prototype = {
         Cu.reportError("FrameWorker: failed to import API "+fn+"\n"+e+"\n");
       }
     });
+    // the "navigator" object in a worker is a subset of the full navigator;
+    // specifically, just the interfaces 'NavigatorID' and 'NavigatorOnLine'
+    let navigator = {
+      __exposedProps__: {
+        "appName": "r",
+        "appVersion": "r",
+        "platform": "r",
+        "userAgent": "r",
+        "onLine": "r"
+      },
+      // interface NavigatorID
+      appName: workerWindow.navigator.appName,
+      appVersion: workerWindow.navigator.appVersion,
+      platform: workerWindow.navigator.platform,
+      userAgent: workerWindow.navigator.userAgent,
+      // interface NavigatorOnLine
+      get onLine() workerWindow.navigator.onLine
+    };
+    sandbox.navigator = navigator;
 
     // and we delegate ononline and onoffline events to the worker.
     // See http://www.whatwg.org/specs/web-apps/current-work/multipage/workers.html#workerglobalscope
