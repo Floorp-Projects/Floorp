@@ -5,10 +5,11 @@
 #ifndef mozilla_system_volume_h__
 #define mozilla_system_volume_h__
 
+#include "VolumeCommand.h"
+#include "nsString.h"
+#include "nsWhitespaceTokenizer.h"
 #include "mozilla/Observer.h"
 #include "mozilla/RefPtr.h"
-#include "nsString.h"
-#include "VolumeCommand.h"
 
 namespace mozilla {
 namespace system {
@@ -68,6 +69,8 @@ public:
   // (i.e. path that leads to the files stored on the volume).
   const nsCString &MountPoint() const { return mMountPoint; }
 
+  bool MediaPresent() const     { return mMediaPresent; }
+
   typedef mozilla::Observer<Volume *>     EventObserver;
   typedef mozilla::ObserverList<Volume *> EventObserverList;
 
@@ -77,7 +80,7 @@ public:
 
 private:
   friend class AutoMounter;         // Calls StartXxx
-  friend class VolumeManager;       // Calls SetState
+  friend class VolumeManager;       // Calls HandleVoldResponse
   friend class VolumeListCallback;  // Calls SetMountPoint, SetState
 
   // The StartXxx functions will queue up a command to the VolumeManager.
@@ -89,9 +92,13 @@ private:
   void StartUnshare(VolumeResponseCallback *aCallback);
 
   void SetState(STATE aNewState);
+  void SetMediaPresent(bool aMediaPresent);
   void SetMountPoint(const nsCSubstring &aMountPoint);
   void StartCommand(VolumeCommand *aCommand);
 
+  void HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer &aTokenizer);
+
+  bool              mMediaPresent;
   STATE             mState;
   const nsCString   mName;
   nsCString         mMountPoint;

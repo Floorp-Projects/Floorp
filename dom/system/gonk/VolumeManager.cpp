@@ -132,12 +132,8 @@ class VolumeListCallback : public VolumeResponseCallback
         // we have of the same name, or add new ones if they don't exist.
         nsCWhitespaceTokenizer tokenizer(ResponseStr());
         nsDependentCSubstring volName(tokenizer.nextToken());
-        nsDependentCSubstring mntPoint(tokenizer.nextToken());
-        nsCString state(tokenizer.nextToken());
         RefPtr<Volume> vol = VolumeManager::FindAddVolumeByName(volName);
-        vol->SetMountPoint(mntPoint);
-        PRInt32 errCode;
-        vol->SetState((Volume::STATE)state.ToInteger(&errCode));
+        vol->HandleVoldResponse(ResponseCode(), tokenizer);
         break;
       }
 
@@ -339,9 +335,6 @@ VolumeManager::OnFileCanWriteWithoutBlocking(int aFd)
 void
 VolumeManager::HandleBroadcast(int aResponseCode, nsCString &aResponseLine)
 {
-  if (aResponseCode != ResponseCode::VolumeStateChange) {
-    return;
-  }
   // Format of the line is something like:
   //
   //  Volume sdcard /mnt/sdcard state changed from 7 (Shared-Unmounted) to 1 (Idle-Unmounted)
@@ -355,14 +348,7 @@ VolumeManager::HandleBroadcast(int aResponseCode, nsCString &aResponseLine)
   if (!vol) {
     return;
   }
-
-  const char *s = strstr(aResponseLine.get(), " to ");
-
-  if (!s) {
-    return;
-  }
-  s += 4;
-  vol->SetState((Volume::STATE)atoi(s));
+  vol->HandleVoldResponse(aResponseCode, tokenizer);
 }
 
 void
