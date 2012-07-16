@@ -509,7 +509,6 @@ IDBFactory::OpenCommon(const nsAString& aName,
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
 
   nsCOMPtr<nsPIDOMWindow> window;
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
   JSObject* scriptOwner = nsnull;
 
   if (mWindow) {
@@ -535,7 +534,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     nsRefPtr<CheckPermissionsHelper> permissionHelper =
-      new CheckPermissionsHelper(openHelper, window, mASCIIOrigin, aDeleting);
+      new CheckPermissionsHelper(openHelper, window, aDeleting);
 
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     NS_ASSERTION(mgr, "This should never be null!");
