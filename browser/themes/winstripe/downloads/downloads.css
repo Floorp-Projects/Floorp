@@ -226,15 +226,15 @@ richlistitem[type="download"][state="1"] > .downloadInfo:hover {
 }
 
 @-moz-keyframes downloadsIndicatorNotificationRight {
-  from { opacity: 0; -moz-transform: translate(-128px, 128px) scale(8); }
+  from { opacity: 0; transform: translate(-128px, 128px) scale(8); }
   20%  { opacity: .85; -moz-animation-timing-function: ease-out; }
-  to   { opacity: 0; -moz-transform: translate(0) scale(1); }
+  to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
 @-moz-keyframes downloadsIndicatorNotificationLeft {
-  from { opacity: 0; -moz-transform: translate(128px, 128px) scale(8); }
+  from { opacity: 0; transform: translate(128px, 128px) scale(8); }
   20%  { opacity: .85; -moz-animation-timing-function: ease-out; }
-  to   { opacity: 0; -moz-transform: translate(0) scale(1); }
+  to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
 #downloads-indicator[notification] > #downloads-indicator-anchor > #downloads-indicator-notification {

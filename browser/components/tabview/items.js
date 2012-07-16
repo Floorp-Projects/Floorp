@@ -254,7 +254,7 @@ Item.prototype = {
   // Rotates the object to the given number of degrees.
   setRotation: function Item_setRotation(degrees) {
     var value = degrees ? "rotate(%deg)".replace(/%/, degrees) : null;
-    iQ(this.container).css({"-moz-transform": value});
+    iQ(this.container).css({"transform": value});
   },
 
   // ----------

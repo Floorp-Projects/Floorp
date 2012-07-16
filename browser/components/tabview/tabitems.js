@@ -535,7 +535,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let tab = this.tab;
 
     function onZoomDone() {
-      $canvas.css({ '-moz-transform': null });
+      $canvas.css({ 'transform': null });
       $tabEl.removeClass("front");
 
       UI.goToTab(tab);
@@ -563,8 +563,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         $tabEl.removeClass("stack-trayed");
       $tabEl.addClass("front");
       $canvas
-        .css({ '-moz-transform-origin': transform.transformOrigin })
-        .animate({ '-moz-transform': transform.transform }, {
+        .css({ 'transform-origin': transform.transformOrigin })
+        .animate({ 'transform': transform.transform }, {
           duration: 230,
           easing: 'fast',
           complete: function() {
@@ -593,7 +593,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     
     let onZoomDone = function onZoomDone() {
       $tab.removeClass("front");
-      $canvas.css("-moz-transform", null);
+      $canvas.css("transform", null);
 
       if (typeof complete == "function")
         complete();
@@ -612,11 +612,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       TabItems.pausePainting();
 
       $canvas.css({
-        '-moz-transform': transform.transform,
-        '-moz-transform-origin': transform.transformOrigin
+        'transform': transform.transform,
+        'transform-origin': transform.transformOrigin
       });
 
-      $canvas.animate({ "-moz-transform": "scale(1.0)" }, {
+      $canvas.animate({ "transform": "scale(1.0)" }, {
         duration: 300,
         easing: 'cubic-bezier', // note that this is legal easing, even without parameters
         complete: function() {
