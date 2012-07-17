@@ -164,7 +164,9 @@ protected:
                         const nsString& aJSON,
                         InfallibleTArray<nsString>* aJSONRetVal = nsnull);
 
-    void ActorDestroy(ActorDestroyReason why);
+    virtual bool Recv__delete__() MOZ_OVERRIDE;
+
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     virtual PIndexedDBParent* AllocPIndexedDB(const nsCString& aASCIIOrigin,
                                               bool* /* aAllowed */);
