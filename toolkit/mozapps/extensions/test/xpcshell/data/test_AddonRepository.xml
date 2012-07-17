@@ -54,7 +54,9 @@
     <developer_comments>Test Developer
                         Comments 2</developer_comments>
     <eula>Test EULA 2</eula>
-    <icon>http://localhost:4444/icon2.png</icon>
+    <icon size="64">http://localhost:4444/icon2-64.png</icon>
+    <icon size="48">http://localhost:4444/icon2-48.png</icon>
+    <icon size="32">http://localhost:4444/icon2-32.png</icon>
     <status id="4">Public</status>
     <compatible_applications>
       <application>
@@ -132,7 +134,7 @@
     <description>   Test Description 3&lt;br&gt;&lt;ul&gt;&lt;li&gt;List item 1&lt;li&gt;List item 2&lt;/ul&gt;   </description>
     <developer_comments>   Test Developer Comments 3   </developer_comments>
     <eula>   Test EULA 3   </eula>
-    <icon>   http://localhost:4444/icon3.png   </icon>
+    <icon size="32">   http://localhost:4444/icon3.png   </icon>
     <status id="   8   ">Preliminarily Reviewed</status>
     <!-- Test that an incompatible + compatible application list passes -->
     <compatible_applications>
