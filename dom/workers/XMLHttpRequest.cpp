@@ -1466,7 +1466,7 @@ XMLHttpRequest::_finalize(JSFreeOp* aFop)
 XMLHttpRequest*
 XMLHttpRequest::Constructor(JSContext* aCx,
                             JSObject* aGlobal,
-                            const Nullable<MozXMLHttpRequestParametersWorkers>& aParams,
+                            const MozXMLHttpRequestParametersWorkers& aParams,
                             ErrorResult& aRv)
 {
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
