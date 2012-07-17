@@ -230,6 +230,12 @@ public:
   { return nsnull; }
 
   /**
+   * Returns true if this LayerManager is owned by an nsIWidget,
+   * and is used for drawing into the widget.
+   */
+  virtual bool IsWidgetLayerManager() { return true; }
+
+  /**
    * Start a new transaction. Nested transactions are not allowed so
    * there must be no transaction currently in progress.
    * This transaction will update the state of the window from which
