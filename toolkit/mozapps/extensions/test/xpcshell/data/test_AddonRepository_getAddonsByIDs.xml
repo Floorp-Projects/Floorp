@@ -21,7 +21,7 @@
     <description>Test Description 1</description>
     <eula>Test EULA 1</eula>
     <developer_comments>Test Developer Comments 1</developer_comments>
-    <icon>http://localhost:4444/icon1.png</icon>
+    <icon size="32">http://localhost:4444/icon1.png</icon>
     <status id="8">Preliminarily Reviewed</status>
     <compatible_applications>
       <application>

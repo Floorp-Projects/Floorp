@@ -24,7 +24,7 @@
     <eula>Repo Add-on 1 - EULA</eula>
     <developer_comments>Repo Add-on 1
                         Developer Comments</developer_comments>
-    <icon>http://localhost:4444/repo/1/icon.png</icon>
+    <icon size="32">http://localhost:4444/repo/1/icon.png</icon>
     <status id="4">Public</status>
     <rating>1</rating>
     <learnmore>http://localhost:4444/repo/1/learnmore.html</learnmore>
@@ -66,7 +66,7 @@
     <description>Repo Add-on 2 - Full Description</description>
     <eula>Repo Add-on 2 - EULA</eula>
     <developer_comments>Repo Add-on 2 - Developer Comments</developer_comments>
-    <icon>http://localhost:4444/repo/2/icon.png</icon>
+    <icon size="32">http://localhost:4444/repo/2/icon.png</icon>
     <status id="9">Unknown</status>
     <previews>
       <preview primary="1">
@@ -101,7 +101,7 @@
     <type id="9999">Unknown</type>
     <guid>test_AddonRepository_3@tests.mozilla.org</guid>
     <version>2.3</version>
-    <icon>http://localhost:4444/repo/3/icon.png</icon>
+    <icon size="32">http://localhost:4444/repo/3/icon.png</icon>
     <previews>
       <preview primary="1">
         <full type="image/png">http://localhost:4444/repo/3/firstFull.png</full>
