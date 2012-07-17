@@ -6371,10 +6371,8 @@ let Reader = {
           return;
         }
 
-        // FIXME: Make the readability check not require a separate copy
-        // of the document by making the operation fully non-destructive.
-        let doc = tab.browser.contentWindow.document.cloneNode(true);
         let uri = Services.io.newURI(url, null, null);
+        let doc = tab.browser.contentWindow.document;
 
         let readability = new Readability(uri, doc);
         callback(readability.check());
