@@ -20,6 +20,7 @@
               0 1px 0 rgba(255,255,255,0.2);
   padding: 5px;
   -moz-user-select: none;
+  position: relative;
 }
 
 html|a {
@@ -91,4 +92,44 @@ html|a {
   min-width: 16px;
   min-height: 16px;
   background: url(chrome://mozapps/skin/plugins/pluginHelp-16.png) no-repeat;
+}
+
+.closeIcon {
+  display: block;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  right: 4px;
+  border: none;
+  background-color: transparent;
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 16, 16, 0);
+  background-repeat: no-repeat;
+}
+
+.closeIcon:-moz-locale-dir(rtl) {
+  right: auto;
+  left: 4px;
+}
+
+.closeIcon:hover {
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 32, 16, 16);
+}
+
+.closeIcon:hover:active {
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 48, 16, 32);
+}
+
+@media (min-resolution: 2dppx) {
+  .closeIcon {
+    background-image: -moz-image-rect(url(chrome://global/skin/icons/close@2x.png), 0, 32, 32, 0);
+  }
+
+  .closeIcon:hover {
+    background-image: -moz-image-rect(url(chrome://global/skin/icons/close@2x.png), 0, 64, 32, 32);
+  }
+
+  .closeIcon:hover:active {
+    background-image: -moz-image-rect(url(chrome://global/skin/icons/close@2x.png), 0, 96, 32, 64);
+  }
 }

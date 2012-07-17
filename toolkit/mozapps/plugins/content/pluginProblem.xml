@@ -23,6 +23,7 @@
 
     <content>
         <xul:vbox class="mainBox" flex="1" chromedir="&locale.dir;">
+            <html:button class="closeIcon" anonid="closeIcon"/>
             <xul:spacer flex="1"/>
             <xul:box class="icon"/>
             <html:div class="msg msgUnsupported">&missingPlugin;</html:div>
