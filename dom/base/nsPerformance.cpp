@@ -9,7 +9,6 @@
 #include "nscore.h"
 #include "nsIDocShell.h"
 #include "nsITimedChannel.h"
-#include "nsDOMClassInfoID.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 #include "nsIDOMWindow.h"
@@ -28,9 +27,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformanceTiming)
 // QueryInterface implementation for nsPerformanceTiming
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformanceTiming)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPerformanceTiming)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMPerformanceTiming)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PerformanceTiming)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
@@ -46,55 +43,6 @@ nsPerformanceTiming::~nsPerformanceTiming()
 {
 }
 
-NS_IMETHODIMP
-nsPerformanceTiming::GetNavigationStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetNavigationStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetUnloadEventStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetUnloadEventStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetUnloadEventEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetUnloadEventEnd();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetRedirectStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetRedirectStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetRedirectEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetRedirectEnd();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetFetchStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetFetchStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomainLookupStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomainLookupStart();
-  return NS_OK;
-}
-
 DOMTimeMilliSec
 nsPerformanceTiming::GetDomainLookupStart() const
 {
@@ -104,13 +52,6 @@ nsPerformanceTiming::GetDomainLookupStart() const
   mozilla::TimeStamp stamp;
   mChannel->GetDomainLookupStart(&stamp);
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomainLookupEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomainLookupEnd();
-  return NS_OK;
 }
 
 DOMTimeMilliSec
@@ -124,13 +65,6 @@ nsPerformanceTiming::GetDomainLookupEnd() const
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
 }
 
-NS_IMETHODIMP
-nsPerformanceTiming::GetConnectStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetConnectStart();
-  return NS_OK;
-}
-
 DOMTimeMilliSec
 nsPerformanceTiming::GetConnectStart() const
 {
@@ -140,13 +74,6 @@ nsPerformanceTiming::GetConnectStart() const
   mozilla::TimeStamp stamp;
   mChannel->GetConnectStart(&stamp);
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetConnectEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetConnectEnd();
-  return NS_OK;
 }
 
 DOMTimeMilliSec
@@ -160,13 +87,6 @@ nsPerformanceTiming::GetConnectEnd() const
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
 }
 
-NS_IMETHODIMP
-nsPerformanceTiming::GetRequestStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetRequestStart();
-  return NS_OK;
-}
-
 DOMTimeMilliSec
 nsPerformanceTiming::GetRequestStart() const
 {
@@ -176,13 +96,6 @@ nsPerformanceTiming::GetRequestStart() const
   mozilla::TimeStamp stamp;
   mChannel->GetRequestStart(&stamp);
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetResponseStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetResponseStart();
-  return NS_OK;
 }
 
 DOMTimeMilliSec
@@ -201,13 +114,6 @@ nsPerformanceTiming::GetResponseStart() const
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
 }
 
-NS_IMETHODIMP
-nsPerformanceTiming::GetResponseEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetResponseEnd();
-  return NS_OK;
-}
-
 DOMTimeMilliSec
 nsPerformanceTiming::GetResponseEnd() const
 {
@@ -222,55 +128,6 @@ nsPerformanceTiming::GetResponseEnd() const
     stamp = cacheStamp;
   }
   return GetDOMTiming()->TimeStampToDOMOrFetchStart(stamp);
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomLoading(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomLoading();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomInteractive(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomInteractive();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomContentLoadedEventStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomContentLoadedEventStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomContentLoadedEventEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomContentLoadedEventEnd();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetDomComplete(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetDomComplete();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetLoadEventStart(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetLoadEventStart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceTiming::GetLoadEventEnd(DOMTimeMilliSec* aTime)
-{
-  *aTime = GetLoadEventEnd();
-  return NS_OK;
 }
 
 JSObject*
@@ -292,9 +149,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPerformanceNavigation)
 // QueryInterface implementation for nsPerformanceNavigation
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformanceNavigation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPerformanceNavigation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMPerformanceNavigation)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PerformanceNavigation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 nsPerformanceNavigation::nsPerformanceNavigation(nsPerformance* aPerformance)
@@ -306,21 +161,6 @@ nsPerformanceNavigation::nsPerformanceNavigation(nsPerformance* aPerformance)
 
 nsPerformanceNavigation::~nsPerformanceNavigation()
 {
-}
-
-NS_IMETHODIMP
-nsPerformanceNavigation::GetType(
-    nsDOMPerformanceNavigationType* aNavigationType)
-{
-  *aNavigationType = GetType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformanceNavigation::GetRedirectCount(PRUint16* aRedirectCount)
-{
-  *aRedirectCount = GetRedirectCount();
-  return NS_OK;
 }
 
 JSObject*
@@ -358,15 +198,9 @@ nsPerformance::~nsPerformance()
 // QueryInterface implementation for nsPerformance
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPerformance)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPerformance)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMPerformance)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Performance)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-
-//
-// nsIDOMPerformance methods
-//
 
 nsPerformanceTiming*
 nsPerformance::GetTiming()
@@ -377,14 +211,6 @@ nsPerformance::GetTiming()
   return mTiming;
 }
 
-NS_IMETHODIMP
-nsPerformance::GetTiming(nsIDOMPerformanceTiming** aTiming)
-{
-  nsRefPtr<nsPerformanceTiming> timing = GetTiming();
-  timing.forget(aTiming);
-  return NS_OK;
-}
-
 nsPerformanceNavigation*
 nsPerformance::GetNavigation()
 {
@@ -392,21 +218,6 @@ nsPerformance::GetNavigation()
     mNavigation = new nsPerformanceNavigation(this);
   }
   return mNavigation;
-}
-
-NS_IMETHODIMP
-nsPerformance::GetNavigation(nsIDOMPerformanceNavigation** aNavigation)
-{
-  nsRefPtr<nsPerformanceNavigation> navigation = GetNavigation();
-  navigation.forget(aNavigation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPerformance::Now(DOMHighResTimeStamp* aNow)
-{
-  *aNow = Now();
-  return NS_OK;
 }
 
 DOMHighResTimeStamp

@@ -2920,7 +2920,7 @@ nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
+nsGlobalWindow::GetPerformance(nsISupports** aPerformance)
 {
   FORWARD_TO_INNER(GetPerformance, (aPerformance), NS_ERROR_NOT_INITIALIZED);
 
