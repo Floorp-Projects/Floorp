@@ -292,6 +292,7 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
 {
     if (safepoint->encoded())
         return;
+
     safepoint->fixupOffset(&masm);
 
     uint32 safepointOffset = safepoints_.startEntry();
@@ -486,6 +487,28 @@ void
 CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
 {
     addPreBarrierOffset(masm.patchableCallPreBarrier(address, type));
+}
+
+void
+CodeGeneratorShared::dropArguments(unsigned argc)
+{
+    for (unsigned i = 0; i < argc; i++)
+        pushedArgumentSlots_.popBack();
+}
+
+bool
+CodeGeneratorShared::markArgumentSlots(LSafepoint *safepoint)
+{
+    for (size_t i = 0; i < pushedArgumentSlots_.length(); i++) {
+#ifdef JS_NUNBOX32
+        if (!safepoint->addValueSlot(pushedArgumentSlots_[i]))
+            return false;
+#else
+        if (!safepoint->addGcSlot(pushedArgumentSlots_[i]))
+            return false;
+#endif
+    }
+    return true;
 }
 
 } // namespace ion
