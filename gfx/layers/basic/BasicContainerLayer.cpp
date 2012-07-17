@@ -122,6 +122,9 @@ class BasicShadowContainerLayer : public ShadowContainerLayer, public BasicImplD
   friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
   friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+  template<class Container>
+  friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
+                                                  Container* aContainer);
 
 public:
   BasicShadowContainerLayer(BasicShadowLayerManager* aLayerManager) :
@@ -145,36 +148,7 @@ public:
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
   {
-    // We push groups for container layers if we need to, which always
-    // are aligned in device space, so it doesn't really matter how we snap
-    // containers.
-    gfxMatrix residual;
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    idealTransform.ProjectTo2D();
-
-    if (!idealTransform.CanDraw2D()) {
-      mEffectiveTransform = idealTransform;
-      ComputeEffectiveTransformsForChildren(gfx3DMatrix());
-      ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
-      mUseIntermediateSurface = true;
-      return;
-    }
-
-    mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
-    // We always pass the ideal matrix down to our children, so there is no
-    // need to apply any compensation using the residual from SnapTransform.
-    ComputeEffectiveTransformsForChildren(idealTransform);
-
-    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
-
-    /* If we have a single child, it can just inherit our opacity,
-     * otherwise we need a PushGroup and we need to mark ourselves as using
-     * an intermediate surface so our children don't inherit our opacity
-     * via GetEffectiveOpacity.
-     * Having a mask layer always forces our own push group
-     */
-    mUseIntermediateSurface = GetMaskLayer() ||
-                              (GetEffectiveOpacity() != 1.0 && HasMultipleChildren());
+    ContainerComputeEffectiveTransforms(aTransformToSurface, this);
   }
 };
 
