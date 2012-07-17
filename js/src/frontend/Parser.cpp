@@ -2225,9 +2225,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
     DefinitionList::Range defs = tc->decls.lookupMulti(atom);
     JSOp op = data->op;
 
-    if (stmt || !defs.empty()) {
-        Definition *dn = defs.empty() ? NULL : defs.front();
-        Definition::Kind dn_kind = dn ? dn->kind() : Definition::VAR;
+    JS_ASSERT_IF(stmt, !defs.empty());
+    if (!defs.empty()) {
+        Definition *dn = defs.front();
+        Definition::Kind dn_kind = dn->kind();
 
         if (dn_kind == Definition::ARG) {
             JSAutoByteString name;

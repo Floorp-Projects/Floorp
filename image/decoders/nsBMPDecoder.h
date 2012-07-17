@@ -58,8 +58,8 @@ private:
     PRUint32 mPos;
 
     BMPFILEHEADER mBFH;
-    BMPINFOHEADER mBIH;
-    char mRawBuf[36];
+    BITMAPV5HEADER mBIH;
+    char mRawBuf[WIN_V3_INTERNAL_BIH_LENGTH];
 
     PRUint32 mLOH; ///< Length of the header
 
