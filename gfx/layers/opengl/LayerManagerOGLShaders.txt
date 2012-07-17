@@ -236,6 +236,25 @@ void main()
 #endif
 @end
 
+// Single texture in RGBA format, but uses external image.  External
+// image is an EGLImage which have internal formats not otherwise
+// supported by OpenGL ES. It is up to the implementation exactly what
+// formats are accepted. It is specified in the OES_EGL_image_external
+// extension.
+@shader sRGBAExternalTextureLayer<mask:,Mask,Mask3D>FS
+#extension GL_OES_EGL_image_external : require
+
+$LAYER_FRAGMENT<mask>$
+uniform samplerExternalOES uTexture;
+
+void main()
+{
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;
+}
+@end
+
+
 // Single texture in BGRA format (via swizzle)
 @shader sBGRATextureLayer<mask:,Mask>FS
 $LAYER_FRAGMENT<mask>$

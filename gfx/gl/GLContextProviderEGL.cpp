@@ -44,6 +44,7 @@ using namespace android;
 
 # define EGL_NATIVE_BUFFER_ANDROID 0x3140
 # define EGL_IMAGE_PRESERVED_KHR   0x30D2
+# define GL_TEXTURE_EXTERNAL_OES   0x8D65
 
 # endif
 
@@ -401,6 +402,26 @@ public:
 
         mBound = false;
         return true;
+    }
+
+    bool BindExternalBuffer(GLuint texture, void* buffer)
+    {
+#if defined(MOZ_WIDGET_GONK)
+        EGLint attrs[] = {
+            EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
+            LOCAL_EGL_NONE, LOCAL_EGL_NONE
+        };
+        EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                                  EGL_NO_CONTEXT,
+                                                  EGL_NATIVE_BUFFER_ANDROID,
+                                                  buffer, attrs);
+        sEGLLibrary.fImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+        fBindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+        sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
+        return true;
+#else
+        return false;
+#endif
     }
 
     bool MakeCurrentImpl(bool aForce = false) {
