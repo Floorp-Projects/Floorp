@@ -125,9 +125,6 @@ class ArrayBufferObject : public JSObject
     obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                   Value *statep, jsid *idp);
 
-    static JSType
-    obj_typeOf(JSContext *cx, HandleObject obj);
-
     bool
     allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
 
