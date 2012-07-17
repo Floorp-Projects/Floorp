@@ -821,9 +821,47 @@ typedef enum NukedGlobalHandling {
     DontNukeForGlobalObject
 } NukedGlobalHandling;
 
+// These filters are designed to be ephemeral stack classes, and thus don't
+// do any rooting or holding of their members.
+struct CompartmentFilter {
+    virtual bool match(JSCompartment *c) const = 0;
+};
+
+struct AllCompartments : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const { return true; };
+};
+
+struct ContentCompartmentsOnly : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const {
+        return !IsSystemCompartment(c);
+    };
+};
+
+struct ChromeCompartmentsOnly : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const {
+        return IsSystemCompartment(c);
+    };
+};
+
+struct SingleCompartment : public CompartmentFilter {
+    JSCompartment *ours;
+    SingleCompartment(JSCompartment *c) : ours(c) {};
+    virtual bool match(JSCompartment *c) const { return c == ours; };
+};
+
+struct CompartmentsWithPrincipals : public CompartmentFilter {
+    JSPrincipals *principals;
+    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {};
+    virtual bool match(JSCompartment *c) const {
+        return JS_GetCompartmentPrincipals(c) == principals;
+    };
+};
+
 extern JS_FRIEND_API(JSBool)
-NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
-                                            NukedGlobalHandling nukeGlobal);
+NukeCrossCompartmentWrappers(JSContext* cx,
+                             const CompartmentFilter& sourceFilter,
+                             const CompartmentFilter& targetFilter,
+                             NukedGlobalHandling nukeGlobal);
 
 } /* namespace js */
 
