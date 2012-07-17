@@ -403,7 +403,7 @@ CodeGenerator::visitStackArg(LStackArg *lir)
     int32 stack_offset = StackOffsetOfPassedArg(argslot);
 
     masm.storeValue(val, Address(StackPointer, stack_offset));
-    return true;
+    return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
 }
 
 bool
@@ -567,6 +567,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
     JS_ASSERT(masm.framePushed() == initialStack);
 
+    dropArguments(call->numStackArgs() + 1);
     return true;
 }
 
@@ -634,6 +635,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
             masm.bind(&notPrimitive);
         }
 
+        dropArguments(call->numStackArgs() + 1);
         return true;
     }
 
@@ -739,6 +741,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.bind(&notPrimitive);
     }
 
+    dropArguments(call->numStackArgs() + 1);
     return true;
 }
 
@@ -770,6 +773,7 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
     // Un-nestle %esp from the argument vector. No prefix was pushed.
     masm.reserveStack(unusedStack);
 
+    dropArguments(call->numStackArgs());
     return true;
 }
 
@@ -1141,6 +1145,11 @@ CodeGenerator::generateBody()
         current = graph.getBlock(i);
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
             IonSpew(IonSpew_Codegen, "instruction %s", iter->opName());
+            if (iter->safepoint() && pushedArgumentSlots_.length()) {
+                if (!markArgumentSlots(iter->safepoint()))
+                    return false;
+            }
+
             if (!iter->accept(this))
                 return false;
         }
@@ -2600,7 +2609,9 @@ CodeGenerator::generate()
 {
     JSContext *cx = gen->cx;
 
-    if (!safepoints_.init(graph.localSlotCount()))
+    unsigned slots = graph.localSlotCount() +
+                     (graph.argumentSlotCount() * sizeof(Value) / STACK_SLOT_SIZE);
+    if (!safepoints_.init(slots))
         return false;
 
     // Before generating any code, we generate type checks for all parameters.
@@ -2644,7 +2655,7 @@ CodeGenerator::generate()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
-    script->ion = IonScript::New(cx, graph.localSlotCount(), scriptFrameSize, snapshots_.size(),
+    script->ion = IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
                                  bailouts_.length(), graph.numConstants(),
                                  safepointIndices_.length(), osiIndices_.length(),
                                  cacheList_.length(), barrierOffsets_.length(),

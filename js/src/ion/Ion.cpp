@@ -405,7 +405,7 @@ IonScript::IonScript()
     constantEntries_(0),
     safepointIndexOffset_(0),
     safepointIndexEntries_(0),
-    frameLocals_(0),
+    frameSlots_(0),
     frameSize_(0),
     osiIndexOffset_(0),
     osiIndexEntries_(0),
@@ -421,7 +421,7 @@ IonScript::IonScript()
 }
 static const int DataAlignment = 4;
 IonScript *
-IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snapshotsSize,
+IonScript::New(JSContext *cx, uint32 frameSlots, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t prebarrierEntries,
                size_t safepointsSize)
@@ -494,7 +494,7 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     script->safepointsSize_ = safepointsSize;
     offsetCursor += paddedSafepointSize;
 
-    script->frameLocals_ = frameLocals;
+    script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
 
     return script;

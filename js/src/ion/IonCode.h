@@ -208,10 +208,12 @@ struct IonScript
     uint32 safepointIndexOffset_;
     uint32 safepointIndexEntries_;
 
-    // Local slot count and frame size. Frame size is the value that can
-    // be added to the StackPointer along with the frame prefix to get a
-    // valid IonJSFrameLayout.
-    uint32 frameLocals_;
+    // Number of STACK_SLOT_SIZE-length slots this function reserves on the
+    // stack.
+    uint32 frameSlots_;
+
+    // Frame size is the value that can be added to the StackPointer along
+    // with the frame prefix to get a valid IonJSFrameLayout.
     uint32 frameSize_;
 
     // Map OSI-point displacement to snapshot.
@@ -358,8 +360,8 @@ struct IonScript
     size_t numConstants() const {
         return constantEntries_;
     }
-    uint32 frameLocals() const {
-        return frameLocals_;
+    uint32 frameSlots() const {
+        return frameSlots_;
     }
     uint32 frameSize() const {
         return frameSize_;
