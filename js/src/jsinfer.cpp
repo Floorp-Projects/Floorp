@@ -1465,7 +1465,9 @@ TypeSet::getKnownTypeTag(JSContext *cx)
     bool empty = flags == 0 && baseObjectCount() == 0;
     JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
 
-    if (cx->compartment->types.compiledInfo.script && (empty || type != JSVAL_TYPE_UNKNOWN)) {
+    if (cx->compartment->types.compiledInfo.compilerOutput(cx)->script &&
+        (empty || type != JSVAL_TYPE_UNKNOWN))
+    {
         add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeTypeTag>(
                   cx->compartment->types.compiledInfo), false);
     }
@@ -1819,6 +1821,8 @@ TypeCompartment::init(JSContext *cx)
 {
     PodZero(this);
 
+    compiledInfo.outputIndex = RecompileInfo::NoCompilerRunning;
+
     if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE) {
 #ifdef JS_METHODJIT
         JSC::MacroAssembler masm;
@@ -2015,7 +2019,7 @@ void
 TypeCompartment::processPendingRecompiles(FreeOp *fop)
 {
     /* Steal the list of scripts to recompile, else we will try to recursively recompile them. */
-    Vector<RecompileInfo> *pending = pendingRecompiles;
+    Vector<CompilerOutput> *pending = pendingRecompiles;
     pendingRecompiles = NULL;
 
     JS_ASSERT(!pending->empty());
@@ -2025,7 +2029,7 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
     mjit::ExpandInlineFrames(compartment());
 
     for (unsigned i = 0; i < pending->length(); i++) {
-        const RecompileInfo &info = (*pending)[i];
+        const CompilerOutput &info = (*pending)[i];
         mjit::JITScript *jit = info.script->getJIT(info.constructing, info.barriers);
         if (jit && jit->chunkDescriptor(info.chunkIndex).chunk) {
             mjit::Recompiler::clearStackReferences(fop, info.script);
@@ -2099,29 +2103,28 @@ TypeCompartment::nukeTypes(FreeOp *fop)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
+TypeCompartment::addPendingRecompile(JSContext *cx, CompilerOutput &co)
 {
+    if (!co.isValid())
+        return;
+
 #ifdef JS_METHODJIT
-    mjit::JITScript *jit = info.script->getJIT(info.constructing, info.barriers);
-    if (!jit || !jit->chunkDescriptor(info.chunkIndex).chunk) {
+    mjit::JITScript *jit = co.script->getJIT(co.constructing, co.barriers);
+    if (!jit || !jit->chunkDescriptor(co.chunkIndex).chunk) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
     }
 
     if (!pendingRecompiles) {
-        pendingRecompiles = cx->new_< Vector<RecompileInfo> >(cx);
+        pendingRecompiles = cx->new_< Vector<CompilerOutput> >(cx);
         if (!pendingRecompiles) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
         }
     }
 
-    for (unsigned i = 0; i < pendingRecompiles->length(); i++) {
-        if (info == (*pendingRecompiles)[i])
-            return;
-    }
-
-    if (!pendingRecompiles->append(info)) {
+    co.invalidate();
+    if (!pendingRecompiles->append(co)) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
@@ -2129,10 +2132,16 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 }
 
 void
+TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
+{
+    addPendingRecompile(cx, (*constrainedOutputs)[info.outputIndex]);
+}
+
+void
 TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
 #ifdef JS_METHODJIT
-    RecompileInfo info;
+    CompilerOutput info;
     info.script = script;
 
     for (int constructing = 0; constructing <= 1; constructing++) {
@@ -2141,6 +2150,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
                 info.constructing = constructing;
                 info.barriers = barriers;
                 info.chunkIndex = jit->chunkIndex(pc);
+                info.mjit = jit;
                 addPendingRecompile(cx, info);
             }
         }
