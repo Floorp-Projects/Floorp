@@ -1,3 +1,4 @@
+/* -*- Mode: C++; indent-tab-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -350,8 +351,15 @@ public:
   static nsOfflineCacheBinding *
       Create(nsIFile *cacheDir, const nsCString *key, int generation);
 
+  enum { FLAG_NEW_ENTRY = 1 };
+
   nsCOMPtr<nsIFile> mDataFile;
   int               mGeneration;
+  int		    mFlags;
+
+  bool IsNewEntry() { return mFlags & FLAG_NEW_ENTRY; }
+  void MarkNewEntry() { mFlags |= FLAG_NEW_ENTRY; }
+  void ClearNewEntry() { mFlags &= ~FLAG_NEW_ENTRY; }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheBinding)
@@ -421,6 +429,7 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
 
   binding->mDataFile.swap(file);
   binding->mGeneration = generation;
+  binding->mFlags = 0;
   return binding;
 }
 
@@ -893,6 +902,7 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
   // Decompose the key into "ClientID" and "Key"
   nsCAutoString keyBuf;
   const char *cid, *key;
+
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
 
@@ -1411,14 +1421,19 @@ nsOfflineCacheDevice::DeactivateEntry(nsCacheEntry *entry)
     // on disk.
     DeleteData(entry);
   }
-  else
+  else if (((nsOfflineCacheBinding *)entry->Data())->IsNewEntry())
   {
     // UPDATE the database row
 
-    // XXX Assumption: the row already exists because it was either created
-    // with a call to BindEntry or it was there when we called FindEntry.
+    // Only new entries are updated, since offline cache is updated in
+    // transactions.  New entries are those who is returned from
+    // BindEntry().
 
+    LOG(("nsOfflineCacheDevice::DeactivateEntry updating new entry\n"));
     UpdateEntry(entry);
+  } else {
+    LOG(("nsOfflineCacheDevice::DeactivateEntry "
+	 "skipping update since entry is not dirty\n"));
   }
 
   // Unlock the entry
@@ -1457,6 +1472,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
       nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key(), -1);
   if (!binding)
     return NS_ERROR_OUT_OF_MEMORY;
+  binding->MarkNewEntry();
 
   nsOfflineCacheRecord rec;
   rec.clientID = cid;
