@@ -11,6 +11,7 @@ const Cr = Components.results;
 var urls = [
   ["data:,foo",                                     "text/plain",               "foo"],
   ["data:application/octet-stream,foo bar",         "application/octet-stream", "foobar"],
+  ["data:application/octet-stream;base64=y,foobar",         "application/octet-stream", "foobar"],
   ["data:application/octet-stream,foo%20bar",       "application/octet-stream", "foo bar"],
   ["data:application/xhtml+xml,foo bar",            "application/xhtml+xml",    "foo bar"],
   ["data:application/xhtml+xml,foo%20bar",          "application/xhtml+xml",    "foo bar"],
