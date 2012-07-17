@@ -65,15 +65,26 @@ class DeviceManager:
     failure: None
     """
     
-  @abstractmethod
   def mkDirs(self, filename):
     """
     make directory structure on the device
+    WARNING: does not create last part of the path
     external function
     returns:
     success: directory structure that we created
     failure: None
     """
+    parts = filename.split('/')
+    name = ""
+    for part in parts:
+        if (part == parts[-1]): break
+        if (part != ""):
+            name += '/' + part
+            if (not self.dirExists(name)):
+                if (self.mkDir(name) == None):
+                    print "failed making directory: " + str(name)
+                    return None
+    return name
     
   @abstractmethod
   def pushDir(self, localDir, remoteDir):
