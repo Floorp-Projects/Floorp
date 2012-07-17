@@ -1,33 +1,32 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH     := ../..
+topsrcdir := @top_srcdir@
+srcdir    := @srcdir@
+VPATH     := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 # Definitions used by constants.js.
-WEAVE_VERSION=$(shell cat $(topsrcdir)/services/sync/version.txt)
-WEAVE_CHANNEL=rel
-WEAVE_ID={340c2bbc-ce74-4362-90b5-7c26312808ef}
+weave_version := 1.19.0
+weave_channel := rel
+weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 
-SYNC_PP_DEFINES = \
- -Dweave_version=$(WEAVE_VERSION) \
- -Dweave_channel=$(WEAVE_CHANNEL) \
- -Dweave_id=$(WEAVE_ID)
+sync_pp_defines := \
+ -Dweave_version=$(weave_version) \
+ -Dweave_channel=$(weave_channel) \
+ -Dweave_id=$(weave_id)
 
-DIRS = locales
+DIRS := locales
 
-EXTRA_COMPONENTS = \
+EXTRA_COMPONENTS := \
   SyncComponents.manifest \
   Weave.js \
   $(NULL)
 
-PREF_JS_EXPORTS = $(srcdir)/services-sync.js
+PREF_JS_EXPORTS := $(srcdir)/services-sync.js
 
 # Preprocess constants (by preprocessing everything).
 # The 'HERE' idiom avoids a dependency on pushd. We need to do this fiddling in
@@ -49,7 +48,7 @@ ifndef NO_DIST_INSTALL
 	for i in $$files; do \
 		src=$(srcdir)/modules/$$i; \
 		dest=$(FINAL_TARGET)/modules/services-sync/$$i; \
-		$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(SYNC_PP_DEFINES) $$src > $$dest ; \
+		$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(sync_pp_defines) $$src > $$dest ; \
 	done
 endif
 
