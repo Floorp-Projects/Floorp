@@ -50,6 +50,18 @@ let SocialShareButton = {
   init: function SSB_init() {
     this.sharePopup.hidden = false;
     this.updateButtonHiddenState();
+
+    let profileRow = document.getElementById("editSharePopupHeader");
+    let profile = Social.provider.profile;
+    if (profile && profile.portrait && profile.displayName) {
+      profileRow.hidden = false;
+      let portrait = document.getElementById("socialUserPortrait");
+      portrait.style.listStyleImage = profile.portrait;
+      let displayName = document.getElementById("socialUserDisplayName");
+      displayName.setAttribute("label", profile.displayName);
+    } else {
+      profileRow.hidden = true;
+    }
   },
 
   get shareButton() {
