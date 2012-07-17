@@ -5,21 +5,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/ShadowLayersParent.h"
+#include "base/basictypes.h"
 
 #include "BasicLayers.h"
+#include "gfx3DMatrix.h"
 #include "LayerManagerOGL.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
-#include "LayerManagerD3D9.h"
+# include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
-#include "RenderFrameParent.h"
-
-#include "gfx3DMatrix.h"
-#include "nsFrameLoader.h"
-#include "nsViewportFrame.h"
-#include "nsSubDocumentFrame.h"
-#include "nsIObserver.h"
+#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/ShadowLayersParent.h"
 #include "nsContentUtils.h"
+#include "nsFrameLoader.h"
+#include "nsIObserver.h"
+#include "nsSubDocumentFrame.h"
+#include "nsViewportFrame.h"
+#include "RenderFrameParent.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
@@ -444,14 +445,37 @@ BuildBackgroundPatternFor(ContainerLayer* aContainer,
   aContainer->InsertAfter(layer, nsnull);
 }
 
-RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
-  : mFrameLoader(aFrameLoader)
+already_AddRefed<LayerManager>
+GetFrom(nsFrameLoader* aFrameLoader)
+{
+  nsIDocument* doc = aFrameLoader->GetOwnerDoc();
+  return nsContentUtils::LayerManagerForDocument(doc);
+}
+
+RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
+                                     LayerManager::LayersBackend* aBackendType,
+                                     int* aMaxTextureSize,
+                                     uint64_t* aId)
+  : mLayersId(0)
+  , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mBackgroundColor(gfxRGBA(1, 1, 1))
 {
-  if (aFrameLoader) {
-    mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
-      new nsContentView(aFrameLoader, FrameMetrics::ROOT_SCROLL_ID);
+  mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
+    new nsContentView(aFrameLoader, FrameMetrics::ROOT_SCROLL_ID);
+
+  *aBackendType = LayerManager::LAYERS_NONE;
+  *aMaxTextureSize = 0;
+  *aId = 0;
+
+  nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  *aBackendType = lm->GetBackendType();
+  *aMaxTextureSize = lm->GetMaxTextureSize();
+
+  if (CompositorParent::CompositorLoop()) {
+    // Our remote frame will push layers updates to the compositor,
+    // and we'll keep an indirect reference to that tree.
+    *aId = mLayersId = CompositorParent::AllocateLayerTreeId();
   }
 }
 
@@ -492,34 +516,12 @@ void
 RenderFrameParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
                                        bool isFirstPaint)
 {
-  mFrameLoader->SetCurrentRemoteFrame(this);
-
   // View map must only contain views that are associated with the current
   // shadow layer tree. We must always update the map when shadow layers
   // are updated.
   BuildViewMap();
 
-  nsIFrame* docFrame = mFrameLoader->GetPrimaryFrameOfOwningContent();
-  if (!docFrame) {
-    // Bad, but nothing we can do about it (XXX/cjones: or is there?
-    // maybe bug 589337?).  When the new frame is created, we'll
-    // probably still be the current render frame and will get to draw
-    // our content then.  Or, we're shutting down and this update goes
-    // to /dev/null.
-    return;
-  }
-
-  // FIXME/cjones: we should collect the rects/regions updated for
-  // Painted*Layer() calls and pass that region to here, then only
-  // invalidate that rect
-  //
-  // We pass INVALIDATE_NO_THEBES_LAYERS here because we're
-  // invalidating the <browser> on behalf of its counterpart in the
-  // content process.  Not only do we not need to invalidate the
-  // shadow layers, things would just break if we did --- we have no
-  // way to repaint shadow layers from this process.
-  nsRect rect = nsRect(nsPoint(0, 0), docFrame->GetRect().Size());
-  docFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+  TriggerRepaint();
 }
 
 already_AddRefed<Layer>
@@ -543,6 +545,25 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     // the NS_ABORT_IF_FALSE() above will flag it.  Returning NULL
     // here will just cause the shadow subtree not to be rendered.
     return nsnull;
+  }
+
+  uint64_t id = GetLayerTreeId();
+  if (0 != id) {
+    MOZ_ASSERT(!GetRootLayer());
+
+    nsRefPtr<RefLayer> layer = aManager->CreateRefLayer();
+    if (!layer) {
+      // Probably a temporary layer manager that doesn't know how to
+      // use ref layers.
+      return nsnull;
+    }
+    layer->SetReferentId(id);
+    layer->SetVisibleRegion(aVisibleRect);
+    nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
+    layer->SetTransform(
+      gfx3DMatrix::Translation(rootFrameOffset.x, rootFrameOffset.y, 0.0));
+
+    return layer.forget();
   }
 
   if (mContainer) {
@@ -608,35 +629,21 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
   mFrameLoader = nsnull;
 }
 
-PLayersParent*
-RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType,
-                                int* aMaxTextureSize,
-                                uint64_t* aId)
+bool
+RenderFrameParent::RecvNotifyCompositorTransaction()
 {
-  *aBackendType = LayerManager::LAYERS_NONE;
-  *aMaxTextureSize = 0;
-  *aId = 0;
+  TriggerRepaint();
+  return true;
+}
 
+PLayersParent*
+RenderFrameParent::AllocPLayers()
+{
   if (!mFrameLoader || mFrameLoaderDestroyed) {
     return nsnull;
   }
-
-  nsIDocument* doc = mFrameLoader->GetOwnerDoc();
-  nsRefPtr<LayerManager> lm = nsContentUtils::LayerManagerForDocument(doc);
-  ShadowLayerManager* slm = lm->AsShadowManager();
-  if (!slm) {
-     return nsnull;
-  }
-  *aBackendType = lm->GetBackendType();
-  *aMaxTextureSize = lm->GetMaxTextureSize();
-#if 0 // Enabled in later patch
-  if (CompositorParent::CompositorLoop()) {
-    // Our remote frame will push layers updates to the compositor,
-    // and we'll keep an indirect reference to that tree.
-    *aId = CompositorParent::AllocateLayerTreeId();
-  }
-#endif
-  return new ShadowLayersParent(slm, this, *aId);
+  nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  return new ShadowLayersParent(lm->AsShadowManager(), this, 0);
 }
 
 bool
@@ -680,6 +687,34 @@ RenderFrameParent::BuildViewMap()
   mContentViews = newContentViews;
 }
 
+void
+RenderFrameParent::TriggerRepaint()
+{
+  mFrameLoader->SetCurrentRemoteFrame(this);
+
+  nsIFrame* docFrame = mFrameLoader->GetPrimaryFrameOfOwningContent();
+  if (!docFrame) {
+    // Bad, but nothing we can do about it (XXX/cjones: or is there?
+    // maybe bug 589337?).  When the new frame is created, we'll
+    // probably still be the current render frame and will get to draw
+    // our content then.  Or, we're shutting down and this update goes
+    // to /dev/null.
+    return;
+  }
+
+  // FIXME/cjones: we should collect the rects/regions updated for
+  // Painted*Layer() calls and pass that region to here, then only
+  // invalidate that rect
+  //
+  // We pass INVALIDATE_NO_THEBES_LAYERS here because we're
+  // invalidating the <browser> on behalf of its counterpart in the
+  // content process.  Not only do we not need to invalidate the
+  // shadow layers, things would just break if we did --- we have no
+  // way to repaint shadow layers from this process.
+  nsRect rect = nsRect(nsPoint(0, 0), docFrame->GetRect().Size());
+  docFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+}
+
 ShadowLayersParent*
 RenderFrameParent::GetShadowLayers() const
 {
@@ -693,8 +728,7 @@ RenderFrameParent::GetShadowLayers() const
 uint64_t
 RenderFrameParent::GetLayerTreeId() const
 {
-  ShadowLayersParent* shadowLayers = GetShadowLayers();
-  return shadowLayers ? shadowLayers->GetId() : 0;
+  return mLayersId;
 }
 
 ContainerLayer*

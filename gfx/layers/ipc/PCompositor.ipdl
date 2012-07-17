@@ -38,8 +38,8 @@ parent:
   sync Pause();
   sync Resume();
 
-  sync PLayers(LayersBackend backend, uint64_t id)
-    returns (int32_t maxTextureSize);
+  sync PLayers(LayersBackend backendHint, uint64_t id)
+    returns (LayersBackend backend, int32_t maxTextureSize);
 };
 
 } // layers

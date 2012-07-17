@@ -33,8 +33,7 @@ RenderFrameChild::Destroy()
 }
 
 PLayersChild*
-RenderFrameChild::AllocPLayers(LayerManager::LayersBackend* aBackendType,
-                               int* aMaxTextureSize, uint64_t* aId)
+RenderFrameChild::AllocPLayers()
 {
   return new ShadowLayersChild();
 }

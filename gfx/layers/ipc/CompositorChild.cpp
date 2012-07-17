@@ -70,7 +70,10 @@ CompositorChild::Get()
 }
 
 PLayersChild*
-CompositorChild::AllocPLayers(const LayersBackend &aBackend, const uint64_t& aId, int* aMaxTextureSize)
+CompositorChild::AllocPLayers(const LayersBackend& aBackendHint,
+                              const uint64_t& aId,
+                              LayersBackend* aBackend,
+                              int* aMaxTextureSize)
 {
   return new ShadowLayersChild();
 }

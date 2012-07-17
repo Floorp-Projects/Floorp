@@ -117,7 +117,10 @@ public:
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
 protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType, const uint64_t& aId, int32_t* aMaxTextureSize);
+  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendHint,
+                                      const uint64_t& aId,
+                                      LayersBackend* aBackend,
+                                      int32_t* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();

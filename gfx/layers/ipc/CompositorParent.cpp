@@ -624,8 +624,9 @@ CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
 }
 
 PLayersParent*
-CompositorParent::AllocPLayers(const LayersBackend& aBackendType,
+CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
                                const uint64_t& aId,
+                               LayersBackend* aBackend,
                                int32_t* aMaxTextureSize)
 {
   MOZ_ASSERT(aId == 0);
@@ -637,7 +638,9 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendType,
   mWidgetSize.width = rect.width;
   mWidgetSize.height = rect.height;
 
-  if (aBackendType == LayerManager::LAYERS_OPENGL) {
+  *aBackend = aBackendHint;
+
+  if (aBackendHint == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager;
     layerManager =
       new LayerManagerOGL(mWidget, mEGLSurfaceSize.width, mEGLSurfaceSize.height, mRenderToEGLSurface);
@@ -659,7 +662,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendType,
     }
     *aMaxTextureSize = layerManager->GetMaxTextureSize();
     return new ShadowLayersParent(slm, this, 0);
-  } else if (aBackendType == LayerManager::LAYERS_BASIC) {
+  } else if (aBackendHint == LayerManager::LAYERS_BASIC) {
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
     mLayerManager = layerManager;
@@ -768,6 +771,7 @@ public:
 
   virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType,
                                       const uint64_t& aId,
+                                      LayersBackend* aBackend,
                                       int32_t* aMaxTextureSize) MOZ_OVERRIDE;
   virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
 
@@ -846,16 +850,16 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 PLayersParent*
 CrossProcessCompositorParent::AllocPLayers(const LayersBackend& aBackendType,
                                            const uint64_t& aId,
+                                           LayersBackend* aBackend,
                                            int32_t* aMaxTextureSize)
 {
   MOZ_ASSERT(aId != 0);
 
   nsRefPtr<LayerManager> lm = sCurrentCompositor->GetLayerManager();
+  *aBackend = lm->GetBackendType();
   *aMaxTextureSize = lm->GetMaxTextureSize();
   return new ShadowLayersParent(lm->AsShadowManager(), this, aId);
-
-   return nsnull;
- }
+}
  
 bool
 CrossProcessCompositorParent::DeallocPLayers(PLayersParent* aLayers)

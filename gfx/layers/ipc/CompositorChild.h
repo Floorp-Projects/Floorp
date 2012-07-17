@@ -36,7 +36,10 @@ public:
   static PCompositorChild* Get();
 
 protected:
-  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend, const uint64_t& aId, int* aMaxTextureSize);
+  virtual PLayersChild* AllocPLayers(const LayersBackend& aBackendHint,
+                                     const uint64_t& aId,
+                                     LayersBackend* aBackend,
+                                     int* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersChild *aChild);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;

@@ -4,59 +4,61 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TabChild.h"
-#include "mozilla/IntentionalCrash.h"
-#include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/PContentDialogChild.h"
-#include "mozilla/layers/PLayersChild.h"
-#include "mozilla/layout/RenderFrameChild.h"
-#include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "base/basictypes.h"
 
 #include "BasicLayers.h"
-#include "nsIWebBrowser.h"
-#include "nsIWebBrowserSetup.h"
-#include "nsEmbedCID.h"
+#include "IndexedDBChild.h"
+#include "mozilla/IntentionalCrash.h"
+#include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/PContentDialogChild.h"
+#include "mozilla/ipc/DocumentRendererChild.h"
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/PLayersChild.h"
+#include "mozilla/layout/RenderFrameChild.h"
 #include "nsComponentManagerUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsEmbedCID.h"
+#include "nsEventListenerManager.h"
 #include "nsIBaseWindow.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMClassInfo.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
-#include "nsIWebProgress.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsThreadUtils.h"
+#include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "mozilla/ipc/DocumentRendererChild.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsPIDOMWindow.h"
-#include "nsIDOMWindowUtils.h"
+#include "nsIJSContextStack.h"
+#include "nsIJSRuntimeService.h"
+#include "nsISSLStatusProvider.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsISecureBrowserUI.h"
+#include "nsIServiceManager.h"
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
-#include "nsIWebBrowserFocus.h"
-#include "nsIDOMEvent.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsIJSRuntimeService.h"
-#include "nsContentUtils.h"
-#include "nsIDOMClassInfo.h"
-#include "nsIXPCSecurityManager.h"
-#include "nsIJSContextStack.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsScriptLoader.h"
-#include "nsPIWindowRoot.h"
-#include "nsIScriptContext.h"
-#include "nsInterfaceHashtable.h"
-#include "nsPresContext.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsWeakReference.h"
-#include "nsISecureBrowserUI.h"
-#include "nsISSLStatusProvider.h"
-#include "nsSerializationHelper.h"
-#include "nsIFrame.h"
 #include "nsIView.h"
-#include "nsEventListenerManager.h"
+#include "nsIWebBrowser.h"
+#include "nsIWebBrowserFocus.h"
+#include "nsIWebBrowserSetup.h"
+#include "nsIWebProgress.h"
+#include "nsIXPCSecurityManager.h"
+#include "nsInterfaceHashtable.h"
+#include "nsPIDOMWindow.h"
+#include "nsPIWindowRoot.h"
+#include "nsPresContext.h"
+#include "nsScriptLoader.h"
+#include "nsSerializationHelper.h"
+#include "nsThreadUtils.h"
+#include "nsWeakReference.h"
 #include "PCOMContentPermissionRequestChild.h"
+#include "TabChild.h"
 #include "xpcpublic.h"
-#include "IndexedDBChild.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -494,6 +496,12 @@ TabChild::DestroyWindow()
         mRemoteFrame->Destroy();
         mRemoteFrame = nsnull;
     }
+}
+
+bool
+TabChild::UseDirectCompositor()
+{
+    return !!CompositorChild::Get();
 }
 
 void
@@ -954,7 +962,9 @@ TabChild::RecvDestroy()
 }
 
 PRenderFrameChild*
-TabChild::AllocPRenderFrame()
+TabChild::AllocPRenderFrame(LayersBackend* aBackend,
+                            int32_t* aMaxTextureSize,
+                            uint64_t* aLayersId)
 {
     return new RenderFrameChild();
 }
@@ -1020,19 +1030,30 @@ TabChild::InitWidget(const nsIntSize& size)
         nsnull                  // nsDeviceContext
         );
 
+    LayerManager::LayersBackend be;
+    uint64_t id;
+    int32_t maxTextureSize;
     RenderFrameChild* remoteFrame =
-        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor());
+        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor(
+                                           &be, &maxTextureSize, &id));
     if (!remoteFrame) {
       NS_WARNING("failed to construct RenderFrame");
       return false;
     }
 
-    NS_ABORT_IF_FALSE(0 == remoteFrame->ManagedPLayersChild().Length(),
-                      "shouldn't have a shadow manager yet");
-    LayerManager::LayersBackend be;
-    PRInt32 maxTextureSize;
-    uint64_t id;
-    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor(&be, &maxTextureSize, &id);
+    PLayersChild* shadowManager = nsnull;
+    if (id != 0) {
+        // Pushing layers transactions directly to a separate
+        // compositor context.
+        shadowManager =
+            CompositorChild::Get()->SendPLayersConstructor(be, id,
+                                                           &be,
+                                                           &maxTextureSize);
+    } else {
+        // Pushing transactions to the parent content.
+        shadowManager = remoteFrame->SendPLayersConstructor();
+    }
+
     if (!shadowManager) {
       NS_WARNING("failed to construct LayersChild");
       // This results in |remoteFrame| being deleted.
@@ -1058,6 +1079,23 @@ TabChild::SetBackgroundColor(const nscolor& aColor)
     mLastBackgroundColor = aColor;
     SendSetBackgroundColor(mLastBackgroundColor);
   }
+}
+
+void
+TabChild::NotifyPainted()
+{
+    if (UseDirectCompositor()) {
+        // FIXME/bug XXXXXX: in theory, we should only have to push a
+        // txn to our remote frame once, and the
+        // display-list/FrameLayerBuilder code there will manage the
+        // tree from there on.  But in practice, that doesn't work for
+        // some unknown reason.  So for now, always notify the content
+        // thread in the parent process.  It's wasteful but won't
+        // result in unnecessary repainting or even composites
+        // (usually, unless timing is unlucky), since they're
+        // throttled.
+        mRemoteFrame->SendNotifyCompositorTransaction();
+    }
 }
 
 NS_IMETHODIMP
