@@ -816,10 +816,10 @@ extern JS_FRIEND_API(const jschar*)
 GetErrorTypeNameFromNumber(JSContext* cx, const unsigned errorNumber);
 
 /* Implemented in jswrapper.cpp. */
-typedef enum NukedGlobalHandling {
-    NukeForGlobalObject,
-    DontNukeForGlobalObject
-} NukedGlobalHandling;
+typedef enum NukeReferencesToWindow {
+    NukeWindowReferences,
+    DontNukeWindowReferences
+} NukeReferencesToWindow;
 
 // These filters are designed to be ephemeral stack classes, and thus don't
 // do any rooting or holding of their members.
@@ -861,7 +861,7 @@ extern JS_FRIEND_API(JSBool)
 NukeCrossCompartmentWrappers(JSContext* cx,
                              const CompartmentFilter& sourceFilter,
                              const CompartmentFilter& targetFilter,
-                             NukedGlobalHandling nukeGlobal);
+                             NukeReferencesToWindow nukeReferencesToWindow);
 
 } /* namespace js */
 

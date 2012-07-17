@@ -1065,7 +1065,7 @@ JS_FRIEND_API(JSBool)
 js::NukeCrossCompartmentWrappers(JSContext* cx, 
                                  const CompartmentFilter& sourceFilter,
                                  const CompartmentFilter& targetFilter,
-                                 js::NukedGlobalHandling nukeGlobal)
+                                 js::NukeReferencesToWindow nukeReferencesToWindow)
 {
     CHECK_REQUEST(cx);
     JSRuntime *rt = cx->runtime;
@@ -1074,7 +1074,6 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
     // that point to an object that shares a global with obj.
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        // Skip non-system compartments because this breaks the web.
         if (!sourceFilter.match(c))
             continue;
 
@@ -1088,9 +1087,10 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
                 continue;
 
             JSObject *wobj = &e.front().value.get().toObject();
-            JSObject *wrapped = UnwrapObject(wobj, false);
+            JSObject *wrapped = UnwrapObject(wobj);
 
-            if (nukeGlobal == DontNukeForGlobalObject && wrapped->isGlobal())
+            if (nukeReferencesToWindow == DontNukeWindowReferences &&
+                wrapped->getClass()->ext.innerObject)
                 continue;
 
             if (targetFilter.match(wrapped->compartment())) {
