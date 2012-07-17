@@ -30,7 +30,7 @@ namespace types {
 
 inline
 CompilerOutput::CompilerOutput()
-  : script(script),
+  : script(NULL),
     isIonFlag(false),
     constructing(false),
     barriers(false),
