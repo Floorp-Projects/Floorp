@@ -1049,15 +1049,6 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
          png_handle_iTXt(png_ptr, info_ptr, length);
 #endif
 
-#ifdef PNG_READ_APNG_SUPPORTED
-      else if (chunk_name == png_acTL)
-         png_handle_acTL(png_ptr, info_ptr, length);
-      else if (chunk_name == png_fcTL)
-         png_handle_fcTL(png_ptr, info_ptr, length);
-      else if (chunk_name == png_fdAT)
-         png_handle_fdAT(png_ptr, info_ptr, length);
-#endif
-
       else
          png_handle_unknown(png_ptr, info_ptr, length);
    } while (!(png_ptr->mode & PNG_HAVE_IEND));
