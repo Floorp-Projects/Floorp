@@ -387,5 +387,45 @@ ShadowContainerLayerOGL::CleanupResources()
   ContainerCleanupResources(this);
 }
 
+ShadowRefLayerOGL::ShadowRefLayerOGL(LayerManagerOGL* aManager)
+  : ShadowRefLayer(aManager, NULL)
+  , LayerOGL(aManager)
+{
+  mImplData = static_cast<LayerOGL*>(this);
+}
+
+ShadowRefLayerOGL::~ShadowRefLayerOGL()
+{
+  Destroy();
+}
+
+void
+ShadowRefLayerOGL::Destroy()
+{
+  MOZ_ASSERT(!mFirstChild);
+  mDestroyed = true;
+}
+
+LayerOGL*
+ShadowRefLayerOGL::GetFirstChildOGL()
+{
+  if (!mFirstChild) {
+    return nsnull;
+   }
+  return static_cast<LayerOGL*>(mFirstChild->ImplData());
+}
+
+void
+ShadowRefLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                               const nsIntPoint& aOffset)
+{
+  ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
+}
+
+void
+ShadowRefLayerOGL::CleanupResources()
+{
+}
+
 } /* layers */
 } /* mozilla */
