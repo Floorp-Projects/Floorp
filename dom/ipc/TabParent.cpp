@@ -99,6 +99,14 @@ TabParent::Destroy()
   }
 }
 
+bool
+TabParent::Recv__delete__()
+{
+  ContentParent* cp = static_cast<ContentParent*>(Manager());
+  cp->NotifyTabDestroyed(this);
+  return true;
+}
+
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {

@@ -252,6 +252,49 @@ ContentParent::Init()
 }
 
 void
+ContentParent::ShutDown()
+{
+    if (mIsAlive) {
+        // Close() can only be called once.  It kicks off the
+        // destruction sequence.
+        Close();
+    }
+    // NB: must MarkAsDead() here so that this isn't accidentally
+    // returned from Get*() while in the midst of shutdown.
+    MarkAsDead();
+}
+
+void
+ContentParent::MarkAsDead()
+{
+    if (!mAppManifestURL.IsEmpty()) {
+        if (gAppContentParents) {
+            gAppContentParents->Remove(mAppManifestURL);
+            if (!gAppContentParents->Count()) {
+                delete gAppContentParents;
+                gAppContentParents = NULL;
+            }
+        }
+    } else if (gNonAppContentParents) {
+        gNonAppContentParents->RemoveElement(this);
+        if (!gNonAppContentParents->Length()) {
+            delete gNonAppContentParents;
+            gNonAppContentParents = NULL;
+        }
+    }
+
+    if (gPrivateContent) {
+        gPrivateContent->RemoveElement(this);
+        if (!gPrivateContent->Length()) {
+            delete gPrivateContent;
+            gPrivateContent = NULL;
+        }
+    }
+
+    mIsAlive = false;
+}
+
+void
 ContentParent::OnChannelConnected(int32 pid)
 {
     ProcessHandle handle;
@@ -349,29 +392,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     if (mRunToCompletionDepth)
         mRunToCompletionDepth = 0;
 
-    if (!mAppManifestURL.IsEmpty()) {
-        gAppContentParents->Remove(mAppManifestURL);
-        if (!gAppContentParents->Count()) {
-            delete gAppContentParents;
-            gAppContentParents = NULL;
-        }
-    } else {
-        gNonAppContentParents->RemoveElement(this);
-        if (!gNonAppContentParents->Length()) {
-            delete gNonAppContentParents;
-            gNonAppContentParents = NULL;
-        }
-    }
-
-    if (gPrivateContent) {
-        gPrivateContent->RemoveElement(this);
-        if (!gPrivateContent->Length()) {
-            delete gPrivateContent;
-            gPrivateContent = NULL;
-        }
-    }
-
-    mIsAlive = false;
+    MarkAsDead();
 
     if (obs) {
         nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
@@ -414,6 +435,19 @@ TabParent*
 ContentParent::CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame)
 {
   return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags, aIsBrowserFrame));
+}
+
+void
+ContentParent::NotifyTabDestroyed(PBrowserParent* aTab)
+{
+    // There can be more than one PBrowser for a given app process
+    // because of popup windows.  When the last one closes, shut
+    // us down.
+    if (IsForApp() && ManagedPBrowserParent().Length() == 1) {
+        MessageLoop::current()->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &ContentParent::ShutDown));
+    }
 }
 
 TestShellParent*
@@ -491,6 +525,12 @@ bool
 ContentParent::IsAlive()
 {
     return mIsAlive;
+}
+
+bool
+ContentParent::IsForApp()
+{
+    return !mAppManifestURL.IsEmpty();
 }
 
 bool
