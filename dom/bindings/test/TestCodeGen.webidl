@@ -264,6 +264,8 @@ interface TestInterface {
   void passDictionary(optional Dict x);
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  void passDictionaryOrLong(optional Dict x);
+  void passDictionaryOrLong(long x);
 };
 
 interface TestNonWrapperCacheInterface {
