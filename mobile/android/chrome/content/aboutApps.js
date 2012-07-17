@@ -44,7 +44,7 @@ function onLoad(aEvent) {
   AppsUI.shortcut = contextmenus.add(gStrings.GetStringFromName("appsContext.shortcut"), contextmenus.SelectorContext("div[mozApp]"),
     function(aTarget) {
       let manifest = aTarget.manifest;
-      let origin = Services.io.newURI(app.origin, null, null);
+      let origin = Services.io.newURI(aTarget.app.origin, null, null);
       gChromeWin.WebappsUI.createShortcut(manifest.name, manifest.fullLaunchPath(), gChromeWin.WebappsUI.getBiggestIcon(manifest.icons, origin), "webapp");
     });
   AppsUI.uninstall = contextmenus.add(gStrings.GetStringFromName("appsContext.uninstall"), contextmenus.SelectorContext("div[mozApp]"),
