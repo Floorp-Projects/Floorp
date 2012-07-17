@@ -13,7 +13,7 @@
 
 namespace js {
 
-class Wrapper;
+class JS_FRIEND_API(Wrapper);
 
 /*
  * A proxy is a JSObject that implements generic behavior by providing custom
