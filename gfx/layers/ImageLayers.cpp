@@ -47,6 +47,10 @@ ImageFactory::CreateImage(const Image::Format *aFormats,
   } else if (FormatInList(aFormats, aNumFormats, Image::MAC_IO_SURFACE)) {
     img = new MacIOSurfaceImage();
 #endif
+#ifdef MOZ_WIDGET_GONK
+  } else if (FormatInList(aFormats, aNumFormats, Image::GONK_IO_SURFACE)) {
+    img = new GonkIOSurfaceImage();
+#endif
   }
   return img.forget();
 }

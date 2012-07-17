@@ -176,6 +176,23 @@ AllocateTextureIOSurface(MacIOSurfaceImage *aIOImage, mozilla::gl::GLContext* aG
 }
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+struct THEBES_API GonkIOSurfaceImageOGLBackendData : public ImageBackendData
+{
+  GLTexture mTexture;
+};
+
+void
+AllocateTextureIOSurface(GonkIOSurfaceImage *aIOImage, mozilla::gl::GLContext* aGL)
+{
+  nsAutoPtr<GonkIOSurfaceImageOGLBackendData> backendData(
+    new GonkIOSurfaceImageOGLBackendData);
+
+  backendData->mTexture.Allocate(aGL);
+  aIOImage->SetBackendData(LayerManager::LAYERS_OPENGL, backendData.forget());
+}
+#endif
+
 Layer*
 ImageLayerOGL::GetLayer()
 {
@@ -297,8 +314,6 @@ ImageLayerOGL::RenderLayer(int,
     }
 
     gl()->MakeCurrent();
-    unsigned int iwidth  = cairoImage->mSize.width;
-    unsigned int iheight = cairoImage->mSize.height;
 
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTexture.GetTextureID());
@@ -321,51 +336,21 @@ ImageLayerOGL::RenderLayer(int,
     gl()->ApplyFilterToBoundTexture(mFilter);
 
     program->Activate();
-    // The following uniform controls the scaling of the vertex coords.
-    // Instead of setting the scale here and using coords in the range [0,1], we
-    // set an identity transform and use pixel coordinates below
-    program->SetLayerQuadRect(nsIntRect(0, 0, 1, 1));
+    program->SetLayerQuadRect(nsIntRect(0, 0, 
+                                        cairoImage->GetSize().width, 
+                                        cairoImage->GetSize().height));
     program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
     program->LoadMask(GetMaskLayer());
 
-    nsIntRect rect = GetVisibleRegion().GetBounds();
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                GetVisibleRegion().GetBounds(),
+                                                nsIntSize(cairoImage->GetSize().width,
+                                                          cairoImage->GetSize().height));
 
-    GLContext::RectTriangles triangleBuffer;
 
-    float tex_offset_u = float(rect.x % iwidth) / iwidth;
-    float tex_offset_v = float(rect.y % iheight) / iheight;
-    triangleBuffer.addRect(rect.x, rect.y,
-                           rect.x + rect.width, rect.y + rect.height,
-                           tex_offset_u, tex_offset_v,
-                           tex_offset_u + float(rect.width) / float(iwidth),
-                           tex_offset_v + float(rect.height) / float(iheight));
-
-    GLuint vertAttribIndex =
-        program->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
-    GLuint texCoordAttribIndex =
-        program->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
-    NS_ASSERTION(texCoordAttribIndex != GLuint(-1), "no texture coords?");
-
-    gl()->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-    gl()->fVertexAttribPointer(vertAttribIndex, 2,
-                               LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                               triangleBuffer.vertexPointer());
-
-    gl()->fVertexAttribPointer(texCoordAttribIndex, 2,
-                               LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                               triangleBuffer.texCoordPointer());
-    {
-        gl()->fEnableVertexAttribArray(texCoordAttribIndex);
-        {
-            gl()->fEnableVertexAttribArray(vertAttribIndex);
-            gl()->fDrawArrays(LOCAL_GL_TRIANGLES, 0, triangleBuffer.elements());
-            gl()->fDisableVertexAttribArray(vertAttribIndex);
-        }
-        gl()->fDisableVertexAttribArray(texCoordAttribIndex);
-    }
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
     if (cairoImage->mSurface && pixmap) {
         sGLXLibrary.ReleaseTexImage(pixmap);
@@ -427,6 +412,45 @@ ImageLayerOGL::RenderLayer(int,
     
      mOGLManager->BindAndDrawQuad(program);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
+#endif
+#ifdef MOZ_WIDGET_GONK
+  } else if (image->GetFormat() == Image::GONK_IO_SURFACE) {
+
+    GonkIOSurfaceImage *ioImage = static_cast<GonkIOSurfaceImage*>(image);
+    if (!ioImage) {
+      return;
+    }
+
+    gl()->MakeCurrent();
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+
+    if (!ioImage->GetBackendData(LayerManager::LAYERS_OPENGL)) {
+      AllocateTextureIOSurface(ioImage, gl());
+    }
+    GonkIOSurfaceImageOGLBackendData *data =
+      static_cast<GonkIOSurfaceImageOGLBackendData*>(ioImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->BindExternalBuffer(data->mTexture.GetTextureID(), ioImage->GetNativeBuffer());
+
+    ShaderProgramOGL *program = mOGLManager->GetProgram(RGBAExternalLayerProgramType, GetMaskLayer());
+
+    gl()->ApplyFilterToBoundTexture(mFilter);
+
+    program->Activate();
+    program->SetLayerQuadRect(nsIntRect(0, 0, 
+                                        ioImage->GetSize().width, 
+                                        ioImage->GetSize().height));
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
+    program->SetRenderOffset(aOffset);
+    program->SetTextureUnit(0);
+    program->LoadMask(GetMaskLayer());
+
+    mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                GetVisibleRegion().GetBounds(),
+                                                nsIntSize(ioImage->GetSize().width,
+                                                          ioImage->GetSize().height));
 #endif
   }
   GetContainer()->NotifyPaintedImage(image);

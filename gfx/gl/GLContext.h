@@ -55,6 +55,7 @@ enum ShaderProgramType {
     RGBXLayerProgramType,
     BGRXLayerProgramType,
     RGBARectLayerProgramType,
+    RGBAExternalLayerProgramType,
     ColorLayerProgramType,
     YCbCrLayerProgramType,
     ComponentAlphaPass1ProgramType,
@@ -740,6 +741,7 @@ public:
      */
     void ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter);
 
+    virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
 
     /*
      * Offscreen support API
