@@ -164,10 +164,6 @@ html|span.ac-emphasize-text {
   background-color: rgba(183,210,226,0.3);
 }
 
-html|span.ac-emphasize-alt {
-  text-decoration: underline;
-}
-
 .ac-title, .ac-url {
   overflow: hidden;
 }

@@ -204,10 +204,6 @@ html|span.ac-emphasize-text {
 %endif
 }
 
-html|span.ac-emphasize-alt {
-  text-decoration: underline;
-}
-
 .ac-title, .ac-url {
   overflow: hidden;
 }
