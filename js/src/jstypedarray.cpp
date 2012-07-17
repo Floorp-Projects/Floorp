@@ -710,12 +710,6 @@ ArrayBufferObject::obj_enumerate(JSContext *cx, HandleObject obj,
     return true;
 }
 
-JSType
-ArrayBufferObject::obj_typeOf(JSContext *cx, HandleObject obj)
-{
-    return JSTYPE_OBJECT;
-}
-
 /*
  * ArrayBufferViews of various sorts
  */
@@ -1323,12 +1317,6 @@ class TypedArrayTemplate
         }
 
         return true;
-    }
-
-    static JSType
-    obj_typeOf(JSContext *cx, HandleObject obj)
-    {
-        return JSTYPE_OBJECT;
     }
 
     static JSObject *
@@ -2896,7 +2884,7 @@ Class js::ArrayBufferClass = {
         ArrayBufferObject::obj_deleteElement,
         ArrayBufferObject::obj_deleteSpecial,
         ArrayBufferObject::obj_enumerate,
-        ArrayBufferObject::obj_typeOf,
+        NULL,       /* typeOf          */
         NULL,       /* thisObject      */
         NULL,       /* clear           */
     }
@@ -3031,7 +3019,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
         _typedArray::obj_deleteElement,                                        \
         _typedArray::obj_deleteSpecial,                                        \
         _typedArray::obj_enumerate,                                            \
-        _typedArray::obj_typeOf,                                               \
+        NULL,                /* typeOf      */                                 \
         NULL,                /* thisObject  */                                 \
         NULL,                /* clear       */                                 \
     }                                                                          \
