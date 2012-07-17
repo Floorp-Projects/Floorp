@@ -167,60 +167,10 @@ public:
  * BasicLayerManager for such an implementation.
  */
 
-/**
- * Helper class to manage user data for layers and LayerManagers.
- */
-class THEBES_API LayerUserDataSet {
-public:
-  LayerUserDataSet() : mKey(nsnull) {}
-
-  void Set(void* aKey, LayerUserData* aValue)
-  {
-    NS_ASSERTION(!mKey || mKey == aKey,
-                 "Multiple LayerUserData objects not supported");
-    mKey = aKey;
-    mValue = aValue;
-  }
-  /**
-   * This can be used anytime. Ownership passes to the caller!
-   */
-  LayerUserData* Remove(void* aKey)
-  {
-    if (mKey == aKey) {
-      mKey = nsnull;
-      LayerUserData* d = mValue.forget();
-      return d;
-    }
-    return nsnull;
-  }
-  /**
-   * This getter can be used anytime.
-   */
-  bool Has(void* aKey)
-  {
-    return mKey == aKey;
-  }
-  /**
-   * This getter can be used anytime. Ownership is retained by this object.
-   */
-  LayerUserData* Get(void* aKey)
-  {
-    return mKey == aKey ? mValue.get() : nsnull;
-  }
-
-  /**
-   * Clear out current user data.
-   */
-  void Clear()
-  {
-    mKey = nsnull;
-    mValue = nsnull;
-  }
-
-private:
-  void* mKey;
-  nsAutoPtr<LayerUserData> mValue;
-};
+static void LayerManagerUserDataDestroy(void *data)
+{
+  delete static_cast<LayerUserData*>(data);
+}
 
 /**
  * A LayerManager controls a tree of layers. All layers in the tree
@@ -270,7 +220,7 @@ public:
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy() { mDestroyed = true; mUserData.Clear(); }
+  virtual void Destroy() { mDestroyed = true; mUserData.Destroy(); }
   bool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
@@ -477,23 +427,32 @@ public:
    * initially null. Ownership pases to the layer manager.
    */
   void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
+  {
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+  }
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
   nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
+  { 
+    nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey)))); 
+    return d;
+  }
   /**
    * This getter can be used anytime.
    */
   bool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
+  {
+    return GetUserData(aKey);
+  }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
   LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  { 
+    return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
+  }
 
   /**
    * Flag the next paint as the first for a document.
@@ -543,7 +502,7 @@ public:
 
 protected:
   nsRefPtr<Layer> mRoot;
-  LayerUserDataSet mUserData;
+  gfx::UserData mUserData;
   bool mDestroyed;
   bool mSnapEffectiveTransforms;
 
@@ -802,23 +761,32 @@ public:
    * initially null. Ownership pases to the layer manager.
    */
   void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
+  { 
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+  }
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
   nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
+  { 
+    nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey)))); 
+    return d;
+  }
   /**
    * This getter can be used anytime.
    */
   bool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
+  {
+    return GetUserData(aKey);
+  }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
   LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  { 
+    return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
+  }
 
   /**
    * |Disconnect()| is used by layers hooked up over IPC.  It may be
@@ -1004,7 +972,7 @@ protected:
   Layer* mPrevSibling;
   void* mImplData;
   nsRefPtr<Layer> mMaskLayer;
-  LayerUserDataSet mUserData;
+  gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   gfx3DMatrix mEffectiveTransform;
