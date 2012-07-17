@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                "Mozilla Foundation", true, 17, 18);
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
          "URI wrong for normalHyperlinkElement!");
-      testStates(normalHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(normalHyperlinkAcc, STATE_LINKED, 0);
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink
@@ -83,7 +83,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                            [nsIAccessibleHyperLink]);
       testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation Home", true, 30, 31);
-      testStates(ariaHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(ariaHyperlinkAcc, STATE_LINKED, 0);
       testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var invalidAriaHyperlinkAcc = getAccessible("InvalidAriaHyperlink",
                                                   [nsIAccessibleHyperLink]);
       is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
-      testStates(invalidAriaHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(invalidAriaHyperlinkAcc, STATE_LINKED, 0);
 
       //////////////////////////////////////////////////////////////////////////
       // image map and its link children
@@ -104,9 +104,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b", "URI wrong!");
       is(imageMapHyperlinkAcc.getURI(1).spec,
          "http://www.bbc.co.uk/radio4/atoz/index.shtml#a", "URI wrong!");
-      testStates(imageMapHyperlinkAcc,
-                 (0),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(imageMapHyperlinkAcc, 0, 0);
 
       var area1 = getAccessible(imageMapHyperlinkAcc.firstChild,
                                 [nsIAccessibleHyperLink]);
@@ -127,9 +125,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var EmptyHLAcc = getAccessible("emptyLink",
                                      [nsIAccessibleHyperLink]);
       testThis("emptyLink", EmptyHLAcc, ROLE_LINK, 1, null, true, 93, 94);
-      testStates(EmptyHLAcc,
-                 (STATE_FOCUSABLE | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(EmptyHLAcc, (STATE_FOCUSABLE | STATE_LINKED), 0);
       testAction("emptyLink", EmptyHLAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -140,7 +136,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                "Heise Online", true, 119, 120);
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
          "URI wrong for hyperlinkElementWithSpan!");
-      testStates(hyperlinkWithSpanAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(hyperlinkWithSpanAcc, STATE_LINKED, 0);
       testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -149,9 +145,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                          [nsIAccessibleHyperLink]);
       testThis("namedAnchor", namedAnchorAcc, ROLE_LINK, 1,
                "This should never be of state_linked", true, 196, 197);
-      testStates(namedAnchorAcc,
-                 (STATE_SELECTABLE),
-                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
+      testStates(namedAnchorAcc, STATE_SELECTABLE,
+                 0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("namedAnchor", namedAnchorAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
@@ -160,9 +155,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                     [nsIAccessibleHyperLink]);
       testThis("noLink", noLinkAcc, ROLE_LINK, 1,
                "This should never be of state_linked", true, 254, 255);
-      testStates(noLinkAcc,
-                 0,
-                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE | STATE_LINKED));
+      testStates(noLinkAcc, 0, 0, (STATE_FOCUSABLE | STATE_LINKED));
       testAction("noLink", noLinkAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
@@ -171,9 +164,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                            [nsIAccessibleHyperLink]);
       testThis("linkWithClick", linkWithClickAcc, ROLE_LINK, 1,
                "This should have state_linked", true, 292, 293);
-      testStates(linkWithClickAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(linkWithClickAcc, STATE_LINKED, 0);
       testAction("linkWithClick", linkWithClickAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
@@ -185,9 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var id = "linkWithTitleNoNameFromSubtree";
       var linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "Link with title", true, 344, 345);
-      testStates(linkAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -197,9 +186,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "the name from subtree", true, 393,
                394);
-      testStates(linkAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -208,9 +195,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "The title for link", true, 447,
                448);
-      testStates(linkAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -219,9 +204,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
       testThis(id, linkAcc, ROLE_LINK, 1, "Link with label and nested image:",
                true, 450, 451);
-      testStates(linkAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(linkAcc, STATE_LINKED, 0);
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
