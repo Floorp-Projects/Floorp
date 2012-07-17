@@ -344,6 +344,12 @@ var gPluginHandler = {
     }
   },
 
+  hideClickToPlayOverlay: function(aPlugin) {
+    let overlay = aPlugin.ownerDocument.getAnonymousElementByAttribute(aPlugin, "class", "mainBox");
+    if (overlay)
+      overlay.style.visibility = "hidden";
+  },
+
   stopPlayPreview: function PH_stopPlayPreview(aPlugin, aPlayPlugin) {
     let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
     if (objLoadingContent.activated)
@@ -446,11 +452,18 @@ var gPluginHandler = {
       overlay.addEventListener("click", function(aEvent) {
         // Have to check that the target is not the link to update the plugin
         if (!(aEvent.originalTarget instanceof HTMLAnchorElement) &&
+            !(aEvent.originalTarget instanceof HTMLButtonElement) &&
             aEvent.button == 0 && aEvent.isTrusted) {
           gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
           aEvent.stopPropagation();
           aEvent.preventDefault();
         }
+      }, true);
+
+      let closeIcon = doc.getAnonymousElementByAttribute(aPlugin, "anonid", "closeIcon");
+      closeIcon.addEventListener("click", function(aEvent) {
+        if (aEvent.button == 0 && aEvent.isTrusted)
+          gPluginHandler.hideClickToPlayOverlay(aPlugin);
       }, true);
     }
 
