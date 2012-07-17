@@ -5768,30 +5768,14 @@ function AddonWrapper(aAddon) {
     });
   }, this);
 
-  // Maps iconURL, icon64URL and optionsURL to the properties of the same name
-  // or icon.png, icon64.png and options.xul in the add-on's files.
-  ["icon", "icon64", "options"].forEach(function(aProp) {
-    this.__defineGetter__(aProp + "URL", function() {
-      if (this.isActive && aAddon[aProp + "URL"])
-        return aAddon[aProp + "URL"];
+  this.__defineGetter__("optionsURL", function() {
+    if (this.isActive && aAddon.optionsURL)
+      return aAddon.optionsURL;
 
-      switch (aProp) {
-        case "icon":
-        case "icon64":
-          if (this.hasResource(aProp + ".png"))
-            return this.getResourceURI(aProp + ".png").spec;
-          break;
-        case "options":
-          if (this.isActive && this.hasResource(aProp + ".xul"))
-            return this.getResourceURI(aProp + ".xul").spec;
-          break;
-      }
+    if (this.isActive && this.hasResource("options.xul"))
+      return this.getResourceURI("options.xul").spec;
 
-      if (aAddon._repositoryAddon)
-        return aAddon._repositoryAddon[aProp + "URL"];
-
-      return null;
-    }, this);
+    return null;
   }, this);
 
   this.__defineGetter__("optionsType", function() {
@@ -5808,6 +5792,35 @@ function AddonWrapper(aAddon) {
       return AddonManager.OPTIONS_TYPE_DIALOG;
 
     return null;
+  }, this);
+
+  this.__defineGetter__("iconURL", function() {
+    return this.icons[32];
+  }, this);
+
+  this.__defineGetter__("icon64URL", function() {
+    return this.icons[64];
+  }, this);
+
+  this.__defineGetter__("icons", function() {
+    let icons = {};
+    if (aAddon._repositoryAddon) {
+      for (let size in aAddon._repositoryAddon.icons) {
+        icons[size] = aAddon._repositoryAddon.icons[size];
+      }
+    }
+    if (this.isActive && aAddon.iconURL) {
+      icons[32] = aAddon.iconURL;
+    } else if (this.hasResource("icon.png")) {
+      icons[32] = this.getResourceURI("icon.png").spec;
+    }
+    if (this.isActive && aAddon.icon64URL) {
+      icons[64] = aAddon.icon64URL;
+    } else if (this.hasResource("icon64.png")) {
+      icons[64] = this.getResourceURI("icon64.png").spec;
+    }
+    Object.freeze(icons);
+    return icons;
   }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {
