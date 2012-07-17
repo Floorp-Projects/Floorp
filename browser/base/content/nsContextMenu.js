@@ -57,6 +57,7 @@ nsContextMenu.prototype = {
     this.initClipboardItems();
     this.initMediaPlayerItems();
     this.initLeaveDOMFullScreenItems();
+    this.initClickToPlayItems();
   },
 
   initPageMenuSeparator: function CM_initPageMenuSeparator() {
@@ -417,6 +418,12 @@ nsContextMenu.prototype = {
     this.showItem("context-media-sep-commands",  onMedia);
   },
 
+  initClickToPlayItems: function() {
+    this.showItem("context-ctp-play", this.onCTPPlugin);
+    this.showItem("context-ctp-hide", this.onCTPPlugin);
+    this.showItem("context-sep-ctp", this.onCTPPlugin);
+  },
+
   inspectNode: function CM_inspectNode() {
     let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
     let imported = {};
@@ -462,6 +469,7 @@ nsContextMenu.prototype = {
     this.bgImageURL        = "";
     this.onEditableArea    = false;
     this.isDesignMode      = false;
+    this.onCTPPlugin       = false;
 
     // Remember the node that was clicked.
     this.target = aNode;
@@ -538,6 +546,12 @@ nsContextMenu.prototype = {
                                               computedURL);
           }
         }
+      }
+      else if ((this.target instanceof HTMLEmbedElement ||
+                this.target instanceof HTMLObjectElement ||
+                this.target instanceof HTMLAppletElement) &&
+               this.target.mozMatchesSelector(":-moz-handler-clicktoplay")) {
+        this.onCTPPlugin = true;
       }
     }
 
@@ -1107,6 +1121,14 @@ nsContextMenu.prototype = {
 
   sendMedia: function() {
     MailIntegration.sendMessage(this.mediaURL, "");
+  },
+
+  playPlugin: function() {
+    gPluginHandler.activateSinglePlugin(this.target.ownerDocument.defaultView.top, this.target);
+  },
+
+  hidePlugin: function() {
+    gPluginHandler.hideClickToPlayOverlay(this.target);
   },
 
   // Generate email address and put it on clipboard.
