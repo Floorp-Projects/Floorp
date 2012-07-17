@@ -42,6 +42,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } catch (e) {
         ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
       }
+      try {
+        var canvas = Components.utils.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
+        is(canvas.DRAWWINDOW_DRAW_CARET, CanvasRenderingContext2D.DRAWWINDOW_DRAW_CARET, "Constants should be defined on DOM objects in a sandbox");
+      } catch (e) {
+        ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
+      }
       SimpleTest.finish();
     }
 
