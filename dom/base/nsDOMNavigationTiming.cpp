@@ -24,7 +24,7 @@ nsDOMNavigationTiming::~nsDOMNavigationTiming()
 void
 nsDOMNavigationTiming::Clear()
 {
-  mNavigationType = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+  mNavigationType = mozilla::dom::PerformanceNavigation::TYPE_RESERVED;
   mNavigationStart = 0;
   mFetchStart = 0;
   mRedirectStart = 0;

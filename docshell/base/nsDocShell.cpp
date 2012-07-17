@@ -638,7 +638,7 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     aLoadType = LOAD_NORMAL;
   }
 
-  nsDOMPerformanceNavigationType result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+  nsDOMPerformanceNavigationType result = dom::PerformanceNavigation::TYPE_RESERVED;
   switch (aLoadType) {
     case LOAD_NORMAL:
     case LOAD_NORMAL_EXTERNAL:
@@ -649,28 +649,28 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     case LOAD_LINK:
     case LOAD_STOP_CONTENT:
     case LOAD_REPLACE_BYPASS_CACHE:
-        result = nsIDOMPerformanceNavigation::TYPE_NAVIGATE;
+        result = dom::PerformanceNavigation::TYPE_NAVIGATE;
         break;
     case LOAD_HISTORY:
-        result = nsIDOMPerformanceNavigation::TYPE_BACK_FORWARD;
+        result = dom::PerformanceNavigation::TYPE_BACK_FORWARD;
         break;
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_CHARSET_CHANGE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-        result = nsIDOMPerformanceNavigation::TYPE_RELOAD;
+        result = dom::PerformanceNavigation::TYPE_RELOAD;
         break;
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_REFRESH:
     case LOAD_BYPASS_HISTORY:
     case LOAD_ERROR_PAGE:
     case LOAD_PUSHSTATE:
-        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        result = dom::PerformanceNavigation::TYPE_RESERVED;
         break;
     default:
         // NS_NOTREACHED("Unexpected load type value");
-        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        result = dom::PerformanceNavigation::TYPE_RESERVED;
         break;
   }
 
