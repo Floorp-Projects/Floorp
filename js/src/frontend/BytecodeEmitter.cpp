@@ -873,6 +873,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bc
     SET_UINT16(pc, sc.slot);
     pc += sizeof(uint16_t);
     SET_UINT32_INDEX(pc, maybeBlockIndex);
+    CheckTypeSet(cx, bce, op);
     return true;
 }
 
@@ -891,40 +892,48 @@ ClonedBlockDepth(BytecodeEmitter *bce)
 static bool
 EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 {
-    /* This restriction will be removed shortly by bug 753158. */
-    JS_ASSERT(pn->isUsed() || pn->isDefn());
-    JS_ASSERT_IF(pn->isUsed(), pn->pn_cookie.level() == 0);
-    JS_ASSERT_IF(pn->isDefn(), pn->pn_cookie.level() == bce->script->staticLevel);
+    unsigned skippedScopes = 0;
+    BytecodeEmitter *bceOfDef = bce;
+    if (pn->isUsed()) {
+        /*
+         * As explained in BindNameToSlot, the 'level' of a use indicates how
+         * many function scopes (i.e., BytecodeEmitters) to skip to find the
+         * enclosing function scope of the definition being accessed.
+         */
+        for (unsigned i = pn->pn_cookie.level(); i; i--) {
+            skippedScopes += ClonedBlockDepth(bceOfDef);
+            if (bceOfDef->sc->funIsHeavyweight()) {
+                skippedScopes++;
+                if (bceOfDef->sc->fun()->isNamedLambda())
+                    skippedScopes++;
+            }
+            bceOfDef = bceOfDef->parent;
+        }
+    } else {
+        JS_ASSERT(pn->isDefn());
+        JS_ASSERT(pn->pn_cookie.level() == bce->script->staticLevel);
+    }
 
-    /*
-     * The contents of the dynamic scope chain (fp->scopeChain) exactly reflect
-     * the needsClone-subset of the block chain. Use this to determine the
-     * number of ClonedBlockObjects on fp->scopeChain to skip to find the scope
-     * object containing the var to which pn is bound. ALIASEDVAR ops cannot
-     * reach across with scopes so ClonedBlockObjects is the only NestedScope
-     * on the scope chain.
-     */
     ScopeCoordinate sc;
     if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
-        sc.hops = ClonedBlockDepth(bce);
-        sc.slot = bce->sc->bindings.formalIndexToSlot(pn->pn_cookie.slot());
+        sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
+        sc.slot = bceOfDef->sc->bindings.formalIndexToSlot(pn->pn_cookie.slot());
     } else {
         JS_ASSERT(JOF_OPTYPE(pn->getOp()) == JOF_LOCAL || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
-        if (local < bce->sc->bindings.numVars()) {
-            sc.hops = ClonedBlockDepth(bce);
-            sc.slot = bce->sc->bindings.varIndexToSlot(local);
+        if (local < bceOfDef->sc->bindings.numVars()) {
+            sc.hops = skippedScopes + ClonedBlockDepth(bceOfDef);
+            sc.slot = bceOfDef->sc->bindings.varIndexToSlot(local);
         } else {
-            unsigned depth = local - bce->sc->bindings.numVars();
-            unsigned hops = 0;
-            StaticBlockObject *b = bce->blockChain;
+            unsigned depth = local - bceOfDef->sc->bindings.numVars();
+            StaticBlockObject *b = bceOfDef->blockChain;
             while (!b->containsVarAtDepth(depth)) {
                 if (b->needsClone())
-                    hops++;
+                    skippedScopes++;
                 b = b->enclosingBlock();
             }
-            sc.hops = hops;
-            sc.slot = b->localIndexToSlot(bce->sc->bindings, local);
+            sc.hops = skippedScopes;
+            sc.slot = b->localIndexToSlot(bceOfDef->sc->bindings, local);
         }
     }
 
@@ -1325,12 +1334,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JS_ASSERT(pn->pn_lexdef);
     JS_ASSERT(pn->pn_cookie.isFree());
 
-    /* TODO: actually the comment lies; until bug 753158, y will stay a NAME. */
-    if (dn->pn_cookie.level() != bce->script->staticLevel) {
-        JS_ASSERT(dn->isClosed());
-        return true;
-    }
-
     /*
      * We are compiling a function body and may be able to optimize name
      * to stack slot. Look for an argument or variable in the function and
@@ -1356,6 +1359,14 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case Definition::VAR:
         if (dn->isOp(JSOP_CALLEE)) {
             JS_ASSERT(op != JSOP_CALLEE);
+
+            /*
+             * Currently, the ALIASEDVAR ops do not support accessing the
+             * callee of a DeclEnvObject, so use NAME.
+             */
+            if (dn->pn_cookie.level() != bce->script->staticLevel)
+                return true;
+
             JS_ASSERT(bce->sc->fun()->flags & JSFUN_LAMBDA);
             JS_ASSERT(pn->pn_atom == bce->sc->fun()->atom);
 
@@ -1414,9 +1425,34 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_NOT_REACHED("unexpected dn->kind()");
     }
 
+    /*
+     * The difference between the current static level and the static level of
+     * the definition is the number of function scopes between the current
+     * scope and dn's scope.
+     */
+    unsigned skip = bce->script->staticLevel - dn->pn_cookie.level();
+    JS_ASSERT_IF(skip, dn->isClosed());
+
+    /*
+     * Explicitly disallow accessing var/let bindings in global scope from
+     * nested functions. The reason for this limitation is that, since the
+     * global script is not included in the static scope chain (1. because it
+     * has no object to stand in the static scope chain, 2. to minimize memory
+     * bloat where a single live function keeps its whole global script
+     * alive.), ScopeCoordinateToTypeSet is not able to find the var/let's
+     * associated types::TypeSet.
+     */
+    if (skip) {
+        BytecodeEmitter *bceSkipped = bce;
+        for (unsigned i = 0; i < skip; i++)
+            bceSkipped = bceSkipped->parent;
+        if (!bceSkipped->sc->inFunction())
+            return true;
+    }
+
     JS_ASSERT(!pn->isOp(op));
     pn->setOp(op);
-    if (!pn->pn_cookie.set(bce->sc->context, 0, dn->pn_cookie.slot()))
+    if (!pn->pn_cookie.set(bce->sc->context, skip, dn->pn_cookie.slot()))
         return false;
 
     pn->pn_dflags |= PND_BOUND;
