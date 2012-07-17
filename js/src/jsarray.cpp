@@ -861,12 +861,6 @@ slowarray_addProperty(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
     return JS_TRUE;
 }
 
-static JSType
-array_typeOf(JSContext *cx, HandleObject obj)
-{
-    return JSTYPE_OBJECT;
-}
-
 static JSBool
 array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict)
 {
@@ -1242,7 +1236,7 @@ Class js::ArrayClass = {
         array_deleteElement,
         array_deleteSpecial,
         NULL,       /* enumerate      */
-        array_typeOf,
+        NULL,       /* typeOf         */
         NULL,       /* thisObject     */
         NULL,       /* clear          */
     }
