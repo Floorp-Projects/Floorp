@@ -1256,6 +1256,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArguments)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgumentsLast)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPerformance, nsPerformance)
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInnerWindowHolder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOuterWindow)
 
@@ -1300,6 +1302,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mArguments)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mArgumentsLast)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPerformance)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInnerWindowHolder)
   if (tmp->mOuterWindow) {
@@ -2936,7 +2940,7 @@ nsGlobalWindow::GetPerformance(nsIDOMPerformance** aPerformance)
         timedChannel = nsnull;
       }
       if (timing) {
-        mPerformance = new nsPerformance(timing, timedChannel);
+        mPerformance = new nsPerformance(this, timing, timedChannel);
       }
     }
     NS_IF_ADDREF(*aPerformance = mPerformance);

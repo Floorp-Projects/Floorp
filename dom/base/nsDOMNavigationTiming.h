@@ -22,22 +22,43 @@ public:
   nsDOMNavigationTiming();
 
   NS_INLINE_DECL_REFCOUNTING(nsDOMNavigationTiming)
-  nsresult GetType(nsDOMPerformanceNavigationType* aNavigationType);
-  nsresult GetRedirectCount(PRUint16* aCount);
 
-  nsresult GetRedirectStart(DOMTimeMilliSec* aRedirectStart);
-  nsresult GetRedirectEnd(DOMTimeMilliSec* aEnd);
-  nsresult GetNavigationStart(DOMTimeMilliSec* aNavigationStart);
-  nsresult GetUnloadEventStart(DOMTimeMilliSec* aStart);
-  nsresult GetUnloadEventEnd(DOMTimeMilliSec* aEnd);
-  nsresult GetFetchStart(DOMTimeMilliSec* aStart);
-  nsresult GetDomLoading(DOMTimeMilliSec* aTime);
-  nsresult GetDomInteractive(DOMTimeMilliSec* aTime);
-  nsresult GetDomContentLoadedEventStart(DOMTimeMilliSec* aStart);
-  nsresult GetDomContentLoadedEventEnd(DOMTimeMilliSec* aEnd);
-  nsresult GetDomComplete(DOMTimeMilliSec* aTime);
-  nsresult GetLoadEventStart(DOMTimeMilliSec* aStart);
-  nsresult GetLoadEventEnd(DOMTimeMilliSec* aEnd);
+  nsDOMPerformanceNavigationType GetType() const {
+    return mNavigationType;
+  }
+  PRUint16 GetRedirectCount();
+
+  DOMTimeMilliSec GetRedirectStart();
+  DOMTimeMilliSec GetRedirectEnd();
+  DOMTimeMilliSec GetNavigationStart() const {
+    return mNavigationStart;
+  }
+  DOMTimeMilliSec GetUnloadEventStart();
+  DOMTimeMilliSec GetUnloadEventEnd();
+  DOMTimeMilliSec GetFetchStart() const {
+    return mFetchStart;
+  }
+  DOMTimeMilliSec GetDomLoading() const {
+    return mDOMLoading;
+  }
+  DOMTimeMilliSec GetDomInteractive() const {
+    return mDOMInteractive;
+  }
+  DOMTimeMilliSec GetDomContentLoadedEventStart() const {
+    return mDOMContentLoadedEventStart;
+  }
+  DOMTimeMilliSec GetDomContentLoadedEventEnd() const {
+    return mDOMContentLoadedEventEnd;
+  }
+  DOMTimeMilliSec GetDomComplete() const {
+    return mDOMComplete;
+  }
+  DOMTimeMilliSec GetLoadEventStart() const {
+    return mLoadEventStart;
+  }
+  DOMTimeMilliSec GetLoadEventEnd() const {
+    return mLoadEventEnd;
+  }
 
   void NotifyNavigationStart();
   void NotifyFetchStart(nsIURI* aURI, nsDOMPerformanceNavigationType aNavigationType);
@@ -56,9 +77,8 @@ public:
   void NotifyDOMComplete(nsIURI* aURI);
   void NotifyDOMContentLoadedStart(nsIURI* aURI);
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
-  nsresult TimeStampToDOM(mozilla::TimeStamp aStamp, DOMTimeMilliSec* aResult);
-  nsresult TimeStampToDOMOrFetchStart(mozilla::TimeStamp aStamp, 
-                                      DOMTimeMilliSec* aResult);
+  DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
+  DOMTimeMilliSec TimeStampToDOMOrFetchStart(mozilla::TimeStamp aStamp) const;
 
   inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp)
   {
