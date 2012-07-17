@@ -276,6 +276,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testDouble(cond, ScratchReg);
     }
+    Condition testNumber(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testNumber(cond, ScratchReg);
+    }
     Condition testNull(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
         return testNull(cond, ScratchReg);

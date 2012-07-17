@@ -344,6 +344,14 @@ ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
     return op;
 }
 
+inline bool
+IsTypeOfCompare(MDefinition *left, MDefinition *right)
+{
+    if (!left->isTypeOf() || !right->isConstant())
+        return false;
+    return right->toConstant()->value().isString();
+}
+
 bool
 LIRGenerator::visitTest(MTest *test)
 {
@@ -401,6 +409,23 @@ LIRGenerator::visitTest(MTest *test)
             return add(lir, comp);
         }
 
+
+        if (comp->specialization() == MIRType_String) {
+            // We can safely reorder, because operand order doesn't matter for LCompareS.
+            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+            if (IsTypeOfCompare(left, right)) {
+                MTypeOf *typeOf = left->toTypeOf();
+
+                LTypeOfIsAndBranch *lir = new LTypeOfIsAndBranch(op, right->toConstant()->value(), 
+                                                                 temp(), ifTrue, ifFalse);
+                if (!useBox(lir, LTypeOfIsAndBranch::Value, typeOf->input()))
+                    return false;
+                if (!assignSnapshot(lir))
+                    return false;                
+                return add(lir, comp);            
+            }
+        }
+
         if (comp->specialization() == MIRType_Boolean) {
             JS_ASSERT(left->type() == MIRType_Value);
             JS_ASSERT(right->type() == MIRType_Boolean);
@@ -429,22 +454,22 @@ LIRGenerator::visitInlineFunctionGuard(MInlineFunctionGuard *ins)
     return add(lir);
 }
 
-static inline bool
-CanEmitCompareAtUses(MInstruction *ins)
+inline bool
+CanEmitInstructionAtUses(MInstruction *ins, MDefinition::Opcode op)
 {
     if (!ins->canEmitAtUses())
         return false;
 
-    bool foundTest = false;
+    bool alreadyUsed = false;
     for (MUseIterator iter(ins->usesBegin()); iter != ins->usesEnd(); iter++) {
         MNode *node = iter->node();
         if (!node->isDefinition())
             return false;
-        if (!node->toDefinition()->isTest())
+        if (node->toDefinition()->op() != op)
             return false;
-        if (foundTest)
+        if (alreadyUsed)
             return false;
-        foundTest = true;
+        alreadyUsed = true;
     }
     return true;
 }
@@ -461,21 +486,11 @@ LIRGenerator::visitCompare(MCompare *comp)
         if (comp->tryFold(&result))
             return define(new LInteger(result), comp);
 
-        // Move below the emitAtUses call if we ever implement
-        // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
-        // make sense and avoids confusion.
-        if (comp->specialization() == MIRType_String) {
-            LCompareS *lir = new LCompareS(useRegister(left), useRegister(right));
-            if (!define(lir, comp))
-                return false;
-            return assignSafepoint(lir, comp);
-        }
-
         // Sniff out if the output of this compare is used only for a branching.
         // If it is, then we willl emit an LCompare*AndBranch instruction in place
         // of this compare and any test that uses this compare. Thus, we can
         // ignore this Compare.
-        if (CanEmitCompareAtUses(comp))
+        if (CanEmitInstructionAtUses(comp, MDefinition::Op_Test))
             return emitAtUses(comp);
 
         if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
@@ -497,6 +512,26 @@ LIRGenerator::visitCompare(MCompare *comp)
             if (!useBox(lir, LCompareB::Lhs, left))
                 return false;
             return define(lir, comp);
+        }
+
+        if (comp->specialization() == MIRType_String) {
+            JSOp op = ReorderComparison(comp->jsop(), &left, &right);
+
+            if (IsTypeOfCompare(left, right)) {
+                MTypeOf *typeOf = left->toTypeOf();
+
+                LTypeOfIs *lir = new LTypeOfIs(op, right->toConstant()->value());
+                if (!useBox(lir, LTypeOfIs::Value, typeOf->input()))
+                    return false;
+                if (!assignSnapshot(lir))
+                    return false;                
+                return define(lir, comp);
+            }
+
+            LCompareS *lir = new LCompareS(op, useRegister(left), useRegister(right));
+            if (!define(lir, comp))
+                return false;
+            return assignSafepoint(lir, comp);
         }
 
         JS_ASSERT(IsNullOrUndefined(comp->specialization()));
@@ -553,6 +588,9 @@ LIRGenerator::visitTypeOf(MTypeOf *ins)
 {
     MDefinition *opd = ins->input();
     JS_ASSERT(opd->type() == MIRType_Value);
+
+    if (CanEmitInstructionAtUses(ins, MDefinition::Op_Compare))
+        return emitAtUses(ins);
 
     LTypeOfV *lir = new LTypeOfV();
     if (!useBox(lir, LTypeOfV::Input, opd))
