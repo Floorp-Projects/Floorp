@@ -917,7 +917,13 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    if (frame->hasPushedSPSFrame())
+    /*
+     * If an SPS frame has already been pushed and profiling has since been
+     * turned off, then we can't enter the jit because the epilogue of a pop
+     * will not be emitted. Otherwise, we're safe with respect to balancing the
+     * push/pops to the SPS sampling stack.
+     */
+    if (frame->hasPushedSPSFrame() && !cx->runtime->spsProfiler.enabled())
         return Compile_Skipped;
 
     if (script->hasJITInfo()) {
