@@ -68,7 +68,8 @@ public:
   virtual bool RecvPause() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
 
-  virtual void ShadowLayersUpdated(bool isFirstPaint) MOZ_OVERRIDE;
+  virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+                                   bool isFirstPaint) MOZ_OVERRIDE;
   void Destroy();
 
   LayerManager* GetLayerManager() { return mLayerManager; }
