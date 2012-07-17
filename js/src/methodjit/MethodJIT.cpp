@@ -1306,23 +1306,7 @@ JITScript::destroyChunk(FreeOp *fop, unsigned chunkIndex, bool resetUses)
             argsCheckPool = NULL;
         }
 
-        invokeEntry = NULL;
-        fastEntry = NULL;
-        argsCheckEntry = NULL;
-        arityCheckEntry = NULL;
-
-        // Fixup any ICs still referring to this chunk.
-        while (!JS_CLIST_IS_EMPTY(&callers)) {
-            JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
-            ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
-
-            uint8_t *start = (uint8_t *)ic->funGuard.executableAddress();
-            JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
-
-            repatch.repatch(ic->funGuard, NULL);
-            repatch.relink(ic->funJump, ic->slowPathStart);
-            ic->purgeGuardedObject();
-        }
+        disableScriptEntry();
     }
 }
 
@@ -1343,6 +1327,28 @@ JITScript::purgeCaches()
         ChunkDescriptor &desc = chunkDescriptor(i);
         if (desc.chunk)
             desc.chunk->purgeCaches();
+    }
+}
+
+void
+JITScript::disableScriptEntry()
+{
+    invokeEntry = NULL;
+    fastEntry = NULL;
+    argsCheckEntry = NULL;
+    arityCheckEntry = NULL;
+
+    // Fixup any ICs still referring to this script.
+    while (!JS_CLIST_IS_EMPTY(&callers)) {
+        JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
+        ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
+
+        uint8_t *start = (uint8_t *)ic->funGuard.executableAddress();
+        JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
+
+        repatch.repatch(ic->funGuard, NULL);
+        repatch.relink(ic->funJump, ic->slowPathStart);
+        ic->purgeGuardedObject();
     }
 }
 
