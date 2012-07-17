@@ -51,7 +51,7 @@ dictionary MozXMLHttpRequestParameters
   boolean mozSystem = false;
 };
 
-[Constructor(optional MozXMLHttpRequestParameters params)]
+[Constructor(optional MozXMLHttpRequestParameters? params = null)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
   [TreatNonCallableAsNull, GetterInfallible=MainThread]
