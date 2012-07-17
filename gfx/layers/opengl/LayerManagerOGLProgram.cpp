@@ -104,6 +104,21 @@ ProgramProfileOGL::GetProfileFor(gl::ShaderProgramType aType,
     AddCommonTextureArgs(result);
     result.mTextureCount = 1;
     break;
+  case gl::RGBAExternalLayerProgramType:
+    if (aMask == Mask3d) {
+      result.mVertexShaderString = sLayerMask3DVS;
+      result.mFragmentShaderString = sRGBAExternalTextureLayerMask3DFS;
+    } else if (aMask == Mask2d) {
+      result.mVertexShaderString = sLayerMaskVS;
+      result.mFragmentShaderString = sRGBAExternalTextureLayerMaskFS;
+    } else {
+      result.mVertexShaderString = sLayerVS;
+      result.mFragmentShaderString = sRGBAExternalTextureLayerFS;
+    }
+    AddCommonArgs(result);
+    AddCommonTextureArgs(result);
+    result.mTextureCount = 1;
+    break;
   case gl::ColorLayerProgramType:
     if (aMask == Mask2d) {
       result.mVertexShaderString = sLayerMaskVS;
