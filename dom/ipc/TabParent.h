@@ -203,7 +203,9 @@ protected:
     bool AllowContentIME();
 
     NS_OVERRIDE
-    virtual PRenderFrameParent* AllocPRenderFrame();
+    virtual PRenderFrameParent* AllocPRenderFrame(LayersBackend* aBackend,
+                                                  int32_t* aMaxTextureSize,
+                                                  uint64_t* aLayersId);
     NS_OVERRIDE
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame);
 

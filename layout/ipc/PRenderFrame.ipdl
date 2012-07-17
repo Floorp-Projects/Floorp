@@ -39,14 +39,19 @@ parent:
      * |id| is set to 0 in the "direct" case, and to a whole number
      * in the "indirect" case.
      */
-     sync PLayers()
-       returns (LayersBackend backend, int32_t maxTextureSize, uint64_t layersId);
+    async PLayers();
+
+    async NotifyCompositorTransaction();
 
     async __delete__();
 
-state EMPTY:
+state EMPTY_OR_DIRECT_COMPOSITOR:
     recv PLayers goto HAVE_CONTENT;
+    recv NotifyCompositorTransaction goto EMPTY_OR_DIRECT_COMPOSITOR;
+    recv __delete__;
+
 state HAVE_CONTENT:
+    recv NotifyCompositorTransaction goto HAVE_CONTENT;
     recv __delete__;
 };
 
