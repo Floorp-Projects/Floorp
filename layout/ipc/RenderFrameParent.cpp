@@ -609,25 +609,34 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 }
 
 PLayersParent*
-RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType, int* aMaxTextureSize)
+RenderFrameParent::AllocPLayers(LayerManager::LayersBackend* aBackendType,
+                                int* aMaxTextureSize,
+                                uint64_t* aId)
 {
+  *aBackendType = LayerManager::LAYERS_NONE;
+  *aMaxTextureSize = 0;
+  *aId = 0;
+
   if (!mFrameLoader || mFrameLoaderDestroyed) {
-    *aBackendType = LayerManager::LAYERS_NONE;
-    *aMaxTextureSize = 0;
     return nsnull;
   }
 
-  nsRefPtr<LayerManager> lm = 
-    nsContentUtils::LayerManagerForDocument(mFrameLoader->GetOwnerDoc());
+  nsIDocument* doc = mFrameLoader->GetOwnerDoc();
+  nsRefPtr<LayerManager> lm = nsContentUtils::LayerManagerForDocument(doc);
   ShadowLayerManager* slm = lm->AsShadowManager();
   if (!slm) {
-    *aBackendType = LayerManager::LAYERS_NONE;
-    *aMaxTextureSize = 0;
      return nsnull;
   }
   *aBackendType = lm->GetBackendType();
   *aMaxTextureSize = lm->GetMaxTextureSize();
-  return new ShadowLayersParent(slm, this);
+#if 0 // Enabled in later patch
+  if (CompositorParent::CompositorLoop()) {
+    // Our remote frame will push layers updates to the compositor,
+    // and we'll keep an indirect reference to that tree.
+    *aId = CompositorParent::AllocateLayerTreeId();
+  }
+#endif
+  return new ShadowLayersParent(slm, this, *aId);
 }
 
 bool
@@ -679,6 +688,13 @@ RenderFrameParent::GetShadowLayers() const
                     "can only support at most 1 ShadowLayersParent");
   return (shadowParents.Length() == 1) ?
     static_cast<ShadowLayersParent*>(shadowParents[0]) : nsnull;
+}
+
+uint64_t
+RenderFrameParent::GetLayerTreeId() const
+{
+  ShadowLayersParent* shadowLayers = GetShadowLayers();
+  return shadowLayers ? shadowLayers->GetId() : 0;
 }
 
 ContainerLayer*

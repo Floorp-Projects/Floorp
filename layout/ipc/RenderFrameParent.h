@@ -71,16 +71,18 @@ public:
   void SetBackgroundColor(nscolor aColor) { mBackgroundColor = gfxRGBA(aColor); };
 
 protected:
-  NS_OVERRIDE void ActorDestroy(ActorDestroyReason why);
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual PLayersParent* AllocPLayers(LayerManager::LayersBackend* aBackendType,
-                                                  int* aMaxTextureSize);
-  NS_OVERRIDE virtual bool DeallocPLayers(PLayersParent* aLayers);
+  virtual PLayersParent*
+  AllocPLayers(LayerManager::LayersBackend* aBackendType,
+               int* aMaxTextureSize, uint64_t* aLayersId) MOZ_OVERRIDE;
+  virtual bool DeallocPLayers(PLayersParent* aLayers) MOZ_OVERRIDE;
 
 private:
   void BuildViewMap();
 
   ShadowLayersParent* GetShadowLayers() const;
+  uint64_t GetLayerTreeId() const;
   ContainerLayer* GetRootLayer() const;
 
   nsRefPtr<nsFrameLoader> mFrameLoader;

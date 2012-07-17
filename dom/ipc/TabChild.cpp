@@ -1031,7 +1031,8 @@ TabChild::InitWidget(const nsIntSize& size)
                       "shouldn't have a shadow manager yet");
     LayerManager::LayersBackend be;
     PRInt32 maxTextureSize;
-    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor(&be, &maxTextureSize);
+    uint64_t id;
+    PLayersChild* shadowManager = remoteFrame->SendPLayersConstructor(&be, &maxTextureSize, &id);
     if (!shadowManager) {
       NS_WARNING("failed to construct LayersChild");
       // This results in |remoteFrame| being deleted.

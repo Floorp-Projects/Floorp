@@ -25,7 +25,7 @@ public:
   void Destroy();
 
 protected:
-  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend, int* aMaxTextureSize);
+  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend, const uint64_t& aId, int* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersChild *aChild);
 
 private:
