@@ -878,11 +878,11 @@ void nsBaseWidget::CreateCompositor()
   mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
   PRInt32 maxTextureSize;
   PLayersChild* shadowManager;
-  if (mUseAcceleratedRendering) {
-    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, 0, &maxTextureSize);
-  } else {
-    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_BASIC, 0, &maxTextureSize);
-  }
+  LayerManager::LayersBackend backendHint =
+    mUseAcceleratedRendering ? LayerManager::LAYERS_OPENGL : LayerManager::LAYERS_BASIC;
+  LayerManager::LayersBackend parentBackend;
+  shadowManager = mCompositorChild->SendPLayersConstructor(
+    backendHint, 0, &parentBackend, &maxTextureSize);
 
   if (shadowManager) {
     ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -892,10 +892,7 @@ void nsBaseWidget::CreateCompositor()
       return;
     }
     lf->SetShadowManager(shadowManager);
-    if (mUseAcceleratedRendering)
-      lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
-    else
-      lf->SetParentBackendType(LayerManager::LAYERS_BASIC);
+    lf->SetParentBackendType(parentBackend);
     lf->SetMaxTextureSize(maxTextureSize);
 
     mLayerManager = lm;

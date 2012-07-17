@@ -846,10 +846,13 @@ TabParent::HandleDelayedDialogs()
 }
 
 PRenderFrameParent*
-TabParent::AllocPRenderFrame()
+TabParent::AllocPRenderFrame(LayersBackend* aBackend,
+                             int32_t* aMaxTextureSize,
+                             uint64_t* aLayersId)
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  return new RenderFrameParent(frameLoader);
+  return new RenderFrameParent(frameLoader,
+                               aBackend, aMaxTextureSize, aLayersId);
 }
 
 bool

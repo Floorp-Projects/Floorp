@@ -232,9 +232,13 @@ public:
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
     void SetBackgroundColor(const nscolor& aColor);
+
+    void NotifyPainted();
 protected:
     NS_OVERRIDE
-    virtual PRenderFrameChild* AllocPRenderFrame();
+    virtual PRenderFrameChild* AllocPRenderFrame(LayersBackend* aBackend,
+                                                 int32_t* aMaxTextureSize,
+                                                 uint64_t* aLayersId);
     NS_OVERRIDE
     virtual bool DeallocPRenderFrame(PRenderFrameChild* aFrame);
     NS_OVERRIDE
@@ -248,6 +252,8 @@ protected:
     virtual bool DeallocPIndexedDB(PIndexedDBChild* aActor);
 
 private:
+    bool UseDirectCompositor();
+
     void ActorDestroy(ActorDestroyReason why);
 
     bool InitTabChildGlobal();

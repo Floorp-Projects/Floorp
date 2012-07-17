@@ -20,6 +20,7 @@ include "IPC/nsGUIEventIPC.h";
 
 using IPC::URI;
 using gfxMatrix;
+using mozilla::LayersBackend;
 using mozilla::WindowsHandle;
 using nscolor;
 using nsCompositionEvent;
@@ -174,7 +175,8 @@ parent:
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
-    async PRenderFrame();
+    sync PRenderFrame()
+        returns (LayersBackend backend, int32_t maxTextureSize, uint64_t layersId);
 
     /** 
      * Starts an offline application cache update.
