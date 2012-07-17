@@ -525,16 +525,14 @@ CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
 }
 
 void
-CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
+CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+                                      bool isFirstPaint)
 {
   mIsFirstPaint = mIsFirstPaint || isFirstPaint;
   mLayersUpdated = true;
-  const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
-  NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
-                    "can only support at most 1 ShadowLayersParent");
-  if (shadowParents.Length()) {
-    Layer* root = static_cast<ShadowLayersParent*>(shadowParents[0])->GetRoot();
-    mLayerManager->SetRoot(root);
+  Layer* root = aLayerTree->GetRoot();
+  mLayerManager->SetRoot(root);
+  if (root) {
     SetShadowProperties(root);
   }
   ScheduleComposition();
