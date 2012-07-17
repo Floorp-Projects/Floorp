@@ -79,9 +79,14 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_SecurityChange.html \
 		file_browserElement_SecurityChange.html \
 		browserElement_BackForward.js \
+	        file_bug741717.sjs \
+		browserElement_Reload.js \
                 browserElement_ContextmenuEvents.js \
                 test_browserElement_inproc_ContextmenuEvents.html \
 		$(NULL)
+
+# Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
+#		test_browserElement_inproc_Reload.html \
 
 # OOP tests don't work on Windows (bug 763081).
 #
@@ -111,6 +116,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_OpenWindowRejected.html \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
+		test_browserElement_oop_Reload.html \
                 test_browserElement_oop_ContextmenuEvents.html \
 		$(NULL)
 endif
