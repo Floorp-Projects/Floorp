@@ -3472,8 +3472,8 @@ class MStoreElementCommon
     bool needsBarrier() const {
         return needsBarrier_;
     }
-    void setNeedsBarrier(bool needsBarrier) {
-        needsBarrier_ = needsBarrier;
+    void setNeedsBarrier() {
+        needsBarrier_ = true;
     }
 };
 
@@ -4256,8 +4256,8 @@ class MStoreSlot
     bool needsBarrier() const {
         return needsBarrier_;
     }
-    void setNeedsBarrier(bool needsBarrier) {
-        needsBarrier_ = needsBarrier;
+    void setNeedsBarrier() {
+        needsBarrier_ = true;
     }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Slot);

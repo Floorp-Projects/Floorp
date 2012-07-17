@@ -3635,8 +3635,20 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
                                                   JSRESOLVE_QUALIFIED, &holder, &shape);
     JS_ASSERT(res && shape && holder == baseObj);
 
+    bool needsBarrier = true;
+    TypeOracle::BinaryTypes b = oracle->binaryTypes(script, pc);
+    if (b.lhsTypes &&
+        ((jsid)id == types::MakeTypeId(cx, id)) &&
+        !b.lhsTypes->propertyNeedsBarrier(cx, id))
+    {
+        needsBarrier = false;
+    }
+
     if (baseObj->isFixedSlot(shape->slot())) {
         MStoreFixedSlot *store = MStoreFixedSlot::New(obj, shape->slot(), value);
+        if (needsBarrier)
+            store->setNeedsBarrier();
+
         current->add(store);
         return resumeAfter(store);
     }
@@ -3645,6 +3657,9 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     current->add(slots);
 
     MStoreSlot *store = MStoreSlot::New(slots, baseObj->dynamicSlotIndex(shape->slot()), value);
+    if (needsBarrier)
+        store->setNeedsBarrier();
+
     current->add(store);
     return resumeAfter(store);
 }
@@ -4247,7 +4262,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
 
     // Determine whether write barrier is required.
     if (!propertyTypes || propertyTypes->needsBarrier(cx))
-        store->setNeedsBarrier(true);
+        store->setNeedsBarrier();
 
     // Pop the global object pushed by bindgname.
     DebugOnly<MDefinition *> pushedGlobal = current->pop();
@@ -4650,7 +4665,7 @@ IonBuilder::jsop_setelem_dense()
 
     // Determine whether a write barrier is required.
     if (oracle->elementWriteNeedsBarrier(script, pc))
-        store->setNeedsBarrier(true);
+        store->setNeedsBarrier();
 
     if (elementType != MIRType_None && packed)
         store->setElementType(elementType);
