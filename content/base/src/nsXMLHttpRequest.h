@@ -181,7 +181,7 @@ public:
   static already_AddRefed<nsXMLHttpRequest>
   Constructor(JSContext* aCx,
               nsISupports* aGlobal,
-              const mozilla::dom::Nullable<mozilla::dom::MozXMLHttpRequestParameters>& aParams,
+              const mozilla::dom::MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
@@ -193,10 +193,7 @@ public:
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
     req->Construct(principal->GetPrincipal(), window);
-    if (!aParams.IsNull()) {
-      const mozilla::dom::MozXMLHttpRequestParameters& params = aParams.Value();
-      req->InitParameters(params.mozAnon, params.mozSystem);
-    }
+    req->InitParameters(aParams.mozAnon, aParams.mozSystem);
     return req.forget();
   }
 
