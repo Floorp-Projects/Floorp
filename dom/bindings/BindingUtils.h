@@ -761,7 +761,7 @@ struct FakeDependentString {
   }
 
   void Truncate() {
-    mData = nsnull;
+    mData = nsDependentString::char_traits::sEmptyBuffer;
     mLength = 0;
   }
 
