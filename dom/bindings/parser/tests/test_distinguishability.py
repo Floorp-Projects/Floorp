@@ -9,7 +9,7 @@ def WebIDLTest(parser, harness):
       };
       interface Bar {
         // Bit of a pain to get things that have dictionary types
-        void passDict(optional Dict arg);
+        void passDict(Dict arg);
         void passFoo(Foo arg);
         void passNullableUnion((object? or DOMString) arg);
         void passNullable(Foo? arg);
