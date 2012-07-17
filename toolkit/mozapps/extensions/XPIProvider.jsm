@@ -3842,6 +3842,9 @@ var XPIProvider = {
     if (aAddon._installLocation.locked)
       throw new Error("Cannot uninstall addons from locked install locations");
 
+    if ("_hasResourceCache" in aAddon)
+      aAddon._hasResourceCache = new Map();
+
     // Inactive add-ons don't require a restart to uninstall
     let requiresRestart = this.uninstallRequiresRestart(aAddon);
 
@@ -5710,8 +5713,10 @@ XPIProvider.DBAddonInternal = DBAddonInternal;
 function createWrapper(aAddon) {
   if (!aAddon)
     return null;
-  if (!aAddon._wrapper)
+  if (!aAddon._wrapper) {
+    aAddon._hasResourceCache = new Map();
     aAddon._wrapper = new AddonWrapper(aAddon);
+  }
   return aAddon._wrapper;
 }
 
@@ -6106,6 +6111,9 @@ function AddonWrapper(aAddon) {
   };
 
   this.hasResource = function(aPath) {
+    if (aAddon._hasResourceCache.has(aPath))
+      return aAddon._hasResourceCache.get(aPath);
+
     let bundle = aAddon._sourceBundle.clone();
 
     // Bundle may not exist any more if the addon has just been uninstalled,
@@ -6113,6 +6121,7 @@ function AddonWrapper(aAddon) {
     try {
       var isDir = bundle.isDirectory();
     } catch (e) {
+      aAddon._hasResourceCache.set(aPath, false);
       return false;
     }
 
@@ -6122,16 +6131,21 @@ function AddonWrapper(aAddon) {
           bundle.append(aPart);
         });
       }
-      return bundle.exists();
+      let result = bundle.exists();
+      aAddon._hasResourceCache.set(aPath, result);
+      return result;
     }
 
     let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                     createInstance(Ci.nsIZipReader);
     try {
       zipReader.open(bundle);
-      return zipReader.hasEntry(aPath);
+      let result = zipReader.hasEntry(aPath);
+      aAddon._hasResourceCache.set(aPath, result);
+      return result;
     }
     catch (e) {
+      aAddon._hasResourceCache.set(aPath, false);
       return false;
     }
     finally {
