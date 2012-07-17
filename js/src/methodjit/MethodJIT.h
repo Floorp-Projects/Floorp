@@ -779,6 +779,13 @@ struct JITScript
      */
     JSC::ExecutablePool *shimPool;
 
+    /*
+     * If set, we decided to keep the JITChunk so that Ion can access its caches.
+     * The chunk has to be destroyed the next time the script runs in JM.
+     * Note that this flag implies nchunks == 1.
+     */
+    bool mustDestroyEntryChunk;
+
 #ifdef JS_MONOIC
     /* Inline cache at function entry for checking this/argument types. */
     JSC::CodeLocationLabel argsCheckStub;
@@ -829,6 +836,8 @@ struct JITScript
 
     void trace(JSTracer *trc);
     void purgeCaches();
+
+    void disableScriptEntry();
 };
 
 /*

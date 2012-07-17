@@ -40,6 +40,10 @@
 #include "vm/RegExpObject-inl.h"
 #include "vm/String-inl.h"
 
+#ifdef JS_ION
+#include "ion/Ion.h"
+#endif
+
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -780,8 +784,25 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
+    JSScript *script = f.script();
+
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script());
+    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), script);
+
+#ifdef JS_ION
+    if (ion::IsEnabled(f.cx) && f.jit()->nchunks == 1 &&
+        script->canIonCompile() && !script->hasIonScript())
+    {
+        // After returning to the interpreter, IonMonkey will try to compile
+        // this script. Don't destroy the JITChunk immediately so that Ion
+        // still has access to its ICs.
+        JS_ASSERT(!f.jit()->mustDestroyEntryChunk);
+        f.jit()->mustDestroyEntryChunk = true;
+        f.jit()->disableScriptEntry();
+        return;
+    }
+#endif
+
     f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
 }
 
