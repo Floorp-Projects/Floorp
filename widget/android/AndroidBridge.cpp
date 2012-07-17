@@ -46,6 +46,8 @@ using namespace mozilla;
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsFilePickerCallback)
 
 AndroidBridge *AndroidBridge::sBridge = 0;
+static PRUintn sJavaEnvThreadIndex = 0;
+static void JavaThreadDetachFunc(void *arg);
 
 AndroidBridge *
 AndroidBridge::ConstructBridge(JNIEnv *jEnv,
@@ -58,6 +60,8 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
      * Conveniently, NSS has an env var that can prevent it from unloading.
      */
     putenv("NSS_DISABLE_UNLOAD=1");
+
+    PR_NewThreadPrivateIndex(&sJavaEnvThreadIndex, JavaThreadDetachFunc);
 
     sBridge = new AndroidBridge();
     if (!sBridge->Init(jEnv, jGeckoAppShellClass)) {
@@ -2163,16 +2167,20 @@ extern "C" {
             __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "Returned a null VM");
             return NULL;
         }
+        jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
+
+        if (jEnv)
+            return jEnv;
+
         int status = jVm->GetEnv((void**) &jEnv, JNI_VERSION_1_2);
-        if (status < 0) {
+        if (status) {
 
             status = jVm->AttachCurrentThread(&jEnv, NULL);
-            if (status < 0) {
+            if (status) {
                 __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread",  "Could not attach");
                 return NULL;
             }
-            static PRUintn sJavaEnvThreadIndex = 0;
-            PR_NewThreadPrivateIndex(&sJavaEnvThreadIndex, JavaThreadDetachFunc);
+            
             PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
         }
         if (!jEnv) {
