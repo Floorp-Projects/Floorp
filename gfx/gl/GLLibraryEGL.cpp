@@ -9,6 +9,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsPrintfCString.h"
+#include "prenv.h"
 
 namespace mozilla {
 namespace gl {
@@ -280,23 +281,21 @@ GLLibraryEGL::InitExtensions()
         return;
     }
 
+    bool debugMode = false;
 #ifdef DEBUG
-    // If DEBUG, then be verbose the first time we're run.
-    static bool firstVerboseRun = true;
+    if (PR_GetEnv("MOZ_GL_DEBUG"))
+        debugMode = true;
+
+    static bool firstRun = true;
 #else
     // Non-DEBUG, so never spew.
-    const bool firstVerboseRun = false;
+    const bool firstRun = false;
 #endif
 
-    if (firstVerboseRun) {
-        printf_stderr("Extensions: %s 0x%02x\n", extensions, extensions[0]);
-        printf_stderr("Extensions length: %d\n", strlen(extensions));
-    }
-
-    mAvailableExtensions.Load(extensions, sExtensionNames, firstVerboseRun);
+    mAvailableExtensions.Load(extensions, sExtensionNames, firstRun && debugMode);
 
 #ifdef DEBUG
-    firstVerboseRun = false;
+    firstRun = false;
 #endif
 }
 
