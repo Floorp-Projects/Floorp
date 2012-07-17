@@ -498,6 +498,19 @@ ContentParent::ContentParent(const nsAString& aAppManifestURL)
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
     unused << SendSetID(gContentChildID++);
 
+    // NB: internally, this will send an IPC message to the child
+    // process to get it to create the CompositorChild.  This
+    // message goes through the regular IPC queue for this
+    // channel, so delivery will happen-before any other messages
+    // we send.  The CompositorChild must be created before any
+    // PBrowsers are created, because they rely on the Compositor
+    // already being around.  (Creation is async, so can't happen
+    // on demand.)
+    if (useOffMainThreadCompositing) {
+        DebugOnly<bool> opened = PCompositor::Open(this);
+        MOZ_ASSERT(opened);
+    }
+
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryChrome* chromeRegistry =
         static_cast<nsChromeRegistryChrome*>(registrySvc.get());
@@ -811,6 +824,13 @@ ContentParent::Observe(nsISupports* aSubject,
 #endif
 
     return NS_OK;
+}
+
+PCompositorParent*
+ContentParent::AllocPCompositor(ipc::Transport* aTransport,
+                                base::ProcessId aOtherProcess)
+{
+    return CompositorParent::Create(aTransport, aOtherProcess);
 }
 
 PBrowserParent*
