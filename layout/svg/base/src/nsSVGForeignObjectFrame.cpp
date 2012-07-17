@@ -67,7 +67,20 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
   AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
                NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  if (NS_SUCCEEDED(rv) &&
+      !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    nsSVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
+  }
   return rv;
+}
+
+void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  // Only unregister if we registered in the first place:
+  if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
+  }
+  nsSVGForeignObjectFrameBase::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom *
