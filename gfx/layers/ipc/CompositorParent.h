@@ -107,7 +107,7 @@ public:
   static void ShutDown();
 
 protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize);
+  virtual PLayersParent* AllocPLayers(const LayersBackend& aBackendType, const uint64_t& aId, int32_t* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();

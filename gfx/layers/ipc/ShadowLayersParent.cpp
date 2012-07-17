@@ -90,8 +90,12 @@ ShadowChild(const OpRemoveChild& op)
 //--------------------------------------------------
 // ShadowLayersParent
 ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager,
-                                       ShadowLayersManager* aLayersManager)
-  : mLayerManager(aManager), mShadowLayersManager(aLayersManager), mDestroyed(false)
+                                       ShadowLayersManager* aLayersManager,
+                                       uint64_t aId)
+  : mLayerManager(aManager)
+  , mShadowLayersManager(aLayersManager)
+  , mId(aId)
+  , mDestroyed(false)
 {
   MOZ_COUNT_CTOR(ShadowLayersParent);
 }

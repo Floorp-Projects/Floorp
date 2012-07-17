@@ -208,7 +208,7 @@ public:
     LAYERS_LAST
   };
 
-  LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true)
+  LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true), mId(0)
   {
     InitLog();
   }
@@ -518,6 +518,7 @@ protected:
 
   static void InitLog();
   static PRLogModuleInfo* sLog;
+  uint64_t mId;
 private:
   TimeStamp mLastFrameTime;
   nsTArray<float> mFrameTimes;

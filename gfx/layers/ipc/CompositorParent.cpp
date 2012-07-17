@@ -539,8 +539,12 @@ CompositorParent::ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
 }
 
 PLayersParent*
-CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextureSize)
+CompositorParent::AllocPLayers(const LayersBackend& aBackendType,
+                               const uint64_t& aId,
+                               int32_t* aMaxTextureSize)
 {
+  MOZ_ASSERT(aId == 0);
+
   // mWidget doesn't belong to the compositor thread, so it should be set to
   // NULL before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
@@ -569,7 +573,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextu
       return NULL;
     }
     *aMaxTextureSize = layerManager->GetMaxTextureSize();
-    return new ShadowLayersParent(slm, this);
+    return new ShadowLayersParent(slm, this, 0);
   } else if (aBackendType == LayerManager::LAYERS_BASIC) {
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
@@ -579,7 +583,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendType, int* aMaxTextu
       return NULL;
     }
     *aMaxTextureSize = layerManager->GetMaxTextureSize();
-    return new ShadowLayersParent(slm, this);
+    return new ShadowLayersParent(slm, this, 0);
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return NULL;
