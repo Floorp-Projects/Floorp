@@ -252,11 +252,11 @@
  */
 
 .details[open][animated] {
-  -moz-animation-duration: 0.25s;
-  -moz-animation-name: showblock;
+  animation-duration: 0.25s;
+  animation-name: showblock;
 }
 
-@-moz-keyframes showblock {
+@keyframes showblock {
   from {
     opacity: 0;
     transform-origin: top;
