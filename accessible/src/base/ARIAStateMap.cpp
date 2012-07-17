@@ -6,6 +6,7 @@
 
 #include "ARIAStateMap.h"
 
+#include "nsARIAMap.h"
 #include "States.h"
 
 #include "mozilla/dom/Element.h"
@@ -221,11 +222,23 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, PRUint64* aState)
 
     case eARIAOrientation:
     {
-      static const EnumTypeData data(
-        nsGkAtoms::aria_orientation, states::HORIZONTAL,
-        &nsGkAtoms::vertical, states::VERTICAL);
+      if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_orientation,
+                                NS_LITERAL_STRING("horizontal"), eCaseMatters)) {
+        *aState &= ~states::VERTICAL;
+        *aState |= states::HORIZONTAL;
+      } else if (aElement->AttrValueIs(kNameSpaceID_None,
+                                       nsGkAtoms::aria_orientation,
+                                       NS_LITERAL_STRING("vertical"),
+                                       eCaseMatters)) {
+        *aState &= ~states::HORIZONTAL;
+        *aState |= states::VERTICAL;
+      } else {
+        NS_ASSERTION(!(*aState & (states::HORIZONTAL | states::VERTICAL)),
+                     "orientation state on role with default aria-orientation!");
+        *aState |= GetRoleMap(aElement)->Is(nsGkAtoms::scrollbar) ?
+          states::VERTICAL : states::HORIZONTAL;
+      }
 
-      MapEnumType(aElement, aState, data);
       return true;
     }
 
