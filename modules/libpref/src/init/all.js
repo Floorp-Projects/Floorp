@@ -353,6 +353,10 @@ pref("nglayout.enable_drag_images", true);
 // enable/disable paint flashing --- useful for debugging
 pref("nglayout.debug.paint_flashing", false);
 
+// enable/disable widget update area flashing --- only supported with 
+// BasicLayers (other layer managers always update the entire widget area)
+pref("nglayout.debug.widget_update_flashing", false);
+
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
