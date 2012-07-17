@@ -27,6 +27,13 @@ namespace layers {
 
 static Thread* sCompositorThread = nsnull;
 
+/**
+ * Lookup the indirect shadow tree for |aId| and return it if it
+ * exists.  Otherwise null is returned.  This must only be called on
+ * the compositor thread.
+ */
+static Layer* GetIndirectShadowTree(uint64_t aId);
+
 void CompositorParent::StartUp()
 {
   CreateCompositorMap();
@@ -292,6 +299,52 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
   mScrollOffset = aScrollOffset;
 }
 
+/**
+ * DRAWING PHASE ONLY
+ *
+ * For reach RefLayer in |aRoot|, look up its referent and connect it
+ * to the layer tree, if found.  On exiting scope, detaches all
+ * resolved referents.
+ */
+class NS_STACK_CLASS AutoResolveRefLayers {
+public:
+  /**
+   * |aRoot| must remain valid in the scope of this, which should be
+   * guaranteed by this helper only being used during the drawing
+   * phase.
+   */
+  AutoResolveRefLayers(Layer* aRoot) : mRoot(aRoot)
+  { WalkTheTree<Resolve>(mRoot, nsnull); }
+
+  ~AutoResolveRefLayers()
+  { WalkTheTree<Detach>(mRoot, nsnull); }
+
+private:
+  enum Op { Resolve, Detach };
+  template<Op OP>
+  void WalkTheTree(Layer* aLayer, Layer* aParent)
+  {
+    if (RefLayer* ref = aLayer->AsRefLayer()) {
+      if (Layer* referent = GetIndirectShadowTree(ref->GetReferentId())) {
+        if (OP == Resolve) {
+          ref->ConnectReferentLayer(referent);
+        } else {
+          ref->DetachReferentLayer(referent);
+        }
+      }
+    }
+    for (Layer* child = aLayer->GetFirstChild();
+         child; child = child->GetNextSibling()) {
+      WalkTheTree<OP>(child, aLayer);
+    }
+  }
+
+  Layer* mRoot;
+
+  AutoResolveRefLayers(const AutoResolveRefLayers&) MOZ_DELETE;
+  AutoResolveRefLayers& operator=(const AutoResolveRefLayers&) MOZ_DELETE;
+};
+
 void
 CompositorParent::Composite()
 {
@@ -305,9 +358,11 @@ CompositorParent::Composite()
     return;
   }
 
+  Layer* aLayer = mLayerManager->GetRoot();
+  AutoResolveRefLayers resolve(aLayer);
+
   TransformShadowTree();
 
-  Layer* aLayer = mLayerManager->GetRoot();
   mozilla::layers::RenderTraceLayers(aLayer, "0000");
 
   mLayerManager->EndEmptyTransaction();
@@ -643,6 +698,12 @@ CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
   return it->second;
 }
 
+static Layer*
+GetIndirectShadowTree(uint64_t aId)
+{
+  // IMPL in later patch
+  return nsnull;
+}
 
 } // namespace layers
 } // namespace mozilla
