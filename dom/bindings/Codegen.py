@@ -1977,7 +1977,7 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = CGGeneric("nsString")
             return (
                 "{\n"
-                "  nsDependentString str;\n"
+                "  FakeDependentString str;\n"
                 "  if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, str)) {\n"
                 "    return false;\n"
                 "  }\n"
@@ -1997,7 +1997,7 @@ for (uint32_t i = 0; i < length; ++i) {
             "}\n"
             "const_cast<%s&>(${declName}) = &${holderName};" %
             (nullBehavior, undefinedBehavior, declType),
-            CGGeneric("const " + declType), CGGeneric("nsDependentString"),
+            CGGeneric("const " + declType), CGGeneric("FakeDependentString"),
             # No need to deal with Optional here; we have handled it already
             False)
 
