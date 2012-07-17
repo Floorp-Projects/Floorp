@@ -319,13 +319,27 @@ template <> struct IsPodType<DefinitionList> {
 } /* namespace tl */
 
 /*
- * Multimap for function-scope atom declarations.
+ * AtomDecls is a map of atoms to (sequences of) Definitions. It is used by
+ * TreeContext to store declarations. A declaration associates a name with a
+ * Definition.
+ * 
+ * Declarations with function scope (such as const, var, and function) are
+ * unique in the sense that they override any previous declarations with the
+ * same name. For such declarations, we only need to store a single Definition,
+ * using the method addUnique.
  *
- * Wraps an internal DefinitionList map with multi-map functionality.
+ * Declarations with block scope (such as let) are slightly more complex. They
+ * override any previous declarations with the same name, but only do so for
+ * the block they are associated with. This is known as shadowing. For such
+ * definitions, we need to store a sequence of Definitions, including those
+ * introduced by previous declarations (and which are now shadowed), using the
+ * method addShadow. When we leave the block associated with the let, the method
+ * remove is used to unshadow the declaration immediately preceding it.
  *
- * In the common case, no block scoping is used, and atoms have a single
- * associated definition. In the uncommon (block scoping) case, we map the atom
- * to a chain of definition nodes.
+ * Due to hoisting, a declaration with block scope can sometimes shadow a
+ * declaration with function scope that appears *after* it. In this case, we
+ * pretend that we actually encountered the latter declaration *before* the
+ * former, using the method addHoist.
  */
 class AtomDecls
 {
