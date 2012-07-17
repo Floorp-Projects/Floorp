@@ -54,6 +54,7 @@ class ImageContainer;
 class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
+class RefLayer;
 class ShadowLayer;
 class ShadowableLayer;
 class ShadowLayerForwarder;
@@ -364,6 +365,12 @@ public:
    * Create a ReadbackLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() { return nsnull; }
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a RefLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<RefLayer> CreateRefLayer() { return nsnull; }
+
 
   /**
    * Can be called anytime, from any thread.
@@ -541,6 +548,7 @@ public:
     TYPE_CONTAINER,
     TYPE_IMAGE,
     TYPE_READBACK,
+    TYPE_REF,
     TYPE_SHADOW,
     TYPE_THEBES
   };
@@ -817,6 +825,12 @@ public:
    * a ContainerLayer.
    */
   virtual ContainerLayer* AsContainerLayer() { return nsnull; }
+
+   /**
+    * Dynamic cast to a RefLayer. Returns null if this is not a
+    * RefLayer.
+    */
+  virtual RefLayer* AsRefLayer() { return nsnull; }
 
   /**
    * Dynamic cast to a ShadowLayer.  Return null if this is not a
@@ -1368,6 +1382,96 @@ protected:
    * Set to true in Updated(), cleared during a transaction.
    */
   bool mDirty;
+};
+
+/**
+ * ContainerLayer that refers to a "foreign" layer tree, through an
+ * ID.  Usage of RefLayer looks like
+ *
+ * Construction phase:
+ *   allocate ID for layer subtree
+ *   create RefLayer, SetReferentId(ID)
+ *
+ * Composition:
+ *   look up subtree for GetReferentId()
+ *   ConnectReferentLayer(subtree)
+ *   compose
+ *   ClearReferentLayer()
+ *
+ * Clients will usually want to Connect/Clear() on each transaction to
+ * avoid difficulties managing memory across multiple layer subtrees.
+ */
+class THEBES_API RefLayer : public ContainerLayer {
+  friend class LayerManager;
+
+private:
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
+  { MOZ_NOT_REACHED("no"); }
+
+  virtual void RemoveChild(Layer* aChild)
+  { MOZ_NOT_REACHED("no"); }
+
+  using ContainerLayer::SetFrameMetrics;
+
+public:
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the ID of the layer's referent.
+   */
+  void SetReferentId(uint64_t aId)
+  {
+    MOZ_ASSERT(aId != 0);
+    mId = aId;
+  }
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Connect this ref layer to its referent, temporarily.
+   * ClearReferentLayer() must be called after composition.
+   */
+  void ConnectReferentLayer(Layer* aLayer)
+  {
+    MOZ_ASSERT(!mFirstChild && !mLastChild);
+    MOZ_ASSERT(!aLayer->GetParent());
+
+    mFirstChild = mLastChild = aLayer;
+    aLayer->SetParent(this);
+  }
+
+  /**
+   * DRAWING PHASE ONLY
+   * |aLayer| is the same as the argument to ConnectReferentLayer().
+   */
+  void DetachReferentLayer(Layer* aLayer)
+  {
+    MOZ_ASSERT(aLayer == mFirstChild && mFirstChild == mLastChild);
+    MOZ_ASSERT(aLayer->GetParent() == this);
+
+    mFirstChild = mLastChild = nsnull;
+    aLayer->SetParent(nsnull);
+  }
+
+  // These getters can be used anytime.
+  virtual RefLayer* AsRefLayer() { return this; }
+
+  virtual int64_t GetReferentId() { return mId; }
+
+  /**
+   * DRAWING PHASE ONLY
+   */
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs);
+
+  MOZ_LAYER_DECL_NAME("RefLayer", TYPE_REF)
+
+protected:
+  RefLayer(LayerManager* aManager, void* aImplData)
+    : ContainerLayer(aManager, aImplData) , mId(0)
+  {}
+
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
+  Layer* mTempReferent;
+  // 0 is a special value that means "no ID".
+  uint64_t mId;
 };
 
 #ifdef MOZ_DUMP_PAINTING

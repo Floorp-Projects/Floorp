@@ -152,6 +152,42 @@ public:
   }
 };
 
+class BasicShadowableRefLayer : public RefLayer, public BasicImplData,
+                                public BasicShadowableLayer {
+  template<class Container>
+  friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
+                                                  Container* aContainer);
+public:
+  BasicShadowableRefLayer(BasicShadowLayerManager* aManager) :
+    RefLayer(aManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowableRefLayer);
+  }
+  virtual ~BasicShadowableRefLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableRefLayer);
+  }
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+  virtual void Disconnect()
+  {
+    BasicShadowableLayer::Disconnect();
+  }
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    ContainerComputeEffectiveTransforms(aTransformToSurface, this);
+  }
+
+private:
+  BasicShadowLayerManager* ShadowManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+};
+
 already_AddRefed<ContainerLayer>
 BasicLayerManager::CreateContainerLayer()
 {
@@ -170,12 +206,30 @@ BasicShadowLayerManager::CreateContainerLayer()
   return layer.forget();
 }
 
+already_AddRefed<RefLayer>
+BasicShadowLayerManager::CreateRefLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableRefLayer> layer =
+    new BasicShadowableRefLayer(this);
+  MAYBE_CREATE_SHADOW(Ref);
+  return layer.forget();
+}
+
 already_AddRefed<ShadowContainerLayer>
 BasicShadowLayerManager::CreateShadowContainerLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ShadowContainerLayer> layer = new BasicShadowContainerLayer(this);
   return layer.forget();
+}
+
+already_AddRefed<ShadowRefLayer>
+BasicShadowLayerManager::CreateShadowRefLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  // FIXME/IMPL
+  return nsnull;
 }
 
 }
