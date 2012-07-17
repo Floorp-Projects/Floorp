@@ -2058,35 +2058,30 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isDictionary():
         if failureCode is not None:
             raise TypeError("Can't handle dictionaries when failureCode is not None")
+        # There are no nullable dictionaries
+        assert not type.nullable()
+        # All optional dictionaries always have default values, so we
+        # should be able to assume not isOptional here.
+        assert not isOptional
 
-        if type.nullable():
-            typeName = CGDictionary.makeDictionaryName(type.inner.inner,
-                                                       descriptorProvider.workers)
-            actualTypeName = "Nullable<%s>" % typeName
-            selfRef = "const_cast<%s&>(${declName}).SetValue()" % actualTypeName
-        else:
-            typeName = CGDictionary.makeDictionaryName(type.inner,
-                                                       descriptorProvider.workers)
-            actualTypeName = typeName
-            selfRef = "${declName}"
+        typeName = CGDictionary.makeDictionaryName(type.inner,
+                                                   descriptorProvider.workers)
+        actualTypeName = typeName
+        selfRef = "${declName}"
 
         declType = CGGeneric(actualTypeName)
 
-        # If we're optional or a member of something else, the const
+        # If we're a member of something else, the const
         # will come from the Optional or our container.
-        if not isOptional and not isMember:
+        if not isMember:
             declType = CGWrapper(declType, pre="const ")
             selfRef = "const_cast<%s&>(%s)" % (typeName, selfRef)
 
-        template = wrapObjectTemplate("if (!%s.Init(cx, &${val}.toObject())) {\n"
-                                      "  return false;\n"
-                                      "}" % selfRef,
-                                      isDefinitelyObject, type,
-                                      ("const_cast<%s&>(${declName}).SetNull()" %
-                                       actualTypeName),
-                                      descriptorProvider.workers, None)
+        template = ("if (!%s.Init(cx, ${val})) {\n"
+                    "  return false;\n"
+                    "}" % selfRef)
 
-        return (template, declType, None, isOptional)
+        return (template, declType, None, False)
 
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % type)
@@ -2833,6 +2828,13 @@ class CGMethodCall(CGThing):
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
 
+            # We can't handle unions at the distinguishing index.
+            for (returnType, args) in possibleSignatures:
+                if args[distinguishingIndex].type.isUnion():
+                    raise TypeError("No support for unions as distinguishing "
+                                    "arguments yet: %s",
+                                    args[distinguishingIndex].location)
+
             # Convert all our arguments up to the distinguishing index.
             # Doesn't matter which of the possible signatures we use, since
             # they all have the same types up to that point; just use
@@ -2863,7 +2865,8 @@ class CGMethodCall(CGThing):
 
             # First check for null or undefined
             pickFirstSignature("%s.isNullOrUndefined()" % distinguishingArg,
-                               lambda s: s[1][distinguishingIndex].type.nullable())
+                               lambda s: (s[1][distinguishingIndex].type.nullable() or
+                                          s[1][distinguishingIndex].type.isDictionary()))
 
             # Now check for distinguishingArg being an object that implements a
             # non-callback interface.  That includes typed arrays and
@@ -3282,6 +3285,8 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
 def getUnionTypeTemplateVars(type, descriptorProvider):
     # For dictionaries and sequences we need to pass None as the failureCode
     # for getJSToNativeConversionTemplate.
+    # Also, for dictionaries we would need to handle conversion of
+    # null/undefined to the dictionary correctly.
     if type.isDictionary() or type.isSequence():
         raise TypeError("Can't handle dictionaries or sequences in unions")
 
@@ -4106,7 +4111,7 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JSObject* obj);\n"
+                "  bool Init(JSContext* cx, const JS::Value& val);\n"
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
@@ -4126,7 +4131,7 @@ class CGDictionary(CGThing):
         d = self.dictionary
         if d.parent:
             initParent = ("// Per spec, we init the parent's members first\n"
-                          "if (!%s::Init(cx, obj)) {\n"
+                          "if (!%s::Init(cx, val)) {\n"
                           "  return false;\n"
                           "}\n" % self.makeClassName(d.parent))
         else:
@@ -4160,7 +4165,7 @@ class CGDictionary(CGThing):
             "}\n"
             "\n"
             "bool\n"
-            "${selfName}::Init(JSContext* cx, JSObject* obj)\n"
+            "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
             "{\n"
             "  if (!initedIds && !InitIds(cx)) {\n"
             "    return false;\n"
@@ -4168,6 +4173,10 @@ class CGDictionary(CGThing):
             "${initParent}"
             "  JSBool found;\n"
             "  JS::Value temp;\n"
+            "  bool isNull = val.isNullOrUndefined();\n"
+            "  if (!isNull && !val.isObject()) {\n"
+            "    return Throw<${isMainThread}>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
+            "  }\n"
             "\n"
             "${initMembers}\n"
             "  return true;\n"
@@ -4175,7 +4184,8 @@ class CGDictionary(CGThing):
                 "selfName": self.makeClassName(d),
                 "initParent": CGIndenter(CGGeneric(initParent)).define(),
                 "initMembers": "\n\n".join(memberInits),
-                "idInit": CGIndenter(idinit).define()
+                "idInit": CGIndenter(idinit).define(),
+                "isMainThread": toStringBool(not self.workers)
                 })
 
     @staticmethod
@@ -4222,13 +4232,15 @@ class CGDictionary(CGThing):
             "prop": "(this->%s)" % member.identifier.name,
             "convert": string.Template(templateBody).substitute(replacements)
             }
-        conversion = ("if (!JS_HasPropertyById(cx, obj, ${propId}, &found)) {\n"
+        conversion = ("if (isNull) {\n"
+                      "  found = false;\n"
+                      "} else if (!JS_HasPropertyById(cx, &val.toObject(), ${propId}, &found)) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
             conversion += (
                 "if (found) {\n"
-                "  if (!JS_GetPropertyById(cx, obj, ${propId}, &temp)) {\n"
+                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "} else {\n"
@@ -4241,7 +4253,7 @@ class CGDictionary(CGThing):
             conversion += (
                 "if (found) {\n"
                 "  ${prop}.Construct();\n"
-                "  if (!JS_GetPropertyById(cx, obj, ${propId}, &temp)) {\n"
+                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "${convert}\n"
