@@ -333,8 +333,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     if (mInitialized) {
 #ifdef DEBUG
-        static bool once = false;
-        if (DebugMode() && !once) {
+        static bool firstRun = true;
+        if (firstRun && DebugMode()) {
             const char *vendors[VendorOther] = {
                 "Intel",
                 "NVIDIA",
@@ -342,7 +342,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Qualcomm"
             };
 
-            once = true;
             if (mVendor < VendorOther) {
                 printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
                               glVendorString, vendors[mVendor]);
@@ -350,6 +349,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
             }
         }
+        firstRun = false;
 #endif
 
         InitExtensions();
@@ -540,17 +540,16 @@ GLContext::InitExtensions()
         return;
 
 #ifdef DEBUG
-    // If DEBUG, then be verbose the first time we're run.
-    static bool firstVerboseRun = true;
+    static bool firstRun = true;
 #else
     // Non-DEBUG, so never spew.
-    const bool firstVerboseRun = false;
+    const bool firstRun = false;
 #endif
 
-    mAvailableExtensions.Load(extensions, sExtensionNames, firstVerboseRun);
+    mAvailableExtensions.Load(extensions, sExtensionNames, firstRun && DebugMode());
 
 #ifdef DEBUG
-    firstVerboseRun = false;
+    firstRun = false;
 #endif
 }
 
