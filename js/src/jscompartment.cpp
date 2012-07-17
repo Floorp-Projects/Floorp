@@ -276,8 +276,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!crossCompartmentWrappers.put(key, *vp))
         return false;
 
-    if (!JSObject::setParent(cx, wrapper, global))
-        return false;
     return true;
 }
 
