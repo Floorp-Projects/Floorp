@@ -83,18 +83,20 @@ class ResultsSink:
         self.fp = options.output_fp
 
         self.groups = {}
-        self.counts = [ 0, 0, 0 ]
+        self.counts = {'PASS': 0, 'FAIL': 0, 'TIMEOUT': 0, 'SKIP': 0}
         self.n = 0
 
         self.pb = None
         if not options.hide_progress:
-            self.pb = ProgressBar('', testcount, 16)
+            self.pb = ProgressBar('', testcount, 21)
 
     def push(self, output):
+        if output.timed_out:
+            self.counts['TIMEOUT'] += 1
         if isinstance(output, NullTestOutput):
             if self.options.tinderbox:
                 self.print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
-            self.counts[2] += 1
+            self.counts['SKIP'] += 1
             self.n += 1
         else:
             if self.options.show_cmd:
@@ -115,11 +117,11 @@ class ResultsSink:
             self.n += 1
 
             if result.result == TestResult.PASS and not result.test.random:
-                self.counts[0] += 1
+                self.counts['PASS'] += 1
             elif result.test.expect and not result.test.random:
-                self.counts[1] += 1
+                self.counts['FAIL'] += 1
             else:
-                self.counts[2] += 1
+                self.counts['SKIP'] += 1
 
             if self.options.tinderbox:
                 if len(result.results) > 1:
@@ -141,7 +143,10 @@ class ResultsSink:
                 print >> self.fp, "%s - %s" % (singular(dev_label), output.test.path)
 
         if self.pb:
-            self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)
+            self.pb.label = '[%4d|%4d|%4d|%4d]'% (self.counts['PASS'],
+                                                  self.counts['FAIL'],
+                                                  self.counts['TIMEOUT'],
+                                                  self.counts['SKIP'])
             self.pb.update(self.n)
 
     def finish(self, completed):
