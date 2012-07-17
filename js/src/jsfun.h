@@ -40,9 +40,6 @@
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_EXTENDED      0x2000  /* structure is FunctionExtended */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.native */
-#define JSFUN_NULL_CLOSURE  0x8000  /* null closure entrains no scope chain */
-#define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
-                                       optimization level -- see above */
 
 namespace js { class FunctionExtended; }
 
@@ -65,20 +62,13 @@ struct JSFunction : public JSObject
 
     bool hasDefaults()       const { return flags & JSFUN_HAS_DEFAULTS; }
     bool hasRest()           const { return flags & JSFUN_HAS_REST; }
-    bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
+    bool isInterpreted()     const { return flags & JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
     bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
-    bool isNullClosure()     const { return kind() == JSFUN_NULL_CLOSURE; }
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
     bool isInterpretedConstructor() const { return isInterpreted() && !isFunctionPrototype(); }
     bool isNamedLambda()     const { return (flags & JSFUN_LAMBDA) && atom; }
-
-    uint16_t kind()          const { return flags & JSFUN_KINDMASK; }
-    void setKind(uint16_t k) {
-        JS_ASSERT(!(k & ~JSFUN_KINDMASK));
-        flags = (flags & ~JSFUN_KINDMASK) | k;
-    }
 
     /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;

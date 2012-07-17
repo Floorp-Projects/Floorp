@@ -4852,9 +4852,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return EmitFunctionDefNop(cx, bce, pn->pn_index);
     }
 
-    JS_ASSERT_IF(pn->pn_funbox->funIsHeavyweight(),
-                 fun->kind() == JSFUN_INTERPRETED);
-
     {
         FunctionBox *funbox = pn->pn_funbox;
         SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, funbox->strictModeState);
