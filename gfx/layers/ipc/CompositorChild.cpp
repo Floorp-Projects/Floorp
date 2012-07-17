@@ -42,7 +42,7 @@ CompositorChild::Destroy()
 }
 
 PLayersChild*
-CompositorChild::AllocPLayers(const LayersBackend &aBackend, int* aMaxTextureSize)
+CompositorChild::AllocPLayers(const LayersBackend &aBackend, const uint64_t& aId, int* aMaxTextureSize)
 {
   return new ShadowLayersChild();
 }

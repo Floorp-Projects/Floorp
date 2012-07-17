@@ -179,9 +179,9 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
 {
   static bool gDisableNativeThemeCached = false;
   if (!gDisableNativeThemeCached) {
-    mozilla::Preferences::AddBoolVarCache(&gDisableNativeTheme,
-                                          "mozilla.widget.disable-native-theme",
-                                          gDisableNativeTheme);
+    Preferences::AddBoolVarCache(&gDisableNativeTheme,
+                                 "mozilla.widget.disable-native-theme",
+                                 gDisableNativeTheme);
     gDisableNativeThemeCached = true;
   }
 
@@ -879,9 +879,9 @@ void nsBaseWidget::CreateCompositor()
   PRInt32 maxTextureSize;
   PLayersChild* shadowManager;
   if (mUseAcceleratedRendering) {
-    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, &maxTextureSize);
+    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, 0, &maxTextureSize);
   } else {
-    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_BASIC, &maxTextureSize);
+    shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_BASIC, 0, &maxTextureSize);
   }
 
   if (shadowManager) {
