@@ -4399,7 +4399,7 @@ nsXPCComponents_Utils::NukeSandbox(const JS::Value &obj, JSContext *cx)
     NS_ENSURE_TRUE(GetObjectJSClass(sb) == &SandboxClass, NS_ERROR_INVALID_ARG);
     NukeCrossCompartmentWrappers(cx, AllCompartments(), 
                                  SingleCompartment(GetObjectCompartment(sb)),
-                                 NukeForGlobalObject);
+                                 NukeWindowReferences);
     return NS_OK;
 }
 

@@ -6869,8 +6869,8 @@ public:
         js::NukeCrossCompartmentWrappers(cx, 
                                          js::ChromeCompartmentsOnly(),
                                          js::SingleCompartment(js::GetObjectCompartment(obj)),
-                                         window->IsInnerWindow() ? js::DontNukeForGlobalObject :
-                                                                   js::NukeForGlobalObject);
+                                         window->IsInnerWindow() ? js::DontNukeWindowReferences :
+                                                                   js::NukeWindowReferences);
       }
     }
 
