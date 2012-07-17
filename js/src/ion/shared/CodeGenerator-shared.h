@@ -95,6 +95,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Vector of all patchable write pre-barrier offsets.
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> barrierOffsets_;
 
+    // List of stack slots that have been pushed as arguments to an MCall.
+    js::Vector<uint32, 0, SystemAllocPolicy> pushedArgumentSlots_;
+
   protected:
     // The offset of the first instruction of the OSR entry block from the
     // beginning of the code buffer.
@@ -109,6 +112,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
     typedef js::Vector<SafepointIndex, 8, SystemAllocPolicy> SafepointIndices;
+
+    bool markArgumentSlots(LSafepoint *safepoint);
+    void dropArguments(unsigned argc);
 
   protected:
     // The initial size of the frame in bytes. These are bytes beyond the
@@ -134,6 +140,16 @@ class CodeGeneratorShared : public LInstructionVisitor
         int32 offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
         JS_ASSERT(offset >= 0);
         return offset;
+    }
+    inline int32 StackOffsetToSlot(int32 offset) const {
+        // See: SlotToStackOffset. This is used to convert pushed arguments
+        // to a slot index that safepoints can use.
+        //
+        // offset = framePushed - (slot * STACK_SLOT_SIZE)
+        // offset + (slot * STACK_SLOT_SIZE) = framePushed
+        // slot * STACK_SLOT_SIZE = framePushed - offset
+        // slot = (framePushed - offset) / STACK_SLOT_SIZE
+        return (masm.framePushed() - offset) / STACK_SLOT_SIZE;
     }
 
     // For argument construction for calls. Argslots are Value-sized.

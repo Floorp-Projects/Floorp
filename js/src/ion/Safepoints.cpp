@@ -47,9 +47,9 @@ using namespace js;
 using namespace ion;
 
 bool
-SafepointWriter::init(uint32 localSlotCount)
+SafepointWriter::init(uint32 slotCount)
 {
-    frameSlots_ = BitSet::New(localSlotCount);
+    frameSlots_ = BitSet::New(slotCount);
     if (!frameSlots_)
         return false;
 
@@ -270,7 +270,7 @@ SafepointWriter::endEntry()
 SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
   : stream_(script->safepoints() + si->safepointOffset(),
             script->safepoints() + script->safepointsSize()),
-    localSlotCount_(script->frameLocals())
+    frameSlots_(script->frameSlots())
 {
     osiCallPointOffset_ = stream_.readUnsigned();
 
@@ -312,7 +312,7 @@ SafepointReader::getSlotFromBitmap(uint32 *slot)
         currentSlotChunkNumber_++;
 
         // Are there any more chunks to read?
-        if (currentSlotChunkNumber_ == BitSet::RawLengthForBits(localSlotCount_))
+        if (currentSlotChunkNumber_ == BitSet::RawLengthForBits(frameSlots_))
             return false;
 
         // Yes, read the next chunk.

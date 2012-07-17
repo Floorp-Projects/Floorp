@@ -62,7 +62,7 @@ class SafepointWriter
     BitSet *frameSlots_;
 
   public:
-    bool init(uint32 localSlotCount);
+    bool init(uint32 slotCount);
 
     // A safepoint entry is written in the order these functions appear.
     uint32 startEntry();
@@ -84,7 +84,7 @@ class SafepointWriter
 class SafepointReader
 {
     CompactBufferReader stream_;
-    uint32 localSlotCount_;
+    uint32 frameSlots_;
     uint32 currentSlotChunk_;
     uint32 currentSlotChunkNumber_;
     uint32 osiCallPointOffset_;
