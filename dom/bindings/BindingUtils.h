@@ -682,15 +682,6 @@ public:
 #endif
   }
 
-  template<typename U>
-  void operator=(U* t) {
-    ptr = t->ToAStringPtr();
-    MOZ_ASSERT(ptr);
-#ifdef DEBUG
-    inited = true;
-#endif
-  }
-
   T** Slot() {
 #ifdef DEBUG
     inited = true;
@@ -745,72 +736,6 @@ protected:
 #endif
 };
 
-// A struct that has the same layout as an nsDependentString but much
-// faster constructor and destructor behavior
-struct FakeDependentString {
-  FakeDependentString() :
-    mFlags(nsDependentString::F_TERMINATED)
-  {
-  }
-
-  void SetData(const nsDependentString::char_type* aData,
-               nsDependentString::size_type aLength) {
-    MOZ_ASSERT(mFlags == nsDependentString::F_TERMINATED);
-    mData = aData;
-    mLength = aLength;
-  }
-
-  void Truncate() {
-    mData = nsnull;
-    mLength = 0;
-  }
-
-  void SetNull() {
-    Truncate();
-    mFlags |= nsDependentString::F_VOIDED;
-  }
-
-  const nsAString* ToAStringPtr() const {
-    return reinterpret_cast<const nsDependentString*>(this);
-  }
-
-  nsAString* ToAStringPtr() {
-    return reinterpret_cast<nsDependentString*>(this);
-  }
-
-  operator const nsAString& () const {
-    return *reinterpret_cast<const nsDependentString*>(this);
-  }
-
-private:
-  const nsDependentString::char_type* mData;
-  nsDependentString::size_type mLength;
-  PRUint32 mFlags;
-
-  // A class to use for our static asserts to ensure our object layout
-  // matches that of nsDependentString.
-  class DepedentStringAsserter : public nsDependentString {
-  public:
-    static const size_t dataOffset = offsetof(nsDependentString, mData);
-    static const size_t lengthOffset = offsetof(nsDependentString, mLength);
-    static const size_t flagsOffset = offsetof(nsDependentString, mFlags);
-  };
-
-  static void StaticAsserts() {
-    MOZ_STATIC_ASSERT(sizeof(FakeDependentString) == sizeof(nsDependentString),
-                      "Must have right object size");
-    MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mData) ==
-                        DepedentStringAsserter::dataOffset,
-                      "Offset of mData should match");
-    MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mLength) ==
-                        DepedentStringAsserter::lengthOffset,
-                      "Offset of mLength should match");
-    MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mFlags) ==
-                        DepedentStringAsserter::flagsOffset,
-                      "Offset of mFlags should match");
-  }
-};
-
 enum StringificationBehavior {
   eStringify,
   eEmpty,
@@ -821,7 +746,7 @@ static inline bool
 ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       FakeDependentString& result)
+                       nsDependentString& result)
 {
   JSString *s;
   if (v.isString()) {
@@ -842,11 +767,7 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
     if (behavior != eStringify || !pval) {
       // Here behavior == eStringify implies !pval, so both eNull and
       // eStringify should end up with void strings.
-      if (behavior == eEmpty) {
-        result.Truncate();
-      } else {
-        result.SetNull();
-      }
+      result.SetIsVoid(behavior != eEmpty);
       return true;
     }
 
@@ -863,7 +784,7 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
     return false;
   }
 
-  result.SetData(chars, len);
+  result.Rebind(chars, len);
   return true;
 }
 
@@ -915,12 +836,6 @@ public:
   void operator=(const nsAString* str) {
     MOZ_ASSERT(str);
     mStr = str;
-    mPassed = true;
-  }
-
-  void operator=(const FakeDependentString* str) {
-    MOZ_ASSERT(str);
-    mStr = str->ToAStringPtr();
     mPassed = true;
   }
 
