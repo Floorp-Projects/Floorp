@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsGeoPosition.h"
+#include "nsThreadUtils.h"
 #include "GonkGPSGeolocationProvider.h"
 
 using namespace mozilla;
@@ -15,77 +16,7 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS1(GonkGPSGeolocationProvider, nsIGeolocationProvider)
 
 GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton;
-
-static void
-LocationCallback(GpsLocation* location)
-{
-  nsRefPtr<GonkGPSGeolocationProvider> provider =
-    GonkGPSGeolocationProvider::GetSingleton();
-  nsCOMPtr<nsIGeolocationUpdate> callback = provider->GetLocationCallback();
-  
-  if (!callback)
-    return;
-
-  nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(location->latitude,
-                                                        location->longitude,
-                                                        location->altitude,
-                                                        location->accuracy,
-                                                        location->accuracy,
-                                                        location->bearing,
-                                                        location->speed,
-                                                        location->timestamp);
-  callback->Update(somewhere);
-}
-
-static void
-StatusCallback(GpsStatus* status)
-{}
-
-static void
-SvStatusCallback(GpsSvStatus* sv_info)
-{}
-
-static void
-NmeaCallback(GpsUtcTime timestamp, const char* nmea, int length)
-{}
-
-static void
-SetCapabilitiesCallback(uint32_t capabilities)
-{}
-
-static void
-AcquireWakelockCallback()
-{}
-
-static void
-ReleaseWakelockCallback()
-{}
-
-typedef void *(*pthread_func)(void *);
-
-/** Callback for creating a thread that can call into the JS codes.
- */
-static pthread_t
-CreateThreadCallback(const char* name, void (*start)(void *), void* arg)
-{
-  pthread_t thread;
-  pthread_attr_t attr;
-
-  pthread_attr_init(&attr);
-
-  /* Unfortunately pthread_create and the callback disagreed on what
-   * start function should return.
-   */
-  pthread_create(&thread, &attr, reinterpret_cast<pthread_func>(start), arg);
-
-  return thread;
-}
-
-static void
-RequestUtcTimeCallback()
-{}
-
-static GpsCallbacks gCallbacks = {
+GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {
   sizeof(GpsCallbacks),
   LocationCallback,
   StatusCallback,
@@ -100,6 +31,93 @@ static GpsCallbacks gCallbacks = {
 #endif
 };
 
+void
+GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
+{
+  class UpdateLocationEvent : public nsRunnable {
+  public:
+    UpdateLocationEvent(nsGeoPosition* aPosition)
+      : mPosition(aPosition)
+    {}
+    NS_IMETHOD Run() {
+      nsRefPtr<GonkGPSGeolocationProvider> provider =
+        GonkGPSGeolocationProvider::GetSingleton();
+      nsCOMPtr<nsIGeolocationUpdate> callback = provider->mLocationCallback;
+      if (callback) {
+        callback->Update(mPosition);
+      }
+      return NS_OK;
+    }
+  private:
+    nsRefPtr<nsGeoPosition> mPosition;
+  };
+
+  nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(location->latitude,
+                                                        location->longitude,
+                                                        location->altitude,
+                                                        location->accuracy,
+                                                        location->accuracy,
+                                                        location->bearing,
+                                                        location->speed,
+                                                        location->timestamp);
+  NS_DispatchToMainThread(new UpdateLocationEvent(somewhere));
+}
+
+void
+GonkGPSGeolocationProvider::StatusCallback(GpsStatus* status)
+{
+}
+
+void
+GonkGPSGeolocationProvider::SvStatusCallback(GpsSvStatus* sv_info)
+{
+}
+
+void
+GonkGPSGeolocationProvider::NmeaCallback(GpsUtcTime timestamp, const char* nmea, int length)
+{
+}
+
+void
+GonkGPSGeolocationProvider::SetCapabilitiesCallback(uint32_t capabilities)
+{
+}
+
+void
+GonkGPSGeolocationProvider::AcquireWakelockCallback()
+{
+}
+
+void
+GonkGPSGeolocationProvider::ReleaseWakelockCallback()
+{
+}
+
+typedef void *(*pthread_func)(void *);
+
+/** Callback for creating a thread that can call into the JS codes.
+ */
+pthread_t
+GonkGPSGeolocationProvider::CreateThreadCallback(const char* name, void (*start)(void *), void* arg)
+{
+  pthread_t thread;
+  pthread_attr_t attr;
+
+  pthread_attr_init(&attr);
+
+  /* Unfortunately pthread_create and the callback disagreed on what
+   * start function should return.
+   */
+  pthread_create(&thread, &attr, reinterpret_cast<pthread_func>(start), arg);
+
+  return thread;
+}
+
+void
+GonkGPSGeolocationProvider::RequestUtcTimeCallback()
+{
+}
+
 GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
   : mStarted(false)
   , mGpsInterface(nsnull)
@@ -108,11 +126,11 @@ GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
 
 GonkGPSGeolocationProvider::~GonkGPSGeolocationProvider()
 {
-  Shutdown();
+  ShutdownNow();
   sSingleton = NULL;
 }
 
-/* static */ already_AddRefed<GonkGPSGeolocationProvider>
+already_AddRefed<GonkGPSGeolocationProvider>
 GonkGPSGeolocationProvider::GetSingleton()
 {
   if (!sSingleton)
@@ -120,13 +138,6 @@ GonkGPSGeolocationProvider::GetSingleton()
 
   NS_ADDREF(sSingleton);
   return sSingleton;
-}
-
-already_AddRefed<nsIGeolocationUpdate>
-GonkGPSGeolocationProvider::GetLocationCallback()
-{
-  nsCOMPtr<nsIGeolocationUpdate> callback = mLocationCallback;
-  return callback.forget();
 }
 
 const GpsInterface*
@@ -150,25 +161,52 @@ GonkGPSGeolocationProvider::GetGPSInterface()
   return result;
 }
 
+void
+GonkGPSGeolocationProvider::Init()
+{
+  // Must not be main thread. Some GPS driver's first init takes very long.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  mGpsInterface = GetGPSInterface();
+  if (!mGpsInterface) {
+    return;
+  }
+
+  if (mGpsInterface->init(&mCallbacks) != 0) {
+    return;
+  }
+
+  NS_DispatchToMainThread(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::StartGPS));
+}
+
+void
+GonkGPSGeolocationProvider::StartGPS()
+{
+  PRInt32 update = Preferences::GetInt("geo.default.update", 1000);
+
+  int positionMode = GPS_POSITION_MODE_STANDALONE;
+
+  mGpsInterface->set_position_mode(positionMode,
+                                   GPS_POSITION_RECURRENCE_PERIODIC,
+                                   update, 0, 0);
+
+  mGpsInterface->start();
+}
+
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Startup()
 {
-  if (mStarted)
+  if (mStarted) {
     return NS_OK;
+  }
 
-  mGpsInterface = GetGPSInterface();
+  if (!mInitThread) {
+    nsresult rv = NS_NewThread(getter_AddRefs(mInitThread));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  NS_ENSURE_TRUE(mGpsInterface, NS_ERROR_FAILURE);
-
-  PRInt32 update = Preferences::GetInt("geo.default.update", 1000);
-
-  if (mGpsInterface->init(&gCallbacks) != 0)
-    return NS_ERROR_FAILURE;
-
-  mGpsInterface->start();
-  mGpsInterface->set_position_mode(GPS_POSITION_MODE_STANDALONE,
-                                   GPS_POSITION_RECURRENCE_PERIODIC,
-                                   update, 0, 0);
+  mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::Init),
+                        NS_DISPATCH_NORMAL);
 
   mStarted = true;
   return NS_OK;
@@ -184,14 +222,27 @@ GonkGPSGeolocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Shutdown()
 {
-  if (!mStarted)
+  if (!mStarted) {
     return NS_OK;
+  }
 
-  NS_ENSURE_TRUE(mGpsInterface, NS_OK);
+  mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::ShutdownNow),
+                        NS_DISPATCH_NORMAL);
+
+  return NS_OK;
+}
+
+void
+GonkGPSGeolocationProvider::ShutdownNow()
+{
+  if (!mGpsInterface) {
+    return;
+  }
 
   mGpsInterface->stop();
   mGpsInterface->cleanup();
-  return NS_OK;
+  mStarted = false;
+  mInitThread = nsnull;
 }
 
 NS_IMETHODIMP
