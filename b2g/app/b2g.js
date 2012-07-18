@@ -198,6 +198,8 @@ pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/b2g/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/b2g/faq/");
+// Whether we want to report crashes (headless)
+pref("app.reportCrashes", true);
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");

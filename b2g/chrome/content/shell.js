@@ -74,6 +74,22 @@ function addPermissions(urls) {
 }
 
 var shell = {
+
+  get CrashSubmit() {
+    delete this.CrashSubmit;
+    Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
+    return this.CrashSubmit;
+  },
+
+  reportCrash: function shell_reportCrash() {
+    let crashID = Cc["@mozilla.org/xre/app-info;1"]
+      .getService(Ci.nsIXULRuntime).lastRunCrashID;
+    if (Services.prefs.getBoolPref('app.reportCrashes') &&
+        crashID) {
+      this.CrashSubmit().submit(crashID)
+    }
+  },
+
   get contentBrowser() {
     delete this.contentBrowser;
     return this.contentBrowser = document.getElementById('homescreen');
@@ -269,6 +285,8 @@ var shell = {
           return;
 
         this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
+
+        this.reportCrash();
 
         let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
         chromeWindow.browserDOMWindow = new nsBrowserAccess();
