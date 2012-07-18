@@ -79,7 +79,6 @@ static const char *sExtensionNames[] = {
     "GL_ARB_sync",
     "GL_OES_EGL_image",
     "GL_OES_EGL_sync",
-    "GL_OES_EGL_image_external",
     nsnull
 };
 
@@ -471,7 +470,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         if (IsExtensionSupported(OES_EGL_image)) {
             SymLoadStruct imageSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fEGLImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nsnull } },
+                { (PRFuncPtr*) &mSymbols.fImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nsnull } },
                 { nsnull, { nsnull } },
             };
 
@@ -479,7 +478,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 NS_ERROR("GL supports OES_EGL_image without supplying its functions.");
 
                 MarkExtensionUnsupported(OES_EGL_image);
-                mSymbols.fEGLImageTargetTexture2D = nsnull;
+                mSymbols.fImageTargetTexture2D = nsnull;
             }
         }
        
