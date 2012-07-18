@@ -28,6 +28,7 @@ _BROWSER_FILES = \
 	browser_newtab_bug725996.js \
 	browser_newtab_bug734043.js \
 	browser_newtab_bug735987.js \
+	browser_newtab_bug765628.js \
 	head.js \
 	$(NULL)
 

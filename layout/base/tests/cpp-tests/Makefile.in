@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH            = ../../../..
-topsrcdir        = @top_srcdir@
-srcdir           = @srcdir@
-VPATH            = @srcdir@
-relativesrcdir   = toolkit/components/osfile/tests
-
-MODULE           = test_osfile
-DIRS = mochi
+DEPTH := ../../../..
+topsrcdir := @top_srcdir@
+srcdir := @srcdir@
+VPATH := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+CPP_UNIT_TESTS := \
+  TestPoisonArea.cpp \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

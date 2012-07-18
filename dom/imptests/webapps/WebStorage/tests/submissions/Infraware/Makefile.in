@@ -12,8 +12,9 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-MOCHITEST_FILES = \
+_FILES = \
   test_event_constructor.html \
   test_event_local_key.html \
   test_event_local_newvalue.html \
@@ -42,7 +43,5 @@ MOCHITEST_FILES = \
   test_storage_session_setitem.html \
   $(NULL)
 
-MOCHITEST_FILES += \
-  $(NULL)
-
-include $(topsrcdir)/config/rules.mk
+libs:: $(_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

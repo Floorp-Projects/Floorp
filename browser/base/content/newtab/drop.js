@@ -90,14 +90,14 @@ let gDrop = {
       if (aCell != draggedSite.cell)
         draggedSite.pin(index);
     } else {
-      // A new link was dragged onto the grid. Create it by pinning its URL.
-      let dt = aEvent.dataTransfer;
-      let [url, title] = dt.getData("text/x-moz-url").split(/[\r\n]+/);
-      let link = {url: url, title: title};
-      gPinnedLinks.pin(link, index);
+      let link = gDragDataHelper.getLinkFromDragEvent(aEvent);
+      if (link) {
+        // A new link was dragged onto the grid. Create it by pinning its URL.
+        gPinnedLinks.pin(link, index);
 
-      // Make sure the newly added link is not blocked.
-      gBlockedLinks.unblock(link);
+        // Make sure the newly added link is not blocked.
+        gBlockedLinks.unblock(link);
+      }
     }
   },
 

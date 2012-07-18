@@ -49,6 +49,18 @@ Source;  Usage and purpose;  License
         use with outstanding changes in either directory.
   MPL
 
+* parseFailures.py
+  Parses failures out of a mochitest log and writes out JSON files and Makefiles
+  into the correct failures/ folder.
+  The mochitest log should be produced by setting the 'dumpFailures' flag in
+  testharnessreport.js; this will print out the encountered failures, marked
+  by @ signs.
+  MPL
+
+* writeMakefile.py
+  Helper functions to write out Makefiles.
+  MPL
+
 * Makefile.in
   Integration with our build system. Installs support files into /resources and
   includes a .mk file for each repository.

@@ -472,7 +472,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       const PRUnichar* m = static_cast<const PRUnichar*>(report->ucmessage);
       if (m) {
         const PRUnichar* n = static_cast<const PRUnichar*>
-            (js::GetErrorTypeNameFromNumber(cx, report->errorNumber));
+            (js::GetErrorTypeName(cx, report->exnType));
         if (n) {
           msg.Assign(n);
           msg.AppendLiteral(": ");
