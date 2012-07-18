@@ -241,6 +241,7 @@ public:
 #endif
 
     static bool IsOptimus();
+    static bool IsRunningInWindows8Metro();
 
 protected:
     RenderMode mRenderMode;
