@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.util.FloatMath;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,10 +63,6 @@ public class IntSize {
         return value + 1;
     }
 
-    public static int nextPowerOfTwo(float value) {
-        return nextPowerOfTwo((int) value);
-    }
-
     public IntSize nextPowerOfTwo() {
         return new IntSize(nextPowerOfTwo(width), nextPowerOfTwo(height));
     }
@@ -74,6 +71,20 @@ public class IntSize {
         if (value == 0)
             return false;
         return (value & (value - 1)) == 0;
+    }
+
+    public static int largestPowerOfTwoLessThan(float value) {
+        int val = (int)FloatMath.floor(value);
+        if (val <= 0) {
+            throw new IllegalArgumentException("Error: value must be > 0");
+        }
+        // keep dropping the least-significant set bits until only one is left
+        int bestVal = val;
+        while (val != 0) {
+            bestVal = val;
+            val &= (val - 1);
+        }
+        return bestVal;
     }
 }
 
