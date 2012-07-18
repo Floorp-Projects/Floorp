@@ -47,6 +47,7 @@ function ident(name) Pattern({ type: "Identifier", name: name })
 function dotExpr(obj, id) Pattern({ type: "MemberExpression", computed: false, object: obj, property: id })
 function memExpr(obj, id) Pattern({ type: "MemberExpression", computed: true, object: obj, property: id })
 function forStmt(init, test, update, body) Pattern({ type: "ForStatement", init: init, test: test, update: update, body: body })
+function forOfStmt(lhs, rhs, body) Pattern({ type: "ForOfStatement", left: lhs, right: rhs, body: body })
 function forInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: false })
 function forEachInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: true })
 function breakStmt(lab) Pattern({ type: "BreakStatement", label: lab })
@@ -648,6 +649,12 @@ assertStmt("for ({a:x,b:y,c:z} in foo);", forInStmt(axbycz, ident("foo"), emptyS
 assertStmt("for (var [x,y,z] in foo);", forInStmt(varDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for (let [x,y,z] in foo);", forInStmt(letDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for ([x,y,z] in foo);", forInStmt(xyz, ident("foo"), emptyStmt));
+assertStmt("for (var {a:x,b:y,c:z} of foo);", forOfStmt(varDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (let {a:x,b:y,c:z} of foo);", forOfStmt(letDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for ({a:x,b:y,c:z} of foo);", forOfStmt(axbycz, ident("foo"), emptyStmt));
+assertStmt("for (var [x,y,z] of foo);", forOfStmt(varDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (let [x,y,z] of foo);", forOfStmt(letDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for ([x,y,z] of foo);", forOfStmt(xyz, ident("foo"), emptyStmt));
 assertStmt("for each (var {a:x,b:y,c:z} in foo);", forEachInStmt(varDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each (let {a:x,b:y,c:z} in foo);", forEachInStmt(letDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each ({a:x,b:y,c:z} in foo);", forEachInStmt(axbycz, ident("foo"), emptyStmt));
@@ -657,6 +664,9 @@ assertStmt("for each ([x,y,z] in foo);", forEachInStmt(xyz, ident("foo"), emptyS
 assertError("for (const x in foo);", SyntaxError);
 assertError("for (const {a:x,b:y,c:z} in foo);", SyntaxError);
 assertError("for (const [x,y,z] in foo);", SyntaxError);
+assertError("for (const x of foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} of foo);", SyntaxError);
+assertError("for (const [x,y,z] of foo);", SyntaxError);
 assertError("for each (const x in foo);", SyntaxError);
 assertError("for each (const {a:x,b:y,c:z} in foo);", SyntaxError);
 assertError("for each (const [x,y,z] in foo);", SyntaxError);
@@ -665,6 +675,8 @@ assertError("for each (const [x,y,z] in foo);", SyntaxError);
 
 assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (var {a:x,b:y,c:z} = 22 of foo);", forOfStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
+assertStmt("for (var [x,y,z] = 22 of foo);", forOfStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertError("for (x = 22 in foo);", SyntaxError);
