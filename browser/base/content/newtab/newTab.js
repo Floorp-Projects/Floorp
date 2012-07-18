@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect",
 let {
   links: gLinks,
   allPages: gAllPages,
+  linkChecker: gLinkChecker,
   pinnedLinks: gPinnedLinks,
   blockedLinks: gBlockedLinks
 } = NewTabUtils;
@@ -53,6 +54,7 @@ const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 #include cells.js
 #include sites.js
 #include drag.js
+#include dragDataHelper.js
 #include drop.js
 #include dropTargetShim.js
 #include dropPreview.js
