@@ -9,6 +9,8 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
 
+    Services.prefs.addObserver("social.sidebar.open", this, false);
+
     Social.init(this._providerReady.bind(this));
   },
 
@@ -17,6 +19,8 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:pref-changed");
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
+
+    Services.prefs.removeObserver("social.sidebar.open", this);
   },
 
   showProfile: function SocialUI_showProfile() {
@@ -29,6 +33,7 @@ let SocialUI = {
       case "social:pref-changed":
         SocialShareButton.updateButtonHiddenState();
         SocialToolbar.updateButtonHiddenState();
+        SocialSidebar.updateSidebar();
         break;
       case "social:ambient-notification-changed":
         SocialToolbar.updateButton();
@@ -36,6 +41,8 @@ let SocialUI = {
       case "social:profile-changed":
         SocialToolbar.updateProfile();
         break;
+      case "nsPref:changed":
+        SocialSidebar.updateSidebar();
     }
   },
 
@@ -43,12 +50,13 @@ let SocialUI = {
   _providerReady: function SocialUI_providerReady() {
     SocialToolbar.init();
     SocialShareButton.init();
+    SocialSidebar.init();
   }
 }
 
 let SocialShareButton = {
+  // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
-    this.sharePopup.hidden = false;
     this.updateButtonHiddenState();
 
     let profileRow = document.getElementById("editSharePopupHeader");
@@ -98,6 +106,8 @@ let SocialShareButton = {
   },
 
   sharePage: function SSB_sharePage() {
+    this.sharePopup.hidden = false;
+
     let uri = gBrowser.currentURI;
     if (!Social.isPageShared(uri)) {
       Social.sharePage(uri);
@@ -248,9 +258,60 @@ var SocialToolbar = {
       notifBrowser.setAttribute("src", "about:blank");
     });
 
-    notifBrowser.service = Social.provider;
+    notifBrowser.setAttribute("origin", Social.provider.origin);
     notifBrowser.setAttribute("src", iconImage.getAttribute("contentPanel"));
     document.getElementById("social-toolbar-button").setAttribute("open", "true");
     panel.openPopup(iconImage, "bottomcenter topleft", 0, 0, false, false);
+  }
+}
+
+var SocialSidebar = {
+  // Called once, after window load, when the Social.provider object is initialized
+  init: function SocialSidebar_init() {
+    this.updateSidebar();
+  },
+
+  // Whether the sidebar can be shown for this window.
+  get canShow() {
+    return Social.uiVisible && Social.provider.sidebarURL && !this.chromeless;
+  },
+
+  // Whether this is a "chromeless window" (e.g. popup window). We don't show
+  // the sidebar in these windows.
+  get chromeless() {
+    let docElem = document.documentElement;
+    return docElem.getAttribute('disablechrome') ||
+           docElem.getAttribute('chromehidden').indexOf("extrachrome") >= 0;
+  },
+
+  // Whether the user has toggled the sidebar on (for windows where it can appear)
+  get enabled() {
+    return Services.prefs.getBoolPref("social.sidebar.open");
+  },
+
+  updateSidebar: function SocialSidebar_updateSidebar() {
+    // Hide the toggle menu item if the sidebar cannot appear
+    let command = document.getElementById("Social:ToggleSidebar");
+    command.hidden = !this.canShow;
+
+    // Hide the sidebar if it cannot appear, or has been toggled off.
+    // Also set the command "checked" state accordingly.
+    let hideSidebar = !this.canShow || !this.enabled;
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    broadcaster.hidden = hideSidebar;
+    command.setAttribute("checked", !hideSidebar);
+
+    // If the sidebar is hidden, unload its document
+    // XXX this results in a poor UX, we should revisit
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    if (broadcaster.hidden) {
+      sbrowser.removeAttribute("origin");
+      sbrowser.setAttribute("src", "about:blank");
+      return;
+    }
+
+    // Load the sidebar document
+    sbrowser.setAttribute("origin", Social.provider.origin);
+    sbrowser.setAttribute("src", Social.provider.sidebarURL);
   }
 }
