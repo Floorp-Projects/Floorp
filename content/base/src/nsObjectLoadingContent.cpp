@@ -496,24 +496,19 @@ nsresult nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMETy
     rv = topWindow->GetDocument(getter_AddRefs(topDocument));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
+    nsIURI* topUri = topDoc->GetDocumentURI();
 
     nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    bool allowPerm = false;
-    if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
-      PRUint32 permission;
-      rv = permissionManager->TestPermissionFromPrincipal(topDoc->NodePrincipal(),
-                                                          "plugins",
-                                                          &permission);
-      NS_ENSURE_SUCCESS(rv, rv);
-      allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
-    }
+    PRUint32 permission;
+    rv = permissionManager->TestPermission(topUri, "plugins", &permission);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 state;
     rv = pluginHost->GetBlocklistStateForType(aMIMEType.get(), &state);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (allowPerm &&
+    if (permission == nsIPermissionManager::ALLOW_ACTION &&
         state != nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE &&
         state != nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
       mCTPPlayable = true;
