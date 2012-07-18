@@ -19,9 +19,9 @@
 #include "nsIURI.h"
 #include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
-#include "Layers.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
+#include "Layers.h"
 
 class nsIURI;
 class nsSubDocumentFrame;

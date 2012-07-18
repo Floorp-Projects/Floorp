@@ -20,7 +20,7 @@ include "IPC/nsGUIEventIPC.h";
 
 using IPC::URI;
 using gfxMatrix;
-using mozilla::LayersBackend;
+using mozilla::layers::LayersBackend;
 using mozilla::WindowsHandle;
 using nscolor;
 using nsCompositionEvent;

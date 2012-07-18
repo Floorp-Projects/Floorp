@@ -21,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
+#include "LayersBackend.h"
 
 class gfxASurface;
 
@@ -135,7 +136,7 @@ public:
 //NS_IMETHOD              CaptureMouse(bool aCapture);
   virtual LayerManager*
   GetLayerManager(PLayersChild* aShadowManager = nsnull,
-                  LayersBackend aBackendHint = LayerManager::LAYERS_NONE,
+                  LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                   bool* aAllowRetaining = nsnull);
 //  virtual nsDeviceContext* GetDeviceContext();

@@ -7,7 +7,6 @@
 #define nsBuiltinDecoderReader_h_
 
 #include <nsDeque.h>
-#include "ImageLayers.h"
 #include "nsSize.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "MediaStreamGraph.h"
