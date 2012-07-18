@@ -1499,7 +1499,7 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
     Matrix oldMat = dt->GetTransform();
     RefPtr<SourceSurface> surf =
       gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
-    dt->SetTransform(oldMat * ToMatrix(aCTM));
+    dt->SetTransform(ToMatrix(aCTM) * oldMat);
 
     gfxSize size = aSurface->GetSize();
     NS_ASSERTION(size.width >= 0 && size.height >= 0, "Failure to get size for aSurface.");
