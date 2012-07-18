@@ -2617,11 +2617,11 @@ void nsHTMLMediaElement::EndMediaStreamPlayback()
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
     GetMediaStream()->RemoveVideoOutput(container);
+    container->GetImageContainer()->SetCurrentImage(nullptr);
   }
   if (mPaused) {
     GetMediaStream()->ChangeExplicitBlockerCount(-1);
   }
-  mVideoFrameContainer->GetImageContainer()->SetCurrentImage(nullptr);
   if (mPausedForInactiveDocument) {
     GetMediaStream()->ChangeExplicitBlockerCount(-1);
   }
