@@ -101,17 +101,10 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
             if (kRedirMap[i].flags &
                 nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT)
             {
-                nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-                         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-                if (NS_FAILED(rv))
-                    return rv;
-            
-                nsCOMPtr<nsIPrincipal> principal;
-                rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
-                if (NS_FAILED(rv))
-                    return rv;
-            
-                rv = tempChannel->SetOwner(principal);
+                // Setting the owner to null means that we'll go through the normal
+                // path in GetChannelPrincipal and create a codebase principal based
+                // on the channel's originalURI
+                rv = tempChannel->SetOwner(nsnull);
                 if (NS_FAILED(rv))
                     return rv;
             }
