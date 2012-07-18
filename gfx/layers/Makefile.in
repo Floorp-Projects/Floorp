@@ -33,6 +33,7 @@ EXPORTS = \
         BasicImplData.h \
         ImageLayers.h \
         Layers.h \
+        LayersBackend.h \
         LayerManagerOGLShaders.h \
         LayerManagerOGL.h \
         LayerManagerOGLProgram.h \

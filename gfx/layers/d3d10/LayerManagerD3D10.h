@@ -55,8 +55,6 @@ extern cairo_user_data_key_t gKeyD3D10Texture;
 class THEBES_API LayerManagerD3D10 : public ShadowLayerManager,
                                      public ShadowLayerForwarder {
 public:
-  typedef LayerManager::LayersBackend LayersBackend;
-
   LayerManagerD3D10(nsIWidget *aWidget);
   virtual ~LayerManagerD3D10();
 

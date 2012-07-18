@@ -70,7 +70,7 @@ using namespace mozilla::widget;
 /**************************************************************
  *
  * SECTION: nsWindow statics
- * 
+ *
  **************************************************************/
 
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
@@ -304,7 +304,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 #endif // WIDGET_DEBUG_OUTPUT
 
     switch (GetLayerManager()->GetBackendType()) {
-      case LayerManager::LAYERS_BASIC:
+      case LAYERS_BASIC:
         {
           nsRefPtr<gfxASurface> targetSurface;
 
@@ -535,13 +535,13 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           }
         }
         break;
-      case LayerManager::LAYERS_OPENGL:
+      case LAYERS_OPENGL:
         static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
           SetClippingRegion(event.region);
         result = DispatchWindowEvent(&event, eventStatus);
         break;
 #ifdef MOZ_ENABLE_D3D9_LAYER
-      case LayerManager::LAYERS_D3D9:
+      case LAYERS_D3D9:
         {
           LayerManagerD3D9 *layerManagerD3D9 =
             static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager());
@@ -559,7 +559,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
         break;
 #endif
 #ifdef MOZ_ENABLE_D3D10_LAYER
-      case LayerManager::LAYERS_D3D10:
+      case LAYERS_D3D10:
         {
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());

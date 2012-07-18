@@ -640,7 +640,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
 
   *aBackend = aBackendHint;
 
-  if (aBackendHint == LayerManager::LAYERS_OPENGL) {
+  if (aBackendHint == mozilla::layers::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager;
     layerManager =
       new LayerManagerOGL(mWidget, mEGLSurfaceSize.width, mEGLSurfaceSize.height, mRenderToEGLSurface);
@@ -662,7 +662,7 @@ CompositorParent::AllocPLayers(const LayersBackend& aBackendHint,
     }
     *aMaxTextureSize = layerManager->GetMaxTextureSize();
     return new ShadowLayersParent(slm, this, 0);
-  } else if (aBackendHint == LayerManager::LAYERS_BASIC) {
+  } else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
     nsRefPtr<LayerManager> layerManager = new BasicShadowLayerManager(mWidget);
     mWidget = NULL;
     mLayerManager = layerManager;
