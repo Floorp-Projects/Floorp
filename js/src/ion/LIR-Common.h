@@ -771,40 +771,6 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
     Label *ifFalse();
 };
 
-class LInlineFunctionGuard : public LInstructionHelper<0, 1, 0>
-{
-    JSFunction *func_;
-    MBasicBlock *functionBlock_;
-    MBasicBlock *fallbackBlock_;
-
-  public:
-    LIR_HEADER(InlineFunctionGuard);
-
-    LInlineFunctionGuard(const LAllocation &in,
-                         JSFunction *func,
-                         MBasicBlock *functionBlock,
-                         MBasicBlock *fallbackBlock)
-      : func_(func),
-        functionBlock_(functionBlock),
-        fallbackBlock_(fallbackBlock)
-    {
-        setOperand(0, in);
-    }
-
-    MBasicBlock *functionBlock() const {
-        return functionBlock_;
-    }
-    MBasicBlock *fallbackBlock() const {
-        return fallbackBlock_;
-    }
-    JSFunction *function() const {
-        return func_;
-    }
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-};
-
 class LPolyInlineDispatch : public LInstructionHelper<0, 1, 0>
 {
   // Accesses function/block table from MIR instruction.

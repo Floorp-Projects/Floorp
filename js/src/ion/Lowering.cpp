@@ -421,15 +421,6 @@ LIRGenerator::visitTest(MTest *test)
 }
 
 bool
-LIRGenerator::visitInlineFunctionGuard(MInlineFunctionGuard *ins)
-{
-    LInlineFunctionGuard *lir =
-        new LInlineFunctionGuard(useRegister(ins->input()),
-            ins->function(), ins->functionBlock(), ins->fallbackBlock());
-    return add(lir);
-}
-
-bool
 LIRGenerator::visitPolyInlineDispatch(MPolyInlineDispatch *ins)
 {
     LPolyInlineDispatch *lir = new LPolyInlineDispatch(useRegister(ins->input()));

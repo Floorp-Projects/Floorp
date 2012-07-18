@@ -53,7 +53,6 @@ namespace ion {
     _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \
-    _(InlineFunctionGuard)                                                  \
     _(PolyInlineDispatch)                                                   \
     _(Compare)                                                              \
     _(Phi)                                                                  \
