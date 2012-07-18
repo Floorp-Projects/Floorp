@@ -48,6 +48,7 @@ ASTDEF(AST_WHILE_STMT,            "WhileStatement",                 "whileStatem
 ASTDEF(AST_DO_STMT,               "DoWhileStatement",               "doWhileStatement")
 ASTDEF(AST_FOR_STMT,              "ForStatement",                   "forStatement")
 ASTDEF(AST_FOR_IN_STMT,           "ForInStatement",                 "forInStatement")
+ASTDEF(AST_FOR_OF_STMT,           "ForOfStatement",                 "forOfStatement")
 ASTDEF(AST_BREAK_STMT,            "BreakStatement",                 "breakStatement")
 ASTDEF(AST_CONTINUE_STMT,         "ContinueStatement",              "continueStatement")
 ASTDEF(AST_WITH_STMT,             "WithStatement",                  "withStatement")
