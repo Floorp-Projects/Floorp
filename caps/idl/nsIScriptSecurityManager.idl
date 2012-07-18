@@ -113,15 +113,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                       in unsigned long flags);
 
     /**
-     * Same as CheckLoadURI but takes string arguments for ease of use
-     * by scripts
-     *
-     * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
-     */
-    [deprecated] void checkLoadURIStr(in AUTF8String from, in AUTF8String uri,
-                                      in unsigned long flags);
-
-    /**
      * Check that the function 'funObj' is allowed to run on 'targetObj'
      *
      * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
