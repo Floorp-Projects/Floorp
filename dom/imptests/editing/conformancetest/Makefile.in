@@ -11,14 +11,16 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-MOCHITEST_FILES = \
+_TESTS = \
   test_runtest.html \
   test_event.html \
   $(NULL)
 
-MOCHITEST_FILES += \
+_TESTS += \
   data.js \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+libs:: $(_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
