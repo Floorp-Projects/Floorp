@@ -57,6 +57,14 @@ let DebuggerView = {
 
     let variables = document.getElementById("variables");
     Prefs.variablesWidth = variables.getAttribute("width");
+
+    let bkps = document.getElementById("breakpoints");
+    let frames = document.getElementById("stackframes");
+    bkps.parentNode.removeChild(bkps);
+    frames.parentNode.removeChild(frames);
+
+    stackframes.parentNode.removeChild(stackframes);
+    variables.parentNode.removeChild(variables);
   },
 
   /**
@@ -544,6 +552,8 @@ ScriptsView.prototype = {
     this._searchbox.removeEventListener("select", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("input", this._onScriptsSearch, false);
     this._searchbox.removeEventListener("keyup", this._onScriptsKeyUp, false);
+
+    this.empty();
     this._scripts = null;
     this._searchbox = null;
   }
@@ -859,6 +869,7 @@ StackFramesView.prototype = {
     frames.removeEventListener("scroll", this._onFramesScroll, false);
     window.removeEventListener("resize", this._onFramesScroll, false);
 
+    this.empty();
     this._frames = null;
   }
 };
@@ -878,6 +889,7 @@ BreakpointsView.prototype = {
    */
   empty: function DVB_empty() {
     let firstChild;
+
     while (firstChild = this._breakpoints.firstChild) {
       this._destroyContextMenu(firstChild);
       this._breakpoints.removeChild(firstChild);
@@ -1287,8 +1299,8 @@ BreakpointsView.prototype = {
     let commandsetId = "breakpointMenuCommands-" + aBreakpoint.id;
     let menupopupId = "breakpointContextMenu-" + aBreakpoint.id;
 
-    let commandsset = document.createElement("commandsset");
-    commandsset.setAttribute("id", commandsetId);
+    let commandset = document.createElement("commandset");
+    commandset.setAttribute("id", commandsetId);
 
     let menupopup = document.createElement("menupopup");
     menupopup.setAttribute("id", menupopupId);
@@ -1321,7 +1333,7 @@ BreakpointsView.prototype = {
       menuitem.setAttribute("command", commandId);
       menuitem.setAttribute("hidden", aHiddenFlag);
 
-      commandsset.appendChild(command);
+      commandset.appendChild(command);
       menupopup.appendChild(menuitem);
 
       aBreakpoint[aName] = {
@@ -1354,7 +1366,10 @@ BreakpointsView.prototype = {
 
     let popupset = document.getElementById("debugger-popups");
     popupset.appendChild(menupopup);
-    document.documentElement.appendChild(commandsset);
+    document.documentElement.appendChild(commandset);
+
+    aBreakpoint.commandsetId = commandsetId;
+    aBreakpoint.menupopupId = menupopupId;
 
     return menupopupId;
   },
@@ -1366,18 +1381,15 @@ BreakpointsView.prototype = {
    *        An element representing a breakpoint.
    */
   _destroyContextMenu: function DVB__destroyContextMenu(aBreakpoint) {
-    let commandsetId = "breakpointMenuCommands-" + aBreakpoint.id;
-    let menupopupId = "breakpointContextMenu-" + aBreakpoint.id;
-
-    let commandset = document.getElementById(commandsetId);
-    let menupopup = document.getElementById(menupopupId);
-
-    if (commandset) {
-      commandset.parentNode.removeChild(commandset);
+    if (!aBreakpoint.commandsetId || !aBreakpoint.menupopupId) {
+      return;
     }
-    if (menupopup) {
-      menupopup.parentNode.removeChild(menupopup);
-    }
+
+    let commandset = document.getElementById(aBreakpoint.commandsetId);
+    let menupopup = document.getElementById(aBreakpoint.menupopupId);
+
+    commandset.parentNode.removeChild(commandset);
+    menupopup.parentNode.removeChild(menupopup);
   },
 
   /**
@@ -1398,6 +1410,7 @@ BreakpointsView.prototype = {
     let breakpoints = this._breakpoints;
     breakpoints.removeEventListener("click", this._onBreakpointClick, false);
 
+    this.empty();
     this._breakpoints = null;
   }
 };
@@ -2499,6 +2512,8 @@ PropertiesView.prototype = {
    * Destruction function, called when the debugger is shut down.
    */
   destroy: function DVP_destroy() {
+    this.empty();
+
     this._currHierarchy = null;
     this._prevHierarchy = null;
     this._vars = null;
