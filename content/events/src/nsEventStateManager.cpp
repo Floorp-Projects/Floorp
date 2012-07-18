@@ -1637,10 +1637,9 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
 
 bool
 nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
-                                               nsIFrameLoader* aFrameLoader,
+                                               nsFrameLoader* aFrameLoader,
                                                nsEventStatus *aStatus) {
-  nsFrameLoader* fml = static_cast<nsFrameLoader*>(aFrameLoader);
-  PBrowserParent* remoteBrowser = fml->GetRemoteBrowser();
+  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
   TabParent* remote = static_cast<TabParent*>(remoteBrowser);
   if (!remote) {
     return false;
@@ -1788,6 +1787,10 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
     }
   }
 
+  if (targets.Length() == 0) {
+    return false;
+  }
+
   // Look up the frame loader for all the remote targets we found, and
   // then dispatch the event to the remote content they represent.
   bool dispatched = false;
@@ -1795,22 +1798,46 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
     nsIContent* target = targets[i];
     nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(target);
     if (!loaderOwner) {
-      return false;
+      continue;
     }
 
     nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
     if (!frameLoader) {
-      return false;
+      continue;
     }
 
     PRUint32 eventMode;
     frameLoader->GetEventMode(&eventMode);
     if (eventMode == nsIFrameLoader::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
-      return false;
+      continue;
     }
 
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
-    aEvent->refPoint = pt.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+    // The "toplevel widget" in content processes is always at position
+    // 0,0.  Map the event coordinates to match that.
+    if (aEvent->eventStructType != NS_TOUCH_EVENT) {
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                                aTargetFrame);
+      aEvent->refPoint =
+        pt.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+    } else {
+      nsIFrame* targetFrame = frameLoader->GetPrimaryFrameOfOwningContent();
+      aEvent->refPoint = nsIntPoint();
+      // Find out how far we're offset from the nearest widget.
+      nsPoint offset =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, targetFrame);
+      nsIntPoint intOffset =
+        offset.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+      nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+      // Then offset all the touch points by that distance, to put them
+      // in the space where top-left is 0,0.
+      const nsTArray<nsCOMPtr<nsIDOMTouch> >& touches = touchEvent->touches;
+      for (PRUint32 i = 0; i < touches.Length(); ++i) {
+        nsIDOMTouch* touch = touches[i];
+        if (touch) {
+          touch->mRefPoint += intOffset;
+        }
+      }
+    }
 
     dispatched |= DispatchCrossProcessEvent(aEvent, frameLoader, aStatus);
   }
