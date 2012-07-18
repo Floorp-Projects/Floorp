@@ -92,7 +92,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitValueToDouble(LValueToDouble *lir);
     bool visitInt32ToDouble(LInt32ToDouble *lir);
     bool visitTestVAndBranch(LTestVAndBranch *lir);
-    bool visitInlineFunctionGuard(LInlineFunctionGuard *lir);
     bool visitPolyInlineDispatch(LPolyInlineDispatch *lir);
     bool visitIntToString(LIntToString *lir);
     bool visitInteger(LInteger *lir);
