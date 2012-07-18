@@ -13,7 +13,7 @@ DIRS = \
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TESTS = \
+_FILES = \
   test_event_constructor_js.html \
   test_missing_arguments.html \
   test_storage_local_clear_js.html \
@@ -32,8 +32,5 @@ _TESTS = \
   test_storage_session_setitem_js.html \
   $(NULL)
 
-_TESTS += \
-  $(NULL)
-
-libs:: $(_TESTS)
+libs:: $(_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
