@@ -41,9 +41,14 @@ void UpdateListIndicesFromIndex(nsTArray<DOMSVGNumber*>& aItemsArray,
 // the cycle, as NS_SVG_VAL_IMPL_CYCLE_COLLECTION does.)
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGNumberList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGNumberList)
-  // No need to null check tmp - script/SMIL can't detach us from mAList
-  ( tmp->IsAnimValList() ? tmp->mAList->mAnimVal : tmp->mAList->mBaseVal ) = nsnull;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
+  if (tmp->mAList) {
+    if (tmp->IsAnimValList()) {
+      tmp->mAList->mAnimVal = nsnull;
+    } else {
+      tmp->mAList->mBaseVal = nsnull;
+    }
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGNumberList)
