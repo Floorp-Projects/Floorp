@@ -167,6 +167,7 @@ var W3CTest = {
    * from tests.
    */
   "timeout": function() {
+    this.logFailure("Test runner timed us out.");
     timeout();
   }
 };
