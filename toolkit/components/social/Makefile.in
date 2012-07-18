@@ -14,7 +14,6 @@ EXTRA_JS_MODULES = \
   MessagePortBase.jsm \
   MessagePortWorker.js \
   SocialService.jsm \
-  SocialProvider.jsm \
   WorkerAPI.jsm \
   $(NULL)
 
