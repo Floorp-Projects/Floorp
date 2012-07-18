@@ -53,13 +53,6 @@ namespace ion {
 
 class IonBuilder : public MIRGenerator
 {
-    enum InlinePolymorphism {
-        Inline_Monomorphic,       // Function being inlined is monomorphic.
-        Inline_Polymorphic,       // Function being inlined is polymorhpic case.
-        Inline_PolymorphicFinal   // Function being inlined is polymorphic, and
-                                  // it's the final branch of a polymorhpic inline.
-    };
-
     enum ControlStatus {
         ControlStatus_Error,
         ControlStatus_Ended,        // There is no continuation/join point.
@@ -205,8 +198,7 @@ class IonBuilder : public MIRGenerator
 
     bool build();
     bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                     MDefinition *thisDefn, MDefinitionVector &args,
-                     InlinePolymorphism polymorphism);
+                     MDefinition *thisDefn, MDefinitionVector &args);
 
   private:
     bool traverseBytecode();
@@ -421,10 +413,8 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineNativeCall(JSNative native, uint32 argc, bool constructing);
 
     bool jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
-                          MConstant *constFun, MResumePoint *inlineResumePoint,
-                          MDefinitionVector &argv, MBasicBlock *bottom,
-                          Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns,
-                          InlinePolymorphism polymorphism);
+                          MConstant *constFun, MBasicBlock *bottom,
+                          Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
     bool inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing);
     bool makeInliningDecision(AutoObjectVector &targets);
 
