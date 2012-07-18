@@ -5528,6 +5528,7 @@ nsDocShell::ForceRefreshURI(nsIURI * aURI,
 
 nsresult
 nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
+                                      nsIPrincipal* aPrincipal,
                                       const nsACString & aHeader)
 {
     // Refresh headers are parsed with the following format in mind
@@ -5569,6 +5570,8 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
 
     // when done, seconds is 0 or the given number of seconds
     //            uriAttrib is empty or the URI specified
+    MOZ_ASSERT(aPrincipal);
+
     nsCAutoString uriAttrib;
     PRInt32 seconds = 0;
     bool specifiesSeconds = false;
@@ -5733,9 +5736,8 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
                             (NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) {
             rv = securityManager->
-                CheckLoadURI(aBaseURI, uri,
-                             nsIScriptSecurityManager::
-                             LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
+                CheckLoadURIWithPrincipal(aPrincipal, uri,
+                                          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
 
             if (NS_SUCCEEDED(rv)) {
                 bool isjs = true;
@@ -5771,8 +5773,16 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
                                             refreshHeader);
 
         if (!refreshHeader.IsEmpty()) {
+            nsCOMPtr<nsIScriptSecurityManager> secMan =
+                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIPrincipal> principal;
+            rv = secMan->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             SetupReferrerFromChannel(aChannel);
-            rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
+            rv = SetupRefreshURIFromHeader(mCurrentURI, principal, refreshHeader);
             if (NS_SUCCEEDED(rv)) {
                 return NS_REFRESHURI_HEADER_FOUND;
             }
