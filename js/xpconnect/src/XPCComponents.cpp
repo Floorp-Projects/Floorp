@@ -2731,7 +2731,6 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
         // Alright, now do the lookup.
         *retval = JSVAL_VOID;
         JSPropertyDescriptor desc;
-        memset(&desc, 0, sizeof(desc)); // This will be fixed soon in JSAPI.
         if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
             return NS_ERROR_FAILURE;
 
