@@ -3177,7 +3177,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
     Value arg;
     if (unsigned(i) < fp->numActualArgs()) {
         if (unsigned(i) < fp->numFormalArgs() && fp->script()->formalLivesInCallObject(i))
-            arg = fp->callObj().arg(i);
+            arg = fp->callObj().formal(i);
         else if (fp->script()->argsObjAliasesFormals() && fp->hasArgsObj())
             arg = fp->argsObj().arg(i);
         else
@@ -3696,12 +3696,12 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
 
         if (fun->nargs > 0) {
-            BindingNames names(cx);
-            if (!fun->script()->bindings.getLocalNameArray(cx, &names))
+            BindingVector names(cx);
+            if (!GetOrderedBindings(cx, fun->script()->bindings, &names))
                 return false;
 
             for (size_t i = 0; i < fun->nargs; i++) {
-                JSAtom *name = names[i].maybeAtom;
+                PropertyName *name = names[i].maybeName;
                 result->setDenseArrayElement(i, name ? StringValue(name) : UndefinedValue());
             }
         }

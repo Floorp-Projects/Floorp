@@ -1,18 +1,16 @@
 var x = new ArrayBuffer(2);
 
-var test = function() {
+var test = function(newProto) {
 try {
-    x.__proto__ = x;
+    x.__proto__ = newProto;
     return false;
 } catch(e) {
     return true;
 }
 }
 
-assertEq(test(), true);
+assertEq(test(x), true);
+assertEq(test({}), true);
+assertEq(test(null), true);
 
-// ArrayBuffer's __proto__ behaviour verification.
-var y = new ArrayBuffer();
-y.__proto__ = null;
-assertEq(y.__proto__, undefined);
 reportCompare(true, true);

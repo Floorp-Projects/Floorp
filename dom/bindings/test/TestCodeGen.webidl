@@ -261,12 +261,11 @@ interface TestInterface {
   readonly attribute byte attributeGetterRenamedFrom;
   attribute byte attributeRenamedFrom;
 
-  void passDictionary(Dict x);
-  void passOptionalDictionary(optional Dict x);
-  void passNullableDictionary(Dict? x);
-  void passOptionalNullableDictionary(optional Dict? x);
-  void passOtherDictionary(GrandparentDict x);
+  void passDictionary(optional Dict x);
+  void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+  void passDictionaryOrLong(optional Dict x);
+  void passDictionaryOrLong(long x);
 };
 
 interface TestNonWrapperCacheInterface {

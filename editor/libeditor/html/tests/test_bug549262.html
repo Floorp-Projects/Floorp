@@ -35,18 +35,20 @@ SimpleTest.waitForFocus(function() {
   setTimeout(function() {
     isnot(win.scrollY, 0, "Page is scrolled down");
     is(ed.textContent, "abc", "The content of the editable element has not changed");
+    var oldY = win.scrollY;
     synthesizeKey(" ", {shiftKey: true}, win);
     setTimeout(function() {
-      is(win.scrollY, 0, "Page is scrolled up");
+      ok(win.scrollY < oldY, "Page is scrolled up");
       is(ed.textContent, "abc", "The content of the editable element has not changed");
 
       // Make sure that pressing Space when a contenteditable element is focused
       // will not scroll the page, and will edit the element.
       ed.focus();
       win.getSelection().collapse(ed.firstChild, 1);
+      oldY = win.scrollY;
       synthesizeKey(" ", {}, win);
       setTimeout(function() {
-        is(win.scrollY, 0, "Page is not scrolled down");
+        ok(win.scrollY <= oldY, "Page is not scrolled down");
         is(ed.textContent, "a bc", "The content of the editable element has changed");
         sc.focus();
         synthesizeKey(" ", {}, win);
@@ -65,7 +67,7 @@ SimpleTest.waitForFocus(function() {
             setTimeout(function() {
               ed.blur();
               sc.focus();
-              var oldY = win.scrollY;
+              oldY = win.scrollY;
               synthesizeKey("VK_UP", {}, win);
               setTimeout(function() {
                 ok(win.scrollY < oldY, "Page is scrolled up");

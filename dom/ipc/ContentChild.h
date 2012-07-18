@@ -19,6 +19,11 @@ struct ResourceMapping;
 struct OverrideMapping;
 
 namespace mozilla {
+
+namespace layers {
+class PCompositorChild;
+}
+
 namespace dom {
 
 class AlertObserver;
@@ -28,6 +33,8 @@ class PStorageChild;
 
 class ContentChild : public PContentChild
 {
+    typedef layers::PCompositorChild PCompositorChild;
+
 public:
     ContentChild();
     virtual ~ContentChild();
@@ -52,8 +59,8 @@ public:
         return mAppInfo;
     }
 
-    /* if you remove this, please talk to cjones or dougt */
-    virtual bool RecvDummy(Shmem& foo) { return true; }
+    PCompositorChild* AllocPCompositor(ipc::Transport* aTransport,
+                                       base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags,
                                          const bool& aIsBrowserFrame);
@@ -157,11 +164,9 @@ public:
     PRUint64 GetID() { return mID; }
 
 private:
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ProcessingError(Result what);
+    virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     /**
      * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run

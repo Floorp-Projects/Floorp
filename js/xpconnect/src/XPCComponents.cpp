@@ -4389,6 +4389,20 @@ nsXPCComponents_Utils::SetGCZeal(PRInt32 aValue, JSContext* cx)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::NukeSandbox(const JS::Value &obj, JSContext *cx)
+{
+    NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
+    JSObject *wrapper = &obj.toObject();
+    NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);
+    JSObject *sb = UnwrapObject(wrapper);
+    NS_ENSURE_TRUE(GetObjectJSClass(sb) == &SandboxClass, NS_ERROR_INVALID_ARG);
+    NukeCrossCompartmentWrappers(cx, AllCompartments(), 
+                                 SingleCompartment(GetObjectCompartment(sb)),
+                                 NukeWindowReferences);
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

@@ -683,6 +683,7 @@ public:
         : mContext(aContext)
         , mTexture(aTexture)
         , mEGLImage(nsnull)
+        , mSyncObject(nsnull)
     {
     }
 
@@ -722,10 +723,46 @@ public:
         return mEGLImage;
     }
 
+    bool MakeSync() {
+        MOZ_ASSERT(mSyncObject == nsnull);
+
+        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+            mSyncObject = sEGLLibrary.fCreateSync(EGL_DISPLAY(), LOCAL_EGL_SYNC_FENCE, nsnull);
+            // We need to flush to make sure the sync object enters the command stream;
+            // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
+            // happens on a different thread/context.
+            mContext->fFlush();
+        }
+
+        if (mSyncObject == EGL_NO_SYNC) {
+            // we failed to create one, so just do a finish
+            mContext->fFinish();
+        }
+
+        return true;
+    }
+
+    bool WaitSync() {
+        if (!mSyncObject) {
+            // if we have no sync object, then we did a Finish() earlier
+            return true;
+        }
+
+        EGLint result = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSyncObject, 0, LOCAL_EGL_FOREVER);
+        sEGLLibrary.fDestroySync(EGL_DISPLAY(), mSyncObject);
+        mSyncObject = nsnull;
+
+        // we should never expire a 'forever' timeout
+        MOZ_ASSERT(result != LOCAL_EGL_TIMEOUT_EXPIRED);
+
+        return result == LOCAL_EGL_CONDITION_SATISFIED;
+    }
+
 private:
     nsRefPtr<GLContext> mContext;
     GLuint mTexture;
     EGLImage mEGLImage;
+    EGLSync mSyncObject;
 };
 
 void
@@ -827,6 +864,7 @@ bool GLContextEGL::AttachSharedHandle(TextureImage::TextureShareType aType,
     NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
     EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
+    wrap->WaitSync();
     sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
     return true;
 }

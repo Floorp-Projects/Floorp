@@ -6,6 +6,7 @@
 
 include protocol PAudio;
 include protocol PBrowser;
+include protocol PCompositor;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
@@ -97,6 +98,8 @@ union DeviceStorageParams
 };
 rpc protocol PContent
 {
+    parent opens PCompositor;
+
     manages PAudio;
     manages PBrowser;
     manages PCrashReporter;

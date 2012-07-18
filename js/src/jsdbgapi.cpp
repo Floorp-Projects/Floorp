@@ -414,21 +414,21 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
-    BindingNames localNames(cx);
-    if (!fun->script()->bindings.getLocalNameArray(cx, &localNames))
+    BindingVector bindings(cx);
+    if (!GetOrderedBindings(cx, fun->script()->bindings, &bindings))
         return NULL;
 
     /* Munge data into the API this method implements.  Avert your eyes! */
     *markp = cx->tempLifoAlloc().mark();
 
-    uintptr_t *names = cx->tempLifoAlloc().newArray<uintptr_t>(localNames.length());
+    uintptr_t *names = cx->tempLifoAlloc().newArray<uintptr_t>(bindings.length());
     if (!names) {
         js_ReportOutOfMemory(cx);
         return NULL;
     }
 
-    for (size_t i = 0; i < localNames.length(); i++)
-        names[i] = reinterpret_cast<uintptr_t>(localNames[i].maybeAtom);
+    for (size_t i = 0; i < bindings.length(); i++)
+        names[i] = reinterpret_cast<uintptr_t>(bindings[i].maybeName);
 
     return names;
 }

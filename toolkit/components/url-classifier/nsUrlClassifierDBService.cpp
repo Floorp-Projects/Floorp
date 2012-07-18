@@ -1043,7 +1043,8 @@ static nsresult KeyedHash(PRUint32 aPref, PRUint32 aDomain,
 
 // -------------------------------------------------------------------------
 // Actual worker implemenatation
-class nsUrlClassifierDBServiceWorker : public nsIUrlClassifierDBServiceWorker
+class nsUrlClassifierDBServiceWorker MOZ_FINAL :
+  public nsIUrlClassifierDBServiceWorker
 {
 public:
   nsUrlClassifierDBServiceWorker();

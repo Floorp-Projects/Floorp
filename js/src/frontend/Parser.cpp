@@ -516,15 +516,10 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
         return false;
 
     // Start with lastVariable(), not the last argument, for destructuring.
-    Shape::Range r = sc->bindings.lastVariable();
-    Shape::Range::AutoRooter root(cx, &r);
-
-    for (; !r.empty(); r.popFront()) {
-        jsid id = r.front().propid();
-        if (!JSID_IS_ATOM(id))
+    for (BindingIter bi(cx, sc->bindings); bi; bi++) {
+        PropertyName *name = bi->maybeName;
+        if (!name)
             continue;
-
-        JSAtom *name = JSID_TO_ATOM(id);
 
         if (name == argumentsAtom || name == evalAtom) {
             if (!ReportBadParameter(cx, parser, name, JSMSG_BAD_BINDING))
@@ -681,36 +676,32 @@ Parser::functionBody(FunctionBodyType type)
         }
     }
 
-    bool hasRest = tc->sc->fun()->hasRest();
-    BindingKind bindKind = tc->sc->bindings.lookup(context, arguments, NULL);
-    switch (bindKind) {
-      case NONE:
-        /* Functions with rest parameters are free from arguments. */
-        if (hasRest)
-            break;
+    BindingIter maybeArgBinding(context, tc->sc->bindings.lookup(context, arguments));
 
-        /*
-         * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
-         * forces an 'arguments' binding.
-         */
-        if (!tc->sc->bindingsAccessedDynamically())
-            break;
+    /* Report error if both rest parameters and 'arguments' are used. */
+    bool hasRest = tc->sc->fun()->hasRest();
+    if (hasRest && maybeArgBinding && maybeArgBinding->kind != ARGUMENT) {
+        reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
+        return NULL;
+    }
+
+    /*
+     * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
+     * forces an 'arguments' binding. The exception is that functions with rest
+     * parameters are free from 'arguments'.
+     */
+    if (!maybeArgBinding && tc->sc->bindingsAccessedDynamically() && !hasRest) {
         if (!tc->sc->bindings.addVariable(context, arguments))
             return NULL;
+        maybeArgBinding = tc->sc->bindings.lookup(context, arguments);
+    }
 
-        /* 'arguments' is now bound, so fall through. */
-      case VARIABLE:
-      case CONSTANT:
-        if (hasRest) {
-            reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
-            return NULL;
-        }
-
-        /*
-         * Now that all possible 'arguments' bindings have been added, note whether
-         * 'arguments' has a local binding and whether it unconditionally needs an
-         * arguments object.
-         */
+    /*
+     * Now that all possible 'arguments' bindings have been added, note whether
+     * 'arguments' has a local binding and whether it unconditionally needs an
+     * arguments object. (Also see the flags' comments in ContextFlags.)
+     */
+    if (maybeArgBinding && maybeArgBinding->kind != ARGUMENT) {
         tc->sc->setFunArgumentsHasLocalBinding();
 
         /* Dynamic scope access destroys all hope of optimization. */
@@ -737,9 +728,6 @@ Parser::functionBody(FunctionBodyType type)
             }
           exitLoop: ;
         }
-        break;
-      case ARGUMENT:
-        break;
     }
 
     return pn;
@@ -1143,10 +1131,10 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
             /*
              * Make sure to deoptimize lexical dependencies that are polluted
-             * by eval (approximated by bindingsAccessedDynamically) or with, to
-             * safely bind globals (see bug 561923).
+             * by eval and function statements (which both flag the function as
+             * having an extensible scope) or any enclosing 'with'.
              */
-            if (funtc->sc->bindingsAccessedDynamically() ||
+            if (funtc->sc->funHasExtensibleScope() ||
                 (outer_dn && tc->innermostWith &&
                  outer_dn->pn_pos < tc->innermostWith->pn_pos)) {
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
@@ -1531,22 +1519,21 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
              * we add a variable even if a parameter with the given name
              * already exists.
              */
-            unsigned index;
-            switch (tc->sc->bindings.lookup(context, funName, &index)) {
-              case NONE:
-              case ARGUMENT:
-                index = tc->sc->bindings.numVars();
-                if (!tc->sc->bindings.addVariable(context, funName))
-                    return NULL;
-                /* FALL THROUGH */
+            BindingIter bi(context, tc->sc->bindings.lookup(context, funName));
+            if (!bi || bi->kind != CONSTANT) {
+                unsigned varIndex;
+                if (!bi || bi->kind == ARGUMENT) {
+                    varIndex = tc->sc->bindings.numVars();
+                    if (!tc->sc->bindings.addVariable(context, funName))
+                        return NULL;
+                } else {
+                    JS_ASSERT(bi->kind == VARIABLE);
+                    varIndex = bi.frameIndex();
+                }
 
-              case VARIABLE:
-                if (!pn->pn_cookie.set(context, tc->staticLevel, index))
+                if (!pn->pn_cookie.set(context, tc->staticLevel, varIndex))
                     return NULL;
                 pn->pn_dflags |= PND_BOUND;
-                break;
-
-              default:;
             }
         }
     }
@@ -2168,12 +2155,10 @@ static bool
 BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, TreeContext *tc)
 {
     JS_ASSERT(tc->sc->inFunction());
-
     ParseNode *pn = data->pn;
-    JSAtom *name = pn->pn_atom;
 
-    BindingKind kind = tc->sc->bindings.lookup(cx, name, NULL);
-    if (kind == NONE) {
+    BindingIter bi(cx, tc->sc->bindings.lookup(cx, pn->pn_atom->asPropertyName()));
+    if (!bi) {
         /*
          * Property not found in current variable scope: we have not seen this
          * variable before, so bind a new local variable for it. Any locals
@@ -2181,7 +2166,7 @@ BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, Tr
          * prolog JSOP_DEFVAR opcodes generated for global and heavyweight-
          * function-local vars.
          */
-        kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
+        BindingKind kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
 
         if (!BindLocalVariable(cx, tc, pn, kind))
             return false;
@@ -2189,11 +2174,11 @@ BindFunctionLocal(JSContext *cx, BindData *data, DefinitionList::Range &defs, Tr
         return true;
     }
 
-    if (kind == ARGUMENT) {
+    if (bi->kind == ARGUMENT) {
         JS_ASSERT(tc->sc->inFunction());
         JS_ASSERT(!defs.empty() && defs.front()->kind() == Definition::ARG);
     } else {
-        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+        JS_ASSERT(bi->kind == VARIABLE || bi->kind == CONSTANT);
     }
 
     return true;
@@ -2225,9 +2210,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
     DefinitionList::Range defs = tc->decls.lookupMulti(atom);
     JSOp op = data->op;
 
-    if (stmt || !defs.empty()) {
-        Definition *dn = defs.empty() ? NULL : defs.front();
-        Definition::Kind dn_kind = dn ? dn->kind() : Definition::VAR;
+    JS_ASSERT_IF(stmt, !defs.empty());
+    if (!defs.empty()) {
+        Definition *dn = defs.front();
+        Definition::Kind dn_kind = dn->kind();
 
         if (dn_kind == Definition::ARG) {
             JSAutoByteString name;

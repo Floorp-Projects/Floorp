@@ -363,12 +363,12 @@ cp $1/objdir/x86-win32-vs8/vpx_config.h vpx_config_x86-win32-vs8.h
 # Should be same for all platforms...
 cp $1/objdir/x86-win32-vs8/vpx_version.h vpx_version.h
 
-# Config files for x86-linux-gcc and Solaris x86
+# Config files for x86-linux-gcc, OpenBSD/i386 and Solaris x86
 cp $1/objdir/x86-linux-gcc/vpx_config.c vpx_config_x86-linux-gcc.c
 cp $1/objdir/x86-linux-gcc/vpx_config.asm vpx_config_x86-linux-gcc.asm
 cp $1/objdir/x86-linux-gcc/vpx_config.h vpx_config_x86-linux-gcc.h
 
-# Config files for x86_64-linux-gcc and Solaris x86_64
+# Config files for x86_64-linux-gcc, OpenBSD/amd64 and Solaris x86_64
 cp $1/objdir/x86_64-linux-gcc/vpx_config.c vpx_config_x86_64-linux-gcc.c
 cp $1/objdir/x86_64-linux-gcc/vpx_config.asm vpx_config_x86_64-linux-gcc.asm
 cp $1/objdir/x86_64-linux-gcc/vpx_config.h vpx_config_x86_64-linux-gcc.h

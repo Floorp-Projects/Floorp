@@ -3976,11 +3976,15 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
-                             JSPropertyDescriptor *desc)
+                             JSPropertyDescriptor *desc_)
 {
     RootedId id(cx, id_);
     RootedObject obj(cx, obj_);
-    return GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, desc);
+    AutoPropertyDescriptorRooter desc(cx);
+    if (!GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, &desc))
+        return false;
+    *desc_ = desc;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3990,7 +3994,7 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj_, jsid id_,
 {
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
-    PropertyDescriptor desc;
+    AutoPropertyDescriptorRooter desc(cx);
     if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
         return false;
 

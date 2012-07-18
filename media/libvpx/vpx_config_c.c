@@ -23,6 +23,14 @@
 /* 64 bit Linux. */
 #include "vpx_config_x86_64-linux-gcc.c"
 
+#elif defined(__OpenBSD__) && defined(__i386)
+/* 32 bit OpenBSD. */
+#include "vpx_config_x86-linux-gcc.h"
+
+#elif defined(__OpenBSD__) && defined(__x86_64)
+/* 64 bit OpenBSD. */
+#include "vpx_config_x86_64-linux-gcc.h"
+
 #elif defined(__sun) && defined(__i386)
 /* 32 bit Solaris. */
 #include "vpx_config_x86-linux-gcc.h"

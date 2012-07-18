@@ -86,6 +86,8 @@ public:
   nsIWidget* GetRetainerWidget() { return mWidget; }
   void ClearRetainerWidget() { mWidget = nsnull; }
 
+  virtual bool IsWidgetLayerManager() { return mWidget != nsnull; }
+
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
@@ -113,6 +115,8 @@ public:
   { return nsnull; }
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
   { return nsnull; }
+  virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer()
+  { return nsnull; }
 
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
@@ -121,9 +125,11 @@ public:
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
   bool InDrawing() { return mPhase == PHASE_DRAWING; }
   bool InForward() { return mPhase == PHASE_FORWARD; }
-  bool InTransaction() { return mPhase != PHASE_NONE; }
 #endif
+  bool InTransaction() { return mPhase != PHASE_NONE; }
+
   gfxContext* GetTarget() { return mTarget; }
+  void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
   bool IsRetained() { return mWidget != nsnull; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -149,12 +155,10 @@ public:
   virtual PRInt32 GetMaxTextureSize() const { return PR_INT32_MAX; }
 
 protected:
-#ifdef DEBUG
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
   };
   TransactionPhase mPhase;
-#endif
 
   // Paints aLayer to mTarget.
   void PaintLayer(gfxContext* aTarget,
@@ -169,6 +173,8 @@ protected:
   bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
+
+  void FlashWidgetUpdateArea(gfxContext* aContext);
 
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.
@@ -227,11 +233,13 @@ public:
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<RefLayer> CreateRefLayer();
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
   virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
   virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer();
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
+  virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer();
 
   ShadowableLayer* Hold(Layer* aLayer);
 

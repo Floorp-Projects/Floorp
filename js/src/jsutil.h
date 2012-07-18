@@ -358,19 +358,6 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 #define JS_ROTATE_LEFT32(a, bits) (((a) << (bits)) | ((a) >> (32 - (bits))))
 #endif
 
-/* Static control-flow checks. */
-#ifdef NS_STATIC_CHECKING
-/* Trigger a control flow check to make sure that code flows through label */
-inline __attribute__ ((unused)) void MUST_FLOW_THROUGH(const char *label) {}
-
-/* Avoid unused goto-label warnings. */
-# define MUST_FLOW_LABEL(label) goto label; label:
-
-#else
-# define MUST_FLOW_THROUGH(label)            ((void) 0)
-# define MUST_FLOW_LABEL(label)
-#endif
-
 /* Crash diagnostics */
 #ifdef DEBUG
 # define JS_CRASH_DIAGNOSTICS 1

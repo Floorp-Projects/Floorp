@@ -16,12 +16,9 @@ import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
-import org.mozilla.gecko.db.DBUtils;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.ContentProviderResult;
 import android.content.ContentProviderOperation;
 import android.database.ContentObserver;
 import android.database.Cursor;

@@ -181,9 +181,12 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
+    // We need to Flush() the surface before modifying it outside of cairo.
+    isurf->Flush();
     mGLContext->ReadPixelsIntoImageSurface(0, 0,
                                            mBounds.width, mBounds.height,
                                            isurf);
+    isurf->MarkDirty();
 
     // Put back the previous framebuffer binding.
     if (currentFramebuffer != mCanvasFramebuffer)

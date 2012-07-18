@@ -11,8 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
   FrameWorker.jsm \
+  MessagePortBase.jsm \
+  MessagePortWorker.js \
   SocialService.jsm \
-  SocialProvider.jsm \
   WorkerAPI.jsm \
   $(NULL)
 

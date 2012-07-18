@@ -38,7 +38,7 @@ nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
   mState = eRLEStateInitial;
   mStateData = 0;
-  mLOH = WIN_HEADER_LENGTH;
+  mLOH = WIN_V3_HEADER_LENGTH;
   mUseAlphaData = mHaveAlphaData = false;
 }
 
@@ -379,18 +379,18 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         }
       }
     }
-    else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (WIN_HEADER_LENGTH + BITFIELD_LENGTH)) {
+    else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH)) {
         // If compression is used, this is a windows bitmap, hence we can
         // use WIN_HEADER_LENGTH instead of mLOH
-        PRUint32 toCopy = (WIN_HEADER_LENGTH + BITFIELD_LENGTH) - mPos;
+        PRUint32 toCopy = (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH) - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - WIN_HEADER_LENGTH), aBuffer, toCopy);
+        memcpy(mRawBuf + (mPos - WIN_V3_HEADER_LENGTH), aBuffer, toCopy);
         mPos += toCopy;
         aBuffer += toCopy;
         aCount -= toCopy;
     }
-    if (mPos == WIN_HEADER_LENGTH + BITFIELD_LENGTH && 
+    if (mPos == WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH && 
         mBIH.compression == BI_BITFIELDS) {
         mBitFields.red = LITTLE_TO_NATIVE32(*(PRUint32*)mRawBuf);
         mBitFields.green = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 4));

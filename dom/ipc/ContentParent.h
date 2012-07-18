@@ -29,6 +29,10 @@ namespace ipc {
 class TestShellParent;
 }
 
+namespace layers {
+class PCompositorParent;
+}
+
 namespace dom {
 
 class TabParent;
@@ -42,6 +46,7 @@ class ContentParent : public PContentParent
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::TestShellParent TestShellParent;
+    typedef mozilla::layers::PCompositorParent PCompositorParent;
 
 public:
     static ContentParent* GetNewOrUsed();
@@ -68,6 +73,8 @@ public:
      * <iframe mozbrowser>.
      */
     TabParent* CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame);
+    /** Notify that a tab was destroyed during normal operation. */
+    void NotifyTabDestroyed(PBrowserParent* aTab);
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
@@ -77,6 +84,7 @@ public:
     bool RequestRunToCompletion();
 
     bool IsAlive();
+    bool IsForApp();
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
 
@@ -106,6 +114,23 @@ private:
     virtual ~ContentParent();
 
     void Init();
+
+    /**
+     * Mark this ContentParent as dead for the purposes of Get*().
+     * This method is idempotent.
+     */
+    void MarkAsDead();
+
+    /**
+     * Exit the subprocess and vamoose.  After this call IsAlive()
+     * will return false and this ContentParent will not be returned
+     * by the Get*() funtions.  However, the shutdown sequence itself
+     * may be asynchronous.
+     */
+    void ShutDown();
+
+    PCompositorParent* AllocPCompositor(ipc::Transport* aTransport,
+                                        base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
