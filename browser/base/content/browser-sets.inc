@@ -107,6 +107,7 @@
     <command id="Browser:ToggleAddonBar" oncommand="toggleAddonBar();"/>
     <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();"/>
     <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
+    <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
   </commandset>
 
   <commandset id="placesCommands">
@@ -181,6 +182,7 @@
     <broadcaster id="sync-syncnow-state"/>
 #endif
     <broadcaster id="workOfflineMenuitemState"/>
+    <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
