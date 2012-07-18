@@ -9,6 +9,8 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsICookie = Components.interfaces.nsICookie;
 const nsICookiePromptService = Components.interfaces.nsICookiePromptService;
 
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 var params; 
 var cookieBundle;
 var gDateService = null;
@@ -24,7 +26,7 @@ function onload()
   var dialog = document.documentElement;
 
   document.getElementById("Button2").collapsed = false;
-  
+
   document.getElementById("ok").label = dialog.getAttribute("acceptLabel");
   document.getElementById("ok").accessKey = dialog.getAttribute("acceptKey");
   document.getElementById("Button2").label = dialog.getAttribute("extra1Label");
@@ -67,7 +69,6 @@ function onload()
       params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
       var objects = params.objects;
       var cookie = params.objects.queryElementAt(0,nsICookie);
-      
       var cookiesFromHost = params.GetInt(nsICookieAcceptDialog.COOKIESFROMHOST);
 
       var messageFormat;
@@ -130,9 +131,7 @@ function onload()
 
   // The Private Browsing service might not be available
   try {
-    var pb = Components.classes["@mozilla.org/privatebrowsing;1"].
-             getService(Components.interfaces.nsIPrivateBrowsingService);
-    if (pb.privateBrowsingEnabled) {
+    if (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener)) {
       var persistCheckbox = document.getElementById("persistDomainAcceptance");
       persistCheckbox.removeAttribute("checked");
       persistCheckbox.setAttribute("disabled", "true");
