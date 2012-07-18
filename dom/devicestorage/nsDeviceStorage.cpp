@@ -25,6 +25,10 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsIVolumeService.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
 
@@ -270,15 +274,26 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   NS_ASSERTION(dirService, "Must have directory service");
 
 #ifdef MOZ_WIDGET_GONK
-  // check that /sdcard exists, if it doesn't go no further.
-  NS_NewLocalFile(NS_LITERAL_STRING("/sdcard"), false, getter_AddRefs(f));
-  bool check = false;
-  f->Exists(&check);
-  if (!check) {
-    mFile = nsnull;
+  mFile = nsnull;
+
+  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+  if (!vs) {
     return typeResult;
   }
-  f = nsnull;
+
+  nsCOMPtr<nsIVolume> v;
+  vs->GetVolumeByPath(NS_LITERAL_STRING("/sdcard"), getter_AddRefs(v));
+  
+  if (!v) {
+    return typeResult;
+  }
+
+  PRInt32 state;
+  v->GetState(&state);
+
+  if (state != nsIVolume::STATE_MOUNTED) {
+    return typeResult;
+  }
 #endif
 
   // Picture directory
