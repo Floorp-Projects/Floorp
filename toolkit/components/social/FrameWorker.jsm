@@ -15,6 +15,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/MessagePortBase.jsm");
 
 const EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
 
@@ -163,17 +164,8 @@ FrameWorker.prototype = {
         return ob.name + ".prototype=" + raw + ";"
       }
       try {
-        let scriptText = [importScripts.toSource(),
-                          AbstractPort.toSource(),
-                          getProtoSource(AbstractPort),
-                          WorkerPort.toSource(),
-                          getProtoSource(WorkerPort),
-                          // *sigh* - toSource() doesn't do __proto__
-                          "WorkerPort.prototype.__proto__=AbstractPort.prototype;",
-                          __initWorkerMessageHandler.toSource(),
-                          "__initWorkerMessageHandler();" // and bootstrap it.
-                         ].join("\n")
-        Cu.evalInSandbox(scriptText, sandbox, "1.8", "<injected port handling code>", 1);
+        Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortBase.jsm", sandbox);
+        Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortWorker.js", sandbox);
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error injecting port code into content side of the worker: " + e + "\n" + e.stack);
@@ -279,63 +271,7 @@ WorkerHandle.prototype = {
   }
 };
 
-// This function is magically injected into the sandbox and used there.
-// Thus, it is only ever dealing with "worker" ports.
-function __initWorkerMessageHandler() {
-
-  let ports = {}; // all "worker" ports currently alive, keyed by ID.
-
-  function messageHandler(event) {
-    // We will ignore all messages destined for otherType.
-    let data = event.data;
-    let portid = data.portId;
-    let port;
-    if (!data.portFromType || data.portFromType === "worker") {
-      // this is a message posted by ourself so ignore it.
-      return;
-    }
-    switch (data.portTopic) {
-      case "port-create":
-        // a new port was created on the "client" side - create a new worker
-        // port and store it in the map
-        port = new WorkerPort(portid);
-        ports[portid] = port;
-        // and call the "onconnect" handler.
-        onconnect({ports: [port]});
-        break;
-
-      case "port-close":
-        // the client side of the port was closed, so close this side too.
-        port = ports[portid];
-        if (!port) {
-          // port already closed (which will happen when we call port.close()
-          // below - the client side will send us this message but we've
-          // already closed it.)
-          return;
-        }
-        delete ports[portid];
-        port.close();
-        break;
-
-      case "port-message":
-        // the client posted a message to this worker port.
-        port = ports[portid];
-        if (!port) {
-          // port must be closed - this shouldn't happen!
-          return;
-        }
-        port._onmessage(data.data);
-        break;
-
-      default:
-        break;
-    }
-  }
-  // addEventListener is injected into the sandbox.
-  _addEventListener('message', messageHandler);
-}
-
-// And this is the message listener for the *client* (ie, chrome) side of the world.
+// This is the message listener for the *client* (ie, chrome) side of the world.
 function initClientMessageHandler(worker, workerWindow) {
   function _messageHandler(event) {
     // We will ignore all messages destined for otherType.
@@ -384,130 +320,6 @@ function initClientMessageHandler(worker, workerWindow) {
     }
   }
   workerWindow.addEventListener('message', messageHandler);
-}
-
-
-// The port implementation which is shared between clients and workers.
-function AbstractPort(portid) {
-  this._portid = portid;
-  this._handler = undefined;
-  // pending messages sent to this port before it has a message handler.
-  this._pendingMessagesIncoming = [];
-}
-
-AbstractPort.prototype = {
-  _portType: null, // set by a subclass.
-  // abstract methods to be overridden.
-  _dopost: function fw_AbstractPort_dopost(data) {
-    throw new Error("not implemented");
-  },
-  _onerror: function fw_AbstractPort_onerror(err) {
-    throw new Error("not implemented");
-  },
-
-  // and concrete methods shared by client and workers.
-  toString: function fw_AbstractPort_toString() {
-    return "MessagePort(portType='" + this._portType + "', portId=" + this._portid + ")";
-  },
-  _JSONParse: function fw_AbstractPort_JSONParse(data) JSON.parse(data),
-
- _postControlMessage: function fw_AbstractPort_postControlMessage(topic, data) {
-    let postData = {portTopic: topic,
-                    portId: this._portid,
-                    portFromType: this._portType,
-                    data: data,
-                    __exposedProps__: {
-                      portTopic: 'r',
-                      portId: 'r',
-                      portFromType: 'r',
-                      data: 'r'
-                    }
-                   };
-    this._dopost(postData);
-  },
-
-  _onmessage: function fw_AbstractPort_onmessage(data) {
-    // See comments in postMessage below - we work around a cloning
-    // issue by using JSON for these messages.
-    // Further, we allow the workers to override exactly how the JSON parsing
-    // is done - we try and do such parsing in the client window so things
-    // like prototype overrides on Array work as expected.
-    data = this._JSONParse(data);
-    if (!this._handler) {
-      this._pendingMessagesIncoming.push(data);
-    }
-    else {
-      try {
-        this._handler({data: data,
-                       __exposedProps__: {data: 'r'}
-                      });
-      }
-      catch (ex) {
-        this._onerror(ex);
-      }
-    }
-  },
-
-  set onmessage(handler) { // property setter for onmessage
-    this._handler = handler;
-    while (this._pendingMessagesIncoming.length) {
-      this._onmessage(this._pendingMessagesIncoming.shift());
-    }
-  },
-
-  /**
-   * postMessage
-   *
-   * Send data to the onmessage handler on the other end of the port.  The
-   * data object should have a topic property.
-   *
-   * @param {jsobj} data
-   */
-  postMessage: function fw_AbstractPort_postMessage(data) {
-    if (this._portid === null) {
-      throw new Error("port is closed");
-    }
-    // There seems to be an issue with passing objects directly and letting
-    // the structured clone thing work - we sometimes get:
-    // [Exception... "The object could not be cloned."  code: "25" nsresult: "0x80530019 (DataCloneError)"]
-    // The best guess is that this happens when funky things have been added to the prototypes.
-    // It doesn't happen for our "control" messages, only in messages from
-    // content - so we explicitly use JSON on these messages as that avoids
-    // the problem.
-    this._postControlMessage("port-message", JSON.stringify(data));
-  },
-
-  close: function fw_AbstractPort_close() {
-    if (!this._portid) {
-      return; // already closed.
-    }
-    this._postControlMessage("port-close");
-    // and clean myself up.
-    this._handler = null;
-    this._pendingMessagesIncoming = [];
-    this._portid = null;
-  }
-}
-
-// Note: this is never instantiated in chrome - the source is sent across
-// to the worker and it is evaluated there and created in response to a
-// port-create message we send.
-function WorkerPort(portid) {
-  AbstractPort.call(this, portid);
-}
-
-WorkerPort.prototype = {
-  __proto__: AbstractPort.prototype,
-  _portType: "worker",
-
-  _dopost: function fw_WorkerPort_dopost(data) {
-    // postMessage is injected into the sandbox.
-    _postMessage(data, "*");
-  },
-
-  _onerror: function fw_WorkerPort_onerror(err) {
-    throw new Error("Port " + this + " handler failed: " + err);
-  }
 }
 
 /**
@@ -576,26 +388,5 @@ ClientPort.prototype = {
     AbstractPort.prototype.close.call(this);
     this._window = null;
     this._pendingMessagesOutgoing = null;
-  }
-}
-
-
-function importScripts() {
-  for (var i=0; i < arguments.length; i++) {
-    // load the url *synchronously*
-    var scriptURL = arguments[i];
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', scriptURL, false);
-    xhr.onreadystatechange = function(aEvt) {
-      if (xhr.readyState == 4) {
-        if (xhr.status == 200 || xhr.status == 0) {
-          eval(xhr.responseText);
-        }
-        else {
-          throw new Error("Unable to importScripts ["+scriptURL+"], status " + xhr.status)
-        }
-      }
-    };
-    xhr.send(null);
   }
 }
