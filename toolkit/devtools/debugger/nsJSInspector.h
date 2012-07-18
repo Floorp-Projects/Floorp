@@ -7,11 +7,12 @@
 #define COMPONENTS_JSINSPECTOR_H
 
 #include "nsIJSInspector.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace jsinspector {
 
-class nsJSInspector : public nsIJSInspector
+class nsJSInspector MOZ_FINAL : public nsIJSInspector
 {
 public:
   NS_DECL_ISUPPORTS
