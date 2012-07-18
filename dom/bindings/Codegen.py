@@ -3794,163 +3794,66 @@ class CGClass(CGThing):
             result = result + memberString
         return result
 
-class CGResolveProperty(CGAbstractMethod):
+class CGXrayHelper(CGAbstractMethod):
+    def __init__(self, descriptor, name, args, properties):
+        CGAbstractMethod.__init__(self, descriptor, name, "bool", args)
+        self.properties = properties
+
+    def definition_body(self):
+        varNames = self.properties.variableNames(True)
+
+        methods = self.properties.methods
+        if methods.hasNonChromeOnly() or methods.hasChromeOnly():
+            methodArgs = """// %(methods)s has an end-of-list marker at the end that we ignore
+%(methods)s, %(methods)s_ids, %(methods)s_specs, ArrayLength(%(methods)s) - 1""" % varNames
+        else:
+            methodArgs = "NULL, NULL, NULL, 0"
+        methodArgs = CGGeneric(methodArgs)
+
+        attrs = self.properties.attrs
+        if attrs.hasNonChromeOnly() or attrs.hasChromeOnly():
+            attrArgs = """// %(attrs)s has an end-of-list marker at the end that we ignore
+%(attrs)s, %(attrs)s_ids, %(attrs)s_specs, ArrayLength(%(attrs)s) - 1""" % varNames
+        else:
+            attrArgs = "NULL, NULL, NULL, 0"
+        attrArgs = CGGeneric(attrArgs)
+
+        consts = self.properties.consts
+        if consts.hasNonChromeOnly() or consts.hasChromeOnly():
+            constArgs = """// %(consts)s has an end-of-list marker at the end that we ignore
+%(consts)s, %(consts)s_ids, %(consts)s_specs, ArrayLength(%(consts)s) - 1""" % varNames
+        else:
+            constArgs = "NULL, NULL, NULL, 0"
+        constArgs = CGGeneric(constArgs)
+
+        prefixArgs = CGGeneric(self.getPrefixArgs())
+
+        return CGIndenter(
+            CGWrapper(CGList([prefixArgs, methodArgs, attrArgs, constArgs], ",\n"),
+                      pre=("return Xray%s(" % self.name),
+                      post=");",
+                      reindent=True)).define()
+
+class CGResolveProperty(CGXrayHelper):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
                 Argument('jsid', 'id'), Argument('bool', 'set'),
                 Argument('JSPropertyDescriptor*', 'desc')]
-        CGAbstractMethod.__init__(self, descriptor, "ResolveProperty", "bool", args)
-        self.properties = properties
-    def definition_body(self):
-        str = ""
+        CGXrayHelper.__init__(self, descriptor, "ResolveProperty", args,
+                              properties)
 
-        varNames = self.properties.variableNames(True)
+    def getPrefixArgs(self):
+        return "cx, wrapper, id, desc"
 
-        methods = self.properties.methods
-        if methods.hasNonChromeOnly() or methods.hasChromeOnly():
-            str += """  // %(methods)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(methods)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(methods)s[prefIdx].specs);
-    if (%(methods)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(methods)s[prefIdx].specs - %(methods)s_specs;
-      for ( ; %(methods)s_ids[i] != JSID_VOID; ++i) {
-        if (id == %(methods)s_ids[i]) {
-          JSFunction *fun = JS_NewFunctionById(cx, %(methods)s_specs[i].call, %(methods)s_specs[i].nargs, 0, wrapper, id);
-          if (!fun)
-              return false;
-          JSObject *funobj = JS_GetFunctionObject(fun);
-          desc->value.setObject(*funobj);
-          desc->attrs = %(methods)s_specs[i].flags;
-          desc->obj = wrapper;
-          desc->setter = nsnull;
-          desc->getter = nsnull;
-          return true;
-        }
-      }
-    }
-  }
 
-""" % varNames
-
-        attrs = self.properties.attrs
-        if attrs.hasNonChromeOnly() or attrs.hasChromeOnly():
-            str += """  // %(attrs)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(attrs)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(attrs)s[prefIdx].specs);
-    if (%(attrs)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(attrs)s[prefIdx].specs - %(attrs)s_specs;;
-      for ( ; %(attrs)s_ids[i] != JSID_VOID; ++i) {
-        if (id == %(attrs)s_ids[i]) {
-          desc->attrs = %(attrs)s_specs[i].flags;
-          desc->obj = wrapper;
-          desc->setter = %(attrs)s_specs[i].setter;
-          desc->getter = %(attrs)s_specs[i].getter;
-          return true;
-        }
-      }
-    }
-  }
-
-""" % varNames
-
-        consts = self.properties.consts
-        if consts.hasNonChromeOnly() or consts.hasChromeOnly():
-            str += """  // %(consts)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(consts)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(consts)s[prefIdx].specs);
-    if (%(consts)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(consts)s[prefIdx].specs - %(consts)s_specs;;
-      for ( ; %(consts)s_ids[i] != JSID_VOID; ++i) {
-        if (id == %(consts)s_ids[i]) {
-          desc->attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-          desc->obj = wrapper;
-          desc->value = %(consts)s_specs[i].value;
-          return true;
-        }
-      }
-    }
-  }
-
-""" % varNames
-
-        return str + "  return true;"
-
-class CGEnumerateProperties(CGAbstractMethod):
+class CGEnumerateProperties(CGXrayHelper):
     def __init__(self, descriptor, properties):
         args = [Argument('JS::AutoIdVector&', 'props')]
-        CGAbstractMethod.__init__(self, descriptor, "EnumerateProperties", "bool", args)
-        self.properties = properties
-    def definition_body(self):
-        str = ""
+        CGXrayHelper.__init__(self, descriptor, "EnumerateProperties", args,
+                              properties)
 
-        varNames = self.properties.variableNames(True)
-
-        methods = self.properties.methods
-        if methods.hasNonChromeOnly() or methods.hasChromeOnly():
-            str += """  // %(methods)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(methods)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(methods)s[prefIdx].specs);
-    if (%(methods)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(methods)s[prefIdx].specs - %(methods)s_specs;
-      for ( ; %(methods)s_ids[i] != JSID_VOID; ++i) {
-        if ((%(methods)s_specs[i].flags & JSPROP_ENUMERATE) &&
-            !props.append(%(methods)s_ids[i])) {
-          return false;
-        }
-      }
-    }
-  }
-
-""" % varNames
-
-        attrs = self.properties.attrs
-        if attrs.hasNonChromeOnly() or attrs.hasChromeOnly():
-            str += """  // %(attrs)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(attrs)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(attrs)s[prefIdx].specs);
-    if (%(attrs)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(attrs)s[prefIdx].specs - %(attrs)s_specs;;
-      for ( ; %(attrs)s_ids[i] != JSID_VOID; ++i) {
-        if ((%(attrs)s_specs[i].flags & JSPROP_ENUMERATE) &&
-            !props.append(%(attrs)s_ids[i])) {
-          return false;
-        }
-      }
-    }
-  }
-
-""" % varNames
-
-        consts = self.properties.consts
-        if consts.hasNonChromeOnly() or consts.hasChromeOnly():
-            str += """  // %(consts)s has an end-of-list marker at the end that we ignore
-  for (size_t prefIdx = 0; prefIdx < ArrayLength(%(consts)s)-1; ++prefIdx) {
-    MOZ_ASSERT(%(consts)s[prefIdx].specs);
-    if (%(consts)s[prefIdx].enabled) {
-      // Set i to be the index into our full list of ids/specs that we're
-      // looking at now.
-      size_t i = %(consts)s[prefIdx].specs - %(consts)s_specs;;
-      for ( ; %(consts)s_ids[i] != JSID_VOID; ++i) {
-        if (!props.append(%(consts)s_ids[i])) {
-          return false;
-        }
-      }
-    }
-  }
-
-""" % varNames
-
-        return str + "  return true;"
+    def getPrefixArgs(self):
+        return "props"
 
 class CGPrototypeTraitsClass(CGClass):
     def __init__(self, descriptor, indent=''):
