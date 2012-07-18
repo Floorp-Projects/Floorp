@@ -1125,35 +1125,24 @@
             <textbox class="gclitoolbar-input-node" rows="1"/>
           </stack>
           <toolbarbutton id="developer-toolbar-webconsole"
+                         label="&webConsoleButton.label;"
                          class="developer-toolbar-button"
-                         observes="devtoolsMenuBroadcaster_WebConsole"/>
+                         command="Tools:WebConsole"/>
           <toolbarbutton id="developer-toolbar-inspector"
+                         label="&inspectorButton.label;"
                          class="developer-toolbar-button"
-                         observes="devtoolsMenuBroadcaster_Inspect"/>
+                         hidden="true"
+                         command="Tools:Inspect"/>
           <toolbarbutton id="developer-toolbar-styleeditor"
+                         label="&styleeditor.label;"
                          class="developer-toolbar-button"
-                         observes="devtoolsMenuBroadcaster_StyleEditor"/>
+                         hidden="true"
+                         command="Tools:StyleEditor"/>
           <toolbarbutton id="developer-toolbar-debugger"
+                         label="&debuggerMenu.label2;"
                          class="developer-toolbar-button"
-                         observes="devtoolsMenuBroadcaster_Debugger"/>
-          <toolbarbutton id="developer-toolbar-other-tools"
-                         type="menu"
-                         class="developer-toolbar-button"
-                         label="&devToolbarOtherToolsButton.label;">
-            <menupopup position="before_end">
-               <menuitem observes="devtoolsMenuBroadcaster_DevToolbar"/>
-               <menuitem observes="devtoolsMenuBroadcaster_ResponsiveUI"/>
-               <menuitem observes="devtoolsMenuBroadcaster_RemoteDebugger"/>
-               <menuitem observes="devtoolsMenuBroadcaster_ChromeDebugger"/>
-               <menuitem observes="devtoolsMenuBroadcaster_Scratchpad"/>
-               <menuitem observes="devtoolsMenuBroadcaster_StyleEditor"/>
-               <menuitem observes="devtoolsMenuBroadcaster_PageSource"/>
-               <menuitem observes="devtoolsMenuBroadcaster_ErrorConsole"/>
-               <menuseparator/>
-               <menuitem observes="devtoolsMenuBroadcaster_GetMoreTools"/>
-            </menupopup>
-          </toolbarbutton>
-
+                         hidden="true"
+                         command="Tools:Debugger"/>
 #ifndef XP_MACOSX
           <toolbarbutton id="developer-toolbar-closebutton"
                          class="devtools-closebutton"
