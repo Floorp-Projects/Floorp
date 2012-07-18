@@ -531,7 +531,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testInt32(Condition cond, const ValueOperand &value);
     Condition testBoolean(Condition cond, const ValueOperand &value);
     Condition testDouble(Condition cond, const ValueOperand &value);
-    Condition testNumber(Condition cond, const ValueOperand &value);
     Condition testNull(Condition cond, const ValueOperand &value);
     Condition testUndefined(Condition cond, const ValueOperand &value);
     Condition testString(Condition cond, const ValueOperand &value);

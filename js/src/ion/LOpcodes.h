@@ -92,8 +92,6 @@
     _(CompareBAndBranch)            \
     _(IsNullOrUndefined)            \
     _(IsNullOrUndefinedAndBranch)   \
-    _(TypeOfIs)                     \
-    _(TypeOfIsAndBranch)            \
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \

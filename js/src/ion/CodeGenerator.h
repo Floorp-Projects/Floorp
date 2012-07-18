@@ -147,8 +147,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCompareV(LCompareV *lir);
     bool visitIsNullOrUndefined(LIsNullOrUndefined *lir);
     bool visitIsNullOrUndefinedAndBranch(LIsNullOrUndefinedAndBranch *lir);
-    bool visitTypeOfIs(LTypeOfIs *lir);
-    bool visitTypeOfIsAndBranch(LTypeOfIsAndBranch *lir);
     bool visitConcat(LConcat *lir);
     bool visitCharCodeAt(LCharCodeAt *lir);
     bool visitFromCharCode(LFromCharCode *lir);

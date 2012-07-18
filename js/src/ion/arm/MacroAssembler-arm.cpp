@@ -1974,7 +1974,6 @@ MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const ValueOpera
     ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN));
     return cond;
 }
-
 Assembler::Condition
 MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperand &value)
 {
@@ -1983,17 +1982,6 @@ MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperan
         ? Below
         : AboveOrEqual;
     ma_cmp(value.typeReg(), ImmTag(JSVAL_TAG_CLEAR));
-    return actual;
-}
-
-Assembler::Condition
-MacroAssemblerARMCompat::testNumber(Assembler::Condition cond, const ValueOperand &value)
-{
-    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    Assembler::Condition actual = (cond == Equal)
-        ? BelowOrEqual
-        : Above;
-    ma_cmp(value.typeReg(), ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
     return actual;
 }
 

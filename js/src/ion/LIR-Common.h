@@ -862,20 +862,13 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
 
 class LCompareS : public LInstructionHelper<1, 2, 0>
 {
-    JSOp jsop_;
-
   public:
     LIR_HEADER(CompareS);
-    LCompareS(JSOp jsop, const LAllocation &left, const LAllocation &right) 
-      : jsop_(jsop)
-    {
+    LCompareS(const LAllocation &left, const LAllocation &right) {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    JSOp jsop() const{
-        return jsop_;
-    }
     const LAllocation *left() {
         return getOperand(0);
     }
@@ -1071,71 +1064,6 @@ class LIsNullOrUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
     MCompare *mir() {
         return mir_->toCompare();
     }
-};
-
-class LTypeOfIs : public LInstructionHelper<1, BOX_PIECES, 0>
-{
-    JSOp op_;
-    const js::Value v_;
-
-  public:
-    LIR_HEADER(TypeOfIs);
-
-    LTypeOfIs(JSOp op, const js::Value &v) 
-      : op_(op), v_(v)
-    { }
-
-    static const size_t Value = 0;
-
-    JSOp jsop() {
-        return op_;
-    }
-    js::Value value() {
-        return v_;
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
-};
-
-class LTypeOfIsAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
-{
-    JSOp jsop_;
-    const js::Value v_;
-    MBasicBlock *ifTrue_;
-    MBasicBlock *ifFalse_;
-
-  public:
-    LIR_HEADER(TypeOfIsAndBranch);
-
-    LTypeOfIsAndBranch(JSOp jsop, const js::Value &v, const LDefinition &temp,
-                      MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : jsop_(jsop),
-        v_(v),
-        ifTrue_(ifTrue),
-        ifFalse_(ifFalse)
-    {
-        setTemp(0, temp);
-    }
-
-    static const size_t Value = 0;
-
-    JSOp jsop() const {
-        return jsop_;
-    }
-    js::Value value() {
-        return v_;
-    }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }    
-    MBasicBlock *ifTrue() const {
-        return ifTrue_;
-    }
-    MBasicBlock *ifFalse() const {
-        return ifFalse_;
-    }
-
 };
 
 // Not operation on an integer.
