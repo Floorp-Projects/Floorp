@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=774245
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 774245</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=774245">Mozilla Bug 774245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Components.lookupMethod in content scope. **/
+SimpleTest.waitForExplicitFinish();
+
+var gLoaded = 0;
+function loaded() {
+  if (++gLoaded == 2)
+    go();
+}
+
+var sameOriginWin;
+var crossOriginWin;
+function go() {
+  // Grab references to the content windows.
+  sameOriginWin = document.getElementById('ifr-same').contentWindow;
+  crossOriginWin = document.getElementById('ifr-cross').contentWindow;
+
+  // Test same-compartment.
+  document.getElementsByTagName = function() { ok(false, "dont call me"); };
+  var result = Components.lookupMethod(document, 'getElementsByTagName')('iframe');
+  is(result.length, 2, "same-origin lookupMethod works");
+
+  // Test that the method is bound.
+  var gebtn = Components.lookupMethod(document, 'getElementsByTagName');
+  is(Function.call.apply(gebtn, [window, 'iframe']).length, 2, "method is bound");
+
+  // Test that we throw for location objects. Location objects already use same-
+  // compartment Xrays, so callers shouldn't need to use lookupMethod there. And
+  // making it work would involve complicating the security surounding the
+  // implementation.
+  try {
+    Components.lookupMethod(location, 'href');
+    ok(false, "Didn't throw when we should have!");
+  } catch(e) {
+    ok(true, "Correctly threw when trying to lookupMethod on location object");
+  }
+
+  // Test cross-compartment same-origin.
+  sameOriginWin.setTimeout = function() { ok(false, "dont call me either"); };
+  Components.lookupMethod(sameOriginWin, 'setTimeout')(continueTest, 0);
+}
+
+function continueTest() {
+  // Test that cross-origin fails.
+  try {
+    Components.lookupMethod(crossOriginWin, 'top');
+    ok(false, "Should have thrown");
+  } catch (e) {
+    ok(true, "Threw appropriately");
+  }
+
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+<iframe id="ifr-same" onload="loaded();" src="file_empty.html"></iframe>
+<iframe id="ifr-cross" onload="loaded();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+</body>
+</html>
