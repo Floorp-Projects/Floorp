@@ -133,9 +133,7 @@ SettingsServiceLock.prototype = {
                                      flags: nsIClassInfo.DOM_OBJECT})
 };
 
-const SETTINGSSERVICE_CONTRACTID = "@mozilla.org/settingsService;1";
 const SETTINGSSERVICE_CID        = Components.ID("{3458e760-8513-11e1-b0c4-0800200c9a66}");
-const nsISettingsService         = Ci.nsISettingsService;
 
 let myGlobal = this;
 
@@ -171,13 +169,7 @@ SettingsService.prototype = {
   },
 
   classID : SETTINGSSERVICE_CID,
-  QueryInterface : XPCOMUtils.generateQI([nsISettingsService]),
-
-  classInfo : XPCOMUtils.generateCI({classID: SETTINGSSERVICE_CID,
-                                     contractID: SETTINGSSERVICE_CONTRACTID,
-                                     classDescription: "SettingsService",
-                                     interfaces: [nsISettingsService],
-                                     flags: nsIClassInfo.DOM_OBJECT})
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsISettingsService]),
 }
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsService, SettingsServiceLock])
