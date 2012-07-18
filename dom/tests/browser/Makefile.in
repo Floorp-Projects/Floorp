@@ -1,28 +1,25 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir	= dom/tests/browser
+DEPTH := ../../..
+topsrcdir := @top_srcdir@
+srcdir := @srcdir@
+VPATH := @srcdir@
+relativesrcdir := dom/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_BROWSER_FILES := \
+  browser_focus_steal_from_chrome.js \
+  browser_focus_steal_from_chrome_during_mousedown.js \
+  browser_autofocus_background.js \
+  browser_ConsoleAPITests.js \
+  test-console-api.html \
+  browser_ConsoleStorageAPITests.js \
+  browser_ConsoleStoragePBTest.js \
+  browser_autofocus_preference.js \
+  browser_bug396843.js \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
-
-_BROWSER_FILES = \
-		browser_focus_steal_from_chrome.js \
-		browser_focus_steal_from_chrome_during_mousedown.js \
-		browser_autofocus_background.js \
-		browser_ConsoleAPITests.js \
-		test-console-api.html \
-		browser_ConsoleStorageAPITests.js \
-		browser_ConsoleStoragePBTest.js \
-		browser_autofocus_preference.js \
-		browser_bug396843.js \
-		$(NULL)
-
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

@@ -318,6 +318,44 @@ var WifiManager = (function() {
     });
   }
 
+  function getConnectionInfoGB(callback) {
+    var rval = {};
+    getRssiApproxCommand(function(rssi) {
+      rval.rssi = rssi;
+      getLinkSpeedCommand(function(linkspeed) {
+        rval.linkspeed = linkspeed;
+        callback(rval);
+      });
+    });
+  }
+
+  function getConnectionInfoICS(callback) {
+    doStringCommand("SIGNAL_POLL", function(reply) {
+      if (!reply) {
+        callback(null);
+        return;
+      }
+
+      let rval = {};
+      var lines = reply.split("\n");
+      for (let i = 0; i < lines.length; ++i) {
+        let [key, value] = lines[i].split("=");
+        switch (key.toUpperCase()) {
+          case "RSSI":
+            rval.rssi = value | 0;
+            break;
+          case "LINKSPEED":
+            rval.linkspeed = value | 0;
+            break;
+          default:
+            // Ignore.
+        }
+      }
+
+      callback(rval);
+    });
+  }
+
   function getMacAddressCommand(callback) {
     doStringCommand("DRIVER MACADDR", function(reply) {
       if (reply)
@@ -1096,6 +1134,9 @@ var WifiManager = (function() {
   manager.getRssiApprox = getRssiApproxCommand;
   manager.getLinkSpeed = getLinkSpeedCommand;
   manager.getDhcpInfo = function() { return dhcpInfo; }
+  manager.getConnectionInfo = (sdkVersion >= 15)
+                              ? getConnectionInfoICS
+                              : getConnectionInfoGB;
   return manager;
 })();
 
@@ -1591,8 +1632,9 @@ WifiWorker.prototype = {
 
     var self = this;
     function getConnectionInformation() {
-      WifiManager.getRssiApprox(function(rssi) {
+      WifiManager.getConnectionInfo(function(info) {
         // See comments in calculateSignal for information about this.
+        let { rssi, linkspeed } = info;
         if (rssi > 0)
           rssi -= 256;
         if (rssi <= MIN_RSSI)
@@ -1600,24 +1642,23 @@ WifiWorker.prototype = {
         else if (rssi >= MAX_RSSI)
           rssi = MAX_RSSI;
 
-        WifiManager.getLinkSpeed(function(linkspeed) {
-          let info = { signalStrength: rssi,
-                       relSignalStrength: calculateSignal(rssi),
-                       linkSpeed: linkspeed };
-          let last = self._lastConnectionInfo;
+        let info = { signalStrength: rssi,
+                     relSignalStrength: calculateSignal(rssi),
+                     linkSpeed: linkspeed };
+        let last = self._lastConnectionInfo;
 
-          // Only fire the event if the link speed changed or the signal
-          // strength changed by more than 10%.
-          function tensPlace(percent) ((percent / 10) | 0)
+        // Only fire the event if the link speed changed or the signal
+        // strength changed by more than 10%.
+        function tensPlace(percent) ((percent / 10) | 0)
 
-          if (last && last.linkSpeed === info.linkSpeed &&
-              tensPlace(last.relSignalStrength) === tensPlace(info.relSignalStrength)) {
-            return;
-          }
+        if (last && last.linkSpeed === info.linkSpeed &&
+            tensPlace(last.relSignalStrength) === tensPlace(info.relSignalStrength)) {
+          return;
+        }
 
-          self._lastConnectionInfo = info;
-          self._fireEvent("connectionInfoUpdate", info);
-        });
+        self._lastConnectionInfo = info;
+        debug("Firing connectionInfoUpdate: " + uneval(info));
+        self._fireEvent("connectionInfoUpdate", info);
       });
     }
 
