@@ -82,6 +82,7 @@
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
     _(InlineFunctionGuard)          \
+    _(PolyInlineDispatch)           \
     _(Compare)                      \
     _(CompareD)                     \
     _(CompareS)                     \

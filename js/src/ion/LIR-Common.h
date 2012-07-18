@@ -805,6 +805,26 @@ class LInlineFunctionGuard : public LInstructionHelper<0, 1, 0>
     }
 };
 
+class LPolyInlineDispatch : public LInstructionHelper<0, 1, 0>
+{
+  // Accesses function/block table from MIR instruction.
+  public:
+    LIR_HEADER(PolyInlineDispatch);
+
+    LPolyInlineDispatch(const LAllocation &in) {
+        setOperand(0, in);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+
+    MPolyInlineDispatch *mir() {
+        return mir_->toPolyInlineDispatch();
+    }
+};
+
+
 // Compares two integral values of the same JS type, either integer or object.
 // For objects, both operands are in registers.
 class LCompare : public LInstructionHelper<1, 2, 0>
