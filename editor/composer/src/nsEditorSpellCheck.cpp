@@ -500,8 +500,6 @@ nsEditorSpellCheck::GetCurrentDictionary(nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
-
   return mSpellChecker->GetCurrentDictionary(aDictionary);
 }
 
@@ -509,6 +507,8 @@ NS_IMETHODIMP
 nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
+
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   if (!mUpdateDictionaryRunning) {
 
@@ -597,6 +597,8 @@ NS_IMETHODIMP
 nsEditorSpellCheck::UpdateCurrentDictionary()
 {
   nsresult rv;
+
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   UpdateDictionnaryHolder holder(this);
 
