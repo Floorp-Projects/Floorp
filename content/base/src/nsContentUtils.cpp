@@ -2774,17 +2774,9 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
 static bool
 TestSitePerm(nsIPrincipal* aPrincipal, const char* aType, PRUint32 aPerm)
 {
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    // System principal is always allowed and never denied permission.
-    return aPerm == nsIPermissionManager::ALLOW_ACTION;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(!aPrincipal ||
-      aPrincipal->GetURI(getter_AddRefs(uri))) ||
-      !uri) {
-    // We always deny (i.e. don't allow) the permission if we don't
-    // have a principal or we don't know the URI.
+  if (!aPrincipal) {
+    // We always deny (i.e. don't allow) the permission if we don't have a
+    // principal.
     return aPerm != nsIPermissionManager::ALLOW_ACTION;
   }
 
@@ -2793,9 +2785,9 @@ TestSitePerm(nsIPrincipal* aPrincipal, const char* aType, PRUint32 aPerm)
   NS_ENSURE_TRUE(permMgr, false);
 
   PRUint32 perm;
-  nsresult rv = permMgr->TestPermission(uri, aType, &perm);
+  nsresult rv = permMgr->TestPermissionFromPrincipal(aPrincipal, aType, &perm);
   NS_ENSURE_SUCCESS(rv, false);
-  
+
   return perm == aPerm;
 }
 
