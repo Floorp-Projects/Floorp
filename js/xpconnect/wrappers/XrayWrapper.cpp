@@ -1618,4 +1618,21 @@ template <> XRAY XRAY::singleton(0);
 template class XRAY;
 #undef XRAY
 
+/* Same-compartment non-filtering versions. */
+
+#define XRAY XrayWrapper<DirectWrapper, XPCWrappedNativeXrayTraits >
+template <> XRAY XRAY::singleton(0);
+template class XRAY;
+#undef XRAY
+
+#define XRAY XrayWrapper<DirectWrapper, ProxyXrayTraits >
+template <> XRAY XRAY::singleton(0);
+template class XRAY;
+#undef XRAY
+
+#define XRAY XrayWrapper<DirectWrapper, DOMXrayTraits >
+template <> XRAY XRAY::singleton(0);
+template class XRAY;
+#undef XRAY
+
 }
