@@ -1429,11 +1429,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin.Zero();
   }
   else if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
-    nscoord autoHeight = bottomEdgeOfChildren;
-    autoHeight -= borderPadding.top;
-    nscoord oldAutoHeight = autoHeight;
-    aReflowState.ApplyMinMaxConstraints(nsnull, &autoHeight);
-    if (autoHeight != oldAutoHeight) {
+    nscoord contentHeight = bottomEdgeOfChildren - borderPadding.top;
+    nscoord autoHeight = aReflowState.ApplyMinMaxHeight(contentHeight);
+    if (autoHeight != contentHeight) {
       // Our min-height or max-height made our height change.  Don't carry out
       // our kids' bottom margins.
       aMetrics.mCarriedOutBottomMargin.Zero();
