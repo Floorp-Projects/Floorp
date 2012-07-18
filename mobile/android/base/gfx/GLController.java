@@ -5,14 +5,17 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.util.Log;
 import android.view.SurfaceHolder;
-
+import android.view.SurfaceView;
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGL11;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL;
+import javax.microedition.khronos.opengles.GL10;
 
 public class GLController {
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
@@ -26,7 +29,7 @@ public class GLController {
     private EGL10 mEGL;
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
-    public EGLSurface mEGLSurface; // accessed from JNI
+    private EGLSurface mEGLSurface;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
 
@@ -164,7 +167,7 @@ public class GLController {
      * This class does not keep a reference to the provided EGL surface; the
      * caller assumes ownership of the surface once it is returned.
      */
-    public EGLSurface provideEGLSurface() {
+    private EGLSurface provideEGLSurface() {
         if (mEGL == null) {
             initEGL();
         }
@@ -183,7 +186,7 @@ public class GLController {
         return "Error " + mEGL.eglGetError();
     }
 
-    private static final class GLControllerException extends RuntimeException {
+    public static class GLControllerException extends RuntimeException {
         public static final long serialVersionUID = 1L;
 
         GLControllerException(String e) {
