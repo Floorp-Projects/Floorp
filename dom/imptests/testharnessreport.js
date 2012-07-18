@@ -69,6 +69,17 @@ var W3CTest = {
     this.runner[(test.result === !test.todo) ? "log" : "error"](msg);
   },
 
+  "_logCollapsedMessages": function() {
+    if (this.collapsedMessages) {
+      this._log({
+        "result": true,
+        "todo": false,
+        "message": "Elided " + this.collapsedMessages + " passes or known failures."
+      });
+    }
+    this.collapsedMessages = 0;
+  },
+
   /**
    * Maybe logs a result, eliding up to MAX_COLLAPSED_MESSAGES consecutive
    * passes.
@@ -78,14 +89,7 @@ var W3CTest = {
     if (success && ++this.collapsedMessages < this.MAX_COLLAPSED_MESSAGES) {
       return;
     }
-    if (this.collapsedMessages) {
-      this._log({
-        "result": true,
-        "todo": false,
-        "message": "Elided " + this.collapsedMessages + " passes or known failures."
-      });
-    }
-    this.collapsedMessages = 0;
+    this._logCollapsedMessages();
     this._log(test);
   },
 
@@ -142,6 +146,8 @@ var W3CTest = {
         url in this.expectedFailures &&
         this.expectedFailures[url] === "error"
     });
+
+    this._logCollapsedMessages();
 
     if (this.dumpFailures) {
       dump("@@@ @@@ Failures\n");
