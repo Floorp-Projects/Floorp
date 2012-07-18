@@ -394,8 +394,7 @@ IonBuilder::processIterators()
 
 bool
 IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                        MDefinition *thisDefn, MDefinitionVector &argv,
-                        InlinePolymorphism polymorphism)
+                        MDefinition *thisDefn, MDefinitionVector &argv)
 {
     IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
@@ -415,15 +414,8 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerBuilder->current;
-    if (polymorphism == Inline_Monomorphic) {
-        JS_ASSERT(predecessor == callerResumePoint->block());
-        predecessor->end(MGoto::New(current));
-    } else if (polymorphism == Inline_Polymorphic) {
-        predecessor->end(MInlineFunctionGuard::New(NULL, NULL, current, NULL));
-    } else {
-        JS_ASSERT(polymorphism == Inline_PolymorphicFinal);
-        predecessor->end(MGoto::New(current));
-    }
+    JS_ASSERT(predecessor == callerResumePoint->block());
+    predecessor->end(MGoto::New(current));
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
 
@@ -2787,11 +2779,37 @@ class AutoAccumulateExits
 
 bool
 IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
-                             MConstant *constFun, MResumePoint *inlineResumePoint,
-                             MDefinitionVector &argv, MBasicBlock *bottom,
-                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns,
-                             InlinePolymorphism polymorphism)
+                             MConstant *constFun, MBasicBlock *bottom,
+                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
+    // This resume point collects outer variables only.  It is used to recover
+    // the stack state before the current bytecode.
+    MResumePoint *inlineResumePoint =
+        MResumePoint::New(current, pc, callerResumePoint_, MResumePoint::Outer);
+    if (!inlineResumePoint)
+        return false;
+
+    // We do not inline JSOP_FUNCALL for now.
+    JS_ASSERT(argc == GET_ARGC(inlineResumePoint->pc()));
+
+    // Gather up  the arguments and |this| to the inline function.
+    // Note that we leave the callee on the simulated stack for the
+    // duration of the call.
+    MDefinitionVector argv;
+    if (!argv.resizeUninitialized(argc + 1))
+        return false;
+    for (int32 i = argc; i >= 0; i--)
+        argv[i] = current->pop();
+
+    // Replace the potential object load by the corresponding constant version
+    // which is inlined here.
+    inlineResumePoint->replaceOperand(
+        inlineResumePoint->numOperands() - (argc + 2), constFun);
+
+    // Pop the function definition and push the known constant function.
+    (void) current->pop();
+    current->push(constFun);
+
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(
@@ -2819,7 +2837,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     }
 
     // Build the graph.
-    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv, polymorphism))
+    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv))
         return false;
 
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
@@ -2922,44 +2940,17 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
     // |top| jumps into the callee subgraph -- save it for later use.
     MBasicBlock *top = current;
 
-    // Add the function constant before the resume point which maps call args.
-    MConstant *constFun = NULL;
-    if (targets.length() == 1) {
-        JSFunction *singleTarget = targets[0]->toFunction();
-        constFun = MConstant::New(ObjectValue(*singleTarget));
-        current->add(constFun);
-    }
-
-    // This resume point collects outer variables only.  It is used to recover
-    // the stack state before the current bytecode.
-    MResumePoint *inlineResumePoint =
-        MResumePoint::New(top, pc, callerResumePoint_, MResumePoint::Outer);
-    if (!inlineResumePoint)
-        return false;
-
-    // We do not inline JSOP_FUNCALL for now.
-    JS_ASSERT(argc == GET_ARGC(inlineResumePoint->pc()));
-
-    // Gather up  the arguments and |this| to the inline function.
-    // Note that we leave the callee on the simulated stack for the
-    // duration of the call.
-    MDefinitionVector argv;
-    if (!discardCallArgs(argc, argv, top))
-        return false;
-
-    // Replace the potential object load by the corresponding constant version
-    // which is inlined here. But only do this if there is exactly one target function.
-    MDefinition *funcDefn = NULL;
-    if (targets.length() == 1) {
-        JS_ASSERT(constFun != NULL);
-        inlineResumePoint->replaceOperand(
-            inlineResumePoint->numOperands() - (argc + 2), constFun);
-        current->pop();
-        current->push(constFun);
-        funcDefn = constFun;
-    } else {
-        funcDefn = current->pop();
-        current->push(funcDefn);
+    // Unwrap all the MPassArgs and replace them with their inputs, and discard the
+    // MPassArgs.
+    for (int32 i = argc; i >= 0; i--) {
+        // Unwrap each MPassArg, replacing it with its contents.
+        int argSlotDepth = -((int) i + 1);
+        MPassArg *passArg = top->peek(argSlotDepth)->toPassArg();
+        MBasicBlock *block = passArg->block();
+        MDefinition *wrapped = passArg->getArgument();
+        passArg->replaceAllUsesWith(wrapped);
+        top->rewriteAtDepth(argSlotDepth, wrapped);
+        block->discard(passArg);
     }
 
     // Create a |bottom| block for all the callee subgraph exits to jump to.
@@ -2972,59 +2963,62 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
 
     // Do the inline build. Return value definitions are stored in retvalDefns.
     if (targets.length() == 1) {
+        JSFunction *func = targets[0]->toFunction();
+        MConstant *constFun = MConstant::New(ObjectValue(*func));
+        current->add(constFun);
+
         // Monomorphic case is simple - no guards.
-        RootedFunction target(cx, targets[0]->toFunction());
-        if(!jsop_call_inline(target, argc, constructing, constFun, inlineResumePoint,
-                             argv, bottom, retvalDefns, Inline_Monomorphic))
+        RootedFunction target(cx, func);
+        if(!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
             return false;
     } else {
-        // Polymorphic inline case is not so simple - needs guards.
-        MBasicBlock *entryBlock = top;
+        // In the polymorphic case, we end the current block with a MPolyInlineDispatch instruction.
+
+        // Construct the instruction first and end the block with it before continuing onward.
+        MDefinition *funcDefn = top->peek(-((int) argc + 2));
+        MPolyInlineDispatch *disp = MPolyInlineDispatch::New(funcDefn);
         for (size_t i = 0; i < targets.length(); i++) {
-            // Do the inline function build.
-            current = entryBlock;
+            // Create an MConstant for the function and add the case for the poly inline
+            // dispatch.
+            JSFunction *func = targets[i]->toFunction();
+            RootedFunction target(cx, func);
+            MConstant *constFun = MConstant::New(ObjectValue(*func));
 
-            // Create and add the constFun for the function being inlined.
-            constFun = MConstant::New(ObjectValue(*(targets[i]->toFunction())));
-            entryBlock->add(constFun);
-
-            RootedFunction target(cx, targets[i]->toFunction());
-            InlinePolymorphism poly = (i == targets.length() - 1) ?
-                                        Inline_PolymorphicFinal : Inline_Polymorphic;
-            if (!jsop_call_inline(target, argc, constructing, constFun,
-                                  inlineResumePoint, argv, bottom, retvalDefns, poly))
+            MBasicBlock *entryBlock = newBlock(top, pc);
+            if (!entryBlock)
                 return false;
 
-            JS_ASSERT(entryBlock->lastIns());
-            JS_ASSERT((i < targets.length() - 1) ?
-                            entryBlock->lastIns()->isInlineFunctionGuard()
-                          : entryBlock->lastIns()->isGoto());
+            // Add case to PolyInlineDispatch
+            entryBlock->add(constFun);
+            disp->addCallee(constFun, entryBlock);
+        }
+        top->end(disp);
 
-            // The buildInline() called by jsop_call_inline will have terminated
-            // this block with either an InlineFunctionGuard (for a non-final
-            // inlined function), or Goto (for the last inlined function).
-            //
-            // In the former case, initialize the function and input for the
-            // InlineFunctionGuard, and set up the fallback block for the next
-            // loop iteration.
-            if (i < targets.length() - 1) {
-                MInlineFunctionGuard *guardIns =
-                    entryBlock->lastIns()->toInlineFunctionGuard();
-                guardIns->setFunction(target);
-                guardIns->setInput(funcDefn);
-                JS_ASSERT(guardIns->functionBlock() != NULL);
-
-                MBasicBlock *fallbackBlock = newBlock(entryBlock, pc);
-                guardIns->setFallbackBlock(fallbackBlock);
-                entryBlock = fallbackBlock;
-            }
+        for (size_t i = 0; i < disp->numCallees(); i++) {
+            // Do the inline function build.
+            MConstant *constFun = disp->getFunctionConstant(i);
+            RootedFunction target(cx, constFun->value().toObject().toFunction());
+            MBasicBlock *block = disp->getSuccessor(i);
+            graph_.moveBlockToEnd(block);
+            current = block;
+            
+            if (!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
+                return false;
         }
     }
 
     graph_.moveBlockToEnd(bottom);
 
-    if (!bottom->inheritNonPredecessor(top))
+    if (!bottom->inheritNonPredecessor(top, true))
         return false;
+
+    // If we were doing a polymorphic inline, then the discardCallArgs
+    // happened on the entry frame, not this frame.  Need to get rid of
+    // those.
+    if (targets.length() > 1) {
+        for (uint32_t i = 0; i < argc + 1; i++)
+            (void) bottom->pop();
+    }
 
     // Pop the callee and push the return value.
     (void) bottom->pop();

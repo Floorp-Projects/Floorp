@@ -214,8 +214,10 @@ MBasicBlock::inherit(MBasicBlock *pred)
 }
 
 bool
-MBasicBlock::inheritNonPredecessor(MBasicBlock *parent)
+MBasicBlock::inheritNonPredecessor(MBasicBlock *parent, bool inheritStack)
 {
+    if (inheritStack)
+        stackPosition_ = parent->stackPosition_;
     copySlots(parent);
 
     // Create a resume point using our initial stack state.
