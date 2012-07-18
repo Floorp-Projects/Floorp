@@ -2347,8 +2347,12 @@ abstract public class GeckoApp
         if (mPromptService != null)
             mPromptService.destroy();
 
-        if (mFavicons != null)
-            mFavicons.close();
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                if (mFavicons != null)
+                    mFavicons.close();
+            }
+        });
 
         if (SmsManager.getInstance() != null) {
             SmsManager.getInstance().stop();
