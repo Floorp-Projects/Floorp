@@ -774,7 +774,7 @@ abstract public class GeckoApp
 
             int dw = tab.getThumbnailWidth();
             int dh = tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, GeckoAppShell.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, ScreenshotHandler.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
         }
     }
 
