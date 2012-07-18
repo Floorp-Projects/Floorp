@@ -857,7 +857,12 @@ TabChild::AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI&
 bool
 TabChild::DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor)
 {
-    static_cast<PCOMContentPermissionRequestChild*>(actor)->IPDLRelease();
+    PCOMContentPermissionRequestChild* child =
+        static_cast<PCOMContentPermissionRequestChild*>(actor);
+#ifdef DEBUG
+    child->mIPCOpen = false;
+#endif /* DEBUG */
+    child->IPDLRelease();
     return true;
 }
 

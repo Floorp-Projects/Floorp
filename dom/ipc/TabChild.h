@@ -10,6 +10,9 @@
 #ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
 #endif
+#ifdef DEBUG
+#include "PCOMContentPermissionRequestChild.h"
+#endif /* DEBUG */
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -215,6 +218,18 @@ public:
     static void ArraysToParams(const InfallibleTArray<int>& aIntParams,
                                const InfallibleTArray<nsString>& aStringParams,
                                nsIDialogParamBlock* aParams);
+
+#ifdef DEBUG
+    virtual PContentPermissionRequestChild* SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
+                                                                                     const nsCString& aType,
+                                                                                     const URI& aUri)
+    {
+      PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
+      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aUri);
+      child->mIPCOpen = true;
+      return request;
+    }
+#endif /* DEBUG */
 
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);

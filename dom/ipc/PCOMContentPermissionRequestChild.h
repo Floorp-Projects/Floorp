@@ -12,7 +12,7 @@
 /*
   PContentPermissionRequestChild implementations also are
   XPCOM objects.  Addref() is called on their implementation
-  before SendPCOntentPermissionRequestConstructor is called.
+  before SendPContentPermissionRequestConstructor is called.
   When Dealloc is called, IPDLRelease() is called.
   Implementations of this method are expected to call
   Release() on themselves.  See Bug 594261 for more
@@ -21,6 +21,15 @@
 class PCOMContentPermissionRequestChild : public mozilla::dom::PContentPermissionRequestChild {
 public:
   virtual void IPDLRelease() = 0;
+#ifdef DEBUG
+  PCOMContentPermissionRequestChild() : mIPCOpen(false) {}
+  virtual ~PCOMContentPermissionRequestChild() {
+    // mIPCOpen is set to true in TabChild::SendPContentPermissionRequestConstructor
+    // and set to false in TabChild::DeallocPContentPermissionRequest
+    MOZ_ASSERT(!mIPCOpen, "Protocol must not be open when PCOMContentPermissionRequestChild is destroyed.");
+  }
+  bool mIPCOpen;
+#endif /* DEBUG */
 };
 
 #endif
