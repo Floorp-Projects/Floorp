@@ -464,7 +464,7 @@ public:
   virtual void DestroySharedSurface(gfxSharedImageSurface* aSurface) = 0;
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface) = 0;
 protected:
-  ~ISurfaceDeAllocator() {};
+  ~ISurfaceDeAllocator() {}
 };
 
 /**
@@ -491,7 +491,7 @@ public:
     mAllocator = aAllocator;
   }
 
-  virtual void DestroyFrontBuffer() { };
+  virtual void DestroyFrontBuffer() { }
 
   /**
    * The following methods are
