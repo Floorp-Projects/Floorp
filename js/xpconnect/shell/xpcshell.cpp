@@ -1332,13 +1332,6 @@ FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
     return NS_OK;
 }
 
-/* void checkLoadURI (in nsIURI from, in nsIURI uri, in unsigned long flags); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags)
-{
-    return NS_OK;
-}
-
 /* void checkLoadURIStrWithPrincipal (in nsIPrincipal aPrincipal, in AUTF8String uri, in unsigned long flags); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
