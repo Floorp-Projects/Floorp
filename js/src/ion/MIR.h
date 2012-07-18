@@ -1438,6 +1438,7 @@ class MCompare
     static MCompare *New(MDefinition *left, MDefinition *right, JSOp op);
 
     bool tryFold(bool *result);
+    bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(bool useValueNumbers);
 
     void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
@@ -4529,6 +4530,8 @@ class MStringLength
     static MStringLength *New(MDefinition *string) {
         return new MStringLength(string);
     }
+
+    MDefinition *foldsTo(bool useValueNumbers);
 
     TypePolicy *typePolicy() {
         return this;
