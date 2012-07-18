@@ -341,7 +341,7 @@ public:
 
   // Returns the current size of the framebuffer used in
   // MozAudioAvailable events.
-  PRUint32 GetFrameBufferLength() { return mFrameBufferLength; };
+  PRUint32 GetFrameBufferLength() { return mFrameBufferLength; }
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
