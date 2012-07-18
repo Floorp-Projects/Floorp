@@ -145,7 +145,7 @@ void nsBaseWidget::DestroyCompositor()
 nsBaseWidget::~nsBaseWidget()
 {
   if (mLayerManager &&
-      mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+      mLayerManager->GetBackendType() == LAYERS_BASIC) {
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
@@ -737,7 +737,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   BasicLayerManager* manager =
     static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
-    NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
+    NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     manager->SetDefaultTarget(aTarget, aDoubleBuffering);
   }
@@ -748,7 +748,7 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   BasicLayerManager* manager =
     static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
   if (manager) {
-    NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
+    NS_ASSERTION(manager->GetBackendType() == LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
     manager->SetDefaultTarget(nsnull, BasicLayerManager::BUFFER_NONE);
   }
@@ -878,9 +878,9 @@ void nsBaseWidget::CreateCompositor()
   mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
   PRInt32 maxTextureSize;
   PLayersChild* shadowManager;
-  LayerManager::LayersBackend backendHint =
-    mUseAcceleratedRendering ? LayerManager::LAYERS_OPENGL : LayerManager::LAYERS_BASIC;
-  LayerManager::LayersBackend parentBackend;
+  mozilla::layers::LayersBackend backendHint =
+    mUseAcceleratedRendering ? mozilla::layers::LAYERS_OPENGL : mozilla::layers::LAYERS_BASIC;
+  mozilla::layers::LayersBackend parentBackend;
   shadowManager = mCompositorChild->SendPLayersConstructor(
     backendHint, 0, &parentBackend, &maxTextureSize);
 
@@ -1314,7 +1314,7 @@ PRUint32
 nsBaseWidget::GetGLFrameBufferFormat()
 {
   if (mLayerManager &&
-      mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+      mLayerManager->GetBackendType() == LAYERS_OPENGL) {
     // Assume that the default framebuffer has RGBA format.  Specific
     // backends that know differently will override this method.
     return LOCAL_GL_RGBA;

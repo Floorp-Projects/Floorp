@@ -13,7 +13,7 @@
 
 #include <map>
 #include "nsDisplayList.h"
-#include "Layers.h"
+#include "LayersBackend.h"
 
 class nsContentView;
 class nsFrameLoader;
@@ -41,7 +41,7 @@ public:
   typedef std::map<ViewID, nsRefPtr<nsContentView> > ViewMap;
 
   RenderFrameParent(nsFrameLoader* aFrameLoader,
-                    LayerManager::LayersBackend* aBackendType,
+                    mozilla::layers::LayersBackend* aBackendType,
                     int* aMaxTextureSize,
                     uint64_t* aId);
   virtual ~RenderFrameParent();

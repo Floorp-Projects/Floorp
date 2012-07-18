@@ -610,7 +610,7 @@ nsWindow::Destroy(void)
     /** Need to clean our LayerManager up while still alive */
     if (mLayerManager) {
         nsRefPtr<GLContext> gl = nsnull;
-        if (mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+        if (mLayerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
             LayerManagerOGL *ogllm = static_cast<LayerManagerOGL*>(mLayerManager.get());
             gl = ogllm->gl();
         }
@@ -2140,7 +2140,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
         return TRUE;
     
-    } else if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
 
@@ -6204,7 +6204,7 @@ void
 nsWindow::ClearCachedResources()
 {
     if (mLayerManager &&
-        mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+        mLayerManager->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
         static_cast<BasicLayerManager*> (mLayerManager.get())->
             ClearCachedResources();
     }

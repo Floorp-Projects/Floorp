@@ -18,7 +18,7 @@
 #include "gfxPattern.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-
+#include "LayersBackend.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
 
@@ -200,15 +200,6 @@ class THEBES_API LayerManager {
   NS_INLINE_DECL_REFCOUNTING(LayerManager)
 
 public:
-  enum LayersBackend {
-    LAYERS_NONE = 0,
-    LAYERS_BASIC,
-    LAYERS_OPENGL,
-    LAYERS_D3D9,
-    LAYERS_D3D10,
-    LAYERS_LAST
-  };
-
   LayerManager() : mDestroyed(false), mSnapEffectiveTransforms(true), mId(0)
   {
     InitLog();
@@ -508,7 +499,7 @@ public:
   static bool IsLogEnabled();
   static PRLogModuleInfo* GetLog() { return sLog; }
 
-  bool IsCompositingCheap(LayerManager::LayersBackend aBackend)
+  bool IsCompositingCheap(LayersBackend aBackend)
   { return LAYERS_BASIC != aBackend; }
 
   virtual bool IsCompositingCheap() { return true; }

@@ -11,7 +11,7 @@
 #include "gfxASurface.h"
 
 #include "ImageLayers.h"
-#include "Layers.h"
+#include "LayersBackend.h"
 #include "mozilla/ipc/SharedMemory.h"
 
 class gfxSharedImageSurface;
@@ -101,7 +101,6 @@ class ShadowLayerForwarder
 
 public:
   typedef gfxASurface::gfxContentType gfxContentType;
-  typedef LayerManager::LayersBackend LayersBackend;
 
   virtual ~ShadowLayerForwarder();
 

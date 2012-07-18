@@ -7,7 +7,7 @@
 
 include protocol PLayers;
 
-using mozilla::LayersBackend;
+using mozilla::layers::LayersBackend;
 using mozilla::null_t;
 
 namespace mozilla {
