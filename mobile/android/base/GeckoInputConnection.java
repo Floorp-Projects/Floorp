@@ -67,6 +67,7 @@ public class GeckoInputConnection
     private static final char UNICODE_BULLET                    = '\u2022';
     private static final char UNICODE_CENT_SIGN                 = '\u00a2';
     private static final char UNICODE_COPYRIGHT_SIGN            = '\u00a9';
+    private static final char UNICODE_CRARR                     = '\u21b2'; // &crarr;
     private static final char UNICODE_DIVISION_SIGN             = '\u00f7';
     private static final char UNICODE_DOUBLE_LOW_QUOTATION_MARK = '\u201e';
     private static final char UNICODE_ELLIPSIS                  = '\u2026';
@@ -434,9 +435,9 @@ public class GeckoInputConnection
                                     int start, int oldEnd, int newEnd) {
         if (!mBatchMode) {
             if (!text.contentEquals(mEditable)) {
-                if (DEBUG) Log.d(LOGTAG, String.format(
-                                 ". . . notifyTextChange: current mEditable=\"%s\"",
-                                 mEditable.toString()));
+                if (DEBUG) Log.d(LOGTAG, ". . . notifyTextChange: current mEditable="
+                                         + prettyPrintString(mEditable));
+
                 // Editable will be updated by IME event
                 if (!hasCompositionString())
                     setEditable(text);
@@ -1149,6 +1150,11 @@ public class GeckoInputConnection
         return new Span(start, end, content);
     }
 
+    private static String prettyPrintString(CharSequence s) {
+        // Quote string and replace newlines with CR arrows.
+        return "\"" + s.toString().replace('\n', UNICODE_CRARR) + "\"";
+    }
+
     private static void postToUiThread(Runnable runnable) {
         // postToUiThread() is called by the Gecko and TimerTask threads.
         // The UI thread does not need to post Runnables to itself.
@@ -1243,7 +1249,7 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
     @Override
     public Editable getEditable() {
         Editable editable = super.getEditable();
-        Log.d(LOGTAG, "IME: getEditable -> " + editable);
+        Log.d(LOGTAG, "IME: getEditable -> " + prettyPrintString(editable));
         GeckoApp.assertOnUiThread();
         return editable;
     }
@@ -1327,8 +1333,8 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
                                     int start, int oldEnd, int newEnd) {
         // notifyTextChange() call is posted to UI thread from notifyIMEChange().
         GeckoApp.assertOnUiThread();
-        String msg = String.format("IME: >notifyTextChange(\"%s\", start=%d, oldEnd=%d, newEnd=%d)",
-                                   text, start, oldEnd, newEnd);
+        String msg = String.format("IME: >notifyTextChange(%s, start=%d, oldEnd=%d, newEnd=%d)",
+                                   prettyPrintString(text), start, oldEnd, newEnd);
         Log.d(LOGTAG, msg);
         if (start < 0 || oldEnd < start || newEnd < start || newEnd > text.length()) {
             throw new IllegalArgumentException("BUG! " + msg);
