@@ -301,7 +301,7 @@ float4 SampleMaskShadowVPS( VS_OUTPUT In) : SV_Target
 PS_TEXT_OUTPUT SampleTextTexturePS( VS_OUTPUT In) : SV_Target
 {
     PS_TEXT_OUTPUT output;
-    output.color = TextColor;
+    output.color = float4(TextColor.r, TextColor.g, TextColor.b, 1.0);
     output.alpha.rgba = tex.Sample(sSampler, In.TexCoord).bgrg * TextColor.a;
     return output;
 };
@@ -312,7 +312,7 @@ PS_TEXT_OUTPUT SampleTextTexturePSMasked( VS_OUTPUT In) : SV_Target
     
     float maskValue = mask.Sample(sMaskSampler, In.MaskTexCoord).a;
 
-    output.color = TextColor * maskValue;
+    output.color = float4(TextColor.r, TextColor.g, TextColor.b, 1.0);
     output.alpha.rgba = tex.Sample(sSampler, In.TexCoord).bgrg * TextColor.a * maskValue;
     
     return output;
