@@ -14,7 +14,7 @@ toolkit.jar:
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
         skin/classic/global/arrow.css
-        skin/classic/global/autocomplete.css
+*       skin/classic/global/autocomplete.css
         skin/classic/global/button.css
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
