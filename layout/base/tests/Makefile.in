@@ -15,15 +15,9 @@ PARALLEL_DIRS += \
   chrome \
   $(NULL)
 
-# We can't use CPP_UNIT_TESTS for TestPoisonArea because libxpcom
-# (which it does not need) isn't available at this point in the build.
-
-BARE_UNIT_TESTS = \
-		TestPoisonArea.cpp \
-		$(NULL)
-
-CPPSRCS += $(BARE_UNIT_TESTS)
-SIMPLE_PROGRAMS += $(BARE_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+TOOL_DIRS := \
+  cpp-tests \
+  $(NULL)
 
 MOCHITEST_FILES =	\
 		border_radius_hit_testing_iframe.html \
@@ -358,11 +352,3 @@ MOCHITEST_BROWSER_FILES = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -D_IMPL_NS_LAYOUT
-
-check::
-	@$(EXIT_ON_ERROR) \
-	  for f in $(subst .cpp,$(BIN_SUFFIX),$(BARE_UNIT_TESTS)); do \
-	    $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
-	  done
