@@ -58,14 +58,17 @@ function addPermissions(urls) {
     'content-camera', 'webcontacts-manage', 'wifi-manage', 'desktop-notification',
     'geolocation', 'device-storage', 'alarms'
   ];
+
   urls.forEach(function(url) {
     url = url.trim();
-    let uri = Services.io.newURI(url, null, null);
-    let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
+    if (url) {
+      let uri = Services.io.newURI(url, null, null);
+      let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
 
-    permissions.forEach(function(permission) {
-      Services.perms.add(uri, permission, allow);
-    });
+      permissions.forEach(function(permission) {
+        Services.perms.add(uri, permission, allow);
+      });
+    }
   });
 }
 
