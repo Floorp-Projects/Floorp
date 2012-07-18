@@ -8,11 +8,6 @@ let gProvider;
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref("social.enabled", true);
-  registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("social.enabled");
-  });
-
   let oldProvider;
   function saveOldProviderAndStartTestWith(provider) {
     oldProvider = Social.provider;
@@ -20,6 +15,12 @@ function test() {
       Social.provider = oldProvider;
     });
     Social.provider = gProvider = provider;
+
+    Services.prefs.setBoolPref("social.enabled", true);
+    registerCleanupFunction(function () {
+      Services.prefs.clearUserPref("social.enabled");
+    });
+
     runTests(tests, undefined, undefined, function () {
       SocialService.removeProvider(provider.origin, finish);
     });

@@ -638,6 +638,12 @@
                           oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
                 </vbox>
               </hbox>
+              <menuitem id="social-toggle-sidebar-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleSidebar"
+                        label="&social.toggleSidebar.label;"
+                        accesskey="&social.toggleSidebar.accesskey;"/>
             </menupopup>
           </button>
           <hbox id="social-status-iconbox" flex="1">
@@ -1023,6 +1029,17 @@
                   autocompletepopup="PopupAutoComplete"
                   onclick="contentAreaClick(event, false);"/>
       <statuspanel id="statusbar-display" inactive="true"/>
+    </vbox>
+    <splitter id="social-sidebar-splitter"
+              class="chromeclass-extrachrome"
+              observes="socialSidebarBroadcaster"/>
+    <vbox id="social-sidebar-box"
+          class="chromeclass-extrachrome"
+          observes="socialSidebarBroadcaster">
+      <browser id="social-sidebar-browser"
+               type="content"
+               flex="1"
+               style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>
     <vbox id="devtools-sidebar-box" hidden="true"
