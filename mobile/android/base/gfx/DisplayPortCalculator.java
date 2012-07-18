@@ -221,7 +221,7 @@ final class DisplayPortCalculator {
     /**
      * This class implements the variation where we basically don't bother with a a display port.
      */
-    private static final class NoMarginStrategy extends DisplayPortStrategy {
+    private static class NoMarginStrategy extends DisplayPortStrategy {
         NoMarginStrategy(Map<String, Integer> prefs) {
             // no prefs in this strategy
         }
@@ -252,7 +252,7 @@ final class DisplayPortCalculator {
      * and/or (b) increasing the buffer on the other axis to compensate for the reduced buffer on
      * one axis.
      */
-    private static final class FixedMarginStrategy extends DisplayPortStrategy {
+    private static class FixedMarginStrategy extends DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
         private final float SIZE_MULTIPLIER;
@@ -318,7 +318,7 @@ final class DisplayPortCalculator {
      * so that it is almost entirely in the direction of the pan, with a little bit in the
      * reverse direction.
      */
-    private static final class VelocityBiasStrategy extends DisplayPortStrategy {
+    private static class VelocityBiasStrategy extends DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
         private final float SIZE_MULTIPLIER;
@@ -444,7 +444,7 @@ final class DisplayPortCalculator {
      * looks blurry. The assumption is that drawing extra that we never display is better than checkerboarding,
      * where we draw less but never even show it on the screen.
      */
-    private static final class DynamicResolutionStrategy extends DisplayPortStrategy {
+    private static class DynamicResolutionStrategy extends DisplayPortStrategy {
         // The length of each axis of the display port will be the corresponding view length
         // multiplied by this factor.
         private static final float SIZE_MULTIPLIER = 1.5f;
@@ -644,7 +644,7 @@ final class DisplayPortCalculator {
      * the panning velocity; unexpected changes in either of these values will cause the heuristic to
      * fail and show checkerboard.
      */
-    private static final class PredictionBiasStrategy extends DisplayPortStrategy {
+    private static class PredictionBiasStrategy extends DisplayPortStrategy {
         private static float VELOCITY_THRESHOLD;
 
         private int mPixelArea;         // area of the viewport, used in draw time calculations

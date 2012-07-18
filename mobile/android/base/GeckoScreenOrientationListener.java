@@ -10,10 +10,11 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.content.pm.ActivityInfo;
 
-final class GeckoScreenOrientationListener {
+public class GeckoScreenOrientationListener
+{
   private static final String LOGTAG = "GeckoScreenOrientationListener";
 
-  private static final class OrientationEventListenerImpl extends OrientationEventListener {
+  static class OrientationEventListenerImpl extends OrientationEventListener {
     public OrientationEventListenerImpl(Context c) {
       super(c);
     }

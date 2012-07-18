@@ -52,7 +52,8 @@ import android.graphics.drawable.*;
 
 import org.json.JSONObject;
 
-public final class GeckoAppShell {
+public class GeckoAppShell
+{
     private static final String LOGTAG = "GeckoAppShell";
 
     // static members only
@@ -203,7 +204,7 @@ public final class GeckoAppShell {
 
     public static native void onFullScreenPluginHidden(View view);
 
-    private static final class GeckoMediaScannerClient implements MediaScannerConnectionClient {
+    private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
         private String mMimeType = "";
         private MediaScannerConnection mScanner = null;

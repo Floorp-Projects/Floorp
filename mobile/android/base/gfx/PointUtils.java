@@ -13,8 +13,6 @@ import org.json.JSONException;
 import org.mozilla.gecko.FloatUtils;
 
 public final class PointUtils {
-    private PointUtils() {}
-
     public static PointF add(PointF one, PointF two) {
         return new PointF(one.x + two.x, one.y + two.y);
     }
@@ -60,3 +58,4 @@ public final class PointUtils {
         return json;
     }
 }
+

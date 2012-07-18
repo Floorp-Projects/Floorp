@@ -23,7 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-final class DoorHangerPopup extends PopupWindow {
+public class DoorHangerPopup extends PopupWindow {
     private static final String LOGTAG = "GeckoDoorHangerPopup";
 
     private Context mContext;

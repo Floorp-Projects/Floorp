@@ -10,7 +10,7 @@ import java.util.List;
 import android.os.SystemClock;
 import android.util.Log;
 
-final class PanningPerfAPI {
+public class PanningPerfAPI {
     private static final String LOGTAG = "GeckoPanningPerfAPI";
 
     // make this large enough to avoid having to resize the frame time

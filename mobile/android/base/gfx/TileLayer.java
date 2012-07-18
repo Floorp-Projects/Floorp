@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
  * Base class for tile layers, which encapsulate the logic needed to draw textured tiles in OpenGL
  * ES.
  */
-abstract class TileLayer extends Layer {
+public abstract class TileLayer extends Layer {
     private static final String LOGTAG = "GeckoTileLayer";
 
     private final Rect mDirtyRect;
@@ -163,3 +163,4 @@ abstract class TileLayer extends Layer {
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, repeatMode);
     }
 }
+

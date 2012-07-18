@@ -22,11 +22,11 @@ import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.text.TextUtils;
 
-final class RemoteTabs extends LinearLayout
-                       implements TabsPanel.PanelView,
-                                  ExpandableListView.OnGroupClickListener,
-                                  ExpandableListView.OnChildClickListener, 
-                                  TabsAccessor.OnQueryTabsCompleteListener {
+public class RemoteTabs extends LinearLayout
+                        implements TabsPanel.PanelView,
+                                   ExpandableListView.OnGroupClickListener,
+                                   ExpandableListView.OnChildClickListener, 
+                                   TabsAccessor.OnQueryTabsCompleteListener {
     private static final String LOGTAG = "GeckoRemoteTabs";
 
     private Context mContext;

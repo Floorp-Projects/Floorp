@@ -10,7 +10,7 @@ import android.graphics.Bitmap;
 /**
  * Utility methods useful when displaying Cairo bitmaps using OpenGL ES.
  */
-final class CairoUtils {
+public class CairoUtils {
     private CairoUtils() { /* Don't call me. */ }
 
     public static int bitsPerPixelForCairoFormat(int cairoFormat) {
@@ -48,3 +48,4 @@ final class CairoUtils {
         }
     }
 }
+

@@ -27,13 +27,13 @@ public class TabsPanel extends LinearLayout {
         REMOTE_TABS
     }
 
-    public interface PanelView {
+    public static interface PanelView {
         public ViewGroup getLayout();
         public void show();
         public void hide();
     }
 
-    public interface TabsLayoutChangeListener {
+    public static interface TabsLayoutChangeListener {
         public void onTabsLayoutChange(int width, int height);
     }
 

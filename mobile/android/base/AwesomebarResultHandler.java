@@ -6,7 +6,7 @@ package org.mozilla.gecko;
 
 import android.content.Intent;
 
-final class AwesomebarResultHandler implements ActivityResultHandler {
+class AwesomebarResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoAwesomebarResultHandler";
 
     public void onActivityResult(int resultCode, Intent data) {

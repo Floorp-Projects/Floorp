@@ -12,7 +12,7 @@ import android.os.Environment;
 import android.text.format.Time;
 import android.util.Log;
 
-final class CameraImageResultHandler implements ActivityResultHandler {
+class CameraImageResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoCameraImageResultHandler";
 
     private final SynchronousQueue<String> mFilePickerResult;

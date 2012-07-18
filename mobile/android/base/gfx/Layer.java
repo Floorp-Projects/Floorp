@@ -152,7 +152,7 @@ public abstract class Layer {
         }
     }
 
-    public static final class RenderContext {
+    public static class RenderContext {
         public final RectF viewport;
         public final RectF pageRect;
         public final float zoomFactor;
@@ -180,3 +180,4 @@ public abstract class Layer {
         }
     }
 }
+

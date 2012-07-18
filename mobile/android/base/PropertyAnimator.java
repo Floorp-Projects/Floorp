@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
 
-final class PropertyAnimator extends TimerTask {
+public class PropertyAnimator extends TimerTask {
     private static final String LOGTAG = "GeckoPropertyAnimator";
 
     private Timer mTimer;
@@ -29,14 +29,14 @@ final class PropertyAnimator extends TimerTask {
         SLIDE_LEFT
     }
 
-    private static final class ElementHolder {
+    private class ElementHolder {
         View view;
         Property property;
         int from;
         int to;
     }
 
-    public interface PropertyAnimationListener {
+    public static interface PropertyAnimationListener {
         public void onPropertyAnimationStart();
         public void onPropertyAnimationEnd();
     }

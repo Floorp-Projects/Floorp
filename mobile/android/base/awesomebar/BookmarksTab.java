@@ -31,9 +31,9 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
-final class BookmarksTab extends AwesomeBarTab {
-    private static final String LOGTAG = "BOOKMARKS_TAB";
-    private static final String TAG = "bookmarks";
+public class BookmarksTab extends AwesomeBarTab {
+    public static final String LOGTAG = "BOOKMARKS_TAB";
+    public static final String TAG = "bookmarks";
     private boolean mInReadingList = false;
     private int mFolderId;
     private String mFolderTitle;
@@ -197,7 +197,7 @@ final class BookmarksTab extends AwesomeBarTab {
         listener.onUrlOpen(url);
     }
 
-    private final class BookmarksListAdapter extends SimpleCursorAdapter {
+    private class BookmarksListAdapter extends SimpleCursorAdapter {
         private static final int VIEW_TYPE_ITEM = 0;
         private static final int VIEW_TYPE_FOLDER = 1;
         private static final int VIEW_TYPE_COUNT = 2;
@@ -337,7 +337,7 @@ final class BookmarksTab extends AwesomeBarTab {
         }
     }
 
-    private final class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
+    private class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
         public BookmarksQueryTask() {
             mFolderId = Bookmarks.FIXED_ROOT_ID;
             mFolderTitle = "";

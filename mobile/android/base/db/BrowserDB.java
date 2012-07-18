@@ -13,14 +13,14 @@ import android.graphics.drawable.BitmapDrawable;
 public class BrowserDB {
     public static String ABOUT_PAGES_URL_FILTER = "about:%";
 
-    public interface URLColumns {
-        static final String URL = "url";
-        static final String TITLE = "title";
-        static final String FAVICON = "favicon";
-        static final String THUMBNAIL = "thumbnail";
-        static final String DATE_LAST_VISITED = "date-last-visited";
-        static final String VISITS = "visits";
-        static final String KEYWORD = "keyword";
+    public static interface URLColumns {
+        public static String URL = "url";
+        public static String TITLE = "title";
+        public static String FAVICON = "favicon";
+        public static String THUMBNAIL = "thumbnail";
+        public static String DATE_LAST_VISITED = "date-last-visited";
+        public static String VISITS = "visits";
+        public static String KEYWORD = "keyword";
     }
 
     private static BrowserDBIface sDb = null;

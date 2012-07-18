@@ -9,7 +9,7 @@ import android.opengl.GLES20;
 import java.util.ArrayList;
 
 /** Manages a list of dead tiles, so we don't leak resources. */
-final class TextureReaper {
+public class TextureReaper {
     private static TextureReaper sSharedInstance;
     private ArrayList<Integer> mDeadTextureIDs;
 
@@ -39,3 +39,5 @@ final class TextureReaper {
         GLES20.glDeleteTextures(deadTextureIDs.length, deadTextureIDs, 0);
     }
 }
+
+

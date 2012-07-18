@@ -13,7 +13,7 @@ import android.util.AttributeSet;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 
-final class SyncPreference extends Preference {
+class SyncPreference extends Preference {
     private Context mContext;
 
     public SyncPreference(Context context, AttributeSet attrs) {
