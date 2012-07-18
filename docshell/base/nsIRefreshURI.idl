@@ -7,8 +7,9 @@
 #include "nsISupports.idl"
 #include "nsIURI.idl"
 interface nsIChannel;
+interface nsIPrincipal;
 
-[scriptable, uuid(cb0ad623-6b46-4c09-a473-c1d6ca63d3c7)]
+[scriptable, uuid(a5e61a3c-51bd-45be-ac0c-e87b71860656)]
 interface nsIRefreshURI : nsISupports {
     /**
       * Load a uri after waiting for aMillis milliseconds. If the docshell
@@ -55,10 +56,11 @@ interface nsIRefreshURI : nsISupports {
       * the current page finishes loading. 
       *
       * @param aBaseURI base URI to resolve refresh uri with.
+      * @param principal the associated principal
       * @param aHeader  The meta refresh header string.
       */
-    void setupRefreshURIFromHeader(in nsIURI aBaseURI, in ACString aHeader);
-      
+    void setupRefreshURIFromHeader(in nsIURI aBaseURI, in nsIPrincipal principal, in ACString aHeader);
+
     /**
       * Cancels all timer loads.
       */
