@@ -201,6 +201,25 @@ CodeGenerator::visitInlineFunctionGuard(LInlineFunctionGuard *lir)
     emitBranch(Assembler::Equal, lir->functionBlock(), lir->fallbackBlock());
     return true;
 }
+ 
+bool
+CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
+{
+    MPolyInlineDispatch *mir = lir->mir();
+    Register inputReg = ToRegister(lir->input());
+
+    for (size_t i = 0; i < mir->numCallees(); i++) {
+        JSFunction *func = mir->getFunctionConstant(i)->value().toObject().toFunction();
+        LBlock *target = mir->getSuccessor(i)->lir();
+        if (i < mir->numCallees() - 1) {
+            masm.branchPtr(Assembler::Equal, inputReg, ImmGCPtr(func), target->label());
+        } else {
+            // Don't generate guard for final case
+            masm.jump(target->label());
+        }
+    }
+    return true;
+}
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)

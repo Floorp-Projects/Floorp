@@ -54,6 +54,7 @@ namespace ion {
     _(Goto)                                                                 \
     _(Test)                                                                 \
     _(InlineFunctionGuard)                                                  \
+    _(PolyInlineDispatch)                                                   \
     _(Compare)                                                              \
     _(Phi)                                                                  \
     _(Beta)                                                                 \

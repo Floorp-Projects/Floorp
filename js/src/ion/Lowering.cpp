@@ -429,6 +429,13 @@ LIRGenerator::visitInlineFunctionGuard(MInlineFunctionGuard *ins)
     return add(lir);
 }
 
+bool
+LIRGenerator::visitPolyInlineDispatch(MPolyInlineDispatch *ins)
+{
+    LPolyInlineDispatch *lir = new LPolyInlineDispatch(useRegister(ins->input()));
+    return add(lir, ins);
+}
+
 static inline bool
 CanEmitCompareAtUses(MInstruction *ins)
 {

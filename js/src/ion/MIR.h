@@ -983,6 +983,88 @@ class MInlineFunctionGuard : public MAryControlInstruction<1, 2>
     }
 };
 
+// Represents a polymorphic dispatch to one or more functions.
+class MPolyInlineDispatch : public MControlInstruction, public SingleObjectPolicy
+{
+    // A table to map JSFunctions to the blocks that execute them.
+    struct Entry {
+        MConstant *funcConst;
+        MBasicBlock *block;
+        Entry(MConstant *funcConst, MBasicBlock *block)
+            : funcConst(funcConst), block(block) {}
+    };
+    Vector<Entry, 4, IonAllocPolicy> dispatchTable_;
+
+    MDefinition *operand_;
+
+    MPolyInlineDispatch(MDefinition *ins)
+      : dispatchTable_(), operand_(NULL)
+    {
+        initOperand(0, ins);
+    }
+
+  protected:
+    virtual void setOperand(size_t index, MDefinition *operand) {
+        JS_ASSERT(index == 0);
+        operand_ = operand;
+    }
+
+  public:
+    INSTRUCTION_HEADER(PolyInlineDispatch);
+
+    virtual MDefinition *getOperand(size_t index) const {
+        JS_ASSERT(index == 0);
+        return operand_;
+    }
+
+    virtual size_t numOperands() const { return 1; }
+    virtual size_t numSuccessors() const { return dispatchTable_.length(); }
+
+    virtual void replaceSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(i < dispatchTable_.length());
+        dispatchTable_[i].block = successor;
+    }
+
+    static MPolyInlineDispatch *New(MDefinition *ins) {
+        return new MPolyInlineDispatch(ins);
+    }
+
+    size_t numCallees() const {
+        return dispatchTable_.length();
+    }
+
+    void addCallee(MConstant *funcConst, MBasicBlock *block) {
+        dispatchTable_.append(Entry(funcConst, block));
+    }
+
+    MConstant *getFunctionConstant(size_t i) const {
+        JS_ASSERT(i < numCallees());
+        return dispatchTable_[i].funcConst;
+    }
+
+    JSFunction *getFunction(size_t i) const {
+        return getFunctionConstant(i)->value().toObject().toFunction();
+    }
+
+    void setSuccessor(size_t i, MBasicBlock *successor) {
+        JS_ASSERT(i < numCallees());
+        dispatchTable_[i].block = successor;
+    }
+
+    MBasicBlock *getSuccessor(size_t i) const {
+        JS_ASSERT(i < numCallees());
+        return dispatchTable_[i].block;
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 
 // Returns from this function to the previous caller.
 class MReturn
