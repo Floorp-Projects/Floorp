@@ -7,13 +7,16 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoApp;
 
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.util.Log;
 import android.view.Surface;
-
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrameAvailableListener {
@@ -21,7 +24,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     private static final int LOCAL_GL_TEXTURE_EXTERNAL_OES = 0x00008d65; // This is only defined in API level 15 for some reason (Android 4.0.3)
 
     private final SurfaceTexture mSurfaceTexture;
-    public final Surface mSurface; // accessed from JNI
+    private final Surface mSurface;
     private int mTextureId;
     private boolean mHaveFrame;
     private float[] mTextureTransform = new float[16];
