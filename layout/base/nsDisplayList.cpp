@@ -3305,9 +3305,9 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     nsSVGEffects::GetEffectProperties(firstFrame);
 
   bool isOK = true;
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
-  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
+  effectProperties.GetClipPathFrame(&isOK);
+  effectProperties.GetMaskFrame(&isOK);
+  effectProperties.GetFilterFrame(&isOK);
 
   if (!isOK) {
     return nsnull;
