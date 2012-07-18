@@ -22,7 +22,7 @@ import org.mozilla.gecko.GeckoAppShell;
 /**
  * Draws a small rect. This is scaled to become a scrollbar.
  */
-final class ScrollbarLayer extends TileLayer {
+public class ScrollbarLayer extends TileLayer {
     public static final long FADE_DELAY = 500; // milliseconds before fade-out starts
     private static final float FADE_AMOUNT = 0.03f; // how much (as a percent) the scrollbar should fade per frame
 

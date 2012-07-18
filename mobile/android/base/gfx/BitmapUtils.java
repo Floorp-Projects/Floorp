@@ -9,8 +9,6 @@ import android.graphics.Color;
 import android.graphics.Bitmap;
 
 public final class BitmapUtils {
-    private BitmapUtils() {}
-
     public static int getDominantColor(Bitmap source) {
       int[] colors = new int[37];
       int[] sat = new int[11];
@@ -55,3 +53,4 @@ public final class BitmapUtils {
       return Color.HSVToColor(hsv);
     }
 }
+

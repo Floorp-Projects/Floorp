@@ -36,7 +36,7 @@ import java.util.ArrayList;
  * {@link #newRow()} to add rows. Automatically expands internal capacity
  * as needed.
  */
-public final class MatrixBlobCursor extends AbstractCursor {
+public class MatrixBlobCursor extends AbstractCursor {
 
     private final String[] columnNames;
     private Object[] data;
@@ -197,7 +197,7 @@ public final class MatrixBlobCursor extends AbstractCursor {
      * value at a time. Follows the same ordering as the column names specified
      * at cursor construction time.
      */
-    public final class RowBuilder {
+    public class RowBuilder {
 
         private int index;
         private final int endIndex;

@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-final class VirtualLayer extends Layer {
+public class VirtualLayer extends Layer {
     public VirtualLayer(IntSize size) {
         super(size);
     }

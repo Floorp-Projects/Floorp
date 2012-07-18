@@ -42,8 +42,8 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 
-final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
-    private static final String LOGTAG = "ALL_PAGES";
+public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
+    public static final String LOGTAG = "ALL_PAGES";
     private static final String TAG = "allPages";
 
     private static final int SUGGESTION_TIMEOUT = 3000;
@@ -56,7 +56,7 @@ final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private ListView mView = null;
     private AwesomeBarCursorAdapter mCursorAdapter = null;
 
-    private static final class SearchEntryViewHolder {
+    private class SearchEntryViewHolder {
         public FlowLayout suggestionView;
         public ImageView iconView;
         public LinearLayout userEnteredView;
@@ -167,10 +167,10 @@ final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     }
 
     private interface AwesomeBarItem {
-        void onClick();
+        public void onClick();
     }
 
-    private final class AwesomeBarCursorItem implements AwesomeBarItem {
+    private class AwesomeBarCursorItem implements AwesomeBarItem {
         private Cursor mCursor;
 
         public AwesomeBarCursorItem(Cursor cursor) {
@@ -196,7 +196,7 @@ final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
     }
 
-    private final class AwesomeBarSearchEngineItem implements AwesomeBarItem {
+    private class AwesomeBarSearchEngineItem implements AwesomeBarItem {
         private String mSearchEngine;
 
         public AwesomeBarSearchEngineItem(String searchEngine) {
@@ -210,7 +210,7 @@ final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
     }
 
-    private final class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
+    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
         private static final int ROW_SEARCH = 0;
         private static final int ROW_STANDARD = 1;
 
@@ -409,7 +409,7 @@ final class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
     };
 
-    private static final class SearchEngine {
+    private class SearchEngine {
         public String name;
         public Drawable icon;
         public ArrayList<String> suggestions;

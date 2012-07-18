@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
  * Helper class to make the ByteBuffers returned by SQLite BLOB
  * easier to use.
  */
-final class ByteBufferInputStream extends InputStream {
+public class ByteBufferInputStream extends InputStream {
     private ByteBuffer mByteBuffer;
 
     public ByteBufferInputStream(ByteBuffer aByteBuffer) {

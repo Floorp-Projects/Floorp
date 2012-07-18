@@ -15,7 +15,7 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 import android.opengl.GLES20;
 
-public final class GfxInfoThread extends Thread {
+public class GfxInfoThread extends Thread {
 
     private static final String LOGTAG = "GfxInfoThread";
 

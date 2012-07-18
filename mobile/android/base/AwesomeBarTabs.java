@@ -18,7 +18,7 @@ import android.widget.TabHost;
 import android.widget.TabWidget;
 import android.widget.TextView;
 
-final class AwesomeBarTabs extends TabHost {
+public class AwesomeBarTabs extends TabHost {
     private static final String LOGTAG = "GeckoAwesomeBarTabs";
 
     private Context mContext;

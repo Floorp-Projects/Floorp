@@ -22,7 +22,7 @@ import org.mozilla.gecko.SurfaceBits;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 
-public final class PluginLayer extends TileLayer
+public class PluginLayer extends TileLayer
 {
     private static final String LOGTAG = "PluginLayer";
     private static final String PREF_PLUGIN_USE_PLACEHOLDER = "plugins.use_placeholder";
@@ -268,7 +268,7 @@ public final class PluginLayer extends TileLayer
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    private static final class PluginLayoutParams extends AbsoluteLayout.LayoutParams
+    class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     {
         private static final String LOGTAG = "GeckoApp.PluginLayoutParams";
 
@@ -316,7 +316,7 @@ public final class PluginLayer extends TileLayer
         }
     }
 
-    private static final class ShowViewRunnable implements Runnable {
+    class ShowViewRunnable implements Runnable {
 
         private PluginLayer mLayer;
 

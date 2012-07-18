@@ -20,8 +20,8 @@ import android.util.Log;
 /* Reads out of a multiple level deep jar file such as
  *  jar:jar:file:///data/app/org.mozilla.fennec.apk!/omni.ja!/chrome/chrome/content/branding/favicon32.png
  */
-final class GeckoJarReader {
-    private static final String LOGTAG = "GeckoJarReader";
+public class GeckoJarReader {
+    private static String LOGTAG = "GeckoJarReader";
 
     public static BitmapDrawable getBitmapDrawable(String url) {
         Stack<String> jarUrls = parseUrl(url);

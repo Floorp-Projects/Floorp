@@ -16,7 +16,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.mozilla.gecko.gfx.GfxInfoThread;
 
-final class GeckoThread extends Thread {
+public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
 
     Intent mIntent;

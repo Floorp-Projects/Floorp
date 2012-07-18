@@ -9,7 +9,7 @@ import org.mozilla.gecko.FloatUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public final class FloatSize {
+public class FloatSize {
     public final float width, height;
 
     public FloatSize(FloatSize size) { width = size.width; height = size.height; }

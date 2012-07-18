@@ -11,7 +11,8 @@ import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.widget.ImageView;
 
-final class SetupScreen extends Dialog {
+public class SetupScreen extends Dialog
+{
     private static final String LOGTAG = "SetupScreen";
     private AnimationDrawable mProgressSpinner;
 

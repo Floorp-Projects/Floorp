@@ -19,7 +19,7 @@ import org.json.JSONObject;
  * ViewportMetrics manages state and contains some utility functions related to
  * the page viewport for the Gecko layer client to use.
  */
-public final class ViewportMetrics {
+public class ViewportMetrics {
     private static final String LOGTAG = "GeckoViewportMetrics";
 
     private RectF mPageRect;
@@ -227,3 +227,4 @@ public final class ViewportMetrics {
         return buff.toString();
     }
 }
+

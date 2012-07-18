@@ -366,4 +366,5 @@ public class Tabs implements GeckoEventListener {
             items.next().onTabChanged(tab, msg, data);
         }
     }
+
 }

@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-final class INIParser extends INISection {
+public class INIParser extends INISection {
     // default file to read and write to
     private File mFile = null;
 

@@ -23,3 +23,4 @@ public abstract class CairoImage {
     public static final int FORMAT_A1 = 3;
     public static final int FORMAT_RGB16_565 = 4;
 }
+

@@ -11,10 +11,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
-public final class DBUtils {
+public class DBUtils {
     private static final String LOGTAG = "GeckoDBUtils";
 
-    public static String qualifyColumn(String table, String column) {
+    public static final String qualifyColumn(String table, String column) {
         return table + "." + column;
     }
 

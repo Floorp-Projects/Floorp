@@ -14,8 +14,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ImageButton;
 
-final class MenuItemActionBar extends ImageButton
-                              implements GeckoMenuItem.Layout {
+public class MenuItemActionBar extends ImageButton
+                               implements GeckoMenuItem.Layout {
     private static final String LOGTAG = "GeckoMenuItemActionBar";
 
     private Context mContext;

@@ -8,7 +8,8 @@ import java.util.ArrayList;
 
 import android.app.Application;
 
-public final class GeckoApplication extends Application {
+public class GeckoApplication extends Application {
+
     private boolean mInBackground = false;
     private ArrayList<ApplicationLifecycleCallbacks> mListeners;
 

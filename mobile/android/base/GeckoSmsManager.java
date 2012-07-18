@@ -36,7 +36,8 @@ import android.telephony.SmsMessage;
  * There are only |Integer.MAX_VALUE - Integer.MIN_VALUE| unique IDs available,
  * and they wrap around.
  */
-final class PendingIntentUID {
+class PendingIntentUID
+{
   static private int sUID = Integer.MIN_VALUE;
 
   static public int generate() { return sUID++; }
@@ -46,7 +47,8 @@ final class PendingIntentUID {
  * The envelope class contains all information that are needed to keep track of
  * a sent SMS.
  */
-final class Envelope {
+class Envelope
+{
   enum SubParts {
     SENT_PART,
     DELIVERED_PART
@@ -138,7 +140,8 @@ final class Envelope {
 /**
  * Postman class is a singleton that manages Envelope instances.
  */
-final class Postman {
+class Postman
+{
   public static final int kUnknownEnvelopeId = -1;
 
   private static final Postman sInstance = new Postman();
@@ -195,7 +198,7 @@ final class Postman {
   }
 }
 
-final class SmsIOThread extends Thread {
+class SmsIOThread extends Thread {
   private final static SmsIOThread sInstance = new SmsIOThread();
 
   private Handler mHandler;
@@ -217,7 +220,8 @@ final class SmsIOThread extends Thread {
   }
 }
 
-final class MessagesListManager {
+class MessagesListManager
+{
   private static final MessagesListManager sInstance = new MessagesListManager();
 
   public static MessagesListManager getInstance() {
@@ -281,7 +285,7 @@ final class MessagesListManager {
   }
 }
 
-final class GeckoSmsManager
+public class GeckoSmsManager
   extends BroadcastReceiver
   implements ISmsManager
 {

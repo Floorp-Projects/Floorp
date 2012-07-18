@@ -34,7 +34,8 @@ import android.widget.CheckBox;
 
 import org.mozilla.gecko.R;
 
-public final class CrashReporter extends Activity {
+public class CrashReporter extends Activity
+{
     private static final String LOGTAG = "GeckoCrashReporter";
 
     private static final String PASSED_MINI_DUMP_KEY = "minidumpPath";

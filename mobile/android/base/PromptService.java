@@ -36,7 +36,7 @@ import android.widget.ListView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-final class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener, GeckoEventResponder {
+public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener, GeckoEventResponder {
     private static final String LOGTAG = "GeckoPromptService";
 
     private PromptInput[] mInputs;
@@ -84,7 +84,7 @@ final class PromptService implements OnClickListener, OnCancelListener, OnItemCl
         GeckoAppShell.unregisterGeckoEventListener("Prompt:Show", this);
     }
 
-    private static final class PromptButton {
+    private class PromptButton {
         public String label = "";
         PromptButton(JSONObject aJSONButton) {
             try {
@@ -93,7 +93,7 @@ final class PromptService implements OnClickListener, OnCancelListener, OnItemCl
         }
     }
 
-    private final class PromptInput {
+    private class PromptInput {
         private String label = "";
         private String type  = "";
         private String hint  = "";
@@ -429,7 +429,7 @@ final class PromptService implements OnClickListener, OnCancelListener, OnItemCl
         return list;
     }
 
-    public static final class PromptListItem {
+    static public class PromptListItem {
         public String label = "";
         public boolean isGroup = false;
         public boolean inGroup = false;
@@ -452,7 +452,7 @@ final class PromptService implements OnClickListener, OnCancelListener, OnItemCl
         }
     }
 
-    public final class PromptListAdapter extends ArrayAdapter<PromptListItem> {
+    public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         private static final int VIEW_TYPE_ITEM = 0;
         private static final int VIEW_TYPE_GROUP = 1;
         private static final int VIEW_TYPE_COUNT = 2;
@@ -571,7 +571,7 @@ final class PromptService implements OnClickListener, OnCancelListener, OnItemCl
             return convertView;
         }
 
-        private final class ViewHolder {
+        private class ViewHolder {
             public TextView textView;
             public int paddingLeft;
             public int paddingRight;

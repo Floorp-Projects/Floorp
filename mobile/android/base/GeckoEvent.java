@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
 /* This class is referenced by Robocop via reflection; use care when 
  * modifying the signature.
  */
-public final class GeckoEvent {
+public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
     private static final int INVALID = -1;

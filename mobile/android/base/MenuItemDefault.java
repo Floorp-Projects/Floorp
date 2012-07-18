@@ -15,8 +15,8 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ImageView;
 
-final class MenuItemDefault extends LinearLayout
-                            implements GeckoMenuItem.Layout {
+public class MenuItemDefault extends LinearLayout
+                             implements GeckoMenuItem.Layout {
     private static final String LOGTAG = "GeckoMenuItemDefault";
 
     private Context mContext;
