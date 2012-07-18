@@ -1348,14 +1348,6 @@ FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
     return NS_OK;
 }
 
-/* void checkLoadURIStr (in AUTF8String from, in AUTF8String uri, in unsigned long flags); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURIStr(const nsACString & from,
-                                 const nsACString & uri, PRUint32 flags)
-{
-    return NS_OK;
-}
-
 /* [noscript] void checkFunctionAccess (in JSContextPtr cx, in voidPtr funObj, in voidPtr targetObj); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckFunctionAccess(JSContext * cx, void * funObj,
