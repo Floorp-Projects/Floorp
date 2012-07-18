@@ -11,6 +11,7 @@ relativesrcdir  = browser/devtools/debugger/test
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
+	browser_dbg_leaktest.js \
 	browser_dbg_createRemote.js \
 	browser_dbg_createChrome.js \
 	browser_dbg_debugger-tab-switch.js \

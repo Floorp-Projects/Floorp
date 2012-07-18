@@ -72,14 +72,13 @@ let DebuggerController = {
     this._isDestroyed = true;
     window.removeEventListener("unload", this._shutdownDebugger, true);
 
-    DebuggerView.destroyPanes();
-    DebuggerView.destroyEditor();
     DebuggerView.Scripts.destroy();
     DebuggerView.StackFrames.destroy();
     DebuggerView.Breakpoints.destroy();
     DebuggerView.Properties.destroy();
+    DebuggerView.destroyPanes();
+    DebuggerView.destroyEditor();
 
-    DebuggerController.Breakpoints.destroy();
     DebuggerController.SourceScripts.disconnect();
     DebuggerController.StackFrames.disconnect();
     DebuggerController.ThreadState.disconnect();
