@@ -4962,6 +4962,14 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::TypeSet *types, HandleId id
         while (curObj != foundProto) {
             if (curObj->getType(cx)->unknownProperties())
                 return true;
+
+            // If anyone on the chain is watched, TI thinks they have an own
+            // property, which means if they were to actually overwrite the
+            // property accessors, we would never know, since we are freezing on
+            // setting that flag.
+            if (!isGetter && curObj->watched())
+                return true;
+
             curObj = curObj->getProto();
         }
     }
