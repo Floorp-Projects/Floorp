@@ -49,6 +49,10 @@ Source;  Usage and purpose;  License
         use with outstanding changes in either directory.
   MPL
 
+* writeMakefile.py
+  Helper functions to write out Makefiles.
+  MPL
+
 * Makefile.in
   Integration with our build system. Installs support files into /resources and
   includes a .mk file for each repository.

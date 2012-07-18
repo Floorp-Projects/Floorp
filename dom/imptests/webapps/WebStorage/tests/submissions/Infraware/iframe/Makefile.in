@@ -13,10 +13,7 @@ DIRS = \
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TESTS = \
-  $(NULL)
-
-_TESTS += \
+_FILES = \
   local_change_item_iframe.html \
   local_security_iframe.html \
   local_set_item_clear_iframe.html \
@@ -26,5 +23,5 @@ _TESTS += \
   session_set_item_iframe.html \
   $(NULL)
 
-libs:: $(_TESTS)
+libs:: $(_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
