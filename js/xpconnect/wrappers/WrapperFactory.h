@@ -88,6 +88,9 @@ class WrapperFactory {
 
     // Wrap a (same compartment) Components object.
     static JSObject *WrapComponentsObject(JSContext *cx, JSObject *obj);
+
+    // Wrap a same-compartment object for Xray inspection.
+    static JSObject *WrapForSameCompartmentXray(JSContext *cx, JSObject *obj);
 };
 
 extern js::DirectWrapper XrayWaiver;
