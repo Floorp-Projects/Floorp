@@ -288,14 +288,22 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     if (!aOptions)
         return NS_OK;
 
+    bool defaultNoAlpha =
+        Preferences::GetBool("webgl.default-no-alpha", false);
+
     WebGLContextOptions newOpts;
 
     GetBoolFromPropertyBag(aOptions, "stencil", &newOpts.stencil);
     GetBoolFromPropertyBag(aOptions, "depth", &newOpts.depth);
-    GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha);
     GetBoolFromPropertyBag(aOptions, "premultipliedAlpha", &newOpts.premultipliedAlpha);
     GetBoolFromPropertyBag(aOptions, "antialias", &newOpts.antialias);
     GetBoolFromPropertyBag(aOptions, "preserveDrawingBuffer", &newOpts.preserveDrawingBuffer);
+
+    // alpha defaults to true as per the spec, but we want to evaluate
+    // what will happen if it were to default to false based on a pref
+    if (!GetBoolFromPropertyBag(aOptions, "alpha", &newOpts.alpha) && defaultNoAlpha) {
+        newOpts.alpha = false;
+    }
 
     // enforce that if stencil is specified, we also give back depth
     newOpts.depth |= newOpts.stencil;
@@ -378,6 +386,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         Preferences::GetBool("gfx.prefer-mesa-llvmpipe", false);
     bool disabled =
         Preferences::GetBool("webgl.disabled", false);
+    bool prefer16bit =
+        Preferences::GetBool("webgl.prefer-16bpp", false);
 
     ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
@@ -407,14 +417,30 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     if (!mOptions.alpha) {
-        // Select 565; we won't/shouldn't hit this on the desktop,
-        // but let mobile know we're ok with it.
-        format.red = 5;
-        format.green = 6;
-        format.blue = 5;
-
         format.alpha = 0;
         format.minAlpha = 0;
+    }
+
+    // we should really have this behind a
+    // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
+    // for now it's just behind a pref for testing/evaluation.
+    if (prefer16bit) {
+        // Select 4444 or 565 on 16-bit displays; we won't/shouldn't
+        // hit this on the desktop, but let mobile know we're ok with
+        // it.  Note that we don't just set this to 4440 if no alpha,
+        // because that might cause us to choose 4444 anyway and we
+        // don't want that.
+        if (mOptions.alpha) {
+            format.red = 4;
+            format.green = 4;
+            format.blue = 4;
+            format.alpha = 4;
+        } else {
+            format.red = 5;
+            format.green = 6;
+            format.blue = 5;
+            format.alpha = 0;
+        }
     }
 
     bool forceMSAA =

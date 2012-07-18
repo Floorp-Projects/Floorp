@@ -447,7 +447,8 @@ protected:
   mozilla::dom::TabParent *GetCrossProcessTarget();
   bool IsTargetCrossProcess(nsGUIEvent *aEvent);
 
-  void DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* remote);
+  bool DispatchCrossProcessEvent(nsEvent* aEvent, nsIFrameLoader* remote,
+                                 nsEventStatus *aStatus);
   bool HandleCrossProcessEvent(nsEvent *aEvent,
                                  nsIFrame* aTargetFrame,
                                  nsEventStatus *aStatus);

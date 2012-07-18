@@ -206,6 +206,13 @@ GlobalObject::createArrayFromBuffer<uint8_clamped>() const
     return createArrayFromBufferHelper(FROM_BUFFER_UINT8CLAMPED);
 }
 
+void
+GlobalObject::setProtoGetter(JSFunction *protoGetter)
+{
+    JS_ASSERT(getSlotRef(PROTO_GETTER).isUndefined());
+    setSlot(PROTO_GETTER, ObjectValue(*protoGetter));
+}
+
 } // namespace js
 
 #endif

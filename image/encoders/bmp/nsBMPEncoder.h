@@ -34,21 +34,27 @@ public:
   ~nsBMPEncoder();
 
 protected:
+  enum Version {
+      VERSION_3 = 3,
+      VERSION_5 = 5
+  };
+
   // See InitData in the cpp for valid parse options
-  nsresult ParseOptions(const nsAString& aOptions, PRUint32* bpp);
+  nsresult ParseOptions(const nsAString& aOptions, Version* version,
+                        PRUint32* bpp);
   // Obtains data with no alpha in machine-independent byte order
   void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
                           PRUint32 aPixelWidth);
-  // Strips the alpha from aSrc and puts it in aDest
-  void StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
-                  PRUint32 aPixelWidth);
   // Thread safe notify listener
   void NotifyListener();
 
   // Initializes the bitmap file header member mBMPFileHeader
-  void InitFileHeader(PRUint32 aBPP, PRUint32 aWidth, PRUint32 aHeight);
+  void InitFileHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
+                      PRUint32 aHeight);
   // Initializes the bitmap info header member mBMPInfoHeader
-  void InitInfoHeader(PRUint32 aBPP, PRUint32 aWidth, PRUint32 aHeight);
+  void InitInfoHeader(Version aVersion, PRUint32 aBPP, PRUint32 aWidth,
+                      PRUint32 aHeight);
+
   // Encodes the bitmap file header member mBMPFileHeader
   void EncodeFileHeader();
   // Encodes the bitmap info header member mBMPInfoHeader
@@ -66,7 +72,7 @@ protected:
   // These headers will always contain endian independent stuff 
   // They store the BMP headers which will be encoded
   mozilla::image::BMPFILEHEADER mBMPFileHeader;
-  mozilla::image::BMPINFOHEADER mBMPInfoHeader;
+  mozilla::image::BITMAPV5HEADER mBMPInfoHeader;
 
   // Keeps track of the start of the image buffer
   PRUint8* mImageBufferStart;

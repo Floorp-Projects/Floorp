@@ -5,9 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.CairoImage;
 import android.graphics.Bitmap;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Utility methods useful when displaying Cairo bitmaps using OpenGL ES.

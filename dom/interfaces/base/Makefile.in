@@ -54,9 +54,6 @@ XPIDLSRCS =					\
 	nsIDOMGlobalPropertyInitializer.idl	\
 	nsIDOMGlobalObjectConstructor.idl \
 	nsIStructuredCloneContainer.idl		\
-	nsIDOMPerformance.idl			\
-	nsIDOMPerformanceTiming.idl		\
-	nsIDOMPerformanceNavigation.idl		\
 	nsIIdleObserver.idl			\
 	$(NULL)
 

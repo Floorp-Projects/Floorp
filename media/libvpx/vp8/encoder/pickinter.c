@@ -132,7 +132,7 @@ static int pick_intra4x4block(
         RECON_INVOKE(&rtcd->common->recon, intra4x4_predict)
                      (*(b->base_dst) + b->dst, b->dst_stride,
                       mode, b->predictor, 16);
-        distortion = get_prediction_error(be, b, &rtcd->common->variance);
+        distortion = get_prediction_error(be, b, IF_RTCD(&rtcd->common->variance));
         this_rd = RDCOST(x->rdmult, x->rddiv, rate, distortion);
 
         if (this_rd < best_rd)

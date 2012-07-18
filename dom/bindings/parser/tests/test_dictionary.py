@@ -121,3 +121,78 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should not allow [TreatUndefinedAs] on dictionary members");
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+            };
+            interface X {
+              void doFoo(A arg);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Trailing dictionary arg must be optional")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+            };
+            interface X {
+              void doFoo(A arg1, optional long arg2);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Dictionary arg followed by optional arg must be optional")
+
+    parser = parser.reset()
+    parser.parse("""
+            dictionary A {
+            };
+            interface X {
+              void doFoo(A arg1, long arg2);
+            };
+        """)
+    results = parser.finish()
+    harness.ok(True, "Dictionary arg followed by required arg can be required")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+            };
+            interface X {
+              void doFoo(optional A? arg1);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Dictionary arg must not be nullable")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+            };
+            interface X {
+              void doFoo((A or long)? arg1);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Dictionary arg must not be in a nullable union")

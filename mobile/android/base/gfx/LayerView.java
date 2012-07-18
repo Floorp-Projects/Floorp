@@ -5,31 +5,20 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoInputConnection;
-import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.InputConnectionHandler;
-import org.mozilla.gecko.gfx.LayerController;
+
 import android.content.Context;
-import android.opengl.GLSurfaceView;
-import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.widget.RelativeLayout;
 import android.util.Log;
-import java.nio.IntBuffer;
-
-import org.mozilla.gecko.GeckoApp;
-import android.content.Context;
 import android.graphics.PixelFormat;
-import android.opengl.GLSurfaceView;
-import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import javax.microedition.khronos.opengles.GL10;
 
+import java.nio.IntBuffer;
 
 /**
  * A view rendered by the layer compositor.

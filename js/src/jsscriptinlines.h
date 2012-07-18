@@ -15,7 +15,6 @@
 #include "jsscript.h"
 #include "jsscope.h"
 
-#include "vm/ScopeObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -38,14 +37,6 @@ Bindings::transfer(Bindings *bindings)
 #ifdef DEBUG
     bindings->lastBinding = NULL;
 #endif
-}
-
-Shape *
-Bindings::lastShape() const
-{
-    JS_ASSERT(lastBinding);
-    JS_ASSERT(!lastBinding->inDictionary());
-    return lastBinding;
 }
 
 Shape *
@@ -88,16 +79,6 @@ Bindings::varIndexToSlot(uint16_t i)
 {
     JS_ASSERT(i < nvars);
     return CallObject::RESERVED_SLOTS + i + nargs;
-}
-
-unsigned
-Bindings::argumentsVarIndex(JSContext *cx) const
-{
-    PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
-    unsigned i;
-    DebugOnly<BindingKind> kind = lookup(cx, arguments, &i);
-    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-    return i;
 }
 
 extern void

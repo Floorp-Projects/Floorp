@@ -122,6 +122,9 @@ class BasicShadowContainerLayer : public ShadowContainerLayer, public BasicImplD
   friend void ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer);
   template<class Container>
   friend void ContainerRemoveChild(Layer* aChild, Container* aContainer);
+  template<class Container>
+  friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
+                                                  Container* aContainer);
 
 public:
   BasicShadowContainerLayer(BasicShadowLayerManager* aLayerManager) :
@@ -145,36 +148,43 @@ public:
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
   {
-    // We push groups for container layers if we need to, which always
-    // are aligned in device space, so it doesn't really matter how we snap
-    // containers.
-    gfxMatrix residual;
-    gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
-    idealTransform.ProjectTo2D();
+    ContainerComputeEffectiveTransforms(aTransformToSurface, this);
+  }
+};
 
-    if (!idealTransform.CanDraw2D()) {
-      mEffectiveTransform = idealTransform;
-      ComputeEffectiveTransformsForChildren(gfx3DMatrix());
-      ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
-      mUseIntermediateSurface = true;
-      return;
-    }
+class BasicShadowableRefLayer : public RefLayer, public BasicImplData,
+                                public BasicShadowableLayer {
+  template<class Container>
+  friend void ContainerComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface,
+                                                  Container* aContainer);
+public:
+  BasicShadowableRefLayer(BasicShadowLayerManager* aManager) :
+    RefLayer(aManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowableRefLayer);
+  }
+  virtual ~BasicShadowableRefLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableRefLayer);
+  }
 
-    mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), &residual);
-    // We always pass the ideal matrix down to our children, so there is no
-    // need to apply any compensation using the residual from SnapTransform.
-    ComputeEffectiveTransformsForChildren(idealTransform);
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+  virtual void Disconnect()
+  {
+    BasicShadowableLayer::Disconnect();
+  }
 
-    /* If we have a single child, it can just inherit our opacity,
-     * otherwise we need a PushGroup and we need to mark ourselves as using
-     * an intermediate surface so our children don't inherit our opacity
-     * via GetEffectiveOpacity.
-     * Having a mask layer always forces our own push group
-     */
-    mUseIntermediateSurface = GetMaskLayer() ||
-                              (GetEffectiveOpacity() != 1.0 && HasMultipleChildren());
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    ContainerComputeEffectiveTransforms(aTransformToSurface, this);
+  }
+
+private:
+  BasicShadowLayerManager* ShadowManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
   }
 };
 
@@ -196,12 +206,30 @@ BasicShadowLayerManager::CreateContainerLayer()
   return layer.forget();
 }
 
+already_AddRefed<RefLayer>
+BasicShadowLayerManager::CreateRefLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableRefLayer> layer =
+    new BasicShadowableRefLayer(this);
+  MAYBE_CREATE_SHADOW(Ref);
+  return layer.forget();
+}
+
 already_AddRefed<ShadowContainerLayer>
 BasicShadowLayerManager::CreateShadowContainerLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ShadowContainerLayer> layer = new BasicShadowContainerLayer(this);
   return layer.forget();
+}
+
+already_AddRefed<ShadowRefLayer>
+BasicShadowLayerManager::CreateShadowRefLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  // FIXME/IMPL
+  return nsnull;
 }
 
 }

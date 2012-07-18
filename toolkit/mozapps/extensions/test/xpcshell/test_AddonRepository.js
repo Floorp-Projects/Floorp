@@ -31,7 +31,7 @@ const INSTALL_URL3  = "/addons/test_AddonRepository_3.xpi";
 // Note: name is checked separately
 var ADDON_PROPERTIES = ["id", "type", "version", "creator", "developers",
                         "description", "fullDescription", "developerComments",
-                        "eula", "iconURL", "screenshots", "homepageURL",
+                        "eula", "iconURL", "icons", "screenshots", "homepageURL",
                         "supportURL", "contributionURL", "contributionAmount",
                         "averageRating", "reviewCount", "reviewURL",
                         "totalDownloads", "weeklyDownloads", "dailyUsers",
@@ -57,6 +57,7 @@ var GET_RESULTS = [{
   developerComments:      "Test Developer Comments 1",
   eula:                   "Test EULA 1",
   iconURL:                BASE_URL + "/icon1.png",
+  icons:                  { "32": BASE_URL + "/icon1.png" },
   screenshots:            [{
                             url:             BASE_URL + "/full1-1.png",
                             width:           400,
@@ -102,7 +103,8 @@ var GET_RESULTS = [{
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   version:                "1.4",
-  repositoryStatus:       9999
+  repositoryStatus:       9999,
+  icons:                  {}
 }];
 
 // Results of retrieveRecommendedAddons and searchAddons
@@ -115,7 +117,8 @@ var SEARCH_RESULTS = [{
                             url:  BASE_URL + "/creator1.html"
                           },
   repositoryStatus:       8,
-  sourceURI:              BASE_URL + "/test1.xpi"
+  sourceURI:              BASE_URL + "/test1.xpi",
+  icons:                  {}
 }, {
   id:                     "test2@tests.mozilla.org",
   type:                   "extension",
@@ -132,7 +135,12 @@ var SEARCH_RESULTS = [{
   fullDescription:        "Test Description 2\nnewline",
   developerComments:      "Test Developer\nComments 2",
   eula:                   "Test EULA 2",
-  iconURL:                BASE_URL + "/icon2.png",
+  iconURL:                BASE_URL + "/icon2-32.png",
+  icons:                  {
+                            "32": BASE_URL + "/icon2-32.png",
+                            "48": BASE_URL + "/icon2-48.png",
+                            "64": BASE_URL + "/icon2-64.png"
+                          },
   screenshots:            [{
                             url:          BASE_URL + "/full1-2.png",
                             thumbnailURL: BASE_URL + "/thumbnail1-2.png"
@@ -167,6 +175,7 @@ var SEARCH_RESULTS = [{
   developerComments:      "Test Developer Comments 3",
   eula:                   "Test EULA 3",
   iconURL:                BASE_URL + "/icon3.png",
+  icons:                  { "32": BASE_URL + "/icon3.png" },
   screenshots:            [{
                             url:          BASE_URL + "/full1-3.png",
                             thumbnailURL: BASE_URL + "/thumbnail1-3.png",
@@ -206,7 +215,8 @@ var SEARCH_RESULTS = [{
   repositoryStatus:       4,
   purchaseURL:            "http://localhost:4444/purchaseURL1",
   purchaseAmount:         5,
-  purchaseDisplayAmount:  "$5"
+  purchaseDisplayAmount:  "$5",
+  icons:                  {}
 }, {
   id:                     "purchase2@tests.mozilla.org",
   type:                   "extension",
@@ -219,7 +229,8 @@ var SEARCH_RESULTS = [{
   repositoryStatus:       4,
   purchaseURL:            "http://localhost:4444/purchaseURL2",
   purchaseAmount:         10,
-  purchaseDisplayAmount:  "$10"
+  purchaseDisplayAmount:  "$10",
+  icons:                  {}
 }, {
   id:                     "test-lastPassing@tests.mozilla.org",
   type:                   "extension",
@@ -230,7 +241,8 @@ var SEARCH_RESULTS = [{
                           },
   averageRating:          5,
   repositoryStatus:       4,
-  sourceURI:              BASE_URL + "/addons/test_AddonRepository_3.xpi"
+  sourceURI:              BASE_URL + "/addons/test_AddonRepository_3.xpi",
+  icons:                  {}
 }];
 
 const TOTAL_RESULTS = 1111;

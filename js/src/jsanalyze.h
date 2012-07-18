@@ -359,16 +359,6 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_LOCALDEC:
         return LocalSlot(script, GET_SLOTNO(pc));
 
-      case JSOP_GETALIASEDVAR:
-      case JSOP_CALLALIASEDVAR:
-      case JSOP_SETALIASEDVAR:
-      {
-        unsigned index;
-        return ScopeCoordinateToFrameIndex(script, pc, &index) == FrameIndex_Local
-               ? LocalSlot(script, index)
-               : ArgSlot(index);
-      }
-
       case JSOP_THIS:
         return ThisSlot();
 

@@ -72,7 +72,7 @@ ArgumentsObject::element(uint32_t i) const
     JS_ASSERT(!isElementDeleted(i));
     const Value &v = data()->args[i];
     if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT))
-        return getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().arg(i);
+        return getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().formal(i);
     return v;
 }
 
@@ -82,7 +82,7 @@ ArgumentsObject::setElement(uint32_t i, const Value &v)
     JS_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
     if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT))
-        getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().setArg(i, v);
+        getFixedSlot(MAYBE_CALL_SLOT).toObject().asCall().setFormal(i, v);
     else
         lhs = v;
 }

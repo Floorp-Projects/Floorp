@@ -17,18 +17,19 @@
 #include "nsIBadCertListener2.h"
 #include "nsISSLErrorListener.h"
 #include "nsITimer.h"
+#include "mozilla/Attributes.h"
 
 // Forward declare pointers
 class nsIURI;
 
-class nsUrlClassifierStreamUpdater : public nsIUrlClassifierStreamUpdater,
-                                     public nsIUrlClassifierUpdateObserver,
-                                     public nsIStreamListener,
-                                     public nsIObserver,
-                                     public nsIBadCertListener2,
-                                     public nsISSLErrorListener,
-                                     public nsIInterfaceRequestor,
-                                     public nsITimerCallback
+class nsUrlClassifierStreamUpdater MOZ_FINAL : public nsIUrlClassifierStreamUpdater,
+                                               public nsIUrlClassifierUpdateObserver,
+                                               public nsIStreamListener,
+                                               public nsIObserver,
+                                               public nsIBadCertListener2,
+                                               public nsISSLErrorListener,
+                                               public nsIInterfaceRequestor,
+                                               public nsITimerCallback
 {
 public:
   nsUrlClassifierStreamUpdater();

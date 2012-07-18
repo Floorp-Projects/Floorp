@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const EXPECTED_SCHEMA_VERSION = 3;
+const EXPECTED_SCHEMA_VERSION = 4;
 let dbfile;
 
 function run_test() {
@@ -90,6 +90,8 @@ function run_test() {
       do_check_true(db.indexExists("screenshot_idx"));
       do_check_true(db.indexExists("compatibility_override_idx"));
       do_check_true(db.tableExists("compatibility_override"));
+      do_check_true(db.indexExists("icon_idx"));
+      do_check_true(db.tableExists("icon"));
 
       // Check the trigger is working
       db.executeSimpleSQL("INSERT INTO addon (id, type, name) VALUES('test_addon', 'extension', 'Test Addon')");
@@ -119,6 +121,8 @@ function run_test() {
     do_check_true(aAddon.screenshots[0].height === null);
     do_check_true(aAddon.screenshots[0].thumbnailWidth === null);
     do_check_true(aAddon.screenshots[0].thumbnailHeight === null);
+    do_check_eq(aAddon.iconURL, undefined);
+    do_check_eq(JSON.stringify(aAddon.icons), "{}");
     AddonRepository.shutdown();
   });
 }

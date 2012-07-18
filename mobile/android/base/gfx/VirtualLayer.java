@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Rect;
-
 public class VirtualLayer extends Layer {
     public VirtualLayer(IntSize size) {
         super(size);

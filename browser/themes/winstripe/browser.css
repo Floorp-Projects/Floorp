@@ -1647,6 +1647,45 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url(chrome://browser/skin/share-button-shared.png);
 }
 
+#socialUserPortrait {
+  width: 48px;
+  height: 48px;
+}
+
+#socialUserDisplayName,
+#socialUserPortrait {
+  cursor: pointer;
+}
+
+#socialUserDisplayName {
+  -moz-appearance: none;
+  border: none;
+  background-color: transparent;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 130%;
+  font-weight: bold;
+}
+
+#socialUserDisplayName > .button-box {
+  -moz-padding-start: 0;
+  padding-top: 0;
+  border-top-width: 0;
+}
+
+#socialUserDisplayName:hover {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+}
+
+#editSharePopupText {
+  height: 48px;
+}
+
+#editSharePopupBottomButtons {
+  margin-top: 1em;
+}
+
 /* star button */
 
 #star-button {

@@ -50,6 +50,7 @@ function finish_test(request, buffer) {
 }
 
 function consume304(request, buffer) {
+  request.QueryInterface(Components.interfaces.nsIHttpChannel);
   do_check_eq(request.responseStatus, 304);
   do_check_eq(request.getResponseHeader("Returned-From-Handler"), "1");
   run_next_test();

@@ -123,6 +123,7 @@ public:
     bool SendRealMouseEvent(nsMouseEvent& event);
     bool SendMouseScrollEvent(nsMouseScrollEvent& event);
     bool SendRealKeyEvent(nsKeyEvent& event);
+    bool SendRealTouchEvent(nsTouchEvent& event);
 
     virtual PDocumentRendererParent*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
@@ -164,7 +165,9 @@ protected:
                         const nsString& aJSON,
                         InfallibleTArray<nsString>* aJSONRetVal = nsnull);
 
-    void ActorDestroy(ActorDestroyReason why);
+    virtual bool Recv__delete__() MOZ_OVERRIDE;
+
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     virtual PIndexedDBParent* AllocPIndexedDB(const nsCString& aASCIIOrigin,
                                               bool* /* aAllowed */);
@@ -200,7 +203,9 @@ protected:
     bool AllowContentIME();
 
     NS_OVERRIDE
-    virtual PRenderFrameParent* AllocPRenderFrame();
+    virtual PRenderFrameParent* AllocPRenderFrame(LayersBackend* aBackend,
+                                                  int32_t* aMaxTextureSize,
+                                                  uint64_t* aLayersId);
     NS_OVERRIDE
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame);
 

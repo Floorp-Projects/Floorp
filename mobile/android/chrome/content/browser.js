@@ -1459,7 +1459,6 @@ var SelectionHandler = {
   HANDLE_WIDTH: 45,
   HANDLE_HEIGHT: 66,
   HANDLE_PADDING: 20,
-  HANDLE_HORIZONTAL_OFFSET: 5,
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
@@ -1497,6 +1496,7 @@ var SelectionHandler = {
         if (zoom != this._viewOffset.zoom) {
           this._viewOffset.zoom = zoom;
           this.updateCacheForSelection();
+          this.updateViewOffsetScroll();
           this.positionHandles(true);
         }
         break;
@@ -1628,17 +1628,17 @@ var SelectionHandler = {
 
   // aX/aY are in top-level window browser coordinates
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    // Update the handle position as it's dragged
-    let leftTop = "left:" + (aX + this._viewOffset.scrollX - this._viewOffset.left) + "px;" +
-                  "top:" + (aY + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
+    // Update the handle position as it's dragged. aX/aY correspond to the left/top of
+    // the handle elements, but the cached x/y correspond to the corners of the selection
+    // area, so we need to adjust the points accordingly.
     if (aIsStartHandle) {
-      this._start.style.cssText = this._start.style.cssText + leftTop;
-      this.cache.start.left = aX;
-      this.cache.start.top = aY;
+      this.cache.start.x = aX + this.HANDLE_PADDING + this.HANDLE_WIDTH / this._viewOffset.zoom;
+      this.cache.start.y = aY;
+      this.positionStartHandle();
     } else {
-      this._end.style.cssText = this._end.style.cssText + leftTop;
-      this.cache.end.left = aX;
-      this.cache.end.top = aY;
+      this.cache.end.x = aX + this.HANDLE_PADDING;
+      this.cache.end.y = aY;
+      this.positionEndHandle();
     }
 
     let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -1675,9 +1675,6 @@ var SelectionHandler = {
       this._start = oldEnd;
       this._end = oldStart;
 
-      // We need to update the cache for the new handles
-      this.updateCacheForHandleRects();
-
       // Re-send mouse events to update the selection corresponding to the new handles
       if (this._isRTL) {
         this._sendEndMouseEvents(cwu, false);
@@ -1690,17 +1687,17 @@ var SelectionHandler = {
   },
 
   _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu, useShift) {
-    let x = this.cache.start.left + this.HANDLE_PADDING + this.HANDLE_WIDTH;
+    let x = this.cache.start.x;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = this.cache.start.top - 1;
+    let y = this.cache.start.y - 1;
 
     this._sendMouseEvents(cwu, useShift, x, y);
   },
 
   _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu, useShift) {
-    let x = this.cache.end.left + this.HANDLE_PADDING;
+    let x = this.cache.end.x;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = this.cache.end.top - 1;
+    let y = this.cache.end.y - 1;
 
     this._sendMouseEvents(cwu, useShift, x, y);
   },
@@ -1798,17 +1795,6 @@ var SelectionHandler = {
     return selectionReversed;
   },
 
-  // Updates the cached client rect left/top values for the handles.
-  updateCacheForHandleRects: function sh_updateCacheForHandleRects() {
-    let start = this._start.getBoundingClientRect();
-    this.cache.start.left = start.left;
-    this.cache.start.top = start.top;
-
-    let end = this._end.getBoundingClientRect();
-    this.cache.end.left = end.left;
-    this.cache.end.top = end.top;
-  },
-
   updateViewOffsetScroll: function sh_updateViewOffsetScroll() {
     let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let scrollX = {}, scrollY = {};
@@ -1821,27 +1807,36 @@ var SelectionHandler = {
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles(adjustScale) {
-    let startCss = this._start.style.cssText;
-    let endCss = this._end.style.cssText;
-
     if (adjustScale) { 
       let heightWidth = "height:" + this.HANDLE_HEIGHT / this._viewOffset.zoom + "px;" + 
                         "width:" + this.HANDLE_WIDTH / this._viewOffset.zoom + "px;";
-
-      startCss += heightWidth;
-      endCss += heightWidth;
+      this.positionStartHandle(this._start.style.cssText + heightWidth);
+      this.positionEndHandle(this._end.style.cssText + heightWidth);
+    } else {
+      this.positionStartHandle();
+      this.positionEndHandle();
     }
+  },
 
-    startCss += "left:" + (this.cache.start.x + this._viewOffset.scrollX - this._viewOffset.left -
-                           this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - this.HANDLE_WIDTH / this._viewOffset.zoom) + "px;" +
-                "top:" + (this.cache.start.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
+  positionStartHandle: function sh_positionStartHandle(startCss) {
+    if (!startCss)
+      startCss = this._start.style.cssText;
 
-    endCss += "left:" + (this.cache.end.x + this._viewOffset.scrollX - this._viewOffset.left -
-                         this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px;" +
-              "top:" + (this.cache.end.y + this._viewOffset.scrollY - this._viewOffset.top) + "px;";
+    let left = this.cache.start.x + this._viewOffset.scrollX - this._viewOffset.left -
+               this.HANDLE_PADDING - this.HANDLE_WIDTH / this._viewOffset.zoom;
+    let top = this.cache.start.y + this._viewOffset.scrollY - this._viewOffset.top;
 
-    this._start.style.cssText = startCss;
-    this._end.style.cssText = endCss;
+    this._start.style.cssText = startCss + "left:" + left + "px;" + "top:" + top + "px;";
+  },
+
+  positionEndHandle: function sh_positionEndHandle(endCss) {
+    if (!endCss)
+      endCss = this._end.style.cssText;
+
+    let left = this.cache.end.x + this._viewOffset.scrollX - this._viewOffset.left - this.HANDLE_PADDING;
+    let top = this.cache.end.y + this._viewOffset.scrollY - this._viewOffset.top;
+
+    this._end.style.cssText = endCss + "left:" + left + "px;" + "top:" + top + "px;";
   },
 
   showHandles: function sh_showHandles() {
@@ -1856,7 +1851,6 @@ var SelectionHandler = {
     }
 
     this.positionHandles(true);
-    this.updateCacheForHandleRects();
 
     this._start.setAttribute("showing", "true");
     this._end.setAttribute("showing", "true");
@@ -1908,7 +1902,7 @@ var SelectionHandler = {
                              y: touch.clientY - rect.top };
 
         // Update the cache in case the page panned since last touch
-        this.updateCacheForHandleRects();
+        this.updateCacheForSelection();
         this.updateViewOffsetScroll();
 
         aEvent.target.addEventListener("touchmove", this, false);
@@ -6377,10 +6371,8 @@ let Reader = {
           return;
         }
 
-        // FIXME: Make the readability check not require a separate copy
-        // of the document by making the operation fully non-destructive.
-        let doc = tab.browser.contentWindow.document.cloneNode(true);
         let uri = Services.io.newURI(url, null, null);
+        let doc = tab.browser.contentWindow.document;
 
         let readability = new Readability(uri, doc);
         callback(readability.check());
