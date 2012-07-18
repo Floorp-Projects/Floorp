@@ -85,21 +85,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                    in unsigned long flags);
 
     /**
-     * Check that content from "from" can load "uri".
-     *
-     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
-     * should be denied.
-     *
-     * @param from the URI causing the load
-     * @param uri the URI that is being loaded
-     * @param flags the permission set, see above
-     *
-     * @deprecated Use checkLoadURIWithPrincipal instead of this function.
-     */
-    [deprecated] void checkLoadURI(in nsIURI from, in nsIURI uri,
-                                   in unsigned long flags);
-
-    /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:
      *
      * 1) The URI is a string, not a URI object.

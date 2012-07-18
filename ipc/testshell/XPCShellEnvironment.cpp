@@ -714,14 +714,6 @@ FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::CheckLoadURI(nsIURI *from,
-                              nsIURI *uri,
-                              PRUint32 flags)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
                                               const nsACString & uri,
                                               PRUint32 flags)
