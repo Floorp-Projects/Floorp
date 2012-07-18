@@ -43,8 +43,6 @@
 using namespace android;
 
 # define EGL_NATIVE_BUFFER_ANDROID 0x3140
-# define EGL_IMAGE_PRESERVED_KHR   0x30D2
-# define GL_TEXTURE_EXTERNAL_OES   0x8D65
 
 # endif
 
@@ -408,15 +406,15 @@ public:
     {
 #if defined(MOZ_WIDGET_GONK)
         EGLint attrs[] = {
-            EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
+            LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
             LOCAL_EGL_NONE, LOCAL_EGL_NONE
         };
         EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
                                                   EGL_NO_CONTEXT,
                                                   EGL_NATIVE_BUFFER_ANDROID,
                                                   buffer, attrs);
-        sEGLLibrary.fImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
-        fBindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+        fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, image);
+        fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, texture);
         sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
         return true;
 #else
@@ -865,7 +863,7 @@ bool GLContextEGL::AttachSharedHandle(TextureImage::TextureShareType aType,
 
     EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
     wrap->WaitSync();
-    sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
+    fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
     return true;
 }
 
@@ -1311,7 +1309,7 @@ public:
         if (UsingDirectTexture()) {
             mGLContext->fActiveTexture(aTextureUnit);
             mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, mEGLImage);
+            fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
             if (sEGLLibrary.fGetError() != LOCAL_EGL_SUCCESS) {
                LOG("Could not set image target texture. ERROR (0x%04x)", sEGLLibrary.fGetError());
             }
@@ -1414,7 +1412,7 @@ public:
             mGLContext->MakeCurrent(true);
             mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
             mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, 0);
+            mGLContext->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, 0);
             if (sEGLLibrary.fGetError() != LOCAL_EGL_SUCCESS) {
                 LOG("Could not set image target texture. ERROR (0x%04x)", sEGLLibrary.fGetError());
                 return false;
@@ -1577,7 +1575,7 @@ public:
             mEGLImage =
                 sEGLLibrary.fCreateImage(EGL_DISPLAY(),
                                          EGL_NO_CONTEXT,
-                                         LOCAL_EGL_NATIVE_PIXMAP_KHR,
+                                         LOCAL_EGL_NATIVE_PIXMAP,
                                          (EGLClientBuffer)xsurface->XDrawable(),
                                          nsnull);
 
@@ -1586,7 +1584,7 @@ public:
                 return false;
             }
             mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            mGLContext->fImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
+            mGLContext->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
             sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mEGLImage);
             mEGLImage = nsnull;
         } else {
@@ -1615,7 +1613,7 @@ public:
                              GraphicBuffer::USAGE_SW_WRITE_OFTEN;
             mGraphicBuffer = new GraphicBuffer(aSize.width, aSize.height, format, usage);
             if (mGraphicBuffer->initCheck() == OK) {
-                const int eglImageAttributes[] = { EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
+                const int eglImageAttributes[] = { LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
                                                    LOCAL_EGL_NONE, LOCAL_EGL_NONE };
                 mEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
                                                         EGL_NO_CONTEXT,
