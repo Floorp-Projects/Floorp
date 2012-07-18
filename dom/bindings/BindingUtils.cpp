@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdarg.h>
+
 #include "BindingUtils.h"
 
 #include "xpcprivate.h"
@@ -11,6 +13,32 @@
 
 namespace mozilla {
 namespace dom {
+
+JSErrorFormatString ErrorFormatString[] = {
+#define MSG_DEF(_name, _argc, _str) \
+  { _str, _argc, JSEXN_TYPEERR },
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString*
+GetErrorMessage(void* aUserRef, const char* aLocale,
+                const unsigned aErrorNumber)
+{
+  MOZ_ASSERT(aErrorNumber < ArrayLength(ErrorFormatString));
+  return &ErrorFormatString[aErrorNumber];
+}
+
+bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
+{
+  va_list ap;
+  va_start(ap, aErrorNumber);
+  JS_ReportErrorNumberVA(aCx, GetErrorMessage, NULL,
+                         static_cast<const unsigned>(aErrorNumber), ap);
+  va_end(ap);
+  return false;
+}
 
 bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)

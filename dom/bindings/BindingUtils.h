@@ -29,6 +29,17 @@ class nsGlobalWindow;
 namespace mozilla {
 namespace dom {
 
+enum ErrNum {
+#define MSG_DEF(_name, _argc, _str) \
+  _name,
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+  Err_Limit
+};
+
+bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
+
 template<bool mainThread>
 inline bool
 Throw(JSContext* cx, nsresult rv)
@@ -414,8 +425,38 @@ struct EnumEntry {
   size_t length;
 };
 
+template<bool Fatal>
+inline bool
+EnumValueNotFound(JSContext* cx, const jschar* chars, size_t length,
+                  const char* type)
+{
+  return false;
+}
+
+template<>
+inline bool
+EnumValueNotFound<false>(JSContext* cx, const jschar* chars, size_t length,
+                         const char* type)
+{
+  // TODO: Log a warning to the console.
+  return true;
+}
+
+template<>
+inline bool
+EnumValueNotFound<true>(JSContext* cx, const jschar* chars, size_t length,
+                        const char* type)
+{
+  NS_LossyConvertUTF16toASCII deflated(static_cast<const PRUnichar*>(chars),
+                                       length);
+  return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, deflated.get(), type);
+}
+
+
+template<bool InvalidValueFatal>
 inline int
-FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values, bool* ok)
+FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values,
+                    const char* type, bool* ok)
 {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
   JSString* str = JS_ValueToString(cx, v);
@@ -451,7 +492,7 @@ FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values, bool* o
     }
   }
 
-  *ok = true;
+  *ok = EnumValueNotFound<InvalidValueFatal>(cx, chars, length, type);
   return -1;
 }
 

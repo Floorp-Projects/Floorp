@@ -2006,20 +2006,27 @@ for (uint32_t i = 0; i < length; ++i) {
             raise TypeError("We don't support nullable enumerated arguments "
                             "yet")
         enum = type.inner.identifier.name
+        if invalidEnumValueFatal:
+            handleInvalidEnumValueCode = "  MOZ_ASSERT(index >= 0);\n"
+        else:
+            handleInvalidEnumValueCode = (
+                "  if (index < 0) {\n"
+                "    return true;\n"
+                "  }\n")
+            
         return (
             "{\n"
             "  bool ok;\n"
-            "  int index = FindEnumStringIndex(cx, ${val}, %(values)s, &ok);\n"
+            "  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, \"%(enumtype)s\", &ok);\n"
             "  if (!ok) {\n"
             "    return false;\n"
             "  }\n"
-            "  if (index < 0) {\n"
-            "    return %(failureCode)s;\n"
-            "  }\n"
+            "%(handleInvalidEnumValueCode)s"
             "  ${declName} = static_cast<%(enumtype)s>(index);\n"
             "}" % { "enumtype" : enum,
                       "values" : enum + "Values::strings",
-                 "failureCode" : "Throw<false>(cx, NS_ERROR_XPC_BAD_CONVERT_JS)" if invalidEnumValueFatal else "true" },
+       "invalidEnumValueFatal" : toStringBool(invalidEnumValueFatal),
+  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode },
             CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
@@ -2762,6 +2769,8 @@ class CGMethodCall(CGThing):
     def __init__(self, argsPre, nativeMethodName, static, descriptor, method):
         CGThing.__init__(self)
 
+        methodName = '"%s.%s"' % (descriptor.interface.identifier.name, method.identifier.name)
+
         def requiredArgCount(signature):
             arguments = signature[1]
             if len(arguments) == 0:
@@ -2785,18 +2794,15 @@ class CGMethodCall(CGThing):
             signature = signatures[0]
             self.cgRoot = CGList([ CGIndenter(getPerSignatureCall(signature)) ])
             requiredArgs = requiredArgCount(signature)
+
+
             if requiredArgs > 0:
+                code = (
+                    "if (argc < %d) {\n"
+                    "  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, %s);\n"
+                    "}" % (requiredArgs, methodName))
                 self.cgRoot.prepend(
-                    CGWrapper(
-                        CGIndenter(
-                            CGGeneric(
-                                "if (argc < %d) {\n"
-                                "  return Throw<%s>(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n"
-                                "}" % (requiredArgs,
-                                       toStringBool(not descriptor.workers)))
-                            ),
-                        pre="\n", post="\n")
-                    )
+                    CGWrapper(CGIndenter(CGGeneric(code)), pre="\n", post="\n"))
             return
 
         # Need to find the right overload
@@ -2978,11 +2984,10 @@ class CGMethodCall(CGThing):
         overloadCGThings.append(
             CGSwitch("argcount",
                      argCountCases,
-                     CGGeneric("return Throw<%s>(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);" %
-                               toStringBool(not descriptor.workers))))
+                     CGGeneric("return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, %s);\n" % methodName)))
         overloadCGThings.append(
-                CGGeneric('MOZ_NOT_REACHED("We have an always-returning default case");\n'
-                          'return false;'))
+            CGGeneric('MOZ_NOT_REACHED("We have an always-returning default case");\n'
+                      'return false;'))
         self.cgRoot = CGWrapper(CGIndenter(CGList(overloadCGThings, "\n")),
                                 pre="\n")
 
