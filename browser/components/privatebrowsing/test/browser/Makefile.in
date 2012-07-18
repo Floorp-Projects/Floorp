@@ -14,6 +14,8 @@ MOCHITEST_BROWSER_FILES =  \
 		head.js \
 		browser_console_clear.js \
 		browser_privatebrowsing_certexceptionsui.js \
+		browser_privatebrowsing_clearplugindata.js \
+		browser_privatebrowsing_clearplugindata.html \
 		browser_privatebrowsing_commandline_toggle.js \
 		browser_privatebrowsing_concurrent.js \
 		browser_privatebrowsing_concurrent_page.html \
@@ -34,6 +36,7 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_newwindow_stopcmd.js \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
+		browser_privatebrowsing_openLocationLastURL.js \
 		browser_privatebrowsing_pageinfo.js \
 		browser_privatebrowsing_placestitle.js \
 		browser_privatebrowsing_popupblocker.js \
@@ -52,8 +55,6 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_windowtitle_page.html \
 		browser_privatebrowsing_zoom.js \
 		browser_privatebrowsing_zoomrestore.js \
-		browser_privatebrowsing_clearplugindata.js \
-		browser_privatebrowsing_clearplugindata.html \
 		ctxmenu.html \
 		ctxmenu-image.png \
 		popup.html \
