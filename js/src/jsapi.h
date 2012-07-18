@@ -1286,6 +1286,7 @@ class AutoVectorRooter : protected AutoGCRooter
     T &operator[](size_t i) { return vector[i]; }
     const T &operator[](size_t i) const { return vector[i]; }
 
+    JS::MutableHandle<T> handleAt(size_t i) { return JS::MutableHandle<T>::fromMarkedLocation(&vector[i]); }
     JS::Handle<T> handleAt(size_t i) const { return JS::Handle<T>::fromMarkedLocation(&vector[i]); }
 
     const T *begin() const { return vector.begin(); }
@@ -1596,8 +1597,10 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 #ifdef __cplusplus
 
 typedef JS::Handle<JSObject*> JSHandleObject;
+typedef JS::Handle<JSString*> JSHandleString;
 typedef JS::Handle<jsid> JSHandleId;
 typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
+typedef JS::MutableHandle<JS::Value> JSMutableHandleValue;
 
 #else
 
@@ -1607,8 +1610,10 @@ typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
  */
 
 typedef struct { JSObject **_; } JSHandleObject;
+typedef struct { JSString **_; } JSHandleString;
 typedef struct { JSObject **_; } JSMutableHandleObject;
 typedef struct { jsid *_; } JSHandleId;
+typedef struct { jsval *_; } JSMutableHandleValue;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
