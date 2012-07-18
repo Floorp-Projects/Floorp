@@ -428,6 +428,7 @@ ScriptsView.prototype = {
     }
 
     this._preferredScript = selectedItem;
+    this._scripts.setAttribute("tooltiptext", selectedItem.value);
     DebuggerController.SourceScripts.showScript(selectedItem.getUserData("sourceScript"));
   },
 
