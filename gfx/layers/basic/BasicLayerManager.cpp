@@ -617,8 +617,7 @@ Transform3D(gfxASurface* aSource, gfxContext* aDest,
 
   // Create a surface the size of the transformed object.
   nsRefPtr<gfxASurface> dest = aDest->CurrentSurface();
-  nsRefPtr<gfxImageSurface> destImage = dest->GetAsImageSurface();
-  destImage = nsnull;
+  nsRefPtr<gfxImageSurface> destImage;
   gfxPoint offset;
   bool blitComplete;
   if (!destImage || aDontBlit || !aDest->ClipContainsRect(destRect)) {
