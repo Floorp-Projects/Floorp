@@ -221,11 +221,19 @@ class MutableHandle : public MutableHandleBase<T>
 typedef MutableHandle<JSObject*>    MutableHandleObject;
 typedef MutableHandle<Value>        MutableHandleValue;
 
+/*
+ * By default, pointers should use the inheritance hierarchy to find their
+ * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
+ * Rooted<T> may be used without the class definition being available.
+ */
+template <typename T>
+struct RootKind<T *> { static ThingRootKind rootKind() { return T::rootKind(); }; };
+
 template <typename T>
 struct RootMethods<T *>
 {
     static T *initial() { return NULL; }
-    static ThingRootKind kind() { return T::rootKind(); }
+    static ThingRootKind kind() { return RootKind<T *>::rootKind(); }
     static bool poisoned(T *v) { return IsPoisonedPtr(v); }
 };
 
