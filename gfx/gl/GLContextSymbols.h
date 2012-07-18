@@ -373,8 +373,8 @@ struct GLContextSymbols
     PFNGLGETSYNCIV fGetSynciv;
 
     // OES_egl_image
-    typedef void (GLAPIENTRY * PFNGLIMAGETARGETTEXTURE2D)(GLenum target, GLeglImage image);
-    PFNGLIMAGETARGETTEXTURE2D fImageTargetTexture2D;
+    typedef void (GLAPIENTRY * PFNGLEGLIMAGETARGETTEXTURE2D)(GLenum target, GLeglImage image);
+    PFNGLEGLIMAGETARGETTEXTURE2D fEGLImageTargetTexture2D;
 };
 
 }
