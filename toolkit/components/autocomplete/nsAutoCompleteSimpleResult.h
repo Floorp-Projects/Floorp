@@ -12,8 +12,9 @@
 #include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
-class nsAutoCompleteSimpleResult : public nsIAutoCompleteSimpleResult
+class nsAutoCompleteSimpleResult MOZ_FINAL : public nsIAutoCompleteSimpleResult
 {
 public:
   nsAutoCompleteSimpleResult();
