@@ -309,6 +309,7 @@ GLLibraryEGL::LoadConfigSensitiveSymbols()
         GLLibraryLoader::SymLoadStruct imageSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nsnull } },
             { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nsnull } },
+            { (PRFuncPtr*) &mSymbols.fImageTargetTexture2DOES, { "glEGLImageTargetTexture2DOES", NULL } },
             { nsnull, { nsnull } }
         };
 
@@ -324,6 +325,7 @@ GLLibraryEGL::LoadConfigSensitiveSymbols()
 
             mSymbols.fCreateImage = nsnull;
             mSymbols.fDestroyImage = nsnull;
+            mSymbols.fImageTargetTexture2DOES = nsnull;
         }
     } else {
         MarkExtensionUnsupported(KHR_image_pixmap);
