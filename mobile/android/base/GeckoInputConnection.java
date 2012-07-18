@@ -177,7 +177,7 @@ public class GeckoInputConnection
             return false;
 
         String text = content.toString();
-        Span selection = clampSelection();
+        Span selection = getSelection();
 
         switch (id) {
             case R.id.selectAll:
@@ -219,7 +219,7 @@ public class GeckoInputConnection
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0)
             mUpdateRequest = req;
 
-        Span selection = clampSelection();
+        Span selection = getSelection();
 
         ExtractedText extract = new ExtractedText();
         extract.flags = 0;
@@ -244,21 +244,9 @@ public class GeckoInputConnection
     }
 
     @Override
-    public boolean deleteSurroundingText(int leftLength, int rightLength) {
-        clampSelection();
-        return super.deleteSurroundingText(leftLength, rightLength);
-    }
-
-    @Override
-    public int getCursorCapsMode(int reqModes) {
-        clampSelection();
-        return super.getCursorCapsMode(reqModes);
-    }
-
-    @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
         // Avoid underrunning text buffer.
-        Span selection = clampSelection();
+        Span selection = getSelection();
         if (length > selection.start) {
             length = selection.start;
         }
@@ -271,15 +259,9 @@ public class GeckoInputConnection
     }
 
     @Override
-    public CharSequence getSelectedText(int flags) {
-        clampSelection();
-        return super.getSelectedText(flags);
-    }
-
-    @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
         // Avoid overrunning text buffer.
-        Span selection = clampSelection();
+        Span selection = getSelection();
         int contentLength = getEditable().length();
         if (selection.end + length > contentLength) {
             length = contentLength - selection.end;
@@ -304,27 +286,14 @@ public class GeckoInputConnection
         if (text.length() == 0 && !hasCompositionString())
             return true;
 
-        clampSelection();
         return super.setComposingText(text, newCursorPosition);
     }
 
-    // Android's BaseInputConnection.java is vulnerable to IndexOutOfBoundsExceptions because it
-    // does not adequately protect against stale indexes for selections exceeding the content length
-    // when the Editable content changes. We must clamp the indexes to be safe.
-    private Span clampSelection() {
+    private Span getSelection() {
         Editable content = getEditable();
-        final int currentStart = Selection.getSelectionStart(content);
-        final int currentEnd = Selection.getSelectionEnd(content);
-        Span selection = Span.clamp(currentStart, currentEnd, content);
-
-        if (selection.start != currentStart || selection.end != currentEnd) {
-            Log.e(LOGTAG, "CLAMPING BOGUS SELECTION [" + currentStart + ", " + currentEnd
-                          + ") -> [" + selection.start + ", " + selection.end + ")",
-                          new AssertionError());
-            super.setSelection(selection.start, selection.end);
-        }
-
-        return selection;
+        int start = Selection.getSelectionStart(content);
+        int end = Selection.getSelectionEnd(content);
+        return Span.clamp(start, end, content);
     }
 
     private void replaceText(CharSequence text, int newCursorPosition, boolean composing) {
@@ -355,7 +324,7 @@ public class GeckoInputConnection
             b = composingSpan.end;
             composingSpan = null;
         } else {
-            Span selection = clampSelection();
+            Span selection = getSelection();
             a = selection.start;
             b = selection.end;
         }
@@ -510,7 +479,7 @@ public class GeckoInputConnection
             start = newSelection.start;
             end = newSelection.end;
 
-            Span currentSelection = clampSelection();
+            Span currentSelection = getSelection();
             int a = currentSelection.start;
             int b = currentSelection.end;
 
@@ -899,8 +868,6 @@ public class GeckoInputConnection
         if (keyCode > KeyEvent.getMaxKeyCode())
             return false;
 
-        clampSelection();
-
         switch (keyCode) {
             case KeyEvent.KEYCODE_MENU:
             case KeyEvent.KEYCODE_BACK:
@@ -939,7 +906,7 @@ public class GeckoInputConnection
                 (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
                 !keyListener.onKeyDown(view, mEditable, keyCode, event)) {
             // Make sure selection in Gecko is up-to-date
-            Span selection = clampSelection();
+            Span selection = getSelection();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION,
                                                                      selection.start,
                                                                      selection.length));
