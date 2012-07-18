@@ -738,6 +738,10 @@ function triggerSecondaryCommand(popup, index) {
   ok(notifications.length > 0, "at least one notification displayed");
   let notification = notifications[0];
 
+  // Cancel the arrow panel slide-in transition (bug 767133) such that
+  // it won't interfere with us interacting with the dropdown.
+  document.getAnonymousNodes(popup)[0].style.transition = "none";
+
   notification.button.focus();
 
   popup.addEventListener("popupshown", function () {
