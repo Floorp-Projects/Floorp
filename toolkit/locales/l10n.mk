@@ -120,6 +120,9 @@ repackage-zip:  libs-$(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  tar --exclude=install.rdf --exclude=chrome.manifest $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
 	mv $(STAGEDIST)/chrome/$(AB_CD).manifest $(STAGEDIST)/chrome/localized.manifest
+ifdef MOZ_WEBAPP_RUNTIME
+	mv $(STAGEDIST)/webapprt/chrome/$(AB_CD).manifest $(STAGEDIST)/webapprt/chrome/localized.manifest
+endif
 ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj
