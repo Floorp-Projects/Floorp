@@ -1308,6 +1308,15 @@ popline:
     if (!memory.Allocate(total))
       return false;
     for (MDRVA pos = memory.position(); buffers; buffers = buffers->next) {
+      // Check for special case of a zero-length buffer.  This should only
+      // occur if a file's size happens to be a multiple of the buffer's
+      // size, in which case the final sys_read() will have resulted in
+      // zero bytes being read after the final buffer was just allocated.
+      if (buffers->len == 0) {
+        // This can only occur with final buffer.
+        assert(buffers->next == NULL);
+        continue;
+      }
       memory.Copy(pos, &buffers->data, buffers->len);
       pos += buffers->len;
     }
