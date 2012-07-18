@@ -408,6 +408,19 @@ MApplyArgs::New(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefini
     return new MApplyArgs(target, fun, argc, self);
 }
 
+MDefinition*
+MStringLength::foldsTo(bool useValueNumbers)
+{
+    if ((type() == MIRType_Int32) && (string()->isConstant())) {
+        Value value = string()->toConstant()->value();
+        size_t length = JS_GetStringLength(value.toString());
+
+        return MConstant::New(Int32Value(length));
+    }
+
+    return this;
+}
+
 MTest *
 MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
@@ -1330,12 +1343,60 @@ MCompare::tryFold(bool *result)
     return false;
 }
 
+bool
+MCompare::evaluateConstantOperands(bool *result)
+{
+    if (type() != MIRType_Boolean)
+        return false;
+
+    MDefinition *left = getOperand(0);
+    MDefinition *right = getOperand(1);
+
+    if (!left->isConstant() || !right->isConstant())
+        return false;
+
+    Value lhs = left->toConstant()->value();
+    Value rhs = right->toConstant()->value();
+
+    if (!lhs.isNumber() || !rhs.isNumber())
+        return false;
+
+    switch (jsop_) {
+      case JSOP_LT:
+        *result = (lhs.toNumber() < rhs.toNumber());
+        break;
+      case JSOP_LE:
+        *result = (lhs.toNumber() <= rhs.toNumber());
+        break;
+      case JSOP_GT:
+        *result = (lhs.toNumber() > rhs.toNumber());
+        break;
+      case JSOP_GE:
+        *result = (lhs.toNumber() >= rhs.toNumber());
+        break;
+      case JSOP_EQ:
+        *result = (lhs.toNumber() == rhs.toNumber());
+        break;
+      case JSOP_NE:
+        *result = (lhs.toNumber() != rhs.toNumber());
+        break;
+      default:
+        return false;
+    }
+
+    return true;
+}
+
 MDefinition *
 MCompare::foldsTo(bool useValueNumbers)
 {
     bool result;
+
     if (tryFold(&result))
         return MConstant::New(BooleanValue(result));
+    else if (evaluateConstantOperands(&result))
+        return MConstant::New(BooleanValue(result));
+
     return this;
 }
 
