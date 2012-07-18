@@ -30,6 +30,7 @@ struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
+struct OpCreateRefLayer        { PLayer layer; };
 
 struct ThebesBuffer {
   SurfaceDescriptor buffer;
@@ -62,6 +63,7 @@ struct ThebesLayerAttributes {
 struct ContainerLayerAttributes{ FrameMetrics metrics; };
 struct ColorLayerAttributes    { gfxRGBA color; };
 struct CanvasLayerAttributes   { GraphicsFilterType filter; };
+struct RefLayerAttributes      { int64_t id; };
 struct ImageLayerAttributes    {
   GraphicsFilterType filter;
   bool forceSingleTile;
@@ -73,6 +75,7 @@ union SpecificLayerAttributes {
   ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
+  RefLayerAttributes;
   ImageLayerAttributes;
 };
 
@@ -127,6 +130,7 @@ union Edit {
   OpCreateImageLayer;
   OpCreateColorLayer;
   OpCreateCanvasLayer;
+  OpCreateRefLayer;
 
   OpSetLayerAttributes;
 

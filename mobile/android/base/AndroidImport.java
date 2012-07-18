@@ -8,25 +8,17 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.LocalBrowserDB;
-import org.mozilla.gecko.R;
 
 import android.content.ContentResolver;
-import android.content.ContentProviderResult;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
-import android.net.Uri;
-import android.os.Build;
 import android.os.RemoteException;
-import android.preference.Preference;
 import android.provider.Browser;
-import android.provider.Browser.BookmarkColumns;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 class AndroidImport implements Runnable {
     static final private String LOGTAG = "AndroidImport";

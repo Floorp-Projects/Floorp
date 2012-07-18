@@ -5,9 +5,6 @@
 #ifndef nsPerformance_h___
 #define nsPerformance_h___
 
-#include "nsIDOMPerformance.h"
-#include "nsIDOMPerformanceTiming.h"
-#include "nsIDOMPerformanceNavigation.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -17,19 +14,19 @@
 
 class nsIURI;
 class nsITimedChannel;
+class nsIDOMWindow;
 class nsPerformance;
 struct JSObject;
 struct JSContext;
 
 // Script "performance.timing" object
-class nsPerformanceTiming MOZ_FINAL : public nsIDOMPerformanceTiming,
+class nsPerformanceTiming MOZ_FINAL : public nsISupports,
                                       public nsWrapperCache
 {
 public:
   nsPerformanceTiming(nsPerformance* aPerformance,
                       nsITimedChannel* aChannel);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMPERFORMANCETIMING
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformanceTiming)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
@@ -96,13 +93,12 @@ private:
 };
 
 // Script "performance.navigation" object
-class nsPerformanceNavigation MOZ_FINAL : public nsIDOMPerformanceNavigation,
+class nsPerformanceNavigation MOZ_FINAL : public nsISupports,
                                           public nsWrapperCache
 {
 public:
   explicit nsPerformanceNavigation(nsPerformance* aPerformance);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMPERFORMANCENAVIGATION
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformanceNavigation)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
@@ -128,7 +124,7 @@ private:
 };
 
 // Script "performance" object
-class nsPerformance MOZ_FINAL : public nsIDOMPerformance,
+class nsPerformance MOZ_FINAL : public nsISupports,
                                 public nsWrapperCache
 {
 public:
@@ -137,7 +133,6 @@ public:
                 nsITimedChannel* aChannel);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMPERFORMANCE
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPerformance)
 
   nsDOMNavigationTiming* GetDOMTiming() const

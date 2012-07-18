@@ -15,6 +15,7 @@ import traceback
 import sys
 import StringIO
 from devicemanager import DeviceManager, DMError, FileError, NetworkTools, _pop_last_line
+import errno
 
 class AgentError(Exception):
   "SUTAgent-specific exception."
@@ -216,10 +217,13 @@ class DeviceManagerSUT(DeviceManager):
             if select.select([self._sock], [], [], 1)[0]:
                 temp = self._sock.recv(1024)
             if (self.debug >= 4): print "response: " + str(temp)
-          except socket.error, msg:
+          except socket.error, err:
             self._sock.close()
             self._sock = None
-            raise AgentError("Error receiving data from socket. cmd="+str(cmd['cmd'])+"; err="+str(msg))
+            # This error shows up with we have our tegra rebooted.
+            if err[0] == errno.ECONNRESET:
+              raise AgentError("Automation error: Error receiving data from socket (possible reboot). cmd=%s; err=%s" % (cmd, err), True)
+            raise AgentError("Error receiving data from socket. cmd=%s; err=%s" % (cmd, err))
 
           data += temp
 
@@ -357,23 +361,6 @@ class DeviceManagerSUT(DeviceManager):
       except AgentError:
         retVal = None
       return retVal
-
-  # make directory structure on the device
-  # external function
-  # returns:
-  #  success: directory structure that we created
-  #  failure: None
-  def mkDirs(self, filename):
-    parts = filename.split('/')
-    name = ""
-    for part in parts:
-      if (part == parts[-1]): break
-      if (part != ""):
-        name += '/' + part
-        if (self.mkDir(name) == None):
-          print "failed making directory: " + str(name)
-          return None
-    return name
 
   # push localDir from host to remoteDir on the device
   # external function

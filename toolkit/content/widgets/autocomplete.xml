@@ -1360,23 +1360,6 @@
         </body>
       </method>
 
-      <method name="_needsAlternateEmphasis">
-        <parameter name="aText"/>
-        <body>
-          <![CDATA[
-          for (let i = aText.length; --i >= 0; ) {
-            let charCode = aText.charCodeAt(i);
-            // Arabic, Syriac, Indic languages are likely to have ligatures
-            // that are broken when using the main emphasis styling
-            if (0x0600 <= charCode && charCode <= 0x109F)
-              return true;
-          }
-
-          return false;
-          ]]>
-        </body>
-      </method>
-
       <method name="_setUpDescription">
         <parameter name="aDescriptionElement"/>
         <parameter name="aText"/>
@@ -1398,10 +1381,6 @@
           let tokens = this._getSearchTokens(search);
           let indices = this._getBoundaryIndices(aText, tokens);
 
-          // If we're searching for something that needs alternate emphasis,
-          // we'll need to check the text that we match
-          let checkAlt = this._needsAlternateEmphasis(search);
-
           let next;
           let start = 0;
           let len = indices.length;
@@ -1415,8 +1394,7 @@
               // Emphasize the text for even indices
               let span = aDescriptionElement.appendChild(
                 document.createElementNS("http://www.w3.org/1999/xhtml", "span"));
-              span.className = checkAlt && this._needsAlternateEmphasis(text) ?
-                "ac-emphasize-alt" : "ac-emphasize-text";
+              span.className = "ac-emphasize-text";
               span.textContent = text;
             } else {
               // Otherwise, it's plain text

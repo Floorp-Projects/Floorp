@@ -1325,21 +1325,27 @@ MediaStreamGraphImpl::RunThread()
     }
 
     {
-      MonitorAutoLock lock(mMonitor);
+      // Not using MonitorAutoLock since we need to unlock in a way
+      // that doesn't match lexical scopes.
+      mMonitor.Lock();
       PrepareUpdatesToMainThreadState();
       if (mForceShutDown || (IsEmpty() && mMessageQueue.IsEmpty())) {
         // Enter shutdown mode. The stable-state handler will detect this
         // and complete shutdown. Destroy any streams immediately.
         LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p waiting for main thread cleanup", this));
+        // Commit to shutting down this graph object.
         mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
-        {
-          MonitorAutoUnlock unlock(mMonitor);
-          // Unlock mMonitor while destroying our streams, since
-          // SourceMediaStream::DestroyImpl needs to take its lock while
-          // we're not holding mMonitor.
-          for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
-            mStreams[i]->DestroyImpl();
-          }
+        // Move mStreams to a temporary array, because after we unlock
+        // mMonitor, 'this' may be deleted by the main thread.
+        nsTArray<nsRefPtr<MediaStream> > streams;
+        mStreams.SwapElements(streams);
+
+        mMonitor.Unlock();
+        // Unlock mMonitor while destroying our streams, since
+        // SourceMediaStream::DestroyImpl needs to take its lock while
+        // we're not holding mMonitor.
+        for (PRUint32 i = 0; i < streams.Length(); ++i) {
+          streams[i]->DestroyImpl();
         }
         return;
       }
@@ -1360,7 +1366,7 @@ MediaStreamGraphImpl::RunThread()
         mWaitState = WAITSTATE_WAITING_INDEFINITELY;
       }
       if (timeout > 0) {
-        lock.Wait(timeout);
+        mMonitor.Wait(timeout);
         LOG(PR_LOG_DEBUG, ("Resuming after timeout; at %f, elapsed=%f",
                            (TimeStamp::Now() - mInitialTimeStamp).ToSeconds(),
                            (TimeStamp::Now() - now).ToSeconds()));
@@ -1368,6 +1374,8 @@ MediaStreamGraphImpl::RunThread()
       mWaitState = WAITSTATE_RUNNING;
       mNeedAnotherIteration = false;
       messageQueue.SwapElements(mMessageQueue);
+
+      mMonitor.Unlock();
     }
   }
 }

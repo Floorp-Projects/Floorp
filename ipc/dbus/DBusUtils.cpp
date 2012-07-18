@@ -38,7 +38,7 @@ namespace ipc {
 void
 log_and_free_dbus_error(DBusError* err, const char* function, DBusMessage* msg)
 {
-  if(msg) {
+  if (msg) {
     LOG("%s: D-Bus error in %s: %s (%s)", function,
         dbus_message_get_member((msg)), (err)->name, (err)->message);
   }	else {
@@ -49,9 +49,8 @@ log_and_free_dbus_error(DBusError* err, const char* function, DBusMessage* msg)
 }
 
 typedef struct {
-  void (*user_cb)(DBusMessage *, void *, void *);
+  DBusCallback user_cb;
   void *user;
-  void *nat;
 } dbus_async_call_t;
 
 void dbus_func_args_async_callback(DBusPendingCall *call, void *data) {
@@ -66,7 +65,7 @@ void dbus_func_args_async_callback(DBusPendingCall *call, void *data) {
   if (msg) {
     if (req->user_cb) {
       // The user may not deref the message object.
-      req->user_cb(msg, req->user, req->nat);
+      req->user_cb(msg, req->user);
     }
     dbus_message_unref(msg);
   }
@@ -77,23 +76,47 @@ void dbus_func_args_async_callback(DBusPendingCall *call, void *data) {
   free(req);
 }
 
+dbus_bool_t dbus_func_send_async(DBusConnection *conn,
+                                 DBusMessage *msg,
+                                 int timeout_ms,
+                                 void (*user_cb)(DBusMessage*,
+                                                 void*),
+                                 void *user) {
+  dbus_async_call_t *pending;
+  dbus_bool_t reply = FALSE;
+
+  // Freed at end of dbus_func_args_async_callback (becomes "req")
+  pending = (dbus_async_call_t *)malloc(sizeof(dbus_async_call_t));
+  DBusPendingCall *call;
+
+  pending->user_cb = user_cb;
+  pending->user = user;
+
+  reply = dbus_connection_send_with_reply(conn, msg,
+                                          &call,
+                                          timeout_ms);
+  if (reply) {
+    dbus_pending_call_set_notify(call,
+                                 dbus_func_args_async_callback,
+                                 pending,
+                                 NULL);
+  }
+
+  if (msg) dbus_message_unref(msg);
+  return reply;
+}
+
 static dbus_bool_t dbus_func_args_async_valist(DBusConnection *conn,
                                                int timeout_ms,
-                                               void (*user_cb)(DBusMessage *,
-                                                               void *,
+                                               void (*user_cb)(DBusMessage*,
                                                                void*),
                                                void *user,
-                                               void *nat,
                                                const char *path,
                                                const char *ifc,
                                                const char *func,
                                                int first_arg_type,
                                                va_list args) {
-  DBusMessage *msg = NULL;
-  const char *name;
-  dbus_async_call_t *pending;
-  dbus_bool_t reply = FALSE;
-
+  DBusMessage *msg = NULL;  
   /* Compose the command */
   msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC, path, ifc, func);
 
@@ -108,37 +131,16 @@ static dbus_bool_t dbus_func_args_async_valist(DBusConnection *conn,
     goto done;
   }
 
-  /* Make the call. */
-  pending = (dbus_async_call_t *)malloc(sizeof(dbus_async_call_t));
-  if (pending) {
-    DBusPendingCall *call;
-
-    pending->user_cb = user_cb;
-    pending->user = user;
-    pending->nat = nat;
-    //pending->method = msg;
-
-    reply = dbus_connection_send_with_reply(conn, msg,
-                                            &call,
-                                            timeout_ms);
-    if (reply == TRUE) {
-      dbus_pending_call_set_notify(call,
-                                   dbus_func_args_async_callback,
-                                   pending,
-                                   NULL);
-    }
-  }
-
+  return dbus_func_send_async(conn, msg, timeout_ms, user_cb, user);
 done:
   if (msg) dbus_message_unref(msg);
-  return reply;
+  return FALSE;
 }
 
 dbus_bool_t dbus_func_args_async(DBusConnection *conn,
                                  int timeout_ms,
-                                 void (*reply)(DBusMessage *, void *, void*),
+                                 void (*reply)(DBusMessage *, void *),
                                  void *user,
-                                 void *nat,
                                  const char *path,
                                  const char *ifc,
                                  const char *func,
@@ -150,7 +152,7 @@ dbus_bool_t dbus_func_args_async(DBusConnection *conn,
 
   ret = dbus_func_args_async_valist(conn,
                                     timeout_ms,
-                                    reply, user, nat,
+                                    reply, user,
                                     path, ifc, func,
                                     first_arg_type, lst);
   va_end(lst);
@@ -173,7 +175,6 @@ DBusMessage * dbus_func_args_timeout_valist(DBusConnection *conn,
                                             va_list args) {
   
   DBusMessage *msg = NULL, *reply = NULL;
-  const char *name;
   bool return_error = (err != NULL);
 
   if (!return_error) {

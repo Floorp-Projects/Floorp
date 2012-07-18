@@ -1246,5 +1246,15 @@ LayerManagerOGL::CreateShadowCanvasLayer()
   return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
 }
 
+already_AddRefed<ShadowRefLayer>
+LayerManagerOGL::CreateShadowRefLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowRefLayerOGL>(new ShadowRefLayerOGL(this)).forget();
+}
+
 } /* layers */
 } /* mozilla */

@@ -14,14 +14,11 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.Xml;
 import android.view.InflateException;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
-import android.view.View;
 
 public class GeckoMenuInflater extends MenuInflater 
                                implements MenuItem.OnMenuItemClickListener {

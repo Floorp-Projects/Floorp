@@ -353,6 +353,10 @@ pref("nglayout.enable_drag_images", true);
 // enable/disable paint flashing --- useful for debugging
 pref("nglayout.debug.paint_flashing", false);
 
+// enable/disable widget update area flashing --- only supported with 
+// BasicLayers (other layer managers always update the entire widget area)
+pref("nglayout.debug.widget_update_flashing", false);
+
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
@@ -3478,6 +3482,8 @@ pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
 pref("webgl.msaa-level", 2);
 pref("webgl.msaa-force", false);
+pref("webgl.prefer-16bpp", false);
+pref("webgl.default-no-alpha", false);
 
 #ifdef XP_WIN
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive

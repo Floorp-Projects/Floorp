@@ -572,7 +572,7 @@ nsScriptSecurityManager::CheckPropertyAccess(JSContext* cx,
                                              PRUint32 aAction)
 {
     return CheckPropertyAccessImpl(aAction, nsnull, cx, aJSObject,
-                                   nsnull, nsnull, nsnull,
+                                   nsnull, nsnull,
                                    aClassName, aProperty, nsnull);
 }
 
@@ -646,7 +646,7 @@ nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                  nsAXPCNativeCallContext* aCallContext,
                                                  JSContext* cx, JSObject* aJSObject,
-                                                 nsISupports* aObj, nsIURI* aTargetURI,
+                                                 nsISupports* aObj,
                                                  nsIClassInfo* aClassInfo,
                                                  const char* aClassName, jsid aProperty,
                                                  void** aCachedClassPolicy)
@@ -721,12 +721,6 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     objectPrincipal = doGetObjectPrincipal(aJSObject);
                     if (!objectPrincipal)
                         rv = NS_ERROR_DOM_SECURITY_ERR;
-                }
-                else if(aTargetURI)
-                {
-                    if (NS_FAILED(GetCodebasePrincipal(
-                          aTargetURI, getter_AddRefs(objectPrincipal))))
-                        return NS_ERROR_FAILURE;
                 }
                 else
                 {
@@ -2803,7 +2797,7 @@ nsScriptSecurityManager::CanAccess(PRUint32 aAction,
                                    void** aPolicy)
 {
     return CheckPropertyAccessImpl(aAction, aCallContext, cx,
-                                   aJSObject, aObj, nsnull, aClassInfo,
+                                   aJSObject, aObj, aClassInfo,
                                    nsnull, aPropertyName, aPolicy);
 }
 

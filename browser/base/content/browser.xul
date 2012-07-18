@@ -190,6 +190,19 @@
            onpopupshown="SocialShareButton.panelShown(event);"
            consumeoutsideclicks="true"
            level="top">
+      <row id="editSharePopupHeader" align="center">
+        <vbox align="center">
+          <image id="socialUserPortrait" onclick="SocialUI.showProfile();"
+                 aria-label="&social.sharePopup.portrait.arialabel;"/>
+        </vbox>
+        <vbox id="editSharePopupText">
+          <button id="socialUserDisplayName"
+                  oncommand="SocialUI.showProfile();"/>
+          <spacer flex="1"/>
+          <label id="socialUserRecommendedText"
+                 value="&social.sharePopup.shared.label;"/>
+        </vbox>
+      </row>
       <hbox id="editSharePopupBottomButtons" pack="end">
 #ifdef XP_UNIX
         <button id="editSharePopupUndoButton"

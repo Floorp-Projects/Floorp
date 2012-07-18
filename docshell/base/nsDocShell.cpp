@@ -78,6 +78,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Attributes.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -408,9 +409,9 @@ IsSameHost(nsIURI *uri1, nsIURI *uri2)
   return host1.Equals(host2);
 }
 
-class nsPingListener : public nsIStreamListener
-                     , public nsIInterfaceRequestor
-                     , public nsIChannelEventSink
+class nsPingListener MOZ_FINAL : public nsIStreamListener
+                               , public nsIInterfaceRequestor
+                               , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -638,7 +639,7 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     aLoadType = LOAD_NORMAL;
   }
 
-  nsDOMPerformanceNavigationType result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+  nsDOMPerformanceNavigationType result = dom::PerformanceNavigation::TYPE_RESERVED;
   switch (aLoadType) {
     case LOAD_NORMAL:
     case LOAD_NORMAL_EXTERNAL:
@@ -649,28 +650,28 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
     case LOAD_LINK:
     case LOAD_STOP_CONTENT:
     case LOAD_REPLACE_BYPASS_CACHE:
-        result = nsIDOMPerformanceNavigation::TYPE_NAVIGATE;
+        result = dom::PerformanceNavigation::TYPE_NAVIGATE;
         break;
     case LOAD_HISTORY:
-        result = nsIDOMPerformanceNavigation::TYPE_BACK_FORWARD;
+        result = dom::PerformanceNavigation::TYPE_BACK_FORWARD;
         break;
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_CHARSET_CHANGE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-        result = nsIDOMPerformanceNavigation::TYPE_RELOAD;
+        result = dom::PerformanceNavigation::TYPE_RELOAD;
         break;
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_REFRESH:
     case LOAD_BYPASS_HISTORY:
     case LOAD_ERROR_PAGE:
     case LOAD_PUSHSTATE:
-        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        result = dom::PerformanceNavigation::TYPE_RESERVED;
         break;
     default:
         // NS_NOTREACHED("Unexpected load type value");
-        result = nsIDOMPerformanceNavigation::TYPE_RESERVED;
+        result = dom::PerformanceNavigation::TYPE_RESERVED;
         break;
   }
 
@@ -7995,7 +7996,7 @@ namespace
 
 // Callback used by CopyFavicon to inform the favicon service that one URI
 // (mNewURI) has the same favicon URI (OnComplete's aFaviconURI) as another.
-class nsCopyFaviconCallback : public nsIFaviconDataCallback
+class nsCopyFaviconCallback MOZ_FINAL : public nsIFaviconDataCallback
 {
 public:
     NS_DECL_ISUPPORTS

@@ -38,7 +38,7 @@ class   ViewWrapper;
 
 namespace mozilla {
 namespace dom {
-class PBrowserChild;
+class TabChild;
 }
 namespace layers {
 class PLayersChild;
@@ -359,7 +359,7 @@ struct InputContextAction {
  */
 class nsIWidget : public nsISupports {
   protected:
-    typedef mozilla::dom::PBrowserChild PBrowserChild;
+    typedef mozilla::dom::TabChild TabChild;
 
   public:
     typedef mozilla::layers::LayerManager LayerManager;
@@ -1543,7 +1543,7 @@ class nsIWidget : public nsISupports {
      * The returned widget must still be nsIWidget::Create()d.
      */
     static already_AddRefed<nsIWidget>
-    CreatePuppetWidget(PBrowserChild *aTabChild);
+    CreatePuppetWidget(TabChild* aTabChild);
 
     /**
      * Reparent this widget's native widget.

@@ -319,6 +319,8 @@ function run_test() {
     do_check_eq(a1.aboutURL, "chrome://test/content/about.xul");
     do_check_eq(a1.iconURL, "chrome://test/skin/icon.png");
     do_check_eq(a1.icon64URL, "chrome://test/skin/icon64.png");
+    do_check_eq(a1.icons[32], "chrome://test/skin/icon.png");
+    do_check_eq(a1.icons[64], "chrome://test/skin/icon64.png");
     do_check_eq(a1.name, "Test Addon 1");
     do_check_eq(a1.description, "Test Description");
     do_check_eq(a1.creator, "Test Creator");

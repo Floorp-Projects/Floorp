@@ -26,6 +26,8 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
@@ -51,6 +53,7 @@
 #include "nsNetUtil.h"
 
 #include "base/message_loop.h"
+#include "base/process_util.h"
 #include "base/task.h"
 
 #include "nsChromeRegistryContent.h"
@@ -81,14 +84,15 @@
 #include "mozilla/dom/sms/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 
-using namespace mozilla::hal_sandbox;
-using namespace mozilla::ipc;
-using namespace mozilla::net;
-using namespace mozilla::places;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
+using namespace mozilla::hal_sandbox;
+using namespace mozilla::ipc;
+using namespace mozilla::layers;
+using namespace mozilla::net;
+using namespace mozilla::places;
 
 namespace mozilla {
 namespace dom {
@@ -382,6 +386,13 @@ ContentChild::DeallocPMemoryReportRequest(PMemoryReportRequestChild* actor)
 {
     delete actor;
     return true;
+}
+
+PCompositorChild*
+ContentChild::AllocPCompositor(ipc::Transport* aTransport,
+                               base::ProcessId aOtherProcess)
+{
+    return CompositorChild::Create(aTransport, aOtherProcess);
 }
 
 PBrowserChild*

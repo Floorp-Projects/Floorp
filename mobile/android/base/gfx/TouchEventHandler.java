@@ -8,7 +8,6 @@ package org.mozilla.gecko.gfx;
 import java.util.LinkedList;
 import java.util.Queue;
 import android.content.Context;
-import android.graphics.PointF;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.GestureDetector;

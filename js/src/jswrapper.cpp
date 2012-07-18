@@ -1062,20 +1062,19 @@ js::NukeCrossCompartmentWrapper(JSObject *wrapper)
  * option of how to handle the global object.
  */
 JS_FRIEND_API(JSBool)
-js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
-                                                js::NukedGlobalHandling nukeGlobal)
+js::NukeCrossCompartmentWrappers(JSContext* cx, 
+                                 const CompartmentFilter& sourceFilter,
+                                 const CompartmentFilter& targetFilter,
+                                 js::NukeReferencesToWindow nukeReferencesToWindow)
 {
     CHECK_REQUEST(cx);
-
     JSRuntime *rt = cx->runtime;
-    JSObject *global = &obj->global();
 
     // Iterate through scopes looking for system cross compartment wrappers
     // that point to an object that shares a global with obj.
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        // Skip non-system compartments because this breaks the web.
-        if (!js::IsSystemCompartment(c))
+        if (!sourceFilter.match(c))
             continue;
 
         // Iterate the wrappers looking for anything interesting.
@@ -1088,15 +1087,13 @@ js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
                 continue;
 
             JSObject *wobj = &e.front().value.get().toObject();
-            JSObject *wrapped = UnwrapObject(wobj, false);
+            JSObject *wrapped = UnwrapObject(wobj);
 
-            if (js::IsSystemCompartment(wrapped->compartment()))
-                continue; // Not interested in chrome->chrome wrappers.
-
-            if (nukeGlobal == DontNukeForGlobalObject && wrapped == global)
+            if (nukeReferencesToWindow == DontNukeWindowReferences &&
+                wrapped->getClass()->ext.innerObject)
                 continue;
 
-            if (&wrapped->global() == global) {
+            if (targetFilter.match(wrapped->compartment())) {
                 // We found a wrapper to nuke.
                 e.removeFront();
                 NukeCrossCompartmentWrapper(wobj);

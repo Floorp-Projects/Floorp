@@ -79,14 +79,21 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_SecurityChange.html \
 		file_browserElement_SecurityChange.html \
 		browserElement_BackForward.js \
+	        file_bug741717.sjs \
+		browserElement_Reload.js \
                 browserElement_ContextmenuEvents.js \
                 test_browserElement_inproc_ContextmenuEvents.html \
 		$(NULL)
 
-# OOP tests don't work on Windows (bug 763081).
+# Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
+#		test_browserElement_inproc_Reload.html \
+
+# OOP tests don't work on Windows (bug 763081) or native-fennec (bug
+# 774939).
 #
 # Note that there's no inproc equivalent of BackForward; that's intentional.
-ifneq ($(OS_ARCH),WINNT)
+ifneq ($(OS_ARCH),WINNT) #{
+ifndef MOZ_JAVA_COMPOSITOR #{
 MOCHITEST_FILES += \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
@@ -111,9 +118,11 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_OpenWindowRejected.html \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
+		test_browserElement_oop_Reload.html \
                 test_browserElement_oop_ContextmenuEvents.html \
 		$(NULL)
-endif
+endif #}
+endif #}
 
 
 include $(topsrcdir)/config/rules.mk
