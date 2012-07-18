@@ -178,7 +178,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Stranger utilities used for inlining.
     bool addPredecessorWithoutPhis(MBasicBlock *pred);
-    bool inheritNonPredecessor(MBasicBlock *parent);
+    bool inheritNonPredecessor(MBasicBlock *parent, bool inheritStack=false);
 
     // Replaces an edge for a given block with a new block. This is used for
     // critical edge splitting.

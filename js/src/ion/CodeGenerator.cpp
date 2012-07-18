@@ -209,7 +209,7 @@ CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
     Register inputReg = ToRegister(lir->input());
 
     for (size_t i = 0; i < mir->numCallees(); i++) {
-        JSFunction *func = mir->getFunctionConstant(i)->value().toObject().toFunction();
+        JSFunction *func = mir->getFunction(i);
         LBlock *target = mir->getSuccessor(i)->lir();
         if (i < mir->numCallees() - 1) {
             masm.branchPtr(Assembler::Equal, inputReg, ImmGCPtr(func), target->label());
