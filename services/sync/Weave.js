@@ -59,12 +59,10 @@ AboutWeaveLog.prototype = {
     let channel = Services.io.newChannelFromURI(uri);
     channel.originalURI = aURI;
 
-    // Ensure that the about page has the same privileges as a regular directory
-    // view. That way links to files can be opened.
-    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                .getService(Ci.nsIScriptSecurityManager);
-    let principal = ssm.getCodebasePrincipal(uri);
-    channel.owner = principal;
+    // Setting the owner to null means that we'll go through the normal
+    // path in GetChannelPrincipal and create a codebase principal based
+    // on the channel's originalURI
+    channel.owner = null;
     return channel;
   }
 };
