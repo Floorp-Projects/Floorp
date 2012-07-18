@@ -2551,7 +2551,6 @@ stack[anonid=browserStack][responsivemode] {
   list-style-image: url("chrome://browser/skin/devtools/tools-icons-small.png");
 }
 
-.developer-toolbar-button[open=true],
 .developer-toolbar-button:active:hover,
 .developer-toolbar-button[checked=true] {
   border-color: hsla(210,8%,5%,.6);
@@ -2579,14 +2578,6 @@ stack[anonid=browserStack][responsivemode] {
 
 #developer-toolbar-debugger {
   -moz-image-region: rect(48px, 16px, 64px, 0);
-}
-
-#developer-toolbar-other-tools {
-  -moz-image-region: rect(64px, 16px, 80px, 0);
-}
-
-#developer-toolbar-other-tools > .toolbarbutton-menu-dropmarker {
-  display: none;
 }
 
 /* Error counter */
