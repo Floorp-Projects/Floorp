@@ -552,10 +552,14 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void setFullScreen(final boolean fullscreen) {
       super.setFullScreen(fullscreen);
-      if (fullscreen)
-          mBrowserToolbar.hide();
-      else
-          mBrowserToolbar.show();
+      mMainHandler.post(new Runnable() {
+          public void run() {
+              if (fullscreen)
+                  mBrowserToolbar.hide();
+              else
+                  mBrowserToolbar.show();
+          }
+      });
     }
 
     @Override
