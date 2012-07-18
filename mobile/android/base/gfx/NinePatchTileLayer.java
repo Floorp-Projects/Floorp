@@ -16,7 +16,7 @@ import java.nio.FloatBuffer;
  * For more information on nine-patch bitmaps, see the following document:
  *   http://developer.android.com/guide/topics/graphics/2d-graphics.html#nine-patch
  */
-final class NinePatchTileLayer extends TileLayer {
+public class NinePatchTileLayer extends TileLayer {
     private static final int PATCH_SIZE = 16;
     private static final int TEXTURE_SIZE = 64;
 

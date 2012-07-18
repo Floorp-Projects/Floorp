@@ -8,7 +8,7 @@ package org.mozilla.gecko.gfx;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public final class IntSize {
+public class IntSize {
     public final int width, height;
 
     public IntSize(IntSize size) { width = size.width; height = size.height; }
@@ -76,3 +76,4 @@ public final class IntSize {
         return (value & (value - 1)) == 0;
     }
 }
+

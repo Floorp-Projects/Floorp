@@ -8,7 +8,7 @@ package org.mozilla.gecko;
 // AsyncTask runs onPostExecute on the thread it is constructed on
 // We construct these off of the main thread, and we want that to run
 // on the main UI thread, so this is a convenience class to do that
-abstract class GeckoAsyncTask<Params, Progress, Result> {
+public abstract class GeckoAsyncTask<Params, Progress, Result> {
     public static final int PRIORITY_NORMAL = 0;
     public static final int PRIORITY_HIGH = 1;
 
@@ -18,7 +18,7 @@ abstract class GeckoAsyncTask<Params, Progress, Result> {
         mPriority = PRIORITY_NORMAL;
     }
 
-    private final class BackgroundTaskRunnable implements Runnable {
+    private class BackgroundTaskRunnable implements Runnable {
         private Params[] mParams;
 
         public BackgroundTaskRunnable(Params... params) {

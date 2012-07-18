@@ -25,8 +25,8 @@ import android.view.View;
 import java.util.Map;
 import java.util.HashMap;
 
-public final class GeckoLayerClient implements GeckoEventResponder,
-                                               LayerView.Listener {
+public class GeckoLayerClient implements GeckoEventResponder,
+                                         LayerView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
 
     private LayerController mLayerController;
@@ -498,3 +498,4 @@ public final class GeckoLayerClient implements GeckoEventResponder,
         public void drawFinished();
     }
 }
+

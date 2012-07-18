@@ -19,7 +19,7 @@ import java.util.Map.Entry;
  * to read SQLite databases, instead of the Android SQLiteDataBase API,
  * which might use whatever outdated DB is present on the Android system.
  */
-public final class SQLiteBridge {
+public class SQLiteBridge {
     private static final String LOGTAG = "SQLiteBridge";
 
     // Path to the database. If this database was not opened with openDatabase, we reopen it every query.

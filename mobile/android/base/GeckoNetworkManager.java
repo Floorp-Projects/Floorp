@@ -60,7 +60,9 @@ import android.telephony.TelephonyManager;
  * int NETWORK_TYPE_LTE      Current network is LTE
  */
 
-final class GeckoNetworkManager extends BroadcastReceiver {
+public class GeckoNetworkManager
+  extends BroadcastReceiver
+{
   static private final GeckoNetworkManager sInstance = new GeckoNetworkManager();
 
   static private final double  kDefaultBandwidth    = -1.0;

@@ -10,7 +10,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-final class FlowLayout extends ViewGroup {
+public class FlowLayout extends ViewGroup {
     private int mSpacing;
 
     public FlowLayout(Context context) {

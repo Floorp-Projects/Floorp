@@ -5,9 +5,8 @@
 
 package org.mozilla.gecko;
 
-final class GeckoHalDefines {
-    private GeckoHalDefines() {}
-
+public class GeckoHalDefines
+{
     /*
      * Keep these values consistent with |SensorType| in Hal.h
     */
@@ -23,4 +22,4 @@ final class GeckoHalDefines {
     public static final int SENSOR_ACCURACY_LOW = 1;
     public static final int SENSOR_ACCURACY_MED = 2;
     public static final int SENSOR_ACCURACY_HIGH = 3;
-}
+};

@@ -23,7 +23,7 @@ import android.view.GestureDetector;
  *
  * Many methods require that the monitor be held, with a synchronized (controller) { ... } block.
  */
-public final class LayerController {
+public class LayerController {
     private static final String LOGTAG = "GeckoLayerController";
 
     private Layer mRootLayer;                   /* The root layer. */

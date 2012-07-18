@@ -21,7 +21,7 @@ import android.widget.TextView;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-final class DoorHanger extends LinearLayout implements Button.OnClickListener {
+public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private static final String LOGTAG = "DoorHanger";
 
     private Context mContext;

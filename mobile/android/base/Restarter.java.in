@@ -13,7 +13,7 @@ import android.os.*;
 import java.io.*;
 import org.mozilla.gecko.GeckoAppShell;
 
-public final class Restarter extends Activity {
+public class Restarter extends Activity {
     private static final String LOGTAG = "GeckoRestarter";
 
     @Override
@@ -63,4 +63,4 @@ public final class Restarter extends Activity {
         GeckoAppShell.waitForAnotherGeckoProc();
         System.exit(0);
     }
-}
+};

@@ -37,9 +37,9 @@ import android.widget.TextView;
 import android.widget.TextSwitcher;
 import android.widget.ViewSwitcher;
 
-final class BrowserToolbar implements ViewSwitcher.ViewFactory,
-                                      Tabs.OnTabsChangedListener,
-                                      GeckoMenu.ActionItemBarPresenter {
+public class BrowserToolbar implements ViewSwitcher.ViewFactory,
+                                       Tabs.OnTabsChangedListener,
+                                       GeckoMenu.ActionItemBarPresenter {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private Button mAwesomeBar;
@@ -578,7 +578,7 @@ final class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
-    private static final class MenuPopup extends PopupWindow {
+    public class MenuPopup extends PopupWindow {
         private RelativeLayout mPanel;
 
         public MenuPopup(Context context) {

@@ -41,9 +41,9 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
-final class HistoryTab extends AwesomeBarTab {
-    private static final String LOGTAG = "HISTORY_TAB";
-    private static final String TAG = "history";
+public class HistoryTab extends AwesomeBarTab {
+    public static final String LOGTAG = "HISTORY_TAB";
+    public static final String TAG = "history";
     private static enum HistorySection { TODAY, YESTERDAY, WEEK, OLDER };
     private ContentObserver mContentObserver;
     private ContentResolver mContentResolver;
@@ -123,7 +123,7 @@ final class HistoryTab extends AwesomeBarTab {
         return mCursorAdapter;
     }
 
-    private final class HistoryListAdapter extends SimpleExpandableListAdapter {
+    private class HistoryListAdapter extends SimpleExpandableListAdapter {
         public HistoryListAdapter(Context context, List<? extends Map<String, ?>> groupData,
                 int groupLayout, String[] groupFrom, int[] groupTo,
                 List<? extends List<? extends Map<String, ?>>> childData) {
@@ -155,7 +155,10 @@ final class HistoryTab extends AwesomeBarTab {
             if (adapter == null)
                 return null;
 
-            Map historyItem = (Map) adapter.getChild(groupPosition, childPosition);
+            @SuppressWarnings("unchecked")
+            Map<String,Object> historyItem =
+                    (Map<String,Object>) adapter.getChild(groupPosition, childPosition);
+
             String title = (String) historyItem.get(URLColumns.TITLE);
             String url = (String) historyItem.get(URLColumns.URL);
 
@@ -192,16 +195,15 @@ final class HistoryTab extends AwesomeBarTab {
         }
     }
 
-    private static final class GroupList extends LinkedList<Map<String,String>> {
+    private static class GroupList extends LinkedList<Map<String,String>> {
         private static final long serialVersionUID = 0L;
     }
 
-    private static final class ChildrenList extends LinkedList<Map<String,Object>> {
+    private static class ChildrenList extends LinkedList<Map<String,Object>> {
         private static final long serialVersionUID = 0L;
     }
 
-    private final class HistoryQueryTask extends AsyncTask<Void, Void,
-                                                           Pair<GroupList, List<ChildrenList>>> {
+    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<GroupList,List<ChildrenList>>> {
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
@@ -394,7 +396,9 @@ final class HistoryTab extends AwesomeBarTab {
         if (adapter == null)
             return false;
 
-        Map historyItem = (Map) adapter.getChild(groupPosition, childPosition);
+        @SuppressWarnings("unchecked")
+        Map<String,Object> historyItem = (Map<String,Object>) adapter.getChild(groupPosition, childPosition);
+
         String url = (String) historyItem.get(URLColumns.URL);
         AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
         if (!TextUtils.isEmpty(url) && listener != null)
@@ -422,6 +426,7 @@ final class HistoryTab extends AwesomeBarTab {
         ExpandableListView exList = (ExpandableListView) view;
 
         // The history list is backed by a SimpleExpandableListAdapter
+        @SuppressWarnings("rawtypes")
         Map map = (Map) exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
         subject = new AwesomeBar.ContextMenuSubject((Integer) map.get(Combined.HISTORY_ID),
                                                      (String) map.get(URLColumns.URL),

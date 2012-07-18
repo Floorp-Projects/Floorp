@@ -12,7 +12,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 
-final class PrivateDataPreference extends MultiChoicePreference {
+class PrivateDataPreference extends MultiChoicePreference {
     private static final String LOGTAG = "GeckoPrivateDataPreference";
     private static final String PREF_KEY_PREFIX = "private.data.";
 

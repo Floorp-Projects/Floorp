@@ -15,7 +15,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.net.Uri;
 
-final class NotificationHandler extends BroadcastReceiver
+public class NotificationHandler
+    extends BroadcastReceiver
 {
     private static final String LOGTAG = "GeckoNotificationHandler";
 

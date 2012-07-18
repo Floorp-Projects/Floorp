@@ -11,7 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
 
-final class TextureGenerator {
+public class TextureGenerator {
     private static final String LOGTAG = "TextureGenerator";
     private static final int POOL_SIZE = 5;
 
@@ -71,3 +71,5 @@ final class TextureGenerator {
         }
     }
 }
+
+

@@ -10,7 +10,7 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.widget.TextView;
 
-final class LinkTextView extends TextView {
+public class LinkTextView extends TextView {
     public LinkTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }

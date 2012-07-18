@@ -25,7 +25,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 
-abstract class AwesomeBarTab {
+abstract public class AwesomeBarTab {
     abstract public String getTag();
     abstract public int getTitleStringId();
     abstract public void destroy();
@@ -50,7 +50,7 @@ abstract class AwesomeBarTab {
         mListListener = listener;
     }
 
-    protected static final class AwesomeEntryViewHolder {
+    protected class AwesomeEntryViewHolder {
         public TextView titleView;
         public TextView urlView;
         public ImageView faviconView;

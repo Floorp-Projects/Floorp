@@ -10,8 +10,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 
-final class AndroidImportPreference extends MultiChoicePreference {
-    private static final String LOGTAG = "AndroidImport";
+class AndroidImportPreference extends MultiChoicePreference {
+    static final private String LOGTAG = "AndroidImport";
     private static final String PREF_KEY_PREFIX = "import_android.data.";
     private Context mContext;
 

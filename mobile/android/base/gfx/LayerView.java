@@ -28,8 +28,8 @@ import java.nio.IntBuffer;
  *
  * Note that LayerView is accessed by Robocop via reflection.
  */
-public final class LayerView extends SurfaceView implements SurfaceHolder.Callback {
-    private static final String LOGTAG = "GeckoLayerView";
+public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
+    private static String LOGTAG = "GeckoLayerView";
 
     private Context mContext;
     private LayerController mController;
@@ -243,4 +243,6 @@ public final class LayerView extends SurfaceView implements SurfaceHolder.Callba
         void compositionResumeRequested(int width, int height);
         void surfaceChanged(int width, int height);
     }
+
+
 }
