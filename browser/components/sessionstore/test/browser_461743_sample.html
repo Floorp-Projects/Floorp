@@ -25,7 +25,7 @@
       return flip++ == 0 ? chromeUrl : exploitUrl;
     };
 
-    var href = Components.lookupMethod(frames[1].location, "href");
+    var href = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(frames[1].location), "href").get;
     var loadChrome = { handleEvent: href };
     var loadExploit = { handleEvent: href };
 
