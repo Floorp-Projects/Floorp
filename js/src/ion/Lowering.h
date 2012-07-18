@@ -125,7 +125,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCall(MCall *call);
     bool visitApplyArgs(MApplyArgs *apply);
     bool visitTest(MTest *test);
-    bool visitInlineFunctionGuard(MInlineFunctionGuard *test);
     bool visitPolyInlineDispatch(MPolyInlineDispatch *ins);
     bool visitCompare(MCompare *comp);
     bool visitTypeOf(MTypeOf *ins);

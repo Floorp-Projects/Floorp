@@ -194,15 +194,6 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 }
  
 bool
-CodeGenerator::visitInlineFunctionGuard(LInlineFunctionGuard *lir)
-{
-    Register inputReg = ToRegister(lir->input());
-    masm.cmpPtr(inputReg, ImmGCPtr(lir->function()));
-    emitBranch(Assembler::Equal, lir->functionBlock(), lir->fallbackBlock());
-    return true;
-}
- 
-bool
 CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
 {
     MPolyInlineDispatch *mir = lir->mir();

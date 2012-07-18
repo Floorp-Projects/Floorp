@@ -427,14 +427,6 @@ MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
     return new MTest(ins, ifTrue, ifFalse);
 }
 
-MInlineFunctionGuard *
-MInlineFunctionGuard::New(MDefinition *input, JSFunction *fun,
-                          MBasicBlock *functionBlock,
-                          MBasicBlock *fallbackBlock)
-{
-    return new MInlineFunctionGuard(input, fun, functionBlock, fallbackBlock);
-}
-
 MCompare *
 MCompare::New(MDefinition *left, MDefinition *right, JSOp op)
 {
