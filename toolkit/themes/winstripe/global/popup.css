@@ -38,12 +38,28 @@ panel[type="arrow"] {
 
 .panel-arrowcontainer[panelopen] {
   transition-duration: 250ms;
-  transition-property: opacity;
+  transition-property: opacity, transform;
   transition-timing-function: ease-out;
 }
 
 .panel-arrowcontainer:not([panelopen]) {
   opacity: 0;
+}
+
+.panel-arrowcontainer:not([panelopen])[side="top"] {
+  transform: translateY(-20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="bottom"] {
+  transform: translateY(20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="left"] {
+  transform: translateX(-20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="right"] {
+  transform: translateX(20px);
 }
 
 panel[type="arrow"][side="top"],
