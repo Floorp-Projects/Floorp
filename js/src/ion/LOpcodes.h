@@ -154,7 +154,9 @@
     _(Round)                        \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
-    _(InterruptCheck)
+    _(InterruptCheck)               \
+    _(ProfilingEnter)               \
+    _(ProfilingExit)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

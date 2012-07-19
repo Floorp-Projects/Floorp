@@ -3713,6 +3713,58 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     return true;
 }
 
+bool
+CodeGenerator::visitProfilingEnter(LProfilingEnter *lir)
+{
+    SPSProfiler *profiler = &gen->cx->runtime->spsProfiler;
+    JS_ASSERT(profiler->enabled());
+
+    // This could be a push for an inline script, so we can't always use
+    // gen->info().script() blindly.
+    JSScript *script = lir->script();
+    const char *string = profiler->profileString(gen->cx, script, script->function());
+    if (string == NULL)
+        return false;
+
+    Register size = ToRegister(lir->temp1()->output());
+    Register base = ToRegister(lir->temp2()->output());
+
+    // Check if there's still space on the stack
+    masm.movePtr(ImmWord(profiler->sizePointer()), size);
+    masm.load32(Address(size, 0), size);
+    Label stackFull;
+    masm.branch32(Assembler::GreaterThanOrEqual, size, Imm32(profiler->maxSize()),
+                  &stackFull);
+
+    // With room, store our string onto the stack
+    masm.movePtr(ImmWord(profiler->stack()), base);
+    JS_STATIC_ASSERT(sizeof(ProfileEntry) == 2 * sizeof(void*));
+    masm.lshiftPtr(Imm32(sizeof(void*) == 4 ? 3 : 4), size);
+    masm.addPtr(size, base);
+
+    masm.storePtr(ImmWord(string), Address(base, offsetof(ProfileEntry, string)));
+    masm.storePtr(ImmWord((uintptr_t) 0), Address(base, offsetof(ProfileEntry, sp)));
+
+    // Always increment the stack size (paired with a decrement in pop)
+    masm.bind(&stackFull);
+    masm.movePtr(ImmWord(profiler->sizePointer()), size);
+    Address addr(size, 0);
+    masm.add32(Imm32(1), addr);
+    return true;
+}
+
+bool
+CodeGenerator::visitProfilingExit(LProfilingExit *exit)
+{
+    SPSProfiler *profiler = &gen->cx->runtime->spsProfiler;
+    JS_ASSERT(profiler->enabled());
+    Register temp = ToRegister(exit->temp());
+    masm.movePtr(ImmWord(profiler->sizePointer()), temp);
+    Address addr(temp, 0);
+    masm.add32(Imm32(-1), addr);
+    return true;
+}
+
 } // namespace ion
 } // namespace js
 

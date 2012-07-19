@@ -1401,6 +1401,14 @@ MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::add32(Imm32 imm, const Address &dest)
+{
+    load32(dest, ScratchRegister);
+    ma_add(imm, ScratchRegister, SetCond);
+    store32(ScratchRegister, dest);
+}
+
+void
 MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
 {
     ma_sub(imm, dest, SetCond);

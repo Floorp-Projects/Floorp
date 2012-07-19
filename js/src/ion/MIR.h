@@ -4913,6 +4913,54 @@ class MNewCallObject : public MUnaryInstruction
     }
 };
 
+// Node that represents that a script has begun executing. This comes at the
+// start of the function and is called once per function (including inline
+// ones)
+class MProfilingEnter : public MNullaryInstruction
+{
+    JSScript *script_;
+
+    MProfilingEnter(JSScript *script) : script_(script) {
+        JS_ASSERT(script != NULL);
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ProfilingEnter);
+
+    static MProfilingEnter *New(JSScript *script) {
+        return new MProfilingEnter(script);
+    }
+
+    JSScript *script() {
+        return script_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Pairing of MProfilingEnter. Each Enter is paired with an eventual
+// Exit. This includes inline functions.
+class MProfilingExit : public MNullaryInstruction
+{
+    MProfilingExit() {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ProfilingExit);
+
+    static MProfilingExit *New() {
+        return new MProfilingExit();
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // This is an alias for MLoadFixedSlot.
 class MEnclosingScope : public MLoadFixedSlot
 {

@@ -3032,6 +3032,44 @@ class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES+1, 2>
     static const size_t RHS = BOX_PIECES;
 };
 
+class LProfilingEnter : public LInstructionHelper<0, 0, 2>
+{
+  public:
+    LIR_HEADER(ProfilingEnter);
+
+    LProfilingEnter(const LDefinition &temp1, const LDefinition &temp2) {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+
+    JSScript *script() const {
+        return mir_->toProfilingEnter()->script();
+    }
+};
+
+class LProfilingExit : public LInstructionHelper<0, 0, 1>
+{
+  public:
+    LIR_HEADER(ProfilingExit);
+
+    LProfilingExit(const LDefinition &temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+};
+
+
 } // namespace ion
 } // namespace js
 

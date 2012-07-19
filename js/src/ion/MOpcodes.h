@@ -123,7 +123,9 @@ namespace ion {
     _(Floor)                                                                \
     _(Round)                                                                \
     _(InstanceOf)                                                           \
-    _(InterruptCheck)
+    _(InterruptCheck)                                                       \
+    _(ProfilingEnter)                                                       \
+    _(ProfilingExit)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

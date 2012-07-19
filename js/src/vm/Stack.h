@@ -826,6 +826,10 @@ class StackFrame
         flags_ |= HAS_PUSHED_SPS_FRAME;
     }
 
+    void unsetPushedSPSFrame() {
+        flags_ &= ~HAS_PUSHED_SPS_FRAME;
+    }
+
     /* Return value */
 
     bool hasReturnValue() const {
