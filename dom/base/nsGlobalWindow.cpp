@@ -4567,6 +4567,11 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 #endif
 
   if (cstr) {
+#ifdef XP_WIN
+    if (IsDebuggerPresent()) {
+      OutputDebugStringA(cstr);
+    }
+#endif
 #ifdef ANDROID
     __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
 #endif
