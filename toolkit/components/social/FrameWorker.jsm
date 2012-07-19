@@ -243,7 +243,7 @@ function makeHiddenFrame() {
   // TODO: disable media (bug 759964)
   
   // Mark this docShell as a "browserFrame", to break script access to e.g. window.top
-  docShell.isBrowserFrame = true;
+  docShell.setIsBrowser();
 
   return iframe;
 }
