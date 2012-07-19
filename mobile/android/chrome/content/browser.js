@@ -1116,6 +1116,14 @@ var NativeWindow = {
                  NativeWindow.toast.show(label, "short");
                });
 
+      this.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
+               this.linkCopyableContext,
+               function(aTarget) {
+                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+                 let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+                 clipboard.copyString(url);
+               });
+
       this.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
                this.linkShareableContext,
                function(aTarget) {
@@ -1232,6 +1240,18 @@ var NativeWindow = {
           let scheme = uri.scheme;
           let dontOpen = /^(mailto|javascript|news|snews)$/;
           return (scheme && !dontOpen.test(scheme));
+        }
+        return false;
+      }
+    },
+
+    linkCopyableContext: {
+      matches: function linkCopyableContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
+          let scheme = uri.scheme;
+          let dontCopy = /^(mailto|tel)$/;
+          return (scheme && !dontCopy.test(scheme));
         }
         return false;
       }
