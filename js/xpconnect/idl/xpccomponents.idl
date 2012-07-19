@@ -302,6 +302,15 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext]
     void makeObjectPropsNormal(in jsval vobj);
 
+    /**
+     * Determines whether this object is backed by a DeadObjectProxy.
+     *
+     * Dead-wrapper objects hold no other objects alive (they have no outgoing
+     * reference edges) and will throw if you touch them (e.g. by
+     * reading/writing a property).
+     */
+    bool isDeadWrapper(in jsval obj);
+
     /*
      * To be called from JS only.
      *
