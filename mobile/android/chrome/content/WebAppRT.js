@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 var WebAppRT = {
   init: function() {
     this.deck = document.getElementById("browsers");
-    this.deck.addEventListener("click", onContentClick, false, true);
+    this.deck.addEventListener("click", this, false, true);
   },
 
   handleEvent: function(event) {
