@@ -473,14 +473,6 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
     GetEffectProperty(style->mMarkerEnd, aFrame, MarkerEndProperty(),
                       CreateMarkerProperty);
   }
-
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
-  while (kid) {
-    if (kid->GetContent()->IsElement()) {
-      UpdateEffects(kid);
-    }
-    kid = kid->GetNextSibling();
-  }
 }
 
 nsSVGFilterProperty *
