@@ -75,12 +75,24 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, Type
 bool
 IonBuilder::abort(const char *message, ...)
 {
+    // Don't call PCToLineNumber in release builds.
+#ifdef DEBUG
     va_list ap;
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
     IonSpew(IonSpew_Abort, "aborted @ %s:%d", script->filename, PCToLineNumber(script, pc));
+#endif
     return false;
+}
+
+void
+IonBuilder::spew(const char *message)
+{
+    // Don't call PCToLineNumber in release builds.
+#ifdef DEBUG
+    IonSpew(IonSpew_MIR, "%s @ %s:%d", message, script->filename, PCToLineNumber(script, pc));
+#endif
 }
 
 static inline int32
@@ -2812,8 +2824,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(
-                            callee->script(), callee, (jsbytecode *)NULL);
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(callee->script(), callee,
+                                                              (jsbytecode *)NULL, constructing);
     if (!info)
         return false;
 
@@ -5040,6 +5052,62 @@ IonBuilder::invalidatedIdempotentCache()
 }
 
 bool
+IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType)
+{
+    JS_ASSERT(shape->hasDefaultGetter());
+    JS_ASSERT(shape->hasSlot());
+
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+
+    if (shape->slot() < shape->numFixedSlots()) {
+        MLoadFixedSlot *load = MLoadFixedSlot::New(obj, shape->slot());
+        current->add(load);
+        current->push(load);
+
+        load->setResultType(rvalType);
+        return pushTypeBarrier(load, types, barrier);
+    }
+
+    MSlots *slots = MSlots::New(obj);
+    current->add(slots);
+
+    MLoadSlot *load = MLoadSlot::New(slots, shape->slot() - shape->numFixedSlots());
+    current->add(load);
+    current->push(load);
+
+    load->setResultType(rvalType);
+    return pushTypeBarrier(load, types, barrier);
+}
+
+bool
+IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier)
+{
+    JS_ASSERT(shape->hasDefaultSetter());
+    JS_ASSERT(shape->writable());
+    JS_ASSERT(shape->hasSlot());
+
+    if (shape->slot() < shape->numFixedSlots()) {
+        MStoreFixedSlot *store = MStoreFixedSlot::New(obj, shape->slot(), value);
+        current->add(store);
+        current->push(value);
+        if (needsBarrier)
+            store->setNeedsBarrier();
+        return resumeAfter(store);
+    }
+
+    MSlots *slots = MSlots::New(obj);
+    current->add(slots);
+
+    MStoreSlot *store = MStoreSlot::New(slots, shape->slot() - shape->numFixedSlots(), value);
+    current->add(store);
+    current->push(value);
+    if (needsBarrier)
+        store->setNeedsBarrier();
+    return resumeAfter(store);
+}
+
+bool
 IonBuilder::jsop_getprop(HandlePropertyName name)
 {
 
@@ -5118,13 +5186,27 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     }
 
     if (unary.ival == MIRType_Object) {
-        MGetPropertyCache *load = MGetPropertyCache::New(obj, name);
-        if (!barrier) {
-            // Use the default type (Value) when the output type is undefined or null.
-            // Because specializing to those types isn't possible.
-            if (unary.rval != MIRType_Undefined && unary.rval != MIRType_Null)
-                load->setResultType(unary.rval);
+        MIRType rvalType = MIRType_Value;
+        if (!barrier && !IsNullOrUndefined(unary.rval))
+            rvalType = unary.rval;
+
+        if (Shape *objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) {
+            // The JM IC was monomorphic, so we inline the property access.
+            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            current->add(guard);
+
+            spew("Inlining monomorphic GETPROP");
+
+            Shape *shape = objShape->search(cx, NameToId(name));
+            JS_ASSERT(shape);
+
+            return loadSlot(obj, shape, rvalType);
         }
+
+        spew("GETPROP not monomorphic");
+
+        MGetPropertyCache *load = MGetPropertyCache::New(obj, name);
+        load->setResultType(rvalType);
 
         // Try to mark the cache as idempotent. We only do this if JM is enabled
         // (its ICs are used to mark property reads as likely non-idempotent) or
@@ -5201,6 +5283,24 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     if (monitored) {
         ins = MCallSetProperty::New(obj, value, name, script->strictModeCode);
     } else {
+        if (Shape *objShape = mjit::GetPICSingleShape(cx, script, pc, info().constructing())) {
+            // The JM IC was monomorphic, so we inline the property access.
+            MGuardShape *guard = MGuardShape::New(obj, objShape);
+            current->add(guard);
+
+            Shape *shape = objShape->search(cx, NameToId(name));
+            JS_ASSERT(shape);
+
+            spew("Inlining monomorphic SETPROP");
+
+            jsid typeId = types::MakeTypeId(cx, id);
+            bool needsBarrier = oracle->propertyWriteNeedsBarrier(script, pc, typeId);
+
+            return storeSlot(obj, shape, value, needsBarrier);
+        }
+
+        spew("SETPROP not monomorphic");
+
         ins = MSetPropertyCache::New(obj, value, name, script->strictModeCode);
 
         if (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))

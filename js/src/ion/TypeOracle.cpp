@@ -516,6 +516,13 @@ TypeInferenceOracle::propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc
 }
 
 bool
+TypeInferenceOracle::propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id)
+{
+    types::TypeSet *types = script->analysis()->poppedTypes(pc, 1);
+    return types->propertyNeedsBarrier(cx, id);
+}
+
+bool
 TypeInferenceOracle::elementWriteNeedsBarrier(JSScript *script, jsbytecode *pc)
 {
     // Return true if SETELEM-like instructions need a write barrier before modifying

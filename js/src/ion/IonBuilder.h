@@ -209,6 +209,7 @@ class IonBuilder : public MIRGenerator
     uint32 readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);
     bool abort(const char *message, ...);
+    void spew(const char *message);
 
     static bool inliningEnabled() {
         return js_IonOptions.inlining;
@@ -313,6 +314,9 @@ class IonBuilder : public MIRGenerator
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
 
     bool invalidatedIdempotentCache();
+
+    bool loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType);
+    bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier);
 
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
