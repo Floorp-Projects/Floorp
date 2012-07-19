@@ -120,6 +120,12 @@ InvokeConstructor(JSContext *cx, JSObject *obj, uint32 argc, Value *argv, Value 
     return ok;
 }
 
+JSObject *
+NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize)
+{
+    return gc::NewGCThing<JSObject>(cx, allocKind, thingSize);
+}
+
 bool
 ReportOverRecursed(JSContext *cx)
 {

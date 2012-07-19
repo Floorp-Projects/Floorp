@@ -69,6 +69,7 @@
     _(ApplyArgsGeneric)             \
     _(StackArg)                     \
     _(CreateThis)                   \
+    _(CreateThisVM)                 \
     _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \

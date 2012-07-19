@@ -277,7 +277,8 @@ CodeGenerator::visitLambda(LLambda *lir)
     JS_ASSERT(clone->getAllocKind() != JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(clone->isInterpreted());
 
-    masm.getNewObject(gen->cx, output, clone, ool->entry());
+    masm.newGCThing(gen->cx, output, clone, ool->entry());
+    masm.initGCThing(gen->cx, output, clone);
 
     // Initialize nargs and flags. We do this with a single uint32 to avoid
     // 16-bit writes.
@@ -1265,9 +1266,10 @@ CodeGenerator::visitNewArray(LNewArray *lir)
         return false;
     templateObject->setType(typeObj);
 
-    masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
-    masm.bind(ool->rejoin());
+    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
+    masm.initGCThing(gen->cx, objReg, templateObject);
 
+    masm.bind(ool->rejoin());
     return true;
 }
 
@@ -1345,9 +1347,10 @@ CodeGenerator::visitNewObject(LNewObject *lir)
         return false;
     templateObject->setType(typeObj);
 
-    masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
-    masm.bind(ool->rejoin());
+    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
+    masm.initGCThing(gen->cx, objReg, templateObject);
 
+    masm.bind(ool->rejoin());
     return true;
 }
 
@@ -1401,7 +1404,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     if (!ool)
         return false;
 
-    masm.getNewObject(gen->cx, obj, templateObj, ool->entry());
+    masm.newGCThing(gen->cx, obj, templateObj, ool->entry());
+    masm.initGCThing(gen->cx, obj, templateObj);
+
     if (lir->slots()->isRegister())
         masm.storePtr(ToRegister(lir->slots()), Address(obj, JSObject::offsetOfSlots()));
     masm.bind(ool->rejoin());
@@ -1423,27 +1428,37 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     return callVM(InitPropInfo, lir);
 }
 
-// Out-of-line object allocation for |new|, calling to the VM.
-class OutOfLineCreateThis : public OutOfLineCodeBase<CodeGenerator>
+bool
+CodeGenerator::visitCreateThis(LCreateThis *lir)
 {
-    LCreateThis *lir_;
+    JS_ASSERT(lir->mir()->hasTemplateObject());
 
-  public:
-    OutOfLineCreateThis(LCreateThis *lir)
-      : lir_(lir)
-    { }
+    RootedObject templateObject(gen->cx, lir->mir()->getTemplateObject());
+    gc::AllocKind allocKind = templateObject->getAllocKind();
+    int thingSize = (int)gc::Arena::thingSize(allocKind);
+    Register objReg = ToRegister(lir->output());
 
-    bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineCreateThis(this);
-    }
+    typedef JSObject *(*pf)(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
+    static const VMFunction NewGCThingInfo = FunctionInfo<pf>(js::ion::NewGCThing);
 
-    LCreateThis *lir() const {
-        return lir_;
-    }
-};
+    OutOfLineCode *ool = oolCallVM(NewGCThingInfo, lir,
+                                   (ArgList(), Imm32(allocKind), Imm32(thingSize)),
+                                   StoreRegisterTo(objReg));
+    if (!ool)
+        return false;
+
+    // Allocate. If the FreeList is empty, call to VM, which may GC.
+    masm.newGCThing(gen->cx, objReg, templateObject, ool->entry());
+
+    // Initialize based on the templateObject.
+    masm.bind(ool->rejoin());
+    masm.initGCThing(gen->cx, objReg, templateObject);
+
+    return true;
+}
 
 bool
-CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
+CodeGenerator::visitCreateThisVM(LCreateThisVM *lir)
 {
     const LAllocation *proto = lir->getPrototype();
     const LAllocation *callee = lir->getCallee();
@@ -1452,10 +1467,6 @@ CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
     typedef JSObject *(*pf)(JSContext *cx, HandleObject callee, JSObject *proto);
     static const VMFunction CreateThisInfo =
         FunctionInfo<pf>(js_CreateThisForFunctionWithProto);
-
-    // Since LCreateThis is not isCall(), used registers must be saved around the call.
-    JS_ASSERT(!lir->isCall());
-    saveLive(lir);
 
     // Push arguments.
     if (proto->isConstant())
@@ -1470,41 +1481,6 @@ CodeGenerator::visitCreateThisVMCall(LCreateThis *lir)
 
     if (!callVM(CreateThisInfo, lir))
         return false;
-
-    if (ReturnReg != objReg)
-        masm.movePtr(ReturnReg, objReg);
-
-    restoreLive(lir);
-    return true;
-}
-
-bool
-CodeGenerator::visitCreateThis(LCreateThis *lir)
-{
-    Register objReg = ToRegister(lir->output());
-
-    // Attempt to inline allocation if possible.
-    if (lir->mir()->hasTemplateObject()) {
-        OutOfLineCreateThis *ool = new OutOfLineCreateThis(lir);
-        if (!addOutOfLineCode(ool))
-            return false;
-
-        RootedObject templateObject(gen->cx, lir->mir()->getTemplateObject());
-
-        masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
-        masm.bind(ool->rejoin());
-        return true;
-    }
-
-    return visitCreateThisVMCall(lir);
-}
-
-bool
-CodeGenerator::visitOutOfLineCreateThis(OutOfLineCreateThis *ool)
-{
-    if (!visitCreateThisVMCall(ool->lir()))
-        return false;
-    masm.jump(ool->rejoin());
     return true;
 }
 
