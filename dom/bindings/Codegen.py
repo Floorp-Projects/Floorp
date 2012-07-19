@@ -3946,7 +3946,7 @@ class CGDescriptor(CGThing):
             if (descriptor.customTrace):
                 cgThings.append(CGClassTraceHook(descriptor))
 
-        if descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject():
+        if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGNativePropertyHooks(descriptor))
         if descriptor.concrete:
             cgThings.append(CGDOMJSClass(descriptor))
@@ -3969,8 +3969,7 @@ class CGDescriptor(CGThing):
 
         # Set up our Xray callbacks as needed.  Note that we don't need to do
         # it in workers.
-        if ((descriptor.concrete or
-             descriptor.interface.hasInterfacePrototypeObject()) and
+        if (descriptor.interface.hasInterfacePrototypeObject() and
             not descriptor.workers):
             cgThings.append(CGResolveProperty(descriptor, properties))
             cgThings.append(CGEnumerateProperties(descriptor, properties))
