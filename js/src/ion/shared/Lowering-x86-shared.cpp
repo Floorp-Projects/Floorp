@@ -95,6 +95,13 @@ LIRGeneratorX86Shared::visitInterruptCheck(MInterruptCheck *ins)
 }
 
 bool
+LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
+{
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
+    return assignSnapshot(guard, Bailout_Invalidate) && add(guard, ins);
+}
+
+bool
 LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     // Note: lhs is used twice, so that we can restore the original value for the

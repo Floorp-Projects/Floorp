@@ -84,7 +84,10 @@ enum BailoutKind
     Bailout_RecompileCheck,
 
     // A bailout triggered by a bounds-check failure.
-    Bailout_BoundsCheck
+    Bailout_BoundsCheck,
+
+    // Like Bailout_Normal, but invalidate the current IonScript.
+    Bailout_Invalidate
 };
 
 #ifdef DEBUG
