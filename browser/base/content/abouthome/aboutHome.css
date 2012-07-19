@@ -171,7 +171,7 @@ body[dir=rtl] #defaultSnippet2 {
      converts em from units of font-size to units of line-height. The goal is to
      preset the height of a three-line snippet to avoid visual moving/flickering as
      the snippets load. */
-  min-height: -moz-calc(15/12 * 3em);
+  min-height: calc(15/12 * 3em);
 }
 
 #launcher {
