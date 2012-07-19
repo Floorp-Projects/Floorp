@@ -23,7 +23,6 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jshash.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -42,6 +41,7 @@
 #include "jsversion.h"
 
 #include "builtin/RegExp.h"
+#include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/NumericConversions.h"
 #include "vm/RegExpObject.h"
