@@ -60,6 +60,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsIAppsService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3549,6 +3550,40 @@ nsScriptSecurityManager::InitPrefs()
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetExtendedOrigin(nsIURI* aURI,
+                                           PRUint32 aAppId,
+                                           bool aInMozBrowser,
+                                           nsACString& aExtendedOrigin)
+{
+  MOZ_ASSERT(aURI);
+
+  if (aAppId == UNKNOWN_APP_ID) {
+    aExtendedOrigin.Truncate();
+    return NS_OK;
+  }
+
+  // Fallback.
+  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInMozBrowser) {
+    nsCAutoString origin;
+    nsPrincipal::GetOriginForURI(aURI, getter_Copies(origin));
+
+    aExtendedOrigin.Assign(origin);
+    return NS_OK;
+  }
+
+  nsCAutoString origin;
+  nsPrincipal::GetOriginForURI(aURI, getter_Copies(origin));
+
+  // aExtendedOrigin = origin + " " + aAppId + " " + int(aInMozBrowser)
+  aExtendedOrigin.Assign(origin + NS_LITERAL_CSTRING("@"));
+  aExtendedOrigin.AppendInt(aAppId);
+  aExtendedOrigin.Append(aInMozBrowser ? NS_LITERAL_CSTRING("t")
+                                       : NS_LITERAL_CSTRING("f"));
+
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
