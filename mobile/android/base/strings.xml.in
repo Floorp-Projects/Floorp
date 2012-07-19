@@ -96,6 +96,7 @@
   <string name="pref_private_data_history">&pref_private_data_history;</string>
   <string name="pref_private_data_formdata">&pref_private_data_formdata;</string>
   <string name="pref_private_data_cookies">&pref_private_data_cookies;</string>
+  <string name="pref_private_data_passwords">&pref_private_data_passwords;</string>
   <string name="pref_private_data_cache">&pref_private_data_cache;</string>
   <string name="pref_private_data_offlineApps">&pref_private_data_offlineApps;</string>
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings;</string>
