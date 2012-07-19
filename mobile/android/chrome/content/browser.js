@@ -804,6 +804,10 @@ var BrowserApp = {
             sanitizer.clearItem("history");
             sanitizer.clearItem("downloads");
             break;
+          case "cookies_sessions":
+            sanitizer.clearItem("cookies");
+            sanitizer.clearItem("sessions");
+            break;
           default:
             sanitizer.clearItem(key);
         }
