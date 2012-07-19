@@ -247,7 +247,7 @@ stubs::CompileFunction(VMFrame &f, uint32_t argc)
 // into Ion may be faster, especially if the function contains loops, but JM -> Ion
 // calls are slower than JM -> JM calls.
 static inline bool
-ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee)
+ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee, JITScript *callerJit)
 {
 #ifdef JS_ION
     if (!ion::IsEnabled(cx))
@@ -257,14 +257,13 @@ ShouldJaegerCompileCallee(JSContext *cx, JSScript *caller, JSScript *callee)
     if (!caller->canIonCompile() || !callee->canIonCompile())
         return true;
 
-    // If the caller is pretty hot, use JM to avoid a large number of slow
-    // JM -> Ion calls.
-    if (caller->getUseCount() > 1500)
-        return true;
-
     // Use JM if the callee has no loops. In this case calling into Ion
     // is likely not worth the overhead.
     if (!callee->hasAnalysis() || !callee->analysis()->hasLoops())
+        return true;
+
+    // If we make a ton of JM -> Ion calls, use JM.
+    if (callee->hasIonScript() && ++callerJit->ionCalls > 4000)
         return true;
 
     return false;
@@ -290,7 +289,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
         return false;
 
     /* Try to compile if not already compiled. */
-    if (ShouldJaegerCompileCallee(cx, f.script(), newscript)) {
+    if (ShouldJaegerCompileCallee(cx, f.script(), newscript, f.jit())) {
         CompileStatus status = CanMethodJIT(cx, newscript, newscript->code, construct,
                                             CompileRequest_JIT, f.fp());
         if (status == Compile_Error) {
