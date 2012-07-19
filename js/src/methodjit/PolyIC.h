@@ -63,6 +63,9 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Whether a type barrier is in place for the result of the op.
     bool forcedTypeBarrier : 1;
 
+    // Whether this IC has been disabled.
+    bool disabled : 1;
+
     // Number of stubs generated.
     uint32_t stubsGenerated : 5;
 
@@ -76,6 +79,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
         hit = false;
         slowCallPatched = false;
         forcedTypeBarrier = false;
+        disabled = false;
         stubsGenerated = 0;
         secondShapeGuard = 0;
     }
@@ -480,8 +484,22 @@ struct PICInfo : public BasePolyIC {
     // Index into the script's atom table.
     PropertyName *name;
 
+  private:
+    Shape *inlinePathShape_;
+
   public:
     void purge(Repatcher &repatcher);
+
+    void setInlinePathShape(Shape *shape) {
+        JS_ASSERT(!inlinePathShape_);
+        inlinePathShape_ = shape;
+    }
+
+    Shape *getSingleShape() {
+        if (disabled || stubsGenerated > 0)
+            return NULL;
+        return inlinePathShape_;
+    }
 
   protected:
     // Reset the data members to the state of a fresh PIC before any patching
@@ -490,6 +508,7 @@ struct PICInfo : public BasePolyIC {
         BasePolyIC::reset();
         inlinePathPatched = false;
         shapeRegHasBaseShape = true;
+        inlinePathShape_ = NULL;
     }
 };
 
