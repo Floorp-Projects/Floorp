@@ -408,8 +408,6 @@ public:
                                 bool aCompileEventHandlers);
     virtual void UnbindFromTree(bool aDeep, bool aNullParent);
     virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
-    virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                               bool aNotify);
     virtual void DestroyContent();
 
 #ifdef DEBUG
