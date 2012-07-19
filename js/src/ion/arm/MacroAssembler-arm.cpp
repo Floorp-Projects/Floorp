@@ -1312,8 +1312,8 @@ MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Co
             return;
         }
     }
-    JS_NOT_REACHED("TODO: implement bigger offsets :(");
-
+    ma_add(base, Imm32(off), ScratchRegister, NoSetCond, cc);
+    as_vdtr(ls, rt, VFPAddr(ScratchRegister, VFPOffImm(0)), cc);
 }
 
 void
