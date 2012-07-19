@@ -159,10 +159,17 @@ ComparePolicy::adjustInputs(MInstruction *def)
 
         JS_ASSERT(def->getOperand(1)->type() == MIRType_Boolean);
 
-        // If the LHS is boolean, specialize as int32 instead.
-        if (def->getOperand(0)->type() == MIRType_Boolean)
-            specialization_ = MIRType_Int32;
-        return true;
+        // Allow the LHS to have any type other than boolean. Value === boolean
+        // is handled by LCompareB, comparisons with other non-boolean types are
+        // folded.
+        if (def->getOperand(0)->type() != MIRType_Boolean)
+            return true;
+
+        // If the LHS is boolean, we set the specialization to int32 and
+        // fall-through. This matches other comparisons of the form
+        // bool === bool and allows us to use LCompare, which is much more
+        // efficient than LCompareB.
+        specialization_ = MIRType_Int32;
     }
 
     for (size_t i = 0; i < 2; i++) {
