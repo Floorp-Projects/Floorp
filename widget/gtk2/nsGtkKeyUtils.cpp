@@ -463,14 +463,14 @@ KeymapWrapper::InitBySystemSettings()
             case INDEX_ALT:
                 modifier = ALT;
                 break;
+            case INDEX_META:
+                modifier = META;
+                break;
             case INDEX_SUPER:
                 modifier = SUPER;
                 break;
             case INDEX_HYPER:
                 modifier = HYPER;
-                break;
-            case INDEX_META:
-                modifier = META;
                 break;
             case INDEX_ALTGR:
                 modifier = ALTGR;
