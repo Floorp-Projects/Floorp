@@ -25,10 +25,13 @@ interface XULElement;
 interface CanvasRenderingContext2D {
 
   // back-reference to the canvas
+  [Infallible]
   readonly attribute HTMLCanvasElement canvas;
 
   // state
+  [Infallible]
   void save(); // push state on state stack
+  [Infallible]
   void restore(); // pop state stack and restore state
 
   // transformations (default transform is the identity matrix)
@@ -41,31 +44,44 @@ interface CanvasRenderingContext2D {
 // NOT IMPLEMENTED  void resetTransform();
 
   // compositing
+           [Infallible]
            attribute double globalAlpha; // (default 1.0)
            attribute DOMString globalCompositeOperation; // (default source-over)
 
   // colors and styles (see also the CanvasDrawingStyles interface)
+           [SetterInfallible]
            attribute any strokeStyle; // (default black)
+           [SetterInfallible]
            attribute any fillStyle; // (default black)
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
   CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, DOMString repetition);
 
   // shadows
+           [Infallible]
            attribute double shadowOffsetX; // (default 0)
+           [Infallible]
            attribute double shadowOffsetY; // (default 0)
+           [Infallible]
            attribute double shadowBlur; // (default 0)
+           [Infallible]
            attribute DOMString shadowColor; // (default transparent black)
 
   // rects
+  [Infallible]
   void clearRect(double x, double y, double w, double h);
+  [Infallible]
   void fillRect(double x, double y, double w, double h);
+  [Infallible]
   void strokeRect(double x, double y, double w, double h);
 
   // path API (see also CanvasPathMethods)
+  [Infallible]
   void beginPath();
+  [Infallible]
   void fill();
 // NOT IMPLEMENTED  void fill(Path path);
+  [Infallible]
   void stroke();
 // NOT IMPLEMENTED  void stroke(Path path);
 // NOT IMPLEMENTED  void drawSystemFocusRing(Element element);
@@ -74,9 +90,11 @@ interface CanvasRenderingContext2D {
 // NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, Element element);
 // NOT IMPLEMENTED  void scrollPathIntoView();
 // NOT IMPLEMENTED  void scrollPathIntoView(Path path);
+  [Infallible]
   void clip();
 // NOT IMPLEMENTED  void clip(Path path);
 // NOT IMPLEMENTED  void resetClip();
+  [Infallible]
   boolean isPointInPath(double x, double y);
 // NOT IMPLEMENTED  boolean isPointInPath(Path path, double x, double y);
 
@@ -105,13 +123,21 @@ interface CanvasRenderingContext2D {
   // FIXME Bug 768048 mozCurrentTransform/mozCurrentTransformInverse should return a WebIDL array.
   attribute object mozCurrentTransform; // [ m11, m12, m21, m22, dx, dy ], i.e. row major
   attribute object mozCurrentTransformInverse;
+
+  [Infallible]
   attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
+
   attribute any mozDash; /* default |null| */
+
+  [Infallible]
   attribute double mozDashOffset; /* default 0.0 */
+
+  [GetterInfallible]
   attribute DOMString mozTextStyle;
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
+  [Infallible]
   attribute boolean mozImageSmoothingEnabled;
 
   // Show the caret if appropriate when drawing
@@ -178,9 +204,13 @@ CanvasRenderingContext2D implements CanvasPathMethods;
 [NoInterfaceObject]
 interface CanvasDrawingStyles {
   // line caps/joins
+           [Infallible]
            attribute double lineWidth; // (default 1)
+           [Infallible]
            attribute DOMString lineCap; // "butt", "round", "square" (default "butt")
+           [SetterInfallible]
            attribute DOMString lineJoin; // "round", "bevel", "miter" (default "miter")
+           [Infallible]
            attribute double miterLimit; // (default 10)
 
   // dashed lines
@@ -189,22 +219,38 @@ interface CanvasDrawingStyles {
 // NOT IMPLEMENTED             attribute double lineDashOffset;
 
   // text
+           [GetterInfallible]
            attribute DOMString font; // (default 10px sans-serif)
+           [Infallible]
            attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
+           [Infallible]
            attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
 };
 
 [NoInterfaceObject]
 interface CanvasPathMethods {
   // shared path API methods
+  [Infallible]
   void closePath();
+
+  [Infallible]
   void moveTo(double x, double y);
+
+  [Infallible]
   void lineTo(double x, double y);
+
+  [Infallible]
   void quadraticCurveTo(double cpx, double cpy, double x, double y);
+
+  [Infallible]
   void bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
+
   void arcTo(double x1, double y1, double x2, double y2, double radius); 
 // NOT IMPLEMENTED  void arcTo(double x1, double y1, double x2, double y2, double radiusX, double radiusY, double rotation);
+
+  [Infallible]
   void rect(double x, double y, double w, double h);
+
   void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false); 
 // NOT IMPLEMENTED  void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
 };

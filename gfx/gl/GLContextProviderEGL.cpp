@@ -44,6 +44,7 @@ using namespace android;
 
 # define EGL_NATIVE_BUFFER_ANDROID 0x3140
 # define EGL_IMAGE_PRESERVED_KHR   0x30D2
+# define GL_TEXTURE_EXTERNAL_OES   0x8D65
 
 # endif
 
@@ -258,6 +259,7 @@ public:
         , mIsPBuffer(false)
         , mIsDoubleBuffered(false)
         , mCanBindToTexture(false)
+        , mShareWithEGLImage(false)
     {
         // any EGL contexts will always be GLESv2
         SetIsGLES2(true);
@@ -326,6 +328,10 @@ public:
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
         mMaxTextureImageSize = PR_INT32_MAX;
+
+        mShareWithEGLImage = sEGLLibrary.HasKHRImageBase() &&
+                             sEGLLibrary.HasKHRImageTexture2D() &&
+                             IsExtensionSupported(OES_EGL_image);
 
         if (ok)
             InitFramebuffers();
@@ -396,6 +402,26 @@ public:
 
         mBound = false;
         return true;
+    }
+
+    bool BindExternalBuffer(GLuint texture, void* buffer)
+    {
+#if defined(MOZ_WIDGET_GONK)
+        EGLint attrs[] = {
+            EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
+            LOCAL_EGL_NONE, LOCAL_EGL_NONE
+        };
+        EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                                  EGL_NO_CONTEXT,
+                                                  EGL_NATIVE_BUFFER_ANDROID,
+                                                  buffer, attrs);
+        sEGLLibrary.fImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+        fBindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+        sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
+        return true;
+#else
+        return false;
+#endif
     }
 
     bool MakeCurrentImpl(bool aForce = false) {
@@ -584,6 +610,13 @@ public:
         return sEGLLibrary.HasKHRLockSurface();
     }
 
+    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType);
+    virtual void UpdateSharedHandle(TextureImage::TextureShareType aType,
+                                    SharedTextureHandle aSharedHandle);
+    virtual void ReleaseSharedHandle(TextureImage::TextureShareType aType,
+                                     SharedTextureHandle aSharedHandle);
+    virtual bool AttachSharedHandle(TextureImage::TextureShareType aType,
+                                    SharedTextureHandle aSharedHandle);
 protected:
     friend class GLContextProviderEGL;
 
@@ -597,6 +630,7 @@ protected:
     bool mIsPBuffer;
     bool mIsDoubleBuffered;
     bool mCanBindToTexture;
+    bool mShareWithEGLImage;
 
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
@@ -641,6 +675,199 @@ protected:
         return surface;
     }
 };
+
+class EGLTextureWrapper
+{
+public:
+    EGLTextureWrapper(GLContext* aContext, GLuint aTexture)
+        : mContext(aContext)
+        , mTexture(aTexture)
+        , mEGLImage(nsnull)
+        , mSyncObject(nsnull)
+    {
+    }
+
+    bool CreateEGLImage() {
+        MOZ_ASSERT(!mEGLImage && mTexture && sEGLLibrary.HasKHRImageBase());
+        static const EGLint eglAttributes[] = {
+            LOCAL_EGL_NONE
+        };
+        GLContextEGL* ctx = static_cast<GLContextEGL*>(mContext.get());
+        mEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(), ctx->Context(), LOCAL_EGL_GL_TEXTURE_2D,
+                                             (EGLClientBuffer)mTexture, eglAttributes);
+        if (!mEGLImage) {
+#ifdef DEBUG
+            printf_stderr("Could not create EGL images: ERROR (0x%04x)\n", sEGLLibrary.fGetError());
+#endif
+            return false;
+        }
+        return true;
+    }
+
+    virtual ~EGLTextureWrapper() {
+        if (mEGLImage) {
+            sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mEGLImage);
+            mEGLImage = nsnull;
+        }
+    }
+
+    GLuint GetTextureID() {
+        return mTexture;
+    }
+
+    GLContext* GetContext() {
+        return mContext.get();
+    }
+
+    const EGLImage GetEGLImage() {
+        return mEGLImage;
+    }
+
+    bool MakeSync() {
+        MOZ_ASSERT(mSyncObject == nsnull);
+
+        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync)) {
+            mSyncObject = sEGLLibrary.fCreateSync(EGL_DISPLAY(), LOCAL_EGL_SYNC_FENCE, nsnull);
+            // We need to flush to make sure the sync object enters the command stream;
+            // we can't use EGL_SYNC_FLUSH_COMMANDS_BIT at wait time, because the wait
+            // happens on a different thread/context.
+            mContext->fFlush();
+        }
+
+        if (mSyncObject == EGL_NO_SYNC) {
+            // we failed to create one, so just do a finish
+            mContext->fFinish();
+        }
+
+        return true;
+    }
+
+    bool WaitSync() {
+        if (!mSyncObject) {
+            // if we have no sync object, then we did a Finish() earlier
+            return true;
+        }
+
+        EGLint result = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSyncObject, 0, LOCAL_EGL_FOREVER);
+        sEGLLibrary.fDestroySync(EGL_DISPLAY(), mSyncObject);
+        mSyncObject = nsnull;
+
+        // we should never expire a 'forever' timeout
+        MOZ_ASSERT(result != LOCAL_EGL_TIMEOUT_EXPIRED);
+
+        return result == LOCAL_EGL_CONDITION_SATISFIED;
+    }
+
+private:
+    nsRefPtr<GLContext> mContext;
+    GLuint mTexture;
+    EGLImage mEGLImage;
+    EGLSync mSyncObject;
+};
+
+void
+GLContextEGL::UpdateSharedHandle(TextureImage::TextureShareType aType,
+                                 SharedTextureHandle aSharedHandle)
+{
+    if (aType != TextureImage::ThreadShared) {
+        NS_ERROR("Implementation not available for this sharing type");
+        return;
+    }
+
+    NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
+
+    EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
+    // We need to copy the current GLContext drawing buffer to the texture
+    // exported by the EGLImage.  Need to save both the read FBO and the texture
+    // binding, because we're going to munge them to do this.
+    GLuint prevRead = GetUserBoundReadFBO();
+    GLint oldtex = -1;
+    BindUserReadFBO(0);
+    fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &oldtex);
+    MOZ_ASSERT(oldtex != -1);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, wrap->GetTextureID());
+
+    // CopyTexSubImage2D, is ~2x slower than simple FBO render to texture with draw quads,
+    // but render with draw quads require complex and hard to maintain context save/restore code
+    fCopyTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0, 0, 0,
+                       0, 0, mOffscreenActualSize.width,
+                       mOffscreenActualSize.height);
+
+    fBindTexture(LOCAL_GL_TEXTURE_2D, oldtex);
+    BindUserReadFBO(prevRead);
+
+    // Make Shared Handle fully resolved in order to
+    // guarantee content ready to draw in different thread GLContext
+    GuaranteeResolve();
+}
+
+SharedTextureHandle
+GLContextEGL::CreateSharedHandle(TextureImage::TextureShareType aType)
+{
+    if (aType != TextureImage::ThreadShared)
+        return nsnull;
+
+    if (!mShareWithEGLImage)
+        return nsnull;
+
+    MakeCurrent();
+    GLuint texture = 0;
+    ContextFormat fmt = ActualFormat();
+    CreateTextureForOffscreen(ChooseGLFormats(fmt, GLContext::ForceRGBA), mOffscreenSize, texture);
+    // texture ownership moved to EGLTextureWrapper after  this point
+    // and texture will be deleted in EGLTextureWrapper dtor
+    EGLTextureWrapper* tex = new EGLTextureWrapper(this, texture);
+    if (!tex->CreateEGLImage()) {
+        NS_ERROR("EGLImage creation for EGLTextureWrapper failed");
+        ReleaseSharedHandle(aType, (SharedTextureHandle)tex);
+
+        // Stop trying to create shared image Handle
+        mShareWithEGLImage = false;
+        return nsnull;
+    }
+    // Raw pointer shared across threads
+    return (SharedTextureHandle)tex;
+}
+
+void GLContextEGL::ReleaseSharedHandle(TextureImage::TextureShareType aType,
+                                       SharedTextureHandle aSharedHandle)
+{
+    if (aType != TextureImage::ThreadShared) {
+        NS_ERROR("Implementation not available for this sharing type");
+        return;
+    }
+
+    NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
+
+    EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
+    GLContext *ctx = wrap->GetContext();
+    if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
+        ctx = ctx->GetSharedContext();
+    }
+    // If we have a context, then we need to delete the texture;
+    // if we don't have a context (either real or shared),
+    // then they went away when the contex was deleted, because it
+    // was the only one that had access to it.
+    if (ctx && !ctx->IsDestroyed() && ctx->MakeCurrent()) {
+        GLuint texture = wrap->GetTextureID();
+        ctx->fDeleteTextures(1, &texture);
+    }
+    delete wrap;
+}
+
+bool GLContextEGL::AttachSharedHandle(TextureImage::TextureShareType aType,
+                                      SharedTextureHandle aSharedHandle)
+{
+    if (aType != TextureImage::ThreadShared)
+        return false;
+
+    NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
+
+    EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
+    wrap->WaitSync();
+    sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
+    return true;
+}
 
 bool
 GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)

@@ -4,8 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include <stddef.h>
+
 #include "TypeInState.h"
+#include "mozilla/mozalloc.h"
+#include "nsAString.h"
+#include "nsDebug.h"
+#include "nsEditProperty.h"
 #include "nsEditor.h"
+#include "nsError.h"
+#include "nsIDOMNode.h"
+#include "nsISelection.h"
+#include "nsISupportsBase.h"
+#include "nsReadableUtils.h"
+#include "nsStringFwd.h"
+#include "nsTraceRefcnt.h"
+
+class nsIAtom;
+class nsIDOMDocument;
 
 /********************************************************************
  *                     XPCOM cruft 

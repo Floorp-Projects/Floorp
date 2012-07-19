@@ -1,11 +1,11 @@
 # HG changeset patch
-# Parent 083d1e9553e5878ce8adabfc9301bcc2156122c9
+# Parent 4c655dd10f74c0782893d34f660e50b36494c88b
 # User Timothy B. Terriberry <tterribe@vt.edu>
 Bug 730907 - Use VARIANCE_INVOKE in multiframe_quality_enhance_block()
 
-diff -r 083d1e9553e5 media/libvpx/vp8/common/postproc.c
---- a/media/libvpx/vp8/common/postproc.c	Tue May 01 09:05:51 2012 -0700
-+++ b/media/libvpx/vp8/common/postproc.c	Tue May 01 09:48:07 2012 -0700
+diff -r 4c655dd10f74 media/libvpx/vp8/common/postproc.c
+--- a/media/libvpx/vp8/common/postproc.c	Mon Jul 09 05:46:16 2012 -0700
++++ b/media/libvpx/vp8/common/postproc.c	Mon Jul 09 06:23:11 2012 -0700
 @@ -706,17 +706,18 @@ static void multiframe_quality_enhance_b
      unsigned char *u,
      unsigned char *v,
@@ -120,3 +120,25 @@ diff -r 083d1e9553e5 media/libvpx/vp8/common/postproc.c
                  vp8_recon_copy16x16(y_ptr, show->y_stride, yd_ptr, dest->y_stride);
                  vp8_recon_copy8x8(u_ptr, show->uv_stride, ud_ptr, dest->uv_stride);
                  vp8_recon_copy8x8(v_ptr, show->uv_stride, vd_ptr, dest->uv_stride);
+diff -r 4c655dd10f74 media/libvpx/vp8/encoder/pickinter.c
+--- a/media/libvpx/vp8/encoder/pickinter.c	Mon Jul 09 05:46:16 2012 -0700
++++ b/media/libvpx/vp8/encoder/pickinter.c	Mon Jul 09 06:23:11 2012 -0700
+@@ -127,17 +127,17 @@ static int pick_intra4x4block(
+     for (mode = B_DC_PRED; mode <= B_HE_PRED /*B_HU_PRED*/; mode++)
+     {
+         int this_rd;
+ 
+         rate = mode_costs[mode];
+         RECON_INVOKE(&rtcd->common->recon, intra4x4_predict)
+                      (*(b->base_dst) + b->dst, b->dst_stride,
+                       mode, b->predictor, 16);
+-        distortion = get_prediction_error(be, b, &rtcd->common->variance);
++        distortion = get_prediction_error(be, b, IF_RTCD(&rtcd->common->variance));
+         this_rd = RDCOST(x->rdmult, x->rddiv, rate, distortion);
+ 
+         if (this_rd < best_rd)
+         {
+             *bestrate = rate;
+             *bestdistortion = distortion;
+             best_rd = this_rd;
+             *best_mode = mode;

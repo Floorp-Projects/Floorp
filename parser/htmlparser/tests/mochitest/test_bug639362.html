@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=639362
+-->
+<head>
+  <title>Test for Bug 639362</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=639362">Mozilla Bug 639362</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function loaded(iframe) {
+  is(iframe.contentWindow.location.href, iframe.src, "should load correct URL");
+  is(iframe.contentDocument.body.textContent, 'CACHE MANIFEST', "text/cache-manifest should be treated as text");
+  SimpleTest.finish();
+}
+</script>
+<iframe src="data:text/cache-manifest,CACHE MANIFEST" onload="loaded(this);"></iframe>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=2 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,8 @@ using mozilla::layers::ShadowLayersChild;
 
 namespace mozilla {
 namespace layers {
+
+/*static*/ CompositorChild* CompositorChild::sCompositor;
 
 CompositorChild::CompositorChild(LayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
@@ -29,20 +31,49 @@ void
 CompositorChild::Destroy()
 {
   mLayerManager = NULL;
-  size_t numChildren = ManagedPLayersChild().Length();
-  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
-                    "compositor must only have 0 or 1 layer forwarder");
-
-  if (numChildren) {
+  while (size_t len = ManagedPLayersChild().Length()) {
     ShadowLayersChild* layers =
-      static_cast<ShadowLayersChild*>(ManagedPLayersChild()[0]);
+      static_cast<ShadowLayersChild*>(ManagedPLayersChild()[len - 1]);
     layers->Destroy();
   }
   SendStop();
 }
 
+/*static*/ PCompositorChild*
+CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
+{
+  // There's only one compositor per child process.
+  MOZ_ASSERT(!sCompositor);
+
+  nsRefPtr<CompositorChild> child(new CompositorChild(nsnull));
+  ProcessHandle handle;
+  if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
+    // We can't go on without a compositor.
+    NS_RUNTIMEABORT("Couldn't OpenProcessHandle() to parent process.");
+    return nsnull;
+  }
+  if (!child->Open(aTransport, handle, XRE_GetIOMessageLoop(),
+                AsyncChannel::Child)) {
+    NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
+    return nsnull;
+  }
+  // We release this ref in ActorDestroy().
+  return sCompositor = child.forget().get();
+}
+
+/*static*/ PCompositorChild*
+CompositorChild::Get()
+{
+  // This is only expected to be used in child processes.
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
+  return sCompositor;
+}
+
 PLayersChild*
-CompositorChild::AllocPLayers(const LayersBackend &aBackend, int* aMaxTextureSize)
+CompositorChild::AllocPLayers(const LayersBackend& aBackendHint,
+                              const uint64_t& aId,
+                              LayersBackend* aBackend,
+                              int* aMaxTextureSize)
 {
   return new ShadowLayersChild();
 }
@@ -53,6 +84,21 @@ CompositorChild::DeallocPLayers(PLayersChild* actor)
   delete actor;
   return true;
 }
+
+void
+CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  MOZ_ASSERT(sCompositor == this);
+  sCompositor = NULL;
+  // We don't want to release the ref to sCompositor here, during
+  // cleanup, because that will cause it to be deleted while it's
+  // still being used.  So defer the deletion to after it's not in
+  // use.
+  MessageLoop::current()->PostTask(
+    FROM_HERE,
+    NewRunnableMethod(this, &CompositorChild::Release));
+}
+
 
 } // namespace layers
 } // namespace mozilla

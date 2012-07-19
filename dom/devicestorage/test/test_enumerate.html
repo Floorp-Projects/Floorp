@@ -28,7 +28,7 @@ function enumerateSuccess(e) {
 
   if (e.target.result == null) {
     ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
-    dump("We still have length = " + files.length);
+    dump("We still have length = " + files.length + "\n");
     devicestorage_cleanup();
     return;
   }
@@ -67,7 +67,7 @@ function addError(e) {
   devicestorage_cleanup();
 }
 
-var storage = navigator.getDeviceStorage("profile");
+var storage = navigator.getDeviceStorage("testing");
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 var prefix = "devicestorage/" + randomFilename(12)
 

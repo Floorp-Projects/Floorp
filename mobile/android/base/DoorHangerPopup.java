@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import java.util.HashMap;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.Gravity;

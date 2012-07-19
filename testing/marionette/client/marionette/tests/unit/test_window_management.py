@@ -55,6 +55,41 @@ class TestSwitchWindow(MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, orig_win)
         self.assertEqual(len(self.marionette.window_handles), len(orig_available))
 
+    def testShouldLoadAWindowAndThenCloseIt(self):
+        test_html = self.marionette.absolute_url("test_windows.html")
+        self.marionette.navigate(test_html)
+        current = self.marionette.current_window_handle
+        
+        self.marionette.find_element('link text',"Open new window").click()
+        window_handles = self.marionette.window_handles
+        window_handles.remove(current)
+        
+        self.marionette.switch_to_window(window_handles[0])
+        self.assertEqual(self.marionette.title, "We Arrive Here")
+        
+        handle = self.marionette.current_window_handle
+        
+        self.assertEqual(self.marionette.current_window_handle, handle)
+        self.assertEqual(2, len(self.marionette.window_handles))
+
+        # Let's close and check
+        self.marionette.close()
+        self.marionette.switch_to_window(current)
+        self.assertEqual(1, len(self.marionette.window_handles))
+
+    def testShouldCauseAWindowToLoadAndCheckItIsOpenThenCloseIt(self):
+        test_html = self.marionette.absolute_url("test_windows.html")
+        self.marionette.navigate(test_html)
+        current = self.marionette.current_window_handle
+        
+        self.marionette.find_element('link text',"Open new window").click()
+        self.assertEqual(2, len(self.marionette.window_handles))
+
+        # Let's close and check
+        self.marionette.close()
+        self.marionette.switch_to_window(current)
+        self.assertEqual(1, len(self.marionette.window_handles))
+
     def tearDown(self):
         #ensure that we close the window, regardless of pass/failure
         self.close_new_window()

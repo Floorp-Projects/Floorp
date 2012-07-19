@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +8,7 @@
 #define mozilla_layers_CompositorChild_h
 
 #include "mozilla/layers/PCompositorChild.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace layers {
@@ -24,12 +25,32 @@ public:
 
   void Destroy();
 
+  /**
+   * We're asked to create a new Compositor in response to an Opens()
+   * or Bridge() request from our parent process.  The Transport is to
+   * the compositor's context.
+   */
+  static PCompositorChild*
+  Create(Transport* aTransport, ProcessId aOtherProcess);
+
+  static PCompositorChild* Get();
+
 protected:
-  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend, int* aMaxTextureSize);
+  virtual PLayersChild* AllocPLayers(const LayersBackend& aBackendHint,
+                                     const uint64_t& aId,
+                                     LayersBackend* aBackend,
+                                     int* aMaxTextureSize);
   virtual bool DeallocPLayers(PLayersChild *aChild);
+
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<LayerManager> mLayerManager;
+
+  // When we're in a child process, this is the process-global
+  // compositor that we use to forward transactions directly to the
+  // compositor context in another process.
+  static CompositorChild* sCompositor;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
 };

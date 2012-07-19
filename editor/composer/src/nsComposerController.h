@@ -7,6 +7,8 @@
 #define nsComposerController_h__
 
 
+#include "nscore.h"                     // for nsresult
+
 class nsIControllerCommandTable;
 
 

@@ -15,7 +15,7 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
 CPPSRCS		= AccessCheck.cpp \
-	          CrossOriginWrapper.cpp \
+	          WaiveXrayWrapper.cpp \
 		  FilteringWrapper.cpp \
 		  XrayWrapper.cpp \
 		  WrapperFactory.cpp

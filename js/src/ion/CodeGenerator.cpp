@@ -1975,7 +1975,7 @@ CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
     }
     if (lir->length()->isConstant()) {
         masm.cmp32(ToRegister(lir->index()), Imm32(ToInt32(lir->length())));
-        return bailoutIf(Assembler::Above, lir->snapshot());
+        return bailoutIf(Assembler::AboveOrEqual, lir->snapshot());
     }
     masm.cmp32(ToRegister(lir->length()), ToRegister(lir->index()));
     return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());

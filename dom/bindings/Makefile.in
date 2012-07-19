@@ -63,6 +63,7 @@ EXPORTS_mozilla = \
 
 EXPORTS_$(binding_include_path) = \
   DOMJSClass.h \
+  Errors.msg \
   PrototypeList.h \
   RegisterBindings.h \
   Nullable.h \

@@ -74,16 +74,24 @@ class MapObject : public JSObject {
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static Class class_;
   private:
-    typedef ValueMap Data;
     static JSFunctionSpec methods[];
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
+    static ValueMap & extract(CallReceiver call);
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool is(const Value &v);
+
+    static bool size_impl(JSContext *cx, CallArgs args);
     static JSBool size(JSContext *cx, unsigned argc, Value *vp);
+    static bool get_impl(JSContext *cx, CallArgs args);
     static JSBool get(JSContext *cx, unsigned argc, Value *vp);
+    static bool has_impl(JSContext *cx, CallArgs args);
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
+    static bool set_impl(JSContext *cx, CallArgs args);
     static JSBool set(JSContext *cx, unsigned argc, Value *vp);
+    static bool delete_impl(JSContext *cx, CallArgs args);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
 };
 
@@ -92,15 +100,22 @@ class SetObject : public JSObject {
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static Class class_;
   private:
-    typedef ValueSet Data;
     static JSFunctionSpec methods[];
     ValueSet *getData() { return static_cast<ValueSet *>(getPrivate()); }
+    static ValueSet & extract(CallReceiver call);
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool is(const Value &v);
+
+    static bool size_impl(JSContext *cx, CallArgs args);
     static JSBool size(JSContext *cx, unsigned argc, Value *vp);
+    static bool has_impl(JSContext *cx, CallArgs args);
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
+    static bool add_impl(JSContext *cx, CallArgs args);
     static JSBool add(JSContext *cx, unsigned argc, Value *vp);
+    static bool delete_impl(JSContext *cx, CallArgs args);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
 };
 

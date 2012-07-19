@@ -10,6 +10,7 @@
 
 #include "IPC/IPCMessageUtils.h"
 #include "Layers.h"
+#include "GLContext.h"
 
 #if defined(MOZ_ENABLE_D3D10_LAYER)
 # include "mozilla/layers/ShadowLayerUtilsD3D10.h"
@@ -73,6 +74,29 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   static bool Read(const Message*, void**, paramType*) { return false; }
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
+
+template<>
+struct ParamTraits<mozilla::gl::TextureImage::TextureShareType>
+{
+  typedef mozilla::gl::TextureImage::TextureShareType paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    MOZ_STATIC_ASSERT(sizeof(paramType) <= sizeof(int32),
+                      "TextureShareType assumes to be int32");
+    WriteParam(msg, int32(param));
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    int32 type;
+    if (!ReadParam(msg, iter, &type))
+      return false;
+
+    *result = paramType(type);
+    return true;
+  }
+};
 
 #if !defined(MOZ_HAVE_SURFACEDESCRIPTORGRALLOC)
 template <>

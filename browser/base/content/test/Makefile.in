@@ -62,6 +62,8 @@ endif
 
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
 
+# browser_pageInfo.js + feed_tab.html is disabled for leaking (bug 767896)
+
 _BROWSER_FILES = \
                  head.js \
                  browser_typeAheadFind.js \
@@ -154,6 +156,7 @@ _BROWSER_FILES = \
                  browser_bug749738.js \
                  browser_bug763468.js \
                  browser_bug767836.js \
+                 browser_shareButton.js \
                  browser_canonizeURL.js \
                  browser_customize.js \
                  browser_findbarClose.js \
@@ -171,7 +174,6 @@ _BROWSER_FILES = \
                  browser_overflowScroll.js \
                  browser_locationBarCommand.js \
                  browser_locationBarExternalLoad.js \
-                 browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
                  browser_plainTextLinks.js \
@@ -219,7 +221,6 @@ _BROWSER_FILES = \
                  test_bug435035.html \
                  test_bug462673.html \
                  page_style_sample.html \
-                 feed_tab.html \
                  plugin_unknown.html \
                  plugin_test.html \
                  plugin_test2.html \
@@ -255,6 +256,7 @@ _BROWSER_FILES = \
                  browser_tabDrop.js \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
+                 browser_social_toolbar.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

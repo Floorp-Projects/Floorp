@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import android.content.Context;
@@ -15,9 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.util.Log;
 import android.view.GestureDetector;
-import android.view.View.OnTouchListener;
 
 /**
  * The layer controller manages a tile that represents the visible page. It does panning and
@@ -80,6 +77,10 @@ public class LayerController {
     public void setLayerClient(GeckoLayerClient layerClient) {
         mLayerClient = layerClient;
         layerClient.setLayerController(this);
+    }
+
+    public void destroy() {
+        mPanZoomController.destroy();
     }
 
     public void setForceRedraw() {

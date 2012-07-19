@@ -5,16 +5,10 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.db.BrowserDB;
-
 import org.json.JSONObject;
 import org.json.JSONException;
 
-import java.util.Map;
-
-import android.app.AlertDialog.Builder;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.util.Log;
 

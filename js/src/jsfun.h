@@ -264,6 +264,21 @@ XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope,
 extern JSObject *
 CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleFunction fun);
 
+/*
+ * Report an error that call.thisv is not compatible with the specified class,
+ * assuming that the method (clasp->name).prototype.<name of callee function>
+ * is what was called.
+ */
+extern void
+ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
+
+/*
+ * Report an error that call.thisv is not an acceptable this for the callee
+ * function.
+ */
+extern void
+ReportIncompatible(JSContext *cx, CallReceiver call);
+
 } /* namespace js */
 
 extern JSBool

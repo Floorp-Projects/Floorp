@@ -43,6 +43,7 @@ a {
 
 #brandLogo {
   height: 154px;
+  width: 154px;
   margin: 22px 0 31px;
 }
 
@@ -64,6 +65,8 @@ a {
 
 #searchEngineLogo {
   display: inline-block;
+  height: 28px;
+  width: 70px;
 }
 
 #searchText {
@@ -82,7 +85,8 @@ body[dir=rtl] #searchText {
   border-radius: 0 2.5px 2.5px 0;
 }
 
-#searchText:focus {
+#searchText:focus,
+#searchText[autofocus] {
   border-color: hsla(206,100%,60%,.6) hsla(206,76%,52%,.6) hsla(204,100%,40%,.6);
 }
 
@@ -106,12 +110,14 @@ body[dir=rtl] #searchSubmit {
 }
 
 #searchText:focus + #searchSubmit,
-#searchText + #searchSubmit:hover {
+#searchText + #searchSubmit:hover,
+#searchText[autofocus] + #searchSubmit {
   border-color: #59b5fc #45a3e7 #3294d5;
   color: white;
 }
 
-#searchText:focus + #searchSubmit {
+#searchText:focus + #searchSubmit,
+#searchText[autofocus] + #searchSubmit {
   background-image: -moz-linear-gradient(#4cb1ff, #1793e5);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 0 0 1px hsla(0,0%,100%,.1) inset,
@@ -160,6 +166,12 @@ body[dir=rtl] #defaultSnippet2 {
   margin: 12px 0;
   color: #3c3c3c;
   font-size: 75%;
+  /* 12px is the computed font size, 15px the computed line height of the snippets
+     with Segoe UI on a default Windows 7 setup. The 15/12 multiplier approximately
+     converts em from units of font-size to units of line-height. The goal is to
+     preset the height of a three-line snippet to avoid visual moving/flickering as
+     the snippets load. */
+  min-height: -moz-calc(15/12 * 3em);
 }
 
 #launcher {
@@ -256,8 +268,9 @@ body[narrow] #restorePreviousSession {
 
 .launchButton::before {
   display: block;
+  width: 32px;
   height: 32px;
-  margin-bottom: 6px;
+  margin: 0 auto 6px;
   line-height: 0; /* remove extra vertical space due to non-zero font-size */
 }
 
@@ -300,7 +313,7 @@ body[narrow] #restorePreviousSession {
 }
 
 body[dir=rtl] #restorePreviousSession::before {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 body[narrow] #restorePreviousSession::before {

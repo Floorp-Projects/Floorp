@@ -68,10 +68,10 @@ AboutGeneric.prototype = {
     var channel = ios.newChannel(moduleInfo.uri, null, null);
     
     if (!moduleInfo.privileged) {
-      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                   getService(Ci.nsIScriptSecurityManager);
-      let principal = secMan.getCodebasePrincipal(aURI);
-      channel.owner = principal;
+      // Setting the owner to null means that we'll go through the normal
+      // path in GetChannelPrincipal and create a codebase principal based
+      // on the channel's originalURI
+      channel.owner = null;
     }
 
     channel.originalURI = aURI;

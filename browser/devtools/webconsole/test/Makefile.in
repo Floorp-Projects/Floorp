@@ -111,6 +111,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_menustatus.js \
 	browser_result_format_as_string.js \
 	browser_webconsole_bug_737873_mixedcontent.js \
+	browser_output_breaks_after_console_dir_uninspectable.js \
 	head.js \
 	$(NULL)
 

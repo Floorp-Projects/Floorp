@@ -112,17 +112,26 @@ EXPORTS_mozilla/layers =\
         CompositorCocoaWidgetHelper.h \
         CompositorChild.h \
         CompositorParent.h \
+        ImageBridgeChild.h \
+        ImageBridgeParent.h \
+        ImageContainerChild.h \
+        ImageContainerParent.h \
         ShadowLayers.h \
         ShadowLayersChild.h \
         ShadowLayersParent.h \
         ShadowLayersManager.h \
         RenderTrace.h \
+        SharedImageUtils.h \
         $(NULL)
 
 CPPSRCS += \
         CompositorCocoaWidgetHelper.cpp \
         CompositorChild.cpp \
         CompositorParent.cpp \
+        ImageBridgeChild.cpp \
+        ImageBridgeParent.cpp \
+        ImageContainerChild.cpp \
+        ImageContainerParent.cpp \
         ShadowLayers.cpp \
         ShadowLayerChild.cpp \
         ShadowLayersChild.cpp \

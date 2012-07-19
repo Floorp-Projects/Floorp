@@ -117,6 +117,12 @@ class ContextFlags {
     { }
 };
 
+/*
+ * The struct SharedContext is part of the current parser context (see
+ * TreeContext). It stores information that is reused between the parser and
+ * the bytecode emitter. Note however, that this information is not shared
+ * between the two; they simply reuse the same data structure.
+ */
 struct SharedContext {
     JSContext       *const context;
 
@@ -202,6 +208,14 @@ typedef HashSet<JSAtom *> FuncStmtSet;
 struct Parser;
 struct StmtInfoTC;
 
+/*
+ * The struct TreeContext stores information about the current parsing context,
+ * which is part of the parser state (see the field Parser::tc). The current
+ * parsing context is either the global context, or the function currently being
+ * parsed. When the parser encounters a function definition, it creates a new
+ * TreeContext, makes it the new current context, and sets its parent to the
+ * context in which it encountered the definition.
+ */
 struct TreeContext {                /* tree context for semantic checks */
 
     typedef StmtInfoTC StmtInfo;

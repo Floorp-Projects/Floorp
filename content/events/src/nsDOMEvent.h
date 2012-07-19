@@ -224,7 +224,7 @@ public:
 protected:
 
   // Internal helper functions
-  nsresult SetEventType(const nsAString& aEventTypeArg);
+  void SetEventType(const nsAString& aEventTypeArg);
   already_AddRefed<nsIContent> GetTargetFromFrame();
 
   nsEvent*                    mEvent;

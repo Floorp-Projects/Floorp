@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/unknownSection.cacheManifest">
+<head>
+<title>unknown section</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+var gGotChecking = false;
+var gGotDownloading = false;
+
+function manifestUpdated()
+{
+  OfflineTest.ok(gGotChecking, "Should get a checking event");
+  OfflineTest.ok(gGotDownloading, "Should get a downloading event");
+
+  OfflineTest.is(applicationCache.status, 1, "Cache status should be 1 (CACHED)");
+
+  var entries = [
+    // The manifest itself should be in the cache
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/unknownSection.cacheManifest", true],
+
+    // The document that requested the manifest should be in the cache
+    [window.location.href, true],
+
+    // The entries from the manifest should be in the cache
+    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", true],
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true],
+
+    // The bad entries from the manifest should not be in the cache
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/jupiter.jpg", false]
+  ];
+  OfflineTest.checkCacheEntries(
+    entries,
+    function() {
+       OfflineTest.teardown();
+       OfflineTest.finish();
+    });
+}
+
+if (OfflineTest.setup()) {
+  OfflineTest.ok(applicationCache instanceof EventTarget,
+                 "applicationCache should be an event target");
+
+  applicationCache.onerror = OfflineTest.failEvent;
+
+  applicationCache.addEventListener("checking", function() {
+    // We should get the "checking" event during an initial update,
+    // but until we are associated it will not affect applicationCache.status
+    OfflineTest.is(applicationCache.status, applicationCache.UNCACHED,
+                   "CHECKING state during initial update");
+    gGotChecking = true;
+    }, true);
+  applicationCache.ondownloading = function() {
+    // We should get the "downloading" event during an initial update,
+    // but until we are associated it will not affect applicationCache.status
+    OfflineTest.is(applicationCache.status, applicationCache.UNCACHED,
+                   "DOWNLOADING state during initial update")
+    gGotDownloading = true; };
+  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>

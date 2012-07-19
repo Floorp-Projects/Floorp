@@ -19,7 +19,7 @@ TESTROOT = $(call core_abspath,$(DEPTH))/_tests/xpcshell/$(relativesrcdir)
 DEFINES += \
   -DAB_CD=$(AB_CD) \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-  -DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
+  -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
   -DBIN_SUFFIX=$(BIN_SUFFIX) \
   -DNS_NO_XPCOM \
   -DMOZ_DEBUG=$(MOZ_DEBUG) \

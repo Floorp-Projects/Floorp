@@ -43,6 +43,15 @@ public:
   // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
   bool IsValidICO() const
   {
+    // If there are errors in the call to png_get_IHDR, the error_callback in
+    // nsPNGDecoder.cpp is called.  In this error callback we do a longjmp, so
+    // we need to save the jump buffer here. Oterwise we'll end up without a
+    // proper callstack.
+    if (setjmp(png_jmpbuf(mPNG))) {
+      // We got here from a longjmp call indirectly from png_get_IHDR
+      return false;
+    }
+
     png_uint_32
         png_width,  // Unused
         png_height; // Unused

@@ -1,4 +1,4 @@
-CC=/usr/bin/gcc-4.2
-CXX=/usr/bin/g++-4.2
+export CC=$topsrcdir/clang/bin/clang
+export CXX=$topsrcdir/clang/bin/clang++
 
 ac_add_options --enable-stdcxx-compat

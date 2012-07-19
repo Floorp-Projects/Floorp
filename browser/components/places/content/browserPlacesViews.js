@@ -1604,7 +1604,7 @@ PlacesToolbar.prototype = {
         }
       }
 
-      ind.style.MozTransform = "translate(" + Math.round(translateX) + "px)";
+      ind.style.transform = "translate(" + Math.round(translateX) + "px)";
       ind.style.MozMarginStart = (-ind.clientWidth) + "px";
       ind.collapsed = false;
 

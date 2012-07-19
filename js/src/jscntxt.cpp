@@ -601,6 +601,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
     else
         efs = callback(userRef, NULL, errorNumber);
     if (efs) {
+        reportp->exnType = efs->exnType;
+
         size_t totalArgsLength = 0;
         size_t argLengths[10]; /* only {0} thru {9} supported */
         argCount = efs->argCount;
@@ -1053,6 +1055,7 @@ JSContext::~JSContext()
 
 #ifdef DEBUG
 namespace JS {
+
 JS_FRIEND_API(void)
 SetRootingUnnecessaryForContext(JSContext *cx, bool value)
 {
@@ -1064,6 +1067,13 @@ IsRootingUnnecessaryForContext(JSContext *cx)
 {
     return cx->rootingUnnecessary;
 }
+
+JS_FRIEND_API(bool)
+RelaxRootChecksForContext(JSContext *cx)
+{
+    return cx->runtime->relaxRootChecks;
+}
+
 } /* namespace JS */
 #endif
 

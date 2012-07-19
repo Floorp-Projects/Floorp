@@ -117,7 +117,7 @@ html[dir=rtl] .close {
 html[dir=rtl] .expander {
   right: auto;
   left: 6px;
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .expander:hover,
@@ -502,7 +502,7 @@ html[dir=rtl] .title-shield {
 html[dir=rtl] .resizer {
   right: auto;
   left: 0;
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .iq-resizable-handle {

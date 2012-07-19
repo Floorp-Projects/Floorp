@@ -1707,6 +1707,11 @@ function check_correctness(text, hash) {
   assertEq( decrypted, text );
 }
 
+// Too much time is taken checking roots on each ToNumber when interpreting the
+// crypto kernel in this benchmark.
+if (relaxRootChecks)
+    relaxRootChecks();
+
 // All 'correct' hashes here come from v8's javascript shell built off of tag 2.3.4
 check_correctness("Hello! I am some text.", "142b19b40fee712ab9468be296447d38c7dfe81a7850f11ae6aa21e49396a4e90bd6ba4aa385105e15960a59f95447dfad89671da6e08ed42229939583753be84d07558abb4feee4d46a92fd31d962679a1a5f4bf0fb7af414b9a756e18df7e6d1e96971cc66769f3b27d61ad932f2211373e0de388dc040557d4c3c3fe74320");
 check_correctness("PLEASE ENCRYPT ME. I AM TEXT. I AM DIEING TO BE ENCRYPTED. OH WHY WONT YOU ENCRYPT ME!?", "490c1fae87d7046296e4b34b357912a72cb7c38c0da3198f1ac3aad3489662ce02663ec5ea1be58ae73a275f3096b16c491f3520ebf822df6c65cc95e28be1cc0a4454dfba3fdd402c3a9de0db2f308989bfc1a7fada0dd680db76d24b2d96bd6b7e7d7e7f962deb953038bae06092f7bb9bcb40bba4ec92e040df32f98e035e");

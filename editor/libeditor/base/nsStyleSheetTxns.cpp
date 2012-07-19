@@ -4,15 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "nsEditor.h"
+#include <stddef.h>                     // for NULL
 
-#include "nsCSSStyleSheet.h"
-#include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
-#include "nsISelectionController.h"
-
-
+#include "nsAString.h"
+#include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
+#include "nsCSSStyleSheet.h"            // for nsCSSStyleSheet
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE
+#include "nsError.h"                    // for NS_OK, etc
+#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDocument.h"                // for nsIDocument
+#include "nsIDocumentObserver.h"        // for UPDATE_STYLE
+#include "nsIEditor.h"                  // for nsIEditor
 #include "nsStyleSheetTxns.h"
+
+class nsIStyleSheet;
 
 static void
 AddStyleSheet(nsIEditor* aEditor, nsIStyleSheet* aSheet)

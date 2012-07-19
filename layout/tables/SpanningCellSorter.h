@@ -22,7 +22,7 @@ class nsIPresShell;
  */
 class NS_STACK_CLASS SpanningCellSorter {
 public:
-    SpanningCellSorter(nsIPresShell *aPresShell);
+    SpanningCellSorter();
     ~SpanningCellSorter();
 
     struct Item {
@@ -44,7 +44,6 @@ public:
      */
     Item* GetNext(PRInt32 *aColSpan);
 private:
-    nsIPresShell *mPresShell;
 
     enum State { ADDING, ENUMERATING_ARRAY, ENUMERATING_HASH, DONE };
     State mState;

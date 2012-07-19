@@ -144,22 +144,38 @@
  */
 
 .ruleview {
-  background-color: #FFF;
+  background-color: white;
 }
 
 .ruleview-rule-source {
-  background-color: -moz-dialog;
-  color: -moz-dialogText;
-  padding: 2px 5px;
+  color: hsl(121,42%,43%); /* green */
+  -moz-padding-start: 5px;
   cursor: pointer;
+  text-align: right;
+  float: right;
+  -moz-user-select: -moz-none;
+}
+
+.ruleview-rule-inheritance {
+  background-color: hsl(0,0%,90%);
+  color: hsl(0,0%,50%);
+  border-top: 1px solid hsl(0,0%,65%);
+  border-bottom: 1px solid hsl(0,0%,65%);
+  padding: 1px 4px;
+  margin-top: 4px;
+  -moz-user-select: -moz-none;
 }
 
 .ruleview-rule-source:hover {
   text-decoration: underline;
 }
 
-.ruleview-code {
-  padding: 2px 5px;
+.ruleview-rule {
+  padding: 2px 4px;
+}
+
+.ruleview-rule + .ruleview-rule {
+  border-top: 1px dotted #cddae5;
 }
 
 .ruleview-warning {
@@ -188,8 +204,15 @@
 .ruleview-enableproperty {
   height: 10px;
   width: 10px;
-  -moz-margin-start: 2px;
+  -moz-margin-start: 1px;
   -moz-margin-end: 0;
+  transition: opacity 100ms;
+  transition-delay: 200ms;
+}
+
+.ruleview-property:not(:hover) > .ruleview-enableproperty {
+  opacity: 0;
+  transition: none;
 }
 
 .ruleview-expander {
@@ -212,7 +235,11 @@
 
 .ruleview-propertyname {
   padding: 1px 0;
-  color: #0060C0;
+  color: hsl(210,100%,38%); /* blue */
+}
+
+.ruleview-propertyvalue {
+  padding: 1px 0;
 }
 
 .ruleview-namecontainer,
@@ -251,10 +278,10 @@
 
 .ruleview-namecontainer > .ruleview-propertyname,
 .ruleview-propertycontainer > .ruleview-propertyvalue {
-  border-bottom: 1px dotted transparent;
+  border-bottom: 1px dashed transparent;
 }
 
 .ruleview-namecontainer:hover > .ruleview-propertyname,
 .ruleview-propertycontainer:hover > .ruleview-propertyvalue {
-  border-bottom-color: black;
+  border-bottom-color: hsl(0,0%,50%);
 }

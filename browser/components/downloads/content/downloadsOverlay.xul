@@ -98,6 +98,7 @@
       </menupopup>
 
       <richlistbox id="downloadsListBox"
+                   style="width: &downloads.width;"
                    class="plain"
                    flex="1"
                    context="downloadsContextMenu"

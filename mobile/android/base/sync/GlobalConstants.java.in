@@ -10,7 +10,7 @@ package org.mozilla.gecko.sync;
  */
 public class GlobalConstants {
   public static final String PRODUCT_NAME = "@MOZ_APP_DISPLAYNAME@";
-  public static final String SYNC_VERSION_STRING = "0.9";
+  public static final String SYNC_VERSION_STRING = "1.@MOZ_APP_VERSION@.0";
 
   public static final String USER_AGENT = "Firefox AndroidSync " + SYNC_VERSION_STRING +
                                           " (" + PRODUCT_NAME + ")";

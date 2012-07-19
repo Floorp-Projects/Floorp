@@ -7,10 +7,14 @@
 #define nsComposerCommands_h_
 
 #include "nsIControllerCommand.h"
-#include "nsString.h"
+#include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED, etc
+#include "nscore.h"                     // for nsresult, NS_IMETHOD
 
-class nsIEditor;
 class nsIAtom;
+class nsICommandParams;
+class nsIEditor;
+class nsISupports;
+class nsString;
 
 // This is a virtual base class for commands registered with the composer controller.
 // Note that such commands are instantiated once per composer, so can store state.

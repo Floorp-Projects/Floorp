@@ -23,7 +23,6 @@ ac_add_options --with-macbundlename-prefix=Firefox
 
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
-ac_add_options --with-ccache
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1

@@ -8,11 +8,12 @@
 
 #include "nsIUrlClassifierDBService.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 /**
  * Thread proxy from the main thread to the worker thread.
  */
-class UrlClassifierDBServiceWorkerProxy :
+class UrlClassifierDBServiceWorkerProxy MOZ_FINAL :
   public nsIUrlClassifierDBServiceWorker
 {
 public:
@@ -136,7 +137,8 @@ private:
 
 // The remaining classes here are all proxies to the main thread
 
-class UrlClassifierLookupCallbackProxy : public nsIUrlClassifierLookupCallback
+class UrlClassifierLookupCallbackProxy MOZ_FINAL :
+  public nsIUrlClassifierLookupCallback
 {
 public:
   UrlClassifierLookupCallbackProxy(nsIUrlClassifierLookupCallback* aTarget)
@@ -166,7 +168,7 @@ private:
   nsCOMPtr<nsIUrlClassifierLookupCallback> mTarget;
 };
 
-class UrlClassifierCallbackProxy : public nsIUrlClassifierCallback
+class UrlClassifierCallbackProxy MOZ_FINAL : public nsIUrlClassifierCallback
 {
 public:
   UrlClassifierCallbackProxy(nsIUrlClassifierCallback* aTarget)
@@ -196,7 +198,8 @@ private:
   nsCOMPtr<nsIUrlClassifierCallback> mTarget;
 };
 
-class UrlClassifierUpdateObserverProxy : public nsIUrlClassifierUpdateObserver
+class UrlClassifierUpdateObserverProxy MOZ_FINAL :
+  public nsIUrlClassifierUpdateObserver
 {
 public:
   UrlClassifierUpdateObserverProxy(nsIUrlClassifierUpdateObserver* aTarget)

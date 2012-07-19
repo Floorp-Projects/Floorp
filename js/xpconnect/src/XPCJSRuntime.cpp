@@ -1728,22 +1728,14 @@ private:
 
 class XPCJSRuntimeStats : public JS::RuntimeStats
 {
-    JSContext   *mCx;
     WindowPaths *mWindowPaths;
 
   public:
     XPCJSRuntimeStats(WindowPaths *windowPaths)
-      : JS::RuntimeStats(JsMallocSizeOf), mCx(NULL), mWindowPaths(windowPaths)
+      : JS::RuntimeStats(JsMallocSizeOf), mWindowPaths(windowPaths)
     { }
 
-    bool init(XPCJSRuntime *xpcrt) {
-        mCx = JS_NewContext(xpcrt->GetJSRuntime(), 0);
-        return !!mCx;
-    }
-    
     ~XPCJSRuntimeStats() {
-        JS_DestroyContextNoGC(mCx);
-
         for (size_t i = 0; i != compartmentStatsVector.length(); ++i) {
             free(compartmentStatsVector[i].extra1);
             free(compartmentStatsVector[i].extra2);
@@ -1757,22 +1749,32 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         GetCompartmentName(c, cName);
 
         // Get the compartment's global.
-        if (JSObject *global = JS_GetGlobalForCompartmentOrNull(mCx, c)) {
-            nsISupports *native = nsXPConnect::GetXPConnect()->GetNativeOfWrapper(mCx, global);
-            if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
-                // The global is a |window| object.  Use the path prefix that
-                // we should have already created for it.
-                if (mWindowPaths->Get(piwindow->WindowID(), &cJSPathPrefix)) {
-                    cDOMPathPrefix.Assign(cJSPathPrefix);
-                    cDOMPathPrefix.AppendLiteral("/dom/");
-                    cJSPathPrefix.AppendLiteral("/js/");
+        nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+        JSContext *cx = xpc->GetSafeJSContext();
+        if (JSObject *global = JS_GetGlobalForCompartmentOrNull(cx, c)) {
+            // Need to enter the compartment, otherwise GetNativeOfWrapper()
+            // might crash.
+            JSAutoEnterCompartment aec;
+            if (aec.enter(cx, global)) {
+                nsISupports *native = xpc->GetNativeOfWrapper(cx, global);
+                if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
+                    // The global is a |window| object.  Use the path prefix that
+                    // we should have already created for it.
+                    if (mWindowPaths->Get(piwindow->WindowID(), &cJSPathPrefix)) {
+                        cDOMPathPrefix.Assign(cJSPathPrefix);
+                        cDOMPathPrefix.AppendLiteral("/dom/");
+                        cJSPathPrefix.AppendLiteral("/js/");
+                    } else {
+                        cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
+                        cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
+                    }
                 } else {
-                    cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unknown-window-global/");
+                    cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
                     cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
                 }
             } else {
-                cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/non-window-global/");
-                cDOMPathPrefix.AssignLiteral("explicit/dom/?!/");
+                cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/unentered/");
+                cDOMPathPrefix.AssignLiteral("explicit/dom/unentered/");
             }
         } else {
             cJSPathPrefix.AssignLiteral("explicit/js-non-window/compartments/no-global/");
@@ -1811,9 +1813,6 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
     // stats seems like a bad idea.
 
     XPCJSRuntimeStats rtStats(windowPaths);
-    if (!rtStats.init(xpcrt))
-        return NS_ERROR_FAILURE;
-
     OrphanReporter orphanReporter;
     if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;

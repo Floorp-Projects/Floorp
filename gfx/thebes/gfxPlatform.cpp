@@ -6,9 +6,16 @@
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
+
+#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/ImageBridgeChild.h"
+
 #include "prlog.h"
+#include "prenv.h"
 
 #include "gfxPlatform.h"
+
+#include "nsXULAppAPI.h"
 
 #if defined(XP_WIN)
 #include "gfxWindowsPlatform.h"
@@ -60,6 +67,7 @@
 #include "nsIGfxInfo.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nsnull;
 static bool gEverInitialized = false;
@@ -243,6 +251,25 @@ gfxPlatform::Init()
     sCmapDataLog = PR_NewLogModule("cmapdata");;
 #endif
 
+    bool useOffMainThreadCompositing = false;
+#ifdef MOZ_X11
+    // On X11 platforms only use OMTC if firefox was initalized with thread-safe 
+    // X11 (else it would crash).
+    useOffMainThreadCompositing = (PR_GetEnv("MOZ_USE_OMTC") != NULL);
+#else
+    useOffMainThreadCompositing = Preferences::GetBool(
+          "layers.offmainthreadcomposition.enabled", 
+          false);
+#endif
+
+    if (useOffMainThreadCompositing && (XRE_GetProcessType() == 
+                                        GeckoProcessType_Default)) {
+        CompositorParent::StartUp();
+        if (Preferences::GetBool("layers.async-video.enabled",false)) {
+            ImageBridgeChild::StartUp();
+        }
+
+    }
 
     /* Initialize the GfxInfo service.
      * Note: we can't call functions on GfxInfo that depend
@@ -359,6 +386,12 @@ gfxPlatform::Shutdown()
     // WebGL on Optimus.
     mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
+
+    // This will block this thread untill the ImageBridge protocol is completely
+    // deleted.
+    ImageBridgeChild::ShutDown();
+
+    CompositorParent::ShutDown();
 
     delete gPlatform;
     gPlatform = nsnull;
@@ -1458,7 +1491,7 @@ gfxPlatform::GetLog(eGfxLog aWhichLog)
 int
 gfxPlatform::GetScreenDepth() const
 {
-    MOZ_ASSERT(false, "Not implemented on this platform");
+    NS_WARNING("GetScreenDepth not implemented on this platform -- returning 0!");
     return 0;
 }
 

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CrossOriginWrapper.h"
+#include "WaiveXrayWrapper.h"
 #include "FilteringWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
@@ -29,13 +29,13 @@ namespace xpc {
 // transparent wrapper in the origin (non-chrome) compartment. When
 // an object with that special wrapper applied crosses into chrome,
 // we know to not apply an X-ray wrapper.
-DirectWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+DirectWrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
 // that transitively extends the waiver to all properties we get
 // off it.
-CrossOriginWrapper CrossOriginWrapper::singleton(0);
+WaiveXrayWrapper WaiveXrayWrapper::singleton(0);
 
 static JSObject *
 GetCurrentOuter(JSContext *cx, JSObject *obj)
@@ -81,7 +81,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
             if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
                 return nsnull;
             wobj = Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
-                                &WaiveXrayWrapperWrapper);
+                                &XrayWaiver);
             if (!wobj)
                 return nsnull;
 
@@ -291,7 +291,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                        unsigned flags)
 {
     NS_ASSERTION(!IsWrapper(obj) ||
-                 GetProxyHandler(obj) == &WaiveXrayWrapperWrapper ||
+                 GetProxyHandler(obj) == &XrayWaiver ||
                  js::GetObjectClass(obj)->ext.innerObject,
                  "wrapped object passed to rewrap");
     NS_ASSERTION(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
@@ -321,7 +321,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
                 // If we waived the X-ray wrapper for this object, wrap it into a
                 // special wrapper to transitively maintain the X-ray waiver.
-                wrapper = &CrossOriginWrapper::singleton;
+                wrapper = &WaiveXrayWrapper::singleton;
             } else {
                 // Native objects must be wrapped into an X-ray wrapper.
                 XrayType type = GetXrayType(obj);

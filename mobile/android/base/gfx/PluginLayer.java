@@ -6,8 +6,6 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.PixelFormat;
 import android.view.View;
 import android.view.Surface;

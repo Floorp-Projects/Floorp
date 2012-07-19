@@ -135,6 +135,8 @@ nsDataHandler::AllowPort(PRInt32 port, const char *scheme, bool *_retval) {
     return NS_OK;
 }
 
+#define BASE64_EXTENSION ";base64"
+
 nsresult
 nsDataHandler::ParseURI(nsCString& spec,
                         nsCString& contentType,
@@ -160,8 +162,8 @@ nsDataHandler::ParseURI(nsCString& spec,
     *comma = '\0';
 
     // determine if the data is base64 encoded.
-    char *base64 = PL_strcasestr(buffer, ";base64");
-    if (base64) {
+    char *base64 = PL_strcasestr(buffer, BASE64_EXTENSION);
+    if (base64 && *(base64 + strlen(BASE64_EXTENSION))==0) {
         isBase64 = true;
         *base64 = '\0';
     }

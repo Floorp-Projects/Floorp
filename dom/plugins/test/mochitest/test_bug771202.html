@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=771202
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 771202</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=771202">Mozilla Bug 771202</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for recreating spliced plugin prototype chains after tranplant. **/
+SimpleTest.waitForExplicitFinish();
+
+function go() {
+  // Set things up.
+  var win = document.getElementById('ifr').contentWindow;
+  var plugin = win.document.getElementById('pluginElement');
+  var testValue = plugin.getObjectValue();
+
+  function checkPlugin() {
+      dump("About to call checkObjectValue\n");
+      ok(plugin.checkObjectValue(testValue), 'Plugin proto should work correctly');
+  }
+  // First, check things before transplanting.
+  checkPlugin();
+
+  // Adopt the plugin and retest.
+  document.body.appendChild(plugin);
+  checkPlugin();
+
+  // All done.
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+
+<iframe id="ifr" onload="go();" src="file_bug771202.html">
+</body>
+</html>

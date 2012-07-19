@@ -4236,7 +4236,7 @@ ConsoleUtils = {
       treeView.data = {
         rootCacheId: body.cacheId,
         panelCacheId: body.cacheId,
-        remoteObject: body.remoteObject,
+        remoteObject: Array.isArray(body.remoteObject) ? body.remoteObject : [],
         remoteObjectProvider: body.remoteObjectProvider,
       };
 

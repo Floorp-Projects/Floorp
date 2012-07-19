@@ -3,46 +3,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-//-----------------------------------------------------------------------------
 var BUGNUMBER = 380933;
 var summary = 'Do not assert with uneval object with setter with modified proto';
-var actual = '';
-var expect = '';
 
+printBugNumber(BUGNUMBER);
+printStatus (summary);
 
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
+var f = (function(){});
+var y =
+  Object.defineProperty({}, "p",
+  {
+    get: f,
+    enumerable: true,
+    configurable: true
+  });
+f.__proto__ = [];
 
-function test()
+try
 {
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
- 
-  var f = (function(){}); 
-  var y =
-    Object.defineProperty({}, "p",
-    {
-      get: f,
-      enumerable: true,
-      configurable: true
-    });
-  f.__proto__ = []; 
-
-  expect = /TypeError: Array.prototype.toSource called on incompatible Function/;
-  try
-  {
-    uneval(y);
-    actual = 'No Error';
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-
-  reportMatch(expect, actual, summary);
-
-  exitFunc ('test');
+  uneval(y);
+  throw new Error("didn't throw");
 }
+catch(ex)
+{
+  assertEq(ex instanceof TypeError, true,
+           "wrong exception thrown: expected TypeError, got " + ex);
+}
+
+if (typeof reportCompare === "function")
+  reportCompare(true, true);
+
+print("Tests complete");
+

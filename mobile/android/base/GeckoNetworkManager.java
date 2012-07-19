@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.lang.Math;
-
 import android.util.Log;
 
 import android.content.BroadcastReceiver;

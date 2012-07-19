@@ -6,8 +6,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.gfx.CairoImage;
-import org.mozilla.gecko.gfx.CairoUtils;
 import android.graphics.Bitmap;
 import java.nio.ByteBuffer;
 

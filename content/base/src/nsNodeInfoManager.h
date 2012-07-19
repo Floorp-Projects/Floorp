@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h" // for already_AddRefed
 #include "plhash.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -28,7 +29,7 @@ class nsIDOMNamedNodeMap;
 class nsXULPrototypeDocument;
 class nsBindingManager;
 
-class nsNodeInfoManager : public nsISupports
+class nsNodeInfoManager MOZ_FINAL : public nsISupports
 {
 public:
   nsNodeInfoManager();

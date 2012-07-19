@@ -107,12 +107,17 @@ let gDrag = {
    * @return Whether we should handle this drag and drop operation.
    */
   isValid: function Drag_isValid(aEvent) {
-    let dt = aEvent.dataTransfer;
-    let mimeType = "text/x-moz-url";
+    let link = gDragDataHelper.getLinkFromDragEvent(aEvent);
 
     // Check that the drag data is non-empty.
     // Can happen when dragging places folders.
-    return dt && dt.types.contains(mimeType) && dt.getData(mimeType);
+    if (!link || !link.url) {
+      return false;
+    }
+
+    // Check that we're not accepting URLs which would inherit the caller's
+    // principal (such as javascript: or data:).
+    return gLinkChecker.checkLoadURI(link.url);
   },
 
   /**

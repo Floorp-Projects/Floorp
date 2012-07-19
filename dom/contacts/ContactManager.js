@@ -456,9 +456,9 @@ ContactManager.prototype = {
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
-    let perm = principal == secMan.getSystemPrincipal() ? 
-                 Ci.nsIPermissionManager.ALLOW_ACTION : 
-                 Services.perms.testExactPermission(principal.URI, "webcontacts-manage");
+    let perm = principal == secMan.getSystemPrincipal()
+                 ? Ci.nsIPermissionManager.ALLOW_ACTION
+                 : Services.perms.testExactPermissionFromPrincipal(principal, "webcontacts-manage");
  
     //only pages with perm set can use the contacts
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;

@@ -118,7 +118,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 /* ----- BOOKMARK BUTTONS ----- */
@@ -459,7 +459,7 @@ toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-locale-dir(rtl),
 toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl):-moz-lwtheme,
 toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl):-moz-lwtheme {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
@@ -929,7 +929,7 @@ toolbar[mode="icons"] #zoom-in-button {
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
   /* let pinstripe-urlbar-back-button-clip-path clip the urlbar's right side for RTL */
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #identity-box {
@@ -1114,7 +1114,7 @@ toolbar[mode="icons"] #zoom-in-button {
   height: 12px;
 }
 
-richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
+richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
   -moz-image-region: rect(0, 64px, 16px, 48px);
@@ -1139,20 +1139,20 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-image-region: rect(0, 16px, 11px, 0);
   padding: 0 3px;
 }
 
 richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(16px, 16px, 32px, 0);
+  -moz-image-region: rect(11px, 16px, 22px, 0);
 }
 
 window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  -moz-image-region: rect(0, 32px, 11px, 16px);
 }
 
 window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  -moz-image-region: rect(11px, 32px, 22px, 16px);
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
@@ -1208,7 +1208,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 #go-button:-moz-locale-dir(rtl),
 #urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #urlbar-reload-button {
@@ -1220,7 +1220,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 }
 
 #urlbar-reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 #urlbar-stop-button {
@@ -1240,6 +1240,59 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #page-report-button:hover:active,
 #page-report-button[open="true"] {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+/* social recommending panel */
+
+#share-button {
+  list-style-image: url(chrome://browser/skin/share-button.png);
+}
+
+#share-button:not([shared]):not([disabled]):hover {
+  list-style-image: url(chrome://browser/skin/share-button-active.png);
+}
+
+#share-button[shared] {
+  list-style-image: url(chrome://browser/skin/share-button-shared.png);
+}
+
+#socialUserPortrait {
+  width: 48px;
+  height: 48px;
+}
+
+#socialUserDisplayName,
+#socialUserPortrait {
+  cursor: pointer;
+}
+
+#socialUserDisplayName {
+  -moz-appearance: none;
+  border: none;
+  background-color: transparent;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 130%;
+  font-weight: bold;
+}
+
+#socialUserDisplayName > .button-box {
+  -moz-padding-start: 0;
+  padding-top: 0;
+  border-top-width: 0;
+}
+
+#socialUserDisplayName:hover {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+}
+
+#editSharePopupText {
+  height: 48px;
+}
+
+#editSharePopupBottomButtons {
+  margin-top: 1em;
 }
 
 /* STAR BUTTON */
@@ -2006,7 +2059,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-down,
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
 #tabbrowser-tabs[tabsontop=false] > .tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
-  -moz-transform: scaleY(-1);
+  transform: scaleY(-1);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
@@ -2287,7 +2340,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #notification-popup-box:-moz-locale-dir(rtl),
 .notification-anchor-icon:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .notification-anchor-icon {
@@ -2835,7 +2888,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   width: 14px;
   height: 14px;
   -moz-margin-start: -moz-calc(50% - 7px);
-  -moz-transform: rotate(-45deg);
+  transform: rotate(-45deg);
   border: 1px solid transparent;
   background-clip: padding-box;
   background-repeat: no-repeat;
@@ -2943,7 +2996,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 
 #inspector-breadcrumbs > .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
 #inspector-breadcrumbs > .scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .inspector-breadcrumbs-button {
@@ -3264,7 +3317,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 7px;
   height: 24px;
   cursor: ew-resize;
-  -moz-transform: translate(12px, -12px);
+  transform: translate(12px, -12px);
   background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
 }
 
@@ -3272,7 +3325,7 @@ stack[anonid=browserStack][responsivemode] {
   width: 16px;
   height: 16px;
   cursor: se-resize;
-  -moz-transform: translate(12px, 12px);
+  transform: translate(12px, 12px);
   background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 
@@ -3329,3 +3382,123 @@ stack[anonid=browserStack][responsivemode] {
   background-image: -moz-linear-gradient(top, #B4211B, #8A1915);
   border-radius: 1px;
 }
+
+/* === social toolbar button === */
+
+/* button icon for the service */
+#social-provider-image {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 2px;
+  min-width: 0;
+  max-height: 20px;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+/* hbox that surrounds an image and its counter */
+.social-notification-icon-container {
+  cursor: pointer;
+  padding: 0px;
+  margin: 0px;
+  position: relative;
+}
+
+/* notification counter box */
+.social-notification-icon-counter {
+  background-color: rgb(240,61,37);
+  border: 1px solid rgb(216,55,34);
+  box-shadow: 0px 1px 0px rgba(0,39,121,0.77);
+  padding-right: 1px;
+  padding-left: 1px;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  z-index: 1;
+  text-align: center;
+}
+
+/* notification image */
+.social-notification-icon-image {
+  padding: 2px;
+  margin: 0px;
+  min-width: 20px;
+  max-width: 32px;
+  max-height: 20px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+/* === end of social toolbar button === */
+
+/* === social toolbar provider menu  === */
+
+#social-statusarea-user {
+  background-color: white;
+  color: black;
+  cursor: default;
+  font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
+  font-size: 12px;
+}
+
+#social-statusarea-user-portrait {
+  width: 32px;
+  height: 32px;
+  margin: 10px;
+  list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+#social-statusarea-username {
+  -moz-appearance: none;
+  color: -moz-nativehyperlinktext;
+  cursor: pointer;
+  min-width: 0;
+  margin: 0 6px;
+}
+
+#social-statusarea-username:hover {
+  text-decoration: underline;
+}
+
+/* === end of social toolbar provider menu === */
+
+/* === start of social toolbar panels === */
+
+#social-notification-panel {
+  min-height: 100px;
+  min-width: 240px;
+  max-height: 600px;
+  max-width: 400px;
+}
+
+#social-notification-panel .panel-arrowcontent {
+  margin: -4px 0 0 0;
+  padding: 0;
+  border-radius: 0px;
+}
+
+#social-notification-panel .panel-arrow[side="top"] {
+  list-style-image: url("chrome://browser/skin/social/panelarrow-up.png");
+  margin-top: -4px;
+  margin-bottom: 3px;
+  height: 21px;
+}
+
+#social-notification-panel .panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://browser/skin/social/panelarrow-down.png");
+  margin-top: -5px;
+}
+
+#social-notification-panel .panel-arrow[side="left"] {
+  list-style-image: url("chrome://browser/skin/social/panelarrow-horiz.png");
+  margin-right: -1px;
+  -moz-transform: scaleX(-1);
+}
+
+#social-notification-panel .panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/social/panelarrow-horiz.png");
+  margin-left: -1px;
+}
+
+/* === end of social toolbar panels === */

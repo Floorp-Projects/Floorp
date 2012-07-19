@@ -5,19 +5,15 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.DisplayMetrics;
+
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.RectUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-import android.util.Log;
 
 /**
  * ViewportMetrics manages state and contains some utility functions related to

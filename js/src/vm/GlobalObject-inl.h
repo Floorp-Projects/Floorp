@@ -59,6 +59,160 @@ GlobalObject::setOriginalEval(JSObject *evalobj)
     setSlot(EVAL, ObjectValue(*evalobj));
 }
 
+void
+GlobalObject::setCreateArrayFromBufferHelper(uint32_t slot, Handle<JSFunction*> fun)
+{
+    JS_ASSERT(getSlotRef(slot).isUndefined());
+    setSlot(slot, ObjectValue(*fun));
+}
+
+void
+GlobalObject::setBooleanValueOf(Handle<JSFunction*> valueOfFun)
+{
+    JS_ASSERT(getSlotRef(BOOLEAN_VALUEOF).isUndefined());
+    setSlot(BOOLEAN_VALUEOF, ObjectValue(*valueOfFun));
+}
+
+void
+GlobalObject::setCreateDataViewForThis(Handle<JSFunction*> fun)
+{
+    JS_ASSERT(getSlotRef(CREATE_DATAVIEW_FOR_THIS).isUndefined());
+    setSlot(CREATE_DATAVIEW_FOR_THIS, ObjectValue(*fun));
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<uint8_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_UINT8, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<int8_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_INT8, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<uint16_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_UINT16, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<int16_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_INT16, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<uint32_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_UINT32, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<int32_t>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_INT32, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<float>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_FLOAT32, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<double>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_FLOAT64, fun);
+}
+
+template<>
+inline void
+GlobalObject::setCreateArrayFromBuffer<uint8_clamped>(Handle<JSFunction*> fun)
+{
+    setCreateArrayFromBufferHelper(FROM_BUFFER_UINT8CLAMPED, fun);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<uint8_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_UINT8);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<int8_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_INT8);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<uint16_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_UINT16);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<int16_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_INT16);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<uint32_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_UINT32);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<int32_t>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_INT32);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<float>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_FLOAT32);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<double>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_FLOAT64);
+}
+
+template<>
+inline Value
+GlobalObject::createArrayFromBuffer<uint8_clamped>() const
+{
+    return createArrayFromBufferHelper(FROM_BUFFER_UINT8CLAMPED);
+}
+
+void
+GlobalObject::setProtoGetter(JSFunction *protoGetter)
+{
+    JS_ASSERT(getSlotRef(PROTO_GETTER).isUndefined());
+    setSlot(PROTO_GETTER, ObjectValue(*protoGetter));
+}
+
 } // namespace js
 
 #endif

@@ -23,9 +23,11 @@ EXPORT_LIBRARY = 1
 ##
 IPDLDIRS =  \
   uriloader/exthandler \
+  dom/devicestorage \
   dom/indexedDB/ipc \
+  dom/bluetooth/ipc \
   dom/plugins/ipc  \
-  dom/ipc  \
+  dom/ipc \
   dom/sms/src/ipc \
   dom/src/storage \
   gfx/layers/ipc \

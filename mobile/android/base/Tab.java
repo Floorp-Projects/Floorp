@@ -11,9 +11,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.util.Log;
-import android.view.Surface;
 import android.view.View;
 
 import org.json.JSONException;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -472,7 +470,7 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoApp.mAppContext.loadUrl("about:reader?url=" + getURL());
+        GeckoApp.mAppContext.loadUrl("about:reader?url=" + Uri.encode(getURL()));
     }
 
     public boolean doReload() {

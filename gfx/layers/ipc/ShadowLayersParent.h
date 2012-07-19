@@ -31,13 +31,16 @@ class ShadowLayersParent : public PLayersParent,
   typedef InfallibleTArray<EditReply> EditReplyArray;
 
 public:
-  ShadowLayersParent(ShadowLayerManager* aManager, ShadowLayersManager* aLayersManager);
+  ShadowLayersParent(ShadowLayerManager* aManager,
+                     ShadowLayersManager* aLayersManager,
+                     uint64_t aId);
   ~ShadowLayersParent();
 
   void Destroy();
 
   ShadowLayerManager* layer_manager() const { return mLayerManager; }
 
+  uint64_t GetId() const { return mId; }
   ContainerLayer* GetRoot() const { return mRoot; }
 
   virtual void DestroySharedSurface(gfxSharedImageSurface* aSurface);
@@ -69,6 +72,11 @@ private:
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
   nsRefPtr<ContainerLayer> mRoot;
+  // When this is nonzero, it refers to a layer tree owned by the
+  // compositor thread.  It is always true that
+  //   mId != 0 => mRoot == null
+  // because the "real tree" is owned by the compositor.
+  uint64_t mId;
   // When the widget/frame/browser stuff in this process begins its
   // destruction process, we need to Disconnect() all the currently
   // live shadow layers, because some of them might be orphaned from

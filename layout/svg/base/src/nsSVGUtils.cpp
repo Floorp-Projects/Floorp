@@ -1029,6 +1029,9 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, PRUint32 aFor)
   if (type == nsGkAtoms::svgForeignObjectFrame) {
     return static_cast<nsSVGForeignObjectFrame*>(aFrame)->GetCanvasTM(aFor);
   }
+  if (type == nsGkAtoms::svgOuterSVGFrame) {
+    return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
+  }
 
   nsSVGContainerFrame *containerFrame = do_QueryFrame(aFrame);
   if (containerFrame) {

@@ -96,28 +96,66 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   margin: 0;
 }
 
+.autocomplete-richlistitem {
+  padding: 1px;
+}
+
 .autocomplete-richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
 
-.autocomplete-richlistitem {
-  padding: 1px 2px;
+%ifdef WINSTRIPE_AERO
+@media (-moz-windows-default-theme) {
+  /*
+  -moz-appearance: menuitem is almost right, but the hover effect is not
+  transparent and is lighter than desired.
+  */
+  .autocomplete-richlistitem[selected="true"] {
+    color: inherit;
+    background-color: transparent;
+    /* four gradients for the bevel highlights on each edge, one for blue background */
+    background-image:
+      -moz-linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to right, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to left, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to top, rgba(255,255,255,0.4) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
+    background-clip: content-box;
+    border-radius: 6px;
+    outline: 1px solid rgb(124,163,206);
+    -moz-outline-radius: 3px;
+    outline-offset: -2px;
+  }
+}
+%endif
+
+.ac-title-box {
+  margin-top: 4px;
 }
 
-.autocomplete-richlistitem:not(:first-child) {
-  border-top: 1px solid ThreeDLightShadow;
+.ac-url-box {
+  margin: 1px 0 4px;
 }
 
 .ac-site-icon {
   width: 16px; 
   height: 16px;
-  margin: 0 5px -3px 3px;
+  margin: 0 5px -2px;
 }
 
 .ac-type-icon {
   width: 16px; 
   height: 16px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 4px;
+  margin-bottom: -1px;
+}
+
+.ac-url-box > .ac-site-icon,
+.ac-url-box > .ac-type-icon {
+  /* Otherwise the spacer is big enough to stretch its container */
+  height: auto;
 }
 
 .ac-extra > .ac-result-type-tag {
@@ -129,13 +167,13 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 .ac-ellipsis-after {
-  margin: 2px 0px 0px 0px !important;
+  margin: 0 !important;
   padding: 0; 
   min-width: 1em;
 }
 
 .ac-normal-text {
-  margin: 2px 0px 0px 0px !important;
+  margin: 0 !important;
   padding: 0;
 }
 
@@ -145,12 +183,25 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 html|span.ac-emphasize-text {
-  font-weight: bold;
-  text-decoration: underline;
+  box-shadow: inset 0 0 1px 1px rgba(208,208,208,0.5);
+  background-color: rgba(208,208,208,0.3);
+  border-radius: 2px;
+  text-shadow: 0 0 currentColor;
 }
 
-html|span.ac-emphasize-alt {
-  text-decoration: underline;
+@media (-moz-windows-default-theme) {
+%ifdef WINSTRIPE_AERO
+  html|span.ac-emphasize-text {
+    box-shadow: inset 0 0 1px 1px rgba(0,0,0,0.1);
+    background-color: rgba(0,0,0,0.05);
+  }
+%else
+  .ac-url-text > html|span.ac-emphasize-text,
+  .ac-action-text > html|span.ac-emphasize-text {
+    box-shadow: inset 0 0 1px 1px rgba(202,214,201,0.3);
+    background-color: rgba(202,214,201,0.2);
+  }
+%endif
 }
 
 .ac-title, .ac-url {

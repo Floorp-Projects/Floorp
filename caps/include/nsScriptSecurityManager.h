@@ -418,7 +418,7 @@ private:
     CheckPropertyAccessImpl(PRUint32 aAction,
                             nsAXPCNativeCallContext* aCallContext,
                             JSContext* cx, JSObject* aJSObject,
-                            nsISupports* aObj, nsIURI* aTargetURI,
+                            nsISupports* aObj,
                             nsIClassInfo* aClassInfo,
                             const char* aClassName, jsid aProperty,
                             void** aCachedClassPolicy);

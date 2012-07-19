@@ -1805,7 +1805,13 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
 
     fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
-    builder.LayerBuilder()->DumpRetainedLayerTree(gfxUtils::sDumpPaintFile);
+    nsIWidget* widget = aFrame->GetNearestWidget();
+    if (widget) {
+      nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
+      if (layerManager) {
+        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, gfxUtils::sDumpPaintFile);
+      }
+    }
     fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
     
     if (gfxUtils::sDumpPaintingToFile) {

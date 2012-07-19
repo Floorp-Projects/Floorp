@@ -3,42 +3,59 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/dom/Element.h"        // for Element
+#include "nsAString.h"
+#include "nsCaret.h"                    // for nsCaret
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsEditor.h"                   // for nsEditor, etc
 #include "nsEditorEventListener.h"
-#include "nsEditor.h"
+#include "nsEventListenerManager.h"     // for nsEventListenerManager
+#include "nsFocusManager.h"             // for nsFocusManager
+#include "nsGUIEvent.h"                 // for NS_EVENT_FLAG_BUBBLE, etc
+#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::input
+#include "nsIClipboard.h"               // for nsIClipboard, etc
+#include "nsIContent.h"                 // for nsIContent
+#include "nsID.h"
+#include "nsIDOMDOMStringList.h"        // for nsIDOMDOMStringList
+#include "nsIDOMDataTransfer.h"         // for nsIDOMDataTransfer
+#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDOMDragEvent.h"            // for nsIDOMDragEvent
+#include "nsIDOMElement.h"              // for nsIDOMElement
+#include "nsIDOMEvent.h"                // for nsIDOMEvent
+#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
+#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
+#include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
+#include "nsIDOMNSEvent.h"              // for nsIDOMNSEvent
+#include "nsIDOMNode.h"                 // for nsIDOMNode
+#include "nsIDOMRange.h"                // for nsIDOMRange
+#include "nsIDocument.h"                // for nsIDocument
+#include "nsIEditor.h"                  // for nsEditor::GetSelection, etc
+#include "nsIEditorIMESupport.h"
+#include "nsIEditorMailSupport.h"       // for nsIEditorMailSupport
+#include "nsIFocusManager.h"            // for nsIFocusManager
+#include "nsIFormControl.h"             // for nsIFormControl, etc
+#include "nsIMEStateManager.h"          // for nsIMEStateManager
+#include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc
+#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsIPresShell.h"               // for nsIPresShell
+#include "nsIPrivateTextEvent.h"        // for nsIPrivateTextEvent
+#include "nsIPrivateTextRange.h"        // for nsIPrivateTextRangeList
+#include "nsISelection.h"               // for nsISelection
+#include "nsISelectionController.h"     // for nsISelectionController, etc
+#include "nsISelectionPrivate.h"        // for nsISelectionPrivate
+#include "nsITransferable.h"            // for kFileMime, kHTMLMime, etc
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING
+#include "nsServiceManagerUtils.h"      // for do_GetService
+#include "nsString.h"                   // for nsAutoString
+#include "prtypes.h"                    // for PRInt32, PRUint16, PRUint32
+#ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
+#include "nsContentUtils.h"             // for nsContentUtils, etc
+#include "nsIBidiKeyboard.h"            // for nsIBidiKeyboard
+#endif
 
-#include "nsIDOMDOMStringList.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMNSEvent.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsIPrivateTextEvent.h"
-#include "nsIEditorMailSupport.h"
-#include "nsFocusManager.h"
-#include "nsEventListenerManager.h"
-#include "nsIMEStateManager.h"
-#include "mozilla/Preferences.h"
-
-// Drag & Drop, Clipboard
-#include "nsIServiceManager.h"
-#include "nsIClipboard.h"
-#include "nsIContent.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIDOMRange.h"
-#include "nsEditorUtils.h"
-#include "nsISelectionPrivate.h"
-#include "nsIDOMDragEvent.h"
-#include "nsIFocusManager.h"
-#include "nsIDOMWindow.h"
-#include "nsContentUtils.h"
-#include "nsIBidiKeyboard.h"
-#include "mozilla/dom/Element.h"
-#include "nsIFormControl.h"
+class nsPresContext;
 
 using namespace mozilla;
 

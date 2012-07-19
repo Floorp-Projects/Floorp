@@ -10,9 +10,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
+interface nsIPrincipal;
 
-[scriptable, uuid(3210a6aa-b464-4f57-9335-b22815567cf1)]
+[scriptable, uuid(66386aa9-2088-4bae-82c7-9f58bc02be64)]
 interface nsIPopupWindowManager : nsISupports {
 
   /**
@@ -24,10 +24,10 @@ interface nsIPopupWindowManager : nsISupports {
 
   /**
    * Test whether a website has permission to show a popup window.
-   * @param   uri is the URI to be tested
+   * @param   principal is the principal to be tested
    * @return  one of the enumerated permission actions defined above
    */
-  PRUint32 testPermission(in nsIURI uri);
+  PRUint32 testPermission(in nsIPrincipal principal);
 };
 
 %{ C++

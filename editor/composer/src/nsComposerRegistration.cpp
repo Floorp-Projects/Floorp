@@ -3,17 +3,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stddef.h>                     // for NULL
+
+#include "mozilla/Module.h"             // for Module, Module::CIDEntry, etc
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
+#include "nsComponentManagerUtils.h"    // for do_CreateInstance
+#include "nsComposeTxtSrvFilter.h"      // for nsComposeTxtSrvFilter, etc
+#include "nsComposerController.h"       // for nsComposerController, etc
+#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS
+#include "nsEditingSession.h"           // for NS_EDITINGSESSION_CID, etc
+#include "nsEditorSpellCheck.h"         // for NS_EDITORSPELLCHECK_CID, etc
+#include "nsError.h"                    // for NS_ERROR_NO_AGGREGATION, etc
+#include "nsIController.h"              // for nsIController
+#include "nsIControllerCommandTable.h"  // for nsIControllerCommandTable, etc
+#include "nsIControllerContext.h"       // for nsIControllerContext
+#include "nsID.h"                       // for NS_DEFINE_NAMED_CID, etc
+#include "nsISupportsImpl.h"
+#include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
+#include "nsServiceManagerUtils.h"      // for do_GetService
+#include "nscore.h"                     // for nsresult
 
-#include "nsEditingSession.h"       // for the CID
-#include "nsComposerController.h"   // for the CID
-#include "nsEditorSpellCheck.h"     // for the CID
-#include "nsComposeTxtSrvFilter.h"
-#include "nsIController.h"
-#include "nsIControllerContext.h"
-#include "nsIControllerCommandTable.h"
-
-#include "nsServiceManagerUtils.h"
+class nsISupports;
 
 #define NS_HTMLEDITOR_COMMANDTABLE_CID \
 { 0x13e50d8d, 0x9cee, 0x4ad1, { 0xa3, 0xa2, 0x4a, 0x44, 0x2f, 0xdf, 0x7d, 0xfa } }

@@ -115,14 +115,16 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define NS_CC_SKIPPABLE_DELAY       400 // ms
 
-// Force a CC after this long if there's anything in the purple buffer.
+// Force a CC after this long if there's more than NS_CC_FORCED_PURPLE_LIMIT
+// objects in the purple buffer.
 #define NS_CC_FORCED                (2 * 60 * PR_USEC_PER_SEC) // 2 min
+#define NS_CC_FORCED_PURPLE_LIMIT   10
 
 // Don't allow an incremental GC to lock out the CC for too long.
-#define NS_MAX_CC_LOCKEDOUT_TIME    (5 * PR_USEC_PER_SEC) // 5 seconds
+#define NS_MAX_CC_LOCKEDOUT_TIME    (15 * PR_USEC_PER_SEC) // 15 seconds
 
 // Trigger a CC if the purple buffer exceeds this size when we check it.
-#define NS_CC_PURPLE_LIMIT          250
+#define NS_CC_PURPLE_LIMIT          200
 
 #define JAVASCRIPT nsIProgrammingLanguage::JAVASCRIPT
 
@@ -152,6 +154,7 @@ static bool sLoadingInProgress;
 
 static PRUint32 sCCollectedWaitingForGC;
 static bool sPostGCEventsToConsole;
+static bool sPostGCEventsToObserver;
 static bool sDisableExplicitCompartmentGC;
 static PRUint32 sCCTimerFireCount = 0;
 static PRUint32 sMinForgetSkippableTime = PR_UINT32_MAX;
@@ -469,7 +472,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       const PRUnichar* m = static_cast<const PRUnichar*>(report->ucmessage);
       if (m) {
         const PRUnichar* n = static_cast<const PRUnichar*>
-            (js::GetErrorTypeNameFromNumber(cx, report->errorNumber));
+            (js::GetErrorTypeName(cx, report->exnType));
         if (n) {
           msg.Assign(n);
           msg.AppendLiteral(": ");
@@ -828,7 +831,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   ::JS_SetOperationCallback(cx, DOMOperationCallback);
 
-  if (NS_FAILED(rv) || (buttonPressed == 0)) {
+  if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
     // Allow the script to continue running
 
     if (neverShowDlgChk) {
@@ -907,7 +910,8 @@ static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinferenc
 static const char js_pccounts_content_str[]   = JS_OPTIONS_DOT_STR "pccounts.content";
 static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chrome";
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
-static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
+static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
+static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 static const char js_disable_explicit_compartment_gc[] =
   JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
@@ -920,6 +924,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
+  sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
   sDisableExplicitCompartmentGC =
     Preferences::GetBool(js_disable_explicit_compartment_gc);
 
@@ -3013,6 +3018,25 @@ DoMergingCC(bool aForced)
 
 }
 
+static void
+FireForgetSkippable(PRUint32 aSuspected, bool aRemoveChildless)
+{
+  PRTime startTime = PR_Now();
+  nsCycleCollector_forgetSkippable(aRemoveChildless);
+  sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
+  ++sCleanupsSinceLastGC;
+  PRTime delta = PR_Now() - startTime;
+  if (sMinForgetSkippableTime > delta) {
+    sMinForgetSkippableTime = delta;
+  }
+  if (sMaxForgetSkippableTime < delta) {
+    sMaxForgetSkippableTime = delta;
+  }
+  sTotalForgetSkippableTime += delta;
+  sRemovedPurples += (aSuspected - sPreviousSuspectedCount);
+  ++sForgetSkippableBeforeCC;
+}
+
 //static
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
@@ -3025,7 +3049,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   if (sCCLockedOut) {
     // We're in the middle of an incremental GC; finish it first
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED);
+    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
+    js::FinishIncrementalGC(nsJSRuntime::sRuntime, js::gcreason::CC_FORCED);
   }
 
   SAMPLE_LABEL("GC", "CycleCollectNow");
@@ -3039,14 +3064,13 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   // nsCycleCollector_forgetSkippable may mark some gray js to black.
   if (sCleanupsSinceLastGC < 2 && aExtraForgetSkippableCalls >= 0) {
-    for (;sCleanupsSinceLastGC < 2; ++sCleanupsSinceLastGC) {
-      nsCycleCollector_forgetSkippable();
+    while (sCleanupsSinceLastGC < 2) {
+      FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
     }
   }
 
   for (PRInt32 i = 0; i < aExtraForgetSkippableCalls; ++i) {
-    nsCycleCollector_forgetSkippable();
-    ++sCleanupsSinceLastGC;
+    FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
   }
 
   bool mergingCC = DoMergingCC(aForced);
@@ -3072,14 +3096,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC);
 
-  if (sPostGCEventsToConsole) {
-    PRTime delta = 0;
-    if (sFirstCollectionTime) {
-      delta = now - sFirstCollectionTime;
-    } else {
-      sFirstCollectionTime = now;
-    }
+  PRTime delta = 0;
+  if (sFirstCollectionTime) {
+    delta = now - sFirstCollectionTime;
+  } else {
+    sFirstCollectionTime = now;
+  }
 
+  PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
+  PRUint32 minForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
+    ? 0 : sMinForgetSkippableTime;
+
+  if (sPostGCEventsToConsole) {
     nsCString mergeMsg;
     if (mergingCC) {
       mergeMsg.AssignLiteral(" merged");
@@ -3094,16 +3122,13 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
       NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
     nsString msg;
-    PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
-    sMinForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
-      ? 0 : sMinForgetSkippableTime;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         (now - start) / PR_USEC_PER_MSEC, suspected,
                                         ccResults.mVisitedRefCounted, ccResults.mVisitedGCed, mergeMsg.get(),
                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
                                         sCCollectedWaitingForGC, gcMsg.get(),
                                         sForgetSkippableBeforeCC,
-                                        sMinForgetSkippableTime / PR_USEC_PER_MSEC,
+                                        minForgetSkippableTime / PR_USEC_PER_MSEC,
                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
                                         (sTotalForgetSkippableTime / cleanups) /
                                           PR_USEC_PER_MSEC,
@@ -3114,7 +3139,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     if (cs) {
       cs->LogStringMessage(msg.get());
     }
+  }
 
+  if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
     NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
        NS_LL("{ \"timestamp\": %llu, ")
          NS_LL("\"duration\": %llu, ")
@@ -3143,7 +3170,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
                                          sCCollectedWaitingForGC,
                                          ccResults.mForcedGC,
                                          sForgetSkippableBeforeCC,
-                                         sMinForgetSkippableTime / PR_USEC_PER_MSEC,
+                                         minForgetSkippableTime / PR_USEC_PER_MSEC,
                                          sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
                                          (sTotalForgetSkippableTime / cleanups) /
                                            PR_USEC_PER_MSEC,
@@ -3191,26 +3218,8 @@ ShouldTriggerCC(PRUint32 aSuspected)
 {
   return sNeedsFullCC ||
          aSuspected > NS_CC_PURPLE_LIMIT ||
-         sLastCCEndTime + NS_CC_FORCED < PR_Now();
-}
-
-static void
-TimerFireForgetSkippable(PRUint32 aSuspected, bool aRemoveChildless)
-{
-  PRTime startTime = PR_Now();
-  nsCycleCollector_forgetSkippable(aRemoveChildless);
-  sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
-  ++sCleanupsSinceLastGC;
-  PRTime delta = PR_Now() - startTime;
-  if (sMinForgetSkippableTime > delta) {
-    sMinForgetSkippableTime = delta;
-  }
-  if (sMaxForgetSkippableTime < delta) {
-    sMaxForgetSkippableTime = delta;
-  }
-  sTotalForgetSkippableTime += delta;
-  sRemovedPurples += (aSuspected - sPreviousSuspectedCount);
-  ++sForgetSkippableBeforeCC;
+         (aSuspected > NS_CC_FORCED_PURPLE_LIMIT &&
+          sLastCCEndTime + NS_CC_FORCED < PR_Now());
 }
 
 static void
@@ -3220,7 +3229,10 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     return;
   }
 
+  static PRUint32 ccDelay = NS_CC_DELAY;
   if (sCCLockedOut) {
+    ccDelay = NS_CC_DELAY / 3;
+
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
       sCCLockedOutTime = now;
@@ -3231,7 +3243,8 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     }
 
     // Finish the current incremental GC
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED);
+    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
+    js::FinishIncrementalGC(nsJSRuntime::sRuntime, js::gcreason::CC_FORCED);
   }
 
   ++sCCTimerFireCount;
@@ -3239,12 +3252,12 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   // During early timer fires, we only run forgetSkippable. During the first
   // late timer fire, we decide if we are going to have a second and final
   // late timer fire, where we may run the CC.
-  const PRUint32 numEarlyTimerFires = NS_CC_DELAY / NS_CC_SKIPPABLE_DELAY - 2;
+  const PRUint32 numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
   bool isLateTimerFire = sCCTimerFireCount > numEarlyTimerFires;
   PRUint32 suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
     if (sCCTimerFireCount == numEarlyTimerFires + 1) {
-      TimerFireForgetSkippable(suspected, true);
+      FireForgetSkippable(suspected, true);
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         // Our efforts to avoid a CC have failed, so we return to let the
         // timer fire once more to trigger a CC.
@@ -3257,10 +3270,12 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
     // Only do a forget skippable if there are more than a few new objects.
-    TimerFireForgetSkippable(suspected, false);
+    FireForgetSkippable(suspected, false);
   }
 
   if (isLateTimerFire) {
+    ccDelay = NS_CC_DELAY;
+
     // We have either just run the CC or decided we don't want to run the CC
     // next time, so kill the timer.
     sPreviousSuspectedCount = 0;
@@ -3359,9 +3374,7 @@ nsJSContext::MaybePokeCC()
     return;
   }
 
-  if (sNeedsFullCC ||
-      nsCycleCollector_suspectedCount() > 100 ||
-      sLastCCEndTime + NS_CC_FORCED < PR_Now()) {
+  if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
     sCCTimerFireCount = 0;
     CallCreateInstance("@mozilla.org/timer;1", &sCCTimer);
     if (!sCCTimer) {
@@ -3465,7 +3478,7 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
-  if (aProgress == js::GC_CYCLE_END && sPostGCEventsToConsole) {
+  if (aProgress == js::GC_CYCLE_END) {
     PRTime now = PR_Now();
     PRTime delta = 0;
     if (sFirstCollectionTime) {
@@ -3474,21 +3487,25 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
       sFirstCollectionTime = now;
     }
 
-    NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
-    nsString prefix, gcstats;
-    gcstats.Adopt(aDesc.formatMessage(aRt));
-    prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
-                                           double(delta) / PR_USEC_PER_SEC));
-    nsString msg = prefix + gcstats;
-    nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (cs) {
-      cs->LogStringMessage(msg.get());
+    if (sPostGCEventsToConsole) {
+      NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
+      nsString prefix, gcstats;
+      gcstats.Adopt(aDesc.formatMessage(aRt));
+      prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
+                                             double(delta) / PR_USEC_PER_SEC));
+      nsString msg = prefix + gcstats;
+      nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (cs) {
+        cs->LogStringMessage(msg.get());
+      }
     }
 
-    nsString json;
-    json.Adopt(aDesc.formatJSON(aRt, now));
-    nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
-    NS_DispatchToMainThread(notify);
+    if (sPostGCEventsToConsole || sPostGCEventsToObserver) {
+      nsString json;
+      json.Adopt(aDesc.formatJSON(aRt, now));
+      nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+      NS_DispatchToMainThread(notify);
+    }
   }
 
   // Prevent cycle collections and shrinking during incremental GC.

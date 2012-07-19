@@ -831,6 +831,13 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
         return NS_OK;
     }
 
+    // Every other section type we don't know must be silently ignored.
+    nsCString::const_iterator lastChar = end;
+    if (*(--lastChar) == ':') {
+        mParserState = PARSE_UNKNOWN_SECTION;
+        return NS_OK;
+    }
+
     nsresult rv;
 
     switch(mParserState) {
@@ -838,6 +845,11 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     case PARSE_ERROR: {
         // this should have been dealt with earlier
         return NS_ERROR_FAILURE;
+    }
+
+    case PARSE_UNKNOWN_SECTION: {
+        // just jump over
+        return NS_OK;
     }
 
     case PARSE_CACHE_ENTRIES: {

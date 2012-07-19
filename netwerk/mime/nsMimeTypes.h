@@ -127,6 +127,7 @@
 #define TEXT_JAVASCRIPT                     "text/javascript"
 #define TEXT_XSL                            "text/xsl"
 #define TEXT_EVENT_STREAM                   "text/event-stream"
+#define TEXT_CACHE_MANIFEST                 "text/cache-manifest"
 
 #define VIDEO_MPEG                          "video/mpeg"
 #define VIDEO_MP4                           "video/mp4"

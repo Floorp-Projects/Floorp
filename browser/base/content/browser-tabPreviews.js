@@ -97,7 +97,6 @@ var tabPreviewPanelHelper = {
     var handler = this._generateHandler(host);
     host.panel.addEventListener("popupshown", handler, false);
     host.panel.addEventListener("popuphiding", handler, false);
-    host.panel.addEventListener("popuphidden", handler, false);
 
     host._prevFocus = document.commandDispatcher.focusedElement;
   },
@@ -130,11 +129,6 @@ var tabPreviewPanelHelper = {
       gBrowser.selectedTab = host.tabToSelect;
       host.tabToSelect = null;
     }
-  },
-  _popuphidden: function (host) {
-    // Destroy the widget in order to prevent outdated content
-    // when re-opening the panel.
-    host.panel.hidden = true;
   }
 };
 

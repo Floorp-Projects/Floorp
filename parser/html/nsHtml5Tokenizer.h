@@ -131,7 +131,6 @@ class nsHtml5Tokenizer
     nsString* publicIdentifier;
     nsString* systemIdentifier;
     nsHtml5HtmlAttributes* attributes;
-    PRInt32 mappingLangToXmlLang;
     bool shouldSuspend;
   protected:
     bool confident;

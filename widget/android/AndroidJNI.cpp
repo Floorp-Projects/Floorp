@@ -80,7 +80,7 @@ Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobjec
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobject obj)
 {
-    AndroidBridge::Bridge()->SetLayerClient(jenv->NewGlobalRef(obj));
+    AndroidBridge::Bridge()->SetLayerClient(jenv, obj);
 }
 
 NS_EXPORT void JNICALL

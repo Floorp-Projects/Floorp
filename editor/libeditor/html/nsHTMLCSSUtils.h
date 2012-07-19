@@ -6,15 +6,24 @@
 #ifndef nsHTMLCSSUtils_h__
 #define nsHTMLCSSUtils_h__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-#include "nsIHTMLEditor.h"
-#include "ChangeCSSInlineStyleTxn.h"
-#include "nsEditProperty.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsTArray.h"                   // for nsTArray
+#include "nscore.h"                     // for nsAString, nsresult, nsnull
+#include "prtypes.h"                    // for PRUint8, PRInt32, PRUint32
+
+class ChangeCSSInlineStyleTxn;
+class nsIAtom;
+class nsIContent;
+class nsIDOMCSSStyleDeclaration;
+class nsIDOMElement;
+class nsIDOMNode;
+class nsINode;
+class nsString;
+namespace mozilla {
+namespace dom {
+class Element;
+}  // namespace dom
+}  // namespace mozilla
 
 #define SPECIFIED_STYLE_TYPE    1
 #define COMPUTED_STYLE_TYPE     2

@@ -9,11 +9,11 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMBluetoothAdapter;
 
-[scriptable, builtinclass, uuid(9d4bcbad-8904-4985-b366-036d32959312)]
+[scriptable, builtinclass, uuid(1442c310-8233-4670-8aa9-752ad673bae0)]
 interface nsIDOMBluetoothManager : nsIDOMEventTarget
 {
   readonly attribute bool enabled;
-  readonly attribute nsIDOMBluetoothAdapter defaultAdapter;
 
+  nsIDOMDOMRequest getDefaultAdapter();
   nsIDOMDOMRequest setEnabled(in boolean enabled);
 };

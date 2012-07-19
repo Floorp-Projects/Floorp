@@ -8,9 +8,12 @@ function makeWorkerUrl(runner) {
 
 var getFrameWorkerHandle;
 function test() {
+  waitForExplicitFinish();
+
   let scope = {};
   Cu.import("resource://gre/modules/FrameWorker.jsm", scope);
   getFrameWorkerHandle = scope.getFrameWorkerHandle;
+
   runTests(tests);
 }
 
@@ -401,6 +404,64 @@ let tests = {
         worker.terminate();
         cbnext();
       }
+    }
+  },
+
+  testNavigator: function(cbnext) {
+    let run = function() {
+      let port;
+      ononline = function() {
+        port.postMessage({topic: "ononline", data: navigator.onLine});
+      }
+      onoffline = function() {
+        port.postMessage({topic: "onoffline", data: navigator.onLine});
+      }
+      onconnect = function(e) {
+        port = e.ports[0];
+        port.postMessage({topic: "ready",
+                          data: {
+                            appName: navigator.appName,
+                            appVersion: navigator.appVersion,
+                            platform: navigator.platform,
+                            userAgent: navigator.userAgent,
+                          }
+                         });
+      }
+    }
+    let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService2);
+    let oldManage = ioService.manageOfflineStatus;
+    let oldOffline = ioService.offline;
+    
+    ioService.manageOfflineStatus = false;
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testNavigator");
+    let expected_topic = "onoffline";
+    let expected_data = false;
+    worker.port.onmessage = function(e) {
+      is(e.data.topic, "ready");
+      for each (let attr in ['appName', 'appVersion', 'platform', 'userAgent']) {
+        // each attribute must be a string with length > 0.
+        is(typeof e.data.data[attr], "string");
+        ok(e.data.data[attr].length > 0);
+      }
+
+      worker.port.onmessage = function(e) {
+        // a handler specifically for the offline notification.
+        is(e.data.topic, "onoffline");
+        is(e.data.data, false);
+
+        // add another handler specifically for the 'online' case.
+        worker.port.onmessage = function(e) {
+          is(e.data.topic, "ononline");
+          is(e.data.data, true);
+          // all good!
+          ioService.manageOfflineStatus = oldManage;
+          ioService.offline = oldOffline;
+          worker.terminate();
+          cbnext();
+        }
+        ioService.offline = false;
+      }
+      ioService.offline = true;
     }
   }
 }

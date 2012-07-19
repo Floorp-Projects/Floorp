@@ -1331,15 +1331,22 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   SelectionDetails *details;
   //look up to see what selection(s) are on this frame
   details = frameSelection->LookUpSelection(newContent, offset, 1, false);
-  // XXX is the above really necessary? We don't actually DO anything
-  // with the details other than test that they're non-null
   if (!details)
     return NS_OK;
   
+  bool normal = false;
   while (details) {
+    if (details->mType == nsISelectionController::SELECTION_NORMAL) {
+      normal = true;
+    }
     SelectionDetails *next = details->mNext;
     delete details;
     details = next;
+  }
+
+  if (!normal && aContentType == nsISelectionDisplay::DISPLAY_IMAGES) {
+    // Don't overlay an image if it's not in the primary selection.
+    return NS_OK;
   }
 
   return aList->AppendNewToTop(new (aBuilder)

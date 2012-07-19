@@ -487,8 +487,14 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // If we are making a wrapper for the nsIClassInfo interface then
     // We *don't* want to have it use the prototype meant for instances
     // of that class.
-    JSBool isClassInfo = Interface &&
-                         Interface->GetIID()->Equals(NS_GET_IID(nsIClassInfo));
+    bool iidIsClassInfo = Interface &&
+                          Interface->GetIID()->Equals(NS_GET_IID(nsIClassInfo));
+    PRUint32 classInfoFlags;
+    bool isClassInfoSingleton = helper.GetClassInfo() == helper.Object() &&
+                                NS_SUCCEEDED(helper.GetClassInfo()
+                                                   ->GetFlags(&classInfoFlags)) &&
+                                (classInfoFlags & nsIClassInfo::SINGLETON_CLASSINFO);
+    bool isClassInfo = iidIsClassInfo || isClassInfoSingleton;
 
     nsIClassInfo *info = helper.GetClassInfo();
 
@@ -1652,6 +1658,11 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 return NS_ERROR_FAILURE;
             }
         }
+
+        // Call the scriptable hook to indicate that we transplanted.
+        XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
+        if (si->GetFlags().WantPostCreate())
+            (void) si->GetCallback()->PostTransplant(wrapper, ccx, flat);
     }
 
     // Now we can just fix up the parent and return the wrapper

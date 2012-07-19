@@ -29,6 +29,17 @@ class nsGlobalWindow;
 namespace mozilla {
 namespace dom {
 
+enum ErrNum {
+#define MSG_DEF(_name, _argc, _str) \
+  _name,
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+  Err_Limit
+};
+
+bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
+
 template<bool mainThread>
 inline bool
 Throw(JSContext* cx, nsresult rv)
@@ -414,8 +425,38 @@ struct EnumEntry {
   size_t length;
 };
 
+template<bool Fatal>
+inline bool
+EnumValueNotFound(JSContext* cx, const jschar* chars, size_t length,
+                  const char* type)
+{
+  return false;
+}
+
+template<>
+inline bool
+EnumValueNotFound<false>(JSContext* cx, const jschar* chars, size_t length,
+                         const char* type)
+{
+  // TODO: Log a warning to the console.
+  return true;
+}
+
+template<>
+inline bool
+EnumValueNotFound<true>(JSContext* cx, const jschar* chars, size_t length,
+                        const char* type)
+{
+  NS_LossyConvertUTF16toASCII deflated(static_cast<const PRUnichar*>(chars),
+                                       length);
+  return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, deflated.get(), type);
+}
+
+
+template<bool InvalidValueFatal>
 inline int
-FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values, bool* ok)
+FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values,
+                    const char* type, bool* ok)
 {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
   JSString* str = JS_ValueToString(cx, v);
@@ -451,7 +492,7 @@ FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values, bool* o
     }
   }
 
-  *ok = true;
+  *ok = EnumValueNotFound<InvalidValueFatal>(cx, chars, length, type);
   return -1;
 }
 
@@ -682,6 +723,15 @@ public:
 #endif
   }
 
+  template<typename U>
+  void operator=(U* t) {
+    ptr = t->ToAStringPtr();
+    MOZ_ASSERT(ptr);
+#ifdef DEBUG
+    inited = true;
+#endif
+  }
+
   T** Slot() {
 #ifdef DEBUG
     inited = true;
@@ -736,6 +786,71 @@ protected:
 #endif
 };
 
+// A struct that has the same layout as an nsDependentString but much
+// faster constructor and destructor behavior
+struct FakeDependentString {
+  FakeDependentString() :
+    mFlags(nsDependentString::F_TERMINATED)
+  {
+  }
+
+  void SetData(const nsDependentString::char_type* aData,
+               nsDependentString::size_type aLength) {
+    MOZ_ASSERT(mFlags == nsDependentString::F_TERMINATED);
+    mData = aData;
+    mLength = aLength;
+  }
+
+  void Truncate() {
+    mData = nsDependentString::char_traits::sEmptyBuffer;
+    mLength = 0;
+  }
+
+  void SetNull() {
+    Truncate();
+    mFlags |= nsDependentString::F_VOIDED;
+  }
+
+  const nsAString* ToAStringPtr() const {
+    return reinterpret_cast<const nsDependentString*>(this);
+  }
+
+  nsAString* ToAStringPtr() {
+    return reinterpret_cast<nsDependentString*>(this);
+  }
+
+  operator const nsAString& () const {
+    return *reinterpret_cast<const nsDependentString*>(this);
+  }
+
+private:
+  const nsDependentString::char_type* mData;
+  nsDependentString::size_type mLength;
+  PRUint32 mFlags;
+
+  // A class to use for our static asserts to ensure our object layout
+  // matches that of nsDependentString.
+  class DependentStringAsserter;
+  friend class DependentStringAsserter;
+
+  class DepedentStringAsserter : public nsDependentString {
+  public:
+    static void StaticAsserts() {
+      MOZ_STATIC_ASSERT(sizeof(FakeDependentString) == sizeof(nsDependentString),
+                        "Must have right object size");
+      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mData) ==
+                          offsetof(DepedentStringAsserter, mData),
+                        "Offset of mData should match");
+      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mLength) ==
+                          offsetof(DepedentStringAsserter, mLength),
+                        "Offset of mLength should match");
+      MOZ_STATIC_ASSERT(offsetof(FakeDependentString, mFlags) ==
+                          offsetof(DepedentStringAsserter, mFlags),
+                        "Offset of mFlags should match");
+    }
+  };
+};
+
 enum StringificationBehavior {
   eStringify,
   eEmpty,
@@ -746,7 +861,7 @@ static inline bool
 ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
-                       nsDependentString& result)
+                       FakeDependentString& result)
 {
   JSString *s;
   if (v.isString()) {
@@ -767,7 +882,11 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
     if (behavior != eStringify || !pval) {
       // Here behavior == eStringify implies !pval, so both eNull and
       // eStringify should end up with void strings.
-      result.SetIsVoid(behavior != eEmpty);
+      if (behavior == eEmpty) {
+        result.Truncate();
+      } else {
+        result.SetNull();
+      }
       return true;
     }
 
@@ -784,7 +903,7 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
     return false;
   }
 
-  result.Rebind(chars, len);
+  result.SetData(chars, len);
   return true;
 }
 
@@ -836,6 +955,12 @@ public:
   void operator=(const nsAString* str) {
     MOZ_ASSERT(str);
     mStr = str;
+    mPassed = true;
+  }
+
+  void operator=(const FakeDependentString* str) {
+    MOZ_ASSERT(str);
+    mStr = str->ToAStringPtr();
     mPassed = true;
   }
 

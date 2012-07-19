@@ -400,6 +400,7 @@ class State(Node):
 
 State.ANY = State(Loc.NONE, '[any]', start=True)
 State.DEAD = State(Loc.NONE, '[dead]', start=False)
+State.DYING = State(Loc.NONE, '[dying]', start=False)
 
 class Param(Node):
     def __init__(self, loc, typespec, name):

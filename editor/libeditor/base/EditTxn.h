@@ -6,10 +6,11 @@
 #ifndef EditTxn_h__
 #define EditTxn_h__
 
-#include "nsITransaction.h"
-#include "nsString.h"
-#include "nsPIEditorTransaction.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupportsImpl.h"
+#include "nsITransaction.h"
+#include "nsPIEditorTransaction.h"
+#include "nscore.h"
 
 /**
  * Base class for all document editing transactions.

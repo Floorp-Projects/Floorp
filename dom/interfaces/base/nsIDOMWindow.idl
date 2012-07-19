@@ -11,7 +11,6 @@ interface nsIDOMBlob;
 interface nsIDOMLocation;
 interface nsIDOMMediaQueryList;
 interface nsIDOMOfflineResourceList;
-interface nsIDOMPerformance;
 interface nsIDOMStorage;
 interface nsIPrompt;
 interface nsISelection;
@@ -508,7 +507,7 @@ interface nsIDOMWindowPerformance : nsISupports
   /**
    * A namespace to hold performance related data and statistics.
    */
-  readonly attribute nsIDOMPerformance performance;
+  readonly attribute nsISupports performance;
 };
 
 /**

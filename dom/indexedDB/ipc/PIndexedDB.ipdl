@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
+include protocol PContent;
 include protocol PIndexedDBDatabase;
 include protocol PIndexedDBDeleteDatabaseRequest;
 
@@ -12,7 +13,7 @@ namespace indexedDB {
 
 protocol PIndexedDB
 {
-  manager PBrowser;
+  manager PBrowser or PContent;
 
   manages PIndexedDBDatabase;
   manages PIndexedDBDeleteDatabaseRequest;

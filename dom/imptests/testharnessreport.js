@@ -13,6 +13,17 @@ var W3CTest = {
   "expectedFailures": {},
 
   /**
+   * If set to true, we will dump the test failures to the console.
+   */
+  "dumpFailures": false,
+
+  /**
+   * If dumpFailures is true, this holds a structure like necessary for
+   * expectedFailures, for ease of updating the expectations.
+   */
+  "failures": {},
+
+  /**
    * List of test results, needed by TestRunner to update the UI.
    */
   "tests": [],
@@ -58,6 +69,17 @@ var W3CTest = {
     this.runner[(test.result === !test.todo) ? "log" : "error"](msg);
   },
 
+  "_logCollapsedMessages": function() {
+    if (this.collapsedMessages) {
+      this._log({
+        "result": true,
+        "todo": false,
+        "message": "Elided " + this.collapsedMessages + " passes or known failures."
+      });
+    }
+    this.collapsedMessages = 0;
+  },
+
   /**
    * Maybe logs a result, eliding up to MAX_COLLAPSED_MESSAGES consecutive
    * passes.
@@ -67,14 +89,7 @@ var W3CTest = {
     if (success && ++this.collapsedMessages < this.MAX_COLLAPSED_MESSAGES) {
       return;
     }
-    if (this.collapsedMessages) {
-      this._log({
-        "result": true,
-        "todo": false,
-        "message": "Elided " + this.collapsedMessages + " passes or known failures."
-      });
-    }
-    this.collapsedMessages = 0;
+    this._logCollapsedMessages();
     this._log(test);
   },
 
@@ -113,6 +128,9 @@ var W3CTest = {
       "result": test.status === test.PASS,
       "todo": this._todo(test)
     });
+    if (this.dumpFailures && test.status !== test.PASS) {
+      this.failures[test.name] = true;
+    }
   },
 
   /**
@@ -128,6 +146,13 @@ var W3CTest = {
         url in this.expectedFailures &&
         this.expectedFailures[url] === "error"
     });
+
+    this._logCollapsedMessages();
+
+    if (this.dumpFailures) {
+      dump("@@@ @@@ Failures\n");
+      dump(url + "@@@" + JSON.stringify(this.failures) + "\n");
+    }
     this.runner.testFinished(this.tests);
   },
 
@@ -148,6 +173,7 @@ var W3CTest = {
    * from tests.
    */
   "timeout": function() {
+    this.logFailure("Test runner timed us out.");
     timeout();
   }
 };

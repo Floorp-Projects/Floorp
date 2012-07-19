@@ -346,11 +346,10 @@ public:
 
   // Dictionary tests
   void PassDictionary(const Dict&, ErrorResult&);
-  void PassOptionalDictionary(const Optional<Dict>&, ErrorResult&);
-  void PassNullableDictionary(const Nullable<Dict>&, ErrorResult&);
-  void PassOptionalNullableDictionary(const Optional<Nullable<Dict> >&, ErrorResult&);
   void PassOtherDictionary(const GrandparentDict&, ErrorResult&);
   void PassSequenceOfDictionaries(const Sequence<Dict>&, ErrorResult&);
+  void PassDictionaryOrLong(const Dict&, ErrorResult&);
+  void PassDictionaryOrLong(int32_t, ErrorResult&);
 
   // Methods and properties imported via "implements"
   bool GetImplementedProperty(ErrorResult&);
