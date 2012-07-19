@@ -73,7 +73,21 @@ var shell = {
     } catch(e) { }
     if (Services.prefs.getBoolPref('app.reportCrashes') &&
         crashID) {
-      this.CrashSubmit().submit(crashID)
+
+      if (!Services.io.offline) {
+        this.CrashSubmit.submit(crashID);
+        return;
+      }
+
+      Services.obs.addObserver(function observer(subject, topic, state) {
+          if (topic != "network:offline-status-changed")
+            return;
+          if (state == 'online') {
+            shell.CrashSubmit.submit(crashID);
+            Services.obs.removeObserver(observer, topic);
+          }
+        }
+        , "network:offline-status-changed", false);
     }
   },
 
