@@ -2364,7 +2364,8 @@ for (uint32_t i = 0; i < length; ++i) {
                             "}\n")
         else:
             wrappingCode = ""
-        if descriptor.castable and not type.unroll().inner.isExternal():
+        if (not descriptor.interface.isExternal() and
+            not descriptor.interface.isCallback()):
             if descriptor.wrapperCache:
                 wrapMethod = "WrapNewBindingObject"
             else:
@@ -2381,6 +2382,10 @@ for (uint32_t i = 0; i < length; ++i) {
                 failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                           "return false;")
             else:
+                if descriptor.notflattened:
+                    raise TypeError("%s is prefable but not flattened; "
+                                    "fallback won't work correctly" %
+                                    descriptor.interface.identifier.name)
                 # Try old-style wrapping for bindings which might be preffed off.
                 failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
             wrappingCode += wrapAndSetPtr(wrap, failed)
