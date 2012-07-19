@@ -51,6 +51,7 @@ function testInitial() {
   sharePopup = SocialShareButton.sharePopup;
   ok(shareButton, "share button exists");
   ok(sharePopup, "share popup exists");
+  ok(!sharePopup.hidden, "share popup is not hidden");
 
   okButton = document.getElementById("editSharePopupOkButton");
   undoButton = document.getElementById("editSharePopupUndoButton");

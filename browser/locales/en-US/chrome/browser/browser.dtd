@@ -662,5 +662,3 @@ toolbar button -->
 <!ENTITY social.sharePopup.ok.accesskey   "O">
 <!ENTITY social.sharePopup.shared.label   "You shared this page.">
 <!ENTITY social.sharePopup.portrait.arialabel "User profile picture">
-<!ENTITY social.toggleSidebar.label "Show sidebar">
-<!ENTITY social.toggleSidebar.accesskey "s">
