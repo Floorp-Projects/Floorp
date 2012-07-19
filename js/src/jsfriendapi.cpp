@@ -470,6 +470,17 @@ JS_GetCustomIteratorCount(JSContext *cx)
     return sCustomIteratorCount;
 }
 
+JS_FRIEND_API(JSBool)
+JS_IsDeadWrapper(JSObject *obj)
+{
+    if (!IsProxy(obj)) {
+        return false;
+    }
+
+    BaseProxyHandler *handler = GetProxyHandler(obj);
+    return handler->family() == &DeadObjectProxy::sDeadObjectFamily;
+}
+
 void
 js::TraceWeakMaps(WeakMapTracer *trc)
 {
