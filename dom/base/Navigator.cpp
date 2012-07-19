@@ -158,6 +158,10 @@ Navigator::Invalidate()
   if (mTelephony) {
     mTelephony = nsnull;
   }
+
+  if (mVoicemail) {
+    mVoicemail = nsnull;
+  }
 #endif
 
   if (mConnection) {
@@ -1177,6 +1181,37 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
   }
 
   telephony.forget(aTelephony);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Navigator::GetMozVoicemail(nsIDOMMozVoicemail** aVoicemail)
+{
+  *aVoicemail = nsnull;
+
+  if (!mVoicemail) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    // Chrome is always allowed access, so do the permission check only
+    // for non-chrome pages.
+    if (!nsContentUtils::IsCallerChrome()) {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
+      NS_ENSURE_TRUE(doc, NS_OK);
+
+      nsCOMPtr<nsIURI> uri;
+      doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+
+      if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.voicemail.whitelist")) {
+        return NS_OK;
+      }
+    }
+
+    nsresult rv = NS_NewVoicemail(window, getter_AddRefs(mVoicemail));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  NS_ADDREF(*aVoicemail = mVoicemail);
   return NS_OK;
 }
 
