@@ -160,7 +160,14 @@ class MochitestOptions(optparse.OptionParser):
                     help = "sets the given variable in the application's "
                            "environment")
     defaults["environment"] = []
-    
+
+    self.add_option("--exclude-extension",
+                    action = "append", type = "string",
+                    dest = "extensionsToExclude",
+                    help = "excludes the given extension from being installed "
+                           "in the test profile")
+    defaults["extensionsToExclude"] = []
+
     self.add_option("--browser-arg",
                     action = "append", type = "string",
                     dest = "browserArgs", metavar = "ARG",
@@ -884,9 +891,10 @@ overlay chrome://webapprt/content/webapp.xul chrome://mochikit/content/browser-t
     for extensionDir in extensionDirs:
       if os.path.isdir(extensionDir):
         for dirEntry in os.listdir(extensionDir):
-          path = os.path.join(extensionDir, dirEntry)
-          if os.path.isdir(path) or (os.path.isfile(path) and path.endswith(".xpi")):
-            self.installExtensionFromPath(options, path)
+          if dirEntry not in options.extensionsToExclude:
+            path = os.path.join(extensionDir, dirEntry)
+            if os.path.isdir(path) or (os.path.isfile(path) and path.endswith(".xpi")):
+              self.installExtensionFromPath(options, path)
 
     # Install custom extensions passed on the command line.
     for path in options.extensionsToInstall:

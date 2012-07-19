@@ -96,6 +96,7 @@ class B2GOptions(MochitestOptions):
         defaults["autorun"] = True
         defaults["closeWhenDone"] = True
         defaults["testPath"] = ""
+        defaults["extensionsToExclude"] = ["specialpowers"]
 
         self.set_defaults(**defaults)
 
