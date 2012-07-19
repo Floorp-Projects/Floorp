@@ -184,6 +184,30 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
         vetoHook->OnRedirectResult(succeeded);
 }
 
+void
+DispatchCacheRunnable(nsIRunnable * r)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsICacheService> service = 
+        do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+
+    nsCOMPtr<nsIEventTarget> cacheThread;
+    if (NS_SUCCEEDED(rv)) {
+        rv = service->GetCacheIOTarget(getter_AddRefs(cacheThread));
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = cacheThread->Dispatch(r, NS_DISPATCH_NORMAL);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_WARNING("DispatchCacheRunnable failed to dispatch runnable to cache "
+                   "service thread; runnable will execute on main thread.");
+        (void) r->Run();
+    }
+}
+
 class HttpCacheQuery : public nsRunnable, public nsICacheListener
 {
 public:
@@ -290,6 +314,44 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED1(HttpCacheQuery, nsRunnable, nsICacheListener)
 
+class CloseCacheEntryRunnable : public nsRunnable
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  CloseCacheEntryRunnable(nsICacheEntryDescriptor * cacheEntry,
+                          already_AddRefed<nsIInputStream> cacheInputStream,
+                          nsHttpChannel::CloseCacheEntryFlags flags)
+    : mCacheEntry(cacheEntry)
+    , mCacheInputStream(cacheInputStream)
+    , mFlags(flags)
+  {
+    // CloseCacheEntry should have set or cleared CLOSE_CACHE_ENTRY_DOOM
+    // accordingly if it was passed CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE instead of
+    // forwarding CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE here.
+    MOZ_ASSERT(!(mFlags & nsHttpChannel::CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE));
+  }
+private:
+  nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+  AutoClose<nsIInputStream> mCacheInputStream;
+  const nsHttpChannel::CloseCacheEntryFlags mFlags;
+};
+
+nsresult
+CloseCacheEntryRunnable::Run()
+{
+    mCacheInputStream.CloseAndRelease();
+
+    if (mFlags & nsHttpChannel::CLOSE_CACHE_ENTRY_DOOM) {
+        LOG(("dooming cache entry!!"));
+        mCacheEntry->Doom();
+    }
+
+    mCacheEntry = nsnull;
+
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <public>
 //-----------------------------------------------------------------------------
@@ -306,6 +368,7 @@ nsHttpChannel::nsHttpChannel()
     , mOfflineCacheLastModifiedTime(0)
     , mCachedContentIsValid(false)
     , mCachedContentIsPartial(false)
+    , mWasAskedToCacheAsFile(false)
     , mTransactionReplaced(false)
     , mAuthRetryPending(false)
     , mResuming(false)
@@ -602,11 +665,12 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
 
     // close the cache entry.  Blow it away if we couldn't process the redirect
     // for some reason (the cache entry might be corrupt).
+    CloseCacheEntryFlags flags = CLOSE_CACHE_ENTRY_NO_FLAGS;
     if (mCacheEntry) {
         if (NS_FAILED(rv))
-            mCacheEntry->Doom();
+            flags |= CLOSE_CACHE_ENTRY_DOOM;
     }
-    CloseCacheEntry(false);
+    CloseCacheEntry(flags);
 
     mIsPending = false;
 
@@ -632,7 +696,7 @@ nsHttpChannel::HandleAsyncNotModified()
 
     DoNotifyListener();
 
-    CloseCacheEntry(true);
+    CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE);
 
     mIsPending = false;
 
@@ -979,8 +1043,7 @@ nsHttpChannel::CallOnStartRequest()
 
     // if this channel is for a download, close off access to the cache.
     if (mCacheEntry && mChannelIsForDownload) {
-        mCacheEntry->Doom();
-        CloseCacheEntry(false);
+        CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM);
     }
 
     if (!mCanceled) {
@@ -1362,7 +1425,7 @@ nsHttpChannel::ContinueProcessResponse(nsresult rv)
 
     if (NS_SUCCEEDED(rv)) {
         InitCacheEntry();
-        CloseCacheEntry(false);
+        CloseCacheEntry(CLOSE_CACHE_ENTRY_NO_FLAGS);
 
         if (mApplicationCacheForWrite) {
             // Store response in the offline cache
@@ -1434,7 +1497,7 @@ nsHttpChannel::ContinueProcessNormal(nsresult rv)
     if (mCacheEntry) {
         rv = InitCacheEntry();
         if (NS_FAILED(rv))
-            CloseCacheEntry(true);
+            CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM);
     }
 
     // Check that the server sent us what we were asking for
@@ -2270,7 +2333,7 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     mOfflineCacheAccess = 0;
 
     // Close the current cache entry.
-    CloseCacheEntry(true);
+    CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE);
 
     // Create a new channel to load the fallback entry.
     nsRefPtr<nsIChannel> newChannel;
@@ -2816,8 +2879,6 @@ HttpCacheQuery::Dispatch()
 
     nsresult rv;
 
-    // XXX: Start the cache service; otherwise DispatchToCacheIOThread will
-    // fail.
     nsCOMPtr<nsICacheService> service = 
         do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
 
@@ -3544,10 +3605,11 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
 }
 
 void
-nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
+nsHttpChannel::CloseCacheEntry(CloseCacheEntryFlags flags)
 {
+    MOZ_ASSERT(mCacheEntry || !mCacheInputStream);
+
     mCacheQuery = nsnull;
-    mCacheInputStream.CloseAndRelease();
 
     if (!mCacheEntry)
         return;
@@ -3560,28 +3622,30 @@ nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
     // Otherwise, CheckCache will make the mistake of thinking that the
     // partial cache entry is complete.
 
-    bool doom = false;
     if (mInitedCacheEntry) {
         NS_ASSERTION(mResponseHead, "oops");
-        if (NS_FAILED(mStatus) && doomOnFailure &&
+        if (NS_FAILED(mStatus) &&
+            (flags & CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE) &&
             (mCacheAccess & nsICache::ACCESS_WRITE) &&
             !mResponseHead->IsResumable())
-            doom = true;
+            flags |= CLOSE_CACHE_ENTRY_DOOM;
     }
     else if (mCacheAccess == nsICache::ACCESS_WRITE)
-        doom = true;
+        flags |= CLOSE_CACHE_ENTRY_DOOM;
 
-    if (doom) {
-        LOG(("  dooming cache entry!!"));
-        mCacheEntry->Doom();
-    }
+    flags &= ~CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE;
+
+    nsCOMPtr<nsIRunnable> r =
+      new CloseCacheEntryRunnable(mCacheEntry, mCacheInputStream.forget(),
+                                  flags);
 
     mCachedResponseHead = nsnull;
-
     mCachePump = 0;
     mCacheEntry = 0;
     mCacheAccess = 0;
     mInitedCacheEntry = false;
+
+    DispatchCacheRunnable(r);
 }
 
 
@@ -4451,7 +4515,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         rv = Connect();
     if (NS_FAILED(rv)) {
         LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
-        CloseCacheEntry(true);
+        CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE);
         AsyncAbort(rv);
     } else if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
@@ -5005,6 +5069,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (mInitedCacheEntry && !mCachedContentIsPartial &&
             (NS_SUCCEEDED(mStatus) || contentComplete) &&
             (mCacheAccess & nsICache::ACCESS_WRITE) &&
+            mWasAskedToCacheAsFile &&
             NS_SUCCEEDED(GetCacheAsFile(&asFile)) && asFile) {
             // We can allow others access to the cache entry
             // because we don't write to the cache anymore.
@@ -5016,10 +5081,15 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             // because we write to the cache asynchronously when
             // it isn't stored in the file and it isn't completely
             // written to the disk yet.
+            //
+            // Because this is a hack just for XHR2 blob support, and XHR2
+            // blobs are rare, we use the mWasAskedToCacheAsFile to avoid
+            // calling GetCacheAsFile (which can be expensive, since it takes
+            // the cache service lock) most of the time.
             mCacheEntry->MarkValid();
         }
     }
-    CloseCacheEntry(!contentComplete);
+    CloseCacheEntry(contentComplete ? 0 : CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE);
 
     if (mOfflineCacheEntry)
         CloseOfflineCacheEntry();
@@ -5391,6 +5461,9 @@ nsHttpChannel::SetCacheAsFile(bool value)
         policy = nsICache::STORE_ON_DISK_AS_FILE;
     else
         policy = nsICache::STORE_ANYWHERE;
+
+    mWasAskedToCacheAsFile = mWasAskedToCacheAsFile || value;
+
     return mCacheEntry->SetStoragePolicy(policy);
 }
 
@@ -5458,7 +5531,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     rv = OnCacheEntryAvailableInternal(entry, access, status);
 
     if (NS_FAILED(rv)) {
-        CloseCacheEntry(true);
+        CloseCacheEntry(CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE);
         AsyncAbort(rv);
     }
 

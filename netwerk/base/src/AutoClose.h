@@ -19,7 +19,13 @@ class AutoClose
 {
 public:
   AutoClose() { } 
-  ~AutoClose(){
+  AutoClose(already_AddRefed<T> & other)
+    : mPtr(other)
+  {
+  }
+
+  ~AutoClose()
+  {
     Close();
   }
 
