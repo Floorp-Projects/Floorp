@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(57889367-590b-4ea2-a345-5211253babf5)]
+[scriptable, builtinclass, uuid(c98f0f21-fe96-4f06-9978-0a9422a789fa)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -630,4 +630,23 @@ interface nsIDocShell : nsISupports
    * in his parent hierarchy.
    */
   readonly attribute boolean isBelowContentBoundary;
+
+  /**
+   * Set the app id this docshell is associated with. It has to be a valid app
+   * id. If the docshell isn't associated with any app, the value should be
+   * nsIScriptSecurityManager::NO_APP_ID.
+   * However, this is the default value if nothing is set.
+   *
+   * This method is [noscript] to reduce the scope. It should be used at very
+   * specific moments.
+   *
+   * Calling setAppId() will mark the frame as an app frame.
+   */
+  [noscript] void setAppId(in unsigned long appId);
+
+  /**
+   * Returns the app id of the app the docshell is in.
+   * Returns nsIScriptSecurityManager::NO_APP_ID If the docshell is not in an app.
+   */
+  readonly attribute unsigned long appId;
 };
