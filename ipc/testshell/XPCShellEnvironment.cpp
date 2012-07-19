@@ -864,15 +864,6 @@ FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx,
     return mSystemPrincipal;
 }
 
-NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId,
-                                   bool aInMozBrowser,
-                                   nsACString& aExtendedOrigin)
-{
-  aExtendedOrigin.Truncate();
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(nsrefcnt)
 XPCShellDirProvider::AddRef()
 {

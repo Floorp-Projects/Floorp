@@ -1487,15 +1487,6 @@ FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx, JSStackFrame **fp)
     return mSystemPrincipal;
 }
 
-NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId,
-                                   bool aInMozBrowser,
-                                   nsACString& aExtendedOrigin)
-{
-  aExtendedOrigin.Truncate();
-  return NS_OK;
-}
-
 /***************************************************************************/
 
 // #define TEST_InitClassesWithNewWrappedGlobal
