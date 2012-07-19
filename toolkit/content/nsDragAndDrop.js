@@ -565,10 +565,11 @@ var nsDragAndDrop = {
       aDraggedText = aDraggedText.replace(/^\s*|\s*$/g, '');
 
       var uri;
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService);
+
       try {
-        uri = ioService.newURI(aDraggedText, null, null);
+        uri = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService)
+                        .newURI(aDraggedText, null, null);
       } catch (e) {
       }
 
@@ -587,12 +588,11 @@ var nsDragAndDrop = {
       var sourceDoc = aDragSession.sourceDocument;
       // Use "file:///" as the default sourceURI so that drops of file:// URIs
       // are always allowed.
-      var principal = sourceDoc ? sourceDoc.nodePrincipal
-                                : secMan.getCodebasePrincipal(ioService.newURI("file:///", null, null));
+      var sourceURI = sourceDoc ? sourceDoc.documentURI : "file:///";
 
       try {
-        secMan.checkLoadURIStrWithPrincipal(principal, aDraggedText,
-                                            nsIScriptSecurityManager.STANDARD);
+        secMan.checkLoadURIStr(sourceURI, aDraggedText,
+                               nsIScriptSecurityManager.STANDARD);
       } catch (e) {
         // Stop event propagation right here.
         aEvent.stopPropagation();

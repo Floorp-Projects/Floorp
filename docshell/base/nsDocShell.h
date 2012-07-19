@@ -664,15 +664,6 @@ protected:
 
     bool JustStartedNetworkLoad();
 
-    enum FrameType {
-        eFrameTypeRegular  = 0x0, // 0000
-        eFrameTypeBrowser  = 0x1, // 0001
-        eFrameTypeApp      = 0x2  // 0010
-    };
-
-    FrameType GetInheritedFrameType();
-    FrameType GetFrameType();
-
     // hash of session storages, keyed by domain
     nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
 
@@ -823,8 +814,6 @@ protected:
     static nsIURIFixup *sURIFixup;
 
     nsRefPtr<nsDOMNavigationTiming> mTiming;
-
-    PRUint32 mAppId;
 
 private:
     nsCOMPtr<nsIAtom> mForcedCharset;

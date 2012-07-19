@@ -809,14 +809,12 @@ function ReadManifest(aURL, inherited_status)
             }
         }
 
-        var principal = secMan.getCodebasePrincipal(aURL);
-
         if (items[0] == "include") {
             if (items.length != 2 || runHttp)
                 throw "Error 2 in manifest file " + aURL.spec + " line " + lineNo;
             var incURI = gIOService.newURI(items[1], null, listURL);
-            secMan.checkLoadURIWithPrincipal(principal, incURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, incURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             ReadManifest(incURI, expected_status);
         } else if (items[0] == TYPE_LOAD) {
             if (items.length != 2 ||
@@ -824,14 +822,14 @@ function ReadManifest(aURL, inherited_status)
                  expected_status != EXPECTED_DEATH))
                 throw "Error 3 in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI] = runHttp
-                            ? ServeFiles(principal, httpDepth,
+                            ? ServeFiles(aURL, httpDepth,
                                          listURL, [items[1]])
                             : [gIOService.newURI(items[1], null, listURL)];
             var prettyPath = runHttp
                            ? gIOService.newURI(items[1], null, listURL).spec
                            : testURI.spec;
-            secMan.checkLoadURIWithPrincipal(principal, testURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: TYPE_LOAD,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
@@ -850,14 +848,14 @@ function ReadManifest(aURL, inherited_status)
             if (items.length != 2)
                 throw "Error 4 in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI] = runHttp
-                            ? ServeFiles(principal, httpDepth,
+                            ? ServeFiles(aURL, httpDepth,
                                          listURL, [items[1]])
                             : [gIOService.newURI(items[1], null, listURL)];
             var prettyPath = runHttp
                            ? gIOService.newURI(items[1], null, listURL).spec
                            : testURI.spec;
-            secMan.checkLoadURIWithPrincipal(principal, testURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: TYPE_SCRIPT,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
@@ -876,17 +874,17 @@ function ReadManifest(aURL, inherited_status)
             if (items.length != 3)
                 throw "Error 5 in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI, refURI] = runHttp
-                                  ? ServeFiles(principal, httpDepth,
+                                  ? ServeFiles(aURL, httpDepth,
                                                listURL, [items[1], items[2]])
                                   : [gIOService.newURI(items[1], null, listURL),
                                      gIOService.newURI(items[2], null, listURL)];
             var prettyPath = runHttp
                            ? gIOService.newURI(items[1], null, listURL).spec
                            : testURI.spec;
-            secMan.checkLoadURIWithPrincipal(principal, testURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            secMan.checkLoadURIWithPrincipal(principal, refURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            secMan.checkLoadURI(aURL, refURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: items[0],
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
@@ -938,7 +936,7 @@ function BuildUseCounts()
     }
 }
 
-function ServeFiles(manifestPrincipal, depth, aURL, files)
+function ServeFiles(manifestURL, depth, aURL, files)
 {
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
     var directory = listURL.file.parent;
@@ -970,8 +968,8 @@ function ServeFiles(manifestPrincipal, depth, aURL, files)
         var testURI = gIOService.newURI(file, null, testbase);
 
         // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
-        secMan.checkLoadURIWithPrincipal(manifestPrincipal, testURI,
-                                         CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+        secMan.checkLoadURI(manifestURL, testURI,
+                            CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
 
         return testURI;
     }

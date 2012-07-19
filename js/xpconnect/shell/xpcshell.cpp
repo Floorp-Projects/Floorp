@@ -1332,11 +1332,26 @@ FullTrustSecMan::CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal,
     return NS_OK;
 }
 
+/* void checkLoadURI (in nsIURI from, in nsIURI uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags)
+{
+    return NS_OK;
+}
+
 /* void checkLoadURIStrWithPrincipal (in nsIPrincipal aPrincipal, in AUTF8String uri, in unsigned long flags); */
 NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal,
                                               const nsACString & uri,
                                               PRUint32 flags)
+{
+    return NS_OK;
+}
+
+/* void checkLoadURIStr (in AUTF8String from, in AUTF8String uri, in unsigned long flags); */
+NS_IMETHODIMP
+FullTrustSecMan::CheckLoadURIStr(const nsACString & from,
+                                 const nsACString & uri, PRUint32 flags)
 {
     return NS_OK;
 }
@@ -1485,15 +1500,6 @@ FullTrustSecMan::GetCxSubjectPrincipalAndFrame(JSContext *cx, JSStackFrame **fp)
 {
     *fp = nsnull;
     return mSystemPrincipal;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId,
-                                   bool aInMozBrowser,
-                                   nsACString& aExtendedOrigin)
-{
-  aExtendedOrigin.Truncate();
-  return NS_OK;
 }
 
 /***************************************************************************/

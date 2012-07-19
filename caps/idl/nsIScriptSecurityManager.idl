@@ -9,7 +9,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(bd94820d-4fd5-4d57-a40e-406ee72d27b7)]
+[scriptable, uuid(cdb27711-492b-4973-938b-de81ac124658)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -85,6 +85,21 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                    in unsigned long flags);
 
     /**
+     * Check that content from "from" can load "uri".
+     *
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
+     * should be denied.
+     *
+     * @param from the URI causing the load
+     * @param uri the URI that is being loaded
+     * @param flags the permission set, see above
+     *
+     * @deprecated Use checkLoadURIWithPrincipal instead of this function.
+     */
+    [deprecated] void checkLoadURI(in nsIURI from, in nsIURI uri,
+                                   in unsigned long flags);
+
+    /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:
      *
      * 1) The URI is a string, not a URI object.
@@ -95,6 +110,15 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
                                       in AUTF8String uri,
+                                      in unsigned long flags);
+
+    /**
+     * Same as CheckLoadURI but takes string arguments for ease of use
+     * by scripts
+     *
+     * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
+     */
+    [deprecated] void checkLoadURIStr(in AUTF8String from, in AUTF8String uri,
                                       in unsigned long flags);
 
     /**
@@ -236,18 +260,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipalAndFrame(in JSContextPtr cx,
                                                                    out JSStackFramePtr fp);
-
-
-    const unsigned long NO_APP_ID = 0;
-    const unsigned long UNKNOWN_APP_ID = 4294967295; // PR_UINT32_MAX
-
-    /**
-     * Returns the extended origin for the uri.
-     * appId can be NO_APP_ID, UNKWOWN_APP_ID or a valid app id.
-     * inMozBrowser has to be true if the uri is inside a mozbrowser iframe.
-     */
-    AUTF8String getExtendedOrigin(in nsIURI uri, in unsigned long appId,
-                                  in boolean inMozBrowser);
 };
 
 %{C++
