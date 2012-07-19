@@ -62,7 +62,6 @@
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
-#include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -92,6 +91,24 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
+bool
+JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+                               CallArgs args)
+{
+    const Value &thisv = args.thisv();
+    JS_ASSERT(!test(thisv));
+
+    if (thisv.isObject()) {
+        JSObject &thisObj = args.thisv().toObject();
+        if (thisObj.isProxy())
+            return Proxy::nativeCall(cx, test, impl, args);
+    }
+
+    ReportIncompatible(cx, args);
+    return false;
+}
+
 
 /*
  * This class is a version-establishing barrier at the head of a VM entry or
@@ -1456,7 +1473,7 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
-    AssertHeapIsIdle(cx);
+    AssertHeapIsIdleOrIterating(cx);
     JS_ASSERT(state == STATE_UNENTERED);
     if (cx->compartment == target->compartment()) {
         state = STATE_SAME_COMPARTMENT;
@@ -1588,6 +1605,15 @@ JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
     JS_ASSERT(origobj != target);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(target));
+
+    /*
+     * Transplantation typically allocates new wrappers in every compartment. If
+     * an incremental GC is active, this causes every compartment to be leaked
+     * for that GC. Hence, we finish any ongoing incremental GC before the
+     * transplant to avoid leaks.
+     */
+    if (cx->runtime->gcIncrementalState != NO_INCREMENTAL)
+        FinishIncrementalGC(cx->runtime, gcreason::TRANSPLANT);
 
     JSCompartment *destination = target->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
@@ -3972,11 +3998,15 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj_, jsid id_, unsigned flags,
-                             JSPropertyDescriptor *desc)
+                             JSPropertyDescriptor *desc_)
 {
     RootedId id(cx, id_);
     RootedObject obj(cx, obj_);
-    return GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, desc);
+    AutoPropertyDescriptorRooter desc(cx);
+    if (!GetPropertyDescriptorById(cx, obj, id, flags, JS_FALSE, &desc))
+        return false;
+    *desc_ = desc;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3986,7 +4016,7 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj_, jsid id_,
 {
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
-    PropertyDescriptor desc;
+    AutoPropertyDescriptorRooter desc(cx);
     if (!GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, JS_FALSE, &desc))
         return false;
 
@@ -4885,14 +4915,6 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj_, jsid id_, JSNative call,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     return js_DefineFunction(cx, obj, id, call, nargs, attrs);
-}
-
-extern JS_PUBLIC_API(JSBool)
-JS_CallNonGenericMethodOnProxy(JSContext *cx, unsigned argc, jsval *vp, JSNative native,
-                               JSClass *clasp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return HandleNonGenericMethodClassMismatch(cx, args, native, Valueify(clasp));
 }
 
 struct AutoLastFrameCheck {
@@ -6308,12 +6330,19 @@ JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
                      void *userRef, const unsigned errorNumber, ...)
 {
     va_list ap;
-
-    AssertHeapIsIdle(cx);
     va_start(ap, errorNumber);
+    JS_ReportErrorNumberVA(cx, errorCallback, userRef, errorNumber, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
+                       void *userRef, const unsigned errorNumber,
+                       va_list ap)
+{
+    AssertHeapIsIdle(cx);
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
                            errorNumber, JS_TRUE, ap);
-    va_end(ap);
 }
 
 JS_PUBLIC_API(void)
@@ -6429,6 +6458,14 @@ JS_ObjectIsDate(JSContext *cx, JSObject *obj)
     AssertHeapIsIdle(cx);
     JS_ASSERT(obj);
     return obj->isDate();
+}
+
+JS_PUBLIC_API(void)
+JS_ClearDateCaches(JSContext *cx)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    js_ClearDateCaches();
 }
 
 /************************************************************************/

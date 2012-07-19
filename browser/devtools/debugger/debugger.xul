@@ -80,10 +80,14 @@
 #endif
     </toolbar>
     <hbox id="dbg-content" flex="1">
-      <vbox id="stackframes"/>
-      <splitter id="stack-script-splitter" class="devtools-side-splitter"/>
+      <vbox id="stackframes+breakpoints">
+        <vbox id="stackframes" flex="1"/>
+        <splitter class="devtools-horizontal-splitter"/>
+        <vbox id="breakpoints"/>
+      </vbox>
+      <splitter class="devtools-side-splitter"/>
       <vbox id="editor" flex="1"/>
-      <splitter id="script-properties-splitter" class="devtools-side-splitter"/>
+      <splitter class="devtools-side-splitter"/>
       <vbox id="variables"/>
     </hbox>
   </vbox>

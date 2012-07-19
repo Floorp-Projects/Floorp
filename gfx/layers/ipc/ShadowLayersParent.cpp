@@ -90,8 +90,12 @@ ShadowChild(const OpRemoveChild& op)
 //--------------------------------------------------
 // ShadowLayersParent
 ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager,
-                                       ShadowLayersManager* aLayersManager)
-  : mLayerManager(aManager), mShadowLayersManager(aLayersManager), mDestroyed(false)
+                                       ShadowLayersManager* aLayersManager,
+                                       uint64_t aId)
+  : mLayerManager(aManager)
+  , mShadowLayersManager(aLayersManager)
+  , mId(aId)
+  , mDestroyed(false)
 {
   MOZ_COUNT_CTOR(ShadowLayersParent);
 }
@@ -187,6 +191,15 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
+    case Edit::TOpCreateRefLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreateRefLayer"));
+
+      nsRefPtr<ShadowRefLayer> layer =
+        layer_manager()->CreateShadowRefLayer();
+      layer->SetAllocator(this);
+      AsShadowLayer(edit.get_OpCreateRefLayer())->Bind(layer);
+      break;
+    }
 
       // Attributes
     case Edit::TOpSetLayerAttributes: {
@@ -250,6 +263,13 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
         static_cast<CanvasLayer*>(layer)->SetFilter(
           specific.get_CanvasLayerAttributes().filter());
+        break;
+
+      case Specific::TRefLayerAttributes:
+        MOZ_LAYERS_LOG(("[ParentSide]   ref layer"));
+
+        static_cast<RefLayer*>(layer)->SetReferentId(
+          specific.get_RefLayerAttributes().id());
         break;
 
       case Specific::TImageLayerAttributes: {
@@ -397,7 +417,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
-  mShadowLayersManager->ShadowLayersUpdated(isFirstPaint);
+  mShadowLayersManager->ShadowLayersUpdated(this, isFirstPaint);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();

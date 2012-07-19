@@ -92,7 +92,11 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // should enforce that the value of this property must be 1 or larger.
 #define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
 
-// NOTE: next free bit is (1<<15)
+// Does this property suppor the hashless hex color quirk in quirks mode?
+#define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
+
+// Does this property suppor the unitless length quirk in quirks mode?
+#define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
 
 /**
  * Types of animatable values.
@@ -150,8 +154,14 @@ public:
   static void ReleaseTable(void);
 
   // Given a property string, return the enum value
-  static nsCSSProperty LookupProperty(const nsAString& aProperty);
-  static nsCSSProperty LookupProperty(const nsACString& aProperty);
+  enum EnabledState {
+    eEnabled,
+    eAny
+  };
+  static nsCSSProperty LookupProperty(const nsAString& aProperty,
+                                      EnabledState aEnabled);
+  static nsCSSProperty LookupProperty(const nsACString& aProperty,
+                                      EnabledState aEnabled);
 
   static inline bool IsShorthand(nsCSSProperty aProperty) {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
@@ -293,6 +303,17 @@ public:
                          aProperty < eCSSProperty_COUNT_no_shorthands,
                       "out of range");
     return gPropertyIndexInStruct[aProperty];
+  }
+
+private:
+  static bool gPropertyEnabled[eCSSProperty_COUNT];
+
+public:
+
+  static bool IsEnabled(nsCSSProperty aProperty) {
+    NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+                      "out of range");
+    return gPropertyEnabled[aProperty];
   }
 
 public:

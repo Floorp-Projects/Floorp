@@ -6,24 +6,13 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.gfx.BufferedCairoImage;
-import org.mozilla.gecko.gfx.CairoImage;
-import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.IntSize;
-import org.mozilla.gecko.gfx.SingleTileLayer;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.Region;
-import android.graphics.RegionIterator;
-import android.opengl.GLES20;
-import android.util.Log;
+
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.FloatBuffer;
 
 public class ScreenshotLayer extends SingleTileLayer {
     private static final int SCREENSHOT_SIZE_LIMIT = 1048576;

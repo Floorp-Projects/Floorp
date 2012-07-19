@@ -6,12 +6,16 @@
 #ifndef nsEditorEventListener_h__
 #define nsEditorEventListener_h__
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-
-#include "nsIDOMEvent.h"
+#include "nsError.h"
 #include "nsIDOMEventListener.h"
+#include "nsISupportsImpl.h"
+#include "nscore.h"
 
-#include "nsCaret.h"
+class nsCaret;
+class nsIDOMEvent;
+class nsIPresShell;
 
 // X.h defines KeyPress
 #ifdef KeyPress

@@ -6,20 +6,13 @@
 #ifndef _nshtmlobjectresizer__h
 #define _nshtmlobjectresizer__h
 
-#include "nsCOMPtr.h"
-#include "nsWeakReference.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-
-#include "nsISelection.h"
-#include "nsString.h"
-#include "nsIHTMLEditor.h"
-#include "nsIHTMLObjectResizer.h"
-
-#include "nsIDOMMouseEvent.h"
-
 #include "nsIDOMEventListener.h"
 #include "nsISelectionListener.h"
+#include "nsISupportsImpl.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsLiteralString.h"
+
+class nsIHTMLEditor;
 
 #define kTopLeft       NS_LITERAL_STRING("nw")
 #define kTop           NS_LITERAL_STRING("n")

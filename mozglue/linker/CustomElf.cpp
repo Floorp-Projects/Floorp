@@ -394,15 +394,30 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
              ((pt_load->p_flags & PF_R) ? PROT_READ : 0);
 
   /* Mmap at page boundary */
-  Addr page_offset = pt_load->p_vaddr & ~PAGE_MASK;
-  void *where = GetPtr(pt_load->p_vaddr - page_offset);
-  debug("%s: Loading segment @%p %c%c%c", GetPath(), where,
-                                          prot & PROT_READ ? 'r' : '-',
-                                          prot & PROT_WRITE ? 'w' : '-',
-                                          prot & PROT_EXEC ? 'x' : '-');
-  void *mapped = mappable->mmap(where, pt_load->p_filesz + page_offset,
-                                prot, MAP_PRIVATE | MAP_FIXED,
-                                pt_load->p_offset - page_offset);
+  Addr align = PAGE_SIZE;
+  void *mapped, *where;
+  do {
+    Addr align_offset = pt_load->p_vaddr & (align - 1);
+    where = GetPtr(pt_load->p_vaddr - align_offset);
+    debug("%s: Loading segment @%p %c%c%c", GetPath(), where,
+                                            prot & PROT_READ ? 'r' : '-',
+                                            prot & PROT_WRITE ? 'w' : '-',
+                                            prot & PROT_EXEC ? 'x' : '-');
+    mapped = mappable->mmap(where, pt_load->p_filesz + align_offset,
+                            prot, MAP_PRIVATE | MAP_FIXED,
+                            pt_load->p_offset - align_offset);
+    if ((mapped != MAP_FAILED) || (pt_load->p_vaddr == 0) ||
+        (pt_load->p_align == align))
+      break;
+    /* The virtual address space for the library is properly aligned at
+     * 16k on ARMv6 (see CustomElf::Load), and so is the first segment
+     * (p_vaddr == 0). But subsequent segments may not be 16k aligned
+     * and fail to mmap. In such case, try to mmap again at the p_align
+     * boundary instead of page boundary. */
+    debug("%s: Failed to mmap, retrying");
+    align = pt_load->p_align;
+  } while (1);
+
   if (mapped != where) {
     if (mapped == MAP_FAILED) {
       log("%s: Failed to mmap", GetPath());

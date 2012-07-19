@@ -8,18 +8,21 @@
 #define mozilla_dom_bluetooth_bluetoothadapter_h__
 
 #include "BluetoothCommon.h"
+#include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDOMBluetoothAdapter.h"
-#include "nsIDOMDOMRequest.h"
-#include "mozilla/Observer.h"
 
 class nsIEventTarget;
+class nsIDOMDOMRequest;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothSignal;
+class BluetoothNamedValue;
+
 class BluetoothAdapter : public nsDOMEventTargetHelper
                        , public nsIDOMBluetoothAdapter
-                       , public BluetoothEventObserver
+                       , public BluetoothSignalObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -29,17 +32,55 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothAdapter,
                                            nsDOMEventTargetHelper)
-
   static already_AddRefed<BluetoothAdapter>
-  Create(const nsCString& name);
+  Create(nsPIDOMWindow* aOwner, const nsAString& name);
 
-  void Notify(const BluetoothEvent& aParam);
-protected:
-  nsCString mName;
+  void Notify(const BluetoothSignal& aParam);
+
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
+  {
+    return static_cast<nsDOMEventTargetHelper*>(
+      const_cast<BluetoothAdapter*>(this));
+  }
+
+  nsISupports*
+  ToISupports() const
+  {
+    return ToIDOMEventTarget();
+  }
+
+  nsresult GetProperties();
+  void SetPropertyByValue(const BluetoothNamedValue& aValue);  
 private:
-  BluetoothAdapter() {}
-  BluetoothAdapter(const nsCString& name);
+  
+  BluetoothAdapter(const nsAString& aPath) : mPath(aPath)
+  {
+  }
+
   ~BluetoothAdapter();
+
+  nsresult SetProperty(const BluetoothNamedValue& aValue,
+                       nsIDOMDOMRequest** aRequest);
+  nsresult StartStopDiscovery(bool aStart, nsIDOMDOMRequest** aRequest);
+  
+  nsString mAddress;
+  nsString mName;
+  nsString mPath;
+  bool mEnabled;
+  bool mDiscoverable;
+  bool mDiscovering;
+  bool mPairable;
+  bool mPowered;
+  PRUint32 mPairableTimeout;
+  PRUint32 mDiscoverableTimeout;
+  PRUint32 mClass;
+  nsTArray<nsString> mDeviceAddresses;
+  nsTArray<nsString> mUuids;
+
+  NS_DECL_EVENT_HANDLER(propertychanged)
+  NS_DECL_EVENT_HANDLER(devicefound)
+  NS_DECL_EVENT_HANDLER(devicedisappeared)
 };
 
 END_BLUETOOTH_NAMESPACE

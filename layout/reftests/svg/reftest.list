@@ -178,7 +178,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
-fuzzy-if(Android,9,38) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg 
+fuzzy-if(Android,9,61) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg 
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
@@ -302,6 +302,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspa
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
 == viewBox-valid-01.svg pass.svg
+== viewBox-valid-02.xhtml pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml

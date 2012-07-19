@@ -8,8 +8,6 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

@@ -1575,7 +1575,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     }
 #endif
 
-    SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
+    SetElementICInfo ic;
 
     // One by one, check if the most important stack entries have registers,
     // and if so, pin them. This is to avoid spilling and reloading from the
@@ -2175,7 +2175,7 @@ mjit::Compiler::jsop_getelem()
         return true;
     }
 
-    GetElementICInfo ic = GetElementICInfo(JSOp(*PC));
+    GetElementICInfo ic;
 
     // Pin the top of the stack to avoid spills, before allocating registers.
     MaybeRegisterID pinnedIdData = frame.maybePinData(id);

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; indent-tab-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,7 +38,11 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Telemetry.h"
 
+#include "sqlite3.h"
+#include "mozilla/storage.h"
+
 using namespace mozilla;
+using namespace mozilla::storage;
 
 static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
@@ -100,10 +105,10 @@ class EvictionObserver
     : mDB(db), mEvictionFunction(evictionFunction)
     {
       mDB->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
+          NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete BEFORE DELETE"
                              " ON moz_cache FOR EACH ROW BEGIN SELECT"
                              " cache_eviction_observer("
-                             "  OLD.key, OLD.generation);"
+                             "  OLD.ClientID, OLD.key, OLD.generation);"
                              " END;"));
       mEvictionFunction->Reset();
     }
@@ -181,11 +186,21 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
   PRUint32 numEntries;
   nsresult rv = values->GetNumEntries(&numEntries);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(numEntries == 2, "unexpected number of arguments");
+  NS_ASSERTION(numEntries == 3, "unexpected number of arguments");
 
   PRUint32 valueLen;
-  const char *key = values->AsSharedUTF8String(0, &valueLen);
-  int generation  = values->AsInt32(1);
+  const char *clientID = values->AsSharedUTF8String(0, &valueLen);
+  const char *key = values->AsSharedUTF8String(1, &valueLen);
+  nsCAutoString fullKey(clientID);
+  fullKey.AppendLiteral(":");
+  fullKey.Append(key);
+  int generation  = values->AsInt32(2);
+
+  // If the key is currently locked, refuse to delete this row.
+  if (mDevice->IsLocked(fullKey)) {
+    NS_ADDREF(*_retval = new IntegerVariant(SQLITE_IGNORE));
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIFile> file;
   rv = GetCacheDataFile(mDevice->CacheDirectory(), key,
@@ -336,8 +351,15 @@ public:
   static nsOfflineCacheBinding *
       Create(nsIFile *cacheDir, const nsCString *key, int generation);
 
+  enum { FLAG_NEW_ENTRY = 1 };
+
   nsCOMPtr<nsIFile> mDataFile;
   int               mGeneration;
+  int		    mFlags;
+
+  bool IsNewEntry() { return mFlags & FLAG_NEW_ENTRY; }
+  void MarkNewEntry() { mFlags |= FLAG_NEW_ENTRY; }
+  void ClearNewEntry() { mFlags &= ~FLAG_NEW_ENTRY; }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheBinding)
@@ -407,6 +429,7 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
 
   binding->mDataFile.swap(file);
   binding->mGeneration = generation;
+  binding->mFlags = 0;
   return binding;
 }
 
@@ -421,7 +444,6 @@ struct nsOfflineCacheRecord
   const PRUint8 *metaData;
   PRUint32       metaDataLen;
   PRInt32        generation;
-  PRInt32        flags;
   PRInt32        dataSize;
   PRInt32        fetchCount;
   PRInt64        lastFetched;
@@ -434,13 +456,11 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
                  const nsCString *fullKey,
                  const nsOfflineCacheRecord &rec)
 {
-  if (rec.flags != 0)
-  {
-    LOG(("refusing to load busy entry\n"));
-    return nsnull;
-  }
-
   nsCacheEntry *entry;
+
+  if (device->IsLocked(*fullKey)) {
+      return nsnull;
+  }
   
   nsresult rv = nsCacheEntry::Create(fullKey->get(), // XXX enable sharing
                                      nsICache::STREAM_BASED,
@@ -882,6 +902,7 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
   // Decompose the key into "ClientID" and "Key"
   nsCAutoString keyBuf;
   const char *cid, *key;
+
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
 
@@ -895,7 +916,6 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
   nsOfflineCacheRecord rec;
   rec.metaData = (const PRUint8 *) md;
   rec.metaDataLen = mdSize;
-  rec.flags = 0;  // mark entry as inactive
   rec.dataSize = entry->DataSize();
   rec.fetchCount = entry->FetchCount();
   rec.lastFetched = PRTimeFromSeconds(entry->LastFetched());
@@ -906,14 +926,13 @@ nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 
   nsresult rv;
   rv  = statement->BindBlobByIndex(0, rec.metaData, rec.metaDataLen);
-  rv |= statement->BindInt32ByIndex(1, rec.flags);
-  rv |= statement->BindInt32ByIndex(2, rec.dataSize);
-  rv |= statement->BindInt32ByIndex(3, rec.fetchCount);
-  rv |= statement->BindInt64ByIndex(4, rec.lastFetched);
-  rv |= statement->BindInt64ByIndex(5, rec.lastModified);
-  rv |= statement->BindInt64ByIndex(6, rec.expirationTime);
-  rv |= statement->BindUTF8StringByIndex(7, nsDependentCString(cid));
-  rv |= statement->BindUTF8StringByIndex(8, nsDependentCString(key));
+  rv |= statement->BindInt32ByIndex(1, rec.dataSize);
+  rv |= statement->BindInt32ByIndex(2, rec.fetchCount);
+  rv |= statement->BindInt64ByIndex(3, rec.lastFetched);
+  rv |= statement->BindInt64ByIndex(4, rec.lastModified);
+  rv |= statement->BindInt64ByIndex(5, rec.expirationTime);
+  rv |= statement->BindUTF8StringByIndex(6, nsDependentCString(cid));
+  rv |= statement->BindUTF8StringByIndex(7, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasRows;
@@ -1043,7 +1062,6 @@ nsOfflineCacheDevice::Init()
   // build the table
   //
   //  "Generation" is the data file generation number.
-  //  "Flags" is a bit-field indicating the state of the entry.
   //
   rv = mDB->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS moz_cache (\n"
@@ -1051,7 +1069,6 @@ nsOfflineCacheDevice::Init()
                          "  Key             TEXT,\n"
                          "  MetaData        BLOB,\n"
                          "  Generation      INTEGER,\n"
-                         "  Flags           INTEGER,\n"
                          "  DataSize        INTEGER,\n"
                          "  FetchCount      INTEGER,\n"
                          "  LastFetched     INTEGER,\n"
@@ -1126,7 +1143,7 @@ nsOfflineCacheDevice::Init()
   mEvictionFunction = new nsOfflineCacheEvictionFunction(this);
   if (!mEvictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 2, mEvictionFunction);
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3, mEvictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -1134,12 +1151,11 @@ nsOfflineCacheDevice::Init()
     StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
     StatementSql ( mStatement_ApplicationCacheSize, "SELECT Sum(DataSize) from moz_cache WHERE ClientID = ?;" ),
     StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
-    StatementSql ( mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" ),
     StatementSql ( mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" ),
-    StatementSql ( mStatement_UpdateEntryFlags,  "UPDATE moz_cache SET Flags = ? WHERE ClientID = ? AND Key = ?;" ),
     StatementSql ( mStatement_DeleteEntry,       "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" ),
-    StatementSql ( mStatement_FindEntry,         "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime, ItemType FROM moz_cache WHERE ClientID = ? AND Key = ?;" ),
-    StatementSql ( mStatement_BindEntry,         "INSERT INTO moz_cache (ClientID, Key, MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime) VALUES(?,?,?,?,?,?,?,?,?,?);" ),
+    StatementSql ( mStatement_FindEntry,         "SELECT MetaData, Generation, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime, ItemType FROM moz_cache WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_BindEntry,         "INSERT INTO moz_cache (ClientID, Key, MetaData, Generation, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime) VALUES(?,?,?,?,?,?,?,?,?);" ),
 
     StatementSql ( mStatement_MarkEntry,         "UPDATE moz_cache SET ItemType = (ItemType | ?) WHERE ClientID = ? AND Key = ?;" ),
     StatementSql ( mStatement_UnmarkEntry,       "UPDATE moz_cache SET ItemType = (ItemType & ~?) WHERE ClientID = ? AND Key = ?;" ),
@@ -1175,13 +1191,6 @@ nsOfflineCacheDevice::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Clear up any dangling active flags
-  rv = mDB->ExecuteSimpleSQL(
-         NS_LITERAL_CSTRING("UPDATE moz_cache"
-                            " SET Flags=(Flags & ~1)"
-                            " WHERE (Flags & 1);"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = InitActiveCaches();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1195,6 +1204,8 @@ nsOfflineCacheDevice::InitActiveCaches()
   mActiveCachesByGroup.Init();
 
   mActiveCaches.Init(5);
+
+  mLockedEntries.Init(64);
 
   AutoResetStatement statement(mStatement_EnumerateGroups);
 
@@ -1277,7 +1288,6 @@ nsOfflineCacheDevice::Shutdown()
   mStatement_EntryCount = nsnull;
   mStatement_UpdateEntry = nsnull;
   mStatement_UpdateEntrySize = nsnull;
-  mStatement_UpdateEntryFlags = nsnull;
   mStatement_DeleteEntry = nsnull;
   mStatement_FindEntry = nsnull;
   mStatement_BindEntry = nsnull;
@@ -1355,17 +1365,15 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
   statement->GetSharedBlob(0, &rec.metaDataLen,
                            (const PRUint8 **) &rec.metaData);
   rec.generation     = statement->AsInt32(1);
-  rec.flags          = statement->AsInt32(2);
-  rec.dataSize       = statement->AsInt32(3);
-  rec.fetchCount     = statement->AsInt32(4);
-  rec.lastFetched    = statement->AsInt64(5);
-  rec.lastModified   = statement->AsInt64(6);
-  rec.expirationTime = statement->AsInt64(7);
+  rec.dataSize       = statement->AsInt32(2);
+  rec.fetchCount     = statement->AsInt32(3);
+  rec.lastFetched    = statement->AsInt64(4);
+  rec.lastModified   = statement->AsInt64(5);
+  rec.expirationTime = statement->AsInt64(6);
 
-  LOG(("entry: [%u %d %d %d %d %lld %lld %lld]\n",
+  LOG(("entry: [%u %d %d %d %lld %lld %lld]\n",
         rec.metaDataLen,
         rec.generation,
-        rec.flags,
         rec.dataSize,
         rec.fetchCount,
         rec.lastFetched,
@@ -1387,28 +1395,8 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
       return nsnull;
     }
 
-    statement->Reset();
-
-    // mark as active
-    AutoResetStatement updateStatement(mStatement_UpdateEntryFlags);
-    rec.flags |= 0x1;
-    rv |= updateStatement->BindInt32ByIndex(0, rec.flags);
-    rv |= updateStatement->BindUTF8StringByIndex(1, nsDependentCString(cid));
-    rv |= updateStatement->BindUTF8StringByIndex(2, nsDependentCString(key));
-    if (NS_FAILED(rv))
-    {
-      delete entry;
-      return nsnull;
-    }
-
-    rv = updateStatement->ExecuteStep(&hasRows);
-    if (NS_FAILED(rv))
-    {
-      delete entry;
-      return nsnull;
-    }
-
-    NS_ASSERTION(!hasRows, "UPDATE should not result in output");
+    // lock the entry
+    Lock(*fullKey);
   }
 
   return entry;
@@ -1433,15 +1421,23 @@ nsOfflineCacheDevice::DeactivateEntry(nsCacheEntry *entry)
     // on disk.
     DeleteData(entry);
   }
-  else
+  else if (((nsOfflineCacheBinding *)entry->Data())->IsNewEntry())
   {
     // UPDATE the database row
 
-    // XXX Assumption: the row already exists because it was either created
-    // with a call to BindEntry or it was there when we called FindEntry.
+    // Only new entries are updated, since offline cache is updated in
+    // transactions.  New entries are those who is returned from
+    // BindEntry().
 
+    LOG(("nsOfflineCacheDevice::DeactivateEntry updating new entry\n"));
     UpdateEntry(entry);
+  } else {
+    LOG(("nsOfflineCacheDevice::DeactivateEntry "
+	 "skipping update since entry is not dirty\n"));
   }
+
+  // Unlock the entry
+  Unlock(*entry->Key());
 
   delete entry;
 
@@ -1476,6 +1472,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
       nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key(), -1);
   if (!binding)
     return NS_ERROR_OUT_OF_MEMORY;
+  binding->MarkNewEntry();
 
   nsOfflineCacheRecord rec;
   rec.clientID = cid;
@@ -1483,7 +1480,6 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   rec.metaData = NULL; // don't write any metadata now.
   rec.metaDataLen = 0;
   rec.generation = binding->mGeneration;
-  rec.flags = 0x1;  // mark entry as active, we'll reset this in DeactivateEntry
   rec.dataSize = 0;
   rec.fetchCount = entry->FetchCount();
   rec.lastFetched = PRTimeFromSeconds(entry->LastFetched());
@@ -1497,12 +1493,11 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   rv |= statement->BindUTF8StringByIndex(1, nsDependentCString(rec.key));
   rv |= statement->BindBlobByIndex(2, rec.metaData, rec.metaDataLen);
   rv |= statement->BindInt32ByIndex(3, rec.generation);
-  rv |= statement->BindInt32ByIndex(4, rec.flags);
-  rv |= statement->BindInt32ByIndex(5, rec.dataSize);
-  rv |= statement->BindInt32ByIndex(6, rec.fetchCount);
-  rv |= statement->BindInt64ByIndex(7, rec.lastFetched);
-  rv |= statement->BindInt64ByIndex(8, rec.lastModified);
-  rv |= statement->BindInt64ByIndex(9, rec.expirationTime);
+  rv |= statement->BindInt32ByIndex(4, rec.dataSize);
+  rv |= statement->BindInt32ByIndex(5, rec.fetchCount);
+  rv |= statement->BindInt64ByIndex(6, rec.lastFetched);
+  rv |= statement->BindInt64ByIndex(7, rec.lastModified);
+  rv |= statement->BindInt64ByIndex(8, rec.expirationTime);
   NS_ENSURE_SUCCESS(rv, rv);
   
   bool hasRows;
@@ -1511,6 +1506,10 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   NS_ASSERTION(!hasRows, "INSERT should not result in output");
 
   entry->SetData(binding);
+
+  // lock the entry
+  Lock(*entry->Key());
+
   return NS_OK;
 }
 
@@ -1524,8 +1523,10 @@ nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
 
   // We can go ahead and delete the corresponding row in our table,
   // but we must not delete the file on disk until we are deactivated.
+  // In another word, the file should be deleted if the entry had been
+  // deactivated.
   
-  DeleteEntry(entry, false);
+  DeleteEntry(entry, !entry->IsActive());
 }
 
 nsresult
@@ -1705,12 +1706,11 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
     statement->GetSharedBlob(2, &rec.metaDataLen,
                              (const PRUint8 **) &rec.metaData);
     rec.generation     = statement->AsInt32(3);
-    rec.flags          = statement->AsInt32(4);
-    rec.dataSize       = statement->AsInt32(5);
-    rec.fetchCount     = statement->AsInt32(6);
-    rec.lastFetched    = statement->AsInt64(7);
-    rec.lastModified   = statement->AsInt64(8);
-    rec.expirationTime = statement->AsInt64(9);
+    rec.dataSize       = statement->AsInt32(4);
+    rec.fetchCount     = statement->AsInt32(5);
+    rec.lastFetched    = statement->AsInt64(6);
+    rec.lastModified   = statement->AsInt64(7);
+    rec.expirationTime = statement->AsInt64(8);
 
     bool keepGoing;
     rv = visitor->VisitEntry(OFFLINE_CACHE_DEVICE_ID, info, &keepGoing);
@@ -1738,7 +1738,7 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
   nsresult rv;
   if (clientID)
   {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE ClientID=? AND Flags = 0;"),
+    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE ClientID=?;"),
                               getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1760,7 +1760,7 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
   }
   else
   {
-    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE Flags = 0;"),
+    rv = mDB->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_cache;"),
                               getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2049,7 +2049,6 @@ nsresult
 nsOfflineCacheDevice::GetGroups(PRUint32 *count,
                                  char ***keys)
 {
-
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
@@ -2059,10 +2058,27 @@ nsresult
 nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
 					   char ***keys)
 {
-
   LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
 
   return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
+}
+
+bool
+nsOfflineCacheDevice::IsLocked(const nsACString &key)
+{
+  return mLockedEntries.GetEntry(key);
+}
+
+void
+nsOfflineCacheDevice::Lock(const nsACString &key)
+{
+  mLockedEntries.PutEntry(key);
+}
+
+void
+nsOfflineCacheDevice::Unlock(const nsACString &key)
+{
+  mLockedEntries.RemoveEntry(key);
 }
 
 nsresult

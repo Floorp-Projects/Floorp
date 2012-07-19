@@ -74,6 +74,8 @@ USING_WORKERS_NAMESPACE
 using namespace mozilla::dom::workers::events;
 using namespace mozilla::dom;
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
+
 namespace {
 
 const char gErrorChars[] = "error";
@@ -122,152 +124,6 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
     static_cast<typename ISupportsBaseInfo<T>::ISupportsBase*>(raw);
   dest->swap(rawSupports);
 }
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
-
-struct WorkerJSRuntimeStats : public JS::RuntimeStats
-{
-  WorkerJSRuntimeStats(nsACString &aRtPath)
-   : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath) { }
-
-  ~WorkerJSRuntimeStats() {
-    for (size_t i = 0; i != compartmentStatsVector.length(); i++) {
-      free(compartmentStatsVector[i].extra1);
-      // no need to free |extra2|, because it's a static string
-    }
-  }
-
-  virtual void initExtraCompartmentStats(JSCompartment *c,
-                                         JS::CompartmentStats *cstats) MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(!cstats->extra1);
-    MOZ_ASSERT(!cstats->extra2);
-    
-    // ReportJSRuntimeExplicitTreeStats expects that cstats->{extra1,extra2}
-    // are char pointers.
-
-    // This is the |cJSPathPrefix|.  Each worker has exactly two compartments:
-    // one for atoms, and one for everything else.
-    nsCString cJSPathPrefix(mRtPath);
-    cJSPathPrefix += js::IsAtomsCompartment(c)
-                   ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
-                   : NS_LITERAL_CSTRING("compartment(web-worker)/");
-    cstats->extra1 = strdup(cJSPathPrefix.get());
-
-    // This is the |cDOMPathPrefix|, which should never be used when reporting
-    // with workers (hence the "?!").
-    cstats->extra2 = (void *)"explicit/workers/?!/";
-  }
-
-private:
-  nsCString mRtPath;
-};
-  
-class WorkerMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
-{
-  WorkerPrivate* mWorkerPrivate;
-  nsCString mAddressString;
-  nsCString mRtPath;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate)
-  : mWorkerPrivate(aWorkerPrivate)
-  {
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    nsCString escapedDomain(aWorkerPrivate->Domain());
-    escapedDomain.ReplaceChar('/', '\\');
-
-    NS_ConvertUTF16toUTF8 escapedURL(aWorkerPrivate->ScriptURL());
-    escapedURL.ReplaceChar('/', '\\');
-
-    {
-      // 64bit address plus '0x' plus null terminator.
-      char address[21];
-      uint32_t addressSize =
-        JS_snprintf(address, sizeof(address), "%p", aWorkerPrivate);
-      if (addressSize != uint32_t(-1)) {
-        mAddressString.Assign(address, addressSize);
-      }
-      else {
-        NS_WARNING("JS_snprintf failed!");
-        mAddressString.AssignLiteral("<unknown address>");
-      }
-    }
-
-    mRtPath = NS_LITERAL_CSTRING("explicit/workers/workers(") +
-              escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
-              escapedURL + NS_LITERAL_CSTRING(", ") + mAddressString +
-              NS_LITERAL_CSTRING(")/");
-  }
-
-  nsresult
-  CollectForRuntime(bool aIsQuick, void* aData)
-  {
-    AssertIsOnMainThread();
-
-    if (mWorkerPrivate) {
-      bool disabled;
-      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(aIsQuick, aData, &disabled)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Don't ever try to talk to the worker again.
-      if (disabled) {
-#ifdef DEBUG
-        {
-          nsCAutoString message("Unable to report memory for ");
-          if (mWorkerPrivate->IsChromeWorker()) {
-            message.AppendLiteral("Chrome");
-          }
-          message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
-                     NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
-                                        "the process of being destroyed");
-          NS_WARNING(message.get());
-        }
-#endif
-        mWorkerPrivate = nsnull;
-      }
-    }
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetName(nsACString &aName)
-  {
-      aName.AssignLiteral("workers");
-      return NS_OK;
-  }
-
-  NS_IMETHOD
-  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
-                 nsISupports* aClosure)
-  {
-    AssertIsOnMainThread();
-
-    WorkerJSRuntimeStats rtStats(mRtPath);
-    nsresult rv = CollectForRuntime(/* isQuick = */false, &rtStats);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Always report, even if we're disabled, so that we at least get an entry
-    // in about::memory.
-    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mRtPath,
-                                                 aCallback, aClosure);
-  }
-
-  NS_IMETHOD
-  GetExplicitNonHeap(PRInt64 *aAmount)
-  {
-    AssertIsOnMainThread();
-
-    return CollectForRuntime(/* isQuick = */true, aAmount);
-  }
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
 
 struct WorkerStructuredCloneCallbacks
 {
@@ -1610,6 +1466,165 @@ public:
 
 } /* anonymous namespace */
 
+struct WorkerJSRuntimeStats : public JS::RuntimeStats
+{
+  WorkerJSRuntimeStats(nsACString &aRtPath)
+   : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath) { }
+
+  ~WorkerJSRuntimeStats() {
+    for (size_t i = 0; i != compartmentStatsVector.length(); i++) {
+      free(compartmentStatsVector[i].extra1);
+      // no need to free |extra2|, because it's a static string
+    }
+  }
+
+  virtual void initExtraCompartmentStats(JSCompartment *c,
+                                         JS::CompartmentStats *cstats) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!cstats->extra1);
+    MOZ_ASSERT(!cstats->extra2);
+    
+    // ReportJSRuntimeExplicitTreeStats expects that cstats->{extra1,extra2}
+    // are char pointers.
+
+    // This is the |cJSPathPrefix|.  Each worker has exactly two compartments:
+    // one for atoms, and one for everything else.
+    nsCString cJSPathPrefix(mRtPath);
+    cJSPathPrefix += js::IsAtomsCompartment(c)
+                   ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
+                   : NS_LITERAL_CSTRING("compartment(web-worker)/");
+    cstats->extra1 = strdup(cJSPathPrefix.get());
+
+    // This is the |cDOMPathPrefix|, which should never be used when reporting
+    // with workers (hence the "?!").
+    cstats->extra2 = (void *)"explicit/workers/?!/";
+  }
+
+private:
+  nsCString mRtPath;
+};
+  
+BEGIN_WORKERS_NAMESPACE
+
+class WorkerMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
+{
+  WorkerPrivate* mWorkerPrivate;
+  nsCString mAddressString;
+  nsCString mRtPath;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  WorkerMemoryReporter(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
+  {
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    nsCString escapedDomain(aWorkerPrivate->Domain());
+    escapedDomain.ReplaceChar('/', '\\');
+
+    NS_ConvertUTF16toUTF8 escapedURL(aWorkerPrivate->ScriptURL());
+    escapedURL.ReplaceChar('/', '\\');
+
+    {
+      // 64bit address plus '0x' plus null terminator.
+      char address[21];
+      uint32_t addressSize =
+        JS_snprintf(address, sizeof(address), "%p", aWorkerPrivate);
+      if (addressSize != uint32_t(-1)) {
+        mAddressString.Assign(address, addressSize);
+      }
+      else {
+        NS_WARNING("JS_snprintf failed!");
+        mAddressString.AssignLiteral("<unknown address>");
+      }
+    }
+
+    mRtPath = NS_LITERAL_CSTRING("explicit/workers/workers(") +
+              escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
+              escapedURL + NS_LITERAL_CSTRING(", ") + mAddressString +
+              NS_LITERAL_CSTRING(")/");
+  }
+
+  nsresult
+  CollectForRuntime(bool aIsQuick, void* aData)
+  {
+    AssertIsOnMainThread();
+
+    if (!mWorkerPrivate) {
+#ifdef DEBUG
+      nsCAutoString message("Unable to report memory for ");
+      if (mWorkerPrivate->IsChromeWorker()) {
+        message.AppendLiteral("Chrome");
+      }
+      message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
+                 NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
+                                    "the process of being destroyed");
+      NS_WARNING(message.get());
+#endif
+      return NS_OK;
+    }
+    
+    if (!mWorkerPrivate->BlockAndCollectRuntimeStats(aIsQuick, aData)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetName(nsACString &aName)
+  {
+    aName.AssignLiteral("workers");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
+                 nsISupports* aClosure)
+  {
+    AssertIsOnMainThread();
+
+    WorkerJSRuntimeStats rtStats(mRtPath);
+    nsresult rv = CollectForRuntime(/* isQuick = */false, &rtStats);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Always report, even if we're disabled, so that we at least get an entry
+    // in about::memory.
+    return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, mRtPath,
+                                                 aCallback, aClosure);
+  }
+
+  NS_IMETHOD
+  GetExplicitNonHeap(PRInt64 *aAmount)
+  {
+    AssertIsOnMainThread();
+
+    return CollectForRuntime(/* isQuick = */true, aAmount);
+  }
+
+  void Disable()
+  {
+#ifdef DEBUG
+    // Setting mWorkerPrivate to nsnull is safe only because we've locked the
+    // worker's mutex on the worker's thread, in the caller.  So we check that.
+    //
+    // Also, we may have already disabled the reporter (and thus set
+    // mWorkerPrivate to nsnull) due to the use of CTypes (see
+    // ChromeWorkerScope.cpp).  That's why the NULL check is necessary.
+    if (mWorkerPrivate) {
+        mWorkerPrivate->mMutex.AssertCurrentThreadOwns();
+    }
+#endif
+    mWorkerPrivate = nsnull;
+  }
+};
+
+END_WORKERS_NAMESPACE
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
+
 #ifdef DEBUG
 void
 mozilla::dom::workers::AssertIsOnMainThread()
@@ -2451,8 +2466,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
   mJSContext(nsnull), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
-  mMemoryReporterDisabled(false)
+  mCloseHandlerFinished(false), mMemoryReporterRunning(false)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate);
 }
@@ -2899,20 +2913,13 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
 }
 
 bool
-WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData, bool* aDisabled)
+WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData)
 {
   AssertIsOnMainThread();
   NS_ASSERTION(aData, "Null data!");
 
   {
     MutexAutoLock lock(mMutex);
-
-    if (mMemoryReporterDisabled) {
-      *aDisabled = true;
-      return true;
-    }
-
-    *aDisabled = false;
     mMemoryReporterRunning = true;
   }
 
@@ -2943,11 +2950,13 @@ WorkerPrivate::DisableMemoryReporter()
   {
     MutexAutoLock lock(mMutex);
 
-    mMemoryReporterDisabled = true;
-
     while (mMemoryReporterRunning) {
       MutexAutoUnlock unlock(mMutex);
       result = ProcessAllControlRunnables() && result;
+    }
+
+    if (mMemoryReporter) {
+      mMemoryReporter->Disable();
     }
   }
 

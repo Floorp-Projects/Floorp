@@ -44,7 +44,7 @@ function verifyAndDelete(prefix, files, e) {
   files.remove(index);
 
   // clean up
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   var cleanup = storage[0].delete(prefix + "/" + filename);
   cleanup.onsuccess = function(e) {}
 }
@@ -57,7 +57,10 @@ function addFiles(prefix, files, date, callback) {
   var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
   for (var i=0; i<files.length; i++) {
-    var f = directoryService.get("ProfD", Components.interfaces.nsIFile);
+
+    var f = directoryService.get("TmpD", Ci.nsIFile);
+    f.appendRelativePath("device-storage-testing");
+
     var path = prefix + '/' + files[i];
     path.split("/").forEach(function(p) {
       f.appendRelativePath(p);
@@ -81,7 +84,7 @@ addFiles(prefix, oldFiles, 157795200, addNewFiles);
 
 function enumerateNew() {
 
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
 // 836031600 is a long time ago

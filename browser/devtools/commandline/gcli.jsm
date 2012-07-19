@@ -1679,8 +1679,8 @@ exports.shutdown = function() {
  *   the associated name. However the name maybe available directly from the
  *   value using a property lookup. Setting 'stringifyProperty' allows
  *   SelectionType to take this shortcut.
- * - cacheable : If lookup is a function, then we normally assume that
- *   the values fetched can change. Setting 'cacheable' enables internal
+ * - cacheable: If lookup is a function, then we normally assume that
+ *   the values fetched can change. Setting 'cacheable:true' enables internal
  *   caching.
  */
 function SelectionType(typeSpec) {
@@ -1774,6 +1774,7 @@ SelectionType.prototype._findPredictions = function(arg) {
   var lookup = this.getLookup();
   var i, option;
   var maxPredictions = Conversion.maxPredictions;
+  var match = arg.text.toLowerCase();
 
   // If the arg has a suffix then we're kind of 'done'. Only an exact match
   // will do.
@@ -1788,10 +1789,18 @@ SelectionType.prototype._findPredictions = function(arg) {
     return predictions;
   }
 
+  // Cache lower case versions of all the option names
+  for (i = 0; i < lookup.length; i++) {
+    option = lookup[i];
+    if (option._gcliLowerName == null) {
+      option._gcliLowerName = option.name.toLowerCase();
+    }
+  }
+
   // Start with prefix matching
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
-    if (option.name.indexOf(arg.text) === 0) {
+    if (option._gcliLowerName.indexOf(match) === 0) {
       this._addToPredictions(predictions, option, arg);
     }
   }
@@ -1800,7 +1809,7 @@ SelectionType.prototype._findPredictions = function(arg) {
   if (predictions.length < (maxPredictions / 2)) {
     for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
       option = lookup[i];
-      if (option.name.indexOf(arg.text) !== -1) {
+      if (option._gcliLowerName.indexOf(match) !== -1) {
         if (predictions.indexOf(option) === -1) {
           this._addToPredictions(predictions, option, arg);
         }
@@ -1815,7 +1824,7 @@ SelectionType.prototype._findPredictions = function(arg) {
       return opt.name;
     });
     speller.train(names);
-    var corrected = speller.correct(arg.text);
+    var corrected = speller.correct(match);
     if (corrected) {
       lookup.forEach(function(opt) {
         if (opt.name === corrected) {
@@ -1852,9 +1861,8 @@ SelectionType.prototype.parse = function(arg) {
     this.noMatch();
   }
 
-  var value = predictions[0].value;
-
   if (predictions[0].name === arg.text) {
+    var value = predictions[0].value;
     return new Conversion(value, arg, Status.VALID, '', predictions);
   }
 
@@ -8420,7 +8428,9 @@ function getListTemplateData(args, context) {
     }
     return true;
   });
-  matchingCommands.sort();
+  matchingCommands.sort(function(c1, c2) {
+    return c1.name.localeCompare(c2.name);
+  });
 
   var heading;
   if (matchingCommands.length === 0) {
@@ -8493,7 +8503,9 @@ function getManTemplateData(command, context) {
         return subcommand.name.indexOf(command.name) === 0 &&
                 subcommand.name !== command.name;
       });
-      matching.sort();
+      matching.sort(function(c1, c2) {
+        return c1.name.localeCompare(c2.name);
+      });
       return matching;
     },
     enumerable: true

@@ -19,7 +19,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>&certerror.pagetitle;</title>
-    <meta name="viewport" content="width=device-width; user-scalable=false" /> 
+    <meta name="viewport" content="width=device-width; user-scalable=false" />
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
     <!-- This page currently uses the same favicon as neterror.xhtml.
          If the location of the favicon is changed for both pages, the
@@ -29,7 +29,7 @@
          should be updated to ignore this one as well. -->
     <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
 
-    <script type="application/x-javascript"><![CDATA[
+    <script type="application/javascript"><![CDATA[
       // Error url MUST be formatted like this:
       //   about:certerror?e=error&u=url&d=desc
 
@@ -79,19 +79,19 @@
               replaceWithHost(node.childNodes[i]);
         };
         replaceWithHost(intro);
-        
+
         if (getCSSClass() == "expertBadCert") {
           toggle('technicalContent');
           toggle('expertContent');
         }
-        
+
         var tech = document.getElementById("technicalContentText");
         if (tech)
           tech.textContent = getDescription();
-        
+
         addDomainErrorLink();
       }
-      
+
       /* In the case of SSL error pages about domain mismatch, see if
          we can hyperlink the user to the correct site.  We don't want
          to do this generically since it allows MitM attacks to redirect
@@ -103,29 +103,29 @@
         var sd = document.getElementById("technicalContentText");
         if (sd) {
           var desc = getDescription();
-          
+
           // sanitize description text - see bug 441169
-          
+
           // First, find the index of the <a> tag we care about, being careful not to
           // use an over-greedy regex
           var re = /<a id="cert_domain_link" title="([^"]+)">/;
           var result = re.exec(desc);
           if(!result)
             return;
-          
+
           // Remove sd's existing children
           sd.textContent = "";
 
           // Everything up to the link should be text content
           sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
-          
+
           // Now create the link itself
           var anchorEl = document.createElement("a");
           anchorEl.setAttribute("id", "cert_domain_link");
           anchorEl.setAttribute("title", result[1]);
           anchorEl.appendChild(document.createTextNode(result[1]));
           sd.appendChild(anchorEl);
-          
+
           // Finally, append text for anything after the closing </a>
           sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
         }
@@ -133,7 +133,7 @@
         var link = document.getElementById('cert_domain_link');
         if (!link)
           return;
-        
+
         var okHost = link.getAttribute("title");
         var thisHost = document.location.hostname;
         var proto = document.location.protocol;
@@ -143,7 +143,7 @@
         // get anyone anywhere useful. bug 432491
         okHost = okHost.replace(/^\*\./, "www.");
 
-        /* case #1: 
+        /* case #1:
          * example.com uses an invalid security certificate.
          *
          * The certificate is only valid for www.example.com
@@ -166,13 +166,13 @@
          */
         if (endsWith(thisHost, "." + okHost))
           link.href = proto + okHost;
-          
+
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
         if (link.href && getCSSClass() != "expertBadCert")
           toggle("technicalContent");
       }
-      
+
       function endsWith(haystack, needle) {
         return haystack.slice(-needle.length) == needle;
       }
@@ -202,7 +202,7 @@
         <div id="introContent">
           <p id="introContentP1">&certerror.introPara1;</p>
         </div>
-        
+
         <div id="whatShouldIDoContent">
           <h2>&certerror.whatShouldIDo.heading;</h2>
           <div id="whatShouldIDoContentText">
@@ -210,14 +210,14 @@
             <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='getMeOutOfHereButton' label='&certerror.getMeOutOfHere.label;'/>
           </div>
         </div>
-        
+
         <!-- The following sections can be unhidden by default by setting the
              "browser.xul.error_pages.expert_bad_cert" pref to true -->
         <div id="technicalContent" collapsed="true">
           <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
           <p id="technicalContentText"/>
         </div>
-        
+
         <div id="expertContent" collapsed="true">
           <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
           <div>
@@ -235,7 +235,7 @@
     - an onload handler. This is because error pages are loaded as
     - LOAD_BACKGROUND, which means that onload handlers will not be executed.
     -->
-    <script type="application/x-javascript">initPage();</script>
+    <script type="application/javascript">initPage();</script>
 
   </body>
 </html>

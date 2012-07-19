@@ -341,6 +341,88 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
 #endif\n\
 ";
 
+static const char sRGBAExternalTextureLayerFS[] = "/* sRGBAExternalTextureLayerFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+uniform samplerExternalOES uTexture;\n\
+void main()\n\
+{\n\
+float mask = 1.0;\n\
+\n\
+gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;\n\
+}\n\
+";
+
+static const char sRGBAExternalTextureLayerMaskFS[] = "/* sRGBAExternalTextureLayerMaskFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec2 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+uniform samplerExternalOES uTexture;\n\
+void main()\n\
+{\n\
+float mask = texture2D(uMaskTexture, vMaskCoord).r;\n\
+\n\
+gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;\n\
+}\n\
+";
+
+static const char sRGBAExternalTextureLayerMask3DFS[] = "/* sRGBAExternalTextureLayerMask3DFS */\n\
+#extension GL_OES_EGL_image_external : require\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec3 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+uniform samplerExternalOES uTexture;\n\
+void main()\n\
+{\n\
+vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;\n\
+float mask = texture2D(uMaskTexture, maskCoords).r;\n\
+\n\
+gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;\n\
+}\n\
+";
+
 static const char sBGRATextureLayerFS[] = "/* sBGRATextureLayerFS */\n\
 /* Fragment Shader */\n\
 #ifdef GL_ES\n\

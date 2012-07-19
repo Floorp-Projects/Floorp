@@ -7,12 +7,23 @@
 #define nsTextEditRules_h__
 
 #include "nsCOMPtr.h"
-
-#include "nsPlaintextEditor.h"
-#include "nsIDOMNode.h"
-
+#include "nsCycleCollectionParticipant.h"
 #include "nsEditRules.h"
+#include "nsEditor.h"
+#include "nsIEditor.h"
+#include "nsISupportsImpl.h"
 #include "nsITimer.h"
+#include "nsPlaintextEditor.h"
+#include "nsString.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsIDOMElement;
+class nsIDOMNode;
+class nsISelection;
+namespace mozilla {
+class Selection;
+}  // namespace mozilla
 
 /** Object that encapsulates HTML text-specific editing rules.
   *  

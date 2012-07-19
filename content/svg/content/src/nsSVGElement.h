@@ -588,8 +588,6 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
-  if (!it)                                                                   \
-    return NS_ERROR_OUT_OF_MEMORY;                                           \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \
@@ -597,7 +595,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
     return rv;                                                               \
   }                                                                          \
                                                                              \
-  *aResult = it.forget().get();                                              \
+  it.forget(aResult);                                                        \
                                                                              \
   return rv;                                                                 \
 }
@@ -610,8 +608,6 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo, aFromParser);                \
-  if (!it)                                                                   \
-    return NS_ERROR_OUT_OF_MEMORY;                                           \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \
@@ -619,7 +615,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
     return rv;                                                               \
   }                                                                          \
                                                                              \
-  *aResult = it.forget().get();                                              \
+  it.forget(aResult);                                                        \
                                                                              \
   return rv;                                                                 \
 }

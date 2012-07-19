@@ -1,0 +1,62 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace dom {
+namespace bluetooth {
+
+/**
+ * Value structure for returns from bluetooth. Currently modeled after dbus
+ * returns, which can be a 32-bit int, an UTF16 string, a bool, or an array of
+ * UTF16 strings. Can also hold key-value pairs for dictionary-ish access.
+ * 
+ */
+union BluetoothValue
+{
+  uint32_t;
+  nsString;
+  bool;
+  nsString[];
+  BluetoothNamedValue[];
+};
+
+/**
+ * Key-value pair for dicts returned by the bluetooth backend. Used for things
+ * like property updates, where the property will have a name and a type.
+ * 
+ */
+struct BluetoothNamedValue
+{
+  nsString name;
+  BluetoothValue value;
+};
+
+struct BluetoothSignal
+{
+  nsString name;
+  nsString path;
+  BluetoothValue value;
+};
+
+struct BluetoothReplySuccess
+{
+  BluetoothValue value;
+};
+
+struct BluetoothReplyError
+{
+  nsString error;
+};
+
+union BluetoothReply
+{
+  BluetoothReplySuccess;
+  BluetoothReplyError;
+};
+
+}
+}
+}

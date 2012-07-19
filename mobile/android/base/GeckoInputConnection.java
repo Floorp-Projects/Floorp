@@ -294,7 +294,16 @@ public class GeckoInputConnection
 
     @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        // setComposingText will likely be called multiple times while we are composing text.
+        // setComposingText() places the given text into the editable, replacing any existing
+        // composing text. This method will likely be called multiple times while we are composing
+        // text.
+
+        // If the replacement composition string is empty and we have no active composition string
+        // to replace, then just ignore the empty string. Some VKBs, such as TouchPal Keyboard,
+        // send us empty strings at inopportune times, deleting committed text. See bug 768106.
+        if (text.length() == 0 && !hasCompositionString())
+            return true;
+
         clampSelection();
         return super.setComposingText(text, newCursorPosition);
     }
@@ -1128,7 +1137,7 @@ public class GeckoInputConnection
 
                     if (mIMEState != IME_STATE_DISABLED) {
                         imm.showSoftInput(v, 0);
-                    } else {
+                    } else if (imm.isActive(v)) {
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     }
                 }

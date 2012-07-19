@@ -11,8 +11,9 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-MOCHITEST_FILES = \
+_FILES = \
   test_body-onload.html \
   test_pageload-image.html \
   test_pageload-video.html \
@@ -20,10 +21,8 @@ MOCHITEST_FILES = \
   test_window-onerror-parse-error.html \
   test_window-onerror-runtime-error.html \
   test_window-onerror-runtime-error-throw.html \
-  $(NULL)
-
-MOCHITEST_FILES += \
   nested-document-write-external.js \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+libs:: $(_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

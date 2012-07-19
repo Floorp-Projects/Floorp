@@ -3,16 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTextFragment.h"
-#include "nsWSRunObject.h"
-#include "nsIDOMNode.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/mozalloc.h"
+#include "nsAString.h"
+#include "nsAutoPtr.h"
+#include "nsCRT.h"
+#include "nsContentUtils.h"
+#include "nsDebug.h"
+#include "nsEditorUtils.h"
+#include "nsError.h"
 #include "nsHTMLEditor.h"
-#include "nsTextEditUtils.h"
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
-#include "nsCRT.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
+#include "nsISupportsImpl.h"
 #include "nsRange.h"
-#include "nsContentUtils.h"
+#include "nsSelectionState.h"
+#include "nsString.h"
+#include "nsTextEditUtils.h"
+#include "nsTextFragment.h"
+#include "nsWSRunObject.h"
 
 const PRUnichar nbsp = 160;
 

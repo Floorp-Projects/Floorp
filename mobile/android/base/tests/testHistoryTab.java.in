@@ -29,6 +29,7 @@ import java.io.File;
 public class testHistoryTab extends BaseTest {
     private static final String ABOUT_HOME_URL = "about:home";
     private static final String OPEN_NEW_TAB = "Open in New Tab";
+    private static final int WAIT_FOR_CHILD_TIMEOUT = 2000;
     private String[] bookmarks = new String[] {
         "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
     };
@@ -59,8 +60,12 @@ public class testHistoryTab extends BaseTest {
         testClick(url);
     }
 
+    private ListView list;
+
     private void testList(String url) {
-        ListView list = getHistoryList();
+        list = getHistoryList();
+        // clear VKB
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         mAsserter.ok(list != null, "checking that history list exists", list.toString());
@@ -114,14 +119,25 @@ public class testHistoryTab extends BaseTest {
     }
 
     private void testContextMenu(String url) {
-        ListView list = getHistoryList();
+        list = getHistoryList();
+        // clear VKB
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         View child = list.getChildAt(0);
         mSolo.clickLongOnView(child);
         mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
 
+        waitForTest(new BooleanTest() {
+            public boolean test() {
+                if (list.getChildAt(1) == null) {
+                    return false;
+                }
+                return true;
+            }
+        }, WAIT_FOR_CHILD_TIMEOUT);
         child = list.getChildAt(1);
+
         mSolo.clickLongOnView(child);
 
         // TODO: Test clicking these does the right thing
@@ -135,7 +151,9 @@ public class testHistoryTab extends BaseTest {
     }
 
     private void testClick(String url) {
-        ListView list = getHistoryList();
+        list = getHistoryList();
+        // clear VKB
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         mSolo.waitForText(url);
 
         View child = list.getChildAt(0);
@@ -143,7 +161,16 @@ public class testHistoryTab extends BaseTest {
         // nothing should happen
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        waitForTest(new BooleanTest() {
+            public boolean test() {
+                if (list.getChildAt(1) == null) {
+                    return false;
+                }
+                return true;
+            }
+        }, WAIT_FOR_CHILD_TIMEOUT);
         child = list.getChildAt(1);
+
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         verifyUrl(url);

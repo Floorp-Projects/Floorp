@@ -32,13 +32,13 @@ public:
     : mAlign(aAlign)
     , mMeetOrSlice(aMeetOrSlice)
     , mDefer(aDefer)
-  {};
+  {}
 
   SVGPreserveAspectRatio()
     : mAlign(0)
     , mMeetOrSlice(0)
     , mDefer(false)
-  {};
+  {}
 
   bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
@@ -48,11 +48,11 @@ public:
       return NS_ERROR_FAILURE;
     mAlign = static_cast<PRUint8>(aAlign);
     return NS_OK;
-  };
+  }
 
   PRUint16 GetAlign() const {
     return mAlign;
-  };
+  }
 
   nsresult SetMeetOrSlice(PRUint16 aMeetOrSlice) {
     if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
@@ -60,19 +60,19 @@ public:
       return NS_ERROR_FAILURE;
     mMeetOrSlice = static_cast<PRUint8>(aMeetOrSlice);
     return NS_OK;
-  };
+  }
 
   PRUint16 GetMeetOrSlice() const {
     return mMeetOrSlice;
-  };
+  }
 
   void SetDefer(bool aDefer) {
     mDefer = aDefer;
-  };
+  }
 
   bool GetDefer() const {
     return mDefer;
-  };
+  }
 
 private:
   PRUint8 mAlign;

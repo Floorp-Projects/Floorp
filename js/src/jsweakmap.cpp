@@ -19,8 +19,6 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/MethodGuard-inl.h"
-
 using namespace js;
 
 namespace js {
@@ -120,16 +118,16 @@ GetKeyArg(JSContext *cx, CallArgs &args)
     return JS_UnwrapObject(&key);
 }
 
-static JSBool
-WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
+static bool
+IsWeakMap(const Value &v)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    return v.isObject() && v.toObject().hasClass(&WeakMapClass);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, WeakMap_has, &WeakMapClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+WeakMap_has_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsWeakMap(args.thisv()));
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -140,10 +138,8 @@ WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
     if (!key)
         return false;
 
-    ObjectValueMap *map = GetObjectMap(thisObj);
-    if (map) {
-        ObjectValueMap::Ptr ptr = map->lookup(key);
-        if (ptr) {
+    if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
+        if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             args.rval() = BooleanValue(true);
             return true;
         }
@@ -154,15 +150,16 @@ WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
+WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_has_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, WeakMap_get, &WeakMapClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+WeakMap_get_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsWeakMap(args.thisv()));
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -173,10 +170,8 @@ WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
     if (!key)
         return false;
 
-    ObjectValueMap *map = GetObjectMap(thisObj);
-    if (map) {
-        ObjectValueMap::Ptr ptr = map->lookup(key);
-        if (ptr) {
+    if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
+        if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             args.rval() = ptr->value;
             return true;
         }
@@ -187,15 +182,16 @@ WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
+WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_get_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, WeakMap_delete, &WeakMapClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+WeakMap_delete_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsWeakMap(args.thisv()));
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -206,10 +202,8 @@ WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
     if (!key)
         return false;
 
-    ObjectValueMap *map = GetObjectMap(thisObj);
-    if (map) {
-        ObjectValueMap::Ptr ptr = map->lookup(key);
-        if (ptr) {
+    if (ObjectValueMap *map = GetObjectMap(&args.thisv().toObject())) {
+        if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             map->remove(ptr);
             args.rval() = BooleanValue(true);
             return true;
@@ -221,15 +215,16 @@ WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
+WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_delete_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, WeakMap_set, &WeakMapClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+WeakMap_set_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsWeakMap(args.thisv()));
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -242,18 +237,22 @@ WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 
     Value value = (args.length() > 1) ? args[1] : UndefinedValue();
 
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
     ObjectValueMap *map = GetObjectMap(thisObj);
     if (!map) {
-        map = cx->new_<ObjectValueMap>(cx, thisObj);
+        map = cx->new_<ObjectValueMap>(cx, thisObj.get());
         if (!map->init()) {
             cx->delete_(map);
-            goto out_of_memory;
+            JS_ReportOutOfMemory(cx);
+            return false;
         }
         thisObj->setPrivate(map);
     }
 
-    if (!map->put(key, value))
-        goto out_of_memory;
+    if (!map->put(key, value)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
 
     // Preserve wrapped native keys to prevent wrapper optimization.
     if (key->getClass()->ext.isWrappedNative) {
@@ -265,10 +264,13 @@ WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setUndefined();
     return true;
+}
 
-  out_of_memory:
-    JS_ReportOutOfMemory(cx);
-    return false;
+static JSBool
+WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsWeakMap, WeakMap_set_impl, args);
 }
 
 JS_FRIEND_API(JSBool)

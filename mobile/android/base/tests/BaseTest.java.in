@@ -27,6 +27,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+    private static final int VERIFY_URL_TIMEOUT = 2000;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -192,9 +193,28 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
         String urlbarText = null;
         if (urlbar != null) {
+            // wait for a short time for the expected text, in case there is a delay
+            // in updating the view
+            waitForTest(new VerifyUrlTest(urlbar, url), VERIFY_URL_TIMEOUT);
             urlbarText = urlbar.getText();
         }
         mAsserter.is(urlbarText, url, "Awesomebar URL stayed the same");
+    }
+
+    class VerifyUrlTest implements BooleanTest {
+        private Element mUrlbar;
+        private String mUrl;
+        public VerifyUrlTest(Element urlbar, String url) {
+            mUrlbar = urlbar;
+            mUrl = url;
+        }
+        public boolean test() {
+            String urlbarText = mUrlbar.getText();
+            if (urlbarText.equals(mUrl)) {
+                return true;
+            }
+            return false;
+        }
     }
 
     protected final String getAbsoluteUrl(String url) {

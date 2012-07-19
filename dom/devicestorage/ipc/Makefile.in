@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/devicestorage/ipc
+
+include $(DEPTH)/config/autoconf.mk
+
+
+TEST_FILES = \
+  test_ipc.html \
+  ../test/devicestorage_common.js \
+  $(NULL)
+
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+libs:: $(TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") \
+	$(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)\

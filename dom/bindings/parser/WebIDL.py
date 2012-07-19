@@ -707,11 +707,9 @@ class IDLDictionary(IDLObjectWithScope):
 
         for member in self.members:
             member.resolve(self)
-            if not member.type.isComplete():
-                type = member.type.complete(scope)
-                assert not isinstance(type, IDLUnresolvedType)
-                assert not isinstance(type.name, IDLUnresolvedIdentifier)
-                member.type = type
+            if not member.isComplete():
+                member.complete(scope)
+                assert member.type.isComplete()
 
         # Members of a dictionary are sorted in lexicographic order
         self.members.sort(cmp=cmp, key=lambda x: x.identifier.name)
@@ -1019,10 +1017,23 @@ class IDLNullableType(IDLType):
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
-        if self.inner.isUnion() and self.inner.hasNullableType:
+        if self.inner.isUnion():
+            if self.inner.hasNullableType:
+                raise WebIDLError("The inner type of a nullable type must not "
+                                  "be a union type that itself has a nullable "
+                                  "type as a member type", [self.location])
+            # Check for dictionaries in the union
+            for memberType in self.inner.flatMemberTypes:
+                if memberType.isDictionary():
+                    raise WebIDLError("The inner type of a nullable type must "
+                                      "not be a union type containing a "
+                                      "dictionary type",
+                                      [self.location, memberType.location])
+                    
+        if self.inner.isDictionary():
             raise WebIDLError("The inner type of a nullable type must not be a "
-                              "union type that itself has a nullable type as a "
-                              "member type", [self.location])
+                              "dictionary type", [self.location])
+
         self.name = self.inner.name
         return self
 
@@ -1030,7 +1041,8 @@ class IDLNullableType(IDLType):
         return self.inner.unroll()
 
     def isDistinguishableFrom(self, other):
-        if other.nullable() or (other.isUnion() and other.hasNullableType):
+        if (other.nullable() or (other.isUnion() and other.hasNullableType) or
+            other.isDictionary()):
             # Can't tell which type null should become
             return False
         return self.inner.isDistinguishableFrom(other)
@@ -1405,8 +1417,9 @@ class IDLWrapperType(IDLType):
         if other.isPrimitive() or other.isString() or other.isEnum() or other.isDate():
             return True
         if self.isDictionary():
-            return (other.isNonCallbackInterface() or other.isSequence() or
-                    other.isArray())
+            return (not other.nullable() and
+                    (other.isNonCallbackInterface() or other.isSequence() or
+                     other.isArray()))
 
         assert self.isInterface()
         # XXXbz need to check that the interfaces can't be implemented
@@ -1726,7 +1739,9 @@ class IDLNullValue(IDLObject):
         self.value = None
 
     def coerceToType(self, type, location):
-        if not isinstance(type, IDLNullableType) and not (type.isUnion() and type.hasNullableType):
+        if (not isinstance(type, IDLNullableType) and
+            not (type.isUnion() and type.hasNullableType) and
+            not type.isDictionary()):
             raise WebIDLError("Cannot coerce null value to type %s." % type,
                               [location])
 
@@ -1746,6 +1761,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
     def __init__(self, location, identifier, tag):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
         self.tag = tag
+        self._extendedAttrDict = {}
 
     def isMethod(self):
         return self.tag == IDLInterfaceMember.Tags.Method
@@ -1757,7 +1773,6 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
         return self.tag == IDLInterfaceMember.Tags.Const
 
     def addExtendedAttributes(self, attrs):
-        self._extendedAttrDict = {}
         for attr in attrs:
             attrlist = list(attr)
             identifier = attrlist.pop(0)
@@ -1862,14 +1877,11 @@ class IDLArgument(IDLObjectWithIdentifier):
         assert isinstance(type, IDLType)
         self.type = type
 
-        if defaultValue:
-            defaultValue = defaultValue.coerceToType(type, location)
-            assert defaultValue
-
         self.optional = optional
         self.defaultValue = defaultValue
         self.variadic = variadic
         self.dictionaryMember = dictionaryMember
+        self._isComplete = False
 
         assert not variadic or optional
 
@@ -1885,6 +1897,33 @@ class IDLArgument(IDLObjectWithIdentifier):
 
         # But actually, we can't handle this at all, so far.
         assert len(attrs) == 0
+
+    def isComplete(self):
+        return self._isComplete
+
+    def complete(self, scope):
+        if self._isComplete:
+            return
+
+        self._isComplete = True
+
+        if not self.type.isComplete():
+            type = self.type.complete(scope)
+            assert not isinstance(type, IDLUnresolvedType)
+            assert not isinstance(type.name, IDLUnresolvedIdentifier)
+            self.type = type
+
+        if self.type.isDictionary() and self.optional and not self.defaultValue:
+            # Default optional dictionaries to null, for simplicity,
+            # so the codegen doesn't have to special-case this.
+            self.defaultValue = IDLNullValue(self.location)
+
+        # Now do the coercing thing; this needs to happen after the
+        # above creation of a default value.
+        if self.defaultValue:
+            self.defaultValue = self.defaultValue.coerceToType(self.type,
+                                                               self.location)
+            assert self.defaultValue
 
 class IDLCallbackType(IDLType, IDLObjectWithScope):
     def __init__(self, location, parentScope, identifier, returnType, arguments):
@@ -2038,34 +2077,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             assert len(overload.arguments) == 0
             assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.domstring]
 
-        inOptionalArguments = False
-        variadicArgument = None
-        sawOptionalWithNoDefault = False
-
-        assert len(self._overloads) == 1
-        arguments = self._overloads[0].arguments
-
-        for argument in arguments:
-            # Only the last argument can be variadic
-            if variadicArgument:
-                raise WebIDLError("Variadic argument is not last argument",
-                                  [variadicArgument.location])
-            # Once we see an optional argument, there can't be any non-optional
-            # arguments.
-            if inOptionalArguments and not argument.optional:
-                raise WebIDLError("Non-optional argument after optional arguments",
-                                  [argument.location])
-            # Once we see an argument with no default value, there can
-            # be no more default values.
-            if sawOptionalWithNoDefault and argument.defaultValue:
-                raise WebIDLError("Argument with default value after optional "
-                                  "arguments with no default values",
-                                  [argument.location])
-            inOptionalArguments = argument.optional
-            if argument.variadic:
-                variadicArgument = argument
-            sawOptionalWithNoDefault = argument.optional and not argument.defaultValue
-
     def isStatic(self):
         return self._static
 
@@ -2111,16 +2122,21 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def addOverload(self, method):
         assert len(method._overloads) == 1
 
+        if self._extendedAttrDict != method ._extendedAttrDict:
+            raise WebIDLError("Extended attributes differ on different "
+                              "overloads of %s" % method.identifier,
+                              [self.location, method.location])
+
         self._overloads.extend(method._overloads)
 
         self._hasOverloads = True
 
         if self.isStatic() != method.isStatic():
-            raise WebIDLError("Overloaded identifier %s appears with different values of the 'static' attribute" % method1.identifier,
+            raise WebIDLError("Overloaded identifier %s appears with different values of the 'static' attribute" % method.identifier,
                               [method.location])
 
         if self.isLegacycaller() != method.isLegacycaller():
-            raise WebIDLError("Overloaded identifier %s appears with different values of the 'legacycaller' attribute" % method1.identifier,
+            raise WebIDLError("Overloaded identifier %s appears with different values of the 'legacycaller' attribute" % method.identifier,
                               [method.location])
 
         # Can't overload special things!
@@ -2143,15 +2159,49 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def finish(self, scope):
         for overload in self._overloads:
-            for argument in overload.arguments:
-                if argument.type.isComplete():
+            inOptionalArguments = False
+            variadicArgument = None
+            sawOptionalWithNoDefault = False
+
+            arguments = overload.arguments
+            for (idx, argument) in enumerate(arguments):
+                if argument.isComplete():
                     continue
 
-                type = argument.type.complete(scope)
+                argument.complete(scope)
+                assert argument.type.isComplete()
 
-                assert not isinstance(type, IDLUnresolvedType)
-                assert not isinstance(type.name, IDLUnresolvedIdentifier)
-                argument.type = type
+                if argument.type.isDictionary():
+                    # Dictionaries at the end of the list or followed by
+                    # optional arguments must be optional.
+                    if (not argument.optional and
+                        (idx == len(arguments) - 1 or arguments[idx+1].optional)):
+                        raise WebIDLError("Dictionary argument not followed by "
+                                          "a required argument must be "
+                                          "optional", [argument.location])
+
+                # Only the last argument can be variadic
+                if variadicArgument:
+                    raise WebIDLError("Variadic argument is not last argument",
+                                      [variadicArgument.location])
+                # Once we see an optional argument, there can't be any non-optional
+                # arguments.
+                if inOptionalArguments and not argument.optional:
+                    raise WebIDLError("Non-optional argument after optional "
+                                      "arguments",
+                                      [argument.location])
+                # Once we see an argument with no default value, there can
+                # be no more default values.
+                if sawOptionalWithNoDefault and argument.defaultValue:
+                    raise WebIDLError("Argument with default value after "
+                                      "optional arguments with no default "
+                                      "values",
+                                      [argument.location])
+                inOptionalArguments = argument.optional
+                if argument.variadic:
+                    variadicArgument = argument
+                sawOptionalWithNoDefault = (argument.optional and
+                                            not argument.defaultValue)
 
             returnType = overload.returnType
             if returnType.isComplete():

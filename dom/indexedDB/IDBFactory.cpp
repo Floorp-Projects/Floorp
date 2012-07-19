@@ -9,9 +9,16 @@
 #include "IDBFactory.h"
 
 #include "nsIFile.h"
+#include "nsIJSContextStack.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsIXPConnect.h"
+#include "nsIXPCScriptable.h"
 
+#include "jsdbgapi.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
@@ -34,13 +41,12 @@
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
 
-#include "mozilla/dom/PBrowserChild.h"
-#include "mozilla/dom/TabChild.h"
-using mozilla::dom::TabChild;
-
 #include "ipc/IndexedDBChild.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+using mozilla::dom::ContentChild;
+using mozilla::dom::TabChild;
 
 namespace {
 
@@ -56,7 +62,8 @@ struct ObjectStoreInfoMap
 } // anonymous namespace
 
 IDBFactory::IDBFactory()
-: mOwningObject(nsnull), mActorChild(nsnull), mActorParent(nsnull)
+: mOwningObject(nsnull), mActorChild(nsnull), mActorParent(nsnull),
+  mRootedOwningObject(false)
 {
 }
 
@@ -67,6 +74,9 @@ IDBFactory::~IDBFactory()
     NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
     mActorChild->Send__delete__(mActorChild);
     NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
+  }
+  if (mRootedOwningObject) {
+    NS_DROP_JS_OBJECTS(this, IDBFactory);
   }
 }
 
@@ -152,6 +162,92 @@ IDBFactory::Create(JSContext* aCx,
   nsRefPtr<IDBFactory> factory = new IDBFactory();
   factory->mASCIIOrigin = origin;
   factory->mOwningObject = aOwningObject;
+
+  if (!IndexedDatabaseManager::IsMainProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    NS_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    IndexedDBChild* actor = new IndexedDBChild(origin);
+
+    contentChild->SendPIndexedDBConstructor(actor);
+
+    actor->SetFactory(factory);
+  }
+
+  factory.forget(aFactory);
+  return NS_OK;
+}
+
+// static
+nsresult
+IDBFactory::Create(IDBFactory** aFactory)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+
+#ifdef DEBUG
+  {
+    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
+    NS_ASSERTION(cxStack, "Couldn't get ThreadJSContextStack!");
+
+    JSContext* lastCx;
+    if (NS_SUCCEEDED(cxStack->Peek(&lastCx))) {
+      NS_ASSERTION(!lastCx, "We should only be called from C++!");
+    }
+    else {
+      NS_ERROR("nsIThreadJSContextStack::Peek should never fail!");
+    }
+  }
+#endif
+
+  nsCString origin;
+  nsresult rv =
+    IndexedDatabaseManager::GetASCIIOriginFromWindow(nsnull, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrincipal> principal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1");
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  nsCxPusher pusher;
+  if (!pusher.Push(cx)) {
+    NS_WARNING("Failed to push safe JS context!");
+    return NS_ERROR_FAILURE;
+  }
+
+  JSAutoRequest ar(cx);
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ASSERTION(xpc, "This should never be null!");
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> globalHolder;
+  rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(globalHolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* global;
+  rv = globalHolder->GetJSObject(&global);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The CreateSandbox call returns a proxy to the actual sandbox object. We
+  // don't need a proxy here.
+  global = JS_UnwrapObject(global);
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, global)) {
+    NS_WARNING("Failed to enter compartment!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<IDBFactory> factory;
+  rv = Create(cx, global, getter_AddRefs(factory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_HOLD_JS_OBJECTS(factory, IDBFactory);
+  factory->mRootedOwningObject = true;
 
   factory.forget(aFactory);
   return NS_OK;
@@ -389,6 +485,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
   if (tmp->mOwningObject) {
     tmp->mOwningObject = nsnull;
   }
+  if (tmp->mRootedOwningObject) {
+    NS_DROP_JS_OBJECTS(tmp, IDBFactory);
+    tmp->mRootedOwningObject = false;
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWindow)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -409,7 +509,6 @@ IDBFactory::OpenCommon(const nsAString& aName,
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
 
   nsCOMPtr<nsPIDOMWindow> window;
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
   JSObject* scriptOwner = nsnull;
 
   if (mWindow) {
@@ -435,7 +534,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     nsRefPtr<CheckPermissionsHelper> permissionHelper =
-      new CheckPermissionsHelper(openHelper, window, mASCIIOrigin, aDeleting);
+      new CheckPermissionsHelper(openHelper, window, aDeleting);
 
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     NS_ASSERTION(mgr, "This should never be null!");

@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "js/HashTable.h"
+#include "js/Vector.h"
 
 namespace JS {
 struct TypeInferenceSizes;
@@ -27,6 +28,10 @@ struct TypeInferenceSizes;
 namespace js {
 
 class CallObject;
+
+namespace mjit {
+    struct JITScript;
+}
 
 namespace mjit {
     struct JITScript;
@@ -1015,7 +1020,7 @@ typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,Sy
  * Information about the result of the compilation of a script.  This structure
  * stored in the TypeCompartment is indexed by the RecompileInfo. This
  * indirection enable the invalidation of all constraints related to the same
- * compilation. The compiler output is built by the AutoEnterCompilation.
+ * compilation. The compiler output is build by the AutoEnterCompilation.
  */
 struct CompilerOutput
 {
@@ -1023,9 +1028,8 @@ struct CompilerOutput
     bool isIonFlag : 1;
     bool constructing : 1;
     bool barriers : 1;
-    uint32_t chunkIndex:29;
+    uint32_t chunkIndex:30;
 
-    /* Result of the compilation */
     union {
         mjit::JITScript *mjit;
         ion::IonScript *ion;
@@ -1036,6 +1040,7 @@ struct CompilerOutput
 
     bool isJM() const { return !isIonFlag; }
     bool isIon() const { return isIonFlag; }
+
     bool isValid() const;
 
     void invalidate() {

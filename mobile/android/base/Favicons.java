@@ -19,7 +19,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.InputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URI;

@@ -45,8 +45,7 @@ namespace {
 
 inline
 PRUint32
-GetIndexedDBPermissions(const nsACString& aASCIIOrigin,
-                        nsIDOMWindow* aWindow)
+GetIndexedDBPermissions(nsIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -74,17 +73,15 @@ GetIndexedDBPermissions(const nsACString& aASCIIOrigin,
     return PERMISSION_DENIED;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aASCIIOrigin);
-  NS_ENSURE_SUCCESS(rv, PERMISSION_DENIED);
-
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permissionManager, PERMISSION_DENIED);
 
   PRUint32 permission;
-  rv = permissionManager->TestPermission(uri, PERMISSION_INDEXEDDB,
-                                         &permission);
+  nsresult rv =
+    permissionManager->TestPermissionFromPrincipal(sop->GetPrincipal(),
+                                                   PERMISSION_INDEXEDDB,
+                                                   &permission);
   NS_ENSURE_SUCCESS(rv, PERMISSION_DENIED);
 
   return permission;
@@ -103,7 +100,7 @@ CheckPermissionsHelper::Run()
 
   PRUint32 permission = mHasPrompted ?
                         mPromptResult :
-                        GetIndexedDBPermissions(mASCIIOrigin, mWindow);
+                        GetIndexedDBPermissions(mWindow);
 
   nsresult rv;
   if (mHasPrompted) {
@@ -113,16 +110,17 @@ CheckPermissionsHelper::Run()
     // we cannot set the permission from the child).
     if (permission != PERMISSION_PROMPT &&
         IndexedDatabaseManager::IsMainProcess()) {
-      nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), mASCIIOrigin);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       nsCOMPtr<nsIPermissionManager> permissionManager =
         do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
       NS_ENSURE_STATE(permissionManager);
 
-      rv = permissionManager->Add(uri, PERMISSION_INDEXEDDB, permission,
-                                  nsIPermissionManager::EXPIRE_NEVER, 0);
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
+      NS_ENSURE_TRUE(sop, NS_ERROR_FAILURE);
+
+      rv = permissionManager->AddFromPrincipal(sop->GetPrincipal(),
+                                               PERMISSION_INDEXEDDB, permission,
+                                               nsIPermissionManager::EXPIRE_NEVER,
+                                               0);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

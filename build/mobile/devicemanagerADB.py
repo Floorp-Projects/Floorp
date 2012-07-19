@@ -176,24 +176,6 @@ class DeviceManagerADB(DeviceManager):
     except:
       return None
 
-  # make directory structure on the device
-  # external function
-  # returns:
-  #  success: directory structure that we created
-  #  failure: None
-  def mkDirs(self, filename):
-    parts = filename.split('/')
-    name = ""
-    for part in parts:
-      if (part == parts[-1]): break
-      if (part != ""):
-        name += '/' + part
-        if (not self.dirExists(name)):
-          if (self.mkDir(name) == None):
-            print "failed making directory: " + str(name)
-            return None
-    return name
-
   # push localDir from host to remoteDir on the device
   # external function
   # returns:

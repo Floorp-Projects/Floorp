@@ -952,7 +952,13 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    if (frame->hasPushedSPSFrame())
+    /*
+     * If an SPS frame has already been pushed and profiling has since been
+     * turned off, then we can't enter the jit because the epilogue of a pop
+     * will not be emitted. Otherwise, we're safe with respect to balancing the
+     * push/pops to the SPS sampling stack.
+     */
+    if (frame->hasPushedSPSFrame() && !cx->runtime->spsProfiler.enabled())
         return Compile_Skipped;
 		
     if (IonGetsFirstChance(cx, script, request))
@@ -3845,7 +3851,7 @@ void
 mjit::Compiler::prepareStubCall(Uses uses)
 {
     JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
-    frame.syncAndKill(Registers(Registers::TempAnyRegs), uses);
+    frame.syncAndKill(Registers(Registers::AvailAnyRegs), uses);
     JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
 }
 
@@ -5056,7 +5062,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
     RESERVE_IC_SPACE(masm);
 
-    PICGenInfo pic(ic::PICInfo::GET, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::GET, PC);
 
     /*
      * If this access has been on a shape with a getter hook, make preparations
@@ -5483,19 +5489,17 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     if (script->hasScriptCounts)
         bumpPropCount(PC, PCCounts::PROP_OTHER);
 
-    JSOp op = JSOp(*PC);
-
 #ifdef JSGC_INCREMENTAL_MJ
     /* Write barrier. We don't have type information for JSOP_SETNAME. */
     if (cx->compartment->needsBarrier() &&
-        (!types || op == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
+        (!types || JSOp(*PC) == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
     {
         jsop_setprop_slow(name);
         return true;
     }
 #endif
 
-    PICGenInfo pic(ic::PICInfo::SET, op);
+    PICGenInfo pic(ic::PICInfo::SET, PC);
     pic.name = name;
 
     if (monitored(PC)) {
@@ -5612,7 +5616,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 void
 mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
 {
-    PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::NAME, PC);
 
     RESERVE_IC_SPACE(masm);
 
@@ -5668,7 +5672,7 @@ mjit::Compiler::jsop_name(PropertyName *name, JSValueType type)
 bool
 mjit::Compiler::jsop_xname(PropertyName *name)
 {
-    PICGenInfo pic(ic::PICInfo::XNAME, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::XNAME, PC);
 
     FrameEntry *fe = frame.peek(-1);
     if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
@@ -5730,7 +5734,7 @@ mjit::Compiler::jsop_xname(PropertyName *name)
 void
 mjit::Compiler::jsop_bindname(PropertyName *name)
 {
-    PICGenInfo pic(ic::PICInfo::BIND, JSOp(*PC));
+    PICGenInfo pic(ic::PICInfo::BIND, PC);
 
     // This code does not check the frame flags to see if scopeChain has been
     // set. Rather, it relies on the up-front analysis statically determining

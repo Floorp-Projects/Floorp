@@ -4,23 +4,15 @@
 
 package org.mozilla.gecko.sqlite;
 
-import org.mozilla.gecko.sqlite.SQLiteBridgeException;
-import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.database.DatabaseErrorHandler;
 import android.text.TextUtils;
-
-import java.lang.String;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /*
  * This class allows using the mozsqlite3 library included with Firefox

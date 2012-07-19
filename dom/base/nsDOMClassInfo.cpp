@@ -85,7 +85,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsScriptNameSpaceManager.h"
-#include "nsIScriptObjectOwner.h"
+#include "nsIScriptEventHandlerOwner.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsJSEnvironment.h"
 
@@ -103,9 +103,6 @@
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
-#include "nsIDOMPerformanceTiming.h"
-#include "nsIDOMPerformanceNavigation.h"
-#include "nsIDOMPerformance.h"
 #include "nsClientRect.h"
 #include "nsIDOMHTMLPropertiesCollection.h"
 
@@ -520,6 +517,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"
 #include "BluetoothAdapter.h"
+#include "BluetoothDevice.h"
+#include "BluetoothDeviceEvent.h"
 #endif
 
 #include "nsIDOMNavigatorSystemMessages.h"
@@ -609,7 +608,9 @@ static const char kDOMStringBundleURL[] =
   (EVENTTARGET_SCRIPTABLE_FLAGS)
 
 #define DOMCLASSINFO_STANDARD_FLAGS                                           \
-  (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
+  (nsIClassInfo::MAIN_THREAD_ONLY |                                           \
+   nsIClassInfo::DOM_OBJECT       |                                           \
+   nsIClassInfo::SINGLETON_CLASSINFO)
 
 
 #ifdef DEBUG
@@ -747,12 +748,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
-  NS_DEFINE_CLASSINFO_DATA(PerformanceTiming, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(PerformanceNavigation, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Performance, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
@@ -1678,7 +1673,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(BluetoothManager, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(BluetoothAdapter, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)  
+  NS_DEFINE_CLASSINFO_DATA(BluetoothDevice, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(BluetoothDeviceEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(DOMError, nsDOMGenericSH,
@@ -2510,21 +2509,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(PerformanceTiming, nsIDOMPerformanceTiming,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformanceTiming)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(PerformanceNavigation, nsIDOMPerformanceNavigation,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformanceNavigation)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Performance, nsIDOMPerformance,
-                                        !nsGlobalWindow::HasPerformanceSupport())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPerformance)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
@@ -4506,6 +4490,15 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(BluetoothAdapter, nsIDOMBluetoothAdapter)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothAdapter)
   DOM_CLASSINFO_MAP_END
+    
+  DOM_CLASSINFO_MAP_BEGIN(BluetoothDevice, nsIDOMBluetoothDevice)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothDevice)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(BluetoothDeviceEvent, nsIDOMBluetoothDeviceEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBluetoothDeviceEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
+  DOM_CLASSINFO_MAP_END
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN(DOMError, nsIDOMDOMError)
@@ -4782,6 +4775,14 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   NS_WARNING("nsDOMClassInfo::PostCreate Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+nsDOMClassInfo::PostTransplant(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *obj)
+{
+  MOZ_NOT_REACHED("nsDOMClassInfo::PostTransplant Don't call me!");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5787,23 +5788,6 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
         }
       }
     }
-  }
-
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
-  if (owner) {
-    nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
-    if (!context) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JSObject* new_obj;
-    rv = owner->GetScriptObject(context, (void**)&new_obj);
-
-    if (NS_SUCCEEDED(rv)) {
-      *rval = OBJECT_TO_JSVAL(new_obj);
-    }
-
-    return rv;
   }
 
   return WrapNative(cx, obj, native, true, rval);
@@ -6940,23 +6924,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     jsval prop_val = JSVAL_VOID; // Property value.
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
-    if (owner) {
-      nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
-      NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-
-      JSObject *prop_obj = nsnull;
-      rv = owner->GetScriptObject(context, (void**)&prop_obj);
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && prop_obj, NS_ERROR_UNEXPECTED);
-
-      prop_val = OBJECT_TO_JSVAL(prop_obj);
-    } else {
-      nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-
-      if (gpi) {
-        rv = gpi->Init(aWin, &prop_val);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+    if (gpi) {
+      rv = gpi->Init(aWin, &prop_val);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
@@ -8195,6 +8166,15 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsElementSH::PostTransplant(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj)
+{
+  // XBL bindings are reapplied asynchronously when the node is inserted into a
+  // new document and frame construction occurs.
+  return NS_OK;
+}
+
 
 // Generic array scriptable helper.
 
@@ -8735,6 +8715,14 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_ERROR_FAILURE;
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentSH::PostTransplant(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj)
+{
+  // Nothing to do here.
   return NS_OK;
 }
 
@@ -9862,6 +9850,20 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
+nsHTMLPluginObjElementSH::PostTransplant(nsIXPConnectWrappedNative *wrapper,
+                                         JSContext *cx, JSObject *obj)
+{
+  // Call through to PostCreate to do the prototype setup all over again. We
+  // may reuse the same prototype, in which case our prototype will be a wrapped
+  // version of the original.
+  nsresult rv = PostCreate(wrapper, cx, obj);
+  if (NS_FAILED(rv)) {
+      NS_WARNING("Calling PostCreate during PostTransplant for plugin element failed.");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                       JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp, bool *_retval)
@@ -10673,7 +10675,7 @@ nsNonDOMObjectSH::GetFlags(PRUint32 *aFlags)
   // This is NOT a DOM Object.  Use this helper class for cases when you need
   // to do something like implement nsISecurityCheckedComponent in a meaningful
   // way.
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::SINGLETON_CLASSINFO;
   return NS_OK;
 }
 

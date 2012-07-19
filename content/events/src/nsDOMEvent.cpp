@@ -524,13 +524,12 @@ nsDOMEvent::PreventDefault()
   return NS_OK;
 }
 
-nsresult
+void
 nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 {
   mEvent->userType =
     nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->eventStructType,
                                       &(mEvent->message));
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -551,7 +550,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
     }
   }
 
-  NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
+  SetEventType(aEventTypeArg);
 
   if (aCanBubbleArg) {
     mEvent->flags &= ~NS_EVENT_FLAG_CANT_BUBBLE;

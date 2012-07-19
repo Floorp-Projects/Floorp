@@ -193,13 +193,6 @@ dl > dl {
 }
 
 
-/* Quirk: MAP acts like an inline, not a block */
-
-map {
-  display: inline;
-}
-
-
 /* Quirk: Make floated images have a margin  (b=58899) */
 
 img[align=left] {

@@ -22,43 +22,8 @@ class nsCString;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-/**
- * BluetoothEvents usually hand back one of 3 types:
- *
- * - 32-bit Int
- * - String
- * - Bool
- *
- * BluetoothVariant encases the types into a single structure.
- */
-struct BluetoothVariant
-{
-  uint32_t mUint32;
-  nsCString mString;  
-};
-
-/**
- * BluetoothNamedVariant is a variant with a name value, for passing around
- * things like properties with variant values.
- */
-struct BluetoothNamedVariant
-{
-  nsCString mName;
-  BluetoothVariant mValue;
-};
-
-/**
- * BluetoothEvent holds a variant value and the name of an event, such as
- * PropertyChanged or DeviceFound.
- */
-struct BluetoothEvent
-{
-  nsCString mEventName;
-  nsTArray<BluetoothNamedVariant> mValues;
-};
-
-typedef mozilla::Observer<BluetoothEvent> BluetoothEventObserver;
-typedef mozilla::ObserverList<BluetoothEvent> BluetoothEventObserverList;
+class BluetoothSignal;
+typedef mozilla::Observer<BluetoothSignal> BluetoothSignalObserver;
 
 END_BLUETOOTH_NAMESPACE
 

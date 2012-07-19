@@ -121,6 +121,7 @@ BrowserElementChild.prototype = {
     addMsgListener("get-can-go-forward", this._recvCanGoForward);
     addMsgListener("go-back", this._recvGoBack);
     addMsgListener("go-forward", this._recvGoForward);
+    addMsgListener("reload", this._recvReload);
     addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
     addMsgListener("fire-ctx-callback", this._recvFireCtxCallback);
 
@@ -465,6 +466,18 @@ BrowserElementChild.prototype = {
       docShell.QueryInterface(Ci.nsIWebNavigation).goForward();
     } catch(e) {
       // Silently swallow errors; these happen when we can't go forward.
+    }
+  },
+
+  _recvReload: function(data) {
+    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+    let reloadFlags = data.json.hardReload ?
+      webNav.LOAD_FLAGS_BYPASS_PROXY | webNav.LOAD_FLAGS_BYPASS_CACHE :
+      webNav.LOAD_FLAGS_NONE;
+    try {
+      webNav.reload(reloadFlags);
+    } catch(e) {
+      // Silently swallow errors; these can happen if a used cancels reload
     }
   },
 

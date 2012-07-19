@@ -124,6 +124,23 @@ function testScriptSearching() {
 
 
     token = "debugger";
+    write("#" + token);
+    ok(gEditor.getCaretPosition().line == 2 &&
+       gEditor.getCaretPosition().col == 44 + token.length,
+      "The editor didn't jump to the correct token. (12.1)");
+
+    clear();
+    EventUtils.sendKey("RETURN");
+    ok(gEditor.getCaretPosition().line == 2 &&
+       gEditor.getCaretPosition().col == 44 + token.length,
+      "The editor shouldn't jump to another token. (12.2)");
+
+    EventUtils.sendKey("ENTER");
+    ok(gEditor.getCaretPosition().line == 2 &&
+       gEditor.getCaretPosition().col == 44 + token.length,
+      "The editor shouldn't jump to another token. (12.3)");
+
+
     write(":1:2:3:a:b:c:::12");
     ok(gEditor.getCaretPosition().line == 11 &&
        gEditor.getCaretPosition().col == 0,

@@ -13,6 +13,7 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
 let WebappsHandler = {
   init: function() {
@@ -30,6 +31,7 @@ let WebappsHandler = {
           this.doInstall(data, chromeWin);
         break;
       case "webapps-launch":
+        WebappOSUtils.launch(data);
         break;
     }
   },

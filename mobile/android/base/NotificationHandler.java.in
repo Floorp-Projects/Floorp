@@ -47,15 +47,6 @@ public class NotificationHandler
 
         Log.i(LOGTAG, "Handle notification ID " + notificationID);
 
-        if (App.mAppContext != null) {
-            // This should call the observer, if any
-            App.mAppContext.handleNotification(action, alertName, alertCookie);
-        } else {
-            // The app is not running, just cancel this notification
-            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(notificationID);
-        }
-
         if (App.ACTION_ALERT_CLICK.equals(action)) {
             // Start or bring to front the main activity
             Intent appIntent = new Intent(Intent.ACTION_MAIN);
@@ -69,6 +60,17 @@ public class NotificationHandler
             } catch (ActivityNotFoundException e) {
                 Log.e(LOGTAG, "NotificationHandler Exception: ", e);
             }
+        }
+
+        // Call observers after we open the app in order to avoid race conditions with
+        // notification handlers that launch third party apps or webapps
+        if (App.mAppContext != null) {
+            // This should call the observer, if any
+            App.mAppContext.handleNotification(action, alertName, alertCookie);
+        } else {
+            // The app is not running, just cancel this notification
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(notificationID);
         }
     }
 }

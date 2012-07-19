@@ -51,10 +51,11 @@ dictionary MozXMLHttpRequestParameters
   boolean mozSystem = false;
 };
 
-[Constructor(optional MozXMLHttpRequestParameters? params = null)]
+[Constructor(optional MozXMLHttpRequestParameters params)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
-  [TreatNonCallableAsNull] attribute Function? onreadystatechange;
+  [TreatNonCallableAsNull, GetterInfallible=MainThread]
+  attribute Function? onreadystatechange;
 
   // states
   const unsigned short UNSENT = 0;
@@ -62,14 +63,22 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   const unsigned short HEADERS_RECEIVED = 2;
   const unsigned short LOADING = 3;
   const unsigned short DONE = 4;
+
+  [Infallible]
   readonly attribute unsigned short readyState;
 
   // request
   void open(DOMString method, DOMString url, optional boolean async = true,
             optional DOMString? user, optional DOMString? password);
   void setRequestHeader(DOMString header, DOMString value);
+
+  [GetterInfallible]
   attribute unsigned long timeout;
+
+  [GetterInfallible, SetterInfallible=MainThread]
   attribute boolean withCredentials;
+
+  [Infallible=MainThread]
   readonly attribute XMLHttpRequestUpload upload;
 
   void send();
@@ -80,26 +89,50 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void send(FormData data);
   void send(InputStream data);
 
+  [Infallible=MainThread]
   void abort();
 
   // response
+  [Infallible=MainThread]
   readonly attribute unsigned short status;
+
+  [Infallible]
   readonly attribute DOMString statusText;
   DOMString? getResponseHeader(DOMString header);
+
+  [Infallible=MainThread]
   DOMString getAllResponseHeaders();
+
+  [Infallible=MainThread]
   void overrideMimeType(DOMString mime);
+
+  [GetterInfallible]
   attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
   readonly attribute DOMString? responseText;
+
+  [GetterInfallible=Workers]
   readonly attribute Document? responseXML;
 
   // Mozilla-specific stuff
+  [GetterInfallible, SetterInfallible=MainThread]
   attribute boolean multipart;
+
+  [GetterInfallible, SetterInfallible=MainThread]
   attribute boolean mozBackgroundRequest;
-  [ChromeOnly] readonly attribute MozChannel channel;
+
+  [ChromeOnly, GetterInfallible, SetterInfallible=MainThread]
+  readonly attribute MozChannel channel;
+
   void sendAsBinary(DOMString body);
   any getInterface(IID iid);
-  [TreatNonCallableAsNull] attribute Function? onuploadprogress;
+
+  [TreatNonCallableAsNull, GetterInfallible=MainThread]
+  attribute Function? onuploadprogress;
+
+  [Infallible]
   readonly attribute boolean mozAnon;
+
+  [Infallible]
   readonly attribute boolean mozSystem;
 };

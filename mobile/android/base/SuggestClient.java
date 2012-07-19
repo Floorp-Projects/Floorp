@@ -14,7 +14,6 @@ import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;

@@ -20,12 +20,17 @@
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIMemoryReporter.h"
 #include "nsCOMArray.h"
+#include "nsDataHashtable.h"
 
 class nsFrameMessageManager;
 namespace mozilla {
 
 namespace ipc {
 class TestShellParent;
+}
+
+namespace layers {
+class PCompositorParent;
 }
 
 namespace dom {
@@ -41,9 +46,19 @@ class ContentParent : public PContentParent
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::TestShellParent TestShellParent;
+    typedef mozilla::layers::PCompositorParent PCompositorParent;
 
 public:
     static ContentParent* GetNewOrUsed();
+
+    /**
+     * Get or create a content process for the given app.  A given app
+     * (identified by its manifest URL) gets one process all to itself.
+     *
+     * If the given manifest is the empty string, then this method is equivalent
+     * to GetNewOrUsed().
+     */
+    static ContentParent* GetForApp(const nsAString& aManifestURL);
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
     NS_DECL_ISUPPORTS
@@ -58,6 +73,8 @@ public:
      * <iframe mozbrowser>.
      */
     TabParent* CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame);
+    /** Notify that a tab was destroyed during normal operation. */
+    void NotifyTabDestroyed(PBrowserParent* aTab);
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
@@ -67,6 +84,7 @@ public:
     bool RequestRunToCompletion();
 
     bool IsAlive();
+    bool IsForApp();
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
 
@@ -83,7 +101,8 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
-    static nsTArray<ContentParent*>* gContentParents;
+    static nsDataHashtable<nsStringHashKey, ContentParent*> *gAppContentParents;
+    static nsTArray<ContentParent*>* gNonAppContentParents;
     static nsTArray<ContentParent*>* gPrivateContent;
 
     // Hide the raw constructor methods since we don't want client code
@@ -91,13 +110,33 @@ private:
     using PContentParent::SendPBrowserConstructor;
     using PContentParent::SendPTestShellConstructor;
 
-    ContentParent();
+    ContentParent(const nsAString& aAppManifestURL);
     virtual ~ContentParent();
 
     void Init();
 
+    /**
+     * Mark this ContentParent as dead for the purposes of Get*().
+     * This method is idempotent.
+     */
+    void MarkAsDead();
+
+    /**
+     * Exit the subprocess and vamoose.  After this call IsAlive()
+     * will return false and this ContentParent will not be returned
+     * by the Get*() funtions.  However, the shutdown sequence itself
+     * may be asynchronous.
+     */
+    void ShutDown();
+
+    PCompositorParent* AllocPCompositor(ipc::Transport* aTransport,
+                                        base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
+
+    virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);
+    virtual bool DeallocPDeviceStorageRequest(PDeviceStorageRequestParent*);
 
     virtual PCrashReporterParent* AllocPCrashReporter(const NativeThreadId& tid,
                                                       const PRUint32& processType);
@@ -108,6 +147,13 @@ private:
 
     NS_OVERRIDE virtual PHalParent* AllocPHal();
     NS_OVERRIDE virtual bool DeallocPHal(PHalParent*);
+
+    virtual PIndexedDBParent* AllocPIndexedDB();
+
+    virtual bool DeallocPIndexedDB(PIndexedDBParent* aActor);
+
+    virtual bool
+    RecvPIndexedDBConstructor(PIndexedDBParent* aActor);
 
     virtual PMemoryReportRequestParent* AllocPMemoryReportRequest();
     virtual bool DeallocPMemoryReportRequest(PMemoryReportRequestParent* actor);
@@ -211,6 +257,7 @@ private:
     bool mIsAlive;
     bool mSendPermissionUpdates;
 
+    const nsString mAppManifestURL;
     nsRefPtr<nsFrameMessageManager> mMessageManager;
 
     friend class CrashReporterParent;

@@ -254,7 +254,9 @@ bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs, base::ProcessArchitecture arch)
 {
 #ifdef MOZ_CRASHREPORTER
-  CrashReporter::OOPInit();
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
 #endif
 
 #ifdef XP_WIN
@@ -299,7 +301,9 @@ bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
 #ifdef MOZ_CRASHREPORTER
-  CrashReporter::OOPInit();
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
 #endif
 
 #ifdef XP_WIN
@@ -689,17 +693,27 @@ GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
   lock.Notify();
 }
 
-// XXX/cjones: these next two methods should basically never be called.
-// after the process is launched, its channel will be used to create
-// one of our channels, AsyncChannel et al.
 void
 GeckoChildProcessHost::OnMessageReceived(const IPC::Message& aMsg)
 {
+  // We never process messages ourself, just save them up for the next
+  // listener.
+  mQueue.push(aMsg);
 }
+
 void
 GeckoChildProcessHost::OnChannelError()
 {
-  // XXXbent Notify that the child process is gone?
+  // FIXME/bug 773925: save up this error for the next listener.
+}
+
+void
+GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue)
+{
+  // If this is called off the IO thread, bad things will happen.
+  DCHECK(MessageLoopForIO::current());
+  swap(queue, mQueue);
+  // We expect the next listener to take over processing of our queue.
 }
 
 void

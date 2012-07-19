@@ -1,6 +1,6 @@
 diff -up8 png.h png.h
 --- png.h	2012-06-14 07:28:00 -0400
-+++ png.h	2012-07-04 16:27:29 -0400
++++ png.h	2012-07-07 10:21:31 -0400
 @@ -423,24 +423,18 @@
  /* Careful here.  At one time, Guy wanted to use 082, but that would be octal.
   * We must not include leading zeros.
@@ -200,7 +200,7 @@ diff -up8 png.h png.h
  /* Do not put anything past this line */
 diff -up8 pngget.c pngget.c
 --- pngget.c	2012-06-14 07:28:00 -0400
-+++ pngget.c	2012-07-04 16:27:29 -0400
++++ pngget.c	2012-04-24 20:51:09 -0400
 @@ -1116,9 +1116,171 @@ png_get_io_chunk_type (png_const_structp
  png_const_bytep PNGAPI
  png_get_io_chunk_name (png_structp png_ptr)
@@ -375,7 +375,7 @@ diff -up8 pngget.c pngget.c
  #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */
 diff -up8 pnginfo.h pnginfo.h
 --- pnginfo.h	2012-06-14 07:28:00 -0400
-+++ pnginfo.h	2012-07-04 16:27:29 -0400
++++ pnginfo.h	2012-03-03 22:17:56 -0500
 @@ -260,10 +260,23 @@ defined(PNG_READ_BACKGROUND_SUPPORTED)
  
  #ifdef PNG_INFO_IMAGE_SUPPORTED
@@ -402,7 +402,7 @@ diff -up8 pnginfo.h pnginfo.h
  #endif /* PNGINFO_H */
 diff -up8 pngpread.c pngpread.c
 --- pngpread.c	2012-06-14 07:28:00 -0400
-+++ pngpread.c	2012-07-04 16:29:59 -0400
++++ pngpread.c	2012-07-16 20:05:38 -0400
 @@ -210,16 +210,119 @@ png_push_read_chunk(png_structp png_ptr,
        png_crc_read(png_ptr, chunk_tag, 4);
        png_ptr->chunk_name = PNG_CHUNK_FROM_STRING(chunk_tag);
@@ -675,7 +675,33 @@ diff -up8 pngpread.c pngpread.c
        png_uint_32 idat_size = png_ptr->idat_size;
  
        /* We want the smaller of 'idat_size' and 'current_buffer_size', but they
-@@ -1299,16 +1479,27 @@ png_set_progressive_read_fn(png_structp 
+@@ -854,16 +1034,25 @@ png_push_read_IDAT(png_structp png_ptr)
+ void /* PRIVATE */
+ png_process_IDAT_data(png_structp png_ptr, png_bytep buffer,
+    png_size_t buffer_length)
+ {
+    /* The caller checks for a non-zero buffer length. */
+    if (!(buffer_length > 0) || buffer == NULL)
+       png_error(png_ptr, "No IDAT data (internal error)");
+ 
++#ifdef PNG_READ_APNG_SUPPORTED
++   /* If the app is not APNG-aware, decode only the first frame */
++   if (!(png_ptr->apng_flags & PNG_APNG_APP) && png_ptr->num_frames_read > 0)
++   {
++     png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
++     return;
++   }
++#endif
++
+    /* This routine must process all the data it has been given
+     * before returning, calling the row callback as required to
+     * handle the uncompressed results.
+     */
+    png_ptr->zstream.next_in = buffer;
+    png_ptr->zstream.avail_in = (uInt)buffer_length;
+ 
+    /* Keep going until the decompressed data is all processed
+@@ -1299,16 +1488,28 @@ png_set_progressive_read_fn(png_structp 
  
     png_ptr->info_fn = info_fn;
     png_ptr->row_fn = row_fn;
@@ -692,6 +718,7 @@ diff -up8 pngpread.c pngpread.c
 +{
 +   png_ptr->frame_info_fn = frame_info_fn;
 +   png_ptr->frame_end_fn = frame_end_fn;
++   png_ptr->apng_flags |= PNG_APNG_APP;
 +}
 +#endif
 +
@@ -705,7 +732,7 @@ diff -up8 pngpread.c pngpread.c
  }
 diff -up8 pngpriv.h pngpriv.h
 --- pngpriv.h	2012-06-14 07:28:00 -0400
-+++ pngpriv.h	2012-07-04 16:27:29 -0400
++++ pngpriv.h	2012-07-16 20:05:38 -0400
 @@ -462,16 +462,20 @@ typedef PNG_CONST png_uint_16p FAR * png
  #define PNG_HAVE_sRGB               0x80
  #define PNG_HAVE_CHUNK_HEADER      0x100
@@ -727,7 +754,7 @@ diff -up8 pngpriv.h pngpriv.h
  #define PNG_SHIFT               0x0008
  #define PNG_SWAP_BYTES          0x0010
  #define PNG_INVERT_MONO         0x0020
-@@ -657,16 +661,25 @@ PNG_EXTERN png_fixed_point png_fixed PNG
+@@ -657,16 +661,26 @@ PNG_EXTERN png_fixed_point png_fixed PNG
  #define png_sPLT PNG_CHUNK(115,  80,  76,  84)
  #define png_sRGB PNG_CHUNK(115,  82,  71,  66)
  #define png_sTER PNG_CHUNK(115,  84,  69,  82)
@@ -743,6 +770,7 @@ diff -up8 pngpriv.h pngpriv.h
 +
 +/* For png_struct.apng_flags: */
 +#define PNG_FIRST_FRAME_HIDDEN       0x0001
++#define PNG_APNG_APP                 0x0002
 +#endif
 +
  /* The following will work on (signed char*) strings, whereas the get_uint_32
@@ -753,7 +781,7 @@ diff -up8 pngpriv.h pngpriv.h
  
  /* This uses (char), not (png_byte) to avoid warnings on systems where (char) is
   * signed and the argument is a (char[])  This macro will fail miserably on
-@@ -1338,16 +1351,55 @@ PNG_EXTERN void png_push_read_iTXt PNGAR
+@@ -1338,16 +1352,55 @@ PNG_EXTERN void png_push_read_iTXt PNGAR
  
  #ifdef PNG_MNG_FEATURES_SUPPORTED
  PNG_EXTERN void png_do_read_intrapixel PNGARG((png_row_infop row_info,
@@ -811,7 +839,7 @@ diff -up8 pngpriv.h pngpriv.h
  #endif
 diff -up8 pngread.c pngread.c
 --- pngread.c	2012-06-14 07:28:00 -0400
-+++ pngread.c	2012-07-04 16:27:29 -0400
++++ pngread.c	2012-07-16 20:05:38 -0400
 @@ -235,16 +235,19 @@ png_read_info(png_structp png_ptr, png_i
        {
           if (!(png_ptr->mode & PNG_HAVE_IHDR))
@@ -1011,35 +1039,9 @@ diff -up8 pngread.c pngread.c
               "Decompression error");
  
     } while (png_ptr->zstream.avail_out);
-@@ -927,16 +1044,25 @@ png_read_end(png_structp png_ptr, png_in
-          png_handle_zTXt(png_ptr, info_ptr, length);
- #endif
- 
- #ifdef PNG_READ_iTXt_SUPPORTED
-       else if (chunk_name == png_iTXt)
-          png_handle_iTXt(png_ptr, info_ptr, length);
- #endif
- 
-+#ifdef PNG_READ_APNG_SUPPORTED
-+      else if (chunk_name == png_acTL)
-+         png_handle_acTL(png_ptr, info_ptr, length);
-+      else if (chunk_name == png_fcTL)
-+         png_handle_fcTL(png_ptr, info_ptr, length);
-+      else if (chunk_name == png_fdAT)
-+         png_handle_fdAT(png_ptr, info_ptr, length);
-+#endif
-+
-       else
-          png_handle_unknown(png_ptr, info_ptr, length);
-    } while (!(png_ptr->mode & PNG_HAVE_IEND));
- }
- #endif /* PNG_SEQUENTIAL_READ_SUPPORTED */
- 
- /* Free all memory used by the read */
- void PNGAPI
 diff -up8 pngrutil.c pngrutil.c
 --- pngrutil.c	2012-06-14 07:28:00 -0400
-+++ pngrutil.c	2012-07-04 16:27:29 -0400
++++ pngrutil.c	2012-04-24 20:51:09 -0400
 @@ -542,16 +542,21 @@ png_handle_IHDR(png_structp png_ptr, png
     width = png_get_uint_31(png_ptr, buf);
     height = png_get_uint_31(png_ptr, buf + 4);
@@ -1341,7 +1343,7 @@ diff -up8 pngrutil.c pngrutil.c
  #endif /* PNG_READ_SUPPORTED */
 diff -up8 pngset.c pngset.c
 --- pngset.c	2012-06-14 07:28:00 -0400
-+++ pngset.c	2012-07-04 16:27:29 -0400
++++ pngset.c	2012-07-07 10:21:31 -0400
 @@ -257,16 +257,21 @@ png_set_IHDR(png_structp png_ptr, png_in
         (PNG_UINT_32_MAX >> 3)      /* 8-byte RRGGBBAA pixels */
         - 48       /* bigrowbuf hack */
@@ -1524,7 +1526,7 @@ diff -up8 pngset.c pngset.c
  
 diff -up8 pngstruct.h pngstruct.h
 --- pngstruct.h	2012-06-14 07:28:00 -0400
-+++ pngstruct.h	2012-07-04 16:27:29 -0400
++++ pngstruct.h	2012-07-07 10:21:31 -0400
 @@ -288,16 +288,37 @@ struct png_struct_def
     png_uint_32 mng_features_permitted;
  #endif
@@ -1565,7 +1567,7 @@ diff -up8 pngstruct.h pngstruct.h
  #endif
 diff -up8 pngwrite.c pngwrite.c
 --- pngwrite.c	2012-06-14 07:28:00 -0400
-+++ pngwrite.c	2012-07-04 16:27:29 -0400
++++ pngwrite.c	2012-07-07 10:21:31 -0400
 @@ -53,16 +53,20 @@ png_write_info_before_PLTE(png_structp p
  #ifdef PNG_WRITE_INTERLACING_SUPPORTED
         info_ptr->interlace_type);
@@ -1660,7 +1662,7 @@ diff -up8 pngwrite.c pngwrite.c
  #endif /* PNG_WRITE_SUPPORTED */
 diff -up8 pngwutil.c pngwutil.c
 --- pngwutil.c	2012-06-14 07:28:00 -0400
-+++ pngwutil.c	2012-07-04 16:27:29 -0400
++++ pngwutil.c	2012-04-24 20:51:09 -0400
 @@ -816,16 +816,21 @@ png_write_IHDR(png_structp png_ptr, png_
     buf[9] = (png_byte)color_type;
     buf[10] = (png_byte)compression_type;

@@ -168,6 +168,7 @@ function BrowserElementParent(frameLoader) {
   defineMethod('setVisible', this._setVisible);
   defineMethod('goBack', this._goBack);
   defineMethod('goForward', this._goForward);
+  defineMethod('reload', this._reload);
   defineDOMRequestMethod('getScreenshot', 'get-screenshot');
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
@@ -334,6 +335,10 @@ BrowserElementParent.prototype = {
 
   _goForward: function() {
     this._sendAsyncMsg('go-forward');
+  },
+
+  _reload: function(hardReload) {
+    this._sendAsyncMsg('reload', {hardReload: hardReload});
   },
 
   _fireKeyEvent: function(data) {

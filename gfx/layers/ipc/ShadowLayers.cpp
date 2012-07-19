@@ -167,6 +167,11 @@ ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 {
   CreatedLayer<OpCreateCanvasLayer>(mTxn, aCanvas);
 }
+void
+ShadowLayerForwarder::CreatedRefLayer(ShadowableLayer* aRef)
+{
+  CreatedLayer<OpCreateRefLayer>(mTxn, aRef);
+}
 
 void
 ShadowLayerForwarder::DestroyedThebesBuffer(ShadowableLayer* aThebes,
@@ -367,7 +372,7 @@ ShadowLayerForwarder::ShadowDrawToTarget(gfxContext* aTarget) {
 }
 
 
-static SharedMemory::SharedMemoryType
+SharedMemory::SharedMemoryType
 OptimalShmemType()
 {
 #if defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)

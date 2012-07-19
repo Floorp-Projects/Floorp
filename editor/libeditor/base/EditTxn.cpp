@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EditTxn.h"
+#include "nsError.h"
+#include "nsISupportsBase.h"
 
 NS_IMPL_CYCLE_COLLECTION_0(EditTxn)
 

@@ -1059,7 +1059,7 @@ struct JSPrinter
     jsbytecode      *dvgfence;      /* DecompileExpression fencepost */
     jsbytecode      **pcstack;      /* DecompileExpression modeled stack */
     JSFunction      *fun;           /* interpreted function */
-    BindingNames    *localNames;    /* argument and variable names */
+    BindingVector   *localNames;    /* argument and variable names */
     Vector<DecompiledOpcode> *decompiledOpcodes; /* optional state for decompiled ops */
 
     DecompiledOpcode &decompiled(jsbytecode *pc) {
@@ -1071,10 +1071,10 @@ struct JSPrinter
 static bool
 SetPrinterLocalNames(JSContext *cx, JSScript *script, JSPrinter *jp)
 {
-    BindingNames *localNames = NULL;
+    BindingVector *localNames = NULL;
     if (script->bindings.count() > 0) {
-        localNames = cx->new_<BindingNames>(cx);
-        if (!localNames || !script->bindings.getLocalNameArray(cx, localNames))
+        localNames = cx->new_<BindingVector>(cx);
+        if (!localNames || !GetOrderedBindings(cx, script->bindings, localNames))
             return false;
     }
     jp->localNames = localNames;
@@ -1762,7 +1762,7 @@ GetArgOrVarAtom(JSPrinter *jp, unsigned slot)
     LOCAL_ASSERT_RV(jp->fun, NULL);
     LOCAL_ASSERT_RV(slot < jp->script->bindings.count(), NULL);
     LOCAL_ASSERT_RV(jp->script == jp->fun->script(), NULL);
-    JSAtom *name = (*jp->localNames)[slot].maybeAtom;
+    JSAtom *name = (*jp->localNames)[slot].maybeName;
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
 #endif
@@ -4663,7 +4663,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
-                    BindingNames *outerLocalNames;
+                    BindingVector *outerLocalNames;
                     JSScript *inner, *outer;
                     Vector<DecompiledOpcode> *decompiledOpcodes;
                     SprintStack ss2(cx);
@@ -5473,7 +5473,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
     }
 
     JSScript *oldscript = jp->script;
-    BindingNames *oldLocalNames = jp->localNames;
+    BindingVector *oldLocalNames = jp->localNames;
     if (!SetPrinterLocalNames(cx, script, jp))
         return false;
     jp->script = script;

@@ -7,13 +7,18 @@
 #define nsEditorSpellCheck_h___
 
 
-#include "nsIEditorSpellCheck.h"
-#include "nsISpellChecker.h"
-#include "nsIURI.h"
-#include "nsWeakReference.h"
-#include "nsCOMPtr.h"
+#include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsIEditorSpellCheck.h"        // for NS_DECL_NSIEDITORSPELLCHECK, etc
+#include "nsISupportsImpl.h"
+#include "nsString.h"                   // for nsString
+#include "nsTArray.h"                   // for nsTArray
+#include "nscore.h"                     // for nsresult
+#include "prtypes.h"                    // for PRInt32
+
+class nsIEditor;
+class nsISpellChecker;
+class nsITextServicesFilter;
 
 #define NS_EDITORSPELLCHECK_CID                     \
 { /* {75656ad9-bd13-4c5d-939a-ec6351eea0cc} */        \

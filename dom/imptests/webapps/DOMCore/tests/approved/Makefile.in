@@ -11,8 +11,9 @@ DIRS = \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-MOCHITEST_FILES = \
+_FILES = \
   test_interfaces.html \
   test_Range-cloneContents.html \
   test_Range-cloneRange.html \
@@ -29,11 +30,9 @@ MOCHITEST_FILES = \
   test_Range-selectNode.html \
   test_Range-set.html \
   test_Range-surroundContents.html \
-  $(NULL)
-
-MOCHITEST_FILES += \
   common.js \
   Range-test-iframe.html \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+libs:: $(_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
