@@ -866,7 +866,7 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
 
     MIRGraph graph(temp);
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun, osrPc);
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(script, fun, osrPc, fp->isConstructing());
     if (!info)
         return false;
 
