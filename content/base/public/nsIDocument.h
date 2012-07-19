@@ -19,7 +19,6 @@
 #include "nsTObserverArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsNodeInfoManager.h"
 #include "nsIVariant.h"
 #include "nsIObserver.h"
 #include "nsGkAtoms.h"
@@ -126,28 +125,9 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
 #ifdef MOZILLA_INTERNAL_API
-  nsIDocument()
-    : nsINode(nsnull),
-      mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
-      mNodeInfoManager(nsnull),
-      mCompatMode(eCompatibility_FullStandards),
-      mIsInitialDocumentInWindow(false),
-      mMayStartLayout(true),
-      mVisible(true),
-      mRemovedFromDocShell(false),
-      // mAllowDNSPrefetch starts true, so that we can always reliably && it
-      // with various values that might disable it.  Since we never prefetch
-      // unless we get a window, and in that case the docshell value will get
-      // &&-ed in, this is safe.
-      mAllowDNSPrefetch(true),
-      mIsBeingUsedAsImage(false),
-      mHasLinksToUpdate(false),
-      mPartID(0)
-  {
-    SetInDocument();
-  }
+  nsIDocument();
 #endif
-  
+
   /**
    * Let the document know that we're starting to load data into it.
    * @param aCommand The parser command. Must not be null.
@@ -1688,14 +1668,7 @@ private:
   PRUint64 mWarnedAbout;
 
 protected:
-  ~nsIDocument()
-  {
-    // XXX The cleanup of mNodeInfoManager (calling DropDocumentReference and
-    //     releasing it) happens in the nsDocument destructor. We'd prefer to
-    //     do it here but nsNodeInfoManager is a concrete class that we don't
-    //     want to expose to users of the nsIDocument API outside of Gecko.
-  }
-
+  ~nsIDocument();
   nsPropertyTable* GetExtraPropertyTable(PRUint16 aCategory);
 
   // Never ever call this. Only call GetWindow!
@@ -1752,11 +1725,9 @@ protected:
   // A reference to the element last returned from GetRootElement().
   mozilla::dom::Element* mCachedRootElement;
 
-  // We'd like these to be nsRefPtrs, but that'd require us to include
-  // additional headers that we don't want to expose.
-  // The cleanup is handled by the nsDocument destructor.
+  // We hold a strong reference to mNodeInfoManager through mNodeInfo
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
-  mozilla::css::Loader* mCSSLoader; // [STRONG]
+  nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsHTMLStyleSheet* mAttrStyleSheet;
 
   // The set of all object, embed, applet, video and audio elements for
@@ -1764,7 +1735,7 @@ protected:
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
-  
+
   // The set of all links that need their status resolved.  Links must add themselves
   // to this set by calling RegisterPendingLinkUpdate when added to a document and must
   // remove themselves by calling UnregisterPendingLinkUpdate when removed from a document.

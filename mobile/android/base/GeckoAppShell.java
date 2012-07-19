@@ -85,10 +85,6 @@ public class GeckoAppShell
     public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
 
-    static public final int SCREENSHOT_THUMBNAIL = 0;
-    static public final int SCREENSHOT_CHECKERBOARD = 1;
-    static public final int SCREENSHOT_CHECKERBOARD_AND_UPDATE = 2;
-
     static public final int RESTORE_NONE = 0;
     static public final int RESTORE_OOM = 1;
     static public final int RESTORE_CRASH = 2;
@@ -2306,91 +2302,57 @@ public class GeckoAppShell
 
 }
 
-class ScreenshotHandler {
-    private static Queue<PendingScreenshot> sPendingScreenshots = new LinkedList<PendingScreenshot>();
-    private static RectF sCheckerboardPageRect;
-    private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
-    private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
-    private static int sMaxTextureSize = 0;
-    private static final String LOGTAG = "GeckoScreenshot";
-    private static boolean sDisableScreenshot = false;
-    private static ByteBuffer sWholePageScreenshotBuffer;
-    private static int sCheckerboardBufferWidth, sCheckerboardBufferHeight;
-    private static Rect sAcumulatedRect = new Rect();
+class ScreenshotHandler implements Runnable {
+    public static final int SCREENSHOT_THUMBNAIL = 0;
+    public static final int SCREENSHOT_CHECKERBOARD = 1;
 
-    static class RepaintRunnable implements Runnable {
-        private boolean mIsRepaintRunnablePosted = false;
-        private float mDirtyTop = Float.POSITIVE_INFINITY, mDirtyLeft = Float.POSITIVE_INFINITY;
-        private float mDirtyBottom = Float.NEGATIVE_INFINITY, mDirtyRight = Float.NEGATIVE_INFINITY;
+    private static final String LOGTAG = "GeckoScreenshotHandler";
+    private static final int BYTES_FOR_16BPP = 2;
+    private static final int MAX_PIXELS_PER_SLICE = 100000;
 
-        public void run() {
-            float top, left, bottom, right;
-            // synchronize so we don't try to accumulate more rects while painting the ones we have
-            synchronized(this) {
-                top = mDirtyTop;
-                left = mDirtyLeft;
-                right = mDirtyRight;
-                bottom = mDirtyBottom;
-                // reset these to infinity to start accumulating again
-                mDirtyTop = Float.POSITIVE_INFINITY;
-                mDirtyLeft = Float.POSITIVE_INFINITY;
-                mDirtyBottom = Float.NEGATIVE_INFINITY;
-                mDirtyRight = Float.NEGATIVE_INFINITY;
-                mIsRepaintRunnablePosted = false;
-            }
+    private static boolean sDisableScreenshot;
+    private static ScreenshotHandler sInstance;
 
+    private final int mMaxTextureSize;
+    private final int mMinTextureSize;
+    private final int mMaxPixels;
 
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab == null)
-                return;
-            LayerController layerController = GeckoApp.mAppContext.getLayerController();
-            if (layerController == null)
-                return;
-            ImmutableViewportMetrics viewport = layerController.getViewportMetrics();
-            
-            if (RectUtils.fuzzyEquals(sCheckerboardPageRect, viewport.getCssPageRect())) {
-                float width = right - left;
-                float height = bottom - top;
-                scheduleCheckerboardScreenshotEvent(tab.getId(), 
-                                                    (int)left, (int)top, (int)width, (int)height, 
-                                                    (int)(sLastCheckerboardWidthRatio * (left - viewport.cssPageRectLeft)),
-                                                    (int)(sLastCheckerboardHeightRatio * (top - viewport.cssPageRectTop)),
-                                                    (int)(sLastCheckerboardWidthRatio * width),
-                                                    (int)(sLastCheckerboardHeightRatio * height),
-                                                    sCheckerboardBufferWidth, sCheckerboardBufferHeight);
-            } else {
-                GeckoAppShell.screenshotWholePage(tab);
+    private final Queue<PendingScreenshot> mPendingScreenshots;
+    private final ByteBuffer mBuffer;
+    private int mBufferWidth;
+    private int mBufferHeight;
+    private RectF mPageRect;
+    private float mWidthRatio;
+    private float mHeightRatio;
+
+    private int mTabId;
+    private RectF mDirtyRect;
+    private boolean mIsRepaintRunnablePosted;
+
+    private static synchronized ScreenshotHandler getInstance() {
+        if (sInstance == null) {
+            try {
+                sInstance = new ScreenshotHandler();
+            } catch (UnsupportedOperationException e) {
+                // initialization failed, fall through and return null
             }
         }
+        return sInstance;
+    }
 
-        void addRectToRepaint(float top, float left, float bottom, float right) {
-            if (sDisableScreenshot || sCheckerboardPageRect == null) {
-                // if screenshotting is disabled just ignore the rect to repaint.
-                // if sCheckerboardPageRect is null, we haven't done a full-page
-                // screenshot yet (or screenshotWholePage failed for some reason),
-                // so ignore partial updates.
-                return;
-            }
-            synchronized(this) {
-                ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
-                mDirtyTop = Math.max(sCheckerboardPageRect.top, Math.min(top, mDirtyTop));
-                mDirtyLeft = Math.max(sCheckerboardPageRect.left, Math.min(left, mDirtyLeft));
-                mDirtyBottom = Math.min(sCheckerboardPageRect.bottom, Math.max(bottom, mDirtyBottom));
-                mDirtyRight = Math.min(sCheckerboardPageRect.right, Math.max(right, mDirtyRight));
-                if (!mIsRepaintRunnablePosted) {
-                    GeckoAppShell.getHandler().postDelayed(this, 5000);
-                    mIsRepaintRunnablePosted = true;
-                }
-            }
+    private ScreenshotHandler() {
+        int[] maxTextureSize = new int[1];
+        GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSize, 0);
+        mMaxTextureSize = maxTextureSize[0];
+        if (mMaxTextureSize == 0) {
+            throw new UnsupportedOperationException();
         }
-    }
-
-    public static void notifyPaintedRect(float top, float left, float bottom, float right) {
-        sRepaintRunnable.addRectToRepaint(top, left, bottom, right);
-    }
-
-    private static int clamp(int min, int val, int max) {
-        return Math.max(Math.min(max, val), min);
+        mMaxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), mMaxTextureSize * mMaxTextureSize);
+        mMinTextureSize = (int)Math.ceil(mMaxPixels / mMaxTextureSize);
+        mPendingScreenshots = new LinkedList<PendingScreenshot>();
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mMaxPixels * BYTES_FOR_16BPP);
+        mDirtyRect = new RectF();
+        clearDirtyRect();
     }
 
     // Invoked via reflection from robocop test
@@ -2399,156 +2361,266 @@ class ScreenshotHandler {
     }
 
     public static void screenshotWholePage(Tab tab) {
+        if (sDisableScreenshot || GeckoApp.mAppContext.isApplicationInBackground()) {
+            return;
+        }
+        ScreenshotHandler handler = getInstance();
+        if (handler == null) {
+            return;
+        }
+
+        handler.screenshotWholePage(tab.getId());
+    }
+
+    private void screenshotWholePage(int tabId) {
+        LayerController layerController = GeckoApp.mAppContext.getLayerController();
+        if (layerController == null) {
+            return;
+        }
+        ImmutableViewportMetrics viewport = layerController.getViewportMetrics();
+        RectF pageRect = viewport.getCssPageRect();
+
+        if (FloatUtils.fuzzyEquals(pageRect.width(), 0) || FloatUtils.fuzzyEquals(pageRect.height(), 0)) {
+            return;
+        }
+
+        synchronized (this) {
+            // if we're doing a full-page screenshot, toss any
+            // dirty rects we have saved up and reset the tab id.
+            mTabId = tabId;
+            clearDirtyRect();
+        }
+        synchronized (mPendingScreenshots) {
+            for (Iterator<PendingScreenshot> i = mPendingScreenshots.iterator(); i.hasNext(); ) {
+                i.next().discard();
+            }
+        }
+
+        int dstx = 0;
+        int dsty = 0;
+        float bestZoomFactor = (float)Math.sqrt(pageRect.width() * pageRect.height() / mMaxPixels);
+        int dstw = IntSize.largestPowerOfTwoLessThan(pageRect.width() / bestZoomFactor);
+        // clamp with min texture size so that the height doesn't exceed the sMaxTextureSize
+        dstw = clamp(mMinTextureSize, dstw, mMaxTextureSize);
+        int dsth = mMaxPixels / dstw;
+
+        mPageRect = pageRect;
+        mBufferWidth = dstw;
+        mBufferHeight = dsth;
+        mWidthRatio = dstw / pageRect.width();
+        mHeightRatio = dsth / pageRect.height();
+
+        scheduleCheckerboardScreenshotEvent(pageRect, dstx, dsty, dstw, dsth);
+    }
+
+    private static int clamp(int min, int val, int max) {
+        return Math.max(Math.min(max, val), min);
+    }
+
+    public static void notifyPaintedRect(float top, float left, float bottom, float right) {
         if (sDisableScreenshot) {
             return;
         }
-        if (GeckoApp.mAppContext.isApplicationInBackground())
+        ScreenshotHandler handler = getInstance();
+        if (handler == null) {
             return;
-
-        if (sMaxTextureSize == 0) {
-            int[] maxTextureSize = new int[1];
-            GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSize, 0);
-            sMaxTextureSize = maxTextureSize[0];
-            if (sMaxTextureSize == 0)
-                return;
-            sWholePageScreenshotBuffer = GeckoAppShell.allocateDirectBuffer(ScreenshotLayer.getMaxNumPixels() * 2 /* 16 bpp */);
         }
 
-        ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
-        Log.i(LOGTAG, "Taking whole-screen screenshot, viewport: " + viewport);
-        // source width and height to screenshot
-        float sx = viewport.cssPageRectLeft;
-        float sy = viewport.cssPageRectTop;
-        float sw = viewport.cssPageRectRight - viewport.cssPageRectLeft;
-        float sh = viewport.cssPageRectBottom - viewport.cssPageRectTop;
-        if (sw == 0 || sh == 0)
-            return;
-        int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
-        // 2Mb of 16bit image data
-        // may be bumped by up to 4x for power of 2 alignment
-        float idealZoomFactor = (float)Math.sqrt((sw * sh) / (maxPixels / 4));
-
-        // calc destination width and hight
-        int idealDstWidth = IntSize.nextPowerOfTwo(sw / idealZoomFactor);
-        // min texture size such that the other dimention doesn't excede the max
-        int minTextureSize = maxPixels / sMaxTextureSize;
-        int dx = 0;
-        int dy = 0;
-        int dw = clamp(minTextureSize, idealDstWidth, sMaxTextureSize);
-        int dh = maxPixels / dw;
-        sCheckerboardBufferWidth = dw;
-        sCheckerboardBufferHeight = dh;
-
-        sLastCheckerboardWidthRatio = dw / sw;
-        sLastCheckerboardHeightRatio = dh / sh;
-        sCheckerboardPageRect = viewport.getCssPageRect();
-        scheduleCheckerboardScreenshotEvent(tab.getId(), (int)sx, (int)sy, (int)sw, (int)sh, dx, dy, dw, dh, dw, dh);
+        handler.notifyPageUpdated(top, left, bottom, right);
     }
 
-    static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
-        float totalSize = sw * sh;
-        int numSlices = (int) Math.ceil(totalSize / 100000);
-        if (numSlices == 0 || dw == 0 || dh == 0)
-            return;
-        int srcSliceSize = (int) Math.ceil(sh / numSlices);
-        int dstSliceSize = (int) Math.ceil(dh / numSlices);
-        for (int i = 0; i < numSlices; i++) {
-            GeckoEvent event =
-                GeckoEvent.createScreenshotEvent(tabId, 
-                                                 sx, sy + srcSliceSize * i,  sw, srcSliceSize, 
-                                                 dx, dy + dstSliceSize * i,  dw, dstSliceSize, bw, bh,
-                                                 i < numSlices - 1 ? 
-                                                 GeckoAppShell.SCREENSHOT_CHECKERBOARD
-                                                 : GeckoAppShell.SCREENSHOT_CHECKERBOARD_AND_UPDATE,
-                                                 sWholePageScreenshotBuffer);
-            synchronized(sPendingScreenshots) {
-                sPendingScreenshots.add(new PendingScreenshot(tabId, event));
-                if (sPendingScreenshots.size() == 1)
-                    sendNextEventToGecko();
+    private void notifyPageUpdated(float top, float left, float bottom, float right) {
+        synchronized (this) {
+            if (mPageRect == null || Tabs.getInstance().getSelectedTab().getId() != mTabId) {
+                // if mPageRect is null, we haven't done a full-page
+                // screenshot yet (or screenshotWholePage failed for some reason),
+                // so ignore partial updates. also if the tab changed, ignore
+                // partial updates until we do the next whole-page screenshot.
+                return;
+            }
+            mDirtyRect.top = Math.max(mPageRect.top, Math.min(top, mDirtyRect.top));
+            mDirtyRect.left = Math.max(mPageRect.left, Math.min(left, mDirtyRect.left));
+            mDirtyRect.bottom = Math.min(mPageRect.bottom, Math.max(bottom, mDirtyRect.bottom));
+            mDirtyRect.right = Math.min(mPageRect.right, Math.max(right, mDirtyRect.right));
+            if (!mIsRepaintRunnablePosted) {
+                GeckoAppShell.getHandler().postDelayed(this, 5000);
+                mIsRepaintRunnablePosted = true;
             }
         }
     }
 
-    static void sendNextEventToGecko() {
-        synchronized(sPendingScreenshots) {
-            if (sPendingScreenshots.isEmpty())
-                return;
-            GeckoAppShell.sendEventToGecko(sPendingScreenshots.element().getEvent());
-        }
-    }
-    
-    static class PendingScreenshot {
-        private final GeckoEvent mEvent;
-        private final int mTabId;
-
-        PendingScreenshot(int tabId, GeckoEvent event) {
-            mTabId = tabId;
-            mEvent = event;
-        }
-
-        GeckoEvent getEvent() {
-            return mEvent;
-        }
-
+    private void clearDirtyRect() {
+        mDirtyRect.set(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+                       Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
     }
 
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId, 
+    public void run() {
+        // make a copy of the dirty rect to work with so we can keep
+        // accumulating new dirty rects.
+        RectF dirtyRect = new RectF();
+        synchronized (this) {
+            dirtyRect.set(mDirtyRect);
+            clearDirtyRect();
+            mIsRepaintRunnablePosted = false;
+        }
+
+        if (dirtyRect.width() <= 0 || dirtyRect.height() <= 0) {
+            // we have nothing in the dirty rect, so nothing to do
+            return;
+        }
+
+        Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        if (selectedTab == null || selectedTab.getId() != mTabId) {
+            // tab changed, so bail out before we start screenshotting
+            // the wrong tab. note we must do this *after* resetting
+            // mIsRepaintRunnablePosted above.
+            return;
+        }
+
+        LayerController layerController = GeckoApp.mAppContext.getLayerController();
+        if (layerController == null) {
+            // we could be in the midst of an activity tear-down and re-start, so guard
+            // against a null layer controller.
+            return;
+        }
+
+        ImmutableViewportMetrics viewport = layerController.getViewportMetrics();
+        if (RectUtils.fuzzyEquals(mPageRect, viewport.getCssPageRect())) {
+            // the page size hasn't changed, so our dirty rect is still valid and we can just
+            // repaint that area
+            int dstx = (int)(mWidthRatio * (dirtyRect.left - viewport.cssPageRectLeft));
+            int dsty = (int)(mHeightRatio * (dirtyRect.top - viewport.cssPageRectTop));
+            int dstw = (int)(mWidthRatio * dirtyRect.width());
+            int dsth = (int)(mHeightRatio * dirtyRect.height());
+            scheduleCheckerboardScreenshotEvent(dirtyRect, dstx, dsty, dstw, dsth);
+        } else {
+            // the page size changed, so we need to re-screenshot the whole page
+            screenshotWholePage(mTabId);
+        }
+    }
+
+    private void scheduleCheckerboardScreenshotEvent(RectF srcRect, int dstx, int dsty, int dstw, int dsth) {
+        int numSlices = (int)FloatMath.ceil(srcRect.width() * srcRect.height() / MAX_PIXELS_PER_SLICE);
+        if (numSlices == 0 || dstw == 0 || dsth == 0) {
+            return;
+        }
+
+        PendingScreenshot pending = new PendingScreenshot(mTabId);
+        int sliceDstH = Math.max(1, dsth / numSlices);
+        float sliceSrcH = sliceDstH * srcRect.height() / dsth;
+        float srcY = srcRect.top;
+        for (int i = 0; i < dsth; i += sliceDstH) {
+            if (i + sliceDstH > dsth) {
+                // the last slice may be smaller to account for rounding error.
+                sliceDstH = dsth - i;
+                sliceSrcH = sliceDstH * srcRect.height() / dsth;
+            }
+            GeckoEvent event = GeckoEvent.createScreenshotEvent(mTabId,
+                (int)srcRect.left, (int)srcY, (int)srcRect.width(), (int)sliceSrcH,
+                dstx, dsty + i, dstw, sliceDstH,
+                mBufferWidth, mBufferHeight, SCREENSHOT_CHECKERBOARD, mBuffer);
+            srcY += sliceSrcH;
+            pending.addEvent(event);
+        }
+        synchronized (mPendingScreenshots) {
+            mPendingScreenshots.add(pending);
+            if (mPendingScreenshots.size() == 1) {
+                sendNextEventToGecko();
+            }
+        }
+    }
+
+    private void sendNextEventToGecko() {
+        synchronized (mPendingScreenshots) {
+            while (!mPendingScreenshots.isEmpty()) {
+                // some of the pending screenshots may have been discard()ed
+                // so keep looping until we find a real one
+                if (mPendingScreenshots.element().sendNextEventToGecko()) {
+                    break;
+                }
+                mPendingScreenshots.remove();
+            }
+        }
+    }
+
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId,
                                         final int left, final int top,
-                                        final int right, final int bottom, 
+                                        final int right, final int bottom,
                                         final int bufferWidth, final int bufferHeight, final int token) {
-
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                final Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab == null) {
-                    if (token == GeckoAppShell.SCREENSHOT_CHECKERBOARD ||
-                        token == GeckoAppShell.SCREENSHOT_CHECKERBOARD_AND_UPDATE) {
-                        synchronized(sPendingScreenshots) {
-                            sPendingScreenshots.remove();
-                            sendNextEventToGecko();
-                        }
-                    }
-                    return;
-                }
-
                 switch (token) {
-                    case GeckoAppShell.SCREENSHOT_CHECKERBOARD:
+                    case SCREENSHOT_CHECKERBOARD:
                     {
-                        // screenshots are always processed sequentially, with the last one 
-                        // marked with the SCREENSHOT_CHECKERBOARD_AND_UPDATE token
-                        synchronized (sAcumulatedRect) {
-                            sAcumulatedRect.union(left, top, right, bottom);
+                        ScreenshotHandler handler = getInstance();
+                        if (Tabs.getInstance().getSelectedTab().getId() == tabId) {
+                            PendingScreenshot current;
+                            synchronized (handler.mPendingScreenshots) {
+                                current = handler.mPendingScreenshots.element();
+                                current.slicePainted(left, top, right, bottom);
+                                if (current.sendNextEventToGecko()) {
+                                    break;
+                                }
+                                // this screenshot has all its slices done, so push it out
+                                // to the layer renderer and remove it from the list
+                            }
+                            LayerController layerController = GeckoApp.mAppContext.getLayerController();
+                            if (layerController != null) {
+                                layerController.getView().getRenderer().setCheckerboardBitmap(
+                                    data, bufferWidth, bufferHeight, handler.mPageRect,
+                                    current.getPaintedRegion());
+                            }
                         }
-                        synchronized(sPendingScreenshots) {
-                            sPendingScreenshots.remove();
-                            sendNextEventToGecko();
+                        synchronized (handler.mPendingScreenshots) {
+                            handler.mPendingScreenshots.remove();
+                            handler.sendNextEventToGecko();
                         }
                         break;
                     }
-                    case GeckoAppShell.SCREENSHOT_CHECKERBOARD_AND_UPDATE:
+                    case SCREENSHOT_THUMBNAIL:
                     {
-                        final Rect rect;
-                        synchronized (sAcumulatedRect) {
-                            sAcumulatedRect.union(left, top, right, bottom);
-                            rect = new Rect(sAcumulatedRect);
-                            sAcumulatedRect.setEmpty();
-                        }
-                        GeckoApp.mAppContext.getLayerController()
-                            .getView().getRenderer()
-                            .setCheckerboardBitmap(data, bufferWidth, bufferHeight, sCheckerboardPageRect, rect);
-                        synchronized(sPendingScreenshots) {
-                            sPendingScreenshots.remove();
-                            sendNextEventToGecko();
-                        }
-                        break;
-                    }
-                    case GeckoAppShell.SCREENSHOT_THUMBNAIL:
-                    {
+                        Tab tab = Tabs.getInstance().getTab(tabId);
                         GeckoApp.mAppContext.handleThumbnailData(tab, data);
                         break;
                     }
                 }
             }
         });
+    }
+
+    static class PendingScreenshot {
+        private final int mTabId;
+        private final LinkedList<GeckoEvent> mEvents;
+        private final Rect mPainted;
+
+        PendingScreenshot(int tabId) {
+            mTabId = tabId;
+            mEvents = new LinkedList<GeckoEvent>();
+            mPainted = new Rect();
+        }
+
+        void addEvent(GeckoEvent event) {
+            mEvents.add(event);
+        }
+
+        boolean sendNextEventToGecko() {
+            if (!mEvents.isEmpty()) {
+                GeckoAppShell.sendEventToGecko(mEvents.remove());
+                return true;
+            }
+            return false;
+        }
+
+        void slicePainted(int left, int top, int right, int bottom) {
+            mPainted.union(left, top, right, bottom);
+        }
+
+        Rect getPaintedRegion() {
+            return mPainted;
+        }
+
+        void discard() {
+            mEvents.clear();
+        }
     }
 }

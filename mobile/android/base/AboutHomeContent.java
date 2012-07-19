@@ -470,7 +470,7 @@ public class AboutHomeContent extends ScrollView
                             }
                         });
 
-                        Favicons favicons = GeckoApp.mAppContext.mFavicons;
+                        Favicons favicons = GeckoApp.mAppContext.getFavicons();
                         favicons.loadFavicon(pageUrl, iconUrl,
                                     new Favicons.OnFaviconLoadedListener() {
                             public void onFaviconLoaded(String url, Drawable favicon) {

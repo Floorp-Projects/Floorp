@@ -184,6 +184,9 @@ XULMenuitemAccessible::AccessKey() const
         case nsIDOMKeyEvent::DOM_VK_META:
           modifierKey = KeyBinding::kMeta;
           break;
+        case nsIDOMKeyEvent::DOM_VK_WIN:
+          modifierKey = KeyBinding::kOS;
+          break;
       }
     }
   }
@@ -226,6 +229,8 @@ XULMenuitemAccessible::KeyboardShortcut() const
     modifierMask |= KeyBinding::kAlt;
   if (modifiersStr.Find("meta") != -1)
     modifierMask |= KeyBinding::kMeta;
+  if (modifiersStr.Find("os") != -1)
+    modifierMask |= KeyBinding::kOS;
   if (modifiersStr.Find("control") != -1)
     modifierMask |= KeyBinding::kControl;
   if (modifiersStr.Find("accel") != -1) {
@@ -233,6 +238,10 @@ XULMenuitemAccessible::KeyboardShortcut() const
     switch (Preferences::GetInt("ui.key.accelKey", 0)) {
       case nsIDOMKeyEvent::DOM_VK_META:
         modifierMask |= KeyBinding::kMeta;
+        break;
+
+      case nsIDOMKeyEvent::DOM_VK_WIN:
+        modifierMask |= KeyBinding::kOS;
         break;
 
       case nsIDOMKeyEvent::DOM_VK_ALT:

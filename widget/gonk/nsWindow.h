@@ -83,7 +83,7 @@ public:
     virtual float GetDPI();
     virtual mozilla::layers::LayerManager*
         GetLayerManager(PLayersChild* aShadowManager = nsnull,
-                        LayersBackend aBackendHint = LayerManager::LAYERS_NONE,
+                        LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                         LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                         bool* aAllowRetaining = nsnull);
     gfxASurface* GetThebesSurface();

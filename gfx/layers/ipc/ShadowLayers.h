@@ -11,7 +11,7 @@
 #include "gfxASurface.h"
 
 #include "ImageLayers.h"
-#include "Layers.h"
+#include "LayersBackend.h"
 #include "mozilla/ipc/SharedMemory.h"
 
 class gfxSharedImageSurface;
@@ -101,7 +101,6 @@ class ShadowLayerForwarder
 
 public:
   typedef gfxASurface::gfxContentType gfxContentType;
-  typedef LayerManager::LayersBackend LayersBackend;
 
   virtual ~ShadowLayerForwarder();
 
@@ -464,7 +463,7 @@ public:
   virtual void DestroySharedSurface(gfxSharedImageSurface* aSurface) = 0;
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface) = 0;
 protected:
-  ~ISurfaceDeAllocator() {};
+  ~ISurfaceDeAllocator() {}
 };
 
 /**
@@ -491,7 +490,7 @@ public:
     mAllocator = aAllocator;
   }
 
-  virtual void DestroyFrontBuffer() { };
+  virtual void DestroyFrontBuffer() { }
 
   /**
    * The following methods are

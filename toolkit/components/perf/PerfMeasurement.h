@@ -7,11 +7,12 @@
 #define COMPONENTS_PERFMEASUREMENT_H
 
 #include "nsIXPCScriptable.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace jsperf {
 
-class Module : public nsIXPCScriptable
+class Module MOZ_FINAL : public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS

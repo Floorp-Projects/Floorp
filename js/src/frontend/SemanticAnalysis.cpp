@@ -56,46 +56,8 @@ SetFunctionKinds(FunctionBox *funbox, bool *isHeavyweight, bool topInFunction, b
             SetFunctionKinds(funbox->kids, isHeavyweight, topInFunction, isDirectEval);
 
         JSFunction *fun = funbox->function();
-
-        JS_ASSERT(fun->kind() == JSFUN_INTERPRETED);
-
-        if (funbox->funIsHeavyweight()) {
-            /* nothing to do */
-        } else if (isDirectEval || funbox->inAnyDynamicScope()) {
-            /*
-             * Either we are in a with-block or a function scope that is
-             * subject to direct eval; or we are compiling strict direct eval
-             * code.
-             *
-             * In either case, fun may reference names that are not bound but
-             * are not necessarily global either. (In the strict direct eval
-             * case, we could bind them, but currently do not bother; see
-             * the comment about strict mode code in BindTopLevelVar.)
-             */
-            JS_ASSERT(!fun->isNullClosure());
-        } else {
-            bool hasUpvars = false;
-
-            if (pn->isKind(PNK_UPVARS)) {
-                AtomDefnMapPtr upvars = pn->pn_names;
-                JS_ASSERT(!upvars->empty());
-
-                /* Determine whether the this function contains upvars. */
-                for (AtomDefnRange r = upvars->all(); !r.empty(); r.popFront()) {
-                    if (!r.front().value()->resolve()->isFreeVar()) {
-                        hasUpvars = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!hasUpvars) {
-                /* No lexical dependencies => null closure, for best performance. */
-                fun->setKind(JSFUN_NULL_CLOSURE);
-            }
-        }
-
-        if (fun->kind() == JSFUN_INTERPRETED && pn->isKind(PNK_UPVARS)) {
+        JS_ASSERT(fun->isInterpreted());
+        if (pn->isKind(PNK_UPVARS)) {
             /*
              * We loop again over all upvars, and for each non-free upvar,
              * ensure that its containing function has been flagged as

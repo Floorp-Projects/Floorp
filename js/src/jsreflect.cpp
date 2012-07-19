@@ -496,6 +496,9 @@ class NodeBuilder
     bool forInStatement(Value var, Value expr, Value stmt,
                         bool isForEach, TokenPos *pos, Value *dst);
 
+    bool forOfStatement(Value var, Value expr, Value stmt, TokenPos *pos, Value *dst);
+
+
     bool withStatement(Value expr, Value stmt, TokenPos *pos, Value *dst);
 
     bool whileStatement(Value test, Value stmt, TokenPos *pos, Value *dst);
@@ -836,6 +839,20 @@ NodeBuilder::forInStatement(Value var, Value expr, Value stmt, bool isForEach,
                    "right", expr,
                    "body", stmt,
                    "each", BooleanValue(isForEach),
+                   dst);
+}
+
+bool
+NodeBuilder::forOfStatement(Value var, Value expr, Value stmt, TokenPos *pos, Value *dst)
+{
+    Value cb = callbacks[AST_FOR_OF_STMT];
+    if (!cb.isNull())
+        return callback(cb, var, expr, stmt, pos, dst);
+
+    return newNode(AST_FOR_OF_STMT, pos,
+                   "left", var,
+                   "right", expr,
+                   "body", stmt,
                    dst);
 }
 
@@ -1612,6 +1629,7 @@ class ASTSerializer
     }
 
     bool forInit(ParseNode *pn, Value *dst);
+    bool forOfOrIn(ParseNode *loop, ParseNode *head, Value var, Value stmt, Value *dst);
     bool statement(ParseNode *pn, Value *dst);
     bool blockStatement(ParseNode *pn, Value *dst);
     bool switchStatement(ParseNode *pn, Value *dst);
@@ -2073,6 +2091,19 @@ ASTSerializer::forInit(ParseNode *pn, Value *dst)
 }
 
 bool
+ASTSerializer::forOfOrIn(ParseNode *loop, ParseNode *head, Value var, Value stmt, Value *dst)
+{
+    Value expr;
+    bool isForEach = loop->pn_iflags & JSITER_FOREACH;
+    bool isForOf = loop->pn_iflags & JSITER_FOR_OF;
+    JS_ASSERT(!isForOf || !isForEach);
+
+    return expression(head->pn_kid3, &expr) &&
+        (isForOf ? builder.forOfStatement(var, expr, stmt, &loop->pn_pos, dst) :
+         builder.forInStatement(var, expr, stmt, isForEach, &loop->pn_pos, dst));
+}
+
+bool
 ASTSerializer::statement(ParseNode *pn, Value *dst)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -2153,18 +2184,14 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
         if (!statement(pn->pn_right, &stmt))
             return false;
 
-        bool isForEach = pn->pn_iflags & JSITER_FOREACH;
-
         if (head->isKind(PNK_FORIN)) {
-            Value var, expr;
-
+            Value var;
             return (!head->pn_kid1
                     ? pattern(head->pn_kid2, NULL, &var)
                     : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
-                      ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
-                      : variableDeclaration(head->pn_kid1, false, &var)) &&
-                   expression(head->pn_kid3, &expr) &&
-                   builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
+                    ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
+                    : variableDeclaration(head->pn_kid1, false, &var)) &&
+                forOfOrIn(pn, head, var, stmt, dst);
         }
 
         Value init, test, update;
@@ -2192,13 +2219,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
         ParseNode *head = loop->pn_left;
         JS_ASSERT(head->isKind(PNK_FORIN));
 
-        bool isForEach = loop->pn_iflags & JSITER_FOREACH;
+        Value stmt;
 
-        Value expr, stmt;
-
-        return expression(head->pn_kid3, &expr) &&
-               statement(loop->pn_right, &stmt) &&
-               builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
+        return statement(loop->pn_right, &stmt) && forOfOrIn(loop, head, var, stmt, dst);
       }
 
       case PNK_BREAK:

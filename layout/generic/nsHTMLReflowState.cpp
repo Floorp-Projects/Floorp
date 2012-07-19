@@ -2427,25 +2427,6 @@ nsCSSOffsetState::ComputePadding(nscoord aContainingBlockWidth, nsIAtom* aFrameT
 }
 
 void
-nsHTMLReflowState::ApplyMinMaxConstraints(nscoord* aFrameWidth,
-                                          nscoord* aFrameHeight) const
-{
-  if (aFrameWidth) {
-    if (NS_UNCONSTRAINEDSIZE != mComputedMaxWidth) {
-      *aFrameWidth = NS_MIN(*aFrameWidth, mComputedMaxWidth);
-    }
-    *aFrameWidth = NS_MAX(*aFrameWidth, mComputedMinWidth);
-  }
-
-  if (aFrameHeight) {
-    if (NS_UNCONSTRAINEDSIZE != mComputedMaxHeight) {
-      *aFrameHeight = NS_MIN(*aFrameHeight, mComputedMaxHeight);
-    }
-    *aFrameHeight = NS_MAX(*aFrameHeight, mComputedMinHeight);
-  }
-}
-
-void
 nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                        nscoord aContainingBlockHeight,
                                        const nsHTMLReflowState* aContainingBlockRS)

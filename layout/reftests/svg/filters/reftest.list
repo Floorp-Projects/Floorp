@@ -2,6 +2,8 @@
 # subregion. The fe*-2 tests test with no clipping (which stresses
 # the automatic optimal surface-size computation a bit more).
 
+== dynamic-filtered-foreignObject-01.svg pass.svg
+
 == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 

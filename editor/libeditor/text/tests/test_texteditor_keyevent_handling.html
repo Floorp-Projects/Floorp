@@ -124,6 +124,10 @@ function runTests()
     check(aDescription + "Meta", true, true, !aIsReadonly);
 
     reset("");
+    synthesizeKey("VK_WIN", { type: "keypress" });
+    check(aDescription + "OS", true, true, !aIsReadonly);
+
+    reset("");
     synthesizeKey("VK_SHIFT", { type: "keypress" });
     check(aDescription + "Shift", true, true, !aIsReadonly);
 
@@ -169,6 +173,10 @@ function runTests()
     synthesizeKey("VK_BACK_SPACE", { metaKey: true });
     check(aDescription + "Meta+Backspace", true, true, aIsReadonly);
 
+    reset("");
+    synthesizeKey("VK_BACK_SPACE", { osKey: true });
+    check(aDescription + "OS+Backspace", true, true, aIsReadonly);
+
     // Delete key:
     //   If editor is readonly, it doesn't consume.
     //   If editor is editable, delete is consumed.
@@ -205,6 +213,11 @@ function runTests()
     // Linux: native handler consumed.
     check(aDescription + "Meta+Delete",
           true, true, kIsLinux);
+
+    reset("");
+    synthesizeKey("VK_DELETE", { osKey: true });
+    check(aDescription + "OS+Delete",
+          true, true, false);
 
     // XXX input.value returns "\n" when it's empty, so, we should use dummy
     // value ("a") for the following tests.
@@ -243,6 +256,11 @@ function runTests()
     check(aDescription + "Meta+Return", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Return");
 
+    reset("a");
+    synthesizeKey("VK_RETURN", { osKey: true });
+    check(aDescription + "OS+Return", true, true, false);
+    is(aElement.value, "a", aDescription + "OS+Return");
+
     // Enter key (same as Return key):
     //   If editor is readonly, it doesn't consume.
     //   If editor is editable and not single line editor, it consumes Return
@@ -276,6 +294,11 @@ function runTests()
     synthesizeKey("VK_ENTER", { metaKey: true });
     check(aDescription + "Meta+Enter", true, true, false);
     is(aElement.value, "a", aDescription + "Meta+Enter");
+
+    reset("a");
+    synthesizeKey("VK_ENTER", { osKey: true });
+    check(aDescription + "OS+Enter", true, true, false);
+    is(aElement.value, "a", aDescription + "OS+Enter");
 
     // Tab key:
     //   If editor is tabbable, editor doesn't consume all tab key events.
@@ -330,6 +353,13 @@ function runTests()
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Meta+Tab)");
 
+    reset("a");
+    synthesizeKey("VK_TAB", { osKey: true });
+    check(aDescription + "OS+Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "OS+Tab");
+    is(fm.focusedElement, aElement,
+       aDescription + "focus moved unexpectedly (OS+Tab)");
+
     // Esc key:
     //   In all cases, esc key events are not consumed
     reset("abc");
@@ -351,6 +381,10 @@ function runTests()
     reset("abc");
     synthesizeKey("VK_ESCAPE", { metaKey: true });
     check(aDescription + "Meta+Esc", true, true, false);
+
+    reset("abc");
+    synthesizeKey("VK_ESCAPE", { osKey: true });
+    check(aDescription + "OS+Esc", true, true, false);
 
     // typical typing tests:
     reset("");

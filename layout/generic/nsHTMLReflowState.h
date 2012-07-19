@@ -413,11 +413,25 @@ public:
                                        nscoord&                 aContainingBlockHeight);
 
   /**
-   * Apply the mComputed(Min/Max)(Width/Height) values to the content
-   * size computed so far. If a passed-in pointer is null, we skip
-   * adjusting that dimension.
+   * Apply the mComputed(Min/Max)Width constraints to the content
+   * size computed so far.
    */
-  void ApplyMinMaxConstraints(nscoord* aContentWidth, nscoord* aContentHeight) const;
+  nscoord ApplyMinMaxWidth(nscoord aWidth) const {
+    if (NS_UNCONSTRAINEDSIZE != mComputedMaxWidth) {
+      aWidth = NS_MIN(aWidth, mComputedMaxWidth);
+    }
+    return NS_MAX(aWidth, mComputedMinWidth);
+  }
+  /**
+   * Apply the mComputed(Min/Max)Height constraints to the content
+   * size computed so far.
+   */
+  nscoord ApplyMinMaxHeight(nscoord aHeight) const {
+    if (NS_UNCONSTRAINEDSIZE != mComputedMaxHeight) {
+      aHeight = NS_MIN(aHeight, mComputedMaxHeight);
+    }
+    return NS_MAX(aHeight, mComputedMinHeight);
+  }
 
   bool ShouldReflowAllKids() const {
     // Note that we could make a stronger optimization for mVResize if

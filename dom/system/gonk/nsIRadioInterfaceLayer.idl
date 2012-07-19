@@ -8,6 +8,7 @@
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
+interface nsIDOMMozVoicemailStatus;
 
 [scriptable, uuid(c14c71b8-afba-403b-8320-94593de9380f)]
 interface nsIRILTelephonyCallback : nsISupports
@@ -60,6 +61,18 @@ interface nsIRILTelephonyCallback : nsISupports
    */
   void notifyError(in long callIndex,
                    in AString error);
+};
+
+[scriptable, uuid(3ac98987-a63c-4ebe-adbd-ff7a0348d804)]
+interface nsIRILVoicemailCallback : nsISupports
+{
+  /**
+   * Called when a voicemail notification has been received by the network.
+   *
+   * @param status
+   *        The new voicemail status
+   */
+  void voicemailNotification(in nsIDOMMozVoicemailStatus status);
 };
 
 [scriptable, uuid(8a711703-1ee5-4675-9d9a-0b188e944cfe)]
@@ -117,11 +130,14 @@ interface nsIRILContactCallback : nsISupports
  * Helper that runs in the content process and exposes information
  * to the DOM.
  */
-[scriptable, uuid(2f8b0929-2ecf-498c-bfa7-42690509696e)]
+[scriptable, uuid(d2ec602f-9746-4ada-b0c6-f1c1a3cf3578)]
 interface nsIRILContentHelper : nsIMobileConnectionProvider
 {
   void registerTelephonyCallback(in nsIRILTelephonyCallback callback);
   void unregisterTelephonyCallback(in nsIRILTelephonyCallback callback);
+
+  void registerVoicemailCallback(in nsIRILVoicemailCallback callback);
+  void unregisterVoicemailCallback(in nsIRILVoicemailCallback callback);
 
   /**
    * Will continue calling callback.enumerateCallState until the callback
@@ -145,6 +161,8 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
+
+  readonly attribute nsIDOMMozVoicemailStatus voicemailStatus;
 };
 
 [scriptable, uuid(fd9e8b38-b839-4d56-8482-3bf1f5c8f2ee)]
