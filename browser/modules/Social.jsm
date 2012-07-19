@@ -34,13 +34,12 @@ let Social = {
     }.bind(this));
   },
 
-  get uiVisible() {
-    return this.provider && this.provider.enabled && this.provider.port;
+  get enabled() {
+    return SocialService.enabled;
   },
 
-  toggleSidebar: function SocialSidebar_toggle() {
-    let prefValue = Services.prefs.getBoolPref("social.sidebar.open");
-    Services.prefs.setBoolPref("social.sidebar.open", !prefValue);
+  get uiVisible() {
+    return this.provider && this.provider.enabled && this.provider.port;
   },
 
   sendWorkerMessage: function Social_sendWorkerMessage(message) {
