@@ -72,7 +72,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
 
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerDivI(MDiv *div);
-    bool visitGuardShape(MGuardShape *ins);
 
   public:
     bool visitConstant(MConstant *ins);

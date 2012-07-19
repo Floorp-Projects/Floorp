@@ -208,6 +208,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     Label exception;
     Label osr;
     Label recompile;
+    Label boundscheck;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (thunk to interpreter)
@@ -217,6 +218,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     // - 0x4: monitor types
     // - 0x5: recompile to inline calls
     // - 0x6: bounds check failure
+    // - 0x7: force invalidation
 
     masm.cmpl(rax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
     masm.j(Assembler::LessThan, &interpret);
@@ -226,7 +228,21 @@ GenerateBailoutTail(MacroAssembler &masm)
     masm.j(Assembler::LessThan, &reflow);
     masm.j(Assembler::Equal, &recompile);
 
+    masm.cmpl(eax, Imm32(BAILOUT_RETURN_INVALIDATE));
+    masm.j(Assembler::LessThan, &boundscheck);
+
+    // Force invalidation.
+    {
+        masm.setupUnalignedABICall(0, rdx);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForceInvalidation));
+
+        masm.testl(rax, rax);
+        masm.j(Assembler::Zero, &exception);
+        masm.jmp(&interpret);
+    }
+
     // Bounds check failure.
+    masm.bind(&boundscheck);
     {
         masm.setupUnalignedABICall(0, rdx);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
