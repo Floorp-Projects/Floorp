@@ -117,7 +117,7 @@ body {
   /* We want the title container to leave out width, position of the .close
      button and space between input and .close button. Keep an eye on LTR and
      RTL differences in .close. */
-  width: -moz-calc(100% - 16px - 6px - 6px);
+  width: calc(100% - 16px - 6px - 6px);
 }
 
 input.name {
