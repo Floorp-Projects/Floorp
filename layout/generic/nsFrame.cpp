@@ -2177,25 +2177,14 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     if (!list.IsEmpty()) {
       // Make sure the root of a fixed position frame sub-tree gets the
       // correct displaylist item type.
+      nsDisplayItem* item;
       if (!child->GetParent()->GetParent() &&
           disp->mPosition == NS_STYLE_POSITION_FIXED) {
-        rv = aLists.PositionedDescendants()->AppendNewToTop(
-          new (aBuilder) nsDisplayFixedPosition(aBuilder, child, child, &list));
-
-        // Make sure that extra positioned descendants don't escape having
-        // their fixed-position metadata applied to them.
-        while (!extraPositionedDescendants.IsEmpty()) {
-          nsDisplayList fixedPosDescendantList;
-          nsDisplayItem* item = extraPositionedDescendants.RemoveBottom();
-          fixedPosDescendantList.AppendToTop(item);
-          aLists.PositionedDescendants()->AppendNewToTop(
-            new (aBuilder) nsDisplayFixedPosition(aBuilder, item->GetUnderlyingFrame(),
-                                                  child, &fixedPosDescendantList));
-        }
+        item = new (aBuilder) nsDisplayFixedPosition(aBuilder, child, &list);
       } else {
-        rv = aLists.PositionedDescendants()->AppendNewToTop(
-          new (aBuilder) nsDisplayWrapList(aBuilder, child, &list));
+        item = new (aBuilder) nsDisplayWrapList(aBuilder, child, &list);
       }
+      rv = aLists.PositionedDescendants()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else if (disp->IsFloating()) {
