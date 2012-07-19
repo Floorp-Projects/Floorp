@@ -112,6 +112,7 @@ enum nsChangeHint {
    */
   nsChangeHint_NonInherited_Hints =
     nsChangeHint_UpdateTransformLayer |
+    nsChangeHint_UpdateEffects |
     nsChangeHint_UpdateOpacityLayer |
     nsChangeHint_UpdateOverflow |
     nsChangeHint_ChildrenOnlyTransform |
