@@ -19,7 +19,7 @@
           style="@style/AddressBar.Button"
           android:background="@drawable/address_bar_url"
           android:layout_marginLeft="0dip"
-          android:layout_marginRight="168dip"
+          android:layout_marginRight="56dip"
           android:layout_marginTop="6dip"
           android:layout_marginBottom="6dip"
           android:layout_toRightOf="@id/dummy_tab"

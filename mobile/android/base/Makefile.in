@@ -315,7 +315,6 @@ RES_LAYOUT_LAND_V14 = \
 
 RES_LAYOUT_XLARGE = \
   res/layout-xlarge/awesomebar_search.xml \
-  res/layout-xlarge/awesomebar_tab_indicator.xml \
   res/layout-xlarge/browser_toolbar.xml \
   res/layout-xlarge/browser_toolbar_menu.xml \
   res/layout-xlarge/doorhangerpopup.xml \
