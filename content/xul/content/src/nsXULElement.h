@@ -500,9 +500,6 @@ public:
 
     virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
-    // XXX This can be removed when nsNodeUtils::CloneAndAdopt doesn't need
-    //     access to mPrototype anymore.
-    friend class nsNodeUtils;
 
     // This can be removed if EnsureContentsGenerated dies.
     friend class nsNSElementTearoff;
