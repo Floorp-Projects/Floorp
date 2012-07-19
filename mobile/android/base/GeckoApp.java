@@ -2374,19 +2374,20 @@ abstract public class GeckoApp
         ((GeckoApplication) getApplication()).removeApplicationLifecycleCallbacks(this);
     }
 
-    // Get/Create a temporary direcory
+    // Get a temporary directory, may return null
     public static File getTempDirectory() {
         File dir = mAppContext.getExternalFilesDir("temp");
-        dir.mkdirs();
         return dir;
     }
 
     // Delete any files in our temporary directory
     public static void deleteTempFiles() {
-        File[] files  = getTempDirectory().listFiles();
+        File dir = getTempDirectory();
+        if (dir == null)
+            return;
+        File[] files = dir.listFiles();
         if (files == null)
             return;
-
         for (File file : files) {
             file.delete();
         }
