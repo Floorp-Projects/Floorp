@@ -319,11 +319,10 @@ nsWindow::Show(bool aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::IsVisible(bool & aState)
+bool
+nsWindow::IsVisible() const
 {
-    aState = mVisible;
-    return NS_OK;
+    return mVisible;
 }
 
 NS_IMETHODIMP

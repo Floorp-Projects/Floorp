@@ -76,7 +76,7 @@ public:
     virtual float GetDPI();
     NS_IMETHOD Show(bool aState);
     NS_IMETHOD SetModal(bool aModal);
-    NS_IMETHOD IsVisible(bool & aState);
+    virtual bool IsVisible() const;
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
                                  PRInt32 *aX,
                                  PRInt32 *aY);

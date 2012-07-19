@@ -395,7 +395,7 @@ public:
   NS_IMETHOD              Destroy();
 
   NS_IMETHOD              Show(bool aState);
-  NS_IMETHOD              IsVisible(bool& outState);
+  virtual bool            IsVisible() const;
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
