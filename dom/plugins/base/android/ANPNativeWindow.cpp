@@ -6,6 +6,7 @@
 // must include config.h first for webkit to fiddle with new/delete
 #include <android/log.h>
 #include "AndroidBridge.h"
+#include "AndroidMediaLayer.h"
 #include "ANPBase.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsPluginInstanceOwner.h"
@@ -18,14 +19,29 @@ using namespace mozilla;
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_native_window_##name
 
-static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {
+static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-  return pinst->AcquireContentWindow();
+
+  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
+}
+
+static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {  
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
+    return NULL;
+
+  ANPNativeWindow window = owner->Layer()->GetNativeWindowForContent();
+  owner->Invalidate();
+
+  return window;
 }
 
 static void anp_native_window_invertPluginContent(NPP instance, bool isContentInverted) {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-  pinst->SetInverted(isContentInverted);
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
+    return;
+
+  owner->Layer()->SetInverted(isContentInverted);
 }
 
 

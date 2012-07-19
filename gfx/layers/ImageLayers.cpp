@@ -43,8 +43,6 @@ ImageFactory::CreateImage(const Image::Format *aFormats,
     img = new PlanarYCbCrImage(aRecycleBin);
   } else if (FormatInList(aFormats, aNumFormats, Image::CAIRO_SURFACE)) {
     img = new CairoImage();
-  } else if (FormatInList(aFormats, aNumFormats, Image::SHARED_TEXTURE)) {
-    img = new SharedTextureImage();
 #ifdef XP_MACOSX
   } else if (FormatInList(aFormats, aNumFormats, Image::MAC_IO_SURFACE)) {
     img = new MacIOSurfaceImage();
