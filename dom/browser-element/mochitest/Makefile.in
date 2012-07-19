@@ -81,6 +81,9 @@ MOCHITEST_FILES = \
 		browserElement_BackForward.js \
 	        file_bug741717.sjs \
 		browserElement_Reload.js \
+	        file_bug709759.sjs \
+		browserElement_Stop.js \
+                test_browserElement_inproc_Stop.html \
                 browserElement_ContextmenuEvents.js \
                 test_browserElement_inproc_ContextmenuEvents.html \
 		$(NULL)
@@ -119,6 +122,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
 		test_browserElement_oop_Reload.html \
+		test_browserElement_oop_Stop.html \
                 test_browserElement_oop_ContextmenuEvents.html \
 		$(NULL)
 endif #}

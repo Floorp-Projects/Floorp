@@ -5194,7 +5194,7 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
 {
     JSXML *xml, *vxml;
     JSObject *vobj;
-    JSBool ok;
+    JSBool ok = JS_TRUE;
     JSString *str, *vstr;
     double d, d2;
 

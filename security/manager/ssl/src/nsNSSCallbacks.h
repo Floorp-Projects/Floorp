@@ -13,6 +13,7 @@
 #include "nsIStreamLoader.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Attributes.h"
 
 char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
@@ -22,7 +23,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc *fd, void *client_data);
 SECStatus RegisterMyOCSPAIAInfoCallback();
 SECStatus UnregisterMyOCSPAIAInfoCallback();
 
-class nsHTTPListener : public nsIStreamLoaderObserver
+class nsHTTPListener MOZ_FINAL : public nsIStreamLoaderObserver
 {
 private:
   // For XPCOM implementations that are not a base class for some other

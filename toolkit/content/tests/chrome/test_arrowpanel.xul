@@ -178,7 +178,11 @@ function checkPanelPosition(panel)
 
   var panelRect = panel.getBoundingClientRect();
   var anchorRect = anchor.getBoundingClientRect();
-  var labelRect = $("panellabel").getBoundingClientRect();
+  var labelBO = $("panellabel").boxObject;
+  var labelRect = { top: labelBO.y,
+                    left: labelBO.x,
+                    bottom: labelBO.y + labelBO.height,
+                    right: labelBO.x + labelBO.width };
   switch (expectedSide) {
     case "top":
       ok(labelRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel label is below");

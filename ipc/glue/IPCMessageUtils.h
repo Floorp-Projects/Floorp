@@ -25,7 +25,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxASurface.h"
-#include "Layers.h"
+#include "LayersBackend.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -40,15 +40,13 @@
 namespace base { struct FileDescriptor { }; }
 #endif
 
-using mozilla::layers::LayerManager;
-
 namespace mozilla {
 
 typedef gfxASurface::gfxContentType gfxContentType;
 typedef gfxASurface::gfxImageFormat PixelFormat;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
-typedef LayerManager::LayersBackend LayersBackend;
+typedef layers::LayersBackend LayersBackend;
 
 // This is a cross-platform approximation to HANDLE, which we expect
 // to be typedef'd to void* or thereabouts.
@@ -518,10 +516,10 @@ struct ParamTraits<mozilla::GraphicsFilterType>
 {};
 
 template <>
-struct ParamTraits<mozilla::LayersBackend>
-  : public EnumSerializer<mozilla::LayersBackend,
-                          LayerManager::LAYERS_NONE,
-                          LayerManager::LAYERS_LAST>
+struct ParamTraits<mozilla::layers::LayersBackend>
+  : public EnumSerializer<mozilla::layers::LayersBackend,
+                          mozilla::layers::LAYERS_NONE,
+                          mozilla::layers::LAYERS_LAST>
 {};
 
 template <>
