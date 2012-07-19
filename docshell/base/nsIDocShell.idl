@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(57889367-590b-4ea2-a345-5211253babf5)]
+[scriptable, builtinclass, uuid(89ea9f32-18ec-413b-9e2c-ce9a4c851b1c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -589,45 +589,21 @@ interface nsIDocShell : nsISupports
    */
   void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
 
-  /**
-   * Mark the docshell as a browser frame.
-   * This should be used for <iframe mozbrowser> but not for <iframe mozapp>.
+  /*
+   * Is this docshell a browser frame (i.e., does it correspond to an <iframe
+   * mozbrowser>)?  The frameloader is responsible for setting this property
+   * when it initializes the docshell.
    *
-   * This method should not be called more than once.
+   * If so, this docshell should act like a chrome/content boundary for the
+   * purposes of window.top and window.parent.
+   *
+   * See also nsIMozBrowserFrame.
    */
-  void setIsBrowser();
+  attribute bool isBrowserFrame;
 
-  /**
-   * Returns true iff the docshell is marked as a browser frame.
+  /*
+   * Is this docshell contained in an <iframe mozbrowser>, either directly or
+   * indirectly?
    */
-  readonly attribute boolean isBrowserElement;
-
-  /**
-   * Returns true iif the docshell is marked as an app frame.
-   */
-  readonly attribute boolean isApp;
-
-  /**
-   * Returns true iif the docshell is marked as a type that behaves like a
-   * content boundary.
-   */
-  readonly attribute boolean isContentBoundary;
-
-  /**
-   * Returns true iif the docshell is inside a browser element.
-   */
-  readonly attribute boolean isInBrowserElement;
-
-  /**
-   * Returns true iif the docshell is inside an application.
-   * However, it will return false if the docshell is inside a browser element
-   * that is inside an application.
-   */
-  readonly attribute boolean isInApp;
-
-  /**
-   * Returns if the docshell has a docshell that behaves as a content boundary
-   * in his parent hierarchy.
-   */
-  readonly attribute boolean isBelowContentBoundary;
+  readonly attribute bool containedInBrowserFrame;
 };

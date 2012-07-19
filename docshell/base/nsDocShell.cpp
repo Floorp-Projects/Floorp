@@ -12023,106 +12023,51 @@ nsDocShell::GetCanExecuteScripts(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetIsBrowser()
+nsDocShell::GetIsBrowserFrame(bool *aOut)
 {
-    if (mIsBrowserFrame) {
-        NS_ERROR("You should not call SetIsBrowser() more than once.");
-        return NS_OK;
-    }
-
-    mIsBrowserFrame = true;
-
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (os) {
-        os->NotifyObservers(GetAsSupports(this),
-                            "docshell-marked-as-browser-frame", NULL);
-    }
-
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aOut);
+  *aOut = mIsBrowserFrame;
+  return NS_OK;
 }
 
-nsDocShell::FrameType
-nsDocShell::GetInheritedFrameType()
+NS_IMETHODIMP
+nsDocShell::SetIsBrowserFrame(bool aValue)
 {
-    FrameType type = GetFrameType();
+  // Disallow transitions from browser frame to not-browser-frame.  Once a
+  // browser frame, always a browser frame.  (Otherwise, observers of
+  // docshell-marked-as-browser-frame would have to distinguish between
+  // newly-created browser frames and frames which went from true to false back
+  // to true.)
+  NS_ENSURE_STATE(!mIsBrowserFrame || aValue);
 
-    if (type != eFrameTypeRegular) {
-        return type;
+  bool wasBrowserFrame = mIsBrowserFrame;
+  mIsBrowserFrame = aValue;
+  if (aValue && !wasBrowserFrame) {
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(GetAsSupports(this),
+                          "docshell-marked-as-browser-frame", NULL);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetContainedInBrowserFrame(bool *aOut)
+{
+    *aOut = false;
+
+    if (mIsBrowserFrame) {
+        *aOut = true;
+        return NS_OK;
     }
 
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
     GetSameTypeParent(getter_AddRefs(parentAsItem));
 
     nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
-    if (!parent) {
-        return eFrameTypeRegular;
-    }
-
-    return static_cast<nsDocShell*>(parent.get())->GetInheritedFrameType();
-}
-
-nsDocShell::FrameType
-nsDocShell::GetFrameType()
-{
-    return mIsBrowserFrame ? eFrameTypeBrowser : eFrameTypeRegular;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
-{
-    *aIsBrowser = (GetFrameType() == eFrameTypeBrowser);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsApp(bool* aIsApp)
-{
-    *aIsApp = (GetFrameType() == eFrameTypeApp);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsContentBoundary(bool* aIsContentBoundary)
-{
-    switch (GetFrameType()) {
-        case eFrameTypeRegular:
-            *aIsContentBoundary = false;
-            break;
-        case eFrameTypeBrowser:
-        case eFrameTypeApp:
-            *aIsContentBoundary = true;
-            break;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-    *aIsInBrowserElement = (GetInheritedFrameType() == eFrameTypeBrowser);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsInApp(bool* aIsInApp)
-{
-    *aIsInApp = (GetInheritedFrameType() == eFrameTypeApp);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsBelowContentBoundary(bool* aIsInContentBoundary)
-{
-    switch (GetInheritedFrameType()) {
-        case eFrameTypeRegular:
-            *aIsInContentBoundary = false;
-            break;
-        case eFrameTypeBrowser:
-        case eFrameTypeApp:
-            *aIsInContentBoundary = true;
-            break;
+    if (parent) {
+        return parent->GetContainedInBrowserFrame(aOut);
     }
 
     return NS_OK;
