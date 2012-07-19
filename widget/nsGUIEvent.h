@@ -1802,6 +1802,17 @@ enum nsDragDropEventStatus {
   nsDragDropEventStatus_eDrop  
 };
 
+#define NS_IS_INPUT_EVENT(evnt) \
+       (((evnt)->eventStructType == NS_INPUT_EVENT) || \
+        ((evnt)->eventStructType == NS_ACCESSIBLE_EVENT) || \
+        ((evnt)->eventStructType == NS_MOUSE_EVENT) || \
+        ((evnt)->eventStructType == NS_KEY_EVENT) || \
+        ((evnt)->eventStructType == NS_TEXT_EVENT) || \
+        ((evnt)->eventStructType == NS_TOUCH_EVENT) || \
+        ((evnt)->eventStructType == NS_DRAG_EVENT) || \
+        ((evnt)->eventStructType == NS_MOUSE_SCROLL_EVENT) || \
+        ((evnt)->eventStructType == NS_MOZTOUCH_EVENT) || \
+        ((evnt)->eventStructType == NS_SIMPLE_GESTURE_EVENT))
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_BUTTON_DOWN) || \

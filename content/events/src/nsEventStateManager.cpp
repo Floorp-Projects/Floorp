@@ -266,6 +266,7 @@ enum {
 #define NS_MODIFIER_CONTROL  2
 #define NS_MODIFIER_ALT      4
 #define NS_MODIFIER_META     8
+#define NS_MODIFIER_OS       16
 
 static nsIDocument *
 GetDocumentFromWindow(nsIDOMWindow *aWindow)
@@ -290,6 +291,7 @@ GetAccessModifierMaskFromPref(PRInt32 aItemType)
     case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
     case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
     case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
+    case nsIDOMKeyEvent::DOM_VK_WIN:     return NS_MODIFIER_OS;
     default:                             return 0;
   }
 
@@ -1167,6 +1169,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         modifierMask |= NS_MODIFIER_ALT;
       if (keyEvent->IsMeta())
         modifierMask |= NS_MODIFIER_META;
+      if (keyEvent->IsOS())
+        modifierMask |= NS_MODIFIER_OS;
 
       // Prevent keyboard scrolling while an accesskey modifier is in use.
       if (modifierMask && (modifierMask == sChromeAccessModifier ||
@@ -1522,6 +1526,10 @@ nsEventStateManager::GetAccessKeyLabelPrefix(nsAString& aPrefix)
   }
   if (modifier & NS_MODIFIER_META) {
     nsContentUtils::GetMetaText(modifierText);
+    aPrefix.Append(modifierText + separator);
+  }
+  if (modifier & NS_MODIFIER_OS) {
+    nsContentUtils::GetOSText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
   if (modifier & NS_MODIFIER_ALT) {

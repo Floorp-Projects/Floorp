@@ -6383,7 +6383,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((aModKeyState.IsControl() || aModKeyState.IsAlt())
+      ((aModKeyState.IsControl() || aModKeyState.IsAlt() || aModKeyState.IsWin())
        && !isDeadKey && KeyboardLayout::IsPrintableCharKey(virtualKeyCode)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
@@ -6472,7 +6472,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return result;
   }
   else if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
-           KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+            !aModKeyState.IsWin() &&
+            KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.

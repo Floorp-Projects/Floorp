@@ -1186,9 +1186,11 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     // If the event causes inputting a character, keyCode must be zero.
     aKeyEvent.keyCode = 0;
 
-    // If Ctrl or Alt or Meta is pressed, we need to append the key details
-    // for handling shortcut key.  Otherwise, we have no additional work.
-    if (!aKeyEvent.IsControl() && !aKeyEvent.IsAlt() && !aKeyEvent.IsMeta()) {
+    // If Ctrl or Alt or Meta or OS is pressed, we need to append the key
+    // details for handling shortcut key.  Otherwise, we have no additional
+    // work.
+    if (!aKeyEvent.IsControl() && !aKeyEvent.IsAlt() &&
+        !aKeyEvent.IsMeta() && !aKeyEvent.IsOS()) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
             ("KeymapWrapper(%p): InitKeypressEvent, "
              "keyCode=0x%02X, charCode=0x%08X",
