@@ -33,6 +33,7 @@ NS_IMPL_ISUPPORTS1(nsMenuBarListener, nsIDOMEventListener)
 #define MODIFIER_CONTROL  2
 #define MODIFIER_ALT      4
 #define MODIFIER_META     8
+#define MODIFIER_OS       16
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -86,6 +87,8 @@ void nsMenuBarListener::InitAccessKey()
     mAccessKeyMask = MODIFIER_ALT;
   else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_META)
     mAccessKeyMask = MODIFIER_META;
+  else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_WIN)
+    mAccessKeyMask = MODIFIER_OS;
 
   mAccessKeyFocuses = Preferences::GetBool("ui.key.menuAccessKeyFocuses");
 }
@@ -270,23 +273,29 @@ PRUint32
 nsMenuBarListener::GetModifiers(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 modifiers = 0;
-  bool modifier;
+  nsInputEvent* inputEvent =
+    static_cast<nsInputEvent*>(aKeyEvent->GetInternalNSEvent());
+  MOZ_ASSERT(inputEvent);
 
-  aKeyEvent->GetShiftKey(&modifier);
-  if (modifier)
+  if (inputEvent->IsShift()) {
     modifiers |= MODIFIER_SHIFT;
+  }
 
-  aKeyEvent->GetCtrlKey(&modifier);
-  if (modifier)
+  if (inputEvent->IsControl()) {
     modifiers |= MODIFIER_CONTROL;
+  }
 
-  aKeyEvent->GetAltKey(&modifier);
-  if (modifier)
+  if (inputEvent->IsAlt()) {
     modifiers |= MODIFIER_ALT;
+  }
 
-  aKeyEvent->GetMetaKey(&modifier);
-  if (modifier)
+  if (inputEvent->IsMeta()) {
     modifiers |= MODIFIER_META;
+  }
+
+  if (inputEvent->IsOS()) {
+    modifiers |= MODIFIER_OS;
+  }
 
   return modifiers;
 }
