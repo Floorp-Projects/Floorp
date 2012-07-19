@@ -15,7 +15,7 @@ endif
 
 define mochitest-libs-rule-template
 libs:: $$($(1))
-	$$(INSTALL) $$(foreach f,$$^,"$$(f)") $$(call mochitestdir,$(2))
+	$$(call install_cmd,$$(foreach f,$$^,"$$(f)") $$(call mochitestdir,$(2)))
 endef
 
 # Provide support for modules with such a large number of tests that
