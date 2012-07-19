@@ -96,11 +96,11 @@ abstract public class GeckoApp
     private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
+    private Favicons mFavicons;
 
     public DoorHangerPopup mDoorHangerPopup;
     public FormAssistPopup mFormAssistPopup;
     public TabsPanel mTabsPanel;
-    public Favicons mFavicons;
 
     private LayerController mLayerController;
     private GeckoLayerClient mLayerClient;
@@ -389,6 +389,13 @@ abstract public class GeckoApp
         }
 
         return null;
+    }
+
+    synchronized Favicons getFavicons() {
+        if (mFavicons == null)
+            mFavicons = new Favicons(this);
+
+        return mFavicons;
     }
 
     Class<?> getPluginClass(String packageName, String className)
@@ -767,7 +774,7 @@ abstract public class GeckoApp
 
             int dw = tab.getThumbnailWidth();
             int dh = tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, GeckoAppShell.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, ScreenshotHandler.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
         }
     }
 
@@ -879,7 +886,7 @@ abstract public class GeckoApp
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
-        mFavicons.clearFavicons();
+        getFavicons().clearFavicons();
     }
 
     public StartupMode getStartupMode() {
@@ -1885,8 +1892,6 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
         }
 
-        mFavicons = new Favicons(this);
-
         Tabs.getInstance().setContentResolver(getContentResolver());
         Tabs.registerOnTabsChangedListener(this);
 
@@ -2342,8 +2347,12 @@ abstract public class GeckoApp
         if (mPromptService != null)
             mPromptService.destroy();
 
-        if (mFavicons != null)
-            mFavicons.close();
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                if (mFavicons != null)
+                    mFavicons.close();
+            }
+        });
 
         if (SmsManager.getInstance() != null) {
             SmsManager.getInstance().stop();

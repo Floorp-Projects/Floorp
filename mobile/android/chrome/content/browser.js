@@ -32,6 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["Readability", "chrome://browser/content/Readability.js"],
+  ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -308,6 +309,9 @@ var BrowserApp = {
       Telemetry.prompt();
 #endif
     }
+
+    if (pinned)
+      WebAppRT.init();
 
     if (this.isAppUpdated())
       this.onAppUpdated();

@@ -8,6 +8,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -25,7 +26,7 @@ void _doCheck(bool cond, const char* msg, int line) {
 
 typedef nsresult(*TestFuncPtr)();
 
-class SettingsServiceCallback : public nsISettingsServiceCallback
+class SettingsServiceCallback MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS

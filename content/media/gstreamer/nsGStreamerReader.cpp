@@ -130,8 +130,13 @@ nsresult nsGStreamerReader::Init(nsBuiltinDecoderReader* aCloneDonor)
   gst_object_unref(sinkpad);
 
   mAudioSink = gst_parse_bin_from_description("capsfilter name=filter ! "
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
         "appsink name=audiosink sync=true caps=audio/x-raw-float,"
         "channels={1,2},rate=44100,width=32,endianness=1234", TRUE, NULL);
+#else
+        "appsink name=audiosink sync=true caps=audio/x-raw-int,"
+        "channels={1,2},rate=48000,width=16,endianness=1234", TRUE, NULL);
+#endif
   mAudioAppSink = GST_APP_SINK(gst_bin_get_by_name(GST_BIN(mAudioSink),
         "audiosink"));
   gst_app_sink_set_callbacks(mAudioAppSink, &mSinkCallbacks,

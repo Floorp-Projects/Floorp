@@ -10,6 +10,7 @@
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"
+#include "LayersBackend.h"
 
 using namespace mozilla::gfx;
 
@@ -374,7 +375,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   }
 
   if (mGLContext &&
-      BasicManager()->GetParentBackendType() == LayerManager::LAYERS_OPENGL) {
+      BasicManager()->GetParentBackendType() == mozilla::layers::LAYERS_OPENGL) {
     TextureImage::TextureShareType flags;
     // if process type is default, then it is single-process (non-e10s)
     if (XRE_GetProcessType() == GeckoProcessType_Default)

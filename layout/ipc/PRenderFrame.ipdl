@@ -8,7 +8,7 @@
 include protocol PBrowser;
 include protocol PLayers;
 
-using mozilla::LayersBackend;
+using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 namespace layout {

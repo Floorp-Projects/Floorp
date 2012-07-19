@@ -1,0 +1,23 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+interface nsIDOMMozVoicemailStatus;
+
+[scriptable, builtinclass, uuid(db5b727a-daf2-40b9-83e4-cc110eab44ca)]
+interface nsIDOMMozVoicemail : nsIDOMEventTarget
+{
+  /**
+   * The current voicemail status, or null when the status is unknown
+   */
+  readonly attribute nsIDOMMozVoicemailStatus status;
+
+  /**
+   * The current voicemail status has changed
+   */
+  attribute nsIDOMEventListener onstatuschanged;
+};

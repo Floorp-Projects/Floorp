@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  function removeRoot() {
+    window.removeEventListener("DOMNodeRemoved", removeRoot, true);
+    document.open();
+  }
+
+  window.addEventListener("DOMNodeRemoved", removeRoot, true);
+
+  var r = document.documentElement;
+  document.removeChild(r);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

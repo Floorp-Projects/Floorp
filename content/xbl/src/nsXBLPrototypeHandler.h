@@ -172,11 +172,13 @@ protected:
   static const PRInt32 cAlt;
   static const PRInt32 cControl;
   static const PRInt32 cMeta;
+  static const PRInt32 cOS;
 
   static const PRInt32 cShiftMask;
   static const PRInt32 cAltMask;
   static const PRInt32 cControlMask;
   static const PRInt32 cMetaMask;
+  static const PRInt32 cOSMask;
 
   static const PRInt32 cAllModifiers;
 
@@ -193,8 +195,6 @@ protected:
   
   // The following four values make up 32 bits.
   PRUint8 mPhase;            // The phase (capturing, bubbling)
-  PRUint8 mKeyMask;          // Which modifier keys this event handler expects to have down
-                             // in order to be matched.
   PRUint8 mType;             // The type of the handler.  The handler is either a XUL key
                              // handler, an XBL "command" event, or a normal XBL event with
                              // accompanying JavaScript.  The high bit is used to indicate
@@ -203,6 +203,9 @@ protected:
                              // stores whether or not we're a key code or char code.
                              // For mouse events, stores the clickCount.
 
+  PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
+                             // in order to be matched.
+ 
   // The primary filter information for mouse/key events.
   PRInt32 mDetail;           // For key events, contains a charcode or keycode. For
                              // mouse events, stores the button info.

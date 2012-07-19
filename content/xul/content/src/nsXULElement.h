@@ -25,7 +25,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
-#include "nsIScriptEventHandlerOwner.h"
 #include "nsBindingManager.h"
 #include "nsIURI.h"
 #include "nsIXULTemplateBuilder.h"
@@ -74,8 +73,7 @@ class nsXULPrototypeAttribute
 {
 public:
     nsXULPrototypeAttribute()
-        : mName(nsGkAtoms::id),  // XXX this is a hack, but names have to have a value
-          mEventHandler(nsnull)
+        : mName(nsGkAtoms::id)  // XXX this is a hack, but names have to have a value
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
         MOZ_COUNT_CTOR(nsXULPrototypeAttribute);
@@ -85,53 +83,10 @@ public:
 
     nsAttrName mName;
     nsAttrValue mValue;
-    // mEventHandler is only valid for the language ID specified in the
-    // containing nsXULPrototypeElement.  We would ideally use
-    // nsScriptObjectHolder, but want to avoid the extra lang ID.
-    JSObject* mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-    /**
-      If enough attributes, on average, are event handlers, it pays to keep
-      mEventHandler here, instead of maintaining a separate mapping in each
-      nsXULElement associating those mName values with their mEventHandlers.
-      Assume we don't need to keep mNameSpaceID along with mName in such an
-      event-handler-only name-to-function-pointer mapping.
-
-      Let
-        minAttrSize  = sizeof(mNodeInof) + sizeof(mValue)
-        mappingSize  = sizeof(mNodeInfo) + sizeof(mEventHandler)
-        elemOverhead = nElems * sizeof(MappingPtr)
-
-      Then
-        nAttrs * minAttrSize + nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (minAttrSize + mappingSize - sizeof(mNodeInfo))
-      which simplifies to
-        nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (mappingSize - sizeof(mNodeInfo))
-      or
-        nEventHandlers + (nElems * sizeof(MappingPtr)) / mappingSize
-        > nAttrs * (1 - sizeof(mNodeInfo) / mappingSize)
-
-      If nsCOMPtr and all other pointers are the same size, this reduces to
-        nEventHandlers + nElems / 2 > nAttrs / 2
-
-      To measure how many attributes are event handlers, compile XUL source
-      with XUL_PROTOTYPE_ATTRIBUTE_METERING and watch the counters below.
-      Plug into the above relation -- if true, it pays to put mEventHandler
-      in nsXULPrototypeAttribute rather than to keep a separate mapping.
-
-      Recent numbers after opening four browser windows:
-        nElems 3537, nAttrs 2528, nEventHandlers 1042
-      giving 1042 + 3537/2 > 2528/2 or 2810 > 1264.
-
-      As it happens, mEventHandler also makes this struct power-of-2 sized,
-      8 words on most architectures, which makes for strength-reduced array
-      index-to-pointer calculations.
-     */
     static PRUint32   gNumElements;
     static PRUint32   gNumAttributes;
-    static PRUint32   gNumEventHandlers;
     static PRUint32   gNumCacheTests;
     static PRUint32   gNumCacheHits;
     static PRUint32   gNumCacheSets;
@@ -143,9 +98,7 @@ public:
 /**
 
   A prototype content model element that holds the "primordial" values
-  that have been parsed from the original XUL document. A
-  'lightweight' nsXULElement may delegate its representation to this
-  structure, which is shared.
+  that have been parsed from the original XUL document.
 
  */
 
@@ -195,11 +148,10 @@ public:
     nsXULPrototypeElement()
         : nsXULPrototypeNode(eType_Element),
           mNumAttributes(0),
-          mAttributes(nsnull),
           mHasIdAttribute(false),
           mHasClassAttribute(false),
           mHasStyleAttribute(false),
-          mHoldsScriptObject(false)
+          mAttributes(nsnull)
     {
     }
 
@@ -239,14 +191,11 @@ public:
 
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
-    PRUint32                 mNumAttributes;
+    PRUint32                 mNumAttributes:29;
+    PRUint32                 mHasIdAttribute:1;
+    PRUint32                 mHasClassAttribute:1;
+    PRUint32                 mHasStyleAttribute:1;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
-    
-    bool                     mHasIdAttribute:1;
-    bool                     mHasClassAttribute:1;
-    bool                     mHasStyleAttribute:1;
-    bool                     mHoldsScriptObject:1;
-
 };
 
 class nsXULDocument;
@@ -409,23 +358,6 @@ public:
                                 bool aCompileEventHandlers);
     virtual void UnbindFromTree(bool aDeep, bool aNullParent);
     virtual void RemoveChildAt(PRUint32 aIndex, bool aNotify);
-    virtual bool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsAString& aResult) const;
-    virtual bool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-    virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
-                               const nsAString& aValue,
-                               nsCaseTreatment aCaseSensitive) const;
-    virtual bool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
-                               nsIAtom* aValue,
-                               nsCaseTreatment aCaseSensitive) const;
-    virtual PRInt32 FindAttrValueIn(PRInt32 aNameSpaceID,
-                                    nsIAtom* aName,
-                                    AttrValuesArray* aValues,
-                                    nsCaseTreatment aCaseSensitive) const;
-    virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                               bool aNotify);
-    virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
-    virtual PRUint32 GetAttrCount() const;
     virtual void DestroyContent();
 
 #ifdef DEBUG
@@ -442,11 +374,8 @@ public:
     virtual nsIContent *GetBindingParent() const;
     virtual bool IsNodeOfType(PRUint32 aFlags) const;
     virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
-    virtual nsIAtom* DoGetID() const;
-    virtual const nsAttrValue* DoGetClasses() const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-    virtual mozilla::css::StyleRule* GetInlineStyleRule();
     virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                                 PRInt32 aModType) const;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -472,8 +401,6 @@ public:
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
     virtual nsEventStates IntrinsicState() const;
 
-    nsresult EnsureLocalStyle();
-
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
     already_AddRefed<nsFrameLoader> GetFrameLoader();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
@@ -488,22 +415,10 @@ public:
       mBindingParent = aBindingParent;
     }
 
-    const nsAttrValue* GetAttrValue(const nsAString& aName);
-
-    /**
-     * Get the attr info for the given namespace ID and attribute name.
-     * The namespace ID must not be kNameSpaceID_Unknown and the name
-     * must not be null.
-     */
-    virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
-
     virtual nsXPCClassInfo* GetClassInfo();
 
     virtual nsIDOMNode* AsDOMNode() { return this; }
 protected:
-    // XXX This can be removed when nsNodeUtils::CloneAndAdopt doesn't need
-    //     access to mPrototype anymore.
-    friend class nsNodeUtils;
 
     // This can be removed if EnsureContentsGenerated dies.
     friend class nsNSElementTearoff;
@@ -536,9 +451,6 @@ protected:
 
     nsresult LoadSrc();
 
-    // Required fields
-    nsRefPtr<nsXULPrototypeElement>     mPrototype;
-
     /**
      * The nearest enclosing content node with a binding
      * that created us. [Weak]
@@ -548,12 +460,7 @@ protected:
     /**
      * Abandon our prototype linkage, and copy all attributes locally
      */
-    nsresult MakeHeavyweight();
-
-    const nsAttrValue* FindLocalOrProtoAttr(PRInt32 aNameSpaceID,
-                                            nsIAtom *aName) const {
-        return nsXULElement::GetAttrInfo(aNameSpaceID, aName).mValue;
-    }
+    nsresult MakeHeavyweight(nsXULPrototypeElement* aPrototype);
 
     virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                    const nsAttrValueOrString* aValue,
@@ -572,11 +479,6 @@ protected:
       GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer);
   
     /**
-     * Return our prototype's attribute, if one exists.
-     */
-    nsXULPrototypeAttribute *FindPrototypeAttribute(PRInt32 aNameSpaceID,
-                                                    nsIAtom *aName) const;
-    /**
      * Add a listener for the specified attribute, if appropriate.
      */
     void AddListenerFor(const nsAttrName& aName,
@@ -592,8 +494,6 @@ protected:
     void SetTitlebarColor(nscolor aColor, bool aActive);
 
     void SetDrawsInTitlebar(bool aState);
-
-    const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
     void RemoveBroadcaster(const nsAString & broadcasterId);
 
@@ -616,8 +516,6 @@ protected:
     static already_AddRefed<nsXULElement>
     Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
            bool aIsScriptable);
-
-    friend class nsScriptEventHandlerOwnerTearoff;
 
     bool IsReadWriteTextElement() const
     {

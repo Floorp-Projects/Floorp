@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Testcase for bug 770629</title>
+  <style>
+
+.outer {
+  position: absolute;
+  left: 100px;
+  -moz-transform: scale(0.5,1);
+  -moz-perspective: 200px; 
+  -moz-perspective-origin: 50% 0px;
+}
+
+.inner {
+  width: 100px;
+  height: 100px;
+  background: blue;
+  -moz-transform: rotateY(0deg);
+}
+
+  </style>
+</head>
+<body>
+  <div class="outer"> 
+    <div class="inner"></div> 
+  </div>
+</body>
+</html>
