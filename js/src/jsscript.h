@@ -23,7 +23,7 @@
 namespace js {
 
 namespace ion {
-    class IonScript;
+    struct IonScript;
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
