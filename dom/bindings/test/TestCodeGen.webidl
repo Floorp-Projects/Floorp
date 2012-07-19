@@ -306,6 +306,7 @@ interface ImplementedInterfaceParent {
 
 ImplementedInterfaceParent implements IndirectlyImplementedInterface;
 
+[NoInterfaceObject]
 interface IndirectlyImplementedInterface {
   void indirectlyImplementedMethod();
   attribute boolean indirectlyImplementedProperty;
