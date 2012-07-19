@@ -347,11 +347,48 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
     // Note that we're _not_ copying mControllers.
 
-    nsresult rv = const_cast<nsXULElement*>(this)->CopyInnerTo(element);
-    if (NS_SUCCEEDED(rv)) {
-        element.forget(aResult);
+    PRUint32 count = mAttrsAndChildren.AttrCount();
+    nsresult rv = NS_OK;
+    for (PRUint32 i = 0; i < count; ++i) {
+        const nsAttrName* originalName = mAttrsAndChildren.AttrNameAt(i);
+        const nsAttrValue* originalValue = mAttrsAndChildren.AttrAt(i);
+        nsAttrValue attrValue;
+
+        // Style rules need to be cloned.
+        if (originalValue->Type() == nsAttrValue::eCSSStyleRule) {
+            nsRefPtr<css::Rule> ruleClone =
+                originalValue->GetCSSStyleRuleValue()->Clone();
+
+            nsString stringValue;
+            originalValue->ToString(stringValue);
+
+            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
+            attrValue.SetTo(styleRule, &stringValue);
+        } else {
+            attrValue.SetTo(*originalValue);
+        }
+
+        if (originalName->IsAtom()) {
+           rv = element->mAttrsAndChildren.SetAndTakeAttr(originalName->Atom(),
+                                                          attrValue);
+        } else {
+            rv = element->mAttrsAndChildren.SetAndTakeAttr(originalName->NodeInfo(),
+                                                           attrValue);
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+        element->AddListenerFor(*originalName, true);
+        if (originalName->Equals(nsGkAtoms::id)) {
+            element->SetHasID();
+        }
+        if (originalName->Equals(nsGkAtoms::_class)) {
+            element->SetFlags(NODE_MAY_HAVE_CLASS);
+        }
+        if (originalName->Equals(nsGkAtoms::style)) {
+            element->SetMayHaveStyle();
+        }
     }
 
+    element.forget(aResult);
     return rv;
 }
 
