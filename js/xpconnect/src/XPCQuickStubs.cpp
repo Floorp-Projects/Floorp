@@ -363,31 +363,31 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
 static void
 GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
 {
-    // Get the interface name.  From DefinePropertyIfFound (in
-    // xpcwrappednativejsops.cpp) and XPCThrower::Verbosify.
-    //
-    // We could instead make the quick stub could pass in its interface name,
-    // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(obj)) ||
-                 js::GetObjectClass(obj) == &XPC_WN_Tearoff_JSClass,
-                 "obj must be a wrapper");
-    XPCWrappedNativeProto *proto;
-    if (IS_SLIM_WRAPPER(obj)) {
-        proto = GetSlimWrapperProto(obj);
-    } else {
-        XPCWrappedNative *wrapper = (XPCWrappedNative *) js::GetObjectPrivate(obj);
-        proto = wrapper->GetProto();
-    }
-    if (proto) {
-        XPCNativeSet *set = proto->GetSet();
-        if (set) {
-            XPCNativeMember *member;
-            XPCNativeInterface *iface;
+    // Don't try to generate a useful name if there are security wrappers,
+    // because it isn't worth the risk of something going wrong just to generate
+    // an error message. Instead, only handle the simple case where we have the
+    // reflector in hand.
+    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
+        XPCWrappedNativeProto *proto;
+        if (IS_SLIM_WRAPPER_OBJECT(obj)) {
+            proto = GetSlimWrapperProto(obj);
+        } else {
+            MOZ_ASSERT(IS_WN_WRAPPER_OBJECT(obj));
+            XPCWrappedNative *wrapper =
+                static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj));
+            proto = wrapper->GetProto();
+        }
+        if (proto) {
+            XPCNativeSet *set = proto->GetSet();
+            if (set) {
+                XPCNativeMember *member;
+                XPCNativeInterface *iface;
 
-            if (set->FindMember(memberId, &member, &iface))
-                *ifaceName = iface->GetNameString();
+                if (set->FindMember(memberId, &member, &iface))
+                    *ifaceName = iface->GetNameString();
+            }
         }
     }
 }

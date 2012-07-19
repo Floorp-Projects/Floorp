@@ -786,6 +786,10 @@ endif
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py \
 	  $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/chrome/localized.manifest \
 	  $(patsubst %,$(DIST)/manifests/%/chrome,$(MOZ_LOCALIZED_PKG_LIST))
+ifdef MOZ_WEBAPP_RUNTIME
+	mv $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome/$(AB_CD).manifest $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome/localized.manifest
+	sed 's/$(AB_CD)/localized/' $(DIST)/bin/webapprt/chrome.manifest > $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/webapprt/chrome.manifest
+endif
 	printf "manifest components/interfaces.manifest\nmanifest components/components.manifest\nmanifest chrome/nonlocalized.manifest\nmanifest chrome/localized.manifest\n" > $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/chrome.manifest
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

@@ -2783,6 +2783,11 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                     aFrame->PresContext(),
                                                     dummy, bounds, aAppUnitsPerPixel);
   } else if (hasSVGTransforms) {
+    // Correct the translation components for zoom:
+    float pixelsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel() /
+                             aAppUnitsPerPixel;
+    svgTransform.x0 *= pixelsPerCSSPx;
+    svgTransform.y0 *= pixelsPerCSSPx;
     result = gfx3DMatrix::From2D(svgTransform);
   } else {
      NS_ASSERTION(aFrame->GetStyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
@@ -2791,6 +2796,11 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
   }
 
   if (hasSVGTransforms && !transformFromSVGParent.IsIdentity()) {
+    // Correct the translation components for zoom:
+    float pixelsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel() /
+                             aAppUnitsPerPixel;
+    transformFromSVGParent.x0 *= pixelsPerCSSPx;
+    transformFromSVGParent.y0 *= pixelsPerCSSPx;
     result = result * gfx3DMatrix::From2D(transformFromSVGParent);
   }
 
@@ -3295,9 +3305,9 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     nsSVGEffects::GetEffectProperties(firstFrame);
 
   bool isOK = true;
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
-  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
+  effectProperties.GetClipPathFrame(&isOK);
+  effectProperties.GetMaskFrame(&isOK);
+  effectProperties.GetFilterFrame(&isOK);
 
   if (!isOK) {
     return nsnull;

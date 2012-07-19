@@ -36,4 +36,6 @@ private:
 } /* namespace plugins */
 } /* namespace mozilla */
 
+#undef slots
+
 #endif

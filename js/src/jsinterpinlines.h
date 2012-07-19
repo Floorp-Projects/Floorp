@@ -473,7 +473,7 @@ inline void
 InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
-        enabler.enableInterrupts();
+        enabler.enable();
 }
 
 static JS_ALWAYS_INLINE bool

@@ -2697,71 +2697,62 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
     JSAutoRequest ar(cx);
 
     // first param must be a JSObject
-    if (JSVAL_IS_PRIMITIVE(object))
+    if (!object.isObject())
         return NS_ERROR_XPC_BAD_CONVERT_JS;
+    JSObject *obj = &object.toObject();
 
-    JSObject* obj = JSVAL_TO_OBJECT(object);
-    while (obj && !js::IsWrapper(obj) && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
-        obj = JS_GetPrototype(obj);
-
-    if (!obj)
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-    JSObject* unwrappedObject;
-    nsresult rv = nsXPConnect::GetXPConnect()->GetJSObjectOfWrapper(cx, obj, &unwrappedObject);
-    if (NS_FAILED(rv))
-        return rv;
-
-    unwrappedObject = JS_ObjectToInnerObject(cx, unwrappedObject);
-    if (!unwrappedObject)
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-    // second param must be a string
+    // second param must be a string.
     if (!JSVAL_IS_STRING(name))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
+    JSString *methodName = name.toString();
+    jsid methodId = INTERNED_STRING_TO_JSID(cx, JS_InternJSString(cx, methodName));
 
-    // Make sure the name that we use for looking up the method/property is
-    // atomized.
-    jsid name_id;
-    JS::Value dummy;
-    if (!JS_ValueToId(cx, name, &name_id) ||
-        !JS_IdToValue(cx, name_id, &dummy))
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+    // If |obj| is a cross-compartment wrapper, try to puncture it. If this fails,
+    // we don't have full access to the other compartment, in which case we throw.
+    // Otherwise, enter the compartment.
+    if (js::IsCrossCompartmentWrapper(obj)) {
+        obj = js::UnwrapOneChecked(cx, obj);
+        if (!obj)
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+    }
 
-    // this will do verification and the method lookup for us
-    // Note that if |obj| is an XPCNativeWrapper this will all still work.
-    // We'll hand back the same method that we'd hand back for the underlying
-    // XPCWrappedNative.  This means no deep wrapping, unfortunately, but we
-    // can't keep track of both the underlying function and the
-    // XPCNativeWrapper at once in a single parent slot...
-    XPCCallContext inner_cc(JS_CALLER, cx, unwrappedObject, nsnull, name_id);
+    {
+        // Enter the target compartment.
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj))
+            return NS_ERROR_FAILURE;
 
-    // was our jsobject really a wrapped native at all?
-    XPCWrappedNative* wrapper = inner_cc.GetWrapper();
-    if (!wrapper || !wrapper->IsValid())
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+        // Now, try to create an Xray wrapper around the object. This won't work
+        // if the object isn't Xray-able. In that case, we throw.
+        JSObject *xray = WrapperFactory::WrapForSameCompartmentXray(cx, obj);
+        if (!xray)
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // did we find a method/attribute by that name?
-    XPCNativeMember* member = inner_cc.GetMember();
-    if (!member || member->IsConstant())
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+        // Alright, now do the lookup.
+        *retval = JSVAL_VOID;
+        JSPropertyDescriptor desc;
+        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
+            return NS_ERROR_FAILURE;
 
-    // it would a be a big surprise if there is a member without an interface :)
-    XPCNativeInterface* iface = inner_cc.GetInterface();
-    if (!iface)
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+        // First look for a method value. If that's not there, try a getter,
+        // since historically lookupMethod also works for getters.
+        JSObject *methodObj = desc.value.isObject() ? &desc.value.toObject() : NULL;
+        if (!methodObj && (desc.attrs & JSPROP_GETTER))
+            methodObj = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
 
-    jsval funval;
+        // Callers of this function seem to expect bound methods. Make it happen.
+        // Note that this is unnecessary until bug 658909 is fixed.
+        if (methodObj && JS_ObjectIsCallable(cx, methodObj))
+            methodObj = JS_BindCallable(cx, methodObj, obj);
 
-    // get (and perhaps lazily create) the member's cloned function
-    if (!member->NewFunctionObject(inner_cc, iface, obj, &funval))
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
+        // Set the return value if appropriate.
+        *retval = methodObj ? ObjectValue(*methodObj) : JSVAL_VOID;
+    }
 
-    NS_ASSERTION(JS_ValueToFunction(inner_cc, funval),
-                 "Function is not a function");
+    // Now that we've left the target compartment, wrap for the caller.
+    if (!JS_WrapValue(cx, retval))
+        return NS_ERROR_FAILURE;;
 
-    // Stick the function in the return value. This roots it.
-    *retval = funval;
     return NS_OK;
 }
 

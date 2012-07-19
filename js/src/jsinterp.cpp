@@ -942,7 +942,7 @@ template<typename T>
 class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
   public:
     GenericInterruptEnabler(T *variable, T value) : variable(variable), value(value) { }
-    void enableInterrupts() const { *variable = value; }
+    void enable() const { *variable = value; }
 
   private:
     T *variable;
@@ -1107,7 +1107,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     register void * const *jumpTable = normalJumpTable;
 
     typedef GenericInterruptEnabler<void * const *> InterruptEnabler;
-    InterruptEnabler interruptEnabler(&jumpTable, interruptJumpTable);
+    InterruptEnabler interrupts(&jumpTable, interruptJumpTable);
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
@@ -1135,7 +1135,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     register int switchMask = 0;
     int switchOp;
     typedef GenericInterruptEnabler<int> InterruptEnabler;
-    InterruptEnabler interruptEnabler(&switchMask, -1);
+    InterruptEnabler interrupts(&switchMask, -1);
 
 # define DO_OP()            goto do_op
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -1169,8 +1169,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
 #endif /* !JS_THREADED_INTERP */
-
-#define ENABLE_INTERRUPTS() (interruptEnabler.enableInterrupts())
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
@@ -1233,18 +1231,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
-        if (script->hasAnyBreakpointsOrStepMode())                            \
-            ENABLE_INTERRUPTS();                                              \
-        if (script->hasScriptCounts)                                          \
-            ENABLE_INTERRUPTS();                                              \
+        if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
+            interrupts.enable();                                              \
         JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
                      script->hasAnyBreakpointsOrStepMode());                  \
-    JS_END_MACRO
-
-#define CHECK_INTERRUPT_HANDLER()                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (cx->runtime->debugHooks.interruptHook)                            \
-            ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
     /* Repoint cx->regs to a local variable for faster access. */
@@ -1255,13 +1245,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * Help Debugger find frames running scripts that it has put in
      * single-step mode.
      */
-    InterpreterFrames interpreterFrame(cx, &regs, interruptEnabler);
+    InterpreterFrames interpreterFrame(cx, &regs, interrupts);
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
     Rooted<JSScript*> script(cx);
     SET_SCRIPT(regs.fp()->script());
-    CHECK_INTERRUPT_HANDLER();
 
     /*
      * Pool of rooters for use in this interpreter frame. References to these
@@ -1278,9 +1267,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
     RootedShape rootShape0(cx);
-
-    if (rt->profilingScripts)
-        ENABLE_INTERRUPTS();
 
     if (!entryFrame)
         entryFrame = regs.fp();
@@ -1334,8 +1320,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     if (interpMode == JSINTERP_REJOIN)
         interpMode = JSINTERP_NORMAL;
 
-    CHECK_INTERRUPT_HANDLER();
-
     RESET_USE_METHODJIT();
 
     /*
@@ -1347,6 +1331,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSOp op;
     int32_t len;
     len = 0;
+
+    if (rt->profilingScripts || cx->runtime->debugHooks.interruptHook)
+        interrupts.enable();
 
     DO_NEXT_OP(len);
 
@@ -1443,7 +1430,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                 break;
             }
             JS_ASSERT(status == JSTRAP_CONTINUE);
-            CHECK_INTERRUPT_HANDLER();
             JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
         }
 
@@ -1798,7 +1784,6 @@ BEGIN_CASE(JSOP_ITER)
     uint8_t flags = GET_UINT8(regs.pc);
     if (!ValueToIterator(cx, flags, &regs.sp[-1]))
         goto error;
-    CHECK_INTERRUPT_HANDLER();
     JS_ASSERT(!regs.sp[-1].isPrimitive());
 }
 END_CASE(JSOP_ITER)
@@ -1811,7 +1796,6 @@ BEGIN_CASE(JSOP_MOREITER)
     bool cond;
     if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, &regs.sp[-1]))
         goto error;
-    CHECK_INTERRUPT_HANDLER();
     regs.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_MOREITER)
@@ -2463,7 +2447,6 @@ BEGIN_CASE(JSOP_EVAL)
         if (!InvokeKernel(cx, args))
             goto error;
     }
-    CHECK_INTERRUPT_HANDLER();
     regs.sp = args.spAfterCall();
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
@@ -2496,7 +2479,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         Value *newsp = args.spAfterCall();
         TypeScript::Monitor(cx, script, regs.pc, newsp[-1]);
         regs.sp = newsp;
-        CHECK_INTERRUPT_HANDLER();
         len = JSOP_CALL_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -2528,7 +2510,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             goto error;
         if (status == ion::Method_Compiled) {
             ion::IonExecStatus exec = ion::Cannon(cx, regs.fp());
-            CHECK_INTERRUPT_HANDLER();
+            CHECK_BRANCH();
             if (exec == ion::IonExec_Bailout) {
                 SET_SCRIPT(regs.fp()->script());
                 op = JSOp(*regs.pc);
@@ -2553,7 +2535,6 @@ BEGIN_CASE(JSOP_FUNCALL)
             mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
             CHECK_PARTIAL_METHODJIT(status);
             interpReturnOK = mjit::JaegerStatusToSuccess(status);
-            CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
     }
@@ -2575,8 +2556,6 @@ BEGIN_CASE(JSOP_FUNCALL)
             JS_NOT_REACHED("bad ScriptDebugPrologue status");
         }
     }
-
-    CHECK_INTERRUPT_HANDLER();
 
     /* Load first op and dispatch it (safe since JSOP_STOP). */
     op = (JSOp) *regs.pc;
@@ -3149,8 +3128,6 @@ BEGIN_CASE(JSOP_NEWINIT)
 
     PUSH_OBJECT(*obj);
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-
-    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_NEWINIT)
 
@@ -3164,8 +3141,6 @@ BEGIN_CASE(JSOP_NEWARRAY)
 
     PUSH_OBJECT(*obj);
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-
-    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_NEWARRAY)
 
@@ -3181,8 +3156,6 @@ BEGIN_CASE(JSOP_NEWOBJECT)
 
     PUSH_OBJECT(*obj);
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-
-    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_NEWOBJECT)
 
@@ -3395,7 +3368,6 @@ BEGIN_CASE(JSOP_DEBUGGER)
         goto error;
       default:;
     }
-    CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_DEBUGGER)
 
@@ -3912,7 +3884,6 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRAP_CONTINUE:
               default:;
             }
-            CHECK_INTERRUPT_HANDLER();
         }
 
         for (TryNoteIter tni(regs); !tni.done(); ++tni) {

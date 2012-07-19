@@ -39,6 +39,7 @@ fuzzy-if(d2d&&layersGPUAccelerated,52,680) fails-if(Android) == scale3d-all-sepa
 == perspective-origin-1b.html perspective-origin-1a.html
 random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # bug 732568
 == perspective-origin-3a.html perspective-origin-3-ref.html
+== perspective-origin-4a.html perspective-origin-4-ref.html
 != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
 == sorting-2a.html sorting-2-ref.html

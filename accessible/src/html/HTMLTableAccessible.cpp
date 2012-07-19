@@ -766,7 +766,7 @@ HTMLTableAccessible::ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx)
   bool isSelected;
   PRInt32 columnExtent = 0;
 
-  nsresult rv = tableLayout->
+  tableLayout->
     GetCellDataAt(aRowIdx, aColIdx, *getter_AddRefs(domElement),
                   startRowIndex, startColIndex, rowSpan, colSpan,
                   actualRowSpan, columnExtent, isSelected);
@@ -786,7 +786,7 @@ HTMLTableAccessible::RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx)
   bool isSelected;
   PRInt32 rowExtent = 0;
 
-  nsresult rv = tableLayout->
+  tableLayout->
     GetCellDataAt(aRowIdx, aColIdx, *getter_AddRefs(domElement),
                   startRowIndex, startColIndex, rowSpan, colSpan,
                   rowExtent, actualColSpan, isSelected);

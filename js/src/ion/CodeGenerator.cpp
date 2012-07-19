@@ -657,8 +657,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
     if (!call->hasSingleTarget()) {
         Address flags(calleereg, offsetof(JSFunction, flags));
-        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_KINDMASK), nargsreg);
-        masm.branch32(Assembler::LessThan, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
+        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), nargsreg);
+        masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!call->getSingleTarget()->isNative());
@@ -916,8 +916,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     if (!apply->hasSingleTarget()) {
         Register kind = objreg;
         Address flags(calleereg, offsetof(JSFunction, flags));
-        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_KINDMASK), kind);
-        masm.branch32(Assembler::LessThan, kind, Imm32(JSFUN_INTERPRETED), &invoke);
+        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), kind);
+        masm.branch32(Assembler::NotEqual, kind, Imm32(JSFUN_INTERPRETED), &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!apply->getSingleTarget()->isNative());
@@ -1462,7 +1462,6 @@ CodeGenerator::visitCreateThisVM(LCreateThisVM *lir)
 {
     const LAllocation *proto = lir->getPrototype();
     const LAllocation *callee = lir->getCallee();
-    Register objReg = ToRegister(lir->output());
 
     typedef JSObject *(*pf)(JSContext *cx, HandleObject callee, JSObject *proto);
     static const VMFunction CreateThisInfo =

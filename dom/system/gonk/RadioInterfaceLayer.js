@@ -780,6 +780,19 @@ RadioInterfaceLayer.prototype = {
       return;
     }
 
+    // TODO: Bug #768441
+    // For now we don't store indicators persistently. When the mwi.discard
+    // flag is false, we'll need to persist the indicator to EFmwis.
+    // See TS 23.040 9.2.3.24.2
+
+    let mwi = message.mwi;
+    if (mwi) {
+      mwi.returnNumber = message.sender || null;
+      mwi.returnMessage = message.fullBody || null;
+      ppmm.sendAsyncMessage("RIL:VoicemailNotification", mwi);
+      return;
+    }
+
     let id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
                                                      message.fullBody || null,
                                                      message.timestamp);
@@ -790,6 +803,7 @@ RadioInterfaceLayer.prototype = {
                                            message.fullBody || null,
                                            message.timestamp,
                                            false);
+
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 

@@ -21,6 +21,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsViewportFrame.h"
 #include "RenderFrameParent.h"
+#include "LayersBackend.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
@@ -95,7 +96,7 @@ AssertInTopLevelChromeDoc(ContainerLayer* aContainer,
                           nsIFrame* aContainedFrame)
 {
   NS_ASSERTION(
-    (aContainer->Manager()->GetBackendType() != LayerManager::LAYERS_BASIC) ||
+    (aContainer->Manager()->GetBackendType() != mozilla::layers::LAYERS_BASIC) ||
     (aContainedFrame->GetNearestWidget() ==
      static_cast<BasicLayerManager*>(aContainer->Manager())->GetRetainerWidget()),
     "Expected frame to be in top-level chrome document");
@@ -316,7 +317,7 @@ ClearContainer(ContainerLayer* aContainer)
 static bool
 IsTempLayerManager(LayerManager* aManager)
 {
-  return (LayerManager::LAYERS_BASIC == aManager->GetBackendType() &&
+  return (mozilla::layers::LAYERS_BASIC == aManager->GetBackendType() &&
           !static_cast<BasicLayerManager*>(aManager)->IsRetained());
 }
 
@@ -453,7 +454,7 @@ GetFrom(nsFrameLoader* aFrameLoader)
 }
 
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
-                                     LayerManager::LayersBackend* aBackendType,
+                                     mozilla::layers::LayersBackend* aBackendType,
                                      int* aMaxTextureSize,
                                      uint64_t* aId)
   : mLayersId(0)
@@ -464,7 +465,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
     new nsContentView(aFrameLoader, FrameMetrics::ROOT_SCROLL_ID);
 
-  *aBackendType = LayerManager::LAYERS_NONE;
+  *aBackendType = mozilla::layers::LAYERS_NONE;
   *aMaxTextureSize = 0;
   *aId = 0;
 

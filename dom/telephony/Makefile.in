@@ -21,6 +21,8 @@ CPPSRCS = \
   Telephony.cpp \
   TelephonyCall.cpp \
   CallEvent.cpp \
+  Voicemail.cpp \
+  VoicemailEvent.cpp \
   $(NULL)
 
 XPIDLSRCS = \
@@ -28,6 +30,9 @@ XPIDLSRCS = \
   nsIDOMTelephony.idl \
   nsIDOMTelephonyCall.idl \
   nsIDOMCallEvent.idl \
+  nsIDOMVoicemail.idl \
+  nsIDOMVoicemailEvent.idl \
+  nsIDOMVoicemailStatus.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
