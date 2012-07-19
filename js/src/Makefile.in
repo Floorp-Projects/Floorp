@@ -82,6 +82,7 @@ CPPSRCS		= \
 		jsfun.cpp \
 		jsgc.cpp \
 		jscrashreport.cpp \
+		jshash.cpp \
 		jsinfer.cpp \
 		jsinterp.cpp \
 		jsiter.cpp \
@@ -160,6 +161,7 @@ INSTALLED_HEADERS = \
 		jsdhash.h \
 		jsfriendapi.h \
 		jsgc.h \
+		jshash.h \
 		jslock.h \
 		json.h \
 		jsproxy.h \
