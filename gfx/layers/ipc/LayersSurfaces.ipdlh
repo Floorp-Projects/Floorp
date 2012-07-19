@@ -40,7 +40,6 @@ struct SharedTextureDescriptor {
   TextureShareType shareType;
   SharedTextureHandle handle;
   nsIntSize size;
-  bool inverted;
 };
 
 struct SurfaceDescriptorGralloc {

@@ -17,7 +17,6 @@
 #include "mozilla/Mutex.h"
 #include "gfxPlatform.h"
 #include "LayersBackend.h"
-#include "GLContext.h"
 
 #ifdef XP_MACOSX
 #include "nsIOSurface.h"
@@ -122,11 +121,6 @@ public:
      * An bitmap image that can be shared with a remote process.
      */
     REMOTE_IMAGE_BITMAP,
-
-    /**
-     * A OpenGL texture that can be shared across threads or processes
-     */
-    SHARED_TEXTURE,
 
     /**
      * An DXGI shared surface handle that can be shared with a remote process.
@@ -870,29 +864,6 @@ public:
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize mSize;
 };
-
-class THEBES_API SharedTextureImage : public Image {
-public:
-  struct Data {
-    gl::SharedTextureHandle mHandle;
-    gl::TextureImage::TextureShareType mShareType;
-    gfxIntSize mSize;
-    bool mInverted;
-  };
-
-  void SetData(const Data& aData) { mData = aData; }
-  const Data* GetData() { return &mData; }
-
-  gfxIntSize GetSize() { return mData.mSize; }
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface() { return NULL; }
-
-  SharedTextureImage() : Image(NULL, SHARED_TEXTURE) {}
-
-private:
-  Data mData;
-};
-
 
 #ifdef XP_MACOSX
 class THEBES_API MacIOSurfaceImage : public Image {
