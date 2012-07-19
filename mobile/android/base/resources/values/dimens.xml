@@ -17,5 +17,7 @@
     <dimen name="tabs_counter_size">22sp</dimen>
     <dimen name="site_identity_popup_width">400dp</dimen>
     <dimen name="doorhanger_arrow_width">44dp</dimen>
+    <dimen name="text_selection_handle_width">30dp</dimen>
+    <dimen name="text_selection_handle_height">44dp</dimen>
 
 </resources>
