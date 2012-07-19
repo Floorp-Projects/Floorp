@@ -436,7 +436,8 @@ private:
                  SecurityLevel* result);
 
     nsresult
-    CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
+    CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
+                            nsIPrincipal** result);
 
     // This is just like the API method, but it doesn't check that the subject
     // name is non-empty or aCertificate is non-null, and it doesn't change the

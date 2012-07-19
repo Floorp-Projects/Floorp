@@ -1941,7 +1941,9 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
 }
 
 nsresult
-nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **result)
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId,
+                                                 bool aInMozBrowser,
+                                                 nsIPrincipal **result)
 {
     // I _think_ it's safe to not create null principals here based on aURI.
     // At least all the callers would do the right thing in those cases, as far
@@ -1965,8 +1967,8 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **re
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = codebase->Init(EmptyCString(), EmptyCString(),
-                                 EmptyCString(), nsnull, aURI,
-                                 nsIScriptSecurityManager::NO_APP_ID, false);
+                                 EmptyCString(), nsnull, aURI, aAppId,
+                                 aInMozBrowser);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1989,9 +1991,10 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     if (NS_FAILED(rv) || inheritsPrincipal) {
         return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
     }
-    
+
     nsCOMPtr<nsIPrincipal> principal;
-    rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
+    rv = CreateCodebasePrincipal(aURI, nsIScriptSecurityManager::NO_APP_ID,
+                                 false, getter_AddRefs(principal));
     if (NS_FAILED(rv)) return rv;
 
     if (mPrincipals.Count() > 0)
