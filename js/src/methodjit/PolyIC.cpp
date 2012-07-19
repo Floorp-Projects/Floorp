@@ -570,7 +570,9 @@ class SetPropCompiler : public PICStubCompiler
         if (!pic.inlinePathPatched &&
             shape->hasDefaultSetter() &&
             !pic.typeMonitored &&
-            !obj->isDenseArray()) {
+            !obj->isDenseArray())
+        {
+            pic.setInlinePathShape(obj->lastProperty());
             return patchInline(shape);
         }
 
@@ -1349,7 +1351,9 @@ class GetPropCompiler : public PICStubCompiler
 
         if (obj == getprop.holder &&
             getprop.shape->hasDefaultGetter() &&
-            !pic.inlinePathPatched) {
+            !pic.inlinePathPatched)
+        {
+            pic.setInlinePathShape(obj->lastProperty());
             return patchInline(getprop.holder, getprop.shape);
         }
 
@@ -2033,6 +2037,8 @@ BaseIC::disable(VMFrame &f, const char *reason, void *stub)
         uint32_t offset = frameCountersOffset(f);
         f.chunk()->pcLengths[offset].picsLength = 0;
     }
+
+    disabled = true;
 
     spew(f, "disabled", reason);
     Repatcher repatcher(f.chunk());
