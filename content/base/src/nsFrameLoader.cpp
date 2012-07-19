@@ -80,6 +80,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "nsIAppsService.h"
 
 #include "jsapi.h"
 
@@ -1475,6 +1476,24 @@ nsFrameLoader::MaybeCreateDocShell()
   // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  if (OwnerIsBrowserFrame() &&
+      mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozapp)) {
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService(APPS_SERVICE_CONTRACTID);
+    if (!appsService) {
+      NS_ERROR("Apps Service is not available!");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoString manifest;
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapp, manifest);
+
+    PRUint32 appId;
+    appsService->GetAppLocalIdByManifestURL(manifest, &appId);
+
+    mDocShell->SetAppId(appId);
+  }
 
   if (!mNetworkCreated) {
     nsCOMPtr<nsIDocShellHistory> history = do_QueryInterface(mDocShell);
