@@ -780,6 +780,12 @@ struct JITScript
     JSC::ExecutablePool *shimPool;
 
     /*
+     * Number of calls made to IonMonkey functions, used to avoid slow
+     * JM -> Ion calls.
+     */
+    uint32_t        ionCalls;
+
+    /*
      * If set, we decided to keep the JITChunk so that Ion can access its caches.
      * The chunk has to be destroyed the next time the script runs in JM.
      * Note that this flag implies nchunks == 1.
