@@ -286,6 +286,8 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     } check(cx);
 #endif
+
+    SPSEntryMarker marker(cx->runtime);
 	
 #ifdef JS_ION
     if (ion::IsEnabled(cx)) {
@@ -304,8 +306,6 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     }
 #endif
-
-    SPSEntryMarker marker(cx->runtime);
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;

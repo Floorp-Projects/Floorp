@@ -299,6 +299,12 @@ ion::HandleException(ResumeFromException *rfe)
             InlineFrameIterator frames(&iter);
             for (;;) {
                 CloseLiveIterators(cx, frames);
+
+                // When profiling, each frame popped needs a notification that
+                // the function has exited, so invoke the probe that a function
+                // is exiting.
+                JSScript *script = frames.script();
+                Probes::exitScript(cx, script, script->function(), NULL);
                 if (!frames.more())
                     break;
                 ++frames;

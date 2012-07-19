@@ -101,6 +101,9 @@ class MacroAssemblerX86Shared : public Assembler
     void add32(Imm32 imm, Register dest) {
         addl(imm, dest);
     }
+    void add32(Imm32 imm, const Address &dest) {
+        addl(imm, Operand(dest));
+    }
     void sub32(Imm32 imm, Register dest) {
         subl(imm, dest);
     }

@@ -1745,6 +1745,18 @@ LIRGenerator::visitInstanceOf(MInstanceOf *ins)
     }
 }
 
+bool
+LIRGenerator::visitProfilingEnter(MProfilingEnter *ins)
+{
+    return add(new LProfilingEnter(temp(), temp()), ins);
+}
+
+bool
+LIRGenerator::visitProfilingExit(MProfilingExit *ins)
+{
+    return add(new LProfilingExit(temp()), ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

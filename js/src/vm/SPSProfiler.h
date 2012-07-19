@@ -117,7 +117,7 @@ class SPSProfiler
     {}
     ~SPSProfiler();
 
-    uint32_t *size() { return size_; }
+    uint32_t *sizePointer() { return size_; }
     uint32_t maxSize() { return max_; }
     ProfileEntry *stack() { return stack_; }
 

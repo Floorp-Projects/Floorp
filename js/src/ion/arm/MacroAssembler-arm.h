@@ -882,6 +882,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void freeStack(Register amount);
 
     void add32(Imm32 imm, Register dest);
+    void add32(Imm32 imm, const Address &dest);
     void sub32(Imm32 imm, Register dest);
 
     void and32(Imm32 imm, Register dest);

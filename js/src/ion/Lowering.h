@@ -174,6 +174,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetArgument(MGetArgument *ins);
     bool visitThrow(MThrow *ins);
     bool visitInstanceOf(MInstanceOf *ins);
+    bool visitProfilingEnter(MProfilingEnter *ins);
+    bool visitProfilingExit(MProfilingExit *ins);
 };
 
 } // namespace ion

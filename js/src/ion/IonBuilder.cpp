@@ -279,6 +279,8 @@ IonBuilder::build()
 
     // Emit the start instruction, so we can begin real instructions.
     current->makeStart(MStart::New(MStart::StartType_Default));
+    if (instrumentedProfiling())
+        current->add(MProfilingEnter::New(script));
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -389,6 +391,10 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         return false;
 
     current->setCallerResumePoint(callerResumePoint);
+
+    // Flag the entry into an inlined function with a special MStart block
+    if (instrumentedProfiling())
+        current->add(MProfilingEnter::New(script));
 
     // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerBuilder->current;
@@ -2534,6 +2540,8 @@ IonBuilder::processReturn(JSOp op)
         break;
     }
 
+    if (instrumentedProfiling())
+        current->add(MProfilingExit::New());
     MReturn *ret = MReturn::New(def);
     current->end(ret);
 
