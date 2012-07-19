@@ -29,6 +29,7 @@ class xpcTestObjectReadOnly MOZ_FINAL : public nsIXPCTestObjectReadOnly {
     PRInt32 longProperty;
     float   floatProperty;
     char    charProperty;
+    PRTime  timeProperty;
 };
 
 class xpcTestObjectReadWrite MOZ_FINAL : public nsIXPCTestObjectReadWrite {
@@ -46,6 +47,7 @@ class xpcTestObjectReadWrite MOZ_FINAL : public nsIXPCTestObjectReadWrite {
      float floatProperty;
      char charProperty;
      char *stringProperty;
+     PRTime timeProperty;
 };
 
 class nsXPCTestParams MOZ_FINAL : public nsIXPCTestParams

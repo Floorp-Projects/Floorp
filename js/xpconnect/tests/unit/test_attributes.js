@@ -30,6 +30,7 @@ function test_component_readwrite(contractid) {
   do_check_eq(2147483647, o.longProperty);
   do_check_true(5.25 < o.floatProperty && 5.75 > o.floatProperty);
   do_check_eq("X", o.charProperty);
+  do_check_eq(-1, o.timeProperty);
 
   // Write new values.
   o.stringProperty = "another string";
@@ -38,6 +39,7 @@ function test_component_readwrite(contractid) {
   o.longProperty = 1234567890;
   o.floatProperty = 10.2;
   o.charProperty = "Z";
+  o.timeProperty = 1;
 
   // Test the new values.
   do_check_eq("another string", o.stringProperty);
@@ -46,6 +48,7 @@ function test_component_readwrite(contractid) {
   do_check_eq(1234567890, o.longProperty);
   do_check_true(10.15 < o.floatProperty && 10.25 > o.floatProperty);
   do_check_eq("Z", o.charProperty);
+  do_check_eq(1, o.timeProperty);
 
   // Assign values that differ from the expected type to verify conversion.
 
@@ -74,4 +77,5 @@ function test_component_readonly(contractid) {
   do_check_eq(2147483647, o.longReadOnly);
   do_check_true(5.25 < o.floatReadOnly && 5.75 > o.floatReadOnly);
   do_check_eq("X", o.charReadOnly);
+  do_check_eq(-1, o.timeReadOnly);
 }
