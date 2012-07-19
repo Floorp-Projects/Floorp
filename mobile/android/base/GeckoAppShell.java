@@ -336,8 +336,12 @@ public class GeckoAppShell
             if (Build.VERSION.SDK_INT >= 8) {
                 downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                 updatesDir  = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-            } else {
-                updatesDir = downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            }
+            if (downloadDir == null) {
+                downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+            }
+            if (updatesDir == null) {
+                updatesDir = downloadDir;
             }
             GeckoAppShell.putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
             GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
