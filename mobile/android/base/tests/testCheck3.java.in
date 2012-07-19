@@ -64,7 +64,7 @@ public class testCheck3 extends PixelTest {
     private boolean disableScreenshot() {
         try {
             ClassLoader classLoader = getActivity().getClassLoader();
-            Class appshell = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+            Class appshell = classLoader.loadClass("org.mozilla.gecko.ScreenshotHandler");
             Method disableScreenshotMethod = appshell.getMethod("disableScreenshot");
             disableScreenshotMethod.invoke(null);
             return true;
