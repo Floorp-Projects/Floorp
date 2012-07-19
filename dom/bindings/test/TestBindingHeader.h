@@ -35,6 +35,26 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
+// IID for the IndirectlyImplementedInterface
+#define NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID \
+{ 0xfed55b69, 0x7012, 0x4849, \
+ { 0xaf, 0x56, 0x4b, 0xa9, 0xee, 0x41, 0x30, 0x89 } }
+
+class IndirectlyImplementedInterface : public nsISupports,
+                                       public nsWrapperCache
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  bool GetIndirectlyImplementedProperty(ErrorResult&);
+  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
+  void IndirectlyImplementedMethod(ErrorResult&);
+};
+
 // IID for the TestExternalInterface
 #define NS_TEST_EXTERNAL_INTERFACE_IID \
 { 0xd5ba0c99, 0x9b1d, 0x4e71, \
@@ -227,6 +247,9 @@ public:
   void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&, ErrorResult&);
   void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&, ErrorResult&);
   void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*, ErrorResult&);
+
+  already_AddRefed<IndirectlyImplementedInterface> ReceiveConsequentialInterface(ErrorResult&);
+  void PassConsequentialInterface(IndirectlyImplementedInterface&, ErrorResult&);
 
   // Sequence types
   void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
