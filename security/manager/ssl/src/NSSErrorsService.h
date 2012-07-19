@@ -6,11 +6,12 @@
 
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace psm {
 
-class NSSErrorsService : public nsINSSErrorsService
+class NSSErrorsService MOZ_FINAL : public nsINSSErrorsService
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSINSSERRORSSERVICE
