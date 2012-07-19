@@ -824,8 +824,6 @@ protected:
 
     nsRefPtr<nsDOMNavigationTiming> mTiming;
 
-    PRUint32 mAppId;
-
 private:
     nsCOMPtr<nsIAtom> mForcedCharset;
     nsCOMPtr<nsIAtom> mParentCharset;
