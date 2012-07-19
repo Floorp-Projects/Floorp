@@ -1074,7 +1074,9 @@ class MNewArray : public MNullaryInstruction
     INSTRUCTION_HEADER(NewArray);
 
     MNewArray(uint32 count, types::TypeObject *type, AllocatingBehaviour allocating)
-        : count_(count), type_(type), allocating_(allocating)
+      : count_(count),
+        type_(type),
+        allocating_(allocating)
     {
         setResultType(MIRType_Object);
     }
@@ -1086,9 +1088,19 @@ class MNewArray : public MNullaryInstruction
     types::TypeObject *type() const {
         return type_;
     }
-    
+
     bool isAllocating() const {
         return allocating_ == NewArray_Allocating;
+    }
+
+    // NewArray is marked as non-effectful because all our allocations are
+    // either lazy when we are using "new Array(length)" or bounded by the
+    // script or the stack size when we are using "new Array(...)" or "[...]"
+    // notations.  So we might have to allocate the array twice if we bail
+    // during the computation of the first element of the square braket
+    // notation.
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

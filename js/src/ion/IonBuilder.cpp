@@ -3551,7 +3551,7 @@ IonBuilder::jsop_newarray(uint32 count)
     current->add(ins);
     current->push(ins);
 
-    return resumeAfter(ins);
+    return true;
 }
 
 bool
