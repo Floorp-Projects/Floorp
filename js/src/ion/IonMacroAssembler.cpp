@@ -372,11 +372,12 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssembler::getNewObject(JSContext *cx, const Register &result,
-                             HandleObject templateObject, Label *fail)
+MacroAssembler::newGCThing(JSContext *cx, const Register &result,
+                           HandleObject templateObject, Label *fail)
 {
-    gc::AllocKind allocKind = templateObject->getAllocKind();
+    // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
 
+    gc::AllocKind allocKind = templateObject->getAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
     int thingSize = (int)gc::Arena::thingSize(allocKind);
 
@@ -384,7 +385,7 @@ MacroAssembler::getNewObject(JSContext *cx, const Register &result,
     JS_ASSERT(!templateObject->hasDynamicElements());
 
 #ifdef JS_GC_ZEAL
-    // Dynamic Cehck for GC Zeal.
+    // Don't execute the inline path if gcZeal is active.
     movePtr(ImmWord(cx->runtime), result);
     loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
     branch32(Assembler::NotEqual, result, Imm32(0), fail);
@@ -401,55 +402,50 @@ MacroAssembler::getNewObject(JSContext *cx, const Register &result,
 
     addPtr(Imm32(thingSize), result);
     storePtr(result, AbsoluteAddress(&list->first));
+    subPtr(Imm32(thingSize), result);
+}
 
-    // Fill in the blank object. Order doesn't matter here, since everything is
-    // infallible. Note that this bakes GC thing pointers into the code without
-    // explicitly pinning them. With type inference enabled, JIT code is
-    // collected on GC except when analysis or compilation is active, in which
-    // case type objects won't be collected but other things may be. The shape
-    // held by templateObject *must* be pinned against GC either by the script
-    // or by some type object.
+void
+MacroAssembler::initGCThing(JSContext *cx, const Register &obj, HandleObject templateObject)
+{
+    // Fast initialization of an empty object returned by NewGCThing().
 
-    int elementsOffset = JSObject::offsetOfFixedElements();
+    storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));
+    storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
+    storePtr(ImmWord((void *)NULL), Address(obj, JSObject::offsetOfSlots()));
 
-    // Write out the elements pointer before readjusting the result register:
-    // for dense arrays we wil need to get the address of the fixed elements first.
     if (templateObject->isDenseArray()) {
         JS_ASSERT(!templateObject->getDenseArrayInitializedLength());
-        addPtr(Imm32(-thingSize + elementsOffset), result);
-        storePtr(result, Address(result, -elementsOffset + JSObject::offsetOfElements()));
-        addPtr(Imm32(-elementsOffset), result);
-    } else {
-        subPtr(Imm32(thingSize), result);
-        storePtr(ImmWord(emptyObjectElements), Address(result, JSObject::offsetOfElements()));
-    }
 
-    storePtr(ImmGCPtr(templateObject->lastProperty()), Address(result, JSObject::offsetOfShape()));
-    storePtr(ImmGCPtr(templateObject->type()), Address(result, JSObject::offsetOfType()));
-    storePtr(ImmWord((void *)NULL), Address(result, JSObject::offsetOfSlots()));
+        int elementsOffset = JSObject::offsetOfFixedElements();
 
-    if (templateObject->isDenseArray()) {
+        addPtr(Imm32(elementsOffset), obj);
+        storePtr(obj, Address(obj, -elementsOffset + JSObject::offsetOfElements()));
+        addPtr(Imm32(-elementsOffset), obj);
+
         // Fill in the elements header.
         store32(Imm32(templateObject->getDenseArrayCapacity()),
-                Address(result, elementsOffset + ObjectElements::offsetOfCapacity()));
+                Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
         store32(Imm32(templateObject->getDenseArrayInitializedLength()),
-                Address(result, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+                Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
         store32(Imm32(templateObject->getArrayLength()),
-                Address(result, elementsOffset + ObjectElements::offsetOfLength()));
+                Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
     } else {
+        storePtr(ImmWord(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
+
         // Fixed slots of non-array objects are required to be initialized.
         // Use the values currently in the template object.
         size_t nslots = JS_MIN(templateObject->numFixedSlots(), templateObject->slotSpan());
         for (unsigned i = 0; i < nslots; i++) {
             storeValue(templateObject->getFixedSlot(i),
-                       Address(result, JSObject::getFixedSlotOffset(i)));
+                       Address(obj, JSObject::getFixedSlotOffset(i)));
         }
     }
 
     if (templateObject->hasPrivate()) {
         uint32_t nfixed = templateObject->numFixedSlots();
         storePtr(ImmWord(templateObject->getPrivate()),
-                 Address(result, JSObject::getPrivateDataOffset(nfixed)));
+                 Address(obj, JSObject::getPrivateDataOffset(nfixed)));
     }
 }
 
