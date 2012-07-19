@@ -3387,10 +3387,15 @@ var BrowserEventHandler = {
           let data = JSON.parse(aData);
           let isClickable = ElementTouchHelper.isElementClickable(element);
 
-          var params = { movePoint: isClickable};
-          this._sendMouseEvent("mousemove", element, data.x, data.y, params);
-          this._sendMouseEvent("mousedown", element, data.x, data.y, params);
-          this._sendMouseEvent("mouseup",   element, data.x, data.y, params);
+          if (isClickable) {
+            [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
+            element = ElementTouchHelper.anyElementFromPoint(element.ownerDocument.defaultView, data.x, data.y);
+            isClickable = ElementTouchHelper.isElementClickable(element);
+          }
+
+          this._sendMouseEvent("mousemove", element, data.x, data.y);
+          this._sendMouseEvent("mousedown", element, data.x, data.y);
+          this._sendMouseEvent("mouseup",   element, data.x, data.y);
   
           if (isClickable)
             Haptic.performSimpleAction(Haptic.LongPress);
@@ -3542,10 +3547,10 @@ var BrowserEventHandler = {
     this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
   },
 
-  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aParams) {
+  _moveClickPoint: function(aElement, aX, aY) {
     // the element can be out of the aX/aY point because of the touch radius
     // if outside, we gracefully move the touch point to the edge of the element
-    if (!(aElement instanceof HTMLHtmlElement) && aParams.movePoint) {
+    if (!(aElement instanceof HTMLHtmlElement)) {
       let isTouchClick = true;
       let rects = ElementTouchHelper.getContentClientRects(aElement);
       for (let i = 0; i < rects.length; i++) {
@@ -3561,14 +3566,16 @@ var BrowserEventHandler = {
 
       if (isTouchClick) {
         let rect = rects[0];
-        if (rect.width == 0 && rect.height == 0)
-          return;
-
-        aX = Math.min(rect.left + rect.width, Math.max(rect.left, aX));
-        aY = Math.min(rect.top + rect.height, Math.max(rect.top,  aY));
+        if (rect.width != 0 || rect.height != 0) {
+          aX = Math.min(rect.left + rect.width, Math.max(rect.left, aX));
+          aY = Math.min(rect.top + rect.height, Math.max(rect.top,  aY));
+        }
       }
     }
+    return [aX, aY];
+  },
 
+  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
     let window = aElement.ownerDocument.defaultView;
     try {
       let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
