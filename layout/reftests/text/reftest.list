@@ -23,6 +23,7 @@ load ligature-with-space-1.html
 == line-editing-1d.html line-editing-1-ref.html
 == line-editing-1e.html line-editing-1-ref.html
 fails-if(cocoaWidget||winWidget) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+== lineheight-percentage-1.html lineheight-percentage-1-ref.html
 == long-1.html long-ref.html
 == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
