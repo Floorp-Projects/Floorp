@@ -515,7 +515,7 @@ const PDU_TOA_NATIONAL      = 0xA0; // National number. Prefix or escape digits
 const PDU_TOA_NETWORK_SPEC  = 0xB0; // Network specific number This is used to
                                     // indicate administration/service number
                                     // specific to the serving network
-const PDU_TOA_SUSCRIBER     = 0xC0; // Suscriber number. This is used when a
+const PDU_TOA_SUBSCRIBER    = 0xC0; // Subscriber number. This is used when a
                                     // specific short number representation is
                                     // stored in one or more SCs as part of a
                                     // higher layer application
@@ -657,12 +657,23 @@ const PDU_PID_ME_DEPERSONALIZATION         = 0x7E;
 const PDU_PID_USIM_DATA_DOWNLOAD           = 0x7F;
 
 // DCS - Data Coding Scheme
-const PDU_DCS_MSG_CODING_7BITS_ALPHABET = 0x00;
-const PDU_DCS_MSG_CODING_8BITS_ALPHABET = 0x04;
-const PDU_DCS_MSG_CODING_16BITS_ALPHABET= 0x08;
-const PDU_DCS_MSG_CLASS_ME_SPECIFIC     = 0xF1;
-const PDU_DCS_MSG_CLASS_SIM_SPECIFIC    = 0xF2;
-const PDU_DCS_MSG_CLASS_TE_SPECIFIC     = 0xF3;
+const PDU_DCS_MSG_CODING_7BITS_ALPHABET  = 0x00;
+const PDU_DCS_MSG_CODING_8BITS_ALPHABET  = 0x04;
+const PDU_DCS_MSG_CODING_16BITS_ALPHABET = 0x08;
+const PDU_DCS_MSG_CLASS_ME_SPECIFIC      = 0xF1;
+const PDU_DCS_MSG_CLASS_SIM_SPECIFIC     = 0xF2;
+const PDU_DCS_MSG_CLASS_TE_SPECIFIC      = 0xF3;
+const PDU_DCS_CODING_GROUP_BITS          = 0xF0;
+const PDU_DCS_CODING_GROUP_7BITS_DISCARD = 0xC0;
+const PDU_DCS_CODING_GROUP_7BITS_STORE   = 0xD0;
+const PDU_DCS_CODING_GROUP_16BITS_STORE  = 0xE0;
+const PDU_DCS_MWI_ACTIVE_BITS            = 0x08;
+const PDU_DCS_MWI_ACTIVE_VALUE           = 0x08;
+const PDU_DCS_MWI_TYPE_BITS              = 0x03;
+const PDU_DCS_MWI_TYPE_VOICEMAIL         = 0x00;
+const PDU_DCS_MWI_TYPE_FAX               = 0x01;
+const PDU_DCS_MWI_TYPE_EMAIL             = 0x02;
+const PDU_DCS_MWI_TYPE_OTHER             = 0x03;
 
 // Because service center timestamp omit the century. Yay.
 const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
@@ -670,8 +681,8 @@ const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
 // See 9.2.3.24 TP‑User Data (TP‑UD)
 const PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT         = 0x00;
 const PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION           = 0x01;
-const PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_8BIT  = 0x04;
-const PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_16BIT = 0x05;
+const PDU_IEI_APPLICATION_PORT_ADDRESSING_SCHEME_8BIT  = 0x04;
+const PDU_IEI_APPLICATION_PORT_ADDRESSING_SCHEME_16BIT = 0x05;
 const PDU_IEI_SMSC_CONTROL_PARAMS                      = 0x06;
 const PDU_IEI_UDH_SOURCE_INDICATOR                     = 0x07;
 const PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT        = 0x08;
@@ -1334,6 +1345,11 @@ const PDU_NL_SINGLE_SHIFT_TABLES = [
   + "                "
 ];
 
+// Special SMS Message Indication constants
+const PDU_MWI_STORE_TYPE_BIT     = 0x80;
+const PDU_MWI_STORE_TYPE_DISCARD = 0x00;
+const PDU_MWI_STORE_TYPE_STORE   = 0x80;
+
 const RADIOTECH_FAMILY_3GPP = 1;  // GSM, WCDMA, LTE
 const RADIOTECH_FAMILY_3GPP2 = 2; // CDMA, EVDO
 
@@ -1461,6 +1477,8 @@ const GECKO_RADIO_TECH = [
   "lte",
   "hspa+",
 ];
+
+const GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN = -1;
 
 // Allow this file to be imported via Components.utils.import().
 const EXPORTED_SYMBOLS = Object.keys(this);
