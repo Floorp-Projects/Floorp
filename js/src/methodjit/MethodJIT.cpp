@@ -1320,6 +1320,35 @@ JITScript::trace(JSTracer *trc)
     }
 }
 
+static ic::PICInfo *
+GetPIC(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
+{
+    JITScript *jit = script->getJIT(constructing, cx->compartment->needsBarrier());
+    if (!jit)
+        return NULL;
+
+    JITChunk *chunk = jit->chunk(pc);
+    if (!chunk)
+        return NULL;
+
+    ic::PICInfo *pics = chunk->pics();
+    for (uint32_t i = 0; i < chunk->nPICs; i++) {
+        if (pics[i].pc == pc)
+            return &pics[i];
+    }
+
+    return NULL;
+}
+
+Shape *
+mjit::GetPICSingleShape(JSContext *cx, JSScript *script, jsbytecode *pc, bool constructing)
+{
+    ic::PICInfo *pic = GetPIC(cx, script, pc, constructing);
+    if (!pic)
+        return NULL;
+    return pic->getSingleShape();
+}
+
 void
 JITScript::purgeCaches()
 {
