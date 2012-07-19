@@ -85,6 +85,7 @@ MOCHITEST_FILES = \
 		test_dom_keyboard_event.html \
 		test_dom_mouse_event.html \
 		test_bug742376.html \
+		test_bug603008.html \
 		$(NULL)
 
 #bug 585630
@@ -98,12 +99,6 @@ endif
 ifneq (Linux,$(OS_ARCH))
 MOCHITEST_FILES += \
 		test_bug493251.html \
-		$(NULL)
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_FILES += \
-		test_bug603008.html \
 		$(NULL)
 endif
 
