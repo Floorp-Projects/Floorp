@@ -763,6 +763,7 @@ nsDocShell::nsDocShell():
 #ifdef DEBUG
     mInEnsureScriptEnv(false),
 #endif
+    mAppId(nsIScriptSecurityManager::NO_APP_ID),
     mParentCharsetSource(0)
 {
     mHistoryID = ++gDocshellIDCounter;
@@ -12064,6 +12065,10 @@ nsDocShell::GetInheritedFrameType()
 nsDocShell::FrameType
 nsDocShell::GetFrameType()
 {
+    if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
+        return eFrameTypeApp;
+    }
+
     return mIsBrowserFrame ? eFrameTypeBrowser : eFrameTypeRegular;
 }
 
@@ -12126,4 +12131,38 @@ nsDocShell::GetIsBelowContentBoundary(bool* aIsInContentBoundary)
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAppId(PRUint32 aAppId)
+{
+    MOZ_ASSERT(mAppId == nsIScriptSecurityManager::NO_APP_ID);
+    MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+    mAppId = aAppId;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAppId(PRUint32* aAppId)
+{
+    if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
+        MOZ_ASSERT(GetFrameType() == eFrameTypeApp);
+
+        *aAppId = mAppId;
+        return NS_OK;
+    }
+
+    MOZ_ASSERT(GetFrameType() != eFrameTypeApp);
+
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+    GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+    nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
+    if (!parent) {
+        *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+        return NS_OK;
+    }
+
+    return parent->GetAppId(aAppId);
 }
