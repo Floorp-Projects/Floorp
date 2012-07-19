@@ -1066,4 +1066,11 @@ public class PanZoomController
         bounce(finalMetrics);
         return true;
     }
+
+    /** This function must be called from the UI thread. */
+    public void abortPanning() {
+        checkMainThread();
+        mState = PanZoomState.NOTHING;
+        bounce();
+    }
 }
