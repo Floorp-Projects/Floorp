@@ -46,6 +46,17 @@ public:
   NS_DECL_ISUPPORTS
 };
 
+// IID for the TestCallbackInterface
+#define NS_TEST_CALLBACK_INTERFACE_IID \
+{ 0xbf711ba4, 0xc8f6, 0x46cf, \
+ { 0xba, 0x5b, 0xaa, 0xe2, 0x78, 0x18, 0xe6, 0x4a } }
+class TestCallbackInterface : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_CALLBACK_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+};
+
 class TestNonWrapperCacheInterface : public nsISupports
 {
 public:
@@ -202,6 +213,21 @@ public:
   void PassOptionalNonNullExternal(const Optional<TestExternalInterface*>&, ErrorResult&);
   void PassOptionalExternalWithDefault(TestExternalInterface*, ErrorResult&);
 
+  already_AddRefed<TestCallbackInterface> ReceiveCallbackInterface(ErrorResult&);
+  already_AddRefed<TestCallbackInterface> ReceiveNullableCallbackInterface(ErrorResult&);
+  TestCallbackInterface* ReceiveWeakCallbackInterface(ErrorResult&);
+  TestCallbackInterface* ReceiveWeakNullableCallbackInterface(ErrorResult&);
+  void PassCallbackInterface(TestCallbackInterface&, ErrorResult&);
+  void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>, ErrorResult&);
+  void PassNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface(ErrorResult&);
+  void SetNonNullCallbackInterface(TestCallbackInterface&, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface(ErrorResult&);
+  void SetNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
+  void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&, ErrorResult&);
+  void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&, ErrorResult&);
+  void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*, ErrorResult&);
+
   // Sequence types
   void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
@@ -220,8 +246,6 @@ public:
                                              ErrorResult&);
   void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
                                              ErrorResult&);
-  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
-                                                         ErrorResult&);
   void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
                                              ErrorResult&);
   void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &,
