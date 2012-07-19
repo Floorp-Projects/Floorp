@@ -178,11 +178,11 @@ IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bo
 IonBuilder::InliningStatus
 IonBuilder::inlineArray(uint32 argc, bool constructing)
 {
+    uint32_t initLength = 0;
+
     // Multiple arguments imply array initialization, not just construction.
     if (argc >= 2)
-        return InliningStatus_NotInlined;
-
-    uint32_t initLength = 0;
+        initLength = argc;
 
     // A single integer argument denotes initial length.
     if (argc == 1) {
@@ -207,8 +207,31 @@ IonBuilder::inlineArray(uint32 argc, bool constructing)
     current->add(ins);
     current->push(ins);
 
-    if (!resumeAfter(ins))
-        return InliningStatus_Error;
+    if (argc >= 2) {
+        // Get the elements vector.
+        MElements *elements = MElements::New(ins);
+        current->add(elements);
+
+        // Store all values, no need to initialize the length after each as
+        // jsop_initelem_dense is doing because we do not expect to bailout
+        // because the memory is supposed to be allocated by now.
+        MConstant *id = NULL;
+        for (uint32_t i = 0; i < initLength; i++) {
+            id = MConstant::New(Int32Value(i));
+            current->add(id);
+
+            MStoreElement *store = MStoreElement::New(elements, id, argv[i + 1]);
+            current->add(store);
+        }
+
+        // Update the length.
+        MSetInitializedLength *length = MSetInitializedLength::New(elements, id);
+        current->add(length);
+
+        if (!resumeAfter(length))
+            return InliningStatus_Error;
+    }
+
     return InliningStatus_Inlined;
 }
 
