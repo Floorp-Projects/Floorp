@@ -287,7 +287,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     }
 
     // Bounds check failure.
-    masm.bind(&boundscheck);
+    masm.bind(&boundsCheck);
     {
         masm.setupAlignedABICall(0);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
