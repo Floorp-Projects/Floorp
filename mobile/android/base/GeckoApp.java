@@ -12,7 +12,6 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
-import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.ui.PanZoomController;
 
 import java.io.*;
@@ -234,14 +233,6 @@ abstract public class GeckoApp
                     // nothing
                 }
             }
-        }
-
-        // we don't support Honeycomb
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
-            Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
-        {
-            Log.w(LOGTAG, "Blocking plugins because of Honeycomb");
-            return new String[0];
         }
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
@@ -1613,51 +1604,6 @@ abstract public class GeckoApp
                 }
             });
     }
-
-    public Surface createSurface() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return null;
-
-        SurfaceTextureLayer layer = SurfaceTextureLayer.create();
-        if (layer == null)
-            return null;
-
-        Surface surface = layer.getSurface();
-        tab.addPluginLayer(surface, layer);
-        return surface;
-    }
-
-    public void destroySurface(Surface surface) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        Layer layer = tab.removePluginLayer(surface);
-        hidePluginLayer(layer);
-    }
-
-    public void showSurface(Surface surface, int x, int y,
-                            int w, int h, boolean inverted, boolean blend) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        LayerView layerView = mLayerController.getView();
-        SurfaceTextureLayer layer = (SurfaceTextureLayer)tab.getPluginLayer(surface);
-        if (layer == null)
-            return;
-
-        layer.update(new Rect(x, y, x + w, y + h), inverted, blend);
-        layerView.addLayer(layer);
-
-        // FIXME: shouldn't be necessary, layer will request
-        // one when it gets first frame
-        layerView.requestRender();
-    }
     
     private void hidePluginLayer(Layer layer) {
         LayerView layerView = mLayerController.getView();
@@ -1669,19 +1615,6 @@ abstract public class GeckoApp
         LayerView layerView = mLayerController.getView();
         layerView.addLayer(layer);
         layerView.requestRender();
-    }
-
-    public void hideSurface(Surface surface) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        Layer layer = tab.getPluginLayer(surface);
-        if (layer == null)
-            return;
-
-        hidePluginLayer(layer);
     }
 
     public void requestRender() {

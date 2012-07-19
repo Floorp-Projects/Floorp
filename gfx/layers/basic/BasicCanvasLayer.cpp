@@ -387,7 +387,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     if (!handle) {
       handle = mGLContext->CreateSharedHandle(flags);
       if (handle) {
-        mBackBuffer = SharedTextureDescriptor(flags, handle, mBounds.Size());
+        mBackBuffer = SharedTextureDescriptor(flags, handle, mBounds.Size(), false);
       }
     }
     if (handle) {

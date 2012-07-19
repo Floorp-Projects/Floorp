@@ -145,6 +145,7 @@ public class GeckoAppShell
     public static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native Message getNextMessageFromQueue(MessageQueue queue);
+    public static native void onSurfaceTextureFrameAvailable(SurfaceTexture surfaceTexture, int id);
 
     public static void registerGlobalExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -1681,35 +1682,6 @@ public class GeckoAppShell
         GeckoApp.mAppContext.removePluginView(view, isFullScreen);
     }
 
-    public static Surface createSurface() {
-        Log.i(LOGTAG, "createSurface");
-        return GeckoApp.mAppContext.createSurface();
-    }
-
-    public static void showSurface(Surface surface,
-                                   int x, int y,
-                                   int w, int h,
-                                   boolean inverted,
-                                   boolean blend)
-    {
-        Log.i(LOGTAG, "showSurface:" + surface + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " inverted: " + inverted + " blend: " + blend);
-        try {
-            GeckoApp.mAppContext.showSurface(surface, x, y, w, h, inverted, blend);
-        } catch (Exception e) {
-            Log.i(LOGTAG, "Error in showSurface:", e);
-        }
-    }
-
-    public static void hideSurface(Surface surface) {
-        Log.i(LOGTAG, "hideSurface:" + surface);
-        GeckoApp.mAppContext.hideSurface(surface);
-    }
-
-    public static void destroySurface(Surface surface) {
-        Log.i(LOGTAG, "destroySurface:" + surface);
-        GeckoApp.mAppContext.destroySurface(surface);
-    }
-
     public static Class<?> loadPluginClass(String className, String libName) {
         Log.i(LOGTAG, "in loadPluginClass... attempting to access className, then libName.....");
         Log.i(LOGTAG, "className: " + className);
@@ -2275,6 +2247,17 @@ public class GeckoAppShell
         return data;
     }
 
+    public static void registerSurfaceTextureFrameListener(SurfaceTexture surfaceTexture, final int id) {
+        surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                GeckoAppShell.onSurfaceTextureFrameAvailable(surfaceTexture, id);
+            }
+        });
+    }
+
+    public static void unregisterSurfaceTextureFrameListener(SurfaceTexture surfaceTexture) {
+        surfaceTexture.setOnFrameAvailableListener(null);
+    }
 }
 
 class ScreenshotHandler implements Runnable {

@@ -3251,10 +3251,14 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_CORE_NATIVE_ENGINE          0x305B
 #define LOCAL_EGL_READ                        0x305A
 #define LOCAL_EGL_DRAW                        0x3059
+#define LOCAL_EGL_BAD_PARAMETER               0x300C
 #define LOCAL_EGL_CONTEXT_LOST                0x300E
 
 // EGL_KHR_gl_texture_2D_image
 #define LOCAL_EGL_GL_TEXTURE_2D               0x30B1
+
+// OES_EGL_image_external
+#define LOCAL_GL_TEXTURE_EXTERNAL             0x8D65
 
 // EGL_KHR_fence_sync
 #define LOCAL_EGL_SYNC_FENCE                  0x30F9
