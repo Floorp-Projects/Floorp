@@ -73,8 +73,7 @@ class nsXULPrototypeAttribute
 {
 public:
     nsXULPrototypeAttribute()
-        : mName(nsGkAtoms::id),  // XXX this is a hack, but names have to have a value
-          mEventHandler(nsnull)
+        : mName(nsGkAtoms::id)  // XXX this is a hack, but names have to have a value
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
         MOZ_COUNT_CTOR(nsXULPrototypeAttribute);
@@ -84,53 +83,10 @@ public:
 
     nsAttrName mName;
     nsAttrValue mValue;
-    // mEventHandler is only valid for the language ID specified in the
-    // containing nsXULPrototypeElement.  We would ideally use
-    // nsScriptObjectHolder, but want to avoid the extra lang ID.
-    JSObject* mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-    /**
-      If enough attributes, on average, are event handlers, it pays to keep
-      mEventHandler here, instead of maintaining a separate mapping in each
-      nsXULElement associating those mName values with their mEventHandlers.
-      Assume we don't need to keep mNameSpaceID along with mName in such an
-      event-handler-only name-to-function-pointer mapping.
-
-      Let
-        minAttrSize  = sizeof(mNodeInof) + sizeof(mValue)
-        mappingSize  = sizeof(mNodeInfo) + sizeof(mEventHandler)
-        elemOverhead = nElems * sizeof(MappingPtr)
-
-      Then
-        nAttrs * minAttrSize + nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (minAttrSize + mappingSize - sizeof(mNodeInfo))
-      which simplifies to
-        nEventHandlers * mappingSize + elemOverhead
-        > nAttrs * (mappingSize - sizeof(mNodeInfo))
-      or
-        nEventHandlers + (nElems * sizeof(MappingPtr)) / mappingSize
-        > nAttrs * (1 - sizeof(mNodeInfo) / mappingSize)
-
-      If nsCOMPtr and all other pointers are the same size, this reduces to
-        nEventHandlers + nElems / 2 > nAttrs / 2
-
-      To measure how many attributes are event handlers, compile XUL source
-      with XUL_PROTOTYPE_ATTRIBUTE_METERING and watch the counters below.
-      Plug into the above relation -- if true, it pays to put mEventHandler
-      in nsXULPrototypeAttribute rather than to keep a separate mapping.
-
-      Recent numbers after opening four browser windows:
-        nElems 3537, nAttrs 2528, nEventHandlers 1042
-      giving 1042 + 3537/2 > 2528/2 or 2810 > 1264.
-
-      As it happens, mEventHandler also makes this struct power-of-2 sized,
-      8 words on most architectures, which makes for strength-reduced array
-      index-to-pointer calculations.
-     */
     static PRUint32   gNumElements;
     static PRUint32   gNumAttributes;
-    static PRUint32   gNumEventHandlers;
     static PRUint32   gNumCacheTests;
     static PRUint32   gNumCacheHits;
     static PRUint32   gNumCacheSets;
@@ -142,9 +98,7 @@ public:
 /**
 
   A prototype content model element that holds the "primordial" values
-  that have been parsed from the original XUL document. A
-  'lightweight' nsXULElement may delegate its representation to this
-  structure, which is shared.
+  that have been parsed from the original XUL document.
 
  */
 
@@ -194,11 +148,10 @@ public:
     nsXULPrototypeElement()
         : nsXULPrototypeNode(eType_Element),
           mNumAttributes(0),
-          mAttributes(nsnull),
           mHasIdAttribute(false),
           mHasClassAttribute(false),
           mHasStyleAttribute(false),
-          mHoldsScriptObject(false)
+          mAttributes(nsnull)
     {
     }
 
@@ -238,14 +191,11 @@ public:
 
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
-    PRUint32                 mNumAttributes;
+    PRUint32                 mNumAttributes:29;
+    PRUint32                 mHasIdAttribute:1;
+    PRUint32                 mHasClassAttribute:1;
+    PRUint32                 mHasStyleAttribute:1;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
-    
-    bool                     mHasIdAttribute:1;
-    bool                     mHasClassAttribute:1;
-    bool                     mHasStyleAttribute:1;
-    bool                     mHoldsScriptObject:1;
-
 };
 
 class nsXULDocument;

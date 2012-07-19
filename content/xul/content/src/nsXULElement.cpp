@@ -113,7 +113,6 @@ static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
-PRUint32             nsXULPrototypeAttribute::gNumEventHandlers;
 PRUint32             nsXULPrototypeAttribute::gNumCacheTests;
 PRUint32             nsXULPrototypeAttribute::gNumCacheHits;
 PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
@@ -1854,19 +1853,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeNode)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXULPrototypeNode)
-    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
-        nsXULPrototypeElement *elem =
-            static_cast<nsXULPrototypeElement*>(tmp);
-        if (elem->mHoldsScriptObject) {
-            PRUint32 i;
-            for (i = 0; i < elem->mNumAttributes; ++i) {
-                JSObject* handler = elem->mAttributes[i].mEventHandler;
-                NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(handler,
-                                                           "mAttributes[i].mEventHandler")
-            }
-        }
-    }
-    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+    if (tmp->mType == nsXULPrototypeNode::eType_Script) {
         nsXULPrototypeScript *script =
             static_cast<nsXULPrototypeScript*>(tmp);
         NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(script->mScriptObject.mObject,
@@ -2162,10 +2149,6 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 void
 nsXULPrototypeElement::Unlink()
 {
-    if (mHoldsScriptObject) {
-        nsContentUtils::DropJSObjects(this);
-        mHoldsScriptObject = false;
-    }
     mNumAttributes = 0;
     delete[] mAttributes;
     mAttributes = nsnull;
