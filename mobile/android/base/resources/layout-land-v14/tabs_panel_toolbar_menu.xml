@@ -27,7 +27,7 @@
 
         <LinearLayout android:layout_width="fill_parent"
                       android:layout_height="fill_parent"
-                      android:layout_marginRight="13dip">
+                      android:layout_marginRight="8dip">
 
             <TextView android:id="@+id/title"
                       android:layout_width="wrap_content"
@@ -49,11 +49,11 @@
                          android:visibility="gone"/>
 
             <ImageButton android:id="@+id/add_tab"
-                         android:layout_width="65dip"
+                         android:layout_width="70dip"
                          android:layout_height="@dimen/browser_toolbar_height"
                          android:gravity="center_vertical"
                          android:paddingLeft="10dip"
-                         android:paddingRight="35dip"
+                         android:paddingRight="40dip"
                          android:src="@drawable/tab_new"
                          android:contentDescription="@string/new_tab"
                          android:background="@drawable/tab_new_button"/>
