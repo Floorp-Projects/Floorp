@@ -1,4 +1,4 @@
-// Iterating over non-iterable values throws a TypeError.
+// The Set constructor throws TypeError when passed a non-iterable argument.
 
 load(libdir + "asserts.js");
 
@@ -8,7 +8,7 @@ var misc = [
     {}, {x: 1}, Math, isNaN,
     Object.create(null),
     argsobj(0, 1, 2),
-    null, undefined,
+    null,
     true, 0, 3.1416,
     new Boolean(true), new Number(0),
     {iterator: function () { return undefined; }},
@@ -17,12 +17,7 @@ var misc = [
     {iterator: function () { return 17; }},
 ];
 
-for (var i = 0; i < misc.length; i++) {
-    let v = misc[i];
-    var testfn = function () {
-        for (var _ of v)
-            throw 'FAIL';
-        throw 'BAD';
-    };
-    assertThrowsInstanceOf(testfn, TypeError);
+for (var v of misc) {
+    assertThrowsInstanceOf(function () { Set(v); }, TypeError);
+    assertThrowsInstanceOf(function () { Map(v); }, TypeError);
 }

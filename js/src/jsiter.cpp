@@ -610,6 +610,9 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 
         if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, NULL, vp))
             return false;
+
+        if (!ToObject(cx, vp))
+            return false;
         return true;
     }
 
