@@ -461,11 +461,14 @@ public class GeckoInputConnection
         mUpdateExtract.partialStartOffset = 0;
         mUpdateExtract.partialEndOffset = oldEnd;
 
-        // Faster to not query for selection
-        mUpdateExtract.selectionStart = newEnd;
-        mUpdateExtract.selectionEnd = newEnd;
+        String updatedText = (newEnd > text.length() ? text : text.substring(0, newEnd));
+        int updatedTextLength = updatedText.length();
 
-        mUpdateExtract.text = text.substring(0, newEnd);
+        // Faster to not query for selection
+        mUpdateExtract.selectionStart = updatedTextLength;
+        mUpdateExtract.selectionEnd = updatedTextLength;
+
+        mUpdateExtract.text = updatedText;
         mUpdateExtract.startOffset = 0;
 
         imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
@@ -1324,9 +1327,12 @@ private static final class DebugGeckoInputConnection extends GeckoInputConnectio
                                     int start, int oldEnd, int newEnd) {
         // notifyTextChange() call is posted to UI thread from notifyIMEChange().
         GeckoApp.assertOnUiThread();
-        Log.d(LOGTAG, String.format(
-                      "IME: >notifyTextChange(\"%s\", start=%d, oldEnd=%d, newEnd=%d)",
-                      text, start, oldEnd, newEnd));
+        String msg = String.format("IME: >notifyTextChange(\"%s\", start=%d, oldEnd=%d, newEnd=%d)",
+                                   text, start, oldEnd, newEnd);
+        Log.d(LOGTAG, msg);
+        if (start < 0 || oldEnd < start || newEnd < start || newEnd > text.length()) {
+            throw new IllegalArgumentException("BUG! " + msg);
+        }
         super.notifyTextChange(imm, text, start, oldEnd, newEnd);
     }
 
