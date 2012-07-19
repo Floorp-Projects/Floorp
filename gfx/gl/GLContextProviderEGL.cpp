@@ -424,6 +424,22 @@ public:
 #endif
     }
 
+    bool UnbindExternalBuffer(GLuint texture)
+    {
+#if defined(MOZ_WIDGET_GONK)
+        fActiveTexture(LOCAL_GL_TEXTURE0);
+        fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+        fTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
+                    LOCAL_GL_RGBA,
+                    1, 1, 0,
+                    LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
+                    nsnull);
+        return true;
+#else
+        return false;
+#endif
+    }
+
     bool MakeCurrentImpl(bool aForce = false) {
         bool succeeded = true;
 
@@ -1412,13 +1428,7 @@ public:
         if (mGraphicBuffer != nsnull) {
             // Unset the EGLImage target so that we don't get clashing locks
             mGLContext->MakeCurrent(true);
-            mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
-            mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, 0);
-            if (sEGLLibrary.fGetError() != LOCAL_EGL_SUCCESS) {
-                LOG("Could not set image target texture. ERROR (0x%04x)", sEGLLibrary.fGetError());
-                return false;
-            }
+            mGLContext->UnbindExternalBuffer(mTexture);
 
             void *vaddr;
             if (mGraphicBuffer->lock(GraphicBuffer::USAGE_SW_READ_OFTEN |
