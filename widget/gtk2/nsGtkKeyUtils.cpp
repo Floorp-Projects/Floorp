@@ -56,12 +56,8 @@ static const KeyPair kKeyPairs[] = {
     { NS_VK_CONTROL,    GDK_Control_R },
     { NS_VK_ALT,        GDK_Alt_L },
     { NS_VK_ALT,        GDK_Alt_R },
-
-    // NS_VK_META is used for Command key of Mac.  It's a modifier key for
-    // shortcut keys like Ctrl key on GTK or Windows.  So, it's really different
-    // from GTK's META key, we shouldn't use it on GTK.
-    // { NS_VK_META,       GDK_Meta_L },
-    // { NS_VK_META,       GDK_Meta_R },
+    { NS_VK_META,       GDK_Meta_L },
+    { NS_VK_META,       GDK_Meta_R },
 
     // Assume that Super or Hyper is always mapped to physical Win key.
     { NS_VK_WIN,        GDK_Super_L },
@@ -378,8 +374,16 @@ KeymapWrapper::InitBySystemSettings()
 
     // Note that two or more modifiers may use one modifier flag.  E.g.,
     // on Ubuntu 10.10, Alt and Meta share the Mod1 in default settings.
-    //  And also Super and Hyper share the Mod4.
+    // And also Super and Hyper share the Mod4. In such cases, we need to
+    // decide which modifier flag means one of DOM modifiers.
 
+    // mod[0] is Modifier introduced by Mod1.
+    Modifier mod[5];
+    PRInt32 foundLevel[5];
+    for (PRUint32 i = 0; i < ArrayLength(mod); i++) {
+        mod[i] = NOT_MODIFIER;
+        foundLevel[i] = PR_INT32_MAX;
+    }
     const PRUint32 map_size = 8 * xmodmap->max_keypermod;
     for (PRUint32 i = 0; i < map_size; i++) {
         KeyCode keycode = xmodmap->modifiermap[i];
@@ -400,44 +404,85 @@ KeymapWrapper::InitBySystemSettings()
             xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
         const PRUint32 bit = i / xmodmap->max_keypermod;
         modifierKey->mMask |= 1 << bit;
+
+        // We need to know the meaning of Mod1, Mod2, Mod3, Mod4 and Mod5.
+        // Let's skip if current map is for others.
+        if (bit < 3) {
+            continue;
+        }
+
+        const PRInt32 modIndex = bit - 3;
         for (PRInt32 j = 0; j < keysyms_per_keycode; j++) {
             Modifier modifier = GetModifierForGDKKeyval(syms[j]);
             PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
                 ("KeymapWrapper(%p): InitBySystemSettings, "
-                 "    bit=%d, j=%d, syms[j]=%s(0x%X), modifier=%s",
-                 this, bit, j, gdk_keyval_name(syms[j]), syms[j],
+                 "    Mod%d, j=%d, syms[j]=%s(0x%X), modifier=%s",
+                 this, modIndex + 1, j, gdk_keyval_name(syms[j]), syms[j],
                  GetModifierName(modifier)));
 
-            ModifierIndex index;
             switch (modifier) {
-                case NUM_LOCK:
-                    index = INDEX_NUM_LOCK;
+                case NOT_MODIFIER:
+                    // Don't overwrite the stored information with
+                    // NOT_MODIFIER.
                     break;
-                case SCROLL_LOCK:
-                    index = INDEX_SCROLL_LOCK;
-                    break;
-                case ALT:
-                    index = INDEX_ALT;
-                    break;
-                case SUPER:
-                    index = INDEX_SUPER;
-                    break;
-                case HYPER:
-                    index = INDEX_HYPER;
-                    break;
-                case META:
-                    index = INDEX_META;
-                    break;
-                case ALTGR:
-                    index = INDEX_ALTGR;
+                case CAPS_LOCK:
+                case SHIFT:
+                case CTRL:
+                    // Ignore the modifiers defined in GDK spec. They shouldn't
+                    // be mapped to Mod1-5 because they must not work on native
+                    // GTK applications.
                     break;
                 default:
-                    // NOTE: We always use GDK_SHIFT_MASK, GDK_CONTROL_MASK and
-                    //       GDK_LOCK_MASK for SHIFT, CTRL and CAPS_LOCK.
-                    //       This is standard manners of GTK application.
-                    continue;
+                    // If new modifier is found in higher level than stored
+                    // value, we don't need to overwrite it.
+                    if (j > foundLevel[modIndex]) {
+                        break;
+                    }
+                    // If new modifier is more important than stored value,
+                    // we should overwrite it with new modifier.
+                    if (j == foundLevel[modIndex]) {
+                        mod[modIndex] = NS_MIN(modifier, mod[modIndex]);
+                        break;
+                    }
+                    foundLevel[modIndex] = j;
+                    mod[modIndex] = modifier;
+                    break;
             }
-            mModifierMasks[index] |= 1 << bit;
+        }
+    }
+
+    for (PRUint32 i = 0; i < COUNT_OF_MODIFIER_INDEX; i++) {
+        Modifier modifier;
+        switch (i) {
+            case INDEX_NUM_LOCK:
+                modifier = NUM_LOCK;
+                break;
+            case INDEX_SCROLL_LOCK:
+                modifier = SCROLL_LOCK;
+                break;
+            case INDEX_ALT:
+                modifier = ALT;
+                break;
+            case INDEX_META:
+                modifier = META;
+                break;
+            case INDEX_SUPER:
+                modifier = SUPER;
+                break;
+            case INDEX_HYPER:
+                modifier = HYPER;
+                break;
+            case INDEX_ALTGR:
+                modifier = ALTGR;
+                break;
+            default:
+                MOZ_NOT_REACHED("All indexes must be handled here");
+                break;
+        }
+        for (PRUint32 j = 0; j < ArrayLength(mod); j++) {
+            if (modifier == mod[j]) {
+                mModifierMasks[i] |= 1 << (j + 3);
+            }
         }
     }
 
@@ -534,6 +579,9 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
     if (keymapWrapper->AreModifiersActive(ALT, aModifierState)) {
         aInputEvent.modifiers |= MODIFIER_ALT;
     }
+    if (keymapWrapper->AreModifiersActive(META, aModifierState)) {
+        aInputEvent.modifiers |= MODIFIER_META;
+    }
     if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
         keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
         aInputEvent.modifiers |= MODIFIER_OS;
@@ -554,11 +602,13 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
     PR_LOG(gKeymapWrapperLog, PR_LOG_DEBUG,
         ("KeymapWrapper(%p): InitInputEvent, aModifierState=0x%08X, "
          "aInputEvent.modifiers=0x%04X (Shift: %s, Control: %s, Alt: %s, "
-         "OS: %s, AltGr: %s, CapsLock: %s, NumLock: %s, ScrollLock: %s)",
+         "Meta: %s, OS: %s, AltGr: %s, "
+         "CapsLock: %s, NumLock: %s, ScrollLock: %s)",
          keymapWrapper, aModifierState, aInputEvent.modifiers,
          GetBoolName(aInputEvent.modifiers & MODIFIER_SHIFT),
          GetBoolName(aInputEvent.modifiers & MODIFIER_CONTROL),
          GetBoolName(aInputEvent.modifiers & MODIFIER_ALT),
+         GetBoolName(aInputEvent.modifiers & MODIFIER_META),
          GetBoolName(aInputEvent.modifiers & MODIFIER_OS),
          GetBoolName(aInputEvent.modifiers & MODIFIER_ALTGRAPH),
          GetBoolName(aInputEvent.modifiers & MODIFIER_CAPSLOCK),
@@ -616,7 +666,17 @@ KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
         if (GetModifierForGDKKeyval(keyvalWithoutModifier)) {
             keyval = keyvalWithoutModifier;
         }
-        return GetDOMKeyCodeFromKeyPairs(keyval);
+        // Note that the modifier keycode and activating or deactivating
+        // modifier flag may be mismatched, but it's okay.  If a DOM key
+        // event handler is testing a keydown event, it's more likely being
+        // used to test which key is being pressed than to test which
+        // modifier will become active.  So, if we computed DOM keycode
+        // from modifier flag which were changing by the physical key, then
+        // there would be no other way for the user to generate the original
+        // keycode.
+        PRUint32 DOMKeyCode = GetDOMKeyCodeFromKeyPairs(keyval);
+        NS_ASSERTION(DOMKeyCode, "All modifier keys must have a DOM keycode");
+        return DOMKeyCode;
     }
 
     // If the key isn't printable, let's look at the key pairs.
@@ -1126,9 +1186,11 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     // If the event causes inputting a character, keyCode must be zero.
     aKeyEvent.keyCode = 0;
 
-    // If Ctrl or Alt or Meta is pressed, we need to append the key details
-    // for handling shortcut key.  Otherwise, we have no additional work.
-    if (!aKeyEvent.IsControl() && !aKeyEvent.IsAlt() && !aKeyEvent.IsMeta()) {
+    // If Ctrl or Alt or Meta or OS is pressed, we need to append the key
+    // details for handling shortcut key.  Otherwise, we have no additional
+    // work.
+    if (!aKeyEvent.IsControl() && !aKeyEvent.IsAlt() &&
+        !aKeyEvent.IsMeta() && !aKeyEvent.IsOS()) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
             ("KeymapWrapper(%p): InitKeypressEvent, "
              "keyCode=0x%02X, charCode=0x%08X",

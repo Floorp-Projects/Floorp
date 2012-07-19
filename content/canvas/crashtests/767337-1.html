@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="500" height="1000">
+</canvas>
+<script>
+var ctxt = document.getElementById('c').getContext('2d');
+for (var k = 0; k < 100; ++j) {
+  for (var j = 0; j < 10; ++j) {
+    for (var i = 0; i < 1000; ++i) {
+      gradient = ctxt.createLinearGradient(0,0,200,i);
+      gradient.addColorStop(0,'black');
+      gradient.addColorStop(1,'rgba(0, 255*k/100, 0, 0.1)');
+      ctxt.fillStyle = gradient;
+      ctxt.fillRect(j*50, 2*i, 50, 2);
+    }
+  }
+}
+</script>
+</body>
+</html>

@@ -53,7 +53,7 @@ private:
   RecentBadCert &operator=(const RecentBadCert &other) MOZ_DELETE;
 };
 
-class nsRecentBadCertsService : public nsIRecentBadCertsService
+class nsRecentBadCertsService MOZ_FINAL : public nsIRecentBadCertsService
 {
 public:
   NS_DECL_ISUPPORTS

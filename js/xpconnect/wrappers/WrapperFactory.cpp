@@ -540,4 +540,40 @@ WrapperFactory::WrapComponentsObject(JSContext *cx, JSObject *obj)
     return wrapperObj;
 }
 
+JSObject *
+WrapperFactory::WrapForSameCompartmentXray(JSContext *cx, JSObject *obj)
+{
+    // We should be same-compartment here.
+    MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
+
+    // Sort out what kind of Xray we can do. If we can't Xray, bail.
+    XrayType type = GetXrayType(obj);
+    if (type == NotXray)
+        return NULL;
+
+    // Select the appropriate proxy handler.
+    Wrapper *wrapper = NULL;
+    if (type == XrayForWrappedNative)
+        wrapper = &XrayWrapper<DirectWrapper>::singleton;
+    else if (type == XrayForDOMProxyObject)
+        wrapper = &XrayWrapper<DirectWrapper, ProxyXrayTraits>::singleton;
+    else if (type == XrayForDOMObject)
+        wrapper = &XrayWrapper<DirectWrapper, DOMXrayTraits>::singleton;
+    else
+        MOZ_NOT_REACHED("Bad Xray type");
+
+    // Make the Xray.
+    JSObject *parent = JS_GetGlobalForObject(cx, obj);
+    JSObject *wrapperObj = Wrapper::New(cx, obj, NULL, parent, wrapper);
+    if (!wrapperObj)
+        return NULL;
+
+    // Make the holder.
+    JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, parent);
+    if (!xrayHolder)
+        return nsnull;
+    js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
+    return wrapperObj;
+}
+
 }

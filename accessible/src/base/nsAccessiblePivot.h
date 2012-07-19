@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsTObserverArray.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 class Accessible;
 class nsIAccessibleTraversalRule;
@@ -23,7 +24,7 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 0x26)
 /**
  * Class represents an accessible pivot.
  */
-class nsAccessiblePivot: public nsIAccessiblePivot
+class nsAccessiblePivot MOZ_FINAL : public nsIAccessiblePivot
 {
 public:
   nsAccessiblePivot(Accessible* aRoot);

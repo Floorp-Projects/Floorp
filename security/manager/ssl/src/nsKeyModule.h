@@ -7,6 +7,7 @@
 
 #include "nsIKeyModule.h"
 #include "pk11pub.h"
+#include "mozilla/Attributes.h"
 
 #define NS_KEYMODULEOBJECT_CLASSNAME "Key Object Component"
 /* eae599aa-ecef-49c6-a8af-6ddcc6feb484 */
@@ -21,7 +22,7 @@
 #define NS_KEYMODULEOBJECTFACTORY_CONTRACTID \
 "@mozilla.org/security/keyobjectfactory;1"
 
-class nsKeyObject : public nsIKeyObject
+class nsKeyObject MOZ_FINAL : public nsIKeyObject
 {
 public:
   nsKeyObject();
@@ -48,7 +49,7 @@ private:
 };
 
 
-class nsKeyObjectFactory : public nsIKeyObjectFactory
+class nsKeyObjectFactory MOZ_FINAL : public nsIKeyObjectFactory
 {
 public:
   nsKeyObjectFactory();

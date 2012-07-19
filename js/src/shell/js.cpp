@@ -1729,9 +1729,6 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
 
 #undef SHOW_FLAG
 
-        if (fun->isNullClosure())
-            Sprint(sp, " NULL_CLOSURE");
-
         Sprint(sp, "\n");
     }
 

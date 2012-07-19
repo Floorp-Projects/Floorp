@@ -290,7 +290,7 @@ PuppetWidget::GetLayerManager(PLayersChild* aShadowManager,
     // The backend hint is a temporary placeholder until Azure, when
     // all content-process layer managers will be BasicLayerManagers.
 #if defined(MOZ_ENABLE_D3D10_LAYER)
-    if (LayerManager::LAYERS_D3D10 == aBackendHint) {
+    if (mozilla::layers::LAYERS_D3D10 == aBackendHint) {
       nsRefPtr<LayerManagerD3D10> m = new LayerManagerD3D10(this);
       m->AsShadowForwarder()->SetShadowManager(aShadowManager);
       if (m->Initialize()) {
@@ -498,7 +498,7 @@ PuppetWidget::DispatchPaintEvent()
                          nsCAutoString("PuppetWidget"), nsnull);
 #endif
 
-    if (LayerManager::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
+    if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
       DispatchEvent(&event, status);
     } else {
       nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);

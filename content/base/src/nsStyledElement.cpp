@@ -193,15 +193,6 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
 nsIDOMCSSStyleDeclaration*
 nsStyledElementNotElementCSSInlineStyle::GetStyle(nsresult* retval)
 {
-  nsXULElement* xulElement = nsXULElement::FromContent(this);
-  if (xulElement) {
-    nsresult rv = xulElement->EnsureLocalStyle();
-    if (NS_FAILED(rv)) {
-      *retval = rv;
-      return nsnull;
-    }
-  }
-    
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mStyle) {

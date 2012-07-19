@@ -93,6 +93,8 @@ interface nsIPermissionManager : nsISupports
    * Add permission information for a given principal.
    * It is internally calling the other add() method using the nsIURI from the
    * principal.
+   * Passing a system principal will be a no-op because they will always be
+   * granted permissions.
    */
   void addFromPrincipal(in nsIPrincipal principal, in string typed,
                         in PRUint32 permission,
@@ -116,6 +118,8 @@ interface nsIPermissionManager : nsISupports
   /**
    * Remove permission information for a given principal.
    * This is internally calling remove() with the host from the principal's URI.
+   * Passing system principal will be a no-op because we never add them to the
+   * database.
    */
   void removeFromPrincipal(in nsIPrincipal principal, in string type);
 
@@ -136,6 +140,7 @@ interface nsIPermissionManager : nsISupports
 
   /**
    * Test whether the principal has the permission to perform a given action.
+   * System principals will always have permissions granted.
    */
   PRUint32 testPermissionFromPrincipal(in nsIPrincipal principal,
                                        in string type);
@@ -153,6 +158,7 @@ interface nsIPermissionManager : nsISupports
 
   /**
    * See testExactPermission() above.
+   * System principals will always have permissions granted.
    */
   PRUint32 testExactPermissionFromPrincipal(in nsIPrincipal principal,
                                             in string type);
