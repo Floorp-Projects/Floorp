@@ -877,76 +877,112 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                            const nsAttrValue* aValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None) {
-        // XXX UnsetAttr handles more attributes than we do. See bug 233642.
-
-        // Add popup and event listeners. We can't call AddListenerFor since
-        // the attribute isn't set yet.
-        MaybeAddPopupListener(aName);
-        if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL) && aValue) {
-            if (aValue->Type() == nsAttrValue::eString) {
-                AddScriptEventListener(aName, aValue->GetStringValue(), true);
-            } else {
-                nsAutoString body;
-                aValue->ToString(body);
-                AddScriptEventListener(aName, body, true);
-            }
-        }
-
-        // Hide chrome if needed
-        if (mNodeInfo->Equals(nsGkAtoms::window) && aValue) {
-            if (aName == nsGkAtoms::hidechrome) {
-                HideWindowChrome(
-                  aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-            }
-            else if (aName == nsGkAtoms::chromemargin) {
-                SetChromeMargins(aValue);
-            }
-        }
-
-        // title, (in)activetitlebarcolor and drawintitlebar are settable on
-        // any root node (windows, dialogs, etc)
-        nsIDocument *document = GetCurrentDoc();
-        if (document && document->GetRootElement() == this) {
-            if (aName == nsGkAtoms::title) {
-                document->NotifyPossibleTitleChange(false);
-            }
-            else if ((aName == nsGkAtoms::activetitlebarcolor ||
-                      aName == nsGkAtoms::inactivetitlebarcolor) && aValue) {
-                nscolor color = NS_RGBA(0, 0, 0, 0);
-                if (aValue->Type() == nsAttrValue::eColor) {
-                    aValue->GetColorValue(color);
+        if (aValue) {
+            // Add popup and event listeners. We can't call AddListenerFor since
+            // the attribute isn't set yet.
+            MaybeAddPopupListener(aName);
+            if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL)) {
+                if (aValue->Type() == nsAttrValue::eString) {
+                    AddScriptEventListener(aName, aValue->GetStringValue(), true);
                 } else {
-                    nsAutoString tmp;
-                    nsAttrValue attrValue;
-                    aValue->ToString(tmp);
-                    attrValue.ParseColor(tmp);
-                    attrValue.GetColorValue(color);
-                }
-                SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
-            }
-            else if (aName == nsGkAtoms::drawintitlebar) {
-                SetDrawsInTitlebar(aValue &&
-                    aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-            }
-            else if (aName == nsGkAtoms::localedir) {
-                // if the localedir changed on the root element, reset the document direction
-                nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
-                if (xuldoc) {
-                    xuldoc->ResetDocumentDirection();
+                    nsAutoString body;
+                    aValue->ToString(body);
+                    AddScriptEventListener(aName, body, true);
                 }
             }
-            else if (aName == nsGkAtoms::lwtheme ||
-                     aName == nsGkAtoms::lwthemetextcolor) {
-                // if the lwtheme changed, make sure to reset the document lwtheme cache
-                nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
-                if (xuldoc) {
-                    xuldoc->ResetDocumentLWTheme();
+    
+            // Hide chrome if needed
+            if (mNodeInfo->Equals(nsGkAtoms::window)) {
+                if (aName == nsGkAtoms::hidechrome) {
+                    HideWindowChrome(
+                      aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+                }
+                else if (aName == nsGkAtoms::chromemargin) {
+                    SetChromeMargins(aValue);
                 }
             }
-        }
-
-        if (aName == nsGkAtoms::src && document) {
-            LoadSrc();
+    
+            // title, (in)activetitlebarcolor and drawintitlebar are settable on
+            // any root node (windows, dialogs, etc)
+            nsIDocument *document = GetCurrentDoc();
+            if (document && document->GetRootElement() == this) {
+                if (aName == nsGkAtoms::title) {
+                    document->NotifyPossibleTitleChange(false);
+                }
+                else if ((aName == nsGkAtoms::activetitlebarcolor ||
+                          aName == nsGkAtoms::inactivetitlebarcolor)) {
+                    nscolor color = NS_RGBA(0, 0, 0, 0);
+                    if (aValue->Type() == nsAttrValue::eColor) {
+                        aValue->GetColorValue(color);
+                    } else {
+                        nsAutoString tmp;
+                        nsAttrValue attrValue;
+                        aValue->ToString(tmp);
+                        attrValue.ParseColor(tmp);
+                        attrValue.GetColorValue(color);
+                    }
+                    SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
+                }
+                else if (aName == nsGkAtoms::drawintitlebar) {
+                    SetDrawsInTitlebar(
+                        aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+                }
+                else if (aName == nsGkAtoms::localedir) {
+                    // if the localedir changed on the root element, reset the document direction
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
+                    if (xuldoc) {
+                        xuldoc->ResetDocumentDirection();
+                    }
+                }
+                else if (aName == nsGkAtoms::lwtheme ||
+                         aName == nsGkAtoms::lwthemetextcolor) {
+                    // if the lwtheme changed, make sure to reset the document lwtheme cache
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
+                    if (xuldoc) {
+                        xuldoc->ResetDocumentLWTheme();
+                    }
+                }
+            }
+    
+            if (aName == nsGkAtoms::src && document) {
+                LoadSrc();
+            }
+        } else  {
+            if (mNodeInfo->Equals(nsGkAtoms::window)) {
+                if (aName == nsGkAtoms::hidechrome) {
+                    HideWindowChrome(false);
+                }
+                else if (aName == nsGkAtoms::chromemargin) {
+                    ResetChromeMargins();
+                }
+            }
+    
+            nsIDocument* doc = GetCurrentDoc();
+            if (doc && doc->GetRootElement() == this) {
+                if ((aName == nsGkAtoms::activetitlebarcolor ||
+                     aName == nsGkAtoms::inactivetitlebarcolor)) {
+                    // Use 0, 0, 0, 0 as the "none" color.
+                    SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
+                }
+                else if (aName == nsGkAtoms::localedir) {
+                    // if the localedir changed on the root element, reset the document direction
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+                    if (xuldoc) {
+                        xuldoc->ResetDocumentDirection();
+                    }
+                }
+                else if ((aName == nsGkAtoms::lwtheme ||
+                          aName == nsGkAtoms::lwthemetextcolor)) {
+                    // if the lwtheme changed, make sure to restyle appropriately
+                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+                    if (xuldoc) {
+                        xuldoc->ResetDocumentLWTheme();
+                    }
+                }
+                else if (aName == nsGkAtoms::drawintitlebar) {
+                    SetDrawsInTitlebar(false);
+                }
+            }
         }
 
         // XXX need to check if they're changing an event handler: if
@@ -971,157 +1007,6 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
     }
 
     return true;
-}
-
-nsresult
-nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
-{
-    // This doesn't call BeforeSetAttr/AfterSetAttr for now.
-    
-    NS_ASSERTION(nsnull != aName, "must have attribute name");
-    nsresult rv;
-
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-    bool isId = false;
-    if (aName == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
-      // Have to do this before clearing flag. See RemoveFromIdTable
-      RemoveFromIdTable();
-      isId = true;
-    }
-
-    PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID);
-    if (index < 0) {
-        return NS_OK;
-    }
-
-    nsAutoString oldValue;
-    GetAttr(aNameSpaceID, aName, oldValue);
-
-    if (aNotify) {
-        nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
-                                         nsIDOMMutationEvent::REMOVAL);
-    }
-
-    bool hasMutationListeners = aNotify &&
-        nsContentUtils::HasMutationListeners(this,
-            NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
-
-    nsCOMPtr<nsIDOMAttr> attrNode;
-    if (hasMutationListeners) {
-        nsAutoString ns;
-        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-        GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName),
-                                   getter_AddRefs(attrNode));
-    }
-
-    nsDOMSlots *slots = GetExistingDOMSlots();
-    if (slots && slots->mAttributeMap) {
-      slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);
-    }
-
-    // The id-handling code, and in the future possibly other code, need to
-    // react to unexpected attribute changes.
-    nsMutationGuard::DidMutate();
-
-    nsAttrValue ignored;
-    rv = mAttrsAndChildren.RemoveAttrAt(index, ignored);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXX if the RemoveAttrAt() call fails, we might end up having removed
-    // the attribute from the attribute map even though the attribute is still
-    // on the element
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=296205
-
-    // Deal with modification of magical attributes that side-effect
-    // other things.
-    // XXX Know how to remove POPUP event listeners when an attribute is unset?
-
-    if (isId) {
-        ClearHasID();
-    }
-
-    if (aNameSpaceID == kNameSpaceID_None) {
-        if (mNodeInfo->Equals(nsGkAtoms::window)) {
-            if (aName == nsGkAtoms::hidechrome) {
-                HideWindowChrome(false);
-            }
-            else if (aName == nsGkAtoms::chromemargin) {
-                ResetChromeMargins();
-            }
-        }
-
-        if (doc && doc->GetRootElement() == this) {
-            if ((aName == nsGkAtoms::activetitlebarcolor ||
-                 aName == nsGkAtoms::inactivetitlebarcolor)) {
-                // Use 0, 0, 0, 0 as the "none" color.
-                SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
-            }
-            else if (aName == nsGkAtoms::localedir) {
-                // if the localedir changed on the root element, reset the document direction
-                nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-                if (xuldoc) {
-                    xuldoc->ResetDocumentDirection();
-                }
-            }
-            else if ((aName == nsGkAtoms::lwtheme ||
-                      aName == nsGkAtoms::lwthemetextcolor)) {
-                // if the lwtheme changed, make sure to restyle appropriately
-                nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-                if (xuldoc) {
-                    xuldoc->ResetDocumentLWTheme();
-                }
-            }
-            else if (aName == nsGkAtoms::drawintitlebar) {
-                SetDrawsInTitlebar(false);
-            }
-        }
-
-        // If the accesskey attribute is removed, unregister it here
-        // Also see nsXULLabelFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
-        if (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control) {
-            UnregisterAccessKey(oldValue);
-        }
-
-        // Check to see if the OBSERVES attribute is being unset.  If so, we
-        // need to remove our broadcaster goop completely.
-        if (doc && (aName == nsGkAtoms::observes ||
-                          aName == nsGkAtoms::command)) {
-            RemoveBroadcaster(oldValue);
-        }
-    }
-
-    if (doc) {
-        nsRefPtr<nsXBLBinding> binding =
-            doc->BindingManager()->GetBinding(this);
-        if (binding)
-            binding->AttributeChanged(aName, aNameSpaceID, true, aNotify);
-
-    }
-
-    UpdateState(aNotify);
-
-    if (aNotify) {
-        nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                      nsIDOMMutationEvent::REMOVAL);
-    }
-
-    if (hasMutationListeners) {
-        nsMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
-
-        mutation.mRelatedNode = attrNode;
-        mutation.mAttrName = aName;
-
-        if (!oldValue.IsEmpty())
-          mutation.mPrevAttrValue = do_GetAtom(oldValue);
-        mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
-
-        mozAutoSubtreeModified subtree(OwnerDoc(), this);
-        (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
-    }
-
-    return NS_OK;
 }
 
 void
