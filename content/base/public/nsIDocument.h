@@ -1185,6 +1185,11 @@ public:
     return mLoadedAsData;
   }
 
+  bool IsLoadedAsInteractiveData()
+  {
+    return mLoadedAsInteractiveData;
+  }
+
   bool MayStartLayout()
   {
     return mMayStartLayout;
@@ -1769,6 +1774,11 @@ protected:
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
   bool mLoadedAsData;
+
+  // This flag is only set in nsXMLDocument, for e.g. documents used in XBL. We
+  // don't want animations to play in such documents, so we need to store the
+  // flag here so that we can check it in nsDocument::GetAnimationController.
+  bool mLoadedAsInteractiveData;
 
   // If true, whoever is creating the document has gotten it to the
   // point where it's safe to start layout on it.
