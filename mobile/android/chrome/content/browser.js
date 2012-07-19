@@ -1441,10 +1441,13 @@ var NativeWindow = {
 };
 
 var SelectionHandler = {
-  // Keeps track of data about the dimensions of the selection
+  HANDLE_TYPE_START: "START",
+  HANDLE_TYPE_END: "END",
+
+  // Keeps track of data about the dimensions of the selection. Coordinates
+  // stored here are relative to the _view window.
   cache: null,
   _active: false,
-  _viewOffset: null,
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1457,39 +1460,20 @@ var SelectionHandler = {
     this._viewRef = Cu.getWeakReference(aView);
   },
 
+  get _cwu() {
+    return BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                                    getInterface(Ci.nsIDOMWindowUtils);
+  },
+
   _isRTL: false,
-
-  // The DIV elements for the start/end handles
-  get _start() {
-    if (this._startRef)
-      return this._startRef.get();
-    return null;
-  },
-
-  set _start(aElement) {
-    this._startRef = Cu.getWeakReference(aElement);
-  },
-
-  get _end() {
-    if (this._endRef)
-      return this._endRef.get();
-    return null;
-  },
-
-  set _end(aElement) {
-    this._endRef = Cu.getWeakReference(aElement);
-  },
-
-  // Units in pixels
-  HANDLE_WIDTH: 45,
-  HANDLE_HEIGHT: 66,
-  HANDLE_PADDING: 20,
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Window:Resize", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "after-viewport-change", false);
+    Services.obs.addObserver(this, "TextSelection:Move", false);
+    Services.obs.addObserver(this, "TextSelection:Position", false);
   },
 
   uninit: function sh_uninit() {
@@ -1497,6 +1481,8 @@ var SelectionHandler = {
     Services.obs.removeObserver(this, "Window:Resize");
     Services.obs.removeObserver(this, "Tab:Selected");
     Services.obs.removeObserver(this, "after-viewport-change");
+    Services.obs.removeObserver(this, "TextSelection:Move");
+    Services.obs.removeObserver(this, "TextSelection:Position");
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
@@ -1517,15 +1503,48 @@ var SelectionHandler = {
         break;
       }
       case "after-viewport-change": {
-        let zoom = BrowserApp.selectedTab.getViewport().zoom;
-        if (zoom != this._viewOffset.zoom) {
-          this._viewOffset.zoom = zoom;
-          this.updateCacheForSelection();
-          this.updateViewOffsetScroll();
-          this.positionHandles(true);
-        }
+        // Update the cache and reposition the handles after the viewport
+        // changes (e.g. panning, zooming).
+        this.updateCacheForSelection();
+        this.positionHandles();
         break;
       }
+      case "TextSelection:Move": {
+        let data = JSON.parse(aData);
+        this.moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
+        break;
+      }
+      case "TextSelection:Position": {
+        let data = JSON.parse(aData);
+
+        // Reverse the handles if necessary.
+        let selectionReversed = this.updateCacheForSelection(data.handleType == this.HANDLE_TYPE_START);
+        if (selectionReversed) {
+          // Re-send mouse events to update the selection corresponding to the new handles.
+          if (this._isRTL) {
+            this._sendMouseEvents(this.cache.end.x, this.cache.end.y, false);
+            this._sendMouseEvents(this.cache.start.x, this.cache.start.y, true);
+          } else {
+            this._sendMouseEvents(this.cache.start.x, this.cache.start.y, false);
+            this._sendMouseEvents(this.cache.end.x, this.cache.end.y, true);
+          }
+        }
+
+        // Position the handles to align with the edges of the selection.
+        this.positionHandles();
+        break;
+      }
+    }
+  },
+
+  handleEvent: function sh_handleEvent(aEvent) {
+    if (!this._active)
+      return;
+
+    switch (aEvent.type) {
+      case "pagehide":
+        this.endSelection();
+        break;
     }
   },
 
@@ -1550,24 +1569,16 @@ var SelectionHandler = {
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
+    this._view.addEventListener("pagehide", this, false);
     this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
-
-    let computedStyle = this._view.getComputedStyle(this._view.document.documentElement);
-    this._viewOffset = { top: parseInt(computedStyle.getPropertyValue("margin-top").replace("px", "")),
-                         left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")),
-                         zoom: BrowserApp.selectedTab.getViewport().zoom };
-    this.updateViewOffsetScroll();
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
     let selection = this._view.getSelection();
     selection.removeAllRanges();
 
-    // Position the caret using a fake mouse click
-    let cwu = BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                                                       getInterface(Ci.nsIDOMWindowUtils);
-    cwu.sendMouseEventToWindow("mousedown", aX, aY, 0, 0, 0, true);
-    cwu.sendMouseEventToWindow("mouseup", aX, aY, 0, 0, 0, true);
+    // Position the caret using a fake mouse click sent to the top-level window
+    this._sendMouseEvents(aX, aY, false);
 
     try {
       let selectionController = this._view.QueryInterface(Ci.nsIInterfaceRequestor).
@@ -1630,7 +1641,7 @@ var SelectionHandler = {
                                              QueryInterface(Ci.nsISelectionController);
         selectionController.selectAll();
         this.updateCacheForSelection();
-        this.positionHandles(false);
+        this.positionHandles();
         break;
       }
       case COPY: {
@@ -1651,90 +1662,41 @@ var SelectionHandler = {
     }
   },
 
-  // aX/aY are in top-level window browser coordinates
+  // Moves the ends of the selection in the page. aX/aY are in top-level window
+  // browser coordinates.
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    // Update the handle position as it's dragged. aX/aY correspond to the left/top of
-    // the handle elements, but the cached x/y correspond to the corners of the selection
-    // area, so we need to adjust the points accordingly.
+    // Update the handle position as it's dragged.
     if (aIsStartHandle) {
-      this.cache.start.x = aX + this.HANDLE_PADDING + this.HANDLE_WIDTH / this._viewOffset.zoom;
+      this.cache.start.x = aX;
       this.cache.start.y = aY;
-      this.positionStartHandle();
     } else {
-      this.cache.end.x = aX + this.HANDLE_PADDING;
+      this.cache.end.x = aX;
       this.cache.end.y = aY;
-      this.positionEndHandle();
     }
-
-    let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // The handles work the same on both LTR and RTL pages, but the underlying selection
     // works differently, so we need to reverse how we send mouse events on RTL pages.
     if (this._isRTL) {
       // Position the caret at the end handle using a fake mouse click
       if (!aIsStartHandle)
-        this._sendEndMouseEvents(cwu, false);
+        this._sendMouseEvents(this.cache.end.x, this.cache.end.y, false);
 
       // Selects text between the carat and the start handle using a fake shift+click
-      this._sendStartMouseEvents(cwu, true);
+      this._sendMouseEvents(this.cache.start.x, this.cache.start.y, true);
     } else {
       // Position the caret at the start handle using a fake mouse click
       if (aIsStartHandle)
-        this._sendStartMouseEvents(cwu, false);
+        this._sendMouseEvents(this.cache.start.x, this.cache.start.y, false);
 
       // Selects text between the carat and the end handle using a fake shift+click
-      this._sendEndMouseEvents(cwu, true);
-    }
-
-    // Update the cached selection area after firing the mouse events
-    let selectionReversed = this.updateCacheForSelection(aIsStartHandle);
-
-    // Reverse the handles if necessary
-    if (selectionReversed) {
-      let oldStart = this._start;
-      let oldEnd = this._end;
-
-      oldStart.setAttribute("anonid", "selection-handle-end");
-      oldEnd.setAttribute("anonid", "selection-handle-start");
-
-      this._start = oldEnd;
-      this._end = oldStart;
-
-      // Re-send mouse events to update the selection corresponding to the new handles
-      if (this._isRTL) {
-        this._sendEndMouseEvents(cwu, false);
-        this._sendStartMouseEvents(cwu, true);
-      } else {
-        this._sendStartMouseEvents(cwu, false);
-        this._sendEndMouseEvents(cwu, true);
-      }
+      this._sendMouseEvents( this.cache.end.x, this.cache.end.y, true);
     }
   },
 
-  _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu, useShift) {
-    let x = this.cache.start.x;
-    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = this.cache.start.y - 1;
-
-    this._sendMouseEvents(cwu, useShift, x, y);
-  },
-
-  _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu, useShift) {
-    let x = this.cache.end.x;
-    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    let y = this.cache.end.y - 1;
-
-    this._sendMouseEvents(cwu, useShift, x, y);
-  },
-
-  _sendMouseEvents: function sh_sendMouseEvents(cwu, useShift, x, y) {
-    let element = cwu.elementFromPoint(x, y, false, true);
-    // Don't send mouse events to the other handle
-    if (element instanceof Ci.nsIDOMHTMLHtmlElement)
-      return;
-
-    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
-    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+  _sendMouseEvents: function sh_sendMouseEvents(aX, aY, useShift) {
+    // Send mouse event 1px too high to prevent selection from entering the line below where it should be
+    this._cwu.sendMouseEventToWindow("mousedown", aX, aY - 1, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+    this._cwu.sendMouseEventToWindow("mouseup", aX, aY - 1, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1769,15 +1731,15 @@ var SelectionHandler = {
       }
     }
 
-    this._isRTL = false;
+    this._view.removeEventListener("pagehide", this, false);
     this._view = null;
-    this._viewOffset = null;
+    this._isRTL = false;
     this.cache = null;
 
     return selectedText;
   },
 
-  _pointInSelection: function sh_pointInSelection(aX, aY) {
+  _getViewOffset: function sh_getViewOffset() {
     let offset = { x: 0, y: 0 };
     let win = this._view;
 
@@ -1790,6 +1752,11 @@ var SelectionHandler = {
       win = win.parent;
     }
 
+    return offset;
+  },
+
+  _pointInSelection: function sh_pointInSelection(aX, aY) {
+    let offset = this._getViewOffset();
     let rangeRect = this._view.getSelection().getRangeAt(0).getBoundingClientRect();
     let radius = ElementTouchHelper.getTouchRadius();
     return (aX - offset.x > rangeRect.left - radius.left &&
@@ -1812,149 +1779,43 @@ var SelectionHandler = {
                           (!aIsStartHandle && (start.y < this.cache.start.y || (start.y == this.cache.start.y && start.x < this.cache.start.x)));
     }
 
-    this.cache.start.x = start.x;
-    this.cache.start.y = start.y;
-    this.cache.end.x = end.x;
-    this.cache.end.y = end.y;
+    this.cache.start = start;
+    this.cache.end = end;
 
     return selectionReversed;
   },
 
-  updateViewOffsetScroll: function sh_updateViewOffsetScroll() {
-    let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let scrollX = {}, scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-
-    this._viewOffset.scrollX = scrollX.value;
-    this._viewOffset.scrollY = scrollY.value;
-  },
-
-  // Adjust start/end positions to account for scroll, and account for the dimensions of the
-  // handle elements to ensure the handles point exactly at the ends of the selection.
-  positionHandles: function sh_positionHandles(adjustScale) {
-    if (adjustScale) { 
-      let heightWidth = "height:" + this.HANDLE_HEIGHT / this._viewOffset.zoom + "px;" + 
-                        "width:" + this.HANDLE_WIDTH / this._viewOffset.zoom + "px;";
-      this.positionStartHandle(this._start.style.cssText + heightWidth);
-      this.positionEndHandle(this._end.style.cssText + heightWidth);
-    } else {
-      this.positionStartHandle();
-      this.positionEndHandle();
-    }
-  },
-
-  positionStartHandle: function sh_positionStartHandle(startCss) {
-    if (!startCss)
-      startCss = this._start.style.cssText;
-
-    let left = this.cache.start.x + this._viewOffset.scrollX - this._viewOffset.left -
-               this.HANDLE_PADDING - this.HANDLE_WIDTH / this._viewOffset.zoom;
-    let top = this.cache.start.y + this._viewOffset.scrollY - this._viewOffset.top;
-
-    this._start.style.cssText = startCss + "left:" + left + "px;" + "top:" + top + "px;";
-  },
-
-  positionEndHandle: function sh_positionEndHandle(endCss) {
-    if (!endCss)
-      endCss = this._end.style.cssText;
-
-    let left = this.cache.end.x + this._viewOffset.scrollX - this._viewOffset.left - this.HANDLE_PADDING;
-    let top = this.cache.end.y + this._viewOffset.scrollY - this._viewOffset.top;
-
-    this._end.style.cssText = endCss + "left:" + left + "px;" + "top:" + top + "px;";
+  positionHandles: function sh_positionHandles() {
+    // Translate coordinates to account for selections in sub-frames. We can't cache
+    // this because the top-level page may have scrolled since selection started.
+    let offset = this._getViewOffset();
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:PositionHandles",
+        startLeft: this.cache.start.x + offset.x,
+        startTop: this.cache.start.y + offset.y,
+        endLeft: this.cache.end.x + offset.x,
+        endTop: this.cache.end.y + offset.y
+      }
+    });
   },
 
   showHandles: function sh_showHandles() {
-    let doc = this._view.document;
-    this._start = doc.getAnonymousElementByAttribute(doc.documentElement, "anonid", "selection-handle-start");
-    this._end = doc.getAnonymousElementByAttribute(doc.documentElement, "anonid", "selection-handle-end");
+    this.positionHandles();
 
-    if (!this._start || !this._end) {
-      Cu.reportError("SelectionHandler.showHandles: Couldn't find anonymous handle elements");
-      this.endSelection();
-      return;
-    }
-
-    this.positionHandles(true);
-
-    this._start.setAttribute("showing", "true");
-    this._end.setAttribute("showing", "true");
-
-    this._start.addEventListener("touchend", this, true);
-    this._end.addEventListener("touchend", this, true);
-
-    this._start.addEventListener("touchstart", this, true);
-    this._end.addEventListener("touchstart", this, true);
-
-    this._view.addEventListener("pagehide", this, false);
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:ShowHandles"
+      }
+    });
   },
 
   hideHandles: function sh_hideHandles() {
-    if (!this._start || !this._end)
-      return;
-
-    this._start.removeAttribute("showing");
-    this._end.removeAttribute("showing");
-
-    this._start.removeEventListener("touchstart", this, true);
-    this._end.removeEventListener("touchstart", this, true);
-
-    this._start.removeEventListener("touchend", this, true);
-    this._end.removeEventListener("touchend", this, true);
-
-    this._start = null;
-    this._end = null;
-
-    this._view.removeEventListener("pagehide", this, false);
-  },
-
-  _touchId: null,
-  _touchDelta: null,
-
-  handleEvent: function sh_handleEvent(aEvent) {
-    let isStartHandle = (aEvent.target == this._start);
-
-    switch (aEvent.type) {
-      case "touchstart":
-        aEvent.preventDefault();
-
-        let touch = aEvent.changedTouches[0];
-        this._touchId = touch.identifier;
-
-        // Keep track of what part of the handle the user touched
-        let rect = aEvent.target.getBoundingClientRect();
-        this._touchDelta = { x: touch.clientX - rect.left,
-                             y: touch.clientY - rect.top };
-
-        // Update the cache in case the page panned since last touch
-        this.updateCacheForSelection();
-        this.updateViewOffsetScroll();
-
-        aEvent.target.addEventListener("touchmove", this, false);
-        break;
-
-      case "touchend":
-        aEvent.target.removeEventListener("touchmove", this, false);
-
-        this._touchId = null;
-        this._touchDelta = null;
-
-        // Adjust the handles to be in the correct spot relative to the text selection
-        this.positionHandles(false);
-        break;
-
-      case "touchmove":
-        touch = aEvent.changedTouches.identifiedTouch(this.touchId);
-
-        // Adjust the touch to account for what part of the handle the user first touched
-        this.moveSelection(isStartHandle, touch.clientX - this._touchDelta.x,
-                                          touch.clientY - this._touchDelta.y);
-        break;
-
-      case "pagehide":
-        this.endSelection();
-        break;
-    }
+    sendMessageToJava({
+      gecko: {
+        type: "TextSelection:HideHandles"
+      }
+    });
   }
 };
 
