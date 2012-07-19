@@ -18,6 +18,7 @@
 
   importScripts("resource://gre/modules/osfile/osfile_shared.jsm");
   importScripts("resource://gre/modules/osfile/osfile_win_back.jsm");
+  importScripts("resource://gre/modules/osfile/ospath_win_back.jsm");
 
   (function(exports) {
      "use strict";
