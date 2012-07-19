@@ -3904,11 +3904,14 @@ var FormAssistant = {
   // autocomplete suggestions
   _currentInputElement: null,
 
+  _isBlocklisted: false,
+
   // Keep track of whether or not an invalid form has been submitted
   _invalidSubmit: false,
 
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
+    Services.obs.addObserver(this, "FormAssist:Blocklisted", false);
     Services.obs.addObserver(this, "FormAssist:Hidden", false);
     Services.obs.addObserver(this, "invalidformsubmit", false);
 
@@ -3921,6 +3924,7 @@ var FormAssistant = {
 
   uninit: function() {
     Services.obs.removeObserver(this, "FormAssist:AutoComplete");
+    Services.obs.removeObserver(this, "FormAssist:Blocklisted");
     Services.obs.removeObserver(this, "FormAssist:Hidden");
     Services.obs.removeObserver(this, "invalidformsubmit");
 
@@ -3942,6 +3946,10 @@ var FormAssistant = {
         event.initEvent("DOMAutoComplete", true, true);
         this._currentInputElement.dispatchEvent(event);
 
+        break;
+
+      case "FormAssist:Blocklisted":
+        this._isBlocklisted = (aData == "true");
         break;
 
       case "FormAssist:Hidden":
@@ -4097,9 +4105,9 @@ var FormAssistant = {
       return false;
 
     // Don't display the form auto-complete popup after the user starts typing
-    // to avoid confusing the IME. See bug 758820 and bug 632744.
-    if (aElement.value.length > 0) {
-        return false;
+    // to avoid confusing somes IME. See bug 758820 and bug 632744.
+    if (this._isBlocklisted && aElement.value.length > 0) {
+      return false;
     }
 
     let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
