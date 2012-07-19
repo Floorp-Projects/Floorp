@@ -1356,6 +1356,8 @@ var NativeWindow = {
       if (aEvent.defaultPrevented)
         return;
 
+      Haptic.performSimpleAction(Haptic.LongPress);
+
       let popupNode = aEvent.originalTarget;
       let title = "";
       if (popupNode.hasAttribute("title")) {
