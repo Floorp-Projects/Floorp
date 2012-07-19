@@ -14,6 +14,7 @@
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
+#include "Element.h"
 #include "nsIMemoryReporter.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -1677,7 +1678,12 @@ public:
     {
         size_t n = 0;
         nsCOMPtr<nsINode> node = do_QueryInterface(static_cast<nsISupports*>(aSupports));
-        if (node && !node->IsInDoc()) {
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=773533#c11 explains
+        // that we have to skip XBL elements because they violate certain
+        // assumptions.  Yuk.
+        if (node && !node->IsInDoc() &&
+            !(node->IsElement() && node->AsElement()->IsInNamespace(kNameSpaceID_XBL)))
+        {
             // This is an orphan node.  If we haven't already handled the
             // sub-tree that this node belongs to, measure the sub-tree's size
             // and then record its root so we don't measure it again.
