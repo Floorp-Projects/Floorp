@@ -159,10 +159,6 @@ FrameWorker.prototype = {
       workerWindow.removeEventListener("load", loadListener);
       // the iframe has loaded the js file as text - first inject the magic
       // port-handling code into the sandbox.
-      function getProtoSource(ob) {
-        let raw = ob.prototype.toSource();
-        return ob.name + ".prototype=" + raw + ";"
-      }
       try {
         Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortBase.jsm", sandbox);
         Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortWorker.js", sandbox);
