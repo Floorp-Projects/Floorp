@@ -242,6 +242,10 @@ var BrowserApp = {
         pinned = window.arguments[4];
     }
 
+    let updated = this.isAppUpdated();
+    if (pinned)
+      WebAppRT.init(updated);
+
     if (url == "about:empty")
       loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
 
@@ -310,10 +314,7 @@ var BrowserApp = {
 #endif
     }
 
-    if (pinned)
-      WebAppRT.init();
-
-    if (this.isAppUpdated())
+    if (updated)
       this.onAppUpdated();
 
     // notify java that gecko has loaded
