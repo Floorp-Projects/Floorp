@@ -24,7 +24,6 @@
 #include "jsscope.h"
 #include "jsstr.h"
 
-#include "js/HashTable.h"
 #include "js/MemoryMetrics.h"
 
 #include "jsatominlines.h"
@@ -146,7 +145,7 @@ Shape::hashify(JSContext *cx)
 Shape **
 ShapeTable::search(jsid id, bool adding)
 {
-    js::HashNumber hash0, hash1, hash2;
+    JSHashNumber hash0, hash1, hash2;
     int sizeLog2;
     Shape *stored, *shape, **spp, **firstRemoved;
     uint32_t sizeMask;
