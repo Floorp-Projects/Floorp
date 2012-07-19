@@ -153,11 +153,6 @@ public:
   virtual void GetScriptLocation(nsACString& aStr) MOZ_OVERRIDE;
   void SetURI(nsIURI* aURI);
 
-  /**
-   * Computes the puny-encoded origin of aURI.
-   */
-  static nsresult GetOriginForURI(nsIURI* aURI, char **aOrigin);
-
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable

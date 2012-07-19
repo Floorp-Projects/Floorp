@@ -2965,9 +2965,9 @@ nsGlobalWindow::GetScriptableParent(nsIDOMWindow** aParent)
     return NS_OK;
   }
 
-  bool isContentBoundary = false;
-  mDocShell->GetIsContentBoundary(&isContentBoundary);
-  if (isContentBoundary) {
+  bool isMozBrowser = false;
+  mDocShell->GetIsBrowserFrame(&isMozBrowser);
+  if (isMozBrowser) {
     nsCOMPtr<nsIDOMWindow> parent = static_cast<nsIDOMWindow*>(this);
     parent.swap(*aParent);
     return NS_OK;
@@ -6446,13 +6446,12 @@ nsGlobalWindow::Close()
 {
   FORWARD_TO_OUTER(Close, (), NS_ERROR_NOT_INITIALIZED);
 
-  bool isContentBoundary = false;
+  bool isMozBrowser = false;
   if (mDocShell) {
-    mDocShell->GetIsContentBoundary(&isContentBoundary);
+    mDocShell->GetIsBrowserFrame(&isMozBrowser);
   }
 
-  if ((!isContentBoundary && IsFrame()) ||
-      !mDocShell || IsInModalState()) {
+  if ((!isMozBrowser && IsFrame()) || !mDocShell || IsInModalState()) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
@@ -6981,9 +6980,9 @@ nsGlobalWindow::GetScriptableFrameElement(nsIDOMElement** aFrameElement)
     return NS_OK;
   }
 
-  bool isContentBoundary = false;
-  mDocShell->GetIsContentBoundary(&isContentBoundary);
-  if (isContentBoundary) {
+  bool isMozBrowser = false;
+  mDocShell->GetIsBrowserFrame(&isMozBrowser);
+  if (isMozBrowser) {
     return NS_OK;
   }
 

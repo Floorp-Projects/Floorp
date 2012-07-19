@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(c98f0f21-fe96-4f06-9978-0a9422a789fa)]
+[scriptable, builtinclass, uuid(89ea9f32-18ec-413b-9e2c-ce9a4c851b1c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -589,64 +589,21 @@ interface nsIDocShell : nsISupports
    */
   void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
 
-  /**
-   * Mark the docshell as a browser frame.
-   * This should be used for <iframe mozbrowser> but not for <iframe mozapp>.
+  /*
+   * Is this docshell a browser frame (i.e., does it correspond to an <iframe
+   * mozbrowser>)?  The frameloader is responsible for setting this property
+   * when it initializes the docshell.
    *
-   * This method should not be called more than once.
-   */
-  void setIsBrowser();
-
-  /**
-   * Returns true iff the docshell is marked as a browser frame.
-   */
-  readonly attribute boolean isBrowserElement;
-
-  /**
-   * Returns true iif the docshell is marked as an app frame.
-   */
-  readonly attribute boolean isApp;
-
-  /**
-   * Returns true iif the docshell is marked as a type that behaves like a
-   * content boundary.
-   */
-  readonly attribute boolean isContentBoundary;
-
-  /**
-   * Returns true iif the docshell is inside a browser element.
-   */
-  readonly attribute boolean isInBrowserElement;
-
-  /**
-   * Returns true iif the docshell is inside an application.
-   * However, it will return false if the docshell is inside a browser element
-   * that is inside an application.
-   */
-  readonly attribute boolean isInApp;
-
-  /**
-   * Returns if the docshell has a docshell that behaves as a content boundary
-   * in his parent hierarchy.
-   */
-  readonly attribute boolean isBelowContentBoundary;
-
-  /**
-   * Set the app id this docshell is associated with. It has to be a valid app
-   * id. If the docshell isn't associated with any app, the value should be
-   * nsIScriptSecurityManager::NO_APP_ID.
-   * However, this is the default value if nothing is set.
+   * If so, this docshell should act like a chrome/content boundary for the
+   * purposes of window.top and window.parent.
    *
-   * This method is [noscript] to reduce the scope. It should be used at very
-   * specific moments.
-   *
-   * Calling setAppId() will mark the frame as an app frame.
+   * See also nsIMozBrowserFrame.
    */
-  [noscript] void setAppId(in unsigned long appId);
+  attribute bool isBrowserFrame;
 
-  /**
-   * Returns the app id of the app the docshell is in.
-   * Returns nsIScriptSecurityManager::NO_APP_ID If the docshell is not in an app.
+  /*
+   * Is this docshell contained in an <iframe mozbrowser>, either directly or
+   * indirectly?
    */
-  readonly attribute unsigned long appId;
+  readonly attribute bool containedInBrowserFrame;
 };

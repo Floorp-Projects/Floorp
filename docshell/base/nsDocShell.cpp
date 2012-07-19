@@ -763,7 +763,6 @@ nsDocShell::nsDocShell():
 #ifdef DEBUG
     mInEnsureScriptEnv(false),
 #endif
-    mAppId(nsIScriptSecurityManager::NO_APP_ID),
     mParentCharsetSource(0)
 {
     mHistoryID = ++gDocshellIDCounter;
@@ -5529,7 +5528,6 @@ nsDocShell::ForceRefreshURI(nsIURI * aURI,
 
 nsresult
 nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
-                                      nsIPrincipal* aPrincipal,
                                       const nsACString & aHeader)
 {
     // Refresh headers are parsed with the following format in mind
@@ -5571,8 +5569,6 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
 
     // when done, seconds is 0 or the given number of seconds
     //            uriAttrib is empty or the URI specified
-    MOZ_ASSERT(aPrincipal);
-
     nsCAutoString uriAttrib;
     PRInt32 seconds = 0;
     bool specifiesSeconds = false;
@@ -5737,8 +5733,9 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
                             (NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv)) {
             rv = securityManager->
-                CheckLoadURIWithPrincipal(aPrincipal, uri,
-                                          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
+                CheckLoadURI(aBaseURI, uri,
+                             nsIScriptSecurityManager::
+                             LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT);
 
             if (NS_SUCCEEDED(rv)) {
                 bool isjs = true;
@@ -5774,16 +5771,8 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
                                             refreshHeader);
 
         if (!refreshHeader.IsEmpty()) {
-            nsCOMPtr<nsIScriptSecurityManager> secMan =
-                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCOMPtr<nsIPrincipal> principal;
-            rv = secMan->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
-            NS_ENSURE_SUCCESS(rv, rv);
-
             SetupReferrerFromChannel(aChannel);
-            rv = SetupRefreshURIFromHeader(mCurrentURI, principal, refreshHeader);
+            rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
             if (NS_SUCCEEDED(rv)) {
                 return NS_REFRESHURI_HEADER_FOUND;
             }
@@ -12024,145 +12013,52 @@ nsDocShell::GetCanExecuteScripts(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetIsBrowser()
+nsDocShell::GetIsBrowserFrame(bool *aOut)
 {
-    if (mIsBrowserFrame) {
-        NS_ERROR("You should not call SetIsBrowser() more than once.");
-        return NS_OK;
-    }
+  NS_ENSURE_ARG_POINTER(aOut);
+  *aOut = mIsBrowserFrame;
+  return NS_OK;
+}
 
-    mIsBrowserFrame = true;
+NS_IMETHODIMP
+nsDocShell::SetIsBrowserFrame(bool aValue)
+{
+  // Disallow transitions from browser frame to not-browser-frame.  Once a
+  // browser frame, always a browser frame.  (Otherwise, observers of
+  // docshell-marked-as-browser-frame would have to distinguish between
+  // newly-created browser frames and frames which went from true to false back
+  // to true.)
+  NS_ENSURE_STATE(!mIsBrowserFrame || aValue);
 
+  bool wasBrowserFrame = mIsBrowserFrame;
+  mIsBrowserFrame = aValue;
+  if (aValue && !wasBrowserFrame) {
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
-        os->NotifyObservers(GetAsSupports(this),
-                            "docshell-marked-as-browser-frame", NULL);
+      os->NotifyObservers(GetAsSupports(this),
+                          "docshell-marked-as-browser-frame", NULL);
     }
-
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
-nsDocShell::FrameType
-nsDocShell::GetInheritedFrameType()
+NS_IMETHODIMP
+nsDocShell::GetContainedInBrowserFrame(bool *aOut)
 {
-    FrameType type = GetFrameType();
+    *aOut = false;
 
-    if (type != eFrameTypeRegular) {
-        return type;
+    if (mIsBrowserFrame) {
+        *aOut = true;
+        return NS_OK;
     }
 
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
     GetSameTypeParent(getter_AddRefs(parentAsItem));
 
     nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
-    if (!parent) {
-        return eFrameTypeRegular;
-    }
-
-    return static_cast<nsDocShell*>(parent.get())->GetInheritedFrameType();
-}
-
-nsDocShell::FrameType
-nsDocShell::GetFrameType()
-{
-    if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
-        return eFrameTypeApp;
-    }
-
-    return mIsBrowserFrame ? eFrameTypeBrowser : eFrameTypeRegular;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
-{
-    *aIsBrowser = (GetFrameType() == eFrameTypeBrowser);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsApp(bool* aIsApp)
-{
-    *aIsApp = (GetFrameType() == eFrameTypeApp);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsContentBoundary(bool* aIsContentBoundary)
-{
-    switch (GetFrameType()) {
-        case eFrameTypeRegular:
-            *aIsContentBoundary = false;
-            break;
-        case eFrameTypeBrowser:
-        case eFrameTypeApp:
-            *aIsContentBoundary = true;
-            break;
+    if (parent) {
+        return parent->GetContainedInBrowserFrame(aOut);
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-    *aIsInBrowserElement = (GetInheritedFrameType() == eFrameTypeBrowser);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsInApp(bool* aIsInApp)
-{
-    *aIsInApp = (GetInheritedFrameType() == eFrameTypeApp);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsBelowContentBoundary(bool* aIsInContentBoundary)
-{
-    switch (GetInheritedFrameType()) {
-        case eFrameTypeRegular:
-            *aIsInContentBoundary = false;
-            break;
-        case eFrameTypeBrowser:
-        case eFrameTypeApp:
-            *aIsInContentBoundary = true;
-            break;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetAppId(PRUint32 aAppId)
-{
-    MOZ_ASSERT(mAppId == nsIScriptSecurityManager::NO_APP_ID);
-    MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-    mAppId = aAppId;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetAppId(PRUint32* aAppId)
-{
-    if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
-        MOZ_ASSERT(GetFrameType() == eFrameTypeApp);
-
-        *aAppId = mAppId;
-        return NS_OK;
-    }
-
-    MOZ_ASSERT(GetFrameType() != eFrameTypeApp);
-
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-    GetSameTypeParent(getter_AddRefs(parentAsItem));
-
-    nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
-    if (!parent) {
-        *aAppId = nsIScriptSecurityManager::NO_APP_ID;
-        return NS_OK;
-    }
-
-    return parent->GetAppId(aAppId);
 }

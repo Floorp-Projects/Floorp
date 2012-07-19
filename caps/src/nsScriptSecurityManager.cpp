@@ -60,7 +60,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "nsIAppsService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1263,6 +1262,25 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     return NS_ERROR_DOM_BAD_URI;
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
+                                      PRUint32 aFlags)
+{
+    // FIXME: bug 327244 -- this function should really die...  Really truly.
+    NS_PRECONDITION(aSourceURI, "CheckLoadURI called with null source URI");
+    NS_ENSURE_ARG_POINTER(aSourceURI);
+
+    // Note: this is not _quite_ right if aSourceURI has
+    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
+    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
+    // really needs to go away....
+    nsCOMPtr<nsIPrincipal> sourcePrincipal;
+    nsresult rv = CreateCodebasePrincipal(aSourceURI,
+                                          getter_AddRefs(sourcePrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return CheckLoadURIWithPrincipal(sourcePrincipal, aTargetURI, aFlags);
+}
+
 /**
  * Helper method to handle cases where a flag passed to
  * CheckLoadURIWithPrincipal means denying loading if the given URI has certain
@@ -1567,6 +1585,30 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
 #endif
     }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
+                                         const nsACString& aTargetURIStr,
+                                         PRUint32 aFlags)
+{
+    // FIXME: bug 327244 -- this function should really die...  Really truly.
+    nsCOMPtr<nsIURI> source;
+    nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr,
+                            nsnull, nsnull, sIOService);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Note: this is not _quite_ right if aSourceURI has
+    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
+    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
+    // really needs to go away....
+    nsCOMPtr<nsIPrincipal> sourcePrincipal;
+    rv = CreateCodebasePrincipal(source,
+                                 getter_AddRefs(sourcePrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return CheckLoadURIStrWithPrincipal(sourcePrincipal, aTargetURIStr,
+                                        aFlags);
 }
 
 NS_IMETHODIMP
@@ -3550,40 +3592,6 @@ nsScriptSecurityManager::InitPrefs()
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetExtendedOrigin(nsIURI* aURI,
-                                           PRUint32 aAppId,
-                                           bool aInMozBrowser,
-                                           nsACString& aExtendedOrigin)
-{
-  MOZ_ASSERT(aURI);
-
-  if (aAppId == UNKNOWN_APP_ID) {
-    aExtendedOrigin.Truncate();
-    return NS_OK;
-  }
-
-  // Fallback.
-  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInMozBrowser) {
-    nsCAutoString origin;
-    nsPrincipal::GetOriginForURI(aURI, getter_Copies(origin));
-
-    aExtendedOrigin.Assign(origin);
-    return NS_OK;
-  }
-
-  nsCAutoString origin;
-  nsPrincipal::GetOriginForURI(aURI, getter_Copies(origin));
-
-  // aExtendedOrigin = origin + " " + aAppId + " " + int(aInMozBrowser)
-  aExtendedOrigin.Assign(origin + NS_LITERAL_CSTRING("@"));
-  aExtendedOrigin.AppendInt(aAppId);
-  aExtendedOrigin.Append(aInMozBrowser ? NS_LITERAL_CSTRING("t")
-                                       : NS_LITERAL_CSTRING("f"));
-
-  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
