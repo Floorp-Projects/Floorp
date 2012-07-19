@@ -10,7 +10,7 @@
  *
  */
 
-[scriptable, uuid(29e950a0-0134-44bc-b947-5e0ee95c8f7e)]
+[scriptable, uuid(42fbd9f6-b12d-47ef-b7a1-02d73c11fe53)]
 interface nsIXPCTestObjectReadOnly : nsISupports {
 	readonly attribute string  strReadOnly;
 	readonly attribute boolean boolReadOnly;
@@ -18,9 +18,10 @@ interface nsIXPCTestObjectReadOnly : nsISupports {
 	readonly attribute long    longReadOnly;
 	readonly attribute float   floatReadOnly;
 	readonly attribute char    charReadOnly;
+	readonly attribute PRTime  timeReadOnly;
 };
 
-[scriptable, uuid(492609a7-2582-436b-b0ef-92e29bb9e143)]
+[scriptable, uuid(f07529b0-a479-4954-aba5-ab3142c6b1cb)]
 interface nsIXPCTestObjectReadWrite : nsISupports {
 	attribute string  stringProperty;
 	attribute boolean booleanProperty;
@@ -28,4 +29,5 @@ interface nsIXPCTestObjectReadWrite : nsISupports {
 	attribute long    longProperty;
 	attribute float   floatProperty;
 	attribute char    charProperty;
+	attribute PRTime  timeProperty;
 };
