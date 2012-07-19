@@ -1109,12 +1109,27 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  bool weAreBrowserFrame = false;
-  bool otherIsBrowserFrame = false;
-  ourDocshell->GetIsBrowserFrame(&weAreBrowserFrame);
-  otherDocshell->GetIsBrowserFrame(&otherIsBrowserFrame);
-  if (weAreBrowserFrame != otherIsBrowserFrame) {
+  bool ourContentBoundary, otherContentBoundary;
+  ourDocshell->GetIsContentBoundary(&ourContentBoundary);
+  otherDocshell->GetIsContentBoundary(&otherContentBoundary);
+  if (ourContentBoundary != otherContentBoundary) {
     return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (ourContentBoundary) {
+    bool ourIsBrowser, otherIsBrowser;
+    ourDocshell->GetIsBrowserElement(&ourIsBrowser);
+    otherDocshell->GetIsBrowserElement(&otherIsBrowser);
+    if (ourIsBrowser != otherIsBrowser) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    bool ourIsApp, otherIsApp;
+    ourDocshell->GetIsApp(&ourIsApp);
+    otherDocshell->GetIsApp(&otherIsApp);
+    if (ourIsApp != otherIsApp) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
 
   if (mInSwap || aOther->mInSwap) {
@@ -1563,7 +1578,7 @@ nsFrameLoader::MaybeCreateDocShell()
   EnsureMessageManager();
 
   if (OwnerIsBrowserFrame()) {
-    mDocShell->SetIsBrowserFrame(true);
+    mDocShell->SetIsBrowser();
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {

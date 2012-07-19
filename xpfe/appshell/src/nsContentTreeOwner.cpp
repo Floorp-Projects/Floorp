@@ -842,12 +842,12 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   // open a modal-type window, we're going to create a new <iframe mozbrowser>
   // and return its window here.
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-  bool inBrowserFrame = false;
+  bool isInContentBoundary = false;
   if (docshell) {
-    docshell->GetContainedInBrowserFrame(&inBrowserFrame);
+    docshell->GetIsBelowContentBoundary(&isInContentBoundary);
   }
 
-  if (inBrowserFrame &&
+  if (isInContentBoundary &&
       !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                         nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
