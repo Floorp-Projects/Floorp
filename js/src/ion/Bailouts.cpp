@@ -335,6 +335,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_RECOMPILE_CHECK;
       case Bailout_BoundsCheck:
         return BAILOUT_RETURN_BOUNDS_CHECK;
+      case Bailout_Invalidate:
+        return BAILOUT_RETURN_INVALIDATE;
     }
 
     JS_NOT_REACHED("bad bailout kind");
@@ -549,17 +551,26 @@ ion::BoundsCheckFailure()
         script->failedBoundsCheck = true;
 
         // Invalidate the script to force a recompile.
-        Vector<types::CompilerOutput> scripts(cx);
-        types::CompilerOutput co(script);
-        if (!scripts.append(co))
-            return BAILOUT_RETURN_FATAL_ERROR;
-
         IonSpew(IonSpew_Invalidate, "Invalidating due to bounds check failure");
 
-        Invalidate(cx->runtime->defaultFreeOp(), scripts);
+        return Invalidate(cx, script);
     }
 
     return true;
+}
+
+uint32
+ion::ForceInvalidation()
+{
+    JSContext *cx = GetIonContext()->cx;
+    JSScript *script = GetBailedJSScript(cx);
+
+    JS_ASSERT(script->hasIonScript());
+    JS_ASSERT(!script->ion->invalidated());
+
+    IonSpew(IonSpew_Invalidate, "Forced invalidation bailout");
+
+    return Invalidate(cx, script);
 }
 
 uint32

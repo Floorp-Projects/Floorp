@@ -254,13 +254,6 @@ LIRGeneratorX86::lowerDivI(MDiv *div)
 
 
 bool
-LIRGeneratorX86::visitGuardShape(MGuardShape *ins)
-{
-    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));
-    return assignSnapshot(guard) && add(guard, ins);
-}
-
-bool
 LIRGeneratorX86::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

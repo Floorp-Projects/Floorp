@@ -140,6 +140,7 @@ static const uint32 BAILOUT_RETURN_TYPE_BARRIER = 3;
 static const uint32 BAILOUT_RETURN_MONITOR = 4;
 static const uint32 BAILOUT_RETURN_RECOMPILE_CHECK = 5;
 static const uint32 BAILOUT_RETURN_BOUNDS_CHECK = 6;
+static const uint32 BAILOUT_RETURN_INVALIDATE = 7;
 
 // Attached to the compartment for easy passing through from ::Bailout to
 // ::ThunkToInterpreter.
@@ -252,6 +253,8 @@ uint32 ReflowTypeInfo(uint32 bailoutResult);
 uint32 RecompileForInlining();
 
 uint32 BoundsCheckFailure();
+
+uint32 ForceInvalidation();
 
 } // namespace ion
 } // namespace js
