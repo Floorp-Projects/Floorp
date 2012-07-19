@@ -225,10 +225,16 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 bool
 LIRGenerator::visitCreateThis(MCreateThis *ins)
 {
-    LCreateThis *lir = new LCreateThis(useRegisterOrConstant(ins->getCallee()),
-                                       useRegisterOrConstant(ins->getPrototype()));
-    
-    return define(lir, ins) && assignSafepoint(lir, ins);
+    // Template objects permit fast initialization.
+    if (ins->hasTemplateObject()) {
+        LCreateThis *lir = new LCreateThis();
+        return define(lir, ins) && assignSafepoint(lir, ins);
+    }
+
+    LCreateThisVM *lir = new LCreateThisVM(useRegisterOrConstant(ins->getCallee()),
+                                           useRegisterOrConstant(ins->getPrototype()));
+
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

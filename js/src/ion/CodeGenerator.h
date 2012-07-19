@@ -57,7 +57,6 @@ namespace ion {
 
 class OutOfLineNewArray;
 class OutOfLineNewObject;
-class OutOfLineCreateThis;
 class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
 class OutOfLineCache;
@@ -122,9 +121,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);
     bool visitNewCallObject(LNewCallObject *lir);
     bool visitInitProp(LInitProp *lir);
-    bool visitCreateThisVMCall(LCreateThis *lir);
     bool visitCreateThis(LCreateThis *lir);
-    bool visitOutOfLineCreateThis(OutOfLineCreateThis *ool);
+    bool visitCreateThisVM(LCreateThisVM *lir);
     bool visitReturnFromCtor(LReturnFromCtor *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
