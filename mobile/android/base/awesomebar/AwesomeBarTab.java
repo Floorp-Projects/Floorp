@@ -33,6 +33,7 @@ abstract public class AwesomeBarTab {
     abstract public boolean   onBackPressed();
     abstract public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo);
 
+    protected View mView = null;
     protected View.OnTouchListener mListListener;
     private AwesomeBarTabs.OnUrlOpenListener mListener;
     private LayoutInflater mInflater = null;
@@ -48,6 +49,8 @@ abstract public class AwesomeBarTab {
 
     public void setListTouchListener(View.OnTouchListener listener) {
         mListListener = listener;
+        if (mView != null)
+            mView.setOnTouchListener(mListListener);
     }
 
     protected class AwesomeEntryViewHolder {
