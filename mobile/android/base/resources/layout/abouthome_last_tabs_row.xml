@@ -39,7 +39,7 @@
               android:textColor="#666666"/>
 
     <View android:layout_width="fill_parent"
-          android:layout_height="2dp"
+          android:layout_height="1dp"
           android:background="@drawable/abouthome_divider"
           android:layout_alignParentBottom="true"/>
 

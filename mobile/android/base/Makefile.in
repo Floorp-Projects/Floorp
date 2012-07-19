@@ -298,9 +298,6 @@ RES_LAYOUT = \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_section.xml \
-  res/layout/abouthome_section_moretext.xml \
-  res/layout/abouthome_section_subtitle.xml \
-  res/layout/abouthome_section_title.xml \
   res/layout/abouthome_remote_tab_row.xml \
   res/layout/abouthome_topsite_item.xml \
   res/layout/validation_message.xml \
@@ -363,7 +360,6 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
-  res/drawable-nodpi/abouthome_topsites_bg.png \
   res/drawable-nodpi/background.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
@@ -869,7 +865,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
   mobile/android/base/resources/drawable/abouthome_divider.xml                  \
   mobile/android/base/resources/drawable/abouthome_sync_box.xml                 \
-  mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \

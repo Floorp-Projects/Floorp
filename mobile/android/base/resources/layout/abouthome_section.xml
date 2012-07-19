@@ -5,15 +5,25 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <view class="org.mozilla.gecko.AboutHomeSection$TitleView"
-          android:id="@+id/title"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"/>
+    <TextView android:id="@+id/title"
+              android:layout_width="fill_parent"
+              android:layout_height="26dip"
+              android:background="#34FFFFFF"
+              android:paddingLeft="12dip"
+              android:textSize="12sp"
+              android:textColor="#000000"
+              android:textStyle="bold"
+              android:gravity="left|center_vertical"/>
 
-    <view class="org.mozilla.gecko.AboutHomeSection$SubTitleView"
-          android:id="@+id/subtitle"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"/>
+    <TextView android:id="@+id/subtitle"
+              android:layout_width="fill_parent"
+              android:layout_height="26dip"
+              android:layout_marginTop="1dip"
+              android:background="#34FFFFFF"
+              android:paddingLeft="12dip"
+              android:textSize="12sp"
+              android:textColor="#666666"
+              android:gravity="left|center_vertical"/>
 
     <LinearLayout android:id="@+id/items_container"
                   android:layout_width="fill_parent"
@@ -21,9 +31,11 @@
                   android:orientation="vertical"
                   android:isScrollContainer="false"/>
 
-    <view class="org.mozilla.gecko.AboutHomeSection$MoreTextView"
-          android:id="@+id/more_text"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"/>
+    <org.mozilla.gecko.LinkTextView android:id="@+id/more_text"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="47dip"
+                                    android:textColor="#22629e"
+                                    android:textSize="12sp"
+                                    android:gravity="center"/>
 
 </merge>
