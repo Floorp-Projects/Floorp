@@ -8,8 +8,9 @@
   <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="run()">
 <p id="display"></p>
+<iframe id="quirks" src="data:text/html,<div id='testnode'></div>"></iframe>
 <div id="content" style="display: none">
 
 <div id="testnode"></div>
@@ -18,42 +19,76 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var gDeclaration = document.getElementById("testnode").style;
+SimpleTest.waitForExplicitFinish();
 
-var gKnownFails = {
-  "pitch-range": [ " -0.01", "100.2", "108", "-3" ],
-  "richness": [ " -0.01", "100.2", "108", "-3" ],
-  "stress": [ " -0.01", "100.2", "108", "-3" ],
-  "volume": [ " -0.01", "100.2", "108", "-3" ]
+function check_not_accepted(decl, property, info, badval)
+{
+  decl.setProperty(property, badval, "");
+
+  is(decl.getPropertyValue(property), "",
+     "invalid value '" + badval + "' not accepted for '" + property +
+     "' property");
+
+  if ("subproperties" in info) {
+    for (var sidx in info.subproperties) {
+      var subprop = info.subproperties[sidx];
+      is(decl.getPropertyValue(subprop), "",
+         "invalid value '" + badval + "' not accepted for '" + property +
+         "' property when testing subproperty '" + subprop + "'");
+    }
+  }
+
+  decl.removeProperty(property);
 }
 
-for (var property in gCSSProperties) {
-  var info = gCSSProperties[property];
-  for (var idx in info.invalid_values) {
-    var badval = info.invalid_values[idx];
+function run()
+{
+  var gDeclaration = document.getElementById("testnode").style;
+  var gQuirksDeclaration = document.getElementById("quirks").contentDocument
+                             .getElementById("testnode").style;
 
-    gDeclaration.setProperty(property, badval, "");
-
-    var func = is;
-    if (property in gKnownFails &&
-        gKnownFails[property].indexOf(badval) != -1)
-      func = todo_is;
-
-    func(gDeclaration.getPropertyValue(property), "",
-         "invalid value '" + badval + "' not accepted for '" + property +
-         "' property");
-
-    if ("subproperties" in info) {
-      for (var sidx in info.subproperties) {
-        var subprop = info.subproperties[sidx];
-        func(gDeclaration.getPropertyValue(subprop), "",
-             "invalid value '" + badval + "' not accepted for '" + property +
-             "' property when testing subproperty '" + subprop + "'");
-      }
+  for (var property in gCSSProperties) {
+    var info = gCSSProperties[property];
+    for (var idx in info.invalid_values) {
+      check_not_accepted(gDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_not_accepted(gQuirksDeclaration, property, info,
+                         info.invalid_values[idx]);
     }
 
-    gDeclaration.removeProperty(property);
+    if ("quirks_values" in info) {
+      for (var quirkval in info.quirks_values) {
+        var standardval = info.quirks_values[quirkval];
+        check_not_accepted(gDeclaration, property, info, quirkval);
+
+        gQuirksDeclaration.setProperty(property, quirkval, "");
+        gDeclaration.setProperty(property, standardval, "");
+        var quirkret = gQuirksDeclaration.getPropertyValue(property);
+        var standardret = gDeclaration.getPropertyValue(property);
+        isnot(quirkret, "", property + ": " + quirkval +
+                            " should be accepted in quirks mode");
+        is(quirkret, standardret, property + ": " + quirkval + " result");
+
+        if ("subproperties" in info) {
+          for (var sidx in info.subproperties) {
+            var subprop = info.subproperties[sidx];
+            var quirksub = gQuirksDeclaration.getPropertyValue(subprop);
+            var standardsub = gDeclaration.getPropertyValue(subprop);
+            isnot(quirksub, "", property + ": " + quirkval +
+                                " should be accepted in quirks mode" +
+                                " when testing subproperty " + subprop);
+            is(quirksub, standardsub, property + ": " + quirkval + " result" +
+                                      " when testing subproperty " + subprop);
+          }
+        }
+
+        gQuirksDeclaration.removeProperty(property);
+        gDeclaration.removeProperty(property);
+      }
+    }
   }
+
+  SimpleTest.finish();
 }
 
 </script>

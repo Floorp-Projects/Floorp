@@ -119,12 +119,17 @@ nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
       if (SVGFrame) {
         NS_ABORT_IF_FALSE(!(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
                           "Check for this explicitly in the |if|, then");
+        bool isFirstReflow = (kid->GetStateBits() & NS_FRAME_FIRST_REFLOW);
         // Remove bits so that ScheduleBoundsUpdate will work:
         kid->RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
                              NS_FRAME_HAS_DIRTY_CHILDREN);
         // No need to invalidate the new kid's old bounds, so we just use
         // nsSVGUtils::ScheduleBoundsUpdate.
         nsSVGUtils::ScheduleBoundsUpdate(kid);
+        if (isFirstReflow) {
+          // Add back the NS_FRAME_FIRST_REFLOW bit:
+          kid->AddStateBits(NS_FRAME_FIRST_REFLOW);
+        }
       }
     }
   }

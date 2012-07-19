@@ -467,17 +467,9 @@
       <handler event="popupshown" phase="target">
         this.setAttribute("panelopen", "true");
       </handler>
-      <handler event="popuphidden" phase="target"><![CDATA[
+      <handler event="popuphidden" phase="target">
         this.removeAttribute("panelopen");
-
-        if (this.state == "closed") {
-          // Destroy the widget to prevent the current state from being rendered
-          // briefly when the panel reopens.
-          this.hidden = true;
-          this.clientHeight; // flush layout
-          this.hidden = false;
-        }
-      ]]></handler>
+      </handler>
     </handlers>
   </binding>
 

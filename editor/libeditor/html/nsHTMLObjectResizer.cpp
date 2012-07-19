@@ -3,32 +3,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLObjectResizer.h"
-
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMText.h"
-
-#include "nsIDOMCSSValue.h"
-#include "nsIDOMCSSPrimitiveValue.h"
-
-#include "nsIContent.h"
-#include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
-#include "nsIEditor.h"
-#include "nsIPresShell.h"
-#include "nsPIDOMWindow.h"
-
-#include "nsHTMLEditor.h"
-#include "nsEditor.h"
-#include "nsEditorUtils.h"
-#include "nsHTMLEditUtils.h"
-
-#include "nsPoint.h"
-
-#include "nsIServiceManager.h"
-#include "mozilla/Preferences.h"
-
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/mozalloc.h"
+#include "nsAString.h"
+#include "nsAlgorithm.h"
+#include "nsAutoPtr.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsEditProperty.h"
+#include "nsEditorUtils.h"
+#include "nsError.h"
+#include "nsHTMLCSSUtils.h"
+#include "nsHTMLEditUtils.h"
+#include "nsHTMLEditor.h"
+#include "nsHTMLObjectResizer.h"
+#include "nsIAtom.h"
+#include "nsIContent.h"
+#include "nsID.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMText.h"
+#include "nsIDocument.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIHTMLObjectResizeListener.h"
+#include "nsIHTMLObjectResizer.h"
+#include "nsIPresShell.h"
+#include "nsISupportsUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
+#include "nsSubstringTuple.h"
+#include "nscore.h"
+#include "prtypes.h"
+
+class nsISelection;
 
 using namespace mozilla;
 

@@ -5,28 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include LayersSurfaces;
 include protocol PCompositor;
 include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
 
 include "gfxipc/ShadowLayerUtils.h";
-
-using gfx3DMatrix;
-using gfxIntSize;
-using gfxPoint;
-using gfxRGBA;
-using nsIntPoint;
-using nsIntRect;
-using nsIntRegion;
-using nsIntSize;
-using mozilla::gfxContentType;
-using mozilla::GraphicsFilterType;
-using mozilla::layers::FrameMetrics;
-using mozilla::layers::MagicGrallocBufferHandle;
-using mozilla::layers::SurfaceDescriptorX11;
-using mozilla::null_t;
-using mozilla::WindowsHandle;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -45,39 +30,7 @@ struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
-
-union MaybeMagicGrallocBufferHandle {
-  MagicGrallocBufferHandle;
-  null_t;
-};
-
-struct SurfaceDescriptorD3D10 {
-  WindowsHandle handle;
-};
-
-struct SurfaceDescriptorGralloc {
-  PGrallocBuffer buffer;
-};
-
-union SurfaceDescriptor {
-  Shmem;
-  SurfaceDescriptorD3D10;
-  SurfaceDescriptorGralloc;
-  SurfaceDescriptorX11;
-};
-
-struct YUVImage {
-  SurfaceDescriptor Ydata;
-  SurfaceDescriptor Udata;
-  SurfaceDescriptor Vdata;
-  nsIntRect picture;
-};
-
-union SharedImage {
-  SurfaceDescriptor;
-  YUVImage;
-  null_t;
-};
+struct OpCreateRefLayer        { PLayer layer; };
 
 struct ThebesBuffer {
   SurfaceDescriptor buffer;
@@ -110,6 +63,7 @@ struct ThebesLayerAttributes {
 struct ContainerLayerAttributes{ FrameMetrics metrics; };
 struct ColorLayerAttributes    { gfxRGBA color; };
 struct CanvasLayerAttributes   { GraphicsFilterType filter; };
+struct RefLayerAttributes      { int64_t id; };
 struct ImageLayerAttributes    {
   GraphicsFilterType filter;
   bool forceSingleTile;
@@ -121,6 +75,7 @@ union SpecificLayerAttributes {
   ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
+  RefLayerAttributes;
   ImageLayerAttributes;
 };
 
@@ -175,6 +130,7 @@ union Edit {
   OpCreateImageLayer;
   OpCreateColorLayer;
   OpCreateCanvasLayer;
+  OpCreateRefLayer;
 
   OpSetLayerAttributes;
 

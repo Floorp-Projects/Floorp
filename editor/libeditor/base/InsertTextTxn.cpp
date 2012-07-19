@@ -3,10 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdio.h>                      // for printf
+
 #include "InsertTextTxn.h"
-#include "nsIDOMCharacterData.h"
-#include "nsISelection.h"
-#include "EditAggregateTxn.h"
+#include "nsAString.h"
+#include "nsDebug.h"                    // for NS_ASSERTION, etc
+#include "nsError.h"                    // for NS_OK, etc
+#include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsISelection.h"               // for nsISelection
+#include "nsISupportsUtils.h"           // for NS_ADDREF_THIS, NS_RELEASE
+#include "nsITransaction.h"             // for nsITransaction
 
 #ifdef DEBUG
 static bool gNoisy = false;

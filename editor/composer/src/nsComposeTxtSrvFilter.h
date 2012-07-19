@@ -6,8 +6,10 @@
 #ifndef nsComposeTxtSrvFilter_h__
 #define nsComposeTxtSrvFilter_h__
 
+#include "nsCOMPtr.h"                   // for nsCOMPtr
+#include "nsIAtom.h"                    // for nsIAtom
+#include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS
 #include "nsITextServicesFilter.h"
-#include "nsIAtom.h"
 
 /**
  * This class implements a filter interface, that enables

@@ -19,11 +19,13 @@ function test() {
 }
 
 function testEcho() {
+  /*
   DeveloperToolbarTest.exec({
     typed: "echo message",
     args: { message: "message" },
     outputMatch: /^message$/,
   });
+  */
 }
 
 function testConsole(tab) {

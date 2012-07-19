@@ -14,7 +14,7 @@ class nsParserBase : public nsISupports
     NS_IMETHOD GetChannel(nsIChannel** aChannel) {
       *aChannel = nsnull;
       return NS_OK;
-    };
+    }
 };
 
 #endif // nsParserBase_h_

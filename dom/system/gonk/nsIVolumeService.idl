@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVolume.idl"
+
+[scriptable, uuid(b31bd379-4bd2-4189-a85b-c0927a266a85)]
+interface nsIVolumeService : nsISupports
+{
+    nsIVolume getVolumeByName(in DOMString volName);
+    nsIVolume getVolumeByPath(in DOMString path);
+};
+
+%{C++
+#define NS_VOLUMESERVICE_CID \
+  {0xb31bd379, 0x4bd2, 0x4189, {0xa8, 0x5b, 0xc0, 0x92, 0x7a, 0x26, 0x6a, 0x85}}
+#define NS_VOLUMESERVICE_CONTRACTID "@mozilla.org/telephony/volume-service;1"
+%}

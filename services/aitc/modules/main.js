@@ -28,13 +28,26 @@ function Aitc() {
     Preferences.get("services.aitc.dashboard.url")
   ).prePath;
 
-  this._manager = new AitcManager(this._init.bind(this));
+  let self = this;
+  this._manager = new AitcManager(function managerDone() {
+    CommonUtils.nextTick(self._init, self);
+  });
 }
 Aitc.prototype = {
   // The goal of the init function is to be ready to activate the AITC
-  // client whenever the user is looking at the dashboard.
-  _init: function init() {
+  // client whenever the user is looking at the dashboard. It also calls
+  // the initialSchedule function on the manager.
+  _init: function _init() {
     let self = this;
+
+    // Do an initial upload.
+    this._manager.initialSchedule(function queueDone(num) {
+      if (num == -1) {
+        self._log.debug("No initial upload was required");
+        return;
+      }
+      self._log.debug(num + " initial apps queued successfully");
+    });
 
     // This is called iff the user is currently looking the dashboard.
     function dashboardLoaded(browser) {

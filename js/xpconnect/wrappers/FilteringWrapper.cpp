@@ -6,7 +6,7 @@
 
 #include "FilteringWrapper.h"
 #include "AccessCheck.h"
-#include "CrossOriginWrapper.h"
+#include "WaiveXrayWrapper.h"
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
 

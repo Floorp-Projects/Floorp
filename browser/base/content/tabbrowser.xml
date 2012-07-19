@@ -3497,7 +3497,7 @@
         if (!ltr)
           newMargin *= -1;
 
-        ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
+        ind.style.transform = "translate(" + Math.round(newMargin) + "px)";
         ind.style.MozMarginStart = (-ind.clientWidth) + "px";
       ]]></handler>
 

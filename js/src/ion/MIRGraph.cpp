@@ -213,13 +213,16 @@ MBasicBlock::inherit(MBasicBlock *pred)
     return true;
 }
 
-bool
-MBasicBlock::inheritNonPredecessor(MBasicBlock *parent, bool inheritStack)
+void
+MBasicBlock::inheritSlots(MBasicBlock *parent)
 {
-    if (inheritStack)
-        stackPosition_ = parent->stackPosition_;
+    stackPosition_ = parent->stackPosition_;
     copySlots(parent);
+}
 
+bool
+MBasicBlock::initEntrySlots()
+{
     // Create a resume point using our initial stack state.
     entryResumePoint_ = MResumePoint::New(this, pc(), callerResumePoint(), MResumePoint::ResumeAt);
     if (!entryResumePoint_)

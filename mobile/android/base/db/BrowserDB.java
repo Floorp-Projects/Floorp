@@ -10,8 +10,6 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
-import org.mozilla.gecko.GeckoProfile;
-
 public class BrowserDB {
     public static String ABOUT_PAGES_URL_FILTER = "about:%";
 

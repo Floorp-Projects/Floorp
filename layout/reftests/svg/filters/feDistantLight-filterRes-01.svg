@@ -13,7 +13,7 @@
       </feDiffuseLighting>
     </filter>
   </defs>
-  <svg clip="rect(1px 1px 48px 48px)">
+  <svg clip="rect(1px 48px 48px 1px)">
     <path d="M0,0 h100 v100 h-100 z" filter="url(#f)"/>
   </svg>
 </svg>

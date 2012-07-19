@@ -5,19 +5,11 @@
 package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
-import java.util.UUID;
-
-import java.util.Random;
 
 public class DBUtils {
     private static final String LOGTAG = "GeckoDBUtils";

@@ -30,7 +30,7 @@ function enumerateSuccess(e) {
 function enumerateFailure(e) {
 }
 
-var cursor = navigator.getDeviceStorage("profile")[0].enumerate();
+var cursor = navigator.getDeviceStorage("testing")[0].enumerate();
 cursor.onsuccess = enumerateSuccess;
 cursor.onerror = enumerateFailure;
 

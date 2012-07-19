@@ -3410,25 +3410,18 @@ EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
+RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
 {
-    jsval arg = JS_ARGV(cx, vp)[0];
-    if (argc == 0 || !JSVAL_IS_BOOLEAN(arg)) {
+    if (argc > 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
-                             "enableSPSProfilingAssertions");
+                             "relaxRootChecks");
         return false;
     }
 
-    static ProfileEntry stack[1000];
-    static uint32_t stack_size = 0;
+#ifdef DEBUG
+    cx->runtime->relaxRootChecks = true;
+#endif
 
-    if (JSVAL_TO_BOOLEAN(arg))
-        SetRuntimeProfilingStack(cx->runtime, stack, &stack_size, 1000);
-    else
-        SetRuntimeProfilingStack(cx->runtime, NULL, NULL, 0);
-    cx->runtime->spsProfiler.enableSlowAssertions(JSVAL_TO_BOOLEAN(arg));
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -3732,10 +3725,11 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
 
-    JS_FN_HELP("enableSPSProfilingAssertions", EnableSPSProfilingAssertions, 1, 0,
-"enableProfilingAssertions(enabled)",
-"  Enables or disables the assertions related to SPS profiling. This is fairly\n"
-"  expensive, so it shouldn't be enabled normally."),
+    JS_FN_HELP("relaxRootChecks", RelaxRootChecks, 0, 0,
+"relaxRootChecks()",
+"  Tone down the frequency with which the dynamic rooting analysis checks for\n"
+"  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
+"  heavily numeric code."),
 
     JS_FS_END
 };

@@ -18,6 +18,12 @@ function MarionetteComponent() {
   this._loaded = false;
   // set up the logger
   this.logger = Log4Moz.repository.getLogger("Marionette");
+  this.logger.level = Log4Moz.Level["All"];
+  let logf = FileUtils.getFile('ProfD', ['marionette.log']);
+  
+  let formatter = new Log4Moz.BasicFormatter();
+  this.logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
+  this.logger.info("MarionetteComponent loaded");
 }
 
 MarionetteComponent.prototype = {
@@ -31,15 +37,12 @@ MarionetteComponent.prototype = {
     let observerService = Services.obs;
     switch (aTopic) {
       case "profile-after-change":
-        if (Services.prefs.prefHasUserValue(MARIONETTE_ENABLED_PREF) && 
-            Services.prefs.getBoolPref(MARIONETTE_ENABLED_PREF)) {
-
-          this.logger.level = Log4Moz.Level["All"];
-          let logf = FileUtils.getFile('ProfD', ['marionette.log']);
-          
-          let formatter = new Log4Moz.BasicFormatter();
-          this.logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
-          this.logger.info("MarionetteComponent loaded");
+        let enabled = false;
+        try {
+          enabled = Services.prefs.getBoolPref(MARIONETTE_ENABLED_PREF);
+        } catch(e) {}
+        if (enabled) {
+          this.logger.info("marionette enabled");
 
           //add observers
           observerService.addObserver(this, "final-ui-startup", false);

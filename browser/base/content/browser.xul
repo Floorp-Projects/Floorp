@@ -182,6 +182,62 @@
       </hbox>
     </panel>
 
+    <panel id="editSharePopup"
+           type="arrow"
+           orient="vertical"
+           ignorekeys="true"
+           hidden="true"
+           onpopupshown="SocialShareButton.panelShown(event);"
+           consumeoutsideclicks="true"
+           level="top">
+      <row id="editSharePopupHeader" align="center">
+        <vbox align="center">
+          <image id="socialUserPortrait" onclick="SocialUI.showProfile();"
+                 aria-label="&social.sharePopup.portrait.arialabel;"/>
+        </vbox>
+        <vbox id="editSharePopupText">
+          <button id="socialUserDisplayName"
+                  oncommand="SocialUI.showProfile();"/>
+          <spacer flex="1"/>
+          <label id="socialUserRecommendedText"
+                 value="&social.sharePopup.shared.label;"/>
+        </vbox>
+      </row>
+      <hbox id="editSharePopupBottomButtons" pack="end">
+#ifdef XP_UNIX
+        <button id="editSharePopupUndoButton"
+                class="editSharePopupBottomButton"
+                label="&social.sharePopup.undo.label;"
+                accesskey="&social.sharePopup.undo.accesskey;"
+                command="Social:UnsharePage"/>
+        <button id="editSharePopupOkButton"
+                class="editSharePopupBottomButton"
+                default="true"
+                autofocus="autofocus"
+                label="&social.sharePopup.ok.label;"
+                accesskey="&social.sharePopup.ok.accesskey;"
+                oncommand="SocialShareButton.dismissSharePopup();"/>
+#else
+        <button id="editSharePopupOkButton"
+                class="editSharePopupBottomButton"
+                default="true"
+                autofocus="autofocus"
+                label="&social.sharePopup.ok.label;"
+                accesskey="&social.sharePopup.ok.accesskey;"
+                oncommand="SocialShareButton.dismissSharePopup();"/>
+        <button id="editSharePopupUndoButton"
+                class="editSharePopupBottomButton"
+                label="&social.sharePopup.undo.label;"
+                accesskey="&social.sharePopup.undo.accesskey;"
+                command="Social:UnsharePage"/>
+#endif
+      </hbox>
+    </panel>
+
+    <panel id="social-notification-panel" type="arrow" hidden="true" noautofocus="true">
+      <browser id="social-notification-browser" type="content" flex="1"/>
+    </panel>
+
     <menupopup id="inspector-node-popup">
       <menuitem id="inspectorHTMLCopyInner"
                 label="&inspectorHTMLCopyInner.label;"
@@ -464,6 +520,7 @@
                  showcommentcolumn="true"
                  showimagecolumn="true"
                  enablehistory="true"
+                 maxrows="6"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
@@ -506,6 +563,12 @@
                    hidden="true"
                    tooltiptext="&pageReportIcon.tooltip;"
                    onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+
+            <label id="share-button-status" collapsed="true" role="status"/>
+            <image id="share-button"
+                   class="urlbar-icon"
+                   hidden="true"
+                   onclick="SocialShareButton.onClick(event);"/>
 
             <image id="star-button"
                    class="urlbar-icon"
@@ -557,6 +620,45 @@
                      ondragexit="homeButtonObserver.onDragExit(event)"
                      onclick="BrowserGoHome(event);"
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
+
+      <toolbaritem id="social-toolbar-button"
+                   class="toolbarbutton-1 chromeclass-toolbar-additional"
+                   removable="false"
+                   title="&socialToolbar.title;"
+                   hidden="true">
+        <hbox id="social-toolbar-button-box" class="social-statusarea-container">
+          <button id="social-provider-image" type="menu">
+            <menupopup id="social-statusarea-popup">
+              <hbox id="social-statusarea-user" pack="left" align="center">
+                <image id="social-statusarea-user-portrait"/>
+                <vbox>
+                  <label id="social-statusarea-notloggedin"
+                         value="&social.notLoggedIn.label;"/>
+                  <button id="social-statusarea-username"
+                          oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
+                </vbox>
+              </hbox>
+            </menupopup>
+          </button>
+          <hbox id="social-status-iconbox" flex="1">
+            <box class="social-notification-icon-container" collapsed="true"
+                     onclick="SocialToolbar.showAmbientPopup(this);">
+              <image class="social-notification-icon-image"/>
+              <box class="social-notification-icon-counter" collapsed="true"/>
+            </box>
+            <box class="social-notification-icon-container" collapsed="true"
+                     onclick="SocialToolbar.showAmbientPopup(this);">
+              <image class="social-notification-icon-image"/>
+              <box class="social-notification-icon-counter" collapsed="true"/>
+            </box>
+            <box class="social-notification-icon-container" collapsed="true"
+                     onclick="SocialToolbar.showAmbientPopup(this);">
+              <image class="social-notification-icon-image"/>
+              <box class="social-notification-icon-counter" collapsed="true"/>
+            </box>
+          </hbox>
+        </hbox>
+      </toolbaritem>
 
       <toolbaritem id="bookmarks-menu-button-container"
                    class="chromeclass-toolbar-additional"

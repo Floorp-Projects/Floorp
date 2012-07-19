@@ -9,8 +9,9 @@
 #include "nsIUrlClassifierUtils.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
+#include "mozilla/Attributes.h"
 
-class nsUrlClassifierUtils : public nsIUrlClassifierUtils
+class nsUrlClassifierUtils MOZ_FINAL : public nsIUrlClassifierUtils
 {
 private:
   /**

@@ -29,5 +29,5 @@ nsresult RawDBusConnection::EstablishDBusConnection() {
 
 void RawDBusConnection::ScopedDBusConnectionPtrTraits::release(DBusConnection* ptr)
 {
-  if(ptr) dbus_connection_unref(ptr);
+  if (ptr) dbus_connection_unref(ptr);
 }

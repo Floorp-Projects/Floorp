@@ -68,6 +68,9 @@ browser.jar:
   skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
   skin/classic/browser/newtab/noise.png                     (newtab/noise.png)
   skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/share-button.png
+  skin/classic/browser/share-button-active.png
+  skin/classic/browser/share-button-shared.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
@@ -110,6 +113,10 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/preferences/aboutPermissions.css     (preferences/aboutPermissions.css)
+  skin/classic/browser/social/social.png                    (social/social.png)
+  skin/classic/browser/social/panelarrow-down.png           (social/panelarrow-down.png)
+  skin/classic/browser/social/panelarrow-horiz.png          (social/panelarrow-horiz.png)
+  skin/classic/browser/social/panelarrow-up.png             (social/panelarrow-up.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/connecting.png                         (tabbrowser/connecting.png)

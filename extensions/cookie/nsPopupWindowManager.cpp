@@ -9,6 +9,8 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
 
 /**
  * The Popup Window Manager maintains popup window permissions by website.
@@ -61,20 +63,17 @@ nsPopupWindowManager::Init()
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *aPermission)
+nsPopupWindowManager::TestPermission(nsIPrincipal* aPrincipal,
+                                     PRUint32 *aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aPermission);
 
-  nsresult rv;
   PRUint32 permit;
-
   *aPermission = mPolicy;
 
   if (mPermissionManager) {
-    rv = mPermissionManager->TestPermission(aURI, "popup", &permit);
-
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(mPermissionManager->TestPermissionFromPrincipal(aPrincipal, "popup", &permit))) {
       // Share some constants between interfaces?
       if (permit == nsIPermissionManager::ALLOW_ACTION) {
         *aPermission = ALLOW_POPUP;

@@ -93,6 +93,15 @@ function AddFinishDependency()
 function RemoveFinishDependency()
   { if (--gDelayCount == 0) SimpleTest.finish(); }
 
+// We record the maximum number of times we had to look at a test before
+// it switched to the passing state (though we assume it's 10 to start
+// rather than 0 so that we have a reasonable default).  Then we make a
+// test "time out" if it takes more than gTimeoutFactor times that
+// amount of time.  This allows us to report a test failure rather than
+// making a test failure just show up as a timeout.
+var gMaxPassingTries = 10;
+var gTimeoutFactor = 10;
+
 function loadVisitedPage()
 {
   var element = document.createElement("iframe");
@@ -127,6 +136,7 @@ function startTest(i)
   var splitData = testLine.split(" ");
   var testData =
     { op: splitData[0], test: splitData[1], reference: splitData[2] };
+  var tries = 0;
 
   // Maintain state specific to this test in the closure exposed to all
   // the functions nested inside this one.
@@ -157,16 +167,27 @@ function startTest(i)
     {
       var test_snapshot = takeSnapshot(test.element);
       if (passes(testData.op, test_snapshot, reference.snapshot)) {
-        reportSuccess();
+        if (tries > gMaxPassingTries) {
+          gMaxPassingTries = tries;
+        }
+        report(true);
       } else {
-        // Links might not have been colored yet.  Try again in 100ms.
-        setTimeout(checkTest, 100);
+        ++tries;
+        if (tries > gMaxPassingTries * gTimeoutFactor) {
+          info("Giving up after " + tries + " tries, " +
+               "maxp=" + gMaxPassingTries +
+               "fact=" + gTimeoutFactor);
+          report(false);
+        } else {
+          // Links might not have been colored yet.  Try again in 100ms.
+          setTimeout(checkTest, 100);
+        }
       }
     }
-    function reportSuccess()
+    function report(result)
     {
-      ok(true, "(" + i + ") " +
-               testData.op + " " + testData.test + " " + testData.reference);
+      ok(result, "(" + i + ") " +
+                 testData.op + " " + testData.test + " " + testData.reference);
       RemoveFinishDependency();
     }
     var iframe = { element: element, loaded: false };

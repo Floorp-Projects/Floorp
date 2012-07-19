@@ -8,7 +8,7 @@
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
 #include "FilteringWrapper.h"
-#include "CrossOriginWrapper.h"
+#include "WaiveXrayWrapper.h"
 #include "WrapperFactory.h"
 
 #include "nsINode.h"

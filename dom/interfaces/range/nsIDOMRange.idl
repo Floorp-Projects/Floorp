@@ -12,7 +12,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
  */
 
-[scriptable, builtinclass, uuid(a059eea8-fece-4c14-93d3-7f50a944ae43)]
+[scriptable, builtinclass, uuid(1f94055c-42e7-4a30-96a1-6a804f1c2d1e)]
 interface nsIDOMRange : nsISupports
 {
   readonly attribute nsIDOMNode       startContainer;
@@ -64,6 +64,11 @@ interface nsIDOMRange : nsISupports
   //    1 if point is after the end boundary point.
   // Sort of a strcmp for ranges.
   short                     comparePoint(in nsIDOMNode parent, in long offset);
+
+  /**
+   * Returns whether the range intersects node.
+   */
+  boolean                   intersectsNode(in nsIDOMNode node);
 
   // These methods come from 
   // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-range-interface

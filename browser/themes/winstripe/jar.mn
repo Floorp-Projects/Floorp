@@ -50,6 +50,9 @@ browser.jar:
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/setDesktopBackground.css
+        skin/classic/browser/share-button.png
+        skin/classic/browser/share-button-active.png
+        skin/classic/browser/share-button-shared.png
         skin/classic/browser/menu-back.png                           (menu-back.png)
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
         skin/classic/browser/monitor.png
@@ -103,6 +106,7 @@ browser.jar:
         skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
         skin/classic/browser/preferences/applications.css            (preferences/applications.css)
         skin/classic/browser/preferences/aboutPermissions.css        (preferences/aboutPermissions.css)
+        skin/classic/browser/social/social.png                       (social/social.png)
         skin/classic/browser/tabbrowser/alltabs.png                  (tabbrowser/alltabs.png)
         skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
@@ -248,6 +252,9 @@ browser.jar:
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
+        skin/classic/aero/browser/share-button.png
+        skin/classic/aero/browser/share-button-active.png
+        skin/classic/aero/browser/share-button-shared.png
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)
         skin/classic/aero/browser/monitor.png
@@ -301,6 +308,7 @@ browser.jar:
         skin/classic/aero/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
         skin/classic/aero/browser/preferences/aboutPermissions.css   (preferences/aboutPermissions.css)
+        skin/classic/aero/browser/social/social.png                  (social/social.png)
         skin/classic/aero/browser/tabbrowser/alltabs.png             (tabbrowser/alltabs.png)
         skin/classic/aero/browser/tabbrowser/newtab.png              (tabbrowser/newtab.png)
         skin/classic/aero/browser/tabbrowser/newtab-inverted.png     (tabbrowser/newtab-inverted.png)

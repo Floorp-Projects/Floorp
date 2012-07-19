@@ -295,7 +295,11 @@ struct AutoEnterCompilation
 {
     JSContext *cx;
     RecompileInfo &info;
-    enum Compiler { JM, Ion };
+
+    enum Compiler {
+        JM,
+        Ion
+    };
     Compiler mode;
 
     AutoEnterCompilation(JSContext *cx, Compiler mode)

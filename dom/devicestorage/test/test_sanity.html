@@ -38,32 +38,13 @@ ok(throws, "getDeviceStorage takes one arg");
 storage = navigator.getDeviceStorage("kilimanjaro");
 ok(!storage, "kilimanjaro - Should not have this type of storage");
 
-storage = navigator.getDeviceStorage("temp");
-ok(storage, "temp - Should have getDeviceStorage");
-
-storage = navigator.getDeviceStorage("profile");
-ok(storage, "profile - Should have getDeviceStorage");
+storage = navigator.getDeviceStorage("testing");
+ok(storage, "testing - Should have getDeviceStorage");
 
 var cursor = storage[0].enumerate();
 ok(cursor, "Should have a non-null cursor");
 
-var i = 4;
-cursor.onsuccess = function(e) {
-  i = i - 1;
-  if (i > 0) {
-    ok(true, "onsuccess was called");
-    e.target.continue();
-  }
-  else {
-    ok(true, "onsuccess was called 4 times");
-    devicestorage_cleanup();
-  }
-}
-
-cursor.onerror = function(e) {
-  ok(false, "onerror was called : " + e.target.error.name);
-  devicestorage_cleanup();
-}
+devicestorage_cleanup();
 
 </script>
 </pre>

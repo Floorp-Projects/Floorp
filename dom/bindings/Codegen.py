@@ -596,14 +596,11 @@ class CGAddPropertyHook(CGAbstractClassHook):
                                      'JSBool', args)
 
     def generate_code(self):
-        return """
-  JSCompartment* compartment = js::GetObjectCompartment(obj);
-  xpc::CompartmentPrivate* priv =
-    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
-  if (!priv->RegisterDOMExpandoObject(obj)) {
-    return false;
-  }
-  self->SetPreservingWrapper(true);
+        # FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=774279
+        # Using a real trace hook might enable us to deal with non-nsISupports
+        # wrappercached things here.
+        assert self.descriptor.nativeIsISupports
+        return """  nsContentUtils::PreserveWrapper(reinterpret_cast<nsISupports*>(self), self);
   return true;"""
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -1980,7 +1977,7 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = CGGeneric("nsString")
             return (
                 "{\n"
-                "  nsDependentString str;\n"
+                "  FakeDependentString str;\n"
                 "  if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, str)) {\n"
                 "    return false;\n"
                 "  }\n"
@@ -2000,7 +1997,7 @@ for (uint32_t i = 0; i < length; ++i) {
             "}\n"
             "const_cast<%s&>(${declName}) = &${holderName};" %
             (nullBehavior, undefinedBehavior, declType),
-            CGGeneric("const " + declType), CGGeneric("nsDependentString"),
+            CGGeneric("const " + declType), CGGeneric("FakeDependentString"),
             # No need to deal with Optional here; we have handled it already
             False)
 
@@ -2009,20 +2006,27 @@ for (uint32_t i = 0; i < length; ++i) {
             raise TypeError("We don't support nullable enumerated arguments "
                             "yet")
         enum = type.inner.identifier.name
+        if invalidEnumValueFatal:
+            handleInvalidEnumValueCode = "  MOZ_ASSERT(index >= 0);\n"
+        else:
+            handleInvalidEnumValueCode = (
+                "  if (index < 0) {\n"
+                "    return true;\n"
+                "  }\n")
+            
         return (
             "{\n"
             "  bool ok;\n"
-            "  int index = FindEnumStringIndex(cx, ${val}, %(values)s, &ok);\n"
+            "  int index = FindEnumStringIndex<%(invalidEnumValueFatal)s>(cx, ${val}, %(values)s, \"%(enumtype)s\", &ok);\n"
             "  if (!ok) {\n"
             "    return false;\n"
             "  }\n"
-            "  if (index < 0) {\n"
-            "    return %(failureCode)s;\n"
-            "  }\n"
+            "%(handleInvalidEnumValueCode)s"
             "  ${declName} = static_cast<%(enumtype)s>(index);\n"
             "}" % { "enumtype" : enum,
                       "values" : enum + "Values::strings",
-                 "failureCode" : "Throw<false>(cx, NS_ERROR_XPC_BAD_CONVERT_JS)" if invalidEnumValueFatal else "true" },
+       "invalidEnumValueFatal" : toStringBool(invalidEnumValueFatal),
+  "handleInvalidEnumValueCode" : handleInvalidEnumValueCode },
             CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
@@ -2061,35 +2065,30 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isDictionary():
         if failureCode is not None:
             raise TypeError("Can't handle dictionaries when failureCode is not None")
+        # There are no nullable dictionaries
+        assert not type.nullable()
+        # All optional dictionaries always have default values, so we
+        # should be able to assume not isOptional here.
+        assert not isOptional
 
-        if type.nullable():
-            typeName = CGDictionary.makeDictionaryName(type.inner.inner,
-                                                       descriptorProvider.workers)
-            actualTypeName = "Nullable<%s>" % typeName
-            selfRef = "const_cast<%s&>(${declName}).SetValue()" % actualTypeName
-        else:
-            typeName = CGDictionary.makeDictionaryName(type.inner,
-                                                       descriptorProvider.workers)
-            actualTypeName = typeName
-            selfRef = "${declName}"
+        typeName = CGDictionary.makeDictionaryName(type.inner,
+                                                   descriptorProvider.workers)
+        actualTypeName = typeName
+        selfRef = "${declName}"
 
         declType = CGGeneric(actualTypeName)
 
-        # If we're optional or a member of something else, the const
+        # If we're a member of something else, the const
         # will come from the Optional or our container.
-        if not isOptional and not isMember:
+        if not isMember:
             declType = CGWrapper(declType, pre="const ")
             selfRef = "const_cast<%s&>(%s)" % (typeName, selfRef)
 
-        template = wrapObjectTemplate("if (!%s.Init(cx, &${val}.toObject())) {\n"
-                                      "  return false;\n"
-                                      "}" % selfRef,
-                                      isDefinitelyObject, type,
-                                      ("const_cast<%s&>(${declName}).SetNull()" %
-                                       actualTypeName),
-                                      descriptorProvider.workers, None)
+        template = ("if (!%s.Init(cx, ${val})) {\n"
+                    "  return false;\n"
+                    "}" % selfRef)
 
-        return (template, declType, None, isOptional)
+        return (template, declType, None, False)
 
     if not type.isPrimitive():
         raise TypeError("Need conversion for argument type '%s'" % type)
@@ -2770,6 +2769,8 @@ class CGMethodCall(CGThing):
     def __init__(self, argsPre, nativeMethodName, static, descriptor, method):
         CGThing.__init__(self)
 
+        methodName = '"%s.%s"' % (descriptor.interface.identifier.name, method.identifier.name)
+
         def requiredArgCount(signature):
             arguments = signature[1]
             if len(arguments) == 0:
@@ -2793,18 +2794,15 @@ class CGMethodCall(CGThing):
             signature = signatures[0]
             self.cgRoot = CGList([ CGIndenter(getPerSignatureCall(signature)) ])
             requiredArgs = requiredArgCount(signature)
+
+
             if requiredArgs > 0:
+                code = (
+                    "if (argc < %d) {\n"
+                    "  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, %s);\n"
+                    "}" % (requiredArgs, methodName))
                 self.cgRoot.prepend(
-                    CGWrapper(
-                        CGIndenter(
-                            CGGeneric(
-                                "if (argc < %d) {\n"
-                                "  return Throw<%s>(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);\n"
-                                "}" % (requiredArgs,
-                                       toStringBool(not descriptor.workers)))
-                            ),
-                        pre="\n", post="\n")
-                    )
+                    CGWrapper(CGIndenter(CGGeneric(code)), pre="\n", post="\n"))
             return
 
         # Need to find the right overload
@@ -2836,6 +2834,13 @@ class CGMethodCall(CGThing):
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
 
+            # We can't handle unions at the distinguishing index.
+            for (returnType, args) in possibleSignatures:
+                if args[distinguishingIndex].type.isUnion():
+                    raise TypeError("No support for unions as distinguishing "
+                                    "arguments yet: %s",
+                                    args[distinguishingIndex].location)
+
             # Convert all our arguments up to the distinguishing index.
             # Doesn't matter which of the possible signatures we use, since
             # they all have the same types up to that point; just use
@@ -2866,7 +2871,8 @@ class CGMethodCall(CGThing):
 
             # First check for null or undefined
             pickFirstSignature("%s.isNullOrUndefined()" % distinguishingArg,
-                               lambda s: s[1][distinguishingIndex].type.nullable())
+                               lambda s: (s[1][distinguishingIndex].type.nullable() or
+                                          s[1][distinguishingIndex].type.isDictionary()))
 
             # Now check for distinguishingArg being an object that implements a
             # non-callback interface.  That includes typed arrays and
@@ -2978,11 +2984,10 @@ class CGMethodCall(CGThing):
         overloadCGThings.append(
             CGSwitch("argcount",
                      argCountCases,
-                     CGGeneric("return Throw<%s>(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);" %
-                               toStringBool(not descriptor.workers))))
+                     CGGeneric("return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, %s);\n" % methodName)))
         overloadCGThings.append(
-                CGGeneric('MOZ_NOT_REACHED("We have an always-returning default case");\n'
-                          'return false;'))
+            CGGeneric('MOZ_NOT_REACHED("We have an always-returning default case");\n'
+                      'return false;'))
         self.cgRoot = CGWrapper(CGIndenter(CGList(overloadCGThings, "\n")),
                                 pre="\n")
 
@@ -3285,6 +3290,8 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
 def getUnionTypeTemplateVars(type, descriptorProvider):
     # For dictionaries and sequences we need to pass None as the failureCode
     # for getJSToNativeConversionTemplate.
+    # Also, for dictionaries we would need to handle conversion of
+    # null/undefined to the dictionary correctly.
     if type.isDictionary() or type.isSequence():
         raise TypeError("Can't handle dictionaries or sequences in unions")
 
@@ -4109,7 +4116,7 @@ class CGDictionary(CGThing):
         return (string.Template(
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
-                "  bool Init(JSContext* cx, JSObject* obj);\n"
+                "  bool Init(JSContext* cx, const JS::Value& val);\n"
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
@@ -4129,7 +4136,7 @@ class CGDictionary(CGThing):
         d = self.dictionary
         if d.parent:
             initParent = ("// Per spec, we init the parent's members first\n"
-                          "if (!%s::Init(cx, obj)) {\n"
+                          "if (!%s::Init(cx, val)) {\n"
                           "  return false;\n"
                           "}\n" % self.makeClassName(d.parent))
         else:
@@ -4163,7 +4170,7 @@ class CGDictionary(CGThing):
             "}\n"
             "\n"
             "bool\n"
-            "${selfName}::Init(JSContext* cx, JSObject* obj)\n"
+            "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
             "{\n"
             "  if (!initedIds && !InitIds(cx)) {\n"
             "    return false;\n"
@@ -4171,6 +4178,10 @@ class CGDictionary(CGThing):
             "${initParent}"
             "  JSBool found;\n"
             "  JS::Value temp;\n"
+            "  bool isNull = val.isNullOrUndefined();\n"
+            "  if (!isNull && !val.isObject()) {\n"
+            "    return Throw<${isMainThread}>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
+            "  }\n"
             "\n"
             "${initMembers}\n"
             "  return true;\n"
@@ -4178,7 +4189,8 @@ class CGDictionary(CGThing):
                 "selfName": self.makeClassName(d),
                 "initParent": CGIndenter(CGGeneric(initParent)).define(),
                 "initMembers": "\n\n".join(memberInits),
-                "idInit": CGIndenter(idinit).define()
+                "idInit": CGIndenter(idinit).define(),
+                "isMainThread": toStringBool(not self.workers)
                 })
 
     @staticmethod
@@ -4225,13 +4237,15 @@ class CGDictionary(CGThing):
             "prop": "(this->%s)" % member.identifier.name,
             "convert": string.Template(templateBody).substitute(replacements)
             }
-        conversion = ("if (!JS_HasPropertyById(cx, obj, ${propId}, &found)) {\n"
+        conversion = ("if (isNull) {\n"
+                      "  found = false;\n"
+                      "} else if (!JS_HasPropertyById(cx, &val.toObject(), ${propId}, &found)) {\n"
                       "  return false;\n"
                       "}\n")
         if member.defaultValue:
             conversion += (
                 "if (found) {\n"
-                "  if (!JS_GetPropertyById(cx, obj, ${propId}, &temp)) {\n"
+                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "} else {\n"
@@ -4244,7 +4258,7 @@ class CGDictionary(CGThing):
             conversion += (
                 "if (found) {\n"
                 "  ${prop}.Construct();\n"
-                "  if (!JS_GetPropertyById(cx, obj, ${propId}, &temp)) {\n"
+                "  if (!JS_GetPropertyById(cx, &val.toObject(), ${propId}, &temp)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "${convert}\n"

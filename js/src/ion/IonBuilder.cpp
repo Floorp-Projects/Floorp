@@ -2969,7 +2969,7 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
 
         // Monomorphic case is simple - no guards.
         RootedFunction target(cx, func);
-        if(!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
+        if (!jsop_call_inline(target, argc, constructing, constFun, bottom, retvalDefns))
             return false;
     } else {
         // In the polymorphic case, we end the current block with a MPolyInlineDispatch instruction.
@@ -3009,19 +3009,18 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
 
     graph_.moveBlockToEnd(bottom);
 
-    if (!bottom->inheritNonPredecessor(top, true))
-        return false;
+    bottom->inheritSlots(top);
 
     // If we were doing a polymorphic inline, then the discardCallArgs
     // happened on the entry frame, not this frame.  Need to get rid of
     // those.
     if (targets.length() > 1) {
         for (uint32_t i = 0; i < argc + 1; i++)
-            (void) bottom->pop();
+            bottom->pop();
     }
 
     // Pop the callee and push the return value.
-    (void) bottom->pop();
+    bottom->pop();
 
     MDefinition *retvalDefn;
     if (retvalDefns.length() > 1) {
@@ -3039,10 +3038,8 @@ IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool cons
     }
 
     bottom->push(retvalDefn);
-
-    // Replace the callee with the return value in the resumepoint.
-    uint32 retvalSlot = bottom->stackDepth() - 1;
-    bottom->entryResumePoint()->replaceOperand(retvalSlot, retvalDefn);
+    if (!bottom->initEntrySlots())
+        return false;
 
     // Check the depth change:
     //  -argc for popped args

@@ -338,15 +338,7 @@ class SkipRoot
 
   public:
     template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr
-             JS_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        init(ContextFriendFields::get(cx), ptr, 1);
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr, size_t count
+    SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
              JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         init(ContextFriendFields::get(cx), ptr, count);
@@ -369,14 +361,7 @@ class SkipRoot
 
   public:
     template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr
-              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr, size_t count
+    SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
               JS_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
@@ -390,18 +375,21 @@ class SkipRoot
 #ifdef DEBUG
 JS_FRIEND_API(bool) IsRootingUnnecessaryForContext(JSContext *cx);
 JS_FRIEND_API(void) SetRootingUnnecessaryForContext(JSContext *cx, bool value);
+JS_FRIEND_API(bool) RelaxRootChecksForContext(JSContext *cx);
 #endif
 
 class AssertRootingUnnecessary {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+#ifdef DEBUG
     JSContext *cx;
     bool prev;
+#endif
 public:
     AssertRootingUnnecessary(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : cx(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef DEBUG
+        this->cx = cx;
         prev = IsRootingUnnecessaryForContext(cx);
         SetRootingUnnecessaryForContext(cx, true);
 #endif
@@ -423,11 +411,13 @@ CheckStackRoots(JSContext *cx);
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
  */
-inline void MaybeCheckStackRoots(JSContext *cx)
+inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
 #ifdef DEBUG
     JS_ASSERT(!IsRootingUnnecessaryForContext(cx));
 # if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+    if (relax && RelaxRootChecksForContext(cx))
+        return;
     CheckStackRoots(cx);
 # endif
 #endif

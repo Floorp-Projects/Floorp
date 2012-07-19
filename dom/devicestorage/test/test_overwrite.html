@@ -39,12 +39,13 @@ function deleteError(e) {
 
 function addOverwritingSuccess(e) {
   ok(false, "addOverwritingSuccess was called.");
+  devicestorage_cleanup();
 }
 
 function addOverwritingError(e) {
   ok(true, "Adding to the same location should fail");
 
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage[0].delete(filename)
   request.onsuccess = deleteSuccess;
   request.onerror = deleteError;
@@ -53,7 +54,7 @@ function addOverwritingError(e) {
 function addSuccess(e) {
   ok(true, "addSuccess was called");
 
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
   request = storage[0].addNamed(createRandomBlob(), filename);
@@ -65,13 +66,13 @@ function addSuccess(e) {
 
 function addError(e) {
   // test file is already exists.  clean it up and try again..
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   request = storage[0].delete(filename)
   request.onsuccess = runtest;
 }
 
 function runtest() {
-  var storage = navigator.getDeviceStorage("profile");
+  var storage = navigator.getDeviceStorage("testing");
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
   request = storage[0].addNamed(createRandomBlob(), filename);

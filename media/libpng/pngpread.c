@@ -1039,6 +1039,15 @@ png_process_IDAT_data(png_structp png_ptr, png_bytep buffer,
    if (!(buffer_length > 0) || buffer == NULL)
       png_error(png_ptr, "No IDAT data (internal error)");
 
+#ifdef PNG_READ_APNG_SUPPORTED
+   /* If the app is not APNG-aware, decode only the first frame */
+   if (!(png_ptr->apng_flags & PNG_APNG_APP) && png_ptr->num_frames_read > 0)
+   {
+     png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
+     return;
+   }
+#endif
+
    /* This routine must process all the data it has been given
     * before returning, calling the row callback as required to
     * handle the uncompressed results.
@@ -1492,6 +1501,7 @@ png_set_progressive_frame_fn(png_structp png_ptr,
 {
    png_ptr->frame_info_fn = frame_info_fn;
    png_ptr->frame_end_fn = frame_end_fn;
+   png_ptr->apng_flags |= PNG_APNG_APP;
 }
 #endif
 

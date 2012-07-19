@@ -71,7 +71,7 @@ public:
     typedef ListType LT;
     typedef Base B;
     typedef IndexOps IO;
-    typedef NameOps NO;
+    typedef NameOps NOp;
 };
 
 class NoBase {
@@ -110,13 +110,13 @@ protected:
     typedef typename LC::B Base;
     typedef typename LC::IO::G::T IndexGetterType;
     typedef typename LC::IO::S::T IndexSetterType;
-    typedef typename LC::NO::G::T NameGetterType;
-    typedef typename LC::NO::S::T NameSetterType;
+    typedef typename LC::NOp::G::T NameGetterType;
+    typedef typename LC::NOp::S::T NameSetterType;
     enum {
         hasIndexGetter = LC::IO::G::hasOp,
         hasIndexSetter = LC::IO::S::hasOp,
-        hasNameGetter = LC::NO::G::hasOp,
-        hasNameSetter = LC::NO::S::hasOp
+        hasNameGetter = LC::NOp::G::hasOp,
+        hasNameSetter = LC::NOp::S::hasOp
     };
 
 private:

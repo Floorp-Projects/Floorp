@@ -107,11 +107,11 @@
   border-style: solid;
   border-color: rgba(255, 255, 255, 0.05);
   margin: 5px 0;
-  -moz-transform: translateX(-7px);
+  transform: translateX(-7px);
 }
 
 .splitview-landscape-resizer:-moz-locale-dir(rtl) {
-  -moz-transform: translateX(7px);
+  transform: translateX(7px);
 }
 
 .splitview-portrait-resizer {

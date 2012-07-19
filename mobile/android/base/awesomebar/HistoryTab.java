@@ -36,8 +36,6 @@ import java.util.Map;
 import java.util.List;
 import java.util.Date;
 
-import org.json.JSONArray;
-
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;

@@ -256,7 +256,7 @@ class Marionette(object):
         response = self._send_message('getWindows', 'value')
         return response
 
-    def close_window(self, window_id=None):
+    def close(self, window_id=None):
         if not window_id:
             window_id = self.current_window_handle
         response = self._send_message('closeWindow', 'ok', value=window_id)

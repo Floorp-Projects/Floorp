@@ -259,7 +259,7 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
   }
-  *_retval = domItem.forget().get();
+  domItem.forget(_retval);
   return NS_OK;
 }
 

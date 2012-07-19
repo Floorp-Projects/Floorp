@@ -8,7 +8,7 @@ package org.mozilla.gecko.ui;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.gfx.FloatSize;
+
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
@@ -140,6 +140,13 @@ public class PanZoomController
         prefs.put(PREF_ZOOM_ANIMATION_FRAMES);
         Axis.addPrefNames(prefs);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_PREFS_GET, prefs.toString()));
+    }
+
+    public void destroy() {
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_ZOOM_RECT, this);
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
+        GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
+        mSubscroller.destroy();
     }
 
     // for debugging bug 713011; it can be taken out once that is resolved.
@@ -868,7 +875,7 @@ public class PanZoomController
 
     @Override
     public boolean onScale(SimpleScaleGestureDetector detector) {
-        if (GeckoApp.mDOMFullScreen)
+        if (GeckoApp.mAppContext == null || GeckoApp.mAppContext.mDOMFullScreen)
             return false;
 
         if (mState != PanZoomState.PINCHING)

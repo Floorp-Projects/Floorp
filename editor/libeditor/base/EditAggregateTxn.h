@@ -7,10 +7,15 @@
 #define EditAggregateTxn_h__
 
 #include "EditTxn.h"
-#include "nsIAtom.h"
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIAtom.h"
+#include "nsISupportsImpl.h"
+#include "nsTArray.h"
+#include "nscore.h"
+
+class nsITransaction;
 
 /**
  * base class for all document editing transactions that require aggregation.

@@ -24,7 +24,7 @@ class nsAccDocManager : public nsIWebProgressListener,
                         public nsSupportsWeakReference
 {
 public:
-  virtual ~nsAccDocManager() { };
+  virtual ~nsAccDocManager() { }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -70,7 +70,7 @@ public:
 #endif
 
 protected:
-  nsAccDocManager() { };
+  nsAccDocManager() { }
 
   /**
    * Initialize the manager.

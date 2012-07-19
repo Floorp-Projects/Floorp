@@ -1,0 +1,58 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+namespace devicestorage {
+
+
+struct ErrorResponse
+{
+  nsString error;
+};
+
+struct SuccessResponse
+{
+};
+
+struct BlobResponse
+{
+  // todo going away
+  PRUint8[] bits;
+  nsCString contentType;
+};
+
+struct DeviceStorageFileValue
+{
+  // todo going away
+  nsString fullpath;
+  nsString path;
+};
+
+struct EnumerationResponse
+{
+  DeviceStorageFileValue[] paths;
+  // todo bent PBlob
+};
+
+union DeviceStorageResponseValue
+{
+  ErrorResponse;
+  SuccessResponse;
+  BlobResponse;
+  EnumerationResponse;
+};
+
+sync protocol PDeviceStorageRequest {
+    manager PContent;
+child:
+    __delete__(DeviceStorageResponseValue response);
+};
+
+} // namespace devicestorage
+} // namespace dom
+} // namespace mozilla

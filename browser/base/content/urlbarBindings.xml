@@ -625,8 +625,6 @@
         ]]></body>
       </method>
 
-      <property name="maxRows" onget="return this.popup.maxResults;"/>
-
       <property name="textValue"
                 onget="return this.value;">
         <setter>

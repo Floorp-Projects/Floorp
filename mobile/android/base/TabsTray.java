@@ -27,7 +27,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.PropertyAnimator.Property;
 
 public class TabsTray extends LinearLayout 
@@ -444,4 +443,3 @@ public class TabsTray extends LinearLayout
         }
     }
 }
-

@@ -7,6 +7,7 @@
 #include "nsEditor.h"
 #include "IMETextTxn.h"
 #include "nsGkAtoms.h"
+#include "nsISelection.h"
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(true), 

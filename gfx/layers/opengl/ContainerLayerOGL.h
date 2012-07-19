@@ -109,6 +109,37 @@ public:
   virtual void CleanupResources();
 };
 
+class ShadowRefLayerOGL : public ShadowRefLayer,
+                          public LayerOGL
+{
+  template<class Container>
+  friend void ContainerRender(Container* aContainer,
+                              int aPreviousFrameBuffer,
+                              const nsIntPoint& aOffset,
+                              LayerManagerOGL* aManager);
+
+public:
+  ShadowRefLayerOGL(LayerManagerOGL *aManager);
+  ~ShadowRefLayerOGL();
+
+  /** LayerOGL implementation */
+  Layer* GetLayer() { return this; }
+
+  void Destroy();
+
+  LayerOGL* GetFirstChildOGL();
+
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
+
+  virtual void CleanupResources();
+};
+
 } /* layers */
 } /* mozilla */
 

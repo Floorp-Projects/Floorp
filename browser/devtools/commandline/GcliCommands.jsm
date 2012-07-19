@@ -7,6 +7,9 @@ let EXPORTED_SYMBOLS = [ "GcliCommands" ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const XMLHttpRequest =
+  Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
+
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -25,6 +28,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "js_beautify",
+                                  "resource:///modules/devtools/Jsbeautify.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Debugger", function() {
+  let JsDebugger = {};
+  Components.utils.import("resource://gre/modules/jsdebugger.jsm", JsDebugger);
+
+  let global = Components.utils.getGlobalForObject({});
+  JsDebugger.addDebuggerToGlobal(global);
+
+  return global.Debugger;
+});
 
 let prefSvc = "@mozilla.org/preferences-service;1";
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
@@ -125,6 +141,7 @@ function loadCommandFile(aFile, aSandboxPrincipal) {
 gcli.addCommand({
   name: "cmd",
   description: gcli.lookup("cmdDesc"),
+  hidden: true
 });
 
 /**
@@ -133,6 +150,7 @@ gcli.addCommand({
 gcli.addCommand({
   name: "cmd refresh",
   description: gcli.lookup("cmdRefreshDesc"),
+  hidden: true,
   exec: function Command_cmdRefresh(args, context) {
     GcliCommands.refreshAutoCommands(context.environment.chromeDocument.defaultView);
   }
@@ -152,6 +170,7 @@ gcli.addCommand({
     }
   ],
   returnType: "string",
+  hidden: true,
   exec: function Command_echo(args, context) {
     return args.message;
   }
@@ -277,6 +296,87 @@ gcli.addCommand({
     persist.saveURI(source, null, null, null, null, file);
 
     return "Saved to " + filename;
+  }
+});
+
+
+let callLogDebuggers = [];
+
+/**
+ * 'calllog' command
+ */
+gcli.addCommand({
+  name: "calllog",
+  description: gcli.lookup("calllogDesc")
+})
+
+/**
+ * 'calllog start' command
+ */
+gcli.addCommand({
+  name: "calllog start",
+  description: gcli.lookup("calllogStartDesc"),
+
+  exec: function(args, context) {
+    let contentWindow = context.environment.contentDocument.defaultView;
+
+    let dbg = new Debugger(contentWindow);
+    dbg.onEnterFrame = function(frame) {
+      // BUG 773652 -  Make the output from the GCLI calllog command nicer
+      contentWindow.console.log("Method call: " + this.callDescription(frame));
+    }.bind(this);
+
+    callLogDebuggers.push(dbg);
+
+    let tab = context.environment.chromeDocument.defaultView.gBrowser.selectedTab;
+    HUDService.activateHUDForContext(tab);
+
+    return gcli.lookup("calllogStartReply");
+  },
+
+  callDescription: function(frame) {
+    let name = "<anonymous>";
+    if (frame.callee.name) {
+      name = frame.callee.name;
+    }
+    else {
+      let desc = frame.callee.getOwnPropertyDescriptor("displayName");
+      if (desc && desc.value && typeof desc.value == "string") {
+        name = desc.value;
+      }
+    }
+
+    let args = frame.arguments.map(this.valueToString).join(", ");
+    return name + "(" + args + ")";
+  },
+
+  valueToString: function(value) {
+    if (typeof value !== "object" || value === null) {
+      return uneval(value);
+    }
+    return "[object " + value.class + "]";
+  }
+});
+
+/**
+ * 'calllog stop' command
+ */
+gcli.addCommand({
+  name: "calllog stop",
+  description: gcli.lookup("calllogStopDesc"),
+
+  exec: function(args, context) {
+    let numDebuggers = callLogDebuggers.length;
+    if (numDebuggers == 0) {
+      return gcli.lookup("calllogStopNoLogging");
+    }
+
+    for (let dbg of callLogDebuggers) {
+      dbg.onEnterFrame = undefined;
+    }
+    callLogDebuggers = [];
+
+    return gcli.lookupFormat("calllogStopReply", [ numDebuggers ]);
   }
 });
 
@@ -997,6 +1097,133 @@ gcli.addCommand({
   }
 });
 
+
+/**
+ * 'dbg' command
+ */
+gcli.addCommand({
+  name: "dbg",
+  description: gcli.lookup("dbgDesc"),
+  manual: gcli.lookup("dbgManual")
+});
+
+
+/**
+ * 'dbg interrupt' command
+ */
+gcli.addCommand({
+  name: "dbg interrupt",
+  description: gcli.lookup("dbgInterrupt"),
+  params: [],
+  exec: function(args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let dbg = win.DebuggerUI.getDebugger();
+
+    if (dbg) {
+      let controller = dbg.contentWindow.DebuggerController;
+      let thread = controller.activeThread;
+      if (!thread.paused) {
+        thread.interrupt();
+      }
+    }
+  }
+});
+
+/**
+ * 'dbg continue' command
+ */
+gcli.addCommand({
+  name: "dbg continue",
+  description: gcli.lookup("dbgContinue"),
+  params: [],
+  exec: function(args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let dbg = win.DebuggerUI.getDebugger();
+
+    if (dbg) {
+      let controller = dbg.contentWindow.DebuggerController;
+      let thread = controller.activeThread;
+      if (thread.paused) {
+        thread.resume();
+      }
+    }
+  }
+});
+
+
+/**
+ * 'dbg step' command
+ */
+gcli.addCommand({
+  name: "dbg step",
+  description: gcli.lookup("dbgStepDesc"),
+  manual: gcli.lookup("dbgStepManual")
+});
+
+
+/**
+ * 'dbg step over' command
+ */
+gcli.addCommand({
+  name: "dbg step over",
+  description: gcli.lookup("dbgStepOverDesc"),
+  params: [],
+  exec: function(args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let dbg = win.DebuggerUI.getDebugger();
+
+    if (dbg) {
+      let controller = dbg.contentWindow.DebuggerController;
+      let thread = controller.activeThread;
+      if (thread.paused) {
+        thread.stepOver();
+      }
+    }
+  }
+});
+
+/**
+ * 'dbg step in' command
+ */
+gcli.addCommand({
+  name: 'dbg step in',
+  description: gcli.lookup("dbgStepInDesc"),
+  params: [],
+  exec: function(args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let dbg = win.DebuggerUI.getDebugger();
+
+    if (dbg) {
+      let controller = dbg.contentWindow.DebuggerController;
+      let thread = controller.activeThread;
+      if (thread.paused) {
+        thread.stepIn();
+      }
+    }
+  }
+});
+
+/**
+ * 'dbg step over' command
+ */
+gcli.addCommand({
+  name: 'dbg step out',
+  description: gcli.lookup("dbgStepOutDesc"),
+  params: [],
+  exec: function(args, context) {
+    let win = context.environment.chromeDocument.defaultView;
+    let dbg = win.DebuggerUI.getDebugger();
+
+    if (dbg) {
+      let controller = dbg.contentWindow.DebuggerController;
+      let thread = controller.activeThread;
+      if (thread.paused) {
+        thread.stepOut();
+      }
+    }
+  }
+});
+
 // We need a list of addon names for the enable and disable commands. Because
 // getting the name list is async we do not add the commands until we have the
 // list.
@@ -1197,3 +1424,126 @@ AddonManager.getAllAddons(function addonAsync(aAddons) {
     exec: gcli_cmd_resize
   });
 })();
+
+/**
+ * jsb command.
+ */
+gcli.addCommand({
+  name: 'jsb',
+  description: gcli.lookup('jsbDesc'),
+  returnValue:'string',
+  hidden: true,
+  params: [
+    {
+      name: 'url',
+      type: 'string',
+      description: gcli.lookup('jsbUrlDesc'),
+      manual: 'The URL of the JS to prettify'
+    },
+    {
+      name: 'indentSize',
+      type: 'number',
+      description: gcli.lookup('jsbIndentSizeDesc'),
+      manual: gcli.lookup('jsbIndentSizeManual'),
+      defaultValue: 2
+    },
+    {
+      name: 'indentChar',
+      type: {
+        name: 'selection',
+        lookup: [{name: "space", value: " "}, {name: "tab", value: "\t"}]
+      },
+      description: gcli.lookup('jsbIndentCharDesc'),
+      manual: gcli.lookup('jsbIndentCharManual'),
+      defaultValue: ' ',
+    },
+    {
+      name: 'preserveNewlines',
+      type: 'boolean',
+      description: gcli.lookup('jsbPreserveNewlinesDesc'),
+      manual: gcli.lookup('jsbPreserveNewlinesManual'),
+      defaultValue: true
+    },
+    {
+      name: 'preserveMaxNewlines',
+      type: 'number',
+      description: gcli.lookup('jsbPreserveMaxNewlinesDesc'),
+      manual: gcli.lookup('jsbPreserveMaxNewlinesManual'),
+      defaultValue: -1
+    },
+    {
+      name: 'jslintHappy',
+      type: 'boolean',
+      description: gcli.lookup('jsbJslintHappyDesc'),
+      manual: gcli.lookup('jsbJslintHappyManual'),
+      defaultValue: false
+    },
+    {
+      name: 'braceStyle',
+      type: {
+        name: 'selection',
+        data: ['collapse', 'expand', 'end-expand', 'expand-strict']
+      },
+      description: gcli.lookup('jsbBraceStyleDesc'),
+      manual: gcli.lookup('jsbBraceStyleManual'),
+      defaultValue: "collapse"
+    },
+    {
+      name: 'spaceBeforeConditional',
+      type: 'boolean',
+      description: gcli.lookup('jsbSpaceBeforeConditionalDesc'),
+      manual: gcli.lookup('jsbSpaceBeforeConditionalManual'),
+      defaultValue: true
+    },
+    {
+      name: 'unescapeStrings',
+      type: 'boolean',
+      description: gcli.lookup('jsbUnescapeStringsDesc'),
+      manual: gcli.lookup('jsbUnescapeStringsManual'),
+      defaultValue: false
+    }
+  ],
+  exec: function(args, context) {
+  let opts = {
+    indent_size: args.indentSize,
+    indent_char: args.indentChar,
+    preserve_newlines: args.preserveNewlines,
+    max_preserve_newlines: args.preserveMaxNewlines == -1 ?
+                           undefined : args.preserveMaxNewlines,
+    jslint_happy: args.jslintHappy,
+    brace_style: args.braceStyle,
+    space_before_conditional: args.spaceBeforeConditional,
+    unescape_strings: args.unescapeStrings
+  }
+
+  let xhr = new XMLHttpRequest();
+
+  try {
+    xhr.open("GET", args.url, true);
+  } catch(e) {
+    return gcli.lookup('jsbInvalidURL');
+  }
+
+  let promise = context.createPromise();
+
+  xhr.onreadystatechange = function(aEvt) {
+    if (xhr.readyState == 4) {
+      if (xhr.status == 200 || xhr.status == 0) {
+        let browserDoc = context.environment.chromeDocument;
+        let browserWindow = browserDoc.defaultView;
+        let browser = browserWindow.gBrowser;
+
+        browser.selectedTab = browser.addTab("data:text/plain;base64," +
+          browserWindow.btoa(js_beautify(xhr.responseText, opts)));
+        promise.resolve();
+      }
+      else {
+        promise.resolve("Unable to load page to beautify: " + args.url + " " +
+                        xhr.status + " " + xhr.statusText);
+      }
+    };
+  }
+  xhr.send(null);
+  return promise;
+  }
+});

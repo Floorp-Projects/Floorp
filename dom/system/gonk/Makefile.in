@@ -27,6 +27,9 @@ XPIDLSRCS = \
   nsIAudioManager.idl \
   nsINetworkManager.idl \
   nsIRadioInterfaceLayer.idl \
+  nsIVolume.idl \
+  nsIVolumeService.idl \
+  nsIVolumeStat.idl \
   nsIWorkerHolder.idl \
   $(NULL)
 
@@ -45,9 +48,14 @@ CPPSRCS += \
   AutoMounter.cpp \
   AutoMounterSetting.cpp \
   GonkGPSGeolocationProvider.cpp \
+  nsVolume.cpp \
+  nsVolumeService.cpp \
+  nsVolumeStat.cpp \
   Volume.cpp \
   VolumeCommand.cpp \
   VolumeManager.cpp \
+  VolumeServiceIOThread.cpp \
+  VolumeServiceTest.cpp \
   $(NULL)
 # for our local copy of AudioSystem.h
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src

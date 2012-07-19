@@ -5,13 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.FloatSize;
-import android.graphics.PointF;
 import android.graphics.RectF;
-import android.util.Log;
-import javax.microedition.khronos.opengles.GL10;
-import java.nio.FloatBuffer;
 import android.opengl.GLES20;
+
+import java.nio.FloatBuffer;
 
 /**
  * Encapsulates the logic needed to draw a nine-patch bitmap using OpenGL ES.

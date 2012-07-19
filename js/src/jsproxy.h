@@ -13,7 +13,7 @@
 
 namespace js {
 
-class Wrapper;
+class JS_FRIEND_API(Wrapper);
 
 /*
  * A proxy is a JSObject that implements generic behavior by providing custom
@@ -102,7 +102,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
-    virtual bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
+    virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
@@ -150,8 +150,8 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                       Value *vp) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc,
                            Value *argv, Value *rval) MOZ_OVERRIDE;
-    virtual bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp,
-                            Native native, CallArgs args) MOZ_OVERRIDE;
+    virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+                            CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp,
                              bool *bp) MOZ_OVERRIDE;
     virtual JSType typeOf(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
@@ -226,7 +226,7 @@ class Proxy {
     /* Spidermonkey extensions. */
     static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     static bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
-    static bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
+    static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     static bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     static JSType typeOf(JSContext *cx, JSObject *proxy);
     static bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);

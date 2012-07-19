@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -17,9 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
@@ -104,6 +101,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
         DisplayPortCalculator.addPrefNames(prefs);
         PluginLayer.addPrefNames(prefs);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Preferences:Get", prefs.toString()));
+    }
+
+    public void destroy() {
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:Update", this);
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:PageSize", this);
+        GeckoAppShell.unregisterGeckoEventListener("Viewport:CalculateDisplayPort", this);
+        GeckoAppShell.unregisterGeckoEventListener("Checkerboard:Toggle", this);
+        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
     }
 
     DisplayPortMetrics getDisplayPort() {

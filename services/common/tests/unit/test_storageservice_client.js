@@ -683,6 +683,34 @@ add_test(function test_set_bsos_invalid_bso() {
   run_next_test();
 });
 
+add_test(function test_set_bsos_newline() {
+  _("Ensure that newlines in BSO payloads are formatted properly.");
+
+  let [server, client, username] = getServerAndClient();
+  let user = server.user(username);
+
+  let request = client.setBSOs("testcoll");
+
+  let bso0 = new BasicStorageObject("bso0");
+  bso0.payload = "hello\nworld";
+  request.addBSO(bso0);
+
+  let bso1 = new BasicStorageObject("bso1");
+  bso1.payload = "foobar";
+  request.addBSO(bso1);
+
+  request.dispatch(function onComplete(error, request) {
+    do_check_null(error);
+    do_check_eq(request.successfulIDs.size(), 2);
+
+    let coll = user.collection("testcoll");
+    do_check_eq(coll.bso("bso0").payload, bso0.payload);
+    do_check_eq(coll.bso("bso1").payload, bso1.payload);
+
+    server.stop(run_next_test);
+  });
+});
+
 add_test(function test_delete_bso_simple() {
   _("Ensure deletion of individual BSOs works.");
 

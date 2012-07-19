@@ -128,6 +128,8 @@ public class GeckoAppShell
 
     public static GfxInfoThread sGfxInfoThread = null;
 
+    static ActivityHandlerHelper sActivityHelper = new ActivityHandlerHelper();
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -1370,12 +1372,11 @@ public class GeckoAppShell
     }
 
     public static String showFilePickerForExtensions(String aExtensions) {
-        return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aExtensions));
+        return sActivityHelper.showFilePicker(GeckoApp.mAppContext, getMimeTypeFromExtensions(aExtensions));
     }
 
     public static String showFilePickerForMimeType(String aMimeType) {
-        return GeckoApp.mAppContext.showFilePicker(aMimeType);
+        return sActivityHelper.showFilePicker(GeckoApp.mAppContext, aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -1845,7 +1846,7 @@ public class GeckoAppShell
             }
 
             try {
-                sCamera.setPreviewDisplay(GeckoApp.cameraView.getHolder());
+                sCamera.setPreviewDisplay(GeckoApp.mAppContext.cameraView.getHolder());
             } catch(IOException e) {
                 Log.e(LOGTAG, "Error setPreviewDisplay:", e);
             } catch(RuntimeException e) {
@@ -2100,16 +2101,7 @@ public class GeckoAppShell
     }
 
     public static boolean isTablet() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();
-            // xlarge is defined by android as screens larger than 960dp x 720dp
-            // and should include most devices ~7in and up.
-            // http://developer.android.com/guide/practices/screens_support.html
-            if ((config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE) {
-                return true;
-            }
-        }
-        return false;
+        return GeckoApp.mAppContext.isTablet();
     }
 
     public static void viewSizeChanged() {
@@ -2271,9 +2263,10 @@ public class GeckoAppShell
         msg.recycle();
     }
 
-    static class AsyncResultHandler extends GeckoApp.FilePickerResultHandler {
+    static class AsyncResultHandler extends FilePickerResultHandler {
         private long mId;
         AsyncResultHandler(long id) {
+            super(null);
             mId = id;
         }
 
@@ -2287,9 +2280,11 @@ public class GeckoAppShell
 
     /* Called by JNI from AndroidBridge */
     public static void showFilePickerAsync(String aMimeType, long id) {
-        if (!GeckoApp.mAppContext.showFilePicker(aMimeType, new AsyncResultHandler(id)))
+        if (!sActivityHelper.showFilePicker(GeckoApp.mAppContext, aMimeType, new AsyncResultHandler(id))) {
             GeckoAppShell.notifyFilePickerResult("", id);
+        }
     }
+
     public static void screenshotWholePage(Tab tab) {
         ScreenshotHandler.screenshotWholePage(tab);
     }
@@ -2346,7 +2341,12 @@ class ScreenshotHandler {
 
 
             Tab tab = Tabs.getInstance().getSelectedTab();
-            ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+            if (tab == null)
+                return;
+            LayerController layerController = GeckoApp.mAppContext.getLayerController();
+            if (layerController == null)
+                return;
+            ImmutableViewportMetrics viewport = layerController.getViewportMetrics();
             
             if (RectUtils.fuzzyEquals(sCheckerboardPageRect, viewport.getCssPageRect())) {
                 float width = right - left;

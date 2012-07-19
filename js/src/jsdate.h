@@ -65,6 +65,9 @@ extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
                  int hour, int min, int sec);
 
+extern void
+js_ClearDateCaches();
+
 extern JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj);
 

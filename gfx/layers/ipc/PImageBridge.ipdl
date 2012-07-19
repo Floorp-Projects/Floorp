@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PImageContainer;
+
+using ImageHandle;
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * The PImageBridge protocol is used to allow isolated threads or processes to push
+ * frames directly to the compositor thread/process without relying on the main thread
+ * which might be too busy dealing with content script.
+ */
+/*FIXME: sync*/rpc protocol PImageBridge
+{
+  manages PImageContainer;
+
+parent:
+  
+  // First step of the destruction sequence. This puts all the ImageContainerParents
+  // in a state in which they can't send asynchronous messages to their child 
+  // counterpart so as to not race with the upcomming __delete__ message. 
+  // In the child side, the __delete__ messages are not sent right after Stop,
+  // they are scheduled in the ImageBridgeChild's message queue in order to ensure 
+  // that all the messages from the parent side have been received and processed
+  // before sending __delete__.
+  sync Stop();
+
+  sync PImageContainer() returns (PRUint64 id);
+};
+
+
+} // namespace
+} // namespace
+

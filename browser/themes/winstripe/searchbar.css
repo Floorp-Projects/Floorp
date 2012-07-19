@@ -70,7 +70,7 @@
 }
 
 .search-go-button:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .search-go-button:hover {

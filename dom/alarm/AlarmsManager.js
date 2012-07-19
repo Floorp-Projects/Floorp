@@ -63,7 +63,7 @@ AlarmsManager.prototype = {
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage(
       "AlarmsManager:Add", 
-      { requestID: this.getRequestId(request), date: aDate, ignoreTimezone: isIgnoreTimezone, data: aData, manifestURL: this._manifestURL }
+      { requestId: this.getRequestId(request), date: aDate, ignoreTimezone: isIgnoreTimezone, data: aData, manifestURL: this._manifestURL }
     );
     return request;
   },
@@ -83,7 +83,7 @@ AlarmsManager.prototype = {
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage(
       "AlarmsManager:GetAll", 
-      { requestID: this.getRequestId(request) }
+      { requestId: this.getRequestId(request) }
     );
     return request;
   },
@@ -92,10 +92,10 @@ AlarmsManager.prototype = {
     debug("receiveMessage(): " + aMessage.name);
 
     let json = aMessage.json;
-    let request = this.getRequest(json.requestID);
+    let request = this.getRequest(json.requestId);
 
     if (!request) {
-      debug("No request stored! " + json.requestID);
+      debug("No request stored! " + json.requestId);
       return;
     }
 
@@ -120,7 +120,7 @@ AlarmsManager.prototype = {
         debug("Wrong message: " + aMessage.name);
         break;
     }
-    this.removeRequest(json.requestID);
+    this.removeRequest(json.requestId);
    },
 
   // nsIDOMGlobalPropertyInitializer implementation

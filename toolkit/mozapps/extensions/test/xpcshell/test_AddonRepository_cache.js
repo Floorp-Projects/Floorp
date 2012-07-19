@@ -35,7 +35,7 @@ const PREF_ADDON1_CACHE_ENABLED = "extensions." + ADDON_IDS[1] + ".getAddons.cac
 const ADDON_PROPERTIES = ["id", "type", "name", "version", "creator",
                           "developers", "translators", "contributors",
                           "description", "fullDescription",
-                          "developerComments", "eula", "iconURL",
+                          "developerComments", "eula", "iconURL", "icons",
                           "screenshots", "homepageURL", "supportURL",
                           "optionsURL", "aboutURL", "contributionURL",
                           "contributionAmount", "averageRating", "reviewCount",
@@ -81,6 +81,7 @@ const REPOSITORY_ADDONS = [{
   developerComments:      "Repo Add-on 1\nDeveloper Comments",
   eula:                   "Repo Add-on 1 - EULA",
   iconURL:                BASE_URL + "/repo/1/icon.png",
+  icons:                  { "32": BASE_URL + "/repo/1/icon.png" },
   homepageURL:            BASE_URL + "/repo/1/homepage.html",
   supportURL:             BASE_URL + "/repo/1/support.html",
   contributionURL:        BASE_URL + "/repo/1/meetDevelopers.html",
@@ -129,6 +130,7 @@ const REPOSITORY_ADDONS = [{
   developerComments:      "Repo Add-on 2 - Developer Comments",
   eula:                   "Repo Add-on 2 - EULA",
   iconURL:                BASE_URL + "/repo/2/icon.png",
+  icons:                  { "32": BASE_URL + "/repo/2/icon.png" },
   screenshots:            [{
                             url:          BASE_URL + "/repo/2/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
@@ -155,6 +157,7 @@ const REPOSITORY_ADDONS = [{
   name:                   "Repo Add-on 3",
   version:                "2.3",
   iconURL:                BASE_URL + "/repo/3/icon.png",
+  icons:                  { "32": BASE_URL + "/repo/3/icon.png" },
   screenshots:            [{
                             url:          BASE_URL + "/repo/3/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/3/firstThumbnail.png",
@@ -182,6 +185,7 @@ const WITHOUT_CACHE = [{
                            { name: "XPI Add-on 1 - Second Contributor" }],
   description:            "XPI Add-on 1 - Description",
   iconURL:                BASE_URL + "/xpi/1/icon.png",
+  icons:                  { "32": BASE_URL + "/xpi/1/icon.png" },
   homepageURL:            BASE_URL + "/xpi/1/homepage.html",
   optionsURL:             BASE_URL + "/xpi/1/options.html",
   aboutURL:               BASE_URL + "/xpi/1/about.html",
@@ -191,7 +195,8 @@ const WITHOUT_CACHE = [{
   type:                   "theme",
   name:                   "XPI Add-on 2",
   version:                "1.2",
-  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec
+  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec,
+  icons:                  {}
 }, {
   id:                     ADDON_IDS[2],
   type:                   "theme",
@@ -199,6 +204,9 @@ const WITHOUT_CACHE = [{
   version:                "1.3",
   get iconURL () {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
+  },
+  get icons () {
+    return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
   screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
@@ -226,6 +234,7 @@ const WITH_CACHE = [{
   developerComments:      "Repo Add-on 1\nDeveloper Comments",
   eula:                   "Repo Add-on 1 - EULA",
   iconURL:                BASE_URL + "/xpi/1/icon.png",
+  icons:                  { "32": BASE_URL + "/xpi/1/icon.png" },
   homepageURL:            BASE_URL + "/xpi/1/homepage.html",
   supportURL:             BASE_URL + "/repo/1/support.html",
   optionsURL:             BASE_URL + "/xpi/1/options.html",
@@ -276,6 +285,7 @@ const WITH_CACHE = [{
   developerComments:      "Repo Add-on 2 - Developer Comments",
   eula:                   "Repo Add-on 2 - EULA",
   iconURL:                BASE_URL + "/repo/2/icon.png",
+  icons:                  { "32": BASE_URL + "/repo/2/icon.png" },
   screenshots:            [{
                             url:          BASE_URL + "/repo/2/firstFull.png",
                             thumbnailURL: BASE_URL + "/repo/2/firstThumbnail.png",
@@ -304,6 +314,9 @@ const WITH_CACHE = [{
   version:                "1.3",
   get iconURL () {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
+  },
+  get icons () {
+    return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
   screenshots:            [{
                             url:          BASE_URL + "/repo/3/firstFull.png",
@@ -338,6 +351,7 @@ const WITH_EXTENSION_CACHE = [{
   developerComments:      "Repo Add-on 1\nDeveloper Comments",
   eula:                   "Repo Add-on 1 - EULA",
   iconURL:                BASE_URL + "/xpi/1/icon.png",
+  icons:                  { "32": BASE_URL + "/xpi/1/icon.png" },
   homepageURL:            BASE_URL + "/xpi/1/homepage.html",
   supportURL:             BASE_URL + "/repo/1/support.html",
   optionsURL:             BASE_URL + "/xpi/1/options.html",
@@ -372,7 +386,8 @@ const WITH_EXTENSION_CACHE = [{
   type:                   "theme",
   name:                   "XPI Add-on 2",
   version:                "1.2",
-  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec
+  sourceURI:              NetUtil.newURI(ADDON_FILES[1]).spec,
+  icons:                  {}
 }, {
   id:                     ADDON_IDS[2],
   type:                   "theme",
@@ -380,6 +395,9 @@ const WITH_EXTENSION_CACHE = [{
   version:                "1.3",
   get iconURL () {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
+  },
+  get icons () {
+    return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
   screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec

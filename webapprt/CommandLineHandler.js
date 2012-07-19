@@ -32,6 +32,8 @@ CommandLineHandler.prototype = {
     if (!inTestMode) {
       startUp(inTestMode);
     } else {
+      DOMApplicationRegistry.allAppsLaunchable = true;
+
       // startUp() accesses WebappRT.config, which in test mode is not valid
       // until WebappRT.jsm observes an app installation.
       Services.obs.addObserver(function onInstall(subj, topic, data) {

@@ -673,6 +673,7 @@ PNG_EXTERN png_fixed_point png_fixed PNGARG((png_structp png_ptr, double fp,
 
 /* For png_struct.apng_flags: */
 #define PNG_FIRST_FRAME_HIDDEN       0x0001
+#define PNG_APNG_APP                 0x0002
 #endif
 
 /* The following will work on (signed char*) strings, whereas the get_uint_32

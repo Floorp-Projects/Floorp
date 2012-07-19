@@ -37,7 +37,7 @@ const DEFAULT_CACHE_TYPES = "extension,theme,locale,dictionary";
 
 const KEY_PROFILEDIR = "ProfD";
 const FILE_DATABASE  = "addons.sqlite";
-const DB_SCHEMA      = 3;
+const DB_SCHEMA      = 4;
 
 const TOOLKIT_ID     = "toolkit@mozilla.org";
 
@@ -55,20 +55,18 @@ const TOOLKIT_ID     = "toolkit@mozilla.org";
 // Note: the 'install' property is added for results from
 // retrieveRecommendedAddons and searchAddons
 const PROP_SINGLE = ["id", "type", "name", "version", "creator", "description",
-                     "fullDescription", "developerComments", "eula", "iconURL",
+                     "fullDescription", "developerComments", "eula",
                      "homepageURL", "supportURL", "contributionURL",
                      "contributionAmount", "averageRating", "reviewCount",
                      "reviewURL", "totalDownloads", "weeklyDownloads",
                      "dailyUsers", "sourceURI", "repositoryStatus", "size",
                      "updateDate"];
-const PROP_MULTI = ["developers", "screenshots"]
 
 // A map between XML keys to AddonSearchResult keys for string values
 // that require no extra parsing from XML
 const STRING_KEY_MAP = {
   name:               "name",
   version:            "version",
-  icon:               "iconURL",
   homepage:           "homepageURL",
   support:            "supportURL"
 };
@@ -145,6 +143,7 @@ function getAddonsToCache(aIds, aCallback) {
 
 function AddonSearchResult(aId) {
   this.id = aId;
+  this.icons = {};
 }
 
 AddonSearchResult.prototype = {
@@ -203,7 +202,14 @@ AddonSearchResult.prototype = {
   /**
    * The url of the add-on's icon
    */
-  iconURL: null,
+  get iconURL() {
+    return this.icons[32];
+  },
+
+   /**
+   * The URLs of the add-on's icons, as an object with icon size as key
+   */
+  icons: null,
 
   /**
    * An array of screenshot urls for the add-on
@@ -1145,6 +1151,9 @@ var AddonRepository = {
           if (!isNaN(epoch))
             addon.updateDate = new Date(1000 * epoch);
           break;
+        case "icon":
+          addon.icons[node.getAttribute("size")] = this._getTextContent(node);
+          break;
       }
     }
 
@@ -1466,7 +1475,7 @@ var AddonDatabase = {
   queries: {
     getAllAddons: "SELECT internal_id, id, type, name, version, " +
                   "creator, creatorURL, description, fullDescription, " +
-                  "developerComments, eula, iconURL, homepageURL, supportURL, " +
+                  "developerComments, eula, homepageURL, supportURL, " +
                   "contributionURL, contributionAmount, averageRating, " +
                   "reviewCount, reviewURL, totalDownloads, weeklyDownloads, " +
                   "dailyUsers, sourceURI, repositoryStatus, size, updateDate " +
@@ -1484,9 +1493,12 @@ var AddonDatabase = {
                            "FROM compatibility_override " +
                            "ORDER BY addon_internal_id, num",
 
+    getAllIcons: "SELECT addon_internal_id, size, url FROM icon " +
+                 "ORDER BY addon_internal_id, size",
+
     insertAddon: "INSERT INTO addon VALUES (NULL, :id, :type, :name, :version, " +
                  ":creator, :creatorURL, :description, :fullDescription, " +
-                 ":developerComments, :eula, :iconURL, :homepageURL, :supportURL, " +
+                 ":developerComments, :eula, :homepageURL, :supportURL, " +
                  ":contributionURL, :contributionAmount, :averageRating, " +
                  ":reviewCount, :reviewURL, :totalDownloads, :weeklyDownloads, " +
                  ":dailyUsers, :sourceURI, :repositoryStatus, :size, :updateDate)",
@@ -1507,6 +1519,8 @@ var AddonDatabase = {
                                  "(:addon_internal_id, :num, :type, " +
                                  ":minVersion, :maxVersion, :appID, " +
                                  ":appMinVersion, :appMaxVersion)",
+
+    insertIcon: "INSERT INTO icon VALUES (:addon_internal_id, :size, :url)",
 
     emptyAddon:       "DELETE FROM addon"
   },
@@ -1580,12 +1594,13 @@ var AddonDatabase = {
           this._createSchema();
           break;
         case 1:
-          LOG("Upgrading database schema");
+          LOG("Upgrading database schema to version 2");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN width INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN height INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailWidth INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailHeight INTEGER");
         case 2:
+          LOG("Upgrading database schema to version 3");
           this.connection.createTable("compatibility_override",
                                       "addon_internal_id INTEGER, " +
                                       "num INTEGER, " +
@@ -1596,10 +1611,17 @@ var AddonDatabase = {
                                       "appMinVersion TEXT, " +
                                       "appMaxVersion TEXT, " +
                                       "PRIMARY KEY (addon_internal_id, num)");
+        case 3:
+          LOG("Upgrading database schema to version 4");
+          this.connection.createTable("icon",
+                                      "addon_internal_id INTEGER, " +
+                                      "size INTEGER, " +
+                                      "url TEXT, " +
+                                      "PRIMARY KEY (addon_internal_id, size)");
           this._createIndices();
           this._createTriggers();
           this.connection.schemaVersion = DB_SCHEMA;
-        case 3:
+        case DB_SCHEMA:
           break;
         default:
           return tryAgain();
@@ -1830,6 +1852,39 @@ var AddonDatabase = {
             return;
           }
 
+          getAllIcons();
+        }
+      });
+    }
+
+    function getAllIcons() {
+      self.getAsyncStatement("getAllIcons").executeAsync({
+        handleResult: function(aResults) {
+          let row = null;
+          while (row = aResults.getNextRow()) {
+            let addon_internal_id = row.getResultByName("addon_internal_id");
+            if (!(addon_internal_id in addons)) {
+              WARN("Found an icon not linked to an add-on in database");
+              continue;
+            }
+
+            let addon = addons[addon_internal_id];
+            let { size, url } = self._makeIconFromAsyncRow(row);
+            addon.icons[size] = url;
+            if (size == 32)
+              addon.iconURL = url;
+          }
+        },
+
+        handleError: self.asyncErrorLogger,
+
+        handleCompletion: function(aReason) {
+          if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+            ERROR("Error retrieving icons from database. Returning empty results");
+            aCallback({});
+            return;
+          }
+
           let returnedAddons = {};
           for each (let addon in addons)
             returnedAddons[addon.id] = addon;
@@ -1941,6 +1996,20 @@ var AddonDatabase = {
       initializeArrayInsert("insertCompatibilityOverride",
                             aAddon.compatibilityOverrides,
                             self._addCompatOverrideParams);
+      {
+        let stmt = self.getAsyncStatement("insertIcon");
+        let params = stmt.newBindingParamsArray();
+        let empty = true;
+        for (let size in aAddon.icons) {
+          self._addIconParams(params, internal_id, aAddon.icons[size], size);
+          empty = false;
+        }
+
+        if (!empty) {
+          stmt.bindParameters(params);
+          stmts.push(stmt);
+        }
+      }
 
       // Immediately call callback if nothing to insert
       if (stmts.length == 0) {
@@ -2096,6 +2165,29 @@ var AddonDatabase = {
   },
 
   /**
+   * Add icon parameters to the specified mozIStorageBindingParamsArray.
+   *
+   * @param  aParams
+   *         The mozIStorageBindingParamsArray to add the parameters to
+   * @param  aInternalID
+   *         The internal_id of the add-on that this override is for
+   * @param  aURL
+   *         The URL of this icon
+   * @param  aSize
+   *         The size of this icon
+   */
+  _addIconParams: function AD_addIconParams(aParams,
+                                            aInternalID,
+                                            aURL,
+                                            aSize) {
+    let bp = aParams.newBindingParams();
+    bp.bindByName("addon_internal_id", aInternalID);
+    bp.bindByName("url", aURL);
+    bp.bindByName("size", aSize);
+    aParams.addParams(bp);
+  },
+
+  /**
    * Make add-on from an asynchronous row
    * Note: This add-on will be lacking both developers and screenshots
    *
@@ -2105,6 +2197,7 @@ var AddonDatabase = {
    */
   _makeAddonFromAsyncRow: function AD__makeAddonFromAsyncRow(aRow) {
     let addon = {};
+    addon.icons = {};
 
     PROP_SINGLE.forEach(function(aProperty) {
       let value = aRow.getResultByName(aProperty);
@@ -2186,6 +2279,19 @@ var AddonDatabase = {
   },
 
   /**
+   * Make an icon from an asynchronous row
+   *
+   * @param  aRow
+   *         The asynchronous row to use
+   * @return An object containing the size and URL of the icon
+   */
+  _makeIconFromAsyncRow: function AD_makeIconFromAsyncRow(aRow) {
+    let size = aRow.getResultByName("size");
+    let url = aRow.getResultByName("url");
+    return { size: size, url: url };
+  },
+
+  /**
    * Synchronously creates the schema in the database.
    */
   _createSchema: function AD__createSchema() {
@@ -2203,7 +2309,6 @@ var AddonDatabase = {
                                   "fullDescription TEXT, " +
                                   "developerComments TEXT, " +
                                   "eula TEXT, " +
-                                  "iconURL TEXT, " +
                                   "homepageURL TEXT, " +
                                   "supportURL TEXT, " +
                                   "contributionURL TEXT, " +
@@ -2249,6 +2354,12 @@ var AddonDatabase = {
                                   "appMaxVersion TEXT, " +
                                   "PRIMARY KEY (addon_internal_id, num)");
 
+      this.connection.createTable("icon",
+                                  "addon_internal_id INTEGER, " +
+                                  "size INTEGER, " +
+                                  "url TEXT, " +
+                                  "PRIMARY KEY (addon_internal_id, size)");
+
       this._createIndices();
       this._createTriggers();
 
@@ -2265,6 +2376,7 @@ var AddonDatabase = {
       "DELETE FROM developer WHERE addon_internal_id=old.internal_id; " +
       "DELETE FROM screenshot WHERE addon_internal_id=old.internal_id; " +
       "DELETE FROM compatibility_override WHERE addon_internal_id=old.internal_id; " +
+      "DELETE FROM icon WHERE addon_internal_id=old.internal_id; " +
       "END");
   },
 
@@ -2278,5 +2390,7 @@ var AddonDatabase = {
                                        "ON screenshot (addon_internal_id)");
       this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS compatibility_override_idx " +
                                        "ON compatibility_override (addon_internal_id)");
+      this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS icon_idx " +
+                                       "ON icon (addon_internal_id)");
   }
 };

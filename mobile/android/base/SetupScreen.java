@@ -8,12 +8,8 @@ package org.mozilla.gecko;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ImageView;
-
-import org.mozilla.gecko.R;
 
 public class SetupScreen extends Dialog
 {

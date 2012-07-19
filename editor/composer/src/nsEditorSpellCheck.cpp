@@ -3,29 +3,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdlib.h>                     // for getenv
+
+#include "mozilla/Attributes.h"         // for MOZ_FINAL
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/Services.h"           // for GetXULChromeRegistryService
+#include "mozilla/dom/Element.h"        // for Element
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsAString.h"                  // for nsAString_internal::IsEmpty, etc
+#include "nsComponentManagerUtils.h"    // for do_CreateInstance
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsDependentSubstring.h"       // for Substring
 #include "nsEditorSpellCheck.h"
-
-#include "nsStyleUtil.h"
-#include "nsIContent.h"
-#include "nsIDOMElement.h"
-#include "nsITextServicesDocument.h"
-#include "nsISpellChecker.h"
-#include "nsISelection.h"
-#include "nsIDOMRange.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
-
-#include "nsIComponentManager.h"
-#include "nsIContentPrefService.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIChromeRegistry.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsITextServicesFilter.h"
-#include "nsUnicharUtils.h"
-#include "mozilla/Services.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/dom/Element.h"
+#include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
+#include "nsIChromeRegistry.h"          // for nsIXULChromeRegistry
+#include "nsIContent.h"                 // for nsIContent
+#include "nsIContentPrefService.h"      // for nsIContentPrefService, etc
+#include "nsIDOMDocument.h"             // for nsIDOMDocument
+#include "nsIDOMElement.h"              // for nsIDOMElement
+#include "nsIDOMRange.h"                // for nsIDOMRange
+#include "nsIDocument.h"                // for nsIDocument
+#include "nsIEditor.h"                  // for nsIEditor
+#include "nsIHTMLEditor.h"              // for nsIHTMLEditor
+#include "nsISelection.h"               // for nsISelection
+#include "nsISpellChecker.h"            // for nsISpellChecker, etc
+#include "nsISupportsBase.h"            // for nsISupports
+#include "nsISupportsUtils.h"           // for NS_ADDREF
+#include "nsITextServicesDocument.h"    // for nsITextServicesDocument
+#include "nsITextServicesFilter.h"      // for nsITextServicesFilter
+#include "nsIURI.h"                     // for nsIURI
+#include "nsIVariant.h"                 // for nsIWritableVariant, etc
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc
+#include "nsMemory.h"                   // for nsMemory
+#include "nsReadableUtils.h"            // for ToNewUnicode, EmptyString, etc
+#include "nsServiceManagerUtils.h"      // for do_GetService
+#include "nsString.h"                   // for nsAutoString, nsString, etc
+#include "nsStringFwd.h"                // for nsAFlatString
+#include "nsStyleUtil.h"                // for nsStyleUtil
 
 using namespace mozilla;
 
@@ -494,6 +508,8 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
+
   if (!mUpdateDictionaryRunning) {
 
     nsDefaultStringComparator comparator;
@@ -581,6 +597,8 @@ NS_IMETHODIMP
 nsEditorSpellCheck::UpdateCurrentDictionary()
 {
   nsresult rv;
+
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   UpdateDictionnaryHolder holder(this);
 

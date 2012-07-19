@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1341001222000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1341959296000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -28,7 +28,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i107" os="WINNT" id="{ABDE892B-13A8-4d1b-88E6-365A6E755758}">
-                        <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
+                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i88" id="anttoolbar@ant.com">
@@ -215,6 +215,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i111" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
+                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i38" id="{B7082FAA-CB62-4872-9106-E42DD88EDE45}">
                         <versionRange  minVersion="0.1" maxVersion="3.3.0.*">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -328,7 +332,7 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
-                        <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
+                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i11" id="yslow@yahoo-inc.com">

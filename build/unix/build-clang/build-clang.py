@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "160105"
+llvm_revision = "160364"
 moz_version = "moz0"
 
 ##############################################
@@ -77,6 +77,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     inst_dir = stage_dir + "/clang"
 
     configure_opts = ["--enable-optimized",
+                      "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
     if is_stage_one:
@@ -99,6 +100,7 @@ if not os.path.exists(source_dir):
     if not isDarwin:
         patch("old-ld-hack.patch", 1, llvm_source_dir)
         patch("compiler-rt-gnu89-inline.patch", 0, compiler_rt_source_dir)
+        patch("no-sse-on-linux.patch", 1, clang_source_dir)
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)

@@ -197,8 +197,6 @@ let gSyncUtils = {
       error = "change.password.pwSameAsEmail";
     else if (val1 && val1 == Weave.Identity.basicPassword)
       error = "change.password.pwSameAsPassword";
-    else if (val1 && val1 == Weave.Identity.syncKey)
-      error = "change.password.pwSameAsRecoveryKey";
     else if (val1 && val2) {
       if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)
         valid = true;

@@ -1066,23 +1066,7 @@ IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder
     masm.mov(scopeChainReg(), scratchReg);
     GenerateScopeChainGuards(masm, scopeChain, holder, scratchReg, &failures);
 
-    unsigned slot;
-    if (holder->isCall()) {
-        slot = shape->shortid();
-
-        CallObject *callObj = &holder->asCall();
-        if (!callObj->isForEval()) {
-            JSFunction *fun = &callObj->callee();
-
-            if (shape->setterOp() == CallObject::setVarOp)
-                slot += fun->nargs;
-        }
-        slot += CallObject::RESERVED_SLOTS;
-    } else {
-        JS_ASSERT(holder->isGlobal());
-        slot = shape->slot();
-    }
-
+    unsigned slot = shape->slot();
     if (holder->isFixedSlot(slot)) {
         Address addr(scratchReg, JSObject::getFixedSlotOffset(slot));
         masm.loadTypedOrValue(addr, outputReg());
@@ -1146,11 +1130,8 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
         if (!IsCacheableGetProp(obj, holder, shape))
             return false;
     } else if (obj->isCall()) {
-        if (shape->setterOp() != CallObject::setArgOp &&
-            shape->setterOp() != CallObject::setVarOp)
-        {
+        if (!shape->hasDefaultGetter())
             return false;
-        }
     } else {
         // We don't yet support lookups on Block or DeclEnv objects.
         return false;

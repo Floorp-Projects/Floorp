@@ -22,9 +22,9 @@
 
       testAccessibleTree("imagemapcontainer", accTree);
 
-      // map group
+      // map group.  Imagemaps are inlines by default, so TEXT_CONTAINER.
       accTree =
-        { PARAGRAPH: [
+        { TEXT_CONTAINER: [
           { PARAGRAPH: [
             { TEXT_LEAF: [ ] },
             { LINK: [

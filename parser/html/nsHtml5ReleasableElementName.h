@@ -6,8 +6,9 @@
 #define nsHtml5ReleasableElementName_h__
 
 #include "nsHtml5ElementName.h"
+#include "mozilla/Attributes.h"
 
-class nsHtml5ReleasableElementName : public nsHtml5ElementName
+class nsHtml5ReleasableElementName MOZ_FINAL : public nsHtml5ElementName
 {
   public:
     nsHtml5ReleasableElementName(nsIAtom* name);

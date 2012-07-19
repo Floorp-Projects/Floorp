@@ -86,8 +86,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
-  LayerBuilder()->Init(this);
-
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
 
@@ -586,6 +584,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     layerManager = new BasicLayerManager();
   }
 
+  FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
+  layerBuilder->Init(aBuilder);
+  layerManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(layerBuilder));
+
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
@@ -598,7 +600,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     }
   }
   if (allowRetaining) {
-    aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
+    layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
   }
 
   nsPresContext* presContext = aForFrame->PresContext();
@@ -606,11 +608,14 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   nsDisplayItem::ContainerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
-  nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
                            containerParameters, nsnull);
-  if (!root)
+
+  if (!root) {
+    layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
     return;
+  }
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   gfx3DMatrix rootTransform = root->GetTransform()*
     gfx3DMatrix::ScalingMatrix(1.0f/containerParameters.mXScale,
@@ -641,16 +646,17 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetRoot(root);
-  aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
+  layerBuilder->WillEndTransaction(layerManager);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder);
-  aBuilder->LayerBuilder()->DidEndTransaction(layerManager);
+  layerBuilder->DidEndTransaction(layerManager);
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
   nsCSSRendering::DidPaint();
+  layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
 }
 
 PRUint32 nsDisplayList::Count() const {
@@ -1910,7 +1916,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
+  nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
   if (!layer)
@@ -1996,7 +2002,7 @@ already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
+  nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
   return layer.forget();
@@ -2125,7 +2131,7 @@ already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
                                  const ContainerParameters& aContainerParameters) {
-  nsRefPtr<ContainerLayer> layer = aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
 
@@ -2881,7 +2887,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nsnull;
   }
 
-  nsRefPtr<ContainerLayer> container = aBuilder->LayerBuilder()->
+  nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
                            aContainerParameters, &newTransformMatrix);
 
@@ -3256,11 +3262,52 @@ nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect
   }
 }
 
-void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
-                                nsRenderingContext* aCtx)
+void
+nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder* aBuilder,
+                                  nsRenderingContext* aCtx,
+                                  LayerManager* aManager)
 {
-  nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
-          mFrame, mVisibleRect, aBuilder, &mList);
+  nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx, mFrame,
+                                                mVisibleRect,
+                                                aBuilder, aManager);
+}
+
+LayerState
+nsDisplaySVGEffects::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
+{
+  return LAYER_SVG_EFFECTS;
+}
+
+already_AddRefed<Layer>
+nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerParameters& aContainerParameters)
+{
+  float opacity = mFrame->GetStyleDisplay()->mOpacity;
+  if (opacity == 0.0f)
+    return nsnull;
+
+  nsIFrame* firstFrame =
+    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+
+  bool isOK = true;
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
+  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
+
+  if (!isOK) {
+    return nsnull;
+  }
+
+  nsRefPtr<ContainerLayer> container = GetLayerBuilderForManager(aManager)->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
+                           aContainerParameters, nsnull);
+
+  return container.forget();
 }
 
 bool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,

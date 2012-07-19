@@ -42,7 +42,6 @@
 #include "jsobj.h"
 #include "jsprf.h"
 
-#include "vm/MethodGuard-inl.h"
 #include "jsobjinlines.h"
 #include "jsarrayinlines.h"
 
@@ -53,6 +52,12 @@ enum {
     JSSLOT_PA_BUFFER,
     JSSLOT_PA_MAX
 };
+
+static bool
+IsParallelArray(const Value &v)
+{
+    return v.isObject() && v.toObject().hasClass(&ParallelArrayClass);
+}
 
 inline uint32_t
 GetLength(JSObject *obj)
@@ -79,22 +84,16 @@ NewParallelArray(JSContext *cx, JSObject *buffer, uint32_t length)
     return result;
 }
 
-static JSBool
-ParallelArray_get(JSContext *cx, unsigned argc, Value *vp)
+static bool
+ParallelArray_get_impl(JSContext *cx, CallArgs args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, ParallelArray_get, &ParallelArrayClass, obj.address()))
-        return false;
-    if (!obj)
-        return true;
-
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "ParallelArray.get", "0", "s");
         return false;
     }
+
+    RootedObject obj(cx, &args.thisv().toObject());
 
     uint32_t index;
     if (!ToUint32(cx, args[0], &index))
@@ -108,6 +107,13 @@ ParallelArray_get(JSContext *cx, unsigned argc, Value *vp)
     args.rval() = GetBuffer(obj)->getDenseArrayElement(index);
 
     return true;
+}
+
+static JSBool
+ParallelArray_get(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ParallelArray_get_impl, args);
 }
 
 static JSBool
@@ -236,42 +242,17 @@ ParallelArray_construct(JSContext *cx, unsigned argc, Value *vp)
     return ParallelArray_build(cx, length, UndefinedValue(), elementalFun, false, 0, NULL, &(args.rval()));
 }
 
-/* forward declaration */
-static JSBool
-ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap);
-
-static JSBool
-ParallelArray_map(JSContext *cx, unsigned argc, Value *vp)
+template <bool IsMap>
+static bool
+MapOrCombine(JSContext *cx, CallArgs args)
 {
-    return ParallelArray_mapOrCombine(cx, argc, vp, true);
-}
-
-static JSBool
-ParallelArray_combine(JSContext *cx, unsigned argc, Value *vp)
-{
-    return ParallelArray_mapOrCombine(cx, argc, vp, false);
-}
-
-static JSBool
-ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* make sure we are called on a ParallelArray */
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, (isMap ? ParallelArray_map : ParallelArray_combine),
-                               &ParallelArrayClass, obj.address()))
-    {
-        return false;
-    }
-    if (!obj)
-        return true;
-
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             (isMap ? "map" : "combine"), "0", "s");
+                             (IsMap ? "map" : "combine"), "0", "s");
         return false;
     }
+
+    RootedObject obj(cx, &args.thisv().toObject());
 
     /* extract first argument, the elemental function */
     RootedObject elementalFun(cx, ValueToCallable(cx, &args[0]));
@@ -279,8 +260,8 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
         return false;
 
     /* check extra arguments for map to be objects */
-    if (isMap && (argc > 1)) {
-        for (unsigned i = 1; i < argc; i++) {
+    if (IsMap && (args.length() > 1)) {
+        for (unsigned i = 1; i < args.length(); i++) {
             if (!args[i].isObject()) {
                 char buffer[4];
                 JS_snprintf(buffer, 4, "%d", i+1);
@@ -292,52 +273,46 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
         }
     }
 
-    return ParallelArray_build(cx, GetLength(obj), ObjectValue(*obj), elementalFun, isMap,
-                               (isMap ? argc-1 : 0), ((argc > 1) ? &(args[1]) : NULL), &(args.rval()));
-}
-
-/* forward declaration */
-static JSBool
-ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan);
-
-static JSBool
-ParallelArray_scan(JSContext *cx, unsigned argc, Value *vp)
-{
-    return ParallelArray_scanOrReduce(cx, argc, vp, true);
+    return ParallelArray_build(cx, GetLength(obj), ObjectValue(*obj), elementalFun, IsMap,
+                               (IsMap
+                                ? args.length() - 1
+                                : 0),
+                               ((args.length() > 1)
+                                ? &(args[1])
+                                : NULL),
+                               &(args.rval()));
 }
 
 static JSBool
-ParallelArray_reduce(JSContext *cx, unsigned argc, Value *vp)
-{
-    return ParallelArray_scanOrReduce(cx, argc, vp, false);
-}
-
-static JSBool
-ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
+ParallelArray_map(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, MapOrCombine<true>, args);
+}
 
-    /* make sure we are called on a ParallelArray */
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, (isScan ? ParallelArray_scan : ParallelArray_reduce),
-                               &ParallelArrayClass, obj.address()))
-    {
-        return false;
-    }
-    if (!obj)
-        return true;
+static JSBool
+ParallelArray_combine(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, MapOrCombine<false>, args);
+}
 
+template <bool IsScan>
+static bool
+ScanOrReduce(JSContext *cx, CallArgs args)
+{
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             (isScan ? "scan" : "reduce"), "0", "s");
+                             (IsScan ? "scan" : "reduce"), "0", "s");
         return false;
     }
 
+    RootedObject obj(cx, &args.thisv().toObject());
     uint32_t length = GetLength(obj);
 
     RootedObject result(cx);
     RootedObject resBuffer(cx);
-    if (isScan) {
+    if (IsScan) {
         /* create data store for results */
         resBuffer = NewDenseAllocatedArray(cx, length);
         if (!resBuffer)
@@ -358,14 +333,14 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
 
     /* special case of empty arrays */
     if (length == 0) {
-        args.rval() = (isScan ? ObjectValue(*result) : UndefinedValue());
+        args.rval() = (IsScan ? ObjectValue(*result) : UndefinedValue());
         return true;
     }
 
     RootedObject buffer(cx, GetBuffer(obj));
 
     Value accu = buffer->getDenseArrayElement(0);
-    if (isScan)
+    if (IsScan)
         resBuffer->setDenseArrayElementWithType(cx, 0, accu);
 
     /* prepare call frame on stack */
@@ -389,32 +364,40 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
 
         /* remember result for next round */
         accu = ag.rval();
-        if (isScan)
+        if (IsScan)
             resBuffer->setDenseArrayElementWithType(cx, i, accu);
     }
 
-    args.rval() = (isScan ? ObjectValue(*result) : accu);
+    args.rval() = (IsScan ? ObjectValue(*result) : accu);
 
     return true;
 }
 
 static JSBool
-ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
+ParallelArray_scan(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ScanOrReduce<true>, args);
+}
 
-    /* make sure we are called on a ParallelArray */
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, ParallelArray_filter, &ParallelArrayClass, obj.address()))
-        return false;
-    if (!obj)
-        return true;
+static JSBool
+ParallelArray_reduce(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ScanOrReduce<false>, args);
+}
 
+
+static bool
+ParallelArray_filter_impl(JSContext *cx, CallArgs args)
+{
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "filter", "0", "s");
         return false;
     }
+
+    RootedObject obj(cx, &args.thisv().toObject());
 
     /* extract first argument, the elemental function */
     RootedObject elementalFun(cx, ValueToCallable(cx, &args[0]));
@@ -462,24 +445,23 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
+ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ParallelArray_filter_impl, args);
+}
 
-    /* make sure we are called on a ParallelArray */
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, ParallelArray_scatter, &ParallelArrayClass, obj.address()))
-        return false;
-    if (!obj)
-        return true;
-
-    RootedObject buffer(cx, GetBuffer(obj));
-
+static bool
+ParallelArray_scatter_impl(JSContext *cx, CallArgs args)
+{
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "scatter", "0", "s");
         return false;
     }
+
+    RootedObject obj(cx, &args.thisv().toObject());
+    RootedObject buffer(cx, GetBuffer(obj));
 
     /* grab the scatter vector */
     if (!args[0].isObject()) {
@@ -592,48 +574,36 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native native, HandleId id)
+ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ParallelArray_scatter_impl, args);
+}
 
-    RootedObject obj(cx);
-    if (!NonGenericMethodGuard(cx, args, native, &ParallelArrayClass, obj.address()))
-        return false;
-    if (!obj)
-        return true;
-
+static bool
+ParallelArray_toString_impl(JSContext *cx, CallArgs args)
+{
     RootedValue callable(cx);
+    RootedObject obj(cx, &args.thisv().toObject());
     RootedObject buffer(cx, GetBuffer(obj));
+    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
+
     if (!GetMethod(cx, buffer, id, 0, callable.address()))
         return false;
 
     RootedValue rval(cx);
-    if (!Invoke(cx, ObjectOrNullValue(buffer), callable, argc, vp, rval.address()))
+    if (!Invoke(cx, ObjectOrNullValue(buffer), callable, args.length(), args.array(), rval.address()))
         return false;
 
-    *vp = rval;
+    args.rval() = rval;
     return true;
 }
 
 static JSBool
 ParallelArray_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toString, id);
-}
-
-static JSBool
-ParallelArray_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
-{
-    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toLocaleString, id);
-}
-
-static JSBool
-ParallelArray_toSource(JSContext *cx, unsigned argc, Value *vp)
-{
-    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
-    return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toSource, id);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsParallelArray, ParallelArray_toString_impl, args);
 }
 
 static JSBool
@@ -1064,8 +1034,8 @@ static JSFunctionSpec parallel_array_methods[] = {
     JS_FN("filter",              ParallelArray_filter,         1, 0),
     JS_FN("scatter",             ParallelArray_scatter,        1, 0),
     JS_FN(js_toString_str,       ParallelArray_toString,       0, 0),
-    JS_FN(js_toLocaleString_str, ParallelArray_toLocaleString, 0, 0),
-    JS_FN(js_toSource_str,       ParallelArray_toSource,       0, 0),
+    JS_FN(js_toLocaleString_str, ParallelArray_toString,       0, 0),
+    JS_FN(js_toSource_str,       ParallelArray_toString,       0, 0),
     JS_FS_END
 };
 

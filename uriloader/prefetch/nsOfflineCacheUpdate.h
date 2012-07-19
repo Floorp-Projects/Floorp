@@ -148,6 +148,7 @@ private:
         PARSE_CACHE_ENTRIES,
         PARSE_FALLBACK_ENTRIES,
         PARSE_BYPASS_ENTRIES,
+        PARSE_UNKNOWN_SECTION,
         PARSE_ERROR
     } mParserState;
 

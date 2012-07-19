@@ -15,41 +15,58 @@ XPIDL_MODULE     = dom_bluetooth
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-VPATH += $(srcdir)/linux
-LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
-endif
-
-ifdef MOZ_ENABLE_DBUS
-VPATH += $(srcdir)/linux
-LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
-endif
-
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
+CPPSRCS += \
+  BluetoothService.cpp \
   BluetoothManager.cpp \
   BluetoothAdapter.cpp \
-  BluetoothFirmware.cpp \
+  BluetoothDevice.cpp \
+  BluetoothDeviceEvent.cpp \
+  BluetoothReplyRunnable.cpp \
   $(NULL)
-
-ifdef MOZ_ENABLE_DBUS
-CPPSRCS += BluetoothDBusUtils.cpp
-endif
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += BluetoothDBusUtils.cpp
-endif
 
 XPIDLSRCS = \
   nsIDOMNavigatorBluetooth.idl \
   nsIDOMBluetoothManager.idl \
   nsIDOMBluetoothAdapter.idl \
+  nsIDOMBluetoothDevice.idl \
+  nsIDOMBluetoothDeviceEvent.idl \
   $(NULL)
 
-include $(topsrcdir)/config/rules.mk
-
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+VPATH += \
+	$(srcdir)/linux \
+	$(srcdir)/gonk \
+	$(NULL)
+LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+CPPSRCS += \
+	BluetoothDBusService.cpp \
+	BluetoothGonkService.cpp \
+	BluetoothGonkServiceFactory.cpp \
+	$(NULL)
+else
 ifdef MOZ_ENABLE_DBUS
+VPATH += $(srcdir)/linux
+LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+CPPSRCS += \
+	BluetoothDBusService.cpp \
+	BluetoothDBusServiceFactory.cpp \
+	$(NULL)
 CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
+else
+CPPSRCS += BluetoothNullServiceFactory.cpp
 endif
+endif
+
+LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders/mozilla/dom/bluetooth/
+
+# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
+# subdirectory
+LOCAL_INCLUDES += $(VPATH:%=-I%)
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+

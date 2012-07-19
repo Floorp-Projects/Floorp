@@ -12,45 +12,47 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
 		test_bug448587.xul \
+		test_bug484459.xul \
 		test_bug500931.xul \
 		bug503926.xul \
 		test_bug503926.xul \
-		test_bug533596.xul \
-		test_doublewrappedcompartments.xul \
-		test_evalInSandbox.xul \
-		file_evalInSandbox.html \
-		test_sandboxImport.xul \
-		test_wrappers.xul \
-		test_bug484459.xul \
-		test_cows.xul \
 		test_bug517163.xul \
+		test_bug533596.xul \
 		test_bug571849.xul \
+		test_bug596580.xul \
 		test_bug601803.xul \
 		test_bug610390.xul \
 		test_bug614757.xul \
 		test_bug616992.xul \
 		test_bug618176.xul \
 		file_bug618176.xul \
-		test_bug596580.xul \
 		test_bug654370.xul \
 		test_bug658560.xul \
-		test_bug679861.xul \
 		test_bug664689.xul \
+		test_bug679861.xul \
 		test_bug706301.xul \
-		test_bug743843.xul \
-		test_APIExposer.xul \
-		test_precisegc.xul \
-		test_nodelists.xul \
-		test_getweakmapkeys.xul \
-		test_weakmaps.xul \
-		test_exnstack.xul \
-		test_weakref.xul \
 		test_bug726949.xul \
-		test_expandosharing.xul \
-		file_expandosharing.jsm \
+		test_bug743843.xul \
 		test_bug758563.xul \
 		test_bug760076.xul \
+		test_bug763343.xul \
+		test_APIExposer.xul \
+		test_cows.xul \
 		test_documentdomain.xul \
+		test_doublewrappedcompartments.xul \
+		test_evalInSandbox.xul \
+		file_evalInSandbox.html \
+		test_exnstack.xul \
+		test_expandosharing.xul \
+		file_expandosharing.jsm \
+		test_getweakmapkeys.xul \
+		test_nodelists.xul \
+		test_precisegc.xul \
+		test_sandboxImport.xul \
+		test_weakmaps.xul \
+		test_weakref.xul \
+		test_wrappers.xul \
+		test_bug771429.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based
