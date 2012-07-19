@@ -1847,4 +1847,16 @@ public class GeckoAppShell
     public static String getGfxInfoData() {
         return null;
     }
+
+    public static void registerSurfaceTextureFrameListener(SurfaceTexture surfaceTexture, final int id) {
+        surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                GeckoAppShell.onSurfaceTextureFrameAvailable(surfaceTexture, id);
+            }
+        });
+    }
+
+    public static void unregisterSurfaceTextureFrameListener(SurfaceTexture surfaceTexture) {
+        surfaceTexture.setOnFrameAvailableListener(null);
+    }
 }
