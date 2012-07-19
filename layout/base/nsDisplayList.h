@@ -1910,7 +1910,7 @@ public:
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsIFrame* aFixedPosFrame, nsDisplayList* aList);
+                         nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayFixedPosition();
 #endif
@@ -1919,9 +1919,6 @@ public:
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
-
-protected:
-  nsIFrame* mFixedPosFrame;
 };
 
 /**

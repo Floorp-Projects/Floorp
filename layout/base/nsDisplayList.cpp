@@ -2010,10 +2010,8 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
-                                               nsIFrame* aFixedPosFrame,
                                                nsDisplayList* aList)
-    : nsDisplayOwnLayer(aBuilder, aFrame, aList)
-    , mFixedPosFrame(aFixedPosFrame) {
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
 }
 
@@ -2034,7 +2032,7 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   // any positioning set (left/top/right/bottom) indicates that the
   // corresponding side of its container should be the anchor point,
   // defaulting to top-left.
-  nsIFrame* viewportFrame = mFixedPosFrame->GetParent();
+  nsIFrame* viewportFrame = mFrame->GetParent();
   nsPresContext *presContext = viewportFrame->PresContext();
 
   // Fixed position frames are reflowed into the scroll-port size if one has
@@ -2061,7 +2059,7 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   gfxPoint anchor(anchorRect.x, anchorRect.y);
 
-  const nsStylePosition* position = mFixedPosFrame->GetStylePosition();
+  const nsStylePosition* position = mFrame->GetStylePosition();
   if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
     anchor.x = anchorRect.XMost();
   if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto)
