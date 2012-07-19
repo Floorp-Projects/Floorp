@@ -656,18 +656,17 @@ nsPrincipal::GetScriptLocation(nsACString &aStr)
   }
 }
 
-NS_IMETHODIMP
-nsPrincipal::GetOrigin(char **aOrigin)
+/* static */ nsresult
+nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
 {
+  if (!aURI) {
+    return NS_ERROR_FAILURE;
+  }
+
   *aOrigin = nsnull;
 
-  nsCOMPtr<nsIURI> origin;
-  if (mCodebase) {
-    origin = NS_GetInnermostURI(mCodebase);
-  }
-  
+  nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
   if (!origin) {
-    NS_ASSERTION(mCert, "No Domain or Codebase for a non-cert principal");
     return NS_ERROR_FAILURE;
   }
 
@@ -683,8 +682,9 @@ nsPrincipal::GetOrigin(char **aOrigin)
     rv = origin->GetAsciiHost(hostPort);
     // Some implementations return an empty string, treat it as no support
     // for asciiHost by that implementation.
-    if (hostPort.IsEmpty())
+    if (hostPort.IsEmpty()) {
       rv = NS_ERROR_FAILURE;
+    }
   }
 
   PRInt32 port;
@@ -701,6 +701,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
     nsCAutoString scheme;
     rv = origin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
+
     *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
   else {
@@ -711,10 +712,17 @@ nsPrincipal::GetOrigin(char **aOrigin)
     // both fall back to GetSpec.  That needs to be fixed.
     rv = origin->GetAsciiSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
+
     *aOrigin = ToNewCString(spec);
   }
 
   return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetOrigin(char **aOrigin)
+{
+  return GetOriginForURI(mCodebase, aOrigin);
 }
 
 NS_IMETHODIMP
