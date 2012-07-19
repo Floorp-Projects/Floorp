@@ -9,7 +9,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(bd94820d-4fd5-4d57-a40e-406ee72d27b7)]
+[scriptable, uuid(cdb27711-492b-4973-938b-de81ac124658)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -236,18 +236,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipalAndFrame(in JSContextPtr cx,
                                                                    out JSStackFramePtr fp);
-
-
-    const unsigned long NO_APP_ID = 0;
-    const unsigned long UNKNOWN_APP_ID = 4294967295; // PR_UINT32_MAX
-
-    /**
-     * Returns the extended origin for the uri.
-     * appId can be NO_APP_ID, UNKWOWN_APP_ID or a valid app id.
-     * inMozBrowser has to be true if the uri is inside a mozbrowser iframe.
-     */
-    AUTF8String getExtendedOrigin(in nsIURI uri, in unsigned long appId,
-                                  in boolean inMozBrowser);
 };
 
 %{C++
