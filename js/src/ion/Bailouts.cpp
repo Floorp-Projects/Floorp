@@ -122,6 +122,12 @@ StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
         }
     }
 
+    // Assume that all new stack frames have had their entry flag set if
+    // profiling has been turned on. This will be corrected if necessary
+    // elsewhere.
+    if (cx->runtime->spsProfiler.enabled())
+        setPushedSPSFrame();
+
     if (isFunctionFrame()) {
         Value thisv = iter.read();
         formals()[-1] = thisv;
@@ -293,8 +299,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_OK;
       case Bailout_TypeBarrier:
         return BAILOUT_RETURN_TYPE_BARRIER;
-      case Bailout_ArgumentCheck:
-        return BAILOUT_RETURN_ARGUMENT_CHECK;
       case Bailout_Monitor:
         return BAILOUT_RETURN_MONITOR;
       case Bailout_RecompileCheck:
@@ -303,6 +307,15 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_BOUNDS_CHECK;
       case Bailout_Invalidate:
         return BAILOUT_RETURN_INVALIDATE;
+
+      // When bailing out from an argument check, none of the code of the
+      // function has run yet. When profiling, this means that the function
+      // hasn't flagged its entry just yet. It has been "entered," however, so
+      // we flag it here manually that the entry has happened.
+      case Bailout_ArgumentCheck:
+        fp->unsetPushedSPSFrame();
+        Probes::enterScript(cx, fp->script(), fp->script()->function(), fp);
+        return BAILOUT_RETURN_ARGUMENT_CHECK;
     }
 
     JS_NOT_REACHED("bad bailout kind");
