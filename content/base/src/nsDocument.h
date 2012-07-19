@@ -1173,11 +1173,6 @@ protected:
 
   bool mInXBLUpdate:1;
 
-  // This flag is only set in nsXMLDocument, for e.g. documents used in XBL. We
-  // don't want animations to play in such documents, so we need to store the
-  // flag here so that we can check it in nsDocument::GetAnimationController.
-  bool mLoadedAsInteractiveData:1;
-
   // Whether we're currently holding a lock on all of our images.
   bool mLockingImages:1;
 
