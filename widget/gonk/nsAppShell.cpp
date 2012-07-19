@@ -108,7 +108,7 @@ struct UserInputData {
 };
 
 static void
-sendMouseEvent(PRUint32 msg, uint64_t timeMs, int x, int y)
+sendMouseEvent(PRUint32 msg, uint64_t timeMs, int x, int y, bool forwardToChildren)
 {
     nsMouseEvent event(true, msg, NULL,
                        nsMouseEvent::eReal, nsMouseEvent::eNormal);
@@ -119,6 +119,9 @@ sendMouseEvent(PRUint32 msg, uint64_t timeMs, int x, int y)
     event.button = nsMouseEvent::eLeftButton;
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;
+
+    if (!forwardToChildren)
+        event.flags |= NS_EVENT_FLAG_DONT_FORWARD_CROSS_PROCESS;
 
     nsWindow::DispatchInputEvent(event);
 }
@@ -332,8 +335,6 @@ GeckoInputDispatcher::dispatchOnce()
     switch (data.type) {
     case UserInputData::MOTION_DATA: {
         nsEventStatus status = sendTouchEvent(data);
-        if (status == nsEventStatus_eConsumeNoDefault)
-            break;
 
         PRUint32 msg;
         switch (data.action & AMOTION_EVENT_ACTION_MASK) {
@@ -354,7 +355,8 @@ GeckoInputDispatcher::dispatchOnce()
         sendMouseEvent(msg,
                        data.timeMs,
                        data.motion.touches[0].coords.getX(),
-                       data.motion.touches[0].coords.getY());
+                       data.motion.touches[0].coords.getY(),
+                       status != nsEventStatus_eConsumeNoDefault);
         break;
     }
     case UserInputData::KEY_DATA:
