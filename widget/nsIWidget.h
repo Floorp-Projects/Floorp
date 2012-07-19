@@ -609,7 +609,7 @@ class nsIWidget : public nsISupports {
      * Returns whether the window is visible
      *
      */
-    NS_IMETHOD IsVisible(bool & aState) = 0;
+    virtual bool IsVisible() const = 0;
 
     /**
      * Perform platform-dependent sanity check on a potential window position.
