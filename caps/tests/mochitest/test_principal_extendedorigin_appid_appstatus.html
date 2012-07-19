@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=758258
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for nsIPrincipal extendedOrigin, appStatus and appId</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=758258">Mozilla Bug 758258</a>
+<p id="display"></p>
+<div id="content">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 758258 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gData = [
+  {
+    app: "http://example.org/manifest.webapp",
+    origin: "http://example.org",
+  },
+  {
+    app: "https://example.com:443/manifest.webapp",
+    origin: "https://example.com",
+  },
+  {
+    app: "http://test1.example.org/manifest.webapp",
+    origin: "http://test1.example.org",
+  },
+  {
+    app: "http://test1.example.org:8000/manifest.webapp",
+    origin: "http://test1.example.org:8000",
+  },
+  {
+    app: "http://sub1.test1.example.org/manifest.webapp",
+    origin: "http://sub1.test1.example.org",
+  },
+  {
+    app: "http://example.org/foo/manifest.webapp",
+    origin: "http://example.org",
+  },
+  {
+    app: "http://example.org/bar/manifest.webapp",
+    origin: "http://example.org",
+  },
+  {
+    browser: true,
+    origin: "http://example.org",
+  },
+  {
+    origin: "http://example.org",
+  },
+  {
+    app: "http://example.org/wedonthaveanyappinthatdirectory/manifest.webapp",
+    origin: "http://example.org",
+  },
+  {
+    app: "http://example.org/manifest.webapp",
+    origin: "data:text/html,foobar",
+    test: [ "todo-origin" ],
+  },
+  {
+    app: "http://example.org/manifest.webapp",
+    origin: "data:text/html,foobar2",
+    test: [ "todo-origin" ],
+  },
+  {
+    origin: "file:///",
+  },
+  {
+    origin: "file:///tmp",
+  },
+  {
+    app: "http://example.org/manifest.webapp",
+    origin: "file:///",
+  },
+  {
+    app: "http://example.org/manifest.webapp",
+    origin: "file:///tmp",
+  },
+];
+
+var content = document.getElementById('content');
+var checkedCount = 0;
+var checksTodo = gData.length;
+
+function checkPrincipalForIFrame(aFrame, data) {
+  var principal = aFrame.contentDocument.nodePrincipal;
+
+  // TODO: TEMP.
+  if (!data.test) {
+    data.test = [];
+  }
+
+  if (data.test.indexOf('todo-origin') == -1) {
+    var origin = data.origin;
+    if (navigator.platform.indexOf("Mac") != 1) {
+      origin = origin.replace("file:///", "file:///private/");
+    }
+    is(principal.URI.origin, origin, 'the correct URL should have been loaded');
+  }
+
+  checkedCount++;
+  if (checkedCount == checksTodo) {
+    SimpleTest.finish();
+  }
+}
+
+is('appStatus' in document.nodePrincipal, false,
+   'appStatus should not be present in nsIPrincipal');
+is('extendedOrigin' in document.nodePrincipal, false,
+   'extendedOrigin should not be present in nsIPrincipal');
+is('appId' in document.nodePrincipal, false,
+   'appId should not be present in nsIPrincipal');
+
+gData.forEach(function(data) {
+  var iframe = document.createElement('iframe');
+  iframe.checkPrincipal = function() {
+    checkPrincipalForIFrame(this, data);
+  };
+
+  if (data.app) {
+    iframe.setAttribute('mozapp', data.app);
+    iframe.setAttribute('mozbrowser', '');
+  } else if (data.browser) {
+    iframe.setAttribute('mozbrowser', '');
+  }
+
+  iframe.src = data.origin;
+
+  iframe.addEventListener('load', iframe.checkPrincipal.bind(iframe));
+
+  content.appendChild(iframe);
+});
+
+</script>
+</pre>
+</body>
+</html>
