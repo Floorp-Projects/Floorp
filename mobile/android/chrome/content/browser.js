@@ -799,7 +799,14 @@ var BrowserApp = {
         continue;
 
       try {
-        sanitizer.clearItem(key);
+        switch (key) {
+          case "history_downloads":
+            sanitizer.clearItem("history");
+            sanitizer.clearItem("downloads");
+            break;
+          default:
+            sanitizer.clearItem(key);
+        }
       } catch (e) {
         dump("sanitize error: " + e);
         success = false;
