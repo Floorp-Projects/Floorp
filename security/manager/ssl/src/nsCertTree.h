@@ -18,6 +18,7 @@
 #include "pldhash.h"
 #include "nsIX509CertDB.h"
 #include "nsCertOverrideService.h"
+#include "mozilla/Attributes.h"
 
 
 typedef struct treeArrayElStr treeArrayEl;
@@ -37,7 +38,7 @@ struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
   CompareCacheHashEntry *entry;
 };
 
-class nsCertAddonInfo : public nsISupports
+class nsCertAddonInfo MOZ_FINAL : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS

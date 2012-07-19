@@ -387,7 +387,6 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
 
     if (mode == XDR_DECODE) {
         fun->nargs = flagsword >> 16;
-        JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
         fun->flags = uint16_t(flagsword);
         fun->atom.init(atom);
         fun->initScript(script);
@@ -1219,8 +1218,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
 
     /* Initialize all function members. */
     fun->nargs = uint16_t(nargs);
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
-    if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
+    if (flags & JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         fun->mutableScript().init(NULL);
         fun->initEnvironment(parent);
@@ -1268,7 +1267,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         clone->initializeExtended();
     }
 
-    if (cx->compartment == fun->compartment()) {
+    if (cx->compartment == fun->compartment() && !types::UseNewTypeForClone(fun)) {
         /*
          * We can use the same type as the original function provided that (a)
          * its prototype is correct, and (b) its type is not a singleton. The
@@ -1279,6 +1278,9 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         if (fun->getProto() == proto && !fun->hasSingletonType())
             clone->setType(fun->type());
     } else {
+        if (!clone->setSingletonType(cx))
+            return NULL;
+
         /*
          * Across compartments we have to clone the script for interpreted
          * functions. Cross-compartment cloning only happens via JSAPI
@@ -1289,22 +1291,24 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
             RootedScript script(cx, clone->script());
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
-            JS_ASSERT(script->compartment() != cx->compartment);
-            JS_ASSERT(!script->enclosingStaticScope());
+            JS_ASSERT_IF(script->compartment() != cx->compartment,
+                         !script->enclosingStaticScope() && !script->compileAndGo);
+
+            RootedObject scope(cx, script->enclosingStaticScope());
 
             clone->mutableScript().init(NULL);
 
-            JSScript *cscript = CloneScript(cx, NullPtr(), clone, script);
+            JSScript *cscript = CloneScript(cx, scope, clone, script);
             if (!cscript)
                 return NULL;
 
             clone->setScript(cscript);
             cscript->setFunction(clone);
-            if (!clone->setTypeForScriptedFunction(cx))
-                return NULL;
+
+            GlobalObject *global = script->compileAndGo ? &script->global() : NULL;
 
             js_CallNewScriptHook(cx, clone->script(), clone);
-            Debugger::onNewScript(cx, clone->script(), NULL);
+            Debugger::onNewScript(cx, clone->script(), global);
         }
     }
     return clone;

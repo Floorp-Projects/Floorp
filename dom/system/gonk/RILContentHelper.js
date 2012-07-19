@@ -22,6 +22,8 @@ const MOBILECONNECTIONINFO_CID =
   Components.ID("{a35cfd39-2d93-4489-ac7d-396475dacb27}");
 const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
+const VOICEMAILSTATUS_CID=
+  Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 
 const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
@@ -33,6 +35,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
   "RIL:CallStateChanged",
+  "RIL:VoicemailNotification",
   "RIL:CallError",
   "RIL:GetCardLock:Return:OK",
   "RIL:GetCardLock:Return:KO",
@@ -96,6 +99,25 @@ MobileNetworkInfo.prototype = {
   mcc: 0,
   mnc: 0,
   state: null
+};
+
+function VoicemailStatus() {}
+VoicemailStatus.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozVoicemailStatus]),
+  classID:        VOICEMAILSTATUS_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          VOICEMAILSTATUS_CID,
+    classDescription: "VoicemailStatus",
+    flags:            Ci.nsIClassInfo.DOM_OBJECT,
+    interfaces:       [Ci.nsIDOMMozVoicemailStatus]
+  }),
+
+  // nsIDOMMozVoicemailStatus
+
+  hasMessages: false,
+  messageCount: Ci.nsIDOMMozVoicemailStatus.MESSAGE_COUNT_UNKNOWN,
+  returnNumber: null,
+  returnMessage: null
 };
 
 function RILContentHelper() {
@@ -312,29 +334,52 @@ RILContentHelper.prototype = {
   },
 
   _telephonyCallbacks: null,
-  _enumerationTelephonyCallbacks: null,
+  _voicemailCallbacks: null,
+  _enumerateTelephonyCallbacks: null,
 
-  registerTelephonyCallback: function registerTelephonyCallback(callback) {
-    if (this._telephonyCallbacks) {
-      if (this._telephonyCallbacks.indexOf(callback) != -1) {
-        throw new Error("Already registered this callback!");
-      }
-    } else {
-      this._telephonyCallbacks = [];
+  voicemailStatus: null,
+
+  registerCallback: function registerCallback(callbackType, callback) {
+    let callbacks = this[callbackType];
+    if (!callbacks) {
+      callbacks = this[callbackType] = [];
     }
-    this._telephonyCallbacks.push(callback);
-    debug("Registered telephony callback: " + callback);
+
+    if (callbacks.indexOf(callback) != -1) {
+      throw new Error("Already registered this callback!");
+    }
+
+    callbacks.push(callback);
+    if (DEBUG) debug("Registered " + callbackType + " callback: " + callback);
   },
 
-  unregisterTelephonyCallback: function unregisterTelephonyCallback(callback) {
-    if (!this._telephonyCallbacks) {
+  unregisterCallback: function unregisterCallback(callbackType, callback) {
+    let callbacks = this[callbackType];
+    if (!callbacks) {
       return;
     }
-    let index = this._telephonyCallbacks.indexOf(callback);
+
+    let index = callbacks.indexOf(callback);
     if (index != -1) {
-      this._telephonyCallbacks.splice(index, 1);
-      debug("Unregistered telephony callback: " + callback);
+      callbacks.splice(index, 1);
+      if (DEBUG) debug("Unregistered telephony callback: " + callback);
     }
+  },
+
+  registerTelephonyCallback: function registerTelephonyCallback(callback) {
+    this.registerCallback("_telephonyCallbacks", callback);
+  },
+
+  unregisterTelephonyCallback: function unregisteTelephonyCallback(callback) {
+    this.unregisterCallback("_telephonyCallbacks", callback);
+  },
+
+  registerVoicemailCallback: function registerVoicemailCallback(callback) {
+    this.registerCallback("_voicemailCallbacks", callback);
+  },
+
+  unregisterVoicemailCallback: function unregisteVoicemailCallback(callback) {
+    this.unregisterCallback("_voicemailCallbacks", callback);
   },
 
   enumerateCalls: function enumerateCalls(callback) {
@@ -487,14 +532,19 @@ RILContentHelper.prototype = {
                                  RIL.GECKO_NETWORK_SELECTION_AUTOMATIC);
         break;
       case "RIL:CallStateChanged":
-        this._deliverTelephonyCallback("callStateChanged",
-                                       [msg.json.callIndex, msg.json.state,
-                                        msg.json.number, msg.json.isActive]);
+        this._deliverCallback("_telephonyCallbacks",
+                              "callStateChanged",
+                              [msg.json.callIndex, msg.json.state,
+                               msg.json.number, msg.json.isActive]);
         break;
       case "RIL:CallError":
-        this._deliverTelephonyCallback("notifyError",
-                                        [msg.json.callIndex,
-                                         msg.json.error]);
+        this._deliverCallback("_telephonyCallbacks",
+                              "notifyError",
+                              [msg.json.callIndex,
+                               msg.json.error]);
+        break;
+      case "RIL:VoicemailNotification":
+        this.handleVoicemailNotification(msg.json);
         break;
       case "RIL:GetCardLock:Return:OK":
       case "RIL:SetCardLock:Return:OK":
@@ -590,14 +640,48 @@ RILContentHelper.prototype = {
     }
   },
 
-  _deliverTelephonyCallback: function _deliverTelephonyCallback(name, args) {
-    if (!this._telephonyCallbacks) {
+  handleVoicemailNotification: function handleVoicemailNotification(message) {
+    let changed = false;
+    if (!this.voicemailStatus) {
+      this.voicemailStatus = new VoicemailStatus();
+    }
+
+    if (this.voicemailStatus.hasMessages != message.active) {
+      changed = true;
+      this.voicemailStatus.hasMessages = message.active;
+    }
+
+    if (this.voicemailStatus.messageCount != message.msgCount) {
+      changed = true;
+      this.voicemailStatus.messageCount = message.msgCount;
+    }
+
+    if (this.voicemailStatus.returnNumber != message.returnNumber) {
+      changed = true;
+      this.voicemailStatus.returnNumber = message.returnNumber;
+    }
+
+    if (this.voicemailStatus.returnMessage != message.returnMessage) {
+      changed = true;
+      this.voicemailStatus.returnMessage = message.returnMessage;
+    }
+
+    if (changed) {
+      this._deliverCallback("_voicemailCallbacks",
+                            "voicemailNotification",
+                            [this.voicemailStatus]);
+    }
+  },
+
+  _deliverCallback: function _deliverCallback(callbackType, name, args) {
+    let thisCallbacks = this[callbackType];
+    if (!thisCallbacks) {
       return;
     }
 
-    let callbacks = this._telephonyCallbacks.slice();
+    let callbacks = thisCallbacks.slice();
     for each (let callback in callbacks) {
-      if (this._telephonyCallbacks.indexOf(callback) == -1) {
+      if (thisCallbacks.indexOf(callback) == -1) {
         continue;
       }
       let handler = callback[name];
@@ -610,7 +694,7 @@ RILContentHelper.prototype = {
         debug("callback handler for " + name + " threw an exception: " + e);
       }
     }
-  },
+  }
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper]);

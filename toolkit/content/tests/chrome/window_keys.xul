@@ -23,6 +23,7 @@ var keysToTest = [
   ["k-v-scy", "V", { ctrlKey: true } ],
   ["", "V", { altKey: true } ],
   ["", "V", { metaKey: true } ],
+  ["", "V", { osKey: true } ],
   ["k-v-scy", "V", { shiftKey: true, ctrlKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
   ["k-e-y", "E", { } ],
@@ -30,8 +31,16 @@ var keysToTest = [
   ["", "E", { ctrlKey: true } ],
   ["", "E", { altKey: true } ],
   ["", "E", { metaKey: true } ],
+  ["", "E", { osKey: true } ],
   ["k-d-a", "D", { altKey: true } ],
   ["k-8-m", "8", { metaKey: true } ],
+  ["", "8", { metaKey: true, osKey: true } ],
+  ["k-a-o", "A", { osKey: true } ],
+  ["", "A", { osKey: true, metaKey: true } ],
+  ["k-b-myo", "B", { osKey: true } ],
+  ["k-b-myo", "B", { osKey: true, metaKey: true } ],
+  ["k-f-oym", "F", { metaKey: true } ],
+  ["k-f-oym", "F", { metaKey: true, osKey: true } ],
   ["k-c-scaym", "C", { metaKey: true } ],
   ["k-c-scaym", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true } ],
   ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
@@ -148,6 +157,9 @@ SimpleTest.waitForFocus(runTest);
   <key id="k-v-scy" key="v" modifiers="shift any control" oncommand="checkKey(event)"/>
   <key id="k-e-y" key="e" modifiers="any" oncommand="checkKey(event)"/>
   <key id="k-8-m" key="8" modifiers="meta" oncommand="checkKey(event)"/>
+  <key id="k-a-o" key="a" modifiers="os" oncommand="checkKey(event)"/>
+  <key id="k-b-myo" key="b" modifiers="meta any os" oncommand="checkKey(event)"/>
+  <key id="k-f-oym" key="f" modifiers="os any meta" oncommand="checkKey(event)"/>
   <key id="k-c-scaym" key="c" modifiers="shift control alt any meta" oncommand="checkKey(event)"/>
   <key id="k-h-l" key="h" modifiers="accel" oncommand="checkKey(event)"/>
   <key id="k-j-s" key="j" modifiers="access" oncommand="checkKey(event)"/>

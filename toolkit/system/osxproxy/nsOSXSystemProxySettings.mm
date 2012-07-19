@@ -15,8 +15,9 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 #include "nsObjCExceptions.h"
+#include "mozilla/Attributes.h"
 
-class nsOSXSystemProxySettings : public nsISystemProxySettings {
+class nsOSXSystemProxySettings MOZ_FINAL : public nsISystemProxySettings {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYSTEMPROXYSETTINGS

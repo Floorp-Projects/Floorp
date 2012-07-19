@@ -237,7 +237,7 @@ void
 nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
 {
   if ((!aMatrix && !mAnimateMotionTransform) ||
-      aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform) {
+      (aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform)) {
     return;
   }
   mAnimateMotionTransform = aMatrix ? new gfxMatrix(*aMatrix) : nsnull;

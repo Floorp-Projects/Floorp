@@ -13,13 +13,14 @@
 #include "nsWebShellWindow.h"
 #include "nsStringFwd.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 // {0099907D-123C-4853-A46A-43098B5FB68C}
 #define NS_APPSHELLSERVICE_CID \
 { 0x99907d, 0x123c, 0x4853, { 0xa4, 0x6a, 0x43, 0x9, 0x8b, 0x5f, 0xb6, 0x8c } }
 
-class nsAppShellService : public nsIAppShellService,
-                          public nsIObserver
+class nsAppShellService MOZ_FINAL : public nsIAppShellService,
+                                    public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

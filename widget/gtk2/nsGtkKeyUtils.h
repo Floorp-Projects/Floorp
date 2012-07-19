@@ -53,9 +53,9 @@ public:
         SHIFT              = 0x0008,
         CTRL               = 0x0010,
         ALT                = 0x0020,
-        SUPER              = 0x0040,
-        HYPER              = 0x0080,
-        META               = 0x0100,
+        META               = 0x0040,
+        SUPER              = 0x0080,
+        HYPER              = 0x0100,
         ALTGR              = 0x0200
     };
 
@@ -170,9 +170,9 @@ protected:
         INDEX_NUM_LOCK,
         INDEX_SCROLL_LOCK,
         INDEX_ALT,
+        INDEX_META,
         INDEX_SUPER,
         INDEX_HYPER,
-        INDEX_META,
         INDEX_ALTGR,
         COUNT_OF_MODIFIER_INDEX
     };

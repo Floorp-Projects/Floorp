@@ -688,7 +688,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     computedSize.height -= outsideBoxSizing;
     // Note: might be negative now, but that's OK because min-width is
     // never negative.
-    aReflowState.ApplyMinMaxConstraints(nsnull, &computedSize.height);
+    computedSize.height = aReflowState.ApplyMinMaxHeight(computedSize.height);
     computedSize.height += outsideBoxSizing;
   } else {
     computedSize.height += m.top + m.bottom;
