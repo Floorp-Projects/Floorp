@@ -222,7 +222,14 @@ class FontSizePreference extends DialogPreference {
      * invalidates the view. Does not update the font indices.
      */
     private void updatePreviewFontSize(String twip) {
-        mPreviewFontView.setTextSize(PREVIEW_FONT_SIZE_UNIT, convertTwipStrToPT(twip));
+        float pt = convertTwipStrToPT(twip);
+        // Android will not render a font size of 0 pt but for Gecko, 0 twip turns off font
+        // inflation. Thus we special case 0 twip to display a renderable font size.
+        if (pt == 0) {
+            mPreviewFontView.setTextSize(PREVIEW_FONT_SIZE_UNIT, 1);
+        } else {
+            mPreviewFontView.setTextSize(PREVIEW_FONT_SIZE_UNIT, pt);
+        }
         mPreviewFontView.scrollTo(0, 0);
     }
 
