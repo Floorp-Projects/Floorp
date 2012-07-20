@@ -105,6 +105,20 @@ public:
    */
   virtual void NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming) {}
 
+  /**
+   * When a SourceMediaStream has pulling enabled, and the MediaStreamGraph
+   * control loop is ready to pull, this gets called. A NotifyPull implementation
+   * is allowed to call the SourceMediaStream methods that alter track
+   * data. It is not allowed to make other MediaStream API calls, including
+   * calls to add or remove MediaStreamListeners. It is not allowed to block
+   * for any length of time.
+   * aDesiredTime is the stream time we would like to get data up to. Data
+   * beyond this point will not be played until NotifyPull runs again, so there's
+   * not much point in providing it. Note that if the stream is blocked for
+   * some reason, then data before aDesiredTime may not be played immediately.
+   */
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
+
   enum Blocking {
     BLOCKED,
     UNBLOCKED
@@ -387,6 +401,7 @@ public:
     mLastConsumptionState(MediaStreamListener::NOT_CONSUMED),
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
+    mPullEnabled(false),
     mUpdateFinished(false), mDestroyed(false)
   {}
 
@@ -396,6 +411,14 @@ public:
   virtual void DestroyImpl();
 
   // Call these on any thread.
+  /**
+   * Enable or disable pulling. When pulling is enabled, NotifyPull
+   * gets called on MediaStreamListeners for this stream during the
+   * MediaStreamGraph control loop. Pulling is initially disabled.
+   * Due to unavoidable race conditions, after a call to SetPullEnabled(false)
+   * it is still possible for a NotifyPull to occur.
+   */
+  void SetPullEnabled(bool aEnabled);
   /**
    * Add a new track to the stream starting at the given base time (which
    * must be greater than or equal to the last time passed to
@@ -495,6 +518,7 @@ protected:
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
+  bool mPullEnabled;
   bool mUpdateFinished;
   bool mDestroyed;
 };
