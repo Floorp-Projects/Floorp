@@ -194,14 +194,15 @@ public:
    *                              dispatch a Gecko key event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.
-   *                              NOTE: When aKeyEvent is a keypress event and 
-   *                                    the caller expects that the event will
-   *                                    cause a character to be input (say in an
-   *                                     editor), the caller should set
-   *                                     aKeyEvent.charCode before calling this.
-   *                                     Then charCode won't be modified.
+   * @param aInsertString         If caller expects that the event will cause
+   *                              a character to be input (say in an editor),
+   *                              the caller should set this.  Otherwise,
+   *                              if caller sets null to this, this method will
+   *                              compute the character to be input from
+   *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+                    const nsAString *aInsertString = nsnull);
 
   /**
    * ComputeGeckoKeyCode() returns Gecko keycode for aNativeKeyCode on current
@@ -254,18 +255,17 @@ protected:
    *
    * @param aNativeKeyEvent       A native key event for which you want to
    *                              dispatch a Gecko key event.
+   * @param aInsertChar           A character to be input in an editor by the
+   *                              event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.  This must be
    *                              NS_KEY_PRESS event.
-   *                              NOTE: If the caller expects this event to
-   *                                    cause character input (say in an editor),
-   *                                    the caller should set aKeyEvent.charCode
-   *                                    before calling this.  Then charCode
-   *                                    won't be modified.
    * @param aKbType               A native Keyboard Type value.  Typically,
    *                              this is a result of ::LMGetKbdType().
    */
-  void InitKeyPressEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+  void InitKeyPressEvent(NSEvent *aNativeKeyEvent,
+                         PRUnichar aInsertChar,
+                         nsKeyEvent& aKeyEvent,
                          UInt32 aKbType);
 
   bool GetBoolProperty(const CFStringRef aKey);
@@ -325,8 +325,15 @@ public:
    *                              dispatch a Gecko key event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.
+   * @param aInsertString         If caller expects that the event will cause
+   *                              a character to be input (say in an editor),
+   *                              the caller should set this.  Otherwise,
+   *                              if caller sets null to this, this method will
+   *                              compute the character to be input from
+   *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+                    const nsAString *aInsertString = nsnull);
 
   /**
    * SynthesizeNativeKeyEvent() is an implementation of
