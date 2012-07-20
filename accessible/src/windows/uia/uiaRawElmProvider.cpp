@@ -146,6 +146,43 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
   if (!aPropertyValue)
     return E_INVALIDARG;
 
+  if (mAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  aPropertyValue->vt = VT_EMPTY;
+
+  switch (aPropertyId) {
+    // Accelerator Key / shortcut.
+    case UIA_AcceleratorKeyPropertyId: {
+      nsAutoString keyString;
+
+      mAcc->KeyboardShortcut().ToString(keyString);
+
+      if (!keyString.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(keyString.get());
+        return S_OK;
+      }
+
+      break;
+    }
+
+    // Access Key / mneumonic.
+    case UIA_AccessKeyPropertyId: {
+      nsAutoString keyString;
+
+      mAcc->AccessKey().ToString(keyString);
+
+      if (!keyString.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(keyString.get());
+        return S_OK;
+      }
+
+      break;
+    }
+  }
+
   // UI Automation will attempt to get the property from the host
   //window provider.
   aPropertyValue->vt = VT_EMPTY;
