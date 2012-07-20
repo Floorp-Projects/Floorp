@@ -155,6 +155,7 @@ function BrowserElementParent(frameLoader) {
   addMessageListener("close", this._fireEventFromMsg);
   addMessageListener("securitychange", this._fireEventFromMsg);
   addMessageListener("error", this._fireEventFromMsg);
+  addMessageListener("scroll", this._fireEventFromMsg);
   addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
