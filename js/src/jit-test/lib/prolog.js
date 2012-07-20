@@ -24,12 +24,8 @@ if (!("selectforgc" in this)) {
   selectforgc = function() { }
 }
 
-if (!("verifyprebarriers" in this)) {
-  verifyprebarriers = function() { }
-}
-
-if (!("verifypostbarriers" in this)) {
-  verifypostbarriers = function() { }
+if (!("verifybarriers" in this)) {
+  verifybarriers = function() { }
 }
 
 if ("options" in this)

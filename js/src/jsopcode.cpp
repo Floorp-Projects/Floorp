@@ -5097,7 +5097,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 sn = js_GetSrcNote(jp->script, pc);
 
                 /* Skip any #n= prefix to find the opening bracket. */
-                for (xval = rval; *xval != '[' && *xval != '{' && *xval; xval++)
+                for (xval = rval; *xval != '[' && *xval != '{'; xval++)
                     continue;
                 inArray = (*xval == '[');
                 if (inArray)
