@@ -85,6 +85,7 @@
 <!ENTITY pref_font_size_medium "Medium">
 <!ENTITY pref_font_size_large "Large">
 <!ENTITY pref_font_size_xlarge "Extra Large">
+<!ENTITY pref_font_size_set "Set">
 
 <!-- Localization note (pref_font_size_preview_text): This paragraph is used as an example to
     demonstrate the font size setting.  It is meant to be whimsical and fun. -->

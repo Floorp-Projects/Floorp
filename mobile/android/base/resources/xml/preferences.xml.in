@@ -32,10 +32,11 @@
                         android:entryValues="@array/pref_plugins_values"
                         android:persistent="false" />
 
-        <ListPreference android:key="font.size.inflation.minTwips"
+        <org.mozilla.gecko.FontSizePreference
+                        android:key="font.size.inflation.minTwips"
                         android:title="@string/pref_text_size"
-                        android:entries="@array/pref_font_size_entries"
-                        android:entryValues="@array/pref_font_size_values"
+                        android:positiveButtonText="@string/pref_font_size_set"
+                        android:negativeButtonText="@string/button_cancel"
                         android:persistent="false" />
 
     </PreferenceCategory>
