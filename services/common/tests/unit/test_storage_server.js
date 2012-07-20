@@ -187,10 +187,12 @@ add_test(function test_basic_http() {
   server.startSynchronous(PORT);
 
   _("Started on " + server.port);
+  do_check_eq(server.requestCount, 0);
   let req = localRequest("/2.0/storage/crypto/keys");
   _("req is " + req);
   req.get(function (err) {
     do_check_eq(null, err);
+    do_check_eq(server.requestCount, 1);
     server.stop(run_next_test);
   });
 });
