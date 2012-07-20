@@ -110,9 +110,13 @@ endif
 EXPORTS_NAMESPACES = gfxipc mozilla/layers
 EXPORTS_gfxipc = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
+        AsyncPanZoomController.h \
+        Axis.h \
         CompositorCocoaWidgetHelper.h \
         CompositorChild.h \
         CompositorParent.h \
+        GeckoContentController.h \
+        GestureEventListener.h \
         ImageBridgeChild.h \
         ImageBridgeParent.h \
         ImageContainerChild.h \
@@ -126,9 +130,12 @@ EXPORTS_mozilla/layers =\
         $(NULL)
 
 CPPSRCS += \
+        AsyncPanZoomController.cpp \
+        Axis.cpp \
         CompositorCocoaWidgetHelper.cpp \
         CompositorChild.cpp \
         CompositorParent.cpp \
+        GestureEventListener.cpp \
         ImageBridgeChild.cpp \
         ImageBridgeParent.cpp \
         ImageContainerChild.cpp \
@@ -161,5 +168,9 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+LOCAL_INCLUDES += \
+        -I$(topsrcdir)/content/events/src \
+        $(NULL)
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
