@@ -241,6 +241,7 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
                 do_QueryInterface(win->GetDocShell());
             if (refURI) {
                 refURI->SetupRefreshURIFromHeader(mDocument->GetDocBaseURI(),
+                                                  mDocument->NodePrincipal(),
                                                   mRefreshString);
             }
         }

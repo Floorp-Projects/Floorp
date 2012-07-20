@@ -18,6 +18,7 @@ import sys
 import threading
 import tempfile
 import sqlite3
+from string import Template
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
@@ -284,6 +285,63 @@ class Automation(object):
     permDB.commit()
     cursor.close()
 
+  def setupTestApps(self, profileDir, apps):
+    webappJSONTemplate = Template(""""$name": {
+"origin": "$origin",
+"installOrigin": "$origin",
+"receipt": null,
+"installTime": 132333986000,
+"manifestURL": "$manifestURL",
+"localId": $localId
+}""")
+
+    manifestTemplate = Template("""{
+  "name": "$name",
+  "description": "$description",
+  "launch_path": "/",
+  "developer": {
+    "name": "Mozilla",
+    "url": "https://mozilla.org/"
+  },
+  "permissions": [
+  ],
+  "locales": {
+    "en-US": {
+      "name": "$name",
+      "description": "$description"
+    }
+  },
+  "default_locale": "en-US",
+  "icons": {
+  }
+}
+""")
+
+    # Create webapps/webapps.json
+    webappsDir = os.path.join(profileDir, "webapps")
+    os.mkdir(webappsDir);
+
+    webappsJSON = []
+    for localId, app in enumerate(apps):
+      app['localId'] = localId + 1 # Has to be 1..n
+      webappsJSON.append(webappJSONTemplate.substitute(app))
+    webappsJSON = '{\n' + ',\n'.join(webappsJSON) + '\n}\n'
+
+    webappsJSONFile = open(os.path.join(webappsDir, "webapps.json"), "a")
+    webappsJSONFile.write(webappsJSON)
+    webappsJSONFile.close()
+
+    # Create manifest file for each app.
+    for app in apps:
+      manifest = manifestTemplate.substitute(app)
+
+      manifestDir = os.path.join(webappsDir, app['name'])
+      os.mkdir(manifestDir)
+
+      manifestFile = open(os.path.join(manifestDir, "manifest.webapp"), "a")
+      manifestFile.write(manifest)
+      manifestFile.close()
+
   def initializeProfile(self, profileDir, extraPrefs = [], useServerLocations = False):
     " Sets up the standard testing profile."
 
@@ -462,6 +520,40 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     prefsFile = open(profileDir + "/" + "user.js", "a")
     prefsFile.write("".join(prefs))
     prefsFile.close()
+
+    apps = [
+      {
+        'name': 'http_example_org',
+        'origin': 'http://example.org',
+        'manifestURL': 'http://example.org/manifest.webapp',
+        'description': 'http://example.org App'
+      },
+      {
+        'name': 'https_example_com',
+        'origin': 'https://example.com',
+        'manifestURL': 'https://example.com/manifest.webapp',
+        'description': 'https://example.com App'
+      },
+      {
+        'name': 'http_test1_example_org',
+        'origin': 'http://test1.example.org',
+        'manifestURL': 'http://test1.example.org/manifest.webapp',
+        'description': 'http://test1.example.org App'
+      },
+      {
+        'name': 'http_test1_example_org_8000',
+        'origin': 'http://test1.example.org:8000',
+        'manifestURL': 'http://test1.example.org:8000/manifest.webapp',
+        'description': 'http://test1.example.org:8000 App'
+      },
+      {
+        'name': 'http_sub1_test1_example_org',
+        'origin': 'http://sub1.test1.example.org',
+        'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
+        'description': 'http://sub1.test1.example.org App'
+      },
+    ];
+    self.setupTestApps(profileDir, apps)
 
   def addCommonOptions(self, parser):
     "Adds command-line options which are common to mochitest and reftest."

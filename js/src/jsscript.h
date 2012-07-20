@@ -22,8 +22,6 @@
 
 namespace js {
 
-class BytecodeEmitter;
-
 namespace ion {
     struct IonScript;
 }
@@ -571,7 +569,8 @@ struct JSScript : public js::gc::Cell
                               uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
                               uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets);
     static bool fullyInitTrivial(JSContext *cx, JS::Handle<JSScript*> script);  // inits a JSOP_STOP-only script
-    static bool fullyInitFromEmitter(JSContext *cx, JS::Handle<JSScript*> script, js::BytecodeEmitter *bce);
+    static bool fullyInitFromEmitter(JSContext *cx, JS::Handle<JSScript*> script,
+                                     js::frontend::BytecodeEmitter *bce);
 
     void setVersion(JSVersion v) { version = v; }
 

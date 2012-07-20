@@ -1037,7 +1037,7 @@ JSContext::~JSContext()
 {
     /* Free the stuff hanging off of cx. */
     if (parseMapPool_)
-        Foreground::delete_<ParseMapPool>(parseMapPool_);
+        Foreground::delete_(parseMapPool_);
 
     if (lastMessage)
         Foreground::free_(lastMessage);
@@ -1212,7 +1212,7 @@ void
 JSContext::purge()
 {
     if (!activeCompilations) {
-        Foreground::delete_<ParseMapPool>(parseMapPool_);
+        Foreground::delete_(parseMapPool_);
         parseMapPool_ = NULL;
     }
 }

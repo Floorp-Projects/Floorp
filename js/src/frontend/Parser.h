@@ -22,11 +22,10 @@
 #include "frontend/ParseNode.h"
 #include "frontend/TreeContext.h"
 
-typedef struct BindData BindData;
-
 namespace js {
+namespace frontend {
 
-class StaticBlockObject;
+struct BindData;
 
 enum FunctionSyntaxKind { Expression, Statement };
 enum LetContext { LetExpresion, LetStatement };
@@ -106,7 +105,7 @@ struct Parser : private AutoGCRooter
     inline bool reportWarning(ParseNode *pn, unsigned errorNumber, ...);
     inline bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     inline bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
-    typedef bool (js::Parser::*Reporter)(ParseNode *pn, unsigned errorNumber, ...);
+    typedef bool (Parser::*Reporter)(ParseNode *pn, unsigned errorNumber, ...);
 
   private:
     ParseNode *allocParseNode(size_t size) {
@@ -320,6 +319,7 @@ Parser::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 bool
 DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser);
 
+} /* namespace frontend */
 } /* namespace js */
 
 /*

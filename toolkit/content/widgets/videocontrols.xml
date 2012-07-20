@@ -416,7 +416,7 @@
                     // video data, or a video with no audio track.
                     if (this.video.readyState >= this.video.HAVE_METADATA) {
                         if (this.video instanceof HTMLVideoElement &&
-                            (this.video.videoWidth == 0 || this.videoHeight == 0))
+                            (this.video.videoWidth == 0 || this.video.videoHeight == 0))
                             this.isAudioOnly = true;
 
                         // We have to check again if the media has audio here,

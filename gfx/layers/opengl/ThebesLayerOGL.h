@@ -115,14 +115,10 @@ public:
   ShadowThebesLayerOGL(LayerManagerOGL *aManager);
   virtual ~ShadowThebesLayerOGL();
 
-  virtual bool ShouldDoubleBuffer();
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
-  virtual void EnsureTextureUpdated();
-  virtual void EnsureTextureUpdated(nsIntRegion& aRegion);
-  virtual void ProgressiveUpload();
   virtual void DestroyFrontBuffer();
 
   virtual void Disconnect();

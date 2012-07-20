@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"> 
+
+    <TextView android:id="@+id/preview"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:background="#ffffffff"
+              android:paddingTop="2dp"
+              android:paddingBottom="2dp"
+              android:paddingLeft="3dp"
+              android:paddingRight="3dp"
+              android:text="@string/pref_font_size_preview_text"
+              android:textColor="#ff000000"
+              android:scrollbars="vertical"
+              android:fadeScrollbars="true"/>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+
+        <Button android:id="@+id/decrease_preview_font_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/pref_font_size_adjust_char"
+                android:textSize="8sp"/>
+
+        <Button android:id="@+id/increase_preview_font_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/pref_font_size_adjust_char"
+                android:textSize="16sp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

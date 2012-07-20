@@ -48,6 +48,8 @@ CPPSRCS += nsHTMLEditorLog.cpp             \
 DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
+DEFINES += -D_IMPL_NS_LAYOUT
+
 # don't want the shared lib; force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
@@ -57,4 +59,5 @@ INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
                    -I$(topsrcdir)/editor/libeditor/text \
                    -I$(topsrcdir)/editor/txmgr/src \
                    -I$(topsrcdir)/content/base/src \
+                   -I$(topsrcdir)/layout/style \
                    $(NULL)

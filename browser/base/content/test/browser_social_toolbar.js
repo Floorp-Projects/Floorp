@@ -3,27 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-let gProvider;
 
 function test() {
   waitForExplicitFinish();
-
-  Services.prefs.setBoolPref("social.enabled", true);
-  registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("social.enabled");
-  });
-
-  let oldProvider;
-  function saveOldProviderAndStartTestWith(provider) {
-    oldProvider = Social.provider;
-    registerCleanupFunction(function () {
-      Social.provider = oldProvider;
-    });
-    Social.provider = gProvider = provider;
-    runTests(tests, undefined, undefined, function () {
-      SocialService.removeProvider(provider.origin, finish);
-    });
-  }
 
   let manifest = { // normal provider
     name: "provider 1",
@@ -31,17 +13,10 @@ function test() {
     workerURL: "https://example1.com/worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   };
-  SocialService.addProvider(manifest, function(provider) {
-    // If the UI is already active, run the test immediately, otherwise wait
-    // for initialization.
-    if (Social.provider) {
-      saveOldProviderAndStartTestWith(provider);
-    } else {
-      Services.obs.addObserver(function obs() {
-        Services.obs.removeObserver(obs, "test-social-ui-ready");
-        saveOldProviderAndStartTestWith(provider);
-      }, "test-social-ui-ready", false);
-    }
+  runSocialTestWithProvider(manifest, function () {
+    runTests(tests, undefined, undefined, function () {
+      SocialService.removeProvider(Social.provider.origin, finish);
+    });
   });
 }
 
@@ -53,7 +28,7 @@ var tests = {
       displayName: "Kuma Lisa",
       profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
     }
-    gProvider.updateUserProfile(profile);
+    Social.provider.updateUserProfile(profile);
     // check dom values
     let portrait = document.getElementById("social-statusarea-user-portrait").getAttribute("src");
     is(portrait, profile.portrait, "portrait is set");
@@ -69,7 +44,7 @@ var tests = {
       contentPanel: "about:blank",
       counter: 42
     };
-    gProvider.setAmbientNotification(ambience);
+    Social.provider.setAmbientNotification(ambience);
 
     let statusIcons = document.getElementById("social-status-iconbox");
     ok(!statusIcons.firstChild.collapsed, "status icon is visible");
@@ -77,13 +52,13 @@ var tests = {
     is(statusIcons.firstChild.lastChild.textContent, "42", "status value is correct");
 
     ambience.counter = 0;
-    gProvider.setAmbientNotification(ambience);
+    Social.provider.setAmbientNotification(ambience);
     ok(statusIcons.firstChild.lastChild.collapsed, "status value is not visible");
     is(statusIcons.firstChild.lastChild.textContent, "", "status value is correct");
     next();
   },
   testProfileUnset: function(next) {
-    gProvider.updateUserProfile({});
+    Social.provider.updateUserProfile({});
     // check dom values
     let portrait = document.getElementById("social-statusarea-user-portrait").getAttribute("src");
     is(portrait, "chrome://browser/skin/social/social.png", "portrait is generic");

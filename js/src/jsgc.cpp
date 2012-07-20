@@ -2202,7 +2202,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case PARSER:
-        static_cast<Parser *>(this)->trace(trc);
+        static_cast<frontend::Parser *>(this)->trace(trc);
         return;
 
       case ENUMERATOR:

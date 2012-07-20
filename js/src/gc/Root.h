@@ -86,6 +86,9 @@ struct NullPtr
 };
 
 template <typename T>
+class MutableHandle;
+
+template <typename T>
 class HandleBase {};
 
 /*
@@ -112,6 +115,11 @@ class Handle : public HandleBase<T>
     Handle(NullPtr) {
         typedef typename js::tl::StaticAssert<js::tl::IsPointerType<T>::result>::result _;
         ptr = reinterpret_cast<const T *>(&NullPtr::constNullValue);
+    }
+
+    friend class MutableHandle<T>;
+    Handle(MutableHandle<T> handle) {
+        ptr = handle.address();
     }
 
     /*
@@ -189,6 +197,19 @@ class MutableHandle : public MutableHandleBase<T>
     {
         JS_ASSERT(!RootMethods<T>::poisoned(v));
         *ptr = v;
+    }
+
+    /*
+     * This may be called only if the location of the T is guaranteed
+     * to be marked (for some reason other than being a Rooted),
+     * e.g., if it is guaranteed to be reachable from an implicit root.
+     *
+     * Create a MutableHandle from a raw location of a T.
+     */
+    static MutableHandle fromMarkedLocation(T *p) {
+        MutableHandle h;
+        h.ptr = p;
+        return h;
     }
 
     T *address() const { return ptr; }

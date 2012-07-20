@@ -2426,7 +2426,7 @@ LoadNativeIterator(MacroAssembler &masm, Register obj, Register dest, Label *fai
     JS_ASSERT(obj != dest);
 
     // Test class.
-    masm.branchTestObjClass(Assembler::NotEqual, obj, dest, &IteratorClass, failures);
+    masm.branchTestObjClass(Assembler::NotEqual, obj, dest, &PropertyIteratorObject::class_, failures);
 
     // Load NativeIterator object.
     masm.loadObjPrivate(obj, JSObject::ITER_CLASS_NFIXED_SLOTS, dest);

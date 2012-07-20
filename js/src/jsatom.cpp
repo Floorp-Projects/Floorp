@@ -454,30 +454,6 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 
 namespace js {
 
-void
-InitAtomMap(JSContext *cx, AtomIndexMap *indices, HeapPtrAtom *atoms)
-{
-    if (indices->isMap()) {
-        typedef AtomIndexMap::WordMap WordMap;
-        const WordMap &wm = indices->asMap();
-        for (WordMap::Range r = wm.all(); !r.empty(); r.popFront()) {
-            JSAtom *atom = r.front().key;
-            jsatomid index = r.front().value;
-            JS_ASSERT(index < indices->count());
-            atoms[index].init(atom);
-        }
-    } else {
-        for (const AtomIndexMap::InlineElem *it = indices->asInline(), *end = indices->inlineEnd();
-             it != end; ++it) {
-            JSAtom *atom = it->key;
-            if (!atom)
-                continue;
-            JS_ASSERT(it->value < indices->count());
-            atoms[it->value].init(atom);
-        }
-    }
-}
-
 bool
 IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
 {

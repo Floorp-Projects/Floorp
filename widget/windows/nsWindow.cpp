@@ -1190,10 +1190,9 @@ NS_METHOD nsWindow::Show(bool bState)
  **************************************************************/
 
 // Return true if the whether the component is visible, false otherwise
-NS_METHOD nsWindow::IsVisible(bool & bState)
+bool nsWindow::IsVisible() const
 {
-  bState = mIsVisible;
-  return NS_OK;
+  return mIsVisible;
 }
 
 /**************************************************************

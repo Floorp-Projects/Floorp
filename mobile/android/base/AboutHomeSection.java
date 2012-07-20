@@ -16,10 +16,10 @@ import android.text.TextUtils;
 public class AboutHomeSection extends LinearLayout {
     private static final String LOGTAG = "GeckoAboutHomeSection";
 
-    private TitleView mTitle;
-    private SubTitleView mSubtitle;
+    private TextView mTitle;
+    private TextView mSubtitle;
     private LinearLayout mItemsContainer;
-    private MoreTextView mMoreText;
+    private LinkTextView mMoreText;
 
     public AboutHomeSection(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -28,10 +28,10 @@ public class AboutHomeSection extends LinearLayout {
 
         LayoutInflater.from(context).inflate(R.layout.abouthome_section, this);
 
-        mTitle = (TitleView) this.findViewById(R.id.title);
-        mSubtitle = (SubTitleView) this.findViewById(R.id.subtitle);
+        mTitle = (TextView) this.findViewById(R.id.title);
+        mSubtitle = (TextView) this.findViewById(R.id.subtitle);
         mItemsContainer = (LinearLayout) this.findViewById(R.id.items_container);
-        mMoreText = (MoreTextView) this.findViewById(R.id.more_text);
+        mMoreText = (LinkTextView) this.findViewById(R.id.more_text);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AboutHomeSection);
         setTitle(a.getText(R.styleable.AboutHomeSection_title));
@@ -97,56 +97,5 @@ public class AboutHomeSection extends LinearLayout {
 
     public void hideMoreText() {
         mMoreText.setVisibility(View.GONE);
-    }
-
-    public static class TitleView extends LinearLayout {
-        private TextView mText;
-
-        public TitleView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            setOrientation(LinearLayout.VERTICAL);
-
-            inflate(context, R.layout.abouthome_section_title, this);
-
-            mText = (TextView) findViewById(R.id.text);
-        }
-
-        public void setText(CharSequence text) {
-            mText.setText(text);
-        }
-    }
-
-    public static class SubTitleView extends LinearLayout {
-        private TextView mText;
-
-        public SubTitleView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            setOrientation(LinearLayout.VERTICAL);
-
-            inflate(context, R.layout.abouthome_section_subtitle, this);
-
-            mText = (TextView) findViewById(R.id.text);
-        }
-
-        public void setText(CharSequence text) {
-            mText.setText(text);
-        }
-    }
-
-    public static class MoreTextView extends LinearLayout {
-        private TextView mText;
-
-        public MoreTextView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            setOrientation(LinearLayout.VERTICAL);
-
-            inflate(context, R.layout.abouthome_section_moretext, this);
-
-            mText = (TextView) findViewById(R.id.text);
-        }
-
-        public void setText(CharSequence text) {
-            mText.setText(text);
-        }
     }
 }
