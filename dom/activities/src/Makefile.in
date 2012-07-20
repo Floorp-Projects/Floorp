@@ -26,8 +26,15 @@ EXPORTS_mozilla/dom = \
   $(NULL)
 
 EXTRA_COMPONENTS = \
+  ActivityOptions.js \
   ActivityProxy.js \
+  ActivityRequestHandler.js \
+  ActivityWrapper.js \
   Activities.manifest \
+  $(NULL)
+
+EXTRA_JS_MODULES =   \
+  ActivitiesService.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

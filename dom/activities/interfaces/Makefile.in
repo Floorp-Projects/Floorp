@@ -17,6 +17,7 @@ XPIDLSRCS = nsIDOMActivity.idl \
             nsIDOMActivityRequestHandler.idl \
             nsIDOMNavigatorActivities.idl \
             nsIActivityProxy.idl \
+            nsIActivityUIGlue.idl \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk
