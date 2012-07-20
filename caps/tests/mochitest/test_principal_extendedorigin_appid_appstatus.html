@@ -20,71 +20,75 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 
 /** Test for Bug 758258 **/
 
+var Ci = Components.interfaces;
+
 SimpleTest.waitForExplicitFinish();
 
 var gData = [
   {
     app: "http://example.org/manifest.webapp",
-    origin: "http://example.org",
+    src: "http://example.org/",
   },
   {
     app: "https://example.com:443/manifest.webapp",
-    origin: "https://example.com",
+    src: "https://example.com/",
   },
   {
     app: "http://test1.example.org/manifest.webapp",
-    origin: "http://test1.example.org",
+    src: "http://test1.example.org/",
   },
   {
     app: "http://test1.example.org:8000/manifest.webapp",
-    origin: "http://test1.example.org:8000",
+    src: "http://test1.example.org:8000/",
   },
   {
     app: "http://sub1.test1.example.org/manifest.webapp",
-    origin: "http://sub1.test1.example.org",
+    src: "http://sub1.test1.example.org/",
   },
   {
     app: "http://example.org/foo/manifest.webapp",
-    origin: "http://example.org",
+    src: "http://example.org/",
   },
   {
     app: "http://example.org/bar/manifest.webapp",
-    origin: "http://example.org",
+    src: "http://example.org/",
   },
   {
     browser: true,
-    origin: "http://example.org",
+    src: "http://example.org/",
   },
   {
-    origin: "http://example.org",
+    src: "http://example.org/",
   },
   {
     app: "http://example.org/wedonthaveanyappinthatdirectory/manifest.webapp",
-    origin: "http://example.org",
+    src: "http://example.org/",
+  },
+/*
+  {
+    app: "http://example.org/manifest.webapp",
+    src: "data:text/html,foobar",
+    test: [ "todo-src" ],
   },
   {
     app: "http://example.org/manifest.webapp",
-    origin: "data:text/html,foobar",
-    test: [ "todo-origin" ],
+    src: "data:text/html,foobar2",
+    test: [ "todo-src" ],
+  },
+*/
+  {
+    src: "file:///",
+  },
+  {
+    src: "file:///tmp",
   },
   {
     app: "http://example.org/manifest.webapp",
-    origin: "data:text/html,foobar2",
-    test: [ "todo-origin" ],
-  },
-  {
-    origin: "file:///",
-  },
-  {
-    origin: "file:///tmp",
+    src: "file:///",
   },
   {
     app: "http://example.org/manifest.webapp",
-    origin: "file:///",
-  },
-  {
-    app: "http://example.org/manifest.webapp",
-    origin: "file:///tmp",
+    src: "file:///tmp",
   },
 ];
 
@@ -100,15 +104,15 @@ function checkPrincipalForIFrame(aFrame, data) {
     data.test = [];
   }
 
-/*
-  if (data.test.indexOf('todo-origin') == -1) {
-    var origin = data.origin;
-    if (navigator.platform.indexOf("Mac") != 1) {
-      origin = origin.replace("file:///", "file:///private/");
-    }
-    is(principal.origin, origin, 'the correct URL should have been loaded');
-  }
-*/
+  is(principal.URI.spec, data.src,
+     'the correct URL should have been loaded');
+
+  is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED,
+     'principal is not part of an installed app');
+  is(principal.extendedOrigin, principal.origin,
+     "extendedOrigin returns the origin for the moment");
+  is(principal.appId, Ci.nsIScriptSecurityManager.NO_APP_ID,
+     "appId is always NO_APP_ID for the moment");
 
   checkedCount++;
   if (checkedCount == checksTodo) {
@@ -116,12 +120,12 @@ function checkPrincipalForIFrame(aFrame, data) {
   }
 }
 
-is('appStatus' in document.nodePrincipal, false,
-   'appStatus should not be present in nsIPrincipal');
-is('extendedOrigin' in document.nodePrincipal, false,
-   'extendedOrigin should not be present in nsIPrincipal');
-is('appId' in document.nodePrincipal, false,
-   'appId should not be present in nsIPrincipal');
+is('appStatus' in document.nodePrincipal, true,
+   'appStatus should be present in nsIPrincipal');
+is('extendedOrigin' in document.nodePrincipal, true,
+   'extendedOrigin should be present in nsIPrincipal');
+is('appId' in document.nodePrincipal, true,
+   'appId should be present in nsIPrincipal');
 
 gData.forEach(function(data) {
   var iframe = document.createElement('iframe');
@@ -136,7 +140,7 @@ gData.forEach(function(data) {
     iframe.setAttribute('mozbrowser', '');
   }
 
-  iframe.src = data.origin;
+  iframe.src = data.src;
 
   iframe.addEventListener('load', iframe.checkPrincipal.bind(iframe));
 
