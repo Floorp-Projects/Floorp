@@ -6,8 +6,8 @@
 == clipPath-html-03-extref.xhtml clipPath-html-03-ref.svg
 == clipPath-html-04.xhtml clipPath-html-04-ref.xhtml
 == clipPath-html-04-extref.xhtml clipPath-html-04-ref.xhtml
-fuzzy-if(gtk2Widget,70,119) == clipPath-html-05.xhtml clipPath-html-05-ref.xhtml # Bug 776089 for Linux
-fuzzy-if(gtk2Widget,70,119) == clipPath-html-05-extref.xhtml clipPath-html-05-ref.xhtml # Bug 776089 for Linux
+fuzzy-if(gtk2Widget,70,119) fuzzy-if(Android,70,123) == clipPath-html-05.xhtml clipPath-html-05-ref.xhtml # Bug 776089 for Linux/Android
+fuzzy-if(gtk2Widget,70,119) fuzzy-if(Android,70,123) == clipPath-html-05-extref.xhtml clipPath-html-05-ref.xhtml # Bug 776089 for Linux/Android
 == clipPath-html-06.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
