@@ -16,7 +16,7 @@
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
-
+#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 

@@ -9,6 +9,7 @@
 #include "nsDOMError.h"
 #include "prtypes.h"
 #include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
 
 nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly)
   : mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)

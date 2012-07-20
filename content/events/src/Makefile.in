@@ -36,8 +36,6 @@ CPPSRCS		= \
 		nsDOMDragEvent.cpp \
 		nsDOMMutationEvent.cpp \
 		nsDOMPopupBlockedEvent.cpp \
-		nsDOMDeviceProximityEvent.cpp \
-		nsDOMUserProximityEvent.cpp \
 		nsDOMDeviceLightEvent.cpp \
 		nsDOMDeviceOrientationEvent.cpp \
 		nsDOMDeviceMotionEvent.cpp \
@@ -71,7 +69,6 @@ CPPSRCS		= \
 		nsDOMSettingsEvent.cpp \
 		nsDOMContactChangeEvent.cpp \
 		nsDOMTouchEvent.cpp \
-		nsDOMCustomEvent.cpp \
 		nsDOMCompositionEvent.cpp \
 		nsDOMApplicationEvent.cpp \
 		$(NULL)
