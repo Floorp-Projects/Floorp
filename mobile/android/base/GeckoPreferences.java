@@ -160,9 +160,12 @@ public class GeckoPreferences
             int newIndex = ((ListPreference)preference).findIndexOfValue((String) newValue);
             CharSequence newEntry = ((ListPreference)preference).getEntries()[newIndex];
             ((ListPreference)preference).setSummary(newEntry);
-        }
-        if (preference instanceof LinkPreference)
+        } else if (preference instanceof LinkPreference) {
             finish();
+        } else if (preference instanceof FontSizePreference) {
+            final FontSizePreference fontSizePref = (FontSizePreference) preference;
+            fontSizePref.setSummary(fontSizePref.getSavedFontSizeName());
+        }
         return true;
     }
 
@@ -336,7 +339,18 @@ public class GeckoPreferences
                             ((ListPreference)pref).setSummary(selectedEntry);
                         }
                     });
+                } else if (pref instanceof FontSizePreference && "string".equals(prefType)) {
+                    final FontSizePreference fontSizePref = (FontSizePreference) pref;
+                    final String twipValue = jPref.getString("value");
+                    fontSizePref.setSavedFontSize(twipValue);
+                    final String fontSizeName = fontSizePref.getSavedFontSizeName();
+                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                        public void run() {
+                            pref.setSummary(fontSizeName); // Ex: "Small".
+                        }
+                    });
                 }
+
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Problem parsing preferences response: ", e);
