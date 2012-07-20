@@ -2005,6 +2005,22 @@ nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
   return GetCodebasePrincipalInternal(aURI, aAppId, aInMozBrowser, aPrincipal);
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
+                                                      nsIDocShell* aDocShell,
+                                                      nsIPrincipal** aPrincipal)
+{
+  MOZ_ASSERT(aDocShell);
+
+  PRUint32 appId;
+  bool isInBrowserElement;
+  aDocShell->GetAppId(&appId);
+  aDocShell->GetIsInBrowserElement(&isInBrowserElement);
+
+  return GetCodebasePrincipalInternal(aURI, appId, isInBrowserElement,
+                                      aPrincipal);
+}
+
 nsresult
 nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
                                               PRUint32 aAppId,

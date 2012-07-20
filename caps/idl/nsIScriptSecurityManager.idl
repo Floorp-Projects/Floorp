@@ -8,6 +8,7 @@
 #include "nsIXPCSecurityManager.idl"
 interface nsIURI;
 interface nsIChannel;
+interface nsIDocShell;
 
 [scriptable, uuid(75a7afe3-d7c9-46fe-b305-ae686457bc7f)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
@@ -161,6 +162,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
                                          in unsigned long appId,
                                          in boolean inMozBrowser);
+
+    /**
+     * Returns a principal that has the appId and inMozBrowser of the docshell
+     * inside a mozbrowser frame.
+     * @param docShell to get appId/inMozBrowser from.
+     */
+    nsIPrincipal getDocShellCodebasePrincipal(in nsIURI uri,
+                                              in nsIDocShell docShell);
 
     /**
      * Returns a principal with that has the same origin as uri and is not part
