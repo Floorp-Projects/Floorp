@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozActivity;
+interface nsIDOMMozActivityOptions;
+
+/**
+  * Implemented by @mozilla.org/dom/activities/proxy;1
+  */
+[scriptable, uuid(2241faf9-6219-4bc0-95f3-18651ac8a18b)]
+interface nsIActivityProxy : nsISupports
+{
+    void startActivity(in nsIDOMMozActivity activity, in nsIDOMMozActivityOptions options);
+    void cleanup();
+};

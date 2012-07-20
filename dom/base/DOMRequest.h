@@ -42,6 +42,7 @@ public:
   void FireError(nsresult aError);
 
   DOMRequest(nsIDOMWindow* aWindow);
+  DOMRequest();
 
   virtual ~DOMRequest()
   {
@@ -55,6 +56,8 @@ protected:
 
   virtual void RootResultVal();
   virtual void UnrootResultVal();
+
+  void Init(nsIDOMWindow* aWindow);
 };
 
 class DOMRequestService MOZ_FINAL : public nsIDOMRequestService
