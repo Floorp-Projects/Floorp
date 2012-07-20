@@ -59,7 +59,8 @@
                   android:verticalSpacing="8dip"
                   android:horizontalSpacing="0dip"
                   android:isScrollContainer="false"
-                  android:gravity="center"/>
+                  android:gravity="center"
+                  android:listSelector="@drawable/action_bar_button"/>
 
             <org.mozilla.gecko.LinkTextView android:id="@+id/all_top_sites_text"
                                             android:layout_width="fill_parent"
