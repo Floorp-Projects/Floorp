@@ -1408,6 +1408,13 @@ FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI, PRUint32 aAppId, bool aIn
     return GetCodebasePrincipal(aURI, _retval);
 }
 
+/* [noscript] nsIPrincipal getDocShellCodebasePrincipal (in nsIURI aURI, nsIDocShell docShell); */
+NS_IMETHODIMP
+FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI, nsIDocShell* aDocShell, nsIPrincipal **_retval)
+{
+    return GetCodebasePrincipal(aURI, _retval);
+}
+
 /* [noscript] short requestCapability (in nsIPrincipal principal, in string capability); */
 NS_IMETHODIMP
 FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
