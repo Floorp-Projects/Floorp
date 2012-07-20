@@ -88,6 +88,21 @@ var Utils = {
     let extState = {};
     aAccessible.getState(state, extState);
     return [state.value, extState.value];
+  },
+
+  getVirtualCursor: function getVirtualCursor(aDocument) {
+    let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
+      gAccRetrieval.getAccessibleFor(aDocument);
+
+    while (doc) {
+      try {
+        return doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
+      } catch (x) {
+        doc = doc.parentDocument;
+      }
+    }
+
+    return null;
   }
 };
 

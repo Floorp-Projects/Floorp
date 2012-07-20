@@ -334,12 +334,12 @@ var VirtualCursorController = {
   },
 
   moveToPoint: function moveToPoint(aDocument, aX, aY) {
-    this.getVirtualCursor(aDocument).moveToPoint(TraversalRules.Simple,
-                                                 aX, aY, true);
+    Utils.getVirtualCursor(aDocument).moveToPoint(TraversalRules.Simple,
+                                                  aX, aY, true);
   },
 
   moveForward: function moveForward(aDocument, aLast, aRule) {
-    let virtualCursor = this.getVirtualCursor(aDocument);
+    let virtualCursor = Utils.getVirtualCursor(aDocument);
     if (aLast) {
       virtualCursor.moveLast(TraversalRules.Simple);
     } else {
@@ -347,13 +347,14 @@ var VirtualCursorController = {
         virtualCursor.moveNext(aRule || TraversalRules.Simple);
       } catch (x) {
         this.moveCursorToObject(
-            gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
+          virtualCursor,
+          gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
       }
     }
   },
 
   moveBackward: function moveBackward(aDocument, aFirst, aRule) {
-    let virtualCursor = this.getVirtualCursor(aDocument);
+    let virtualCursor = Utils.getVirtualCursor(aDocument);
     if (aFirst) {
       virtualCursor.moveFirst(TraversalRules.Simple);
     } else {
@@ -361,13 +362,14 @@ var VirtualCursorController = {
         virtualCursor.movePrevious(aRule || TraversalRules.Simple);
       } catch (x) {
         this.moveCursorToObject(
-            gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
+          virtualCursor,
+          gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
       }
     }
   },
 
   activateCurrent: function activateCurrent(document) {
-    let virtualCursor = this.getVirtualCursor(document);
+    let virtualCursor = Utils.getVirtualCursor(document);
     let acc = virtualCursor.position;
 
     if (acc.actionCount > 0) {
@@ -394,24 +396,9 @@ var VirtualCursorController = {
     }
   },
 
-  getVirtualCursor: function getVirtualCursor(document) {
-    return gAccRetrieval.getAccessibleFor(document).
-      QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-  },
-
-  moveCursorToObject: function moveCursorToObject(aAccessible, aRule) {
-    let doc = aAccessible.document;
-    while (doc) {
-      let vc = null;
-      try {
-        vc = doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-      } catch (x) {
-        doc = doc.parentDocument;
-        continue;
-      }
-      vc.moveNext(aRule || TraversalRules.Simple, aAccessible, true);
-      break;
-    }
+  moveCursorToObject: function moveCursorToObject(aVirtualCursor,
+                                                  aAccessible, aRule) {
+    aVirtualCursor.moveNext(aRule || TraversalRules.Simple, aAccessible, true);
   },
 
   keyMap: {
