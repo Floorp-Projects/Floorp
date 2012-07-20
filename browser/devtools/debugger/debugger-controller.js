@@ -50,6 +50,7 @@ let DebuggerController = {
     this._isInitialized = true;
     window.removeEventListener("DOMContentLoaded", this._startupDebugger, true);
 
+    DebuggerView.cacheView();
     DebuggerView.initializePanes();
     DebuggerView.initializeEditor(function() {
       DebuggerView.GlobalSearch.initialize();
@@ -1693,6 +1694,16 @@ XPCOMUtils.defineLazyGetter(L10N, "stringBundle", function() {
   return Services.strings.createBundle(DBG_STRINGS_URI);
 });
 
+const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
+const STACKFRAMES_VISIBLE = "devtools.debugger.ui.stackframes-pane-visible";
+const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
+const VARIABLES_PANE_VISIBLE = "devtools.debugger.ui.variables-pane-visible";
+const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
+const REMOTE_HOST = "devtools.debugger.remote-host";
+const REMOTE_PORT = "devtools.debugger.remote-port";
+const REMOTE_CONNECTION_RETRIES = "devtools.debugger.remote-connection-retries";
+const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
+
 /**
  * Shortcuts for accessing various debugger preferences.
  */
@@ -1703,19 +1714,39 @@ let Prefs = {
    * @return number
    */
   get stackframesWidth() {
-    if (this._sfrmWidth === undefined) {
-      this._sfrmWidth = Services.prefs.getIntPref("devtools.debugger.ui.stackframes-width");
+    if (this._stackframesWidth === undefined) {
+      this._stackframesWidth = Services.prefs.getIntPref(STACKFRAMES_WIDTH);
     }
-    return this._sfrmWidth;
+    return this._stackframesWidth;
   },
 
   /**
    * Sets the preferred stackframes pane width.
-   * @return number
+   * @param number value
    */
   set stackframesWidth(value) {
-    Services.prefs.setIntPref("devtools.debugger.ui.stackframes-width", value);
-    this._sfrmWidth = value;
+    Services.prefs.setIntPref(STACKFRAMES_WIDTH, value);
+    this._stackframesWidth = value;
+  },
+
+  /**
+   * Gets the preferred stackframes pane visibility state.
+   * @return boolean
+   */
+  get stackframesPaneVisible() {
+    if (this._stackframesVisible === undefined) {
+      this._stackframesVisible = Services.prefs.getBoolPref(STACKFRAMES_VISIBLE);
+    }
+    return this._stackframesVisible;
+  },
+
+  /**
+   * Sets the preferred stackframes pane visibility state.
+   * @param boolean value
+   */
+  set stackframesPaneVisible(value) {
+    Services.prefs.setBoolPref(STACKFRAMES_VISIBLE, value);
+    this._stackframesVisible = value;
   },
 
   /**
@@ -1723,19 +1754,39 @@ let Prefs = {
    * @return number
    */
   get variablesWidth() {
-    if (this._varsWidth === undefined) {
-      this._varsWidth = Services.prefs.getIntPref("devtools.debugger.ui.variables-width");
+    if (this._variablesWidth === undefined) {
+      this._variablesWidth = Services.prefs.getIntPref(VARIABLES_WIDTH);
     }
-    return this._varsWidth;
+    return this._variablesWidth;
   },
 
   /**
    * Sets the preferred variables pane width.
-   * @return number
+   * @param number value
    */
   set variablesWidth(value) {
-    Services.prefs.setIntPref("devtools.debugger.ui.variables-width", value);
-    this._varsWidth = value;
+    Services.prefs.setIntPref(VARIABLES_WIDTH, value);
+    this._variablesWidth = value;
+  },
+
+  /**
+   * Gets the preferred variables pane visibility state.
+   * @return boolean
+   */
+  get variablesPaneVisible() {
+    if (this._variablesVisible === undefined) {
+      this._variablesVisible = Services.prefs.getBoolPref(VARIABLES_PANE_VISIBLE);
+    }
+    return this._variablesVisible;
+  },
+
+  /**
+   * Sets the preferred variables pane visibility state.
+   * @param boolean value
+   */
+  set variablesPaneVisible(value) {
+    Services.prefs.setBoolPref(VARIABLES_PANE_VISIBLE, value);
+    this._variablesVisible = value;
   },
 
   /**
@@ -1744,19 +1795,20 @@ let Prefs = {
    * @return boolean
    */
   get remoteAutoConnect() {
-    if (this._autoConn === undefined) {
-      this._autoConn = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
+    if (this._autoConnect === undefined) {
+      this._autoConnect = Services.prefs.getBoolPref(REMOTE_AUTO_CONNECT);
     }
-    return this._autoConn;
+    return this._autoConnect;
   },
 
   /**
-   * Sets a flag specifying if the the debugger should automatically connect.
+   * Sets a flag specifying if the the debugger should automatically connect to
+   * the default host and port number.
    * @param boolean value
    */
   set remoteAutoConnect(value) {
-    Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", value);
-    this._autoConn = value;
+    Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
+    this._autoConnect = value;
   }
 };
 
@@ -1765,7 +1817,7 @@ let Prefs = {
  * @return string
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
-  return Services.prefs.getCharPref("devtools.debugger.remote-host");
+  return Services.prefs.getCharPref(REMOTE_HOST);
 });
 
 /**
@@ -1773,7 +1825,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-port");
+  return Services.prefs.getIntPref(REMOTE_PORT);
 });
 
 /**
@@ -1781,7 +1833,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-connection-retries");
+  return Services.prefs.getIntPref(REMOTE_CONNECTION_RETRIES);
 });
 
 /**
@@ -1789,7 +1841,7 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteConnectionRetries", function() {
  * @return number
  */
 XPCOMUtils.defineLazyGetter(Prefs, "remoteTimeout", function() {
-  return Services.prefs.getIntPref("devtools.debugger.remote-timeout");
+  return Services.prefs.getIntPref(REMOTE_TIMEOUT);
 });
 
 /**

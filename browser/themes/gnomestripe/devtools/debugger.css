@@ -107,7 +107,20 @@
 }
 
 /**
- * Stack frames
+ * Stack frames and breakpoints panel
+ */
+
+#stackframes\+breakpoints {
+  background-color: white;
+  min-width: 50px;
+}
+
+#stackframes\+breakpoints[animated] {
+  -moz-transition: margin 0.25s ease-in-out;
+}
+
+/**
+ * Stack frames view
  */
 
 #stackframes {
@@ -146,6 +159,11 @@
 
 #variables {
   background-color: white;
+  min-width: 50px;
+}
+
+#variables[animated] {
+  -moz-transition: margin 0.25s ease-in-out;
 }
 
 /**
@@ -345,6 +363,22 @@
 /**
  * Toolbar Controls
  */
+
+#toggle-panes {
+  background: none;
+  border: none;
+  box-shadow: none;
+  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#toggle-panes:not([stackframesAndBreakpointsHidden]):not([variablesHidden]) {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+}
+
+#toggle-panes:active {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
 
 #resume {
   list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");

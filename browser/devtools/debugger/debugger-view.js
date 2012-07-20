@@ -28,14 +28,30 @@ let DebuggerView = {
   editor: null,
 
   /**
+   * Caches frequently used global view elements.
+   */
+  cacheView: function DV_cacheView() {
+    this._onTogglePanesButtonPressed = this._onTogglePanesButtonPressed.bind(this);
+
+    this._togglePanesButton = document.getElementById("toggle-panes");
+    this._stackframesAndBreakpoints = document.getElementById("stackframes+breakpoints");
+    this._stackframes = document.getElementById("stackframes");
+    this._breakpoints = document.getElementById("breakpoints");
+    this._variables = document.getElementById("variables");
+    this._globalSearch = document.getElementById("globalsearch");
+  },
+
+  /**
    * Initializes UI properties for all the displayed panes.
    */
   initializePanes: function DV_initializePanes() {
-    let stackframes = document.getElementById("stackframes+breakpoints");
-    stackframes.setAttribute("width", Prefs.stackframesWidth);
+    this._togglePanesButton.addEventListener("click", this._onTogglePanesButtonPressed);
 
-    let variables = document.getElementById("variables");
-    variables.setAttribute("width", Prefs.variablesWidth);
+    this._stackframesAndBreakpoints.setAttribute("width", Prefs.stackframesWidth);
+    this._variables.setAttribute("width", Prefs.variablesWidth);
+
+    this.showStackframesAndBreakpointsPane(Prefs.stackframesPaneVisible);
+    this.showVariablesPane(Prefs.variablesPaneVisible);
   },
 
   /**
@@ -66,22 +82,16 @@ let DebuggerView = {
    * Removes the displayed panes and saves any necessary state.
    */
   destroyPanes: function DV_destroyPanes() {
-    let stackframes = document.getElementById("stackframes+breakpoints");
-    Prefs.stackframesWidth = stackframes.getAttribute("width");
+    this._togglePanesButton.removeEventListener("click", this._onTogglePanesButtonPressed);
 
-    let variables = document.getElementById("variables");
-    Prefs.variablesWidth = variables.getAttribute("width");
+    Prefs.stackframesWidth = this._stackframesAndBreakpoints.getAttribute("width");
+    Prefs.variablesWidth = this._variables.getAttribute("width");
 
-    let bkps = document.getElementById("breakpoints");
-    let frames = document.getElementById("stackframes");
-    bkps.parentNode.removeChild(bkps);
-    frames.parentNode.removeChild(frames);
-
-    stackframes.parentNode.removeChild(stackframes);
-    variables.parentNode.removeChild(variables);
-
-    let search = document.getElementById("globalsearch");
-    search.parentNode.removeChild(search);
+    this._breakpoints.parentNode.removeChild(this._breakpoints);
+    this._stackframes.parentNode.removeChild(this._stackframes);
+    this._stackframesAndBreakpoints.parentNode.removeChild(this._stackframesAndBreakpoints);
+    this._variables.parentNode.removeChild(this._variables);
+    this._globalSearch.parentNode.removeChild(this._globalSearch);
   },
 
   /**
@@ -102,12 +112,79 @@ let DebuggerView = {
   },
 
   /**
+   * Called when the panes toggle button is clicked.
+   */
+  _onTogglePanesButtonPressed: function DV__onTogglePanesButtonPressed() {
+    this.showStackframesAndBreakpointsPane(
+      this._togglePanesButton.getAttribute("stackframesAndBreakpointsHidden"), true);
+
+    this.showVariablesPane(
+      this._togglePanesButton.getAttribute("variablesHidden"), true);
+  },
+
+  /**
    * Sets the close button hidden or visible. It's hidden by default.
    * @param boolean aVisibleFlag
    */
   showCloseButton: function DV_showCloseButton(aVisibleFlag) {
     document.getElementById("close").setAttribute("hidden", !aVisibleFlag);
-  }
+  },
+
+  /**
+   * Sets the stackframes and breakpoints pane hidden or visible.
+   * @param boolean aVisibleFlag
+   * @param boolean aAnimatedFlag
+   */
+  showStackframesAndBreakpointsPane:
+  function DV_showStackframesAndBreakpointsPane(aVisibleFlag, aAnimatedFlag) {
+    if (aAnimatedFlag) {
+      this._stackframesAndBreakpoints.setAttribute("animated", "");
+    } else {
+      this._stackframesAndBreakpoints.removeAttribute("animated");
+    }
+    if (aVisibleFlag) {
+      this._stackframesAndBreakpoints.style.marginLeft = "0";
+      this._togglePanesButton.removeAttribute("stackframesAndBreakpointsHidden");
+    } else {
+      let margin = parseInt(this._stackframesAndBreakpoints.getAttribute("width")) + 1;
+      this._stackframesAndBreakpoints.style.marginLeft = -margin + "px";
+      this._togglePanesButton.setAttribute("stackframesAndBreakpointsHidden", "true");
+    }
+    Prefs.stackframesPaneVisible = aVisibleFlag;
+  },
+
+  /**
+   * Sets the variable spane hidden or visible.
+   * @param boolean aVisibleFlag
+   * @param boolean aAnimatedFlag
+   */
+  showVariablesPane:
+  function DV_showVariablesPane(aVisibleFlag, aAnimatedFlag) {
+    if (aAnimatedFlag) {
+      this._variables.setAttribute("animated", "");
+    } else {
+      this._variables.removeAttribute("animated");
+    }
+    if (aVisibleFlag) {
+      this._variables.style.marginRight = "0";
+      this._togglePanesButton.removeAttribute("variablesHidden");
+    } else {
+      let margin = parseInt(this._variables.getAttribute("width")) + 1;
+      this._variables.style.marginRight = -margin + "px";
+      this._togglePanesButton.setAttribute("variablesHidden", "true");
+    }
+    Prefs.variablesPaneVisible = aVisibleFlag;
+  },
+
+  /**
+   * The cached global view elements.
+   */
+  _togglePanesButton: null,
+  _stackframesAndBreakpoints: null,
+  _stackframes: null,
+  _breakpoints: null,
+  _variables: null,
+  _globalSearch: null
 };
 
 /**
