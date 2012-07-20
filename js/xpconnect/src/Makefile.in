@@ -21,7 +21,8 @@ EXPORTS = \
 		xpcpublic.h \
 		XPCJSMemoryReporter.h \
 		dombindings.h \
-		dombindings_gen.h
+		dombindings_gen.h \
+		GeneratedEvents.h
 
 CPPSRCS		= \
 		nsScriptError.cpp \
@@ -113,8 +114,6 @@ nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
 
 XPCJSRuntime.$(OBJ_SUFFIX): dom_quickstubs.h
 
-nsScriptError.$(OBJ_SUFFIX): GeneratedEvents.h
-
 dom_quickstubs.h: dom_quickstubs.cpp
 
 dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
@@ -171,7 +170,7 @@ DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.h \
                                  DictionaryHelpers.cpp
 
 DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
-                     $(srcdir)/event_impl_gen.conf \
+                     event_impl_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/codegen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
@@ -184,10 +183,10 @@ DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
 	  -I $(DEPTH)/dist/idl \
 	  --header-output DictionaryHelpers.h \
 	  $(srcdir)/dictionary_helper_gen.conf \
-	  $(srcdir)/event_impl_gen.conf
+	  event_impl_gen.conf
 
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
-                       $(srcdir)/event_impl_gen.conf \
+                       event_impl_gen.conf \
                        $(srcdir)/dictionary_helper_gen.py \
                        $(srcdir)/codegen.py \
                        $(LIBXUL_DIST)/sdk/bin/header.py \
@@ -202,13 +201,16 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
 	  $(srcdir)/dictionary_helper_gen.conf \
-	  $(srcdir)/event_impl_gen.conf
+	  event_impl_gen.conf
 
 GeneratedEvents.$(OBJ_SUFFIX): GeneratedEvents.h \
                                GeneratedEvents.cpp
 
+event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > event_impl_gen.conf
+
 GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
-                   $(srcdir)/event_impl_gen.conf \
+                   event_impl_gen.conf \
                    $(srcdir)/dictionary_helper_gen.py \
                    $(srcdir)/event_impl_gen.py \
                    $(srcdir)/codegen.py \
@@ -221,11 +223,11 @@ GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
 	  $(srcdir)/event_impl_gen.py \
 	  -I $(DEPTH)/dist/idl \
 	  --header-output GeneratedEvents.h \
-	  $(srcdir)/event_impl_gen.conf
+	  event_impl_gen.conf
 
 GeneratedEvents.cpp: DictionaryHelpers.h \
                      $(srcdir)/dictionary_helper_gen.conf \
-                     $(srcdir)/event_impl_gen.conf \
+                     event_impl_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/event_impl_gen.py \
                      $(srcdir)/codegen.py \
@@ -240,11 +242,10 @@ GeneratedEvents.cpp: DictionaryHelpers.h \
 	  --header-output GeneratedEvents.h \
 	  --stub-output GeneratedEvents.cpp \
 	  --makedepend-output $(MDDEPDIR)/event_impl_gen.pp \
-	  $(srcdir)/event_impl_gen.conf
+	  event_impl_gen.conf
 
 _EXTRA_EXPORT_FILES = \
   DictionaryHelpers.h \
-  GeneratedEvents.h \
   $(NULL)
 
 libs:: $(_EXTRA_EXPORT_FILES)
@@ -259,6 +260,7 @@ GARBAGE += \
 		DictionaryHelpers.cpp \
 		GeneratedEvents.h \
 		GeneratedEvents.cpp \
+		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
 		$(MDDEPDIR)/dombindingsgen.pp \
