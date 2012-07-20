@@ -375,7 +375,7 @@ public class Utils {
    * Get names of stages to sync: (ALL intersect SYNC) intersect (ALL minus SKIP).
    *
    * @param knownStageNames collection of known stage names (set ALL above).
-   * @param bundle
+   * @param extras
    *          a <code>Bundle</code> instance (possibly null) optionally containing keys
    *          <code>EXTRAS_KEY_STAGES_TO_SYNC</code> (set SYNC above) and
    *          <code>EXTRAS_KEY_STAGES_TO_SKIP</code> (set SKIP above).
