@@ -1538,7 +1538,7 @@ nsBlockFrame::UpdateOverflow()
   return nsBlockFrameSuper::UpdateOverflow();
 }
 
-nsresult
+void
 nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
 {
   // Mark aLine dirty
@@ -1555,8 +1555,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
   // Mark previous line dirty if it's an inline line so that it can
   // maybe pullup something from the line just affected.
   // XXX We don't need to do this if aPrevLine ends in a break-after...
-  if (aLine != (aLineList ? aLineList : &mLines)->front() &&
-      aLine->IsInline() &&
+  if (aLine != aLineList->front() && aLine->IsInline() &&
       aLine.prev()->IsInline()) {
     aLine.prev()->MarkDirty();
     aLine.prev()->SetInvalidateTextRuns(true);
@@ -1569,8 +1568,6 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
     }
 #endif
   }
-
-  return NS_OK;
 }
 
 /**
@@ -5174,7 +5171,7 @@ nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
 
 nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     line_iterator aLine)
-  : mFrame(aFrame), mLine(aLine), mInOverflowLines(nsnull)
+  : mFrame(aFrame), mLine(aLine), mLineList(&aFrame->mLines)
 {
   // This will assert if aLine isn't in mLines of aFrame:
   DebugOnly<bool> check = aLine == mFrame->begin_lines();
@@ -5182,16 +5179,15 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
 
 nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     line_iterator aLine, bool aInOverflow)
-  : mFrame(aFrame), mLine(aLine), mInOverflowLines(nsnull)
+  : mFrame(aFrame), mLine(aLine),
+    mLineList(aInOverflow ? &aFrame->GetOverflowLines()->mLines
+                          : &aFrame->mLines)
 {
-  if (aInOverflow) {
-    mInOverflowLines = &aFrame->GetOverflowLines()->mLines;
-  }
 }
 
 nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     bool* aFoundValidLine)
-  : mFrame(aFrame), mInOverflowLines(nsnull)
+  : mFrame(aFrame), mLineList(&aFrame->mLines)
 {
   mLine = aFrame->begin_lines();
   *aFoundValidLine = FindValidLine();
@@ -5222,7 +5218,7 @@ FindChildContaining(nsBlockFrame* aFrame, nsIFrame* aFindFrame)
 
 nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     nsIFrame* aFindFrame, bool* aFoundValidLine)
-  : mFrame(aFrame), mInOverflowLines(nsnull)
+  : mFrame(aFrame), mLineList(&aFrame->mLines)
 {
   *aFoundValidLine = false;
 
@@ -5293,7 +5289,7 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
 nsBlockFrame::line_iterator
 nsBlockInFlowLineIterator::End()
 {
-  return mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+  return mLineList->end();
 }
 
 bool
@@ -5313,17 +5309,17 @@ nsBlockInFlowLineIterator::Next()
 bool
 nsBlockInFlowLineIterator::Prev()
 {
-  line_iterator begin = mInOverflowLines ? mInOverflowLines->begin() : mFrame->begin_lines();
+  line_iterator begin = mLineList->begin();
   if (mLine != begin) {
     --mLine;
     return true;
   }
-  bool currentlyInOverflowLines = mInOverflowLines != nsnull;
+  bool currentlyInOverflowLines = GetInOverflow();
   while (true) {
     if (currentlyInOverflowLines) {
-      mInOverflowLines = nsnull;
-      mLine = mFrame->end_lines();
-      if (mLine != mFrame->begin_lines()) {
+      mLineList = &mFrame->mLines;
+      mLine = mLineList->end();
+      if (mLine != mLineList->begin()) {
         --mLine;
         return true;
       }
@@ -5332,10 +5328,10 @@ nsBlockInFlowLineIterator::Prev()
       if (!mFrame)
         return false;
       nsBlockFrame::FrameLines* overflowLines = mFrame->GetOverflowLines();
-      mInOverflowLines = overflowLines ? &overflowLines->mLines : nsnull;
-      if (mInOverflowLines) {
-        mLine = mInOverflowLines->end();
-        NS_ASSERTION(mLine != mInOverflowLines->begin(), "empty overflow line list?");
+      if (overflowLines) {
+        mLineList = &overflowLines->mLines;
+        mLine = mLineList->end();
+        NS_ASSERTION(mLine != mLineList->begin(), "empty overflow line list?");
         --mLine;
         return true;
       }
@@ -5347,25 +5343,25 @@ nsBlockInFlowLineIterator::Prev()
 bool
 nsBlockInFlowLineIterator::FindValidLine()
 {
-  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+  line_iterator end = mLineList->end();
   if (mLine != end)
     return true;
-  bool currentlyInOverflowLines = mInOverflowLines != nsnull;
+  bool currentlyInOverflowLines = GetInOverflow();
   while (true) {
     if (currentlyInOverflowLines) {
       mFrame = static_cast<nsBlockFrame*>(mFrame->GetNextInFlow());
       if (!mFrame)
         return false;
-      mInOverflowLines = nsnull;
-      mLine = mFrame->begin_lines();
-      if (mLine != mFrame->end_lines())
+      mLineList = &mFrame->mLines;
+      mLine = mLineList->begin();
+      if (mLine != mLineList->end())
         return true;
     } else {
       nsBlockFrame::FrameLines* overflowLines = mFrame->GetOverflowLines();
-      mInOverflowLines = overflowLines ? &overflowLines->mLines : nsnull;
-      if (mInOverflowLines) {
-        mLine = mInOverflowLines->begin();
-        NS_ASSERTION(mLine != mInOverflowLines->end(), "empty overflow line list?");
+      if (overflowLines) {
+        mLineList = &overflowLines->mLines;
+        mLine = mLineList->begin();
+        NS_ASSERTION(mLine != mLineList->end(), "empty overflow line list?");
         return true;
       }
     }
@@ -6476,7 +6472,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     }
     
     if (bulletLine != end_lines()) {
-      MarkLineDirty(bulletLine);
+      MarkLineDirty(bulletLine, &mLines);
     }
     // otherwise we have an empty line list, and ReflowDirtyLines
     // will handle reflowing the bullet.
