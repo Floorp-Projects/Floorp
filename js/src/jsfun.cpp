@@ -10,6 +10,7 @@
  */
 #include <string.h>
 
+#include "mozilla/RangedPtr.h"
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
@@ -40,6 +41,7 @@
 #include "gc/Marking.h"
 #include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
+#include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 
 #ifdef JS_METHODJIT
@@ -521,34 +523,177 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
     fun_trace
 };
 
-JSString *
-ToSourceCache::lookup(JSFunction *fun)
-{
-    if (!map_)
-        return NULL;
-    if (Map::Ptr p = map_->lookup(fun))
-        return p->value;
-    return NULL;
-}
 
-void
-ToSourceCache::put(JSFunction *fun, JSString *str)
+/* Find the body of a function (not including braces). */
+static bool
+FindBody(JSContext *cx, JSFunction *fun, const jschar *chars, size_t length,
+         size_t *bodyStart, size_t *bodyEnd)
 {
-    if (!map_) {
-        map_ = OffTheBooks::new_<Map>();
-        if (!map_)
-            return;
-        map_->init();
+    // We don't need principals, since those are only used for error reporting.
+    TokenStream ts(cx, NULL, NULL, chars, length, "internal-FindBody", 0,
+                   fun->script()->getVersion(), NULL);
+    JS_ASSERT(chars[0] == '(');
+    int nest = 0;
+    bool onward = true;
+    // Skip arguments list.
+    do {
+        switch (ts.getToken()) {
+          case TOK_LP:
+            nest++;
+            break;
+          case TOK_RP:
+            if (--nest == 0)
+                onward = false;
+            break;
+          case TOK_ERROR:
+            // Must be memory.
+            return false;
+          default:
+            break;
+        }
+    } while (onward);
+    DebugOnly<bool> braced = ts.matchToken(TOK_LC);
+    if (ts.getToken() == TOK_ERROR)
+        return false;
+    JS_ASSERT(!!(fun->flags & JSFUN_EXPR_CLOSURE) ^ braced);
+    *bodyStart = ts.offsetOfToken(ts.currentToken());
+    RangedPtr<const jschar> p(chars, length);
+    p = chars + length;
+    for (; unicode::IsSpaceOrBOM2(p[-1]); p--)
+        ;
+    if (p[-1] == '}') {
+        p--;
+        for (; unicode::IsSpaceOrBOM2(p[-1]); p--)
+            ;
+    } else {
+        JS_ASSERT(!braced);
     }
-
-    (void) map_->put(fun, str);
+    *bodyEnd = p.get() - chars;
+    return true;
 }
 
-void
-ToSourceCache::purge()
+JSString *
+JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
 {
-    Foreground::delete_(map_);
-    map_ = NULL;
+    StringBuffer out(cx);
+
+    if (!bodyOnly) {
+        // If we're not in pretty mode, put parentheses around lambda functions.
+        if (isInterpreted() && !lambdaParen && (flags & JSFUN_LAMBDA)) {
+            if (!out.append("("))
+                return NULL;
+        }
+        if (!out.append("function "))
+            return NULL;
+        if (atom) {
+            if (!out.append(atom))
+                return NULL;
+        }
+    }
+    if (isInterpreted()) {
+        RootedString src(cx, script()->sourceData(cx));
+        if (!src)
+            return NULL;
+        const jschar *chars = src->getChars(cx);
+        if (!chars)
+            return NULL;
+        bool exprBody = flags & JSFUN_EXPR_CLOSURE;
+
+        // The source data for functions created by calling the Function
+        // constructor is only the function's body.
+        bool funCon = script()->sourceStart == 0 && script()->source->argumentsNotIncluded();
+
+        // Functions created with the constructor should not be using the
+        // expression body extension.
+        JS_ASSERT_IF(funCon, !exprBody);
+        JS_ASSERT_IF(!funCon, src->length() > 0 && chars[0] == '(');
+
+        // If a function inherits strict mode by having scopes above it that
+        // have "use strict", we insert "use strict" into the body of the
+        // function. This ensures that if the result of toString is evaled, the
+        // resulting function will have the same semantics.
+        bool addUseStrict = script()->strictModeCode && !script()->explicitUseStrict;
+
+        // Functions created with the constructor can't have inherited strict
+        // mode.
+        JS_ASSERT(!funCon || !addUseStrict);
+        bool buildBody = funCon && !bodyOnly;
+        if (buildBody) {
+            // This function was created with the Function constructor. We don't
+            // have source for the arguments, so we have to generate that. Part
+            // of bug 755821 should be cobbling the arguments passed into the
+            // Function constructor into the source string.
+            if (!out.append("("))
+                return NULL;
+
+            // Fish out the argument names.
+            BindingVector *localNames = cx->new_<BindingVector>(cx);
+            js::ScopedDeletePtr<BindingVector> freeNames(localNames);
+            if (!GetOrderedBindings(cx, script()->bindings, localNames))
+                return NULL;
+            for (unsigned i = 0; i < nargs; i++) {
+                if ((i && !out.append(", ")) ||
+                    (i == unsigned(nargs - 1) && hasRest() && !out.append("...")) ||
+                    !out.append((*localNames)[i].maybeName)) {
+                    return NULL;
+                }
+            }
+            if (!out.append(") { "))
+                return NULL;
+        }
+        if ((bodyOnly && !funCon) || addUseStrict) {
+            // We need to get at the body either because we're only supposed to
+            // return the body or we need to insert "use strict" into the body.
+            JS_ASSERT(!buildBody);
+            size_t bodyStart = 0, bodyEnd = 0;
+            if (!FindBody(cx, this, chars, src->length(), &bodyStart, &bodyEnd))
+                return NULL;
+
+            if (addUseStrict) {
+                // Output source up to beginning of body.
+                if (!out.append(chars, bodyStart))
+                    return NULL;
+                if (exprBody) {
+                    // We can't insert a statement into a function with an
+                    // expression body. Do what the decompiler did, and insert a
+                    // comment.
+                    if (!out.append("/* use strict */ "))
+                        return NULL;
+                } else {
+                    if (!out.append("\"use strict\";\n"))
+                        return NULL;
+                }
+            }
+
+            // Output just the body (for bodyOnly) or the body and possibly
+            // closing braces (for addUseStrict).
+            size_t dependentEnd = (bodyOnly) ? bodyEnd : src->length();
+            if (!out.append(chars + bodyStart, dependentEnd - bodyStart))
+                return NULL;
+        } else {
+            if (!out.append(src))
+                return NULL;
+        }
+        if (buildBody) {
+            if (!out.append(" }"))
+                return NULL;
+        }
+        if (bodyOnly) {
+            // Slap a semicolon on the end of functions with an expression body.
+            if (exprBody && !out.append(";"))
+                return NULL;
+        } else if (!lambdaParen && (flags & JSFUN_LAMBDA)) {
+            if (!out.append(")"))
+                return NULL;
+        }
+    } else {
+        JS_ASSERT(!(flags & JSFUN_EXPR_CLOSURE));
+        if ((!bodyOnly && !out.append("() {\n    ")) ||
+            !out.append("[native code]") ||
+            (!bodyOnly && !out.append("\n}")))
+            return NULL;
+    }
+    return out.finishString();
 }
 
 JSString *
@@ -568,19 +713,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, unsigned indent)
     if (!fun)
         return NULL;
 
-    if (!indent) {
-        if (JSString *str = cx->runtime->toSourceCache.lookup(fun))
-            return str;
-    }
-
-    JSString *str = JS_DecompileFunction(cx, fun, indent);
-    if (!str)
-        return NULL;
-
-    if (!indent)
-        cx->runtime->toSourceCache.put(fun, str);
-
-    return str;
+    return fun->toString(cx, false, indent != JS_DONT_PRETTY_PRINT);
 }
 
 static JSBool

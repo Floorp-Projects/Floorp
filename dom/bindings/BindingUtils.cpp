@@ -122,26 +122,13 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  JS::Value* argv = JS_ARGV(cx, vp);
-  uint32_t indent = 0;
-  if (argc != 0 && !JS_ValueToECMAUint32(cx, argv[0], &indent))
-      return false;
-
-  nsAutoString spaces;
-  while (indent-- > 0) {
-    spaces.Append(PRUnichar(' '));
-  }
-
   nsString str;
-  str.Append(spaces);
   str.AppendLiteral("function ");
   str.Append(name, length);
   str.AppendLiteral("() {");
   str.Append('\n');
-  str.Append(spaces);
   str.AppendLiteral("    [native code]");
   str.Append('\n');
-  str.Append(spaces);
   str.AppendLiteral("}");
 
   return xpc::NonVoidStringToJsval(cx, str, vp);

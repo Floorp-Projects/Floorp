@@ -40,7 +40,7 @@ function runTests() {
   root.setAttribute("onclick", listenerSource);
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 1, "Element should have listeners (1)");
-  is(infos[0].toSource(), 'function onclick(event) {' + listenerSource + '}',
+  is(infos[0].toSource(), 'function onclick(event) { ' + listenerSource + ' }',
      "Unexpected serialization (1)");
   is(infos[0].type, "click", "Wrong type (1)");
   is(infos[0].capturing, false, "Wrong phase (1)");
@@ -67,7 +67,7 @@ function runTests() {
   root.addEventListener("foo", l, false, false);
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 2, "Element should have listeners (2)");
-  is(infos[0].toSource(), "(function (e) {alert(e);})",
+  is(infos[0].toSource(), "(function (e) { alert(e); })",
      "Unexpected serialization (2)");
   is(infos[0].type, "foo", "Wrong type (2)");
   is(infos[0].capturing, true, "Wrong phase (2)");
@@ -78,7 +78,7 @@ function runTests() {
   is(jsdvalue.getWrappedValue(), l, "Wrong JS value! (1)");
 */
 
-  is(infos[1].toSource(), "(function (e) {alert(e);})",
+  is(infos[1].toSource(), "(function (e) { alert(e); })",
      "Unexpected serialization (3)");
   is(infos[1].type, "foo", "Wrong type (3)");
   is(infos[1].capturing, false, "Wrong phase (3)");
@@ -97,7 +97,7 @@ function runTests() {
   root.onclick = l;
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 1, "Element should have listeners (3)");
-  is(infos[0].toSource(), '(function (e) {alert(e);})',
+  is(infos[0].toSource(), '(function (e) { alert(e); })',
      "Unexpected serialization (4)");
   is(infos[0].type, "click", "Wrong type (4)");
   is(infos[0].capturing, false, "Wrong phase (4)");

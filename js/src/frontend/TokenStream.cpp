@@ -378,11 +378,11 @@ TokenStream::peekChars(int n, jschar *cp)
 const jschar *
 TokenStream::TokenBuf::findEOLMax(const jschar *p, size_t max)
 {
-    JS_ASSERT(base <= p && p <= limit);
+    JS_ASSERT(base_ <= p && p <= limit_);
 
     size_t n = 0;
     while (true) {
-        if (p >= limit)
+        if (p >= limit_)
             break;
         if (n >= max)
             break;
@@ -1123,6 +1123,31 @@ TokenStream::matchUnicodeEscapeIdent(int32_t *cp)
         return true;
     }
     return false;
+}
+
+size_t
+TokenStream::endOffset(const Token &tok)
+{
+    uint32_t lineno = tok.pos.begin.lineno;
+    JS_ASSERT(lineno <= tok.pos.end.lineno);
+    const jschar *end;
+    if (lineno < tok.pos.end.lineno) {
+        TokenBuf buf(tok.ptr, userbuf.addressOfNextRawChar() - userbuf.base());
+        for (; lineno < tok.pos.end.lineno; lineno++) {
+            jschar c;
+            do {
+                JS_ASSERT(buf.hasRawChars());
+                c = buf.getRawChar();
+            } while (!TokenBuf::isRawEOLChar(c));
+            if (c == '\r' && buf.hasRawChars())
+                buf.matchRawChar('\n');
+        }
+        end = buf.addressOfNextRawChar() + tok.pos.end.index;
+    } else {
+        end = tok.ptr + (tok.pos.end.index - tok.pos.begin.index);
+    }
+    JS_ASSERT(end <= userbuf.addressOfNextRawChar());
+    return end - userbuf.base();
 }
 
 /*

@@ -230,3 +230,26 @@ BEGIN_TEST(testXDR_bug516827)
     return true;
 }
 END_TEST(testXDR_bug516827)
+
+BEGIN_TEST(testXDR_source)
+{
+    const char *samples[] = {
+        // This can't possibly fail to compress well, can it?
+        "function f(x) { return x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x + x }",
+        "short",
+        NULL
+    };
+    for (const char **s = samples; *s; s++) {
+        JSScript *script = JS_CompileScript(cx, global, *s, strlen(*s), __FILE__, __LINE__);
+        CHECK(script);
+        script = FreezeThaw(cx, script);
+        CHECK(script);
+        JSString *out = JS_DecompileScript(cx, script, "testing", 0);
+        CHECK(out);
+        JSBool equal;
+        CHECK(JS_StringEqualsAscii(cx, out, *s, &equal));
+        CHECK(equal);
+    }
+    return true;
+}
+END_TEST(testXDR_source)

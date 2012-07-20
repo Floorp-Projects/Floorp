@@ -18,8 +18,8 @@
     // killed.
     SimpleTest.requestLongerTimeout(100);
 
+    // Disable crash observers as it breaks later tests.
     function iframeScriptFirst() {
-      // Disable this functionality, it breaks later tests.
       SpecialPowers.prototype.registerProcessCrashObservers = function() { };
       SpecialPowers.prototype.unregisterProcessCrashObservers = function() { };
 
