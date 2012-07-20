@@ -254,7 +254,7 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_MIR, "Analyzing script %s:%d (%p)",
+    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p)",
             script->filename, script->lineno, (void *) script);
 
     if (!initParameters())
@@ -374,7 +374,7 @@ bool
 IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
                         MDefinition *thisDefn, MDefinitionVector &argv)
 {
-    IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
+    IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
 
     callerBuilder_ = callerBuilder;
