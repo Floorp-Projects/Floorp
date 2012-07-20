@@ -261,6 +261,10 @@ private:
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;
 
+        // calculate the number of half open sockets that have not had at least 1
+        // connection complete
+        PRUint32 UnconnectedHalfOpens();
+
         // Pipeline depths for various states
         const static PRUint32 kPipelineUnlimited  = 1024; // fully open - extended green
         const static PRUint32 kPipelineOpen       = 6;    // 6 on each conn - normal green

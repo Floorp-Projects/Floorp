@@ -1103,24 +1103,13 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
         return true;
     }
 
-    PRInt32 totalCount = ent->mActiveConns.Length();
-
     // Add in the in-progress tcp connections, we will assume they are
     // keepalive enabled.
-    PRUint32 pendingHalfOpens = 0;
-    for (PRUint32 i = 0; i < ent->mHalfOpens.Length(); ++i) {
-        nsHalfOpenSocket *halfOpen = ent->mHalfOpens[i];
-
-        // Exclude half-open's that has already created a usable connection.
-        // This prevents the limit being stuck on ipv6 connections that 
-        // eventually time out after typical 21 seconds of no ACK+SYN reply.
-        if (halfOpen->HasConnected())
-            continue;
-
-        ++pendingHalfOpens;
-    }
-    
-    totalCount += pendingHalfOpens;
+    // Exclude half-open's that has already created a usable connection.
+    // This prevents the limit being stuck on ipv6 connections that 
+    // eventually time out after typical 21 seconds of no ACK+SYN reply.
+    PRUint32 totalCount =
+        ent->mActiveConns.Length() + ent->UnconnectedHalfOpens();
 
     PRUint16 maxPersistConns;
 
@@ -1185,7 +1174,7 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
     
     // If the restriction is based on a tcp handshake in progress
     // let that connect and then see if it was SPDY or not
-    if (ent->mHalfOpens.Length())
+    if (ent->UnconnectedHalfOpens())
         return true;
 
     // There is a concern that a host is using a mix of HTTP/1 and SPDY.
@@ -2313,22 +2302,15 @@ nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket()
     LOG(("Destroying nsHalfOpenSocket [this=%p]\n", this));
     
     if (mEnt) {
-        // If the removal of the HalfOpenSocket from the mHalfOpens list
-        // removes the RestrictConnections() throttle then we need to
-        // process the pending queue.
-        bool restrictedBeforeRelease =
-            gHttpHandler->ConnMgr()->RestrictConnections(mEnt);
-
         // A failure to create the transport object at all
         // will result in this not being present in the halfopen table
         // so ignore failures of RemoveElement()
         mEnt->mHalfOpens.RemoveElement(this);
-
-        if (restrictedBeforeRelease &&
-            !gHttpHandler->ConnMgr()->RestrictConnections(mEnt)) {
-            LOG(("nsHalfOpenSocket %p lifted RestrictConnections() limit.\n"));
+        
+        // If there are no unconnected half opens left in the array, then
+        // it is liekly that this dtor transitioned
+        if (!mEnt->UnconnectedHalfOpens())
             gHttpHandler->ConnMgr()->ProcessPendingQForEntry(mEnt);
-        }
     }
 }
 
@@ -3029,4 +3011,15 @@ nsConnectionEntry::MaxPipelineDepth(nsAHttpTransaction::Classifier aClass)
         return kPipelineRestricted;
 
     return mGreenDepth;
+}
+
+PRUint32
+nsHttpConnectionMgr::nsConnectionEntry::UnconnectedHalfOpens()
+{
+    PRUint32 unconnectedHalfOpens = 0;
+    for (PRUint32 i = 0; i < mHalfOpens.Length(); ++i) {
+        if (!mHalfOpens[i]->HasConnected())
+            ++unconnectedHalfOpens;
+    }
+    return unconnectedHalfOpens;
 }
