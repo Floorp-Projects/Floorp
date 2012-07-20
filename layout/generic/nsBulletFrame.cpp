@@ -411,7 +411,7 @@ static bool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& re
      // skip the leading '-'
      ++p;
    }     
-   for(; nsnull != *p ; p++) 
+   for(; '\0' != *p ; p++) 
       *p += diff;
    return true;
 }
@@ -424,7 +424,7 @@ static bool TamilToText(PRInt32 ordinal,  nsString& result)
      return false;
    }
    PRUnichar* p = result.BeginWriting();
-   for(; nsnull != *p ; p++) 
+   for(; '\0' != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;
    return true;

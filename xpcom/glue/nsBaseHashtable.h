@@ -125,7 +125,7 @@ public:
   {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent)
-      return nsnull;
+      return 0;
 
     return ent->mData;
   }

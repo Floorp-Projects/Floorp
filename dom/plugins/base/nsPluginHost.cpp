@@ -589,7 +589,7 @@ nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
 {
   return GetURLWithHeaders(static_cast<nsNPAPIPluginInstance*>(pluginInst),
                            url, target, streamListener, altHost, referrer,
-                           forceJSEnabled, nsnull, nsnull);
+                           forceJSEnabled, 0, nsnull);
 }
 
 nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
