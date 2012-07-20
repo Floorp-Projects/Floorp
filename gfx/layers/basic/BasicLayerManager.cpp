@@ -384,6 +384,16 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
 }
 
+void
+BasicLayerManager::AbortTransaction()
+{
+  NS_ASSERTION(InConstruction(), "Should be in construction phase");
+#ifdef DEBUG
+  mPhase = PHASE_NONE;
+#endif
+  mUsingDefaultTarget = false;
+}
+
 bool
 BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                           void* aCallbackData,
