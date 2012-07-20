@@ -74,14 +74,16 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
   let strPrefs = ['ril.data.apn', 'ril.data.user', 'ril.data.passwd',
                   'ril.data.mmsc', 'ril.data.mmsproxy'];
   strPrefs.forEach(function(key) {
-    SettingsListener.observe(key, false, function(value) {
+    SettingsListener.observe(key, "", function(value) {
       Services.prefs.setCharPref(key, value);
     });
   });
 
   ['ril.data.mmsport'].forEach(function(key) {
-    SettingsListener.observe(key, false, function(value) {
-      Services.prefs.setIntPref(key, value);
+    SettingsListener.observe(key, null, function(value) {
+      if (value != null) {
+        Services.prefs.setIntPref(key, value);
+      }
     });
   });
 })();
