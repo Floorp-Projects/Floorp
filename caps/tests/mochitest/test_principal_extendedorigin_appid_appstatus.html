@@ -105,7 +105,7 @@ function checkPrincipalForIFrame(aFrame, data) {
     if (navigator.platform.indexOf("Mac") != 1) {
       origin = origin.replace("file:///", "file:///private/");
     }
-    is(principal.URI.origin, origin, 'the correct URL should have been loaded');
+    is(principal.origin, origin, 'the correct URL should have been loaded');
   }
 
   checkedCount++;
