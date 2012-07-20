@@ -171,6 +171,7 @@ ion::CheckLogging()
             "usage: IONFLAGS=option,option,option,... where options can be:\n"
             "\n"
             "  aborts     Compilation abort messages\n"
+            "  scripts    Compiled scripts\n"
             "  mir        MIR information\n"
             "  alias      Alias analysis\n"
             "  gvn        Global Value Numbering\n"
@@ -195,6 +196,8 @@ ion::CheckLogging()
         EnableChannel(IonSpew_Abort);
     if (ContainsFlag(env, "alias"))
         EnableChannel(IonSpew_Alias);
+    if (ContainsFlag(env, "scripts"))
+        EnableChannel(IonSpew_Scripts);
     if (ContainsFlag(env, "mir"))
         EnableChannel(IonSpew_MIR);
     if (ContainsFlag(env, "gvn"))
