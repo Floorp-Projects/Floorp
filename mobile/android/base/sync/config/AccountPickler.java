@@ -78,7 +78,7 @@ public class AccountPickler {
   public static void pickle(final Context context, final String filename,
       final SyncAccountParameters params, final boolean syncAutomatically) {
     final ExtendedJSONObject o = params.asJSON();
-    o.put(Constants.JSON_KEY_SYNC_AUTOMATICALLY, new Boolean(syncAutomatically));
+    o.put(Constants.JSON_KEY_SYNC_AUTOMATICALLY, Boolean.valueOf(syncAutomatically));
     o.put(Constants.JSON_KEY_VERSION, new Long(VERSION));
     o.put(Constants.JSON_KEY_TIMESTAMP, new Long(System.currentTimeMillis()));
 
@@ -133,7 +133,7 @@ public class AccountPickler {
     // Default to syncing automatically.
     boolean syncAutomatically = true;
     if (json.containsKey(Constants.JSON_KEY_SYNC_AUTOMATICALLY)) {
-      if ((new Boolean(false)).equals(json.get(Constants.JSON_KEY_SYNC_AUTOMATICALLY))) {
+      if (Boolean.FALSE.equals(json.get(Constants.JSON_KEY_SYNC_AUTOMATICALLY))) {
         syncAutomatically = false;
       }
     }
