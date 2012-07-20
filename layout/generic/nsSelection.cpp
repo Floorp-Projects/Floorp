@@ -55,6 +55,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsDOMClassInfoID.h"
 
 //included for desired x position;
 #include "nsPresContext.h"

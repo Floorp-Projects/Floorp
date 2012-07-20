@@ -34,6 +34,7 @@
 #include "mozilla/css/Declaration.h"
 #include "nsCSSParser.h"
 #include "nsPrintfCString.h"
+#include "nsDOMClassInfoID.h"
 
 namespace css = mozilla::css;
 
