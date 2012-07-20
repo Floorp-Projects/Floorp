@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+/**
+  * The constructor will accept the name as a parameter.
+  */
+[scriptable, uuid(1601d370-08d9-47b7-8802-d4291533b843)]
+interface nsIDOMMozActivityHandlerDescription : nsISupports
+{
+    attribute DOMString name;
+    attribute DOMString href;
+    attribute DOMString disposition;
+    attribute boolean   returnValue;
+    // The |filters| property can be null.
+    attribute jsval     filters;
+};
