@@ -3024,6 +3024,9 @@ typedef void* GLeglImage;
 #define LOCAL_GL_CONDITION_SATISFIED              0x911C
 #define LOCAL_GL_WAIT_FAILED                      0x911D
 
+// OES_EGL_image_external
+#define LOCAL_GL_TEXTURE_EXTERNAL                 0x8D65
+
 #define LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS       0x8DFB
 #define LOCAL_GL_MAX_VARYING_VECTORS              0x8DFC
 #define LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS     0x8DFD
@@ -3236,8 +3239,6 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_TEXTURE_RGB                 0x305D
 #define LOCAL_EGL_TEXTURE_RGBA                0x305E
 #define LOCAL_EGL_TEXTURE_2D                  0x305F
-#define LOCAL_EGL_NATIVE_PIXMAP_KHR           0x30B0
-#define LOCAL_EGL_IMAGE_PRESERVED_KHR         0x30D2
 #define LOCAL_EGL_FALSE                       0
 #define LOCAL_EGL_TRUE                        1
 #define LOCAL_EGL_BITMAP_POINTER_KHR          0x30C6
@@ -3252,6 +3253,12 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_READ                        0x305A
 #define LOCAL_EGL_DRAW                        0x3059
 #define LOCAL_EGL_CONTEXT_LOST                0x300E
+
+// EGL_KHR_image_base (not supplied by EGL_KHR_image!)
+#define LOCAL_EGL_IMAGE_PRESERVED             0x30D2
+
+// EGL_KHR_image_pixmap
+#define LOCAL_EGL_NATIVE_PIXMAP               0x30B0
 
 // EGL_KHR_gl_texture_2D_image
 #define LOCAL_EGL_GL_TEXTURE_2D               0x30B1
