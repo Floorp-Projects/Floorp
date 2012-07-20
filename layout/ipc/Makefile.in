@@ -20,6 +20,7 @@ EXPORTS_NAMESPACES = mozilla/layout
 EXPORTS_mozilla/layout = \
   RenderFrameChild.h \
   RenderFrameParent.h \
+  RenderFrameUtils.h \
   $(NULL)
 
 CPPSRCS = \

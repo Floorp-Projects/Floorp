@@ -19,9 +19,8 @@
 
 #include "vm/ScopeObject.h"
 
-typedef struct BindData BindData;
-
 namespace js {
+namespace frontend {
 
 class ContextFlags {
 
@@ -407,8 +406,6 @@ struct StmtInfoTC : public StmtInfoBase {
 
     StmtInfoTC(JSContext *cx) : StmtInfoBase(cx), isFunctionBodyBlock(false) {}
 };
-
-namespace frontend {
 
 bool
 GenerateBlockId(TreeContext *tc, uint32_t &blockid);

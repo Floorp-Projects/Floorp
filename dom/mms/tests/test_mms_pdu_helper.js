@@ -550,3 +550,46 @@ add_test(function test_StatusValue_encode() {
   run_next_test();
 });
 
+//
+// Test target: PduHelper
+//
+
+//// PduHelper.parseHeaders ////
+
+add_test(function test_PduHelper_parseHeaders() {
+  function parse(input, expect, exception) {
+    let data = {array: input, offset: 0};
+    do_check_throws(wsp_test_func.bind(null, MMS.PduHelper.parseHeaders, data, expect),
+                    exception);
+  }
+
+  // Parse ends with Content-Type
+  let expect = {};
+  expect["x-mms-mms-version"] = MMS_VERSION;
+  expect["content-type"] = {
+    media: "application/vnd.wap.multipart.related",
+    params: null,
+  };
+  parse([0x80 | 0x0D, 0x80 | MMS_VERSION,   // X-Mms-Mms-Version: 1.3
+         0x80 | 0x04, 0x80 | 0x33,          // Content-Type: application/vnd.wap.multipart.related
+	 0x80 | 0x0C, MMS_PDU_TYPE_SEND_REQ // X-Mms-Message-Type: M-Send.req
+        ], expect);
+
+  // Parse header fields with multiple entries
+  expect = {
+    to: [
+      { address: "+123", type: "PLMN" },
+      { address: "+456", type: "num" },
+    ],
+  };
+  expect["content-type"] = {
+    media: "application/vnd.wap.multipart.related",
+    params: null,
+  };
+  parse(Array.concat([0x80 | 0x17]).concat(strToCharCodeArray("+123/TYPE=PLMN"))
+             .concat([0x80 | 0x17]).concat(strToCharCodeArray("+456"))
+             .concat([0x80 | 0x04, 0x80 | 0x33]),
+        expect);
+
+  run_next_test();
+});

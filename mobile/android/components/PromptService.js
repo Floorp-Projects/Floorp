@@ -197,9 +197,10 @@ Prompt.prototype = {
 
   confirmCheck: function confirmCheck(aTitle, aText, aCheckMsg, aCheckState) {
     let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, []);
+    let ok = data.button == 0;
     if (aCheckMsg)
       aCheckState.value = data.checkbox == "true";
-    return (data.button == 0);
+    return ok;
   },
 
   confirmEx: function confirmEx(aTitle, aText, aButtonFlags, aButton0,
@@ -250,11 +251,12 @@ Prompt.prototype = {
     let inputs = [{ type: "textbox", value: aValue.value }];
     let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
 
+    let ok = data.button == 0;
     if (aCheckMsg)
       aCheckState.value = data.checkbox == "true";
-    if (data.textbox)
+    if (ok)
       aValue.value = data.textbox;
-    return (data.button == 0);
+    return ok;
   },
 
   nsIPrompt_promptPassword: function nsIPrompt_promptPassword(
@@ -262,11 +264,12 @@ Prompt.prototype = {
     let inputs = [{ type: "password", hint: "Password", value: aPassword.value || "" }];
     let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
 
+    let ok = data.button == 0;
     if (aCheckMsg)
       aCheckState.value = data.checkbox == "true";
-    if (data.password)
+    if (ok)
       aPassword.value = data.password;
-    return (data.button == 0);
+    return ok;
   },
 
   nsIPrompt_promptUsernameAndPassword: function nsIPrompt_promptUsernameAndPassword(
@@ -274,13 +277,15 @@ Prompt.prototype = {
     let inputs = [{ type: "textbox",  hint: PromptUtils.getLocaleString("username", "passwdmgr"), value: aUsername.value },
                   { type: "password", hint: PromptUtils.getLocaleString("password", "passwdmgr"), value: aPassword.value }];
     let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
+
+    let ok = data.button == 0;
     if (aCheckMsg)
       aCheckState.value = data.checkbox == "true";
-    if (data.textbox)
+    if (ok) {
       aUsername.value = data.textbox;
-    if (data.password)
       aPassword.value = data.password;
-    return (data.button == 0);
+    }
+    return ok;
   },
 
   select: function select(aTitle, aText, aCount, aSelectList, aOutSelection) {
@@ -289,9 +294,12 @@ Prompt.prototype = {
     ], "", {value: false}, [
       { type: "menulist",  values: aSelectList },
     ]);
-    if (data.menulist)
+
+    let ok = data.button == 0;
+    if (ok)
       aOutSelection.value = data.menulist;
-    return (data.button == 0);
+
+    return ok;
   },
 
   /* ----------  nsIAuthPrompt  ---------- */
@@ -332,7 +340,8 @@ Prompt.prototype = {
     if (ok && canSave && check.value)
       PromptUtils.savePassword(hostname, realm, aUser, aPass);
 
-    return ok;  },
+    return ok;
+  },
 
   /* ----------  nsIAuthPrompt2  ---------- */
 

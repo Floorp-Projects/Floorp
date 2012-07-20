@@ -94,6 +94,7 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
+  void AbortTransaction();
 
   virtual void SetRoot(Layer* aLayer);
 

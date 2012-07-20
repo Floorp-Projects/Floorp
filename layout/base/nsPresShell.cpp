@@ -680,7 +680,15 @@ PresShell::PresShell()
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = false;
   mIsActive = true;
+  // FIXME/bug 735029: find a better solution to this problem
+#ifdef MOZ_JAVA_COMPOSITOR
+  // The java pan/zoom code uses this to mean approximately "request a
+  // reset of pan/zoom state" which doesn't necessarily correspond
+  // with the first paint of content.
   mIsFirstPaint = false;
+#else
+  mIsFirstPaint = true;
+#endif
   mFrozen = false;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;
@@ -5556,11 +5564,13 @@ EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
   if (!frame) {
     return;
   }
-  nsPoint *pt = new nsPoint(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
-  widget = frame->GetView()->GetNearestWidget(pt);
+  nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
+  widget = frame->GetView()->GetNearestWidget(&pt);
+
   if (!widget) {
     return;
   }
+  
   nsTouchEvent event(true, NS_TOUCH_END, widget);
   event.widget = widget;
   event.time = PR_IntervalNow();
@@ -6500,9 +6510,8 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
   nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
   // touch events should fire on all targets
   if (aEvent->message != NS_TOUCH_START) {
-    nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
-    for (PRUint32 i = 0; i < touches.Length(); ++i) {
-      nsIDOMTouch *touch = touches[i];
+    for (PRUint32 i = 0; i < touchEvent->touches.Length(); ++i) {
+      nsIDOMTouch *touch = touchEvent->touches[i];
       if (!touch || !touch->mChanged) {
         continue;
       }
@@ -6550,9 +6559,8 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
     }
   } else {
     // touchevents need to have the target attribute set on each touch
-    nsTArray<nsCOMPtr<nsIDOMTouch> >  touches = touchEvent->touches;
-    for (PRUint32 i = 0; i < touches.Length(); ++i) {
-      nsIDOMTouch *touch = touches[i];
+    for (PRUint32 i = 0; i < touchEvent->touches.Length(); ++i) {
+      nsIDOMTouch *touch = touchEvent->touches[i];
       if (touch->mChanged) {
         touch->SetTarget(mCurrentEventContent);
       }

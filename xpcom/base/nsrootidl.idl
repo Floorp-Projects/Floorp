@@ -30,7 +30,7 @@ typedef unsigned short      PRUint16 ;
 typedef unsigned short      PRUnichar;
 typedef unsigned long       PRUint32 ;
 typedef unsigned long long  PRUint64 ;
-typedef unsigned long long  PRTime   ;
+typedef long long           PRTime   ;
 typedef short               PRInt16  ;
 typedef long                PRInt32  ;
 typedef long long           PRInt64  ;

@@ -972,7 +972,14 @@ let PduHelper = {
       header = HeaderField.decode(data, headers);
 
       if (header) {
-        headers[header.name] = header.value;
+        let orig = headers[header.name];
+        if (Array.isArray(orig)) {
+          headers[header.name].push(header.value);
+        } else if (orig) {
+          headers[header.name] = [orig, header.value];
+        } else {
+          headers[header.name] = header.value;
+        }
         if (header.name == "content-type") {
           // `... if the PDU contains a message body the Content Type MUST be
           // the last header field, followed by message body.` See

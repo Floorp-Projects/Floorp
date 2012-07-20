@@ -3873,7 +3873,7 @@ CheckForDisabledWindows()
       nsCOMPtr<nsIWidget> widget;
       baseWin->GetMainWidget(getter_AddRefs(widget));
       if (widget && !widget->GetParent() &&
-          NS_SUCCEEDED(widget->IsVisible(aFlag)) && aFlag == true &&
+          widget->IsVisible() &&
           NS_SUCCEEDED(widget->IsEnabled(&aFlag)) && aFlag == false) {
         nsIWidget * child = widget->GetFirstChild();
         bool enable = true;

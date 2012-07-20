@@ -10,15 +10,16 @@
 
 namespace js {
 
-struct Parser;
 class StackFrame;
 
 namespace frontend {
 
+class Parser;
+
 /*
- * For each function in the compilation unit given by tc, decide whether the
- * function is a full closure or a null closure and set JSFunction flags
- * accordingly.
+ * For each function in the compilation unit given by sc and functionList,
+ * decide whether the function is a full closure or a null closure and set
+ * JSFunction flags accordingly.
  */
 bool
 AnalyzeFunctions(Parser *parser, StackFrame *callerFrame);

@@ -13,6 +13,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gAppBrowser",
                             function() document.getElementById("content"));
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                   "@mozilla.org/toolkit/crash-reporter;1",
+                                   "nsICrashReporter");
+#endif
+
 let progressListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
@@ -28,6 +34,14 @@ let progressListener = {
       title = origin + " - " + title;
     }
     document.documentElement.setAttribute("title", title);
+  },
+
+  onStateChange: function onStateChange(aProgress, aRequest, aFlags, aStatus) {
+    if (aRequest instanceof Ci.nsIChannel &&
+        aFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      updateCrashReportURL(aRequest.URI);
+    }
   }
 };
 
@@ -65,7 +79,8 @@ function onLoad() {
   }
 
   gAppBrowser.webProgress.
-    addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_LOCATION);
+    addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_LOCATION |
+                                          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
   initWindow(!!cmdLineArgs);
 }
@@ -175,5 +190,21 @@ function updateEditUIVisibility() {
     goSetCommandEnabled("cmd_delete", true);
     goSetCommandEnabled("cmd_switchTextDirection", true);
   }
+#endif
+}
+
+function updateCrashReportURL(aURI) {
+#ifdef MOZ_CRASHREPORTER
+  if (!gCrashReporter.enabled)
+    return;
+
+  let uri = aURI.clone();
+  if (uri.userPass != "") {
+    try {
+      uri.userPass = "";
+    } catch (e) {}
+  }
+
+  gCrashReporter.annotateCrashReport("URL", uri.spec);
 #endif
 }

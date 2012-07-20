@@ -1,5 +1,7 @@
 // for-of can iterate strict arguments objects in non-strict code.
 
+Object.prototype.iterator = Array.prototype.iterator;
+
 var s;
 function g(obj) {
     for (var v of obj)

@@ -8,6 +8,7 @@
 #include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEditProperty.h"
@@ -420,14 +421,10 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     // Yes, it is absolutely positioned
     mResizedObjectIsAbsolutelyPositioned = true;
 
-    nsCOMPtr<nsIDOMWindow> window;
-    res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(window));
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     // Get the all the computed css styles attached to the element node
-    res = window->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<nsComputedDOMStyle> cssDecl =
+      mHTMLCSSUtils->GetComputedStyle(aElement);
+    NS_ENSURE_STATE(cssDecl);
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
     aBorderTop  = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-top-width"));

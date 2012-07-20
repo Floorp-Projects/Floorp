@@ -15,9 +15,16 @@ interface mozIDOMApplication;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(40e580e7-8891-4eb8-b514-0b5796af4df1)]
+[scriptable, uuid(1210a0f3-add3-4381-b892-9c102e3afc42)]
 interface nsIAppsService : nsISupports
 {
   mozIDOMApplication getAppByManifestURL(in DOMString manifestURL);
+
+  /**
+   * Returns the |localId| of the app associated with the |manifestURL| passed
+   * in parameter.
+   * Returns nsIScriptSecurityManager::NO_APP_ID if |manifestURL| isn't a valid
+   * installed manifest URL.
+   */
   unsigned long getAppLocalIdByManifestURL(in DOMString manifestURL);
 };

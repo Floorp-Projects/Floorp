@@ -646,16 +646,12 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     // where we can't shut down because an invisible window is open.  If
     // someone tries to do this, throw.
     if (!hasChromeParent && (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
-      bool parentVisible = true;
       nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
       nsCOMPtr<nsIWidget> parentWidget;
       if (parentWindow)
         parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
-      if (parentWidget)
-        parentWidget->IsVisible(parentVisible);
-      if (!parentVisible) {
+      if (parentWidget && !parentWidget->IsVisible())
         return NS_ERROR_NOT_AVAILABLE;
-      }
     }
 
     NS_ASSERTION(mWindowCreator,

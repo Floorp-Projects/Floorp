@@ -3,24 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+       android:shape="rectangle">
 
-    <item>
+     <size android:height="1dp"/>
+     <solid android:color="#3460666E"/>
 
-        <shape android:shape="rectangle">
-             <size android:height="1dp"/>
-             <solid android:color="#C1C7CC"/>
-        </shape>
-
-    </item>
-
-    <item android:top="1dp">
-
-        <shape android:shape="rectangle">
-             <size android:height="1dp"/>
-             <solid android:color="#FFFFFF"/>
-        </shape>
-
-    </item>
-
-</layer-list>
+</shape>

@@ -4,13 +4,10 @@
 
 "use strict";
 
-let Cu = Components.utils;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cr = Components.results;
-
+let { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Geometry.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 // Event whitelisted for bubbling.
@@ -62,7 +59,7 @@ BrowserElementChild.prototype = {
 
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
-    docShell.isBrowserFrame = true;
+    docShell.setIsBrowser();
     docShell.QueryInterface(Ci.nsIWebProgress)
             .addProgressListener(this._progressListener,
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
@@ -575,3 +572,10 @@ BrowserElementChild.prototype = {
 };
 
 var api = new BrowserElementChild();
+
+// FIXME/bug 775438: use a JSM?
+//
+// The code in this included file depends on the |addEventListener|,
+// |addMessageListener|, |content|, |Geometry| and |Services| symbols
+// being "exported" from here.
+#include BrowserElementScrolling.js
