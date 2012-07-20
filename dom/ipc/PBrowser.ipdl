@@ -13,18 +13,23 @@ include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
 include protocol PIndexedDB;
 
-include "mozilla/dom/TabMessageUtils.h";
 include "gfxMatrix.h";
-include "mozilla/net/NeckoMessageUtils.h";
 include "IPC/nsGUIEventIPC.h";
+include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/layout/RenderFrameUtils.h";
+include "mozilla/net/NeckoMessageUtils.h";
 
 using IPC::URI;
 using gfxMatrix;
+using gfxSize;
 using mozilla::layers::LayersBackend;
+using mozilla::layout::ScrollingBehavior;
 using mozilla::WindowsHandle;
 using nscolor;
 using nsCompositionEvent;
 using nsIMEUpdatePreference;
+using nsIntPoint;
+using nsIntRect;
 using nsIntSize;
 using nsKeyEvent;
 using nsMouseEvent;
@@ -176,7 +181,8 @@ parent:
      * the page that is currently loaded in the <browser>.
      */
     sync PRenderFrame()
-        returns (LayersBackend backend, int32_t maxTextureSize, uint64_t layersId);
+        returns (ScrollingBehavior scrolling,
+                 LayersBackend backend, int32_t maxTextureSize, uint64_t layersId);
 
     /** 
      * Starts an offline application cache update.
@@ -240,6 +246,11 @@ child:
     LoadURL(nsCString uri);
 
     UpdateDimensions(nsRect rect, nsIntSize size);
+
+    UpdateFrame(nsIntRect displayPort,
+                nsIntPoint scrollOffset,
+                gfxSize resolution,
+                nsIntRect screenSize);
 
     /**
      * Sending an activate message moves focus to the child.

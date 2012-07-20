@@ -43,6 +43,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsPIDOMWindow.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "mozilla/Attributes.h"
@@ -166,6 +167,10 @@ public:
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size);
+    virtual bool RecvUpdateFrame(const nsIntRect& aDisplayPort,
+                                      const nsIntPoint& aScrollOffset,
+                                      const gfxSize& aResolution,
+                                      const nsIntRect& aScreenSize);
     virtual bool RecvActivate();
     virtual bool RecvDeactivate();
     virtual bool RecvMouseEvent(const nsString& aType,
@@ -249,9 +254,13 @@ public:
     void SetBackgroundColor(const nscolor& aColor);
 
     void NotifyPainted();
+
+    bool IsAsyncPanZoomEnabled();
+
 protected:
     NS_OVERRIDE
-    virtual PRenderFrameChild* AllocPRenderFrame(LayersBackend* aBackend,
+    virtual PRenderFrameChild* AllocPRenderFrame(ScrollingBehavior* aScrolling,
+                                                 LayersBackend* aBackend,
                                                  int32_t* aMaxTextureSize,
                                                  uint64_t* aLayersId);
     NS_OVERRIDE
@@ -293,6 +302,7 @@ private:
     PRUint32 mChromeFlags;
     nsIntRect mOuterRect;
     nscolor mLastBackgroundColor;
+    ScrollingBehavior mScrolling;
     bool mDidFakeShow;
     bool mIsBrowserFrame;
 
