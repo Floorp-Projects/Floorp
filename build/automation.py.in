@@ -523,31 +523,31 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     apps = [
       {
-        'name': 'http:example.org',
+        'name': 'http_example_org',
         'origin': 'http://example.org',
         'manifestURL': 'http://example.org/manifest.webapp',
         'description': 'http://example.org App'
       },
       {
-        'name': 'https:example.com',
+        'name': 'https_example_com',
         'origin': 'https://example.com',
         'manifestURL': 'https://example.com/manifest.webapp',
         'description': 'https://example.com App'
       },
       {
-        'name': 'http:test1.example.org',
+        'name': 'http_test1_example_org',
         'origin': 'http://test1.example.org',
         'manifestURL': 'http://test1.example.org/manifest.webapp',
         'description': 'http://test1.example.org App'
       },
       {
-        'name': 'http:test1.example.org:8000',
+        'name': 'http_test1_example_org_8000',
         'origin': 'http://test1.example.org:8000',
         'manifestURL': 'http://test1.example.org:8000/manifest.webapp',
         'description': 'http://test1.example.org:8000 App'
       },
       {
-        'name': 'http:sub1.test1.example.org',
+        'name': 'http_sub1_test1_example_org',
         'origin': 'http://sub1.test1.example.org',
         'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
         'description': 'http://sub1.test1.example.org App'
