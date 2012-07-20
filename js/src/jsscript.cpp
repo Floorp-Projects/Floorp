@@ -1237,6 +1237,16 @@ ScriptSource::destroy(JSRuntime *rt)
     rt->free_(this);
 }
 
+size_t
+ScriptSource::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+{
+    JS_ASSERT(onRuntime());
+    JS_ASSERT(ready());
+    // data is a union, but both members are pointers to allocated memory, so
+    // just using compressed will work.
+    return mallocSizeOf(this) + mallocSizeOf(data.compressed);
+}
+
 void
 ScriptSource::sweep(JSRuntime *rt)
 {
