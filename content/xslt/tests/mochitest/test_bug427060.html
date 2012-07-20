@@ -20,20 +20,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=427060
 /** Test for Bug 427060 **/
 
 var xmldoc, xsltdoc;
-[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(String(xml), "text/xml") for each (xml in [ 
+[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for each (xml in [ 
 
-    <opml version="1.0"><body></body></opml> ,
+    '<opml version="1.0"><body></body></opml>' ,
 
-    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-    	<xsl:template match="/opml">
-    		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-    			<head>
-    				<base target="_blank"></base>
-    			</head>
-    			<body></body>
-    		</html>
-    	</xsl:template>
-    </xsl:stylesheet>
+    '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+    	<xsl:template match="/opml">\n\
+    		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">\n\
+    			<head>\n\
+    				<base target="_blank"></base>\n\
+    			</head>\n\
+    			<body></body>\n\
+    		</html>\n\
+    	</xsl:template>\n\
+    </xsl:stylesheet>'
 
 ]) ];
 
