@@ -377,7 +377,8 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         }
         NS_ENSURE_SUCCESS(rv, rv);
         element->AddListenerFor(*originalName, true);
-        if (originalName->Equals(nsGkAtoms::id)) {
+        if (originalName->Equals(nsGkAtoms::id) &&
+            !originalValue->IsEmptyString()) {
             element->SetHasID();
         }
         if (originalName->Equals(nsGkAtoms::_class)) {
