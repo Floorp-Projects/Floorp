@@ -195,6 +195,8 @@ browser.jar:
   skin/classic/browser/devtools/layout-background-grid.png  (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css              (devtools/layoutview.css)
   skin/classic/browser/devtools/layout-buttons.png          (devtools/layout-buttons.png)
+  skin/classic/browser/devtools/debugger-collapse.png       (devtools/debugger-collapse.png)
+  skin/classic/browser/devtools/debugger-expand.png         (devtools/debugger-expand.png)
   skin/classic/browser/devtools/debugger-pause.png          (devtools/debugger-pause.png)
   skin/classic/browser/devtools/debugger-play.png           (devtools/debugger-play.png)
   skin/classic/browser/devtools/debugger-step-in.png        (devtools/debugger-step-in.png)
