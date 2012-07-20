@@ -37,6 +37,7 @@
 #include "mozilla/css/Declaration.h"
 #include "nsRuleNode.h"
 #include "nsMediaFeatures.h"
+#include "nsDOMClassInfoID.h"
 
 namespace css = mozilla::css;
 

@@ -31,6 +31,7 @@
 #include "DictionaryHelpers.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 

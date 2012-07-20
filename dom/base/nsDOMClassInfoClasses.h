@@ -44,8 +44,10 @@ DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
 DOMCI_CLASS(PopupBlockedEvent)
 DOMCI_CLASS(DeviceLightEvent)
-DOMCI_CLASS(DeviceProximityEvent)
-DOMCI_CLASS(UserProximityEvent)
+#define MOZ_GENERATED_EVENT_LIST
+#define MOZ_GENERATED_EVENT(_event_interface) DOMCI_CLASS(_event_interface)
+#include "GeneratedEvents.h"
+#undef MOZ_GENERATED_EVENT_LIST
 DOMCI_CLASS(DeviceOrientationEvent)
 DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
@@ -507,7 +509,6 @@ DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
 
 DOMCI_CLASS(MediaQueryList)
-DOMCI_CLASS(CustomEvent)
 
 DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)

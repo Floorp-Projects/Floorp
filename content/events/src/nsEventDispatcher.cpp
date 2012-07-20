@@ -22,6 +22,7 @@
 #include "nsDOMTouchEvent.h"
 #include "nsDOMStorage.h"
 #include "sampler.h"
+#include "GeneratedEvents.h"
 
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
