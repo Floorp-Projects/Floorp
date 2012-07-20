@@ -243,7 +243,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
 
     /**
      * Returns the extended origin for the uri.
-     * appId can be NO_APP_ID, UNKWOWN_APP_ID or a valid app id.
+     * appId can be NO_APP_ID or a valid app id. appId should not be
+     * UNKNOWN_APP_ID.
      * inMozBrowser has to be true if the uri is inside a mozbrowser iframe.
      */
     AUTF8String getExtendedOrigin(in nsIURI uri, in unsigned long appId,
