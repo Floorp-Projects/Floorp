@@ -66,4 +66,16 @@ interface nsILoadContext : nsISupports
     return usingPB;
   }
 %}
+
+  /**
+   * Returns true iif the load is occurring inside a browser element.
+   */
+  readonly attribute boolean isInBrowserElement;
+
+  /**
+   * Returns the app id of the app the load is occurring is in. Returns
+   * nsIScriptSecurityManager::NO_APP_ID if the load is not part of an app.
+   */
+  readonly attribute unsigned long appId;
+
 };
