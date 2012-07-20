@@ -139,7 +139,7 @@ function BrowserElementParent(frameLoader) {
   function addMessageListener(msg, handler) {
     function checkedHandler() {
       if (self._isAlive()) {
-        handler.apply(self, arguments);
+        return handler.apply(self, arguments);
       }
     }
     self._mm.addMessageListener('browser-element-api:' + msg, checkedHandler);
