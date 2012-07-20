@@ -124,10 +124,41 @@ function finalCheck(i, string, token) {
   }
 
   clear();
+  ok(gEditor.getCaretPosition().line == 5 &&
+     gEditor.getCaretPosition().col == 8 + token.length + i,
+    "The editor didn't remain at the correct token. (4)");
 
   executeSoon(function() {
+    let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
+
     is(gScripts.visibleItemsCount, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
+    is(gMenulist.selectedIndex, 1,
+      "The menulist should have retained its selected index after the searchbox was emptied.");
+
+    write("BOGUS");
+    ok(gEditor.getCaretPosition().line == 5 &&
+       gEditor.getCaretPosition().col == 8 + token.length + i,
+      "The editor didn't remain at the correct token. (5)");
+
+    is(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should display a notice that no scripts match the searched token.");
+    is(gScripts.visibleItemsCount, 0,
+      "No scripts should be displayed in the menulist after a bogus search.");
+    is(gMenulist.selectedIndex, 1,
+      "The menulist should retain its selected index after a bogus search.");
+
+    clear();
+    ok(gEditor.getCaretPosition().line == 5 &&
+       gEditor.getCaretPosition().col == 8 + token.length + i,
+      "The editor didn't remain at the correct token. (6)");
+
+    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
+      "The menulist should not display a notice after the searchbox was emptied.");
+    is(gScripts.visibleItemsCount, 2,
+      "Not all the scripts are shown after the searchbox was emptied.");
+    is(gMenulist.selectedIndex, 1,
+      "The menulist should have retained its selected index after the searchbox was emptied of a bogus search.");
 
     closeDebuggerAndFinish();
   });
