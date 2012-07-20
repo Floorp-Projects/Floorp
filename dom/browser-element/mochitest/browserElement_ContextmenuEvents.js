@@ -8,15 +8,15 @@ var iframeScript = function() {
     var ev = content.document.createEvent('HTMLEvents');
     ev.initEvent('contextmenu', true, false);
     element.dispatchEvent(ev);
-  }
+  };
 
   XPCNativeWrapper.unwrap(content).ctxCallbackFired = function(data) {
     sendAsyncMessage('test:callbackfired', {data: data});
-  }
+  };
 
   XPCNativeWrapper.unwrap(content).onerror = function(e) {
     sendAsyncMessage('test:errorTriggered', {data: e});
-  }
+  };
 
   content.fireContextMenu(content.document.body);
   content.fireContextMenu(content.document.getElementById('menu1-trigger'));

@@ -18,7 +18,7 @@ function a(){
 
 try
 {
-  expect = 'function a() {\n    return (1).toSource();\n}';
+  expect = 'function a() {\n    return 1..toSource();\n}';
   actual = a.toString();
   compareSource(expect, actual, summary + ': 1');
 }
@@ -30,7 +30,7 @@ catch(ex)
 
 try
 {
-  expect = 'function a() {return (1).toSource();}';
+  expect = 'function a() {return 1..toSource();}';
   actual = a.toSource();
   compareSource(expect, actual, summary + ': 2');
 }
@@ -46,7 +46,7 @@ reportCompare(expect, actual, summary + ': 3');
 
 try
 {
-  expect = 'function a() {\n    return (1).toSource();\n}';
+  expect = 'function a() {\n    return 1..toSource();\n}';
   actual = "" + a;
   compareSource(expect, actual, summary + ': 4');
 }
@@ -55,36 +55,3 @@ catch(ex)
   actual = ex + '';
   reportCompare(expect, actual, summary + ': 4');
 }
-
-function b(){
-  x=1..toSource();
-  x=1['a'];
-  x=1..a;
-  x=1['"a"'];
-  x=1["'a'"];
-  x=1['1'];
-  x=1["#"];
-}
-
-try
-{
-  expect = "function b() {\n    x = (1).toSource();\n" +
-    "    x = (1).a;\n" +
-    "    x = (1).a;\n" +
-    "    x = (1)['\"a\"'];\n" +
-    "    x = (1)[\'\\'a\\''];\n" +
-    "    x = (1)['1'];\n" +
-    "    x = (1)['#'];\n" +
-    "}";
-  actual = "" + b;
-  // fudge the actual to match a['1'] ~ a[1].
-  // see https://bugzilla.mozilla.org/show_bug.cgi?id=452369
-  actual = actual.replace(/\(1\)\[1\];/, "(1)['1'];");
-  compareSource(expect, actual, summary + ': 5');
-}
-catch(ex)
-{
-  actual = ex + '';
-  reportCompare(expect, actual, summary + ': 5');
-}
-

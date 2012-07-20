@@ -21,7 +21,7 @@ function test()
   printStatus (summary);
 
   var f = function ([x]) { let x; }
-  expect = 'function ([x]) { var x; }';
+  expect = 'function ([x]) { let x; }';
   actual = f + '';
 
   compareSource(expect, actual, summary);

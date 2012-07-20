@@ -10,7 +10,6 @@
 /*
  * JS script descriptor.
  */
-#include "jsatom.h"
 #include "jsprvtd.h"
 #include "jsdbgapi.h"
 #include "jsclist.h"
@@ -336,6 +335,8 @@ typedef HashMap<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> DebugScriptMap;
 
+struct ScriptSource;
+
 } /* namespace js */
 
 struct JSScript : public js::gc::Cell
@@ -436,6 +437,8 @@ struct JSScript : public js::gc::Cell
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
+    js::ScriptSource *source; /* source code */
+
   private:
 #ifdef JS_METHODJIT
     JITScriptSet *jitInfo;
@@ -455,6 +458,10 @@ struct JSScript : public js::gc::Cell
 
     uint32_t        natoms;     /* length of atoms array */
 
+    uint32_t        sourceStart;
+    uint32_t        sourceEnd;
+
+
   private:
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
@@ -467,6 +474,8 @@ struct JSScript : public js::gc::Cell
   private:
     uint32_t        idpad;
 #endif
+
+    uint32_t        PADDING;
 
     // 16-bit fields.
 
@@ -511,6 +520,7 @@ struct JSScript : public js::gc::Cell
                                        expression statement */
     bool            savedCallerFun:1; /* can call getCallerFunction() */
     bool            strictModeCode:1; /* code is in strict mode */
+    bool            explicitUseStrict:1; /* code has "use strict"; explicitly */
     bool            compileAndGo:1;   /* see Parser::compileAndGo */
     bool            bindingsAccessedDynamically:1; /* see ContextFlags' field of the same name */
     bool            funHasExtensibleScope:1;       /* see ContextFlags' field of the same name */
@@ -551,7 +561,8 @@ struct JSScript : public js::gc::Cell
     static JSScript *Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
                             JSPrincipals *principals, JSPrincipals *originPrincipals,
                             bool compileAndGo, bool noScriptRval,
-                            JSVersion version, unsigned staticLevel);
+                            JSVersion version, unsigned staticLevel,
+                            js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
 
     // Three ways ways to initialize a JSScript.  Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -606,6 +617,8 @@ struct JSScript : public js::gc::Cell
      */
     JSFunction *function() const { return function_; }
     void setFunction(JSFunction *fun);
+
+    JSFixedString *sourceData(JSContext *cx);
 
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval || isActiveEval; }
@@ -936,6 +949,132 @@ extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
 namespace js {
+
+struct SourceCompressionToken;
+
+struct ScriptSource
+{
+    friend class SourceCompressorThread;
+    ScriptSource *next;
+  private:
+    union {
+        // When the script source is ready, compressedLength > 0 implies
+        // compressed holds the compressed data; otherwise, source holds the
+        // uncompressed source.
+        jschar *source;
+        unsigned char *compressed;
+    } data;
+    uint32_t length_;
+    uint32_t compressedLength;
+    bool marked:1;
+    bool onRuntime_:1;
+    bool argumentsNotIncluded_:1;
+#ifdef DEBUG
+    bool ready_:1;
+#endif
+
+  public:
+    static ScriptSource *createFromSource(JSContext *cx,
+                                          const jschar *src,
+                                          uint32_t length,
+                                          bool argumentsNotIncluded = false,
+                                          SourceCompressionToken *tok = NULL);
+    void attachToRuntime(JSRuntime *rt);
+    void mark() { JS_ASSERT(ready_); JS_ASSERT(onRuntime_); marked = true; }
+    void destroy(JSRuntime *rt);
+    uint32_t length() const { return length_; }
+    bool onRuntime() const { return onRuntime_; }
+    bool argumentsNotIncluded() const { return argumentsNotIncluded_; }
+#ifdef DEBUG
+    bool ready() const { return ready_; }
+#endif
+    JSFixedString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+
+    // For the GC.
+    static void sweep(JSRuntime *rt);
+
+    // XDR handling
+    template <XDRMode mode>
+    static bool performXDR(XDRState<mode> *xdr, ScriptSource **ss);
+
+  private:
+    bool compressed() { return !!compressedLength; }
+    void considerCompressing(JSRuntime *rt, const jschar *src);
+};
+
+#ifdef JS_THREADSAFE
+/*
+ * Background thread to compress JS source code. This happens only while parsing
+ * and bytecode generation is happening in the main thread. If needed, the
+ * compiler waits for compression to complete before returning.
+ *
+ * To use it, you have to have a SourceCompressionToken, tok, with tok.ss and
+ * tok.chars set to the proper values. When the SourceCompressionToken is
+ * destroyed, it makes sure the compression is complete. At this point tok.ss is
+ * ready to be attached to the runtime.
+ */
+class SourceCompressorThread
+{
+  private:
+    enum {
+        // The compression thread is in the process of compression some source.
+        COMPRESSING,
+        // The compression thread is not doing anything and available to
+        // compress source.
+        IDLE,
+        // Set by finish() to tell the compression thread to exit.
+        SHUTDOWN
+    } state;
+    JSRuntime *rt;
+    SourceCompressionToken *tok;
+    PRThread *thread;
+    // Protects |state| and |tok| when it's non-NULL.
+    PRLock *lock;
+    // When it's idling, the compression thread blocks on this. The main thread
+    // uses it to notify the compression thread when it has source to be
+    // compressed.
+    PRCondVar *wakeup;
+    // The main thread can block on this to wait for compression to finish.
+    PRCondVar *done;
+
+    void threadLoop();
+    static void compressorThread(void *arg);
+
+  public:
+    explicit SourceCompressorThread(JSRuntime *rt)
+    : state(IDLE),
+      rt(rt),
+      tok(NULL),
+      thread(NULL),
+      lock(NULL),
+      wakeup(NULL),
+      done(NULL) {}
+    void finish();
+    bool init();
+    void compress(SourceCompressionToken *tok);
+    void waitOnCompression(SourceCompressionToken *userTok);
+};
+#endif
+
+struct SourceCompressionToken
+{
+    friend class ScriptSource;
+    friend class SourceCompressorThread;
+  private:
+    JSRuntime *rt;
+    ScriptSource *ss;
+    const jschar *chars;
+  public:
+    SourceCompressionToken(JSRuntime *rt)
+      : rt(rt), ss(NULL), chars(NULL) {}
+    ~SourceCompressionToken()
+    {
+        JS_ASSERT_IF(!ss, !chars);
+        if (ss)
+            ensureReady();
+    }
+    void ensureReady();
+};
 
 extern void
 CallDestroyScriptHook(FreeOp *fop, JSScript *script);

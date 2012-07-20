@@ -22,54 +22,6 @@ function f2novar(o){with(this)for(x in o)printStatus(o[x]); return x}
 function f3(i,o){for(var x=i in o)printStatus(o[x]); return x}
 function f4(i,o){with(this)for(var x=i in o)printStatus(o[x]); return x}
 
-const f1src =
-  "function f1(o) {\n" +
-  "    for (var x in o) {\n" +
-  "        printStatus(o[x]);\n" +
-  "    }\n" +
-  "    return x;\n" +
-  "}";
-
-const f2src =
-  "function f2(o) {\n" +
-  "    with (this) {\n" +
-  "        for (var x in o) {\n" +
-  "            printStatus(o[x]);\n" +
-  "        }\n" +
-  "    }\n" +
-  "    return x;\n" +
-  "}";
-
-const f2novarsrc =
-  "function f2novar(o) {\n" +
-  "    with (this) {\n" +
-  "        for (x in o) {\n" +
-  "            printStatus(o[x]);\n" +
-  "        }\n" +
-  "    }\n" +
-  "    return x;\n" +
-  "}";
-
-const f3src =
-  "function f3(i, o) {\n" +
-  "    var x = i;\n" +
-  "    for (x in o) {\n" +
-  "        printStatus(o[x]);\n" +
-  "    }\n" +
-  "    return x;\n" +
-  "}";
-
-const f4src =
-  "function f4(i, o) {\n" +
-  "    with (this) {\n" +
-  "        var x = i;\n" +
-  "        for (x in o) {\n" +
-  "            printStatus(o[x]);\n" +
-  "        }\n" +
-  "    }\n" +
-  "    return x;\n" +
-  "}";
-
 var t=0;
 function assert(c)
 {
@@ -85,21 +37,6 @@ function assert(c)
   }
   reportCompare(expect, actual, summary);
 }
-
-if (dodis && this.dis) dis(f1);
-assert(f1 == f1src);
-
-if (dodis && this.dis) dis(f2);
-assert(f2 == f2src);
-
-if (dodis && this.dis) dis(f2novar);
-assert(f2novar == f2novarsrc);
-
-if (dodis && this.dis) dis(f3);
-assert(f3 == f3src);
-
-if (dodis && this.dis) dis(f4);
-assert(f4 == f4src);
 
 assert(f1([]) == undefined);
 
