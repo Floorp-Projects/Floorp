@@ -80,6 +80,12 @@ public:
             aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
   }
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
+
   virtual bool UpdateOverflow();
 };
 
