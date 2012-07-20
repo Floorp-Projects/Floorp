@@ -58,6 +58,13 @@ public:
                                 nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                 float aOpacity);
 
+  // nsIFrame methods:
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
+
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsSVGPaintServerFrameBase::IsFrameOfType(aFlags & ~nsIFrame::eSVGPaintServer);
