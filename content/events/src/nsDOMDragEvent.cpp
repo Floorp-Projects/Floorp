@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIDragService.h"
+#include "nsDOMClassInfoID.h"
 
 nsDOMDragEvent::nsDOMDragEvent(nsPresContext* aPresContext,
                                nsInputEvent* aEvent)

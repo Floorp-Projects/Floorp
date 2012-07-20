@@ -11,7 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMProgressEvent.h"
-
+#include "nsDOMClassInfoID.h"
 #include "FileHelper.h"
 #include "LockedFile.h"
 
