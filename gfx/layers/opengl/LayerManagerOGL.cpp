@@ -17,6 +17,7 @@
 #include "TiledThebesLayerOGL.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Preferences.h"
+#include "TexturePoolOGL.h"
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
@@ -750,6 +751,10 @@ LayerManagerOGL::Render()
   } else {
     MakeCurrent();
   }
+
+#if MOZ_WIDGET_ANDROID
+  TexturePoolOGL::Fill(gl());
+#endif
 
   SetupBackBuffer(width, height);
   SetupPipeline(width, height, ApplyWorldTransform);
