@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
 
 #ifdef MOZ_LOGGING
@@ -201,6 +202,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Number of documents currently loading
 static PRInt32 gNumberOfDocumentsLoading = 0;
@@ -12165,4 +12167,15 @@ nsDocShell::GetAppId(PRUint32* aAppId)
     }
 
     return parent->GetAppId(aAppId);
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
+{
+    if (TabChild* tabChild = GetTabChildFrom(this)) {
+        *aOut = tabChild->IsAsyncPanZoomEnabled();
+        return NS_OK;
+    }
+    *aOut = false;
+    return NS_OK;
 }

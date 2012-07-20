@@ -680,7 +680,15 @@ PresShell::PresShell()
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = false;
   mIsActive = true;
+  // FIXME/bug 735029: find a better solution to this problem
+#ifdef MOZ_JAVA_COMPOSITOR
+  // The java pan/zoom code uses this to mean approximately "request a
+  // reset of pan/zoom state" which doesn't necessarily correspond
+  // with the first paint of content.
   mIsFirstPaint = false;
+#else
+  mIsFirstPaint = true;
+#endif
   mFrozen = false;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;

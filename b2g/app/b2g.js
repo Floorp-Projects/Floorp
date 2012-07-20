@@ -247,6 +247,7 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
+pref("layers.async-pan-zoom.enabled", true);
 
 // Web Notifications
 pref("notification.feature.enabled", true);
