@@ -716,6 +716,8 @@ struct JSRuntime : js::RuntimeFriendFields
         return !JS_CLIST_IS_EMPTY(&contextList);
     }
 
+    JS_SourceHook       sourceHook;
+
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        debugHooks;
 
