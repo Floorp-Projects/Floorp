@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <android/log.h>
+#include "AndroidBridge.h"
 #include "ANPBase.h"
-#include "AndroidMediaLayer.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsNPAPIPluginInstance.h"
@@ -15,58 +15,30 @@
 
 using namespace mozilla;
 
-static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
-}
-
-static AndroidMediaLayer* GetLayerForInstance(NPP instance) {
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
-    return NULL;
-  
-  return owner->Layer();
-}
-
-static void Invalidate(NPP instance) {
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
-    return;
-
-  owner->Invalidate();
-}
+typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
 
 static ANPNativeWindow anp_video_acquireNativeWindow(NPP instance) {
-  AndroidMediaLayer* layer = GetLayerForInstance(instance);
-  if (!layer)
-    return NULL;
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  return layer->RequestNativeWindowForVideo();
+  return pinst->AcquireVideoWindow();
 }
 
 static void anp_video_setWindowDimensions(NPP instance, const ANPNativeWindow window,
-        const ANPRectF* dimensions) {
-  AndroidMediaLayer* layer = GetLayerForInstance(instance);
-  if (!layer)
-    return;
+                                          const ANPRectF* dimensions) {
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
   gfxRect rect(dimensions->left, dimensions->top,
                dimensions->right - dimensions->left,
                dimensions->bottom - dimensions->top);
 
-  layer->SetNativeWindowDimensions(window, rect);
-  Invalidate(instance);
+  pinst->SetVideoDimensions(window, rect);
+  pinst->RedrawPlugin();
 }
 
-
 static void anp_video_releaseNativeWindow(NPP instance, ANPNativeWindow window) {
-  AndroidMediaLayer* layer = GetLayerForInstance(instance);
-  if (!layer)
-    return;
-
-  layer->ReleaseNativeWindowForVideo(window);
-  Invalidate(instance);
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+  pinst->ReleaseVideoWindow(window);
+  pinst->RedrawPlugin();
 }
 
 static void anp_video_setFramerateCallback(NPP instance, const ANPNativeWindow window, ANPVideoFrameCallbackProc callback) {
