@@ -552,18 +552,6 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
         'description': 'http://sub1.test1.example.org App'
       },
-      {
-        'name': 'http:example.org/foo',
-        'origin': 'http://example.org',
-        'manifestURL': 'http://example.org/foo/manifest.webapp',
-        'description': 'http://example.org/foo App'
-      },
-      {
-        'name': 'http:example.org/bar',
-        'origin': 'http://example.org',
-        'manifestURL': 'http://example.org/bar/manifest.webapp',
-        'description': 'http://example.org/bar App'
-      },
     ];
     self.setupTestApps(profileDir, apps)
 
