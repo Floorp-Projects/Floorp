@@ -336,7 +336,7 @@ private:
   {
     if (mBackBuffer.type() == SurfaceDescriptor::TSharedTextureDescriptor)
       return mBackBuffer.get_SharedTextureDescriptor().handle();
-    return nsnull;
+    return 0;
   }
 
   BasicShadowLayerManager* BasicManager()

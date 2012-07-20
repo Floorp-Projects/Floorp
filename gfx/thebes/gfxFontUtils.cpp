@@ -551,7 +551,7 @@ gfxFontUtils::FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
     };
 
     if (aUVSTableOffset) {
-        *aUVSTableOffset = nsnull;
+        *aUVSTableOffset = 0;
     }
 
     if (!aBuf || aBufLength < SizeOfHeader) {

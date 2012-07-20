@@ -112,7 +112,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding)
   : mHandlerText(nsnull),
-    mLineNumber(nsnull),
+    mLineNumber(0),
     mNextHandler(nsnull),
     mPrototypeBinding(aBinding)
 {

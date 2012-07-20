@@ -2771,6 +2771,21 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     fi
 fi
 
+dnl Check for nullptr (bug 626472)
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING(for nullptr)
+AC_CACHE_VAL(ac_cv_nullptr,
+ [AC_TRY_COMPILE([],
+                 [int* foo = nullptr;],
+                 [ac_cv_nullptr=true],
+                 [ac_cv_nullptr=false])])
+if test "$ac_cv_nullptr" = true ; then
+  AC_DEFINE(HAVE_NULLPTR)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
 AC_LANG_C
 
 dnl Check for .hidden assembler directive and visibility attribute.
