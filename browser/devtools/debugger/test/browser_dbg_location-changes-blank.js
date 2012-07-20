@@ -67,6 +67,13 @@ function testLocationChange()
           is(gDebugger.editor.getText().length, 0,
             "The source editor not have any text displayed.");
 
+          let menulist = gDebugger.DebuggerView.Scripts._scripts;
+          let noScripts = gDebugger.L10N.getStr("noScriptsText");
+          is(menulist.getAttribute("label"), noScripts,
+            "The menulist should display a notice that there are no scripts availalble.");
+          is(menulist.getAttribute("tooltiptext"), "",
+            "The menulist shouldn't have any tooltip text attributed when there are no scripts available.");
+
           closeDebuggerAndFinish();
         });
       });
