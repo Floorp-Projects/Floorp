@@ -441,8 +441,9 @@ public class PasswordsRepositorySession extends
 
   /**
    * Insert record and return the record with its updated androidId set.
-   * @param record
-   * @return
+   *
+   * @param record the record to insert.
+   * @return updated record.
    * @throws RemoteException
    */
   public PasswordRecord insert(PasswordRecord record) throws RemoteException {
