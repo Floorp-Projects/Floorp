@@ -165,5 +165,32 @@ var Logger = {
     }
 
     return str;
-  }
+  },
+
+  statesToString: function statesToString(aAccessible) {
+    let [state, extState] = Utils.getStates(aAccessible);
+    let stringArray = [];
+    let stateStrings = gAccRetrieval.getStringStates(state, extState);
+    for (var i=0; i < stateStrings.length; i++)
+      stringArray.push(stateStrings.item(i));
+    return stringArray.join(' ');
+  },
+
+  dumpTree: function dumpTree(aLogLevel, aRootAccessible) {
+    if (aLogLevel < this.logLevel)
+      return;
+
+    this._dumpTreeInternal(aLogLevel, aRootAccessible, 0);
+  },
+
+  _dumpTreeInternal: function _dumpTreeInternal(aLogLevel, aAccessible, aIndent) {
+    let indentStr = '';
+    for (var i=0; i < aIndent; i++)
+      indentStr += ' ';
+    this.log(aLogLevel, indentStr,
+             this.accessibleToString(aAccessible),
+             '(' + this.statesToString(aAccessible) + ')');
+    for (var i=0; i < aAccessible.childCount; i++)
+      this._dumpTreeInternal(aLogLevel, aAccessible.getChildAt(i), aIndent + 1);
+    }
 };
