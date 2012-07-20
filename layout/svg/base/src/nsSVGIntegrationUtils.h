@@ -28,7 +28,7 @@ class nsSVGIntegrationUtils MOZ_FINAL
 {
 public:
   /**
-   * Returns true if a non-SVG frame has SVG effects.
+   * Returns true if SVG effects are currently applied to this frame.
    */
   static bool
   UsingEffectsForFrame(const nsIFrame* aFrame);

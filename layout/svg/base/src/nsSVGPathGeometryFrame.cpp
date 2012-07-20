@@ -9,6 +9,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
@@ -39,6 +40,61 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGPathGeometryFrame)
 NS_QUERYFRAME_HEAD(nsSVGPathGeometryFrame)
   NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGPathGeometryFrameBase)
+
+//----------------------------------------------------------------------
+// Display list item:
+
+class nsDisplaySVGPathGeometry : public nsDisplayItem {
+public:
+  nsDisplaySVGPathGeometry(nsDisplayListBuilder* aBuilder,
+                           nsSVGPathGeometryFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplaySVGPathGeometry);
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVGPathGeometry() {
+    MOZ_COUNT_DTOR(nsDisplaySVGPathGeometry);
+  }
+#endif
+ 
+  NS_DISPLAY_DECL_NAME("nsDisplaySVGPathGeometry", TYPE_SVG_PATH_GEOMETRY)
+
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsRenderingContext* aCtx);
+};
+
+void
+nsDisplaySVGPathGeometry::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                                  HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
+{
+  nsSVGPathGeometryFrame *frame = static_cast<nsSVGPathGeometryFrame*>(mFrame);
+  nsPoint pointRelativeToReferenceFrame = aRect.Center();
+  // ToReferenceFrame() includes frame->GetPosition(), our user space position.
+  nsPoint userSpacePt = pointRelativeToReferenceFrame -
+                          (ToReferenceFrame() - frame->GetPosition());
+  if (frame->GetFrameForPoint(userSpacePt)) {
+    aOutFrames->AppendElement(frame);
+  }
+}
+
+void
+nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
+                                nsRenderingContext* aCtx)
+{
+  // ToReferenceFrame includes our mRect offset, but painting takes
+  // account of that too. To avoid double counting, we subtract that
+  // here.
+  nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
+
+  aCtx->PushState();
+  aCtx->Translate(offset);
+  static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(aCtx, nsnull);
+  aCtx->PopState();
+}
 
 //----------------------------------------------------------------------
 // nsIFrame methods
@@ -92,8 +148,7 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   }
 
   nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
-  const SVGAnimatedTransformList *list = content->GetAnimatedTransformList();
-  if ((list && !list->GetAnimValue().IsEmpty()) ||
+  if (content->GetAnimatedTransformList() ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
       *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
@@ -102,6 +157,18 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
     foundTransform = true;
   }
   return foundTransform;
+}
+
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists)
+{
+  if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
+    return NS_OK;
+  }
+  return aLists.Content()->AppendNewToTop(
+           new (aBuilder) nsDisplaySVGPathGeometry(aBuilder, this));
 }
 
 //----------------------------------------------------------------------
@@ -154,6 +221,9 @@ NS_IMETHODIMP_(nsIFrame*)
 nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   gfxMatrix canvasTM = GetCanvasTM(FOR_HIT_TESTING);
+  if (canvasTM.IsSingular()) {
+    return nsnull;
+  }
   PRUint16 fillRule, hitTestFlags;
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     hitTestFlags = SVG_HIT_TEST_FILL;
@@ -162,9 +232,6 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     hitTestFlags = GetHitTestFlags();
     // XXX once bug 614732 is fixed, aPoint won't need any conversion in order
     // to compare it with mRect.
-    if (canvasTM.IsSingular()) {
-      return nsnull;
-    }
     nsPoint point =
       nsSVGUtils::TransformOuterSVGPointToChildFrame(aPoint, canvasTM, PresContext());
     if (!hitTestFlags || ((hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) &&

@@ -33,6 +33,7 @@
 #include "nsBoxFrame.h"
 #include "nsViewportFrame.h"
 #include "nsSVGEffects.h"
+#include "nsSVGElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "sampler.h"
 
@@ -3295,6 +3296,19 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerParameters& aContainerParameters)
 {
+  const nsIContent* content = mFrame->GetContent();
+  bool hasSVGLayout = (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  if (hasSVGLayout) {
+    nsISVGChildFrame *svgChildFrame = do_QueryFrame(mFrame);
+    if (!svgChildFrame || !mFrame->GetContent()->IsSVG()) {
+      NS_ASSERTION(false, "why?");
+      return nsnull;
+    }
+    if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+      return nsnull; // The SVG spec says not to draw filters for this
+    }
+  }
+
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
   if (opacity == 0.0f)
     return nsnull;

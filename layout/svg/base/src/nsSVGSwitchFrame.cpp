@@ -46,6 +46,10 @@ public:
   }
 #endif
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext, const nsIntRect *aDirtyRect);
   NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
@@ -89,9 +93,26 @@ nsSVGSwitchFrame::GetType() const
 }
 
 NS_IMETHODIMP
+nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists)
+{
+  nsIFrame* kid = GetActiveChildFrame();
+  if (kid) {
+    return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
                            const nsIntRect *aDirtyRect)
 {
+  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only painting of non-display "
+               "SVG should take this code path");
+
   const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
   if (display->mOpacity == 0.0)
     return NS_OK;
@@ -107,6 +128,11 @@ nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGSwitchFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
+  NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only hit-testing of non-display "
+               "SVG should take this code path");
+
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
     nsISVGChildFrame* svgFrame = do_QueryFrame(kid);

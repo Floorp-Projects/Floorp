@@ -79,7 +79,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-== feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,2,93) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg

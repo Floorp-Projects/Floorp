@@ -341,6 +341,9 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     nsRect dirtyRect; // only used if aDirtyRect is non-null
     if (aDirtyRect) {
+      NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
+                   (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+                   "Display lists handle dirty rect intersection test");
       dirtyRect = aDirtyRect->ToAppUnits(appUnitsPerDevPx);
       // Adjust dirtyRect to match our local coordinate system.
       nsRect rootRect =

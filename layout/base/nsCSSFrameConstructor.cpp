@@ -7730,6 +7730,21 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // will be invalidated by nsFrame::FinishAndStoreOverflowArea.
       aFrame->InvalidateTransformLayer();
     }
+    if (aChange & nsChangeHint_ChildrenOnlyTransform) {
+      // The long comment in ProcessRestyledFrames that precedes the
+      // |frame->GetContent()->GetPrimaryFrame()| and abort applies here too.
+      nsIFrame *f = aFrame->GetContent()->GetPrimaryFrame();
+      NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG |
+                                         nsIFrame::eSVGContainer),
+                        "Children-only transforms only expected on SVG frames");
+      nsIFrame* childFrame = f->GetFirstPrincipalChild();
+      for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+        childFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
+        // Invalidate the old transformed area. The new transformed area
+        // will be invalidated by nsFrame::FinishAndStoreOverflowArea.
+        childFrame->InvalidateTransformLayer();
+      }
+    }
   }
 }
 
@@ -8016,7 +8031,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didReflowThisFrame = true;
       }
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
-                  nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer)) {
+                  nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer |
+                  nsChangeHint_ChildrenOnlyTransform)) {
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = true;
       }
