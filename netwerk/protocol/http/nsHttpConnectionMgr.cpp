@@ -56,8 +56,6 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     : mRef(0)
     , mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor")
     , mMaxConns(0)
-    , mMaxConnsPerHost(0)
-    , mMaxConnsPerProxy(0)
     , mMaxPersistConnsPerHost(0)
     , mMaxPersistConnsPerProxy(0)
     , mIsShuttingDown(false)
@@ -107,8 +105,6 @@ nsHttpConnectionMgr::EnsureSocketThreadTargetIfOnline()
 
 nsresult
 nsHttpConnectionMgr::Init(PRUint16 maxConns,
-                          PRUint16 maxConnsPerHost,
-                          PRUint16 maxConnsPerProxy,
                           PRUint16 maxPersistConnsPerHost,
                           PRUint16 maxPersistConnsPerProxy,
                           PRUint16 maxRequestDelay,
@@ -121,8 +117,6 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
         ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
         mMaxConns = maxConns;
-        mMaxConnsPerHost = maxConnsPerHost;
-        mMaxConnsPerProxy = maxConnsPerProxy;
         mMaxPersistConnsPerHost = maxPersistConnsPerHost;
         mMaxPersistConnsPerProxy = maxPersistConnsPerProxy;
         mMaxRequestDelay = maxRequestDelay;
@@ -1109,22 +1103,12 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
         return true;
     }
 
-    nsHttpConnection *conn;
-    PRInt32 i, totalCount, persistCount = 0;
-    
-    totalCount = ent->mActiveConns.Length();
-
-    // count the number of persistent connections
-    for (i=0; i<totalCount; ++i) {
-        conn = ent->mActiveConns[i];
-        if (conn->IsKeepAlive()) // XXX make sure this is thread-safe
-            persistCount++;
-    }
+    PRInt32 totalCount = ent->mActiveConns.Length();
 
     // Add in the in-progress tcp connections, we will assume they are
     // keepalive enabled.
     PRUint32 pendingHalfOpens = 0;
-    for (i = 0; i < ent->mHalfOpens.Length(); ++i) {
+    for (PRUint32 i = 0; i < ent->mHalfOpens.Length(); ++i) {
         nsHalfOpenSocket *halfOpen = ent->mHalfOpens[i];
 
         // Exclude half-open's that has already created a usable connection.
@@ -1137,25 +1121,18 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     }
     
     totalCount += pendingHalfOpens;
-    persistCount += pendingHalfOpens;
 
-    LOG(("   total=%d, persist=%d\n", totalCount, persistCount));
-
-    PRUint16 maxConns;
     PRUint16 maxPersistConns;
 
-    if (ci->UsingHttpProxy() && !ci->UsingConnect()) {
-        maxConns = mMaxConnsPerProxy;
+    if (ci->UsingHttpProxy() && !ci->UsingConnect())
         maxPersistConns = mMaxPersistConnsPerProxy;
-    }
-    else {
-        maxConns = mMaxConnsPerHost;
+    else
         maxPersistConns = mMaxPersistConnsPerHost;
-    }
+
+    LOG(("   connection count = %d, limit %d\n", totalCount, maxPersistConns));
 
     // use >= just to be safe
-    bool result = (totalCount >= maxConns) || ( (caps & NS_HTTP_ALLOW_KEEPALIVE) &&
-                                              (persistCount >= maxPersistConns) );
+    bool result = (totalCount >= maxPersistConns);
     LOG(("  result: %s", result ? "true" : "false"));
     return result;
 }
@@ -2103,12 +2080,6 @@ nsHttpConnectionMgr::OnMsgUpdateParam(PRInt32, void *param)
     switch (name) {
     case MAX_CONNECTIONS:
         mMaxConns = value;
-        break;
-    case MAX_CONNECTIONS_PER_HOST:
-        mMaxConnsPerHost = value;
-        break;
-    case MAX_CONNECTIONS_PER_PROXY:
-        mMaxConnsPerProxy = value;
         break;
     case MAX_PERSISTENT_CONNECTIONS_PER_HOST:
         mMaxPersistConnsPerHost = value;

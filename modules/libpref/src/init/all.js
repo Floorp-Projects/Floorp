@@ -781,8 +781,6 @@ pref("network.http.use-cache", true);
 // HTTP traffic.  an empty value indicates the normal TCP/IP socket type.
 pref("network.http.default-socket-type", "");
 
-pref("network.http.keep-alive", true); // set it to false in case of problems
-pref("network.http.proxy.keep-alive", true);
 // There is a problem with some IIS7 servers that don't close the connection
 // properly after it times out (bug #491541). Default timeout on IIS7 is
 // 120 seconds. We need to reuse or drop the connection within this time.
@@ -796,17 +794,12 @@ pref("network.http.keep-alive.timeout", 115);
 // file descriptors for things other than sockets.   
 pref("network.http.max-connections", 256);
 
-// limit the absolute number of http connections that can be established per
-// host.  if a http proxy server is enabled, then the "server" is the proxy
-// server.  Otherwise, "server" is the http origin server.
-pref("network.http.max-connections-per-server", 15);
-
-// if network.http.keep-alive is true, and if NOT connecting via a proxy, then
+// If NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent
 // connections to the server is less then max-persistent-connections-per-server.
 pref("network.http.max-persistent-connections-per-server", 6);
 
-// if network.http.keep-alive is true, and if connecting via a proxy, then a
+// If connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
 pref("network.http.max-persistent-connections-per-proxy", 8);
