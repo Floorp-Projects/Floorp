@@ -232,6 +232,91 @@ gl_FragColor = texture2D(uTexture, vTexCoord) * uLayerOpacity * mask;\n\
 }\n\
 ";
 
+static const char sRGBATextureLayerExternalFS[] = "/* sRGBATextureLayerExternalFS */\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+#extension GL_OES_EGL_image_external : require\n\
+uniform samplerExternalOES uTexture;\n\
+uniform mat4 uTextureTransform;\n\
+void main()\n\
+{\n\
+float mask = 1.0;\n\
+\n\
+gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0)).xy) * uLayerOpacity * mask;\n\
+}\n\
+";
+
+static const char sRGBATextureLayerExternalMaskFS[] = "/* sRGBATextureLayerExternalMaskFS */\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec2 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+#extension GL_OES_EGL_image_external : require\n\
+uniform samplerExternalOES uTexture;\n\
+uniform mat4 uTextureTransform;\n\
+void main()\n\
+{\n\
+float mask = texture2D(uMaskTexture, vMaskCoord).r;\n\
+\n\
+gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0)).xy) * uLayerOpacity * mask;\n\
+}\n\
+";
+
+static const char sRGBATextureLayerExternalMask3DFS[] = "/* sRGBATextureLayerExternalMask3DFS */\n\
+/* Fragment Shader */\n\
+#ifdef GL_ES\n\
+precision lowp float;\n\
+#endif\n\
+\n\
+#ifndef NO_LAYER_OPACITY\n\
+uniform float uLayerOpacity;\n\
+#endif\n\
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range\n\
+varying mediump vec2 vTexCoord;\n\
+#else\n\
+varying vec2 vTexCoord;\n\
+#endif\n\
+\n\
+varying vec3 vMaskCoord;\n\
+uniform sampler2D uMaskTexture;\n\
+\n\
+#extension GL_OES_EGL_image_external : require\n\
+uniform samplerExternalOES uTexture;\n\
+uniform mat4 uTextureTransform;\n\
+void main()\n\
+{\n\
+vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;\n\
+float mask = texture2D(uMaskTexture, maskCoords).r;\n\
+\n\
+gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0)).xy) * uLayerOpacity * mask;\n\
+}\n\
+";
+
 static const char sRGBARectTextureLayerFS[] = "/* sRGBARectTextureLayerFS */\n\
 #extension GL_ARB_texture_rectangle : enable\n\
 /* Fragment Shader */\n\

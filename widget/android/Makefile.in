@@ -32,7 +32,6 @@ CPPSRCS	= \
 	AndroidLayerViewWrapper.cpp \
 	AndroidGraphicBuffer.cpp \
 	AndroidJNI.cpp \
-	AndroidMediaLayer.cpp \
 	nsWindow.cpp \
 	nsLookAndFeel.cpp \
 	nsScreenManagerAndroid.cpp \
@@ -74,6 +73,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/docshell/base \
 	-I$(topsrcdir)/content/events/src \
 	-I$(topsrcdir)/netwerk/cache \
+	-I$(topsrcdir)/widget/android/android \
 	-I$(srcdir) \
 	$(NULL)
 
