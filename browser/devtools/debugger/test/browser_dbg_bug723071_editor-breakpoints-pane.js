@@ -142,7 +142,13 @@ function test()
                gBreakpointsElement.querySelectorAll(".list-item.empty").length,
                "Found junk in the breakpoints container.");
 
-            finish();
+            executeSoon(function() {
+              gDebugger.gClient.addOneTimeListener("resumed", function() {
+                finalCheck();
+                closeDebuggerAndFinish();
+              });
+              gDebugger.DebuggerController.activeThread.resume();
+            });
           });
         });
       });
@@ -261,11 +267,13 @@ function test()
     }
   }
 
-  registerCleanupFunction(function() {
+  function finalCheck() {
     is(Object.keys(gBreakpoints).length, 0, "no breakpoint in the debugger");
     ok(!gPane.getBreakpoint(gScripts.scriptLocations[0], 5),
        "getBreakpoint(scriptLocations[0], 5) returns no breakpoint");
+  }
 
+  registerCleanupFunction(function() {
     is(breakpointsAdded, 3, "correct number of breakpoints have been added");
     is(breakpointsDisabled, 3, "correct number of breakpoints have been disabled");
     is(breakpointsRemoved, 3, "correct number of breakpoints have been removed");
