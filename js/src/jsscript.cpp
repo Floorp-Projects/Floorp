@@ -1070,6 +1070,35 @@ SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
 }
 #endif /* JS_THREADSAFE */
 
+bool
+JSScript::loadSource(JSContext *cx, bool *worked)
+{
+    JS_ASSERT(!source);
+    *worked = false;
+    if (!cx->runtime->sourceHook)
+        return true;
+    char *src = NULL;
+    uint32_t length;
+    if (!cx->runtime->sourceHook(cx, this, &src, &length))
+        return false;
+    if (!src)
+        return true;
+    size_t newLength = length;
+    jschar *usrc = InflateString(cx, src, &newLength);
+    cx->free_(src);
+    if (!usrc)
+        return false;
+    ScriptSource *ss = ScriptSource::createFromSource(cx, usrc, length, false, NULL, true);
+    if (!ss) {
+        cx->free_(usrc);
+        return false;
+    }
+    source = ss;
+    ss->attachToRuntime(cx->runtime);
+    *worked = true;
+    return true;
+}
+
 JSFixedString *
 JSScript::sourceData(JSContext *cx)
 {
@@ -1147,7 +1176,8 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 
 ScriptSource *
 ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length,
-                               bool argumentsNotIncluded, SourceCompressionToken *tok)
+                               bool argumentsNotIncluded, SourceCompressionToken *tok,
+                               bool ownSource)
 {
     ScriptSource *ss = static_cast<ScriptSource *>(cx->malloc_(sizeof(*ss)));
     if (!ss)
@@ -1160,6 +1190,7 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     }
     ss->next = NULL;
     ss->length_ = length;
+    ss->compressedLength = 0;
     ss->marked = ss->onRuntime_ = false;
     ss->argumentsNotIncluded_ = argumentsNotIncluded;
 #ifdef DEBUG
@@ -1176,6 +1207,8 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
         ss->marked = true;
 #endif
 
+    JS_ASSERT_IF(ownSource, !tok);
+
 #ifdef JS_THREADSAFE
     if (tok) {
         tok->ss = ss;
@@ -1183,21 +1216,23 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
         cx->runtime->sourceCompressorThread.compress(tok);
     } else
 #endif
-        ss->considerCompressing(cx->runtime, src);
+        ss->considerCompressing(cx->runtime, src, ownSource);
 
 
     return ss;
 }
 
 void
-ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src)
+ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource)
 {
     JS_ASSERT(!ready());
     const size_t memlen = length_ * sizeof(jschar);
     const size_t COMPRESS_THRESHOLD = 512;
 
     size_t compressedLen;
-    if (memlen >= COMPRESS_THRESHOLD &&
+    if (ownSource) {
+        data.source = const_cast<jschar *>(src);
+    } else if (memlen >= COMPRESS_THRESHOLD &&
         TryCompressString(reinterpret_cast<const unsigned char *>(src), memlen,
                           data.compressed, &compressedLen))
     {
@@ -1207,7 +1242,6 @@ ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src)
         data.compressed = static_cast<unsigned char *>(mem);
         JS_ASSERT(data.compressed);
     } else {
-        compressedLength = 0;
         PodCopy(data.source, src, length_);
     }
 #ifdef DEBUG    

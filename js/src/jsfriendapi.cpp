@@ -23,6 +23,12 @@ using namespace js;
 using namespace JS;
 
 JS_FRIEND_API(void)
+JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook)
+{
+    rt->sourceHook = hook;
+}
+
+JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     rt->gcGrayRootsTraceOp = traceOp;
