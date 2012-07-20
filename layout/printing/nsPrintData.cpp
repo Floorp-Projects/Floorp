@@ -34,7 +34,7 @@ static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
   mType(aType), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
-  mPrintDocList(nsnull), mIsIFrameSelected(false),
+  mPrintDocList(0), mIsIFrameSelected(false),
   mIsParentAFrameSet(false), mOnStartSent(false),
   mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
   mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 

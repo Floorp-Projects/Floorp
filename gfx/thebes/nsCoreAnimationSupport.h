@@ -27,9 +27,9 @@ enum AllowOfflineRendererEnum { ALLOW_OFFLINE_RENDERER, DISALLOW_OFFLINE_RENDERE
 class THEBES_API nsCARenderer {
   NS_INLINE_DECL_REFCOUNTING(nsCARenderer)
 public:
-  nsCARenderer() : mCARenderer(nsnull), mFBOTexture(nsnull), mOpenGLContext(nsnull),
-                   mCGImage(nsnull), mCGData(nsnull), mIOSurface(nsnull), mFBO(nsnull),
-                   mIOTexture(nsnull),
+  nsCARenderer() : mCARenderer(nsnull), mFBOTexture(0), mOpenGLContext(nsnull),
+                   mCGImage(nsnull), mCGData(nsnull), mIOSurface(nsnull), mFBO(0),
+                   mIOTexture(0),
                    mUnsupportedWidth(UINT32_MAX), mUnsupportedHeight(UINT32_MAX),
                    mAllowOfflineRenderer(DISALLOW_OFFLINE_RENDERER) {}
   ~nsCARenderer();

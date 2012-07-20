@@ -385,7 +385,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   if (NS_FAILED(scriptError->InitWithWindowID(event.errorMsg,
                                               event.fileName,
                                               nsnull, event.lineNr,
-                                              nsnull, 0,
+                                              0, 0,
                                               "IndexedDB",
                                               aOwner->WindowID()))) {
     NS_WARNING("Failed to init script error!");

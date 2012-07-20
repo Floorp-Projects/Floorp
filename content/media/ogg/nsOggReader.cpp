@@ -734,9 +734,9 @@ PRInt64 nsOggReader::RangeStartTime(PRInt64 aOffset)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   MediaResource* resource = mDecoder->GetResource();
-  NS_ENSURE_TRUE(resource != nsnull, nsnull);
+  NS_ENSURE_TRUE(resource != nsnull, 0);
   nsresult res = resource->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  NS_ENSURE_SUCCESS(res, nsnull);
+  NS_ENSURE_SUCCESS(res, 0);
   PRInt64 startTime = 0;
   nsBuiltinDecoderReader::FindStartTime(startTime);
   return startTime;

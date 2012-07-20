@@ -592,7 +592,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   TruncateTitle(aTitle, title);
 
   rv = InsertBookmarkInDB(placeId, BOOKMARK, aFolder, index, title, dateAdded,
-                          nsnull, folderGuid, grandParentId, aURI,
+                          0, folderGuid, grandParentId, aURI,
                           aNewBookmarkId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -855,7 +855,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
   TruncateTitle(aTitle, title);
 
   rv = InsertBookmarkInDB(-1, FOLDER, aParent, index,
-                          title, dateAdded, nsnull, folderGuid, grandParentId,
+                          title, dateAdded, 0, folderGuid, grandParentId,
                           nsnull, aNewFolder, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -908,7 +908,7 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent,
   nsCAutoString guid;
   PRTime dateAdded = PR_Now();
   rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, voidString, dateAdded,
-                          nsnull, folderGuid, grandParentId, nsnull,
+                          0, folderGuid, grandParentId, nsnull,
                           aNewItemId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 

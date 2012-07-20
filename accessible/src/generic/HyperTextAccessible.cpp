@@ -482,7 +482,7 @@ NS_IMETHODIMP
 HyperTextAccessible::GetCharacterAtOffset(PRInt32 aOffset, PRUnichar* aCharacter)
 {
   NS_ENSURE_ARG_POINTER(aCharacter);
-  *aCharacter = nsnull;
+  *aCharacter = L'\0';
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;

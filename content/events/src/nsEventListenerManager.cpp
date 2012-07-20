@@ -602,7 +602,7 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
                                  NS_ConvertUTF8toUTF16(asciiSpec),
                                  scriptSample,
-                                 nsnull);
+                                 0);
         return NS_OK;
       }
     }

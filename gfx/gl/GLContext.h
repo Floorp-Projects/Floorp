@@ -859,7 +859,7 @@ public:
     /**
      * Create new shared GLContext content handle, must be released by ReleaseSharedHandle.
      */
-    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType) { return nsnull; }
+    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType) { return 0; }
     /**
      * Publish GLContext content to intermediate buffer attached to shared handle.
      * Shared handle content is ready to be used after call returns, and no need extra Flush/Finish are required.

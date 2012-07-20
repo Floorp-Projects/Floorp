@@ -286,7 +286,7 @@ nsJSONWriter::SetCharset(const char* aCharset)
     rv = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(mEncoder));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Signal,
-                                          nsnull, nsnull);
+                                          nsnull, '\0');
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
