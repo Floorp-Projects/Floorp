@@ -53,6 +53,7 @@ FENNEC_JAVA_FILES = \
   FindInPageBar.java \
   FloatUtils.java \
   FlowLayout.java \
+  FontSizePreference.java \
   FormAssistPopup.java \
   GeckoApplication.java \
   GeckoApp.java \
