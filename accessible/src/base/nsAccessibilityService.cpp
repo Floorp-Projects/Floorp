@@ -42,6 +42,10 @@
 #include "Logging.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMXULElement.h"
@@ -1222,6 +1226,12 @@ nsAccessibilityService::Init()
 
   // Initialize accessibility.
   nsAccessNodeWrap::InitAccessibility();
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::
+    AnnotateCrashReport(NS_LITERAL_CSTRING("Accessibility"),
+                        NS_LITERAL_CSTRING("Active"));
+#endif
 
   gIsShutdown = false;
   return true;
