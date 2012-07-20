@@ -25,7 +25,7 @@ using namespace mozilla::services;
 namespace mozilla {
 namespace system {
 
-#define TEST_NSVOLUME_OBSERVER  1
+#define TEST_NSVOLUME_OBSERVER  0
 
 #if TEST_NSVOLUME_OBSERVER
 
