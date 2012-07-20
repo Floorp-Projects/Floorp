@@ -145,6 +145,9 @@ BrowserElementChild.prototype = {
     els.addSystemEventListener(global, 'contextmenu',
                                this._contextmenuHandler.bind(this),
                                /* useCapture = */ false);
+    els.addSystemEventListener(global, 'scroll',
+                               this._scrollEventHandler.bind(this),
+                               /* useCapture = */ false);
   },
 
   _tryGetInnerWindowID: function(win) {
@@ -376,6 +379,16 @@ BrowserElementChild.prototype = {
       return elem.currentSrc || elem.src;
     }
     return false;
+  },
+
+  _scrollEventHandler: function(e) {
+    let win = e.target.defaultView;
+    if (win != content) {
+      return;
+    }
+
+    debug("scroll event " + win);
+    sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
   },
 
   _recvGetScreenshot: function(data) {
