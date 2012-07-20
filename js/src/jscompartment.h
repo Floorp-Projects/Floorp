@@ -14,7 +14,6 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
-#include "gc/StoreBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -144,11 +143,6 @@ struct JSCompartment
 
   public:
     js::gc::ArenaLists           arenas;
-
-#ifdef JSGC_GENERATIONAL
-    js::gc::Nursery              gcNursery;
-    js::gc::StoreBuffer          gcStoreBuffer;
-#endif
 
   private:
     bool                         needsBarrier_;

@@ -859,7 +859,6 @@ class ValueOperations
     bool isMagic(JSWhyMagic why) const { return value()->isMagic(why); }
     bool isMarkable() const { return value()->isMarkable(); }
     bool isPrimitive() const { return value()->isPrimitive(); }
-    bool isGCThing() const { return value()->isGCThing(); }
 
     bool toBoolean() const { return value()->toBoolean(); }
     double toNumber() const { return value()->toNumber(); }
@@ -3668,7 +3667,7 @@ struct JSTracer {
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
     JSBool              eagerlyTraceWeakMaps;
-#ifdef JS_GC_ZEAL
+#ifdef DEBUG
     void                *realLocation;
 #endif
 };
@@ -3708,16 +3707,11 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 /*
  * Sets the real location for a marked reference, when passing the address
  * directly is not feasable.
- *
- * FIXME: This is currently overcomplicated by our need to nest calls for Values
- * stored as keys in hash tables, but will get simplified once we can rekey
- * in-place.
  */
-#ifdef JS_GC_ZEAL
+#ifdef DEBUG
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
     JS_BEGIN_MACRO                                                            \
-        if ((trc)->realLocation == NULL || (location) == NULL)                \
-            (trc)->realLocation = (location);                                 \
+        (trc)->realLocation = (location);                                     \
     JS_END_MACRO
 #else
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
