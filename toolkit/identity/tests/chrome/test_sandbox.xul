@@ -119,26 +119,43 @@ function test_url_normalization() {
 /**
  * Check with the server's state to see what content was loaded then reset it.
  */
-function check_loaded_content(aNothingShouldLoad, aCallback) {
+function check_loaded_content(aSandbox, aNothingShouldLoad, aCallback) {
 
   let xhr = new XMLHttpRequest();
   xhr.open("GET", STATE_URL + "?get_loaded", true);
   xhr.onload = function() {
+    let res = xhr.responseText;
     is(xhr.status, 200, "Check successful response");
 
     if (aNothingShouldLoad) {
-      is(xhr.responseText, "NOTHING", "Check that nothing was loaded on the server");
+      is(res, "NOTHING", "Check that nothing was loaded on the server");
     } else if (!OSX_10_5) {
-      let loadedTypes = xhr.responseText == "NOTHING" ? [] : xhr.responseText.split(",");
+      let allowedTypes = [ "application/javascript", "text/html", "video/webm",
+                           "audio/ogg", "application/x-test" ];
+      let loadedTypes = res == "NOTHING" ? [] : res.split(",");
+
+      for (let loadedType of loadedTypes) {
+        isnot(allowedTypes.indexOf(loadedType), -1, "Check that " + loadedType + " was expected to load");
+      }
 
       // TODO: Media should be disabled after bug 759964.
-      is(loadedTypes.length, 4, "Check number of loaded content types: " + xhr.responseText)
-      todo_is(loadedTypes.length, 2, "Check number of loaded content types: " + xhr.responseText)
-
       isnot(loadedTypes.indexOf("application/javascript"), -1, "Check JS was loaded");
       isnot(loadedTypes.indexOf("text/html"), -1, "Check iframe was loaded");
       todo_is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
       todo_is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
+
+      // Check that no plugin tags have a type other than TYPE_NULL (failed load)
+      // --
+      // Checking if a channel was opened is not sufficient for plugin tags --
+      // An object tag may still be allowed to load a sub-document, but not a
+      // plugin, so it will open a channel but then abort when it gets a
+      // plugin-type.
+      let doc = aSandbox._frame.contentDocument;
+      let nullType = Components.interfaces.nsIObjectLoadingContent.TYPE_NULL;
+      for (let tag of doc.querySelectorAll("embed, object, applet")) {
+        tag instanceof Components.interfaces.nsIObjectLoadingContent;
+        is(tag.displayedType, nullType, "Check that plugin did not load content");
+      }
     }
 
     reset_server_state();
@@ -157,7 +174,7 @@ function check_disabled_content(aSandboxURL, aNothingShouldLoad = false) {
     let originalId = aSandbox.id;
 
     setTimeout(function() {
-      check_loaded_content(aNothingShouldLoad, function checkFinished() {
+      check_loaded_content(aSandbox, aNothingShouldLoad, function checkFinished() {
 
         info("reload the sandbox content");
         aSandbox.reload(function sandboxReloadCB(aSandbox) {
@@ -165,7 +182,7 @@ function check_disabled_content(aSandboxURL, aNothingShouldLoad = false) {
           is(aSandbox.id, originalId, "Sandbox ID should be the same after reload");
 
           setTimeout(function() {
-            check_loaded_content(aNothingShouldLoad, function reloadCheckFinished() {
+            check_loaded_content(aSandbox, aNothingShouldLoad, function reloadCheckFinished() {
               free_and_check_sandbox(aSandbox);
             });
           }, 5000);
