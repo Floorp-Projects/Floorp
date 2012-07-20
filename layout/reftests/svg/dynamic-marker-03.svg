@@ -2,18 +2,11 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait"
-  onload="startTest()">
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
 
   <title>Testing that dynamic changes to preserveAspectRatio are reflected in the marker</title>
   <script>
 <![CDATA[
-
-function startTest() {
-  document.addEventListener("MozReftestInvalidate", doTest, false);
-  // in case we're not gecko
-  setTimeout(doTest, 5000);
-}
 
 function doTest() {
   m = document.getElementById("m1");
@@ -21,6 +14,10 @@ function doTest() {
     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_NONE;
   document.documentElement.removeAttribute("class");
 }
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+// in case we're not gecko
+setTimeout(doTest, 3000);
 
 ]]>
   </script>
