@@ -740,9 +740,8 @@ TelemetryPing.prototype = {
     this._pingsLoaded = 0;
     this._pingLoadsCompleted = 0;
     try {
-      let entry;
-      while (entry = entries.nextFile()) {
-        this.loadHistograms(entry, sync);
+      while (entries.hasMoreElements()) {
+        this.loadHistograms(entries.nextFile, sync);
       }
     }
     finally {

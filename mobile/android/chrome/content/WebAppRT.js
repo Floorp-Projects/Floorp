@@ -7,10 +7,45 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+function pref(name, value) {
+  return {
+    name: name,
+    value: value
+  }
+}
+
 var WebAppRT = {
-  init: function() {
+  prefs: [
+    // Disable all add-on locations other than the profile (which can't be disabled this way)
+    pref("extensions.enabledScopes", 1),
+    // Auto-disable any add-ons that are "dropped in" to the profile
+    pref("extensions.autoDisableScopes", 1),
+    // Disable add-on installation via the web-exposed APIs
+    pref("xpinstall.enabled", false),
+    // Disable the telemetry prompt in webapps
+    pref("toolkit.telemetry.prompted", true)
+  ],
+
+  init: function(isUpdate) {
     this.deck = document.getElementById("browsers");
     this.deck.addEventListener("click", this, false, true);
+
+    // on first run, update any prefs
+    if (isUpdate == "new") {
+      this.prefs.forEach(function(aPref) {
+        switch (typeof aPref.value) {
+          case "string":
+            Services.prefs.setCharPref(aPref.name, aPref.value);
+            break;
+          case "boolean":
+            Services.prefs.setBoolPref(aPref.name, aPref.value);
+            break;
+          case "number":
+            Services.prefs.setIntPref(aPref.name, aPref.value);
+            break;
+        }
+      });
+    }
   },
 
   handleEvent: function(event) {

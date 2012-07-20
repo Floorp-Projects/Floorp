@@ -348,7 +348,7 @@
 %ifdef WINSTRIPE_AERO
     -moz-margin-start: 30px;
 %else
-    -moz-margin-start: -moz-calc(1.45em + 4px);
+    -moz-margin-start: calc(1.45em + 4px);
 %endif
     padding: 0;
     border-top: 1px solid #d6e5f5;
@@ -809,7 +809,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
                     -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%),
                     -moz-linear-gradient(transparent, rgba(0,0,0,.25) 30%);
   background-position: 1px -1px, 0 -1px, 100% -1px;
-  background-size: -moz-calc(100% - 2px) 100%, 1px 100%, 1px 100%;
+  background-size: calc(100% - 2px) 100%, 1px 100%, 1px 100%;
   background-repeat: no-repeat;
 }
 
@@ -1834,7 +1834,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
               -moz-linear-gradient(-moz-dialog, -moz-dialog);
   background-origin: border-box;
   background-position: 1px 2px;
-  background-size: -moz-calc(100% - 2px) -moz-calc(100% - 2px);
+  background-size: calc(100% - 2px) calc(100% - 2px);
   background-repeat: no-repeat;
   margin: 0;
   padding: 2px 0 4px;
@@ -1992,7 +1992,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 
   .tab-content {
-    min-height: -moz-calc(6.8mozmm - 7px); /* subtract borders from the desired height */
+    min-height: calc(6.8mozmm - 7px); /* subtract borders from the desired height */
   }
 }
 
@@ -2718,7 +2718,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #highlighter-nodeinfobar-text {
   /* 100% - size of the buttons and margins */
-  max-width: -moz-calc(100% - 2 * (26px + 6px));
+  max-width: calc(100% - 2 * (26px + 6px));
   padding-bottom: 1px;
 }
 
@@ -2784,7 +2784,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 .highlighter-nodeinfobar-arrow {
   width: 14px;
   height: 14px;
-  -moz-margin-start: -moz-calc(50% - 7px);
+  -moz-margin-start: calc(50% - 7px);
   transform: rotate(-45deg);
   border: 1px solid transparent;
   background-clip: padding-box;

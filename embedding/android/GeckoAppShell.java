@@ -102,6 +102,7 @@ public class GeckoAppShell
     public static native void notifyListCreated(int aListId, int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId, long aProcessId);
+    public static native void onSurfaceTextureFrameAvailable(SurfaceTexture surfaceTexture, int id);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {

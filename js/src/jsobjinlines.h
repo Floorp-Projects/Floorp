@@ -561,18 +561,6 @@ JSObject::setDateUTCTime(const js::Value &time)
     setFixedSlot(JSSLOT_DATE_UTC_TIME, time);
 }
 
-inline js::NativeIterator *
-JSObject::getNativeIterator() const
-{
-    return (js::NativeIterator *) getPrivate();
-}
-
-inline void
-JSObject::setNativeIterator(js::NativeIterator *ni)
-{
-    setPrivate(ni);
-}
-
 #if JS_HAS_XML_SUPPORT
 
 inline JSLinearString *
@@ -799,7 +787,6 @@ inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
 inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
 inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
 inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
-inline bool JSObject::isIterator() const { return hasClass(&js::IteratorClass); }
 inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
 inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
 inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }

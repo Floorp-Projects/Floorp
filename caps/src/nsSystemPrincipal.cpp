@@ -16,6 +16,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIScriptSecurityManager.h"
 
 NS_IMPL_CLASSINFO(nsSystemPrincipal, NULL,
                   nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY,
@@ -237,6 +238,25 @@ nsSystemPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSystemPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
+{
+  return GetOrigin(getter_Copies(aExtendedOrigin));
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetAppStatus(PRUint16* aAppStatus)
+{
+  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetAppId(PRUint32* aAppId)
+{
+  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  return NS_OK;
+}
 
 //////////////////////////////////////////
 // Methods implementing nsISerializable //

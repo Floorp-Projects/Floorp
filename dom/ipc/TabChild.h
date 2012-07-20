@@ -10,6 +10,9 @@
 #ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
 #endif
+#ifdef DEBUG
+#include "PCOMContentPermissionRequestChild.h"
+#endif /* DEBUG */
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -40,6 +43,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsPIDOMWindow.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 #include "mozilla/Attributes.h"
@@ -163,6 +167,10 @@ public:
     virtual bool RecvLoadURL(const nsCString& uri);
     virtual bool RecvShow(const nsIntSize& size);
     virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size);
+    virtual bool RecvUpdateFrame(const nsIntRect& aDisplayPort,
+                                      const nsIntPoint& aScrollOffset,
+                                      const gfxSize& aResolution,
+                                      const nsIntRect& aScreenSize);
     virtual bool RecvActivate();
     virtual bool RecvDeactivate();
     virtual bool RecvMouseEvent(const nsString& aType,
@@ -216,6 +224,18 @@ public:
                                const InfallibleTArray<nsString>& aStringParams,
                                nsIDialogParamBlock* aParams);
 
+#ifdef DEBUG
+    virtual PContentPermissionRequestChild* SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
+                                                                                     const nsCString& aType,
+                                                                                     const URI& aUri)
+    {
+      PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
+      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aUri);
+      child->mIPCOpen = true;
+      return request;
+    }
+#endif /* DEBUG */
+
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
@@ -234,9 +254,13 @@ public:
     void SetBackgroundColor(const nscolor& aColor);
 
     void NotifyPainted();
+
+    bool IsAsyncPanZoomEnabled();
+
 protected:
     NS_OVERRIDE
-    virtual PRenderFrameChild* AllocPRenderFrame(LayersBackend* aBackend,
+    virtual PRenderFrameChild* AllocPRenderFrame(ScrollingBehavior* aScrolling,
+                                                 LayersBackend* aBackend,
                                                  int32_t* aMaxTextureSize,
                                                  uint64_t* aLayersId);
     NS_OVERRIDE
@@ -278,6 +302,7 @@ private:
     PRUint32 mChromeFlags;
     nsIntRect mOuterRect;
     nscolor mLastBackgroundColor;
+    ScrollingBehavior mScrolling;
     bool mDidFakeShow;
     bool mIsBrowserFrame;
 

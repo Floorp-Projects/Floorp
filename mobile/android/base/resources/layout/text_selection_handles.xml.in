@@ -1,0 +1,23 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
+
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/start_handle"
+                                          android:layout_width="@dimen/text_selection_handle_width"
+                                          android:layout_height="@dimen/text_selection_handle_height"
+                                          android:src="@drawable/handle_start"
+                                          android:visibility="gone"
+                                          gecko:handleType="START"/>
+
+   <org.mozilla.gecko.TextSelectionHandle android:id="@+id/end_handle"
+                                          android:layout_width="@dimen/text_selection_handle_width"
+                                          android:layout_height="@dimen/text_selection_handle_height"
+                                          android:src="@drawable/handle_end"
+                                          android:visibility="gone"
+                                          gecko:handleType="END"/>
+</merge>

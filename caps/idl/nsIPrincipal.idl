@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(42ba6a38-d619-49ab-8248-3d247e959d5e)]
+[scriptable, uuid(fbb93cc7-9a94-4743-8e89-9e6939cac083)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -212,6 +212,39 @@ interface nsIPrincipal : nsISerializable
      * A Content Security Policy associated with this principal.
      */
     [noscript] attribute nsIContentSecurityPolicy csp;
+
+    /**
+     * Returns the extended origin of the principal.
+     * The extended origin is a string that has more information than the origin
+     * and can be used to isolate data or permissions between different
+     * principals while taking into account parameters like the app id or the
+     * fact that the principal is embedded in a mozbrowser.
+     * Some principals will return the origin for extendedOrigin.
+     * Some principals will assert if you try to access the extendedOrigin.
+     *
+     * The extendedOrigin is intended to be an opaque identifier. It is
+     * currently "human-readable" but no callers should assume it will stay
+     * as is and it might be crypto-hashed at some point.
+     */
+    readonly attribute AUTF8String extendedOrigin;
+
+    const short APP_STATUS_NOT_INSTALLED = 0;
+    const short APP_STATUS_INSTALLED     = 1;
+    const short APP_STATUS_TRUSTED       = 2;
+    const short APP_STATUS_CERTIFIED     = 3;
+
+    /**
+     * Shows the status of the app.
+     * Can be: APP_STATUS_NOT_INSTALLED, APP_STATUS_INSTALLED,
+     *         APP_STATUS_TRUSTED or APP_STATUS_CERTIFIED.
+     */
+    readonly attribute unsigned short appStatus;
+
+    /**
+     * Returns the app id the principal is in.
+     * Returns nsIAppsService::NO_APP_ID if this principal isn't part of an app.
+     */
+    readonly attribute unsigned long appId;
 };
 
 /**

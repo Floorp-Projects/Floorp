@@ -25,62 +25,60 @@
 
 class JSObject2WrappedJSMap
 {
+    typedef js::HashMap<JSObject*, nsXPCWrappedJS*, js::PointerHasher<JSObject*, 3>,
+                        js::SystemAllocPolicy> Map;
+
 public:
-    struct Entry : public JSDHashEntryHdr
-    {
-        JSObject*       key;
-        nsXPCWrappedJS* value;
-    };
-
-    static JSObject2WrappedJSMap* newMap(int size);
-
-    inline nsXPCWrappedJS* Find(JSObject* Obj)
-    {
-        NS_PRECONDITION(Obj,"bad param");
-        Entry* entry = (Entry*)
-            JS_DHashTableOperate(mTable, Obj, JS_DHASH_LOOKUP);
-        if (JS_DHASH_ENTRY_IS_FREE(entry))
-            return nsnull;
-        return entry->value;
+    static JSObject2WrappedJSMap* newMap(int size) {
+        JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap();
+        if (map && map->mTable.init(size))
+            return map;
+        delete map;
+        return nsnull;
     }
 
-    inline nsXPCWrappedJS* Add(nsXPCWrappedJS* wrapper)
-    {
+    inline nsXPCWrappedJS* Find(JSObject* Obj) {
+        NS_PRECONDITION(Obj,"bad param");
+        Map::Ptr p = mTable.lookup(Obj);
+        return p ? p->value : nsnull;
+    }
+
+    inline nsXPCWrappedJS* Add(nsXPCWrappedJS* wrapper) {
         NS_PRECONDITION(wrapper,"bad param");
         JSObject* obj = wrapper->GetJSObjectPreserveColor();
-        Entry* entry = (Entry*)
-            JS_DHashTableOperate(mTable, obj, JS_DHASH_ADD);
-        if (!entry)
-            return nsnull;
-        if (entry->key)
-            return entry->value;
-        entry->key = obj;
-        entry->value = wrapper;
-        return wrapper;
+        Map::AddPtr p = mTable.lookupForAdd(obj);
+        if (p)
+            return p->value;
+        return mTable.add(p, obj, wrapper) ? wrapper : nsnull;
     }
 
-    inline void Remove(nsXPCWrappedJS* wrapper)
-    {
+    inline void Remove(nsXPCWrappedJS* wrapper) {
         NS_PRECONDITION(wrapper,"bad param");
-        JS_DHashTableOperate(mTable, wrapper->GetJSObjectPreserveColor(),
-                             JS_DHASH_REMOVE);
+        mTable.remove(wrapper->GetJSObjectPreserveColor());
     }
 
-    inline uint32_t Count() {return mTable->entryCount;}
-    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
-        {return JS_DHashTableEnumerate(mTable, f, arg);}
+    inline uint32_t Count() {return mTable.count();}
 
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+    inline void Dump(PRInt16 depth) {
+        for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
+            r.front().value->DebugDump(depth);
+    }
 
-    ~JSObject2WrappedJSMap();
+    void FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying);
+
+    void ShutdownMarker(JSRuntime* rt);
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) {
+        size_t n = 0;
+        n += mallocSizeOf(this);
+        n += mTable.sizeOfIncludingThis(mallocSizeOf);
+        return n;
+    }
+
 private:
-    JSObject2WrappedJSMap();    // no implementation
-    JSObject2WrappedJSMap(int size);
+    JSObject2WrappedJSMap() {}
 
-    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
-
-private:
-    JSDHashTable *mTable;
+    Map mTable;
 };
 
 /*************************/
@@ -609,10 +607,9 @@ class JSObject2JSObjectMap
                         js::SystemAllocPolicy> Map;
 
 public:
-    static JSObject2JSObjectMap* newMap(int size)
-    {
-        JSObject2JSObjectMap* map = new JSObject2JSObjectMap(size);
-        if (map && map->mTable.initialized())
+    static JSObject2JSObjectMap* newMap(int size) {
+        JSObject2JSObjectMap* map = new JSObject2JSObjectMap();
+        if (map && map->mTable.init(size))
             return map;
         delete map;
         return nsnull;
@@ -669,12 +666,8 @@ public:
     }
 
 private:
-    JSObject2JSObjectMap() MOZ_DELETE;
-    JSObject2JSObjectMap(int size) {
-        mTable.init(size);
-    }
+    JSObject2JSObjectMap() {}
 
-private:
     Map mTable;
 };
 

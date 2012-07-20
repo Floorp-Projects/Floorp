@@ -18,6 +18,10 @@ MOCHITEST_FILES = 	test_bug423375.html \
                 test_disallowInheritPrincipal.html \
                 $(NULL)
 
+# Temporarily disabled for orange
+# MOCHITEST_CHROME_FILES = test_principal_extendedorigin_appid_appstatus.html \
+#                          $(NULL)
+
 test_bug292789.html : % : %.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	     $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@

@@ -357,7 +357,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
     nsAutoString value(*aValue);
     mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
                                                        bHasProp, value,
-                                                       COMPUTED_STYLE_TYPE);
+                                                       nsHTMLCSSUtils::eComputed);
   } else {
     IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp);
   }
@@ -463,7 +463,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
                                            aAttribute, aValue)) {
     if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
-          aNode, aProperty, aAttribute, *aValue, COMPUTED_STYLE_TYPE)) {
+          aNode, aProperty, aAttribute, *aValue, nsHTMLCSSUtils::eComputed)) {
       return NS_OK;
     }
   } else if (IsTextPropertySetByContent(aNode, aProperty,
@@ -649,9 +649,8 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
       // the HTML style defined by aProperty/aAttribute has a CSS equivalence
       // in this implementation for the node tmp; let's check if it carries those css styles
       nsAutoString firstValue;
-      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(tmp, aProperty, aAttribute,
-                                                         isSet, firstValue,
-                                                         SPECIFIED_STYLE_TYPE);
+      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(tmp, aProperty,
+        aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
     }
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
          (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) ||
@@ -861,9 +860,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     // css styles
     nsAutoString propertyValue;
     bool isSet;
-    mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
-                                                       isSet, propertyValue,
-                                                       SPECIFIED_STYLE_TYPE);
+    mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty,
+      aAttribute, isSet, propertyValue, nsHTMLCSSUtils::eSpecified);
     if (isSet) {
       // yes, tmp has the corresponding css declarations in its style attribute
       // let's remove them
@@ -1153,7 +1151,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                                                aAttribute)) {
         mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           collapsedNode, aProperty, aAttribute, isSet, tOutString,
-          COMPUTED_STYLE_TYPE);
+          nsHTMLCSSUtils::eComputed);
         if (outValue) {
           outValue->Assign(tOutString);
         }
@@ -1245,9 +1243,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           if (aValue) {
             firstValue.Assign(*aValue);
           }
-          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
-                                                             isSet, firstValue,
-                                                             COMPUTED_STYLE_TYPE);
+          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty,
+            aAttribute, isSet, firstValue, nsHTMLCSSUtils::eComputed);
         } else {
           IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
                                      &firstValue);
@@ -1268,9 +1265,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           if (aValue) {
             theValue.Assign(*aValue);
           }
-          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
-                                                             isSet, theValue,
-                                                             COMPUTED_STYLE_TYPE);
+          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty,
+            aAttribute, isSet, theValue, nsHTMLCSSUtils::eComputed);
         } else {
           IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
                                      &theValue);
@@ -1435,11 +1431,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
           nsAutoString cssValue;
           bool isSet = false;
           mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(startNode,
-                                                    aProperty,
-                                                    aAttribute,
-                                                    isSet ,
-                                                    cssValue,
-                                                    COMPUTED_STYLE_TYPE);
+            aProperty, aAttribute, isSet , cssValue,
+            nsHTMLCSSUtils::eComputed);
           if (isSet) {
             // startNode's computed style indicates the CSS equivalence to the HTML style to
             // remove is applied; but we found no element in the ancestors of startNode
@@ -1495,12 +1488,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
             // in this implementation for node
             nsAutoString cssValue;
             bool isSet = false;
-            mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node,
-                                                               aProperty,
-                                                               aAttribute,
-                                                               isSet ,
-                                                               cssValue,
-                                                               COMPUTED_STYLE_TYPE);
+            mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty,
+              aAttribute, isSet , cssValue, nsHTMLCSSUtils::eComputed);
             if (isSet) {
               // startNode's computed style indicates the CSS equivalence to the HTML style to
               // remove is applied; but we found no element in the ancestors of startNode

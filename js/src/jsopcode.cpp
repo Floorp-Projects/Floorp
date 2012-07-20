@@ -55,6 +55,9 @@
 using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+using js::frontend::IsIdentifier;
+using js::frontend::LetDataToGroupAssign;
+using js::frontend::LetDataToOffset;
 
 /*
  * Index limit must stay within 32 bits.

@@ -300,6 +300,28 @@ public class LayerController {
         return layerPoint;
     }
 
+    /**
+     * Does the opposite of convertViewPointToLayerPoint.
+     */
+    public PointF convertLayerPointToViewPoint(PointF layerPoint) {
+        if (mLayerClient == null) {
+            return null;
+        }
+
+        ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
+        PointF origin = viewportMetrics.getOrigin();
+        float zoom = viewportMetrics.zoomFactor;
+        ViewportMetrics geckoViewport = mLayerClient.getGeckoViewportMetrics();
+        PointF geckoOrigin = geckoViewport.getOrigin();
+        float geckoZoom = geckoViewport.getZoomFactor();
+
+        PointF viewPoint = new PointF(
+                ((layerPoint.x + (geckoOrigin.x / geckoZoom)) * zoom - origin.x),
+                ((layerPoint.y + (geckoOrigin.y / geckoZoom)) * zoom - origin.y));
+
+        return viewPoint;
+    }
+
     /** Retrieves whether we should show checkerboard checks or not. */
     public boolean checkerboardShouldShowChecks() {
         return mCheckerboardShouldShowChecks;

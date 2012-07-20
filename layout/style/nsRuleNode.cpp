@@ -3634,8 +3634,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     canStoreInRuleTree = false;
     // Use |mFont.size| to pick up minimum font size.
     text->mLineHeight.SetCoordValue(
-        nscoord(float(aContext->GetStyleFont()->mFont.size) *
-                lineHeightValue->GetPercentValue()));
+        NSToCoordRound(float(aContext->GetStyleFont()->mFont.size) *
+                       lineHeightValue->GetPercentValue()));
   }
   else if (eCSSUnit_Initial == lineHeightValue->GetUnit() ||
            eCSSUnit_System_Font == lineHeightValue->GetUnit()) {
