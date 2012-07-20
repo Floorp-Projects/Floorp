@@ -502,8 +502,7 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     volatile uint32_t   gcNumArenasFreeCommitted;
     js::GCMarker        gcMarker;
-    void                *gcVerifyPreData;
-    void                *gcVerifyPostData;
+    void                *gcVerifyData;
     bool                gcChunkAllocationSinceLastGC;
     int64_t             gcNextFullGCTime;
     int64_t             gcLastGCTime;
