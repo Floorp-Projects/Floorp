@@ -286,7 +286,6 @@ private:
     PRUint16 mIdleSynTimeout;
 
     PRUint16 mMaxConnections;
-    PRUint8  mMaxConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerProxy;
     PRUint16 mMaxPipelinedRequests;
