@@ -155,6 +155,7 @@
  "dom/tests/mochitest/bugs/test_bug641552.html": "",
  "dom/tests/mochitest/bugs/test_resize_move_windows.html": "TIMED_OUT",
  "dom/tests/mochitest/bugs/test_window_bar.html": "",
+ "dom/devicestorage/ipc/test_ipc.html": "",
  "dom/devicestorage/test/test_basic.html": "",
  "dom/devicestorage/test/test_dotdot.html": "",
  "dom/devicestorage/test/test_enumerate.html": "",

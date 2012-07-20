@@ -194,17 +194,17 @@ StaticBlockObject::setStackDepth(uint32_t depth)
 }
 
 inline void
-StaticBlockObject::setDefinitionParseNode(unsigned i, Definition *def)
+StaticBlockObject::setDefinitionParseNode(unsigned i, frontend::Definition *def)
 {
     JS_ASSERT(slotValue(i).isUndefined());
     setSlotValue(i, PrivateValue(def));
 }
 
-inline Definition *
+inline frontend::Definition *
 StaticBlockObject::maybeDefinitionParseNode(unsigned i)
 {
     Value v = slotValue(i);
-    return v.isUndefined() ? NULL : reinterpret_cast<Definition *>(v.toPrivate());
+    return v.isUndefined() ? NULL : reinterpret_cast<frontend::Definition *>(v.toPrivate());
 }
 
 inline void

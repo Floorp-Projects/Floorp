@@ -436,7 +436,12 @@ private:
                  SecurityLevel* result);
 
     nsresult
-    CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
+    GetCodebasePrincipalInternal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
+                         nsIPrincipal** result);
+
+    nsresult
+    CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
+                            nsIPrincipal** result);
 
     // This is just like the API method, but it doesn't check that the subject
     // name is non-empty or aCertificate is non-null, and it doesn't change the
@@ -595,5 +600,14 @@ public:
 
     NS_IMETHOD InitializeNameSet(nsIScriptContext* aScriptContext);
 };
+
+namespace mozilla {
+
+void
+GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppid,
+                  bool aInMozBrowser,
+                  nsACString& aExtendedOrigin);
+
+} // namespace mozilla
 
 #endif // nsScriptSecurityManager_h__

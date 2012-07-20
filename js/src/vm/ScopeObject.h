@@ -313,8 +313,8 @@ class StaticBlockObject : public BlockObject
      * Frontend compilation temporarily uses the object's slots to link
      * a let var to its associated Definition parse node.
      */
-    void setDefinitionParseNode(unsigned i, Definition *def);
-    Definition *maybeDefinitionParseNode(unsigned i);
+    void setDefinitionParseNode(unsigned i, frontend::Definition *def);
+    frontend::Definition *maybeDefinitionParseNode(unsigned i);
 
     /*
      * The parser uses 'enclosingBlock' as the prev-link in the tc->blockChain

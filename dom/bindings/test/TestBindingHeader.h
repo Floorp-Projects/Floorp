@@ -35,6 +35,26 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
+// IID for the IndirectlyImplementedInterface
+#define NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID \
+{ 0xfed55b69, 0x7012, 0x4849, \
+ { 0xaf, 0x56, 0x4b, 0xa9, 0xee, 0x41, 0x30, 0x89 } }
+
+class IndirectlyImplementedInterface : public nsISupports,
+                                       public nsWrapperCache
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  bool GetIndirectlyImplementedProperty(ErrorResult&);
+  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
+  void IndirectlyImplementedMethod(ErrorResult&);
+};
+
 // IID for the TestExternalInterface
 #define NS_TEST_EXTERNAL_INTERFACE_IID \
 { 0xd5ba0c99, 0x9b1d, 0x4e71, \
@@ -43,6 +63,17 @@ class TestExternalInterface : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_EXTERNAL_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+};
+
+// IID for the TestCallbackInterface
+#define NS_TEST_CALLBACK_INTERFACE_IID \
+{ 0xbf711ba4, 0xc8f6, 0x46cf, \
+ { 0xba, 0x5b, 0xaa, 0xe2, 0x78, 0x18, 0xe6, 0x4a } }
+class TestCallbackInterface : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_CALLBACK_INTERFACE_IID)
   NS_DECL_ISUPPORTS
 };
 
@@ -202,6 +233,24 @@ public:
   void PassOptionalNonNullExternal(const Optional<TestExternalInterface*>&, ErrorResult&);
   void PassOptionalExternalWithDefault(TestExternalInterface*, ErrorResult&);
 
+  already_AddRefed<TestCallbackInterface> ReceiveCallbackInterface(ErrorResult&);
+  already_AddRefed<TestCallbackInterface> ReceiveNullableCallbackInterface(ErrorResult&);
+  TestCallbackInterface* ReceiveWeakCallbackInterface(ErrorResult&);
+  TestCallbackInterface* ReceiveWeakNullableCallbackInterface(ErrorResult&);
+  void PassCallbackInterface(TestCallbackInterface&, ErrorResult&);
+  void PassCallbackInterface2(OwningNonNull<TestCallbackInterface>, ErrorResult&);
+  void PassNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> GetNonNullCallbackInterface(ErrorResult&);
+  void SetNonNullCallbackInterface(TestCallbackInterface&, ErrorResult&);
+  already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface(ErrorResult&);
+  void SetNullableCallbackInterface(TestCallbackInterface*, ErrorResult&);
+  void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&, ErrorResult&);
+  void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&, ErrorResult&);
+  void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*, ErrorResult&);
+
+  already_AddRefed<IndirectlyImplementedInterface> ReceiveConsequentialInterface(ErrorResult&);
+  void PassConsequentialInterface(IndirectlyImplementedInterface&, ErrorResult&);
+
   // Sequence types
   void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
@@ -220,8 +269,6 @@ public:
                                              ErrorResult&);
   void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
                                              ErrorResult&);
-  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
-                                                         ErrorResult&);
   void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&,
                                              ErrorResult&);
   void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &,

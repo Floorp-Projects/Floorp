@@ -2796,7 +2796,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #highlighter-nodeinfobar-text {
   /* 100% - size of the buttons + margins */
-  max-width: -moz-calc(100% - 2 * (26px + 6px));
+  max-width: calc(100% - 2 * (26px + 6px));
   padding-bottom: 1px;
 }
 
@@ -2862,7 +2862,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 .highlighter-nodeinfobar-arrow {
   width: 14px;
   height: 14px;
-  -moz-margin-start: -moz-calc(50% - 7px);
+  -moz-margin-start: calc(50% - 7px);
   transform: rotate(-45deg);
   border: 1px solid transparent;
   background-clip: padding-box;

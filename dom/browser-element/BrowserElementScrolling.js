@@ -1,23 +1,14 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- /
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-'use strict';
-
-dump('======================= webapi.js ======================= \n');
-
-let { classes: Cc, interfaces: Ci, utils: Cu }  = Components;
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/Geometry.jsm');
 
 const ContentPanning = {
   init: function cp_init() {
     ['mousedown', 'mouseup', 'mousemove'].forEach(function(type) {
       addEventListener(type, ContentPanning, true);
     });
+
+    addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
   },
 
   handleEvent: function cp_handleEvent(evt) {
@@ -124,9 +115,9 @@ const ContentPanning = {
     if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
       return [null, null];
 
-    let content = node.ownerDocument.defaultView;
+    let nodeContent = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
-      let style = content.getComputedStyle(node, null);
+      let style = nodeContent.getComputedStyle(node, null);
 
       let overflow = [style.getPropertyValue('overflow'),
                       style.getPropertyValue('overflow-x'),
@@ -144,7 +135,13 @@ const ContentPanning = {
       node = node.parentNode;
     }
 
-    return [content, this._generateCallback(content)];
+    if (ContentPanning._asyncPanZoomForViewportFrame &&
+        nodeContent === content)
+      // The parent context is asynchronously panning and zooming our
+      // root scrollable frame, so don't use our synchronous fallback.
+      return [null, null];
+
+    return [nodeContent, this._generateCallback(nodeContent)];
   },
 
   _generateCallback: function cp_generateCallback(content) {
@@ -176,6 +173,39 @@ const ContentPanning = {
 
     const kStateActive = 0x00000001;
     this._domUtils.setContentState(root.documentElement, kStateActive);
+  },
+
+  get _asyncPanZoomForViewportFrame() {
+    return docShell.asyncPanZoomEnabled;
+  },
+
+  _recvViewportChange: function(data) {
+    let viewport = data.json;
+    let displayPort = viewport.displayPort;
+
+    let screenWidth = viewport.screenSize.width;
+    let screenHeight = viewport.screenSize.height;
+
+    let x = viewport.x;
+    let y = viewport.y;
+
+    let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    cwu.setCSSViewport(screenWidth, screenHeight);
+
+    // Set scroll position
+    cwu.setScrollPositionClampingScrollPortSize(
+      screenWidth / viewport.zoom, screenHeight / viewport.zoom);
+    content.scrollTo(x, y);
+    cwu.setResolution(displayPort.resolution, displayPort.resolution);
+
+    let element = null;
+    if (content.document && (element = content.document.documentElement)) {
+      cwu.setDisplayPortForElement(displayPort.left,
+                                   displayPort.top,
+                                   displayPort.width,
+                                   displayPort.height,
+                                   element);
+    }
   }
 };
 
@@ -349,4 +379,3 @@ const KineticPanning = {
     content.mozRequestAnimationFrame(callback);
   }
 };
-

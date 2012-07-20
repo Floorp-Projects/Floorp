@@ -317,7 +317,8 @@ let DOMApplicationRegistry = {
   },
 
   _nextLocalId: function() {
-    let maxLocalId = 0;
+    let maxLocalId = Ci.nsIScriptSecurityManager.NO_APP_ID;
+
     for (let id in this.webapps) {
       if (this.webapps[id].localId > maxLocalId) {
         maxLocalId = this.webapps[id].localId;
@@ -635,7 +636,7 @@ let DOMApplicationRegistry = {
       }
     }
 
-    return 0;
+    return Ci.nsIScriptSecurityManager.NO_APP_ID;
   },
 
   getAllWithoutManifests: function(aCallback) {

@@ -68,25 +68,6 @@ const char* XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
-static JSDHashOperator
-WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                             uint32_t number, void *arg)
-{
-    nsTArray<nsXPCWrappedJS*>* array = static_cast<nsTArray<nsXPCWrappedJS*>*>(arg);
-    nsXPCWrappedJS* wrapper = ((JSObject2WrappedJSMap::Entry*)hdr)->value;
-    NS_ASSERTION(wrapper, "found a null JS wrapper!");
-
-    // walk the wrapper chain and find any whose JSObject is to be finalized
-    while (wrapper) {
-        if (wrapper->IsSubjectToFinalization()) {
-            if (JS_IsAboutToBeFinalized(wrapper->GetJSObjectPreserveColor()))
-                array->AppendElement(wrapper);
-        }
-        wrapper = wrapper->GetNextWrapper();
-    }
-    return JS_DHASH_NEXT;
-}
-
 struct CX_AND_XPCRT_Data
 {
     JSContext* cx;
@@ -651,8 +632,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             // We add them to the array now and Release the array members
             // later to avoid the posibility of doing any JS GCThing
             // allocations during the gc cycle.
-            self->mWrappedJSMap->
-                Enumerate(WrappedJSDyingJSObjectFinder, dyingWrappedJSArray);
+            self->mWrappedJSMap->FindDyingJSObjects(dyingWrappedJSArray);
 
             // Find dying scopes.
             XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
@@ -945,18 +925,6 @@ DEBUG_WrapperChecker(JSDHashTable *table, JSDHashEntryHdr *hdr,
 #endif
 
 static JSDHashOperator
-WrappedJSShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                        uint32_t number, void *arg)
-{
-    JSRuntime* rt = (JSRuntime*) arg;
-    nsXPCWrappedJS* wrapper = ((JSObject2WrappedJSMap::Entry*)hdr)->value;
-    NS_ASSERTION(wrapper, "found a null JS wrapper!");
-    NS_ASSERTION(wrapper->IsValid(), "found an invalid JS wrapper!");
-    wrapper->SystemIsBeingShutDown(rt);
-    return JS_DHASH_NEXT;
-}
-
-static JSDHashOperator
 DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
                                          uint32_t number, void *arg)
 {
@@ -1038,7 +1006,7 @@ XPCJSRuntime::~XPCJSRuntime()
         if (count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);
 #endif
-        mWrappedJSMap->Enumerate(WrappedJSShutdownMarker, mJSRuntime);
+        mWrappedJSMap->ShutdownMarker(mJSRuntime);
         delete mWrappedJSMap;
     }
 
@@ -2204,13 +2172,6 @@ WrappedJSClassMapDumpEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 static JSDHashOperator
-WrappedJSMapDumpEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                           uint32_t number, void *arg)
-{
-    ((JSObject2WrappedJSMap::Entry*)hdr)->value->DebugDump(*(PRInt16*)arg);
-    return JS_DHASH_NEXT;
-}
-static JSDHashOperator
 NativeSetDumpEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                         uint32_t number, void *arg)
 {
@@ -2263,7 +2224,7 @@ XPCJSRuntime::DebugDump(PRInt16 depth)
         // iterate wrappers...
         if (depth && mWrappedJSMap && mWrappedJSMap->Count()) {
             XPC_LOG_INDENT();
-            mWrappedJSMap->Enumerate(WrappedJSMapDumpEnumerator, &depth);
+            mWrappedJSMap->Dump(depth);
             XPC_LOG_OUTDENT();
         }
 
