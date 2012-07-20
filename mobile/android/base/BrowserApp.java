@@ -506,6 +506,7 @@ abstract public class BrowserApp extends GeckoApp
                             loadUrl(url, AwesomeBar.Target.CURRENT_TAB);
                         }
                     });
+                    mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
                     mAboutHomeContent.update(GeckoApp.mAppContext,
                                              EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
