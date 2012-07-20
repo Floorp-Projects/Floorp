@@ -8,6 +8,8 @@
 #include "ANPBase.h"
 #include "GLContextProvider.h"
 #include "nsNPAPIPluginInstance.h"
+#include "nsPluginInstanceOwner.h"
+#include "GLContextProvider.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_opengl_##name
@@ -15,24 +17,53 @@
 using namespace mozilla;
 using namespace mozilla::gl;
 
-static ANPEGLContext anp_opengl_acquireContext(NPP inst) {
-    // Bug 687267
-    NOT_IMPLEMENTED();
-    return NULL;
+typedef nsNPAPIPluginInstance::TextureInfo TextureInfo;
+
+static ANPEGLContext anp_opengl_acquireContext(NPP instance) {
+    nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+    GLContext* context = pinst->GLContext();
+    if (!context)
+        return NULL;
+
+    context->MakeCurrent();
+    return context->GetNativeData(GLContext::NativeGLContext);
 }
 
 static ANPTextureInfo anp_opengl_lockTexture(NPP instance) {
-    ANPTextureInfo info = { 0, 0, 0, 0 };
-    NOT_IMPLEMENTED();
+    nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+    TextureInfo pluginInfo = pinst->LockContentTexture();
+
+    ANPTextureInfo info;
+    info.textureId = pluginInfo.mTexture;
+    info.width = pluginInfo.mWidth;
+    info.height = pluginInfo.mHeight;
+
+    // It looks like we should be passing whatever
+    // internal format Flash told us it used previously
+    // (e.g., the value of pluginInfo.mInternalFormat),
+    // but if we do that it doesn't upload to the texture
+    // for some reason.
+    info.internalFormat = 0;
+
     return info;
 }
 
 static void anp_opengl_releaseTexture(NPP instance, const ANPTextureInfo* info) {
-    NOT_IMPLEMENTED();
+    nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+    TextureInfo pluginInfo(info->textureId, info->width, info->height, info->internalFormat);
+    pinst->ReleaseContentTexture(pluginInfo);
+    pinst->RedrawPlugin();
 }
 
 static void anp_opengl_invertPluginContent(NPP instance, bool isContentInverted) {
-    NOT_IMPLEMENTED();
+    nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+    // Our definition of inverted is the opposite of the plugin's
+    pinst->SetInverted(!isContentInverted);
+    pinst->RedrawPlugin();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
