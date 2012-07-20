@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
+const TOUCH_EVENTS_ENABLED_PREF = "dom.w3c_touch_events.enabled";
 
 function debug(msg) {
   //dump("BrowserElementParent - " + msg + "\n");
@@ -179,6 +180,10 @@ function BrowserElementParent(frameLoader) {
 
   // Define methods on the frame element.
   defineMethod('setVisible', this._setVisible);
+  defineMethod('sendMouseEvent', this._sendMouseEvent);
+  if (Services.prefs.getBoolPref(TOUCH_EVENTS_ENABLED_PREF)) {
+    defineMethod('sendTouchEvent', this._sendTouchEvent);
+  }
   defineMethod('goBack', this._goBack);
   defineMethod('goForward', this._goForward);
   defineMethod('reload', this._reload);
@@ -351,6 +356,34 @@ BrowserElementParent.prototype = {
 
   _setVisible: function(visible) {
     this._sendAsyncMsg('set-visible', {visible: visible});
+  },
+
+  _sendMouseEvent: function(type, x, y, button, clickCount, modifiers) {
+    this._sendAsyncMsg("send-mouse-event", {
+      "type": type,
+      "x": x,
+      "y": y,
+      "button": button,
+      "clickCount": clickCount,
+      "modifiers": modifiers
+    });
+  },
+
+  _sendTouchEvent: function(type, identifiers, touchesX, touchesY,
+                            radiisX, radiisY, rotationAngles, forces,
+                            count, modifiers) {
+    this._sendAsyncMsg("send-touch-event", {
+      "type": type,
+      "identifiers": identifiers,
+      "touchesX": touchesX,
+      "touchesY": touchesY,
+      "radiisX": radiisX,
+      "radiisY": radiisY,
+      "rotationAngles": rotationAngles,
+      "forces": forces,
+      "count": count,
+      "modifiers": modifiers
+    });
   },
 
   _goBack: function() {
