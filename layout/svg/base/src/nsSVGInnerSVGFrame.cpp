@@ -57,6 +57,11 @@ NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
                              const nsIntRect *aDirtyRect)
 {
+  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only painting of non-display "
+               "SVG should take this code path");
+
   gfxContextAutoSaveRestore autoSR;
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
@@ -211,6 +216,11 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
+  NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only hit-testing of non-display "
+               "SVG should take this code path");
+
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);

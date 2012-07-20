@@ -158,27 +158,19 @@ nsSVGGraphicElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     // will be called on us and our ancestors.
     nsIFrame* frame =
       const_cast<nsSVGGraphicElement*>(this)->GetPrimaryFrame();
-    if (frame && frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
-      // No need to do anything.
-    } else if (aModType == nsIDOMMutationEvent::ADDITION ||
-               aModType == nsIDOMMutationEvent::REMOVAL) {
-      // In order to handle view creation/destruction and stacking context
-      // changes, the code in nsStyleDisplay::CalcDifference uses
-      // nsChangeHint_ReconstructFrame if the transform was added/removed.
-      // XXXSDL Currently we don't need to reconstruct SVG frames when their
-      // transform is set/unset since we don't currently create GFX layers for
-      // SVG transforms, but we will after bug 614732 is fixed. Also change the
-      // assertion in ApplyRenderingChangeToTree when we do that.
-      NS_UpdateHint(retval, nsChangeHint_UpdateOverflow);
+    if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      return retval; // no change
+    }
+    if (aModType == nsIDOMMutationEvent::ADDITION ||
+        aModType == nsIDOMMutationEvent::REMOVAL) {
+      // Reconstruct the frame tree to handle stacking context changes:
+      NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
     } else {
       NS_ABORT_IF_FALSE(aModType == nsIDOMMutationEvent::MODIFICATION,
                         "Unknown modification type.");
       // We just assume the old and new transforms are different.
-      // XXXSDL Once we use GFX layers for SVG transforms, we will need to pass
-      // the nsChangeHint_UpdateTransformLayer hint too. Note that the
-      // assertion in ApplyRenderingChangeToTree will fail if that hint is
-      // passed on nsIDOMMutationEvent::REMOVAL though.
-      NS_UpdateHint(retval, nsChangeHint_UpdateOverflow);
+      NS_UpdateHint(retval, NS_CombineHint(nsChangeHint_UpdateOverflow,
+                                           nsChangeHint_UpdateTransformLayer));
     }
   }
   return retval;

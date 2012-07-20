@@ -13,6 +13,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsBidiPresUtils.h"
+#include "nsDisplayList.h"
 #include "nsDOMError.h"
 #include "nsIDOMSVGRect.h"
 #include "nsRenderingContext.h"
@@ -198,6 +199,59 @@ private:
   bool mInError;
 };
 
+
+class nsDisplaySVGGlyphs : public nsDisplayItem {
+public:
+  nsDisplaySVGGlyphs(nsDisplayListBuilder* aBuilder,
+                     nsSVGGlyphFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplaySVGGlyphs);
+    NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVGGlyphs() {
+    MOZ_COUNT_DTOR(nsDisplaySVGGlyphs);
+  }
+#endif
+
+  NS_DISPLAY_DECL_NAME("nsDisplaySVGGlyphs", TYPE_SVG_GLYPHS)
+
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsRenderingContext* aCtx);
+};
+
+void
+nsDisplaySVGGlyphs::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                            HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
+{
+  nsSVGGlyphFrame *frame = static_cast<nsSVGGlyphFrame*>(mFrame);
+  nsPoint pointRelativeToReferenceFrame = aRect.Center();
+  // ToReferenceFrame() includes frame->GetPosition(), our user space position.
+  nsPoint userSpacePt = pointRelativeToReferenceFrame -
+                          (ToReferenceFrame() - frame->GetPosition());
+  if (frame->GetFrameForPoint(userSpacePt)) {
+    aOutFrames->AppendElement(frame);
+  }
+}
+
+void
+nsDisplaySVGGlyphs::Paint(nsDisplayListBuilder* aBuilder,
+                          nsRenderingContext* aCtx)
+{
+  // ToReferenceFrame includes our mRect offset, but painting takes
+  // account of that too. To avoid double counting, we subtract that
+  // here.
+  nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
+
+  aCtx->PushState();
+  aCtx->Translate(offset);
+  static_cast<nsSVGGlyphFrame*>(mFrame)->PaintSVG(aCtx, nsnull);
+  aCtx->PopState();
+}
+
 //----------------------------------------------------------------------
 // Implementation
 
@@ -293,6 +347,18 @@ nsIAtom *
 nsSVGGlyphFrame::GetType() const
 {
   return nsGkAtoms::svgGlyphFrame;
+}
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
+{
+  if (GetStyleFont()->mFont.size <= 0) {
+    return NS_OK;
+  }
+  return aLists.Content()->AppendNewToTop(
+           new (aBuilder) nsDisplaySVGGlyphs(aBuilder, this));
 }
 
 //----------------------------------------------------------------------

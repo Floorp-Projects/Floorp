@@ -1451,15 +1451,28 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   return DisplayOutlineUnconditional(aBuilder, aLists);
 }
 
+inline static bool IsSVGContentWithCSSClip(const nsIFrame *aFrame)
+{
+  // The CSS spec says that the 'clip' property only applies to absolutely
+  // positioned elements, whereas the SVG spec says that it applies to SVG
+  // elements regardless of the value of the 'position' property. Here we obey
+  // the CSS spec for outer-<svg> (since that's what we generally do), but
+  // obey the SVG spec for other SVG elements to which 'clip' applies.
+  nsIAtom *tag = aFrame->GetContent()->Tag();
+  return (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
+    (tag == nsGkAtoms::svg || tag == nsGkAtoms::foreignObject);
+}
+
 bool
 nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
                               const nsSize& aSize) const
 {
   NS_PRECONDITION(aRect, "Must have aRect out parameter");
 
-  if (!aDisp->IsAbsolutelyPositioned() ||
-      !(aDisp->mClipFlags & NS_STYLE_CLIP_RECT))
+  if (!(aDisp->mClipFlags & NS_STYLE_CLIP_RECT) ||
+      !(aDisp->IsAbsolutelyPositioned() || IsSVGContentWithCSSClip(this))) {
     return false;
+  }
 
   *aRect = aDisp->mClip;
   if (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags) {
@@ -1751,8 +1764,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect dirtyRect = aDirtyRect;
 
   bool inTransform = aBuilder->IsInTransform();
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-      disp->HasTransform()) {
+  if (IsTransformed()) {
     if (aBuilder->IsForPainting() &&
         nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this)) {
       dirtyRect = GetVisualOverflowRectRelativeToSelf();
@@ -1803,8 +1815,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
   }
 
-  // Mark the display list items for absolutely positioned children
   MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
+
   // Preserve3DChildren() also guarantees that applyAbsPosClipping and usingSVGEffects are false
   // We only modify the preserve-3d rect if we are the top of a preserve-3d heirarchy
   if (Preserves3DChildren()) {
@@ -1915,7 +1927,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* Else, if the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
    */
-  else if (disp->mOpacity < 1.0f && !resultList.IsEmpty()) {
+  else if (disp->mOpacity < 1.0f &&
+           !nsSVGUtils::CanOptimizeOpacity(this) &&
+           !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
     if (NS_FAILED(rv))
@@ -1933,8 +1947,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * We also traverse into sublists created by nsDisplayWrapList or nsDisplayOpacity, so that
    * we find all the correct children.
    */
-  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-      disp->HasTransform() && !resultList.IsEmpty()) {
+  if (IsTransformed() && !resultList.IsEmpty()) {
     if (Preserves3DChildren()) {
       rv = WrapPreserve3DList(this, aBuilder, &resultList);
       if (NS_FAILED(rv))
@@ -1965,11 +1978,14 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsIFrame* child = aChild;
   if (child->GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
+  
+  bool isSVG = (child->GetStateBits() & NS_FRAME_SVG_LAYOUT);
 
   // true if this is a real or pseudo stacking context
   bool pseudoStackingContext =
     (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
-  if ((aFlags & DISPLAY_CHILD_INLINE) &&
+  if (!isSVG &&
+      (aFlags & DISPLAY_CHILD_INLINE) &&
       !child->IsFrameOfType(eLineParticipant)) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
@@ -2020,7 +2036,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  // Mark the display list items for absolutely positioned children
   child->MarkAbsoluteFramesForDisplayList(aBuilder, dirty);
 
   if (childType != nsGkAtoms::placeholderFrame &&
@@ -2070,8 +2085,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     || child->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
-  bool isPositioned = disp->IsPositioned();
-  if (isVisuallyAtomic || isPositioned || disp->IsFloating() ||
+  bool isPositioned = !isSVG && disp->IsPositioned();
+  if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating()) ||
+      ((disp->mClipFlags & NS_STYLE_CLIP_RECT) &&
+       IsSVGContentWithCSSClip(this)) ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = true;
@@ -2178,16 +2195,20 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // Make sure the root of a fixed position frame sub-tree gets the
       // correct displaylist item type.
       nsDisplayItem* item;
-      if (!child->GetParent()->GetParent() &&
+      if (!isSVG && !child->GetParent()->GetParent() &&
           disp->mPosition == NS_STYLE_POSITION_FIXED) {
         item = new (aBuilder) nsDisplayFixedPosition(aBuilder, child, &list);
       } else {
         item = new (aBuilder) nsDisplayWrapList(aBuilder, child, &list);
       }
-      rv = aLists.PositionedDescendants()->AppendNewToTop(item);
+      if (isSVG) {
+        rv = aLists.Content()->AppendNewToTop(item);
+      } else {
+        rv = aLists.PositionedDescendants()->AppendNewToTop(item);
+      }
       NS_ENSURE_SUCCESS(rv, rv);
     }
-  } else if (disp->IsFloating()) {
+  } else if (!isSVG && disp->IsFloating()) {
     if (!list.IsEmpty()) {
       rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
           nsDisplayWrapList(aBuilder, child, &list));

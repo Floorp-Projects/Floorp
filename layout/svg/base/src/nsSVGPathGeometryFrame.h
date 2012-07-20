@@ -17,6 +17,7 @@
 #include "nsSVGUtils.h"
 
 class gfxContext;
+class nsDisplaySVGPathGeometry;
 class nsIAtom;
 class nsIFrame;
 class nsIPresShell;
@@ -34,6 +35,9 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
 {
   friend nsIFrame*
   NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  friend class nsDisplaySVGPathGeometry;
+
 protected:
   nsSVGPathGeometryFrame(nsStyleContext* aContext)
     : nsSVGPathGeometryFrameBase(aContext)
@@ -68,6 +72,10 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGPathGeometry"), aResult);
   }
 #endif
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   // nsSVGGeometryFrame methods
   gfxMatrix GetCanvasTM(PRUint32 aFor);
