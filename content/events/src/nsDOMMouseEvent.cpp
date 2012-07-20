@@ -8,6 +8,7 @@
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "DictionaryHelpers.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 

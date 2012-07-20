@@ -32,7 +32,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
 #include "nsNodeInfoManager.h"
-#include "nsDOMClassInfoID.h"
+#include "nsIXPCScriptable.h"
 #include "nsDataHashtable.h"
 #include "nsIDOMEvent.h"
 #include "nsTArray.h"

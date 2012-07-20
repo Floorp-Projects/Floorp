@@ -49,6 +49,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIObserverService.h"
+#include "GeneratedEvents.h"
 
 using namespace mozilla;
 

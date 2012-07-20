@@ -35,7 +35,7 @@
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTArray.h"
-
+#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
 #include "mozAutoDocUpdate.h"
