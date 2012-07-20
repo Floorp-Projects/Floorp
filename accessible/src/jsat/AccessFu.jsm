@@ -357,7 +357,8 @@ var AccessFu = {
       }
       case Ci.nsIAccessibleEvent.EVENT_SCROLLING_START:
       {
-        VirtualCursorController.moveCursorToObject(aEvent.accessible);
+        VirtualCursorController.moveCursorToObject(
+          Utils.getVirtualCursor(aEvent.accessibleDocument), aEvent.accessible);
         break;
       }
       case Ci.nsIAccessibleEvent.EVENT_FOCUS:
@@ -366,7 +367,8 @@ var AccessFu = {
         let doc = aEvent.accessibleDocument;
         if (acc.role != Ci.nsIAccessibleRole.ROLE_DOCUMENT &&
             doc.role != Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW)
-          VirtualCursorController.moveCursorToObject(acc);
+          VirtualCursorController.moveCursorToObject(
+            Utils.getVirtualCursor(doc), acc);
 
         let [,extState] = Utils.getStates(acc);
         let editableState = extState &
