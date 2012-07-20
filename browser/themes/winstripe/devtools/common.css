@@ -106,7 +106,7 @@
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl) {
-  background-position: -moz-calc(100% - 4px) 3px, top left, top left;
+  background-position: calc(100% - 4px) 3px, top left, top left;
 }
 
 .devtools-searchinput > .textbox-input-box > .textbox-search-icons {

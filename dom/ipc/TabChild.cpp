@@ -52,6 +52,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsPresContext.h"
+#include "nsPrintfCString.h"
 #include "nsScriptLoader.h"
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
@@ -337,12 +338,12 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
     // open a modal-type window, we're going to create a new <iframe mozbrowser>
     // and return its window here.
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-    bool inBrowserFrame = false;
+    bool isInContentBoundary = false;
     if (docshell) {
-      docshell->GetContainedInBrowserFrame(&inBrowserFrame);
+      docshell->GetIsBelowContentBoundary(&isInContentBoundary);
     }
 
-    if (inBrowserFrame &&
+    if (isInContentBoundary &&
         !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
                           nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                           nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
@@ -626,6 +627,37 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size)
 }
 
 bool
+TabChild::RecvUpdateFrame(const nsIntRect& aDisplayPort,
+                          const nsIntPoint& aScrollOffset,
+                          const gfxSize& aResolution,
+                          const nsIntRect& aScreenSize)
+{
+    nsCString data;
+    data += nsPrintfCString("{ \"x\" : %d", aScrollOffset.x);
+    data += nsPrintfCString(", \"y\" : %d", aScrollOffset.y);
+    // We don't treat the x and y scales any differently for this
+    // semi-platform-specific code.
+    data += nsPrintfCString(", \"zoom\" : %f", aResolution.width);
+    data += nsPrintfCString(", \"displayPort\" : ");
+        data += nsPrintfCString("{ \"left\" : %d", aDisplayPort.X());
+        data += nsPrintfCString(", \"top\" : %d", aDisplayPort.Y());
+        data += nsPrintfCString(", \"width\" : %d", aDisplayPort.Width());
+        data += nsPrintfCString(", \"height\" : %d", aDisplayPort.Height());
+        data += nsPrintfCString(", \"resolution\" : %f", aResolution.width);
+        data += nsPrintfCString(" }");
+    data += nsPrintfCString(", \"screenSize\" : ");
+        data += nsPrintfCString("{ \"width\" : %d", aScreenSize.width);
+        data += nsPrintfCString(", \"height\" : %d", aScreenSize.height);
+        data += nsPrintfCString(" }");
+    data += nsPrintfCString(" }");
+
+    // Let the BrowserElementScrolling helper (if it exists) for this
+    // content manipulate the frame state.
+    return RecvAsyncMessage(NS_LITERAL_STRING("Viewport:Change"),
+                            NS_ConvertUTF8toUTF16(data));
+}
+
+bool
 TabChild::RecvActivate()
 {
   nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
@@ -857,7 +889,12 @@ TabChild::AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI&
 bool
 TabChild::DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor)
 {
-    static_cast<PCOMContentPermissionRequestChild*>(actor)->IPDLRelease();
+    PCOMContentPermissionRequestChild* child =
+        static_cast<PCOMContentPermissionRequestChild*>(actor);
+#ifdef DEBUG
+    child->mIPCOpen = false;
+#endif /* DEBUG */
+    child->IPDLRelease();
     return true;
 }
 
@@ -962,7 +999,8 @@ TabChild::RecvDestroy()
 }
 
 PRenderFrameChild*
-TabChild::AllocPRenderFrame(LayersBackend* aBackend,
+TabChild::AllocPRenderFrame(ScrollingBehavior* aScrolling,
+                            LayersBackend* aBackend,
                             int32_t* aMaxTextureSize,
                             uint64_t* aLayersId)
 {
@@ -1035,7 +1073,7 @@ TabChild::InitWidget(const nsIntSize& size)
     int32_t maxTextureSize;
     RenderFrameChild* remoteFrame =
         static_cast<RenderFrameChild*>(SendPRenderFrameConstructor(
-                                           &be, &maxTextureSize, &id));
+                                           &mScrolling, &be, &maxTextureSize, &id));
     if (!remoteFrame) {
       NS_WARNING("failed to construct RenderFrame");
       return false;
@@ -1096,6 +1134,12 @@ TabChild::NotifyPainted()
         // throttled.
         mRemoteFrame->SendNotifyCompositorTransaction();
     }
+}
+
+bool
+TabChild::IsAsyncPanZoomEnabled()
+{
+    return mScrolling == ASYNC_PAN_ZOOM;
 }
 
 NS_IMETHODIMP

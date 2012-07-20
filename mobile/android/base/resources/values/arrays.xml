@@ -53,8 +53,8 @@
         <item>@string/pref_private_data_history</item>
         <item>@string/pref_private_data_formdata</item>
         <item>@string/pref_private_data_cookies</item>
+        <item>@string/pref_private_data_passwords</item>
         <item>@string/pref_private_data_cache</item>
-        <item>@string/pref_private_data_sessions</item>
         <item>@string/pref_private_data_offlineApps</item>
         <item>@string/pref_private_data_siteSettings</item>
     </string-array>
@@ -68,11 +68,11 @@
         <item>true</item>
     </string-array>
     <string-array name="pref_private_data_keys">
-        <item>private.data.history</item>
+        <item>private.data.history_downloads</item>
         <item>private.data.formdata</item>
-        <item>private.data.cookies</item>
+        <item>private.data.cookies_sessions</item>
+        <item>private.data.passwords</item>
         <item>private.data.cache</item>
-        <item>private.data.sessions</item>
         <item>private.data.offlineApps</item>
         <item>private.data.siteSettings</item>
     </string-array>

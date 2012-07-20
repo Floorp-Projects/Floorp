@@ -140,7 +140,7 @@ public:
   NS_IMETHOD            Enable(bool aState);
   NS_IMETHOD            IsEnabled(bool* aState);
   NS_IMETHOD            Show(bool aState);
-  NS_IMETHOD            IsVisible(bool& aState);
+  virtual bool          IsVisible() const;
   NS_IMETHOD            SetFocus(bool aRaise);
   NS_IMETHOD            Invalidate(const nsIntRect& aRect);
   gfxASurface*          GetThebesSurface();

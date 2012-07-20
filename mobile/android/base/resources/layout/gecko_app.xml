@@ -37,6 +37,8 @@
                                                 android:layout_height="fill_parent"
                                                 android:background="@drawable/abouthome_bg_repeat"/>
 
+            <include layout="@layout/text_selection_handles"/>
+
         </RelativeLayout>
 
         <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"

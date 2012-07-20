@@ -9,6 +9,11 @@ interface TestExternalInterface;
 interface TestNonCastableInterface {
 };
 
+callback interface TestCallbackInterface {
+  readonly attribute long foo;
+  void doSomething();
+};
+
 enum TestEnum {
   "a",
   "b"
@@ -150,6 +155,27 @@ interface TestInterface {
   void passOptionalNonNullExternal(optional TestExternalInterface arg);
   void passOptionalExternalWithDefault(optional TestExternalInterface? arg = null);
 
+  // Callback interface types
+  TestCallbackInterface receiveCallbackInterface();
+  TestCallbackInterface? receiveNullableCallbackInterface();
+  TestCallbackInterface receiveWeakCallbackInterface();
+  TestCallbackInterface? receiveWeakNullableCallbackInterface();
+  // A verstion to test for casting to TestCallbackInterface&
+  void passCallbackInterface(TestCallbackInterface arg);
+  // A version we can use to test for the exact type passed in
+  void passCallbackInterface2(TestCallbackInterface arg);
+  void passNullableCallbackInterface(TestCallbackInterface? arg);
+  attribute TestCallbackInterface nonNullCallbackInterface;
+  attribute TestCallbackInterface? nullableCallbackInterface;
+  // Optional arguments
+  void passOptionalCallbackInterface(optional TestCallbackInterface? arg);
+  void passOptionalNonNullCallbackInterface(optional TestCallbackInterface arg);
+  void passOptionalCallbackInterfaceWithDefault(optional TestCallbackInterface? arg = null);
+
+  // Miscellaneous interface tests
+  IndirectlyImplementedInterface receiveConsequentialInterface();
+  void passConsequentialInterface(IndirectlyImplementedInterface arg);
+
   // Sequence types
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
@@ -280,6 +306,7 @@ interface ImplementedInterfaceParent {
 
 ImplementedInterfaceParent implements IndirectlyImplementedInterface;
 
+[NoInterfaceObject]
 interface IndirectlyImplementedInterface {
   void indirectlyImplementedMethod();
   attribute boolean indirectlyImplementedProperty;

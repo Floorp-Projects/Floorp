@@ -93,7 +93,7 @@ Sandbox.prototype = {
                                       .getInterface(Ci.nsIDocShell);
 
     // Mark this docShell as a "browserFrame", to break script access to e.g. window.top
-    docShell.isBrowserFrame = true;
+    docShell.setIsBrowser();
 
     // Stop about:blank from being loaded.
     docShell.stop(Ci.nsIWebNavigation.STOP_NETWORK);

@@ -8,8 +8,9 @@
 #include "nsIXPCSecurityManager.idl"
 interface nsIURI;
 interface nsIChannel;
+interface nsIDocShell;
 
-[scriptable, uuid(cdb27711-492b-4973-938b-de81ac124658)]
+[scriptable, uuid(75a7afe3-d7c9-46fe-b305-ae686457bc7f)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -85,21 +86,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                    in unsigned long flags);
 
     /**
-     * Check that content from "from" can load "uri".
-     *
-     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
-     * should be denied.
-     *
-     * @param from the URI causing the load
-     * @param uri the URI that is being loaded
-     * @param flags the permission set, see above
-     *
-     * @deprecated Use checkLoadURIWithPrincipal instead of this function.
-     */
-    [deprecated] void checkLoadURI(in nsIURI from, in nsIURI uri,
-                                   in unsigned long flags);
-
-    /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:
      *
      * 1) The URI is a string, not a URI object.
@@ -110,15 +96,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
                                       in AUTF8String uri,
-                                      in unsigned long flags);
-
-    /**
-     * Same as CheckLoadURI but takes string arguments for ease of use
-     * by scripts
-     *
-     * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
-     */
-    [deprecated] void checkLoadURIStr(in AUTF8String from, in AUTF8String uri,
                                       in unsigned long flags);
 
     /**
@@ -171,8 +148,35 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
 
     /**
      * Return a principal that has the same origin as aURI.
+     * This principals should not be used for any data/permission check, it will
+     * have appId = UNKNOWN_APP_ID.
      */
     nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
+
+    /**
+     * Returns a principal that has the given information.
+     * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
+     * @param inMozBrowser is true if the principal has to be considered as
+     * inside a mozbrowser frame.
+     */
+    nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
+                                         in unsigned long appId,
+                                         in boolean inMozBrowser);
+
+    /**
+     * Returns a principal that has the appId and inMozBrowser of the docshell
+     * inside a mozbrowser frame.
+     * @param docShell to get appId/inMozBrowser from.
+     */
+    nsIPrincipal getDocShellCodebasePrincipal(in nsIURI uri,
+                                              in nsIDocShell docShell);
+
+    /**
+     * Returns a principal with that has the same origin as uri and is not part
+     * of an appliction.
+     * The returned principal will have appId = NO_APP_ID.
+     */
+    nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
     ///////////////// Capabilities API /////////////////////
     /**
@@ -260,6 +264,19 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipalAndFrame(in JSContextPtr cx,
                                                                    out JSStackFramePtr fp);
+
+
+    const unsigned long NO_APP_ID = 0;
+    const unsigned long UNKNOWN_APP_ID = 4294967295; // PR_UINT32_MAX
+
+    /**
+     * Returns the extended origin for the uri.
+     * appId can be NO_APP_ID or a valid app id. appId should not be
+     * UNKNOWN_APP_ID.
+     * inMozBrowser has to be true if the uri is inside a mozbrowser iframe.
+     */
+    AUTF8String getExtendedOrigin(in nsIURI uri, in unsigned long appId,
+                                  in boolean inMozBrowser);
 };
 
 %{C++

@@ -66,6 +66,7 @@ using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+using namespace js::frontend;
 
 static JSBool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)

@@ -53,6 +53,7 @@ FENNEC_JAVA_FILES = \
   FindInPageBar.java \
   FloatUtils.java \
   FlowLayout.java \
+  FontSizePreference.java \
   FormAssistPopup.java \
   GeckoApplication.java \
   GeckoApp.java \
@@ -104,6 +105,8 @@ FENNEC_JAVA_FILES = \
   TabsTray.java \
   TabsAccessor.java \
   Telemetry.java \
+  TextSelection.java \
+  TextSelectionHandle.java \
   WebAppAllocator.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
@@ -173,6 +176,7 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
+  res/layout/text_selection_handles.xml \
   res/xml/preferences.xml \
   res/menu/gecko_menu.xml \
   res/menu-v11/gecko_menu.xml \
@@ -272,6 +276,7 @@ RES_LAYOUT = \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
   res/layout/find_in_page_content.xml \
+  res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
@@ -298,9 +303,6 @@ RES_LAYOUT = \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
   res/layout/abouthome_section.xml \
-  res/layout/abouthome_section_moretext.xml \
-  res/layout/abouthome_section_subtitle.xml \
-  res/layout/abouthome_section_title.xml \
   res/layout/abouthome_remote_tab_row.xml \
   res/layout/abouthome_topsite_item.xml \
   res/layout/validation_message.xml \
@@ -315,7 +317,6 @@ RES_LAYOUT_LAND_V14 = \
 
 RES_LAYOUT_XLARGE = \
   res/layout-xlarge/awesomebar_search.xml \
-  res/layout-xlarge/awesomebar_tab_indicator.xml \
   res/layout-xlarge/browser_toolbar.xml \
   res/layout-xlarge/browser_toolbar_menu.xml \
   res/layout-xlarge/doorhangerpopup.xml \
@@ -364,7 +365,6 @@ RES_ANIM = \
 
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
-  res/drawable-nodpi/abouthome_topsites_bg.png \
   res/drawable-nodpi/background.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_selected_bg.png \
@@ -443,6 +443,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/validation_bg.9.png \
   res/drawable/bookmarkdefaults_favicon_support.png \
   res/drawable/bookmarkdefaults_favicon_addons.png \
+  res/drawable/handle_end.png \
+  res/drawable/handle_start.png \
   $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
@@ -513,6 +515,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/validation_arrow.png \
   res/drawable-hdpi/validation_arrow_inverted.png \
   res/drawable-hdpi/validation_bg.9.png \
+  res/drawable-hdpi/handle_end.png \
+  res/drawable-hdpi/handle_start.png \
   $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
@@ -577,6 +581,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/validation_arrow.png \
   res/drawable-xhdpi/validation_arrow_inverted.png \
   res/drawable-xhdpi/validation_bg.9.png \
+  res/drawable-xhdpi/handle_end.png \
+  res/drawable-xhdpi/handle_start.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
@@ -853,10 +859,6 @@ RES_MENU = \
   res/menu/titlebar_contextmenu.xml \
   $(NULL)
 
-RES_RAW = \
-  res/raw/webapp_prefs_js \
-  $(NULL)
-
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ifdef MOZ_CRASHREPORTER
@@ -870,7 +872,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
   mobile/android/base/resources/drawable/abouthome_divider.xml                  \
   mobile/android/base/resources/drawable/abouthome_sync_box.xml                 \
-  mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
@@ -917,7 +918,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_LAND_V14) $(RES_VALUES_XLARGE_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_COLOR) $(RES_MENU) $(RES_RAW)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_LAND_V14) $(RES_VALUES_XLARGE_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \

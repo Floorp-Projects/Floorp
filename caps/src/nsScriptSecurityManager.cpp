@@ -328,7 +328,19 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return GetCodebasePrincipal(uri, aPrincipal);
+    PRUint32 appId = UNKNOWN_APP_ID;
+    bool isInBrowserElement = false;
+
+    nsCOMPtr<nsIDocShell> docShell;
+    NS_QueryNotificationCallbacks(aChannel, docShell);
+
+    if (docShell) {
+        docShell->GetAppId(&appId);
+        docShell->GetIsInBrowserElement(&isInBrowserElement);
+    }
+
+    return GetCodebasePrincipalInternal(uri, appId, isInBrowserElement,
+                                        aPrincipal);
 }
 
 NS_IMETHODIMP
@@ -1262,25 +1274,6 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     return NS_ERROR_DOM_BAD_URI;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
-                                      PRUint32 aFlags)
-{
-    // FIXME: bug 327244 -- this function should really die...  Really truly.
-    NS_PRECONDITION(aSourceURI, "CheckLoadURI called with null source URI");
-    NS_ENSURE_ARG_POINTER(aSourceURI);
-
-    // Note: this is not _quite_ right if aSourceURI has
-    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
-    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
-    // really needs to go away....
-    nsCOMPtr<nsIPrincipal> sourcePrincipal;
-    nsresult rv = CreateCodebasePrincipal(aSourceURI,
-                                          getter_AddRefs(sourcePrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-    return CheckLoadURIWithPrincipal(sourcePrincipal, aTargetURI, aFlags);
-}
-
 /**
  * Helper method to handle cases where a flag passed to
  * CheckLoadURIWithPrincipal means denying loading if the given URI has certain
@@ -1588,30 +1581,6 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
-                                         const nsACString& aTargetURIStr,
-                                         PRUint32 aFlags)
-{
-    // FIXME: bug 327244 -- this function should really die...  Really truly.
-    nsCOMPtr<nsIURI> source;
-    nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr,
-                            nsnull, nsnull, sIOService);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Note: this is not _quite_ right if aSourceURI has
-    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
-    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
-    // really needs to go away....
-    nsCOMPtr<nsIPrincipal> sourcePrincipal;
-    rv = CreateCodebasePrincipal(source,
-                                 getter_AddRefs(sourcePrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return CheckLoadURIStrWithPrincipal(sourcePrincipal, aTargetURIStr,
-                                        aFlags);
-}
-
-NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
                                                       const nsACString& aTargetURIStr,
                                                       PRUint32 aFlags)
@@ -1906,7 +1875,8 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = certificate->Init(aCertFingerprint, aSubjectName,
-                                    aPrettyName, aCertificate, aURI);
+                                    aPrettyName, aCertificate, aURI,
+                                    UNKNOWN_APP_ID, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Check to see if we already have this principal.
@@ -1967,7 +1937,8 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
                                                      subjectName, aPrettyName,
                                                      granted, denied,
                                                      aCertificate,
-                                                     true, false);
+                                                     true, false,
+                                                     UNKNOWN_APP_ID, false);
                 if (NS_FAILED(rv))
                     return rv;
                 
@@ -1982,7 +1953,9 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
 }
 
 nsresult
-nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **result)
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId,
+                                                 bool aInMozBrowser,
+                                                 nsIPrincipal **result)
 {
     // I _think_ it's safe to not create null principals here based on aURI.
     // At least all the callers would do the right thing in those cases, as far
@@ -2006,7 +1979,8 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **re
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = codebase->Init(EmptyCString(), EmptyCString(),
-                                 EmptyCString(), nsnull, aURI);
+                                 EmptyCString(), nsnull, aURI, aAppId,
+                                 aInMozBrowser);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2016,11 +1990,57 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **re
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
+nsScriptSecurityManager::GetCodebasePrincipal(nsIURI* aURI,
+                                                    nsIPrincipal** aPrincipal)
+{
+  return GetCodebasePrincipalInternal(aURI, nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                              false, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetNoAppCodebasePrincipal(nsIURI* aURI,
+                                                   nsIPrincipal** aPrincipal)
+{
+  return GetCodebasePrincipalInternal(aURI,  nsIScriptSecurityManager::NO_APP_ID,
+                              false, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
+                                                 PRUint32 aAppId,
+                                                 bool aInMozBrowser,
+                                                 nsIPrincipal** aPrincipal)
+{
+  NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
+
+  return GetCodebasePrincipalInternal(aURI, aAppId, aInMozBrowser, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
+                                                      nsIDocShell* aDocShell,
+                                                      nsIPrincipal** aPrincipal)
+{
+  MOZ_ASSERT(aDocShell);
+
+  PRUint32 appId;
+  bool isInBrowserElement;
+  aDocShell->GetAppId(&appId);
+  aDocShell->GetIsInBrowserElement(&isInBrowserElement);
+
+  return GetCodebasePrincipalInternal(aURI, appId, isInBrowserElement,
+                                      aPrincipal);
+}
+
+nsresult
+nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
+                                              PRUint32 aAppId,
+                                              bool aInMozBrowser,
                                               nsIPrincipal **result)
 {
     NS_ENSURE_ARG(aURI);
-    
+
     bool inheritsPrincipal;
     nsresult rv =
         NS_URIChainHasFlags(aURI,
@@ -2029,10 +2049,11 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     if (NS_FAILED(rv) || inheritsPrincipal) {
         return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
     }
-    
+
     nsCOMPtr<nsIPrincipal> principal;
-    rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
-    if (NS_FAILED(rv)) return rv;
+    rv = CreateCodebasePrincipal(aURI, aAppId, aInMozBrowser,
+                                 getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (mPrincipals.Count() > 0)
     {
@@ -2067,10 +2088,11 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                                   subjectName, EmptyCString(),
                                                   granted, denied,
                                                   nsnull, false,
-                                                  isTrusted);
-                if (NS_FAILED(rv))
-                    return rv;
-                
+                                                  isTrusted,
+                                                  aAppId,
+                                                  aInMozBrowser);
+                NS_ENSURE_SUCCESS(rv, rv);
+
                 codebase->SetURI(aURI);
                 principal = codebase;
             }
@@ -3536,7 +3558,8 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         rv = newPrincipal->InitFromPersistent(aPrefNames[c], id, subjectName,
                                               EmptyCString(),
                                               grantedList, deniedList, nsnull, 
-                                              isCert, isTrusted);
+                                              isCert, isTrusted, UNKNOWN_APP_ID,
+                                              false);
         if (NS_SUCCEEDED(rv))
             mPrincipals.Put(newPrincipal, newPrincipal);
     }
@@ -3592,6 +3615,51 @@ nsScriptSecurityManager::InitPrefs()
     }
 
     return NS_OK;
+}
+
+namespace mozilla {
+
+void
+GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
+                  nsACString& aExtendedOrigin)
+{
+  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  if (aAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  }
+
+  nsCAutoString origin;
+  nsPrincipal::GetOriginForURI(aURI, getter_Copies(origin));
+
+  // Fallback.
+  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInMozBrowser) {
+    aExtendedOrigin.Assign(origin);
+    return;
+  }
+
+  // aExtendedOrigin = origin + "@" + aAppId + { 't', 'f' }
+  aExtendedOrigin.Assign(origin + NS_LITERAL_CSTRING("@"));
+  aExtendedOrigin.AppendInt(aAppId);
+  aExtendedOrigin.Append(aInMozBrowser ? NS_LITERAL_CSTRING("t")
+                                       : NS_LITERAL_CSTRING("f"));
+
+  return;
+}
+
+} // namespace mozilla
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetExtendedOrigin(nsIURI* aURI,
+                                           PRUint32 aAppId,
+                                           bool aInMozBrowser,
+                                           nsACString& aExtendedOrigin)
+{
+  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  mozilla::GetExtendedOrigin(aURI, aAppId, aInMozBrowser, aExtendedOrigin);
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -55,6 +55,15 @@ extern JS_FRIEND_API(JSBool)
 JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
 
 /*
+ * Determine whether the given object is backed by a DeadObjectProxy.
+ *
+ * Such objects hold no other objects (they have no outgoing reference edges)
+ * and will throw if you touch them (e.g. by reading/writing a property).
+ */
+extern JS_FRIEND_API(JSBool)
+JS_IsDeadWrapper(JSObject *obj);
+
+/*
  * Used by the cycle collector to trace through the shape and all
  * shapes it reaches, marking all non-shape children found in the
  * process. Uses bounded stack space.

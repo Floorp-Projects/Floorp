@@ -1836,6 +1836,10 @@ for (uint32_t i = 0; i < length; ++i) {
                                 "arguments (like %s), because we don't know "
                                 "how to handle them being preffed off" %
                                 descriptor.interface.identifier.name)
+            if descriptor.interface.isConsequential():
+                raise TypeError("Consequential interface %s being used as an "
+                                "argument but flagged as castable" %
+                                descriptor.interface.identifier.name)
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
@@ -2364,7 +2368,8 @@ for (uint32_t i = 0; i < length; ++i) {
                             "}\n")
         else:
             wrappingCode = ""
-        if descriptor.castable and not type.unroll().inner.isExternal():
+        if (not descriptor.interface.isExternal() and
+            not descriptor.interface.isCallback()):
             if descriptor.wrapperCache:
                 wrapMethod = "WrapNewBindingObject"
             else:
@@ -2381,6 +2386,10 @@ for (uint32_t i = 0; i < length; ++i) {
                 failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                           "return false;")
             else:
+                if descriptor.notflattened:
+                    raise TypeError("%s is prefable but not flattened; "
+                                    "fallback won't work correctly" %
+                                    descriptor.interface.identifier.name)
                 # Try old-style wrapping for bindings which might be preffed off.
                 failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
             wrappingCode += wrapAndSetPtr(wrap, failed)
@@ -3063,6 +3072,13 @@ class CGSetterCall(CGGetterSetterCall):
         # We just get our stuff from vp
         return ""
 
+class FakeCastableDescriptor():
+    def __init__(self, descriptor):
+        self.castable = True
+        self.workers = descriptor.workers
+        self.nativeType = descriptor.nativeType
+        self.name = descriptor.name
+
 class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
     Common class to generate the JSNatives for all our methods, getters, and
@@ -3075,9 +3091,14 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
+        # Our descriptor might claim that we're not castable, simply because
+        # we're someone's consequential interface.  But for this-unwrapping, we
+        # know that we're the real deal.  So fake a descriptor here for
+        # consumption by FailureFatalCastableObjectUnwrapper.
         unwrapThis = CGIndenter(CGGeneric(
-            str(FailureFatalCastableObjectUnwrapper(self.descriptor,
-                                                    "obj", "self"))))
+            str(FailureFatalCastableObjectUnwrapper(
+                        FakeCastableDescriptor(self.descriptor),
+                        "obj", "self"))))
         return CGList([ self.getThis(), unwrapThis,
                         self.generate_code() ], "\n").define()
 
@@ -3925,7 +3946,7 @@ class CGDescriptor(CGThing):
             if (descriptor.customTrace):
                 cgThings.append(CGClassTraceHook(descriptor))
 
-        if descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject():
+        if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGNativePropertyHooks(descriptor))
         if descriptor.concrete:
             cgThings.append(CGDOMJSClass(descriptor))
@@ -3948,8 +3969,7 @@ class CGDescriptor(CGThing):
 
         # Set up our Xray callbacks as needed.  Note that we don't need to do
         # it in workers.
-        if ((descriptor.concrete or
-             descriptor.interface.hasInterfacePrototypeObject()) and
+        if (descriptor.interface.hasInterfacePrototypeObject() and
             not descriptor.workers):
             cgThings.append(CGResolveProperty(descriptor, properties))
             cgThings.append(CGEnumerateProperties(descriptor, properties))

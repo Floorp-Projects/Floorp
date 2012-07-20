@@ -456,12 +456,9 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   // only if the parent is visible.
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
   if (parent) {
-    bool parentVisible = true;
     nsCOMPtr<nsIWidget> parentWidget;
     parent->GetMainWidget(getter_AddRefs(parentWidget));
-    if (parentWidget)
-      parentWidget->IsVisible(parentVisible);
-    if (parentVisible) {
+    if (!parentWidget || parentWidget->IsVisible()) {
       nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
       if (appShell) {
         nsCOMPtr<nsIXULWindow> hiddenWindow;
