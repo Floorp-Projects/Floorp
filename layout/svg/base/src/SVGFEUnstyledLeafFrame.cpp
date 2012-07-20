@@ -25,6 +25,12 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
+
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return SVGFEUnstyledLeafFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
