@@ -1978,11 +1978,41 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
+nsScriptSecurityManager::GetCodebasePrincipal(nsIURI* aURI,
+                                                    nsIPrincipal** aPrincipal)
+{
+  return GetCodebasePrincipalInternal(aURI, nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                              false, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetNoAppCodebasePrincipal(nsIURI* aURI,
+                                                   nsIPrincipal** aPrincipal)
+{
+  return GetCodebasePrincipalInternal(aURI,  nsIScriptSecurityManager::NO_APP_ID,
+                              false, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
+                                                 PRUint32 aAppId,
+                                                 bool aInMozBrowser,
+                                                 nsIPrincipal** aPrincipal)
+{
+  NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
+
+  return GetCodebasePrincipalInternal(aURI, aAppId, aInMozBrowser, aPrincipal);
+}
+
+nsresult
+nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
+                                              PRUint32 aAppId,
+                                              bool aInMozBrowser,
                                               nsIPrincipal **result)
 {
     NS_ENSURE_ARG(aURI);
-    
+
     bool inheritsPrincipal;
     nsresult rv =
         NS_URIChainHasFlags(aURI,
@@ -1993,9 +2023,9 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     }
 
     nsCOMPtr<nsIPrincipal> principal;
-    rv = CreateCodebasePrincipal(aURI, nsIScriptSecurityManager::NO_APP_ID,
-                                 false, getter_AddRefs(principal));
-    if (NS_FAILED(rv)) return rv;
+    rv = CreateCodebasePrincipal(aURI, aAppId, aInMozBrowser,
+                                 getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (mPrincipals.Count() > 0)
     {
@@ -2031,11 +2061,10 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                                   granted, denied,
                                                   nsnull, false,
                                                   isTrusted,
-                                                  nsIScriptSecurityManager::NO_APP_ID,
-                                                  false);
-                if (NS_FAILED(rv))
-                    return rv;
-                
+                                                  aAppId,
+                                                  aInMozBrowser);
+                NS_ENSURE_SUCCESS(rv, rv);
+
                 codebase->SetURI(aURI);
                 principal = codebase;
             }
