@@ -16,8 +16,6 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
-#include "nsDOMPopStateEvent.h"
-#include "nsDOMHashChangeEvent.h"
 #include "nsFrameLoader.h"
 #include "nsDOMTouchEvent.h"
 #include "nsDOMStorage.h"

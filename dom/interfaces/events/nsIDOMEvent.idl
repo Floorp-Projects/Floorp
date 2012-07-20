@@ -214,8 +214,6 @@ NS_NewDOMTextEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsT
 nsresult
 NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
-NS_NewDOMPageTransitionEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, nsEvent* aEvent);
-nsresult
 NS_NewDOMSVGEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsEvent* aEvent);
 nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsGUIEvent* aEvent);
@@ -251,8 +249,6 @@ NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresC
 nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsAnimationEvent* aEvent);
 nsresult
-NS_NewDOMCloseEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
-nsresult
 NS_NewDOMMozTouchEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsMozTouchEvent* aEvent);
 nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsTouchEvent *aEvent);
@@ -266,10 +262,6 @@ nsresult
 NS_NewDOMMozWifiStatusChangeEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
 NS_NewDOMMozWifiConnectionInfoEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
-nsresult
-NS_NewDOMPopStateEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
-nsresult
-NS_NewDOMHashChangeEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
 NS_NewDOMMozApplicationEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 %}

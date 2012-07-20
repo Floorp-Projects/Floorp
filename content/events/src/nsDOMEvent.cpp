@@ -25,7 +25,6 @@
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
-#include "nsDOMPopStateEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
 #include "DictionaryHelpers.h"
