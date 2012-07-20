@@ -46,6 +46,7 @@ DIRS += \
 DIRS += \
   apps \
   base \
+  activities \
   bindings \
   battery \
   browser-element \

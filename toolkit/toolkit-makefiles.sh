@@ -35,6 +35,8 @@ MAKEFILES_dom="
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
   dom/interfaces/xul/Makefile
+  dom/activities/Makefile
+  dom/activities/interfaces/Makefile
   dom/alarm/Makefile
   dom/base/Makefile
   dom/battery/Makefile
