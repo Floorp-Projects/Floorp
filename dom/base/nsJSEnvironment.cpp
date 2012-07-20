@@ -1051,6 +1051,21 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS | JSOPTION_ALLOW_XML;
 
+  // The JS engine needs to keep the source code around in order to implement
+  // Function.prototype.toSource(). JSOPTION_ONLY_CNG_SOURCE causes the JS
+  // engine to retain the source code for scripts compiled in compileAndGo mode
+  // and compiled function bodies (from JS_CompileFunction*). In practice, this
+  // means content scripts and event handlers. It'd be nice to stop there and
+  // simply stub out requests for source on chrome code. Life is not so easy,
+  // unfortunately. Nobody relies on chrome toSource() working in core browser
+  // code, but chrome tests use it. The worst offenders are addons, which like
+  // to monkeypatch chrome functions by calling toSource() on them and using
+  // regular expression to modify them. So, even though we don't keep it in
+  // memory, we have to provide a way to get chrome source somehow. Enter
+  // SourceHook. When the JS engine is asked to provide the source for a
+  // function it doesn't have in memory, it calls this function to load it.
+  mDefaultJSOptions |= JSOPTION_ONLY_CNG_SOURCE;
+
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
@@ -3850,6 +3865,89 @@ NS_DOMStructuredCloneError(JSContext* cx,
   xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
 }
 
+static nsresult
+ReadSourceFromFilename(JSContext *cx, const char *filename, char **buf, PRUint32 *len)
+{
+  nsresult rv;
+
+  // Get the URI.
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> scriptChannel;
+  rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Only allow local reading.
+  nsCOMPtr<nsIURI> actualUri;
+  rv = scriptChannel->GetURI(getter_AddRefs(actualUri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString scheme;
+  rv = actualUri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar"))
+    return NS_OK;
+
+  nsCOMPtr<nsIInputStream> scriptStream;
+  rv = scriptChannel->Open(getter_AddRefs(scriptStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = scriptStream->Available(len);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!*len)
+    return NS_ERROR_FAILURE;
+
+  // Allocate an internal buf the size of the file.
+  *buf = static_cast<char *>(JS_malloc(cx, *len + 1));
+  if (!*buf)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  char *ptr = *buf, *end = ptr + *len;
+  while (ptr < end) {
+    PRUint32 bytesRead;
+    rv = scriptStream->Read(ptr, end - ptr, &bytesRead);
+    if (NS_FAILED(rv)) {
+      JS_free(cx, *buf);
+      return rv;
+    }
+    NS_ASSERTION(bytesRead > 0, "stream promised more bytes before EOF");
+    ptr += bytesRead;
+  }
+  *end = '\0';
+
+  return NS_OK;
+}
+
+
+/*
+  The JS engine calls this function when it needs the source for a chrome JS
+  function. See the comment in nsJSContext::nsJSContext about
+  JSOPTION_ONLY_CGN_SOURCE.
+*/
+static bool
+SourceHook(JSContext *cx, JSScript *script, char **src, uint32_t *length)
+{
+  *src = NULL;
+  *length = 0;
+
+  if (!nsContentUtils::IsCallerChrome())
+    return true;
+
+  const char *filename = JS_GetScriptFilename(cx, script);
+  if (!filename)
+    return true;
+
+  nsresult rv = ReadSourceFromFilename(cx, filename, src, length);
+  if (NS_FAILED(rv)) {
+    xpc::Throw(cx, rv);
+    return false;
+  }
+
+  return true;
+}
+
+
 //static
 nsresult
 nsJSRuntime::Init()
@@ -3871,6 +3969,8 @@ nsJSRuntime::Init()
 
   rv = sRuntimeService->GetRuntime(&sRuntime);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  JS_SetSourceHook(sRuntime, SourceHook);
 
   // Let's make sure that our main thread is the same as the xpcom main thread.
   NS_ASSERTION(NS_IsMainThread(), "bad");
