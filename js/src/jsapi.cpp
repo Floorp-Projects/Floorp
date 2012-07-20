@@ -4580,11 +4580,12 @@ JS_GetArrayLength(JSContext *cx, JSObject *obj, uint32_t *lengthp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, uint32_t length)
+JS_SetArrayLength(JSContext *cx, JSObject *objArg, uint32_t length)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    assertSameCompartment(cx, objArg);
+    RootedObject obj(cx, objArg);
     return js_SetLengthProperty(cx, obj, length);
 }
 
