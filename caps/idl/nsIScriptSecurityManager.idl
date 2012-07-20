@@ -9,7 +9,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(bd94820d-4fd5-4d57-a40e-406ee72d27b7)]
+[scriptable, uuid(75a7afe3-d7c9-46fe-b305-ae686457bc7f)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -147,8 +147,27 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
 
     /**
      * Return a principal that has the same origin as aURI.
+     * This principals should not be used for any data/permission check, it will
+     * have appId = UNKNOWN_APP_ID.
      */
     nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
+
+    /**
+     * Returns a principal that has the given information.
+     * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
+     * @param inMozBrowser is true if the principal has to be considered as
+     * inside a mozbrowser frame.
+     */
+    nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
+                                         in unsigned long appId,
+                                         in boolean inMozBrowser);
+
+    /**
+     * Returns a principal with that has the same origin as uri and is not part
+     * of an appliction.
+     * The returned principal will have appId = NO_APP_ID.
+     */
+    nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
     ///////////////// Capabilities API /////////////////////
     /**
