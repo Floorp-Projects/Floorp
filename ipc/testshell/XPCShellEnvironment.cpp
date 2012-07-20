@@ -773,6 +773,22 @@ FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
+FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI,
+                                           nsIPrincipal **_retval)
+{
+    return GetCodebasePrincipal(aURI, _retval);
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI,
+                                         PRUint32 aAppId,
+                                         bool aInMozBrowser,
+                                         nsIPrincipal **_retval)
+{
+    return GetCodebasePrincipal(aURI, _retval);
+}
+
+NS_IMETHODIMP
 FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
                                    const char *capability,
                                    PRInt16 *_retval)
