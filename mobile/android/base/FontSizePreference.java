@@ -9,6 +9,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Resources;
 import android.preference.DialogPreference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.text.method.ScrollingMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -17,6 +18,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.util.HashMap;
 
 class FontSizePreference extends DialogPreference {
     private static final String LOGTAG = "FontSizePreference";
@@ -30,16 +33,24 @@ class FontSizePreference extends DialogPreference {
     private Button mDecreaseFontButton;
 
     private final String[] mFontTwipValues;
+    private final String[] mFontSizeNames; // Ex: "Small".
     /** Index into the above arrays for the saved preference value (from Gecko). */
     private int mSavedFontIndex = DEFAULT_FONT_INDEX;
     /** Index into the above arrays for the currently displayed font size (the preview). */
     private int mPreviewFontIndex = mSavedFontIndex;
+    private HashMap<String, Integer> mFontTwipToIndexMap;
+
     public FontSizePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
 
         final Resources res = mContext.getResources();
         mFontTwipValues = res.getStringArray(R.array.pref_font_size_values);
+        mFontSizeNames = res.getStringArray(R.array.pref_font_size_entries);
+        mFontTwipToIndexMap = new HashMap<String, Integer>();
+        for (int i = 0; i < mFontTwipValues.length; ++i) {
+            mFontTwipToIndexMap.put(mFontTwipValues[i], i);
+        }
     }
 
     @Override
@@ -77,6 +88,38 @@ class FontSizePreference extends DialogPreference {
         builder.setView(dialogView);
     }
 
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        super.onDialogClosed(positiveResult);
+        if (!positiveResult) {
+            mPreviewFontIndex = mSavedFontIndex;
+            return;
+        }
+        mSavedFontIndex = mPreviewFontIndex;
+        final String twipVal = mFontTwipValues[mSavedFontIndex];
+        final OnPreferenceChangeListener prefChangeListener = getOnPreferenceChangeListener();
+        if (prefChangeListener == null) {
+            Log.e(LOGTAG, "PreferenceChangeListener is null. FontSizePreference will not be saved to Gecko.");
+            return;
+        }
+        prefChangeListener.onPreferenceChange(this, twipVal);
+    }
+
+    /**
+     * Finds the index of the given twip value and sets it as the saved preference value. Also the
+     * current preview text size to the given value. Does not update the mPreviewFontView text size.
+     */
+    protected void setSavedFontSize(String twip) {
+        final Integer index = mFontTwipToIndexMap.get(twip);
+        if (index != null) {
+            mSavedFontIndex = index;
+            mPreviewFontIndex = mSavedFontIndex;
+            return;
+        }
+        resetSavedFontSizeToDefault();
+        Log.e(LOGTAG, "setSavedFontSize: Given font size does not exist in twip values map. Reverted to default font size.");
+    }
+
     /**
      * Updates the mPreviewFontView to the given text size and forces redraw. Does not update the
      * font indicies.
@@ -84,6 +127,21 @@ class FontSizePreference extends DialogPreference {
     private void updatePreviewFontSize(String twip) {
         mPreviewFontView.setTextSize(PREVIEW_FONT_SIZE_UNIT, convertTwipStrToPT(twip));
         mPreviewFontView.invalidate();
+    }
+
+    /**
+     * Resets the font indicies to the default value. Does not update the mPreviewFontView text size.
+     */
+    private void resetSavedFontSizeToDefault() {
+        mSavedFontIndex = DEFAULT_FONT_INDEX;
+        mPreviewFontIndex = mSavedFontIndex;
+    }
+
+    /**
+     * Returns the name of the font size (ex: "Small") at the currently saved preference value.
+     */
+    protected String getSavedFontSizeName() {
+        return mFontSizeNames[mSavedFontIndex];
     }
 
     private float convertTwipStrToPT(String twip) {
