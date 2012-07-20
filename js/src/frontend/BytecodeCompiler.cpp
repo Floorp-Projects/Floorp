@@ -83,10 +83,13 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
         return NULL;
     AutoAttachToRuntime attacher(cx->runtime);
     SourceCompressionToken sct(cx->runtime);
-    ScriptSource *ss = ScriptSource::createFromSource(cx, chars, length, false, &sct);
-    if (!ss)
-        return NULL;
-    attacher.ss = ss;
+    ScriptSource *ss = NULL;
+    if (!cx->hasRunOption(JSOPTION_ONLY_CNG_SOURCE) || compileAndGo) {
+        ss = ScriptSource::createFromSource(cx, chars, length, false, &sct);
+        if (!ss)
+            return NULL;
+        attacher.ss = ss;
+    }
 
     Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
                   /* foldConstants = */ true, compileAndGo);

@@ -357,8 +357,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         OwnFilename,
         ParentFilename,
         IsGenerator,
+        HaveSource,
         OwnSource,
-        ParentSource,
         ExplicitUseStrict
     };
 
@@ -518,9 +518,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                           ? (1 << ParentFilename)
                           : (1 << OwnFilename);
         }
-        scriptBits |= (enclosingScript && enclosingScript->source == script->source)
-            ? (1 << ParentSource)
-            : (1 << OwnSource);
+        if (script->source) {
+            scriptBits |= (1 << HaveSource);
+            if (!enclosingScript || enclosingScript->source != script->source)
+                scriptBits |= (1 << OwnSource);
+        }
         if (script->isGenerator)
             scriptBits |= (1 << IsGenerator);
 
@@ -632,13 +634,18 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->filename = enclosingScript->filename;
     }
 
-    if (scriptBits & (1 << OwnSource)) {
-        if (!ScriptSource::performXDR<mode>(xdr, &script->source))
-            return false;
-    } else if (scriptBits & (1 << ParentSource)) {
-        JS_ASSERT(enclosingScript);
-        if (mode == XDR_DECODE)
-            script->source = enclosingScript->source;
+    if (scriptBits & (1 << HaveSource)) {
+        if (scriptBits & (1 << OwnSource)) {
+            if (!ScriptSource::performXDR<mode>(xdr, &script->source))
+                return false;
+        } else {
+            JS_ASSERT(enclosingScript);
+            if (mode == XDR_DECODE)
+                script->source = enclosingScript->source;
+        }
+    } else if (mode == XDR_DECODE) {
+        script->source = NULL;
+        JS_ASSERT_IF(enclosingScript, !enclosingScript->source);
     }
     if (!xdr->codeUint32(&script->sourceStart))
         return false;
@@ -1066,6 +1073,7 @@ SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
 JSFixedString *
 JSScript::sourceData(JSContext *cx)
 {
+    JS_ASSERT(source);
     return source->substring(cx, sourceStart, sourceEnd);
 }
 

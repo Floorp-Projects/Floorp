@@ -590,7 +590,7 @@ JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
                 return NULL;
         }
     }
-    if (isInterpreted()) {
+    if (isInterpreted() && script()->source) {
         RootedString src(cx, script()->sourceData(cx));
         if (!src)
             return NULL;
