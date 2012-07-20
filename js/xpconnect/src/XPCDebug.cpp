@@ -6,10 +6,34 @@
 
 #include "xpcprivate.h"
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 #ifdef TAB
 #undef TAB
 #endif
 #define TAB "    "
+
+static void DebugDump(const char* fmt, ...)
+{
+  char buffer[2048];
+  va_list ap;
+  va_start(ap, fmt);
+#ifdef XPWIN
+  _vsnprintf(buffer, sizeof(buffer), fmt, ap);
+#else
+  vsnprintf(buffer, sizeof(buffer), fmt, ap);
+#endif
+  buffer[sizeof(buffer)-1] = '\0';
+  va_end(ap);
+#ifdef XP_WIN
+  if (IsDebuggerPresent()) {
+    OutputDebugStringA(buffer);
+  }
+#endif
+  printf("%s", buffer);
+}
 
 static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString,
                                 JSAutoByteString *bytes)
@@ -241,7 +265,7 @@ JSBool
 xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     if (char* buf = xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
-        fputs(buf, stdout);
+        DebugDump("%s\n", buf);
         JS_smprintf_free(buf);
     }
     return true;
@@ -254,13 +278,13 @@ xpc_PrintJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals,
     char* buf;
     JSExceptionState *state = JS_SaveExceptionState(cx);
     if (!state)
-        puts("Call to a debug function modifying state!");
+        DebugDump("%s", "Call to a debug function modifying state!\n");
 
     JS_ClearPendingException(cx);
 
     buf = FormatJSStackDump(cx, nsnull, showArgs, showLocals, showThisProps);
     if (!buf)
-        puts("Failed to format JavaScript stack for dump");
+        DebugDump("%s", "Failed to format JavaScript stack for dump\n");
 
     JS_RestoreExceptionState(cx, state);
     return buf;
@@ -272,7 +296,7 @@ static void
 xpcDumpEvalErrorReporter(JSContext *cx, const char *message,
                          JSErrorReport *report)
 {
-    printf("Error: %s\n", message);
+    DebugDump("Error: %s\n", message);
 }
 
 JSBool
@@ -283,11 +307,11 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     uint32_t num = 0;
 
     if (!cx || !text) {
-        puts("invalid params passed to xpc_DumpEvalInJSStackFrame!");
+        DebugDump("%s", "invalid params passed to xpc_DumpEvalInJSStackFrame!\n");
         return false;
     }
 
-    printf("js[%d]> %s\n", frameno, text);
+    DebugDump("js[%d]> %s\n", frameno, text);
 
     while (nsnull != (fp = JS_FrameIterator(cx, &iter))) {
         if (num == frameno)
@@ -296,7 +320,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     }
 
     if (!fp) {
-        puts("invalid frame number!");
+        DebugDump("%s", "invalid frame number!\n");
         return false;
     }
 
@@ -311,9 +335,9 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     if (JS_EvaluateInStackFrame(cx, fp, text, strlen(text), "eval", 1, &rval) &&
         nsnull != (str = JS_ValueToString(cx, rval)) &&
         bytes.encode(cx, str)) {
-        printf("%s\n", bytes.ptr());
+        DebugDump("%s\n", bytes.ptr());
     } else
-        puts("eval failed!");
+        DebugDump("%s", "eval failed!\n");
     JS_SetErrorReporter(cx, older);
     JS_RestoreExceptionState(cx, exceptionState);
     return true;
@@ -326,11 +350,11 @@ xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
                            jsval *rval, void *closure)
 {
     static const char line[] =
-    "------------------------------------------------------------------------";
-    puts(line);
-    puts("Hit JavaScript \"debugger\" keyword. JS call stack...");
+    "------------------------------------------------------------------------\n";
+    DebugDump("%s", line);
+    DebugDump("%s", "Hit JavaScript \"debugger\" keyword. JS call stack...\n");
     xpc_DumpJSStack(cx, true, true, false);
-    puts(line);
+    DebugDump("%s", line);
     return JSTRAP_CONTINUE;
 }
 
@@ -378,10 +402,10 @@ static const int tab_width = 2;
 static void PrintObjectBasics(JSObject* obj)
 {
     if (JS_IsNative(obj))
-        printf("%p 'native' <%s>",
-               (void *)obj, js::GetObjectClass(obj)->name);
+        DebugDump("%p 'native' <%s>",
+                  (void *)obj, js::GetObjectClass(obj)->name);
     else
-        printf("%p 'host'", (void *)obj);
+        DebugDump("%p 'host'", (void *)obj);
 }
 
 static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
@@ -390,13 +414,13 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
 
     switch (pile->Visit(obj)) {
     case ObjectPile::primary:
-        puts("");
+        DebugDump("%s", "\n");
         break;
     case ObjectPile::seen:
-        puts(" (SEE ABOVE)");
+        DebugDump("%s", " (SEE ABOVE)\n");
         return;
     case ObjectPile::overflow:
-        puts(" (TOO MANY OBJECTS)");
+        DebugDump("%s", " (TOO MANY OBJECTS)\n");
         return;
     }
 
@@ -406,16 +430,16 @@ static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
     JSObject* parent = js::GetObjectParent(obj);
     JSObject* proto  = js::GetObjectProto(obj);
 
-    printf("%*sparent: ", INDENT(depth+1));
+    DebugDump("%*sparent: ", INDENT(depth+1));
     if (parent)
         PrintObject(parent, depth+1, pile);
     else
-        puts("null");
-    printf("%*sproto: ", INDENT(depth+1));
+        DebugDump("%s", "null\n");
+    DebugDump("%*sproto: ", INDENT(depth+1));
     if (proto)
         PrintObject(proto, depth+1, pile);
     else
-        puts("null");
+        DebugDump("%s", "null\n");
 }
 
 JSBool
@@ -423,16 +447,16 @@ xpc_DumpJSObject(JSObject* obj)
 {
     ObjectPile pile;
 
-    puts("Debugging reminders...");
-    puts("  class:  (JSClass*)(obj->fslots[2]-1)");
-    puts("  parent: (JSObject*)(obj->fslots[1])");
-    puts("  proto:  (JSObject*)(obj->fslots[0])");
-    puts("");
+    DebugDump("%s", "Debugging reminders...\n");
+    DebugDump("%s", "  class:  (JSClass*)(obj->fslots[2]-1)\n");
+    DebugDump("%s", "  parent: (JSObject*)(obj->fslots[1])\n");
+    DebugDump("%s", "  proto:  (JSObject*)(obj->fslots[0])\n");
+    DebugDump("%s", "\n");
 
     if (obj)
         PrintObject(obj, 0, &pile);
     else
-        puts("xpc_DumpJSObject passed null!");
+        DebugDump("%s", "xpc_DumpJSObject passed null!\n");
 
     return true;
 }

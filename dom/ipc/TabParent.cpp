@@ -4,46 +4,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TabParent.h"
+#include "base/basictypes.h"
 
+#include "IDBFactory.h"
+#include "IndexedDBParent.h"
+#include "mozilla/BrowserElementParent.h"
+#include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
-#include "mozilla/docshell/OfflineCacheUpdateParent.h"
-
-#include "nsIURI.h"
-#include "nsFocusManager.h"
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIDOMElement.h"
-#include "nsEventDispatcher.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
-#include "nsPIDOMWindow.h"
-#include "TabChild.h"
-#include "nsIDOMEvent.h"
-#include "nsFrameLoader.h"
-#include "nsNetUtil.h"
-#include "nsContentUtils.h"
-#include "nsContentPermissionHelper.h"
-#include "nsIDOMHTMLFrameElement.h"
-#include "nsIDialogCreator.h"
-#include "nsThreadUtils.h"
-#include "nsSerializationHelper.h"
-#include "nsIPromptFactory.h"
-#include "nsIContent.h"
-#include "nsIWidget.h"
-#include "nsIViewManager.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
+#include "nsCOMPtr.h"
+#include "nsContentPermissionHelper.h"
+#include "nsContentUtils.h"
 #include "nsDebug.h"
+#include "nsEventDispatcher.h"
+#include "nsFocusManager.h"
+#include "nsFrameLoader.h"
+#include "nsIContent.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMWindow.h"
+#include "nsIDialogCreator.h"
+#include "nsIPromptFactory.h"
+#include "nsIURI.h"
+#include "nsIMozBrowserFrame.h"
+#include "nsIViewManager.h"
+#include "nsIWidget.h"
+#include "nsIWindowWatcher.h"
+#include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
-#include "mozilla/BrowserElementParent.h"
-#include "IndexedDBParent.h"
-#include "IDBFactory.h"
+#include "nsSerializationHelper.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+#include "TabChild.h"
+#include "TabParent.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
+using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::widget;
 using namespace mozilla::dom::indexedDB;
@@ -92,10 +96,8 @@ TabParent::Destroy()
   // destroy itself and send back __delete__().
   unused << SendDestroy();
 
-  for (size_t i = 0; i < ManagedPRenderFrameParent().Length(); ++i) {
-    RenderFrameParent* rfp =
-      static_cast<RenderFrameParent*>(ManagedPRenderFrameParent()[i]);
-    rfp->Destroy();
+  if (RenderFrameParent* frame = GetRenderFrame()) {
+    frame->Destroy();
   }
 }
 
@@ -203,7 +205,19 @@ TabParent::Show(const nsIntSize& size)
 void
 TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
-    unused << SendUpdateDimensions(rect, size);
+  unused << SendUpdateDimensions(rect, size);
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->NotifyDimensionsChanged(size.width, size.height);
+  }
+}
+
+void
+TabParent::UpdateFrame(const FrameMetrics& aFrameMetrics)
+{
+  unused << SendUpdateFrame(aFrameMetrics.mDisplayPort,
+                            aFrameMetrics.mViewportScrollOffset,
+                            aFrameMetrics.mResolution,
+                            aFrameMetrics.mViewport);
 }
 
 void
@@ -302,22 +316,30 @@ TabParent::SendKeyEvent(const nsAString& aType,
 
 bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
 {
-  return PBrowserParent::SendRealMouseEvent(event);
+  nsMouseEvent e(event);
+  MaybeForwardEventToRenderFrame(event, &e);
+  return PBrowserParent::SendRealMouseEvent(e);
 }
 
 bool TabParent::SendMouseScrollEvent(nsMouseScrollEvent& event)
 {
-  return PBrowserParent::SendMouseScrollEvent(event);
+  nsMouseScrollEvent e(event);
+  MaybeForwardEventToRenderFrame(event, &e);
+  return PBrowserParent::SendMouseScrollEvent(e);
 }
 
 bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
 {
-  return PBrowserParent::SendRealKeyEvent(event);
+  nsKeyEvent e(event);
+  MaybeForwardEventToRenderFrame(event, &e);
+  return PBrowserParent::SendRealKeyEvent(e);
 }
 
 bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
 {
-  return PBrowserParent::SendRealTouchEvent(event);
+  nsTouchEvent e(event);
+  MaybeForwardEventToRenderFrame(event, &e);
+  return PBrowserParent::SendRealTouchEvent(e);
 }
 
 bool
@@ -348,10 +370,8 @@ TabParent::RecvSetCursor(const PRUint32& aCursor)
 bool
 TabParent::RecvSetBackgroundColor(const nscolor& aColor)
 {
-  if (nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader()) {
-    if (RenderFrameParent* frame = frameLoader->GetCurrentRemoteFrame()) {
-      frame->SetBackgroundColor(aColor);
-    }
+  if (RenderFrameParent* frame = GetRenderFrame()) {
+    frame->SetBackgroundColor(aColor);
   }
   return true;
 }
@@ -555,6 +575,15 @@ TabParent::GetFrom(nsIContent* aContent)
   }
   nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
   return GetFrom(frameLoader);
+}
+
+RenderFrameParent*
+TabParent::GetRenderFrame()
+{
+  if (ManagedPRenderFrameParent().IsEmpty()) {
+    return nsnull;
+  }
+  return static_cast<RenderFrameParent*>(ManagedPRenderFrameParent()[0]);
 }
 
 bool
@@ -846,12 +875,17 @@ TabParent::HandleDelayedDialogs()
 }
 
 PRenderFrameParent*
-TabParent::AllocPRenderFrame(LayersBackend* aBackend,
+TabParent::AllocPRenderFrame(ScrollingBehavior* aScrolling,
+                             LayersBackend* aBackend,
                              int32_t* aMaxTextureSize,
                              uint64_t* aLayersId)
 {
+  MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
+
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  *aScrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
   return new RenderFrameParent(frameLoader,
+                               *aScrolling,
                                aBackend, aMaxTextureSize, aLayersId);
 }
 
@@ -958,6 +992,40 @@ TabParent::GetWidget() const
 
   nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
   return widget.forget();
+}
+
+bool
+TabParent::IsForMozBrowser()
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(content);
+  if (browserFrame) {
+    bool isBrowser = false;
+    browserFrame->GetReallyIsBrowser(&isBrowser);
+    return isBrowser;
+  }
+  return false;
+}
+
+bool
+TabParent::UseAsyncPanZoom()
+{
+  bool usingOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
+  bool asyncPanZoomEnabled =
+    Preferences::GetBool("layers.async-pan-zoom.enabled", false);
+  ContentParent* cp = static_cast<ContentParent*>(Manager());
+  return (usingOffMainThreadCompositing &&
+          !cp->IsForApp() && IsForMozBrowser() &&
+          asyncPanZoomEnabled);
+}
+
+void
+TabParent::MaybeForwardEventToRenderFrame(const nsInputEvent& aEvent,
+                                          nsInputEvent* aOutEvent)
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->NotifyInputEvent(aEvent, aOutEvent);
+  }
 }
 
 bool

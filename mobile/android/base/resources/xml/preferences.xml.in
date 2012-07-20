@@ -20,36 +20,38 @@
 
     <PreferenceCategory android:title="@string/pref_category_content">
 
-        <ListPreference     android:key="browser.menu.showCharacterEncoding"
-                            android:title="@string/pref_char_encoding"
-                            android:entries="@array/pref_char_encoding_entries"
-                            android:entryValues="@array/pref_char_encoding_values"
-                            android:persistent="false" />
+        <ListPreference android:key="browser.menu.showCharacterEncoding"
+                        android:title="@string/pref_char_encoding"
+                        android:entries="@array/pref_char_encoding_entries"
+                        android:entryValues="@array/pref_char_encoding_values"
+                        android:persistent="false" />
 
-        <ListPreference     android:key="plugin.enable"
-                            android:title="@string/pref_plugins"
-                            android:entries="@array/pref_plugins_entries"
-                            android:entryValues="@array/pref_plugins_values"
-                            android:persistent="false" />
+        <ListPreference android:key="plugin.enable"
+                        android:title="@string/pref_plugins"
+                        android:entries="@array/pref_plugins_entries"
+                        android:entryValues="@array/pref_plugins_values"
+                        android:persistent="false" />
 
-        <ListPreference     android:key="font.size.inflation.minTwips"
-                            android:title="@string/pref_text_size"
-                            android:entries="@array/pref_font_size_entries"
-                            android:entryValues="@array/pref_font_size_values"
-                            android:persistent="false" />
+        <org.mozilla.gecko.FontSizePreference
+                        android:key="font.size.inflation.minTwips"
+                        android:title="@string/pref_text_size"
+                        android:positiveButtonText="@string/pref_font_size_set"
+                        android:negativeButtonText="@string/button_cancel"
+                        android:persistent="false" />
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
         <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
-        <org.mozilla.gecko.PrivateDataPreference android:title="@string/pref_clear_private_data"
-                                                 android:key="android.not_a_preference.privacy.clear"
-                                                 android:persistent="true"
-                                                 android:positiveButtonText="@string/button_clear_data"
-                                                 gecko:entries="@array/pref_private_data_entries"
-                                                 gecko:entryKeys="@array/pref_private_data_keys"
-                                                 gecko:initialValues="@array/pref_private_data_values" />
+        <org.mozilla.gecko.PrivateDataPreference
+                            android:key="android.not_a_preference.privacy.clear"
+                            android:title="@string/pref_clear_private_data"
+                            android:persistent="true"
+                            android:positiveButtonText="@string/button_clear_data"
+                            gecko:entries="@array/pref_private_data_entries"
+                            gecko:entryKeys="@array/pref_private_data_keys"
+                            gecko:initialValues="@array/pref_private_data_values" />
 
         <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
                             android:title="@string/pref_do_not_track"

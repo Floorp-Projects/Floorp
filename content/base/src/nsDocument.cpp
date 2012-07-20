@@ -2191,10 +2191,21 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
     if (securityManager) {
+      nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+
+      if (!docShell && aLoadGroup) {
+        nsCOMPtr<nsIInterfaceRequestor> cbs;
+        aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+        docShell = do_GetInterface(cbs);
+      }
+
+      MOZ_ASSERT(docShell,
+                 "must be in a docshell or pass in an explicit principal");
+
       nsCOMPtr<nsIPrincipal> principal;
-      nsresult rv =
-        securityManager->GetCodebasePrincipal(mDocumentURI,
-                                              getter_AddRefs(principal));
+      nsresult rv = securityManager->
+        GetDocShellCodebasePrincipal(mDocumentURI, docShell,
+                                     getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
         SetPrincipal(principal);
       }
@@ -3087,7 +3098,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       // should really be the same thing).  Note that this code can run
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
-      refresher->SetupRefreshURIFromHeader(mDocumentURI,
+      refresher->SetupRefreshURIFromHeader(mDocumentURI, NodePrincipal(),
                                            NS_ConvertUTF16toUTF8(aData));
     }
   }

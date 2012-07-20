@@ -4293,6 +4293,17 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsDeadWrapper(const jsval &obj, bool *out)
+{
+    *out = false;
+    if (JSVAL_IS_PRIMITIVE(obj))
+        return NS_ERROR_INVALID_ARG;
+
+    *out = JS_IsDeadWrapper(JSVAL_TO_OBJECT(obj));
+    return NS_OK;
+}
+
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)

@@ -558,7 +558,7 @@ JSContext::ensureParseMapPool()
 {
     if (parseMapPool_)
         return true;
-    parseMapPool_ = js::OffTheBooks::new_<js::ParseMapPool>(this);
+    parseMapPool_ = js::OffTheBooks::new_<js::frontend::ParseMapPool>(this);
     return parseMapPool_;
 }
 

@@ -14,6 +14,7 @@
 #include "frontend/ParseMaps-inl.h"
 
 namespace js {
+namespace frontend {
 
 inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
@@ -38,6 +39,12 @@ SharedContext::inStrictMode()
     return strictModeState == StrictMode::STRICT;
 }
 
+inline bool
+SharedContext::needStrictChecks()
+{
+    return context->hasStrictOption() || strictModeState != StrictMode::NOTSTRICT;
+}
+
 inline unsigned
 TreeContext::blockid()
 {
@@ -48,12 +55,6 @@ inline bool
 TreeContext::atBodyLevel()
 {
     return !topStmt || topStmt->isFunctionBodyBlock;
-}
-
-inline bool
-SharedContext::needStrictChecks()
-{
-    return context->hasStrictOption() || strictModeState != StrictMode::NOTSTRICT;
 }
 
 inline
@@ -119,6 +120,8 @@ TreeContext::~TreeContext()
             sc->context->delete_(queuedStrictModeError);
     }
 }
+
+} /* namespace frontend */
 
 template <class ContextT>
 void

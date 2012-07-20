@@ -80,43 +80,33 @@ HashNativeKey(JSDHashTable *table, const void *key)
 /***************************************************************************/
 // implement JSObject2WrappedJSMap...
 
-// static
-JSObject2WrappedJSMap*
-JSObject2WrappedJSMap::newMap(int size)
+void
+JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
 {
-    JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap(size);
-    if (map && map->mTable)
-        return map;
-    delete map;
-    return nsnull;
+    for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
+        nsXPCWrappedJS* wrapper = r.front().value;
+        NS_ASSERTION(wrapper, "found a null JS wrapper!");
+
+        // walk the wrapper chain and find any whose JSObject is to be finalized
+        while (wrapper) {
+            if (wrapper->IsSubjectToFinalization()) {
+                if (JS_IsAboutToBeFinalized(wrapper->GetJSObjectPreserveColor()))
+                    dying->AppendElement(wrapper);
+            }
+            wrapper = wrapper->GetNextWrapper();
+        }
+    }
 }
 
-JSObject2WrappedJSMap::JSObject2WrappedJSMap(int size)
+void
+JSObject2WrappedJSMap::ShutdownMarker(JSRuntime* rt)
 {
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
-                              sizeof(Entry), size);
-}
-
-JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
-{
-    if (mTable)
-        JS_DHashTableDestroy(mTable);
-}
-
-size_t
-JSObject2WrappedJSMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
-{
-    size_t n = 0;
-    n += mallocSizeOf(this);
-    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntryExcludingThis, mallocSizeOf) : 0;
-    return n;
-}
-
-/* static */ size_t
-JSObject2WrappedJSMap::SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr,
-                                                JSMallocSizeOfFun mallocSizeOf, void *)
-{
-    return mallocSizeOf(((JSObject2WrappedJSMap::Entry*)hdr)->value);
+    for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
+        nsXPCWrappedJS* wrapper = r.front().value;
+        NS_ASSERTION(wrapper, "found a null JS wrapper!");
+        NS_ASSERTION(wrapper->IsValid(), "found an invalid JS wrapper!");
+        wrapper->SystemIsBeingShutDown(rt);
+    }
 }
 
 /***************************************************************************/

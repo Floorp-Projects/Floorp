@@ -493,7 +493,7 @@ statuspanel {
   position: fixed;
   margin-top: -3em;
   left: 0;
-  max-width: -moz-calc(100% - 5px);
+  max-width: calc(100% - 5px);
   pointer-events: none;
 }
 

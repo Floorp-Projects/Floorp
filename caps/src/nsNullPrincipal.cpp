@@ -20,6 +20,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
 #include "nsDOMError.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
 
 using namespace mozilla;
@@ -312,6 +313,26 @@ nsNullPrincipal::GetCertificate(nsISupports** aCertificate)
 {
     *aCertificate = nsnull;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
+{
+  return GetOrigin(getter_Copies(aExtendedOrigin));
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::GetAppStatus(PRUint16* aAppStatus)
+{
+  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::GetAppId(PRUint32* aAppId)
+{
+  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  return NS_OK;
 }
 
 /**

@@ -9,7 +9,10 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
+#include "vm/String-inl.h"
+
 using namespace js;
+using namespace js::frontend;
 
 void
 ParseMapPool::checkInvariants()
@@ -152,4 +155,28 @@ AtomDecls::addHoist(JSAtom *atom, Definition *defn)
     if (p)
         return p.value().pushBack(cx, defn);
     return map->add(p, atom, DefinitionList(defn));
+}
+
+void
+frontend::InitAtomMap(JSContext *cx, frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
+{
+    if (indices->isMap()) {
+        typedef AtomIndexMap::WordMap WordMap;
+        const WordMap &wm = indices->asMap();
+        for (WordMap::Range r = wm.all(); !r.empty(); r.popFront()) {
+            JSAtom *atom = r.front().key;
+            jsatomid index = r.front().value;
+            JS_ASSERT(index < indices->count());
+            atoms[index].init(atom);
+        }
+    } else {
+        for (const AtomIndexMap::InlineElem *it = indices->asInline(), *end = indices->inlineEnd();
+             it != end; ++it) {
+            JSAtom *atom = it->key;
+            if (!atom)
+                continue;
+            JS_ASSERT(it->value < indices->count());
+            atoms[it->value].init(atom);
+        }
+    }
 }

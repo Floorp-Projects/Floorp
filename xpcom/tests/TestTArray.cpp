@@ -266,10 +266,6 @@ static bool test_autoptr_array() {
 
 //----
 
-static bool operator==(const nsCString &a, const char *b) {
-  return a.Equals(b);
-}
-
 static bool test_string_array() {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
