@@ -620,6 +620,8 @@ struct JSScript : public js::gc::Cell
 
     JSFixedString *sourceData(JSContext *cx);
 
+    bool loadSource(JSContext *cx, bool *worked);
+
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval || isActiveEval; }
 
@@ -978,7 +980,8 @@ struct ScriptSource
                                           const jschar *src,
                                           uint32_t length,
                                           bool argumentsNotIncluded = false,
-                                          SourceCompressionToken *tok = NULL);
+                                          SourceCompressionToken *tok = NULL,
+                                          bool ownSource = false);
     void attachToRuntime(JSRuntime *rt);
     void mark() { JS_ASSERT(ready_); JS_ASSERT(onRuntime_); marked = true; }
     void destroy(JSRuntime *rt);
@@ -1000,7 +1003,7 @@ struct ScriptSource
 
   private:
     bool compressed() { return !!compressedLength; }
-    void considerCompressing(JSRuntime *rt, const jschar *src);
+    void considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource = false);
 };
 
 #ifdef JS_THREADSAFE

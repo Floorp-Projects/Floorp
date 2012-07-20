@@ -590,7 +590,10 @@ JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
                 return NULL;
         }
     }
-    if (isInterpreted() && script()->source) {
+    bool haveSource = isInterpreted();
+    if (haveSource && !script()->source && !script()->loadSource(cx, &haveSource))
+            return NULL;
+    if (haveSource) {
         RootedString src(cx, script()->sourceData(cx));
         if (!src)
             return NULL;
@@ -686,6 +689,13 @@ JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
             if (!out.append(")"))
                 return NULL;
         }
+    } else if (isInterpreted()) {
+        if ((!bodyOnly && !out.append("() {\n    ")) ||
+            !out.append("[sourceless code]") ||
+            (!bodyOnly && !out.append("\n}")))
+            return NULL;
+        if (!lambdaParen && (flags & JSFUN_LAMBDA) && (!out.append(")")))
+            return NULL;
     } else {
         JS_ASSERT(!(flags & JSFUN_EXPR_CLOSURE));
         if ((!bodyOnly && !out.append("() {\n    ")) ||

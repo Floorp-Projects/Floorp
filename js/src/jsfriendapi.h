@@ -175,6 +175,11 @@ JS_END_EXTERN_C
 
 #ifdef __cplusplus
 
+typedef bool (* JS_SourceHook)(JSContext *cx, JSScript *script, char **src, uint32_t *length);
+
+extern JS_FRIEND_API(void)
+JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
+
 namespace js {
 
 struct RuntimeFriendFields {
