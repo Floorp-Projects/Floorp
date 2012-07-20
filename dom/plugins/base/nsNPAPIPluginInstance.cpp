@@ -42,6 +42,14 @@
 #include "AndroidBridge.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/Hal.h"
+#include "GLContextProvider.h"
+#include "TexturePoolOGL.h"
+
+using namespace mozilla;
+using namespace mozilla::gl;
+
+typedef nsNPAPIPluginInstance::TextureInfo TextureInfo;
+typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
 
 class PluginEventRunnable : public nsRunnable
 {
@@ -65,6 +73,89 @@ private:
   bool mCanceled;
 };
 
+static nsRefPtr<GLContext> sPluginContext = nsnull;
+
+static bool EnsureGLContext()
+{
+  if (!sPluginContext) {
+    sPluginContext = GLContextProvider::CreateOffscreen(gfxIntSize(16, 16));
+  }
+
+  return sPluginContext != nsnull;
+}
+
+class SharedPluginTexture {
+public:
+  NS_INLINE_DECL_REFCOUNTING(SharedPluginTexture)
+
+  SharedPluginTexture() :
+    mCurrentHandle(0), mNeedNewImage(false), mLock("SharedPluginTexture.mLock")
+  {
+  }
+
+  ~SharedPluginTexture()
+  {
+    // This will be destroyed in the compositor (as it normally is)
+    mCurrentHandle = nsnull;
+  }
+
+  TextureInfo Lock()
+  {
+    if (!EnsureGLContext()) {
+      mTextureInfo.mTexture = 0;
+      return mTextureInfo;
+    }
+
+    if (!mTextureInfo.mTexture && sPluginContext->MakeCurrent()) {
+      sPluginContext->fGenTextures(1, &mTextureInfo.mTexture);
+    }
+
+    mLock.Lock();
+    return mTextureInfo;
+  }
+
+  void Release(TextureInfo& aTextureInfo)
+  {
+    mNeedNewImage = true;
+ 
+    mTextureInfo = aTextureInfo;
+    mLock.Unlock();
+  } 
+
+  SharedTextureHandle CreateSharedHandle()
+  {
+    MutexAutoLock lock(mLock);
+
+    if (!mNeedNewImage)
+      return mCurrentHandle;
+
+    if (!EnsureGLContext())
+      return nsnull;
+
+    mNeedNewImage = false;
+
+    if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
+      return nsnull;
+
+    mCurrentHandle = sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, (void*)mTextureInfo.mTexture, GLContext::TextureID);
+
+    // We want forget about this now, so delete the texture. Assigning it to zero
+    // ensures that we create a new one in Lock()
+    sPluginContext->fDeleteTextures(1, &mTextureInfo.mTexture);
+    mTextureInfo.mTexture = 0;
+    
+    return mCurrentHandle;
+  }
+
+private:
+  TextureInfo mTextureInfo;
+  SharedTextureHandle mCurrentHandle;
+ 
+  bool mNeedNewImage;
+
+  Mutex mLock;
+};
+
 #endif
 
 using namespace mozilla;
@@ -78,12 +169,12 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   :
     mDrawingModel(kDefaultDrawingModel),
 #ifdef MOZ_WIDGET_ANDROID
-    mSurface(nsnull),
     mANPDrawingModel(0),
     mOnScreen(true),
     mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary),
     mWakeLocked(false),
     mFullScreen(false),
+    mInverted(false),
 #endif
     mRunning(NOT_STARTED),
     mWindowless(false),
@@ -118,10 +209,6 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
     PR_Free((void *)mMIMEType);
     mMIMEType = nsnull;
   }
-
-#if MOZ_WIDGET_ANDROID
-  SetWakeLock(false);
-#endif
 }
 
 void
@@ -129,6 +216,18 @@ nsNPAPIPluginInstance::Destroy()
 {
   Stop();
   mPlugin = nsnull;
+
+#if MOZ_WIDGET_ANDROID
+  mContentTexture = nsnull;
+  mContentSurface = nsnull;
+
+  std::map<void*, VideoInfo*>::iterator it;
+  for (it = mVideos.begin(); it != mVideos.end(); it++) {
+    delete it->second;
+  }
+  mVideos.clear();
+  SetWakeLock(false);
+#endif
 }
 
 TimeStamp
@@ -772,6 +871,24 @@ void nsNPAPIPluginInstance::NotifyFullScreen(bool aFullScreen)
   }
 }
 
+void nsNPAPIPluginInstance::NotifySize(nsIntSize size)
+{
+  if (kOpenGL_ANPDrawingModel != GetANPDrawingModel() ||
+      size == mCurrentSize)
+    return;
+
+  mCurrentSize = size;
+
+  ANPEvent event;
+  event.inSize = sizeof(ANPEvent);
+  event.eventType = kDraw_ANPEventType;
+  event.data.draw.model = kOpenGL_ANPDrawingModel;
+  event.data.draw.data.surfaceSize.width = size.width;
+  event.data.draw.data.surfaceSize.height = size.height;
+
+  HandleEvent(&event, nsnull);
+}
+
 void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
 {
   mANPDrawingModel = aModel;
@@ -830,6 +947,122 @@ void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
   hal::ModifyWakeLock(NS_LITERAL_STRING("nsNPAPIPluginInstance"),
                       mWakeLocked ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
                       hal::WAKE_LOCK_NO_CHANGE);
+}
+
+void nsNPAPIPluginInstance::EnsureSharedTexture()
+{
+  if (!mContentTexture)
+    mContentTexture = new SharedPluginTexture();
+}
+
+GLContext* nsNPAPIPluginInstance::GLContext()
+{
+  if (!EnsureGLContext())
+    return nsnull;
+
+  return sPluginContext;
+}
+
+TextureInfo nsNPAPIPluginInstance::LockContentTexture()
+{
+  EnsureSharedTexture();
+  return mContentTexture->Lock();
+}
+
+void nsNPAPIPluginInstance::ReleaseContentTexture(TextureInfo& aTextureInfo)
+{
+  EnsureSharedTexture();
+  mContentTexture->Release(aTextureInfo);
+}
+
+nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
+{
+  if (!EnsureGLContext())
+    return nsnull;
+
+  GLuint texture = TexturePoolOGL::AcquireTexture();
+  if (!texture)
+    return nsnull;
+
+  nsSurfaceTexture* surface = nsSurfaceTexture::Create(texture);
+  if (!surface)
+    return nsnull;
+
+  nsCOMPtr<nsIRunnable> frameCallback = NS_NewRunnableMethod(this, &nsNPAPIPluginInstance::RedrawPlugin);
+  surface->SetFrameAvailableCallback(frameCallback);
+  return surface;
+}
+
+void* nsNPAPIPluginInstance::AcquireContentWindow()
+{
+  if (!mContentSurface) {
+    mContentSurface = CreateSurfaceTexture();
+
+    if (!mContentSurface)
+      return nsnull;
+  }
+
+  return mContentSurface->GetNativeWindow();
+}
+
+SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
+{
+  if (mContentTexture) {
+    return mContentTexture->CreateSharedHandle();
+  } else if (mContentSurface) {
+    EnsureGLContext();
+    return sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, mContentSurface, GLContext::SurfaceTexture);
+  } else return nsnull;
+}
+
+void* nsNPAPIPluginInstance::AcquireVideoWindow()
+{
+  nsSurfaceTexture* surface = CreateSurfaceTexture();
+  if (!surface)
+    return nsnull;
+
+  VideoInfo* info = new VideoInfo(surface);
+
+  void* window = info->mSurfaceTexture->GetNativeWindow();
+  mVideos.insert(std::pair<void*, VideoInfo*>(window, info));
+
+  return window;
+}
+
+void nsNPAPIPluginInstance::ReleaseVideoWindow(void* window)
+{
+  std::map<void*, VideoInfo*>::iterator it = mVideos.find(window);
+  if (it == mVideos.end())
+    return;
+
+  delete it->second;
+  mVideos.erase(window);
+}
+
+void nsNPAPIPluginInstance::SetVideoDimensions(void* window, gfxRect aDimensions)
+{
+  std::map<void*, VideoInfo*>::iterator it;
+
+  it = mVideos.find(window);
+  if (it == mVideos.end())
+    return;
+
+  it->second->mDimensions = aDimensions;
+}
+
+void nsNPAPIPluginInstance::GetVideos(nsTArray<VideoInfo*>& aVideos)
+{
+  std::map<void*, VideoInfo*>::iterator it;
+  for (it = mVideos.begin(); it != mVideos.end(); it++)
+    aVideos.AppendElement(it->second);
+}
+
+void nsNPAPIPluginInstance::SetInverted(bool aInverted)
+{
+  if (aInverted == mInverted)
+    return;
+
+  mInverted = aInverted;
 }
 
 #endif
