@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(c98f0f21-fe96-4f06-9978-0a9422a789fa)]
+[scriptable, builtinclass, uuid(05802c0d-3315-4245-b72e-cf92eb3118a3)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -649,4 +649,10 @@ interface nsIDocShell : nsISupports
    * nsIScriptSecurityManager::NO_APP_ID if the docshell is not in an app.
    */
   readonly attribute unsigned long appId;
+
+  /** 
+   * True iff asynchronous panning and zooming is enabled for this
+   * docshell.
+   */
+  readonly attribute bool asyncPanZoomEnabled;
 };

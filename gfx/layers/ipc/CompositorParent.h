@@ -30,6 +30,7 @@ class Thread;
 namespace mozilla {
 namespace layers {
 
+class AsyncPanZoomController;
 class LayerManager;
 
 // Represents (affine) transforms that are calculated from a content view.
@@ -106,8 +107,28 @@ public:
    */
   static void ShutDown();
 
-  /** Must run on the content main thread. */
+  /**
+   * Allocate an ID that can be used to refer to a layer tree and
+   * associated resources that live only on the compositor thread.
+   *
+   * Must run on the content main thread.
+   */
   static uint64_t AllocateLayerTreeId();
+  /**
+   * Release compositor-thread resources referred to by |aID|.
+   *
+   * Must run on the content main thread.
+   */
+  static void DeallocateLayerTreeId(uint64_t aId);
+
+  /**
+   * Set aController as the pan/zoom controller for the tree referred
+   * to by aLayersId.
+   *
+   * Must run on content main thread.
+   */
+  static void SetPanZoomControllerForLayerTree(uint64_t aLayersId,
+                                               AsyncPanZoomController* aController);
 
   /**
    * A new child process has been configured to push transactions
@@ -135,7 +156,14 @@ private:
   void ResumeComposition();
   void ResumeCompositionAndResize(int width, int height);
 
-  void TransformShadowTree();
+  // Sample transforms for layer trees.  Return true to request
+  // another animation frame.
+  bool TransformShadowTree(TimeStamp aCurrentFrame);
+  // Return true if an AsyncPanZoomController content transform was
+  // applied for |aLayer|.  *aWantNextFrame is set to true if the
+  // controller wants another animation frame.
+  bool ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame, Layer* aLayer,
+                                        bool* aWantNextFrame);
 
   inline PlatformThreadId CompositorThreadID();
 
