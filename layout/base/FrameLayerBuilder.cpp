@@ -1636,6 +1636,9 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   aLayerBuilder->WillEndTransaction(tempManager);
   if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
     static_cast<nsDisplaySVGEffects*>(aItem)->PaintAsLayer(aBuilder, aCtx, tempManager);
+    if (tempManager->InTransaction()) {
+      tempManager->AbortTransaction();
+    }
   } else {
     tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
   }
