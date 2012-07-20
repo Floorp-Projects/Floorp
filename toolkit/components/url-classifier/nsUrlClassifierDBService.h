@@ -31,6 +31,7 @@
 
 class nsUrlClassifierDBServiceWorker;
 class nsIThread;
+class nsIURI;
 
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.

@@ -42,6 +42,7 @@
 #include "prnetdb.h"
 #include "zlib.h"
 #include "mozilla/Attributes.h"
+#include "nsIPrincipal.h"
 
 // Needed to interpert mozIStorageConnection::GetLastError
 #include <sqlite3.h>
@@ -4238,10 +4239,11 @@ nsUrlClassifierDBService::Init()
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::Classify(nsIURI *uri,
+nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
                                    nsIURIClassifierCallback* c,
                                    bool* result)
 {
+  NS_ENSURE_ARG(aPrincipal);
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   if (!(mCheckMalware || mCheckPhishing)) {
@@ -4252,6 +4254,10 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
   nsRefPtr<nsUrlClassifierClassifyCallback> callback =
     new nsUrlClassifierClassifyCallback(c, mCheckMalware, mCheckPhishing);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
   nsresult rv = LookupURI(uri, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
