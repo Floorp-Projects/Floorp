@@ -40,6 +40,7 @@ public class GeckoPreferences
     private PreferenceScreen mPreferenceScreen;
     private static boolean sIsCharEncodingEnabled = false;
     private static final String NON_PREF_PREFIX = "android.not_a_preference.";
+    private static final String FONT_SIZE_PREF_KEY = "font.size.inflation.minTwips";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,10 @@ public class GeckoPreferences
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
+        final FontSizePreference fontSizePref =
+                (FontSizePreference) mPreferenceScreen.findPreference(FONT_SIZE_PREF_KEY);
+        fontSizePref.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -116,8 +121,9 @@ public class GeckoPreferences
                 // "android.not_a_preference.privacy.clear" key - which doesn't
                 // exist in Gecko - to satisfy this requirement.
                 String key = pref.getKey();
-                if (key != null && !key.startsWith(NON_PREF_PREFIX))
+                if (key != null && !key.startsWith(NON_PREF_PREFIX)) {
                     mPreferencesList.add(pref.getKey());
+                }
             }
         }
     }
@@ -339,14 +345,14 @@ public class GeckoPreferences
                             ((ListPreference)pref).setSummary(selectedEntry);
                         }
                     });
-                } else if (pref instanceof FontSizePreference && "string".equals(prefType)) {
+                } else if (pref instanceof FontSizePreference) {
                     final FontSizePreference fontSizePref = (FontSizePreference) pref;
                     final String twipValue = jPref.getString("value");
                     fontSizePref.setSavedFontSize(twipValue);
                     final String fontSizeName = fontSizePref.getSavedFontSizeName();
                     GeckoAppShell.getMainHandler().post(new Runnable() {
                         public void run() {
-                            pref.setSummary(fontSizeName); // Ex: "Small".
+                            fontSizePref.setSummary(fontSizeName); // Ex: "Small".
                         }
                     });
                 }
