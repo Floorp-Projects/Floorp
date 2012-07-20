@@ -63,8 +63,10 @@ var AccessFu = {
     this.addPresenter(new VisualPresenter());
 
     // Implicitly add the Android presenter on Android.
-    if (Utils.OS == 'Android')
+    if (Utils.MozBuildApp == 'mobile/android')
       this.addPresenter(new AndroidPresenter());
+    else if (Utils.MozBuildApp == 'b2g')
+      this.addPresenter(new SpeechPresenter());
 
     VirtualCursorController.attach(this.chromeWin);
 
