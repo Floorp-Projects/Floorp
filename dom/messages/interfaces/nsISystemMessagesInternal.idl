@@ -27,3 +27,13 @@ interface nsISystemMessagesInternal : nsISupports
    */
   void registerPage(in DOMString type, in nsIURI pageURI, in nsIURI manifestURI);
 };
+
+[scriptable, uuid(b43c74ec-1b64-49fb-b552-aadd9d827eec)]
+interface nsISystemMessagesWrapper: nsISupports
+{
+  /*
+   * Wrap a message and gives back any kind of object.
+   * @param message  The json blob to wrap.
+   */
+  jsval wrapMessage(in jsval message);
+};
