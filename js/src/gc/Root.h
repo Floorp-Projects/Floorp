@@ -395,6 +395,12 @@ class SkipRoot
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/*
+ * This typedef is to annotate parameters that we have manually verified do not
+ * need rooting, as opposed to parameters that have not yet been considered.
+ */
+typedef JSObject *RawObject;
+
 #ifdef DEBUG
 JS_FRIEND_API(bool) IsRootingUnnecessaryForContext(JSContext *cx);
 JS_FRIEND_API(void) SetRootingUnnecessaryForContext(JSContext *cx, bool value);
