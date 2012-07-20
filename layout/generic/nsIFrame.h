@@ -2476,7 +2476,8 @@ public:
   /**
    * Determines whether this frame is a pseudo stacking context, looking
    * only as style --- i.e., assuming that it's in-flow and not a replaced
-   * element.
+   * element and not an SVG element.
+   * XXX maybe check IsTransformed()?
    */
   bool IsPseudoStackingContextFromStyle() {
     const nsStyleDisplay* disp = GetStyleDisplay();

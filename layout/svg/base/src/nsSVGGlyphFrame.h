@@ -15,6 +15,7 @@
 
 class CharacterIterator;
 class gfxContext;
+class nsDisplaySVGGlyphs;
 class nsIDOMSVGRect;
 class nsRenderingContext;
 class nsSVGGlyphFrame;
@@ -143,6 +144,10 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGGlyph"), aResult);
   }
 #endif
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   // nsISVGChildFrame interface:
   // These four always use the global transform, even if NS_STATE_NONDISPLAY_CHILD

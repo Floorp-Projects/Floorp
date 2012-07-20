@@ -571,11 +571,18 @@ public:
       nsIAtom* type = aFrame->GetType();
       if (type == nsGkAtoms::tableFrame ||
           type == nsGkAtoms::tableCellFrame ||
-          type == nsGkAtoms::bcTableCellFrame) {
+          type == nsGkAtoms::bcTableCellFrame ||
+          type == nsGkAtoms::svgOuterSVGFrame ||
+          type == nsGkAtoms::svgInnerSVGFrame ||
+          type == nsGkAtoms::svgForeignObjectFrame) {
         return true;
       }
     }
-    
+
+    if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+      return false;
+    }
+
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.
     return

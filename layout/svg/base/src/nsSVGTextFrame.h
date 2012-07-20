@@ -51,6 +51,10 @@ public:
   }
 #endif
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   // Override these four to ensure that UpdateGlyphPositioning is called
