@@ -1,3 +1,4 @@
+// |reftest| pref(javascript.options.xml.content,true)
 
 var SUMMARY = "Mark properties of XML.prototype as unknown";
 

@@ -1,3 +1,4 @@
+// |reftest| pref(javascript.options.xml.content,true)
 /* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
