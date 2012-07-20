@@ -1062,7 +1062,7 @@ class SourceCompressorThread
 
 struct SourceCompressionToken
 {
-    friend class ScriptSource;
+    friend struct ScriptSource;
     friend class SourceCompressorThread;
   private:
     JSRuntime *rt;
