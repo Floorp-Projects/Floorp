@@ -285,7 +285,11 @@ public:
 
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
-  static bool BlockIsMarginRoot(nsIFrame* aBlock);
+  /**
+   * Determine if this block is a margin root at the top/bottom edges.
+   */
+  void IsMarginRoot(bool* aTopMarginRoot, bool* aBottomMarginRoot);
+
   static bool BlockNeedsFloatManager(nsIFrame* aBlock);
 
   /**

@@ -75,115 +75,121 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   // reasons.
   nsIFrame* frame = DescendIntoBlockLevelFrame(aRS.frame);
   nsPresContext* prescontext = frame->PresContext();
-  if (0 == aRS.mComputedBorderPadding.top &&
-      nsLayoutUtils::GetAsBlock(frame) &&
-      !nsBlockFrame::BlockIsMarginRoot(frame)) {
-    // iterate not just through the lines of 'block' but also its
-    // overflow lines and the normal and overflow lines of its next in
-    // flows. Note that this will traverse some frames more than once:
-    // for example, if A contains B and A->nextinflow contains
-    // B->nextinflow, we'll traverse B->nextinflow twice. But this is
-    // OK because our traversal is idempotent.
-    for (nsBlockFrame* block = static_cast<nsBlockFrame*>(frame);
-         block; block = static_cast<nsBlockFrame*>(block->GetNextInFlow())) {
-      for (PRIntn overflowLines = false; overflowLines <= true; ++overflowLines) {
-        nsBlockFrame::line_iterator line;
-        nsBlockFrame::line_iterator line_end;
-        bool anyLines = true;
-        if (overflowLines) {
-          nsBlockFrame::FrameLines* frames = block->GetOverflowLines();
-          nsLineList* lines = frames ? &frames->mLines : nsnull;
-          if (!lines) {
-            anyLines = false;
-          } else {
-            line = lines->begin();
-            line_end = lines->end();
-          }
-        } else {
-          line = block->begin_lines();
-          line_end = block->end_lines();
-        }
-        for (; anyLines && line != line_end; ++line) {
-          if (!aClearanceFrame && line->HasClearance()) {
-            // If we don't have a clearance frame, then we're computing
-            // the collapsed margin in the first pass, assuming that all
-            // lines have no clearance. So clear their clearance flags.
-            line->ClearHasClearance();
-            line->MarkDirty();
-            dirtiedLine = true;
-          }
-          
-          bool isEmpty;
-          if (line->IsInline()) {
-            isEmpty = line->IsEmpty();
-          } else {
-            nsIFrame* kid = line->mFirstChild;
-            if (kid == aClearanceFrame) {
-              line->SetHasClearance();
-              line->MarkDirty();
-              dirtiedLine = true;
-              goto done;
-            }
-            // Here is where we recur. Now that we have determined that a
-            // generational collapse is required we need to compute the
-            // child blocks margin and so in so that we can look into
-            // it. For its margins to be computed we need to have a reflow
-            // state for it.
-            
-            // We may have to construct an extra reflow state here if
-            // we drilled down through a block wrapper. At the moment
-            // we can only drill down one level so we only have to support
-            // one extra reflow state.
-            const nsHTMLReflowState* outerReflowState = &aRS;
-            if (frame != aRS.frame) {
-              NS_ASSERTION(frame->GetParent() == aRS.frame,
-                           "Can only drill through one level of block wrapper");
-              nsSize availSpace(aRS.ComputedWidth(), aRS.ComputedHeight());
-              outerReflowState = new nsHTMLReflowState(prescontext,
-                                                       aRS, frame, availSpace);
-            }
-            {
-              nsSize availSpace(outerReflowState->ComputedWidth(),
-                                outerReflowState->ComputedHeight());
-              nsHTMLReflowState innerReflowState(prescontext,
-                                                 *outerReflowState, kid,
-                                                 availSpace);
-              // Record that we're being optimistic by assuming the kid
-              // has no clearance
-              if (kid->GetStyleDisplay()->mBreakType != NS_STYLE_CLEAR_NONE) {
-                *aMayNeedRetry = true;
-              }
-              if (ComputeCollapsedTopMargin(innerReflowState, aMargin, aClearanceFrame, aMayNeedRetry, &isEmpty)) {
-                line->MarkDirty();
-                dirtiedLine = true;
-              }
-              if (isEmpty)
-                aMargin->Include(innerReflowState.mComputedMargin.bottom);
-            }
-            if (outerReflowState != &aRS) {
-              delete const_cast<nsHTMLReflowState*>(outerReflowState);
-            }
-          }
-          if (!isEmpty) {
-            if (!setBlockIsEmpty && aBlockIsEmpty) {
-              setBlockIsEmpty = true;
-              *aBlockIsEmpty = false;
-            }
-            goto done;
-          }
-        }
-        if (!setBlockIsEmpty && aBlockIsEmpty) {
-          // The first time we reach here is when this is the first block
-          // and we have processed all its normal lines.
-          setBlockIsEmpty = true;
-          // All lines are empty, or we wouldn't be here!
-          *aBlockIsEmpty = aRS.frame->IsSelfEmpty();
-        }
+  nsBlockFrame* block = nsnull;
+  if (0 == aRS.mComputedBorderPadding.top) {
+    block = nsLayoutUtils::GetAsBlock(frame);
+    if (block) {
+      bool topMarginRoot, unused;
+      block->IsMarginRoot(&topMarginRoot, &unused);
+      if (topMarginRoot) {
+        block = nsnull;
       }
     }
-  done:
-    ;
   }
+
+  // iterate not just through the lines of 'block' but also its
+  // overflow lines and the normal and overflow lines of its next in
+  // flows. Note that this will traverse some frames more than once:
+  // for example, if A contains B and A->nextinflow contains
+  // B->nextinflow, we'll traverse B->nextinflow twice. But this is
+  // OK because our traversal is idempotent.
+  for ( ;block; block = static_cast<nsBlockFrame*>(block->GetNextInFlow())) {
+    for (PRIntn overflowLines = false; overflowLines <= true; ++overflowLines) {
+      nsBlockFrame::line_iterator line;
+      nsBlockFrame::line_iterator line_end;
+      bool anyLines = true;
+      if (overflowLines) {
+        nsBlockFrame::FrameLines* frames = block->GetOverflowLines();
+        nsLineList* lines = frames ? &frames->mLines : nsnull;
+        if (!lines) {
+          anyLines = false;
+        } else {
+          line = lines->begin();
+          line_end = lines->end();
+        }
+      } else {
+        line = block->begin_lines();
+        line_end = block->end_lines();
+      }
+      for (; anyLines && line != line_end; ++line) {
+        if (!aClearanceFrame && line->HasClearance()) {
+          // If we don't have a clearance frame, then we're computing
+          // the collapsed margin in the first pass, assuming that all
+          // lines have no clearance. So clear their clearance flags.
+          line->ClearHasClearance();
+          line->MarkDirty();
+          dirtiedLine = true;
+        }
+        
+        bool isEmpty;
+        if (line->IsInline()) {
+          isEmpty = line->IsEmpty();
+        } else {
+          nsIFrame* kid = line->mFirstChild;
+          if (kid == aClearanceFrame) {
+            line->SetHasClearance();
+            line->MarkDirty();
+            dirtiedLine = true;
+            goto done;
+          }
+          // Here is where we recur. Now that we have determined that a
+          // generational collapse is required we need to compute the
+          // child blocks margin and so in so that we can look into
+          // it. For its margins to be computed we need to have a reflow
+          // state for it.
+          
+          // We may have to construct an extra reflow state here if
+          // we drilled down through a block wrapper. At the moment
+          // we can only drill down one level so we only have to support
+          // one extra reflow state.
+          const nsHTMLReflowState* outerReflowState = &aRS;
+          if (frame != aRS.frame) {
+            NS_ASSERTION(frame->GetParent() == aRS.frame,
+                         "Can only drill through one level of block wrapper");
+            nsSize availSpace(aRS.ComputedWidth(), aRS.ComputedHeight());
+            outerReflowState = new nsHTMLReflowState(prescontext,
+                                                     aRS, frame, availSpace);
+          }
+          {
+            nsSize availSpace(outerReflowState->ComputedWidth(),
+                              outerReflowState->ComputedHeight());
+            nsHTMLReflowState innerReflowState(prescontext,
+                                               *outerReflowState, kid,
+                                               availSpace);
+            // Record that we're being optimistic by assuming the kid
+            // has no clearance
+            if (kid->GetStyleDisplay()->mBreakType != NS_STYLE_CLEAR_NONE) {
+              *aMayNeedRetry = true;
+            }
+            if (ComputeCollapsedTopMargin(innerReflowState, aMargin, aClearanceFrame, aMayNeedRetry, &isEmpty)) {
+              line->MarkDirty();
+              dirtiedLine = true;
+            }
+            if (isEmpty)
+              aMargin->Include(innerReflowState.mComputedMargin.bottom);
+          }
+          if (outerReflowState != &aRS) {
+            delete const_cast<nsHTMLReflowState*>(outerReflowState);
+          }
+        }
+        if (!isEmpty) {
+          if (!setBlockIsEmpty && aBlockIsEmpty) {
+            setBlockIsEmpty = true;
+            *aBlockIsEmpty = false;
+          }
+          goto done;
+        }
+      }
+      if (!setBlockIsEmpty && aBlockIsEmpty) {
+        // The first time we reach here is when this is the first block
+        // and we have processed all its normal lines.
+        setBlockIsEmpty = true;
+        // All lines are empty, or we wouldn't be here!
+        *aBlockIsEmpty = aRS.frame->IsSelfEmpty();
+      }
+    }
+  }
+  done:
 
   if (!setBlockIsEmpty && aBlockIsEmpty) {
     *aBlockIsEmpty = aRS.frame->IsEmpty();

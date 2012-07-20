@@ -1017,9 +1017,10 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-  bool marginRoot = BlockIsMarginRoot(this);
+  bool topMarginRoot, bottomMarginRoot;
+  IsMarginRoot(&topMarginRoot, &bottomMarginRoot);
   nsBlockReflowState state(*reflowState, aPresContext, this, aMetrics,
-                           marginRoot, marginRoot, needFloatManager);
+                           topMarginRoot, bottomMarginRoot, needFloatManager);
 
 #ifdef IBMBIDI
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
@@ -7012,17 +7013,25 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   }
 }
 
-/* static */
-bool
-nsBlockFrame::BlockIsMarginRoot(nsIFrame* aBlock)
+void
+nsBlockFrame::IsMarginRoot(bool* aTopMarginRoot, bool* aBottomMarginRoot)
 {
-  NS_PRECONDITION(aBlock, "Must have a frame");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlock), "aBlock must be a block");
+  if (!(GetStateBits() & NS_BLOCK_MARGIN_ROOT)) {
+    nsIFrame* parent = GetParent();
+    if (!parent || parent->IsFloatContainingBlock()) {
+      *aTopMarginRoot = false;
+      *aBottomMarginRoot = false;
+      return;
+    }
+    if (parent->GetType() == nsGkAtoms::columnSetFrame) {
+      *aTopMarginRoot = GetPrevInFlow() == nsnull;
+      *aBottomMarginRoot = GetNextInFlow() == nsnull;
+      return;
+    }
+  }
 
-  nsIFrame* parent = aBlock->GetParent();
-  return (aBlock->GetStateBits() & NS_BLOCK_MARGIN_ROOT) ||
-    (parent && !parent->IsFloatContainingBlock() &&
-     parent->GetType() != nsGkAtoms::columnSetFrame);
+  *aTopMarginRoot = true;
+  *aBottomMarginRoot = true;
 }
 
 /* static */
