@@ -38,7 +38,6 @@ class nsAHttpConnection;
 namespace mozilla { namespace net {
 
 class HttpCacheQuery;
-class CloseCacheEntryRunnable;
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel
@@ -225,15 +224,7 @@ private:
     nsresult CheckCache();
     bool ShouldUpdateOfflineCacheEntry();
     nsresult ReadFromCache(bool alreadyMarkedValid);
-
-    typedef PRUint32 CloseCacheEntryFlags;
-    enum {
-        CLOSE_CACHE_ENTRY_NO_FLAGS = 0,
-        CLOSE_CACHE_ENTRY_DOOM_ON_FAILURE = (1 << 0),
-        CLOSE_CACHE_ENTRY_DOOM = (1 << 1),
-    };
-    void     CloseCacheEntry(CloseCacheEntryFlags flags);
-
+    void     CloseCacheEntry(bool doomOnFailure);
     void     CloseOfflineCacheEntry();
     nsresult InitCacheEntry();
     void     UpdateInhibitPersistentCachingFlag();
@@ -335,7 +326,6 @@ private:
     friend class AutoRedirectVetoNotifier;
     friend class HttpAsyncAborter<nsHttpChannel>;
     friend class HttpCacheQuery;
-    friend class CloseCacheEntryRunnable;
 
     nsCOMPtr<nsIURI>                  mRedirectURI;
     nsCOMPtr<nsIChannel>              mRedirectChannel;
@@ -344,7 +334,6 @@ private:
     // state flags
     PRUint32                          mCachedContentIsValid     : 1;
     PRUint32                          mCachedContentIsPartial   : 1;
-    PRUint32                          mWasAskedToCacheAsFile    : 1;
     PRUint32                          mTransactionReplaced      : 1;
     PRUint32                          mAuthRetryPending         : 1;
     PRUint32                          mResuming                 : 1;
