@@ -328,7 +328,19 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return GetCodebasePrincipal(uri, aPrincipal);
+    PRUint32 appId = UNKNOWN_APP_ID;
+    bool isInBrowserElement = false;
+
+    nsCOMPtr<nsIDocShell> docShell;
+    NS_QueryNotificationCallbacks(aChannel, docShell);
+
+    if (docShell) {
+        docShell->GetAppId(&appId);
+        docShell->GetIsInBrowserElement(&isInBrowserElement);
+    }
+
+    return GetCodebasePrincipalInternal(uri, appId, isInBrowserElement,
+                                        aPrincipal);
 }
 
 NS_IMETHODIMP
