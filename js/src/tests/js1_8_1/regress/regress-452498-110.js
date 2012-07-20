@@ -26,7 +26,7 @@ function test()
 
   function f(a) { const b = a; print(++b); return b; }
 
-  expect = 'function f(a) { const b = a; print(+ b + 1); return b; }';
+  expect = 'function f(a) { const b = a; print(++b); return b; }';
   actual = f + '';
   compareSource(expect, actual, 'function f(a) { const b = a; print(++b); return b; }');
 

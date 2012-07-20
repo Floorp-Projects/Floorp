@@ -45,10 +45,10 @@ div.onload = f;
 is(div.onload, f, "Should have 'f' as div's onload");
 div.setAttribute("onload", "");
 isnot(div.onload, f, "Should not longer have 'f' as div's onload");
-is(div.onload.toString(), "function onload(event) {\n}",
+is(div.onload.toString(), "function onload(event) {  }",
    "Should have wrapped empty string in a function");
 div.setAttribute("onload", "foopy();");
-is(div.onload.toString(), "function onload(event) {\n    foopy();\n}",
+is(div.onload.toString(), "function onload(event) { foopy(); }",
    "Should have wrapped call in a function");
 div.removeAttribute("onload");
 is(div.onload, null, "Should have null onload now");
@@ -69,11 +69,11 @@ function testPropagationToWindow(eventName) {
 
   document.body.setAttribute("on"+eventName, eventName);
   is(window["on"+eventName].toString(),
-            "function on"+eventName+"(event) {\n    "+eventName+";\n}",
+            "function on"+eventName+"(event) { "+eventName+" }",
             "Setting on"+eventName+"attribute on body should propagate to window");
   document.createElement("body").setAttribute("on"+eventName, eventName+"2");
   is(window["on"+eventName].toString(),
-            "function on"+eventName+"(event) {\n    "+eventName+"2;\n}",
+            "function on"+eventName+"(event) { "+eventName+"2 }",
             "Setting on"+eventName+"attribute on body outside the document should propagate to window");
 }
 

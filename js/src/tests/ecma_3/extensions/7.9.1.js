@@ -23,19 +23,16 @@ function test()
   var code;
 
   code = '(function() { label1: for (;;) { continue \n label1; }})';
-  expect = '(function() { label1: for (;;) { continue ; label1; }})';
   actual = uneval(eval(code));
-  compareSource(expect, actual, summary + ': ' + code);
+  compareSource(code, actual, summary + ': ' + code);
 
   code = '(function() { label2: for (;;) { break \n label2; }})';
-  expect = '(function() { label2: for (;;) { break ; label2; }})';
   actual = uneval(eval(code));
-  compareSource(expect, actual, summary + ': ' + code);
+  compareSource(code, actual, summary + ': ' + code);
 
   code = '(function() { return \n x++; })';
-  expect = '(function() { return ; x++; })';
   actual = uneval(eval(code));
-  compareSource(expect, actual, summary + ': ' + code);
+  compareSource(code, actual, summary + ': ' + code);
 
   print('see bug 256617');
   code = '(function() { throw \n x++; })';

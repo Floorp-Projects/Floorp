@@ -335,6 +335,21 @@ ClearAllBitArrayElements(size_t *array, size_t length)
         array[i] = 0;
 }
 
+/*
+ * Attempt to compress some bytes. Return true if compression produced a
+ * string smaller than the input. The caller is responsible for allocating
+ * |out| to a string the same length as the input.
+ */
+bool TryCompressString(const unsigned char *inp, size_t inplen,
+                       unsigned char *out, size_t *outlen);
+
+/*
+ * Decompress a string. The caller must know the length of the output and
+ * allocate |out| to a string of that length.
+ */
+bool DecompressString(const unsigned char *inp, size_t inplen,
+                      unsigned char *out, size_t outlen);
+
 }  /* namespace js */
 #endif  /* __cplusplus */
 
