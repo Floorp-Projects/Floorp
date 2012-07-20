@@ -15,6 +15,7 @@ Cu.import('resource://gre/modules/ContactService.jsm');
 Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
+Cu.import('resource://gre/modules/ActivitiesService.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -306,15 +307,16 @@ nsBrowserAccess.prototype = {
 };
 
 // Listen for system messages and relay them to Gaia.
-Services.obs.addObserver(function(aSubject, aTopic, aData) {
-  let msg = JSON.parse(aData);
+Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
+  let msg = JSON.parse(data);
   let origin = Services.io.newURI(msg.manifest, null, null).prePath;
-  shell.sendEvent(shell.contentBrowser.contentWindow,
-                  "mozChromeEvent", { type: "open-app",
-                                      url: msg.uri,
-                                      origin: origin,
-                                      manifest: msg.manifest } );
-}, "system-messages-open-app", false);
+  shell.sendEvent(shell.contentBrowser.contentWindow, 'mozChromeEvent', {
+    type: 'open-app',
+    url: msg.uri,
+    origin: origin,
+    manifest: msg.manifest
+  });
+}, 'system-messages-open-app', false);
 
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
