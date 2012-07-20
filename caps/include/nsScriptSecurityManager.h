@@ -596,4 +596,13 @@ public:
     NS_IMETHOD InitializeNameSet(nsIScriptContext* aScriptContext);
 };
 
+namespace mozilla {
+
+void
+GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppid,
+                  bool aInMozBrowser,
+                  nsACString& aExtendedOrigin);
+
+} // namespace mozilla
+
 #endif // nsScriptSecurityManager_h__

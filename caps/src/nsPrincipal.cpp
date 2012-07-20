@@ -601,7 +601,7 @@ void nsPrincipal::dumpImpl()
 {
   nsCAutoString str;
   GetScriptLocation(str);
-  fprintf(stderr, "nsPrincipal (%p) = %s\n", this, str.get());
+  fprintf(stderr, "nsPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
 }
 #endif 
 
@@ -617,7 +617,9 @@ NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
 NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
 
 nsPrincipal::nsPrincipal()
-  : mCodebaseImmutable(false)
+  : mAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
+  , mInMozBrowser(false)
+  , mCodebaseImmutable(false)
   , mDomainImmutable(false)
   , mInitialized(false)
 { }
@@ -630,7 +632,9 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
                   const nsACString& aSubjectName,
                   const nsACString& aPrettyName,
                   nsISupports* aCert,
-                  nsIURI *aCodebase)
+                  nsIURI *aCodebase,
+                  PRUint32 aAppId,
+                  bool aInMozBrowser)
 {
   NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(!aCertFingerprint.IsEmpty() || aCodebase); // better have one of these.
@@ -639,6 +643,9 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
 
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
+
+  mAppId = aAppId;
+  mInMozBrowser = aInMozBrowser;
 
   if (aCertFingerprint.IsEmpty())
     return NS_OK;
@@ -930,8 +937,6 @@ nsPrincipal::SetURI(nsIURI* aURI)
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 }
 
-
-
 NS_IMETHODIMP
 nsPrincipal::GetHashValue(PRUint32* aValue)
 {
@@ -997,7 +1002,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
                                 const char* aDeniedList,
                                 nsISupports* aCert,
                                 bool aIsCert,
-                                bool aTrusted)
+                                bool aTrusted,
+                                PRUint32 aAppId,
+                                bool aInMozBrowser)
 {
   NS_PRECONDITION(!mCapabilities || mCapabilities->Count() == 0,
                   "mCapabilities was already initialized?");
@@ -1006,6 +1013,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
   NS_PRECONDITION(!mInitialized, "We were already initialized?");
 
   mInitialized = true;
+
+  mAppId = aAppId;
+  mInMozBrowser = aInMozBrowser;
 
   nsresult rv;
   if (aIsCert) {
@@ -1050,6 +1060,37 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
+{
+  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  mozilla::GetExtendedOrigin(mCodebase, mAppId, mInMozBrowser, aExtendedOrigin);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetAppStatus(PRUint16* aAppStatus)
+{
+  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  *aAppStatus = GetAppStatus();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetAppId(PRUint32* aAppId)
+{
+  if (mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    MOZ_ASSERT(false);
+    *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+    return NS_OK;
+  }
+
+  *aAppId = mAppId;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1118,7 +1159,15 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
     return rv;
   }
 
-  rv = Init(fingerprint, subjectName, prettyName, cert, codebase);
+  PRUint32 appId;
+  rv = aStream->Read32(&appId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool inMozBrowser;
+  rv = aStream->ReadBoolean(&inMozBrowser);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Init(fingerprint, subjectName, prettyName, cert, codebase, appId, inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> domain;
@@ -1214,6 +1263,9 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     return rv;
   }
 
+  aStream->Write32(mAppId);
+  aStream->WriteBoolean(mInMozBrowser);
+
   rv = aStream->Write8(mTrusted);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1225,6 +1277,18 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   return NS_OK;
 }
 
+PRUint16
+nsPrincipal::GetAppStatus()
+{
+  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+
+  // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
+  // and they are not inside a mozbrowser.
+  return mAppId != nsIScriptSecurityManager::NO_APP_ID &&
+         mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID && !mInMozBrowser
+          ? nsIPrincipal::APP_STATUS_INSTALLED
+          : nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+}
 
 /************************************************************************************************************************/
 
@@ -1394,6 +1458,24 @@ nsExpandedPrincipal::GetWhiteList(nsTArray<nsCOMPtr<nsIPrincipal> >** aWhiteList
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsExpandedPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetAppStatus(PRUint16* aAppStatus)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetAppId(PRUint32* aAppId)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
@@ -1408,7 +1490,7 @@ nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 #ifdef DEBUG
 void nsExpandedPrincipal::dumpImpl()
 {
-  fprintf(stderr, "nsExpandedPrincipal (%p)\n", this);
+  fprintf(stderr, "nsExpandedPrincipal (%p)\n", static_cast<void*>(this));
 }
 #endif 
 
