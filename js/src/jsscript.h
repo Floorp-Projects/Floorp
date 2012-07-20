@@ -989,6 +989,7 @@ struct ScriptSource
     bool ready() const { return ready_; }
 #endif
     JSFixedString *substring(JSContext *cx, uint32_t start, uint32_t stop);
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     // For the GC.
     static void sweep(JSRuntime *rt);
