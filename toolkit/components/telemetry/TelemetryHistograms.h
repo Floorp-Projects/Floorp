@@ -32,6 +32,7 @@ HISTOGRAM_ENUMERATED_VALUES(A11Y_CONSUMERS, 11, "Accessibility client by enum id
 HISTOGRAM_FLAG(A11Y_ISIMPLEDOM_USAGE_FLAG, "have the ISimpleDOM* accessibility interfaces been used")
 HISTOGRAM_FLAG(A11Y_IATABLE_USAGE_FLAG, "has the IAccessibleTable accessibility interface been used")
 HISTOGRAM_FLAG(A11Y_XFORMS_USAGE_FLAG, "has XForms accessibility been instantiated")
+HISTOGRAM(A11Y_UPDATE_TIME, 1, 10000, 50, EXPONENTIAL, "time spent updating accessibility (ms)")
 
 /**
  * Cycle collector telemetry

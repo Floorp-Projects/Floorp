@@ -45,7 +45,7 @@
       testThis("linkedLabel", linkedLabelAcc, ROLE_LINK, 1,
                "Mozilla Foundation home", "http://www.mozilla.org/", 1, 2,
                true);
-      testStates(linkedLabelAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
+      testStates(linkedLabelAcc, STATE_LINKED, 0);
 
       var labelWithValueAcc = getAccessible("linkLabelWithValue",
                                             [nsIAccessibleHyperLink]);
