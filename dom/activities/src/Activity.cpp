@@ -51,7 +51,7 @@ Activity::Initialize(nsISupports* aOwner,
   if (aArgc != 1 || !aArgv[0].isObject()) {
     return NS_ERROR_INVALID_ARG;
   }
- 
+
   nsCOMPtr<nsISupports> tmp;
   nsContentUtils::XPConnect()->WrapJS(aContext, aArgv[0].toObjectOrNull(),
                                       NS_GET_IID(nsIDOMMozActivityOptions),
@@ -71,8 +71,18 @@ Activity::Initialize(nsISupports* aOwner,
   return NS_OK;
 }
 
-Activity::~Activity() {
+Activity::~Activity()
+{
   if (mProxy) {
     mProxy->Cleanup();
   }
 }
+
+Activity::Activity()
+  : DOMRequest()
+{
+  // Unfortunately we must explicitly declare the default constructor in order
+  // to prevent an implicitly deleted constructor in DOMRequest compile error
+  // in GCC 4.6.
+}
+
