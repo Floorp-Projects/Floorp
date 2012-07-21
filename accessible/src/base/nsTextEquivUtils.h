@@ -9,6 +9,7 @@
 #define _nsTextEquivUtils_H_
 
 #include "Accessible.h"
+#include "Role.h"
 
 #include "nsIContent.h"
 #include "nsIStringBundle.h"
@@ -140,9 +141,9 @@ private:
   static bool IsWhitespace(PRUnichar aChar);
 
   /**
-   * Map array from roles to name rules (constants of ETextEquivRule).
+   * Returns the rule (constant of ETextEquivRule) for a given role.
    */
-  static PRUint32 gRoleToNameRulesMap[];
+  static PRUint32 GetRoleRule(mozilla::a11y::roles::Role aRole);
 
   /**
    * The accessible for which we are computing a text equivalent. It is useful
