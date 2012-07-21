@@ -152,14 +152,14 @@ bool HTTPUpload::SendRequest(const wstring &url,
     if (!InternetSetOption(request.get(),
                            INTERNET_OPTION_SEND_TIMEOUT,
                            timeout,
-                           sizeof(timeout))) {
+                           sizeof(*timeout))) {
       fwprintf(stderr, L"Could not unset send timeout, continuing...\n");
     }
 
     if (!InternetSetOption(request.get(),
                            INTERNET_OPTION_RECEIVE_TIMEOUT,
                            timeout,
-                           sizeof(timeout))) {
+                           sizeof(*timeout))) {
       fwprintf(stderr, L"Could not unset receive timeout, continuing...\n");
     }
   }
