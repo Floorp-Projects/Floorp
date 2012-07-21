@@ -1402,12 +1402,10 @@ var gBrowserInit = {
     // Enable developer toolbar?
     let devToolbarEnabled = gPrefService.getBoolPref("devtools.toolbar.enabled");
     if (devToolbarEnabled) {
-      document.getElementById("menu_devToolbar").hidden = false;
-      document.getElementById("Tools:DevToolbar").removeAttribute("disabled");
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_DevToolbar");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
       document.getElementById("Tools:DevToolbarFocus").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_devToolbar").hidden = false;
-#endif
 
       // Show the toolbar if it was previously visible
       if (gPrefService.getBoolPref("devtools.toolbar.visible")) {
@@ -1418,33 +1416,25 @@ var gBrowserInit = {
     // Enable Inspector?
     let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
     if (enabled) {
-      document.getElementById("menu_pageinspect").hidden = false;
-      document.getElementById("Tools:Inspect").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_pageInspect").hidden = false;
-#endif
-      document.getElementById("developer-toolbar-inspector").hidden = false;
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_Inspect");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Debugger?
     let enabled = gPrefService.getBoolPref("devtools.debugger.enabled");
     if (enabled) {
-      document.getElementById("menu_debugger").hidden = false;
-      document.getElementById("Tools:Debugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_debugger").hidden = false;
-#endif
-      document.getElementById("developer-toolbar-debugger").hidden = false;
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_Debugger");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Remote Debugger?
     let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
     if (enabled) {
-      document.getElementById("menu_remoteDebugger").hidden = false;
-      document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_remoteDebugger").hidden = false;
-#endif
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_RemoteDebugger");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Chrome Debugger?
@@ -1452,45 +1442,34 @@ var gBrowserInit = {
                   gPrefService.getBoolPref("devtools.debugger.chrome-enabled") &&
                   gPrefService.getBoolPref("devtools.debugger.remote-enabled");
     if (enabled) {
-      document.getElementById("menu_chromeDebugger").hidden = false;
-      document.getElementById("Tools:ChromeDebugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_chromeDebugger").hidden = false;
-#endif
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_ChromeDebugger");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Error Console?
     // XXX Temporarily always-enabled, see bug 601201
     let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled");
     if (consoleEnabled) {
-      document.getElementById("javascriptConsole").hidden = false;
-      document.getElementById("key_errorConsole").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_errorConsole").hidden = false;
-#endif
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_ErrorConsole");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Scratchpad in the UI, if the preference allows this.
     let scratchpadEnabled = gPrefService.getBoolPref(Scratchpad.prefEnabledName);
     if (scratchpadEnabled) {
-      document.getElementById("menu_scratchpad").hidden = false;
-      document.getElementById("Tools:Scratchpad").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_scratchpad").hidden = false;
-#endif
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_Scratchpad");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     // Enable Style Editor?
     let styleEditorEnabled = gPrefService.getBoolPref(StyleEditor.prefEnabledName);
     if (styleEditorEnabled) {
-      document.getElementById("menu_styleeditor").hidden = false;
-      document.getElementById("Tools:StyleEditor").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_styleeditor").hidden = false;
-#endif
-      // We don't show the Style Editor button in the developer toolbar for now.
-      // See bug 771203
-      // document.getElementById("developer-toolbar-styleeditor").hidden = false;
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_StyleEditor");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -1505,11 +1484,9 @@ var gBrowserInit = {
     // Enable Responsive UI?
     let responsiveUIEnabled = gPrefService.getBoolPref("devtools.responsiveUI.enabled");
     if (responsiveUIEnabled) {
-      document.getElementById("menu_responsiveUI").hidden = false;
-      document.getElementById("Tools:ResponsiveUI").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-      document.getElementById("appmenu_responsiveUI").hidden = false;
-#endif
+      let broadcaster = document.getElementById("devtoolsMenuBroadcaster_ResponsiveUI");
+      broadcaster.removeAttribute("disabled");
+      broadcaster.removeAttribute("hidden");
     }
 
     let appMenuButton = document.getElementById("appmenu-button");
