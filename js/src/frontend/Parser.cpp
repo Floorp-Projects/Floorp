@@ -57,6 +57,8 @@
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "frontend/TreeContext-inl.h"
+
+#include "vm/NumericConversions.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;
@@ -5805,10 +5807,17 @@ Parser::memberExpr(bool allowCallSyntax)
             TokenPtr begin = lhs->pn_pos.begin, end = tokenStream.currentToken().pos.end;
 
             /*
-             * Optimize property name lookups.  If the name is a PropertyName,
+             * Do folding so we don't have roundtrip changes for cases like:
+             * function (obj) { return obj["a" + "b"] }
+             */
+            if (foldConstants && !FoldConstants(context, propExpr, this))
+                return NULL;
+
+            /*
+             * Optimize property name lookups. If the name is a PropertyName,
              * then make a name-based node so the emitter will use a name-based
-             * bytecode.  Otherwise make a node using the property expression
-             * by value.  If the node is a string containing an index, convert
+             * bytecode. Otherwise make a node using the property expression
+             * by value. If the node is a string containing an index, convert
              * it to a number to save work later.
              */
             uint32_t index;
@@ -5823,11 +5832,13 @@ Parser::memberExpr(bool allowCallSyntax)
                     name = atom->asPropertyName();
                 }
             } else if (propExpr->isKind(PNK_NUMBER)) {
-                JSAtom *atom = ToAtom(context, NumberValue(propExpr->pn_dval));
-                if (!atom)
-                    return NULL;
-                if (!atom->isIndex(&index))
+                double number = propExpr->pn_dval;
+                if (number != ToUint32(number)) {
+                    JSAtom *atom = ToAtom(context, DoubleValue(number));
+                    if (!atom)
+                        return NULL;
                     name = atom->asPropertyName();
+                }
             }
 
             if (name)
