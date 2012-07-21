@@ -1781,13 +1781,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       nsCSSValueTriplet triplet1(*aValue1.GetCSSValueTripletValue());
       nsCSSValueTriplet triplet2(*aValue2.GetCSSValueTripletValue());
 
-      if (triplet1.mZValue.GetUnit() == eCSSUnit_Null) {
-        triplet1.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
-      }
-      if (triplet2.mZValue.GetUnit() == eCSSUnit_Null) {
-          triplet2.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
-      }
-
       nsCSSUnit unit[3];
       unit[0] = GetCommonUnit(aProperty, triplet1.mXValue.GetUnit(),
                               triplet2.mXValue.GetUnit());
@@ -1814,11 +1807,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
-      }
-
-      if (result->mZValue.GetUnit() == eCSSUnit_Pixel &&
-          result->mZValue.GetFloatValue() == 0.0f) {
-        result->mZValue.Reset();
       }
 
       aResultValue.SetAndAdoptCSSValueTripletValue(result.forget(),
@@ -2672,10 +2660,6 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[2],
                                     triplet->mZValue)) {
             return false;
-          }
-          if (triplet->mZValue.GetUnit() == eCSSUnit_Pixel &&
-              triplet->mZValue.GetFloatValue() == 0.0f) {
-            triplet->mZValue.Reset();
           }
           aComputedValue.SetAndAdoptCSSValueTripletValue(triplet.forget(),
                                                          eUnit_CSSValueTriplet);
