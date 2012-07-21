@@ -8179,8 +8179,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = secMan->GetCodebasePrincipal(aReferrer,
-                                          getter_AddRefs(loadingPrincipal));
+        rv = secMan->GetSimpleCodebasePrincipal(aReferrer,
+                                                getter_AddRefs(loadingPrincipal));
     }
 
     rv = NS_CheckContentLoadPolicy(contentType,

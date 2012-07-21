@@ -1990,11 +1990,12 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetCodebasePrincipal(nsIURI* aURI,
+nsScriptSecurityManager::GetSimpleCodebasePrincipal(nsIURI* aURI,
                                                     nsIPrincipal** aPrincipal)
 {
-  return GetCodebasePrincipalInternal(aURI, nsIScriptSecurityManager::UNKNOWN_APP_ID,
-                              false, aPrincipal);
+  return GetCodebasePrincipalInternal(aURI,
+                                      nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                                      false, aPrincipal);
 }
 
 NS_IMETHODIMP
@@ -2002,7 +2003,7 @@ nsScriptSecurityManager::GetNoAppCodebasePrincipal(nsIURI* aURI,
                                                    nsIPrincipal** aPrincipal)
 {
   return GetCodebasePrincipalInternal(aURI,  nsIScriptSecurityManager::NO_APP_ID,
-                              false, aPrincipal);
+                                      false, aPrincipal);
 }
 
 NS_IMETHODIMP
@@ -2035,9 +2036,9 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
 
 nsresult
 nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
-                                              PRUint32 aAppId,
-                                              bool aInMozBrowser,
-                                              nsIPrincipal **result)
+                                                      PRUint32 aAppId,
+                                                      bool aInMozBrowser,
+                                                      nsIPrincipal **result)
 {
     NS_ENSURE_ARG(aURI);
 
