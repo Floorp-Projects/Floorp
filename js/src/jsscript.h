@@ -653,7 +653,22 @@ struct JSScript : public js::gc::Cell
     inline js::GlobalObject &global() const;
 
     /* See StaticScopeIter comment. */
-    JSObject *enclosingStaticScope() const { return enclosingScope_; }
+    JSObject *enclosingStaticScope() const {
+        JS_ASSERT(enclosingScriptsCompiledSuccessfully());
+        return enclosingScope_;
+    }
+
+    /*
+     * If a compile error occurs in an enclosing function after parsing a
+     * nested function, the enclosing function's JSFunction, which appears on
+     * the nested function's enclosingScope chain, will be invalid. Normal VM
+     * operation only sees scripts where all enclosing scripts have been
+     * successfully compiled. Any path that may look at scripts left over from
+     * unsuccessful compilation (e.g., by iterating over all scripts in the
+     * compartment) should check this predicate before doing any operation that
+     * uses enclosingScope (e.g., ScopeCoordinateName).
+     */
+    bool enclosingScriptsCompiledSuccessfully() const;
 
   private:
     bool makeTypes(JSContext *cx);
