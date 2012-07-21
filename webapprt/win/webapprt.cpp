@@ -521,7 +521,7 @@ main(int argc, char* argv[])
   }
 
   // We've done all we know how to do to try to find and launch FF
-  Output("This app requires that Firefox version 15 or above is installed."
-         " Firefox 15+ has not been detected.");
+  Output("This app requires that Firefox version 16 or above is installed."
+         " Firefox 16+ has not been detected.");
   return 255;
 }
