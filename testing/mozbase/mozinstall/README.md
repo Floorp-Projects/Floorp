@@ -2,7 +2,7 @@
 python package for installing and uninstalling Mozilla applications on
 various platforms.
 
-For example, depending on the platform, Firefox can be distributed as a 
+For example, depending on the platform, Firefox can be distributed as a
 zip, tar.bz2, exe, or dmg file or cloned from a repository. Mozinstall takes
 the hassle out of extracting and/or running these files and for convenience
 returns the full path to the install directory. In the case that mozinstall
