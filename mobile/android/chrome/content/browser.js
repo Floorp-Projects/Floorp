@@ -363,6 +363,14 @@ var BrowserApp = {
         NativeWindow.toast.show(label, "short");
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
+      NativeWindow.contextmenus.linkCopyableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+        clipboard.copyString(url);
+      });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
       NativeWindow.contextmenus.linkShareableContext,
       function(aTarget) {
