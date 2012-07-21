@@ -151,7 +151,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * This principals should not be used for any data/permission check, it will
      * have appId = UNKNOWN_APP_ID.
      */
-    nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
+    nsIPrincipal getSimpleCodebasePrincipal(in nsIURI aURI);
 
     /**
      * Returns a principal that has the given information.

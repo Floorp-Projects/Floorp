@@ -436,8 +436,9 @@ private:
                  SecurityLevel* result);
 
     nsresult
-    GetCodebasePrincipalInternal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
-                         nsIPrincipal** result);
+    GetCodebasePrincipalInternal(nsIURI* aURI, PRUint32 aAppId,
+                                 bool aInMozBrowser,
+                                 nsIPrincipal** result);
 
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,

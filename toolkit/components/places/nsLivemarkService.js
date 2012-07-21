@@ -756,7 +756,7 @@ Livemark.prototype = {
     }
 
     // Security check the site URI against the feed URI principal.
-    let feedPrincipal = secMan.getCodebasePrincipal(this.feedURI);
+    let feedPrincipal = secMan.getSimpleCodebasePrincipal(this.feedURI);
     try {
       secMan.checkLoadURIWithPrincipal(feedPrincipal, aSiteURI, SEC_FLAGS);
     }
@@ -1090,7 +1090,8 @@ LivemarkLoadListener.prototype = {
 
     try {
       // We need this to make sure the item links are safe
-      let feedPrincipal = secMan.getCodebasePrincipal(this._livemark.feedURI);
+      let feedPrincipal =
+        secMan.getSimpleCodebasePrincipal(this._livemark.feedURI);
 
       // Enforce well-formedness because the existing code does
       if (!aResult || !aResult.doc || aResult.bozo) {
