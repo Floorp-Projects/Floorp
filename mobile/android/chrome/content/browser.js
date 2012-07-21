@@ -378,6 +378,14 @@ var BrowserApp = {
         NativeWindow.contextmenus._copyStringToDefaultClipboard(emailAddr);
       });
 
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyPhoneNumber"),
+      NativeWindow.contextmenus.phoneNumberLinkCopyableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
+        NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
+    });
+
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
       NativeWindow.contextmenus.linkShareableContext,
       function(aTarget) {
@@ -1286,6 +1294,16 @@ var NativeWindow = {
         let uri = NativeWindow.contextmenus._getLink(aElement);
         if (uri) {
           return uri.schemeIs("mailto");
+        }
+        return false;
+      }
+    },
+
+    phoneNumberLinkCopyableContext: {
+      matches: function phoneNumberLinkCopyableContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
+          return uri.schemeIs("tel");
         }
         return false;
       }
