@@ -29,7 +29,7 @@ function waitForPB() {
 function runTest() {
   let tmpScope = {};
   Cu.import("resource://gre/modules/DownloadLastDir.jsm", tmpScope);
-  let gDownloadLastDir = tmpScope.gDownloadLastDir;
+  let gDownloadLastDir = new tmpScope.DownloadLastDir(window);
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/FileUtils.jsm", tmpScope);
   let FileUtils = tmpScope.FileUtils;
