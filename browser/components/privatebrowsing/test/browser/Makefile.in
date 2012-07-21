@@ -20,10 +20,6 @@ MOCHITEST_BROWSER_FILES =  \
 		browser_privatebrowsing_concurrent.js \
 		browser_privatebrowsing_concurrent_page.html \
 		browser_privatebrowsing_crh.js \
-		browser_privatebrowsing_downloadLastDir.js \
-		browser_privatebrowsing_downloadLastDir_c.js \
-		browser_privatebrowsing_downloadLastDir_toggle.js \
-		browser_privatebrowsing_DownloadLastDirWithCPS.js \
 		browser_privatebrowsing_fastswitch.js \
 		browser_privatebrowsing_findbar.js \
 		browser_privatebrowsing_forgetthissite.js \

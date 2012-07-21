@@ -388,7 +388,7 @@ Rule.prototype = {
         eltText += "#" + this.inherited.id;
       }
       this._inheritedSource =
-        CssLogic._strings.formatStringFromName("rule.inheritedSource", [eltText], 1);
+        CssLogic._strings.formatStringFromName("rule.inheritedFrom", [eltText], 1);
     }
     return this._inheritedSource;
   },
