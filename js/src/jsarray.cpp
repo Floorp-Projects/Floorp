@@ -205,45 +205,6 @@ StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
 
 }
 
-static JSBool
-BigIndexToId(JSContext *cx, JSObject *obj, uint32_t index, JSBool createAtom,
-             jsid *idp)
-{
-
-    JS_ASSERT(index > JSID_INT_MAX);
-
-    jschar buf[10];
-    jschar *start = ArrayEnd(buf);
-    do {
-        --start;
-        *start = (jschar)('0' + index % 10);
-        index /= 10;
-    } while (index != 0);
-
-    /*
-     * Skip the atomization if the class is known to store atoms corresponding
-     * to big indexes together with elements. In such case we know that the
-     * array does not have an element at the given index if its atom does not
-     * exist.  Dense arrays don't use atoms for any indexes, though it would be
-     * rare to see them have a big index in any case.
-     */
-    JSAtom *atom;
-    if (!createAtom && (obj->isSlowArray() || obj->isArguments() || obj->isObject())) {
-        atom = js_GetExistingStringAtom(cx, start, ArrayEnd(buf) - start);
-        if (!atom) {
-            *idp = JSID_VOID;
-            return JS_TRUE;
-        }
-    } else {
-        atom = js_AtomizeChars(cx, start, ArrayEnd(buf) - start);
-        if (!atom)
-            return JS_FALSE;
-    }
-
-    *idp = NON_INTEGER_ATOM_TO_JSID(atom);
-    return JS_TRUE;
-}
-
 bool
 JSObject::willBeSparseDenseArray(unsigned requiredCapacity, unsigned newElementsHint)
 {
@@ -273,32 +234,6 @@ JSObject::willBeSparseDenseArray(unsigned requiredCapacity, unsigned newElements
     return true;
 }
 
-static bool
-ReallyBigIndexToId(JSContext* cx, double index, jsid* idp)
-{
-    return ValueToId(cx, DoubleValue(index), idp);
-}
-
-static bool
-IndexToId(JSContext* cx, JSObject* obj, double index, JSBool* hole, jsid* idp,
-          JSBool createAtom = JS_FALSE)
-{
-    if (index <= JSID_INT_MAX) {
-        *idp = INT_TO_JSID(int(index));
-        return JS_TRUE;
-    }
-
-    if (index <= uint32_t(-1)) {
-        if (!BigIndexToId(cx, obj, uint32_t(index), createAtom, idp))
-            return JS_FALSE;
-        if (hole && JSID_IS_VOID(*idp))
-            *hole = JS_TRUE;
-        return JS_TRUE;
-    }
-
-    return ReallyBigIndexToId(cx, index, idp);
-}
-
 bool
 JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
 {
@@ -312,9 +247,8 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
         return true;
     }
 
-    JSBool hole;
     jsid id;
-    if (!IndexToId(cx, this, i, &hole, &id))
+    if (!IndexToId(cx, i, &id))
         return false;
 
     Shape *shape = nativeLookup(cx, id);
@@ -325,42 +259,47 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
     return true;
 }
 
+bool
+DoubleIndexToId(JSContext *cx, double index, jsid *id)
+{
+    if (index == uint32_t(index))
+        return IndexToId(cx, uint32_t(index), id);
+
+    return ValueToId(cx, DoubleValue(index), id);
+}
+
 /*
  * If the property at the given index exists, get its value into location
  * pointed by vp and set *hole to false. Otherwise set *hole to true and *vp
  * to JSVAL_VOID. This function assumes that the location pointed by vp is
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
-static inline JSBool
+static inline bool
 DoGetElement(JSContext *cx, JSObject *obj_, double index, JSBool *hole, Value *vp)
 {
     RootedObject obj(cx, obj_);
     RootedId id(cx);
 
-    *hole = JS_FALSE;
-    if (!IndexToId(cx, obj, index, hole, id.address()))
-        return JS_FALSE;
-    if (*hole) {
-        vp->setUndefined();
-        return JS_TRUE;
-    }
+    if (!DoubleIndexToId(cx, index, id.address()))
+        return false;
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
-        return JS_FALSE;
+        return false;
+
     if (!prop) {
         vp->setUndefined();
-        *hole = JS_TRUE;
+        *hole = true;
     } else {
         if (!obj->getGeneric(cx, id, vp))
-            return JS_FALSE;
-        *hole = JS_FALSE;
+            return false;
+        *hole = false;
     }
-    return JS_TRUE;
+    return true;
 }
 
-static inline JSBool
+static inline bool
 DoGetElement(JSContext *cx, HandleObject obj, uint32_t index, JSBool *hole, Value *vp)
 {
     bool present;
@@ -379,6 +318,7 @@ static void
 AssertGreaterThanZero(IndexType index)
 {
     JS_ASSERT(index >= 0);
+    JS_ASSERT(index == floor(index));
 }
 
 template<>
@@ -479,9 +419,8 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, const Value &v)
     }
 
     RootedId id(cx);
-    if (!IndexToId(cx, obj, index, NULL, id.address(), JS_TRUE))
-        return JS_FALSE;
-    JS_ASSERT(!JSID_IS_VOID(id));
+    if (!DoubleIndexToId(cx, index, id.address()))
+        return false;
 
     RootedValue tmp(cx, v);
     return obj->setGeneric(cx, obj, id, tmp.address(), true);
