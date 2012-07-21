@@ -5,7 +5,9 @@
 __all__ = ['Profile', 'FirefoxProfile', 'ThunderbirdProfile']
 
 import os
+import time
 import tempfile
+import uuid
 from addons import AddonManager
 from permissions import Permissions
 from shutil import rmtree
@@ -36,7 +38,8 @@ class Profile(object):
         self.written_prefs = set()
 
         # our magic markers
-        self.delimeters = ('#MozRunner Prefs Start', '#MozRunner Prefs End')
+        nonce = '%s %s' % (str(time.time()), uuid.uuid4())
+        self.delimeters = ('#MozRunner Prefs Start %s' % nonce,'#MozRunner Prefs End %s' % nonce)
 
         # Handle profile creation
         self.create_new = not profile

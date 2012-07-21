@@ -17,6 +17,7 @@ import urllib
 import urlparse
 import re
 import iface
+import time
 from SocketServer import ThreadingMixIn
 
 class EasyServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
@@ -63,9 +64,16 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     docroot = os.getcwd() # current working directory at time of import
     proxy_host_dirs = False
+    request_log = []
+    log_requests = False
     request = None
 
     def _try_handler(self, method):
+        if self.log_requests:
+            self.request_log.append({ 'method': method,
+                                      'path': self.request.path,
+                                      'time': time.time() })
+
         handlers = [handler for handler in self.urlhandlers
                     if handler['method'] == method]
         for handler in handlers:
@@ -181,7 +189,7 @@ class MozHttpd(object):
     """
 
     def __init__(self, host="127.0.0.1", port=8888, docroot=None,
-                 urlhandlers=None, proxy_host_dirs=False):
+                 urlhandlers=None, proxy_host_dirs=False, log_requests=False):
         self.host = host
         self.port = int(port)
         self.docroot = docroot
@@ -190,11 +198,15 @@ class MozHttpd(object):
         self.proxy_host_dirs = proxy_host_dirs
         self.httpd = None
         self.urlhandlers = urlhandlers or []
+        self.log_requests = log_requests
+        self.request_log = []
 
         class RequestHandlerInstance(RequestHandler):
             docroot = self.docroot
             urlhandlers = self.urlhandlers
             proxy_host_dirs = self.proxy_host_dirs
+            request_log = self.request_log
+            log_requests = self.log_requests
 
         self.handler_class = RequestHandlerInstance
 
@@ -244,8 +256,6 @@ def main(args=sys.argv[1:]):
     options, args = parser.parse_args(args)
     if args:
         parser.error("mozhttpd does not take any arguments")
-        parser.print_help()
-        parser.exit()
 
     if options.external_ip:
         host = iface.get_lan_ip()

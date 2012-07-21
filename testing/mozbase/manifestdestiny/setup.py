@@ -13,7 +13,7 @@ import os
 
 here = os.path.dirname(os.path.abspath(__file__))
 try:
-    filename = os.path.join(here, 'README.txt')
+    filename = os.path.join(here, 'README.md')
     description = file(filename).read()
 except:
     description = ''
