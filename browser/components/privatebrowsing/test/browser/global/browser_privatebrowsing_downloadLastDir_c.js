@@ -5,11 +5,13 @@
 
 function test() {
   let tmpScope = {};
-  Cu.import("resource://gre/modules/DownloadLastDir.jsm");
+  let downloadModule = {};
+  Cu.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
   Cu.import("resource://gre/modules/FileUtils.jsm", tmpScope);
   let FileUtils = tmpScope.FileUtils;
   Cu.import("resource://gre/modules/Services.jsm");
   let MockFilePicker = SpecialPowers.MockFilePicker;
+  let gDownloadLastDir = new downloadModule.DownloadLastDir(window);
 
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
@@ -54,7 +56,6 @@ function test() {
     validateFileName = validateFileNameToRestore;
     gDownloadLastDir.cleanupPrivateFile();
     delete FileUtils;
-    delete gDownloadLastDir;
   });
 
   // Overwrite stringBundle to return an object masquerading as a string bundle

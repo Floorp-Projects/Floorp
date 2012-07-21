@@ -5,11 +5,13 @@
 
 function test() {
   let tempScope = {};
+  let downloadModule = {};
   Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/DownloadLastDir.jsm");
+  Cu.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
   Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
   let FileUtils = tempScope.FileUtils;
   let MockFilePicker = SpecialPowers.MockFilePicker;
+  let gDownloadLastDir = new downloadModule.DownloadLastDir(window);
 
   let launcher = {
     source: Services.io.newURI("http://test1.com/file", null, null)
@@ -53,7 +55,6 @@ function test() {
     MockFilePicker.cleanup();
     gDownloadLastDir.cleanupPrivateFile();
     delete FileUtils;
-    delete gDownloadLastDir;
   });
 
   let context = gBrowser.selectedBrowser.contentWindow;
