@@ -24,6 +24,7 @@
 #include "nsINetUtil.h"
 #include "nsIChannel.h"
 #include "nsIObserver.h"
+#include "imgIEncoder.h"
 
 namespace mozilla {
 namespace widget {
@@ -458,13 +459,14 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
     if (mURLShortcut) {
       OnFaviconDataNotAvailable();
     }
+    
     return NS_OK;
   }
 
   nsCOMPtr<nsIFile> icoFile;
   nsresult rv = FaviconHelper::GetOutputIconPath(mNewURI, icoFile, mURLShortcut);
-
   NS_ENSURE_SUCCESS(rv, rv);
+  
   nsAutoString path;
   rv = icoFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -544,12 +546,38 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
                                     EmptyString(),
                                     getter_AddRefs(iconStream));
     } else {
-    mMimeTypeOfInputData.AssignLiteral("image/vnd.microsoft.icon");
-    rv = imgtool->EncodeImage(container, 
-                              mMimeTypeOfInputData,
-                              NS_LITERAL_STRING("format=bmp;bpp=32"),
-                              getter_AddRefs(iconStream));
+      nsRefPtr<gfxASurface> s;
+      rv = container->GetFrame(imgIContainer::FRAME_FIRST, 0, getter_AddRefs(s));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      gfxImageSurface* surface =
+        new gfxImageSurface(gfxIntSize(48, 48),
+                            gfxImageSurface::ImageFormatARGB32);
+      gfxContext context(surface);
+      context.SetOperator(gfxContext::OPERATOR_SOURCE);
+      context.SetColor(gfxRGBA(1, 1, 1, 1));
+      context.Rectangle(gfxRect(0, 0, 48, 48));
+      context.Fill();
+
+      context.Translate(gfxPoint(16, 16));
+      context.SetOperator(gfxContext::OPERATOR_OVER);
+      context.DrawSurface(s,  gfxSize(16, 16));
+      gfxIntSize size = surface->GetSize();
+
+      nsRefPtr<imgIEncoder> encoder = 
+        do_CreateInstance("@mozilla.org/image/encoder;2?"
+                          "type=image/vnd.microsoft.icon");
+      NS_ENSURE_TRUE(encoder, NS_ERROR_FAILURE);
+      rv = encoder->InitFromData(surface->Data(), surface->Stride() * size.height,
+                            size.width, size.height, surface->Stride(),
+                            imgIEncoder::INPUT_FORMAT_HOSTARGB, EmptyString());
+      NS_ENSURE_SUCCESS(rv, rv);
+      CallQueryInterface(encoder.get(), getter_AddRefs(iconStream));
+      if (!iconStream) {
+        return NS_ERROR_FAILURE;
+      }
   }
+
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIFile> icoFile
     = do_CreateInstance("@mozilla.org/file/local;1");
