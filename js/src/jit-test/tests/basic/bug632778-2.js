@@ -1,4 +1,3 @@
-load(libdir + "asserts.js");
+// |jit-test| error: TypeError
 obj = wrap(Number.bind());
-assertThrowsInstanceOf(function () { Object.defineProperty(obj, "caller", {set: function(){}}); }, TypeError);
-
+Object.defineProperty(obj, "caller", {set: function () {}});
