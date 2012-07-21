@@ -496,19 +496,29 @@ nsresult nsObjectLoadingContent::IsPluginEnabledForType(const nsCString& aMIMETy
     rv = topWindow->GetDocument(getter_AddRefs(topDocument));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
-    nsIURI* topUri = topDoc->GetDocumentURI();
 
     nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRUint32 permission;
-    rv = permissionManager->TestPermission(topUri, "plugins", &permission);
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool allowPerm = false;
+    // For now we always say that the system principal uses click-to-play since
+    // that maintains current behavior and we have tests that expect this.
+    // What we really should do is disable plugins entirely in pages that use
+    // the system principal, i.e. in chrome pages. That way the click-to-play
+    // code here wouldn't matter at all. Bug 775301 is tracking this.
+    if (!nsContentUtils::IsSystemPrincipal(topDoc->NodePrincipal())) {
+      PRUint32 permission;
+      rv = permissionManager->TestPermissionFromPrincipal(topDoc->NodePrincipal(),
+                                                          "plugins",
+                                                          &permission);
+      NS_ENSURE_SUCCESS(rv, rv);
+      allowPerm = permission == nsIPermissionManager::ALLOW_ACTION;
+    }
 
     PRUint32 state;
     rv = pluginHost->GetBlocklistStateForType(aMIMEType.get(), &state);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (permission == nsIPermissionManager::ALLOW_ACTION &&
+    if (allowPerm &&
         state != nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE &&
         state != nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
       mCTPPlayable = true;
