@@ -47,6 +47,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SelectNetworkAuto",
   "RIL:CallStateChanged",
   "RIL:VoicemailNotification",
+  "RIL:VoicemailNumberChanged",
   "RIL:CallError",
   "RIL:GetCardLock:Return:OK",
   "RIL:GetCardLock:Return:KO",
@@ -349,6 +350,8 @@ RILContentHelper.prototype = {
   _enumerateTelephonyCallbacks: null,
 
   voicemailStatus: null,
+  voicemailNumber: null,
+  voicemailDisplayName: null,
 
   registerCallback: function registerCallback(callbackType, callback) {
     let callbacks = this[callbackType];
@@ -556,6 +559,10 @@ RILContentHelper.prototype = {
         break;
       case "RIL:VoicemailNotification":
         this.handleVoicemailNotification(msg.json);
+        break;
+      case "RIL:VoicemailNumberChanged":
+        this.voicemailNumber = msg.json.number;
+        this.voicemailDisplayName = msg.json.alphaId;
         break;
       case "RIL:GetCardLock:Return:OK":
       case "RIL:SetCardLock:Return:OK":
