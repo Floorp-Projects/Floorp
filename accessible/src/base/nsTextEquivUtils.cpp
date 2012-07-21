@@ -34,9 +34,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
     return NS_OK;
 
   gInitiatorAcc = aAccessible;
-
-  PRUint32 nameRule = gRoleToNameRulesMap[aAccessible->Role()];
-  if (nameRule == eFromSubtree) {
+  if (GetRoleRule(aAccessible->Role()) == eFromSubtree) {
     //XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
       nsAutoString name;
@@ -216,7 +214,7 @@ nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   // into subtree if accessible allows "text equivalent from subtree rule" or
   // it's not root and not control.
   if (isEmptyTextEquiv) {
-    PRUint32 nameRule = gRoleToNameRulesMap[aAccessible->Role()];
+    PRUint32 nameRule = GetRoleRule(aAccessible->Role());
     if (nameRule & eFromSubtreeIfRec) {
       rv = AppendFromAccessibleChildren(aAccessible, aString);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -239,8 +237,7 @@ nsresult
 nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
                                   nsAString *aString)
 {
-  PRUint32 nameRule = gRoleToNameRulesMap[aAccessible->Role()];
-  if (nameRule != eFromValue)
+  if (GetRoleRule(aAccessible->Role()) != eFromValue)
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
 
   // Implementation of step f. of text equivalent computation. If the given
@@ -366,138 +363,20 @@ nsTextEquivUtils::IsWhitespace(PRUnichar aChar)
     aChar == '\r' || aChar == '\t' || aChar == 0xa0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Name rules to role map.
-
-PRUint32 nsTextEquivUtils::gRoleToNameRulesMap[] =
+PRUint32 
+nsTextEquivUtils::GetRoleRule(role aRole)
 {
-  eFromSubtreeIfRec, // ROLE_NOTHING
-  eNoRule,           // ROLE_TITLEBAR
-  eNoRule,           // ROLE_MENUBAR
-  eNoRule,           // ROLE_SCROLLBAR
-  eNoRule,           // ROLE_GRIP
-  eNoRule,           // ROLE_SOUND
-  eNoRule,           // ROLE_CURSOR
-  eNoRule,           // ROLE_CARET
-  eNoRule,           // ROLE_ALERT
-  eNoRule,           // ROLE_WINDOW
-  eNoRule,           // ROLE_INTERNAL_FRAME
-  eNoRule,           // ROLE_MENUPOPUP
-  eFromSubtree,      // ROLE_MENUITEM
-  eFromSubtree,      // ROLE_TOOLTIP
-  eNoRule,           // ROLE_APPLICATION
-  eNoRule,           // ROLE_DOCUMENT
-  eNoRule,           // ROLE_PANE
-  eNoRule,           // ROLE_CHART
-  eNoRule,           // ROLE_DIALOG
-  eNoRule,           // ROLE_BORDER
-  eNoRule,           // ROLE_GROUPING
-  eNoRule,           // ROLE_SEPARATOR
-  eNoRule,           // ROLE_TOOLBAR
-  eNoRule,           // ROLE_STATUSBAR
-  eNoRule,           // ROLE_TABLE
-  eFromSubtree,      // ROLE_COLUMNHEADER
-  eFromSubtree,      // ROLE_ROWHEADER
-  eFromSubtree,      // ROLE_COLUMN
-  eFromSubtree,      // ROLE_ROW
-  eFromSubtreeIfRec, // ROLE_CELL
-  eFromSubtree,      // ROLE_LINK
-  eFromSubtree,      // ROLE_HELPBALLOON
-  eNoRule,           // ROLE_CHARACTER
-  eFromSubtreeIfRec, // ROLE_LIST
-  eFromSubtree,      // ROLE_LISTITEM
-  eNoRule,           // ROLE_OUTLINE
-  eFromSubtree,      // ROLE_OUTLINEITEM
-  eFromSubtree,      // ROLE_PAGETAB
-  eNoRule,           // ROLE_PROPERTYPAGE
-  eNoRule,           // ROLE_INDICATOR
-  eNoRule,           // ROLE_GRAPHIC
-  eNoRule,           // ROLE_STATICTEXT
-  eNoRule,           // ROLE_TEXT_LEAF
-  eFromSubtree,      // ROLE_PUSHBUTTON
-  eFromSubtree,      // ROLE_CHECKBUTTON
-  eFromSubtree,      // ROLE_RADIOBUTTON
-  eFromValue,        // ROLE_COMBOBOX
-  eNoRule,           // ROLE_DROPLIST
-  eFromValue,        // ROLE_PROGRESSBAR
-  eNoRule,           // ROLE_DIAL
-  eNoRule,           // ROLE_HOTKEYFIELD
-  eNoRule,           // ROLE_SLIDER
-  eNoRule,           // ROLE_SPINBUTTON
-  eNoRule,           // ROLE_DIAGRAM
-  eNoRule,           // ROLE_ANIMATION
-  eNoRule,           // ROLE_EQUATION
-  eFromSubtree,      // ROLE_BUTTONDROPDOWN
-  eFromSubtree,      // ROLE_BUTTONMENU
-  eFromSubtree,      // ROLE_BUTTONDROPDOWNGRID
-  eNoRule,           // ROLE_WHITESPACE
-  eNoRule,           // ROLE_PAGETABLIST
-  eNoRule,           // ROLE_CLOCK
-  eNoRule,           // ROLE_SPLITBUTTON
-  eNoRule,           // ROLE_IPADDRESS
-  eNoRule,           // ROLE_ACCEL_LABEL
-  eNoRule,           // ROLE_ARROW
-  eNoRule,           // ROLE_CANVAS
-  eFromSubtree,      // ROLE_CHECK_MENU_ITEM
-  eNoRule,           // ROLE_COLOR_CHOOSER
-  eNoRule,           // ROLE_DATE_EDITOR
-  eNoRule,           // ROLE_DESKTOP_ICON
-  eNoRule,           // ROLE_DESKTOP_FRAME
-  eNoRule,           // ROLE_DIRECTORY_PANE
-  eNoRule,           // ROLE_FILE_CHOOSER
-  eNoRule,           // ROLE_FONT_CHOOSER
-  eNoRule,           // ROLE_CHROME_WINDOW
-  eNoRule,           // ROLE_GLASS_PANE
-  eFromSubtreeIfRec, // ROLE_HTML_CONTAINER
-  eNoRule,           // ROLE_ICON
-  eFromSubtree,      // ROLE_LABEL
-  eNoRule,           // ROLE_LAYERED_PANE
-  eNoRule,           // ROLE_OPTION_PANE
-  eNoRule,           // ROLE_PASSWORD_TEXT
-  eNoRule,           // ROLE_POPUP_MENU
-  eFromSubtree,      // ROLE_RADIO_MENU_ITEM
-  eNoRule,           // ROLE_ROOT_PANE
-  eNoRule,           // ROLE_SCROLL_PANE
-  eNoRule,           // ROLE_SPLIT_PANE
-  eFromSubtree,      // ROLE_TABLE_COLUMN_HEADER
-  eFromSubtree,      // ROLE_TABLE_ROW_HEADER
-  eFromSubtree,      // ROLE_TEAR_OFF_MENU_ITEM
-  eNoRule,           // ROLE_TERMINAL
-  eFromSubtreeIfRec, // ROLE_TEXT_CONTAINER
-  eFromSubtree,      // ROLE_TOGGLE_BUTTON
-  eNoRule,           // ROLE_TREE_TABLE
-  eNoRule,           // ROLE_VIEWPORT
-  eNoRule,           // ROLE_HEADER
-  eNoRule,           // ROLE_FOOTER
-  eFromSubtreeIfRec, // ROLE_PARAGRAPH
-  eNoRule,           // ROLE_RULER
-  eNoRule,           // ROLE_AUTOCOMPLETE
-  eNoRule,           // ROLE_EDITBAR
-  eFromValue,        // ROLE_ENTRY
-  eFromSubtreeIfRec, // ROLE_CAPTION
-  eNoRule,           // ROLE_DOCUMENT_FRAME
-  eFromSubtreeIfRec, // ROLE_HEADING
-  eNoRule,           // ROLE_PAGE
-  eFromSubtreeIfRec, // ROLE_SECTION
-  eNoRule,           // ROLE_REDUNDANT_OBJECT
-  eNoRule,           // ROLE_FORM
-  eNoRule,           // ROLE_IME
-  eNoRule,           // ROLE_APP_ROOT
-  eFromSubtree,      // ROLE_PARENT_MENUITEM
-  eNoRule,           // ROLE_CALENDAR
-  eNoRule,           // ROLE_COMBOBOX_LIST
-  eFromSubtree,      // ROLE_COMBOBOX_OPTION
-  eNoRule,           // ROLE_IMAGE_MAP
-  eFromSubtree,      // ROLE_OPTION
-  eFromSubtree,      // ROLE_RICH_OPTION
-  eNoRule,           // ROLE_LISTBOX
-  eNoRule,           // ROLE_FLAT_EQUATION
-  eFromSubtree,      // ROLE_GRID_CELL
-  eNoRule,           // ROLE_EMBEDDED_OBJECT
-  eFromSubtree,      // ROLE_NOTE
-  eNoRule,           // ROLE_FIGURE
-  eFromSubtree,      // ROLE_CHECK_RICH_OPTION
-  eFromSubtreeIfRec, // ROLE_DEFINITION_LIST
-  eFromSubtree,      // ROLE_TERM
-  eFromSubtree       // ROLE_DEFINITION
-};
+#define ROLE(geckoRole, stringRole, atkRole, \
+             macRole, msaaRole, ia2Role, nameRule) \
+  case roles::geckoRole: \
+    return nameRule;
+
+  switch (aRole) {
+#include "RoleMap.h"
+    default:
+      MOZ_NOT_REACHED("Unknown role.");
+  }
+
+#undef ROLE
+}
+
