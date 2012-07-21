@@ -48,6 +48,7 @@ endif
 
 EXPORTS = \
   a11yGeneric.h \
+	AccEvent.h \
   nsAccDocManager.h \
   nsAccessibilityService.h \
   nsAccessNode.h \
@@ -60,6 +61,12 @@ EXPORTS_mozilla/a11y = \
   States.h \
   Role.h \
   $(NULL)
+
+ifdef MOZ_DEBUG
+EXPORTS_mozilla/a11y += \
+	Logging.h \
+	$(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

@@ -10,7 +10,6 @@
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEditableText.h"
 
-#include "AccCollector.h"
 #include "AccessibleWrap.h"
 
 #include "nsFrameSelection.h"

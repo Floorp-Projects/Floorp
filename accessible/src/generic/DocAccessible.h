@@ -10,8 +10,8 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessiblePivot.h"
 
+#include "AccEvent.h"
 #include "HyperTextAccessibleWrap.h"
-#include "nsEventShell.h"
 
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -190,17 +190,7 @@ public:
   /**
    * Fire value change event on the given accessible if applicable.
    */
-  void MaybeNotifyOfValueChange(Accessible* aAccessible)
-  {
-    mozilla::a11y::role role = aAccessible->Role();
-    if (role == mozilla::a11y::roles::ENTRY ||
-        role == mozilla::a11y::roles::COMBOBOX) {
-      nsRefPtr<AccEvent> valueChangeEvent =
-        new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
-                     eAutoDetect, AccEvent::eRemoveDupes);
-      FireDelayedAccessibleEvent(valueChangeEvent);
-    }
-  }
+  void MaybeNotifyOfValueChange(Accessible* aAccessible);
 
   /**
    * Get/set the anchor jump.

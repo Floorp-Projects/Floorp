@@ -7,6 +7,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "ApplicationAccessibleWrap.h"
+#include "nsAccUtils.h"
 
 #include "nsAppShell.h"
 
