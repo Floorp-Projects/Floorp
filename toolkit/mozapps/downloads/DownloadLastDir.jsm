@@ -1,4 +1,3 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,12 +25,18 @@
 
 const LAST_DIR_PREF = "browser.download.lastDir";
 const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
-const nsIFile = Components.interfaces.nsIFile;
+const PBSVC_CID = "@mozilla.org/privatebrowsing;1";
+const nsILocalFile = Components.interfaces.nsILocalFile;
 
-var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
+var EXPORTED_SYMBOLS = [ "gDownloadLastDir" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+let pbSvc = null;
+if (PBSVC_CID in Components.classes) {
+  pbSvc = Components.classes[PBSVC_CID]
+                    .getService(Components.interfaces.nsIPrivateBrowsingService);
+}
 
 let observer = {
   QueryInterface: function (aIID) {
@@ -43,8 +48,12 @@ let observer = {
   },
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "last-pb-context-exited":
-        gDownloadLastDirFile = null;
+      case "private-browsing":
+        if (aData == "enter")
+          gDownloadLastDirFile = readLastDirPref();
+        else if (aData == "exit") {
+          gDownloadLastDirFile = null;
+        }
         break;
       case "browser:purge-session-history":
         gDownloadLastDirFile = null;
@@ -58,12 +67,12 @@ let observer = {
 
 let os = Components.classes["@mozilla.org/observer-service;1"]
                    .getService(Components.interfaces.nsIObserverService);
-os.addObserver(observer, "last-pb-context-exited", true);
+os.addObserver(observer, "private-browsing", true);
 os.addObserver(observer, "browser:purge-session-history", true);
 
 function readLastDirPref() {
   try {
-    return Services.prefs.getComplexValue(LAST_DIR_PREF, nsIFile);
+    return Services.prefs.getComplexValue(LAST_DIR_PREF, nsILocalFile);
   }
   catch (e) {
     return null;
@@ -73,34 +82,23 @@ function readLastDirPref() {
 function isContentPrefEnabled() {
   try {
     return Services.prefs.getBoolPref(SAVE_PER_SITE_PREF);
-  }
+  } 
   catch (e) {
     return true;
   }
 }
 
 let gDownloadLastDirFile = readLastDirPref();
-
-function DownloadLastDir(aWindow) {
-  this.window = aWindow;
-}
-
-DownloadLastDir.prototype = {
-  isPrivate: function DownloadLastDir_isPrivate() {
-    return PrivateBrowsingUtils.isWindowPrivate(this.window);
-  },
+let gDownloadLastDir = {
   // compat shims
   get file() { return this.getFile(); },
   set file(val) { this.setFile(null, val); },
-  cleanupPrivateFile: function () {
-    gDownloadLastDirFile = null;
-  },
   getFile: function (aURI) {
     if (aURI && isContentPrefEnabled()) {
       let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF);
       if (lastDir) {
         var lastDirFile = Components.classes["@mozilla.org/file/local;1"]
-                                    .createInstance(Components.interfaces.nsIFile);
+                                    .createInstance(Components.interfaces.nsILocalFile);
         lastDirFile.initWithPath(lastDir);
         return lastDirFile;
       }
@@ -108,11 +106,8 @@ DownloadLastDir.prototype = {
     if (gDownloadLastDirFile && !gDownloadLastDirFile.exists())
       gDownloadLastDirFile = null;
 
-    if (this.isPrivate()) {
-      if (!gDownloadLastDirFile)
-        gDownloadLastDirFile = readLastDirPref();
+    if (pbSvc && pbSvc.privateBrowsingEnabled)
       return gDownloadLastDirFile;
-    }
     else
       return readLastDirPref();
   },
@@ -123,14 +118,14 @@ DownloadLastDir.prototype = {
       else
         Services.contentPrefs.removePref(aURI, LAST_DIR_PREF);
     }
-    if (this.isPrivate()) {
+    if (pbSvc && pbSvc.privateBrowsingEnabled) {
       if (aFile instanceof Components.interfaces.nsIFile)
         gDownloadLastDirFile = aFile.clone();
       else
         gDownloadLastDirFile = null;
     } else {
       if (aFile instanceof Components.interfaces.nsIFile)
-        Services.prefs.setComplexValue(LAST_DIR_PREF, nsIFile, aFile);
+        Services.prefs.setComplexValue(LAST_DIR_PREF, nsILocalFile, aFile);
       else if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
         Services.prefs.clearUserPref(LAST_DIR_PREF);
     }

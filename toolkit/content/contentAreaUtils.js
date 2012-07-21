@@ -1,4 +1,4 @@
-# -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -431,7 +431,7 @@ function internalPersist(persistArgs)
  * Structure for holding info about automatically supplied parameters for
  * internalSave(...). This allows parameters to be supplied so the user does not
  * need to be prompted for file info.
- * @param aFileAutoChosen This is an nsIFile object that has been
+ * @param aFileAutoChosen This is an nsILocalFile object that has been
  *        pre-determined as the filename for the target to save to
  * @param aUriAutoChosen  This is the nsIURI object for the target
  */
@@ -525,13 +525,13 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  */
 function getTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
 {
-  let downloadModule = {};
-  Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
-  var gDownloadLastDir = new downloadModule.DownloadLastDir(window);
+  if (!getTargetFile.gDownloadLastDir)
+    Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", getTargetFile);
+  var gDownloadLastDir = getTargetFile.gDownloadLastDir;
 
   var prefs = getPrefsBrowserDownload("browser.download.");
   var useDownloadDir = prefs.getBoolPref("useDownloadDir");
-  const nsIFile = Components.interfaces.nsIFile;
+  const nsILocalFile = Components.interfaces.nsILocalFile;
 
   if (!aSkipPrompt)
     useDownloadDir = false;
@@ -568,7 +568,7 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelated
     // Default to desktop.
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                                 .getService(Components.interfaces.nsIProperties);
-    dir = fileLocator.get("Desk", nsIFile);
+    dir = fileLocator.get("Desk", nsILocalFile);
   }
 
   var fp = makeFilePicker();
@@ -600,11 +600,11 @@ function getTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelated
     prefs.setIntPref("save_converter_index", fp.filterIndex);
 
   // Do not store the last save directory as a pref inside the private browsing mode
-  var directory = fp.file.parent.QueryInterface(nsIFile);
+  var directory = fp.file.parent.QueryInterface(nsILocalFile);
   gDownloadLastDir.setFile(aRelatedURI, directory);
 
   fp.file.leafName = validateFileName(fp.file.leafName);
-
+  
   aFpP.saveAsType = fp.filterIndex;
   aFpP.file = fp.file;
   aFpP.fileURL = fp.fileURL;
