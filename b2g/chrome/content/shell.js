@@ -246,8 +246,8 @@ var shell = {
           if (!manifest)
             return;
 
-          let documentURI = contentWindow.document.documentURIObject;
-          if (!Services.perms.testPermission(documentURI, 'offline-app')) {
+          let principal = contentWindow.document.nodePrincipal;
+          if (Services.perms.testPermissionFromPrincipal(principal, 'offline-app') == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
             if (Services.prefs.getBoolPref('browser.offline-apps.notify')) {
               // FIXME Bug 710729 - Add a UI for offline cache notifications
               return;
@@ -255,8 +255,8 @@ var shell = {
             return;
           }
 
-          Services.perms.add(documentURI, 'offline-app',
-                             Ci.nsIPermissionManager.ALLOW_ACTION);
+          Services.perms.addFromPrincipal(principal, 'offline-app',
+                                          Ci.nsIPermissionManager.ALLOW_ACTION);
 
           let manifestURI = Services.io.newURI(manifest, null, documentURI);
           let updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
