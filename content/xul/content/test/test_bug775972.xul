@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=775972
+-->
+<window title="Mozilla Bug 775972"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test()">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=775972"
+     target="_blank">Mozilla Bug 775972</a>
+  </body>
+
+  <hbox id="container"><label value="test" id=""/></hbox>
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 775972 **/
+
+  function test() {
+    var c = document.getElementById("container");
+    var clone = c.cloneNode(true);
+    document.documentElement.appendChild(clone);
+    ok(true, "This shouldn't crash!");
+  }
+
+
+  ]]>
+  </script>
+</window>
