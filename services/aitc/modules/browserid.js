@@ -212,12 +212,11 @@ BrowserIDService.prototype = {
     // We're executing navigator.id.get as a content script in win.
     // This results in a popup that we will temporarily unblock.
     let pm = Services.perms;
-    let origin = Services.io.newURI(
-      win.wrappedJSObject.location.toString(), null, null
-    );
-    let oldPerm = pm.testExactPermission(origin, "popup");
+    let principal = win.document.nodePrincipal;
+
+    let oldPerm = pm.testExactPermissionFromPrincipal(principal, "popup");
     try {
-      pm.add(origin, "popup", pm.ALLOW_ACTION);
+      pm.addFromPrincipal(principal, "popup", pm.ALLOW_ACTION);
     } catch(e) {
       this._log.warn("Setting popup blocking to false failed " + e);
     }
@@ -232,7 +231,7 @@ BrowserIDService.prototype = {
     function callback(val) {
       // Set popup blocker permission to original value.
       try {
-        pm.add(origin, "popup", oldPerm);
+        pm.addFromPrincipal(principal, "popup", oldPerm);
       } catch(e) {
         this._log.warn("Setting popup blocking to original value failed " + e);
       }
