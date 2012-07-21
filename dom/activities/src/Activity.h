@@ -13,7 +13,7 @@
 #define NS_DOMACTIVITY_CID                          \
  {0x1c5b0930, 0xc90c, 0x4e9c, {0xaf, 0x4e, 0xb0, 0xb7, 0xa6, 0x59, 0xb4, 0xed}}
 
-#define NS_DOMACTIVITY_CONTRACTID "@mozilla.org/dom/activity;1" 
+#define NS_DOMACTIVITY_CONTRACTID "@mozilla.org/dom/activity;1"
 
 namespace mozilla {
 namespace dom {
@@ -32,6 +32,8 @@ public:
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
                         JSObject* aObject, PRUint32 aArgc, jsval* aArgv);
+
+  Activity();
 
 protected:
   nsCOMPtr<nsIActivityProxy> mProxy;
