@@ -294,8 +294,8 @@ int main(int argc, char *argv[])
   snprintf(appIniPath, MAXPATHLEN, "%s/%s", firefoxDir, kAPP_INI);
 
   if (NS_FAILED(parser.Init(appIniPath))) {
-    ErrorDialog("This app requires that Firefox version 15 or above is installed."
-                " Firefox 15+ has not been detected.");
+    ErrorDialog("This app requires that Firefox version 16 or above is installed."
+                " Firefox 16+ has not been detected.");
     return 255;
   }
 
