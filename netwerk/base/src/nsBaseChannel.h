@@ -245,7 +245,6 @@ private:
   friend class RedirectRunnable;
 
   nsRefPtr<nsInputStreamPump>         mPump;
-  nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
   nsCOMPtr<nsIURI>                    mURI;
@@ -264,6 +263,7 @@ private:
 
 protected:
   nsCOMPtr<nsILoadGroup>              mLoadGroup;
+  nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
   nsCOMPtr<nsIStreamListener>         mListener;
   nsCOMPtr<nsISupports>               mListenerContext;
   nsresult                            mStatus;

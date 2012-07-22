@@ -1015,6 +1015,18 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     }
   }
 
+  // Get info from nsILoadContext, if any
+  bool haveLoadContext = false;
+  bool isContent = false;
+  bool usePrivateBrowsing = false;
+  nsCOMPtr<nsILoadContext> loadContext;
+  GetCallback(loadContext);
+  if (loadContext) {
+    haveLoadContext = true;
+    loadContext->GetIsContent(&isContent);
+    loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
+  }
+
   //
   // Send request to the chrome process...
   //
@@ -1040,8 +1052,9 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
                 IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
                 mPriority, mRedirectionLimit, mAllowPipelining,
                 mForceAllowThirdPartyCookie, mSendResumeAt,
-                mStartPos, mEntityID, mChooseApplicationCache, 
-                appCacheClientId, mAllowSpdy, UsePrivateBrowsing());
+                mStartPos, mEntityID, mChooseApplicationCache,
+                appCacheClientId, mAllowSpdy, haveLoadContext, isContent,
+                usePrivateBrowsing);
 
   return NS_OK;
 }
