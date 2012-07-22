@@ -22,6 +22,8 @@ WebSocketChannelParent::WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvi
   , mHaveLoadContext(false)
   , mIsContent(false)
   , mUsePrivateBrowsing(false)
+  , mIsInBrowserElement(false)
+  , mAppId(0)
 {
 #if defined(PR_LOGGING)
   if (!webSocketLog)
@@ -49,7 +51,9 @@ WebSocketChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
                                       const bool& aSecure,
                                       const bool& haveLoadContext,
                                       const bool& isContent,
-                                      const bool& usePrivateBrowsing)
+                                      const bool& usePrivateBrowsing,
+                                      const bool& isInBrowserElement,
+                                      const PRUint32& appId)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
   nsresult rv;
@@ -67,6 +71,8 @@ WebSocketChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   mHaveLoadContext = haveLoadContext;
   mIsContent = isContent;
   mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
   rv = mChannel->SetNotificationCallbacks(this);
   if (NS_FAILED(rv))
     goto fail;
@@ -276,6 +282,24 @@ WebSocketChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
   // We shouldn't need this on parent...
   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+WebSocketChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
+  return NS_OK;
 }
 
 

@@ -29,7 +29,9 @@ parent:
             InputStream uploadStream,
             bool haveLoadContext,
             bool isContent,
-            bool usePrivateBrowsing);
+            bool usePrivateBrowsing,
+            bool isInBrowserElement,
+            PRUint32 appID);
   ConnectChannel(PRUint32 channelId);
   Cancel(nsresult status);
   Suspend();

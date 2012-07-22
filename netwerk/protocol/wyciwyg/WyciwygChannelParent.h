@@ -37,7 +37,9 @@ protected:
                              const PRUint32& loadFlags,
                              const bool& haveLoadContext,
                              const bool& isContent,
-                             const bool& usingPrivateBrowsing);
+                             const bool& usingPrivateBrowsing,
+                             const bool& isInBrowserElement,
+                             const PRUint32& appId);
   virtual bool RecvWriteToCacheEntry(const nsString& data);
   virtual bool RecvCloseCacheEntry(const nsresult& reason);
   virtual bool RecvSetCharsetAndSource(const PRInt32& source,
@@ -51,9 +53,12 @@ protected:
   bool mIPCClosed;
 
   // fields for impersonating nsILoadContext
-  bool mHaveLoadContext : 1;
-  bool mIsContent : 1;
-  bool mUsePrivateBrowsing : 1;
+  bool mHaveLoadContext             : 1;
+  bool mIsContent                   : 1;
+  bool mUsePrivateBrowsing          : 1;
+  bool mIsInBrowserElement          : 1;
+
+  PRUint32 mAppId;
 };
 
 } // namespace net

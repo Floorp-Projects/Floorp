@@ -68,7 +68,9 @@ protected:
                              const bool&                allowSpdy,
                              const bool &               haveLoadContext,
                              const bool &               isContent,
-                             const bool&                usingPrivateBrowsing);
+                             const bool&                usingPrivateBrowsing,
+                             const bool&                isInBrowserElement,
+                             const PRUint32&            appId);
 
   virtual bool RecvConnectChannel(const PRUint32& channelId);
   virtual bool RecvSetPriority(const PRUint16& priority);
@@ -108,14 +110,17 @@ private:
   PRUint64 mStoredProgress;
   PRUint64 mStoredProgressMax;
 
-  bool mSentRedirect1Begin : 1;
-  bool mSentRedirect1BeginFailed : 1;
-  bool mReceivedRedirect2Verify : 1;
+  bool mSentRedirect1Begin          : 1;
+  bool mSentRedirect1BeginFailed    : 1;
+  bool mReceivedRedirect2Verify     : 1;
 
   // fields for impersonating nsILoadContext
-  bool mHaveLoadContext : 1;
-  bool mIsContent : 1;
-  bool mUsePrivateBrowsing : 1;
+  bool mHaveLoadContext             : 1;
+  bool mIsContent                   : 1;
+  bool mUsePrivateBrowsing          : 1;
+  bool mIsInBrowserElement          : 1;
+
+  PRUint32 mAppId;
 };
 
 } // namespace net

@@ -38,6 +38,8 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
   , mHaveLoadContext(false)
   , mIsContent(false)
   , mUsePrivateBrowsing(false)
+  , mIsInBrowserElement(false)
+  , mAppId(0)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
@@ -123,7 +125,9 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const bool&                allowSpdy,
                                  const bool&                haveLoadContext,
                                  const bool&                isContent,
-                                 const bool&                usePrivateBrowsing)
+                                 const bool&                usePrivateBrowsing,
+                                 const bool&                isInBrowserElement,
+                                 const PRUint32&            appId)
 {
   nsCOMPtr<nsIURI> uri(aURI);
   nsCOMPtr<nsIURI> originalUri(aOriginalURI);
@@ -149,6 +153,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   mHaveLoadContext = haveLoadContext;
   mIsContent = isContent;
   mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
 
@@ -650,5 +656,22 @@ HttpChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
   return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+HttpChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
+  return NS_OK;
+}
 
 }} // mozilla::net

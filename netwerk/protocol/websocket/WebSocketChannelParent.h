@@ -39,7 +39,9 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const bool& aSecure,
                      const bool& haveLoadContext,
                      const bool& isContent,
-                     const bool& usingPrivateBrowsing);
+                     const bool& usingPrivateBrowsing,
+                     const bool& isInBrowserElement,
+                     const PRUint32& appId);
   bool RecvClose(const PRUint16 & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
@@ -54,9 +56,12 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool mIPCOpen;
 
   // fields for impersonating nsILoadContext
-  bool mHaveLoadContext : 1;
-  bool mIsContent : 1;
-  bool mUsePrivateBrowsing : 1;
+  bool mHaveLoadContext             : 1;
+  bool mIsContent                   : 1;
+  bool mUsePrivateBrowsing          : 1;
+  bool mIsInBrowserElement          : 1;
+
+  PRUint32 mAppId;
 };
 
 } // namespace net

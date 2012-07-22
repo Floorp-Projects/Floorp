@@ -20,6 +20,8 @@ WyciwygChannelParent::WyciwygChannelParent()
  , mHaveLoadContext(false)
  , mIsContent(false)
  , mUsePrivateBrowsing(false)
+ , mIsInBrowserElement(false)
+ , mAppId(0)
 {
 #if defined(PR_LOGGING)
   if (!gWyciwygLog)
@@ -86,7 +88,9 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
                                     const PRUint32& aLoadFlags,
                                     const bool& haveLoadContext,
                                     const bool& isContent,
-                                    const bool& usePrivateBrowsing)
+                                    const bool& usePrivateBrowsing,
+                                    const bool& isInBrowserElement,
+                                    const PRUint32& appId)
 {
   nsCOMPtr<nsIURI> original(aOriginal);
 
@@ -109,6 +113,8 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
   mHaveLoadContext = haveLoadContext;
   mIsContent = isContent;
   mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
   mChannel->SetNotificationCallbacks(this);
 
   rv = mChannel->AsyncOpen(this, nsnull);
@@ -316,5 +322,22 @@ WyciwygChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
   return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+WyciwygChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
+  return NS_OK;
+}
 
 }} // mozilla::net
