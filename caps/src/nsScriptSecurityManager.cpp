@@ -3640,11 +3640,11 @@ GetExtendedOrigin(nsIURI* aURI, PRUint32 aAppId, bool aInMozBrowser,
     return;
   }
 
-  // aExtendedOrigin = origin + "@" + aAppId + { 't', 'f' }
-  aExtendedOrigin.Assign(origin + NS_LITERAL_CSTRING("@"));
+  // aExtendedOrigin = appId + "+" + origin + "+" + { 't', 'f' }
+  aExtendedOrigin.Truncate();
   aExtendedOrigin.AppendInt(aAppId);
-  aExtendedOrigin.Append(aInMozBrowser ? NS_LITERAL_CSTRING("t")
-                                       : NS_LITERAL_CSTRING("f"));
+  aExtendedOrigin.Append(NS_LITERAL_CSTRING("+") + origin + NS_LITERAL_CSTRING("+"));
+  aExtendedOrigin.Append(aInMozBrowser ? 't' : 'f');
 
   return;
 }

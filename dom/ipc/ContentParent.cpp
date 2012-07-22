@@ -430,9 +430,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 }
 
 TabParent*
-ContentParent::CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame)
+ContentParent::CreateTab(PRUint32 aChromeFlags, bool aIsBrowserElement, PRUint32 aAppId)
 {
-  return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags, aIsBrowserFrame));
+  return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags, aIsBrowserElement, aAppId));
 }
 
 void
@@ -834,7 +834,9 @@ ContentParent::AllocPCompositor(ipc::Transport* aTransport,
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame)
+ContentParent::AllocPBrowser(const PRUint32& aChromeFlags,
+                             const bool& aIsBrowserElement,
+                             const PRUint32& aAppId)
 {
   TabParent* parent = new TabParent();
   if (parent){
