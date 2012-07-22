@@ -62,6 +62,7 @@
 #include "nsGUIEvent.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
+#include "nsEditor.h"
 
 // Set to spew messages to the console about what is happening.
 //#define DEBUG_INLINESPELL
@@ -119,7 +120,7 @@ mozInlineSpellStatus::InitForEditorChange(
                                 getter_AddRefs(mAnchorRange));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aAction == mozInlineSpellChecker::kOpDeleteSelection) {
+  if (aAction == nsEditor::kOpDeleteSelection) {
     // Deletes are easy, the range is just the current anchor. We set the range
     // to check to be empty, FinishInitOnEvent will fill in the range to be
     // the current word.
@@ -152,7 +153,7 @@ mozInlineSpellStatus::InitForEditorChange(
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this NULL.
-  if (aAction == mozInlineSpellChecker::kOpInsertText)
+  if (aAction == nsEditor::kOpInsertText)
     mCreatedRange = mRange;
 
   // if we were given a range, we need to expand our range to encompass it
