@@ -396,9 +396,11 @@ ContentChild::AllocPCompositor(ipc::Transport* aTransport,
 }
 
 PBrowserChild*
-ContentChild::AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame)
+ContentChild::AllocPBrowser(const PRUint32& aChromeFlags,
+                            const bool& aIsBrowserElement,
+                            const PRUint32& aAppId)
 {
-    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserFrame);
+    nsRefPtr<TabChild> iframe = new TabChild(aChromeFlags, aIsBrowserElement, aAppId);
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 

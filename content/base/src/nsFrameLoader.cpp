@@ -1971,6 +1971,31 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
+  PRUint32 appId = 0;
+  bool isBrowserElement = false;
+
+  if (OwnerIsBrowserFrame()) {
+    isBrowserElement = true;
+
+    if (mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozapp)) {
+      nsAutoString manifest;
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapp, manifest);
+
+      nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+      if (!appsService) {
+        NS_ERROR("Apps Service is not available!");
+        return NS_ERROR_FAILURE;
+      }
+
+      appsService->GetAppLocalIdByManifestURL(manifest, &appId);
+
+      // If the frame is actually an app, we should not mark it as a browser.
+      if (appId != nsIScriptSecurityManager::NO_APP_ID) {
+        isBrowserElement = false;
+      }
+    }
+  }
+
   // If our owner has no app manifest URL, then this is equivalent to
   // ContentParent::GetNewOrUsed().
   nsAutoString appManifest;
@@ -1978,8 +2003,7 @@ nsFrameLoader::TryRemoteBrowser()
   ContentParent* parent = ContentParent::GetForApp(appManifest);
 
   NS_ASSERTION(parent->IsAlive(), "Process parent should be alive; something is very wrong!");
-  mRemoteBrowser = parent->CreateTab(chromeFlags,
-                                     /* aIsBrowserFrame = */ OwnerIsBrowserFrame());
+  mRemoteBrowser = parent->CreateTab(chromeFlags, isBrowserElement, appId);
   if (mRemoteBrowser) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mRemoteBrowser->SetOwnerElement(element);
