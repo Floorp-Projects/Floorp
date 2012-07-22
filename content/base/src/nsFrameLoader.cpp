@@ -1597,7 +1597,7 @@ nsFrameLoader::MaybeCreateDocShell()
   EnsureMessageManager();
 
   if (OwnerIsBrowserFrame()) {
-    mDocShell->SetIsBrowser();
+    mDocShell->SetIsBrowserElement();
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
