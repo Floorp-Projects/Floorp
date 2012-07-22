@@ -127,6 +127,9 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void sendAsBinary(DOMString body);
   any getInterface(IID iid);
 
+  [TreatNonCallableAsNull, GetterInfallible=MainThread]
+  attribute Function? onuploadprogress;
+
   [Infallible]
   readonly attribute boolean mozAnon;
 
