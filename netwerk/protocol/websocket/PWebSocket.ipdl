@@ -28,7 +28,9 @@ parent:
             bool aSecure,
             bool haveLoadContext,
             bool isContent,
-            bool usingPrivateBrowsing);
+            bool usePrivateBrowsing,
+            bool isInBrowserElement,
+            PRUint32 appID);
   Close(PRUint16 code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

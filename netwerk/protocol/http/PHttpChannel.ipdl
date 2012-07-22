@@ -54,7 +54,9 @@ parent:
             // it in HttpChannelParent too
             bool                haveLoadContext,
             bool                isContent,
-            bool                usePrivateBrowsing);
+            bool                usePrivateBrowsing,
+            bool                isInBrowserElement,
+            PRUint32            appID);
 
   // Used to connect redirected-to channel on the parent with redirected-to
   // channel on the child.

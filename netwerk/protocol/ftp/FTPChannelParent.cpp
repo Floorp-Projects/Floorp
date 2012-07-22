@@ -23,6 +23,8 @@ FTPChannelParent::FTPChannelParent()
   , mHaveLoadContext(false)
   , mIsContent(false)
   , mUsePrivateBrowsing(false)
+  , mIsInBrowserElement(false)
+  , mAppId(0)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -64,7 +66,9 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
                                 const IPC::InputStream& aUploadStream,
                                 const bool& haveLoadContext,
                                 const bool& isContent,
-                                const bool& usePrivateBrowsing)
+                                const bool& usePrivateBrowsing,
+                                const bool& isInBrowserElement,
+                                const PRUint32& appId)
 {
   nsCOMPtr<nsIURI> uri(aURI);
 
@@ -103,6 +107,8 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   mHaveLoadContext = haveLoadContext;
   mIsContent = isContent;
   mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
   mChannel->SetNotificationCallbacks(this);
 
   rv = mChannel->AsyncOpen(this, nsnull);
@@ -297,6 +303,23 @@ FTPChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
   return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+FTPChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
+  return NS_OK;
+}
 
 } // namespace net
 } // namespace mozilla

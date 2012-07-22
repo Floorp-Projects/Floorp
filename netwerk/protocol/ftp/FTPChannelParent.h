@@ -42,7 +42,9 @@ protected:
                                          const IPC::InputStream& uploadStream,
                                          const bool& haveLoadContext,
                                          const bool& isContent,
-                                         const bool& aUsePrivateBrowsing);
+                                         const bool& usingPrivateBrowsing,
+                                         const bool& isInBrowserElement,
+                                         const PRUint32& appId);
   NS_OVERRIDE virtual bool RecvConnectChannel(const PRUint32& channelId);
   NS_OVERRIDE virtual bool RecvCancel(const nsresult& status);
   NS_OVERRIDE virtual bool RecvSuspend();
@@ -58,6 +60,9 @@ protected:
   bool mHaveLoadContext       : 1;
   bool mIsContent             : 1;
   bool mUsePrivateBrowsing    : 1;
+  bool mIsInBrowserElement    : 1;
+
+  PRUint32 mAppId;
 };
 
 } // namespace net
