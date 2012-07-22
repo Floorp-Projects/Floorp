@@ -79,6 +79,7 @@ FENNEC_JAVA_FILES = \
   GeckoViewsFactory.java \
   INIParser.java \
   INISection.java \
+  InputMethods.java \
   LinkPreference.java \
   LinkTextView.java \
   MenuItemActionBar.java \
