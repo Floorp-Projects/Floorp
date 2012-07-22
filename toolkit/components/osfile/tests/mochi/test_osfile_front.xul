@@ -27,7 +27,6 @@ function test() {
     ok(false, "error "+error);
   }
   worker.onmessage = function(msg) {
-    ok(true, "MAIN: onmessage "+JSON.stringify(msg));
     switch (msg.data.kind) {
     case "is":
       return SimpleTest.is(msg.data.a, msg.data.b, msg.data.description);
@@ -36,6 +35,7 @@ function test() {
     case "ok":
       return SimpleTest.ok(msg.data.condition, msg.data.description);
     case "finish":
+      worker.terminate();
       SimpleTest.finish();
       return;
     default:

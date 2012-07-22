@@ -46,6 +46,10 @@
      let gBytesWritten = new ctypes.int32_t(-1);
      let gBytesWrittenPtr = gBytesWritten.address();
 
+     // Same story for GetFileInformationByHandle
+     let gFileInfo = new OS.Shared.Type.FILE_INFORMATION.implementation();
+     let gFileInfoPtr = gFileInfo.address();
+
      /**
       * Representation of a file.
       *
@@ -179,7 +183,18 @@
          // OS.File.POS_END == OS.Constants.Win.FILE_END
          whence = (whence == undefined)?Const.FILE_BEGIN:whence;
          return throw_on_negative("setPosition",
-	   WinFile.SetFilePointer(this.fd, pos, null, whence));
+           WinFile.SetFilePointer(this.fd, pos, null, whence));
+       },
+
+       /**
+        * Fetch the information on the file.
+        *
+        * @return File.Info The information on |this| file.
+        */
+       stat: function stat() {
+         throw_on_zero("stat",
+           WinFile.GetFileInformationByHandle(this.fd, gFileInfoPtr));
+         return new File.Info(gFileInfo);
        }
      };
 
@@ -321,7 +336,7 @@
       */
      File.open = function Win_open(path, mode, options) {
        options = options || noOptions;
-
+       mode = mode || noOptions;
        let share = options.winShare || DEFAULT_SHARE;
        let security = options.winSecurity || null;
        let flags = options.winFlags || DEFAULT_FLAGS;
@@ -471,17 +486,21 @@
       * Utility function: convert a FILETIME to a JavaScript Date.
       */
      let FILETIME_to_Date = function FILETIME_to_Date(fileTime) {
-       LOG("fileTimeToDate:", fileTime);
        if (fileTime == null) {
          throw new TypeError("Expecting a non-null filetime");
        }
-       LOG("fileTimeToDate normalized:", fileTime);
-       throw_on_zero("FILETIME_to_Date", WinFile.FileTimeToSystemTime(fileTime.address(),
+       throw_on_zero("FILETIME_to_Date",
+                     WinFile.FileTimeToSystemTime(fileTime.address(),
                                                   gSystemTimePtr));
-       return new Date(gSystemTime.wYear, gSystemTime.wMonth,
-                       gSystemTime.wDay, gSystemTime.wHour,
-                       gSystemTime.wMinute, gSystemTime.wSecond,
-                       gSystemTime.wMilliSeconds);
+       // Windows counts hours, minutes, seconds from UTC,
+       // JS counts from local time, so we need to go through UTC.
+       let utc = Date.UTC(gSystemTime.wYear,
+                          gSystemTime.wMonth - 1
+                          /*Windows counts months from 1, JS from 0*/,
+                          gSystemTime.wDay, gSystemTime.wHour,
+                          gSystemTime.wMinute, gSystemTime.wSecond,
+                          gSystemTime.wMilliSeconds);
+       return new Date(utc);
      };
 
      /**
@@ -615,13 +634,13 @@
         * |true| if the entry is a directory, |false| otherwise
         */
        get isDir() {
-         return this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY;
+         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
        },
        /**
         * |true| if the entry is a symbolic link, |false| otherwise
         */
-       get isLink() {
-         return this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT;
+       get isSymLink() {
+         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
        },
        /**
         * The name of the entry.
@@ -670,6 +689,129 @@
          Object.defineProperty(this, "path", {value: path});
          return path;
        }
+     };
+
+     /**
+      * Information on a file.
+      *
+      * To obtain the latest information on a file, use |File.stat|
+      * (for an unopened file) or |File.prototype.stat| (for an
+      * already opened file).
+      *
+      * @constructor
+      */
+     File.Info = function Info(stat) {
+       this._dwFileAttributes = stat.dwFileAttributes;
+       this._ftCreationTime = stat.ftCreationTime;
+       this._ftLastAccessTime = stat.ftLastAccessTime;
+       this._ftLastWriteTime = stat.ftLastAccessTime;
+       this._nFileSizeHigh = stat.nFileSizeHigh;
+       this._nFileSizeLow = stat.nFileSizeLow;
+     };
+     File.Info.prototype = {
+       /**
+        * |true| if this file is a directory, |false| otherwise
+        */
+       get isDir() {
+         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_DIRECTORY);
+       },
+       /**
+        * |true| if this file is a symbolink link, |false| otherwise
+        */
+       get isSymLink() {
+         return !!(this._dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT);
+       },
+       /**
+        * The size of the file, in bytes.
+        *
+        * Note that the result may be |NaN| if the size of the file cannot be
+        * represented in JavaScript.
+        *
+        * @type {number}
+        */
+       get size() {
+         try {
+           return OS.Shared.projectValue(
+             ctypes.uint64_t("" +
+             this._nFileSizeHigh +
+             this._nFileSizeLow));
+         } catch (x) {
+           return NaN;
+         }
+       },
+       /**
+        * The date of creation of this file
+        *
+        * @type {Date}
+        */
+       get creationDate() {
+         delete this.creationDate;
+         let date = FILETIME_to_Date(this._ftCreationTime);
+         Object.defineProperty(this, "creationDate", { value: date });
+         return date;
+       },
+       /**
+        * The date of last access to this file.
+        *
+        * Note that the definition of last access may depend on the
+        * underlying operating system and file system.
+        *
+        * @type {Date}
+        */
+       get lastAccessDate() {
+         delete this.lastAccess;
+         let date = FILETIME_to_Date(this._ftLastAccessTime);
+         Object.defineProperty(this, "lastAccessDate", { value: date });
+         return date;
+       },
+       /**
+        * Return the date of last modification of this file.
+        *
+        * Note that the definition of last access may depend on the
+        * underlying operating system and file system.
+        *
+        * @type {Date}
+        */
+       get lastModificationDate() {
+         delete this.lastModification;
+         let date = FILETIME_to_Date(this._ftLastWriteTime);
+         Object.defineProperty(this, "lastModificationDate", { value: date });
+         return date;
+       }
+     };
+
+     /**
+      * Fetch the information on a file.
+      *
+      * Performance note: if you have opened the file already,
+      * method |File.prototype.stat| is generally much faster
+      * than method |File.stat|.
+      *
+      * Platform-specific note: under Windows, if the file is
+      * already opened without sharing of the read capability,
+      * this function will fail.
+      *
+      * @return {File.Information}
+      */
+     File.stat = function stat(path) {
+       let file = File.open(path, FILE_STAT_MODE, FILE_STAT_OPTIONS);
+       try {
+         return file.stat();
+       } finally {
+         file.close();
+       }
+     };
+     // All of the following is required to ensure that File.stat
+     // also works on directories.
+     const FILE_STAT_MODE = {
+       read:true
+     };
+     const FILE_STAT_OPTIONS = {
+       // Directories can be opened neither for reading(!) nor for writing
+       winAccess: 0,
+       // Directories can only be opened with backup semantics(!)
+       winFlags: OS.Constants.Win.FILE_FLAG_BACKUP_SEMANTICS,
+       winDisposition: OS.Constants.Win.OPEN_EXISTING
      };
 
      /**
