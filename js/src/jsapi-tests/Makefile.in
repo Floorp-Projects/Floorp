@@ -64,6 +64,7 @@ CPPSRCS = \
   testVersion.cpp \
   testXDR.cpp \
   testProfileStrings.cpp \
+  testJSEvaluateScript.cpp \
   $(NULL)
 
 CSRCS = \
