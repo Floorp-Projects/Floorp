@@ -146,10 +146,14 @@
        /**
         * Type |mode_t|
         */
-       Types.mode_t = Object.create(
-         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_MODE_T),
-         {name: {value: "mode_t"}});
+       Types.mode_t =
+         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_MODE_T).withName("mode_t");
 
+       /**
+        * Type |time_t|
+        */
+       Types.time_t =
+         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_TIME_T).withName("time_t");
 
        Types.DIR =
          new Type("DIR",
@@ -190,6 +194,36 @@
        Types.null_or_dirent_ptr =
          new Type("null_of_dirent",
                   Types.dirent.out_ptr.implementation);
+
+       // Structure |stat|
+       // Same technique
+       {
+         let stat = new OS.Shared.HollowStructure("stat",
+           OS.Constants.libc.OSFILE_SIZEOF_STAT);
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_MODE,
+                        "st_mode", Types.mode_t.implementation);
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_UID,
+                          "st_uid", ctypes.int);
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_GID,
+                          "st_gid", ctypes.int);
+
+         // Here, things get complicated with different data structures.
+         // Some platforms have |time_t st_atime| and some platforms have
+         // |timespec st_atimespec|. However, since |timespec| starts with
+         // a |time_t|, followed by nanoseconds, we just cheat and pretend
+         // that everybody has |time_t st_atime|, possibly followed by padding
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_ATIME,
+                          "st_atime", Types.time_t.implementation);
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_MTIME,
+                          "st_mtime", Types.time_t.implementation);
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_CTIME,
+                          "st_ctime", Types.time_t.implementation);
+
+         stat.add_field_at(OS.Constants.libc.OSFILE_OFFSETOF_STAT_ST_SIZE,
+                        "st_size", Types.size_t.implementation);
+         Types.stat = stat.getType();
+       }
+
 
        // Declare libc functions as functions of |OS.Unix.File|
 
@@ -314,6 +348,22 @@
                     /*return*/ Types.negativeone_or_nothing,
                     /*fd*/     Types.fd,
                     /*length*/ Types.off_t);
+
+       if (OS.Constants.libc._DARWIN_FEATURE_64_BIT_INODE) {
+         UnixFile.fstat =
+           declareFFI("fstat$INODE64", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.fd,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+       } else {
+         UnixFile.fstat =
+           declareFFI("fstat", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.fd,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+       }
 
        UnixFile.lchown =
          declareFFI("lchown", ctypes.default_abi,
@@ -449,13 +499,88 @@
 
        // Weird cases that require special treatment
 
+       // OSes use a variety of hacks to differentiate between
+       // 32-bits and 64-bits versions of |stat|, |lstat|, |fstat|.
+       if (OS.Constants.libc._DARWIN_FEATURE_64_BIT_INODE) {
+         // MacOS X 64-bits
+         UnixFile.stat =
+           declareFFI("stat$INODE64", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.string,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+         UnixFile.lstat =
+           declareFFI("lstat$INODE64", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.string,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+         UnixFile.fstat =
+           declareFFI("fstat$INODE64", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.fd,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+       } else if (OS.Constants.libc._STAT_VER != undefined) {
+         const ver = OS.Constants.libc._STAT_VER;
+         // Linux, all widths
+         let xstat =
+           declareFFI("__xstat", ctypes.default_abi,
+                      /*return*/    Types.negativeone_or_nothing,
+                      /*_stat_ver*/ Types.int,
+                      /*path*/      Types.string,
+                      /*buf*/       Types.stat.out_ptr);
+         let lxstat =
+           declareFFI("__lxstat", ctypes.default_abi,
+                      /*return*/    Types.negativeone_or_nothing,
+                      /*_stat_ver*/ Types.int,
+                      /*path*/      Types.string,
+                      /*buf*/       Types.stat.out_ptr);
+         let fxstat =
+           declareFFI("__fxstat", ctypes.default_abi,
+                      /*return*/    Types.negativeone_or_nothing,
+                      /*_stat_ver*/ Types.int,
+                      /*fd*/        Types.fd,
+                      /*buf*/       Types.stat.out_ptr);
+
+         UnixFile.stat = function stat(path, buf) {
+           return xstat(ver, path, buf);
+         };
+         UnixFile.lstat = function stat(path, buf) {
+           return lxstat(ver, path, buf);
+         };
+         UnixFile.fstat = function stat(fd, buf) {
+           return fxstat(ver, fd, buf);
+         };
+       } else {
+         // Mac OS X 32-bits, other Unix
+         UnixFile.stat =
+           declareFFI("stat", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.string,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+         UnixFile.lstat =
+           declareFFI("lstat", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*path*/   Types.string,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+         UnixFile.fstat =
+           declareFFI("fstat", ctypes.default_abi,
+                      /*return*/ Types.negativeone_or_nothing,
+                      /*fd*/     Types.fd,
+                      /*buf*/    Types.stat.out_ptr
+                     );
+       }
+
        // We cannot make a C array of CDataFinalizer, so
        // pipe cannot be directly defined as a C function.
 
        let _pipe =
-         declareFFI("pipe", ctypes.default_abi,
-                    /*return*/ Types.negativeone_or_nothing,
-                    /*fds*/    Types.int.out_ptr);
+         libc.declare("pipe", ctypes.default_abi,
+                    /*return*/ ctypes.int,
+                    /*fds*/    ctypes.ArrayType(ctypes.int, 2));
 
        // A shared per-thread buffer used to communicate with |pipe|
        let _pipebuf = new (ctypes.ArrayType(ctypes.int, 2))();

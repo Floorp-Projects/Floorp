@@ -9,9 +9,9 @@ function send(message) {
   self.postMessage(message);
 }
 
-self.onmessage = function(msg) {
-  self.onmessage = function(msg) {
-    log("ignored message "+JSON.stringify(msg.data));
+self.onmessage = function onmessage_start(msg) {
+  self.onmessage = function onmessage_ignored(msg) {
+    log("ignored message " + JSON.stringify(msg.data));
   };
   try {
     test_init();
@@ -21,6 +21,7 @@ self.onmessage = function(msg) {
     test_read_write_file();
     test_move_file();
     test_iter_dir();
+    test_info();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -143,7 +144,7 @@ function test_read_write_file()
          bytesAvailable = source.read(buf, 4096)) {
     let bytesWritten = dest.write(buf, bytesAvailable);
     if (bytesWritten != bytesAvailable) {
-      eq(bytesWritten, bytesAvailable, "test_read_write_file: writing all bytes");
+      is(bytesWritten, bytesAvailable, "test_read_write_file: writing all bytes");
     }
   }
 
@@ -220,7 +221,7 @@ function test_iter_dir()
     if (entry.name == tmp_file_name) {
       encountered_tmp_file = true;
       isnot(entry.isDir, "test_iter_dir: The temporary file is not a directory");
-      isnot(entry.isLink, "test_iter_dir: The temporary file is not a link");
+      isnot(entry.isSymLink, "test_iter_dir: The temporary file is not a link");
     }
 
     let file;
@@ -258,4 +259,97 @@ function test_iter_dir()
   ok(true, "test_iter_dir: Cleaning up");
   iterator.close();
   ok(true, "test_iter_dir: Complete");
+}
+
+function test_info() {
+  ok(true, "test_info: Starting");
+
+  let filename = "test_info.tmp";
+  let size = 261;// An arbitrary file length
+  let start = new Date();
+
+ // Cleanup any leftover from previous tests
+  try {
+    OS.File.remove(filename);
+    ok(true, "test_info: Cleaned up previous garbage");
+  } catch (x) {
+    if (!x.becauseNoSuchFile) {
+      throw x;
+    }
+    ok(true, "test_info: No previous garbage");
+  }
+
+  let file = OS.File.open(filename, {trunc: true});
+  let buf = new ArrayBuffer(size);
+  file.write(buf, size);
+  file.close();
+
+  // Test OS.File.stat on new file
+  let info = OS.File.stat(filename);
+  ok(!!info, "test_info: info acquired");
+  ok(!info.isDir, "test_info: file is not a directory");
+  is(info.isSymLink, false, "test_info: file is not a link");
+  is(info.size.toString(), size, "test_info: correct size");
+
+  let stop = new Date();
+
+  // We round down/up by 1s as file system precision is lower than Date precision
+  let startMs = start.getTime() - 1000;
+  let stopMs  = stop.getTime() + 1000;
+
+  let birth = info.creationDate;
+  ok(birth.getTime() <= stopMs,
+     "test_info: file was created before now - " + stop + ", " + birth);
+  // Note: Previous versions of this test checked whether the file has
+  // been created after the start of the test. Unfortunately, this sometimes
+  // failed under Windows, in specific circumstances: if the file has been
+  // removed at the start of the test and recreated immediately, the Windows
+  // file system detects this and decides that the file was actually truncated
+  // rather than recreated, hence that it should keep its previous creation date.
+  // Debugging hilarity ensues.
+
+  let change = info.lastModificationDate;
+  ok(change.getTime() >= startMs
+     && change.getTime() <= stopMs,
+     "test_info: file has changed between the start of the test and now - " + start + ", " + stop + ", " + change);
+
+  // Test OS.File.prototype.stat on new file
+  file = OS.File.open(filename);
+  try {
+    info = file.stat();
+  } finally {
+    file.close();
+  }
+
+  ok(!!info, "test_info: info acquired 2");
+  ok(!info.isDir, "test_info: file is not a directory 2");
+  ok(!info.isSymLink, "test_info: file is not a link 2");
+  is(info.size.toString(), size, "test_info: correct size 2");
+
+  stop = new Date();
+
+  // We round down/up by 1s as file system precision is lower than Date precision
+  startMs = start.getTime() - 1000;
+  stopMs  = stop.getTime() + 1000;
+
+  birth = info.creationDate;
+  ok(birth.getTime() <= stopMs,
+      "test_info: file 2 was created between the start of the test and now - " + start +  ", " + stop + ", " + birth);
+
+  let access = info.lastModificationDate;
+  ok(access.getTime() >= startMs
+     && access.getTime() <= stopMs,
+     "test_info: file 2 was accessed between the start of the test and now - " + start + ", " + stop + ", " + access);
+
+  change = info.lastModificationDate;
+  ok(change.getTime() >= startMs
+     && change.getTime() <= stopMs,
+     "test_info: file 2 has changed between the start of the test and now - " + start + ", " + stop + ", " + change);
+
+  // Test OS.File.stat on directory
+  info = OS.File.stat(OS.File.curDir);
+  ok(!!info, "test_info: info on directory acquired");
+  ok(info.isDir, "test_info: directory is a directory");
+
+  ok(true, "test_info: Complete");
 }
