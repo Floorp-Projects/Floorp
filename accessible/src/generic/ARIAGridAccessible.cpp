@@ -265,7 +265,7 @@ ARIAGridAccessible::SelectedCells(nsTArray<Accessible*>* aCells)
 void
 ARIAGridAccessible::SelectedCellIndices(nsTArray<PRUint32>* aCells)
 {
-  PRUint32 rowCount = RowCount(), colCount = ColCount();
+  PRUint32 colCount = ColCount();
 
   AccIterator rowIter(this, filters::GetRow);
   Accessible* row = nsnull;
