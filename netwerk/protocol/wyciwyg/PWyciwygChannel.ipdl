@@ -22,6 +22,8 @@ parent:
   Init(URI uri);
   AsyncOpen(URI      originalURI,
             PRUint32 loadFlags,
+            bool     haveLoadContext,
+            bool     isContent,
             bool     usingPrivateBrowsing);
 
   // methods corresponding to those of nsIWyciwygChannel

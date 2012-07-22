@@ -28,14 +28,13 @@
 #include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
 #include "nsFtpProtocolHandler.h"
-#include "PrivateBrowsingConsumer.h"
+#include "nsNetUtil.h"
 
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,
                      public nsIUploadChannel,
                      public nsIResumableChannel,
-                     public nsIProxiedChannel,
-                     public mozilla::net::PrivateBrowsingConsumer
+                     public nsIProxiedChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -44,8 +43,7 @@ public:
     NS_DECL_NSIPROXIEDCHANNEL
     
     nsFtpChannel(nsIURI *uri, nsIProxyInfo *pi)
-        : mozilla::net::PrivateBrowsingConsumer(this)
-        , mProxyInfo(pi)
+        : mProxyInfo(pi)
         , mStartPos(0)
         , mResumeRequested(false)
         , mLastModifiedTime(0)

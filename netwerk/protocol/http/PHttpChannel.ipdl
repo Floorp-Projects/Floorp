@@ -50,6 +50,10 @@ parent:
             bool                chooseApplicationCache,
             nsCString           appCacheClientID,
             bool                allowSpdy,
+            // If child channel callbacks implement nsILoadContext, we implement
+            // it in HttpChannelParent too
+            bool                haveLoadContext,
+            bool                isContent,
             bool                usePrivateBrowsing);
 
   // Used to connect redirected-to channel on the parent with redirected-to

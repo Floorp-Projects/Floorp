@@ -10,6 +10,7 @@
 #include "mozilla/net/PWebSocketParent.h"
 #include "nsIWebSocketListener.h"
 #include "nsIWebSocketChannel.h"
+#include "nsILoadContext.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -20,12 +21,14 @@ namespace net {
 
 class WebSocketChannelParent : public PWebSocketParent,
                                public nsIWebSocketListener,
-                               public nsIInterfaceRequestor
+                               public nsIInterfaceRequestor,
+                               public nsILoadContext
 {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSOCKETLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSILOADCONTEXT
 
   WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider);
 
@@ -33,7 +36,10 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool RecvAsyncOpen(const IPC::URI& aURI,
                      const nsCString& aOrigin,
                      const nsCString& aProtocol,
-                     const bool& aSecure);
+                     const bool& aSecure,
+                     const bool& haveLoadContext,
+                     const bool& isContent,
+                     const bool& usingPrivateBrowsing);
   bool RecvClose(const PRUint16 & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
@@ -46,6 +52,11 @@ class WebSocketChannelParent : public PWebSocketParent,
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
   nsCOMPtr<nsIWebSocketChannel> mChannel;
   bool mIPCOpen;
+
+  // fields for impersonating nsILoadContext
+  bool mHaveLoadContext : 1;
+  bool mIsContent : 1;
+  bool mUsePrivateBrowsing : 1;
 };
 
 } // namespace net
