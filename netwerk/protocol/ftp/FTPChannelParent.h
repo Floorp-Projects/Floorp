@@ -12,6 +12,7 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsILoadContext.h"
 
 class nsFtpChannel;
 
@@ -21,6 +22,7 @@ namespace net {
 class FTPChannelParent : public PFTPChannelParent
                        , public nsIParentChannel
                        , public nsIInterfaceRequestor
+                       , public nsILoadContext
 {
 public:
   NS_DECL_ISUPPORTS
@@ -28,6 +30,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIPARENTCHANNEL
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSILOADCONTEXT
 
   FTPChannelParent();
   virtual ~FTPChannelParent();
@@ -37,6 +40,8 @@ protected:
                                          const PRUint64& startPos,
                                          const nsCString& entityID,
                                          const IPC::InputStream& uploadStream,
+                                         const bool& haveLoadContext,
+                                         const bool& isContent,
                                          const bool& aUsePrivateBrowsing);
   NS_OVERRIDE virtual bool RecvConnectChannel(const PRUint32& channelId);
   NS_OVERRIDE virtual bool RecvCancel(const nsresult& status);
@@ -48,6 +53,11 @@ protected:
   nsRefPtr<nsFtpChannel> mChannel;
 
   bool mIPCClosed;
+
+  // fields for impersonating nsILoadContext
+  bool mHaveLoadContext       : 1;
+  bool mIsContent             : 1;
+  bool mUsePrivateBrowsing    : 1;
 };
 
 } // namespace net
