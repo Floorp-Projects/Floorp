@@ -41,8 +41,6 @@ import android.view.inputmethod.InputMethodManager;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -91,15 +89,6 @@ public class GeckoInputConnection
     private static int mIMEState;
     private static String mIMETypeHint;
     private static String mIMEActionHint;
-
-    // The blocklist is so short that ArrayList is probably cheaper than HashSet.
-    private final Collection<String> sFormAutoCompleteBlocklist = Arrays.asList(new String[] {
-        "com.adamrocker.android.input.simeji/.OpenWnnSimeji",   // Simeji (bug 768108)
-        "com.google.android.inputmethod.japanese/.MozcService", // Google Japanese Input (bug 775850)
-        "com.nuance.swype.input/.IME",                          // Swype Beta (bug 755909)
-        "com.owplus.ime.openwnnplus/.OpenWnnJAJP",              // OpenWnn Plus (bug 768108)
-        "com.swype.android.inputmethod/.SwypeInputMethod"       // Swype (bug 755909)
-        });
 
     private String mCurrentInputMethod;
 
@@ -448,7 +437,7 @@ public class GeckoInputConnection
 
     private static InputMethodManager getInputMethodManager() {
         Context context = getView().getContext();
-        return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        return InputMethods.getInputMethodManager(context);
     }
 
     protected void notifyTextChange(InputMethodManager imm, String text,
@@ -847,7 +836,8 @@ public class GeckoInputConnection
         else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
             outAttrs.actionLabel = mIMEActionHint;
 
-        DisplayMetrics metrics = GeckoApp.mAppContext.getDisplayMetrics();
+        GeckoApp app = GeckoApp.mAppContext;
+        DisplayMetrics metrics = app.getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
             // prevent showing full-screen keyboard only when the screen is tall enough
             // to show some reasonable amount of the page (see bug 752709)
@@ -863,18 +853,13 @@ public class GeckoInputConnection
         }
 
         String prevInputMethod = mCurrentInputMethod;
-        mCurrentInputMethod = getCurrentInputMethod();
+        mCurrentInputMethod = InputMethods.getCurrentInputMethod(app);
 
-        // If the user has changed IMEs, check whether the new IME is blocklisted.
+        // If the user has changed IMEs, then notify input method observers.
         if (mCurrentInputMethod != prevInputMethod) {
-            FormAssistPopup popup = GeckoApp.mAppContext.mFormAssistPopup;
+            FormAssistPopup popup = app.mFormAssistPopup;
             if (popup != null) {
-                boolean blocklisted = mCurrentInputMethod != null &&
-                                      sFormAutoCompleteBlocklist.contains(mCurrentInputMethod);
-                if (DEBUG && blocklisted) {
-                    Log.d(LOGTAG, "FormAssist: Blocklisting \"" + mCurrentInputMethod + "\" IME");
-                }
-                popup.block(blocklisted);
+                popup.onInputMethodChanged(mCurrentInputMethod);
             }
         }
 
@@ -1187,12 +1172,6 @@ public class GeckoInputConnection
 
         return new Span(start, end, content);
     }
-
-    private String getCurrentInputMethod() {
-        return Secure.getString(GeckoApp.mAppContext.getContentResolver(),
-                                Secure.DEFAULT_INPUT_METHOD);
-    }
-
 
     private static String prettyPrintString(CharSequence s) {
         // Quote string and replace newlines with CR arrows.
