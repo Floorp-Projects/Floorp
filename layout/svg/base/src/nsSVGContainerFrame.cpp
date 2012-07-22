@@ -136,7 +136,7 @@ nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
                              NS_FRAME_HAS_DIRTY_CHILDREN);
         // No need to invalidate the new kid's old bounds, so we just use
         // nsSVGUtils::ScheduleBoundsUpdate.
-        nsSVGUtils::ScheduleBoundsUpdate(kid);
+        nsSVGUtils::ScheduleReflowSVG(kid);
         if (isFirstReflow) {
           // Add back the NS_FRAME_FIRST_REFLOW bit:
           kid->AddStateBits(NS_FRAME_FIRST_REFLOW);
@@ -230,18 +230,18 @@ nsSVGDisplayContainerFrame::GetCoveredRegion()
 }
 
 void
-nsSVGDisplayContainerFrame::UpdateBounds()
+nsSVGDisplayContainerFrame::ReflowSVG()
 {
-  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
-               "This call is probaby a wasteful mistake");
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
+               "This call is probably a wasteful mistake");
 
   NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "UpdateBounds mechanism not designed for this");
+                    "ReflowSVG mechanism not designed for this");
 
   NS_ABORT_IF_FALSE(GetType() != nsGkAtoms::svgOuterSVGFrame,
                     "Do not call on outer-<svg>");
 
-  if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
+  if (!nsSVGUtils::NeedsReflowSVG(this)) {
     return;
   }
 
@@ -267,7 +267,7 @@ nsSVGDisplayContainerFrame::UpdateBounds()
     if (SVGFrame) {
       NS_ABORT_IF_FALSE(!(kid->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
                         "Check for this explicitly in the |if|, then");
-      SVGFrame->UpdateBounds();
+      SVGFrame->ReflowSVG();
 
       // We build up our child frame overflows here instead of using
       // nsLayoutUtils::UnionChildOverflow since SVG frame's all use the same
