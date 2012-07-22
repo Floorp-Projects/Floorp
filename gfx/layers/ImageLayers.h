@@ -123,11 +123,6 @@ public:
     REMOTE_IMAGE_BITMAP,
 
     /**
-     * A OpenGL texture that can be shared across threads or processes
-     */
-    SHARED_TEXTURE,
-
-    /**
      * An DXGI shared surface handle that can be shared with a remote process.
      */
     REMOTE_IMAGE_DXGI_TEXTURE
