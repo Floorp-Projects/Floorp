@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(ef5a9aba-fe75-410c-a216-fe9b71a6661c)]
+[scriptable, builtinclass, uuid(be5a675b-b675-4443-af75-510530eab5fa)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -584,7 +584,7 @@ interface nsIDocShell : nsISupports
    *
    * This method should not be called more than once.
    */
-  void setIsBrowser();
+  void setIsBrowserElement();
 
   /**
    * Returns true iff the docshell is marked as a browser frame.
