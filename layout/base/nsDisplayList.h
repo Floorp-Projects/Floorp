@@ -1008,8 +1008,10 @@ public:
   void AppendToBottom(nsDisplayList* aList) {
     if (aList->mSentinel.mAbove) {
       aList->mTop->mAbove = mSentinel.mAbove;
-      mTop = aList->mTop;
       mSentinel.mAbove = aList->mSentinel.mAbove;
+      if (mTop == &mSentinel) {
+        mTop = aList->mTop;
+      }
            
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nsnull;

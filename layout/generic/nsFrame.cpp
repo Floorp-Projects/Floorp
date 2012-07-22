@@ -6928,7 +6928,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       Invalidate(aOverflowAreas.VisualOverflow());
     }
   }
-  // XXXSDL For SVG the invalidation happens in UpdateBounds for now, so we
+  // XXXSDL For SVG the invalidation happens in ReflowSVG for now, so we
   // don't currently invalidate SVG here:
   if (anyOverflowChanged && hasTransform &&
       !(GetStateBits() & NS_FRAME_SVG_LAYOUT)) {

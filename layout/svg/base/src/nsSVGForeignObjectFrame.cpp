@@ -97,7 +97,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
-      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+      nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
       // XXXjwatt: why mark intrinsic widths dirty? can't we just use eResize?
       RequestReflow(nsIPresShell::eStyleChange);
     } else if (aAttribute == nsGkAtoms::x ||
@@ -105,7 +105,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
                aAttribute == nsGkAtoms::transform) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
-      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+      nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
     } else if (aAttribute == nsGkAtoms::viewBox ||
                aAttribute == nsGkAtoms::preserveAspectRatio) {
       nsSVGUtils::InvalidateBounds(this);
@@ -127,7 +127,7 @@ nsSVGForeignObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // XXXperf: probably only need a bounds update if 'font-size' changed and
     // we have em unit width/height. Or, once we map 'transform' into style,
     // if some transform property changed.
-    nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+    nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
   }
 }
 
@@ -148,7 +148,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(!(GetStateBits() & NS_FRAME_IS_DIRTY),
                "Reflowing while a resize is pending is wasteful");
 
-  // UpdateBounds makes sure mRect is up to date before we're called.
+  // ReflowSVG makes sure mRect is up to date before we're called.
 
   NS_ASSERTION(!aReflowState.parentReflowState,
                "should only get reflow from being reflow root");
@@ -390,15 +390,15 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
 }
 
 void
-nsSVGForeignObjectFrame::UpdateBounds()
+nsSVGForeignObjectFrame::ReflowSVG()
 {
-  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingUpdateBounds(this),
-               "This call is probaby a wasteful mistake");
+  NS_ASSERTION(nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
+               "This call is probably a wasteful mistake");
 
   NS_ABORT_IF_FALSE(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "UpdateBounds mechanism not designed for this");
+                    "ReflowSVG mechanism not designed for this");
 
-  if (!nsSVGUtils::NeedsUpdatedBounds(this)) {
+  if (!nsSVGUtils::NeedsReflowSVG(this)) {
     return;
   }
 
@@ -521,7 +521,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     // invalidate them. We also don't need to invalidate ourself, since our
     // changed ancestor will have invalidated its entire area, which includes
     // our area.
-    nsSVGUtils::ScheduleBoundsUpdate(this);
+    nsSVGUtils::ScheduleReflowSVG(this);
   }
 
   // If we're called while the PresShell is handling reflow events then we
@@ -593,7 +593,7 @@ nsSVGForeignObjectFrame::GetCanvasTM(PRUint32 aFor)
 void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
-    // If we haven't had a UpdateBounds yet, nothing to do.
+    // If we haven't had a ReflowSVG() yet, nothing to do.
     return;
 
   nsIFrame* kid = GetFirstPrincipalChild();
@@ -654,7 +654,7 @@ nsSVGForeignObjectFrame::DoReflow()
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     // Since we're a reflow root and can be reflowed independently of our
     // outer-<svg>, we can't just blindly pass 'true' here.
-    FlushDirtyRegion(0, nsSVGUtils::OuterSVGIsCallingUpdateBounds(this));
+    FlushDirtyRegion(0, nsSVGUtils::OuterSVGIsCallingReflowSVG(this));
   }
 }
 

@@ -62,7 +62,7 @@ public:
   // called until after the nsSVGOuterSVGFrame has had its initial reflow
   // (i.e. once the SVG viewport dimensions are known). It should also only
   // be called by nsSVGOuterSVGFrame during its reflow.
-  virtual void UpdateBounds()=0;
+  virtual void ReflowSVG()=0;
 
   /**
    * Flags used to specify to GetCanvasTM what it's being called for so that it

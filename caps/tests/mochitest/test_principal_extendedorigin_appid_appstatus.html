@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
   
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script type="application/javascript;version=1.7">
 
 /** Test for Bug 758258 **/
 
@@ -105,7 +105,6 @@ var gData = [
     browser: true,
     test: [ "eo-as-last" ],
   },
-/*
 //  {
 //    app: "http://example.org/manifest.webapp",
 //    src: "data:text/html,foobar",
@@ -116,14 +115,13 @@ var gData = [
 //    src: "data:text/html,foobar2",
 //    test: [ "todo-src" ],
 //  },
-*/
   {
     src: "file:///",
     isapp: false,
     test: [ "eo-unique" ],
   },
   {
-    src: "file:///tmp",
+    src: "file:///tmp/",
     isapp: false,
     test: [ "eo-unique" ],
   },
@@ -135,9 +133,126 @@ var gData = [
   },
   {
     app: "http://example.org/manifest.webapp",
-    src: "file:///tmp",
+    src: "file:///tmp/",
     isapp: true,
     test: [ "eo-unique" ],
+  },
+  // iframe inside an app is part of the app.
+  {
+    app: "http://example.org/manifest.webapp",
+    src: "http://example.org/",
+    isapp: true,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: true
+    },
+    test: [ "child-has-same-eo" ],
+  },
+  // app A inside app B aren't the same app.
+  {
+    app: "http://example.org/manifest.webapp",
+    src: "http://example.org/",
+    isapp: true,
+    child: {
+      app: "https://example.com/manifest.webapp",
+      src: "https://example.com/chrome/",
+      isapp: true
+    },
+    test: [ "child-has-different-eo", "child-has-same-appstatus", "child-has-different-appid" ],
+  },
+  // app A inside app A are the same app.
+  {
+    app: "http://example.org/manifest.webapp",
+    src: "http://example.org/",
+    isapp: true,
+    child: {
+      app: "http://example.org/manifest.webapp",
+      src: "http://example.org/chrome/",
+      isapp: true
+    },
+    test: [ "child-has-same-eo" ],
+  },
+  // app inside a regular iframe is an app.
+  {
+    src: "http://example.org/",
+    isapp: false,
+    child: {
+      app: "http://example.org/manifest.webapp",
+      src: "http://example.org/chrome/",
+      isapp: true
+    },
+    test: [ "child-has-different-eo", "child-has-different-appstatus", "child-has-different-appid" ],
+  },
+  // browser inside app is a browser, has appid but isn't installed.
+  {
+    src: "http://example.org/",
+    app: "http://example.org/manifest.webapp",
+    isapp: true,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      browser: true,
+    },
+    test: [ "child-has-different-eo", "child-has-different-appstatus", "child-has-same-appid" ],
+  },
+  // app inside a browser is an app.
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: true,
+    child: {
+      app: "http://example.org/manifest.webapp",
+      src: "http://example.org/chrome/",
+      isapp: true,
+    },
+    test: [ "child-has-different-eo", "child-has-different-appstatus", "child-has-different-appid" ],
+  },
+  // browser inside a browser are two browsers
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: true,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      browser: true,
+    },
+    test: [ "child-has-same-eo" ],
+  },
+  // browser inside a browser are two browsers
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: true,
+    child: {
+      src: "https://example.com/chrome/",
+      isapp: false,
+      browser: true,
+    },
+    test: [ "child-has-different-eo", "child-has-same-appstatus", "child-has-same-appid" ],
+  },
+  // iframe containing a browser
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: false,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+      browser: true,
+    },
+    test: [ "child-has-different-eo", "child-has-same-appstatus", "child-has-same-appid" ],
+  },
+  // browser containing an iframe is part of the browser
+  {
+    src: "http://example.org/",
+    isapp: false,
+    browser: true,
+    child: {
+      src: "http://example.org/chrome/",
+      isapp: false,
+    },
+    test: [ "child-has-same-eo" ],
   },
 ];
 
@@ -148,16 +263,21 @@ var content = document.getElementById('content');
 var checkedCount = 0;
 var checksTodo = gData.length;
 
-function checkPrincipalForIFrame(aFrame, data) {
+function checkIFrame(aFrame, data) {
   var principal = aFrame.contentDocument.nodePrincipal;
 
   if (!data.test) {
     data.test = [];
   }
 
-// Temporarily disable that check.
-//  is(principal.URI.spec, data.src,
-//     'the correct URL should have been loaded');
+  if (navigator.platform.indexOf("Mac") != -1) {
+    is(principal.URI.spec,
+       data.src.replace('file:///tmp/', 'file:///private/tmp/'),
+       'the correct URL should have been loaded');
+  } else {
+    is(principal.URI.spec, data.src,
+       'the correct URL should have been loaded');
+  }
 
   if (data.isapp) {
     is(principal.appStatus, Ci.nsIPrincipal.APP_STATUS_INSTALLED,
@@ -190,11 +310,56 @@ function checkPrincipalForIFrame(aFrame, data) {
        "extendedOrigin should be the same as the last inserted one");
   }
 
+  if (data.child) {
+    let childPrincipal = aFrame.contentWindow.frames[0].document.nodePrincipal;
+
+    if (data.child.isapp) {
+      is(childPrincipal.appStatus, Ci.nsIPrincipal.APP_STATUS_INSTALLED,
+         "child should be an installed app");
+    }
+
+    if (data.test.indexOf("child-has-same-eo") != -1) {
+      is(childPrincipal.extendedOrigin, principal.extendedOrigin,
+         "child should have the same extendedOrigin as parent");
+      is(childPrincipal.appStatus, principal.appStatus,
+         "child should have the same appStatus if it has the same extendedOrigin");
+      is(childPrincipal.appId, principal.appId,
+         "child should have the same appId if it has the same extendedOrigin");
+    }
+
+    if (data.test.indexOf("child-has-different-eo") != -1) {
+      isnot(childPrincipal.extendedOrigin, principal.extendedOrigin,
+            "child should not have the same extendedOrigin as parent");
+    }
+
+    if (data.test.indexOf("child-has-same-appstatus") != -1) {
+      is(childPrincipal.appStatus, principal.appStatus,
+         "childPrincipal and parent principal should have the same appStatus");
+    }
+
+    if (data.test.indexOf("child-has-different-appstatus") != -1) {
+      isnot(childPrincipal.appStatus, principal.appStatus,
+            "childPrincipal and parent principal should not have the same appStatus");
+    }
+
+    if (data.test.indexOf("child-has-same-appid") != -1) {
+      is(childPrincipal.appId, principal.appId,
+         "childPrincipal and parent principal should have the same appId");
+    }
+
+    if (data.test.indexOf("child-has-different-appid") != -1) {
+      isnot(childPrincipal.appId, principal.appId,
+            "childPrincipal and parent principal should have different appId");
+    }
+  }
+
   eoList.push(principal.extendedOrigin);
 
   checkedCount++;
   if (checkedCount == checksTodo) {
     SimpleTest.finish();
+  } else {
+    gTestRunner.next();
   }
 }
 
@@ -205,35 +370,60 @@ is('extendedOrigin' in document.nodePrincipal, true,
 is('appId' in document.nodePrincipal, true,
    'appId should be present in nsIPrincipal');
 
-SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true]]}, function() {
+function runTest() {
+  // We want to use a generator. Those only work in a one level stack so we
+  // can't use .forEach() here.
+  for (var i=0; i<gData.length; ++i) {
+    let data = gData[i];
 
-// For some unknown reasons, this test this to always timeout on Windows.
-if (navigator.platform.indexOf("Win") != -1) {
-  SimpleTest.finish();
-  return;
+    var iframe = document.createElement('iframe');
+    iframe.check = function() {
+      checkIFrame(this, data);
+    };
+    iframe.addChild = function() {
+      var childFrame = document.createElement('iframe');
+
+      if (data.child.app) {
+        childFrame.setAttribute('mozapp', data.child.app)
+        childFrame.setAttribute('mozbrowser', '');
+      } else if (data.child.browser) {
+        childFrame.setAttribute('mozbrowser', '');
+      }
+
+      childFrame.src = data.child.src;
+
+      this.removeEventListener('load', this.addChild.bind(this));
+      childFrame.addEventListener('load', this.check.bind(this));
+
+      this.contentDocument.body.appendChild(childFrame);
+    };
+
+    if (data.app) {
+      iframe.setAttribute('mozapp', data.app);
+      iframe.setAttribute('mozbrowser', '');
+    } else if (data.browser) {
+      iframe.setAttribute('mozbrowser', '');
+    }
+
+    iframe.src = data.src;
+
+    if (data.child) {
+      iframe.addEventListener('load', iframe.addChild.bind(iframe));
+    } else {
+      iframe.addEventListener('load', iframe.check.bind(iframe));
+    }
+
+    content.appendChild(iframe);
+
+    yield;
+  }
 }
 
-gData.forEach(function(data) {
-  var iframe = document.createElement('iframe');
-  iframe.checkPrincipal = function() {
-    checkPrincipalForIFrame(this, data);
-  };
+var gTestRunner = runTest();
 
-  if (data.app) {
-    iframe.setAttribute('mozapp', data.app);
-    iframe.setAttribute('mozbrowser', '');
-  } else if (data.browser) {
-    iframe.setAttribute('mozbrowser', '');
-  }
-
-  iframe.src = data.src;
-
-  iframe.addEventListener('load', iframe.checkPrincipal.bind(iframe));
-
-  content.appendChild(iframe);
-});
-
-});
+SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                   ["dom.mozBrowserFramesWhitelist", "http://example.org"]]},
+                           function() { gTestRunner.next(); });
 
 </script>
 </pre>
