@@ -11992,7 +11992,7 @@ nsDocShell::GetCanExecuteScripts(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetIsBrowser()
+nsDocShell::SetIsBrowserElement()
 {
     if (mIsBrowserFrame) {
         NS_ERROR("You should not call SetIsBrowser() more than once.");
