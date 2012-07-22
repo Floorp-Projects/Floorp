@@ -158,7 +158,7 @@ public:
                                       PRUint32 aFlags);
 
   NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void UpdateBounds();
+  virtual void ReflowSVG();
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
 
