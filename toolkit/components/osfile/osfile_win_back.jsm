@@ -145,7 +145,7 @@
                   ctypes.StructType("FILETIME", [
                   { lo: Types.DWORD.implementation },
                   { hi: Types.DWORD.implementation }]));
-              
+
        Types.FindData =
          new Type("FIND_DATA",
                   ctypes.StructType("FIND_DATA", [
@@ -160,7 +160,21 @@
                     { cFileName:        ctypes.ArrayType(ctypes.jschar, exports.OS.Constants.Win.MAX_PATH) },
                     { cAlternateFileName: ctypes.ArrayType(ctypes.jschar, 14) }
                       ]));
-                  
+
+       Types.FILE_INFORMATION =
+         new Type("FILE_INFORMATION",
+                  ctypes.StructType("FILE_INFORMATION", [
+                    { dwFileAttributes: ctypes.uint32_t },
+                    { ftCreationTime:   Types.FILETIME.implementation },
+                    { ftLastAccessTime: Types.FILETIME.implementation },
+                    { ftLastWriteTime:  Types.FILETIME.implementation },
+                    { dwVolumeSerialNumber: ctypes.uint32_t },
+                    { nFileSizeHigh:    Types.DWORD.implementation },
+                    { nFileSizeLow:     Types.DWORD.implementation },
+                    { nNumberOfLinks:   ctypes.uint32_t },
+                    { nFileIndex: ctypes.uint64_t }
+                   ]));
+
        Types.SystemTime =
          new Type("SystemTime",
                   ctypes.StructType("SystemTime", [
@@ -255,6 +269,12 @@
                     /*length*/ Types.DWORD,
                     /*buf*/    Types.jschar.out_ptr
                    );
+
+       WinFile.GetFileInformationByHandle =
+         declareFFI("GetFileInformationByHandle", ctypes.winapi_abi,
+                    /*return*/ Types.zero_or_nothing,
+                    /*handle*/ Types.HANDLE,
+                    /*info*/   Types.FILE_INFORMATION.out_ptr);
 
        WinFile.MoveFileEx =
          declareFFI("MoveFileExW", ctypes.winapi_abi,
