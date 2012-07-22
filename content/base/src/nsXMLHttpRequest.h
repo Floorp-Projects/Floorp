@@ -217,6 +217,10 @@ public:
   // nsIXMLHttpRequest
   NS_DECL_NSIXMLHTTPREQUEST
 
+  // nsIJSXMLHttpRequest
+  NS_IMETHOD GetOnuploadprogress(nsIDOMEventListener** aOnuploadprogress);
+  NS_IMETHOD SetOnuploadprogress(nsIDOMEventListener* aOnuploadprogress);
+
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
 
   // nsIStreamListener
@@ -249,6 +253,24 @@ public:
 
   // event handler
   IMPL_EVENT_HANDLER(readystatechange, Readystatechange)
+  JSObject* GetOnuploadprogress(JSContext* /* unused */)
+  {
+    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : NULL;
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eOnuploadprogress);
+    }
+    return GetListenerAsJSObject(mOnUploadProgressListener);
+  }
+  void SetOnuploadprogress(JSContext* aCx, JSObject* aCallback,
+                           ErrorResult& aRv)
+  {
+    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : NULL;
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eOnuploadprogress);
+    }
+    aRv = SetJSObjectListener(aCx, NS_LITERAL_STRING("uploadprogress"),
+                              mOnUploadProgressListener, aCallback);
+  }
 
   // states
   uint16_t GetReadyState();
@@ -555,6 +577,7 @@ protected:
   nsCOMPtr<nsIChannel> mCORSPreflightChannel;
   nsTArray<nsCString> mCORSUnsafeHeaders;
 
+  nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;

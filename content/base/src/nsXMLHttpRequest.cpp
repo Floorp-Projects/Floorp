@@ -90,6 +90,7 @@ using namespace mozilla::dom;
 #define TIMEOUT_STR "timeout"
 #define LOADSTART_STR "loadstart"
 #define PROGRESS_STR "progress"
+#define UPLOADPROGRESS_STR "uploadprogress"
 #define READYSTATE_STR "readystatechange"
 #define LOADEND_STR "loadend"
 
@@ -618,6 +619,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
       NS_UNMARK_LISTENER_WRAPPER(LoadStart)
       NS_UNMARK_LISTENER_WRAPPER(Progress)
       NS_UNMARK_LISTENER_WRAPPER(Loadend)
+      NS_UNMARK_LISTENER_WRAPPER(UploadProgress)
       NS_UNMARK_LISTENER_WRAPPER(Readystatechange)
     }
     if (!isBlack && tmp->PreservingWrapper()) {
@@ -643,6 +645,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCORSPreflightChannel)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnUploadProgressListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnReadystatechangeListener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXMLParserStreamListener)
@@ -664,6 +667,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mResponseXML)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCORSPreflightChannel)
 
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnUploadProgressListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnReadystatechangeListener)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mXMLParserStreamListener)
@@ -704,6 +708,7 @@ void
 nsXMLHttpRequest::DisconnectFromOwner()
 {
   nsXHREventTarget::DisconnectFromOwner();
+  NS_DISCONNECT_EVENT_HANDLER(UploadProgress)
   NS_DISCONNECT_EVENT_HANDLER(Readystatechange)
   Abort();
 }
@@ -723,6 +728,23 @@ nsXMLHttpRequest::SetOnreadystatechange(nsIDOMEventListener * aOnreadystatechang
     nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(READYSTATE_STR),
                                              mOnReadystatechangeListener,
                                              aOnreadystatechange);
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::GetOnuploadprogress(nsIDOMEventListener * *aOnuploadprogress)
+{
+  return
+    nsXHREventTarget::GetInnerEventListener(mOnUploadProgressListener,
+                                            aOnuploadprogress);
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::SetOnuploadprogress(nsIDOMEventListener * aOnuploadprogress)
+{
+  return
+    nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(UPLOADPROGRESS_STR),
+                                             mOnUploadProgressListener,
+                                             aOnuploadprogress);
 }
 
 /* readonly attribute nsIChannel channel; */
@@ -1633,7 +1655,8 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
   NS_ASSERTION(!aType.IsEmpty(), "missing event type");
 
   if (NS_FAILED(CheckInnerWindowCorrectness()) ||
-      (!AllowUploadProgress() && aTarget == mUpload)) {
+      (!AllowUploadProgress() &&
+       (aTarget == mUpload || aType.EqualsLiteral(UPLOADPROGRESS_STR)))) {
     return;
   }
 
@@ -1729,6 +1752,7 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
   nsCAutoString method;
   httpChannel->GetRequestMethod(method);
   if (!mCORSUnsafeHeaders.IsEmpty() ||
+      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
       (mUpload && mUpload->HasListeners()) ||
       (!method.LowerCaseEqualsLiteral("get") &&
        !method.LowerCaseEqualsLiteral("post") &&
@@ -2796,6 +2820,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
   // necko won't generate any progress notifications.
   if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
+      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
       (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
     nsLoadFlags loadFlags;
     mChannel->GetLoadFlags(&loadFlags);
@@ -3154,7 +3179,9 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     // can run script that would try to restart this request, and that could end
     // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
     ChangeState(XML_HTTP_REQUEST_SENT);
-    if (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR))) {
+    if ((!mUploadComplete &&
+         HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR))) ||
+        (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
       StartProgressEventTimer();
     }
     DispatchProgressEvent(this, NS_LITERAL_STRING(LOADSTART_STR), false,
@@ -3695,6 +3722,10 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
       mUploadProgressMax = mUploadProgress;
       mUploadLengthComputable = true;
     }
+    DispatchProgressEvent(this, NS_LITERAL_STRING(UPLOADPROGRESS_STR),
+                          true, mUploadLengthComputable, mUploadTransferred,
+                          mUploadTotal, mUploadProgress,
+                          mUploadProgressMax);
     if (mUpload && !mUploadComplete) {
       DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
                             true, mUploadLengthComputable, mUploadTransferred,
