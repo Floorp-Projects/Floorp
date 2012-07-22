@@ -51,6 +51,12 @@ class gfxXlibSurface;
 #include <os2.h>
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+namespace mozilla {
+  class AndroidMediaLayer;
+}
+#endif
+
 // X.h defines KeyPress
 #ifdef KeyPress
 #undef KeyPress
@@ -254,11 +260,21 @@ public:
   bool UseAsyncRendering();
 
 #ifdef MOZ_WIDGET_ANDROID
-  // Returns the image container for the specified VideoInfo
-  void GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*>& aVideos);
-  already_AddRefed<ImageContainer> GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo);
+  nsIntRect GetVisibleRect() {
+    return nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
+  }
 
-  nsIntRect GetVisibleRect();
+  void SetInverted(bool aInverted) {
+    mInverted = aInverted;
+  }
+
+  bool Inverted() {
+    return mInverted;
+  }
+
+  mozilla::AndroidMediaLayer* Layer() {
+    return mLayer;
+  }
 
   void Invalidate();
 
@@ -281,12 +297,19 @@ private:
   
   void FixUpURLS(const nsString &name, nsAString &value);
 #ifdef MOZ_WIDGET_ANDROID
+  void SendSize(int width, int height);
+
   gfxRect GetPluginRect();
   bool AddPluginView(const gfxRect& aRect = gfxRect(0, 0, 0, 0));
   void RemovePluginView();
 
+  bool mInverted;
   bool mFullScreen;
+
   void* mJavaView;
+
+  // For kOpenGL_ANPDrawingModel
+  nsRefPtr<mozilla::AndroidMediaLayer> mLayer;
 #endif 
  
   nsPluginNativeWindow       *mPluginWindow;

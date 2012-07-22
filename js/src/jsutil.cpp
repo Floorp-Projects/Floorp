@@ -54,7 +54,7 @@ js::TryCompressString(const unsigned char *inp, size_t inplen, unsigned char *ou
     zs.avail_in = inplen;
     zs.next_out = out;
     zs.avail_out = inplen;
-    int ret = deflateInit(&zs, Z_DEFAULT_COMPRESSION);
+    int ret = deflateInit(&zs, Z_BEST_SPEED);
     if (ret != Z_OK) {
         JS_ASSERT(ret == Z_MEM_ERROR);
         return false;
