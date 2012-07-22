@@ -203,8 +203,7 @@ nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode *aNode, PRUint32 aOffset)
 {
   if (aNode && aNode->IsElement()) {
     PRUint32 childCount = aNode->GetChildCount();
-    NS_ASSERTION(aOffset >= 0 && aOffset <= childCount,
-                 "Wrong offset of the DOM point!");
+    NS_ASSERTION(aOffset <= childCount, "Wrong offset of the DOM point!");
 
     // The offset can be after last child of container node that means DOM point
     // is placed immediately after the last child. In this case use the DOM node
