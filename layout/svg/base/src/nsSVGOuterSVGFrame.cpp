@@ -430,17 +430,17 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
   if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     // Now that we've marked the necessary children as dirty, call
-    // UpdateBounds() on them:
+    // ReflowSVG() on them:
 
-    mCallingUpdateBounds = true;
+    mCallingReflowSVG = true;
 
     // Update the mRects and visual overflow rects of all our descendants,
     // including our anonymous wrapper kid:
-    anonKid->UpdateBounds();
+    anonKid->ReflowSVG();
     NS_ABORT_IF_FALSE(!anonKid->GetNextSibling(),
       "We should have one anonymous child frame wrapping our real children");
 
-    mCallingUpdateBounds = false;
+    mCallingReflowSVG = false;
   }
 
   // Make sure we scroll if we're too big:
