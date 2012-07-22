@@ -39,6 +39,7 @@
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
+#include "nsScriptLoader.h"
 
 #include "xpcpublic.h"
 
@@ -3866,7 +3867,7 @@ NS_DOMStructuredCloneError(JSContext* cx,
 }
 
 static nsresult
-ReadSourceFromFilename(JSContext *cx, const char *filename, char **buf, PRUint32 *len)
+ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, PRUint32 *len)
 {
   nsresult rv;
 
@@ -3893,32 +3894,40 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, char **buf, PRUint32
   rv = scriptChannel->Open(getter_AddRefs(scriptStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = scriptStream->Available(len);
+  PRUint32 rawLen;
+  rv = scriptStream->Available(&rawLen);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!*len)
+  if (!rawLen)
     return NS_ERROR_FAILURE;
 
   // Allocate an internal buf the size of the file.
-  *buf = static_cast<char *>(JS_malloc(cx, *len + 1));
-  if (!*buf)
+  nsAutoArrayPtr<unsigned char> buf(new unsigned char[rawLen]);
+  if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  char *ptr = *buf, *end = ptr + *len;
+  unsigned char *ptr = buf, *end = ptr + rawLen;
   while (ptr < end) {
     PRUint32 bytesRead;
-    rv = scriptStream->Read(ptr, end - ptr, &bytesRead);
-    if (NS_FAILED(rv)) {
-      JS_free(cx, *buf);
+    rv = scriptStream->Read(reinterpret_cast<char *>(ptr), end - ptr, &bytesRead);
+    if (NS_FAILED(rv))
       return rv;
-    }
     NS_ASSERTION(bytesRead > 0, "stream promised more bytes before EOF");
     ptr += bytesRead;
   }
-  *end = '\0';
+
+  nsString decoded;
+  rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(), NULL, decoded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Copy to JS engine.
+  *len = decoded.Length();
+  *src = static_cast<jschar *>(JS_malloc(cx, decoded.Length()*sizeof(jschar)));
+  if (!*src)
+    return NS_ERROR_FAILURE;
+  memcpy(*src, decoded.get(), decoded.Length()*sizeof(jschar));
 
   return NS_OK;
 }
-
 
 /*
   The JS engine calls this function when it needs the source for a chrome JS
@@ -3926,7 +3935,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, char **buf, PRUint32
   JSOPTION_ONLY_CGN_SOURCE.
 */
 static bool
-SourceHook(JSContext *cx, JSScript *script, char **src, uint32_t *length)
+SourceHook(JSContext *cx, JSScript *script, jschar **src, uint32_t *length)
 {
   *src = NULL;
   *length = 0;

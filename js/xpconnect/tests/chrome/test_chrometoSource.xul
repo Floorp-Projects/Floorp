@@ -22,8 +22,14 @@ function inlinefunction() {
          return 42;
 }
 
-isnot(inlinefunction.toSource().indexOf("return 42"), -1, "inline XUL script should have source");
-isnot(outoflinefunction.toSource().indexOf("return 42"), -1, "outofline XUL script should have source");
-isnot(NetUtil.asyncFetch.toSource().indexOf("return"), -1, "JSM module should have source");
+var src;
+src = inlinefunction.toSource();
+isnot(src.indexOf("return 42"), -1, "inline XUL script should have source");
+is(src.charAt(src.length - 1), "}", "inline XUL source should end with '}'");
+src = outoflinefunction.toSource();
+isnot(src.indexOf("return 42"), -1, "out of line XUL script should have source")
+is(src.charAt(src.length - 1), "}", "out of line XUL source should end with '}'");
+src = NetUtil.asyncFetch.toSource()
+isnot(src.indexOf("return"), -1, "JSM should have source");
   ]]></script>
 </window>

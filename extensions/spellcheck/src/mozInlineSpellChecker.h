@@ -157,46 +157,6 @@ private:
   // the whole document.
   bool mFullSpellCheckScheduled;
 
-  // TODO: these should be defined somewhere so that they don't have to be copied
-  // from editor!
-  enum OperationID
-  {
-    kOpIgnore = -1,
-    kOpNone = 0,
-    kOpUndo,
-    kOpRedo,
-    kOpInsertNode,
-    kOpCreateNode,
-    kOpDeleteNode,
-    kOpSplitNode,
-    kOpJoinNode,
-    kOpDeleteSelection,
-
-    kOpInsertBreak    = 1000,
-    kOpInsertText     = 1001,
-    kOpInsertIMEText  = 1002,
-    kOpDeleteText     = 1003,
-
-    kOpMakeList            = 3001,
-    kOpIndent              = 3002,
-    kOpOutdent             = 3003,
-    kOpAlign               = 3004,
-    kOpMakeBasicBlock      = 3005,
-    kOpRemoveList          = 3006,
-    kOpMakeDefListItem     = 3007,
-    kOpInsertElement       = 3008,
-    kOpInsertQuotation     = 3009,
-    kOpSetTextProperty     = 3010,
-    kOpRemoveTextProperty  = 3011,
-    kOpHTMLPaste           = 3012,
-    kOpLoadHTML            = 3013,
-    kOpResetTextProperties = 3014,
-    kOpSetAbsolutePosition = 3015,
-    kOpRemoveAbsolutePosition = 3016,
-    kOpDecreaseZIndex      = 3017,
-    kOpIncreaseZIndex      = 3018
-  };
-
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
