@@ -88,14 +88,16 @@ public:
 };
 
 
-TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserFrame)
+TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement,
+                   PRUint32 aAppId)
   : mRemoteFrame(nsnull)
   , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
   , mLastBackgroundColor(NS_RGB(255, 255, 255))
   , mDidFakeShow(false)
-  , mIsBrowserFrame(aIsBrowserFrame)
+  , mIsBrowserElement(aIsBrowserElement)
+  , mAppId(aAppId)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -380,8 +382,7 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
 
   nsRefPtr<TabChild> newChild =
     static_cast<TabChild*>(Manager()->SendPBrowserConstructor(
-      /* aChromeFlags = */ 0,
-      /* aIsBrowserFrame = */ true));
+      /* aChromeFlags = */ 0, mIsBrowserElement, mAppId));
 
   nsCAutoString spec;
   aURI->GetSpec(spec);
@@ -584,6 +585,17 @@ TabChild::RecvShow(const nsIntSize& size)
     baseWindow->InitWindow(0, mWidget,
                            0, 0, size.width, size.height);
     baseWindow->Create();
+
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebNav);
+    MOZ_ASSERT(docShell);
+
+    if (docShell) {
+      docShell->SetAppId(mAppId);
+      if (mIsBrowserElement) {
+        docShell->SetIsBrowserElement();
+      }
+    }
+
     baseWindow->SetVisibility(true);
 
     // IPC uses a WebBrowser object for which DNS prefetching is turned off
@@ -1043,7 +1055,7 @@ TabChild::InitTabChildGlobal()
   root->SetParentTarget(scope);
 
   // Initialize the child side of the browser element machinery, if appropriate.
-  if (mIsBrowserFrame) {
+  if (mIsBrowserElement || mAppId != nsIScriptSecurityManager::NO_APP_ID) {
     RecvLoadRemoteScript(
       NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"));
   }

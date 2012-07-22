@@ -147,10 +147,11 @@ public:
     /**
      * Create a new TabChild object.
      *
-     * |aIsBrowserFrame| indicates whether the TabChild is inside an
-     * <iframe mozbrowser>.
+     * |aIsBrowserElement| indicates whether the tab is inside an <iframe mozbrowser>.
+     * |aAppId| is the app id of the app containing this tab. If the tab isn't
+     * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
      */
-    TabChild(PRUint32 aChromeFlags, bool aIsBrowserFrame);
+    TabChild(PRUint32 aChromeFlags, bool aIsBrowserElement, PRUint32 aAppId);
     virtual ~TabChild();
     nsresult Init();
 
@@ -304,7 +305,8 @@ private:
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
     bool mDidFakeShow;
-    bool mIsBrowserFrame;
+    bool mIsBrowserElement;
+    PRUint32 mAppId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
