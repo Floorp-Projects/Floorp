@@ -198,7 +198,6 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --header-output DictionaryHelpers.h \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
 	  $(srcdir)/dictionary_helper_gen.conf \
