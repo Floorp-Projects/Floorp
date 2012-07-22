@@ -59,7 +59,6 @@ BrowserElementChild.prototype = {
 
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
-    docShell.setIsBrowserElement();
     docShell.QueryInterface(Ci.nsIWebProgress)
             .addProgressListener(this._progressListener,
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
