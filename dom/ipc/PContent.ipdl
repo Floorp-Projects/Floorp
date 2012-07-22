@@ -120,7 +120,7 @@ both:
     // The child creates the PBrowser as part of
     // TabChild::BrowserFrameProvideWindow, and the parent creates the PBrowser
     // as part of ContentParent::CreateTab.
-    async PBrowser(PRUint32 chromeFlags, bool isBrowserFrame);
+    async PBrowser(PRUint32 chromeFlags, bool isBrowserElement, PRUint32 appId);
 
 child:
     PMemoryReportRequest();

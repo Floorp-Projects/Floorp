@@ -69,10 +69,11 @@ public:
     /**
      * Create a new tab.
      *
-     * |aIsBrowserFrame| indicates whether this tab is part of an
+     * |aIsBrowserElement| indicates whether this tab is part of an
      * <iframe mozbrowser>.
+     * |aAppId| indicates which app the tab belongs to.
      */
-    TabParent* CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame);
+    TabParent* CreateTab(PRUint32 aChromeFlags, bool aIsBrowserElement, PRUint32 aAppId);
     /** Notify that a tab was destroyed during normal operation. */
     void NotifyTabDestroyed(PBrowserParent* aTab);
 
@@ -132,7 +133,7 @@ private:
     PCompositorParent* AllocPCompositor(ipc::Transport* aTransport,
                                         base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame);
+    virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserElement, const PRUint32& aAppId);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);

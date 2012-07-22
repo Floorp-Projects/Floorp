@@ -63,7 +63,8 @@ public:
                                        base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags,
-                                         const bool& aIsBrowserFrame);
+                                         const bool& aIsBrowserElement,
+                                         const PRUint32& aAppId);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
     virtual PDeviceStorageRequestChild* AllocPDeviceStorageRequest(const DeviceStorageParams&);
