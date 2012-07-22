@@ -395,22 +395,8 @@ interface nsIXHRSendable : nsISupports {
 /**
  * @deprecated
  */
-[deprecated, scriptable, uuid(423fdd3d-41c9-4149-8fe5-b14a1d3912a0)]
+[deprecated, scriptable, uuid(8ae70a39-edf1-40b4-a992-472d23421c25)]
 interface nsIJSXMLHttpRequest : nsISupports {
-  /**
-   * Meant to be a script-only mechanism for setting an upload progress event
-   * listener.
-   * This attribute should not be used from native code!!
-   * This event listener may be called multiple times during the upload..
-   *
-   * After the initial response, all event listeners will be cleared.
-   * // XXXbz what does that mean, exactly?
-   *
-   * This event listener must be set BEFORE calling open().
-   *
-   * Mozilla only.
-   */
-  attribute nsIDOMEventListener onuploadprogress;
 };
 
 %{ C++

@@ -26,16 +26,9 @@ window.addEventListener("message", function(e) {\n\
     res.progressEvents++;\n\
   }, false);\n\
   if (req.uploadProgress) {\n\
-    if (req.uploadProgress == "uploadProgress") {\n\
-      xhr.addEventListener("uploadProgress", function(e) {\n\
-        res.progressEvents++;\n\
-      }, false);\n\
-    }\n\
-    else {\n\
-      xhr.upload.addEventListener(req.uploadProgress, function(e) {\n\
-        res.progressEvents++;\n\
-      }, false);\n\
-    }\n\
+    xhr.upload.addEventListener(req.uploadProgress, function(e) {\n\
+      res.progressEvents++;\n\
+    }, false);\n\
   }\n\
   xhr.onerror = function(e) {\n\
     res.didFail = true;\n\
