@@ -985,7 +985,7 @@ SourceCompressorThread::init()
     if (!done)
         return false;
     thread = PR_CreateThread(PR_USER_THREAD, compressorThread, this, PR_PRIORITY_NORMAL,
-                             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                             PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (!thread)
         return false;
     return true;
