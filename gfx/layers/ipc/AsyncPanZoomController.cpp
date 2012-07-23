@@ -31,6 +31,12 @@ static const PRInt32 PAN_REPAINT_INTERVAL = 250;
  */
 static const PRInt32 FLING_REPAINT_INTERVAL = 75;
 
+/**
+ * Minimum amount of speed along an axis before we begin painting far ahead by
+ * adjusting the displayport.
+ */
+static const float MIN_SKATE_SPEED = 0.5f;
+
 AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
   :  mGeckoContentController(aGeckoContentController),
@@ -564,15 +570,8 @@ const nsIntRect AsyncPanZoomController::CalculatePendingDisplayPort() {
   nsIntRect viewport = mFrameMetrics.mViewport;
   viewport.ScaleRoundIn(1 / scale);
 
-  const float SIZE_MULTIPLIER = 2.0f;
   nsIntPoint scrollOffset = mFrameMetrics.mViewportScrollOffset;
-  gfx::Rect contentRect = mFrameMetrics.mCSSContentRect;
-
-  // Paint a larger portion of the screen than just what we can see. This makes
-  // it less likely that we'll checkerboard when panning around and Gecko hasn't
-  // repainted yet.
-  float desiredWidth = viewport.width * SIZE_MULTIPLIER,
-        desiredHeight = viewport.height * SIZE_MULTIPLIER;
+  nsPoint velocity = GetVelocityVector();
 
   // The displayport is relative to the current scroll offset. Here's a little
   // diagram to make it easier to see:
@@ -598,32 +597,40 @@ const nsIntRect AsyncPanZoomController::CalculatePendingDisplayPort() {
   // viewport marks the current scroll offset. From the @ symbol to the far left
   // and far top, it is clear that this distance is 1/4 of the displayport's
   // height/width dimension.
-  gfx::Rect displayPort(-desiredWidth / 4, -desiredHeight / 4, desiredWidth, desiredHeight);
+  const float STATIONARY_SIZE_MULTIPLIER = 2.0f;
+  const float SKATE_SIZE_MULTIPLIER = 3.0f;
+  gfx::Rect displayPort(0, 0,
+                        viewport.width * STATIONARY_SIZE_MULTIPLIER,
+                        viewport.height * STATIONARY_SIZE_MULTIPLIER);
 
-  // Check if the desired boundaries go over the CSS page rect along the top or
-  // left. If they do, shift them to the right or down.
-  float oldDisplayPortX = displayPort.x, oldDisplayPortY = displayPort.y;
-  if (displayPort.X() + scrollOffset.x < contentRect.X()) {
-    displayPort.x = contentRect.X() - scrollOffset.x;
-  }
-  if (displayPort.Y() + scrollOffset.y < contentRect.Y()) {
-    displayPort.y = contentRect.Y() - scrollOffset.y;
+  // Iff there's motion along only one axis of movement, and it's above a
+  // threshold, then we want to paint a larger area in the direction of that
+  // motion so that it's less likely to checkerboard. Also note that the other
+  // axis doesn't need its displayport enlarged beyond the viewport dimension,
+  // since it is impossible for it to checkerboard along that axis until motion
+  // begins on it.
+  if (fabsf(velocity.x) > MIN_SKATE_SPEED && fabsf(velocity.y) < MIN_SKATE_SPEED) {
+    displayPort.height = viewport.height;
+    displayPort.width = viewport.width * SKATE_SIZE_MULTIPLIER;
+    displayPort.x = velocity.x > 0 ? 0 : viewport.width - displayPort.width;
+  } else if (fabsf(velocity.x) < MIN_SKATE_SPEED && fabsf(velocity.y) > MIN_SKATE_SPEED) {
+    displayPort.width = viewport.width;
+    displayPort.height = viewport.height * SKATE_SIZE_MULTIPLIER;
+    displayPort.y = velocity.y > 0 ? 0 : viewport.height - displayPort.height;
+  } else {
+    displayPort.x = -displayPort.width / 4;
+    displayPort.y = -displayPort.height / 4;
   }
 
-  // We don't need to paint the extra area that was going to overlap with the
-  // content rect. Subtract out this extra width or height.
-  displayPort.width -= displayPort.x - oldDisplayPortX;
-  displayPort.height -= displayPort.y - oldDisplayPortY;
-
-  // Check if the desired boundaries go over the CSS page rect along the right
-  // or bottom. If they do, subtract out some height or width such that they
-  // perfectly align with the end of the CSS page rect.
-  if (displayPort.XMost() + scrollOffset.x > contentRect.XMost()) {
-    displayPort.width = NS_MAX(0.0f, contentRect.XMost() - (displayPort.X() + scrollOffset.x));
-  }
-  if (displayPort.YMost() + scrollOffset.y > contentRect.YMost()) {
-    displayPort.height = NS_MAX(0.0f, contentRect.YMost() - (displayPort.Y() + scrollOffset.y));
-  }
+  gfx::Rect shiftedDisplayPort = displayPort;
+  // Both the scroll offset and displayport are in CSS pixels.  We're scaling
+  // the scroll offset because Gecko will internally scale the displayport by
+  // the resolution, so we'll get clipping at the far bottom or far right if we
+  // directly get the intersection of the displayport offset by the scroll
+  // offset and the CSS content rect.
+  shiftedDisplayPort.MoveBy(scrollOffset.x / scale, scrollOffset.y / scale);
+  displayPort = shiftedDisplayPort.Intersect(mFrameMetrics.mCSSContentRect);
+  displayPort.MoveBy(-scrollOffset.x / scale, -scrollOffset.y / scale);
 
   // Round the displayport so we don't get any truncation, then get the nsIntRect
   // from this.
