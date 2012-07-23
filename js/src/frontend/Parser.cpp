@@ -801,8 +801,6 @@ Define(ParseNode *pn, JSAtom *atom, TreeContext *tc, bool let = false)
         return false;
     pn->setDefn(true);
     pn->pn_dflags &= ~PND_PLACEHOLDER;
-    if (!tc->parent)
-        pn->pn_dflags |= PND_TOPLEVEL;
     return true;
 }
 
@@ -4797,6 +4795,9 @@ Parser::unaryExpr()
           case PNK_NAME:
             if (!reportStrictModeError(pn, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return NULL;
+            tc->sc->setBindingsAccessedDynamically();
+            tc->sc->setFunIsHeavyweight();
+            pn2->pn_dflags |= PND_DEOPTIMIZED;
             pn2->setOp(JSOP_DELNAME);
             break;
           default:;
