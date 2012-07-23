@@ -138,6 +138,8 @@ public:
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;
+  SurfaceDescriptor mBufferDescriptor;
+  nsIntRegion mValidRegionForNextBackBuffer;
 };
 
 } /* layers */
