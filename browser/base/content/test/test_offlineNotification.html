@@ -37,9 +37,20 @@ window.addEventListener("message", function(event) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       var pm = Components.classes["@mozilla.org/permissionmanager;1"].
                getService(Components.interfaces.nsIPermissionManager);
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+      var uri1 = ioService.newURI(frames.testFrame.location, null, null);
+      var uri2 = ioService.newURI(frames.testFrame3.location, null, null);
 
-      pm.remove(frames.testFrame.location.hostname, "offline-app");
-      pm.remove(frames.testFrame3.location.hostname, "offline-app");
+      var principal1 = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri1);
+      var principal2 = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri2);
+
+      pm.removeFromPrincipal(principal1, "offline-app");
+      pm.removeFromPrincipal(principal2, "offline-app");
 
       SimpleTest.finish();
     }
