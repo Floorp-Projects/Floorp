@@ -90,7 +90,8 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
                                     const bool& isContent,
                                     const bool& usePrivateBrowsing,
                                     const bool& isInBrowserElement,
-                                    const PRUint32& appId)
+                                    const PRUint32& appId,
+                                    const nsCString& extendedOrigin)
 {
   nsCOMPtr<nsIURI> original(aOriginal);
 
@@ -115,6 +116,7 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
   mUsePrivateBrowsing = usePrivateBrowsing;
   mIsInBrowserElement = isInBrowserElement;
   mAppId = appId;
+  mExtendedOrigin = extendedOrigin;
   mChannel->SetNotificationCallbacks(this);
 
   rv = mChannel->AsyncOpen(this, nsnull);
@@ -339,5 +341,14 @@ WyciwygChannelParent::GetAppId(PRUint32* aAppId)
   *aAppId = mAppId;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetExtendedOrigin(nsIURI *aUri,
+                                        nsACString &aResult)
+{
+  aResult = mExtendedOrigin;
+  return NS_OK;
+}
+
 
 }} // mozilla::net

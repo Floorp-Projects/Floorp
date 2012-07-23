@@ -44,7 +44,8 @@ protected:
                                          const bool& isContent,
                                          const bool& usingPrivateBrowsing,
                                          const bool& isInBrowserElement,
-                                         const PRUint32& appId);
+                                         const PRUint32& appId,
+                                         const nsCString& extendedOrigin);
   NS_OVERRIDE virtual bool RecvConnectChannel(const PRUint32& channelId);
   NS_OVERRIDE virtual bool RecvCancel(const nsresult& status);
   NS_OVERRIDE virtual bool RecvSuspend();
@@ -63,6 +64,7 @@ protected:
   bool mIsInBrowserElement    : 1;
 
   PRUint32 mAppId;
+  nsCString mExtendedOrigin;
 };
 
 } // namespace net

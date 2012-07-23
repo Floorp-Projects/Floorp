@@ -31,7 +31,8 @@ parent:
             bool isContent,
             bool usePrivateBrowsing,
             bool isInBrowserElement,
-            PRUint32 appID);
+            PRUint32 appID,
+            nsCString extendedOrigin);
   ConnectChannel(PRUint32 channelId);
   Cancel(nsresult status);
   Suspend();
