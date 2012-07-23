@@ -42,6 +42,7 @@
 #include "prnetdb.h"
 #include "zlib.h"
 #include "mozilla/Attributes.h"
+#include "nsIPrincipal.h"
 
 // Needed to interpert mozIStorageConnection::GetLastError
 #include <sqlite3.h>
@@ -1829,7 +1830,7 @@ nsUrlClassifierDBServiceWorker::AddNoise(PRInt64 nearID,
 
 // Lookup a key in the db.
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::Lookup(const nsACString& spec,
+nsUrlClassifierDBServiceWorker::Lookup(nsIPrincipal* aPrincipal,
                                        nsIUrlClassifierCallback* c)
 {
   return HandlePendingLookups();
@@ -4238,10 +4239,11 @@ nsUrlClassifierDBService::Init()
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::Classify(nsIURI *uri,
+nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
                                    nsIURIClassifierCallback* c,
                                    bool* result)
 {
+  NS_ENSURE_ARG(aPrincipal);
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   if (!(mCheckMalware || mCheckPhishing)) {
@@ -4253,7 +4255,7 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
     new nsUrlClassifierClassifyCallback(c, mCheckMalware, mCheckPhishing);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = LookupURI(uri, callback, false, result);
+  nsresult rv = LookupURI(aPrincipal, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
     *result = false;
     // The URI had no hostname, don't try to classify it.
@@ -4265,38 +4267,36 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::Lookup(const nsACString& spec,
+nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
                                  nsIUrlClassifierCallback* c)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIURI> uri;
-
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uri = NS_GetInnermostURI(uri);
-  if (!uri) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool didLookup;
-  return LookupURI(uri, c, true, &didLookup);
+  bool dummy;
+  return LookupURI(aPrincipal, c, true, &dummy);
 }
 
 nsresult
-nsUrlClassifierDBService::LookupURI(nsIURI* uri,
+nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
                                     nsIUrlClassifierCallback* c,
                                     bool forceLookup,
                                     bool *didLookup)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_ARG(aPrincipal);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uri = NS_GetInnermostURI(uri);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
   nsCAutoString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  nsresult rv = utilsService->GetKeyForURI(uri, key);
+  rv = utilsService->GetKeyForURI(uri, key);
   if (NS_FAILED(rv))
     return rv;
 
@@ -4315,7 +4315,10 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
 
       if (permissionManager) {
         PRUint32 perm;
-        permissionManager->TestPermission(uri, "safe-browsing", &perm);
+        rv = permissionManager->TestPermissionFromPrincipal(aPrincipal,
+                                                           "safe-browsing", &perm);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         clean |= (perm == nsIPermissionManager::ALLOW_ACTION);
       }
     }
@@ -4342,7 +4345,7 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
   rv = mWorker->QueueLookup(key, proxyCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mWorkerProxy->Lookup(EmptyCString(), nsnull);
+  return mWorkerProxy->Lookup(nsnull, nsnull);
 }
 
 NS_IMETHODIMP
