@@ -17,6 +17,10 @@
 namespace mozilla {
 namespace layers {
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 static const float EPSILON = 0.0001;
 
 /**
@@ -36,6 +40,11 @@ static const PRInt32 FLING_REPAINT_INTERVAL = 75;
  * adjusting the displayport.
  */
 static const float MIN_SKATE_SPEED = 0.5f;
+
+/**
+ * Angle from axis within which we stay axis-locked.
+ */
+static const float AXIS_LOCK_ANGLE = M_PI / 6.0;
 
 AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
@@ -214,10 +223,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
 }
 
 nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent) {
-  SingleTouchData& touch = GetFirstSingleTouch(aEvent);
-  nsIntPoint point = touch.mScreenPoint;
-  PRInt32 xPos = point.x, yPos = point.y;
-
   switch (mState) {
     case FLING:
     case NOTHING:
@@ -226,14 +231,12 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case TOUCHING: {
-      float panThreshold = 1.0f/16.0f * mDPI;
-      if (PanDistance(aEvent) < panThreshold) {
+      float panThreshold = 1.0f/2.0f * mDPI;
+      UpdateWithTouchAtDevicePoint(aEvent);
+      if (PanDistance() < panThreshold) {
         return nsEventStatus_eIgnore;
       }
-      mLastRepaint = aEvent.mTime;
-      mX.StartTouch(xPos);
-      mY.StartTouch(yPos);
-      mState = PANNING;
+      StartPanning(aEvent);
       return nsEventStatus_eConsumeNoDefault;
     }
 
@@ -428,12 +431,7 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
   return nsEventStatus_eIgnore;
 }
 
-float AsyncPanZoomController::PanDistance(const MultiTouchInput& aEvent) {
-  SingleTouchData& touch = GetFirstSingleTouch(aEvent);
-  nsIntPoint point = touch.mScreenPoint;
-  PRInt32 xPos = point.x, yPos = point.y;
-  mX.UpdateWithTouchAtDevicePoint(xPos, TimeDuration(0));
-  mY.UpdateWithTouchAtDevicePoint(yPos, TimeDuration(0));
+float AsyncPanZoomController::PanDistance() {
   return NS_hypot(mX.PanDistance(), mY.PanDistance()) * mFrameMetrics.mResolution.width;
 }
 
@@ -444,7 +442,28 @@ const nsPoint AsyncPanZoomController::GetVelocityVector() {
   );
 }
 
-void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
+void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
+  SingleTouchData& touch = GetFirstSingleTouch(aEvent);
+
+  float dx = mX.PanDistance(),
+        dy = mY.PanDistance();
+
+  double angle = atan2(dy, dx); // range [-pi, pi]
+  angle = fabs(angle); // range [0, pi]
+
+  mX.StartTouch(touch.mScreenPoint.x);
+  mY.StartTouch(touch.mScreenPoint.y);
+  mState = PANNING;
+  mLastRepaint = aEvent.mTime;
+
+  if (angle < AXIS_LOCK_ANGLE || angle > (M_PI - AXIS_LOCK_ANGLE)) {
+    mY.LockPanning();
+  } else if (fabsf(angle - M_PI / 2) < AXIS_LOCK_ANGLE) {
+    mX.LockPanning();
+  }
+}
+
+void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
   nsIntPoint point = touch.mScreenPoint;
   PRInt32 xPos = point.x, yPos = point.y;
@@ -455,10 +474,22 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     return;
   }
 
+  mX.UpdateWithTouchAtDevicePoint(xPos, timeDelta);
+  mY.UpdateWithTouchAtDevicePoint(yPos, timeDelta);
+}
+
+void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
+  TimeDuration timeDelta = TimeDuration().FromMilliseconds(aEvent.mTime - mLastEventTime);
+
+  // Probably a duplicate event, just throw it away.
+  if (timeDelta.ToMilliseconds() <= EPSILON) {
+    return;
+  }
+
+  UpdateWithTouchAtDevicePoint(aEvent);
+
   {
     MonitorAutoLock monitor(mMonitor);
-    mX.UpdateWithTouchAtDevicePoint(xPos, timeDelta);
-    mY.UpdateWithTouchAtDevicePoint(yPos, timeDelta);
 
     // We want to inversely scale it because when you're zoomed further in, a
     // larger swipe should move you a shorter distance.
