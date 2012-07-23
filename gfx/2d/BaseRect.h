@@ -276,6 +276,19 @@ struct BaseRect {
   T XMost() const { return x + width; }
   T YMost() const { return y + height; }
 
+  // Moves one edge of the rect without moving the opposite edge.
+  void SetLeftEdge(T aX) {
+    width = XMost() - aX;
+    x = aX;
+  }
+  void SetRightEdge(T aXMost) { width = aXMost - x; }
+
+  void SetTopEdge(T aY) {
+    height = YMost() - aY;
+    y = aY;
+  }
+  void SetBottomEdge(T aYMost) { height = aYMost - y; }
+
   // Round the rectangle edges to integer coordinates, such that the rounded
   // rectangle has the same set of pixel centers as the original rectangle.
   // Edges at offset 0.5 round up.
