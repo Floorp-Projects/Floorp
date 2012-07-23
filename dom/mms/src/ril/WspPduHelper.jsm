@@ -1039,6 +1039,37 @@ let UriValue = {
 };
 
 /**
+ * Internal coder for "type" parameter.
+ *
+ *   Type-value = Constrained-encoding
+ *
+ * @see WAP-230-WSP-20010705-a table 38
+ */
+let TypeValue = {
+  /**
+   * @param data
+   *        A wrapped object containing raw PDU data.
+   *
+   * @return Decoded content type string.
+   */
+  decode: function decode(data) {
+    let numOrStr = ConstrainedEncoding.decode(data);
+    if (typeof numOrStr == "string") {
+      return numOrStr.toLowerCase();
+    }
+
+    let number = numOrStr;
+    let entry = WSP_WELL_KNOWN_CONTENT_TYPES[number];
+    if (!entry) {
+      throw new NotWellKnownEncodingError(
+        "Constrained-media: not well known media " + number);
+    }
+
+    return entry.type;
+  },
+};
+
+/**
  * Parameter = Typed-parameter | Untyped-parameter
  *
  * For Typed-parameters, the actual expected type of the value is implied by
@@ -1539,23 +1570,8 @@ let ContentTypeValue = {
    *         is not registered or supported.
    */
   decodeConstrainedMedia: function decodeConstrainedMedia(data) {
-    let numOrStr = ConstrainedEncoding.decode(data);
-    if (typeof numOrStr == "string") {
-      return {
-        media: numOrStr.toLowerCase(),
-        params: null,
-      };
-    }
-
-    let number = numOrStr;
-    let entry = WSP_WELL_KNOWN_CONTENT_TYPES[number];
-    if (!entry) {
-      throw new NotWellKnownEncodingError(
-        "Constrained-media: not well known media " + number);
-    }
-
     return {
-      media: entry.type,
+      media: TypeValue.decode(data),
       params: null,
     };
   },
@@ -1991,7 +2007,7 @@ const WSP_WELL_KNOWN_PARAMS = (function () {
   //add("filename",        0x06); Deprecated
   add("differences",       0x07, FieldName);
   add("padding",           0x08, ShortInteger);
-  add("type",              0x09, ConstrainedEncoding);
+  add("type",              0x09, TypeValue);
   add("start",             0x0A, TextValue); // Deprecated, but used in some carriers, eg. T-Mobile.
   //add("start-info",      0x0B); Deprecated
   //add("comment",         0x0C); Deprecated
@@ -2109,6 +2125,7 @@ const EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
   "QValue",
   "VersionValue",
   "UriValue",
+  "TypeValue",
   "Parameter",
   "Header",
   "WellKnownHeader",

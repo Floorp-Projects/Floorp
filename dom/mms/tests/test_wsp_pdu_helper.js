@@ -541,6 +541,24 @@ add_test(function test_UriValue_decode() {
 });
 
 //
+// Test target: TypeValue
+//
+
+//// TypeValue.decode ////
+
+add_test(function test_TypeValue_decode() {
+  // Test for string-typed return value from ConstrainedEncoding
+  wsp_decode_test(WSP.TypeValue, [65, 0], "a");
+  // Test for number-typed return value from ConstrainedEncoding
+  wsp_decode_test(WSP.TypeValue, [0x33 | 0x80],
+                  "application/vnd.wap.multipart.related");
+  // Test for NotWellKnownEncodingError
+  wsp_decode_test(WSP.TypeValue, [0x80], null, "NotWellKnownEncodingError");
+
+  run_next_test();
+});
+
+//
 // Test target: Parameter
 //
 
