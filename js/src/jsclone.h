@@ -132,9 +132,9 @@ struct JSStructuredCloneWriter {
 
     bool writeString(uint32_t tag, JSString *str);
     bool writeId(jsid id);
-    bool writeArrayBuffer(JSObject *obj);
-    bool writeTypedArray(JSObject *obj);
-    bool startObject(JSObject *obj);
+    bool writeArrayBuffer(JSHandleObject obj);
+    bool writeTypedArray(JSHandleObject obj);
+    bool startObject(JSHandleObject obj);
     bool startWrite(const js::Value &v);
 
     inline void checkStack();

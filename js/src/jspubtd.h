@@ -249,6 +249,7 @@ struct RootKind;
  * available.
  */
 template <> struct RootKind<JSObject *> { static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }; };
+template <> struct RootKind<JSFunction *> { static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }; };
 template <> struct RootKind<JSString *> { static ThingRootKind rootKind() { return THING_ROOT_STRING; }; };
 template <> struct RootKind<JSScript *> { static ThingRootKind rootKind() { return THING_ROOT_SCRIPT; }; };
 template <> struct RootKind<jsid> { static ThingRootKind rootKind() { return THING_ROOT_ID; }; };

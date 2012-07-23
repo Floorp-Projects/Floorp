@@ -87,13 +87,13 @@ Class js::ObjectClass = {
 };
 
 JS_FRIEND_API(JSObject *)
-JS_ObjectToInnerObject(JSContext *cx, JSObject *obj_)
+JS_ObjectToInnerObject(JSContext *cx, JSObject *objArg)
 {
-    if (!obj_) {
+    RootedObject obj(cx, objArg);
+    if (!obj) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
         return NULL;
     }
-    Rooted<JSObject*> obj(cx, obj_);
     return GetInnerObject(cx, obj);
 }
 
@@ -2291,7 +2291,7 @@ js_Object(JSContext *cx, unsigned argc, Value *vp)
         obj = NULL;
     } else {
         /* If argv[0] is null or undefined, obj comes back null. */
-        if (!js_ValueToObjectOrNull(cx, vp[2], obj.address()))
+        if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
             return JS_FALSE;
     }
     if (!obj) {
@@ -3800,7 +3800,7 @@ SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycle
 }
 
 bool
-js_GetClassObject(JSContext *cx, HandleObject obj, JSProtoKey key,
+js_GetClassObject(JSContext *cx, RawObject obj, JSProtoKey key,
                   MutableHandleObject objp)
 {
 
@@ -5468,7 +5468,7 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
 }
 
 JSBool
-js_ValueToObjectOrNull(JSContext *cx, const Value &v, JSObject **objp)
+js_ValueToObjectOrNull(JSContext *cx, const Value &v, MutableHandleObject objp)
 {
     JSObject *obj;
 
@@ -5481,7 +5481,7 @@ js_ValueToObjectOrNull(JSContext *cx, const Value &v, JSObject **objp)
         if (!obj)
             return false;
     }
-    *objp = obj;
+    objp.set(obj);
     return true;
 }
 
@@ -5511,7 +5511,7 @@ ToObjectSlow(JSContext *cx, Value *vp)
 JSObject *
 js_ValueToNonNullObject(JSContext *cx, const Value &v)
 {
-    JSObject *obj;
+    RootedObject obj(cx);
 
     if (!js_ValueToObjectOrNull(cx, v, &obj))
         return NULL;

@@ -579,7 +579,7 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
          * correspond to indexes in the half-open range [newlen, oldlen).  See
          * bug 322135.
          */
-        JSObject *iter = JS_NewPropertyIterator(cx, obj);
+        RootedObject iter(cx, JS_NewPropertyIterator(cx, obj));
         if (!iter)
             return false;
 
@@ -3707,7 +3707,8 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg)
 
     Rooted<GlobalObject*> parent(cx, parent_);
     RootedObject proto(cx, protoArg);
-    PoisonPtr(reinterpret_cast<uintptr_t *>(protoArg));
+    if (protoArg)
+        PoisonPtr(reinterpret_cast<uintptr_t *>(protoArg));
 
     if (!proto && !FindProto(cx, &ArrayClass, parent, &proto))
         return NULL;

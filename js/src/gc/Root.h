@@ -232,6 +232,12 @@ typedef MutableHandle<JSObject*>    MutableHandleObject;
 typedef MutableHandle<Value>        MutableHandleValue;
 
 /*
+ * Raw pointer used as documentation that a parameter does not need to be
+ * rooted.
+ */
+typedef JSObject *                  RawObject;
+
+/*
  * By default, pointers should use the inheritance hierarchy to find their
  * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
  * Rooted<T> may be used without the class definition being available.

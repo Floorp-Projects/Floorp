@@ -653,7 +653,7 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToLowerCase) {
-        JSString *str = ThisToStringForStringProto(cx, args);
+        RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
@@ -720,7 +720,7 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
-        JSString *str = ThisToStringForStringProto(cx, args);
+        RootedString str(cx, ThisToStringForStringProto(cx, args));
         if (!str)
             return false;
 
@@ -746,7 +746,7 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() == 0) {
         args.rval().setInt32(0);
     } else {
-        JSString *thatStr = ToString(cx, args[0]);
+        RootedString thatStr(cx, ToString(cx, args[0]));
         if (!thatStr)
             return false;
 
