@@ -1668,7 +1668,8 @@ abstract public class GeckoApp
 
     public boolean isTablet() {
         int screenLayout = getResources().getConfiguration().screenLayout;
-        return ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE);
+        return (Build.VERSION.SDK_INT >= 11 &&
+                ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE));
     }
 
     /** Called when the activity is first created. */
