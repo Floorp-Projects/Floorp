@@ -59,6 +59,14 @@ public:
   void StopTouch();
 
   /**
+   * Sets axis locking. This prevents any panning along this axis. If the
+   * current touch point is updated and the axis is locked, the velocity will
+   * not be recalculated. Any already-existing velocity will however stay the
+   * same.
+   */
+  void LockPanning();
+
+  /**
    * Gets displacement that should have happened since the previous touch.
    * Note: Does not reset the displacement. It gets recalculated on the next
    * UpdateWithTouchAtDevicePoint(), however it is not safe to assume this will
@@ -164,6 +172,7 @@ protected:
   PRInt32 mStartPos;
   float mVelocity;
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
+  bool mLockPanning;
 };
 
 class AxisX : public Axis {
