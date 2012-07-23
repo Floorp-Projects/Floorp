@@ -14,16 +14,16 @@ Cu.import("resource://gre/modules/mms_consts.js");
 let DEBUG; // set to true to see debug messages
 
 function translatePduErrorToStatus(error) {
-  switch (error) {
-    case MMS_PDU_ERROR_OK:
-      return MMS_PDU_STATUS_RETRIEVED;
-    case MMS_PDU_ERROR_TRANSIENT_FAILURE:
-    case MMS_PDU_ERROR_TRANSIENT_MESSAGE_NOT_FOUND:
-    case MMS_PDU_ERROR_TRANSIENT_NETWORK_PROBLEM:
-      return MMS_PDU_STATUS_DEFERRED;
-    default:
-      return MMS_PDU_STATUS_UNRECOGNISED;
+  if (error == MMS_PDU_ERROR_OK) {
+    return MMS_PDU_STATUS_RETRIEVED;
   }
+
+  if ((error >= MMS_PDU_ERROR_TRANSIENT_FAILURE)
+      && (error < MMS_PDU_ERROR_PERMANENT_FAILURE)) {
+    return MMS_PDU_STATUS_DEFERRED;
+  }
+
+  return MMS_PDU_STATUS_UNRECOGNISED;
 }
 
 /**
@@ -881,24 +881,13 @@ let RetrieveStatusValue = {
    */
   decode: function decode(data) {
     let value = WSP.Octet.decode(data);
-    if ((value == 128)
-        || ((value >= 192) && (value <= 194))
-        || ((value >= 224) && (value <= 227))) {
+    if (value == MMS_PDU_ERROR_OK) {
       return value;
     }
 
-    if ((value >= 195) && (value <= 223)) {
-      // The values 195 through 223 are reserved for future use to indicate
-      // other transient failures. An MMS Client MUST react the same to a value
-      // in range 195 to 223 as it does to the value 192
-      // (Error-transient-failure).
-      return MMS_PDU_ERROR_TRANSIENT_FAILURE;
+    if ((value >= MMS_PDU_ERROR_TRANSIENT_FAILURE) && (value < 256)) {
+      return value;
     }
-
-    // The values 228 through 255 are reserved for future use to indicate
-    // other permanent failures. An MMS Client MUST react the same to a value
-    // in range 228 to 255 as it does to the value 224
-    // (Error-permanent-failure).
 
     // Any other values SHALL NOT be used. They are reserved for future use.
     // An MMS Client that receives such a reserved value MUST react the same
