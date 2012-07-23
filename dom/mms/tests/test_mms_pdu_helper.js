@@ -97,8 +97,8 @@ add_test(function test_HeaderField_decode() {
 add_test(function test_HeaderField_encode() {
   // Test for MmsHeader
   wsp_encode_test(MMS.HeaderField, {name: "X-Mms-Message-Type",
-                                    value: MMS.MMS_PDU_TYPE_SEND_REQ},
-                  [0x80 | 0x0C, MMS.MMS_PDU_TYPE_SEND_REQ]);
+                                    value: MMS_PDU_TYPE_SEND_REQ},
+                  [0x80 | 0x0C, MMS_PDU_TYPE_SEND_REQ]);
   // Test for ApplicationHeader
   wsp_encode_test(MMS.HeaderField, {name: "a", value: "B"}, [97, 0, 66, 0]);
 
@@ -132,8 +132,8 @@ add_test(function test_MmsHeader_encode() {
                   null, "NotWellKnownEncodingError");
   // Test for normal header
   wsp_encode_test(MMS.MmsHeader, {name: "X-Mms-Message-Type",
-                                  value: MMS.MMS_PDU_TYPE_SEND_REQ},
-                  [0x80 | 0x0C, MMS.MMS_PDU_TYPE_SEND_REQ]);
+                                  value: MMS_PDU_TYPE_SEND_REQ},
+                  [0x80 | 0x0C, MMS_PDU_TYPE_SEND_REQ]);
 
   run_next_test();
 });
@@ -164,24 +164,44 @@ add_test(function test_ContentClassValue_decode() {
 
 add_test(function test_ContentLocationValue_decode() {
   // Test for MMS_PDU_TYPE_MBOX_DELETE_CONF & MMS_PDU_TYPE_DELETE_CONF
-  wsp_decode_test_ex(function (data) {
-      data.array[0] = data.array.length - 1;
-
+  function test(type, statusCount, exception) {
+    function decode(data) {
       let options = {};
-      options["x-mms-message-type"] = /*MMS.MMS_PDU_TYPE_MBOX_DELETE_CONF*/146;
+      if (type) {
+        options["x-mms-message-type"] = type;
+      }
       return MMS.ContentLocationValue.decode(data, options);
-    }, [0, 0x80 | 0x00].concat(strToCharCodeArray("http://no.such.com/path")),
-    {statusCount: 0, uri: "http://no.such.com/path"}
-  );
-  wsp_decode_test_ex(function (data) {
-      data.array[0] = data.array.length - 1;
+    }
 
-      let options = {};
-      options["x-mms-message-type"] = /*MMS.MMS_PDU_TYPE_DELETE_CONF*/149;
-      return MMS.ContentLocationValue.decode(data, options);
-    }, [0, 0x80 | 0x00].concat(strToCharCodeArray("http://no.such.com/path")),
-    {statusCount: 0, uri: "http://no.such.com/path"}
-  );
+    let uri = "http://no.such.com/path";
+
+    let data = strToCharCodeArray(uri);
+    if (statusCount != null) {
+      data = [data.length + 1, statusCount | 0x80].concat(data);
+    }
+
+    let expected;
+    if (!exception) {
+      expected = {};
+      if (statusCount != null) {
+        expected.statusCount = statusCount;
+      }
+      expected.uri = uri;
+    }
+
+    do_print("data = " + JSON.stringify(data));
+    wsp_decode_test_ex(decode, data, expected, exception);
+  }
+
+  test(null, null, "FatalCodeError");
+  for (let type = MMS_PDU_TYPE_SEND_REQ; type <= MMS_PDU_TYPE_CANCEL_CONF; type++) {
+    if ((type == MMS_PDU_TYPE_MBOX_DELETE_CONF)
+        || (type == MMS_PDU_TYPE_DELETE_CONF)) {
+      test(type, 1, null);
+    } else {
+      test(type, null, null);
+    }
+  }
 
   run_next_test();
 });
