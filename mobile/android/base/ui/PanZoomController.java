@@ -298,7 +298,6 @@ public class PanZoomController
             // if we enter here, we just finished a block of events whose default actions
             // were prevented by touch listeners. Now there are no touch points left, so
             // we need to reset our state and re-bounce because we might be in overscroll
-            setState(PanZoomState.NOTHING);
             bounce();
         }
     }
@@ -416,7 +415,6 @@ public class PanZoomController
             return false;
 
         case TOUCHING:
-            setState(PanZoomState.NOTHING);
             // the switch into TOUCHING might have happened while the page was
             // snapping back after overscroll. we need to finish the snap if that
             // was the case
@@ -451,7 +449,6 @@ public class PanZoomController
         }
 
         cancelTouch();
-        setState(PanZoomState.NOTHING);
         // ensure we snap back if we're overscrolled
         bounce();
         return false;
@@ -1074,7 +1071,6 @@ public class PanZoomController
     /** This function must be called from the UI thread. */
     public void abortPanning() {
         checkMainThread();
-        setState(PanZoomState.NOTHING);
         bounce();
     }
 }
