@@ -39,6 +39,10 @@ typedef char realGLboolean;
 
 #include "mozilla/mozalloc.h"
 
+namespace android {
+class GraphicBuffer;
+}
+
 namespace mozilla {
   namespace layers {
     class LayerManagerOGL;
@@ -745,6 +749,10 @@ public:
 
     virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
     virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
+
+    virtual already_AddRefed<TextureImage>
+    CreateDirectTextureImage(android::GraphicBuffer* aBuffer, GLenum aWrapMode)
+    { return nsnull; }
 
     /*
      * Offscreen support API
