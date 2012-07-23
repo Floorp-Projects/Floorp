@@ -83,6 +83,7 @@
 
 #include "mozilla/dom/sms/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
+#include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 
 using namespace mozilla::docshell;
 using namespace mozilla::dom::devicestorage;

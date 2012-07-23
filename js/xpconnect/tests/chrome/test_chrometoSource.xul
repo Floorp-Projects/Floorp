@@ -17,6 +17,7 @@
   <script type="application/javascript"><![CDATA[
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function inlinefunction() {
          return 42;
@@ -29,7 +30,11 @@ is(src.charAt(src.length - 1), "}", "inline XUL source should end with '}'");
 src = outoflinefunction.toSource();
 isnot(src.indexOf("return 42"), -1, "out of line XUL script should have source")
 is(src.charAt(src.length - 1), "}", "out of line XUL source should end with '}'");
-src = NetUtil.asyncFetch.toSource()
+src = NetUtil.asyncFetch.toSource();
 isnot(src.indexOf("return"), -1, "JSM should have source");
+var ns = {};
+Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);
+src = ns.NetUtil.asyncFetch.toSource();
+isnot(src.indexOf("return"), -1, "subscript should have source");
   ]]></script>
 </window>

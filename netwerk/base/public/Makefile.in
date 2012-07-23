@@ -58,7 +58,6 @@ XPIDLSRCS	= \
                 nsINetworkLinkService.idl \
 		nsIPermission.idl \
 		nsIPermissionManager.idl \
-		nsIPrivateBrowsingConsumer.idl \
 		nsIPrivateBrowsingService.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
