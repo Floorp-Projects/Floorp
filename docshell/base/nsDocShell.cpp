@@ -2747,6 +2747,10 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem ** aParent)
     NS_ENSURE_ARG_POINTER(aParent);
     *aParent = nsnull;
 
+    if (mIsBrowserFrame) {
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIDocShellTreeItem> parent =
         do_QueryInterface(GetAsSupports(mParent));
     if (!parent)
@@ -2757,6 +2761,27 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem ** aParent)
 
     if (parentType == mItemType) {
         parent.swap(*aParent);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetParentIgnoreBrowserFrame(nsIDocShell** aParent)
+{
+    NS_ENSURE_ARG_POINTER(aParent);
+    *aParent = nsnull;
+
+    nsCOMPtr<nsIDocShellTreeItem> parent =
+        do_QueryInterface(GetAsSupports(mParent));
+    if (!parent)
+        return NS_OK;
+
+    PRInt32 parentType;
+    NS_ENSURE_SUCCESS(parent->GetItemType(&parentType), NS_ERROR_FAILURE);
+
+    if (parentType == mItemType) {
+        nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parent);
+        parentDS.forget(aParent);
     }
     return NS_OK;
 }
@@ -11093,16 +11118,9 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
 bool
 nsDocShell::IsFrame()
 {
-    nsCOMPtr<nsIDocShellTreeItem> parent =
-        do_QueryInterface(GetAsSupports(mParent));
-    if (parent) {
-        PRInt32 parentType = ~mItemType;        // Not us
-        parent->GetItemType(&parentType);
-        if (parentType == mItemType)    // This is a frame
-            return true;
-    }
-
-    return false;
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    GetSameTypeParent(getter_AddRefs(parent));
+    return !!parent;
 }
 
 /* boolean IsBeingDestroyed (); */
