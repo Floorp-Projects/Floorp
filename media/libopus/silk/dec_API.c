@@ -357,7 +357,7 @@ opus_int silk_get_TOC(
         return -1;
     }
 
-    silk_memset( Silk_TOC, 0, sizeof( Silk_TOC ) );
+    silk_memset( Silk_TOC, 0, sizeof( *Silk_TOC ) );
 
     /* For stereo, extract the flags for the mid channel */
     flags = silk_RSHIFT( payload[ 0 ], 7 - nFramesPerPayload ) & ( silk_LSHIFT( 1, nFramesPerPayload + 1 ) - 1 );
