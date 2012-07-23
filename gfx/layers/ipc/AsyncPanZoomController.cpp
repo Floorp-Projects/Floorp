@@ -717,6 +717,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
     mFrameMetrics.mResolution.width = 1 / mFrameMetrics.mResolution.width;
     mFrameMetrics.mResolution.height = 1 / mFrameMetrics.mResolution.height;
     SetPageRect(mFrameMetrics.mCSSContentRect);
+
+    // Bug 776413/fixme: Request a repaint as soon as a page is loaded so that
+    // we get a larger displayport. This is very bad because we're wasting a
+    // paint and not initializating the displayport correctly.
+    RequestContentRepaint();
   } else if (!mFrameMetrics.mContentRect.IsEqualEdges(aViewportFrame.mContentRect)) {
     mFrameMetrics.mCSSContentRect = aViewportFrame.mCSSContentRect;
     SetPageRect(mFrameMetrics.mCSSContentRect);
