@@ -2990,8 +2990,11 @@ nsGlobalWindow::GetRealParent(nsIDOMWindow** aParent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetParentIgnoreBrowserFrame(getter_AddRefs(parent));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
 
   if (parent) {
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(parent));
@@ -3070,19 +3073,11 @@ NS_IMETHODIMP
 nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 {
   FORWARD_TO_OUTER(GetContent, (aContent), NS_ERROR_NOT_INITIALIZED);
+
   *aContent = nsnull;
 
-  // If we're contained in <iframe mozbrowser>, then GetContent is the same as
-  // window.top.
-  if (mDocShell) {
-    bool belowContentBoundary = false;
-    mDocShell->GetIsBelowContentBoundary(&belowContentBoundary);
-    if (belowContentBoundary) {
-      return GetScriptableTop(aContent);
-    }
-  }
-
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
+
   if (!nsContentUtils::IsCallerChrome()) {
     // If we're called by non-chrome code, make sure we don't return
     // the primary content window if the calling tab is hidden. In
@@ -3096,6 +3091,7 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 
       if (!visible) {
         nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+
         treeItem->GetSameTypeRootTreeItem(getter_AddRefs(primaryContent));
       }
     }
@@ -3114,7 +3110,6 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsGlobalWindow::GetPrompter(nsIPrompt** aPrompt)
@@ -7035,16 +7030,19 @@ nsGlobalWindow::GetRealFrameElement(nsIDOMElement** aFrameElement)
 
   *aFrameElement = NULL;
 
-  if (!mDocShell) {
+  nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(mDocShell));
+
+  if (!docShellTI) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetParentIgnoreBrowserFrame(getter_AddRefs(parent));
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  docShellTI->GetSameTypeParent(getter_AddRefs(parent));
 
-  if (!parent || parent == mDocShell) {
+  if (!parent || parent == docShellTI) {
     // We're at a chrome boundary, don't expose the chrome iframe
     // element to content code.
+
     return NS_OK;
   }
 
