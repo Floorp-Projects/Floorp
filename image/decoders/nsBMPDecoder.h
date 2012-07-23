@@ -36,7 +36,7 @@ public:
     PRInt32 GetBitsPerPixel() const;
     // Obtains the width from the internal BIH header
     PRInt32 GetWidth() const;
-    // Obtains the height from the internal BIH header
+    // Obtains the abs-value of the height from the internal BIH header
     PRInt32 GetHeight() const;
     // Obtains the internal output image buffer
     PRUint32* GetImageData();
@@ -71,7 +71,7 @@ private:
     PRUint32 *mImageData; ///< Pointer to the image data for the frame
     PRUint8 *mRow;      ///< Holds one raw line of the image
     PRUint32 mRowBytes; ///< How many bytes of the row were already received
-    PRInt32 mCurLine;   ///< Index of the line of the image that's currently being decoded
+    PRInt32 mCurLine;   ///< Index of the line of the image that's currently being decoded: [height,1]
     PRInt32 mOldLine;   ///< Previous index of the line 
     PRInt32 mCurPos;    ///< Index in the current line of the image
 
