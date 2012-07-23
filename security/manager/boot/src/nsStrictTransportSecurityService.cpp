@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStringGlue.h"
+#include "nsIScriptSecurityManager.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gSTSLog = PR_NewLogModule("nsSTSService");
@@ -28,6 +29,27 @@ PRLogModuleInfo *gSTSLog = PR_NewLogModule("nsSTSService");
     return NS_ERROR_FAILURE; \
   }
 
+namespace {
+
+/**
+ * Returns a principal (aPrincipal) corresponding to aURI.
+ * This is used to interact with the permission manager.
+ */
+nsresult
+GetPrincipalForURI(nsIURI* aURI, nsIPrincipal** aPrincipal)
+{
+   // The permission manager wants a principal but don't actually check a
+   // permission but a data we saved in the permission manager so we are good by
+   // creating a no-app codebase principal and send it to the permission manager.
+   nsresult rv;
+   nsCOMPtr<nsIScriptSecurityManager> securityManager =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+   NS_ENSURE_SUCCESS(rv, rv);
+
+   return securityManager->GetNoAppCodebasePrincipal(aURI, aPrincipal);
+}
+
+} // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -396,7 +418,12 @@ nsStrictTransportSecurityService::AddPermission(nsIURI     *aURI,
     // those be stored persistently.
     if (!mInPrivateMode || aExpireType == nsIPermissionManager::EXPIRE_NEVER) {
       // Not in private mode, or manually-set permission
-      return mPermMgr->Add(aURI, aType, aPermission, aExpireType, aExpireTime);
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalForURI(aURI, getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return mPermMgr->AddFromPrincipal(principal, aType, aPermission,
+                                        aExpireType, aExpireTime);
     }
 
     nsCAutoString host;
@@ -441,25 +468,30 @@ nsresult
 nsStrictTransportSecurityService::RemovePermission(const nsCString  &aHost,
                                                    const char       *aType)
 {
+    // Build up a principal for use with the permission manager.
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                            NS_LITERAL_CSTRING("http://") + aHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = GetPrincipalForURI(uri, getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (!mInPrivateMode) {
       // Not in private mode: remove permissions persistently.
-      return mPermMgr->Remove(aHost, aType);
+      return mPermMgr->RemoveFromPrincipal(principal, aType);
     }
 
     // Make changes in mPrivateModeHostTable only, so any changes will be
     // rolled back when exiting private mode.
     nsSTSHostEntry* entry = mPrivateModeHostTable.GetEntry(aHost.get());
 
-    // Build up an nsIURI for use with the permission manager.
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                            NS_LITERAL_CSTRING("http://") + aHost);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Check to see if there's STS data stored for this host in the
     // permission manager (probably set outside private mode).
     PRUint32 permmgrValue;
-    rv = mPermMgr->TestExactPermission(uri, aType, &permmgrValue);
+    rv = mPermMgr->TestExactPermissionFromPrincipal(principal, aType,
+                                                    &permmgrValue);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If there is STS data in the permission manager, store a "deleted" mask
@@ -497,10 +529,14 @@ nsStrictTransportSecurityService::TestPermission(nsIURI     *aURI,
 
     if (!mInPrivateMode) {
       // if not in private mode, just delegate to the permission manager.
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalForURI(aURI, getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
       if (testExact)
-        return mPermMgr->TestExactPermission(aURI, aType, aPermission);
+        return mPermMgr->TestExactPermissionFromPrincipal(principal, aType, aPermission);
       else
-        return mPermMgr->TestPermission(aURI, aType, aPermission);
+        return mPermMgr->TestPermissionFromPrincipal(principal, aType, aPermission);
     }
 
     nsCAutoString host;
@@ -537,9 +573,12 @@ nsStrictTransportSecurityService::TestPermission(nsIURI     *aURI,
                       NS_LITERAL_CSTRING("http://") + Substring(host, offset));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = mPermMgr->TestExactPermission(domainWalkURI,
-                                          aType,
-                                          &actualExactPermission);
+      nsCOMPtr<nsIPrincipal> principal;
+      nsresult rv = GetPrincipalForURI(domainWalkURI, getter_AddRefs(principal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mPermMgr->TestExactPermissionFromPrincipal(principal, aType,
+                                                      &actualExactPermission);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // There are three cases as we walk up the hostname testing
