@@ -39,6 +39,12 @@ class TextOverflow {
   void ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine);
 
   /**
+   * Get the resulting text-overflow markers (the list may be empty).
+   * @return a DisplayList containing any text-overflow markers.
+   */
+  nsDisplayList& GetMarkers() { return mMarkerList; }
+
+  /**
    * @return true if aBlockFrame needs analysis for text overflow.
    */
   static bool CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
@@ -169,7 +175,7 @@ class TextOverflow {
 
   /**
    * ProcessLine calls this to create display items for the markers and insert
-   * them into a display list for the block.
+   * them into mMarkerList.
    * @param aLine the line we're processing
    * @param aCreateLeft if true, create a marker on the left side
    * @param aCreateRight if true, create a marker on the right side
@@ -178,13 +184,13 @@ class TextOverflow {
   void CreateMarkers(const nsLineBox* aLine,
                      bool             aCreateLeft,
                      bool             aCreateRight,
-                     const nsRect&    aInsideMarkersArea) const;
+                     const nsRect&    aInsideMarkersArea);
 
   nsRect                 mContentArea;
   nsDisplayListBuilder*  mBuilder;
   nsIFrame*              mBlock;
   nsIScrollableFrame*    mScrollableFrame;
-  nsDisplayList*         mMarkerList;
+  nsDisplayList          mMarkerList;
   bool                   mBlockIsRTL;
   bool                   mCanHaveHorizontalScrollbar;
   bool                   mAdjustForPixelSnapping;
