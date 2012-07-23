@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772288
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772288</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="doTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772288">Mozilla Bug 772288</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 772288 **/
+SimpleTest.waitForExplicitFinish();
+
+const Cu = SpecialPowers.wrap(Components).utils;
+
+function doTest() {
+    msg = "Services should be imported on window";
+    try {
+      Cu.import("resource://gre/modules/Services.jsm", window);
+      ok(Services, msg);
+    } catch (ex) {
+      ok(false, msg + " : " + ex);
+    }
+
+    msg = "Services should be imported on myObj";
+    try {
+      var myObj = {};
+      Cu.import("resource://gre/modules/Services.jsm", myObj);
+      ok(myObj.Services, msg);
+    } catch (ex) {
+      ok(false, msg + " : " + ex);
+    }
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
