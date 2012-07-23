@@ -516,14 +516,12 @@ add_test(function test_ReplyChargingValue_decode() {
 
 add_test(function test_RetrieveStatusValue_decode() {
   for (let i = 0; i < 256; i++) {
-    if ((i == 128)
-        || ((i >= 192) && (i <= 194))
-        || ((i >= 224) && (i <= 227))) {
+    if ((i == MMS_PDU_ERROR_OK)
+        || (i >= MMS_PDU_ERROR_TRANSIENT_FAILURE)) {
       wsp_decode_test(MMS.RetrieveStatusValue, [i], i);
-    } else if ((i >= 195) && (i <= 223)) {
-      wsp_decode_test(MMS.RetrieveStatusValue, [i], 192);
     } else {
-      wsp_decode_test(MMS.RetrieveStatusValue, [i], 224);
+      wsp_decode_test(MMS.RetrieveStatusValue, [i],
+                      MMS_PDU_ERROR_PERMANENT_FAILURE);
     }
   }
 
