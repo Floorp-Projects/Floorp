@@ -33,6 +33,7 @@ let SocialUI = {
   observe: function SocialUI_observe(subject, topic, data) {
     switch (topic) {
       case "social:pref-changed":
+        this.updateToggleCommand();
         SocialShareButton.updateButtonHiddenState();
         SocialToolbar.updateButtonHiddenState();
         SocialSidebar.updateSidebar();
@@ -48,15 +49,47 @@ let SocialUI = {
     }
   },
 
+  get toggleCommand() {
+    return document.getElementById("Social:Toggle");
+  },
+
   // Called once Social.jsm's provider has been set
   _providerReady: function SocialUI_providerReady() {
     // If we couldn't find a provider, nothing to do here.
     if (!Social.provider)
       return;
 
+    this.updateToggleCommand();
+
+    let toggleCommand = this.toggleCommand;
+    let label = gNavigatorBundle.getFormattedString("social.enable.label",
+                                                    [Social.provider.name]);
+    let accesskey = gNavigatorBundle.getString("social.enable.accesskey");
+    toggleCommand.setAttribute("label", label);
+    toggleCommand.setAttribute("accesskey", accesskey);
+
     SocialToolbar.init();
     SocialShareButton.init();
     SocialSidebar.init();
+  },
+
+  updateToggleCommand: function SocialUI_updateToggleCommand() {
+    let toggleCommand = this.toggleCommand;
+    toggleCommand.setAttribute("checked", Social.enabled);
+
+    // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
+    // need to update them manually.
+    // This should just be: toggleCommand.hidden = !Social.active;
+    for (let id of ["appmenu_socialToggle", "menu_socialToggle"]) {
+      let el = document.getElementById(id);
+      if (!el)
+        continue;
+
+      if (Social.active)
+        el.removeAttribute("hidden");
+      else
+        el.setAttribute("hidden", "true");
+    }
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -216,6 +249,14 @@ var SocialToolbar = {
   init: function SocialToolbar_init() {
     document.getElementById("social-provider-image").setAttribute("image", Social.provider.iconURL);
 
+    let removeItem = document.getElementById("social-remove-menuitem");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.remove.label",
+                                                    [brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
+    removeItem.setAttribute("label", label);
+    removeItem.setAttribute("accesskey", accesskey);
+
     let statusAreaPopup = document.getElementById("social-statusarea-popup");
     statusAreaPopup.addEventListener("popupshowing", function(e) {
       this.button.setAttribute("open", "true");
@@ -298,10 +339,10 @@ var SocialToolbar = {
     panel.hidden = false;
 
     function sizePanelToContent() {
-      // XXX Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
-      // XXX need to handle dynamic sizing
+      // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
+      // Need to handle dynamic sizing
       let doc = notifBrowser.contentDocument;
-      // XXX "notif" is an implementation detail that we should get rid of
+      // "notif" is an implementation detail that we should get rid of
       // eventually
       let body = doc.getElementById("notif") || doc.body.firstChild;
       if (!body)
