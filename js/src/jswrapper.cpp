@@ -1141,7 +1141,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
 
 // Remap all cross-compartment wrappers pointing to |oldTarget| to point to
 // |newTarget|. All wrappers are recomputed.
-bool
+JS_FRIEND_API(bool)
 js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
                               JSObject *newTarget)
 {
