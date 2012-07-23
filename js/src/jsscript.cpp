@@ -1999,7 +1999,7 @@ void
 CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                 JSPrincipals **origin)
 {
-    ScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx);
 
     if (iter.done()) {
         *file = NULL;

@@ -2496,6 +2496,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
 #else
         MarkConservativeStackRoots(trc, useSavedRoots);
 #endif
+        rt->markSelfHostedGlobal(trc);
     }
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
