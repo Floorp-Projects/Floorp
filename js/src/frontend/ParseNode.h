@@ -724,20 +724,19 @@ struct ParseNode {
     Definition *resolve();
 
 /* PN_FUNC and PN_NAME pn_dflags bits. */
-#define PND_LET         0x01            /* let (block-scoped) binding */
-#define PND_CONST       0x02            /* const binding (orthogonal to let) */
-#define PND_INITIALIZED 0x04            /* initialized declaration */
-#define PND_ASSIGNED    0x08            /* set if ever LHS of assignment */
-#define PND_TOPLEVEL    0x10            /* see isTopLevel() below */
-#define PND_BLOCKCHILD  0x20            /* use or def is direct block child */
-#define PND_PLACEHOLDER 0x40            /* placeholder definition for lexdep */
-#define PND_BOUND       0x80            /* bound to a stack or global slot */
-#define PND_DEOPTIMIZED 0x100           /* former pn_used name node, pn_lexdef
+#define PND_LET                 0x01    /* let (block-scoped) binding */
+#define PND_CONST               0x02    /* const binding (orthogonal to let) */
+#define PND_ASSIGNED            0x04    /* set if ever LHS of assignment */
+#define PND_TOPLEVEL            0x08    /* see isTopLevel() below */
+#define PND_BLOCKCHILD          0x10    /* use or def is direct block child */
+#define PND_PLACEHOLDER         0x20    /* placeholder definition for lexdep */
+#define PND_BOUND               0x40    /* bound to a stack or global slot */
+#define PND_DEOPTIMIZED         0x80    /* former pn_used name node, pn_lexdef
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
-#define PND_CLOSED      0x200           /* variable is closed over */
-#define PND_DEFAULT     0x400           /* definition is an arg with a default */
-#define PND_IMPLICITARGUMENTS 0x800     /* the definition is a placeholder for
+#define PND_CLOSED             0x100    /* variable is closed over */
+#define PND_DEFAULT            0x200    /* definition is an arg with a default */
+#define PND_IMPLICITARGUMENTS  0x400    /* the definition is a placeholder for
                                            'arguments' that has been converted
                                            into a definition after the function
                                            body has been parsed. */
@@ -781,7 +780,6 @@ struct ParseNode {
 
     bool isLet() const          { return test(PND_LET); }
     bool isConst() const        { return test(PND_CONST); }
-    bool isInitialized() const  { return test(PND_INITIALIZED); }
     bool isBlockChild() const   { return test(PND_BLOCKCHILD); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
