@@ -878,8 +878,7 @@ public:
   void DirectUpdate(gfxASurface* aUpdate, nsIntRegion& aRegion);
 
   void Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
-              const nsIntRect& aRect, const nsIntPoint& aRotation,
-              bool aDelayUpload, nsIntRegion& aPendingUploadRegion);
+              const nsIntRect& aRect, const nsIntPoint& aRotation);
 
 protected:
   virtual nsIntPoint GetOriginOffset() {
@@ -915,8 +914,7 @@ ShadowBufferOGL::DirectUpdate(gfxASurface* aUpdate, nsIntRegion& aRegion)
 
 void
 ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
-                        const nsIntRect& aRect, const nsIntPoint& aRotation,
-                        bool aDelayUpload, nsIntRegion& aPendingUploadRegion)
+                        const nsIntRect& aRect, const nsIntPoint& aRotation)
 {
   // aUpdated is in screen coordinates. Convert it to buffer coordinates.
   nsIntRegion destRegion(aUpdated);
@@ -935,16 +933,8 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
                ((destBounds.y % size.height) + destBounds.height <= size.height),
                "Updated region lies across rotation boundaries!");
 
-  if (aDelayUpload) {
-    // Record the region that needs to be updated, and clip it to the size of
-    // the texture.
-    aPendingUploadRegion.Or(aPendingUploadRegion, destRegion).
-      And(aPendingUploadRegion, nsIntRect(0, 0, size.width, size.height));
-  } else {
-    // NB: this gfxContext must not escape EndUpdate() below
-    DirectUpdate(aUpdate, destRegion);
-    aPendingUploadRegion.Sub(aPendingUploadRegion, destRegion);
-  }
+  // NB: this gfxContext must not escape EndUpdate() below
+  DirectUpdate(aUpdate, destRegion);
 
   mBufferRect = aRect;
   mBufferRotation = aRotation;
@@ -982,7 +972,7 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
     mBuffer = new ShadowBufferOGL(this);
   }
   AutoOpenSurface frontSurface(OPEN_READ_ONLY, aNewFront.buffer());
-  mBuffer->Upload(frontSurface.Get(), aUpdatedRegion, aNewFront.rect(), aNewFront.rotation(), false, mRegionPendingUpload);
+  mBuffer->Upload(frontSurface.Get(), aUpdatedRegion, aNewFront.rect(), aNewFront.rotation());
     
   *aNewBack = aNewFront;
   *aNewBackValidRegion = mValidRegion;
@@ -993,13 +983,6 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
 void
 ShadowThebesLayerOGL::DestroyFrontBuffer()
 {
-  mFrontBuffer.Clear();
-  mOldValidRegion.SetEmpty();
-
-  if (IsSurfaceDescriptorValid(mFrontBufferDescriptor)) {
-    mAllocator->DestroySharedSurface(&mFrontBufferDescriptor);
-  }
-
   mBuffer = nsnull;
 }
 

@@ -125,7 +125,6 @@ public:
 
   virtual void SetValidRegion(const nsIntRegion& aRegion)
   {
-    mOldValidRegion = mValidRegion;
     ShadowThebesLayer::SetValidRegion(aRegion);
   }
 
@@ -139,20 +138,6 @@ public:
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;
-
-  // When doing delayed texture upload, this is the region of the buffer that
-  // still requires uploading.
-  nsIntRegion mRegionPendingUpload;
-
-  // Following used for double-buffering
-  ShadowThebesLayerBufferOGL mFrontBuffer;
-  // Describes the gfxASurface we hand out to |mFrontBuffer|.
-  SurfaceDescriptor mFrontBufferDescriptor;
-  // When we receive an update from our remote partner, we stow away
-  // our previous parameters that described our previous front buffer.
-  // Then when we Swap() back/front buffers, we can return these
-  // parameters to our partner (adjusted as needed).
-  nsIntRegion mOldValidRegion;
 };
 
 } /* layers */
