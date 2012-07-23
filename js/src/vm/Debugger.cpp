@@ -3418,8 +3418,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
            .setCompileAndGo(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno);
-    JSScript *script = frontend::CompileScript(cx, env, fp, options, chars, length,
-                                               /* source = */ NULL, /* staticLimit = */ 1);
+    RootedScript script(cx, frontend::CompileScript(cx, env, fp, options, chars, length,
+                                                    /* source = */ NULL, /* staticLimit = */ 1));
     if (!script)
         return false;
 

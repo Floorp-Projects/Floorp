@@ -6,8 +6,7 @@
 
 BEGIN_TEST(testJSEvaluateScript)
 {
-    jsvalRoot proto(cx);
-    JSObject *obj = JS_NewObject(cx, NULL, NULL, global);
+    JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, global));
     CHECK(obj);
 
     uint32_t options = JS_GetOptions(cx);
