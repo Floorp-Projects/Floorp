@@ -1132,11 +1132,8 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * by eval and function statements (which both flag the function as
              * having an extensible scope) or any enclosing 'with'.
              */
-            if (funtc->sc->funHasExtensibleScope() ||
-                (outer_dn && tc->innermostWith &&
-                 outer_dn->pn_pos < tc->innermostWith->pn_pos)) {
+            if (funtc->sc->funHasExtensibleScope() || tc->innermostWith)
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
-            }
 
             if (!outer_dn) {
                 AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(atom);
