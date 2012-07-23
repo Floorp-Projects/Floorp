@@ -52,29 +52,3 @@ def kill_pid(pid):
     if process:
         windll.kernel32.TerminateProcess(process, 0)
         windll.kernel32.CloseHandle(process)
-
-if __name__ == '__main__':
-    import subprocess
-    import time
-
-    # This test just opens a new notepad instance and kills it.
-
-    name = 'notepad'
-
-    old_pids = set(get_pids(name))
-    subprocess.Popen([name])
-    time.sleep(0.25)
-    new_pids = set(get_pids(name)).difference(old_pids)
-
-    if len(new_pids) != 1:
-        raise Exception('%s was not opened or get_pids() is '
-                        'malfunctioning' % name)
-
-    kill_pid(tuple(new_pids)[0])
-
-    newest_pids = set(get_pids(name)).difference(old_pids)
-
-    if len(newest_pids) != 0:
-        raise Exception('kill_pid() is malfunctioning')
-
-    print "Test passed."

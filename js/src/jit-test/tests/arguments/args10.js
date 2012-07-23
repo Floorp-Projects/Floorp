@@ -1,5 +1,5 @@
 actual = '';
-expected = 'function h(x, y) {\n    return arguments;\n},2,4,8,';
+expected = 'function h(x, y) { return arguments; },2,4,8,';
 
 function h(x, y) { return arguments; }
 

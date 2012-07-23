@@ -846,6 +846,11 @@ SpdySession2::VerifyStream(SpdyStream2 *aStream, PRUint32 aOptionalID = 0)
   // This is annoying, but at least it is O(1)
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
+#ifndef DEBUG
+  // Only do the real verification in debug builds
+  return true;
+#endif
+
   if (!aStream)
     return true;
 

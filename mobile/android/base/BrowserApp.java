@@ -175,7 +175,8 @@ abstract public class BrowserApp extends GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinearLayout actionBar = (LinearLayout) findViewById(R.id.browser_toolbar);
+        LinearLayout actionBar = (LinearLayout) getActionBarLayout();
+        mMainLayout.addView(actionBar, 0);
 
         mBrowserToolbar = new BrowserToolbar(mAppContext);
         mBrowserToolbar.from(actionBar);
@@ -275,7 +276,7 @@ abstract public class BrowserApp extends GeckoApp
             int index = mMainLayout.indexOfChild(mBrowserToolbar.getLayout());
             mMainLayout.removeViewAt(index);
 
-            LinearLayout actionBar = (LinearLayout) getBrowserToolbar();
+            LinearLayout actionBar = (LinearLayout) getActionBarLayout();
             mMainLayout.addView(actionBar, index);
             mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
@@ -285,13 +286,7 @@ abstract public class BrowserApp extends GeckoApp
         mTabsPanel.refresh();
     }
 
-    @Override
-    public boolean isBrowserToolbarSupported() {
-        return true;
-    }
-
-    @Override
-    public View getBrowserToolbar() {
+    public View getActionBarLayout() {
         int actionBarRes;
 
         if (GeckoApp.mAppContext.hasPermanentMenuKey())
@@ -506,6 +501,7 @@ abstract public class BrowserApp extends GeckoApp
                             loadUrl(url, AwesomeBar.Target.CURRENT_TAB);
                         }
                     });
+                    mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
                     mAboutHomeContent.update(GeckoApp.mAppContext,
                                              EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,

@@ -86,6 +86,7 @@ FENNEC_JAVA_FILES = \
   MultiChoicePreference.java \
   NSSBridge.java \
   CustomEditText.java \
+  OnInterceptTouchListener.java \
   PrivateDataPreference.java \
   PropertyAnimator.java \
   ProfileMigrator.java \

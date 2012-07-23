@@ -312,7 +312,7 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
  * and querying them could throw.
  *
  * @param table String Name of the table that we want to consult
- * @param key String Key for table lookup
+ * @param key Principal being used to lookup the database
  * @param callback nsIUrlListManagerCallback (ie., Function) given false or the
  *        value in the table corresponding to key.  If the table name does not
  *        exist, we return false, too.

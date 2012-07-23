@@ -24,12 +24,6 @@ public class WebApp extends GeckoApp {
     public int getLayout() { return R.layout.web_app; }
 
     @Override
-    public boolean isBrowserToolbarSupported() { return false; }
-
-    @Override
-    public View getBrowserToolbar() { return null; }
-
-    @Override
     public void onCreate(Bundle savedInstanceState)
     {
         Log.i("DEBUG", "xxx WebApp");

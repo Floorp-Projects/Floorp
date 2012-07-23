@@ -414,7 +414,7 @@ class HeapSlot : public EncapsulatedValue
     inline void set(JSCompartment *comp, JSObject *owner, uint32_t slot, const Value &v);
 
     static inline void writeBarrierPost(JSObject *obj, uint32_t slot);
-    static inline void writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slotno);
+    static inline void writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slot);
 
   private:
     inline void post(JSObject *owner, uint32_t slot);

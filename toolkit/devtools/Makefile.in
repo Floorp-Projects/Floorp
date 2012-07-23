@@ -11,6 +11,7 @@ include $(topsrcdir)/config/config.mk
 
 PARALLEL_DIRS += \
   debugger \
+  sourcemap \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

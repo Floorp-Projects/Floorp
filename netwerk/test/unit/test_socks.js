@@ -57,8 +57,26 @@ function runScriptSubprocess(script, args)
 
 function buf2ip(buf)
 {
-  // XXX this doesn't work with IPv6
-  return buf.join('.');
+  if (buf.length == 16) {
+    var ip = (buf[0]  << 4 | buf[1]).toString(16) + ':' +
+             (buf[2]  << 4 | buf[3]).toString(16) + ':' +
+             (buf[4]  << 4 | buf[5]).toString(16) + ':' +
+             (buf[6]  << 4 | buf[7]).toString(16) + ':' +
+             (buf[8]  << 4 | buf[9]).toString(16) + ':' +
+             (buf[10] << 4 | buf[11]).toString(16) + ':' +
+             (buf[12] << 4 | buf[13]).toString(16) + ':' +
+             (buf[14] << 4 | buf[15]).toString(16);
+    for (var i = 8; i >= 2; i--) {
+      var re = new RegExp("(^|:)(0(:|$)){" + i + "}");
+      var shortip = ip.replace(re, '::');
+      if (shortip != ip) {
+        return shortip;
+      }
+    }
+    return ip;
+  } else {
+    return buf.join('.');
+  }
 }
 
 function buf2int(buf)
@@ -325,8 +343,13 @@ SocksClient.prototype = {
 
   sendSocks5Response: function()
   {
-    // send a successful response with the address, 127.0.0.1:80
-    this.outbuf += '\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x80';
+    if (this.dest_addr.length == 16) {
+      // send a successful response with the address, [::1]:80
+      this.outbuf += '\x05\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x80';
+    } else {
+      // send a successful response with the address, 127.0.0.1:80
+      this.outbuf += '\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x80';
+    }
     this.sendPing();
   },
 
@@ -395,7 +418,7 @@ SocksTestServer.prototype = {
     
     print('server: test finished', test.port);
     do_check_true(test != null);
-    do_check_eq(test.type, client.type);
+    do_check_eq(test.expectedType || test.type, client.type);
     do_check_eq(test.port, port_id);
 
     if (test.remote_dns)
@@ -414,11 +437,11 @@ SocksTestServer.prototype = {
   {
     var argv = [];
 
-    // marshaled: socks_ver:server_port:dest_host:dest_port:remote|local
+    // marshaled: socks_ver|server_port|dest_host|dest_port|<remote|local>
     for each (var test in this.test_cases) {
-      var arg = test.type + ':' +
-        String(socks_listen_port) + ':' +
-        test.host + ':' + test.port + ':';
+      var arg = test.type + '|' +
+        String(socks_listen_port) + '|' +
+        test.host + '|' + test.port + '|';
       if (test.remote_dns)
         arg += 'remote';
       else
@@ -485,6 +508,12 @@ function run_test()
         remote_dns: true,
   });
   socks_test_server.addTestCase({
+        type: "socks4",
+        expectedType: "socks",
+        host: '::1',
+        remote_dns: false,
+  });
+  socks_test_server.addTestCase({
         type: "socks",
         host: '127.0.0.1',
         remote_dns: false,
@@ -493,6 +522,11 @@ function run_test()
         type: "socks",
         host: 'abcdefg.xxx',
         remote_dns: true,
+  });
+  socks_test_server.addTestCase({
+        type: "socks",
+        host: '::1',
+        remote_dns: false,
   });
   socks_test_server.runClientSubprocess();
 

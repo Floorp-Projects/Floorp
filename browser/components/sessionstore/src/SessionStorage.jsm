@@ -52,20 +52,20 @@ let DomStorage = {
     let shistory = aDocShell.sessionHistory;
 
     for (let i = 0; i < shistory.count; i++) {
-      let uri = History.getUriForEntry(shistory, i);
+      let principal = History.getPrincipalForEntry(shistory, i, aDocShell);
+      if (!principal)
+        continue;
 
-      if (uri) {
-        // Check if we're allowed to store sessionStorage data.
-        let isHTTPS = uri.schemeIs("https");
-        if (aFullData || SessionStore.checkPrivacyLevel(isHTTPS, isPinned)) {
-          let host = History.getHostForURI(uri);
+      // Check if we're allowed to store sessionStorage data.
+      let isHTTPS = principal.URI && principal.URI.schemeIs("https");
+      if (aFullData || SessionStore.checkPrivacyLevel(isHTTPS, isPinned)) {
+        let origin = principal.extendedOrigin;
 
-          // Don't read a host twice.
-          if (!(host in data)) {
-            let hostData = this._readEntry(uri, aDocShell);
-            if (Object.keys(hostData).length) {
-              data[host] = hostData;
-            }
+        // Don't read a host twice.
+        if (!(origin in data)) {
+          let originData = this._readEntry(principal, aDocShell);
+          if (Object.keys(originData).length) {
+            data[origin] = originData;
           }
         }
       }
@@ -84,7 +84,8 @@ let DomStorage = {
   write: function DomStorage_write(aDocShell, aStorageData) {
     for (let [host, data] in Iterator(aStorageData)) {
       let uri = Services.io.newURI(host, null, null);
-      let storage = aDocShell.getSessionStorageForURI(uri, "");
+      let principal = Services.scriptSecurityManager.getDocShellCodebasePrincipal(uri, aDocShell);
+      let storage = aDocShell.getSessionStorageForPrincipal(principal, "", true);
 
       for (let [key, value] in Iterator(data)) {
         try {
@@ -104,19 +105,17 @@ let DomStorage = {
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
    */
-  _readEntry: function DomStorage_readEntry(aURI, aDocShell) {
+  _readEntry: function DomStorage_readEntry(aPrincipal, aDocShell) {
     let hostData = {};
     let storage;
 
     try {
-      let principal = Services.scriptSecurityManager.getCodebasePrincipal(aURI);
-
       // Using getSessionStorageForPrincipal instead of
       // getSessionStorageForURI just to be able to pass aCreate = false,
       // that avoids creation of the sessionStorage object for the page
       // earlier than the page really requires it. It was causing problems
       // while accessing a storage when a page later changed its domain.
-      storage = aDocShell.getSessionStorageForPrincipal(principal, "", false);
+      storage = aDocShell.getSessionStorageForPrincipal(aPrincipal, "", false);
     } catch (e) {
       // sessionStorage might throw if it's turned off, see bug 458954
     }
@@ -143,30 +142,17 @@ let History = {
    *        That tab's session history
    * @param aIndex
    *        The history entry's index
+   * @param aDocShell
+   *        That tab's docshell
    */
-  getUriForEntry: function History_getUriForEntry(aHistory, aIndex) {
+  getPrincipalForEntry: function History_getPrincipalForEntry(aHistory,
+                                                              aIndex,
+                                                              aDocShell) {
     try {
-      return aHistory.getEntryAtIndex(aIndex, false).URI;
+      return Services.scriptSecurityManager.getDocShellCodebasePrincipal(
+        aHistory.getEntryAtIndex(aIndex, false).URI, aDocShell);
     } catch (e) {
       // This might throw for some reason.
     }
   },
-
-  /**
-   * Returns the host of a given URI.
-   * @param aURI
-   *        The URI for which to return the host
-   */
-  getHostForURI: function History_getHostForURI(aURI) {
-    let host = aURI.spec;
-
-    try {
-      if (aURI.host)
-        host = aURI.prePath;
-    } catch (e) {
-      // This throws for host-less URIs (such as about: or jar:).
-    }
-
-    return host;
-  }
 };

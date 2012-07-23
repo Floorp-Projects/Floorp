@@ -16,6 +16,19 @@ var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
   getService(Ci.nsIAccessibleRetrieval);
 
 var Utils = {
+  _buildAppMap: {
+    '{3c2e2abc-06d4-11e1-ac3b-374f68613e61}': 'b2g',
+    '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'browser',
+    '{aa3c5121-dab2-40e2-81ca-7ea25febc110}': 'mobile/android',
+    '{a23983c0-fd0e-11dc-95ff-0800200c9a66}': 'mobile/xul'
+  },
+
+  get MozBuildApp() {
+    if (!this._buildApp)
+      this._buildApp = this._buildAppMap[Services.appinfo.ID];
+    return this._buildApp;
+  },
+
   get OS() {
     if (!this._OS)
       this._OS = Services.appinfo.OS;
@@ -40,21 +53,27 @@ var Utils = {
   },
 
   getBrowserApp: function getBrowserApp(aWindow) {
-    switch (this.OS) {
-      case 'Android':
+    switch (this.MozBuildApp) {
+      case 'mobile/android':
         return aWindow.BrowserApp;
-      default:
+      case 'browser':
         return aWindow.gBrowser;
+      case 'b2g':
+        return aWindow.shell;
+      default:
+        return null;
     }
   },
 
   getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
+    if (this.MozBuildApp == "b2g")
+      return this.getBrowserApp(aWindow).contentBrowser.contentDocument;
     return this.getBrowserApp(aWindow).selectedBrowser.contentDocument;
   },
 
   getViewport: function getViewport(aWindow) {
-    switch (this.OS) {
-      case 'Android':
+    switch (this.MozBuildApp) {
+      case 'mobile/android':
         return aWindow.BrowserApp.selectedTab.getViewport();
       default:
         return null;
@@ -69,6 +88,21 @@ var Utils = {
     let extState = {};
     aAccessible.getState(state, extState);
     return [state.value, extState.value];
+  },
+
+  getVirtualCursor: function getVirtualCursor(aDocument) {
+    let doc = (aDocument instanceof Ci.nsIAccessible) ? aDocument :
+      gAccRetrieval.getAccessibleFor(aDocument);
+
+    while (doc) {
+      try {
+        return doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
+      } catch (x) {
+        doc = doc.parentDocument;
+      }
+    }
+
+    return null;
   }
 };
 
@@ -131,5 +165,32 @@ var Logger = {
     }
 
     return str;
-  }
+  },
+
+  statesToString: function statesToString(aAccessible) {
+    let [state, extState] = Utils.getStates(aAccessible);
+    let stringArray = [];
+    let stateStrings = gAccRetrieval.getStringStates(state, extState);
+    for (var i=0; i < stateStrings.length; i++)
+      stringArray.push(stateStrings.item(i));
+    return stringArray.join(' ');
+  },
+
+  dumpTree: function dumpTree(aLogLevel, aRootAccessible) {
+    if (aLogLevel < this.logLevel)
+      return;
+
+    this._dumpTreeInternal(aLogLevel, aRootAccessible, 0);
+  },
+
+  _dumpTreeInternal: function _dumpTreeInternal(aLogLevel, aAccessible, aIndent) {
+    let indentStr = '';
+    for (var i=0; i < aIndent; i++)
+      indentStr += ' ';
+    this.log(aLogLevel, indentStr,
+             this.accessibleToString(aAccessible),
+             '(' + this.statesToString(aAccessible) + ')');
+    for (var i=0; i < aAccessible.childCount; i++)
+      this._dumpTreeInternal(aLogLevel, aAccessible.getChildAt(i), aIndent + 1);
+    }
 };

@@ -85,10 +85,10 @@ public class AccountAuthenticator {
   /**
    * Abort authentication.
    *
+   * @param result
+   *    returned to callback.
    * @param e
    *    Exception causing abort.
-   * @param reason
-   *    Reason for abort.
    */
   public void abort(AuthenticationResult result, Exception e) {
     if (isCanceled) {

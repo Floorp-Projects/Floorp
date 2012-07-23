@@ -14,7 +14,7 @@ import org.mozilla.gecko.sync.repositories.android.RepoUtils;
  *
  * I map a <code>fieldName</code> string to a <code>value</code> string.
  *
- * {@link http://mxr.mozilla.org/services-central/source/services-central/services/sync/modules/engines/forms.js}
+ * @see "<a href='http://mxr.mozilla.org/services-central/source/services-central/services/sync/modules/engines/forms.js'>http://mxr.mozilla.org/services-central/source/services-central/services/sync/modules/engines/forms.js</a>."
  */
 public class FormHistoryRecord extends Record {
   private static final String LOG_TAG = "FormHistoryRecord";

@@ -1,0 +1,11 @@
+component {ba9bd5cb-76a0-4ecf-a7b3-d2f7c43c5949} ActivityProxy.js
+contract @mozilla.org/dom/activities/proxy;1 {ba9bd5cb-76a0-4ecf-a7b3-d2f7c43c5949}
+
+component {5430d6f9-32d6-4924-ba39-6b6d1b093cd6} ActivityWrapper.js
+contract @mozilla.org/dom/system-messages/wrapper/activity;1 {5430d6f9-32d6-4924-ba39-6b6d1b093cd6}
+
+component {9326952a-dbe3-4d81-a51f-d9c160d96d6b} ActivityRequestHandler.js
+contract @mozilla.org/dom/activities/request-handler;1 {9326952a-dbe3-4d81-a51f-d9c160d96d6b}
+
+component {ee983dbb-d5ea-4c5b-be98-10a13cac9f9d} ActivityOptions.js
+contract @mozilla.org/dom/activities/options;1 {ee983dbb-d5ea-4c5b-be98-10a13cac9f9d}

@@ -285,7 +285,11 @@ public:
 
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
-  static bool BlockIsMarginRoot(nsIFrame* aBlock);
+  /**
+   * Determine if this block is a margin root at the top/bottom edges.
+   */
+  void IsMarginRoot(bool* aTopMarginRoot, bool* aBottomMarginRoot);
+
   static bool BlockNeedsFloatManager(nsIFrame* aBlock);
 
   /**
@@ -542,11 +546,9 @@ protected:
    * on those lines because the text in the lines might have changed due to
    * addition/removal of frames.
    * @param aLine the line to mark dirty
-   * @param aLineList the line list containing that line, null means the line
-   *        is in 'mLines' of this frame.
+   * @param aLineList the line list containing that line
    */
-  nsresult MarkLineDirty(line_iterator aLine,
-                         const nsLineList* aLineList = nsnull);
+  void MarkLineDirty(line_iterator aLine, const nsLineList* aLineList);
 
   // XXX where to go
   bool IsLastLine(nsBlockReflowState& aState,
@@ -870,13 +872,13 @@ public:
   line_iterator GetLine() { return mLine; }
   bool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
-  bool GetInOverflow() { return mInOverflowLines != nsnull; }
+  bool GetInOverflow() { return mLineList != &mFrame->mLines; }
 
   /**
    * Returns the current line list we're iterating, null means
    * we're iterating |mLines| of the container.
    */
-  nsLineList* GetLineList() { return mInOverflowLines; }
+  nsLineList* GetLineList() { return mLineList; }
 
   /**
    * Returns the end-iterator of whatever line list we're in.
@@ -901,7 +903,7 @@ private:
 
   nsBlockFrame* mFrame;
   line_iterator mLine;
-  nsLineList*   mInOverflowLines;
+  nsLineList*   mLineList;  // the line list mLine is in
 
   /**
    * Moves iterator to next valid line reachable from the current block.

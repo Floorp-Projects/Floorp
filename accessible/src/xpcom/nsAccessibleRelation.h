@@ -10,6 +10,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace a11y {
@@ -19,7 +20,7 @@ class Relation;
 /**
  * Class represents an accessible relation.
  */
-class nsAccessibleRelation : public nsIAccessibleRelation
+class nsAccessibleRelation MOZ_FINAL : public nsIAccessibleRelation
 {
 public:
   nsAccessibleRelation(PRUint32 aType, Relation* aRel);

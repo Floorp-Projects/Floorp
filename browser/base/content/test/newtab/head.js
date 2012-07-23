@@ -14,7 +14,7 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 let {NewTabUtils, Sanitizer} = tmp;
 
 let uri = Services.io.newURI("about:newtab", null, null);
-let principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
+let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
 
 let sm = Services.domStorageManager;
 let storage = sm.getLocalStorageForPrincipal(principal, "");

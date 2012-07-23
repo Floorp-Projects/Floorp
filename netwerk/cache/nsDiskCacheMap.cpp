@@ -27,8 +27,13 @@
  */
 
 nsresult
-nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
+nsDiskCacheMap::Open(nsIFile *  cacheDirectory,
+                     nsDiskCache::CorruptCacheInfo *  corruptInfo)
 {
+    NS_ENSURE_ARG_POINTER(corruptInfo);
+
+    // Assume we have an unexpected error until we find otherwise.
+    *corruptInfo = nsDiskCache::kUnexpectedError;
     NS_ENSURE_ARG_POINTER(cacheDirectory);
     if (mMapFD)  return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -43,7 +48,11 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
 
     // open the file - restricted to user, the data could be confidential
     rv = file->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00600, &mMapFD);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FILE_CORRUPTED);
+    if (NS_FAILED(rv)) {
+        *corruptInfo = nsDiskCache::kOpenCacheMapError;
+        NS_WARNING("Could not open cache map file");
+        return NS_ERROR_FILE_CORRUPTED;
+    }
 
     bool cacheFilesExist = CacheFilesExist();
     rv = NS_ERROR_FILE_CORRUPTED;  // presume the worst
@@ -53,11 +62,15 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
     if (mapSize == 0) {  // creating a new _CACHE_MAP_
 
         // block files shouldn't exist if we're creating the _CACHE_MAP_
-        if (cacheFilesExist)
-            goto error_exit;
+        if (cacheFilesExist) {
+            *corruptInfo = nsDiskCache::kBlockFilesShouldNotExist;
+            goto error_exit; 
+        }
 
-        if (NS_FAILED(CreateCacheSubDirectories()))
+        if (NS_FAILED(CreateCacheSubDirectories())) {
+            *corruptInfo = nsDiskCache::kCreateCacheSubdirectories;
             goto error_exit;
+        }
 
         // create the file - initialize in memory
         memset(&mHeader, 0, sizeof(nsDiskCacheHeader));
@@ -66,41 +79,59 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
         mRecordArray = (nsDiskCacheRecord *)
             PR_CALLOC(mHeader.mRecordCount * sizeof(nsDiskCacheRecord));
         if (!mRecordArray) {
+            *corruptInfo = nsDiskCache::kOutOfMemory;
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto error_exit;
         }
     } else if (mapSize >= sizeof(nsDiskCacheHeader)) {  // read existing _CACHE_MAP_
         
         // if _CACHE_MAP_ exists, so should the block files
-        if (!cacheFilesExist)
+        if (!cacheFilesExist) {
+            *corruptInfo = nsDiskCache::kBlockFilesShouldExist;
             goto error_exit;
+        }
 
         CACHE_LOG_DEBUG(("CACHE: nsDiskCacheMap::Open [this=%p] reading map", this));
 
         // read the header
         PRUint32 bytesRead = PR_Read(mMapFD, &mHeader, sizeof(nsDiskCacheHeader));
-        if (sizeof(nsDiskCacheHeader) != bytesRead)  goto error_exit;
+        if (sizeof(nsDiskCacheHeader) != bytesRead) {
+            *corruptInfo = nsDiskCache::kHeaderSizeNotRead;
+            goto error_exit;
+        }
         mHeader.Unswap();
 
-        if (mHeader.mIsDirty || (mHeader.mVersion != nsDiskCache::kCurrentVersion))
+        if (mHeader.mIsDirty) {
+            *corruptInfo = nsDiskCache::kHeaderIsDirty;
             goto error_exit;
+        }
+        
+        if (mHeader.mVersion != nsDiskCache::kCurrentVersion) {
+            *corruptInfo = nsDiskCache::kVersionMismatch;
+            goto error_exit;
+        }
 
         PRUint32 recordArraySize =
                 mHeader.mRecordCount * sizeof(nsDiskCacheRecord);
-        if (mapSize < recordArraySize + sizeof(nsDiskCacheHeader))
+        if (mapSize < recordArraySize + sizeof(nsDiskCacheHeader)) {
+            *corruptInfo = nsDiskCache::kRecordsIncomplete;
             goto error_exit;
+        }
 
         // Get the space for the records
         mRecordArray = (nsDiskCacheRecord *) PR_MALLOC(recordArraySize);
         if (!mRecordArray) {
+            *corruptInfo = nsDiskCache::kOutOfMemory;
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto error_exit;
         }
 
         // Read the records
         bytesRead = PR_Read(mMapFD, mRecordArray, recordArraySize);
-        if (bytesRead < recordArraySize)
+        if (bytesRead < recordArraySize) {
+            *corruptInfo = nsDiskCache::kNotEnoughToRead;
             goto error_exit;
+        }
 
         // Unswap each record
         PRInt32 total = 0;
@@ -114,20 +145,29 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
         }
         
         // verify entry count
-        if (total != mHeader.mEntryCount)
+        if (total != mHeader.mEntryCount) {
+            *corruptInfo = nsDiskCache::kEntryCountIncorrect;
             goto error_exit;
+        }
 
     } else {
+        *corruptInfo = nsDiskCache::kHeaderIncomplete;
         goto error_exit;
     }
 
-    rv = OpenBlockFiles();
-    if (NS_FAILED(rv))  goto error_exit;
+    rv = OpenBlockFiles(corruptInfo);
+    if (NS_FAILED(rv)) {
+        // corruptInfo is set in the call to OpenBlockFiles
+        goto error_exit;
+    }
 
     // set dirty bit and flush header
     mHeader.mIsDirty    = true;
     rv = FlushHeader();
-    if (NS_FAILED(rv))  goto error_exit;
+    if (NS_FAILED(rv)) {
+        *corruptInfo = nsDiskCache::kFlushHeaderError;
+        goto error_exit;
+    }
     
     {
         // extra scope so the compiler doesn't barf on the above gotos jumping
@@ -137,6 +177,7 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory)
                 overhead);
     }
 
+    *corruptInfo = nsDiskCache::kNotCorrupt;
     return NS_OK;
     
 error_exit:
@@ -585,23 +626,32 @@ nsDiskCacheMap::EvictRecords( nsDiskCacheRecordVisitor * visitor)
 
 
 nsresult
-nsDiskCacheMap::OpenBlockFiles()
+nsDiskCacheMap::OpenBlockFiles(nsDiskCache::CorruptCacheInfo *  corruptInfo)
 {
+    NS_ENSURE_ARG_POINTER(corruptInfo);
+
     // create nsIFile for block file
     nsCOMPtr<nsIFile> blockFile;
     nsresult rv = NS_OK;
+    *corruptInfo = nsDiskCache::kUnexpectedError;
     
     for (int i = 0; i < kNumBlockFiles; ++i) {
         rv = GetBlockFileForIndex(i, getter_AddRefs(blockFile));
-        if (NS_FAILED(rv)) break;
+        if (NS_FAILED(rv)) {
+            *corruptInfo = nsDiskCache::kCouldNotGetBlockFileForIndex;
+            break;
+        }
     
         PRUint32 blockSize = GetBlockSizeForIndex(i+1); // +1 to match file selectors 1,2,3
         PRUint32 bitMapSize = GetBitMapSizeForIndex(i+1);
-        rv = mBlockFile[i].Open(blockFile, blockSize, bitMapSize);
-        if (NS_FAILED(rv)) break;
+        rv = mBlockFile[i].Open(blockFile, blockSize, bitMapSize, corruptInfo);
+        if (NS_FAILED(rv)) {
+            // corruptInfo was set inside the call to mBlockFile[i].Open
+            break;
+        }
     }
     // close all files in case of any error
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         (void)CloseBlockFiles(false); // we already have an error to report
 
     return rv;

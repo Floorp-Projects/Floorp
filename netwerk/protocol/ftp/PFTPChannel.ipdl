@@ -23,8 +23,15 @@ async protocol PFTPChannel
 parent:
   __delete__();
 
-  AsyncOpen(URI uri, PRUint64 startPos, nsCString entityID,
-            InputStream uploadStream, bool usePrivateBrowsing);
+  AsyncOpen(URI uri,
+            PRUint64 startPos,
+            nsCString entityID,
+            InputStream uploadStream,
+            bool haveLoadContext,
+            bool isContent,
+            bool usePrivateBrowsing,
+            bool isInBrowserElement,
+            PRUint32 appID);
   ConnectChannel(PRUint32 channelId);
   Cancel(nsresult status);
   Suspend();

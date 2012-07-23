@@ -137,6 +137,8 @@ nsICODecoder::FixBitmapHeight(PRInt8 *bih)
   PRInt32 height;
   memcpy(&height, bih + 8, sizeof(height));
   height = LITTLE_TO_NATIVE32(height);
+  // BMPs can be stored inverted by having a negative height
+  height = abs(height);
 
   // The bitmap height is by definition * 2 what it should be to account for
   // the 'AND mask'. It is * 2 even if the `AND mask` is not present.

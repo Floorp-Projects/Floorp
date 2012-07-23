@@ -7,6 +7,7 @@
 #include "uiaRawElmProvider.h"
 
 #include "AccessibleWrap.h"
+#include "nsIPersistentProperties2.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -181,11 +182,25 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
       break;
     }
+    
+    //ARIA Role / shortcut
+    case UIA_AriaRolePropertyId: {
+      nsAutoString xmlRoles;
+
+      nsCOMPtr<nsIPersistentProperties> attributes;
+      mAcc->GetAttributes(getter_AddRefs(attributes));
+      attributes->GetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRoles);
+
+      if(!xmlRoles.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(xmlRoles.get());
+        return S_OK;
+      }
+
+      break;
+    }
   }
 
-  // UI Automation will attempt to get the property from the host
-  //window provider.
-  aPropertyValue->vt = VT_EMPTY;
   return S_OK;
 
   A11Y_TRYBLOCK_END

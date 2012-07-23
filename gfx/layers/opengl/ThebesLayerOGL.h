@@ -144,13 +144,6 @@ private:
   // still requires uploading.
   nsIntRegion mRegionPendingUpload;
 
-  // Task used for progressive texture upload. When double-buffering, rather
-  // than synchronously uploading texture data, we immediately return and
-  // upload only what is necessary when rendering the layer. We also upload
-  // other parts of the layer that aren't necessary to render progressively,
-  // over time.
-  CancelableTask* mUploadTask;
-
   // Following used for double-buffering
   ShadowThebesLayerBufferOGL mFrontBuffer;
   // Describes the gfxASurface we hand out to |mFrontBuffer|.

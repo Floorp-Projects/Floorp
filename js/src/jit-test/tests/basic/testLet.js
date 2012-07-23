@@ -8,7 +8,7 @@ function test(str, arg, result)
     var fun = new Function('x', str);
 
     var got = fun.toSource().replace(/\n/g,'');
-    var expect = '(function anonymous(x) {' + str + '})';
+    var expect = '(function anonymous(x) { ' + str + ' })';
     if (got !== expect) {
         print("GOT:    " + got);
         print("EXPECT: " + expect);
@@ -341,20 +341,3 @@ test('switch (x) {case 3:let y;return 3;case 4:let z;return 4;default:return x;}
 test('switch (x) {case 3:let x;break;default:if (x === undefined) {return "ponies";}}');
 test('switch (x) {case 3:default:let y;let (y = x) {return y;}}');
 isError('switch (x) {case 3:let y;return 3;case 4:let y;return 4;default:;}');
-
-// test weird cases where the decompiler changes tokens
-function testWeird(str, printedAs, arg, result)
-{
-    var fun = new Function('x', str);
-
-    // this is lame and doesn't normalize whitespace so if an assert fails
-    // here, see if its just whitespace and fix the caller
-    assertEq(fun.toSource(), '(function anonymous(x) {' + printedAs + '})');
-
-    test(printedAs, arg, result);
-}
-
-testWeird('let y = x;return x;', 'var y = x;return x;');
-testWeird('let y = 1, y = x;return y;', 'var y = 1, y = x;return y;');
-testWeird('return let ({x:x, y:y} = x) x + y', 'return let ({x, y} = x) x + y;', {x:'pon', y:'ies'});
-testWeird('let ({x:x, y:y} = x) {return x + y;}', 'let ({x, y} = x) {return x + y;}', {x:'pon', y:'ies'});

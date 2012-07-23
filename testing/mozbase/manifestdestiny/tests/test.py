@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -22,7 +24,7 @@ def run_tests(raise_on_error=False, report_first=False):
                         raise_on_error=raise_on_error)
     if report_first:
         doctest_args['optionflags'] = doctest.REPORT_ONLY_FIRST_FAILURE
-                                
+
     # gather tests
     directory = os.path.dirname(os.path.abspath(__file__))
     tests =  [ test for test in os.listdir(directory)
@@ -74,6 +76,6 @@ def main(args=sys.argv[1:]):
         for test in sorted(results.keys()):
             result = results[test]
             print "%s: failed=%s, attempted=%s" % (test, result[0], result[1])
-               
+
 if __name__ == '__main__':
     main()

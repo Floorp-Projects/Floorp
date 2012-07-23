@@ -10,6 +10,7 @@
 #include "nsClientRect.h"
 #include "nsPaintRequest.h"
 #include "nsIFrame.h"
+#include "nsDOMClassInfoID.h"
 
 nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(nsPresContext* aPresContext,
                                              nsEvent* aEvent,

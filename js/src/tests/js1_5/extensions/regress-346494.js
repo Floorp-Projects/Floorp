@@ -49,19 +49,6 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect =
-    'function g() {\n' +
-    '    try {\n' +
-    '        throw "foo";\n' +
-    '    } catch (e if e == "bar") {\n' +
-    '    } catch (e if e == "baz") {\n' +
-    '    } finally {\n' +
-    '    }\n' +
-    '}';
-
-  actual = g + '';
-  reportCompare(expect, actual, summary);
-
   function h()
   {
     try
@@ -89,19 +76,6 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
-
-  expect =
-    'function h() {\n' +
-    '    try {\n' +
-    '        throw "foo";\n' +
-    '    } catch (e if e == "bar") {\n' +
-    '    } catch (e) {\n' +
-    '    } finally {\n' +
-    '    }\n' +
-    '}';
-
-  actual = h + '';
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

@@ -8,6 +8,7 @@
 #define mozilla_layers_AsyncPanZoomController_h
 
 #include "GeckoContentController.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -40,7 +41,7 @@ class GestureEventListener;
  * asynchronously scrolled subframes, we want to have one AsyncPanZoomController
  * per frame.
  */
-class AsyncPanZoomController {
+class AsyncPanZoomController MOZ_FINAL {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomController)
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
@@ -263,7 +264,7 @@ protected:
    * current touch (this only makes sense if a touch is currently happening and
    * OnTouchMove() is being invoked).
    */
-  float PanDistance(const MultiTouchInput& aEvent);
+  float PanDistance();
 
   /**
    * Gets a vector of the velocities of each axis.
@@ -276,6 +277,18 @@ protected:
    * relevant.
    */
   SingleTouchData& GetFirstSingleTouch(const MultiTouchInput& aEvent);
+
+  /**
+   * Sets up anything needed for panning. This may lock one of the axes if the
+   * angle of movement is heavily skewed towards it.
+   */
+  void StartPanning(const MultiTouchInput& aStartPoint);
+
+  /**
+   * Wrapper for Axis::UpdateWithTouchAtDevicePoint(). Calls this function for
+   * both axes and factors in the time delta from the last update.
+   */
+  void UpdateWithTouchAtDevicePoint(const MultiTouchInput& aEvent);
 
   /**
    * Does any panning required due to a new touch event.

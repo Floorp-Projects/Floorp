@@ -357,7 +357,10 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         NeedsArgsObj,
         OwnFilename,
         ParentFilename,
-        IsGenerator
+        IsGenerator,
+        HaveSource,
+        OwnSource,
+        ExplicitUseStrict
     };
 
     uint32_t length, lineno, nslots;
@@ -501,6 +504,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << SavedCallerFun);
         if (script->strictModeCode)
             scriptBits |= (1 << StrictModeCode);
+        if (script->explicitUseStrict)
+            scriptBits |= (1 << ExplicitUseStrict);
         if (script->bindingsAccessedDynamically)
             scriptBits |= (1 << ContainsDynamicNameAccess);
         if (script->funHasExtensibleScope)
@@ -513,6 +518,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (enclosingScript && enclosingScript->filename == script->filename)
                           ? (1 << ParentFilename)
                           : (1 << OwnFilename);
+        }
+        if (script->source) {
+            scriptBits |= (1 << HaveSource);
+            if (!enclosingScript || enclosingScript->source != script->source)
+                scriptBits |= (1 << OwnSource);
         }
         if (script->isGenerator)
             scriptBits |= (1 << IsGenerator);
@@ -566,7 +576,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                                   /* compileAndGo = */ false,
                                   !!(scriptBits & (1 << NoScriptRval)),
                                   version_,
-                                  /* staticLevel = */ 0);
+                                  /* staticLevel = */ 0,
+                                  NULL, 0, 0);
         if (!script || !JSScript::partiallyInit(cx, script,
                                                 length, nsrcnotes, natoms, nobjects,
                                                 nregexps, ntrynotes, nconsts, nClosedArgs,
@@ -584,6 +595,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
         if (scriptBits & (1 << StrictModeCode))
             script->strictModeCode = true;
+        if (scriptBits & (1 << ExplicitUseStrict))
+            script->explicitUseStrict = true;
         if (scriptBits & (1 << ContainsDynamicNameAccess))
             script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << FunHasExtensibleScope))
@@ -621,6 +634,24 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_DECODE)
             script->filename = enclosingScript->filename;
     }
+
+    if (scriptBits & (1 << HaveSource)) {
+        if (scriptBits & (1 << OwnSource)) {
+            if (!ScriptSource::performXDR<mode>(xdr, &script->source))
+                return false;
+        } else {
+            JS_ASSERT(enclosingScript);
+            if (mode == XDR_DECODE)
+                script->source = enclosingScript->source;
+        }
+    } else if (mode == XDR_DECODE) {
+        script->source = NULL;
+        JS_ASSERT_IF(enclosingScript, !enclosingScript->source);
+    }
+    if (!xdr->codeUint32(&script->sourceStart))
+        return false;
+    if (!xdr->codeUint32(&script->sourceEnd))
+        return false;
 
     if (mode == XDR_DECODE) {
         script->lineno = lineno;
@@ -933,6 +964,413 @@ JSScript::destroySourceMap(FreeOp *fop)
         fop->free_(releaseSourceMap());
 }
 
+#ifdef JS_THREADSAFE
+void
+SourceCompressorThread::compressorThread(void *arg)
+{
+    PR_SetCurrentThreadName("JS Source Compressing Thread");
+    static_cast<SourceCompressorThread *>(arg)->threadLoop();
+}
+
+bool
+SourceCompressorThread::init()
+{
+    JS_ASSERT(!thread);
+    lock = PR_NewLock();
+    if (!lock)
+        return false;
+    wakeup = PR_NewCondVar(lock);
+    if (!wakeup)
+        return false;
+    done = PR_NewCondVar(lock);
+    if (!done)
+        return false;
+    thread = PR_CreateThread(PR_USER_THREAD, compressorThread, this, PR_PRIORITY_NORMAL,
+                             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+    if (!thread)
+        return false;
+    return true;
+}
+
+void
+SourceCompressorThread::finish()
+{
+    if (thread) {
+        PR_Lock(lock);
+        // We should only be compressing things when in the compiler.
+        JS_ASSERT(state == IDLE);
+        PR_NotifyCondVar(wakeup);
+        state = SHUTDOWN;
+        PR_Unlock(lock);
+        PR_JoinThread(thread);
+    }
+    if (wakeup)
+        PR_DestroyCondVar(wakeup);
+    if (done)
+        PR_DestroyCondVar(done);
+    if (lock)
+        PR_DestroyLock(lock);
+}
+
+void
+SourceCompressorThread::threadLoop()
+{
+    PR_Lock(lock);
+    while (true) {
+        switch (state) {
+          case SHUTDOWN:
+            PR_Unlock(lock);
+            return;
+          case IDLE:
+            PR_WaitCondVar(wakeup, PR_INTERVAL_NO_TIMEOUT);
+            break;
+          case COMPRESSING:
+            JS_ASSERT(tok);
+            JS_ASSERT(!tok->ss->ready());
+            tok->ss->considerCompressing(rt, tok->chars);
+            // We hold the lock, so no one should have changed this.
+            JS_ASSERT(state == COMPRESSING);
+            state = IDLE;
+            PR_NotifyCondVar(done);
+            break;
+        }
+    }
+}
+
+void
+SourceCompressorThread::compress(SourceCompressionToken *sct)
+{
+    if (tok)
+        // We have reentered the compiler. (This can happen through the
+        // debugger.) Complete the current compression before starting the next
+        // one.
+        waitOnCompression(tok);
+    JS_ASSERT(state == IDLE);
+    JS_ASSERT(!tok);
+    PR_Lock(lock);
+    tok = sct;
+    state = COMPRESSING;
+    PR_NotifyCondVar(wakeup);
+    PR_Unlock(lock);
+}
+
+void
+SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
+{
+    JS_ASSERT(userTok == tok);
+    JS_ASSERT(!tok->ss->onRuntime());
+    PR_Lock(lock);
+    if (state == COMPRESSING)
+        PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
+    JS_ASSERT(state == IDLE);
+    JS_ASSERT(tok->ss->ready());
+    tok->ss = NULL;
+    tok->chars = NULL;
+    tok = NULL;
+    PR_Unlock(lock);
+}
+#endif /* JS_THREADSAFE */
+
+bool
+JSScript::loadSource(JSContext *cx, bool *worked)
+{
+    JS_ASSERT(!source);
+    *worked = false;
+    if (!cx->runtime->sourceHook)
+        return true;
+    jschar *src = NULL;
+    uint32_t length;
+    if (!cx->runtime->sourceHook(cx, this, &src, &length))
+        return false;
+    if (!src)
+        return true;
+    ScriptSource *ss = ScriptSource::createFromSource(cx, src, length, false, NULL, true);
+    if (!ss) {
+        cx->free_(src);
+        return false;
+    }
+    source = ss;
+    ss->attachToRuntime(cx->runtime);
+    *worked = true;
+    return true;
+}
+
+JSFixedString *
+JSScript::sourceData(JSContext *cx)
+{
+    JS_ASSERT(source);
+    return source->substring(cx, sourceStart, sourceEnd);
+}
+
+JSFixedString *
+SourceDataCache::lookup(ScriptSource *ss)
+{
+    if (!map_)
+        return NULL;
+    if (Map::Ptr p = map_->lookup(ss))
+        return p->value;
+    return NULL;
+}
+
+void
+SourceDataCache::put(ScriptSource *ss, JSFixedString *str)
+{
+    if (!map_) {
+        map_ = OffTheBooks::new_<Map>();
+        if (!map_)
+            return;
+        if (!map_->init()) {
+            purge();
+            return;
+        }
+    }
+
+    (void) map_->put(ss, str);
+}
+
+void
+SourceDataCache::purge()
+{
+    Foreground::delete_(map_);
+    map_ = NULL;
+}
+
+JSFixedString *
+ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
+{
+    JS_ASSERT(ready());
+    const jschar *chars;
+    Rooted<JSFixedString *> cached(cx, NULL);
+    if (compressed()) {
+        cached = cx->runtime->sourceDataCache.lookup(this);
+        if (!cached) {
+            const size_t memlen = sizeof(jschar) * (length_ + 1);
+            jschar *decompressed = static_cast<jschar *>(cx->malloc_(memlen));
+            if (!decompressed)
+                return NULL;
+            if (!DecompressString(data.compressed, compressedLength,
+                                  reinterpret_cast<unsigned char *>(decompressed), memlen)) {
+                JS_ReportOutOfMemory(cx);
+                cx->free_(decompressed);
+                return NULL;
+            }
+            decompressed[length_] = 0;
+            cached = js_NewString(cx, decompressed, length_);
+            if (!cached) {
+                cx->free_(decompressed);
+                return NULL;
+            }
+            cx->runtime->sourceDataCache.put(this, cached);
+        }
+        chars = cached->getChars(cx);
+        JS_ASSERT(chars);
+    } else {
+        chars = data.source;
+    }
+    return js_NewStringCopyN(cx, chars + start, stop - start);
+}
+
+ScriptSource *
+ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length,
+                               bool argumentsNotIncluded, SourceCompressionToken *tok,
+                               bool ownSource)
+{
+    ScriptSource *ss = static_cast<ScriptSource *>(cx->malloc_(sizeof(*ss)));
+    if (!ss)
+        return NULL;
+    const size_t memlen = length * sizeof(jschar);
+    ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
+    if (!ss->data.compressed) {
+        cx->free_(ss);
+        return NULL;
+    }
+    ss->next = NULL;
+    ss->length_ = length;
+    ss->compressedLength = 0;
+    ss->marked = ss->onRuntime_ = false;
+    ss->argumentsNotIncluded_ = argumentsNotIncluded;
+#ifdef DEBUG
+    ss->ready_ = false;
+#endif
+
+#ifdef JSGC_INCREMENTAL
+    /*
+     * During the IGC we need to ensure that source is marked whenever it is
+     * accessed even if the name was already in the table. At this point old
+     * scripts pointing to the source may no longer be reachable.
+     */
+    if (cx->runtime->gcIncrementalState == MARK && cx->runtime->gcIsFull)
+        ss->marked = true;
+#endif
+
+    JS_ASSERT_IF(ownSource, !tok);
+
+#ifdef JS_THREADSAFE
+    if (tok) {
+        tok->ss = ss;
+        tok->chars = src;
+        cx->runtime->sourceCompressorThread.compress(tok);
+    } else
+#endif
+        ss->considerCompressing(cx->runtime, src, ownSource);
+
+
+    return ss;
+}
+
+void
+ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource)
+{
+    JS_ASSERT(!ready());
+    const size_t memlen = length_ * sizeof(jschar);
+    const size_t COMPRESS_THRESHOLD = 512;
+
+    size_t compressedLen;
+    if (ownSource) {
+        data.source = const_cast<jschar *>(src);
+    } else if (memlen >= COMPRESS_THRESHOLD &&
+        TryCompressString(reinterpret_cast<const unsigned char *>(src), memlen,
+                          data.compressed, &compressedLen))
+    {
+        JS_ASSERT(compressedLen < memlen);
+        compressedLength = compressedLen;
+        void *mem = rt->realloc_(data.compressed, compressedLength);
+        data.compressed = static_cast<unsigned char *>(mem);
+        JS_ASSERT(data.compressed);
+    } else {
+        PodCopy(data.source, src, length_);
+    }
+#ifdef DEBUG    
+    ready_ = true;
+#endif
+}
+
+void
+SourceCompressionToken::ensureReady()
+{
+#ifdef JS_THREADSAFE
+    rt->sourceCompressorThread.waitOnCompression(this);
+#endif
+}
+
+void
+ScriptSource::attachToRuntime(JSRuntime *rt)
+{
+    JS_ASSERT(!onRuntime());
+    next = rt->scriptSources;
+    rt->scriptSources = this;
+    onRuntime_ = true;
+}
+
+void
+ScriptSource::destroy(JSRuntime *rt)
+{
+    JS_ASSERT(ready());
+    JS_ASSERT(onRuntime());
+    rt->free_(data.compressed);
+    onRuntime_ = marked = false;
+#ifdef DEBUG
+    ready_ = false;
+#endif
+    rt->free_(this);
+}
+
+size_t
+ScriptSource::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
+{
+    JS_ASSERT(onRuntime());
+    JS_ASSERT(ready());
+    // data is a union, but both members are pointers to allocated memory, so
+    // just using compressed will work.
+    return mallocSizeOf(this) + mallocSizeOf(data.compressed);
+}
+
+void
+ScriptSource::sweep(JSRuntime *rt)
+{
+    ScriptSource *next = rt->scriptSources, **prev = &rt->scriptSources;
+    while (next) {
+        ScriptSource *cur = next;
+        next = cur->next;
+        JS_ASSERT(cur->ready());
+        JS_ASSERT(cur->onRuntime());
+        if (cur->marked) {
+            cur->marked = false;
+            prev = &cur->next;
+        } else {
+            *prev = next;
+            cur->destroy(rt);
+        }
+    }
+}
+
+template<XDRMode mode>
+bool
+ScriptSource::performXDR(XDRState<mode> *xdr, ScriptSource **ssp)
+{
+    class Cleanup {
+        JSContext *cx;
+        ScriptSource *ss;
+      public:
+        explicit Cleanup(JSContext *cx)
+            : cx(cx), ss(NULL) {}
+        ~Cleanup()
+        {
+            if (ss) {
+                if (ss->data.compressed)
+                    cx->free_(ss->data.compressed);
+                cx->free_(ss);
+            }
+        }
+        void protect(ScriptSource *source) { ss = source; }
+        void release() { ss = NULL; }
+    } cleanup(xdr->cx());
+    ScriptSource *ss = *ssp;
+    if (mode == XDR_DECODE) {
+        *ssp = static_cast<ScriptSource *>(xdr->cx()->malloc_(sizeof(ScriptSource)));
+        ss = *ssp;
+        if (!ss)
+            return false;
+        ss->marked = ss->onRuntime_ = ss->argumentsNotIncluded_ = false;
+#ifdef DEBUG
+        ss->ready_ = false;
+#endif
+        ss->data.compressed = NULL;
+        cleanup.protect(ss);
+#ifdef JSGC_INCREMENTAL
+        // See comment in ScriptSource::createFromSource.
+        if (xdr->cx()->runtime->gcIncrementalState == MARK &&
+            xdr->cx()->runtime->gcIsFull)
+            ss->marked = true;
+#endif
+    }
+    if (!xdr->codeUint32(&ss->length_))
+        return false;
+    if (!xdr->codeUint32(&ss->compressedLength))
+        return false;
+    uint8_t argumentsNotIncluded = ss->argumentsNotIncluded_;
+    if (!xdr->codeUint8(&argumentsNotIncluded))
+        return false;
+    ss->argumentsNotIncluded_ = argumentsNotIncluded;
+    size_t byteLen = ss->compressed() ? ss->compressedLength :
+        (ss->length_ * sizeof(jschar));
+    if (mode == XDR_DECODE) {
+        ss->data.compressed = static_cast<unsigned char *>(xdr->cx()->malloc_(byteLen));
+        if (!ss->data.compressed)
+            return false;
+    }
+    if (!xdr->codeBytes(ss->data.compressed, byteLen))
+        return false;
+    if (mode == XDR_DECODE) {
+#ifdef DEBUG
+        ss->ready_ = true;
+#endif
+        ss->attachToRuntime(xdr->cx()->runtime);
+        cleanup.release();
+    }
+    return true;
+}
+
 /*
  * Shared script filename management.
  */
@@ -1113,7 +1551,8 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 JSScript *
 JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun,
                  JSPrincipals *principals, JSPrincipals *originPrincipals,
-                 bool compileAndGo, bool noScriptRval, JSVersion version, unsigned staticLevel)
+                 bool compileAndGo, bool noScriptRval, JSVersion version, unsigned staticLevel,
+                 ScriptSource *ss, uint32_t bufStart, uint32_t bufEnd)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
@@ -1150,6 +1589,10 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
         return NULL;
     }
     script->staticLevel = uint16_t(staticLevel);
+
+    script->source = ss;
+    script->sourceStart = bufStart;
+    script->sourceEnd = bufEnd;
 
     return script;
 }
@@ -1341,6 +1784,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
     script->strictModeCode = bce->sc->inStrictMode();
+    script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope = bce->sc->funHasExtensibleScope();
     script->hasSingletons = bce->hasSingletons;
@@ -1410,6 +1854,30 @@ JSScript::numNotes()
     for (sn = notes_; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
         continue;
     return sn - notes_ + 1;    /* +1 for the terminator */
+}
+
+bool
+JSScript::enclosingScriptsCompiledSuccessfully() const
+{
+    /*
+     * When a nested script is succesfully compiled, it is eagerly given the
+     * static JSFunction of its enclosing script. The enclosing function's
+     * 'script' field will be NULL until the enclosing script successfully
+     * compiles. Thus, we can detect failed compilation by looking for
+     * JSFunctions in the enclosingScope chain without scripts.
+     */
+    JSObject *enclosing = enclosingScope_;
+    while (enclosing) {
+        if (enclosing->isFunction()) {
+            JSFunction *fun = enclosing->toFunction();
+            if (!fun->script())
+                return false;
+            enclosing = fun->script()->enclosingScope_;
+        } else {
+            enclosing = enclosing->asStaticBlock().enclosingStaticScope();
+        }
+    }
+    return true;
 }
 
 JS_FRIEND_API(void)
@@ -1784,7 +2252,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     JSScript *dst = JSScript::Create(cx, enclosingScope, src->savedCallerFun,
                                      cx->compartment->principals, src->originPrincipals,
                                      src->compileAndGo, src->noScriptRval,
-                                     src->getVersion(), src->staticLevel);
+                                     src->getVersion(), src->staticLevel,
+                                     src->source, src->sourceStart, src->sourceEnd);
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1820,6 +2289,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     }
     dst->cloneHasArray(src);
     dst->strictModeCode = src->strictModeCode;
+    dst->explicitUseStrict = src->explicitUseStrict;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
     dst->hasSingletons = src->hasSingletons;
@@ -2111,8 +2581,13 @@ JSScript::markChildren(JSTracer *trc)
     if (enclosingScope_)
         MarkObject(trc, &enclosingScope_, "enclosing");
 
-    if (IS_GC_MARKING_TRACER(trc) && filename)
-        MarkScriptFilename(trc->runtime, filename);
+    if (IS_GC_MARKING_TRACER(trc)) {
+        if (filename)
+            MarkScriptFilename(trc->runtime, filename);
+
+        if (trc->runtime->gcIsFull && source && source->onRuntime())
+            source->mark();
+    }
 
     bindings.trace(trc);
 
