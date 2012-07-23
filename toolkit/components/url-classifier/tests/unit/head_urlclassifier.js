@@ -15,6 +15,9 @@ var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProper
 
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
+var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+               .getService(Ci.nsIScriptSecurityManager);
+
 // Disable hashcompleter noise for tests
 var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                  getService(Ci.nsIPrefBranch);
@@ -181,7 +184,8 @@ checkUrls: function(urls, expected, cb)
   var doLookup = function() {
     if (urls.length > 0) {
       var fragment = urls.shift();
-      dbservice.lookup("http://" + fragment,
+      var principal = secMan.getNoAppCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null));
+      dbservice.lookup(principal,
                        function(arg) {
                          do_check_eq(expected, arg);
                          doLookup();

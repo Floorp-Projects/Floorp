@@ -97,8 +97,8 @@ add_test(function test_HeaderField_decode() {
 add_test(function test_HeaderField_encode() {
   // Test for MmsHeader
   wsp_encode_test(MMS.HeaderField, {name: "X-Mms-Message-Type",
-                                    value: MMS.MMS_PDU_TYPE_SEND_REQ},
-                  [0x80 | 0x0C, MMS.MMS_PDU_TYPE_SEND_REQ]);
+                                    value: MMS_PDU_TYPE_SEND_REQ},
+                  [0x80 | 0x0C, MMS_PDU_TYPE_SEND_REQ]);
   // Test for ApplicationHeader
   wsp_encode_test(MMS.HeaderField, {name: "a", value: "B"}, [97, 0, 66, 0]);
 
@@ -132,8 +132,8 @@ add_test(function test_MmsHeader_encode() {
                   null, "NotWellKnownEncodingError");
   // Test for normal header
   wsp_encode_test(MMS.MmsHeader, {name: "X-Mms-Message-Type",
-                                  value: MMS.MMS_PDU_TYPE_SEND_REQ},
-                  [0x80 | 0x0C, MMS.MMS_PDU_TYPE_SEND_REQ]);
+                                  value: MMS_PDU_TYPE_SEND_REQ},
+                  [0x80 | 0x0C, MMS_PDU_TYPE_SEND_REQ]);
 
   run_next_test();
 });
@@ -164,24 +164,44 @@ add_test(function test_ContentClassValue_decode() {
 
 add_test(function test_ContentLocationValue_decode() {
   // Test for MMS_PDU_TYPE_MBOX_DELETE_CONF & MMS_PDU_TYPE_DELETE_CONF
-  wsp_decode_test_ex(function (data) {
-      data.array[0] = data.array.length - 1;
-
+  function test(type, statusCount, exception) {
+    function decode(data) {
       let options = {};
-      options["x-mms-message-type"] = /*MMS.MMS_PDU_TYPE_MBOX_DELETE_CONF*/146;
+      if (type) {
+        options["x-mms-message-type"] = type;
+      }
       return MMS.ContentLocationValue.decode(data, options);
-    }, [0, 0x80 | 0x00].concat(strToCharCodeArray("http://no.such.com/path")),
-    {statusCount: 0, uri: "http://no.such.com/path"}
-  );
-  wsp_decode_test_ex(function (data) {
-      data.array[0] = data.array.length - 1;
+    }
 
-      let options = {};
-      options["x-mms-message-type"] = /*MMS.MMS_PDU_TYPE_DELETE_CONF*/149;
-      return MMS.ContentLocationValue.decode(data, options);
-    }, [0, 0x80 | 0x00].concat(strToCharCodeArray("http://no.such.com/path")),
-    {statusCount: 0, uri: "http://no.such.com/path"}
-  );
+    let uri = "http://no.such.com/path";
+
+    let data = strToCharCodeArray(uri);
+    if (statusCount != null) {
+      data = [data.length + 1, statusCount | 0x80].concat(data);
+    }
+
+    let expected;
+    if (!exception) {
+      expected = {};
+      if (statusCount != null) {
+        expected.statusCount = statusCount;
+      }
+      expected.uri = uri;
+    }
+
+    do_print("data = " + JSON.stringify(data));
+    wsp_decode_test_ex(decode, data, expected, exception);
+  }
+
+  test(null, null, "FatalCodeError");
+  for (let type = MMS_PDU_TYPE_SEND_REQ; type <= MMS_PDU_TYPE_CANCEL_CONF; type++) {
+    if ((type == MMS_PDU_TYPE_MBOX_DELETE_CONF)
+        || (type == MMS_PDU_TYPE_DELETE_CONF)) {
+      test(type, 1, null);
+    } else {
+      test(type, null, null);
+    }
+  }
 
   run_next_test();
 });
@@ -263,19 +283,9 @@ add_test(function test_EncodedStringValue_decode() {
                .createInstance(Ci.nsIScriptableUnicodeConverter);
     conv.charset = entry.converter;
 
-    let raw;
-    try {
-      let raw = conv.convertToByteArray(str).concat([0]);
-      if (raw[0] >= 128) {
-        wsp_decode_test(MMS.EncodedStringValue,
-                            [raw.length + 2, 0x80 | entry.number, 127].concat(raw), str);
-      } else {
-        wsp_decode_test(MMS.EncodedStringValue,
-                            [raw.length + 1, 0x80 | entry.number].concat(raw), str);
-      }
-    } catch (e) {
-      do_print("Can't convert test string to byte array with " + entry.converter);
-    }
+    let raw = conv.convertToByteArray(str).concat([0]);
+    wsp_decode_test(MMS.EncodedStringValue,
+                    [raw.length + 2, 0x80 | entry.number, 127].concat(raw), str);
   }
 
   run_next_test();
@@ -291,7 +301,7 @@ add_test(function test_ExpiryValue_decode() {
   // Test for Absolute-token Date-value
   wsp_decode_test(MMS.ExpiryValue, [3, 128, 1, 0x80], new Date(0x80 * 1000));
   // Test for Relative-token Delta-seconds-value
-  wsp_decode_test(MMS.ExpiryValue, [3, 129, 0x80], 0);
+  wsp_decode_test(MMS.ExpiryValue, [2, 129, 0x80], 0);
 
   run_next_test();
 });
@@ -334,7 +344,7 @@ add_test(function test_FromValue_decode() {
   wsp_decode_test(MMS.FromValue, [1, 129], null);
   // Test for Address-present-token:
   let (addr = strToCharCodeArray("+123/TYPE=PLMN")) {
-    wsp_decode_test(MMS.FromValue, [addr.length + 2, 128].concat(addr),
+    wsp_decode_test(MMS.FromValue, [addr.length + 1, 128].concat(addr),
                         {address: "+123", type: "PLMN"});
   }
 
@@ -345,31 +355,33 @@ add_test(function test_FromValue_decode() {
 // Test target: MessageClassValue
 //
 
+//// MessageClassValue.decodeClassIdentifier ////
+
+add_test(function test_MessageClassValue_decodeClassIdentifier() {
+  let (IDs = ["personal", "advertisement", "informational", "auto"]) {
+    for (let i = 0; i < 256; i++) {
+      if ((i >= 128) && (i <= 131)) {
+        wsp_decode_test_ex(function (data) {
+            return MMS.MessageClassValue.decodeClassIdentifier(data);
+          }, [i], IDs[i - 128]
+        );
+      } else {
+        wsp_decode_test_ex(function (data) {
+            return MMS.MessageClassValue.decodeClassIdentifier(data);
+          }, [i], null, "CodeError"
+        );
+      }
+    }
+  }
+
+  run_next_test();
+});
+
 //// MessageClassValue.decode ////
 
 add_test(function test_MessageClassValue_decode() {
   wsp_decode_test(MMS.MessageClassValue, [65, 0], "A");
   wsp_decode_test(MMS.MessageClassValue, [128], "personal");
-
-  run_next_test();
-});
-
-//
-// Test target: ClassIdentifier
-//
-
-//// ClassIdentifier.decode ////
-
-add_test(function test_ClassIdentifier_decode() {
-  let (IDs = ["personal", "advertisement", "informational", "auto"]) {
-    for (let i = 0; i < 256; i++) {
-      if ((i >= 128) && (i <= 131)) {
-        wsp_decode_test(MMS.ClassIdentifier, [i], IDs[i - 128]);
-      } else {
-        wsp_decode_test(MMS.ClassIdentifier, [i], null, "CodeError");
-      }
-    }
-  }
 
   run_next_test();
 });
@@ -433,9 +445,9 @@ add_test(function test_MmFlagsValue_decode() {
 add_test(function test_MmStateValue_decode() {
   for (let i = 0; i < 256; i++) {
     if ((i >= 128) && (i <= 132)) {
-      wsp_decode_test(MMS.MmStateValue, [i, 0], i);
+      wsp_decode_test(MMS.MmStateValue, [i], i);
     } else {
-      wsp_decode_test(MMS.MmStateValue, [i, 0], null, "CodeError");
+      wsp_decode_test(MMS.MmStateValue, [i], null, "CodeError");
     }
   }
 
@@ -504,14 +516,12 @@ add_test(function test_ReplyChargingValue_decode() {
 
 add_test(function test_RetrieveStatusValue_decode() {
   for (let i = 0; i < 256; i++) {
-    if ((i == 128)
-        || ((i >= 192) && (i <= 194))
-        || ((i >= 224) && (i <= 227))) {
+    if ((i == MMS_PDU_ERROR_OK)
+        || (i >= MMS_PDU_ERROR_TRANSIENT_FAILURE)) {
       wsp_decode_test(MMS.RetrieveStatusValue, [i], i);
-    } else if ((i >= 195) && (i <= 223)) {
-      wsp_decode_test(MMS.RetrieveStatusValue, [i], 192);
     } else {
-      wsp_decode_test(MMS.RetrieveStatusValue, [i], 224);
+      wsp_decode_test(MMS.RetrieveStatusValue, [i],
+                      MMS_PDU_ERROR_PERMANENT_FAILURE);
     }
   }
 

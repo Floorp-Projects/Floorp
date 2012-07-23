@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_BASERECT_H_
 
 #include <cmath>
+#include <mozilla/Assertions.h>
 
 namespace mozilla {
 namespace gfx {
@@ -275,6 +276,26 @@ struct BaseRect {
   T Height() const { return height; }
   T XMost() const { return x + width; }
   T YMost() const { return y + height; }
+
+  // Moves one edge of the rect without moving the opposite edge.
+  void SetLeftEdge(T aX) {
+    MOZ_ASSERT(aX <= XMost());
+    width = XMost() - aX;
+    x = aX;
+  }
+  void SetRightEdge(T aXMost) { 
+    MOZ_ASSERT(aXMost >= x);
+    width = aXMost - x; 
+  }
+  void SetTopEdge(T aY) {
+    MOZ_ASSERT(aY <= YMost());
+    height = YMost() - aY;
+    y = aY;
+  }
+  void SetBottomEdge(T aYMost) { 
+    MOZ_ASSERT(aYMost >= y);
+    height = aYMost - y; 
+  }
 
   // Round the rectangle edges to integer coordinates, such that the rounded
   // rectangle has the same set of pixel centers as the original rectangle.
