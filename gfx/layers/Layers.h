@@ -302,6 +302,13 @@ public:
 
   bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 
+  /** 
+   * Returns true if this LayerManager can properly support layers with
+   * SURFACE_COMPONENT_ALPHA. This can include disabling component
+   * alpha if required.
+   */
+  virtual bool AreComponentAlphaLayersEnabled() { return true; }
+
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the root layer. The root layer is initially null. If there is
