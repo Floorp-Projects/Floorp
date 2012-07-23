@@ -266,7 +266,6 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
       RequestContentRepaint();
     }
     mState = FLING;
-    mLastSampleTime = TimeStamp::Now();
     return nsEventStatus_eConsumeNoDefault;
   case PINCHING:
     mState = NOTHING;
@@ -484,7 +483,10 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
     return false;
   }
 
-  if (!mX.FlingApplyFrictionOrCancel(aDelta) && !mY.FlingApplyFrictionOrCancel(aDelta)) {
+  bool shouldContinueFlingX = mX.FlingApplyFrictionOrCancel(aDelta),
+       shouldContinueFlingY = mY.FlingApplyFrictionOrCancel(aDelta);
+  // If we shouldn't continue the fling, let's just stop and repaint.
+  if (!shouldContinueFlingX && !shouldContinueFlingY) {
     RequestContentRepaint();
     mState = NOTHING;
     return false;
