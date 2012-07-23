@@ -427,8 +427,8 @@ float AsyncPanZoomController::PanDistance(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
   nsIntPoint point = touch.mScreenPoint;
   PRInt32 xPos = point.x, yPos = point.y;
-  mX.UpdateWithTouchAtDevicePoint(xPos, 0);
-  mY.UpdateWithTouchAtDevicePoint(yPos, 0);
+  mX.UpdateWithTouchAtDevicePoint(xPos, TimeDuration(0));
+  mY.UpdateWithTouchAtDevicePoint(yPos, TimeDuration(0));
   return NS_hypot(mX.PanDistance(), mY.PanDistance()) * mFrameMetrics.mResolution.width;
 }
 
@@ -442,10 +442,11 @@ const nsPoint AsyncPanZoomController::GetVelocityVector() {
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   SingleTouchData& touch = GetFirstSingleTouch(aEvent);
   nsIntPoint point = touch.mScreenPoint;
-  PRInt32 xPos = point.x, yPos = point.y, timeDelta = aEvent.mTime - mLastEventTime;
+  PRInt32 xPos = point.x, yPos = point.y;
+  TimeDuration timeDelta = TimeDuration().FromMilliseconds(aEvent.mTime - mLastEventTime);
 
   // Probably a duplicate event, just throw it away.
-  if (!timeDelta) {
+  if (timeDelta.ToMilliseconds() <= EPSILON) {
     return;
   }
 
@@ -458,8 +459,8 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     // larger swipe should move you a shorter distance.
     float inverseScale = 1 / mFrameMetrics.mResolution.width;
 
-    PRInt32 xDisplacement = mX.UpdateAndGetDisplacement(inverseScale);
-    PRInt32 yDisplacement = mY.UpdateAndGetDisplacement(inverseScale);
+    PRInt32 xDisplacement = mX.GetDisplacementForDuration(inverseScale, timeDelta);
+    PRInt32 yDisplacement = mY.GetDisplacementForDuration(inverseScale, timeDelta);
     if (!xDisplacement && !yDisplacement) {
       return;
     }
@@ -494,8 +495,8 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
   float inverseScale = 1 / mFrameMetrics.mResolution.width;
 
   ScrollBy(nsIntPoint(
-    mX.UpdateAndGetDisplacement(inverseScale),
-    mY.UpdateAndGetDisplacement(inverseScale)
+    mX.GetDisplacementForDuration(inverseScale, aDelta),
+    mY.GetDisplacementForDuration(inverseScale, aDelta)
   ));
   RequestContentRepaint();
 

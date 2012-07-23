@@ -10,13 +10,7 @@
 namespace mozilla {
 namespace layers {
 
-static const float EPSILON = 0.0001;
-
-/**
- * Milliseconds per frame, used to judge how much displacement should have
- * happened every frame based on the velocity calculated from touch events.
- */
-static const float MS_PER_FRAME = 1000.0f / 60.0f;
+static const float EPSILON = 0.0001f;
 
 /**
  * Maximum acceleration that can happen between two frames. Velocity is
@@ -24,31 +18,31 @@ static const float MS_PER_FRAME = 1000.0f / 60.0f;
  * or we get a touch point very far away from the previous position for some
  * reason.
  */
-static const float MAX_EVENT_ACCELERATION = 12;
+static const float MAX_EVENT_ACCELERATION = 0.5f;
 
 /**
  * Amount of friction applied during flings when going above
  * VELOCITY_THRESHOLD.
  */
-static const float FLING_FRICTION_FAST = 0.010;
+static const float FLING_FRICTION_FAST = 0.010f;
 
 /**
  * Amount of friction applied during flings when going below
  * VELOCITY_THRESHOLD.
  */
-static const float FLING_FRICTION_SLOW = 0.008;
+static const float FLING_FRICTION_SLOW = 0.008f;
 
 /**
  * Maximum velocity before fling friction increases.
  */
-static const float VELOCITY_THRESHOLD = 10;
+static const float VELOCITY_THRESHOLD = 0.5f;
 
 /**
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
  * velocity and rerendering unnecessarily.
  */
-static const float FLING_STOPPED_THRESHOLD = 0.1f;
+static const float FLING_STOPPED_THRESHOLD = 0.01f;
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0.0f),
@@ -58,10 +52,10 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, PRInt32 aTimeDelta) {
-  float newVelocity = MS_PER_FRAME * (mPos - aPos) / aTimeDelta;
+void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeDelta) {
+  float newVelocity = (mPos - aPos) / aTimeDelta.ToMilliseconds();
 
-  bool curVelocityIsLow = fabsf(newVelocity) < 1.0f;
+  bool curVelocityIsLow = fabsf(newVelocity) < 0.01f;
   bool directionChange = (mVelocity > 0) != (newVelocity != 0);
 
   // If a direction change has happened, or the current velocity due to this new
@@ -69,7 +63,7 @@ void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, PRInt32 aTimeDelta) {
   if (curVelocityIsLow || (directionChange && fabs(newVelocity) - EPSILON <= 0.0f)) {
     mVelocity = newVelocity;
   } else {
-    float maxChange = fabsf(mVelocity * aTimeDelta * MAX_EVENT_ACCELERATION);
+    float maxChange = fabsf(mVelocity * aTimeDelta.ToMilliseconds() * MAX_EVENT_ACCELERATION);
     mVelocity = NS_MIN(mVelocity + maxChange, NS_MAX(mVelocity - maxChange, newVelocity));
   }
 
@@ -83,8 +77,8 @@ void Axis::StartTouch(PRInt32 aPos) {
   mVelocity = 0.0f;
 }
 
-PRInt32 Axis::UpdateAndGetDisplacement(float aScale) {
-  PRInt32 displacement = NS_lround(mVelocity * aScale);
+PRInt32 Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
+  PRInt32 displacement = NS_lround(mVelocity * aScale * aDelta.ToMilliseconds());
   // If this displacement will cause an overscroll, throttle it. Can potentially
   // bring it to 0 even if the velocity is high.
   if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
