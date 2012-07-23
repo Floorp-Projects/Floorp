@@ -57,9 +57,7 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
   // if we need more items in the array, new them
   if (arrayCount<rangeCount)
   {
-    PRInt32 count = rangeCount-arrayCount;
-    for (i=0; i<count; i++)
-    {
+    for (i = arrayCount; i < rangeCount; i++) {
       mArray.AppendElement();
       mArray[i] = new nsRangeStore();
     }
