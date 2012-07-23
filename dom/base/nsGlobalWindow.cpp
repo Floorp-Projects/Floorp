@@ -5861,6 +5861,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       false,          // aContentModal
                       true,           // aCalledNoScript
                       false,          // aDoJSFixups
+                      true,           // aNavigate
                       nsnull, nsnull,    // No args
                       GetPrincipal(),    // aCalleePrincipal
                       nsnull,            // aJSCallerContext
@@ -5876,6 +5877,7 @@ nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                       false,          // aContentModal
                       false,          // aCalledNoScript
                       true,           // aDoJSFixups
+                      true,           // aNavigate
                       nsnull, nsnull,    // No args
                       GetPrincipal(),    // aCalleePrincipal
                       nsContentUtils::GetCurrentJSContext(), // aJSCallerContext
@@ -5894,10 +5896,31 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       false,                   // aContentModal
                       true,                    // aCalledNoScript
                       false,                   // aDoJSFixups
+                      true,                    // aNavigate
                       nsnull, aExtraArgument,     // Arguments
                       GetPrincipal(),             // aCalleePrincipal
                       nsnull,                     // aJSCallerContext
                       _retval);
+}
+
+// Like Open, but passes aNavigate=false.
+/* virtual */ nsresult
+nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
+                               const nsAString& aName,
+                               const nsAString& aOptions,
+                               nsIDOMWindow **_retval)
+{
+  return OpenInternal(aUrl, aName, aOptions,
+                      false,          // aDialog
+                      false,          // aContentModal
+                      true,           // aCalledNoScript
+                      false,          // aDoJSFixups
+                      false,          // aNavigate
+                      nsnull, nsnull,    // No args
+                      GetPrincipal(),    // aCalleePrincipal
+                      nsnull,            // aJSCallerContext
+                      _retval);
+
 }
 
 NS_IMETHODIMP
@@ -5940,6 +5963,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       false,            // aContentModal
                       false,            // aCalledNoScript
                       false,            // aDoJSFixups
+                      true,             // aNavigate
                       argvArray, nsnull,   // Arguments
                       GetPrincipal(),      // aCalleePrincipal
                       cx,                  // aJSCallerContext
@@ -7186,6 +7210,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              true,           // aContentModal
                              true,           // aCalledNoScript
                              true,           // aDoJSFixups
+                             true,           // aNavigate
                              nsnull, aArgs,     // args
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
@@ -9104,7 +9129,8 @@ nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              const nsAString& aOptions, bool aDialog,
                              bool aContentModal, bool aCalledNoScript,
-                             bool aDoJSFixups, nsIArray *argv,
+                             bool aDoJSFixups, bool aNavigate,
+                             nsIArray *argv,
                              nsISupports *aExtraArgument,
                              nsIPrincipal *aCalleePrincipal,
                              JSContext *aJSCallerContext,
@@ -9112,8 +9138,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 {
   FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
                                   aContentModal, aCalledNoScript, aDoJSFixups,
-                                  argv, aExtraArgument, aCalleePrincipal,
-                                  aJSCallerContext, aReturn),
+                                  aNavigate, argv, aExtraArgument,
+                                  aCalleePrincipal, aJSCallerContext, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
 #ifdef DEBUG
@@ -9127,6 +9153,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass JS args when called via the noscript methods");
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
+
+  // Calls to window.open from script should navigate.
+  MOZ_ASSERT(aCalledNoScript || aNavigate);
 
   *aReturn = nsnull;
 
@@ -9155,10 +9184,13 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (!aUrl.IsEmpty()) {
     AppendUTF16toUTF8(aUrl, url);
 
-    /* Check whether the URI is allowed, but not for dialogs --
-       see bug 56851. The security of this function depends on
-       window.openDialog being inaccessible from web scripts */
-    if (url.get() && !aDialog)
+    // It's safe to skip the security check below if we're not a dialog
+    // because window.openDialog is not callable from content script.  See bug
+    // 56851.
+    //
+    // If we're not navigating, we assume that whoever *does* navigate the
+    // window will do a security check of their own.
+    if (url.get() && !aDialog && aNavigate)
       rv = SecurityCheckURL(url.get());
   }
 
@@ -9199,6 +9231,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
   const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
 
+  nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+  NS_ENSURE_STATE(pwwatch);
+
   {
     // Reset popup state while opening a window to prevent the
     // current state from being active the whole time a modal
@@ -9206,15 +9241,12 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     nsAutoPopupStatePusher popupStatePusher(openAbused, true);
 
     if (!aCalledNoScript) {
-      nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-      NS_ASSERTION(pwwatch,
-                   "Unable to open windows from JS because window watcher "
-                   "is broken");
-      NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
-        
-      rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                 aDialog, argv,
-                                 getter_AddRefs(domReturn));
+      // We asserted at the top of this function that aNavigate is true for
+      // !aCalledNoScript.
+      rv = pwwatch->OpenWindow2(this, url.get(), name_ptr, options_ptr,
+                                /* aCalledFromScript = */ true,
+                                aDialog, aNavigate, argv,
+                                getter_AddRefs(domReturn));
     } else {
       // Push a null JSContext here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
@@ -9230,9 +9262,11 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         rv = stack->Push(nsnull);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-        
-      rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
-                              aExtraArgument, getter_AddRefs(domReturn));
+
+      rv = pwwatch->OpenWindow2(this, url.get(), name_ptr, options_ptr,
+                                /* aCalledFromScript = */ false,
+                                aDialog, aNavigate, aExtraArgument,
+                                getter_AddRefs(domReturn));
 
       if (stack) {
         JSContext* cx;
