@@ -18,7 +18,7 @@ TOOLCHAIN_PREFIX = ''
 def dependentlibs_dumpbin(lib):
     '''Returns the list of dependencies declared in the given DLL'''
     try:
-        proc = subprocess.Popen(['dumpbin', '-imports', lib], stdout = subprocess.PIPE)
+        proc = subprocess.Popen(['dumpbin', '-dependents', lib], stdout = subprocess.PIPE)
     except OSError:
         # dumpbin is missing, probably mingw compilation. Try using objdump.
         return dependentlibs_mingw_objdump(lib)
@@ -28,6 +28,11 @@ def dependentlibs_dumpbin(lib):
         match = re.match('    (\S+)', line)
         if match:
              deps.append(match.group(1))
+        elif len(deps):
+             # There may be several groups of library names, but only the
+             # first one is interesting. The second one is for delayload-ed
+             # libraries.
+             break
     proc.wait()
     return deps
 
