@@ -39,8 +39,6 @@ EXPORTS = \
         LayerManagerOGLProgram.h \
         ReadbackLayer.h \
         LayerSorter.h \
-        TexturePoolOGL.h \
-        SharedTextureImage.h \
         $(NULL)
 
 CPPSRCS = \
@@ -69,7 +67,6 @@ CPPSRCS = \
         LayerManagerOGLProgram.cpp \
         LayerSorter.cpp \
         ImageLayers.cpp \
-        TexturePoolOGL.cpp \
         $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
