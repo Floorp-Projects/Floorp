@@ -1704,6 +1704,7 @@ void
 nsHttpConnectionMgr::StartedConnect()
 {
     mNumActiveConns++;
+    ActivateTimeoutTick(); // likely disabled by RecvdConnect()
 }
 
 void
@@ -2161,9 +2162,41 @@ nsHttpConnectionMgr::ReadTimeoutTickCB(const nsACString &key,
     LOG(("nsHttpConnectionMgr::ReadTimeoutTickCB() this=%p host=%s\n",
          self, ent->mConnInfo->Host()));
 
+    // first call the tick handler for each active connection
     PRIntervalTime now = PR_IntervalNow();
     for (PRUint32 index = 0; index < ent->mActiveConns.Length(); ++index)
         ent->mActiveConns[index]->ReadTimeoutTick(now);
+
+    // now check for any stalled half open sockets
+    if (ent->mHalfOpens.Length()) {
+        TimeStamp now = TimeStamp::Now();
+        double maxConnectTime = gHttpHandler->ConnectTimeout();  /* in milliseconds */
+
+        for (PRUint32 index = ent->mHalfOpens.Length(); index > 0; ) {
+            index--;
+
+            nsHalfOpenSocket *half = ent->mHalfOpens[index];
+            double delta = half->Duration(now);
+            // If the socket has timed out, close it so the waiting transaction
+            // will get the proper signal
+            if (delta > maxConnectTime) {
+                LOG(("Force timeout of half open to %s after %.2fms.\n",
+                     ent->mConnInfo->HashKey().get(), delta));
+                if (half->SocketTransport())
+                    half->SocketTransport()->Close(NS_ERROR_NET_TIMEOUT);
+                if (half->BackupTransport())
+                    half->BackupTransport()->Close(NS_ERROR_NET_TIMEOUT);
+            }
+
+            // If this half open hangs around for 5 seconds after we've closed() it
+            // then just abandon the socket.
+            if (delta > maxConnectTime + 5000) {
+                LOG(("Abandon half open to %s after %.2fms.\n",
+                     ent->mConnInfo->HashKey().get(), delta));
+                half->Abandon();
+            }
+        }
+    }
 
     return PL_DHASH_NEXT;
 }
@@ -2301,17 +2334,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket()
     NS_ABORT_IF_FALSE(!mSynTimer, "syntimer not null");
     LOG(("Destroying nsHalfOpenSocket [this=%p]\n", this));
     
-    if (mEnt) {
-        // A failure to create the transport object at all
-        // will result in this not being present in the halfopen table
-        // so ignore failures of RemoveElement()
-        mEnt->mHalfOpens.RemoveElement(this);
-        
-        // If there are no unconnected half opens left in the array, then
-        // it is liekly that this dtor transitioned
-        if (!mEnt->UnconnectedHalfOpens())
-            gHttpHandler->ConnMgr()->ProcessPendingQForEntry(mEnt);
-    }
+    if (mEnt)
+        mEnt->RemoveHalfOpen(this);
 }
 
 nsresult
@@ -2496,8 +2520,20 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
 
     CancelBackupTimer();
 
+    if (mEnt)
+        mEnt->RemoveHalfOpen(this);
     mEnt = nsnull;
 }
+
+double
+nsHttpConnectionMgr::nsHalfOpenSocket::Duration(mozilla::TimeStamp epoch)
+{
+    if (mPrimarySynStarted.IsNull())
+        return 0;
+
+    return (epoch - mPrimarySynStarted).ToMilliseconds();
+}
+
 
 NS_IMETHODIMP // method for nsITimerCallback
 nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
@@ -3022,4 +3058,18 @@ nsHttpConnectionMgr::nsConnectionEntry::UnconnectedHalfOpens()
             ++unconnectedHalfOpens;
     }
     return unconnectedHalfOpens;
+}
+
+void
+nsHttpConnectionMgr::
+nsConnectionEntry::RemoveHalfOpen(nsHalfOpenSocket *halfOpen)
+{
+    // A failure to create the transport object at all
+    // will result in it not being present in the halfopen table
+    // so ignore failures of RemoveElement()
+    mHalfOpens.RemoveElement(halfOpen);
+
+    if (!UnconnectedHalfOpens())
+        // perhaps this reverted RestrictConnections()
+        gHttpHandler->ConnMgr()->ProcessPendingQForEntry(this);
 }
