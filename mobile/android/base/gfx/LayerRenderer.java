@@ -123,20 +123,11 @@ public class LayerRenderer {
         "}\n";
 
     public void setCheckerboardBitmap(ByteBuffer data, int width, int height, RectF pageRect, Rect copyRect) {
-        mCheckerboardLayer.setBitmap(data, width, height, copyRect);
-        mCheckerboardLayer.beginTransaction();
         try {
-            mCheckerboardLayer.setPosition(RectUtils.round(pageRect));
-            mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
+            mCheckerboardLayer.setBitmap(data, width, height, copyRect);
+        } catch (IllegalArgumentException ex) {
+            Log.e(LOGTAG, "error setting bitmap: ", ex);
         }
-    }
-
-    public void updateCheckerboardBitmap(Bitmap bitmap, float x, float y,
-                                         float width, float height,
-                                         RectF pageRect) {
-        mCheckerboardLayer.updateBitmap(bitmap, x, y, width, height);
         mCheckerboardLayer.beginTransaction();
         try {
             mCheckerboardLayer.setPosition(RectUtils.round(pageRect));
