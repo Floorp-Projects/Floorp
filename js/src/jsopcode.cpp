@@ -5569,7 +5569,7 @@ js_DecompileFunctionBody(JSPrinter *jp)
 
     JS_ASSERT(jp->fun);
     JS_ASSERT(!jp->script);
-    if (!jp->fun->isInterpreted()) {
+    if (jp->fun->isNative() || jp->fun->isSelfHostedBuiltin()) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
@@ -5604,7 +5604,7 @@ js_DecompileFunction(JSPrinter *jp)
         return JS_FALSE;
     js_puts(jp, "(");
 
-    if (!fun->isInterpreted()) {
+    if (fun->isNative() || fun->isSelfHostedBuiltin()) {
         js_printf(jp, ") {\n");
         jp->indent += 4;
         js_printf(jp, native_code_str);
@@ -5738,7 +5738,7 @@ static JSObject *
 GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     jsbytecode *start = script->main();
-    
+
     JS_ASSERT(pc >= start && pc < script->code + script->length);
 
     JSObject *blockChain = NULL;
@@ -5773,7 +5773,7 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
             break;
         }
     }
-    
+
     return blockChain;
 }
 
@@ -6131,7 +6131,8 @@ ExpressionDecompiler::getOutput(char **res)
 }
 
 static bool
-FindStartPC(JSContext *cx, JSScript *script, int spindex, Value v, jsbytecode **valuepc)
+FindStartPC(JSContext *cx, JSScript *script, int spindex, int skipStackHits,
+            Value v, jsbytecode **valuepc)
 {
     jsbytecode *current = *valuepc;
 
@@ -6150,10 +6151,11 @@ FindStartPC(JSContext *cx, JSScript *script, int spindex, Value v, jsbytecode **
         // exception.
         Value *stackBase = cx->regs().spForStackDepth(0);
         Value *sp = cx->regs().sp;
+        int stackHits = 0;
         do {
             if (sp == stackBase)
                 return true;
-        } while (*--sp != v);
+        } while (*--sp != v || stackHits++ != skipStackHits);
         if (sp < stackBase + pcstack.depth())
             *valuepc = pcstack[sp - stackBase];
     } else {
@@ -6163,7 +6165,7 @@ FindStartPC(JSContext *cx, JSScript *script, int spindex, Value v, jsbytecode **
 }
 
 static bool
-DecompileExpressionFromStack(JSContext *cx, int spindex, Value v, char **res)
+DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Value v, char **res)
 {
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
@@ -6183,7 +6185,7 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, Value v, char **res)
     if (valuepc < script->main())
         return true;
 
-    if (!FindStartPC(cx, script, spindex, v, &valuepc))
+    if (!FindStartPC(cx, script, spindex, skipStackHits, v, &valuepc))
         return false;
     if (!valuepc)
         return true;
@@ -6199,12 +6201,12 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, Value v, char **res)
 
 char *
 js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
-                            HandleString fallbackArg)
+                            HandleString fallbackArg, int skipStackHits)
 {
     RootedString fallback(cx, fallbackArg);
     {
         char *result;
-        if (!DecompileExpressionFromStack(cx, spindex, v, &result))
+        if (!DecompileExpressionFromStack(cx, spindex, skipStackHits, v, &result))
             return NULL;
         if (result) {
             if (strcmp(result, "(intermediate value)"))

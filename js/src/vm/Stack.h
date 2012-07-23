@@ -1743,6 +1743,21 @@ class ScriptFrameIter : public StackIter
     ScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
 };
 
+/* A filtering of the StackIter to only stop at non-self-hosted scripts. */
+class NonBuiltinScriptFrameIter : public StackIter
+{
+    void settle() {
+        while (!done() && (!isScript() || (isFunctionFrame() && fp()->fun()->isSelfHostedBuiltin())))
+            StackIter::operator++();
+    }
+
+  public:
+    NonBuiltinScriptFrameIter(JSContext *cx, StackIter::SavedOption opt = StackIter::STOP_AT_SAVED)
+        : StackIter(cx, opt) { settle(); }
+
+    NonBuiltinScriptFrameIter &operator++() { StackIter::operator++(); settle(); return *this; }
+};
+
 /*****************************************************************************/
 
 /*

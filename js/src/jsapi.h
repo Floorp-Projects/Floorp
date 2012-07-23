@@ -2540,6 +2540,11 @@ class AutoIdRooter : private AutoGCRooter
 
 /* Function flags, internal use only, returned by JS_GetFunctionFlags. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
+
+#define JSFUN_SELF_HOSTED       0x40    /* function is self-hosted native and
+                                           must not be decompilable nor
+                                           constructible. */
+
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
@@ -4414,11 +4419,17 @@ struct JSPropertySpec {
     JSStrictPropertyOpWrapper   setter;
 };
 
+/*
+ * To define a native function, set call to a JSNativeWrapper. To define a
+ * self-hosted function, set selfHostedName to the name of a function
+ * compiled during JSRuntime::initSelfHosting.
+ */
 struct JSFunctionSpec {
     const char      *name;
     JSNativeWrapper call;
     uint16_t        nargs;
     uint16_t        flags;
+    const char      *selfHostedName;
 };
 
 /*
@@ -5147,7 +5158,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     unsigned lineno;
     bool compileAndGo;
     bool noScriptRval;
-    bool allowIntrinsicsCalls;
+    bool selfHostingMode;
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -5164,7 +5175,7 @@ struct JS_PUBLIC_API(CompileOptions) {
     }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
-    CompileOptions &setAllowIntrinsicsCalls(bool aic) { allowIntrinsicsCalls = aic; return *this; }
+    CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setSourcePolicy(SourcePolicy sp) { sourcePolicy = sp; return *this; }
 };
 
