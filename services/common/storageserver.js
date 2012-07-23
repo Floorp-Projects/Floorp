@@ -612,10 +612,11 @@ StorageServerCollection.prototype = {
         continue;
       }
       chunk = chunk.split("=");
+      let key = decodeURIComponent(chunk[0]);
       if (chunk.length == 1) {
-        options[chunk[0]] = "";
+        options[key] = "";
       } else {
-        options[chunk[0]] = chunk[1];
+        options[key] = decodeURIComponent(chunk[1]);
       }
     }
 

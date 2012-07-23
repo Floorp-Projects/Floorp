@@ -253,6 +253,28 @@ add_test(function test_bso_get_existing() {
   server.stop(run_next_test);
 });
 
+add_test(function test_percent_decoding() {
+  _("Ensure query string arguments with percent encoded are handled.");
+
+  let server = new StorageServer();
+  server.registerUser("123", "password");
+  server.startSynchronous(PORT);
+
+  let coll = server.user("123").createCollection("test");
+  coll.insert("001", {foo: "bar"});
+  coll.insert("002", {bar: "foo"});
+
+  let request = localRequest("/2.0/123/storage/test?ids=001%2C002", "123",
+                             "password");
+  let error = doGetRequest(request);
+  do_check_null(error);
+  do_check_eq(request.response.status, 200);
+  let items = JSON.parse(request.response.body).items;
+  do_check_attribute_count(items, 2);
+
+  server.stop(run_next_test);
+});
+
 add_test(function test_bso_404() {
   _("Ensure the server responds with a 404 if a BSO does not exist.");
 
