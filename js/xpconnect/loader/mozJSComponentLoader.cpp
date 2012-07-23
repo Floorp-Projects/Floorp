@@ -55,6 +55,8 @@
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "nsIResProtocolHandler.h"
+#include "nsContentUtils.h"
+#include "WrapperFactory.h"
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
@@ -67,6 +69,7 @@
 
 using namespace mozilla;
 using namespace mozilla::scache;
+using namespace xpc;
 
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
@@ -965,7 +968,7 @@ mozJSComponentLoader::UnloadModules()
 
 NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString& registryLocation,
-                             const JS::Value& targetObj,
+                             const JS::Value& targetVal_,
                              JSContext* cx,
                              PRUint8 optionalArgc,
                              JS::Value* retval)
@@ -975,15 +978,30 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
 
     JSAutoRequest ar(cx);
 
-    JSObject *targetObject = nsnull;
+    JS::Value targetVal = targetVal_;
+    JSObject *targetObject = NULL;
 
+    MOZ_ASSERT(nsContentUtils::CallerHasUniversalXPConnect());
     if (optionalArgc) {
         // The caller passed in the optional second argument. Get it.
-        if (targetObj.isObjectOrNull()) {
-            targetObject = targetObj.toObjectOrNull();
-        } else {
+        if (targetVal.isObject()) {
+            // If we're passing in something like a content DOM window, chances
+            // are the caller expects the properties to end up on the object
+            // proper and not on the Xray holder. This is dubious, but can be used
+            // during testing. Given that dumb callers can already leak JSMs into
+            // content by passing a raw content JS object (where Xrays aren't
+            // possible), we aim for consistency here. Waive xray.
+            if (WrapperFactory::IsXrayWrapper(&targetVal.toObject()) &&
+                !WrapperFactory::WaiveXrayAndWrap(cx, &targetVal))
+            {
+                return NS_ERROR_FAILURE;
+            }
+            targetObject = &targetVal.toObject();
+        } else if (!targetVal.isNull()) {
+            // If targetVal isNull(), we actually want to leave targetObject null.
+            // Not doing so breaks |make package|.
             return ReportOnCaller(cx, ERROR_SCOPE_OBJ,
-                                  PromiseFlatCString(registryLocation).get());            
+                                  PromiseFlatCString(registryLocation).get());
         }
     } else {
         // Our targetObject is the caller's global object. Find it by
