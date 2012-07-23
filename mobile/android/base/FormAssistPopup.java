@@ -327,7 +327,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
                     add(new Pair<String, String>(label, value));
                 }
             } catch (JSONException e) {
-                Log.e(LOGTAG, "JSONException: " + e);
+                Log.e(LOGTAG, "JSONException", e);
             }
         }
 

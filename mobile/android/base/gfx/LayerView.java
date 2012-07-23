@@ -231,7 +231,7 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
             layerView.mListener.compositorCreated();
             return layerView.getGLController();
         } catch (Exception e) {
-            Log.e(LOGTAG, "### Exception! " + e);
+            Log.e(LOGTAG, "Error registering compositor!", e);
             return null;
         }
     }

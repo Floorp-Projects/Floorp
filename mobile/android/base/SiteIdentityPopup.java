@@ -95,7 +95,7 @@ public class SiteIdentityPopup extends PopupWindow {
         try {
             mode = identityData.getString("mode");
         } catch (JSONException e) {
-            Log.e(LOGTAG, "Exception trying to get identity mode: " + e);
+            Log.e(LOGTAG, "Exception trying to get identity mode", e);
             return;
         }
 
@@ -120,7 +120,7 @@ public class SiteIdentityPopup extends PopupWindow {
             String encrypted = identityData.getString("encrypted");
             mEncrypted.setText(encrypted);
         } catch (JSONException e) {
-            Log.e(LOGTAG, "Exception trying to get identity data: " + e);
+            Log.e(LOGTAG, "Exception trying to get identity data", e);
             return;
         }
 
