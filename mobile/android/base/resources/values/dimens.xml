@@ -19,5 +19,6 @@
     <dimen name="doorhanger_arrow_width">44dp</dimen>
     <dimen name="text_selection_handle_width">30dp</dimen>
     <dimen name="text_selection_handle_height">44dp</dimen>
+    <dimen name="text_selection_handle_shadow">2dp</dimen>
 
 </resources>
