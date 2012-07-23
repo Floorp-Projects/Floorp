@@ -97,10 +97,14 @@ function run_test()
   var pm = Cc["@mozilla.org/permissionmanager;1"]
     .getService(Ci.nsIPermissionManager);
   var uri = make_uri("http://localhost:4444");
-  if (pm.testPermission(uri, "offline-app") != 0) {
+  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+
+  if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
     dump("Previous test failed to clear offline-app permission!  Expect failures.\n");
   }
-  pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+  pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
   var ps = Cc["@mozilla.org/preferences-service;1"]
     .getService(Ci.nsIPrefBranch);

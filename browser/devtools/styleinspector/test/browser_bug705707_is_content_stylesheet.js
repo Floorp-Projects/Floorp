@@ -14,6 +14,9 @@ const TEST_URI2 = "http://example.com/browser/browser/devtools/styleinspector/" 
 const XUL_URI = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService)
                 .newURI(TEST_URI2, null, null);
+const XUL_PRINCIPAL =  Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                 .getService(Ci.nsIScriptSecurityManager)
+                                 .getNoAppCodebasePrincipal(XUL_URI);
 
 let tempScope = {};
 Cu.import("resource:///modules/devtools/CssLogic.jsm", tempScope);
@@ -47,7 +50,7 @@ function testFromHTML()
 function openXUL()
 {
   Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .add(XUL_URI, 'allowXULXBL', Ci.nsIPermissionManager.ALLOW_ACTION);
+    .addFromPrincipal(XUL_PRINCIPAL, 'allowXULXBL', Ci.nsIPermissionManager.ALLOW_ACTION);
   addTab(TEST_URI2);
   browser.addEventListener("load", xulLoaded, true);
 }
@@ -93,7 +96,7 @@ function finishUp()
 {
   info("finishing up");
   Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
-    .add(XUL_URI, 'allowXULXBL', Ci.nsIPermissionManager.DENY_ACTION);
+    .addFromPrincipal(XUL_PRINCIPAL, 'allowXULXBL', Ci.nsIPermissionManager.DENY_ACTION);
   doc = null;
   gBrowser.removeCurrentTab();
   finish();

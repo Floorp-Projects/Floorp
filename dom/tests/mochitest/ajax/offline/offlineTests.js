@@ -104,10 +104,14 @@ setup: function()
     var uri = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService)
       .newURI(window.location.href, null, null);
-    if (pm.testPermission(uri, "offline-app") != 0) {
+    var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                      .getService(Ci.nsIScriptSecurityManager)
+                      .getNoAppCodebasePrincipal(uri);
+
+    if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
       ok(false, "Previous test failed to clear offline-app permission!  Expect failures.");
     }
-    pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // Tests must run as toplevel windows.  Open a slave window to run
     // the test.
@@ -133,7 +137,11 @@ teardown: function()
   var uri = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService)
             .newURI(window.location.href, null, null);
-  pm.remove(uri.host, "offline-app");
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+
+  pm.removeFromPrincipal(principal, "offline-app");
 
   // Clear all overrides on the server
   for (override in this._pathOverrides)
