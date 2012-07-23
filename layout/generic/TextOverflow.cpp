@@ -221,7 +221,6 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
 
 void
 TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
-                   const nsDisplayListSet& aLists,
                    nsIFrame*               aBlockFrame)
 {
   mBuilder = aBuilder;
@@ -267,14 +266,13 @@ TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
 
 /* static */ TextOverflow*
 TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
-                               const nsDisplayListSet& aLists,
                                nsIFrame*               aBlockFrame)
 {
   if (!CanHaveTextOverflow(aBuilder, aBlockFrame)) {
     return nsnull;
   }
   nsAutoPtr<TextOverflow> textOverflow(new TextOverflow);
-  textOverflow->Init(aBuilder, aLists, aBlockFrame);
+  textOverflow->Init(aBuilder, aBlockFrame);
   return textOverflow.forget();
 }
 
