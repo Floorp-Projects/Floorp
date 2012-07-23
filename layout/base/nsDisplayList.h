@@ -1893,7 +1893,7 @@ public:
                                    LayerManager* aManager,
                                    const ContainerParameters& aParameters)
   {
-    return mozilla::LAYER_ACTIVE;
+    return mozilla::LAYER_ACTIVE_FORCE;
   }
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
   {

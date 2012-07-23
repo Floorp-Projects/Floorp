@@ -288,6 +288,12 @@ typedef PRUint64 nsFrameState;
 // Is this frame allowed to have generated (::before/::after) content?
 #define NS_FRAME_MAY_HAVE_GENERATED_CONTENT         NS_FRAME_STATE_BIT(44)
 
+// This bit is set on frames that create ContainerLayers with component
+// alpha children. With BasicLayers we avoid creating these, so we mark
+// the frames for future reference.
+#define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(45)
+
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
