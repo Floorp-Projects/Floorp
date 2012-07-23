@@ -6,16 +6,9 @@
 <resources>
 
     <!--
-        Only overriden styles for Honeycomb/Ice cream sandwich tablets are specified here.
+        Only overriden styles for Honeycomb/Ice cream sandwich XLARGE tablets are specified here.
         Please refer to values/styles.xml for default styles.
     -->
-
-    <!-- AwesomeBar -->
-    <style name="AwesomeBar">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-        <item name="android:orientation">horizontal</item>
-    </style>
 
     <!-- Lists in AwesomeBar -->
     <style name="AwesomeBarList" parent="android:style/Widget.Holo.ListView">
