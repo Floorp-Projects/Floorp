@@ -47,12 +47,17 @@ static const float FLING_STOPPED_THRESHOLD = 0.01f;
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0.0f),
     mVelocity(0.0f),
-    mAsyncPanZoomController(aAsyncPanZoomController)
+    mAsyncPanZoomController(aAsyncPanZoomController),
+    mLockPanning(false)
 {
 
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeDelta) {
+  if (mLockPanning) {
+    return;
+  }
+
   float newVelocity = (mPos - aPos) / aTimeDelta.ToMilliseconds();
 
   bool curVelocityIsLow = fabsf(newVelocity) < 0.01f;
@@ -75,6 +80,7 @@ void Axis::StartTouch(PRInt32 aPos) {
   mStartPos = aPos;
   mPos = aPos;
   mVelocity = 0.0f;
+  mLockPanning = false;
 }
 
 PRInt32 Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
@@ -93,6 +99,10 @@ float Axis::PanDistance() {
 
 void Axis::StopTouch() {
   mVelocity = 0.0f;
+}
+
+void Axis::LockPanning() {
+  mLockPanning = true;
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
