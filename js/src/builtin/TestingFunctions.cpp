@@ -22,6 +22,74 @@ using namespace js;
 using namespace JS;
 
 static JSBool
+GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
+{
+    RootedObject info(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    if (!info)
+        return false;
+    Value value;
+
+#ifdef JSGC_ROOT_ANALYSIS
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "rooting-analysis", &value))
+        return false;
+
+#ifdef JSGC_USE_EXACT_ROOTING
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "exact-rooting", &value))
+        return false;
+
+#ifdef JSGC_ROOT_ANALYSIS
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "rooting-analysis", &value))
+        return false;
+
+#ifdef DEBUG
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "debug", &value))
+        return false;
+
+#ifdef JS_HAS_CTYPES
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "has-ctypes", &value))
+        return false;
+
+#ifdef JS_GC_ZEAL
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "has-gczeal", &value))
+        return false;
+
+#ifdef JS_THREADSAFE
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "has-gczeal", &value))
+        return false;
+
+    *vp = ObjectValue(*info);
+    return true;
+}
+
+static JSBool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
     /*
@@ -583,6 +651,11 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "gcparam(name [, value])",
 "  Wrapper for JS_[GS]etGCParameter. The name is either maxBytes,\n"
 "  maxMallocBytes, gcBytes, gcNumber, or sliceTimeBudget."),
+
+    JS_FN_HELP("getBuildConfiguration", GetBuildConfiguration, 0, 0,
+"getBuildConfiguration()",
+"  Return an object describing some of the configuration options SpiderMonkey\n"
+"  was built with."),
 
     JS_FN_HELP("countHeap", CountHeap, 0, 0,
 "countHeap([start[, kind]])",
