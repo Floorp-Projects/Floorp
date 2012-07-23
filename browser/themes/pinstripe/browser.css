@@ -3459,6 +3459,7 @@ stack[anonid=browserStack][responsivemode] {
   margin: -4px 0 0 0;
   padding: 0;
   border-radius: 0px;
+  background-color: white;
 }
 
 #social-notification-panel .panel-arrow[side="top"] {
