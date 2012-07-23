@@ -206,7 +206,6 @@ var BrowserApp = {
     ClipboardHelper.init();
     PermissionsHelper.init();
     CharacterEncoding.init();
-    SearchEngines.init();
     ActivityObserver.init();
     WebappsUI.init();
     RemoteDebugger.init();
@@ -243,8 +242,12 @@ var BrowserApp = {
     }
 
     let updated = this.isAppUpdated();
-    if (pinned)
+    if (pinned) {
       WebAppRT.init(updated);
+    } else {
+      SearchEngines.init();
+      this.initContextMenu();
+    }
 
     if (url == "about:empty")
       loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
@@ -345,6 +348,110 @@ var BrowserApp = {
       return savedmstone ? "upgrade" : "new";
     }
     return "";
+  },
+
+  initContextMenu: function ba_initContextMenu() {
+    // TODO: These should eventually move into more appropriate classes
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewTab"),
+      NativeWindow.contextmenus.linkOpenableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
+
+        let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
+        let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
+        NativeWindow.toast.show(label, "short");
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
+      NativeWindow.contextmenus.linkCopyableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyEmailAddress"),
+      NativeWindow.contextmenus.emailLinkCopyableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
+        NativeWindow.contextmenus._copyStringToDefaultClipboard(emailAddr);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyPhoneNumber"),
+      NativeWindow.contextmenus.phoneNumberLinkCopyableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
+        NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
+    });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
+      NativeWindow.contextmenus.linkShareableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let title = aTarget.textContent || aTarget.title;
+        let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
+        sharing.shareWithDefault(url, "text/plain", title);
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
+      NativeWindow.contextmenus.linkBookmarkableContext,
+      function(aTarget) {
+        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+        let title = aTarget.textContent || aTarget.title || url;
+        sendMessageToJava({
+          gecko: {
+            type: "Bookmark:Insert",
+            url: url,
+            title: title
+          }
+        });
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
+      NativeWindow.contextmenus.SelectorContext("video:not(:-moz-full-screen)"),
+      function(aTarget) {
+        aTarget.mozRequestFullScreen();
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
+      NativeWindow.contextmenus.imageSaveableContext,
+      function(aTarget) {
+        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let src = aTarget.src;
+        let type = "";
+        try {
+           type = String(props.get("type", Ci.nsISupportsCString));
+        } catch(ex) {
+           type = "";
+        }
+        sendMessageToJava({
+          gecko: {
+            type: "Share:Image",
+            url: src,
+            mime: type,
+          }
+        });
+      });
+
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
+      NativeWindow.contextmenus.imageSaveableContext,
+      function(aTarget) {
+        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+        let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+        let contentDisposition = "";
+        let type = "";
+        try {
+           contentDisposition = String(props.get("content-disposition", Ci.nsISupportsCString));
+           type = String(props.get("type", Ci.nsISupportsCString));
+        } catch(ex) {
+           contentDisposition = "";
+           type = "";
+        }
+        ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, aTarget.ownerDocument.documentURIObject, true, null);
+      });
   },
 
   onAppUpdated: function() {
@@ -1115,93 +1222,6 @@ var NativeWindow = {
 
     init: function() {
       Services.obs.addObserver(this, "Gesture:LongPress", false);
-
-      // TODO: These should eventually move into more appropriate classes
-      this.add(Strings.browser.GetStringFromName("contextmenu.openInNewTab"),
-               this.linkOpenableContext,
-               function(aTarget) {
-                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
-
-                 let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
-                 let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-                 NativeWindow.toast.show(label, "short");
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
-               this.linkCopyableContext,
-               function(aTarget) {
-                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-                 clipboard.copyString(url);
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
-               this.linkShareableContext,
-               function(aTarget) {
-                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 let title = aTarget.textContent || aTarget.title;
-                 let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
-                 sharing.shareWithDefault(url, "text/plain", title);
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
-               this.linkBookmarkableContext,
-               function(aTarget) {
-                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 let title = aTarget.textContent || aTarget.title || url;
-                 sendMessageToJava({
-                   gecko: {
-                     type: "Bookmark:Insert",
-                     url: url,
-                     title: title
-                   }
-                 });
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
-               this.SelectorContext("video:not(:-moz-full-screen)"),
-               function(aTarget) {
-                 aTarget.mozRequestFullScreen();
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
-               this.imageSaveableContext,
-               function(aTarget) {
-                 let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-                 let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
-                 let src = aTarget.src;
-                 let type = "";
-                 try {
-                    type = String(props.get("type", Ci.nsISupportsCString));
-                 } catch(ex) {
-                    type = "";
-                 }
-                 sendMessageToJava({
-                   gecko: {
-                     type: "Share:Image",
-                     url: src,
-                     mime: type,
-                   }
-                 });
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
-               this.imageSaveableContext,
-               function(aTarget) {
-                 let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
-                 let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
-                 let contentDisposition = "";
-                 let type = "";
-                 try {
-                    contentDisposition = String(props.get("content-disposition", Ci.nsISupportsCString));
-                    type = String(props.get("type", Ci.nsISupportsCString));
-                 } catch(ex) {
-                    contentDisposition = "";
-                    type = "";
-                 }
-                 ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, aTarget.ownerDocument.documentURIObject, true, null);
-               });
     },
 
     uninit: function() {
@@ -1264,6 +1284,26 @@ var NativeWindow = {
           let scheme = uri.scheme;
           let dontCopy = /^(mailto|tel)$/;
           return (scheme && !dontCopy.test(scheme));
+        }
+        return false;
+      }
+    },
+
+    emailLinkCopyableContext: {
+      matches: function emailLinkCopyableContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
+          return uri.schemeIs("mailto");
+        }
+        return false;
+      }
+    },
+
+    phoneNumberLinkCopyableContext: {
+      matches: function phoneNumberLinkCopyableContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
+          return uri.schemeIs("tel");
         }
         return false;
       }
@@ -1449,6 +1489,15 @@ var NativeWindow = {
       }
 
       return this.makeURLAbsolute(aLink.baseURI, href);
+    },
+
+    _copyStringToDefaultClipboard: function(aString) {
+      let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+      clipboard.copyString(aString);
+    },
+
+    _stripScheme: function(aString) {
+      return aString.slice(aString.indexOf(":") + 1);
     }
   }
 };
@@ -3907,11 +3956,14 @@ var FormAssistant = {
   // autocomplete suggestions
   _currentInputElement: null,
 
+  _isBlocklisted: false,
+
   // Keep track of whether or not an invalid form has been submitted
   _invalidSubmit: false,
 
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
+    Services.obs.addObserver(this, "FormAssist:Blocklisted", false);
     Services.obs.addObserver(this, "FormAssist:Hidden", false);
     Services.obs.addObserver(this, "invalidformsubmit", false);
 
@@ -3924,6 +3976,7 @@ var FormAssistant = {
 
   uninit: function() {
     Services.obs.removeObserver(this, "FormAssist:AutoComplete");
+    Services.obs.removeObserver(this, "FormAssist:Blocklisted");
     Services.obs.removeObserver(this, "FormAssist:Hidden");
     Services.obs.removeObserver(this, "invalidformsubmit");
 
@@ -3945,6 +3998,10 @@ var FormAssistant = {
         event.initEvent("DOMAutoComplete", true, true);
         this._currentInputElement.dispatchEvent(event);
 
+        break;
+
+      case "FormAssist:Blocklisted":
+        this._isBlocklisted = (aData == "true");
         break;
 
       case "FormAssist:Hidden":
@@ -4100,9 +4157,9 @@ var FormAssistant = {
       return false;
 
     // Don't display the form auto-complete popup after the user starts typing
-    // to avoid confusing the IME. See bug 758820 and bug 632744.
-    if (aElement.value.length > 0) {
-        return false;
+    // to avoid confusing somes IME. See bug 758820 and bug 632744.
+    if (this._isBlocklisted && aElement.value.length > 0) {
+      return false;
     }
 
     let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);

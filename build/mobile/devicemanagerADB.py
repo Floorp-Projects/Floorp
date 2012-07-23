@@ -786,9 +786,12 @@ class DeviceManagerADB(DeviceManager):
 
   def verifyRoot(self):
     # a test to see if we have root privs
-    files = self.listFiles("/data/data")
-    if (len(files) == 0):
-      print "NOT running as root"
+    p = self.runCmd(["shell", "id"])
+    response = p.stdout.readline()
+    response = response.rstrip()
+    response = response.split(' ')
+    if (response[0].find('uid=0') < 0 or response[1].find('gid=0') < 0):
+      print "NOT running as root ", response[0].find('uid=0')
       raise DMError("not running as root")
 
     self.haveRoot = True

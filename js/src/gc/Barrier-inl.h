@@ -296,7 +296,7 @@ HeapSlot::writeBarrierPost(JSObject *obj, uint32_t slot)
 }
 
 inline void
-HeapSlot::writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slotno)
+HeapSlot::writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slot)
 {
 }
 

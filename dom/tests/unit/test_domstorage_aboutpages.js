@@ -157,7 +157,7 @@ function getStorageForURI(aURI)
 {
   let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
                   getService(Components.interfaces.nsIScriptSecurityManager).
-                  getCodebasePrincipal(aURI);
+                  getNoAppCodebasePrincipal(aURI);
   let dsm = Components.classes["@mozilla.org/dom/storagemanager;1"].
             getService(Components.interfaces.nsIDOMStorageManager);
   return dsm.getLocalStorageForPrincipal(principal, "");

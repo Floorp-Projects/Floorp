@@ -172,8 +172,8 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    * Bump the modified time of each child.
    * The caller should bump the modified time of the destination if desired.
    *
-   * @param from the source folders.
-   * @param to the destination folder.
+   * @param fromIDs the Android IDs of the source folders.
+   * @param to the Android ID of the destination folder.
    * @return the number of updated rows.
    */
   protected int moveChildren(String[] fromIDs, long to) {

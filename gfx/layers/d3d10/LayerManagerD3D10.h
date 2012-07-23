@@ -155,7 +155,10 @@ public:
   ID3D10Device1 *device() const { return mDevice; }
 
   ID3D10Effect *effect() const { return mEffect; }
-
+  IDXGISwapChain *SwapChain() const
+  {
+    return mSwapChain;
+  }
   ReadbackManagerD3D10 *readbackManager();
 
   void SetupInputAssembler();

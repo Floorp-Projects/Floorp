@@ -17,6 +17,7 @@
 #include "nsSVGUtils.h"
 
 class gfxContext;
+class nsDisplaySVGPathGeometry;
 class nsIAtom;
 class nsIFrame;
 class nsIPresShell;
@@ -34,6 +35,9 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
 {
   friend nsIFrame*
   NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  friend class nsDisplaySVGPathGeometry;
+
 protected:
   nsSVGPathGeometryFrame(nsStyleContext* aContext)
     : nsSVGPathGeometryFrameBase(aContext)
@@ -69,6 +73,10 @@ public:
   }
 #endif
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
   // nsSVGGeometryFrame methods
   gfxMatrix GetCanvasTM(PRUint32 aFor);
 
@@ -78,7 +86,7 @@ protected:
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
-  virtual void UpdateBounds();
+  virtual void ReflowSVG();
   virtual void NotifySVGChanged(PRUint32 aFlags);
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);

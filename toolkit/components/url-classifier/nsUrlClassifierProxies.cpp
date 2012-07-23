@@ -20,17 +20,17 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierDBServiceWorkerProxy,
                               nsIUrlClassifierDBServiceWorker)
 
 NS_IMETHODIMP
-UrlClassifierDBServiceWorkerProxy::Lookup(const nsACString& aSpec,
+UrlClassifierDBServiceWorkerProxy::Lookup(nsIPrincipal* aPrincipal,
                                           nsIUrlClassifierCallback* aCB)
 {
-  nsCOMPtr<nsIRunnable> r = new LookupRunnable(mTarget, aSpec, aCB);
+  nsCOMPtr<nsIRunnable> r = new LookupRunnable(mTarget, aPrincipal, aCB);
   return DispatchToWorkerThread(r);
 }
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::LookupRunnable::Run()
 {
-  mTarget->Lookup(mSpec, mCB);
+  (void) mTarget->Lookup(mPrincipal, mCB);
   return NS_OK;
 }
 

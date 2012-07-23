@@ -10,9 +10,9 @@ function f2(o)
 function f()
 {
     var x = new ctor();
-    verifybarriers();
+    verifyprebarriers();
     f2(x);
-    verifybarriers();
+    verifyprebarriers();
 }
 f();
 f();

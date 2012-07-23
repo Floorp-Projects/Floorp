@@ -595,9 +595,9 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
 }
 
 bool
-nsSVGUtils::OuterSVGIsCallingUpdateBounds(nsIFrame *aFrame)
+nsSVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame *aFrame)
 {
-  return nsSVGUtils::GetOuterSVGFrame(aFrame)->IsCallingUpdateBounds();
+  return nsSVGUtils::GetOuterSVGFrame(aFrame)->IsCallingReflowSVG();
 }
 
 void
@@ -608,20 +608,20 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
                     !(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
                     "Passed bad frame!");
 
-  NS_ASSERTION(aDuringUpdate == OuterSVGIsCallingUpdateBounds(aFrame),
+  NS_ASSERTION(aDuringUpdate == OuterSVGIsCallingReflowSVG(aFrame),
                "aDuringUpdate lies!");
 
   // Rendering observers must be notified about changes to the frames that they
-  // are observing _before_ UpdateBounds is called on the SVG frame tree, so we
-  // only need to notify observers if we're not under an UpdateBounds call.
+  // are observing _before_ ReflowSVG is called on the SVG frame tree, so we
+  // only need to notify observers if we're not under an ReflowSVG call.
   // In fact, it would actually be wrong to notify observers while under
-  // UpdateBounds because the observers will try to mark themselves as dirty
-  // and, since UpdateBounds would be in the process of _removeing_ dirty bits
+  // ReflowSVG because the observers will try to mark themselves as dirty
+  // and, since ReflowSVG would be in the process of _removeing_ dirty bits
   // from frames, that would mess things up.
   if (!aDuringUpdate) {
-    NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
+    NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
                  "Must not InvalidateRenderingObservers() under "
-                 "nsISVGChildFrame::UpdateBounds!");
+                 "nsISVGChildFrame::ReflowSVG!");
 
     nsSVGEffects::InvalidateRenderingObservers(aFrame);
   }
@@ -708,16 +708,16 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
 }
 
 void
-nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
+nsSVGUtils::ScheduleReflowSVG(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
                     "Passed bad frame!");
 
   // If this is triggered, the callers should be fixed to call us before
-  // UpdateBounds is called. If we try to mark dirty bits on frames while we're
+  // ReflowSVG is called. If we try to mark dirty bits on frames while we're
   // in the process of removing them, things will get messed up.
-  NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
-               "Do not call under nsISVGChildFrame::UpdateBounds!");
+  NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
+               "Do not call under nsISVGChildFrame::ReflowSVG!");
 
   // We don't call nsSVGEffects::InvalidateRenderingObservers here because
   // we should only be called under InvalidateAndScheduleBoundsUpdate (which
@@ -778,20 +778,20 @@ nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
 }
 
 void
-nsSVGUtils::InvalidateAndScheduleBoundsUpdate(nsIFrame *aFrame)
+nsSVGUtils::InvalidateAndScheduleReflowSVG(nsIFrame *aFrame)
 {
   // If this is triggered, the callers should be fixed to call us much
   // earlier. If we try to mark dirty bits on frames while we're in the
   // process of removing them, things will get messed up.
-  NS_ASSERTION(!OuterSVGIsCallingUpdateBounds(aFrame),
-               "Must not call under nsISVGChildFrame::UpdateBounds!");
+  NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
+               "Must not call under nsISVGChildFrame::ReflowSVG!");
 
   InvalidateBounds(aFrame, false);
-  ScheduleBoundsUpdate(aFrame);
+  ScheduleReflowSVG(aFrame);
 }
 
 bool
-nsSVGUtils::NeedsUpdatedBounds(nsIFrame *aFrame)
+nsSVGUtils::NeedsReflowSVG(nsIFrame *aFrame)
 {
   NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
                     "SVG uses bits differently!");
@@ -1118,6 +1118,11 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
                                   const nsIntRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
+  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
+               (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only painting of non-display "
+               "SVG should take this code path");
+
   nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
   if (!svgChildFrame)
     return;
@@ -1618,6 +1623,9 @@ nsSVGUtils::GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH,
 bool
 nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 {
+  if (!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+    return false;
+  }
   nsIAtom *type = aFrame->GetType();
   if (type != nsGkAtoms::svgImageFrame &&
       type != nsGkAtoms::svgPathGeometryFrame) {

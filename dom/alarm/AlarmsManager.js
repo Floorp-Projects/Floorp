@@ -134,8 +134,7 @@ AlarmsManager.prototype = {
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
-    let perm = principal == secMan.getSystemPrincipal() ? 
-      Ci.nsIPermissionManager.ALLOW_ACTION : Services.perms.testExactPermission(principal.URI, "alarms");
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
 
     // Only pages with perm set can use the alarms.
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;

@@ -2510,40 +2510,6 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    const nsAString& aDocumentURI,
-                                    nsIDOMStorage** aStorage)
-{
-    return GetSessionStorageForURI(aURI, aDocumentURI, true, aStorage);
-}
-
-nsresult
-nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    const nsSubstring& aDocumentURI,
-                                    bool aCreate,
-                                    nsIDOMStorage** aStorage)
-{
-    NS_ENSURE_ARG(aURI);
-    NS_ENSURE_ARG_POINTER(aStorage);
-
-    *aStorage = nsnull;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This is terrible hack and should go away along with this whole method.
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
-    if (NS_FAILED(rv))
-        return rv;
-
-    return GetSessionStorageForPrincipal(principal, aDocumentURI, aCreate, aStorage);
-}
-
 nsresult
 nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
                               nsIDOMStorage* aStorage)
@@ -8213,8 +8179,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = secMan->GetCodebasePrincipal(aReferrer,
-                                          getter_AddRefs(loadingPrincipal));
+        rv = secMan->GetSimpleCodebasePrincipal(aReferrer,
+                                                getter_AddRefs(loadingPrincipal));
     }
 
     rv = NS_CheckContentLoadPolicy(contentType,
@@ -12026,10 +11992,10 @@ nsDocShell::GetCanExecuteScripts(bool *aResult)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetIsBrowser()
+nsDocShell::SetIsBrowserElement()
 {
     if (mIsBrowserFrame) {
-        NS_ERROR("You should not call SetIsBrowser() more than once.");
+        NS_ERROR("You should not call SetIsBrowserElement() more than once.");
         return NS_OK;
     }
 

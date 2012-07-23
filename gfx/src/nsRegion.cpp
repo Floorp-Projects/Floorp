@@ -1379,6 +1379,20 @@ nsIntRegion nsRegion::ToNearestPixels (nscoord aAppUnitsPerPixel) const
   return ToPixels(aAppUnitsPerPixel, false);
 }
 
+nsIntRegion nsRegion::ScaleToNearestPixels (float aScaleX, float aScaleY,
+                                            nscoord aAppUnitsPerPixel) const
+{
+  nsIntRegion result;
+  nsRegionRectIterator rgnIter(*this);
+  const nsRect* currentRect;
+  while ((currentRect = rgnIter.Next())) {
+    nsIntRect deviceRect =
+      currentRect->ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    result.Or(result, deviceRect);
+  }
+  return result;
+}
+
 nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
                                             nscoord aAppUnitsPerPixel) const
 {
@@ -1390,6 +1404,67 @@ nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
       currentRect->ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
+  return result;
+}
+
+nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
+                                           nscoord aAppUnitsPerPixel) const
+{
+  /* When scaling a rect, walk forward through the rect list up until the y value is greater
+   * than the current rect's YMost() value.
+   *
+   * For each rect found, check if the rects have a touching edge (in unscaled coordinates),
+   * and if one edge is entirely contained within the other.
+   *
+   * If it is, then the contained edge can be moved (in scaled pixels) to ensure that no
+   * gap exists.
+   *
+   * Since this could be potentially expensive - O(n^2), we only attempt this algorithm
+   * for the first rect.
+   */
+
+  nsIntRegion result;
+  RgnRect* pRect = mRectListHead.next;
+  RgnRect* first = pRect;
+
+  nsIntRect firstDeviceRect;
+  if (pRect != &mRectListHead) {
+    firstDeviceRect =
+      pRect->ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    pRect = pRect->next;
+  }
+
+  while (pRect != &mRectListHead)
+  {
+    nsIntRect deviceRect =
+      pRect->ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+
+    if (pRect->y <= first->YMost()) {
+      if (pRect->XMost() == first->x && pRect->YMost() <= first->YMost()) {
+        // pRect is touching on the left edge of the first rect and contained within
+        // the length of its left edge
+        deviceRect.SetRightEdge(firstDeviceRect.x);
+      } else if (pRect->x == first->XMost() && pRect->YMost() <= first->YMost()) {
+        // pRect is touching on the right edge of the first rect and contained within
+        // the length of its right edge
+        deviceRect.SetLeftEdge(firstDeviceRect.XMost());
+      } else if (pRect->y == first->YMost()) {
+        // The bottom of the first rect is on the same line as the top of pRect, but 
+        // they aren't necessarily contained.
+        if (pRect->x <= first->x && pRect->XMost() >= first->XMost()) {
+          // The top of pRect contains the bottom of the first rect
+          firstDeviceRect.SetBottomEdge(deviceRect.y);
+        } else if (pRect->x >= first->x && pRect->XMost() <= first->XMost()) {
+          // The bottom of the first contains the top of pRect
+          deviceRect.SetTopEdge(firstDeviceRect.YMost());
+        }
+      }
+    }
+    pRect = pRect->next;
+    result.Or(result, deviceRect);
+  }
+
+  result.Or(result, firstDeviceRect);
   return result;
 }
 

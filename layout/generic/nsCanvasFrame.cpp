@@ -185,6 +185,16 @@ nsRect nsCanvasFrame::CanvasArea() const
   return result;
 }
 
+static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aSource)
+{
+  aDest->Translate(gfxPoint(aRect.x, aRect.y));
+  aDest->SetSource(aSource);
+  aDest->NewPath();
+  aDest->Rectangle(gfxRect(0, 0, aRect.width, aRect.height));
+  aDest->Fill();
+  aDest->Translate(-gfxPoint(aRect.x, aRect.y));
+}
+
 void
 nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  nsRenderingContext* aCtx)
@@ -192,17 +202,46 @@ nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
-
   if (NS_GET_A(mExtraBackgroundColor) > 0) {
     aCtx->SetColor(mExtraBackgroundColor);
     aCtx->FillRect(bgClipRect);
   }
 
-  nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                  mVisibleRect,
+  bool snap;
+  nsRect bounds = GetBounds(aBuilder, &snap);
+  nsIntRect pixelRect = bounds.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+  nsRenderingContext context;
+  nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
+  nsRefPtr<gfxASurface> surf;
+  nsRefPtr<gfxContext> ctx;
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
+  if (IsSingleFixedPositionImage(aBuilder, bgClipRect) && aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap()) {
+    surf = static_cast<gfxASurface*>(GetUnderlyingFrame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
+    nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
+    if (surf && surf->GetType() == destSurf->GetType()) {
+      BlitSurface(dest, mDestRect, surf);
+      return;
+    }
+    surf = destSurf->CreateSimilarSurface(gfxASurface::CONTENT_COLOR_ALPHA, gfxIntSize(ceil(mDestRect.width), ceil(mDestRect.height)));
+    if (surf) {
+      ctx = new gfxContext(surf);
+      ctx->Translate(-gfxPoint(mDestRect.x, mDestRect.y));
+      context.Init(aCtx->DeviceContext(), ctx);
+    }
+  }
+#endif
+
+  nsCSSRendering::PaintBackground(mFrame->PresContext(), surf ? context : *aCtx, mFrame,
+                                  surf ? bounds : mVisibleRect,
                                   nsRect(offset, mFrame->GetSize()),
                                   aBuilder->GetBackgroundPaintFlags(),
                                   &bgClipRect);
+  if (surf) {
+    BlitSurface(dest, mDestRect, surf);
+
+    GetUnderlyingFrame()->Properties().Set(nsIFrame::CachedBackgroundImage(), surf.forget().get());
+    GetUnderlyingFrame()->AddStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
+  }
 }
 
 /**

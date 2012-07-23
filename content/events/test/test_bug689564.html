@@ -21,12 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689564
 var div = document.createElement("div");
 div.setAttribute("onclick", "div");
 is(window.onclick, null, "div should not forward onclick");
-is(div.onclick.toString(), "function onclick(event) {\n    div;\n}",
+is(div.onclick.toString(), "function onclick(event) { div }",
    "div should have an onclick handler");
 
 div.setAttribute("onscroll", "div");
 is(window.onscroll, null, "div should not forward onscroll");
-is(div.onscroll.toString(), "function onscroll(event) {\n    div;\n}",
+is(div.onscroll.toString(), "function onscroll(event) { div }",
    "div should have an onscroll handler");
 
 div.setAttribute("onpopstate", "div");
@@ -36,25 +36,25 @@ is(div.onpopstate, null, "div should not have onpopstate handler");
 var body = document.createElement("body");
 body.setAttribute("onclick", "body");
 is(window.onclick, null, "body should not forward onclick");
-is(body.onclick.toString(), "function onclick(event) {\n    body;\n}",
+is(body.onclick.toString(), "function onclick(event) { body }",
    "body should have an onclick handler");
 body.setAttribute("onscroll", "body");
-is(window.onscroll.toString(), "function onscroll(event) {\n    body;\n}",
+is(window.onscroll.toString(), "function onscroll(event) { body }",
    "body should forward onscroll");
 body.setAttribute("onpopstate", "body");
-is(window.onpopstate.toString(), "function onpopstate(event) {\n    body;\n}",
+is(window.onpopstate.toString(), "function onpopstate(event) { body }",
    "body should forward onpopstate");
 
 var frameset = document.createElement("frameset");
 frameset.setAttribute("onclick", "frameset");
 is(window.onclick, null, "frameset should not forward onclick");
-is(frameset.onclick.toString(), "function onclick(event) {\n    frameset;\n}",
+is(frameset.onclick.toString(), "function onclick(event) { frameset }",
    "frameset should have an onclick handler");
 frameset.setAttribute("onscroll", "frameset");
-is(window.onscroll.toString(), "function onscroll(event) {\n    frameset;\n}",
+is(window.onscroll.toString(), "function onscroll(event) { frameset }",
    "frameset should forward onscroll");
 frameset.setAttribute("onpopstate", "frameset");
-is(window.onpopstate.toString(), "function onpopstate(event) {\n    frameset;\n}",
+is(window.onpopstate.toString(), "function onpopstate(event) { frameset }",
    "frameset should forward onpopstate");
 
 

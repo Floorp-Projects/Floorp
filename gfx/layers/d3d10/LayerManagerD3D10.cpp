@@ -206,52 +206,93 @@ LayerManagerD3D10::Initialize(bool force)
 
   nsRefPtr<IDXGIDevice> dxgiDevice;
   nsRefPtr<IDXGIAdapter> dxgiAdapter;
-  nsRefPtr<IDXGIFactory> dxgiFactory;
 
   mDevice->QueryInterface(dxgiDevice.StartAssignment());
   dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter));
+  
+#ifdef MOZ_METRO
+  if (gfxWindowsPlatform::IsRunningInWindows8Metro()) {
+    nsRefPtr<IDXGIFactory2> dxgiFactory;
+    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
 
-  dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
+    nsIntRect rect;
+    mWidget->GetClientBounds(rect);
 
-  DXGI_SWAP_CHAIN_DESC swapDesc;
-  ::ZeroMemory(&swapDesc, sizeof(swapDesc));
-
-  swapDesc.BufferDesc.Width = 0;
-  swapDesc.BufferDesc.Height = 0;
-  swapDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  swapDesc.BufferDesc.RefreshRate.Numerator = 60;
-  swapDesc.BufferDesc.RefreshRate.Denominator = 1;
-  swapDesc.SampleDesc.Count = 1;
-  swapDesc.SampleDesc.Quality = 0;
-  swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  swapDesc.BufferCount = 1;
-  // We don't really need this flag, however it seems on some NVidia hardware
-  // smaller area windows do not present properly without this flag. This flag
-  // should have no negative consequences by itself. See bug 613790. This flag
-  // is broken on optimus devices. As a temporary solution we don't set it
-  // there, the only way of reliably detecting we're on optimus is looking for
-  // the DLL. See Bug 623807.
-  if (gfxWindowsPlatform::IsOptimus()) {
+    DXGI_SWAP_CHAIN_DESC1 swapDesc = { 0 };
+    // Automatically detect the width and the height from the winrt CoreWindow
+    swapDesc.Width = rect.width;
+    swapDesc.Height = rect.height;
+    // This is the most common swapchain format
+    swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    swapDesc.Stereo = false; 
+    // Don't use multi-sampling
+    swapDesc.SampleDesc.Count = 1;
+    swapDesc.SampleDesc.Quality = 0;
+    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    // Use double buffering to enable flip
+    swapDesc.BufferCount = 2;
+    swapDesc.Scaling = DXGI_SCALING_STRETCH;
+    // All Metro style apps must use this SwapEffect
+    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     swapDesc.Flags = 0;
-  } else {
-    swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE;
+
+    /**
+     * Create a swap chain, this swap chain will contain the backbuffer for
+     * the window we draw to. The front buffer is the full screen front
+     * buffer.
+    */
+    nsRefPtr<IDXGISwapChain1> swapChain1;
+    hr = dxgiFactory->CreateSwapChainForCoreWindow(
+           dxgiDevice, (IUnknown *)mWidget->GetNativeData(NS_NATIVE_WINDOW),
+           &swapDesc, nullptr, getter_AddRefs(swapChain1));
+    if (FAILED(hr)) {
+        return false;
+    }
+    mSwapChain = swapChain1;
+  } else
+#endif
+  {
+    nsRefPtr<IDXGIFactory> dxgiFactory;
+    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
+
+    DXGI_SWAP_CHAIN_DESC swapDesc;
+    ::ZeroMemory(&swapDesc, sizeof(swapDesc));
+    swapDesc.BufferDesc.Width = 0;
+    swapDesc.BufferDesc.Height = 0;
+    swapDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+    swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+    swapDesc.SampleDesc.Count = 1;
+    swapDesc.SampleDesc.Quality = 0;
+    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapDesc.BufferCount = 1;
+    swapDesc.OutputWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
+    swapDesc.Windowed = TRUE;
+    // We don't really need this flag, however it seems on some NVidia hardware
+    // smaller area windows do not present properly without this flag. This flag
+    // should have no negative consequences by itself. See bug 613790. This flag
+    // is broken on optimus devices. As a temporary solution we don't set it
+    // there, the only way of reliably detecting we're on optimus is looking for
+    // the DLL. See Bug 623807.
+    if (gfxWindowsPlatform::IsOptimus()) {
+      swapDesc.Flags = 0;
+    } else {
+      swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE;
+    }
+
+    /**
+     * Create a swap chain, this swap chain will contain the backbuffer for
+     * the window we draw to. The front buffer is the full screen front
+     * buffer.
+    */
+    hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
+    if (FAILED(hr)) {
+     return false;
+    }
+
+    // We need this because we don't want DXGI to respond to Alt+Enter.
+    dxgiFactory->MakeWindowAssociation(swapDesc.OutputWindow, DXGI_MWA_NO_WINDOW_CHANGES);
   }
-  swapDesc.OutputWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
-  swapDesc.Windowed = TRUE;
-
-  /**
-   * Create a swap chain, this swap chain will contain the backbuffer for
-   * the window we draw to. The front buffer is the full screen front
-   * buffer.
-   */
-  hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
-
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  // We need this because we don't want DXGI to respond to Alt+Enter.
-  dxgiFactory->MakeWindowAssociation(swapDesc.OutputWindow, DXGI_MWA_NO_WINDOW_CHANGES);
 
   reporter.SetSuccessful();
   return true;
@@ -590,7 +631,8 @@ LayerManagerD3D10::VerifyBufferSize()
     }
 
     mRTView = nsnull;
-    if (gfxWindowsPlatform::IsOptimus()) {
+    if (gfxWindowsPlatform::IsOptimus() ||
+        gfxWindowsPlatform::IsRunningInWindows8Metro()) {
       mSwapChain->ResizeBuffers(1, rect.width, rect.height,
                                 DXGI_FORMAT_B8G8R8A8_UNORM,
                                 0);

@@ -153,15 +153,15 @@
       testStates("aria_navigation_anchor", STATE_SELECTABLE);
 
       // aria-orientation (applied to scrollbar, separator, slider)
-      testStates("aria_scrollbar", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL);
-      testStates("aria_separator", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_hseparator", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_vseparator", 0, EXT_STATE_VERTICAL);
-      testStates("aria_slider", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL);
-      testStates("aria_vslider", 0, EXT_STATE_VERTICAL);
+      testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_separator", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hseparator", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vseparator", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_slider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vslider", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
 
       // indeterminate ARIA progressbars (no aria-valuenow or aria-valuetext attribute)
       // should expose mixed state
@@ -224,6 +224,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=740851"
      title="ARIA undetermined progressmeters should expose mixed state">
     Mozilla Bug 740851
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762876
+     title="fix default horizontal / vertical state of role=scrollbar and ensure only one of horizontal / vertical states is exposed">
+    Mozilla Bug 762876
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

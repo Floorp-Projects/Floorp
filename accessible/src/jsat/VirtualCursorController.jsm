@@ -17,17 +17,55 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
   getService(Ci.nsIAccessibleRetrieval);
 
-var TraversalRules = {
-  Simple: {
-    getMatchRoles: function SimpleTraversalRule_getmatchRoles(aRules) {
+function BaseTraversalRule(aRoles, aMatchFunc) {
+  this._matchRoles = aRoles;
+  this._matchFunc = aMatchFunc;
+}
+
+BaseTraversalRule.prototype = {
+    getMatchRoles: function BaseTraversalRule_getmatchRoles(aRules) {
       aRules.value = this._matchRoles;
       return aRules.value.length;
     },
 
     preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
+    Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
 
-    match: function SimpleTraversalRule_match(aAccessible) {
+    match: function BaseTraversalRule_match(aAccessible)
+    {
+      if (this._matchFunc)
+        return this._matchFunc(aAccessible);
+
+      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
+};
+
+var TraversalRules = {
+  Simple: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_MENUITEM,
+     Ci.nsIAccessibleRole.ROLE_LINK,
+     Ci.nsIAccessibleRole.ROLE_PAGETAB,
+     Ci.nsIAccessibleRole.ROLE_GRAPHIC,
+     // XXX: Find a better solution for ROLE_STATICTEXT.
+     // It allows to filter list bullets but at the same time it
+     // filters CSS generated content too as an unwanted side effect.
+     // Ci.nsIAccessibleRole.ROLE_STATICTEXT,
+     Ci.nsIAccessibleRole.ROLE_TEXT_LEAF,
+     Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
+     Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
+     Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
+     Ci.nsIAccessibleRole.ROLE_COMBOBOX,
+     Ci.nsIAccessibleRole.ROLE_PROGRESSBAR,
+     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
+     Ci.nsIAccessibleRole.ROLE_BUTTONMENU,
+     Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
+     Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
+     Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
+     Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
+     Ci.nsIAccessibleRole.ROLE_ENTRY],
+    function Simple_match(aAccessible) {
       switch (aAccessible.role) {
       case Ci.nsIAccessibleRole.ROLE_COMBOBOX:
         // We don't want to ignore the subtree because this is often
@@ -55,46 +93,12 @@ var TraversalRules = {
         return Ci.nsIAccessibleTraversalRule.FILTER_MATCH |
           Ci.nsIAccessibleTraversalRule.FILTER_IGNORE_SUBTREE;
       }
-    },
+    }
+  ),
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule]),
-
-    _matchRoles: [
-      Ci.nsIAccessibleRole.ROLE_MENUITEM,
-      Ci.nsIAccessibleRole.ROLE_LINK,
-      Ci.nsIAccessibleRole.ROLE_PAGETAB,
-      Ci.nsIAccessibleRole.ROLE_GRAPHIC,
-      // XXX: Find a better solution for ROLE_STATICTEXT.
-      // It allows to filter list bullets but at the same time it
-      // filters CSS generated content too as an unwanted side effect.
-      // Ci.nsIAccessibleRole.ROLE_STATICTEXT,
-      Ci.nsIAccessibleRole.ROLE_TEXT_LEAF,
-      Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-      Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-      Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-      Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-      Ci.nsIAccessibleRole.ROLE_PROGRESSBAR,
-      Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-      Ci.nsIAccessibleRole.ROLE_BUTTONMENU,
-      Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
-      Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
-      Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-      Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-      Ci.nsIAccessibleRole.ROLE_ENTRY
-    ]
-  },
-
-  Anchor: {
-    getMatchRoles: function AnchorTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_LINK];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function AnchorTraversalRule_match(aAccessible)
+  Anchor: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_LINK],
+    function Anchor_match(aAccessible)
     {
       // We want to ignore links, only focus named anchors.
       let state = {};
@@ -105,177 +109,53 @@ var TraversalRules = {
       } else {
         return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
       }
-    },
+    }),
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
+  Button: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
+     Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
+     Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
+     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
+     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID]),
 
-  Button: {
-    getMatchRoles: function ButtonTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = this._matchRoles;
-      return aRules.value.length;
-    },
+  Combobox: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_COMBOBOX,
+     Ci.nsIAccessibleRole.ROLE_LISTBOX]),
 
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
+  Entry: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_ENTRY,
+     Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT]),
 
-    match: function ButtonTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
+  FormElement: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
+     Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
+     Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
+     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
+     Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID,
+     Ci.nsIAccessibleRole.ROLE_COMBOBOX,
+     Ci.nsIAccessibleRole.ROLE_LISTBOX,
+     Ci.nsIAccessibleRole.ROLE_ENTRY,
+     Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
+     Ci.nsIAccessibleRole.ROLE_PAGETAB,
+     Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
+     Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
+     Ci.nsIAccessibleRole.ROLE_SLIDER,
+     Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
+     Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM]),
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule]),
+  Graphic: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_GRAPHIC]),
 
-    _matchRoles: [
-      Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-      Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
-      Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-      Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-      Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID
-    ]
-  },
+  Heading: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_HEADING]),
 
-  Combobox: {
-    getMatchRoles: function ComboboxTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-                      Ci.nsIAccessibleRole.ROLE_LISTBOX];
-      return aRules.value.length;
-    },
+  ListItem: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_LISTITEM,
+     Ci.nsIAccessibleRole.ROLE_TERM]),
 
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function ComboboxTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Entry: {
-    getMatchRoles: function EntryTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_ENTRY,
-                      Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function EntryTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  FormElement: {
-    getMatchRoles: function FormElementTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = this._matchRoles;
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function FormElementTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule]),
-
-    _matchRoles: [
-      Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
-      Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
-      Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-      Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-      Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID,
-      Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-      Ci.nsIAccessibleRole.ROLE_LISTBOX,
-      Ci.nsIAccessibleRole.ROLE_ENTRY,
-      Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
-      Ci.nsIAccessibleRole.ROLE_PAGETAB,
-      Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-      Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-      Ci.nsIAccessibleRole.ROLE_SLIDER,
-      Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-      Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM
-    ]
-  },
-
-  Graphic: {
-    getMatchRoles: function GraphicTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_GRAPHIC];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function GraphicTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Heading: {
-    getMatchRoles: function HeadingTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_HEADING];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function HeadingTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  ListItem: {
-    getMatchRoles: function ListItemTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_LISTITEM,
-                      Ci.nsIAccessibleRole.ROLE_TERM];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function ListItemTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Link: {
-    getMatchRoles: function LinkTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_LINK];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function LinkTraversalRule_match(aAccessible)
+  Link: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_LINK],
+    function Link_match(aAccessible)
     {
       // We want to ignore anchors, only focus real links.
       let state = {};
@@ -286,121 +166,28 @@ var TraversalRules = {
       } else {
         return Ci.nsIAccessibleTraversalRule.FILTER_IGNORE;
       }
-    },
+    }),
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
+  List: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_LIST,
+     Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST]),
 
-  List: {
-    getMatchRoles: function ListTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_LIST,
-                      Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST];
-      return aRules.value.length;
-    },
+  PageTab: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_PAGETAB]),
 
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
+  RadioButton: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
+     Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM]),
 
-    match: function ListTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
+  Separator: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_SEPARATOR]),
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
+  Table: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_TABLE]),
 
-  PageTab: {
-    getMatchRoles: function PageTabTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_PAGETAB];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function PageTabTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  RadioButton: {
-    getMatchRoles: function RadioButtonTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-                      Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function RadioButtonTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Separator: {
-    getMatchRoles: function SeparatorTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_SEPARATOR];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function SeparatorTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Table: {
-    getMatchRoles: function TableTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_TABLE];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function TableTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  },
-
-  Checkbox: {
-    getMatchRoles: function CheckboxTraversalRule_getMatchRoles(aRules)
-    {
-      aRules.value = [Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-                      Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM];
-      return aRules.value.length;
-    },
-
-    preFilter: Ci.nsIAccessibleTraversalRule.PREFILTER_DEFUNCT |
-      Ci.nsIAccessibleTraversalRule.PREFILTER_INVISIBLE,
-
-    match: function CheckboxTraversalRule_match(aAccessible)
-    {
-      return Ci.nsIAccessibleTraversalRule.FILTER_MATCH;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
-  }
+  Checkbox: new BaseTraversalRule(
+    [Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
+     Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM])
 };
 
 var VirtualCursorController = {
@@ -547,12 +334,12 @@ var VirtualCursorController = {
   },
 
   moveToPoint: function moveToPoint(aDocument, aX, aY) {
-    this.getVirtualCursor(aDocument).moveToPoint(TraversalRules.Simple,
-                                                 aX, aY, true);
+    Utils.getVirtualCursor(aDocument).moveToPoint(TraversalRules.Simple,
+                                                  aX, aY, true);
   },
 
   moveForward: function moveForward(aDocument, aLast, aRule) {
-    let virtualCursor = this.getVirtualCursor(aDocument);
+    let virtualCursor = Utils.getVirtualCursor(aDocument);
     if (aLast) {
       virtualCursor.moveLast(TraversalRules.Simple);
     } else {
@@ -560,13 +347,14 @@ var VirtualCursorController = {
         virtualCursor.moveNext(aRule || TraversalRules.Simple);
       } catch (x) {
         this.moveCursorToObject(
-            gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
+          virtualCursor,
+          gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
       }
     }
   },
 
   moveBackward: function moveBackward(aDocument, aFirst, aRule) {
-    let virtualCursor = this.getVirtualCursor(aDocument);
+    let virtualCursor = Utils.getVirtualCursor(aDocument);
     if (aFirst) {
       virtualCursor.moveFirst(TraversalRules.Simple);
     } else {
@@ -574,13 +362,14 @@ var VirtualCursorController = {
         virtualCursor.movePrevious(aRule || TraversalRules.Simple);
       } catch (x) {
         this.moveCursorToObject(
-            gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
+          virtualCursor,
+          gAccRetrieval.getAccessibleFor(aDocument.activeElement), aRule);
       }
     }
   },
 
   activateCurrent: function activateCurrent(document) {
-    let virtualCursor = this.getVirtualCursor(document);
+    let virtualCursor = Utils.getVirtualCursor(document);
     let acc = virtualCursor.position;
 
     if (acc.actionCount > 0) {
@@ -607,24 +396,9 @@ var VirtualCursorController = {
     }
   },
 
-  getVirtualCursor: function getVirtualCursor(document) {
-    return gAccRetrieval.getAccessibleFor(document).
-      QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-  },
-
-  moveCursorToObject: function moveCursorToObject(aAccessible, aRule) {
-    let doc = aAccessible.document;
-    while (doc) {
-      let vc = null;
-      try {
-        vc = doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
-      } catch (x) {
-        doc = doc.parentDocument;
-        continue;
-      }
-      vc.moveNext(aRule || TraversalRules.Simple, aAccessible, true);
-      break;
-    }
+  moveCursorToObject: function moveCursorToObject(aVirtualCursor,
+                                                  aAccessible, aRule) {
+    aVirtualCursor.moveNext(aRule || TraversalRules.Simple, aAccessible, true);
   },
 
   keyMap: {

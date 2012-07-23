@@ -208,6 +208,3 @@ class Preferences(object):
 
         if isinstance(_file, basestring):
             f.close()
-
-if __name__ == '__main__':
-    pass

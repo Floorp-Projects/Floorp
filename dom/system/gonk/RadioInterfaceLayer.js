@@ -397,6 +397,9 @@ RadioInterfaceLayer.prototype = {
           callback.receiveContactsList(message.contactType, message.contacts);
         }
         break;
+      case "iccmbdn":
+        ppmm.sendAsyncMessage("RIL:VoicemailNumberChanged", message);
+        break;
       case "celllocationchanged":
         this.rilContext.cell = message;
         break;

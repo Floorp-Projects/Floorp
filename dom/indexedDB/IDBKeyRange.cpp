@@ -13,7 +13,7 @@
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
-
+#include "nsDOMClassInfoID.h"
 #include "Key.h"
 
 #include "mozilla/dom/indexedDB/PIndexedDBIndex.h"

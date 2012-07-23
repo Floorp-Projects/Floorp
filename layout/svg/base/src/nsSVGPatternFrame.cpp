@@ -606,7 +606,7 @@ nsSVGPatternFrame::GetPatternMatrix(const gfxMatrix &patternTransform,
   gfxFloat minx = bbox.X();
   gfxFloat miny = bbox.Y();
 
-  PRUint16 type = GetEnumValue(nsSVGPatternElement::PATTERNCONTENTUNITS);
+  PRUint16 type = GetEnumValue(nsSVGPatternElement::PATTERNUNITS);
   if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     minx += callerBBox.X();
     miny += callerBBox.Y();

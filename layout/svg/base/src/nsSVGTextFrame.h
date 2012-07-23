@@ -51,6 +51,10 @@ public:
   }
 #endif
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   // Override these four to ensure that UpdateGlyphPositioning is called
@@ -58,7 +62,7 @@ public:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint & aPoint);
-  virtual void UpdateBounds();
+  virtual void ReflowSVG();
   virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
                                       PRUint32 aFlags);
   

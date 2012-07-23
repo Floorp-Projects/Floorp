@@ -446,7 +446,7 @@ var gAllTests = [
 
     var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
              .getService(Ci.nsIScriptSecurityManager);
-    var principal = sm.getCodebasePrincipal(URI);
+    var principal = sm.getNoAppCodebasePrincipal(URI);
 
     // Give www.example.com privileges to store offline data
     var pm = Cc["@mozilla.org/permissionmanager;1"]

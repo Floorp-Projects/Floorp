@@ -57,6 +57,11 @@ NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
                              const nsIntRect *aDirtyRect)
 {
+  NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only painting of non-display "
+               "SVG should take this code path");
+
   gfxContextAutoSaveRestore autoSR;
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
@@ -82,7 +87,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
 }
 
 void
-nsSVGInnerSVGFrame::UpdateBounds()
+nsSVGInnerSVGFrame::ReflowSVG()
 {
   // mRect must be set before FinishAndStoreOverflow is called in order
   // for our overflow areas to be clipped correctly.
@@ -92,7 +97,7 @@ nsSVGInnerSVGFrame::UpdateBounds()
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, width, height),
                            PresContext()->AppUnitsPerCSSPixel());
-  nsSVGInnerSVGFrameBase::UpdateBounds();
+  nsSVGInnerSVGFrameBase::ReflowSVG();
 }
 
 void
@@ -123,7 +128,7 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
       // changed ancestor will have invalidated its entire area, which includes
       // our area.
       // For perf reasons we call this before calling NotifySVGChanged() below.
-      nsSVGUtils::ScheduleBoundsUpdate(this);
+      nsSVGUtils::ScheduleReflowSVG(this);
     }
 
     // Coordinate context changes affect mCanvasTM if we have a
@@ -167,7 +172,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
-      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+      nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
 
       if (content->HasViewBoxOrSyntheticViewBox()) {
         // make sure our cached transform matrix gets (lazily) updated
@@ -191,7 +196,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
 
-      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+      nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
 
       nsSVGUtils::NotifyChildrenOfSVGChange(
           this, aAttribute == nsGkAtoms::viewBox ?
@@ -211,6 +216,11 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
+  NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
+               (mState & NS_STATE_SVG_NONDISPLAY_CHILD),
+               "If display lists are enabled, only hit-testing of non-display "
+               "SVG should take this code path");
+
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);

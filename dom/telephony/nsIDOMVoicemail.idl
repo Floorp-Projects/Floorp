@@ -8,13 +8,24 @@
 
 interface nsIDOMMozVoicemailStatus;
 
-[scriptable, builtinclass, uuid(db5b727a-daf2-40b9-83e4-cc110eab44ca)]
+[scriptable, builtinclass, uuid(d9042fb9-a4a6-4133-b2de-8f7aa08595d9)]
 interface nsIDOMMozVoicemail : nsIDOMEventTarget
 {
   /**
    * The current voicemail status, or null when the status is unknown
    */
   readonly attribute nsIDOMMozVoicemailStatus status;
+
+  /**
+   * The voicemail box dialing number, or null if one wasn't found
+   */
+  readonly attribute DOMString number;
+
+  /**
+   * The display name of the voicemail box dialing number, or null if one
+   * wasn't found
+   */
+  readonly attribute DOMString displayName;
 
   /**
    * The current voicemail status has changed

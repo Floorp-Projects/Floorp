@@ -8362,7 +8362,7 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
       nsCSSValue depth;
       if (!ParseVariant(depth, VARIANT_LENGTH | VARIANT_CALC, nsnull) ||
           !nsLayoutUtils::Are3DTransformsEnabled()) {
-        depth.Reset();
+        depth.SetFloatValue(0.0f, eCSSUnit_Pixel);
       }
       value.SetTripletValue(position.mXValue, position.mYValue, depth);
     }

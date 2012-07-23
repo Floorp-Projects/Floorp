@@ -39,8 +39,6 @@ public:
     // parameter names
     enum nsParamName {
         MAX_CONNECTIONS,
-        MAX_CONNECTIONS_PER_HOST,
-        MAX_CONNECTIONS_PER_PROXY,
         MAX_PERSISTENT_CONNECTIONS_PER_HOST,
         MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
         MAX_REQUEST_DELAY,
@@ -55,8 +53,6 @@ public:
     nsHttpConnectionMgr();
 
     nsresult Init(PRUint16 maxConnections,
-                  PRUint16 maxConnectionsPerHost,
-                  PRUint16 maxConnectionsPerProxy,
                   PRUint16 maxPersistentConnectionsPerHost,
                   PRUint16 maxPersistentConnectionsPerProxy,
                   PRUint16 maxRequestDelay,
@@ -265,6 +261,10 @@ private:
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;
 
+        // calculate the number of half open sockets that have not had at least 1
+        // connection complete
+        PRUint32 UnconnectedHalfOpens();
+
         // Pipeline depths for various states
         const static PRUint32 kPipelineUnlimited  = 1024; // fully open - extended green
         const static PRUint32 kPipelineOpen       = 6;    // 6 on each conn - normal green
@@ -437,8 +437,6 @@ private:
 
     // connection limits
     PRUint16 mMaxConns;
-    PRUint16 mMaxConnsPerHost;
-    PRUint16 mMaxConnsPerProxy;
     PRUint16 mMaxPersistConnsPerHost;
     PRUint16 mMaxPersistConnsPerProxy;
     PRUint16 mMaxRequestDelay; // in seconds

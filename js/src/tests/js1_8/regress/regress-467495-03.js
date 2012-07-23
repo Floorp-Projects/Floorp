@@ -37,7 +37,7 @@ function test()
 
   reportCompare(expect, actual, summary + ': f(0): ');
 
-  expect = 'undefined,function g() {\n}';
+  expect = 'undefined,function g(){}';
 
   f(1);
 

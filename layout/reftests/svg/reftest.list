@@ -96,8 +96,8 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,2) == clipPath-and-shape-re
 == dynamic-small-object-scaled-up-02.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
-== dynamic-text-02.svg dynamic-text-02-ref.svg
-== dynamic-text-03.svg dynamic-text-03-ref.svg
+fuzzy-if(d2d&&layersGPUAccelerated,2,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7
+fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
@@ -209,6 +209,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
+== pattern-transformed-01.svg pattern-transformed-01-ref.svg
 == polygon-marker-01.svg pass.svg
 == polygon-points-negative-01.svg pass.svg
 == polyline-points-invalid-01.svg pass.svg

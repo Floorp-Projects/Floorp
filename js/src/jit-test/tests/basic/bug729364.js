@@ -17,4 +17,4 @@ function h(code, globalType) {
   }
 }
 function p()(function() function() {})
-g("print(let(x=verifybarriers(),q)((x(\"\",l('')))?(\"\"):(\"\")))()")
+g("print(let(x=verifyprebarriers(),q)((x(\"\",l('')))?(\"\"):(\"\")))()")

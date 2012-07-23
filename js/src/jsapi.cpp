@@ -752,7 +752,8 @@ JSRuntime::JSRuntime()
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcNumArenasFreeCommitted(0),
-    gcVerifyData(NULL),
+    gcVerifyPreData(NULL),
+    gcVerifyPostData(NULL),
     gcChunkAllocationSinceLastGC(false),
     gcNextFullGCTime(0),
     gcLastGCTime(0),
@@ -806,6 +807,7 @@ JSRuntime::JSRuntime()
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
     emptyString(NULL),
+    sourceHook(NULL),
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
@@ -815,6 +817,9 @@ JSRuntime::JSRuntime()
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
+#ifdef JS_THREADSAFE
+    sourceCompressorThread(thisFromCtor()),
+#endif
     defaultFreeOp_(thisFromCtor(), false, false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
@@ -834,6 +839,7 @@ JSRuntime::JSRuntime()
     sameCompartmentWrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
     preserveWrapperCallback(NULL),
+    scriptSources(NULL),
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
@@ -905,6 +911,11 @@ JSRuntime::init(uint32_t maxbytes)
     if (!scriptFilenameTable.init())
         return false;
 
+#ifdef JS_THREADSAFE
+    if (!sourceCompressorThread.init())
+        return false;
+#endif
+
     if (!evalCache.init())
         return false;
 
@@ -929,6 +940,10 @@ JSRuntime::~JSRuntime()
      * some filenames around because of gcKeepAtoms.
      */
     FreeScriptFilenames(this);
+
+#ifdef JS_THREADSAFE
+    sourceCompressorThread.finish();
+#endif
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -5346,27 +5361,12 @@ JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSPrinter *jp;
-    JSString *str;
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-#ifdef DEBUG
-    if (cx->compartment != script->compartment())
-        CompartmentChecker::fail(cx->compartment, script->compartment());
-#endif
-    jp = js_NewPrinter(cx, name, NULL,
-                       indent & ~JS_DONT_PRETTY_PRINT,
-                       !(indent & JS_DONT_PRETTY_PRINT),
-                       false, false);
-    if (!jp)
-        return NULL;
-    if (js_DecompileScript(jp, script))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
+    if (script->function())
+        return JS_DecompileFunction(cx, script->function(), indent);
+    return script->sourceData(cx);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5376,10 +5376,7 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, unsigned indent)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, fun);
-    return js_DecompileToString(cx, "JS_DecompileFunction", fun,
-                                indent & ~JS_DONT_PRETTY_PRINT,
-                                !(indent & JS_DONT_PRETTY_PRINT),
-                                false, false, js_DecompileFunction);
+    return fun->toString(cx, false, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5389,10 +5386,7 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, fun);
-    return js_DecompileToString(cx, "JS_DecompileFunctionBody", fun,
-                                indent & ~JS_DONT_PRETTY_PRINT,
-                                !(indent & JS_DONT_PRETTY_PRINT),
-                                false, false, js_DecompileFunctionBody);
+    return fun->toString(cx, true, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_NEVER_INLINE JS_PUBLIC_API(JSBool)
@@ -6770,21 +6764,27 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  1: additional GCs at common danger points\n"
                    "  2: GC every F allocations (default: 100)\n"
                    "  3: GC when the window paints (browser only)\n"
-                   "  4: Verify write barriers between instructions\n"
-                   "  5: Verify write barriers between paints\n"
+                   "  4: Verify pre write barriers between instructions\n"
+                   "  5: Verify pre write barriers between paints\n"
                    "  6: Verify stack rooting (ignoring XML and Reflect)\n"
                    "  7: Verify stack rooting (all roots)\n"
                    "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
                    "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-                   " 10: Incremental GC in multiple slices\n");
+                   " 10: Incremental GC in multiple slices\n"
+                   " 11: Verify post write barriers between instructions\n"
+                   " 12: Verify post write barriers between paints\n");
         }
         const char *p = strchr(env, ',');
         zeal = atoi(env);
         frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
 
-    if (zeal == 0 && cx->runtime->gcVerifyData)
-        VerifyBarriers(cx->runtime);
+    if (zeal == 0) {
+        if (cx->runtime->gcVerifyPreData)
+            VerifyBarriers(cx->runtime, PreBarrierVerifier);
+        if (cx->runtime->gcVerifyPostData)
+            VerifyBarriers(cx->runtime, PostBarrierVerifier);
+    }
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     cx->runtime->gcZeal_ = zeal;

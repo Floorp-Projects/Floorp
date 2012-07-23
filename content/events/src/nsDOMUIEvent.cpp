@@ -19,6 +19,7 @@
 #include "DictionaryHelpers.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
+#include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
 

@@ -9,6 +9,8 @@
 #include "mozilla/net/NeckoChild.h"
 #include "WebSocketChannelChild.h"
 #include "nsITabChild.h"
+#include "nsILoadContext.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
@@ -326,11 +328,31 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
   }
 
+  // Get info from nsILoadContext, if any
+  bool haveLoadContext = false;
+  bool isContent = false;
+  bool usePrivateBrowsing = false;
+  bool isInBrowserElement = false;
+  PRUint32 appId = 0;
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsILoadContext),
+                                getter_AddRefs(loadContext));
+  if (loadContext) {
+    haveLoadContext = true;
+    loadContext->GetIsContent(&isContent);
+    loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
+    loadContext->GetIsInBrowserElement(&isInBrowserElement);
+    loadContext->GetAppId(&appId);
+  }
+
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
   gNeckoChild->SendPWebSocketConstructor(this, tabChild);
-  if (!SendAsyncOpen(aURI, nsCString(aOrigin), mProtocol, mEncrypted))
+  if (!SendAsyncOpen(aURI, nsCString(aOrigin), mProtocol, mEncrypted,
+                     haveLoadContext, isContent, usePrivateBrowsing,
+                     isInBrowserElement, appId))
     return NS_ERROR_UNEXPECTED;
 
   mOriginalURI = aURI;
