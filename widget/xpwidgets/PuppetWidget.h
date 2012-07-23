@@ -92,8 +92,8 @@ public:
   // widget is supposed to entail
   NS_IMETHOD Enable(bool aState)
   { mEnabled = aState;  return NS_OK; }
-  NS_IMETHOD IsEnabled(bool *aState)
-  { *aState = mEnabled;  return NS_OK; }
+  virtual bool IsEnabled() const
+  { return mEnabled; }
 
   NS_IMETHOD SetFocus(bool aRaise = false);
 

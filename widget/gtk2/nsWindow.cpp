@@ -1148,12 +1148,10 @@ nsWindow::Enable(bool aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::IsEnabled(bool *aState)
+bool
+nsWindow::IsEnabled() const
 {
-    *aState = mEnabled;
-
-    return NS_OK;
+    return mEnabled;
 }
 
 

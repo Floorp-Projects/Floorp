@@ -1685,11 +1685,11 @@ NS_METHOD nsWindow::Enable(bool bState)
 }
 
 // Return the current enable state
-NS_METHOD nsWindow::IsEnabled(bool *aState)
+bool nsWindow::IsEnabled() const
 {
-  NS_ENSURE_ARG_POINTER(aState);
-  *aState = !mWnd || (::IsWindowEnabled(mWnd) && ::IsWindowEnabled(::GetAncestor(mWnd, GA_ROOT)));
-  return NS_OK;
+  return !mWnd ||
+         (::IsWindowEnabled(mWnd) &&
+          ::IsWindowEnabled(::GetAncestor(mWnd, GA_ROOT)));
 }
 
 

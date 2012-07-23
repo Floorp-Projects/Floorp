@@ -87,8 +87,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x7c7ff2ff, 0x61f9, 0x4240, \
-    { 0xaa, 0x58, 0x74, 0xb0, 0xcd, 0xa9, 0xe3, 0x05 } }
+  { 0x97afe930, 0x72d7, 0x4d95, \
+    { 0x88, 0x5f, 0x37, 0x09, 0x14, 0x2a, 0xf4, 0xe2 } }
 
 /*
  * Window shadow styles
@@ -766,9 +766,8 @@ class nsIWidget : public nsISupports {
 
     /**
      * Ask whether the widget is enabled
-     * @param aState returns true if the widget is enabled
      */
-    NS_IMETHOD IsEnabled(bool *aState) = 0;
+    virtual bool IsEnabled() const = 0;
 
     /**
      * Request activation of this window or give focus to this widget.
