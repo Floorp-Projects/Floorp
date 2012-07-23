@@ -62,7 +62,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mNumActiveConns(0)
     , mNumIdleConns(0)
     , mTimeOfNextWakeUp(LL_MAXUINT)
-    , mReadTimeoutTickArmed(false)
+    , mTimeoutTickArmed(false)
 {
     LOG(("Creating nsHttpConnectionMgr @%x\n", this));
     mCT.Init();
@@ -73,8 +73,8 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
 nsHttpConnectionMgr::~nsHttpConnectionMgr()
 {
     LOG(("Destroying nsHttpConnectionMgr @%x\n", this));
-    if (mReadTimeoutTick)
-        mReadTimeoutTick->Cancel();
+    if (mTimeoutTick)
+        mTimeoutTick->Cancel();
 }
 
 nsresult
@@ -218,21 +218,21 @@ nsHttpConnectionMgr::ConditionallyStopPruneDeadConnectionsTimer()
 }
 
 void
-nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick()
+nsHttpConnectionMgr::ConditionallyStopTimeoutTick()
 {
-    LOG(("nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick "
-         "armed=%d active=%d\n", mReadTimeoutTickArmed, mNumActiveConns));
+    LOG(("nsHttpConnectionMgr::ConditionallyStopTimeoutTick "
+         "armed=%d active=%d\n", mTimeoutTickArmed, mNumActiveConns));
 
-    if (!mReadTimeoutTickArmed)
+    if (!mTimeoutTickArmed)
         return;
 
     if (mNumActiveConns)
         return;
 
-    LOG(("nsHttpConnectionMgr::ConditionallyStopReadTimeoutTick stop==true\n"));
+    LOG(("nsHttpConnectionMgr::ConditionallyStopTimeoutTick stop==true\n"));
 
-    mReadTimeoutTick->Cancel();
-    mReadTimeoutTickArmed = false;
+    mTimeoutTick->Cancel();
+    mTimeoutTickArmed = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -251,8 +251,8 @@ nsHttpConnectionMgr::Observe(nsISupports *subject,
         if (timer == mTimer) {
             PruneDeadConnections();
         }
-        else if (timer == mReadTimeoutTick) {
-            ReadTimeoutTick();
+        else if (timer == mTimeoutTick) {
+            TimeoutTick();
         }
         else {
             NS_ABORT_IF_FALSE(false, "unexpected timer-callback");
@@ -1584,7 +1584,7 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
         if (conn == ent->mYellowConnection)
             ent->OnYellowComplete();
         mNumActiveConns--;
-        ConditionallyStopReadTimeoutTick();
+        ConditionallyStopTimeoutTick();
 
         // sever back references to connection, and do so without triggering
         // a call to ReclaimConnection ;-)
@@ -1711,7 +1711,7 @@ void
 nsHttpConnectionMgr::RecvdConnect()
 {
     mNumActiveConns--;
-    ConditionallyStopReadTimeoutTick();
+    ConditionallyStopTimeoutTick();
 }
 
 nsresult
@@ -1826,10 +1826,10 @@ nsHttpConnectionMgr::OnMsgShutdown(PRInt32, void *)
 
     mCT.Enumerate(ShutdownPassCB, this);
 
-    if (mReadTimeoutTick) {
-        mReadTimeoutTick->Cancel();
-        mReadTimeoutTick = nsnull;
-        mReadTimeoutTickArmed = false;
+    if (mTimeoutTick) {
+        mTimeoutTick->Cancel();
+        mTimeoutTick = nsnull;
+        mTimeoutTickArmed = false;
     }
     
     // signal shutdown complete
@@ -1995,7 +1995,7 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
             nsHttpConnection *temp = conn;
             NS_RELEASE(temp);
             mNumActiveConns--;
-            ConditionallyStopReadTimeoutTick();
+            ConditionallyStopTimeoutTick();
         }
 
         if (conn->CanReuse()) {
@@ -2117,49 +2117,49 @@ nsHttpConnectionMgr::ActivateTimeoutTick()
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     LOG(("nsHttpConnectionMgr::ActivateTimeoutTick() "
-         "this=%p mReadTimeoutTick=%p\n"));
+         "this=%p mTimeoutTick=%p\n"));
 
     // The timer tick should be enabled if it is not already pending.
     // Upon running the tick will rearm itself if there are active
     // connections available.
 
-    if (mReadTimeoutTick && mReadTimeoutTickArmed)
+    if (mTimeoutTick && mTimeoutTickArmed)
         return;
 
-    if (!mReadTimeoutTick) {
-        mReadTimeoutTick = do_CreateInstance(NS_TIMER_CONTRACTID);
-        if (!mReadTimeoutTick) {
+    if (!mTimeoutTick) {
+        mTimeoutTick = do_CreateInstance(NS_TIMER_CONTRACTID);
+        if (!mTimeoutTick) {
             NS_WARNING("failed to create timer for http timeout management");
             return;
         }
-        mReadTimeoutTick->SetTarget(mSocketThreadTarget);
+        mTimeoutTick->SetTarget(mSocketThreadTarget);
     }
 
-    NS_ABORT_IF_FALSE(!mReadTimeoutTickArmed, "timer tick armed");
-    mReadTimeoutTickArmed = true;
-    mReadTimeoutTick->Init(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
+    NS_ABORT_IF_FALSE(!mTimeoutTickArmed, "timer tick armed");
+    mTimeoutTickArmed = true;
+    mTimeoutTick->Init(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
 }
 
 void
-nsHttpConnectionMgr::ReadTimeoutTick()
+nsHttpConnectionMgr::TimeoutTick()
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-    NS_ABORT_IF_FALSE(mReadTimeoutTick, "no readtimeout tick");
+    NS_ABORT_IF_FALSE(mTimeoutTick, "no readtimeout tick");
 
-    LOG(("nsHttpConnectionMgr::ReadTimeoutTick active=%d\n",
+    LOG(("nsHttpConnectionMgr::TimeoutTick active=%d\n",
          mNumActiveConns));
 
-    mCT.Enumerate(ReadTimeoutTickCB, this);
+    mCT.Enumerate(TimeoutTickCB, this);
 }
 
 PLDHashOperator
-nsHttpConnectionMgr::ReadTimeoutTickCB(const nsACString &key,
+nsHttpConnectionMgr::TimeoutTickCB(const nsACString &key,
                                        nsAutoPtr<nsConnectionEntry> &ent,
                                        void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
 
-    LOG(("nsHttpConnectionMgr::ReadTimeoutTickCB() this=%p host=%s\n",
+    LOG(("nsHttpConnectionMgr::TimeoutTickCB() this=%p host=%s\n",
          self, ent->mConnInfo->Host()));
 
     // first call the tick handler for each active connection
