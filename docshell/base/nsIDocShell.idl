@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(51f2b7f0-6435-40ec-b315-588f52be7eea)]
+[scriptable, builtinclass, uuid(be5a675b-b675-4443-af75-510530eab5fa)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -644,10 +644,4 @@ interface nsIDocShell : nsISupports
    * docshell.
    */
   readonly attribute bool asyncPanZoomEnabled;
-
-  /**
-   * Like GetSameTypeParent, except this ignores <iframe mozbrowser>
-   * boundaries.
-   */
-  nsIDocShell getParentIgnoreBrowserFrame();
 };
