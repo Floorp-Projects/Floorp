@@ -27,35 +27,21 @@ add_test(function test_ensureHeader() {
 //
 
 add_test(function test_skipValue() {
+  function func(data) {
+    return WSP.skipValue(data);
+  }
+
   // Test for zero-valued first octet:
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, [0], null
-  );
+  wsp_decode_test_ex(func, [0], null);
   // Test first octet < 31
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, [1, 2], [2]
-  );
+  wsp_decode_test_ex(func, [1, 2], [2]);
   // Test first octet = 31
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, [31, 0], null
-  );
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, [31, 1, 2], [2]
-  );
+  wsp_decode_test_ex(func, [31, 0], null);
+  wsp_decode_test_ex(func, [31, 1, 2], [2]);
   // Test first octet <= 127
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, strToCharCodeArray("Hello world!"), "Hello world!"
-  );
+  wsp_decode_test_ex(func, strToCharCodeArray("Hello world!"), "Hello world!");
   // Test first octet >= 128
-  wsp_decode_test_ex(function (data) {
-      return WSP.skipValue(data);
-    }, [0x80 | 0x01], 0x01
-  );
+  wsp_decode_test_ex(func, [0x80 | 0x01], 0x01);
 
   run_next_test();
 });
@@ -495,7 +481,7 @@ add_test(function test_DateValue_decode() {
 //
 // Test target: DeltaSecondsValue
 //
-  // DeltaSecondsValue is only an alias of IntegerValue.
+// DeltaSecondsValue is only an alias of IntegerValue.
 
 //
 // Test target: QValue
@@ -555,47 +541,50 @@ add_test(function test_UriValue_decode() {
 });
 
 //
+// Test target: TypeValue
+//
+
+//// TypeValue.decode ////
+
+add_test(function test_TypeValue_decode() {
+  // Test for string-typed return value from ConstrainedEncoding
+  wsp_decode_test(WSP.TypeValue, [65, 0], "a");
+  // Test for number-typed return value from ConstrainedEncoding
+  wsp_decode_test(WSP.TypeValue, [0x33 | 0x80],
+                  "application/vnd.wap.multipart.related");
+  // Test for NotWellKnownEncodingError
+  wsp_decode_test(WSP.TypeValue, [0x80], null, "NotWellKnownEncodingError");
+
+  run_next_test();
+});
+
+//
 // Test target: Parameter
 //
 
 //// Parameter.decodeTypedParameter ////
 
 add_test(function test_Parameter_decodeTypedParameter() {
+  function func(data) {
+    return WSP.Parameter.decodeTypedParameter(data);
+  }
+
   // Test for array-typed return value from IntegerValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [7, 0, 0, 0, 0, 0, 0, 0], null, "CodeError"
-  );
+  wsp_decode_test_ex(func, [7, 0, 0, 0, 0, 0, 0, 0], null, "CodeError");
   // Test for number-typed return value from IntegerValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0, 0], {name: "q", value: null}
-  );
+  wsp_decode_test_ex(func, [1, 0, 0], {name: "q", value: null});
   // Test for NotWellKnownEncodingError
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0xFF], null, "NotWellKnownEncodingError"
-  );
+  wsp_decode_test_ex(func, [1, 0xFF], null, "NotWellKnownEncodingError");
   // Test for parameter specific decoder
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0, 100], {name: "q", value: 0.99}
-  );
+  wsp_decode_test_ex(func, [1, 0, 100], {name: "q", value: 0.99});
   // Test for TextValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0x10, 48, 46, 57, 57, 0], {name: "secure", value: "0.99"}
-  );
+  wsp_decode_test_ex(func, [1, 0x10, 48, 46, 57, 57, 0],
+                     {name: "secure", value: "0.99"});
   // Test for TextString
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0x19, 60, 115, 109, 105, 108, 62, 0], {name: "start", value: "<smil>"}
-  );
+  wsp_decode_test_ex(func, [1, 0x19, 60, 115, 109, 105, 108, 62, 0],
+                     {name: "start", value: "<smil>"});
   // Test for skipValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeTypedParameter(data);
-    }, [1, 0x19, 128], null
-  );
+  wsp_decode_test_ex(func, [1, 0x19, 128], null);
 
   run_next_test();
 });
@@ -603,24 +592,16 @@ add_test(function test_Parameter_decodeTypedParameter() {
 //// Parameter.decodeUntypedParameter ////
 
 add_test(function test_Parameter_decodeUntypedParameter() {
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeUntypedParameter(data);
-    }, [1], null, "CodeError"
-  );
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeUntypedParameter(data);
-    }, [65, 0, 0], {name: "a", value: null}
-  );
+  function func (data) {
+    return WSP.Parameter.decodeUntypedParameter(data);
+  }
+
+  wsp_decode_test_ex(func, [1], null, "CodeError");
+  wsp_decode_test_ex(func, [65, 0, 0], {name: "a", value: null});
   // Test for IntegerValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeUntypedParameter(data);
-    }, [65, 0, 1, 0], {name: "a", value: 0}
-  );
+  wsp_decode_test_ex(func, [65, 0, 1, 0], {name: "a", value: 0});
   // Test for TextValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decodeUntypedParameter(data);
-    }, [65, 0, 66, 0], {name: "a", value: "B"}
-  );
+  wsp_decode_test_ex(func, [65, 0, 66, 0], {name: "a", value: "B"});
 
   run_next_test();
 });
@@ -628,14 +609,9 @@ add_test(function test_Parameter_decodeUntypedParameter() {
 //// Parameter.decode ////
 
 add_test(function test_Parameter_decode() {
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decode(data);
-    }, [1, 0x19, 60, 115, 109, 105, 108, 62, 0], {name: "start", value: "<smil>"}
-  );
-  wsp_decode_test_ex(function (data) {
-      return WSP.Parameter.decode(data);
-    }, [65, 0, 66, 0], {name: "a", value: "B"}
-  );
+  wsp_decode_test(WSP.Parameter, [1, 0x19, 60, 115, 109, 105, 108, 62, 0],
+                  {name: "start", value: "<smil>"});
+  wsp_decode_test(WSP.Parameter, [65, 0, 66, 0], {name: "a", value: "B"});
 
   run_next_test();
 });
@@ -797,21 +773,17 @@ add_test(function test_WellKnownCharset_decode() {
 //// ContentTypeValue.decodeConstrainedMedia ////
 
 add_test(function test_ContentTypeValue_decodeConstrainedMedia() {
+  function func(data) {
+    return WSP.ContentTypeValue.decodeConstrainedMedia(data);
+  }
+
   // Test for string-typed return value from ConstrainedEncoding
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeConstrainedMedia(data);
-    }, [65, 0], {media: "a", params: null}
-  );
+  wsp_decode_test_ex(func, [65, 0], {media: "a", params: null});
   // Test for number-typed return value from ConstrainedEncoding
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeConstrainedMedia(data);
-    }, [0x33 | 0x80], {media: "application/vnd.wap.multipart.related", params: null}
-  );
+  wsp_decode_test_ex(func, [0x33 | 0x80],
+                     {media: "application/vnd.wap.multipart.related", params: null});
   // Test for NotWellKnownEncodingError
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeConstrainedMedia(data);
-    }, [0x80], null, "NotWellKnownEncodingError"
-  );
+  wsp_decode_test_ex(func, [0x80], null, "NotWellKnownEncodingError");
 
   run_next_test();
 });
@@ -819,20 +791,15 @@ add_test(function test_ContentTypeValue_decodeConstrainedMedia() {
 //// ContentTypeValue.decodeMedia ////
 
 add_test(function test_ContentTypeValue_decodeMedia() {
+  function func(data) {
+    return WSP.ContentTypeValue.decodeMedia(data);
+  }
+
   // Test for NullTerminatedTexts
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeMedia(data);
-    }, [65, 0], "a"
-  );
+  wsp_decode_test_ex(func, [65, 0], "a");
   // Test for IntegerValue
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeMedia(data);
-    }, [0x3E | 0x80], "application/vnd.wap.mms-message"
-  );
-  wsp_decode_test_ex(function (data) {
-      return WSP.ContentTypeValue.decodeMedia(data);
-    }, [0x80], null, "NotWellKnownEncodingError"
-  );
+  wsp_decode_test_ex(func, [0x3E | 0x80], "application/vnd.wap.mms-message");
+  wsp_decode_test_ex(func, [0x80], null, "NotWellKnownEncodingError");
 
   run_next_test();
 });

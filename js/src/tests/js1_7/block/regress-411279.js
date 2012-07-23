@@ -40,15 +40,6 @@ function test()
     return value;
   }
 
-  expect = 'function f(x) { var value = ""; switch (x) { '
-    + 'case 1: value = "1 " + y;  break; '
-    + 'case 2: let y = 42; value = "2 " + y;  break; ' 
-    + 'default: value = "default " + y; } return value; }';
-
-  actual = f + '';
-
-  compareSource(expect, actual, summary);
-
   expect = '1 undefined';
   actual = f(1);
   reportCompare(expect, actual, summary + ': f(1)');

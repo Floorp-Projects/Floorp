@@ -1,0 +1,29 @@
+""" -*- Mode: Python -*-
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ The name of the event which real interface should have nsIDOM-prefix,
+ and should be in nsIDOM<name>.idl file and which should have
+ <name>Init dictionary for the event constructor. """
+
+simple_events = [
+    'DeviceProximityEvent',
+    'UserProximityEvent',
+    'CustomEvent',
+    'PageTransitionEvent',
+    'PopStateEvent',
+    'HashChangeEvent',
+    'CloseEvent'
+  ]
+
+""" include file names """
+special_includes = [
+    'DictionaryHelpers.h',
+    'nsContentUtils.h'
+  ]
+
+""" name of the type to not include using #include "typename.h" """
+exclude_automatic_type_include = [
+    'nsISupports'
+  ]

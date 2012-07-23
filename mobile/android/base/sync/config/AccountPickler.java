@@ -20,11 +20,34 @@ import android.content.Context;
 /**
  * Bug 768102: Android deletes Account objects when the Authenticator that owns
  * the Account disappears. This happens when an App is installed to the SD card
- * and the SD card is un-mounted.
+ * and the SD card is un-mounted or the device is rebooted.
  * <p>
- * Bug 769745: We work around this by pickling the current Sync account data
- * every sync and un-pickling when we check if Sync accounts exist (called from
- * Fennec).
+ * Bug 769745: Work around this by pickling the current Sync account data every
+ * sync.
+ * <p>
+ * Bug 735842: Work around this by un-pickling when we check if Sync accounts
+ * exist (called from Fennec).
+ * <p>
+ * Android just doesn't support installing Apps that define long-lived Services
+ * and/or own Account types onto the SD card. The documentation says not to do
+ * it. There are hordes of developers who want to do it, and have tried to
+ * register for almost every "package installation changed" broadcast intent
+ * that Android supports. They all explicitly state that the package that has
+ * changed does *not* receive the broadcast intent, thereby preventing an App
+ * from re-establishing its state.
+ * <p>
+ * <a href="http://developer.android.com/guide/topics/data/install-location.html">Reference.</a>
+ * <p>
+ * <b>Quote</b>: Your AbstractThreadedSyncAdapter and all its sync functionality
+ * will not work until external storage is remounted.
+ * <p>
+ * <b>Quote</b>: Your running Service will be killed and will not be restarted
+ * when external storage is remounted. You can, however, register for the
+ * ACTION_EXTERNAL_APPLICATIONS_AVAILABLE broadcast Intent, which will notify
+ * your application when applications installed on external storage have become
+ * available to the system again. At which time, you can restart your Service.
+ * <p>
+ * Problem: <a href="http://code.google.com/p/android/issues/detail?id=8485">that intent doesn't work</a>!
  */
 public class AccountPickler {
   public static final String LOG_TAG = "AccountPickler";
@@ -78,7 +101,7 @@ public class AccountPickler {
   public static void pickle(final Context context, final String filename,
       final SyncAccountParameters params, final boolean syncAutomatically) {
     final ExtendedJSONObject o = params.asJSON();
-    o.put(Constants.JSON_KEY_SYNC_AUTOMATICALLY, new Boolean(syncAutomatically));
+    o.put(Constants.JSON_KEY_SYNC_AUTOMATICALLY, Boolean.valueOf(syncAutomatically));
     o.put(Constants.JSON_KEY_VERSION, new Long(VERSION));
     o.put(Constants.JSON_KEY_TIMESTAMP, new Long(System.currentTimeMillis()));
 
@@ -133,7 +156,7 @@ public class AccountPickler {
     // Default to syncing automatically.
     boolean syncAutomatically = true;
     if (json.containsKey(Constants.JSON_KEY_SYNC_AUTOMATICALLY)) {
-      if ((new Boolean(false)).equals(json.get(Constants.JSON_KEY_SYNC_AUTOMATICALLY))) {
+      if (Boolean.FALSE.equals(json.get(Constants.JSON_KEY_SYNC_AUTOMATICALLY))) {
         syncAutomatically = false;
       }
     }

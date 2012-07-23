@@ -22,7 +22,15 @@ async protocol PWebSocket
 
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  AsyncOpen(URI aURI, nsCString aOrigin, nsCString aProtocol, bool aSecure);
+  AsyncOpen(URI aURI,
+            nsCString aOrigin,
+            nsCString aProtocol,
+            bool aSecure,
+            bool haveLoadContext,
+            bool isContent,
+            bool usePrivateBrowsing,
+            bool isInBrowserElement,
+            PRUint32 appID);
   Close(PRUint16 code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

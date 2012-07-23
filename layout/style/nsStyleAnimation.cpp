@@ -86,6 +86,160 @@ GetCommonUnit(nsCSSProperty aProperty,
   return aFirstUnit;
 }
 
+static nsCSSKeyword
+ToPrimitive(nsCSSKeyword aKeyword)
+{
+  switch (aKeyword) {
+    case eCSSKeyword_translatex:
+    case eCSSKeyword_translatey:
+    case eCSSKeyword_translatez:
+    case eCSSKeyword_translate:
+      return eCSSKeyword_translate3d;
+    case eCSSKeyword_scalex:
+    case eCSSKeyword_scaley:
+    case eCSSKeyword_scalez:
+    case eCSSKeyword_scale:
+      return eCSSKeyword_scale3d;
+    default:
+      return aKeyword;
+  }
+}
+
+static already_AddRefed<nsCSSValue::Array>
+AppendFunction(nsCSSKeyword aTransformFunction)
+{
+  PRUint32 nargs;
+  switch (aTransformFunction) {
+    case eCSSKeyword_matrix3d:
+      nargs = 16;
+      break;
+    case eCSSKeyword_matrix:
+      nargs = 6;
+      break;
+    case eCSSKeyword_rotate3d:
+      nargs = 4;
+      break;
+    case eCSSKeyword_interpolatematrix:
+    case eCSSKeyword_translate3d:
+    case eCSSKeyword_scale3d:
+      nargs = 3;
+      break;
+    case eCSSKeyword_translate:
+    case eCSSKeyword_scale:
+      nargs = 2;
+      break;
+    default:
+      NS_ERROR("must be a transform function");
+    case eCSSKeyword_translatex:
+    case eCSSKeyword_translatey:
+    case eCSSKeyword_translatez:
+    case eCSSKeyword_scalex:
+    case eCSSKeyword_scaley:
+    case eCSSKeyword_scalez:
+    case eCSSKeyword_skewx:
+    case eCSSKeyword_skewy:
+    case eCSSKeyword_rotate:
+    case eCSSKeyword_rotatex:
+    case eCSSKeyword_rotatey:
+    case eCSSKeyword_rotatez:
+    case eCSSKeyword_perspective:
+      nargs = 1;
+      break;
+  }
+
+  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(nargs + 1);
+  arr->Item(0).SetStringValue(
+    NS_ConvertUTF8toUTF16(nsCSSKeywords::GetStringValue(aTransformFunction)),
+    eCSSUnit_Ident);
+
+  return arr.forget();
+}
+
+static already_AddRefed<nsCSSValue::Array>
+ToPrimitive(nsCSSValue::Array* aArray)
+{
+  nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(aArray);
+  nsCSSKeyword primitive = ToPrimitive(tfunc);
+  nsRefPtr<nsCSSValue::Array> arr = AppendFunction(primitive);
+
+  // FIXME: This would produce fewer calc() expressions if the
+  // zero were of compatible type (length vs. percent) when
+  // needed.
+
+  nsCSSValue zero(0.0f, eCSSUnit_Pixel);
+  nsCSSValue one(1.0f, eCSSUnit_Number);
+  switch(tfunc) {
+    case eCSSKeyword_translate:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2 || aArray->Count() == 3,
+                        "unexpected count");
+      arr->Item(1) = aArray->Item(1);
+      arr->Item(2) = aArray->Count() == 3 ? aArray->Item(2) : zero;
+      arr->Item(3) = zero;
+      break;
+    }
+    case eCSSKeyword_translatex:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = aArray->Item(1);
+      arr->Item(2) = zero;
+      arr->Item(3) = zero;
+      break;
+    }
+    case eCSSKeyword_translatey:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = zero;
+      arr->Item(2) = aArray->Item(1);
+      arr->Item(3) = zero;
+      break;
+    }
+    case eCSSKeyword_translatez:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = zero;
+      arr->Item(2) = zero;
+      arr->Item(3) = aArray->Item(1);
+      break;
+    }
+    case eCSSKeyword_scale:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2 || aArray->Count() == 3,
+                        "unexpected count");
+      arr->Item(1) = aArray->Item(1);
+      arr->Item(2) = aArray->Count() == 3 ? aArray->Item(2) : aArray->Item(1);
+      arr->Item(3) = one;
+      break;
+    }
+    case eCSSKeyword_scalex:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = aArray->Item(1);
+      arr->Item(2) = one;
+      arr->Item(3) = one;
+      break;
+    }
+    case eCSSKeyword_scaley:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = one;
+      arr->Item(2) = aArray->Item(1);
+      arr->Item(3) = one;
+      break;
+    }
+    case eCSSKeyword_scalez:
+    {
+      NS_ABORT_IF_FALSE(aArray->Count() == 2, "unexpected count");
+      arr->Item(1) = one;
+      arr->Item(2) = one;
+      arr->Item(3) = aArray->Item(1);
+      break;
+    }
+    default:
+      arr = aArray;
+  }
+  return arr.forget();
+}
 
 // Greatest Common Divisor
 static PRUint32
@@ -409,7 +563,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       unit[2] = GetCommonUnit(aProperty, triplet1->mZValue.GetUnit(),
                               triplet2->mZValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_URL) {
+          unit[2] == eCSSUnit_Null) {
         return false;
       }
 
@@ -972,50 +1126,7 @@ static already_AddRefed<nsCSSValue::Array>
 AppendTransformFunction(nsCSSKeyword aTransformFunction,
                         nsCSSValueList**& aListTail)
 {
-  PRUint32 nargs;
-  switch (aTransformFunction) {
-    case eCSSKeyword_matrix3d:
-      nargs = 16;
-      break;
-    case eCSSKeyword_matrix:
-      nargs = 6;
-      break;
-    case eCSSKeyword_rotate3d:
-      nargs = 4;
-      break;
-    case eCSSKeyword_interpolatematrix:
-    case eCSSKeyword_translate3d:
-    case eCSSKeyword_scale3d:
-      nargs = 3;
-      break;
-    case eCSSKeyword_translate:
-    case eCSSKeyword_scale:
-      nargs = 2;
-      break;
-    default:
-      NS_ERROR("must be a transform function");
-    case eCSSKeyword_translatex:
-    case eCSSKeyword_translatey:
-    case eCSSKeyword_translatez:
-    case eCSSKeyword_scalex:
-    case eCSSKeyword_scaley:
-    case eCSSKeyword_scalez:
-    case eCSSKeyword_skewx:
-    case eCSSKeyword_skewy:
-    case eCSSKeyword_rotate:
-    case eCSSKeyword_rotatex:
-    case eCSSKeyword_rotatey:
-    case eCSSKeyword_rotatez:
-    case eCSSKeyword_perspective:
-      nargs = 1;
-      break;
-  }
-
-  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(nargs + 1);
-  arr->Item(0).SetStringValue(
-    NS_ConvertUTF8toUTF16(nsCSSKeywords::GetStringValue(aTransformFunction)),
-    eCSSUnit_Ident);
-
+  nsRefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
   nsCSSValueList *item = new nsCSSValueList;
   item->mValue.SetArrayValue(arr, eCSSUnit_Function);
 
@@ -1366,15 +1477,7 @@ AddDifferentTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 static bool
 TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 {
-  if (func1 == func2) {
-    return true;
-  }
-
-  if ((func1 == eCSSKeyword_rotatez && func2 == eCSSKeyword_rotate) ||
-      (func1 == eCSSKeyword_rotate && func2 == eCSSKeyword_rotatez)) {
-    return true;
-  }
-  return false;
+  return ToPrimitive(func1) == ToPrimitive(func2);
 }
 
 static nsCSSValueList*
@@ -1385,8 +1488,8 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
   nsCSSValueList **resultTail = getter_Transfers(result);
 
   do {
-    const nsCSSValue::Array *a1 = aList1->mValue.GetArrayValue(),
-                            *a2 = aList2->mValue.GetArrayValue();
+    nsRefPtr<nsCSSValue::Array> a1 = ToPrimitive(aList1->mValue.GetArrayValue()),
+                                a2 = ToPrimitive(aList2->mValue.GetArrayValue());
     NS_ABORT_IF_FALSE(TransformFunctionsMatch(nsStyleTransformMatrix::TransformFunctionOf(a1),
                                               nsStyleTransformMatrix::TransformFunctionOf(a2)),
                       "transform function mismatch");
@@ -1404,38 +1507,6 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
     }
 
     switch (tfunc) {
-      case eCSSKeyword_translate: {
-        NS_ABORT_IF_FALSE(a1->Count() == 2 || a1->Count() == 3,
-                          "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 2 || a2->Count() == 3,
-                          "unexpected count");
-
-        // FIXME: This would produce fewer calc() expressions if the
-        // zero were of compatible type (length vs. percent) when
-        // needed.
-        nsCSSValue zero(0.0f, eCSSUnit_Pixel);
-        // Add Y component of translation.
-        AddTransformTranslate(a1->Count() == 3 ? a1->Item(2) : zero,
-                              aCoeff1,
-                              a2->Count() == 3 ? a2->Item(2) : zero,
-                              aCoeff2,
-                              arr->Item(2));
-
-        // Add X component of translation (which can be merged with case
-        // below in non-DEBUG).
-        AddTransformTranslate(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
-                              arr->Item(1));
-        break;
-      }
-      case eCSSKeyword_translatex:
-      case eCSSKeyword_translatey:
-      case eCSSKeyword_translatez: {
-        NS_ABORT_IF_FALSE(a1->Count() == 2, "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 2, "unexpected count");
-        AddTransformTranslate(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
-                              arr->Item(1));
-        break;
-      }
       case eCSSKeyword_translate3d: {
           NS_ABORT_IF_FALSE(a1->Count() == 4, "unexpected count");
           NS_ABORT_IF_FALSE(a2->Count() == 4, "unexpected count");
@@ -1446,39 +1517,6 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
           AddTransformTranslate(a1->Item(3), aCoeff1, a2->Item(3), aCoeff2,
                                 arr->Item(3));
           break;
-      }
-      case eCSSKeyword_scale: {
-        NS_ABORT_IF_FALSE(a1->Count() == 2 || a1->Count() == 3,
-                          "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 2 || a2->Count() == 3,
-                          "unexpected count");
-
-        // This is different from translate(), since an omitted second
-        // parameter repeats the first rather than being zero.
-        // Add Y component of scale.
-        AddTransformScale(a1->Count() == 3 ? a1->Item(2) : a1->Item(1),
-                          aCoeff1,
-                          a2->Count() == 3 ? a2->Item(2) : a2->Item(1),
-                          aCoeff2,
-                          arr->Item(2));
-
-        // Add X component of scale (which can be merged with case below
-        // in non-DEBUG).
-        AddTransformScale(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
-                          arr->Item(1));
-
-        break;
-      }
-      case eCSSKeyword_scalex:
-      case eCSSKeyword_scaley: 
-      case eCSSKeyword_scalez: {
-        NS_ABORT_IF_FALSE(a1->Count() == 2, "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 2, "unexpected count");
-
-        AddTransformScale(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
-                          arr->Item(1));
-
-        break;
       }
       case eCSSKeyword_scale3d: {
           NS_ABORT_IF_FALSE(a1->Count() == 4, "unexpected count");
@@ -1743,13 +1781,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       nsCSSValueTriplet triplet1(*aValue1.GetCSSValueTripletValue());
       nsCSSValueTriplet triplet2(*aValue2.GetCSSValueTripletValue());
 
-      if (triplet1.mZValue.GetUnit() == eCSSUnit_Null) {
-        triplet1.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
-      }
-      if (triplet2.mZValue.GetUnit() == eCSSUnit_Null) {
-          triplet2.mZValue.SetFloatValue(0.0, eCSSUnit_Pixel);
-      }
-
       nsCSSUnit unit[3];
       unit[0] = GetCommonUnit(aProperty, triplet1.mXValue.GetUnit(),
                               triplet2.mXValue.GetUnit());
@@ -1758,7 +1789,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       unit[2] = GetCommonUnit(aProperty, triplet1.mZValue.GetUnit(),
                               triplet2.mZValue.GetUnit());
       if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_Null || unit[0] == eCSSUnit_URL) {
+          unit[2] == eCSSUnit_Null) {
         return false;
       }
 
@@ -1776,11 +1807,6 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
-      }
-
-      if (result->mZValue.GetUnit() == eCSSUnit_Pixel &&
-          result->mZValue.GetFloatValue() == 0.0f) {
-        result->mZValue.Reset();
       }
 
       aResultValue.SetAndAdoptCSSValueTripletValue(result.forget(),
@@ -2634,10 +2660,6 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
               !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[2],
                                     triplet->mZValue)) {
             return false;
-          }
-          if (triplet->mZValue.GetUnit() == eCSSUnit_Pixel &&
-              triplet->mZValue.GetFloatValue() == 0.0f) {
-            triplet->mZValue.Reset();
           }
           aComputedValue.SetAndAdoptCSSValueTripletValue(triplet.forget(),
                                                          eUnit_CSSValueTriplet);

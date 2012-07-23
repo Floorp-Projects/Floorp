@@ -391,6 +391,36 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
     CoUninitialize();
 }
 
+/* static */ bool
+gfxWindowsPlatform::IsRunningInWindows8Metro()
+{
+  static bool alreadyChecked = false;
+  static bool isMetro = false;
+  if (alreadyChecked) {
+    return isMetro;
+  }
+
+  HMODULE user32DLL = LoadLibraryW(L"user32.dll");
+  if (!user32DLL) {
+    return false;
+  }
+
+  typedef BOOL (WINAPI* IsImmersiveProcessFunc)(HANDLE process);
+  IsImmersiveProcessFunc IsImmersiveProcessPtr = 
+    (IsImmersiveProcessFunc)GetProcAddress(user32DLL,
+                                            "IsImmersiveProcess");
+  FreeLibrary(user32DLL);
+  if (!IsImmersiveProcessPtr) {
+    // isMetro is already set to false.
+    alreadyChecked = true;
+    return false;
+  }
+
+  isMetro = IsImmersiveProcessPtr(GetCurrentProcess());
+  alreadyChecked = true;
+  return isMetro;
+}
+
 void
 gfxWindowsPlatform::UpdateRenderMode()
 {
@@ -429,8 +459,11 @@ gfxWindowsPlatform::UpdateRenderMode()
     d2dDisabled = Preferences::GetBool("gfx.direct2d.disabled", false);
     d2dForceEnabled = Preferences::GetBool("gfx.direct2d.force-enabled", false);
 
+    // In Metro mode there is no fallback available
+    d2dForceEnabled |= IsRunningInWindows8Metro();
+
     bool tryD2D = !d2dBlocked || d2dForceEnabled;
-    
+
     // Do not ever try if d2d is explicitly disabled,
     // or if we're not using DWrite fonts.
     if (d2dDisabled || mUsingGDIFonts) {

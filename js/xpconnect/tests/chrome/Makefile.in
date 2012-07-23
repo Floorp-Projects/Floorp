@@ -37,6 +37,8 @@ MOCHITEST_CHROME_FILES = \
 		test_bug760076.xul \
 		test_bug763343.xul \
 		test_APIExposer.xul \
+		test_chrometoSource.xul \
+		outoflinexulscript.js \
 		test_cows.xul \
 		test_documentdomain.xul \
 		test_doublewrappedcompartments.xul \

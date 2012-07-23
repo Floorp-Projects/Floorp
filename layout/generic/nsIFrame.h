@@ -288,6 +288,15 @@ typedef PRUint64 nsFrameState;
 // Is this frame allowed to have generated (::before/::after) content?
 #define NS_FRAME_MAY_HAVE_GENERATED_CONTENT         NS_FRAME_STATE_BIT(44)
 
+// This bit is set on frames that create ContainerLayers with component
+// alpha children. With BasicLayers we avoid creating these, so we mark
+// the frames for future reference.
+#define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(45)
+
+// Frame has a cached rasterization of anV
+// nsDisplayBackground display item
+#define NS_FRAME_HAS_CACHED_BACKGROUND              NS_FRAME_STATE_BIT(46)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
@@ -868,6 +877,11 @@ public:
     delete static_cast<nsOverflowAreas*>(aPropertyValue);
   }
 
+  static void DestroySurface(void* aPropertyValue)
+  {
+    static_cast<gfxASurface*>(aPropertyValue)->Release();
+  }
+
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
 // non-const.  See bug 555727.
@@ -910,6 +924,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nsnull)
 
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nsnull)
+
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
 
   /**
    * Return the distance between the border edge of the frame and the
@@ -2476,7 +2492,8 @@ public:
   /**
    * Determines whether this frame is a pseudo stacking context, looking
    * only as style --- i.e., assuming that it's in-flow and not a replaced
-   * element.
+   * element and not an SVG element.
+   * XXX maybe check IsTransformed()?
    */
   bool IsPseudoStackingContextFromStyle() {
     const nsStyleDisplay* disp = GetStyleDisplay();
@@ -2585,6 +2602,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * @return whether the frame is focusable via mouse, kbd or script.
    */
   virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
+
+  void ClearDisplayItemCache();
 
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of

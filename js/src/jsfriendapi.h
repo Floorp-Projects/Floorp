@@ -15,6 +15,12 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * Only save the source of scripts that are compileAndGo or are created with
+ * JS_CompileFunction*.
+ */
+#define JSOPTION_ONLY_CNG_SOURCE JS_BIT(20)
+
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
@@ -168,6 +174,11 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWit
 JS_END_EXTERN_C
 
 #ifdef __cplusplus
+
+typedef bool (* JS_SourceHook)(JSContext *cx, JSScript *script, jschar **src, uint32_t *length);
+
+extern JS_FRIEND_API(void)
+JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
 
 namespace js {
 

@@ -182,7 +182,6 @@ public:
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSIOBSERVER
-    NS_DECL_NSILOADCONTEXT
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
 
@@ -220,6 +219,15 @@ public:
 
     // nsIScriptGlobalObjectOwner methods
     virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+
+    // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
+    // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
+    NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**);
+    NS_IMETHOD GetTopWindow(nsIDOMWindow**);
+    NS_IMETHOD IsAppOfType(PRUint32, bool*);
+    NS_IMETHOD GetIsContent(bool*);
+    NS_IMETHOD GetUsePrivateBrowsing(bool*);
+    NS_IMETHOD SetUsePrivateBrowsing(bool);
 
     // Restores a cached presentation from history (mLSHE).
     // This method swaps out the content viewer and simulates loads for

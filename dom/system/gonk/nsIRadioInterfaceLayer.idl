@@ -63,7 +63,7 @@ interface nsIRILTelephonyCallback : nsISupports
                    in AString error);
 };
 
-[scriptable, uuid(3ac98987-a63c-4ebe-adbd-ff7a0348d804)]
+[scriptable, uuid(521cfe4a-bf79-4134-a9fc-e2242164d657)]
 interface nsIRILVoicemailCallback : nsISupports
 {
   /**
@@ -163,6 +163,8 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   attribute bool speakerEnabled;
 
   readonly attribute nsIDOMMozVoicemailStatus voicemailStatus;
+  readonly attribute DOMString voicemailNumber;
+  readonly attribute DOMString voicemailDisplayName;
 };
 
 [scriptable, uuid(fd9e8b38-b839-4d56-8482-3bf1f5c8f2ee)]

@@ -21,7 +21,8 @@ EXPORTS = \
 		xpcpublic.h \
 		XPCJSMemoryReporter.h \
 		dombindings.h \
-		dombindings_gen.h
+		dombindings_gen.h \
+		GeneratedEvents.h
 
 CPPSRCS		= \
 		nsScriptError.cpp \
@@ -57,6 +58,7 @@ CPPSRCS		= \
 		dom_quickstubs.cpp \
 		dombindings.cpp \
 		DictionaryHelpers.cpp \
+		GeneratedEvents.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -65,6 +67,7 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/caps/include \
+		-I$(topsrcdir)/content/base/public \
 		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/events/src \
 		-I$(topsrcdir)/content/html/content/src \
@@ -168,6 +171,7 @@ DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.h \
                                  DictionaryHelpers.cpp
 
 DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
+                     event_impl_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/codegen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
@@ -179,9 +183,11 @@ DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
 	  --header-output DictionaryHelpers.h \
-	  $(srcdir)/dictionary_helper_gen.conf
+	  $(srcdir)/dictionary_helper_gen.conf \
+	  event_impl_gen.conf
 
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
+                       event_impl_gen.conf \
                        $(srcdir)/dictionary_helper_gen.py \
                        $(srcdir)/codegen.py \
                        $(LIBXUL_DIST)/sdk/bin/header.py \
@@ -192,10 +198,51 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/dictionary_helper_gen.py \
 	  -I $(DEPTH)/dist/idl \
-	  --header-output DictionaryHelpers.h \
 	  --stub-output DictionaryHelpers.cpp \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
-	  $(srcdir)/dictionary_helper_gen.conf
+	  $(srcdir)/dictionary_helper_gen.conf \
+	  event_impl_gen.conf
+
+GeneratedEvents.$(OBJ_SUFFIX): GeneratedEvents.h \
+                               GeneratedEvents.cpp
+
+event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > event_impl_gen.conf
+
+GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
+                   event_impl_gen.conf \
+                   $(srcdir)/dictionary_helper_gen.py \
+                   $(srcdir)/event_impl_gen.py \
+                   $(srcdir)/codegen.py \
+                   $(LIBXUL_DIST)/sdk/bin/header.py \
+                   $(LIBXUL_DIST)/sdk/bin/xpidl.py \
+                   $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  $(PLY_INCLUDE) \
+	  -I$(LIBXUL_DIST)/sdk/bin \
+	  $(srcdir)/event_impl_gen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --header-output GeneratedEvents.h \
+	  event_impl_gen.conf
+
+GeneratedEvents.cpp: DictionaryHelpers.h \
+                     $(srcdir)/dictionary_helper_gen.conf \
+                     event_impl_gen.conf \
+                     $(srcdir)/dictionary_helper_gen.py \
+                     $(srcdir)/event_impl_gen.py \
+                     $(srcdir)/codegen.py \
+                     $(LIBXUL_DIST)/sdk/bin/header.py \
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
+                     $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  $(PLY_INCLUDE) \
+	  -I$(LIBXUL_DIST)/sdk/bin \
+	  $(srcdir)/event_impl_gen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --header-output GeneratedEvents.h \
+	  --stub-output GeneratedEvents.cpp \
+	  --makedepend-output $(MDDEPDIR)/event_impl_gen.pp \
+	  event_impl_gen.conf
 
 _EXTRA_EXPORT_FILES = \
   DictionaryHelpers.h \
@@ -211,10 +258,14 @@ GARBAGE += \
 		dombindings_gen.cpp \
 		DictionaryHelpers.h \
 		DictionaryHelpers.cpp \
+		GeneratedEvents.h \
+		GeneratedEvents.cpp \
+		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
 		$(MDDEPDIR)/dombindingsgen.pp \
 		$(MDDEPDIR)/dictionary_helper_gen.pp \
+		$(MDDEPDIR)/event_impl_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(NULL)
 

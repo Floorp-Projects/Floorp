@@ -45,6 +45,27 @@ function SystemMessageManager() {
 SystemMessageManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
+  _dispatchMessage: function sysMessMgr_dispatchMessage(aType, aHandler, aMessage) {
+    // We get a json blob, but in some cases we want another kind of object
+    // to be dispatched.
+    // To do so, we check if we have a with a contract ID of
+    // "@mozilla.org/dom/system-messages/wrapper/TYPE;1" component implementing
+    // nsISystemMessageWrapper.
+    debug("Dispatching " + JSON.stringify(aMessage) + "\n");
+    let contractID = "@mozilla.org/dom/system-messages/wrapper/" + aType + ";1";
+
+    if (contractID in Cc) {
+      debug(contractID + " is registered, creating an instance");
+      let wrapper = Cc[contractID].createInstance(Ci.nsISystemMessagesWrapper);
+      if (wrapper) {
+        aMessage = wrapper.wrapMessage(aMessage);
+        debug("wrapped = " + aMessage);
+      }
+    }
+
+    aHandler.handleMessage(aMessage);
+  },
+
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
     debug("setMessage handler for [" + aType + "] " + aHandler);
     if (!aType) {
@@ -68,10 +89,11 @@ SystemMessageManager.prototype = {
       let thread = Services.tm.mainThread;
       let pending = this._pendings[aType];
       this._pendings[aType] = [];
+      let self = this;
       pending.forEach(function dispatch_pending(aPending) {
         thread.dispatch({
           run: function run() {
-            aHandler.handleMessage(aPending);
+            self._dispatchMessage(aType, aHandler, aPending);
           }
         }, Ci.nsIEventTarget.DISPATCH_NORMAL);
       });
@@ -139,7 +161,7 @@ SystemMessageManager.prototype = {
       return;
     }
 
-    this._handlers[msg.type].handleMessage(msg.msg);
+    this._dispatchMessage(msg.type, this._handlers[msg.type], msg.msg);
   },
 
   // nsIDOMGlobalPropertyInitializer implementation.

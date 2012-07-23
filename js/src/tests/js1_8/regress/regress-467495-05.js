@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'function x() {\n}';
+  expect = 'function x() {}';
 
   function g(x) { if (1) function x() {} return x; }
   print(actual = g(1) + '');

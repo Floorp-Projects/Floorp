@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(05802c0d-3315-4245-b72e-cf92eb3118a3)]
+[scriptable, builtinclass, uuid(be5a675b-b675-4443-af75-510530eab5fa)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -403,17 +403,6 @@ interface nsIDocShell : nsISupports
   void historyPurged(in long numEntries);
 
   /*
-   * Retrieves the WebApps session storage object for the supplied domain.
-   * If it doesn't already exist, a new one will be created.
-   *
-   * @param uri the uri of the storage object to retrieve
-   * @param documentURI new storage will be created with reference to this
-   *                    document.documentURI that will appear in storage event
-   */
-  nsIDOMStorage getSessionStorageForURI(in nsIURI uri,
-                                        in DOMString documentURI);
-
-  /*
    * Retrieves the WebApps session storage object for the supplied principal.
    *
    * @param principal returns a storage for this principal
@@ -595,7 +584,7 @@ interface nsIDocShell : nsISupports
    *
    * This method should not be called more than once.
    */
-  void setIsBrowser();
+  void setIsBrowserElement();
 
   /**
    * Returns true iff the docshell is marked as a browser frame.

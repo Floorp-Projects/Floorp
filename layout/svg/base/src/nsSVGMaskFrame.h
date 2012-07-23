@@ -49,6 +49,12 @@ public:
                   nsIFrame*        aPrevInFlow);
 #endif
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return NS_OK;
+  }
+
   /**
    * Get the "type" of the frame
    *

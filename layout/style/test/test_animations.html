@@ -101,6 +101,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     25% { text-indent: 50px }
     100% { text-indent: 100px }
   }
+
+  @keyframes primitives1 {
+    from { -moz-transform: rotate(0deg) translateX(0px) scaleX(1)
+      translate(0px) scale3d(1, 1, 1); }
+    to { -moz-transform: rotate(270deg) translate3d(0px, 0px, 0px) scale(1)
+      translateY(0px) scaleY(1); }
+  }
   </style>
 </head>
 <body>
@@ -1388,6 +1395,18 @@ advance_clock(3000);
 is(cs.textIndent, "75px", "cascade2 test at 7s");
 advance_clock(1000);
 is(cs.textIndent, "100px", "cascade2 test at 8s");
+done_div();
+
+new_div("-moz-animation: primitives1 2s linear forwards");
+is(cs.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 1, 0, 0)",
+    "primitives1 at 0s");
+advance_clock(1000);
+is(cs.getPropertyValue("-moz-transform"),
+   "matrix(-0.707107, 0.707107, -0.707107, -0.707107, 0, 0)",
+   "primitives1 at 1s");
+advance_clock(1000);
+is(cs.getPropertyValue("-moz-transform"), "matrix(0, -1, 1, 0, 0, 0)",
+    "primitives1 at 0s");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

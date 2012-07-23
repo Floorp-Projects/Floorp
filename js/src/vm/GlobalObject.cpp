@@ -229,6 +229,16 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         JS_ASSERT(proto == functionProto);
         functionProto->flags |= JSFUN_PROTOTYPE;
 
+        const char *rawSource = "() {\n}";
+        size_t sourceLen = strlen(rawSource);
+        jschar *source = InflateString(cx, rawSource, &sourceLen);
+        if (!source)
+            return NULL;
+        ScriptSource *ss = ScriptSource::createFromSource(cx, source, sourceLen);
+        cx->free_(source);
+        if (!ss)
+            return NULL;
+
         Rooted<JSScript*> script(cx, JSScript::Create(cx,
                                                       /* enclosingScope = */ NullPtr(),
                                                       /* savedCallerFun = */ false,
@@ -237,7 +247,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
                                                       /* compileAndGo = */ false,
                                                       /* noScriptRval = */ true,
                                                       JSVERSION_DEFAULT,
-                                                      /* staticLevel = */ 0));
+                                                      /* staticLevel = */ 0,
+                                                      ss,
+                                                      0,
+                                                      ss->length()));
+        ss->attachToRuntime(cx->runtime);
         if (!script || !JSScript::fullyInitTrivial(cx, script))
             return NULL;
 

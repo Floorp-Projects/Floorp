@@ -59,7 +59,6 @@ BrowserElementChild.prototype = {
 
     BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
-    docShell.setIsBrowser();
     docShell.QueryInterface(Ci.nsIWebProgress)
             .addProgressListener(this._progressListener,
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
@@ -114,6 +113,8 @@ BrowserElementChild.prototype = {
 
     addMsgListener("get-screenshot", this._recvGetScreenshot);
     addMsgListener("set-visible", this._recvSetVisible);
+    addMsgListener("send-mouse-event", this._recvSendMouseEvent);
+    addMsgListener("send-touch-event", this._recvSendTouchEvent);
     addMsgListener("get-can-go-back", this._recvCanGoBack);
     addMsgListener("get-can-go-forward", this._recvCanGoForward);
     addMsgListener("go-back", this._recvGoBack);
@@ -142,6 +143,9 @@ BrowserElementChild.prototype = {
                                /* useCapture = */ false);
     els.addSystemEventListener(global, 'contextmenu',
                                this._contextmenuHandler.bind(this),
+                               /* useCapture = */ false);
+    els.addSystemEventListener(global, 'scroll',
+                               this._scrollEventHandler.bind(this),
                                /* useCapture = */ false);
   },
 
@@ -376,6 +380,16 @@ BrowserElementChild.prototype = {
     return false;
   },
 
+  _scrollEventHandler: function(e) {
+    let win = e.target.defaultView;
+    if (win != content) {
+      return;
+    }
+
+    debug("scroll event " + win);
+    sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
+  },
+
   _recvGetScreenshot: function(data) {
     debug("Received getScreenshot message: (" + data.json.id + ")");
     var canvas = content.document
@@ -433,6 +447,24 @@ BrowserElementChild.prototype = {
     if (docShell.isActive !== data.json.visible) {
       docShell.isActive = data.json.visible;
     }
+  },
+
+  _recvSendMouseEvent: function(data) {
+    let json = data.json;
+    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+    utils.sendMouseEvent(json.type, json.x, json.y, json.button,
+                         json.clickCount, json.modifiers);
+  },
+
+  _recvSendTouchEvent: function(data) {
+    let json = data.json;
+    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+    utils.sendTouchEvent(json.type, json.identifiers, json.touchesX,
+                         json.touchesY, json.radiisX, json.radiisY,
+                         json.rotationAngles, json.forces, json.count,
+                         json.modifiers);
   },
 
   _recvCanGoBack: function(data) {

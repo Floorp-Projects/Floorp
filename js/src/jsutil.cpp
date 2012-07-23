@@ -23,7 +23,75 @@
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
 
+#include "zlib.h"
+
 using namespace js;
+
+static void *
+zlib_alloc(void *cx, uInt items, uInt size)
+{
+    return OffTheBooks::malloc_(items * size);
+}
+
+static void
+zlib_free(void *cx, void *addr)
+{
+    Foreground::free_(addr);
+}
+
+
+bool
+js::TryCompressString(const unsigned char *inp, size_t inplen, unsigned char *out, size_t *outlen)
+{
+    JS_ASSERT(inplen);
+    if (inplen >= UINT32_MAX)
+        return false;
+    z_stream zs;
+    zs.opaque = NULL;
+    zs.zalloc = zlib_alloc;
+    zs.zfree = zlib_free;
+    zs.next_in = (Bytef *)inp;
+    zs.avail_in = inplen;
+    zs.next_out = out;
+    zs.avail_out = inplen;
+    int ret = deflateInit(&zs, Z_BEST_SPEED);
+    if (ret != Z_OK) {
+        JS_ASSERT(ret == Z_MEM_ERROR);
+        return false;
+    }
+    ret = deflate(&zs, Z_FINISH);
+    DebugOnly<int> ret2 = deflateEnd(&zs);
+    JS_ASSERT(ret2 == Z_OK);
+    if (ret != Z_STREAM_END)
+        return false;
+    *outlen = inplen - zs.avail_out;
+    return true;
+}
+
+bool
+js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out, size_t outlen)
+{
+    JS_ASSERT(inplen <= UINT32_MAX);
+    z_stream zs;
+    zs.zalloc = zlib_alloc;
+    zs.zfree = zlib_free;
+    zs.opaque = NULL;
+    zs.next_in = (Bytef *)inp;
+    zs.avail_in = inplen;
+    zs.next_out = out;
+    JS_ASSERT(outlen);
+    zs.avail_out = outlen;
+    int ret = inflateInit(&zs);
+    if (ret != Z_OK) {
+      JS_ASSERT(ret == Z_MEM_ERROR);
+      return false;
+    }
+    ret = inflate(&zs, Z_FINISH);
+    JS_ASSERT(ret == Z_STREAM_END);
+    ret = inflateEnd(&zs);
+    JS_ASSERT(ret == Z_OK);
+    return true;
+}
 
 #ifdef DEBUG
 /* For JS_OOM_POSSIBLY_FAIL in jsutil.h. */

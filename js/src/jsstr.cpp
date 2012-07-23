@@ -2213,26 +2213,19 @@ LambdaIsGetElem(JSObject &lambda, JSContext *cx)
     JSScript *script = fun->script();
     jsbytecode *pc = script->code;
 
-    /* Look for an access to 'b' in the enclosing scope. */
-    if (JSOp(*pc) != JSOP_NAME)
-        return NULL;
-    PropertyName *bname;
-    GET_NAME_FROM_BYTECODE(script, pc, 0, bname);
-    pc += JSOP_NAME_LENGTH;
-
     /*
-     * Do a conservative search for 'b' in the enclosing scope. Avoid using a
-     * real name lookup since this can trigger observable effects.
+     * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
+     * Rule out the (unlikely) possibility of a heavyweight function since it
+     * would make our scope walk off by 1.
      */
-    Value b;
-    RootedObject scope(cx, cx->stack.currentScriptedScopeChain());
-    while (true) {
-        if (!scope->isCall() && !scope->isBlock())
-            return NULL;
-        if (HasDataProperty(cx, scope, bname, &b))
-            break;
-        scope = &scope->asScope().enclosingScope();
-    }
+    if (JSOp(*pc) != JSOP_GETALIASEDVAR || fun->isHeavyweight())
+        return NULL;
+    ScopeCoordinate sc(pc);
+    ScopeObject *scope = &fun->environment()->asScope();
+    for (unsigned i = 0; i < sc.hops; ++i)
+        scope = &scope->enclosingScope().asScope();
+    Value b = scope->aliasedVar(sc);
+    pc += JSOP_GETALIASEDVAR_LENGTH;
 
     /* Look for 'a' to be the lambda's first argument. */
     if (JSOp(*pc) != JSOP_GETARG || GET_SLOTNO(pc) != 0)

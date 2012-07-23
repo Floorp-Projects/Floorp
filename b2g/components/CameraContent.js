@@ -59,7 +59,7 @@ CameraContent.prototype = {
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
-    let perm = principal == secMan.getSystemPrincipal() ? Ci.nsIPermissionManager.ALLOW_ACTION : Services.perms.testExactPermission(principal.URI, "content-camera");
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal, "content-camera");
 
     //only pages with perm set and chrome pages can use the camera in content
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;

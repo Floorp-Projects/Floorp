@@ -15,6 +15,7 @@ Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
 var EXPORTED_SYMBOLS = ['VisualPresenter',
                         'AndroidPresenter',
                         'DummyAndroidPresenter',
+                        'SpeechPresenter',
                         'PresenterContext'];
 
 /**
@@ -395,6 +396,41 @@ DummyAndroidPresenter.prototype = {
     Logger.debug('Android event:\n' + JSON.stringify(aMsg, null, 2));
   }
 };
+
+/**
+ * A speech presenter for direct TTS output
+ */
+
+function SpeechPresenter() {}
+
+SpeechPresenter.prototype = {
+  __proto__: Presenter.prototype,
+
+
+  pivotChanged: function SpeechPresenter_pivotChanged(aContext, aReason) {
+    if (!aContext.accessible)
+      return;
+
+    let output = [];
+
+    aContext.newAncestry.forEach(
+      function(acc) {
+        output.push.apply(output, UtteranceGenerator.genForObject(acc));
+      }
+    );
+
+    output.push.apply(output,
+                      UtteranceGenerator.genForObject(aContext.accessible));
+
+    aContext.subtreePreorder.forEach(
+      function(acc) {
+        output.push.apply(output, UtteranceGenerator.genForObject(acc));
+      }
+    );
+
+    Logger.info('SPEAK', '"' + output.join(' ') + '"');
+  }
+}
 
 /**
  * PresenterContext: An object that generates and caches context information

@@ -543,7 +543,7 @@ function test_storage_cleared()
   {
     let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
                     getService(Ci.nsIScriptSecurityManager).
-                    getCodebasePrincipal(aURI);
+                    getNoAppCodebasePrincipal(aURI);
     let dsm = Cc["@mozilla.org/dom/storagemanager;1"].
               getService(Ci.nsIDOMStorageManager);
     return dsm.getLocalStorageForPrincipal(principal, "");

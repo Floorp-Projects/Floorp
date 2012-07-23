@@ -265,7 +265,8 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
     rv =
-      secMan->GetCodebasePrincipal(mDocumentURI, getter_AddRefs(mPrincipal));
+      secMan->GetSimpleCodebasePrincipal(mDocumentURI,
+                                         getter_AddRefs(mPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
     mOriginalPrincipal = mPrincipal;
   } else {

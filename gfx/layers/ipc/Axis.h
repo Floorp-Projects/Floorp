@@ -43,7 +43,7 @@ public:
    * indicating how long it has been since the previous one. This triggers a
    * recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(PRInt32 aPos, PRInt32 aTimeDelta);
+  void UpdateWithTouchAtDevicePoint(PRInt32 aPos, const TimeDuration& aTimeDelta);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
@@ -59,16 +59,24 @@ public:
   void StopTouch();
 
   /**
+   * Sets axis locking. This prevents any panning along this axis. If the
+   * current touch point is updated and the axis is locked, the velocity will
+   * not be recalculated. Any already-existing velocity will however stay the
+   * same.
+   */
+  void LockPanning();
+
+  /**
    * Gets displacement that should have happened since the previous touch.
    * Note: Does not reset the displacement. It gets recalculated on the next
-   * updateWithTouchAtDevicePoint(), however it is not safe to assume this will
+   * UpdateWithTouchAtDevicePoint(), however it is not safe to assume this will
    * be the same on every call. This also checks for page boundaries and will
    * return an adjusted displacement to prevent the viewport from overscrolling
    * the page rect. An example of where this might matter is when you call it,
    * apply a displacement that takes you to the boundary of the page, then call
    * it again. The result will be different in this case.
    */
-  PRInt32 UpdateAndGetDisplacement(float aScale);
+  PRInt32 GetDisplacementForDuration(float aScale, const TimeDuration& aDelta);
 
   /**
    * Gets the distance between the starting position of the touch supplied in
@@ -164,6 +172,7 @@ protected:
   PRInt32 mStartPos;
   float mVelocity;
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
+  bool mLockPanning;
 };
 
 class AxisX : public Axis {
