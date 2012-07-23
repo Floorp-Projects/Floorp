@@ -24,18 +24,18 @@ static const float MAX_EVENT_ACCELERATION = 0.5f;
  * Amount of friction applied during flings when going above
  * VELOCITY_THRESHOLD.
  */
-static const float FLING_FRICTION_FAST = 0.010f;
+static const float FLING_FRICTION_FAST = 0.0025f;
 
 /**
  * Amount of friction applied during flings when going below
  * VELOCITY_THRESHOLD.
  */
-static const float FLING_FRICTION_SLOW = 0.008f;
+static const float FLING_FRICTION_SLOW = 0.0015f;
 
 /**
  * Maximum velocity before fling friction increases.
  */
-static const float VELOCITY_THRESHOLD = 0.5f;
+static const float VELOCITY_THRESHOLD = 1.0f;
 
 /**
  * When flinging, if the velocity goes below this number, we just stop the
@@ -103,9 +103,9 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
     mVelocity = 0.0f;
     return false;
   } else if (fabsf(mVelocity) >= VELOCITY_THRESHOLD) {
-    mVelocity *= 1.0f - FLING_FRICTION_FAST * aDelta.ToMilliseconds();
+    mVelocity *= NS_MAX(1.0f - FLING_FRICTION_FAST * aDelta.ToMilliseconds(), 0.0);
   } else {
-    mVelocity *= 1.0f - FLING_FRICTION_SLOW * aDelta.ToMilliseconds();
+    mVelocity *= NS_MAX(1.0f - FLING_FRICTION_SLOW * aDelta.ToMilliseconds(), 0.0);
   }
   return true;
 }
