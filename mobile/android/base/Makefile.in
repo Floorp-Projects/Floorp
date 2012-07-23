@@ -321,18 +321,18 @@ RES_LAYOUT_LAND_V14 = \
   res/layout-land-v14/tabs_panel_toolbar_menu.xml \
   $(NULL)
 
-RES_LAYOUT_XLARGE = \
-  res/layout-xlarge/awesomebar_search.xml \
-  res/layout-xlarge/browser_toolbar.xml \
-  res/layout-xlarge/browser_toolbar_menu.xml \
-  res/layout-xlarge/doorhangerpopup.xml \
-  res/layout-xlarge/gecko_app.xml \
-  res/layout-xlarge/remote_tabs_child.xml \
-  res/layout-xlarge/remote_tabs_group.xml \
-  res/layout-xlarge/site_identity_popup.xml \
-  res/layout-xlarge/tabs_panel_toolbar.xml \
-  res/layout-xlarge/tabs_panel_toolbar_menu.xml \
-  res/layout-xlarge/tabs_row.xml \
+RES_LAYOUT_XLARGE_V11 = \
+  res/layout-xlarge-v11/awesomebar_search.xml \
+  res/layout-xlarge-v11/browser_toolbar.xml \
+  res/layout-xlarge-v11/browser_toolbar_menu.xml \
+  res/layout-xlarge-v11/doorhangerpopup.xml \
+  res/layout-xlarge-v11/gecko_app.xml \
+  res/layout-xlarge-v11/remote_tabs_child.xml \
+  res/layout-xlarge-v11/remote_tabs_group.xml \
+  res/layout-xlarge-v11/site_identity_popup.xml \
+  res/layout-xlarge-v11/tabs_panel_toolbar.xml \
+  res/layout-xlarge-v11/tabs_panel_toolbar_menu.xml \
+  res/layout-xlarge-v11/tabs_row.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -351,9 +351,9 @@ RES_VALUES_V11 = \
   res/values-v11/themes.xml \
   $(NULL)
 
-RES_VALUES_XLARGE = \
-  res/values-xlarge/dimens.xml \
-  res/values-xlarge/styles.xml \
+RES_VALUES_XLARGE_V11 = \
+  res/values-xlarge-v11/dimens.xml \
+  res/values-xlarge-v11/styles.xml \
   $(NULL)
 
 RES_VALUES_LAND_V14 = \
@@ -760,100 +760,100 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
 
-RES_DRAWABLE_XLARGE_MDPI = \
-  res/drawable-xlarge-mdpi/address_bar_bg.xml \
-  res/drawable-xlarge-mdpi/address_bar_texture_tablet.png \
-  res/drawable-xlarge-mdpi/address_bar_back_button_bg.png \
-  res/drawable-xlarge-mdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-xlarge-mdpi/address_bar_url_default.9.png \
-  res/drawable-xlarge-mdpi/address_bar_url_pressed.9.png \
-  res/drawable-xlarge-mdpi/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-mdpi/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-mdpi/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-mdpi/menu.png \
-  res/drawable-xlarge-mdpi/ic_awesomebar_go.png \
-  res/drawable-xlarge-mdpi/ic_awesomebar_search.png \
-  res/drawable-xlarge-mdpi/ic_menu_bookmark_add.png \
-  res/drawable-xlarge-mdpi/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-mdpi/ic_menu_reload.png \
-  res/drawable-xlarge-mdpi/ic_menu_forward.png \
-  res/drawable-xlarge-mdpi/remote_tabs_off.png \
-  res/drawable-xlarge-mdpi/remote_tabs_on.png \
-  res/drawable-xlarge-mdpi/tab_new.png \
-  res/drawable-xlarge-mdpi/tabs_crop_button.xml \
-  res/drawable-xlarge-mdpi/tabs_carat_contracted.png \
-  res/drawable-xlarge-mdpi/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi/tabs_crop_expanded_normal.png \
-  res/drawable-xlarge-mdpi/tabs_crop_expanded_pressed.png \
-  res/drawable-xlarge-mdpi/tabs_level.xml \
-  res/drawable-xlarge-mdpi/tabs_crop_normal.png \
-  res/drawable-xlarge-mdpi/tabs_crop_pressed.png \
-  res/drawable-xlarge-mdpi/urlbar_stop.png \
-  res/drawable-xlarge-mdpi/reader.png \
-  res/drawable-xlarge-mdpi/site_security_identified.png \
-  res/drawable-xlarge-mdpi/site_security_verified.png \
+RES_DRAWABLE_XLARGE_MDPI_V11 = \
+  res/drawable-xlarge-mdpi-v11/address_bar_bg.xml \
+  res/drawable-xlarge-mdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-xlarge-mdpi-v11/address_bar_back_button_bg.png \
+  res/drawable-xlarge-mdpi-v11/address_bar_back_button_pressed_bg.png \
+  res/drawable-xlarge-mdpi-v11/address_bar_url_default.9.png \
+  res/drawable-xlarge-mdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-mdpi-v11/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-mdpi-v11/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-mdpi-v11/menu.png \
+  res/drawable-xlarge-mdpi-v11/ic_awesomebar_go.png \
+  res/drawable-xlarge-mdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-xlarge-mdpi-v11/ic_menu_reload.png \
+  res/drawable-xlarge-mdpi-v11/ic_menu_forward.png \
+  res/drawable-xlarge-mdpi-v11/remote_tabs_off.png \
+  res/drawable-xlarge-mdpi-v11/remote_tabs_on.png \
+  res/drawable-xlarge-mdpi-v11/tab_new.png \
+  res/drawable-xlarge-mdpi-v11/tabs_crop_button.xml \
+  res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
+  res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
+  res/drawable-xlarge-mdpi-v11/tabs_crop_expanded_normal.png \
+  res/drawable-xlarge-mdpi-v11/tabs_crop_expanded_pressed.png \
+  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
+  res/drawable-xlarge-mdpi-v11/tabs_crop_normal.png \
+  res/drawable-xlarge-mdpi-v11/tabs_crop_pressed.png \
+  res/drawable-xlarge-mdpi-v11/urlbar_stop.png \
+  res/drawable-xlarge-mdpi-v11/reader.png \
+  res/drawable-xlarge-mdpi-v11/site_security_identified.png \
+  res/drawable-xlarge-mdpi-v11/site_security_verified.png \
   $(NULL)
 
-RES_DRAWABLE_XLARGE_HDPI = \
-  res/drawable-xlarge-hdpi/address_bar_texture_tablet.png \
-  res/drawable-xlarge-hdpi/address_bar_back_button_bg.png \
-  res/drawable-xlarge-hdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-xlarge-hdpi/address_bar_url_default.9.png \
-  res/drawable-xlarge-hdpi/address_bar_url_pressed.9.png \
-  res/drawable-xlarge-hdpi/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-hdpi/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-hdpi/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-hdpi/menu.png \
-  res/drawable-xlarge-hdpi/ic_awesomebar_go.png \
-  res/drawable-xlarge-hdpi/ic_awesomebar_search.png \
-  res/drawable-xlarge-hdpi/ic_menu_bookmark_add.png \
-  res/drawable-xlarge-hdpi/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-hdpi/ic_menu_reload.png \
-  res/drawable-xlarge-hdpi/ic_menu_forward.png \
-  res/drawable-xlarge-hdpi/remote_tabs_off.png \
-  res/drawable-xlarge-hdpi/remote_tabs_on.png \
-  res/drawable-xlarge-hdpi/tab_new.png \
-  res/drawable-xlarge-hdpi/tabs_carat_contracted.png \
-  res/drawable-xlarge-hdpi/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi/tabs_crop_expanded_normal.png \
-  res/drawable-xlarge-hdpi/tabs_crop_expanded_pressed.png \
-  res/drawable-xlarge-hdpi/tabs_crop_normal.png \
-  res/drawable-xlarge-hdpi/tabs_crop_pressed.png \
-  res/drawable-xlarge-hdpi/urlbar_stop.png \
-  res/drawable-xlarge-hdpi/reader.png \
-  res/drawable-xlarge-hdpi/site_security_identified.png \
-  res/drawable-xlarge-hdpi/site_security_verified.png \
+RES_DRAWABLE_XLARGE_HDPI_V11 = \
+  res/drawable-xlarge-hdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-xlarge-hdpi-v11/address_bar_back_button_bg.png \
+  res/drawable-xlarge-hdpi-v11/address_bar_back_button_pressed_bg.png \
+  res/drawable-xlarge-hdpi-v11/address_bar_url_default.9.png \
+  res/drawable-xlarge-hdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-hdpi-v11/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-hdpi-v11/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-hdpi-v11/menu.png \
+  res/drawable-xlarge-hdpi-v11/ic_awesomebar_go.png \
+  res/drawable-xlarge-hdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-xlarge-hdpi-v11/ic_menu_reload.png \
+  res/drawable-xlarge-hdpi-v11/ic_menu_forward.png \
+  res/drawable-xlarge-hdpi-v11/remote_tabs_off.png \
+  res/drawable-xlarge-hdpi-v11/remote_tabs_on.png \
+  res/drawable-xlarge-hdpi-v11/tab_new.png \
+  res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
+  res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
+  res/drawable-xlarge-hdpi-v11/tabs_crop_expanded_normal.png \
+  res/drawable-xlarge-hdpi-v11/tabs_crop_expanded_pressed.png \
+  res/drawable-xlarge-hdpi-v11/tabs_crop_normal.png \
+  res/drawable-xlarge-hdpi-v11/tabs_crop_pressed.png \
+  res/drawable-xlarge-hdpi-v11/urlbar_stop.png \
+  res/drawable-xlarge-hdpi-v11/reader.png \
+  res/drawable-xlarge-hdpi-v11/site_security_identified.png \
+  res/drawable-xlarge-hdpi-v11/site_security_verified.png \
   $(NULL)
 
-RES_DRAWABLE_XLARGE_XHDPI = \
-  res/drawable-xlarge-xhdpi/address_bar_texture_tablet.png \
-  res/drawable-xlarge-xhdpi/address_bar_back_button_bg.png \
-  res/drawable-xlarge-xhdpi/address_bar_back_button_pressed_bg.png \
-  res/drawable-xlarge-xhdpi/address_bar_url_default.9.png \
-  res/drawable-xlarge-xhdpi/address_bar_url_pressed.9.png \
-  res/drawable-xlarge-xhdpi/awesomebar_tab_center.9.png \
-  res/drawable-xlarge-xhdpi/awesomebar_tab_left.9.png \
-  res/drawable-xlarge-xhdpi/awesomebar_tab_right.9.png \
-  res/drawable-xlarge-xhdpi/menu.png \
-  res/drawable-xlarge-xhdpi/ic_awesomebar_go.png \
-  res/drawable-xlarge-xhdpi/ic_awesomebar_search.png \
-  res/drawable-xlarge-xhdpi/ic_menu_bookmark_add.png \
-  res/drawable-xlarge-xhdpi/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-xhdpi/ic_menu_reload.png \
-  res/drawable-xlarge-xhdpi/ic_menu_forward.png \
-  res/drawable-xlarge-xhdpi/remote_tabs_off.png \
-  res/drawable-xlarge-xhdpi/tab_new.png \
-  res/drawable-xlarge-xhdpi/remote_tabs_on.png \
-  res/drawable-xlarge-xhdpi/tabs_carat_contracted.png \
-  res/drawable-xlarge-xhdpi/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi/tabs_crop_expanded_normal.png \
-  res/drawable-xlarge-xhdpi/tabs_crop_expanded_pressed.png \
-  res/drawable-xlarge-xhdpi/tabs_crop_normal.png \
-  res/drawable-xlarge-xhdpi/tabs_crop_pressed.png \
-  res/drawable-xlarge-xhdpi/urlbar_stop.png \
-  res/drawable-xlarge-xhdpi/reader.png \
-  res/drawable-xlarge-xhdpi/site_security_identified.png \
-  res/drawable-xlarge-xhdpi/site_security_verified.png \
+RES_DRAWABLE_XLARGE_XHDPI_V11 = \
+  res/drawable-xlarge-xhdpi-v11/address_bar_texture_tablet.png \
+  res/drawable-xlarge-xhdpi-v11/address_bar_back_button_bg.png \
+  res/drawable-xlarge-xhdpi-v11/address_bar_back_button_pressed_bg.png \
+  res/drawable-xlarge-xhdpi-v11/address_bar_url_default.9.png \
+  res/drawable-xlarge-xhdpi-v11/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-xhdpi-v11/menu.png \
+  res/drawable-xlarge-xhdpi-v11/ic_awesomebar_go.png \
+  res/drawable-xlarge-xhdpi-v11/ic_awesomebar_search.png \
+  res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_add.png \
+  res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_remove.png \
+  res/drawable-xlarge-xhdpi-v11/ic_menu_reload.png \
+  res/drawable-xlarge-xhdpi-v11/ic_menu_forward.png \
+  res/drawable-xlarge-xhdpi-v11/remote_tabs_off.png \
+  res/drawable-xlarge-xhdpi-v11/tab_new.png \
+  res/drawable-xlarge-xhdpi-v11/remote_tabs_on.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_crop_expanded_normal.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_crop_expanded_pressed.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_crop_normal.png \
+  res/drawable-xlarge-xhdpi-v11/tabs_crop_pressed.png \
+  res/drawable-xlarge-xhdpi-v11/urlbar_stop.png \
+  res/drawable-xlarge-xhdpi-v11/reader.png \
+  res/drawable-xlarge-xhdpi-v11/site_security_identified.png \
+  res/drawable-xlarge-xhdpi-v11/site_security_verified.png \
   $(NULL)
 
 RES_COLOR = \
@@ -924,17 +924,16 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_LAND_V14) $(RES_VALUES_XLARGE_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
   res/layout-land-v14     \
-  res/layout-xlarge        \
+  res/layout-xlarge-v11   \
   res/values              \
   res/values-v11          \
-  res/values-xlarge        \
+  res/values-xlarge-v11   \
   res/values-land-v14     \
-  res/values-xlarge-v14    \
   res/xml                 \
   res/anim                \
   res/drawable-nodpi      \
@@ -947,16 +946,16 @@ RES_DIRS= \
   res/drawable-hdpi-v11   \
   res/drawable-xhdpi-v11  \
   res/drawable-land-v14   \
-  res/drawable-land-mdpi-v14  \
-  res/drawable-land-hdpi-v14  \
-  res/drawable-land-xhdpi-v14 \
-  res/drawable-xlarge-mdpi     \
-  res/drawable-xlarge-hdpi     \
-  res/drawable-xlarge-xhdpi    \
-  res/color                   \
-  res/menu                    \
-  res/menu-v11                \
-  res/menu-xlarge-v11          \
+  res/drawable-land-mdpi-v14    \
+  res/drawable-land-hdpi-v14    \
+  res/drawable-land-xhdpi-v14   \
+  res/drawable-xlarge-mdpi-v11  \
+  res/drawable-xlarge-hdpi-v11  \
+  res/drawable-xlarge-xhdpi-v11 \
+  res/color                     \
+  res/menu                      \
+  res/menu-v11                  \
+  res/menu-xlarge-v11           \
   $(NULL)
 
 
