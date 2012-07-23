@@ -54,6 +54,10 @@ let Social = {
     this.enabled = !!val;
   },
 
+  toggle: function Social_toggle() {
+    this.enabled = !this.enabled;
+  },
+
   toggleSidebar: function SocialSidebar_toggle() {
     let prefValue = Services.prefs.getBoolPref("social.sidebar.open");
     Services.prefs.setBoolPref("social.sidebar.open", !prefValue);
