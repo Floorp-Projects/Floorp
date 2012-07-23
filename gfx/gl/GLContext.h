@@ -23,7 +23,6 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
-#include "gfx3DMatrix.h"
 #include "nsISupportsImpl.h"
 #include "prlink.h"
 
@@ -52,7 +51,6 @@ typedef uintptr_t SharedTextureHandle;
 
 enum ShaderProgramType {
     RGBALayerProgramType,
-    RGBALayerExternalProgramType,
     BGRALayerProgramType,
     RGBXLayerProgramType,
     BGRXLayerProgramType,
@@ -858,26 +856,10 @@ public:
         return IsExtensionSupported(EXT_framebuffer_blit) || IsExtensionSupported(ANGLE_framebuffer_blit);
     }
 
-    enum SharedTextureBufferType {
-        TextureID
-#ifdef MOZ_WIDGET_ANDROID
-        , SurfaceTexture
-#endif
-    };
-
     /**
      * Create new shared GLContext content handle, must be released by ReleaseSharedHandle.
      */
     virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType) { return 0; }
-    /*
-     * Create a new shared GLContext content handle, using the passed buffer as a source.
-     * Must be released by ReleaseSharedHandle. UpdateSharedHandle will have no effect
-     * on handles created with this method, as the caller owns the source (the passed buffer)
-     * and is responsible for updating it accordingly.
-     */
-    virtual SharedTextureHandle CreateSharedHandle(TextureImage::TextureShareType aType,
-                                                   void* aBuffer,
-                                                   SharedTextureBufferType aBufferType) { return nsnull; }
     /**
      * Publish GLContext content to intermediate buffer attached to shared handle.
      * Shared handle content is ready to be used after call returns, and no need extra Flush/Finish are required.
@@ -900,28 +882,12 @@ public:
      */
     virtual void ReleaseSharedHandle(TextureImage::TextureShareType aType,
                                      SharedTextureHandle aSharedHandle) { }
-
-
-    typedef struct {
-        GLenum mTarget;
-        ShaderProgramType mProgramType;
-        gfx3DMatrix mTextureTransform;
-    } SharedHandleDetails;
-
-    /**
-     * Returns information necessary for rendering a shared handle.
-     * These values change depending on what sharing mechanism is in use
-     */
-    virtual bool GetSharedHandleDetails(TextureImage::TextureShareType aType,
-                                        SharedTextureHandle aSharedHandle,
-                                        SharedHandleDetails& aDetails) { return false; }
     /**
      * Attach Shared GL Handle to GL_TEXTURE_2D target
      * GLContext must be current before this call
      */
     virtual bool AttachSharedHandle(TextureImage::TextureShareType aType,
                                     SharedTextureHandle aSharedHandle) { return false; }
-
     /**
      * Detach Shared GL Handle from GL_TEXTURE_2D target
      */
