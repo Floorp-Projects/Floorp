@@ -357,14 +357,14 @@ public class AboutHomeContent extends ScrollView
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
+        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
             return true;
         return super.onInterceptTouchEvent(event);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener.onTouch(this, event))
+        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
             return true;
         return super.onTouchEvent(event);
     }
