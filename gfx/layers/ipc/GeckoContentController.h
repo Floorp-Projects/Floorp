@@ -21,6 +21,9 @@ public:
    * Implementations per-platform are responsible for actually handling this.
    */
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
+
+  GeckoContentController() {};
+  virtual ~GeckoContentController() {};
 };
 
 }

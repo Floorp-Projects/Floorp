@@ -74,6 +74,7 @@
 #include "nsISocketProvider.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIMIMEHeaderParam.h"
+#include "nsILoadContext.h"
 #include "mozilla/Services.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1294,6 +1295,21 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
                 cbs->GetInterface(iid, result);
         }
     }
+}
+
+/**
+ * Returns true if channel is using Private Browsing, or false if not.
+ *
+ * Note: you may get a false negative if you call this before AsyncOpen has been
+ * called (technically, before the channel's notificationCallbacks are set: this
+ * is almost always done before AsyncOpen).
+ */
+inline bool
+NS_UsePrivateBrowsing(nsIChannel *channel)
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(channel, loadContext);
+  return loadContext && loadContext->UsePrivateBrowsing();
 }
 
 /**
