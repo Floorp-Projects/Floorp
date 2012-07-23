@@ -80,7 +80,7 @@ public class DoorHangerPopup extends PopupWindow {
                 int callBackId = buttonObject.getInt("callback");
                 dh.addButton(label, callBackId);
             } catch (JSONException e) {
-                Log.i(LOGTAG, "JSON throws " + e);
+                Log.i(LOGTAG, "JSON throws", e);
             }
          }
         dh.setOptions(options);

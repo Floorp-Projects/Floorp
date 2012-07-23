@@ -348,7 +348,7 @@ public class GeckoAppShell
             GeckoAppShell.putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
         }
         catch (Exception e) {
-            Log.i(LOGTAG, "No download directory has been found: " + e);
+            Log.i(LOGTAG, "No download directory has been found: ", e);
         }
     }
 
