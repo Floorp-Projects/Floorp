@@ -11995,7 +11995,7 @@ NS_IMETHODIMP
 nsDocShell::SetIsBrowserElement()
 {
     if (mIsBrowserFrame) {
-        NS_ERROR("You should not call SetIsBrowser() more than once.");
+        NS_ERROR("You should not call SetIsBrowserElement() more than once.");
         return NS_OK;
     }
 
