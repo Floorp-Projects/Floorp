@@ -111,7 +111,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
     JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
 
     BytecodeEmitter bce(/* parent = */ NULL, &parser, &sc, script, callerFrame, !!globalScope,
-                        options.lineno);
+                        options.lineno, options.selfHostingMode);
     if (!bce.init())
         return NULL;
 

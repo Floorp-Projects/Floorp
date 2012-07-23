@@ -103,7 +103,7 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
                                  HandleScript script, StackFrame *callerFrame, bool hasGlobalScope,
-                                 unsigned lineno)
+                                 unsigned lineno, bool selfHostingMode)
   : sc(sc),
     parent(parent),
     script(sc->context, script),
@@ -122,7 +122,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, Shared
     typesetCount(0),
     hasSingletons(false),
     inForInit(false),
-    hasGlobalScope(hasGlobalScope)
+    hasGlobalScope(hasGlobalScope),
+    selfHostingMode(selfHostingMode)
 {
     JS_ASSERT_IF(callerFrame, callerFrame->isScriptFrame());
     memset(&prolog, 0, sizeof prolog);
@@ -1150,7 +1151,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
  * Try to convert a *NAME op to a *GNAME op, which optimizes access to
  * undeclared globals. Return true if a conversion was made.
  *
- * This conversion is not made if we are in strict mode.  In eval code nested
+ * This conversion is not made if we are in strict mode. In eval code nested
  * within (strict mode) eval code, access to an undeclared "global" might
  * merely be to a binding local to that outer eval:
  *
@@ -1166,15 +1167,26 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
  *     undeclared = 17; // throws ReferenceError
  *   }
  *   foo();
+ *
+ * In self-hosting mode, JSOP_NAME is unconditionally converted to
+ * JSOP_INTRINSICNAME. This causes the lookup to be redirected to the special
+ * intrinsics holder in the global object, into which any missing objects are
+ * cloned lazily upon first access.
  */
 static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
+    if (bce->selfHostingMode) {
+        JS_ASSERT(*op == JSOP_NAME);
+        *op = JSOP_INTRINSICNAME;
+        return true;
+    }
     if (bce->script->compileAndGo &&
         bce->hasGlobalScope &&
         !bce->sc->funMightAliasLocals() &&
         !pn->isDeoptimized() &&
-        !bce->sc->inStrictMode()) {
+        !bce->sc->inStrictMode())
+    {
         switch (*op) {
           case JSOP_NAME:     *op = JSOP_GETGNAME; break;
           case JSOP_SETNAME:  *op = JSOP_SETGNAME; break;
@@ -4865,7 +4877,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         script->bindings = funbox->bindings;
 
         BytecodeEmitter bce2(bce, bce->parser, &sc, script, bce->callerFrame, bce->hasGlobalScope,
-                             pn->pn_pos.begin.lineno);
+                             pn->pn_pos.begin.lineno, bce->selfHostingMode);
         if (!bce2.init())
             return false;
 
