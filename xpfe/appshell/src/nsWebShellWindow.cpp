@@ -69,6 +69,7 @@
 #include "nsIDocShellTreeNode.h"
 
 #include "nsIMarkupDocumentViewer.h"
+#include "mozilla/Attributes.h"
 
 #ifdef XP_MACOSX
 #include "nsINativeMenuService.h"
@@ -475,7 +476,7 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 
 namespace mozilla {
 
-class WebShellWindowTimerCallback : public nsITimerCallback
+class WebShellWindowTimerCallback MOZ_FINAL : public nsITimerCallback
 {
 public:
   WebShellWindowTimerCallback(nsWebShellWindow* aWindow)
