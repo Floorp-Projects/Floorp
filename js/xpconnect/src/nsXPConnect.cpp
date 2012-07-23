@@ -556,7 +556,9 @@ public:
                                   nsCycleCollectionTraversalCallback &cb);
 };
 
-static CCParticipantVTable<nsXPConnectParticipant>::Type XPConnect_cycleCollectorGlobal = {
+static const CCParticipantVTable<nsXPConnectParticipant>::Type
+XPConnect_cycleCollectorGlobal =
+{
   NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(nsXPConnectParticipant)
 };
 
@@ -980,7 +982,9 @@ public:
     }
 };
 
-static CCParticipantVTable<JSContextParticipant>::Type JSContext_cycleCollectorGlobal = {
+static const CCParticipantVTable<JSContextParticipant>::Type
+JSContext_cycleCollectorGlobal =
+{
   NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSContextParticipant)
 };
 
