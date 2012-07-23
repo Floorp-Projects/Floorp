@@ -463,6 +463,8 @@ function isItemInAddonsList(aType, aDir, aId) {
   xpiPath.append(aId + ".xpi");
   for (var i = 0; i < gAddonsList[aType].length; i++) {
     let file = gAddonsList[aType][i];
+    if (!file.exists())
+      do_throw("Non-existant path found in extensions.ini: " + file.path)
     if (file.isDirectory() && file.equals(path))
       return true;
     if (file.isFile() && file.equals(xpiPath))
