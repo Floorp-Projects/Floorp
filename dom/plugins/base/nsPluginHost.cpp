@@ -3869,13 +3869,12 @@ CheckForDisabledWindows()
     windowList->GetNext(getter_AddRefs(supportsWindow));
     nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(supportsWindow));
     if (baseWin) {
-      bool aFlag;
       nsCOMPtr<nsIWidget> widget;
       baseWin->GetMainWidget(getter_AddRefs(widget));
       if (widget && !widget->GetParent() &&
           widget->IsVisible() &&
-          NS_SUCCEEDED(widget->IsEnabled(&aFlag)) && aFlag == false) {
-        nsIWidget * child = widget->GetFirstChild();
+          !widget->IsEnabled()) {
+        nsIWidget* child = widget->GetFirstChild();
         bool enable = true;
         while (child)  {
           nsWindowType aType;

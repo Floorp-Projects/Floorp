@@ -1404,10 +1404,13 @@ NS_IMETHODIMP nsWebBrowser::SetVisibility(bool aVisibility)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetEnabled(bool *aEnabled)
+NS_IMETHODIMP nsWebBrowser::GetEnabled(bool* aEnabled)
 {
-  if (mInternalWidget)
-    return mInternalWidget->IsEnabled(aEnabled);
+  if (mInternalWidget) {
+    *aEnabled = mInternalWidget->IsEnabled();
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
 
