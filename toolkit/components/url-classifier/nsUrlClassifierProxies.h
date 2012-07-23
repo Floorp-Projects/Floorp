@@ -9,6 +9,7 @@
 #include "nsIUrlClassifierDBService.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "nsIPrincipal.h"
 
 /**
  * Thread proxy from the main thread to the worker thread.
@@ -29,10 +30,10 @@ public:
   {
   public:
     LookupRunnable(nsIUrlClassifierDBServiceWorker* aTarget,
-                   const nsACString& aSpec,
+                   nsIPrincipal* aPrincipal,
                    nsIUrlClassifierCallback* aCB)
       : mTarget(aTarget)
-      , mSpec(aSpec)
+      , mPrincipal(aPrincipal)
       , mCB(aCB)
     { }
 
@@ -40,7 +41,7 @@ public:
 
   private:
     nsCOMPtr<nsIUrlClassifierDBServiceWorker> mTarget;
-    nsCString mSpec;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsCOMPtr<nsIUrlClassifierCallback> mCB;
   };
 

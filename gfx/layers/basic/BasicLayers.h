@@ -94,6 +94,8 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
+  virtual bool AreComponentAlphaLayersEnabled() { return HasShadowManager(); }
+
   void AbortTransaction();
 
   virtual void SetRoot(Layer* aLayer);
