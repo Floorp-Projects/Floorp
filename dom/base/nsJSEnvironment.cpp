@@ -3871,6 +3871,12 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, PRUint
 {
   nsresult rv;
 
+  // mozJSSubScriptLoader prefixes the filenames of the scripts it loads with
+  // the filename of its caller. Axe that if present.
+  const char *arrow = strstr(filename, " -> ");
+  if (arrow)
+    filename = arrow + strlen(" -> ");
+
   // Get the URI.
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), filename);

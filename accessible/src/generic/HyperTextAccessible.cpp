@@ -1808,8 +1808,6 @@ HyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum,
   if (rangeCount < static_cast<PRUint32>(aSelectionNum))
     return NS_ERROR_INVALID_ARG;
 
-  // Caret is a collapsed selection
-  bool isOnlyCaret = (aStartOffset == aEndOffset);
   nsRefPtr<nsRange> range;
   if (aSelectionNum == rangeCount)
     range = new nsRange();

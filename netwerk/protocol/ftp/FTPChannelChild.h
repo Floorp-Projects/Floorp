@@ -16,7 +16,6 @@
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIChildChannel.h"
-#include "PrivateBrowsingConsumer.h"
 
 #include "nsIStreamListener.h"
 
@@ -35,7 +34,6 @@ class FTPChannelChild : public PFTPChannelChild
                       , public nsIResumableChannel
                       , public nsIProxiedChannel
                       , public nsIChildChannel
-                      , public PrivateBrowsingConsumer
 {
 public:
   typedef ::nsIStreamListener nsIStreamListener;

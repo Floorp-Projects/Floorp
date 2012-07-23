@@ -17,6 +17,11 @@ namespace net {
 
 WyciwygChannelParent::WyciwygChannelParent()
  : mIPCClosed(false)
+ , mHaveLoadContext(false)
+ , mIsContent(false)
+ , mUsePrivateBrowsing(false)
+ , mIsInBrowserElement(false)
+ , mAppId(0)
 {
 #if defined(PR_LOGGING)
   if (!gWyciwygLog)
@@ -40,8 +45,10 @@ WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 // WyciwygChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(WyciwygChannelParent,
+NS_IMPL_ISUPPORTS4(WyciwygChannelParent,
                    nsIStreamListener,
+                   nsIInterfaceRequestor,
+                   nsILoadContext,
                    nsIRequestObserver);
 
 //-----------------------------------------------------------------------------
@@ -79,7 +86,11 @@ WyciwygChannelParent::RecvInit(const IPC::URI& aURI)
 bool
 WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
                                     const PRUint32& aLoadFlags,
-                                    const bool& aUsingPrivateBrowsing)
+                                    const bool& haveLoadContext,
+                                    const bool& isContent,
+                                    const bool& usePrivateBrowsing,
+                                    const bool& isInBrowserElement,
+                                    const PRUint32& appId)
 {
   nsCOMPtr<nsIURI> original(aOriginal);
 
@@ -98,8 +109,13 @@ WyciwygChannelParent::RecvAsyncOpen(const IPC::URI& aOriginal,
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
 
-  static_cast<nsWyciwygChannel*>(mChannel.get())->
-    OverridePrivateBrowsing(aUsingPrivateBrowsing);
+  // fields needed to impersonate nsILoadContext
+  mHaveLoadContext = haveLoadContext;
+  mIsContent = isContent;
+  mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
+  mChannel->SetNotificationCallbacks(this);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
@@ -238,6 +254,89 @@ WyciwygChannelParent::OnDataAvailable(nsIRequest *aRequest,
     return NS_ERROR_UNEXPECTED;
   }
 
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// WyciwygChannelParent::nsIInterfaceRequestor
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result)
+{
+  // Only support nsILoadContext if child channel's callbacks did too
+  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && !mHaveLoadContext) {
+    return NS_NOINTERFACE;
+  }
+
+  return QueryInterface(uuid, result);
+}
+
+//-----------------------------------------------------------------------------
+// WyciwygChannelParent::nsILoadContext
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetAssociatedWindow(nsIDOMWindow**)
+{
+  // can't support this in the parent process
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetTopWindow(nsIDOMWindow**)
+{
+  // can't support this in the parent process
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::IsAppOfType(PRUint32, bool*)
+{
+  // don't expect we need this in parent (Thunderbird/SeaMonkey specific?)
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetIsContent(bool *aIsContent)
+{
+  NS_ENSURE_ARG_POINTER(aIsContent);
+
+  *aIsContent = mIsContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
+{
+  NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
+
+  *aUsePrivateBrowsing = mUsePrivateBrowsing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
+{
+  // We shouldn't need this on parent...
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
   return NS_OK;
 }
 

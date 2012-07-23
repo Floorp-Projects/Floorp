@@ -19,7 +19,12 @@ namespace mozilla {
 namespace net {
 
 FTPChannelParent::FTPChannelParent()
-: mIPCClosed(false)
+  : mIPCClosed(false)
+  , mHaveLoadContext(false)
+  , mIsContent(false)
+  , mUsePrivateBrowsing(false)
+  , mIsInBrowserElement(false)
+  , mAppId(0)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -43,10 +48,11 @@ FTPChannelParent::ActorDestroy(ActorDestroyReason why)
 // FTPChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS4(FTPChannelParent,
+NS_IMPL_ISUPPORTS5(FTPChannelParent,
                    nsIStreamListener,
                    nsIParentChannel,
                    nsIInterfaceRequestor,
+                   nsILoadContext,
                    nsIRequestObserver);
 
 //-----------------------------------------------------------------------------
@@ -58,7 +64,11 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
                                 const PRUint64& aStartPos,
                                 const nsCString& aEntityID,
                                 const IPC::InputStream& aUploadStream,
-                                const bool& aUsePrivateBrowsing)
+                                const bool& haveLoadContext,
+                                const bool& isContent,
+                                const bool& usePrivateBrowsing,
+                                const bool& isInBrowserElement,
+                                const PRUint32& appId)
 {
   nsCOMPtr<nsIURI> uri(aURI);
 
@@ -93,7 +103,13 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  mChannel->OverridePrivateBrowsing(aUsePrivateBrowsing);
+  // fields needed to impersonate nsILoadContext
+  mHaveLoadContext = haveLoadContext;
+  mIsContent = isContent;
+  mUsePrivateBrowsing = usePrivateBrowsing;
+  mIsInBrowserElement = isInBrowserElement;
+  mAppId = appId;
+  mChannel->SetNotificationCallbacks(this);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
@@ -229,7 +245,80 @@ FTPChannelParent::Delete()
 NS_IMETHODIMP
 FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
 {
+  // Only support nsILoadContext if child channel's callbacks did too
+  if (uuid.Equals(NS_GET_IID(nsILoadContext)) && !mHaveLoadContext) {
+    return NS_NOINTERFACE;
+  }
+
   return QueryInterface(uuid, result);
+}
+
+//-----------------------------------------------------------------------------
+// FTPChannelParent::nsILoadContext
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+FTPChannelParent::GetAssociatedWindow(nsIDOMWindow**)
+{
+  // can't support this in the parent process
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetTopWindow(nsIDOMWindow**)
+{
+  // can't support this in the parent process
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::IsAppOfType(PRUint32, bool*)
+{
+  // don't expect we need this in parent (Thunderbird/SeaMonkey specific?)
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetIsContent(bool *aIsContent)
+{
+  NS_ENSURE_ARG_POINTER(aIsContent);
+
+  *aIsContent = mIsContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
+{
+  NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
+
+  *aUsePrivateBrowsing = mUsePrivateBrowsing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
+{
+  // We shouldn't need this on parent...
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetIsInBrowserElement(bool* aIsInBrowserElement)
+{
+  NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
+
+  *aIsInBrowserElement = mIsInBrowserElement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FTPChannelParent::GetAppId(PRUint32* aAppId)
+{
+  NS_ENSURE_ARG_POINTER(aAppId);
+
+  *aAppId = mAppId;
+  return NS_OK;
 }
 
 } // namespace net
