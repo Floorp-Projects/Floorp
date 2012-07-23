@@ -141,6 +141,9 @@ public class PropertyAnimator extends TimerTask {
     }
 
     private void invalidate(final ElementHolder element, final int delta) {
+        if (element == null || element.view == null)
+            return;
+
         // Post the layout changes on the view's UI thread.
         element.view.getHandler().post(new Runnable() {
             @Override
