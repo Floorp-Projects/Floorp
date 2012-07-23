@@ -226,7 +226,6 @@ TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
 {
   mBuilder = aBuilder;
   mBlock = aBlockFrame;
-  mMarkerList = aLists.PositionedDescendants();
   mContentArea = aBlockFrame->GetContentRectRelativeToSelf();
   mScrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
   PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
@@ -683,7 +682,7 @@ void
 TextOverflow::CreateMarkers(const nsLineBox* aLine,
                             bool             aCreateLeft,
                             bool             aCreateRight,
-                            const nsRect&    aInsideMarkersArea) const
+                            const nsRect&    aInsideMarkersArea)
 {
   if (aCreateLeft) {
     nsRect markerRect = nsRect(aInsideMarkersArea.x - mLeft.mIntrinsicWidth,
@@ -698,7 +697,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
                           mContentArea + mBuilder->ToReferenceFrame(mBlock),
                           &markerRect);
     }
-    mMarkerList->AppendNewToTop(marker);
+    mMarkerList.AppendNewToTop(marker);
   }
 
   if (aCreateRight) {
@@ -714,7 +713,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
                           mContentArea + mBuilder->ToReferenceFrame(mBlock),
                           &markerRect);
     }
-    mMarkerList->AppendNewToTop(marker);
+    mMarkerList.AppendNewToTop(marker);
   }
 }
 

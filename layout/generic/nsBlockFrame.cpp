@@ -6269,6 +6269,9 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsAutoPtr<TextOverflow> textOverflow(
     TextOverflow::WillProcessLines(aBuilder, aLists, this));
 
+  // We'll collect our lines' display items here, & then append this to aLists.
+  nsDisplayListCollection linesDisplayListCollection;
+
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
   // intersect with the dirty area.
@@ -6293,7 +6296,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           break;
         }
         rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                         aLists, this, textOverflow);
+                         linesDisplayListCollection, this, textOverflow);
         if (NS_FAILED(rv))
           break;
       }
@@ -6308,7 +6311,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
          ++line) {
       nsRect lineArea = line->GetVisualOverflowArea();
       rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                       aLists, this, textOverflow);
+                       linesDisplayListCollection, this, textOverflow);
       if (NS_FAILED(rv))
         break;
       if (!lineArea.IsEmpty()) {
@@ -6326,6 +6329,15 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       SetupLineCursor();
     }
   }
+
+  // Pick up the resulting text-overflow markers.  We append them to
+  // PositionedDescendants just before we append the lines' display items,
+  // so that our text-overflow markers will appear on top of this block's
+  // normal content but below any of its its' positioned children.
+  if (textOverflow) {
+    aLists.PositionedDescendants()->AppendToTop(&textOverflow->GetMarkers());
+  }
+  linesDisplayListCollection.MoveTo(aLists);
 
   if (NS_SUCCEEDED(rv) && HasOutsideBullet()) {
     // Display outside bullets manually
