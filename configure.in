@@ -8780,6 +8780,15 @@ esac
 
 AC_SUBST(PYTHON)
 
+# Populate the virtualenv
+AC_MSG_RESULT([Populating Python virtualenv])
+MACOSX_DEPLOYMENT_TARGET= LDFLAGS="${HOST_LDFLAGS}" \
+  CC="${CC}" CXX="${CXX}" \
+  CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" \
+  $PYTHON $_topsrcdir/build/virtualenv/populate_virtualenv.py \
+    $_topsrcdir $_topsrcdir/build/virtualenv/packages.txt \
+  || exit 1
+
 dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
 dnl   allmakefiles.sh sets the variable, MAKEFILES.
@@ -8852,10 +8861,6 @@ if test -n "$MOZ_WEBRTC"; then
       AC_MSG_ERROR([failed to generate gtest Makefiles])
    fi
 fi
-
-# Populate the virtualenv
-AC_MSG_RESULT([Populating Python virtualenv])
-$MAKE -C build/virtualenv MACOSX_DEPLOYMENT_TARGET=  || exit 1
 
 # Generate a JSON config file for unittest harnesses etc to read
 # build configuration details from in a standardized way.
