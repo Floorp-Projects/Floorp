@@ -376,7 +376,7 @@ NukeCrossCompartmentWrapper(JSObject *wrapper);
 bool
 RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget);
 
-bool
+JS_FRIEND_API(bool)
 RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
                           JSObject *newTarget);
 
