@@ -1299,7 +1299,7 @@ const MMS_WELL_KNOWN_PARAMS = (function () {
     params[name] = params[number] = entry;
   }
 
-  add("type", 0x02, WSP.ConstrainedEncoding);
+  add("type", 0x02, WSP.TypeValue);
 
   return params;
 })();
