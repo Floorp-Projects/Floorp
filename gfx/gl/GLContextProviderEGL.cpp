@@ -324,6 +324,8 @@ public:
             return false;
         }
 
+        SetupLookupFunction();
+
         bool ok = InitWithPrefix("gl", true);
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
