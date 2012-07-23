@@ -859,9 +859,7 @@ static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   // z-indices here, because that might overflow a 32-bit int.
   PRInt32 index1 = nsLayoutUtils::GetZIndex(aItem1->GetUnderlyingFrame());
   PRInt32 index2 = nsLayoutUtils::GetZIndex(aItem2->GetUnderlyingFrame());
-  if (index1 == index2)
-    return IsContentLEQ(aItem1, aItem2, aClosure);
-  return index1 < index2;
+  return index1 <= index2;
 }
 
 void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
