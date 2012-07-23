@@ -54,6 +54,55 @@ GetCurrentOuter(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
+WrapperFactory::GetXrayWaiver(JSObject *obj)
+{
+    // Object should come fully unwrapped but outerized.
+    MOZ_ASSERT(obj == UnwrapObject(obj));
+    MOZ_ASSERT(!js::GetObjectClass(obj)->ext.outerObject);
+    CompartmentPrivate *priv = GetCompartmentPrivate(obj);
+    MOZ_ASSERT(priv);
+
+    if (!priv->waiverWrapperMap)
+        return NULL;
+    return xpc_UnmarkGrayObject(priv->waiverWrapperMap->Find(obj));
+}
+
+JSObject *
+WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
+{
+    // The caller is required to have already done a lookup.
+    // NB: This implictly performs the assertions of GetXrayWaiver.
+    MOZ_ASSERT(!GetXrayWaiver(obj));
+    CompartmentPrivate *priv = GetCompartmentPrivate(obj);
+
+    // Get a waiver for the proto.
+    JSObject *proto = js::GetObjectProto(obj);
+    if (proto && !(proto = WaiveXray(cx, proto)))
+        return nsnull;
+
+    // Create the waiver.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
+        return nsnull;
+    JSObject *waiver = Wrapper::New(cx, obj, proto,
+                                    JS_GetGlobalForObject(cx, obj),
+                                    &XrayWaiver);
+    if (!waiver)
+        return nsnull;
+
+    // Add the new waiver to the map. It's important that we only ever have
+    // one waiver for the lifetime of the target object.
+    if (!priv->waiverWrapperMap) {
+        priv->waiverWrapperMap = JSObject2JSObjectMap::
+                                   newMap(XPC_WRAPPER_MAP_SIZE);
+        MOZ_ASSERT(priv->waiverWrapperMap);
+    }
+    if (!priv->waiverWrapperMap->Add(obj, waiver))
+        return nsnull;
+    return waiver;
+}
+
+JSObject *
 WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
 {
     obj = UnwrapObject(obj);
@@ -62,45 +111,10 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
     // the .wrappedJSObject also wraps the outer window.
     obj = GetCurrentOuter(cx, obj);
 
-    {
-        // See if we already have a waiver wrapper for this object.
-        CompartmentPrivate *priv = GetCompartmentPrivate(obj);
-        JSObject *wobj = nsnull;
-        if (priv && priv->waiverWrapperMap) {
-            wobj = priv->waiverWrapperMap->Find(obj);
-            xpc_UnmarkGrayObject(wobj);
-        }
-
-        // No wrapper yet, make one.
-        if (!wobj) {
-            JSObject *proto = js::GetObjectProto(obj);
-            if (proto && !(proto = WaiveXray(cx, proto)))
-                return nsnull;
-
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
-                return nsnull;
-            wobj = Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
-                                &XrayWaiver);
-            if (!wobj)
-                return nsnull;
-
-            // Add the new wrapper so we find it next time.
-            if (priv) {
-                if (!priv->waiverWrapperMap) {
-                    priv->waiverWrapperMap = JSObject2JSObjectMap::newMap(XPC_WRAPPER_MAP_SIZE);
-                    if (!priv->waiverWrapperMap)
-                        return nsnull;
-                }
-                if (!priv->waiverWrapperMap->Add(obj, wobj))
-                    return nsnull;
-            }
-        }
-
-        obj = wobj;
-    }
-
-    return obj;
+    JSObject *waiver = GetXrayWaiver(obj);
+    if (waiver)
+        return waiver;
+    return CreateXrayWaiver(cx, obj);
 }
 
 // DoubleWrap is called from PrepareForWrapping to maintain the state that
