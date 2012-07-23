@@ -11,14 +11,18 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .alertBox {
-  border: 2px solid #7B969C;
-  background-color: -moz-Dialog;
+  border: 1px solid threedshadow;
+  border-bottom: none;
+  background-color: #f1f5fb;
+  background-image: -moz-linear-gradient(top, white 1px, rgba(255,255,255,0) 15px);
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
   min-height: 50px;
+  padding: 8px;
 }
 
 .alertBox[orient="horizontal"] > .alertImageBox {
-  -moz-margin-start: 4px;
-  -moz-margin-end: 6px;
+  -moz-margin-end: 8px;
   min-height: 46px;
 }
 
