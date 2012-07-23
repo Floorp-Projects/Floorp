@@ -30,7 +30,10 @@ function make_uri(url) {
 // Ensure "fullscreen" permissions are not present on the test URI.
 var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var uri = make_uri("http://mochi.test:8888");
-pm.remove(uri.host, "fullscreen");
+var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService(Ci.nsIScriptSecurityManager)
+                  .getNoAppCodebasePrincipal(uri);
+pm.removeFromPrincipal(principal, "fullscreen");
 
 newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
 

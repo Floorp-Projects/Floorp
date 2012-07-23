@@ -9,6 +9,9 @@ const ABOUT_PERMISSIONS_SPEC = "about:permissions";
 const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
 const TEST_URI_2 = NetUtil.newURI("http://mozilla.org/");
 
+const TEST_PRINCIPAL_1 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_URI_1);
+const TEST_PRINCIPAL_2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_URI_2);
+
 // values from DefaultPermissions object
 const PERM_UNKNOWN = 0;
 const PERM_ALLOW = 1;
@@ -50,7 +53,7 @@ function test() {
       Services.logins.setLoginSavingEnabled(TEST_URI_2.prePath, true);
     } else {
       // set permissions on a site without history visits to test enumerateServices
-      Services.perms.add(TEST_URI_2, type, TEST_PERMS[type]);
+      Services.perms.addFromPrincipal(TEST_PRINCIPAL_2, type, TEST_PERMS[type]);
     }
   }
 
@@ -67,8 +70,8 @@ function test() {
 function cleanUp() {
   for (let type in TEST_PERMS) {
     if (type != "password") {
-      Services.perms.remove(TEST_URI_1.host, type);
-      Services.perms.remove(TEST_URI_2.host, type);
+      Services.perms.removeFromPrincipal(TEST_PRINCIPAL_1, type);
+      Services.perms.removeFromPrincipal(TEST_PRINCIPAL_2, type);
     }
   }
 
@@ -238,7 +241,7 @@ var tests = [
     is(geoMenulist.value, PERM_UNKNOWN, "menulist correctly shows that geolocation permission is unspecified");
 
     // change a permission programatically
-    Services.perms.add(TEST_URI_2, "geo", PERM_DENY);
+    Services.perms.addFromPrincipal(TEST_PRINCIPAL_2, "geo", PERM_DENY);
     // check to make sure this change is reflected in the UI
     is(geoMenulist.value, PERM_DENY, "menulist shows that geolocation is blocked");
 
@@ -247,7 +250,7 @@ var tests = [
     geoMenulist.selectedItem = geoAllowItem;
     geoMenulist.doCommand();
     // check to make sure this change is reflected in the permission manager
-    is(Services.perms.testPermission(TEST_URI_2, "geo"), PERM_ALLOW,
+    is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, "geo"), PERM_ALLOW,
        "permission manager shows that geolocation is allowed");
 
     runNextTest();
@@ -273,7 +276,7 @@ var tests = [
         ok(Services.logins.getLoginSavingEnabled(TEST_URI_2.prePath),
            "password saving should be enabled by default");
       } else {
-        is(Services.perms.testPermission(TEST_URI_2, type), PERM_UNKNOWN,
+        is(Services.perms.testPermissionFromPrincipal(TEST_PRINCIPAL_2, type), PERM_UNKNOWN,
            type + " permission should not be set for test site 2");
       }
     }

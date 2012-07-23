@@ -451,8 +451,8 @@ var gAllTests = [
     // Give www.example.com privileges to store offline data
     var pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
-    pm.add(URI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
-    pm.add(URI, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+    pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    pm.addFromPrincipal(principal, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
 
     // Store some user data to localStorage
     var dsm = Cc["@mozilla.org/dom/storagemanager;1"]
@@ -525,6 +525,10 @@ var gAllTests = [
               .getService(Ci.nsIIOService);
     var URI = ios.newURI(URL, null, null);
 
+    var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+             .getService(Ci.nsIScriptSecurityManager);
+    var principal = sm.getNoAppCodebasePrincipal(URI);
+
     // Open the dialog
     let wh = new WindowHelper();
     wh.onload = function () {
@@ -539,7 +543,7 @@ var gAllTests = [
       // Check all has been deleted (privileges, data, cache)
       var pm = Cc["@mozilla.org/permissionmanager;1"]
                .getService(Ci.nsIPermissionManager);
-      is(pm.testPermission(URI, "offline-app"), 0, "offline-app permissions removed");
+      is(pm.testPermissionFromPrincipal(principal, "offline-app"), 0, "offline-app permissions removed");
     };
     wh.open();
   }

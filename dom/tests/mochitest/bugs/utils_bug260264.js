@@ -100,11 +100,15 @@ function alter_file(uri, file) {
 
   makePopupPrivAccessor = function(uri) {
     uri = ioService.newURI(uri, null, null);
+    var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                      .getService(Components.interfaces.nsIScriptSecurityManager)
+                      .getNoAppCodebasePrincipal(uri);
+
     return function(permission) {
-      var old = pm.testPermission(uri, "popup");
+      var old = pm.testPermissionFromPrincipal(principal, "popup");
       if (arguments.length) {
-        pm.remove(uri.host, "popup");
-        pm.add(uri, "popup", permission);
+        pm.removeFromPrincipal(principal, "popup");
+        pm.addFromPrincipal(principal, "popup", permission);
       }
       return old;
     };

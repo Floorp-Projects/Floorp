@@ -21,33 +21,35 @@ function do_run_test() {
 
   let pm = Services.permissions;
   let permURI = NetUtil.newURI("http://example.com");
+  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI);
+
   let now = Number(Date.now());
 
   // add a permission with *now* expiration
-  pm.add(permURI, "test/expiration-perm-exp", 1, pm.EXPIRE_TIME, now);
+  pm.addFromPrincipal(principal, "test/expiration-perm-exp", 1, pm.EXPIRE_TIME, now);
 
   // add a permission with future expiration (100 milliseconds)
-  pm.add(permURI, "test/expiration-perm-exp2", 1, pm.EXPIRE_TIME, now + 100);
+  pm.addFromPrincipal(principal, "test/expiration-perm-exp2", 1, pm.EXPIRE_TIME, now + 100);
 
   // add a permission with future expiration (1000 seconds)
-  pm.add(permURI, "test/expiration-perm-exp3", 1, pm.EXPIRE_TIME, now + 1e6);
+  pm.addFromPrincipal(principal, "test/expiration-perm-exp3", 1, pm.EXPIRE_TIME, now + 1e6);
 
   // add a permission without expiration
-  pm.add(permURI, "test/expiration-perm-nexp", 1, pm.EXPIRE_NEVER, 0);
+  pm.addFromPrincipal(principal, "test/expiration-perm-nexp", 1, pm.EXPIRE_NEVER, 0);
 
   // check that the second two haven't expired yet
-  do_check_eq(1, pm.testPermission(permURI, "test/expiration-perm-exp3"));
-  do_check_eq(1, pm.testPermission(permURI, "test/expiration-perm-nexp"));
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-exp3"));
+  do_check_eq(1, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-nexp"));
 
   // ... and the first one has
   do_timeout(10, continue_test);
   yield;
-  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp"));
+  do_check_eq(0, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-exp"));
 
   // ... and that the short-term one will
   do_timeout(200, continue_test);
   yield;
-  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp2")); 
+  do_check_eq(0, pm.testPermissionFromPrincipal(principal, "test/expiration-perm-exp2")); 
 
   do_finish_generator_test(test_generator);
 }
