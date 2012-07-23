@@ -4185,7 +4185,6 @@ MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_JAVA_COMPOSITOR=
 MOZ_ONLY_TOUCH_EVENTS=
-MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -6014,13 +6013,6 @@ dnl CSS3 Flexbox Support
 dnl ========================================================
 if test -n "$MOZ_FLEXBOX"; then
   AC_DEFINE(MOZ_FLEXBOX)
-fi
-
-dnl ========================================================
-dnl SVG Display Lists
-dnl ========================================================
-if test -n "$MOZ_SVG_DLISTS"; then
-  AC_DEFINE(MOZ_SVG_DLISTS)
 fi
 
 dnl ========================================================
