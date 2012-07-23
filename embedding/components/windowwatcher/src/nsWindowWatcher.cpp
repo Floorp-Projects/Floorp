@@ -393,9 +393,9 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
   }
   bool dialog = (argc != 0);
 
-  return OpenWindowJSInternal(aParent, aUrl, aName, aFeatures,
-                              /* calledFromJS = */ false, dialog,
-                              /* navigate = */ true, argv, _retval);
+  return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
+                            /* calledFromJS = */ false, dialog,
+                            /* navigate = */ true, argv, _retval);
 }
 
 struct SizeSpec {
@@ -451,21 +451,21 @@ nsWindowWatcher::OpenWindow2(nsIDOMWindow *aParent,
                               nsIDOMWindow **_retval)
 {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
-  return OpenWindowJSInternal(aParent, aUrl, aName, aFeatures,
-                              aCalledFromScript, aDialog,
-                              aNavigate, argv, _retval);
+  return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
+                            aCalledFromScript, aDialog,
+                            aNavigate, argv, _retval);
 }
 
 nsresult
-nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
-                                      const char *aUrl,
-                                      const char *aName,
-                                      const char *aFeatures,
-                                      bool aCalledFromJS,
-                                      bool aDialog,
-                                      bool aNavigate,
-                                      nsIArray *argv,
-                                      nsIDOMWindow **_retval)
+nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
+                                    const char *aUrl,
+                                    const char *aName,
+                                    const char *aFeatures,
+                                    bool aCalledFromJS,
+                                    bool aDialog,
+                                    bool aNavigate,
+                                    nsIArray *argv,
+                                    nsIDOMWindow **_retval)
 {
   nsresult                        rv = NS_OK;
   bool                            nameSpecified,
