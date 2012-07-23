@@ -18,18 +18,6 @@ function addOneShotIframeEventListener(event, fn) {
 }
 
 function runTest() {
-  // At the moment, this isn't going to work unless we're actually out of
-  // process.
-  //
-  // With in-process mozbrowser, the root SHistory for an <iframe mozbrowser>
-  // crosses the mozbrowser boundary.  It's like the mozbrowser wasn't there;
-  // canGoBack reflects whether the top-level frame can go back, not whether the
-  // iframe itself can go back.
-  if (!browserElementTestHelpers.getOOPByDefaultPref()) {
-    ok(false, "This test only works OOP.");
-    return;
-  }
-
   browserElementTestHelpers.setEnabledPref(true);
   browserElementTestHelpers.addToWhitelist();
 
