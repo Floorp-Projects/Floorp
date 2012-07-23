@@ -5017,20 +5017,12 @@ nsDocShell::SetIsActive(bool aIsActive)
       }
   }
 
-  // Recursively tell all of our children, but don't tell <iframe mozbrowser>
-  // children; they handle their state separately.
+  // Recursively tell all of our children
   PRInt32 n = mChildList.Count();
   for (PRInt32 i = 0; i < n; ++i) {
       nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(ChildAt(i));
-      if (!docshell) {
-          continue;
-      }
-
-      bool isContentBoundary = false;
-      docshell->GetIsContentBoundary(&isContentBoundary);
-      if (!isContentBoundary) {
-          docshell->SetIsActive(aIsActive);
-      }
+      if (docshell)
+        docshell->SetIsActive(aIsActive);
   }
 
   return NS_OK;
