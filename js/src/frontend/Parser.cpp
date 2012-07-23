@@ -2221,10 +2221,12 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
     }
 
     DefinitionList::Range defs = tc->decls.lookupMulti(atom);
-    JSOp op = data->op;
-
     JS_ASSERT_IF(stmt, !defs.empty());
-    if (!defs.empty()) {
+
+    if (defs.empty()) {
+        if (!Define(pn, atom, tc))
+            return false;
+    } else {
         Definition *dn = defs.front();
         Definition::Kind dn_kind = dn->kind();
 
@@ -2233,20 +2235,20 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
             if (!js_AtomToPrintableString(cx, atom, &name))
                 return false;
 
-            if (op == JSOP_DEFCONST) {
+            if (data->op == JSOP_DEFCONST) {
                 parser->reportError(pn, JSMSG_REDECLARED_PARAM, name.ptr());
                 return false;
             }
             if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, name.ptr()))
                 return false;
         } else {
-            bool error = (op == JSOP_DEFCONST ||
+            bool error = (data->op == JSOP_DEFCONST ||
                           dn_kind == Definition::CONST ||
                           (dn_kind == Definition::LET &&
                            (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
 
             if (cx->hasStrictOption()
-                ? op != JSOP_DEFVAR || dn_kind != Definition::VAR
+                ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
                 : error)
             {
                 JSAutoByteString name;
@@ -2260,12 +2262,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
                 }
             }
         }
-    }
 
-    if (defs.empty()) {
-        if (!Define(pn, atom, tc))
-            return false;
-    } else {
         /*
          * A var declaration never recreates an existing binding, it restates
          * it and possibly reinitializes its value. Beware that if pn becomes a
@@ -2277,8 +2274,6 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
          * There the x definition is hoisted but the x = 2 assignment mutates
          * the block-local binding of x.
          */
-        Definition *dn = defs.front();
-
         data->fresh = false;
 
         if (!pn->isUsed()) {
