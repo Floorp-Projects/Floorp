@@ -296,6 +296,7 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
+  res/layout/shared_ui_components.xml \
   res/layout/site_identity_popup.xml \
   res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
