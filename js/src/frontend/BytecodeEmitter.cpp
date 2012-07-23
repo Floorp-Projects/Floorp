@@ -2830,7 +2830,9 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
         if (pn->isKind(PNK_NAME)) {
             if (!BindNameToSlot(cx, bce, pn))
                 return false;
-            if (pn->isConst() && !pn->isInitialized())
+
+            /* Allow 'const [x,y] = o', make 'const x,y; [x,y] = o' a nop. */
+            if (pn->isConst() && !pn->isDefn())
                 return Emit1(cx, bce, JSOP_POP) >= 0;
         }
 
