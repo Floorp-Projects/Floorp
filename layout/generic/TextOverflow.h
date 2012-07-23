@@ -29,7 +29,6 @@ class TextOverflow {
    * @return nsnull if no processing is necessary.  The caller owns the object.
    */
   static TextOverflow* WillProcessLines(nsDisplayListBuilder*   aBuilder,
-                                        const nsDisplayListSet& aLists,
                                         nsIFrame*               aBlockFrame);
   /**
    * Analyze the display lists for text overflow and what kind of item is at
@@ -55,7 +54,6 @@ class TextOverflow {
  protected:
   TextOverflow() {}
   void Init(nsDisplayListBuilder*   aBuilder,
-            const nsDisplayListSet& aLists,
             nsIFrame*               aBlockFrame);
 
   struct AlignmentEdges {
