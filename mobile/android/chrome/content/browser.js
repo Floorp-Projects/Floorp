@@ -1786,12 +1786,16 @@ var SelectionHandler = {
     this.hideHandles();
 
     let selectedText = "";
+    let pointInSelection = false;
     if (this._view) {
       let selection = this._view.getSelection();
       if (selection) {
-        // Get the text to copy if the tap is in the selection
+        // Get the text before we clear the selection!
+        selectedText = selection.toString().trim();
+
+        // Also figure out if the point is in the selection before we clear it.
         if (arguments.length == 2 && this._pointInSelection(aX, aY))
-          selectedText = selection.toString().trim();
+          pointInSelection = true;
 
         selection.removeAllRanges();
         selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
@@ -1799,7 +1803,7 @@ var SelectionHandler = {
     }
 
     // Only try copying text if there's text to copy!
-    if (selectedText.length) {
+    if (pointInSelection && selectedText.length) {
       let element = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, aX, aY);
       // Only try copying text if the tap happens in the same view
       if (element.ownerDocument.defaultView == this._view) {
