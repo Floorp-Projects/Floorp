@@ -310,7 +310,6 @@ public:
             }
 
 #ifdef MOZ_WIDGET_GONK
-        gUseBackingSurface = Preferences::GetBool("gfx.gralloc.enabled", false);
         char propValue[PROPERTY_VALUE_MAX];
         property_get("ro.build.version.sdk", propValue, "0");
         if (atoi(propValue) < 15)
@@ -441,6 +440,11 @@ public:
         return false;
 #endif
     }
+
+#ifdef MOZ_WIDGET_GONK
+    virtual already_AddRefed<TextureImage>
+    CreateDirectTextureImage(GraphicBuffer* aBuffer, GLenum aWrapMode) MOZ_OVERRIDE;
+#endif
 
     bool MakeCurrentImpl(bool aForce = false) {
         bool succeeded = true;
@@ -1204,6 +1208,23 @@ PixelFormatForImage(gfxASurface::gfxImageFormat aFormat)
     }
     return 0;
 }
+
+static gfxASurface::gfxContentType
+ContentTypeForPixelFormat(PixelFormat aFormat)
+{
+    switch (aFormat) {
+    case PIXEL_FORMAT_L_8:
+        return gfxASurface::CONTENT_ALPHA;
+    case PIXEL_FORMAT_RGBA_8888:
+        return gfxASurface::CONTENT_COLOR_ALPHA;
+    case PIXEL_FORMAT_RGBX_8888:
+    case PIXEL_FORMAT_RGB_565:
+        return gfxASurface::CONTENT_COLOR;
+    default:
+        MOZ_NOT_REACHED("Unknown content type for gralloc pixel format");
+    }
+    return gfxASurface::CONTENT_COLOR;
+}
 #endif
 
 static GLenum
@@ -1231,7 +1252,8 @@ public:
                     GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext,
-                    TextureImage::Flags aFlags = TextureImage::NoFlags)
+                    Flags aFlags = TextureImage::NoFlags,
+                    TextureState aTextureState = Created)
         : TextureImage(aSize, aWrapMode, aContentType, aFlags)
         , mGLContext(aContext)
         , mUpdateFormat(gfxASurface::ImageFormatUnknown)
@@ -1239,7 +1261,7 @@ public:
         , mTexture(aTexture)
         , mSurface(nsnull)
         , mConfig(nsnull)
-        , mTextureState(Created)
+        , mTextureState(aTextureState)
         , mBound(false)
         , mIsLocked(false)
     {
@@ -1855,6 +1877,43 @@ protected:
     }
 };
 
+#ifdef MOZ_WIDGET_GONK
+
+class DirectTextureImageEGL
+    : public TextureImageEGL
+{
+public:
+    DirectTextureImageEGL(GLuint aTexture,
+                          sp<GraphicBuffer> aGraphicBuffer,
+                          GLenum aWrapMode,
+                          GLContext* aContext)
+        : TextureImageEGL(aTexture,
+                          nsIntSize(aGraphicBuffer->getWidth(), aGraphicBuffer->getHeight()),
+                          aWrapMode,
+                          ContentTypeForPixelFormat(aGraphicBuffer->getPixelFormat()),
+                          aContext,
+                          ForceSingleTile,
+                          Valid)
+    {
+        mGraphicBuffer = aGraphicBuffer;
+
+        const int eglImageAttributes[] =
+            { LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
+              LOCAL_EGL_NONE, LOCAL_EGL_NONE };
+
+        mEGLImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                             EGL_NO_CONTEXT,
+                                             EGL_NATIVE_BUFFER_ANDROID,
+                                             mGraphicBuffer->getNativeBuffer(),
+                                             eglImageAttributes);
+        if (!mEGLImage) {
+            LOG("Could not create EGL images: ERROR (0x%04x)", sEGLLibrary.fGetError());
+        }
+    }
+};
+
+#endif  // MOZ_WIDGET_GONK
+
 already_AddRefed<TextureImage>
 GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
@@ -1864,6 +1923,30 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
     nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aFlags);
     return t.forget();
 }
+
+#ifdef MOZ_WIDGET_GONK
+already_AddRefed<TextureImage>
+GLContextEGL::CreateDirectTextureImage(GraphicBuffer* aBuffer,
+                                       GLenum aWrapMode)
+{
+    MakeCurrent();
+
+    GLuint texture;
+    fGenTextures(1, &texture);
+
+    nsRefPtr<TextureImage> texImage(
+        new DirectTextureImageEGL(texture, aBuffer, aWrapMode, this));
+    texImage->BindTexture(LOCAL_GL_TEXTURE0);
+
+    GLint texfilter = LOCAL_GL_LINEAR;
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+
+    return texImage.forget();
+}
+#endif  // MOZ_WIDGET_GONK
 
 already_AddRefed<TextureImage>
 GLContextEGL::TileGenFunc(const nsIntSize& aSize,
