@@ -76,9 +76,10 @@ protected:
                                 const char *aUrl,
                                 const char *aName,
                                 const char *aFeatures,
-                                bool aDialog,
-                                nsIArray *argv,
                                 bool aCalledFromJS,
+                                bool aDialog,
+                                bool aNavigate,
+                                nsIArray *argv,
                                 nsIDOMWindow **_retval);
 
   static JSContext *GetJSContextFromWindow(nsIDOMWindow *aWindow);
