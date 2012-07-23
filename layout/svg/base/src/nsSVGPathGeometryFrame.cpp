@@ -271,9 +271,8 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
-  // See bug 614732 comment 32:
-  //return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
-  return mCoveredRegion;
+  return nsSVGUtils::TransformFrameRectToOuterSVG(
+           mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 }
 
 void
@@ -307,10 +306,6 @@ nsSVGPathGeometryFrame::ReflowSVG()
   gfxRect extent = GetBBoxContribution(gfxMatrix(), flags);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
             PresContext()->AppUnitsPerCSSPixel());
-
-  // See bug 614732 comment 32.
-  mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
-    mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Make sure we have our filter property (if any) before calling
