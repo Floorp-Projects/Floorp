@@ -38,11 +38,13 @@ function outerIframeLoaded() {
       }                                                                  \
     }                                                                    \
     is(content.window.top, content.window, 'top');                       \
+    is(content.window.content, content.window, 'content');               \
     is(content.window.parent, content.window, 'parent');                 \
     is(content.window.frameElement, null, 'frameElement');               \
     var innerIframe = content.document.getElementById('inner-iframe');   \
     var innerWindow = innerIframe.contentWindow;                         \
     is(innerWindow.top, content.window, 'inner top');                    \
+    is(innerWindow.content, content.window, 'inner content');            \
     is(innerWindow.parent, content.window, 'inner parent');              \
     is(innerWindow.frameElement, innerIframe, 'inner frameElement');"
 
