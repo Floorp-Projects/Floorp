@@ -78,6 +78,7 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
         chars[i] = asciiChars[i];
     chars[len] = 0;
 
+    JS::RootedObject global(cx, JS_GetGlobalObject(cx));
     bool ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(cx, global,
                                                             principals,
                                                             originPrincipals,

@@ -256,7 +256,7 @@ class GlobalObject : public JSObject
         if (arrayClassInitialized())
             return &getPrototype(JSProto_Array).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitArrayClass(cx, this))
+        if (!js_InitArrayClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Array).toObject();
     }
@@ -265,7 +265,7 @@ class GlobalObject : public JSObject
         if (booleanClassInitialized())
             return &getPrototype(JSProto_Boolean).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitBooleanClass(cx, this))
+        if (!js_InitBooleanClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Boolean).toObject();
     }
@@ -274,7 +274,7 @@ class GlobalObject : public JSObject
         if (numberClassInitialized())
             return &getPrototype(JSProto_Number).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitNumberClass(cx, this))
+        if (!js_InitNumberClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_Number).toObject();
     }
@@ -283,7 +283,7 @@ class GlobalObject : public JSObject
         if (stringClassInitialized())
             return &getPrototype(JSProto_String).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitStringClass(cx, this))
+        if (!js_InitStringClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_String).toObject();
     }
@@ -292,7 +292,7 @@ class GlobalObject : public JSObject
         if (regexpClassInitialized())
             return &getPrototype(JSProto_RegExp).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitRegExpClass(cx, this))
+        if (!js_InitRegExpClass(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_RegExp).toObject();
     }
@@ -301,7 +301,7 @@ class GlobalObject : public JSObject
         if (arrayBufferClassInitialized())
             return &getPrototype(JSProto_ArrayBuffer).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, this))
+        if (!js_InitTypedArrayClasses(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
@@ -311,7 +311,7 @@ class GlobalObject : public JSObject
         if (errorClassesInitialized())
             return &getPrototype(key).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitExceptionClasses(cx, this))
+        if (!js_InitExceptionClasses(cx, self))
             return NULL;
         return &self->getPrototype(key).toObject();
     }
@@ -358,7 +358,7 @@ class GlobalObject : public JSObject
         if (dataViewClassInitialized())
             return &getPrototype(JSProto_DataView).toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitTypedArrayClasses(cx, this))
+        if (!js_InitTypedArrayClasses(cx, self))
             return NULL;
         return &self->getPrototype(JSProto_DataView).toObject();
     }
@@ -466,7 +466,7 @@ typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy
 inline bool
 JSObject::isGlobal() const
 {
-    return !!(js::GetObjectClass(this)->flags & JSCLASS_IS_GLOBAL);
+    return !!(js::GetObjectClass(const_cast<JSObject*>(this))->flags & JSCLASS_IS_GLOBAL);
 }
 
 js::GlobalObject &

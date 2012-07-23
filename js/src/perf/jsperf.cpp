@@ -13,7 +13,7 @@ using JS::PerfMeasurement;
 
 // You cannot forward-declare a static object in C++, so instead
 // we have to forward-declare the helper functions that refer to it.
-static PerfMeasurement* GetPM(JSContext* cx, JSObject* obj, const char* fname);
+static PerfMeasurement* GetPM(JSContext* cx, JSHandleObject obj, const char* fname);
 static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
 
 // Property access
@@ -195,7 +195,7 @@ pm_finalize(JSFreeOp* fop, JSObject* obj)
 // Helpers (declared above)
 
 static PerfMeasurement*
-GetPM(JSContext* cx, JSObject* obj, const char* fname)
+GetPM(JSContext* cx, JSHandleObject obj, const char* fname)
 {
     PerfMeasurement* p = (PerfMeasurement*)
         JS_GetInstancePrivate(cx, obj, &pm_class, 0);
@@ -222,10 +222,10 @@ GetPMFromThis(JSContext* cx, jsval* vp)
 namespace JS {
 
 JSObject*
-RegisterPerfMeasurement(JSContext *cx, JSObject *global)
+RegisterPerfMeasurement(JSContext *cx, JSRawObject global)
 {
     js::RootedObject prototype(cx);
-    prototype = JS_InitClass(cx, global, 0 /* parent */,
+    prototype = JS_InitClass(cx, global, NULL /* parent */,
                              &pm_class, pm_construct, 1,
                              pm_props, pm_fns, 0, 0);
     if (!prototype)

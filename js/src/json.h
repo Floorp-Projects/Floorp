@@ -7,6 +7,7 @@
 
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsapi.h"
 
 #include "js/Vector.h"
 
@@ -18,7 +19,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
 js_Stringify(JSContext *cx, js::MutableHandleValue vp,
-	     JSObject *replacer, js::Value space, 
+             JSObject *replacer, js::Value space,
              js::StringBuffer &sb);
 
 // Avoid build errors on certain platforms that define these names as constants

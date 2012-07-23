@@ -69,7 +69,7 @@ struct AutoIncrCounters {
 };
 
 bool
-doResolve(JSObject *obj, jsid id, unsigned flags, JSMutableHandleObject objp)
+doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JSMutableHandleObject objp)
 {
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);

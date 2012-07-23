@@ -715,7 +715,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 }
             }
 
-            JSObject *tmp = *objp;
+            RootedObject tmp(cx, *objp);
             if (!XDRInterpretedFunction(xdr, funEnclosingScope, script, &tmp))
                 return false;
             *objp = tmp;
@@ -741,8 +741,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 }
             }
 
-            StaticBlockObject *tmp = static_cast<StaticBlockObject *>(objp->get());
-            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, &tmp))
+            Rooted<StaticBlockObject*> tmp(cx, static_cast<StaticBlockObject *>(objp->get()));
+            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, tmp.address()))
                 return false;
             *objp = tmp;
         }
