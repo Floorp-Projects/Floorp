@@ -212,7 +212,7 @@ public:
     NS_IMETHOD              Show(bool aState);
     virtual nsIWidget*      GetSheetWindowParent(void);
     NS_IMETHOD              Enable(bool aState);
-    NS_IMETHOD              IsEnabled(bool *aState);
+    virtual bool            IsEnabled() const;
     NS_IMETHOD              SetModal(bool aState);
     virtual bool            IsVisible() const;
     NS_IMETHOD              SetFocus(bool aState=false);
