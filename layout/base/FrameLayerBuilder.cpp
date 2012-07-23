@@ -182,6 +182,11 @@ public:
     return aRect.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
   }
+  nsIntRegion ScaleRegionToNearestPixels(const nsRegion& aRegion)
+  {
+    return aRegion.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
+                                        mAppUnitsPerDevPixel);
+  }
   nsIntRect ScaleToOutsidePixels(const nsRect& aRect, bool aSnap)
   {
     if (aSnap && mSnappingEnabled) {
@@ -197,6 +202,15 @@ public:
     }
     return aRect.ScaleToInsidePixels(mParameters.mXScale, mParameters.mYScale,
                                      mAppUnitsPerDevPixel);
+  }
+
+  nsIntRegion ScaleRegionToInsidePixels(const nsRegion& aRegion, bool aSnap)
+  {
+    if (aSnap && mSnappingEnabled) {
+      return ScaleRegionToNearestPixels(aRegion);
+    }
+    return aRegion.ScaleToInsidePixels(mParameters.mXScale, mParameters.mYScale,
+                                        mAppUnitsPerDevPixel);
   }
 
   const FrameLayerBuilder::ContainerParameters& ScaleParameters() { return mParameters; };
@@ -1482,17 +1496,23 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap);
   if (!opaque.IsEmpty()) {
+    nsRegion opaqueClipped;
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
+      opaqueClipped.Or(opaqueClipped, aClip.ApproximateIntersect(*r));
+    }
+
+    nsIntRegion opaquePixels = aState->ScaleRegionToInsidePixels(opaqueClipped, snap);
+
+    nsIntRegionRectIterator iter2(opaquePixels);
+    for (const nsIntRect* r = iter2.Next(); r; r = iter2.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
       // a canvas background), so we need to make sure that the first rect
       // we see doesn't get discarded.
-      nsIntRect rect =
-        aState->ScaleToInsidePixels(aClip.ApproximateIntersect(*r), snap);
       nsIntRegion tmp;
-      tmp.Or(mOpaqueRegion, rect);
+      tmp.Or(mOpaqueRegion, *r);
        // Opaque display items in chrome documents whose window is partially
        // transparent are always added to the opaque region. This helps ensure
        // that we get as much subpixel-AA as possible in the chrome.
