@@ -568,6 +568,7 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   bool usePrivateBrowsing = false;
   bool isInBrowserElement = false;
   PRUint32 appId = 0;
+  nsCAutoString extendedOrigin;
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
                                 NS_GET_IID(nsILoadContext),
@@ -578,10 +579,11 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
     loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
     loadContext->GetIsInBrowserElement(&isInBrowserElement);
     loadContext->GetAppId(&appId);
+    loadContext->GetExtendedOrigin(mURI, extendedOrigin);
   }
 
   SendAsyncOpen(IPC::URI(mOriginalURI), mLoadFlags, haveLoadContext, isContent,
-                usePrivateBrowsing, isInBrowserElement, appId);
+                usePrivateBrowsing, isInBrowserElement, appId, extendedOrigin);
 
   mState = WCC_OPENED;
 
