@@ -1610,10 +1610,26 @@ var SelectionHandler = {
     }
   },
 
+  _ignoreCollapsedSelection: false,
+
   notifySelectionChanged: function sh_notifySelectionChanged(aDoc, aSel, aReason) {
-    // If the selection was removed, call endSelection() to clean up
-    if (aSel == "" && aReason == Ci.nsISelectionListener.NO_REASON)
+    if (aSel.isCollapsed) {
+      // Bail if we're ignoring events for a collapsed selection.
+      if (this._ignoreCollapsedSelection)
+        return;
+
+      // If the selection is collapsed because of one of the mouse events we 
+      // sent while moving the handle, don't get rid of the selection handles.
+      if (aReason & Ci.nsISelectionListener.MOUSEDOWN_REASON) {
+        this._ignoreCollapsedSelection = true;
+        return;
+      }
+
+      // Otherwise, we do want to end the selection.
       this.endSelection();
+    }
+
+    this._ignoreCollapsedSelection = false;
   },
 
   // aX/aY are in top-level window browser coordinates
