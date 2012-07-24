@@ -245,6 +245,9 @@ DrawTargetCairo::~DrawTargetCairo()
     mPathObserver->ForgetDrawTarget();
   }
   cairo_destroy(mContext);
+  if (mSurface) {
+    cairo_surface_destroy(mSurface);
+  }
 }
 
 IntSize
@@ -723,6 +726,8 @@ bool
 DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
 {
   mContext = cairo_create(aSurface);
+  mSurface = aSurface;
+  cairo_surface_reference(mSurface);
   mSize = aSize;
 
   return true;
