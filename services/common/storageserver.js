@@ -132,13 +132,25 @@ ServerBSO.prototype = {
     }
 
     if (request.hasHeader("x-if-modified-since")) {
-      let headerModified = parseInt(request.getHeader("x-if-modified-since"));
+      let headerModified = parseInt(request.getHeader("x-if-modified-since"),
+                                    10);
       CommonUtils.ensureMillisecondsTimestamp(headerModified);
 
       if (headerModified >= this.modified) {
         code = 304;
         status = "Not Modified";
 
+        sendResponse();
+        return;
+      }
+    } else if (request.hasHeader("x-if-unmodified-since")) {
+      let requestModified = parseInt(request.getHeader("x-if-unmodified-since"),
+                                     10);
+      let serverModified = this.modified;
+
+      if (serverModified > requestModified) {
+        code = 412;
+        status = "Precondition Failed";
         sendResponse();
         return;
       }
@@ -650,6 +662,16 @@ StorageServerCollection.prototype = {
       if (requestModified >= newestBSO) {
         response.setHeader("X-Last-Modified", "" + newestBSO);
         response.setStatusLine(request.httpVersion, 304, "Not Modified");
+        return;
+      }
+    } else if (request.hasHeader("x-if-unmodified-since")) {
+      let requestModified = parseInt(request.getHeader("x-if-unmodified-since"),
+                                     10);
+      let serverModified = this.timestamp;
+
+      if (serverModified > requestModified) {
+        response.setHeader("X-Last-Modified", "" + serverModified);
+        response.setStatusLine(request.httpVersion, 412, "Precondition Failed");
         return;
       }
     }

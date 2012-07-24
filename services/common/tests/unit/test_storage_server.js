@@ -464,6 +464,60 @@ add_test(function test_bso_delete_unmodified() {
   server.stop(run_next_test);
 });
 
+add_test(function test_collection_get_unmodified_since() {
+  _("Ensure conditional unmodified get on collection works when it should.");
+
+  let server = new StorageServer();
+  server.registerUser("123", "password");
+  server.startSynchronous(PORT);
+  let collection = server.user("123").createCollection("testcoll");
+  collection.insert("bso0", {foo: "bar"});
+
+  let serverModified = collection.timestamp;
+
+  let request1 = localRequest("/2.0/123/storage/testcoll", "123", "password");
+  request1.setHeader("X-If-Unmodified-Since", serverModified);
+  let error = doGetRequest(request1);
+  do_check_null(error);
+  do_check_eq(request1.response.status, 200);
+
+  let request2 = localRequest("/2.0/123/storage/testcoll", "123", "password");
+  request2.setHeader("X-If-Unmodified-Since", serverModified - 1);
+  let error = doGetRequest(request2);
+  do_check_null(error);
+  do_check_eq(request2.response.status, 412);
+
+  server.stop(run_next_test);
+});
+
+add_test(function test_bso_get_unmodified_since() {
+  _("Ensure conditional unmodified get on BSO works appropriately.");
+
+  let server = new StorageServer();
+  server.registerUser("123", "password");
+  server.startSynchronous(PORT);
+  let collection = server.user("123").createCollection("testcoll");
+  collection.insert("bso0", {foo: "bar"});
+
+  let serverModified = collection.timestamp;
+
+  let request1 = localRequest("/2.0/123/storage/testcoll/bso0", "123",
+                              "password");
+  request1.setHeader("X-If-Unmodified-Since", serverModified);
+  let error = doGetRequest(request1);
+  do_check_null(error);
+  do_check_eq(request1.response.status, 200);
+
+  let request2 = localRequest("/2.0/123/storage/testcoll/bso0", "123",
+                              "password");
+  request2.setHeader("X-If-Unmodified-Since", serverModified - 1);
+  let error = doGetRequest(request2);
+  do_check_null(error);
+  do_check_eq(request2.response.status, 412);
+
+  server.stop(run_next_test);
+});
+
 add_test(function test_missing_collection_404() {
   _("Ensure a missing collection returns a 404.");
 
