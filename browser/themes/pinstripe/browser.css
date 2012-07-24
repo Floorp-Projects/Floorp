@@ -3420,8 +3420,6 @@ stack[anonid=browserStack][responsivemode] {
 /* === social toolbar provider menu  === */
 
 #social-statusarea-user {
-  background-color: white;
-  color: black;
   cursor: default;
   font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
   font-size: 12px;
