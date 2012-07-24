@@ -2501,7 +2501,6 @@ FragmentOrElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
   NS_NOTYETIMPLEMENTED("FragmentOrElement::SetInlineStyleRule");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 NS_IMETHODIMP_(bool)
 FragmentOrElement::IsAttributeMapped(const nsIAtom* aAttribute) const
@@ -2559,6 +2558,7 @@ FragmentOrElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 
   return nodeInfo;
 }
+#endif
 
 bool
 FragmentOrElement::IsLink(nsIURI** aURI) const
@@ -2567,6 +2567,7 @@ FragmentOrElement::IsLink(nsIURI** aURI) const
   return false;
 }
 
+#if 0
 // static
 bool
 FragmentOrElement::ShouldBlur(nsIContent *aContent)
@@ -2591,6 +2592,7 @@ FragmentOrElement::ShouldBlur(nsIContent *aContent)
   // content as well when blurring.
   return (contentToBlur && nsFocusManager::GetRedirectedFocus(aContent) == contentToBlur);
 }
+#endif
 
 nsIContent*
 FragmentOrElement::GetBindingParent() const
@@ -2603,11 +2605,13 @@ FragmentOrElement::GetBindingParent() const
   return nullptr;
 }
 
+#if 0
 bool
 FragmentOrElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eCONTENT);
 }
+#endif
 
 nsresult
 FragmentOrElement::InsertChildAt(nsIContent* aKid,
@@ -2643,6 +2647,7 @@ FragmentOrElement::SetTextContent(const nsAString& aTextContent)
   return nsContentUtils::SetNodeTextContent(this, aTextContent, false);
 }
 
+#if 0
 /* static */
 nsresult
 FragmentOrElement::DispatchEvent(nsPresContext* aPresContext,
@@ -2720,6 +2725,7 @@ FragmentOrElement::GetPrimaryFrame(mozFlushType aType)
 
   return GetPrimaryFrame();
 }
+#endif
 
 void
 FragmentOrElement::DestroyContent()
@@ -3519,6 +3525,7 @@ FragmentOrElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 //----------------------------------------------------------------------
+#if 0
 nsresult
 FragmentOrElement::LeaveLink(nsPresContext* aPresContext)
 {
@@ -3564,6 +3571,7 @@ FragmentOrElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) c
 {
   return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
 }
+#endif
 
 nsresult
 FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst)
@@ -3837,7 +3845,6 @@ FragmentOrElement::SetMappedAttribute(nsIDocument* aDocument,
   *aRetval = NS_OK;
   return false;
 }
-#endif
 
 nsEventListenerManager*
 FragmentOrElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
@@ -3847,7 +3854,6 @@ FragmentOrElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   return GetListenerManager(true);
 }
 
-#if 0
 FragmentOrElement::nsAttrInfo
 FragmentOrElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
 {
@@ -4282,6 +4288,7 @@ FragmentOrElement::CreateSlots()
   return new nsDOMSlots();
 }
 
+#if 0
 bool
 FragmentOrElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
                                                        nsIURI** aURI) const
@@ -4469,6 +4476,7 @@ FragmentOrElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   return rv;
 }
+#endif
 
 void
 FragmentOrElement::FireNodeRemovedForChildren()
@@ -4490,11 +4498,13 @@ FragmentOrElement::FireNodeRemovedForChildren()
   }
 }
 
+#if 0
 void
 FragmentOrElement::GetLinkTarget(nsAString& aTarget)
 {
   aTarget.Truncate();
 }
+#endif
 
 // NOTE: The aPresContext pointer is NOT addrefed.
 // *aSelectorList might be null even if NS_OK is returned; this
@@ -4695,6 +4705,7 @@ FragmentOrElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
          mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
 }
 
+#if 0
 static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
   // Order matters here
   // See ParseCORSValue
@@ -4737,7 +4748,6 @@ FragmentOrElement::AttrValueToCORSMode(const nsAttrValue* aValue)
   return CORSMode(aValue->GetEnumValue());
 }
 
-#if 0
 NS_IMETHODIMP
 FragmentOrElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
 {

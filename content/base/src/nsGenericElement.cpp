@@ -2509,7 +2509,6 @@ nsGenericElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if 0
 NS_IMETHODIMP_(bool)
 nsGenericElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
@@ -2567,12 +2566,14 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
+#if 0
 bool
 nsGenericElement::IsLink(nsIURI** aURI) const
 {
   *aURI = nullptr;
   return false;
 }
+#endif
 
 // static
 bool
@@ -2599,6 +2600,7 @@ nsGenericElement::ShouldBlur(nsIContent *aContent)
   return (contentToBlur && nsFocusManager::GetRedirectedFocus(aContent) == contentToBlur);
 }
 
+#if 0
 nsIContent*
 nsGenericElement::GetBindingParent() const
 {
@@ -2609,6 +2611,7 @@ nsGenericElement::GetBindingParent() const
   }
   return nullptr;
 }
+#endif
 
 bool
 nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
@@ -2616,6 +2619,7 @@ nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~eCONTENT);
 }
 
+#if 0
 nsresult
 nsGenericElement::InsertChildAt(nsIContent* aKid,
                                 PRUint32 aIndex,
@@ -2649,6 +2653,7 @@ nsGenericElement::SetTextContent(const nsAString& aTextContent)
 {
   return nsContentUtils::SetNodeTextContent(this, aTextContent, false);
 }
+#endif
 
 /* static */
 nsresult
@@ -2728,6 +2733,7 @@ nsGenericElement::GetPrimaryFrame(mozFlushType aType)
   return GetPrimaryFrame();
 }
 
+#if 0
 void
 nsGenericElement::DestroyContent()
 {
@@ -3524,9 +3530,9 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
   return OwnerDoc()->BindingManager()->GetBindingImplementation(this, aIID,
                                                                 aInstancePtr);
 }
+#endif
 
 //----------------------------------------------------------------------
-#if 0
 nsresult
 nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 {
@@ -3563,7 +3569,6 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                   defer, !nsContentUtils::IsChromeDoc(ownerDoc));
   return NS_OK;
 }
-#endif
 
 
 //----------------------------------------------------------------------
@@ -3574,6 +3579,7 @@ nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) co
   return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
 }
 
+#if 0
 nsresult
 nsGenericElement::CopyInnerTo(nsGenericElement* aDst)
 {
@@ -3847,7 +3853,6 @@ nsGenericElement::SetMappedAttribute(nsIDocument* aDocument,
   return false;
 }
 
-#if 0
 nsEventListenerManager*
 nsGenericElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                                  bool* aDefer)
@@ -3855,7 +3860,6 @@ nsGenericElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   *aDefer = true;
   return GetListenerManager(true);
 }
-#endif
 
 nsGenericElement::nsAttrInfo
 nsGenericElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
@@ -4290,6 +4294,7 @@ nsGenericElement::CreateSlots()
 {
   return new nsDOMSlots();
 }
+#endif
 
 bool
 nsGenericElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
@@ -4479,6 +4484,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   return rv;
 }
 
+#if 0
 void
 nsGenericElement::FireNodeRemovedForChildren()
 {
@@ -4498,13 +4504,13 @@ nsGenericElement::FireNodeRemovedForChildren()
     nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
   }
 }
+#endif
 
 void
 nsGenericElement::GetLinkTarget(nsAString& aTarget)
 {
   aTarget.Truncate();
 }
-#endif
 
 // NOTE: The aPresContext pointer is NOT addrefed.
 // *aSelectorList might be null even if NS_OK is returned; this
@@ -4705,6 +4711,7 @@ nsGenericElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   return Element::SizeOfExcludingThis(aMallocSizeOf) +
          mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
 }
+#endif
 
 static const nsAttrValue::EnumTable kCORSAttributeTable[] = {
   // Order matters here
@@ -4747,7 +4754,6 @@ nsGenericElement::AttrValueToCORSMode(const nsAttrValue* aValue)
 
   return CORSMode(aValue->GetEnumValue());
 }
-#endif
 
 NS_IMETHODIMP
 nsGenericElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
