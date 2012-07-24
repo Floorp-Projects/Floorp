@@ -68,6 +68,10 @@ public:
   // Returns true if this CairoPathContext represents path.
   bool ContainsPath(const Path* path);
 
+  // add ourselves as an observer of aDrawTarget, if possible
+  // if we succeed, then mDrawTarget is set to aDrawTarget
+  void ObserveTarget(DrawTargetCairo* aDrawTarget);
+
   cairo_t* GetContext() const { return mContext; }
   DrawTargetCairo* GetDrawTarget() const { return mDrawTarget; }
   Matrix GetTransform() const { return mTransform; }
