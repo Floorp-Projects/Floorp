@@ -14,4 +14,8 @@ PARALLEL_DIRS += \
   sourcemap \
   $(NULL)
 
+EXTRA_JS_MODULES = \
+  Require.jsm \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
