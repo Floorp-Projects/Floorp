@@ -183,6 +183,47 @@ Telephony::NotifyCallsChanged(TelephonyCall* aCall)
   return NS_OK;
 }
 
+nsresult
+Telephony::DialInternal(bool isEmergency,
+                        const nsAString& aNumber,
+                        nsIDOMTelephonyCall** aResult)
+{
+  NS_ENSURE_ARG(!aNumber.IsEmpty());
+
+  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+    const nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
+    if (tempCall->IsOutgoing() &&
+        tempCall->CallState() < nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
+      // One call has been dialed already and we only support one outgoing call
+      // at a time.
+      NS_WARNING("Only permitted to dial one call at a time!");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  nsresult rv;
+  if (isEmergency) {
+    rv = mRIL->DialEmergency(aNumber);
+  } else {
+    rv = mRIL->Dial(aNumber);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aNumber);
+
+  // Notify other telephony objects that we just dialed.
+  for (PRUint32 index = 0; index < gTelephonyList->Length(); index++) {
+    Telephony*& telephony = gTelephonyList->ElementAt(index);
+    if (telephony != this) {
+      nsRefPtr<Telephony> kungFuDeathGrip = telephony;
+      telephony->NoteDialedCallFromOtherInstance(aNumber);
+    }
+  }
+
+  call.forget(aResult);
+  return NS_OK;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(Telephony)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
@@ -225,34 +266,16 @@ NS_IMPL_ISUPPORTS1(Telephony::RILTelephonyCallback, nsIRILTelephonyCallback)
 NS_IMETHODIMP
 Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
 {
-  NS_ENSURE_ARG(!aNumber.IsEmpty());
+  DialInternal(false, aNumber, aResult);
 
-  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
-    const nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
-    if (tempCall->IsOutgoing() &&
-        tempCall->CallState() < nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
-      // One call has been dialed already and we only support one outgoing call
-      // at a time.
-      NS_WARNING("Only permitted to dial one call at a time!");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
+  return NS_OK;
+}
 
-  nsresult rv = mRIL->Dial(aNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
+NS_IMETHODIMP
+Telephony::DialEmergency(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
+{
+  DialInternal(true, aNumber, aResult);
 
-  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aNumber);
-
-  // Notify other telephony objects that we just dialed.
-  for (PRUint32 index = 0; index < gTelephonyList->Length(); index++) {
-    Telephony*& telephony = gTelephonyList->ElementAt(index);
-    if (telephony != this) {
-      nsRefPtr<Telephony> kungFuDeathGrip = telephony;
-      telephony->NoteDialedCallFromOtherInstance(aNumber);
-    }
-  }
-
-  call.forget(aResult);
   return NS_OK;
 }
 
@@ -503,6 +526,10 @@ Telephony::NotifyError(PRInt32 aCallIndex,
   if (!callToNotify) {
     NS_ERROR("Don't call me with a bad call index!");
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mActiveCall && mActiveCall->CallIndex() == callToNotify->CallIndex()) {
+    mActiveCall = nsnull;
   }
 
   // Set the call state to 'disconnected' and remove it from the calls list.

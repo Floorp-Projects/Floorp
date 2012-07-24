@@ -60,6 +60,7 @@ class GrallocBufferActor : public PGrallocBufferChild
                          , public PGrallocBufferParent
 {
   friend class ShadowLayerForwarder;
+  friend class ShadowLayerManager;
   typedef android::GraphicBuffer GraphicBuffer;
 
 public:

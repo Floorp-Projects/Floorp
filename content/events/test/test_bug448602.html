@@ -40,7 +40,7 @@ function runTests() {
   root.setAttribute("onclick", listenerSource);
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 1, "Element should have listeners (1)");
-  is(infos[0].toSource(), 'function onclick(event) { ' + listenerSource + ' }',
+  is(infos[0].toSource(), 'function onclick(event) {\n' + listenerSource + '\n}',
      "Unexpected serialization (1)");
   is(infos[0].type, "click", "Wrong type (1)");
   is(infos[0].capturing, false, "Wrong phase (1)");

@@ -50,6 +50,13 @@
                       android:text="@string/abouthome_no_top_sites"
                       android:visibility="gone"/>
 
+            <ImageView android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:layout_marginTop="4dp"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentRight="true"
+                       android:src="@drawable/abouthome_icon"/>
+
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
                   android:layout_width="fill_parent"
@@ -71,13 +78,6 @@
                                             android:textSize="12sp"
                                             android:gravity="top|center_horizontal"
                                             android:text="@string/abouthome_top_sites_browse"/>
-
-            <ImageView android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:layout_marginTop="4dp"
-                       android:layout_alignParentTop="true"
-                       android:layout_alignParentRight="true"
-                       android:src="@drawable/abouthome_icon"/>
 
             <RelativeLayout android:id="@+id/sync_box_container"
                             android:layout_width="fill_parent"

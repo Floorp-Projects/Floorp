@@ -319,7 +319,7 @@ public class Favicons {
                     faviconUrl = new URL(mFaviconUrl);
                 }
             } catch (MalformedURLException e) {
-                Log.d(LOGTAG, "The provided favicon URL is not valid: " + e);
+                Log.d(LOGTAG, "The provided favicon URL is not valid", e);
                 return null;
             }
 

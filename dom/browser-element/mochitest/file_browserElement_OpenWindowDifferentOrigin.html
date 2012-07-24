@@ -1,0 +1,18 @@
+<html>
+<body>
+
+<div id='name'></div>
+
+<script>
+if (location.search == "?1") {
+  open("http://example.com/tests/dom/browser-element/mochitest/file_browserElement_OpenWindowDifferentOrigin.html?2");
+}
+else if (location.search == "?2") {
+  alert("finish");
+}
+
+document.getElementById('name').innerHTML = location.search;
+</script>
+
+</body>
+</html>

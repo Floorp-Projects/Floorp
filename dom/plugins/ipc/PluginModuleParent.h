@@ -93,12 +93,12 @@ public:
     PluginModuleParent(const char* aFilePath);
     virtual ~PluginModuleParent();
 
-    NS_OVERRIDE virtual void SetPlugin(nsNPAPIPlugin* plugin)
+    virtual void SetPlugin(nsNPAPIPlugin* plugin) MOZ_OVERRIDE
     {
         mPlugin = plugin;
     }
 
-    NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     /**
      * LoadModule
@@ -131,21 +131,18 @@ public:
     void ProcessRemoteNativeEventsInRPCCall();
 
 protected:
-    NS_OVERRIDE
     virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
-    MediateRPCRace(const Message& parent, const Message& child)
+    MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);
     }
 
     virtual bool RecvXXX_HACK_FIXME_cjones(Shmem& mem) { NS_RUNTIMEABORT("not reached"); return false; }
 
-    NS_OVERRIDE
-    virtual bool ShouldContinueFromReplyTimeout();
+    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual bool
-    RecvBackUpXResources(const FileDescriptor& aXSocketFd);
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd) MOZ_OVERRIDE;
 
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
@@ -155,47 +152,46 @@ protected:
                                       NPError* aError,
                                       bool* aBoolVal);
 
-    NS_OVERRIDE
-    virtual bool AnswerProcessSomeEvents();
+    virtual bool AnswerProcessSomeEvents() MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvProcessNativeEventsInRPCCall();
+    virtual bool
+    RecvProcessNativeEventsInRPCCall() MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
+    virtual bool
     RecvPluginShowWindow(const uint32_t& aWindowId, const bool& aModal,
                          const int32_t& aX, const int32_t& aY,
-                         const size_t& aWidth, const size_t& aHeight);
+                         const size_t& aWidth, const size_t& aHeight) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvPluginHideWindow(const uint32_t& aWindowId);
+    virtual bool
+    RecvPluginHideWindow(const uint32_t& aWindowId) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual PCrashReporterParent*
+    virtual PCrashReporterParent*
     AllocPCrashReporter(mozilla::dom::NativeThreadId* id,
-                        PRUint32* processType);
-    NS_OVERRIDE virtual bool
-    DeallocPCrashReporter(PCrashReporterParent* actor);
+                        PRUint32* processType) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPCrashReporter(PCrashReporterParent* actor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvSetCursor(const NSCursorInfo& aCursorInfo);
+    virtual bool
+    RecvSetCursor(const NSCursorInfo& aCursorInfo) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvShowCursor(const bool& aShow);
+    virtual bool
+    RecvShowCursor(const bool& aShow) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvPushCursor(const NSCursorInfo& aCursorInfo);
+    virtual bool
+    RecvPushCursor(const NSCursorInfo& aCursorInfo) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvPopCursor();
+    virtual bool
+    RecvPopCursor() MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvGetNativeCursorsSupported(bool* supported);
+    virtual bool
+    RecvGetNativeCursorsSupported(bool* supported) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
+    virtual bool
     RecvNPN_SetException(PPluginScriptableObjectParent* aActor,
-                         const nsCString& aMessage);
+                         const nsCString& aMessage) MOZ_OVERRIDE;
 
-    NS_OVERRIDE virtual bool
-    RecvNPN_ReloadPlugins(const bool& aReloadPages);
+    virtual bool
+    RecvNPN_ReloadPlugins(const bool& aReloadPages) MOZ_OVERRIDE;
 
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
@@ -244,17 +240,14 @@ private:
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
     virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
-    NS_OVERRIDE virtual bool UseAsyncPainting() { return true; }
-    NS_OVERRIDE
-    virtual nsresult SetBackgroundUnknown(NPP instance);
-    NS_OVERRIDE
+    virtual bool UseAsyncPainting() MOZ_OVERRIDE { return true; }
+    virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect& aRect,
-                                           gfxContext** aCtx);
-    NS_OVERRIDE
+                                           gfxContext** aCtx) MOZ_OVERRIDE;
     virtual nsresult EndUpdateBackground(NPP instance,
                                          gfxContext* aCtx,
-                                         const nsIntRect& aRect);
+                                         const nsIntRect& aRect) MOZ_OVERRIDE;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error);
@@ -320,7 +313,7 @@ private:
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     void InitializeInjector();
     
-    NS_OVERRIDE void OnCrash(DWORD processID);
+    void OnCrash(DWORD processID) MOZ_OVERRIDE;
 
     DWORD mFlashProcess1;
     DWORD mFlashProcess2;

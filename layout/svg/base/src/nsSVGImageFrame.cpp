@@ -488,10 +488,6 @@ nsSVGImageFrame::ReflowSVG()
     mRect.SetEmpty();
   }
 
-  // See bug 614732 comment 32.
-  mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
-    mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
-
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off

@@ -27,15 +27,11 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvDone();
-    NS_OVERRIDE
-    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubParent* __a);
-    NS_OVERRIDE
-    virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSub();
+    virtual bool RecvDone() MOZ_OVERRIDE;
+    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubParent* __a) MOZ_OVERRIDE;
+    virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSub() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -53,15 +49,11 @@ public:
     virtual ~TestManyChildAllocsChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvGo();
-    NS_OVERRIDE
-    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubChild* __a);
-    NS_OVERRIDE
-    virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSub();
+    virtual bool RecvGo() MOZ_OVERRIDE;
+    virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubChild* __a) MOZ_OVERRIDE;
+    virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSub() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -80,8 +72,7 @@ public:
     virtual ~TestManyChildAllocsSubParent() { }
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvHello() { return true; }
+    virtual bool RecvHello() MOZ_OVERRIDE { return true; }
 };
 
 

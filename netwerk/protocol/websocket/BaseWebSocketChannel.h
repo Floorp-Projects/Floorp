@@ -27,7 +27,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
 
   NS_DECL_NSIPROTOCOLHANDLER
 
-  NS_IMETHOD QueryInterface(const nsIID & uuid, void **result NS_OUTPARAM) = 0;
+  NS_IMETHOD QueryInterface(const nsIID & uuid, void **result) = 0;
   NS_IMETHOD_(nsrefcnt ) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt ) Release(void) = 0;
 

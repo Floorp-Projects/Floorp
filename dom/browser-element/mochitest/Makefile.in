@@ -39,6 +39,13 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_GetScreenshot.html \
 		browserElement_SetVisible.js \
 		test_browserElement_inproc_SetVisible.html \
+		browserElement_SetVisibleFrames.js \
+		test_browserElement_inproc_SetVisibleFrames.html \
+		file_browserElement_SetVisibleFrames_Outer.html \
+		file_browserElement_SetVisibleFrames_Inner.html \
+		browserElement_SetVisibleFrames2.js \
+		test_browserElement_inproc_SetVisibleFrames2.html \
+		file_browserElement_SetVisibleFrames2_Outer.html \
 		browserElement_KeyEvents.js \
 		test_browserElement_inproc_KeyEvents.html \
 		browserElement_XFrameOptions.js \
@@ -56,6 +63,9 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_AlertInFrame.html \
 		file_browserElement_AlertInFrame.html \
 		file_browserElement_AlertInFrame_Inner.html \
+		browserElement_TargetTop.js \
+		test_browserElement_inproc_TargetTop.html \
+		file_browserElement_TargetTop.html \
 		browserElement_PromptCheck.js \
 		test_browserElement_inproc_PromptCheck.html \
 		browserElement_PromptConfirm.js \
@@ -75,10 +85,14 @@ MOCHITEST_FILES = \
 		browserElement_OpenWindowRejected.js \
 		test_browserElement_inproc_OpenWindowRejected.html \
 		file_browserElement_OpenWindowRejected.html \
+		browserElement_OpenWindowDifferentOrigin.js \
+		test_browserElement_inproc_OpenWindowDifferentOrigin.html \
+		file_browserElement_OpenWindowDifferentOrigin.html \
 		browserElement_SecurityChange.js \
 		test_browserElement_inproc_SecurityChange.html \
 		file_browserElement_SecurityChange.html \
 		browserElement_BackForward.js \
+		test_browserElement_inproc_BackForward.html \
 	        file_bug741717.sjs \
 		browserElement_Reload.js \
 	        file_bug709759.sjs \
@@ -97,8 +111,6 @@ MOCHITEST_FILES = \
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec (bug
 # 774939).
-#
-# Note that there's no inproc equivalent of BackForward; that's intentional.
 ifneq ($(OS_ARCH),WINNT) #{
 ifndef MOZ_JAVA_COMPOSITOR #{
 MOCHITEST_FILES += \
@@ -110,12 +122,15 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_Iconchange.html \
 		test_browserElement_oop_GetScreenshot.html \
 		test_browserElement_oop_SetVisible.html \
+		test_browserElement_oop_SetVisibleFrames.html \
+		test_browserElement_oop_SetVisibleFrames2.html \
 		test_browserElement_oop_KeyEvents.html \
 		test_browserElement_oop_XFrameOptions.html \
 		test_browserElement_oop_XFrameOptionsDeny.html \
 		test_browserElement_oop_XFrameOptionsSameOrigin.html \
 		test_browserElement_oop_Alert.html \
 		test_browserElement_oop_AlertInFrame.html \
+		test_browserElement_oop_TargetTop.html \
 		test_browserElement_oop_PromptCheck.html \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \
@@ -123,6 +138,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_OpenWindow.html \
 		test_browserElement_oop_OpenWindowInFrame.html \
 		test_browserElement_oop_OpenWindowRejected.html \
+		test_browserElement_oop_OpenWindowDifferentOrigin.html \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
 		test_browserElement_oop_Reload.html \

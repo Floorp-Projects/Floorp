@@ -339,7 +339,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
     gint *atkColumns = g_new(gint, size);
     if (!atkColumns) {
         NS_WARNING("OUT OF MEMORY");
-        return nsnull;
+        return 0;
     }
 
     //copy
@@ -374,7 +374,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
     gint *atkRows = g_new(gint, size);
     if (!atkRows) {
         NS_WARNING("OUT OF MEMORY");
-        return nsnull;
+        return 0;
     }
 
     //copy

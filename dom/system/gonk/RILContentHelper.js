@@ -420,6 +420,11 @@ RILContentHelper.prototype = {
     cpmm.sendAsyncMessage("RIL:Dial", number);
   },
 
+  dialEmergency: function dialEmergency(number) {
+    debug("Dialing emergency " + number);
+    cpmm.sendAsyncMessage("RIL:DialEmergency", number);
+  },
+
   hangUp: function hangUp(callIndex) {
     debug("Hanging up call no. " + callIndex);
     cpmm.sendAsyncMessage("RIL:HangUp", callIndex);

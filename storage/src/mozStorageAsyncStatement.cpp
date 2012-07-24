@@ -100,7 +100,7 @@ public:
   NS_IMETHODIMP
   GetFlags(PRUint32 *_flags)
   {
-    *_flags = nsnull;
+    *_flags = 0;
     return NS_OK;
   }
 
