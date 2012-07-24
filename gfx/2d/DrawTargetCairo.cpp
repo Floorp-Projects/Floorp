@@ -322,6 +322,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
   cairo_pattern_set_matrix(pat, &src_mat);
   cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
+  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 
   cairo_save(mContext);
   cairo_translate(mContext, aDest.X(), aDest.Y());
@@ -391,6 +392,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* surf = source->GetSurface();
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
+  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 
   cairo_t* ctx = cairo_create(blursurf);
 
