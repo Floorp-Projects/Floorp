@@ -20,6 +20,7 @@
 #include "ReadbackLayerD3D10.h"
 #include "ImageLayerD3D10.h"
 #include "mozilla/layers/PLayerChild.h"
+#include "mozilla/WidgetUtils.h"
 
 #include "../d3d9/Nv3DVUtils.h"
 
@@ -729,7 +730,8 @@ LayerManagerD3D10::Render()
   if (mTarget) {
     PaintToTarget();
   } else if (mBackBuffer) {
-    ShadowLayerForwarder::BeginTransaction();
+    ShadowLayerForwarder::BeginTransaction(mWidget->GetNaturalBounds(),
+                                           ROTATION_0);
     
     nsIntRect contentRect = nsIntRect(0, 0, rect.width, rect.height);
     if (!mRootForShadowTree) {
