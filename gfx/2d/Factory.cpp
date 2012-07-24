@@ -239,6 +239,10 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     {
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
+  case NATIVE_FONT_GDI_FONT_FACE:
+    {
+      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
+    }
 #endif
 #ifdef XP_MACOSX
   case NATIVE_FONT_MAC_FONT_FACE:
@@ -247,12 +251,6 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     }
 #endif
 #ifdef USE_SKIA
-#ifdef WIN32
-  case NATIVE_FONT_GDI_FONT_FACE:
-    {
-      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
-    }
-#endif
 #ifdef MOZ_ENABLE_FREETYPE
   case NATIVE_FONT_SKIA_FONT_FACE:
     {
