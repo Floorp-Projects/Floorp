@@ -102,13 +102,11 @@ class DeviceManagerSUT(DeviceManager):
 
   def _shouldCmdCloseSocket(self, cmd):
     """ Some commands need to close the socket after they are sent:
-    * push
     * rebt
     * uninst
     * quit
     """
-    socketClosingCmds = [re.compile('^push .*$'),
-                         re.compile('^quit.*'),
+    socketClosingCmds = [re.compile('^quit.*'),
                          re.compile('^rebt.*'),
                          re.compile('^uninst .*$')]
 
