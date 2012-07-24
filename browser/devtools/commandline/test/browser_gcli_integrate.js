@@ -11,7 +11,7 @@ function test() {
 
 let [ define, require ] = (function() {
   let tempScope = {};
-  Components.utils.import("resource://gre/modules/devtools/Require.jsm", tempScope);
+  Components.utils.import("resource://gre/modules/Require.jsm", tempScope);
   return [ tempScope.define, tempScope.require ];
 })();
 

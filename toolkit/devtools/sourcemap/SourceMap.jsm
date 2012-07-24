@@ -17,7 +17,7 @@
 
 var EXPORTED_SYMBOLS = [ "SourceMapConsumer", "SourceMapGenerator", "SourceNode" ];
 
-Components.utils.import('resource://gre/modules/devtools/Require.jsm');
+Components.utils.import('resource://gre/modules/Require.jsm');
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
