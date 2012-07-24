@@ -997,20 +997,6 @@ StorageCollectionGetRequest.prototype = {
   },
 
   /**
-   * Only retrieve BSOs whose sortindex is higher than this integer value.
-   */
-  set index_above(value) {
-    this._namedArgs.index_above = value;
-  },
-
-  /**
-   * Only retrieve BSOs whose sortindex is lower than this integer value.
-   */
-  set index_below(value) {
-    this._namedArgs.index_below = value;
-  },
-
-  /**
    * Limit the max number of returned BSOs to this integer number.
    */
   set limit(value) {
