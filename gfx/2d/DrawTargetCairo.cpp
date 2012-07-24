@@ -298,6 +298,44 @@ DrawTargetCairo::PrepareForDrawing(cairo_t* aContext, const Path* aPath /* = NUL
   WillChange(aPath);
 }
 
+static cairo_user_data_key_t surfaceDataKey;
+
+void
+ReleaseData(void* aData)
+{
+  static_cast<DataSourceSurface*>(aData)->Release();
+}
+
+/**
+ * Returns cairo surface for the given SourceSurface.
+ * If possible, it will use the cairo_surface associated with aSurface,
+ * otherwise, it will create a new cairo_surface.
+ * In either case, the caller must call cairo_surface_destroy on the
+ * result when it is done with it.
+ */
+cairo_surface_t*
+GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
+{
+  if (aSurface->GetType() == SURFACE_CAIRO) {
+    cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
+    cairo_surface_reference(surf);
+    return surf;
+  } else {
+    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    cairo_surface_t* surf =
+      cairo_image_surface_create_for_data(data->GetData(),
+                                          GfxFormatToCairoFormat(data->GetFormat()),
+                                          data->GetSize().width,
+                                          data->GetSize().height,
+                                          data->Stride());
+    cairo_surface_set_user_data(surf,
+                                 &surfaceDataKey,
+                                 data.forget(),
+                                 ReleaseData);
+    return surf;
+  }
+}
+
 void
 DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const Rect &aDest,
@@ -314,12 +352,10 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_matrix_init_translate(&src_mat, aSource.X(), aSource.Y());
   cairo_matrix_scale(&src_mat, sx, sy);
 
-  cairo_surface_t* surf = NULL;
-  if (aSurface->GetType() == SURFACE_CAIRO) {
-    surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
-  }
-
+  cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aSurface);
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
+  cairo_surface_destroy(surf);
+
   cairo_pattern_set_matrix(pat, &src_mat);
   cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
   cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
@@ -806,6 +842,7 @@ DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
   mSurface = aSurface;
   cairo_surface_reference(mSurface);
   mSize = aSize;
+  mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
   return true;
 }
