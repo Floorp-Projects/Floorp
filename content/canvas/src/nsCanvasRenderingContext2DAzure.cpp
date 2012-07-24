@@ -914,30 +914,12 @@ nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 nsresult
-nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::Initialize(PRInt32 width, PRInt32 height)
 {
-  Reset();
-
-  NS_ASSERTION(mCanvasElement, "Must have a canvas element!");
-  mDocShell = nsnull;
-
   mWidth = width;
   mHeight = height;
 
-  // This first time this is called on this object is via
-  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
-  // non-null, otherwise we'll return an error here and GetContext won't
-  // return this context object and we'll never enter this code again.
-  // All other times this method is called, if target is null then
-  // mTarget won't be changed, i.e. it will remain non-null, or else it
-  // will be set to non-null.
-  // In all cases, any usable canvas context will have non-null mTarget.
-
-  if (target) {
-    mValid = true;
-    mTarget = target;
-  } else {
-    mValid = false;
+  if (!mValid) {
     // Create a dummy target in the hopes that it will help us deal with users
     // calling into us after having changed the size where the size resulted
     // in an inability to create a correct DrawTarget.
@@ -967,6 +949,45 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
   }
 
   return mValid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult
+nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt32 width, PRInt32 height)
+{
+  Reset();
+
+  NS_ASSERTION(mCanvasElement, "Must have a canvas element!");
+  mDocShell = nsnull;
+
+  // This first time this is called on this object is via
+  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
+  // non-null, otherwise we'll return an error here and GetContext won't
+  // return this context object and we'll never enter this code again.
+  // All other times this method is called, if target is null then
+  // mTarget won't be changed, i.e. it will remain non-null, or else it
+  // will be set to non-null.
+  // In all cases, any usable canvas context will have non-null mTarget.
+
+  if (target) {
+    mValid = true;
+    mTarget = target;
+  } else {
+    mValid = false;
+  }
+
+  return Initialize(width, height);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2DAzure::InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height)
+{
+  mDocShell = shell;
+  mThebesSurface = surface;
+
+  mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, IntSize(width, height));
+  mValid = mTarget != nsnull;
+
+  return Initialize(width, height);
 }
 
 NS_IMETHODIMP
