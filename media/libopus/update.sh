@@ -61,3 +61,6 @@ echo "copied from revision ${version}"
 sed -e "s/^The git tag\/revision used was .*/The git tag\/revision used was ${version}./" \
     ${TARGET}/README_MOZILLA > ${TARGET}/README_MOZILLA+ && \
     mv ${TARGET}/README_MOZILLA+ ${TARGET}/README_MOZILLA
+
+# apply outstanding local patches
+patch -p3 < ./bug776661.patch

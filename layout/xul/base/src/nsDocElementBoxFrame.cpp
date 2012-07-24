@@ -111,7 +111,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mTooltipContent->SetAttr(nsnull, nsGkAtoms::_default,
+  mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default,
                            NS_LITERAL_STRING("true"), false);
 
   if (!aElements.AppendElement(mTooltipContent))

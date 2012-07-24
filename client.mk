@@ -254,10 +254,10 @@ CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
 EXTRA_CONFIG_DEPS := \
-	$(TOPSRCDIR)/aclocal.m4 \
-	$(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
-	$(TOPSRCDIR)/js/src/aclocal.m4 \
-	$(NULL)
+  $(TOPSRCDIR)/aclocal.m4 \
+  $(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
+  $(TOPSRCDIR)/js/src/aclocal.m4 \
+  $(NULL)
 
 $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	@$(PYTHON) $(TOPSRCDIR)/js/src/config/check-sync-dirs.py $(TOPSRCDIR)/js/src/build $(TOPSRCDIR)/build
@@ -265,16 +265,16 @@ $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	cd $(@D); $(AUTOCONF)
 
 CONFIG_STATUS_DEPS := \
-	$(wildcard \
-        $(CONFIGURES) \
-        $(TOPSRCDIR)/allmakefiles.sh \
-        $(TOPSRCDIR)/nsprpub/configure \
-        $(TOPSRCDIR)/config/milestone.txt \
-        $(TOPSRCDIR)/js/src/config/milestone.txt \
-        $(TOPSRCDIR)/browser/config/version.txt \
-        $(TOPSRCDIR)/*/confvars.sh \
-	) \
-	$(NULL)
+  $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
+  $(CONFIGURES) \
+  $(TOPSRCDIR)/allmakefiles.sh \
+  $(TOPSRCDIR)/nsprpub/configure \
+  $(TOPSRCDIR)/config/milestone.txt \
+  $(TOPSRCDIR)/js/src/config/milestone.txt \
+  $(TOPSRCDIR)/browser/config/version.txt \
+  $(TOPSRCDIR)/build/virtualenv/packages.txt \
+  $(TOPSRCDIR)/build/virtualenv/populate_virtualenv.py \
+  $(NULL)
 
 CONFIGURE_ENV_ARGS += \
   MAKE="$(MAKE)" \

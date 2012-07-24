@@ -1925,7 +1925,7 @@ nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
 
 /* nsINetAddr getScriptablePeerAddr (); */
 NS_IMETHODIMP
-nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr NS_OUTPARAM)
+nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr)
 {
     PRNetAddr rawAddr;
 
@@ -1941,7 +1941,7 @@ nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr NS_OUTPARAM)
 
 /* nsINetAddr getScriptableSelfAddr (); */
 NS_IMETHODIMP
-nsSocketTransport::GetScriptableSelfAddr(nsINetAddr * *addr NS_OUTPARAM)
+nsSocketTransport::GetScriptableSelfAddr(nsINetAddr * *addr)
 {
     PRNetAddr rawAddr;
 

@@ -126,12 +126,30 @@ var WifiManager = (function() {
     });
   }
 
+  var driverLoaded = false;
   function loadDriver(callback) {
-    voidControlMessage("load_driver", callback);
+    if (driverLoaded) {
+      callback(0);
+      return;
+    }
+
+    voidControlMessage("load_driver", function(status) {
+      driverLoaded = (status >= 0);
+      callback(status)
+    });
   }
 
   function unloadDriver(callback) {
-    voidControlMessage("unload_driver", callback);
+    // Otoro ICS can't unload and then load the driver, so never unload it.
+    if (device === "otoro") {
+      callback(0);
+      return;
+    }
+
+    voidControlMessage("unload_driver", function(status) {
+      driverLoaded = (status < 0);
+      callback(status);
+    });
   }
 
   function startSupplicant(callback) {

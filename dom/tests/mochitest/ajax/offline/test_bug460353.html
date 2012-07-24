@@ -30,7 +30,10 @@ function init()
   var uri = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService)
     .newURI(window.location.href, null, null);
-  pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+  pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 }
 
 function frameOnLoad(frameid, status)
@@ -78,7 +81,10 @@ function finish()
   var uri = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService)
             .newURI(window.location.href, null, null);
-  pm.remove(uri.host, "offline-app");
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+  pm.removeFromPrincipal(principal, "offline-app");
 
   cleanCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest");
   cleanCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs");

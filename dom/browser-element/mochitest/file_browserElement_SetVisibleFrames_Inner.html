@@ -1,0 +1,18 @@
+<html>
+<body>
+<script>
+
+var name = location.search.substring(1);
+addEventListener('load', function() {
+  setTimeout(function() {
+    alert(name + ':ready');
+  }, 0);
+});
+
+addEventListener('mozvisibilitychange', function() {
+  alert(name + ':' + (document.mozHidden ? 'hidden' : 'visible'));
+});
+
+</script>
+</body>
+</html>

@@ -24,8 +24,7 @@ public:
   ShadowableLayer* layer() const { return mLayer; }
 
 protected:
-  NS_OVERRIDE
-  virtual void ActorDestroy(ActorDestroyReason why);
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
 private:
   ShadowableLayer* mLayer;

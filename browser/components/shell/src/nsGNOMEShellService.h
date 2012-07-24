@@ -8,8 +8,9 @@
 
 #include "nsIShellService.h"
 #include "nsStringAPI.h"
+#include "mozilla/Attributes.h"
 
-class nsGNOMEShellService : public nsIShellService
+class nsGNOMEShellService MOZ_FINAL : public nsIShellService
 {
 public:
   nsGNOMEShellService() : mCheckedThisSession(false), mAppIsInPath(false) { }

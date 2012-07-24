@@ -336,7 +336,7 @@ private:
   {
     if (mBackBuffer.type() == SurfaceDescriptor::TSharedTextureDescriptor)
       return mBackBuffer.get_SharedTextureDescriptor().handle();
-    return nsnull;
+    return 0;
   }
 
   BasicShadowLayerManager* BasicManager()
@@ -387,7 +387,7 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     if (!handle) {
       handle = mGLContext->CreateSharedHandle(flags);
       if (handle) {
-        mBackBuffer = SharedTextureDescriptor(flags, handle, mBounds.Size());
+        mBackBuffer = SharedTextureDescriptor(flags, handle, mBounds.Size(), false);
       }
     }
     if (handle) {

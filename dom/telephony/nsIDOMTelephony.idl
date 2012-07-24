@@ -9,10 +9,11 @@
 interface nsIDOMEventListener;
 interface nsIDOMTelephonyCall;
 
-[scriptable, builtinclass, uuid(0de46b73-be83-4970-ad15-45f92cb0902a)]
+[scriptable, builtinclass, uuid(b3875982-7327-478f-98a2-54cc2de36d7d)]
 interface nsIDOMTelephony : nsIDOMEventTarget
 {
   nsIDOMTelephonyCall dial(in DOMString number);
+  nsIDOMTelephonyCall dialEmergency(in DOMString number);
 
   attribute boolean muted;
   attribute boolean speakerEnabled;

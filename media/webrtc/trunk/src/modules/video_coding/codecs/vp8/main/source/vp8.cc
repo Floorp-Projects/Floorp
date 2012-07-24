@@ -691,7 +691,7 @@ int VP8Decoder::Decode(const EncodedImage& input_image,
       propagation_cnt_++;
   }
 
-  vpx_dec_iter_t iter = NULL;
+  vpx_codec_iter_t iter = NULL;
   vpx_image_t* img;
   int ret;
 
