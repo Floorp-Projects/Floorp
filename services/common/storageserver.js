@@ -411,26 +411,6 @@ StorageServerCollection.prototype = {
       }
     }
 
-    if (options.index_above) {
-      if (bso.sortindex === undefined) {
-        return false;
-      }
-
-      if (bso.sortindex <= options.index_above) {
-        return false;
-      }
-    }
-
-    if (options.index_below) {
-      if (bso.sortindex === undefined) {
-        return false;
-      }
-
-      if (bso.sortindex >= options.index_below) {
-        return false;
-      }
-    }
-
     return true;
   },
 
@@ -640,18 +620,6 @@ StorageServerCollection.prototype = {
 
       CommonUtils.ensureMillisecondsTimestamp(options.older);
       options.older = parseInt(options.older, 10);
-    }
-
-    if (options.index_above) {
-      if (!isInteger(options.index_above)) {
-        throw HTTP_400;
-      }
-    }
-
-    if (options.index_below) {
-      if (!isInteger(options.index_below)) {
-        throw HTTP_400;
-      }
     }
 
     if (options.limit) {
