@@ -39,7 +39,7 @@ public:
                                                 gfxASurface::gfxImageFormat format);
     
     mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
 

@@ -730,7 +730,7 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 #endif
 
 RefPtr<ScaledFont>
-gfxPlatformGtk::GetScaledFontForFont(gfxFont *aFont)
+gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     NS_ASSERTION(aFont->GetType() == gfxFont::FONT_TYPE_FT2, "Expecting Freetype font");
     NativeFont nativeFont;
