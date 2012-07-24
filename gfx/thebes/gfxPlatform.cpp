@@ -606,7 +606,7 @@ gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
   NativeFont nativeFont;
   nativeFont.mType = NATIVE_FONT_CAIRO_FONT_FACE;
-  nativeFont.mFont = aFont;
+  nativeFont.mFont = aFont->GetCairoScaledFont();
   RefPtr<ScaledFont> scaledFont =
     Factory::CreateScaledFontForNativeFont(nativeFont,
                                            aFont->GetAdjustedSize());
