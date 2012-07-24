@@ -41,7 +41,8 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const bool& isContent,
                      const bool& usingPrivateBrowsing,
                      const bool& isInBrowserElement,
-                     const PRUint32& appId);
+                     const PRUint32& appId,
+                     const nsCString& extendedOrigin);
   bool RecvClose(const PRUint16 & code, const nsCString & reason);
   bool RecvSendMsg(const nsCString& aMsg);
   bool RecvSendBinaryMsg(const nsCString& aMsg);
@@ -62,6 +63,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool mIsInBrowserElement          : 1;
 
   PRUint32 mAppId;
+  nsCString mExtendedOrigin;
 };
 
 } // namespace net

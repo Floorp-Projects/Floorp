@@ -49,6 +49,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:StartTone",
   "RIL:StopTone",
   "RIL:Dial",
+  "RIL:DialEmergency",
   "RIL:HangUp",
   "RIL:AnswerCall",
   "RIL:RejectCall",
@@ -230,6 +231,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "RIL:Dial":
         this.dial(msg.json);
+        break;
+      case "RIL:DialEmergency":
+        this.dialEmergency(msg.json);
         break;
       case "RIL:HangUp":
         this.hangUp(msg.json);
@@ -1041,7 +1045,12 @@ RadioInterfaceLayer.prototype = {
 
   dial: function dial(number) {
     debug("Dialing " + number);
-    this.worker.postMessage({type: "dial", number: number});
+    this.worker.postMessage({type: "dial", number: number, isDialEmergency: false});
+  },
+
+  dialEmergency: function dialEmergency(number) {
+    debug("Dialing emergency " + number);
+    this.worker.postMessage({type: "dial", number: number, isDialEmergency: true});
   },
 
   hangUp: function hangUp(callIndex) {

@@ -13,7 +13,8 @@ MODULE		= jsloader
 LIBRARY_NAME	= jsloader_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-LOCAL_INCLUDES += -I$(srcdir)/../src
+LOCAL_INCLUDES += -I$(srcdir)/../src \
+                  -I$(srcdir)/../wrappers
 
 CPPSRCS		= mozJSComponentLoader.cpp mozJSSubScriptLoader.cpp mozJSLoaderUtils.cpp
 

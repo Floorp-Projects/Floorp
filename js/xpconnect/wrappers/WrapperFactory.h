@@ -50,6 +50,8 @@ class WrapperFactory {
         return HasWrapperFlag(wrapper, SHADOWING_FORBIDDEN);
     }
 
+    static JSObject *GetXrayWaiver(JSObject *obj);
+    static JSObject *CreateXrayWaiver(JSContext *cx, JSObject *obj);
     static JSObject *WaiveXray(JSContext *cx, JSObject *obj);
 
     static JSObject *DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags);

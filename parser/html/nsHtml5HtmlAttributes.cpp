@@ -116,7 +116,7 @@ nsHtml5HtmlAttributes::getURI(PRInt32 index)
   if (index < length && index >= 0) {
     return names[index]->getUri(mode);
   } else {
-    return nsnull;
+    return 0;
   }
 }
 

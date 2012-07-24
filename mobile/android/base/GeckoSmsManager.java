@@ -573,7 +573,7 @@ public class GeckoSmsManager
       Log.e("GeckoSmsManager", "The id we received is higher than the higher allowed value.");
       return -1;
     } catch (Exception e) {
-      Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message: " + e);
+      Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message", e);
       return -1;
     }
   }
@@ -649,7 +649,7 @@ public class GeckoSmsManager
           Log.i("GeckoSmsManager", "Message has an invalid type, we ignore it.");
           GeckoAppShell.notifyGetSmsFailed(kNotFoundError, mRequestId, mProcessId);
         } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to get message: " + e);
+          Log.e("GeckoSmsManager", "Error while trying to get message", e);
           GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId, mProcessId);
         } finally {
           if (cursor != null) {
@@ -693,10 +693,10 @@ public class GeckoSmsManager
 
           GeckoAppShell.notifySmsDeleted(count == 1, mRequestId, mProcessId);
         } catch (TooManyResultsException e) {
-          Log.e("GeckoSmsManager", "Delete more than one message? " + e);
+          Log.e("GeckoSmsManager", "Delete more than one message?", e);
           GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId, mProcessId);
         } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to delete a message: " + e);
+          Log.e("GeckoSmsManager", "Error while trying to delete a message", e);
           GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId, mProcessId);
         }
       }
@@ -809,10 +809,10 @@ public class GeckoSmsManager
                                           cursor.getLong(cursor.getColumnIndex("date")),
                                           mRequestId, mProcessId);
         } catch (UnexpectedDeliveryStateException e) {
-          Log.e("GeckoSmsManager", "Unexcepted delivery state type: " + e);
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
           GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId, mProcessId);
         } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to create a message list cursor: " + e);
+          Log.e("GeckoSmsManager", "Error while trying to create a message list cursor", e);
           GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId, mProcessId);
         } finally {
           // Close the cursor if MessagesListManager isn't taking care of it.
@@ -875,10 +875,10 @@ public class GeckoSmsManager
                                              cursor.getLong(cursor.getColumnIndex("date")),
                                              mRequestId, mProcessId);
         } catch (UnexpectedDeliveryStateException e) {
-          Log.e("GeckoSmsManager", "Unexcepted delivery state type: " + e);
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
           GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId, mProcessId);
         } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to get the next message of a list: " + e);
+          Log.e("GeckoSmsManager", "Error while trying to get the next message of a list", e);
           GeckoAppShell.notifyReadingMessageListFailed(kUnknownError, mRequestId, mProcessId);
         }
       }

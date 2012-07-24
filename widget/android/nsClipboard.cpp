@@ -110,7 +110,7 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
                                     PRUint32 aLength, PRInt32 aWhichClipboard,
-                                    bool *aHasText NS_OUTPARAM)
+                                    bool *aHasText)
 {
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard)
@@ -125,7 +125,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool *aIsSupported NS_OUTPARAM)
+nsClipboard::SupportsSelectionClipboard(bool *aIsSupported)
 {
   *aIsSupported = false;
   return NS_OK;

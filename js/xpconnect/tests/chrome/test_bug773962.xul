@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=773962
+-->
+<window title="Mozilla Bug 773962"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=773962"
+     target="_blank">Mozilla Bug 773962</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for remapping Xray waivers during brain transplant. **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  var gFramesLoaded = 0;
+  function frameLoaded() {
+    ++gFramesLoaded;
+    if (gFramesLoaded == 2)
+      startTest();
+    if (gFramesLoaded == 3)
+      finishTest();
+  }
+
+  function startTest() {
+    // grab the windows and the node.
+    win1 = document.getElementById('frame1').contentWindow;
+    win2 = document.getElementById('frame2').contentWindow;
+    node1 = win1.document.getElementById('text');
+    loc1 = win1.location;
+
+    // Grab some Xray waivers.
+    win1Waiver = win1.wrappedJSObject;
+    node1Waiver = node1.wrappedJSObject;
+    loc1Waiver = win1Waiver.location;
+
+    // Adopt node1 into win2. This causes node1 to be transplanted.
+    win2.document.adoptNode(node1);
+
+    // Navigate win1. This causes win1 to be transplanted.
+    win1.location = 'http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html';
+
+    // The above happens async. Our onload handler will call finishTest() when we're ready.
+  }
+
+  function finishTest() {
+    // Now, recompute some wrappers.
+    Cu.recomputeWrappers();
+
+    // First, pat ourselves on the back for not asserting/crashing. That's most of
+    // what we're really testing here.
+    ok(true, "Didnt crash!");
+
+    // Now, make sure everything is set up how we expect.
+    ok(win1Waiver === win1.wrappedJSObject, "waivers still work");
+    ok(XPCNativeWrapper(win1Waiver) === win1, "waivers still work");
+    ok(node1Waiver === node1.wrappedJSObject, "waivers still work");
+    ok(XPCNativeWrapper(node1Waiver) === node1, "waivers still work");
+
+    // The semantics of location are tricky, because win1 now has a new location object.
+    // In fact, loc1 should be a dead object proxy. Let's make sure we get this right.
+    ok(loc1 !== win1.location, "navigation means different window.location");
+    ok(loc1Waiver !== win1.location.wrappedJSObject, "navigation means different window.location");
+
+    // Whew.
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="frame1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+  <iframe id="frame2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

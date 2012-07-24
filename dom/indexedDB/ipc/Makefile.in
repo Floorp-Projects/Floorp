@@ -45,7 +45,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Copy all the normal xpcshell tests from the regular unit directory.
 copy-xpcshell-tests:
-	$(DIR_INSTALL) $(wildcard $(topsrcdir)/dom/indexedDB/test/unit/test_*.js) \
-    $(testxpcobjdir)/$(relativesrcdir)/$(XPCSHELL_TESTS)
+	$(call install_cmd,$(wildcard $(topsrcdir)/dom/indexedDB/test/unit/test_*.js) \
+		$(testxpcobjdir)/$(relativesrcdir)/$(XPCSHELL_TESTS))
 
 libs-xpcshell-tests: copy-xpcshell-tests

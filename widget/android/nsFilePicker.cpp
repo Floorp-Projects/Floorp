@@ -113,7 +113,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
     return CallQueryInterface(uri, aFileURL);
 }
 
-NS_IMETHODIMP nsFilePicker::Show(PRInt16 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsFilePicker::Show(PRInt16 *_retval)
 {
     if (!mozilla::AndroidBridge::Bridge())
         return NS_ERROR_NOT_IMPLEMENTED;

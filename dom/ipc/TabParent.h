@@ -212,13 +212,11 @@ protected:
     bool ShouldDelayDialogs();
     bool AllowContentIME();
 
-    NS_OVERRIDE
     virtual PRenderFrameParent* AllocPRenderFrame(ScrollingBehavior* aScrolling,
                                                   LayersBackend* aBackend,
                                                   int32_t* aMaxTextureSize,
-                                                  uint64_t* aLayersId);
-    NS_OVERRIDE
-    virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame);
+                                                  uint64_t* aLayersId) MOZ_OVERRIDE;
+    virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
     // IME
     static TabParent *mIMETabParent;

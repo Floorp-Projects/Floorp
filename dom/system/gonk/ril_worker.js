@@ -1543,14 +1543,18 @@ let RIL = {
    */
   dial: function dial(options) {
     let dial_request_type = REQUEST_DIAL;
-    if (this.voiceRegistrationState.emergencyCallsOnly) {
+    if (this.voiceRegistrationState.emergencyCallsOnly ||
+        options.isDialEmergency) {
       if (!this._isEmergencyNumber(options.number)) {
-        if (DEBUG) {
-          // TODO: Notify an error here so that the DOM will see an error event.
-          debug(options.number + " is not a valid emergency number.");
-        }
+        // Notify error in establishing the call with an invalid number.
+        options.callIndex = -1;
+        options.type = "callError";
+        options.error =
+          RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_UNOBTAINABLE_NUMBER];
+        this.sendDOMMessage(options);
         return;
       }
+
       if (RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL) {
         dial_request_type = REQUEST_DIAL_EMERGENCY_CALL;
       }

@@ -684,10 +684,6 @@ SYSINSTALL	= $(NSINSTALL) -t
 # This isn't necessarily true, just here
 sysinstall_cmd = install_cmd
 
-# Directory nsinstall.
-DIR_INSTALL = $(INSTALL)
-dir_install_cmd = install_cmd
-
 #
 # Localization build automation
 #
