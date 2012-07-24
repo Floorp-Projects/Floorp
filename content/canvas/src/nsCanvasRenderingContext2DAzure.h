@@ -597,11 +597,14 @@ protected:
   /* This function ensures there is a writable pathbuilder available, this
    * pathbuilder may be working in user space or in device space or
    * device space.
+   * After calling this function mPathTransformWillUpdate will be false
    */
   void EnsureWritablePath();
 
   // Ensures a path in UserSpace is available.
-  void EnsureUserSpacePath();
+  // If aCommitTransform is true, then any transform on the context will be
+  // used for the path.
+  void EnsureUserSpacePath(bool aCommitTransform = true);
 
   void TransformWillUpdate();
 
