@@ -70,6 +70,7 @@
     _(SubI)                         \
     _(MulI)                         \
     _(MathD)                        \
+    _(ModD)                         \
     _(BinaryV)                      \
     _(Concat)                       \
     _(CharCodeAt)                   \
