@@ -464,7 +464,7 @@ XULTreeGridCellAccessible::
                             XULTreeGridRowAccessible* aRowAcc,
                             nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                             PRInt32 aRow, nsITreeColumn* aColumn) :
-  LeafAccessible(aContent, aDoc), mTree(aTree),
+  LeafAccessible(aContent, aDoc), xpcAccessibleTableCell(this), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
@@ -497,6 +497,13 @@ NS_IMPL_RELEASE_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: nsIAccessible implementation
+
+  void
+  XULTreeGridCellAccessible::Shutdown()
+{
+  mTableCell = nsnull;
+  LeafAccessible::Shutdown();
+}
 
 Accessible*
 XULTreeGridCellAccessible::FocusedChild()
