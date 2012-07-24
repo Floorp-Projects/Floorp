@@ -9,7 +9,9 @@
 #include "BaseAccessibles.h"
 #include "nsIAccessibleTable.h"
 #include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "xpcAccessibleTable.h"
+#include "xpcAccessibleTableCell.h"
 #include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 
@@ -151,7 +153,9 @@ private:
  * Class represents xul:listcell.
  */
 class XULListCellAccessible : public HyperTextAccessibleWrap,
-                              public nsIAccessibleTableCell
+                              public nsIAccessibleTableCell,
+                              public TableCellAccessible,
+                              public xpcAccessibleTableCell
 {
 public:
   XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -160,9 +164,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTableCell
-  NS_DECL_NSIACCESSIBLETABLECELL
+  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL
 
   // Accessible
+  virtual void Shutdown();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual a11y::role NativeRole();
 };

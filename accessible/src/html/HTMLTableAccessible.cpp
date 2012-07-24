@@ -45,7 +45,7 @@ using namespace mozilla::a11y;
 
 HTMLTableCellAccessible::
   HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
 {
 }
 
@@ -58,6 +58,13 @@ NS_IMPL_ISUPPORTS_INHERITED1(HTMLTableCellAccessible,
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableCellAccessible: Accessible implementation
+
+  void
+  HTMLTableCellAccessible::Shutdown()
+{
+  mTableCell = nsnull;
+  HyperTextAccessibleWrap::Shutdown();
+}
 
 role
 HTMLTableCellAccessible::NativeRole()
