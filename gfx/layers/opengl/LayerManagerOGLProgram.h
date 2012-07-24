@@ -111,10 +111,12 @@ struct ProgramProfileOGL
   nsTArray<Argument> mAttributes;
   PRUint32 mTextureCount;
   bool mHasMatrixProj;
+  bool mHasTextureTransform;
 private:
   ProgramProfileOGL() :
     mTextureCount(0),
-    mHasMatrixProj(false) {}
+    mHasMatrixProj(false),
+    mHasTextureTransform(false) {}
 };
 
 
@@ -141,7 +143,6 @@ public:
   ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile) :
     mIsProjectionMatrixStale(false), mGL(aGL), mProgram(0),
     mProfile(aProfile), mProgramState(STATE_NEW) { }
-
 
   ~ShaderProgramOGL() {
     if (mProgram <= 0) {
@@ -244,6 +245,12 @@ public:
   void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
     mIsProjectionMatrixStale = false;
+  }
+
+  // sets this program's texture transform, if it uses one
+  void SetTextureTransform(const gfx3DMatrix& aMatrix) {
+    if (mProfile.mHasTextureTransform)
+      SetMatrixUniform(mProfile.LookupUniformLocation("uTextureTransform"), aMatrix);
   }
 
   void SetRenderOffset(const nsIntPoint& aOffset) {

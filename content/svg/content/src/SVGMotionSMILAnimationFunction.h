@@ -31,11 +31,11 @@ class SVGMotionSMILAnimationFunction : public nsSMILAnimationFunction
 {
 public:
   SVGMotionSMILAnimationFunction();
-  NS_OVERRIDE virtual bool SetAttr(nsIAtom* aAttribute,
-                                     const nsAString& aValue,
-                                     nsAttrValue& aResult,
-                                     nsresult* aParseResult = nsnull);
-  NS_OVERRIDE virtual bool UnsetAttr(nsIAtom* aAttribute);
+  virtual bool SetAttr(nsIAtom* aAttribute,
+                       const nsAString& aValue,
+                       nsAttrValue& aResult,
+                       nsresult* aParseResult = nsnull) MOZ_OVERRIDE;
+  virtual bool UnsetAttr(nsIAtom* aAttribute) MOZ_OVERRIDE;
 
   // Method to allow our owner-element to signal us when our <mpath>
   // has changed or been added/removed.  When that happens, we need to
@@ -56,12 +56,12 @@ protected:
     ePathSourceType_Mpath
   };
 
-  NS_OVERRIDE virtual nsSMILCalcMode GetCalcMode() const;
-  NS_OVERRIDE virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                                         nsSMILValueArray& aResult);
-  NS_OVERRIDE virtual void CheckValueListDependentAttrs(PRUint32 aNumValues);
+  virtual nsSMILCalcMode GetCalcMode() const MOZ_OVERRIDE;
+  virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
+                             nsSMILValueArray& aResult) MOZ_OVERRIDE;
+  virtual void CheckValueListDependentAttrs(PRUint32 aNumValues) MOZ_OVERRIDE;
 
-  NS_OVERRIDE virtual bool IsToAnimation() const;
+  virtual bool IsToAnimation() const MOZ_OVERRIDE;
 
   void     CheckKeyPoints();
   nsresult SetKeyPoints(const nsAString& aKeyPoints, nsAttrValue& aResult);

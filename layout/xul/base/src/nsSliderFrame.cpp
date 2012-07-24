@@ -592,7 +592,7 @@ nsSliderFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
 bool
 nsSliderFrame::GetTouchPoint(nsTouchEvent* aEvent, nsIntPoint &aPoint)
 {
-  NS_ENSURE_ARG_POINTER(aEvent);
+  NS_ENSURE_TRUE(aEvent, false);
   // return false if there is more than one touch on the page, or if
   // we can't find a touch point
   if (aEvent->touches.Length() != 1) {

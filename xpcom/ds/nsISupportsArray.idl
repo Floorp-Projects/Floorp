@@ -36,7 +36,7 @@ class nsISupportsArray;
 typedef bool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
 nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result NS_OUTPARAM,
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array);
 %}
 

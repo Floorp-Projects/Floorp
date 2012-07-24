@@ -11,14 +11,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -27,33 +26,30 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TabWidget;
 import android.widget.Toast;
 
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Map;
-
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB;
 
-import org.json.JSONObject;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class AwesomeBar extends GeckoActivity {
     private static final String LOGTAG = "GeckoAwesomeBar";
+
+    private static final Collection<String> sSwypeInputMethods = Arrays.asList(new String[] {
+                                                                 InputMethods.METHOD_SWYPE,
+                                                                 InputMethods.METHOD_SWYPE_BETA,
+                                                                 });
 
     static final String URL_KEY = "url";
     static final String CURRENT_URL_KEY = "currenturl";
@@ -68,6 +64,7 @@ public class AwesomeBar extends GeckoActivity {
     private ImageButton mGoButton;
     private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
+    private boolean mIsUsingSwype;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -204,6 +201,33 @@ public class AwesomeBar extends GeckoActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        // The Awesome Bar will receive focus when the Awesome Screen first opens or after the user
+        // closes the "Select Input Method" window. If the input method changes to or from Swype,
+        // then toggle the URL mode flag. Swype's URL mode disables the automatic word spacing that
+        // Swype users expect when entering search queries, but does not add any special VKB keys
+        // like ".com" or "/" that would be useful for entering URLs.
+
+        if (!hasFocus)
+            return;
+
+        boolean wasUsingSwype = mIsUsingSwype;
+        mIsUsingSwype = sSwypeInputMethods.contains(InputMethods.getCurrentInputMethod(this));
+
+        if (mIsUsingSwype == wasUsingSwype)
+            return;
+
+        int currentInputType = mText.getInputType();
+        int newInputType = mIsUsingSwype
+                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI)    // URL=OFF
+                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI);    // URL=ON
+
+        mText.setRawInputType(newInputType);
     }
 
     @Override
@@ -589,5 +613,4 @@ public class AwesomeBar extends GeckoActivity {
         }
         return false;
     }
-
 }

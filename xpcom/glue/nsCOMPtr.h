@@ -740,7 +740,7 @@ class nsCOMPtr MOZ_FINAL
 
       template <typename I>
       void
-      forget( I** rhs NS_OUTPARAM )
+      forget( I** rhs )
           // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
           // Useful to avoid unnecessary AddRef/Release pairs with "out"
           // parameters where rhs bay be a T** or an I** where I is a base class
@@ -1046,7 +1046,7 @@ class nsCOMPtr<nsISupports>
         }
 
       void
-      forget( nsISupports** rhs NS_OUTPARAM )
+      forget( nsISupports** rhs )
           // Set the target of rhs to the value of mRawPtr and null out mRawPtr.
           // Useful to avoid unnecessary AddRef/Release pairs with "out"
           // parameters.

@@ -49,6 +49,7 @@ EXPORTS	= \
 	gfxUserFontSet.h \
 	nsCoreAnimationSupport.h \
 	nsIOSurface.h \
+	nsSurfaceTexture.h \
 	gfxSharedImageSurface.h \
 	gfxReusableSurfaceWrapper.h \
 	$(NULL)
@@ -174,6 +175,7 @@ CPPSRCS	= \
 	gfxHarfBuzzShaper.cpp \
 	gfxSharedImageSurface.cpp \
 	gfxReusableSurfaceWrapper.cpp \
+	nsSurfaceTexture.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))

@@ -23,12 +23,10 @@ public:
     void Main();
 
 protected:    
-    NS_OVERRIDE
     virtual bool RecvPong(const int& one, const float& zeroPtTwoFive,
-                          const PRUint8& dummy);
+                          const PRUint8& dummy) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -46,12 +44,10 @@ public:
     virtual ~TestSanityChild();
 
 protected:
-    NS_OVERRIDE
     virtual bool RecvPing(const int& zero, const float& zeroPtFive,
-                          const PRInt8& dummy);
+                          const PRInt8& dummy) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

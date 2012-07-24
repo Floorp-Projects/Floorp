@@ -22,7 +22,7 @@ public:
   PluginStreamChild();
   virtual ~PluginStreamChild() { }
 
-  NS_OVERRIDE virtual bool IsBrowserStream() { return false; }
+  virtual bool IsBrowserStream() MOZ_OVERRIDE { return false; }
 
   virtual bool Answer__delete__(const NPReason& reason,
                                 const bool& artificial);

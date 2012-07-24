@@ -94,7 +94,7 @@ public:
   virtual ~nsSelectionCommandsBase() {}
 
   NS_DECL_ISUPPORTS
-  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandContext, bool *_retval NS_OUTPARAM);
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandContext, bool *_retval);
   NS_IMETHOD GetCommandStateParams(const char * aCommandName, nsICommandParams *aParams, nsISupports *aCommandContext);
   NS_IMETHOD DoCommandParams(const char * aCommandName, nsICommandParams *aParams, nsISupports *aCommandContext);
 

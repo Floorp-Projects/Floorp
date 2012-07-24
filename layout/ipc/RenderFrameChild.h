@@ -22,10 +22,8 @@ public:
   void Destroy();
 
 protected:
-  NS_OVERRIDE
-  virtual PLayersChild* AllocPLayers();
-  NS_OVERRIDE
-  virtual bool DeallocPLayers(PLayersChild* aLayers);
+  virtual PLayersChild* AllocPLayers() MOZ_OVERRIDE;
+  virtual bool DeallocPLayers(PLayersChild* aLayers) MOZ_OVERRIDE;
 };
 
 } // namespace layout

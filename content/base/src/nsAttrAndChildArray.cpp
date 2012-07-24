@@ -462,7 +462,7 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos, nsAttrValue& aValue)
   memmove(&ATTRS(mImpl)[aPos],
           &ATTRS(mImpl)[aPos + 1],
           (slotCount - aPos - 1) * sizeof(InternalAttr));
-  memset(&ATTRS(mImpl)[slotCount - 1], nsnull, sizeof(InternalAttr));
+  memset(&ATTRS(mImpl)[slotCount - 1], 0, sizeof(InternalAttr));
 
   return NS_OK;
 }

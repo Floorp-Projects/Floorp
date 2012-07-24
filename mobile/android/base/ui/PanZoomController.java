@@ -130,7 +130,7 @@ public class PanZoomController
         mMainThread = GeckoApp.mAppContext.getMainLooper().getThread();
         checkMainThread();
 
-        mState = PanZoomState.NOTHING;
+        setState(PanZoomState.NOTHING);
 
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
@@ -147,6 +147,10 @@ public class PanZoomController
         GeckoAppShell.unregisterGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
         GeckoAppShell.unregisterGeckoEventListener(MESSAGE_PREFS_DATA, this);
         mSubscroller.destroy();
+    }
+
+    private void setState(PanZoomState state) {
+        mState = state;
     }
 
     // for debugging bug 713011; it can be taken out once that is resolved.
@@ -262,7 +266,7 @@ public class PanZoomController
         case ANIMATED_ZOOM:
             // the zoom that's in progress likely makes no sense any more (such as if
             // the screen orientation changed) so abort it
-            mState = PanZoomState.NOTHING;
+            setState(PanZoomState.NOTHING);
             // fall through
         case NOTHING:
             // Don't do animations here; they're distracting and can cause flashes on page
@@ -283,7 +287,7 @@ public class PanZoomController
             // this is the first touch point going down, so we enter the pending state
             // seting the state will kill any animations in progress, possibly leaving
             // the page in overscroll
-            mState = PanZoomState.WAITING_LISTENERS;
+            setState(PanZoomState.WAITING_LISTENERS);
         }
     }
 
@@ -294,7 +298,6 @@ public class PanZoomController
             // if we enter here, we just finished a block of events whose default actions
             // were prevented by touch listeners. Now there are no touch points left, so
             // we need to reset our state and re-bounce because we might be in overscroll
-            mState = PanZoomState.NOTHING;
             bounce();
         }
     }
@@ -375,14 +378,14 @@ public class PanZoomController
             return true;
 
         case PANNING_HOLD_LOCKED:
-            mState = PanZoomState.PANNING_LOCKED;
+            setState(PanZoomState.PANNING_LOCKED);
             // fall through
         case PANNING_LOCKED:
             track(event);
             return true;
 
         case PANNING_HOLD:
-            mState = PanZoomState.PANNING;
+            setState(PanZoomState.PANNING);
             // fall through
         case PANNING:
             track(event);
@@ -412,7 +415,6 @@ public class PanZoomController
             return false;
 
         case TOUCHING:
-            mState = PanZoomState.NOTHING;
             // the switch into TOUCHING might have happened while the page was
             // snapping back after overscroll. we need to finish the snap if that
             // was the case
@@ -423,12 +425,12 @@ public class PanZoomController
         case PANNING_LOCKED:
         case PANNING_HOLD:
         case PANNING_HOLD_LOCKED:
-            mState = PanZoomState.FLING;
+            setState(PanZoomState.FLING);
             fling();
             return true;
 
         case PINCHING:
-            mState = PanZoomState.NOTHING;
+            setState(PanZoomState.NOTHING);
             return true;
         }
         Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchEnd");
@@ -447,7 +449,6 @@ public class PanZoomController
         }
 
         cancelTouch();
-        mState = PanZoomState.NOTHING;
         // ensure we snap back if we're overscrolled
         bounce();
         return false;
@@ -456,7 +457,7 @@ public class PanZoomController
     private void startTouch(float x, float y, long time) {
         mX.startTouch(x);
         mY.startTouch(y);
-        mState = PanZoomState.TOUCHING;
+        setState(PanZoomState.TOUCHING);
         mLastEventTime = time;
     }
 
@@ -474,12 +475,12 @@ public class PanZoomController
 
         if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
             mY.setScrollingDisabled(true);
-            mState = PanZoomState.PANNING_LOCKED;
+            setState(PanZoomState.PANNING_LOCKED);
         } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
             mX.setScrollingDisabled(true);
-            mState = PanZoomState.PANNING_LOCKED;
+            setState(PanZoomState.PANNING_LOCKED);
         } else {
-            mState = PanZoomState.PANNING;
+            setState(PanZoomState.PANNING);
         }
     }
 
@@ -515,13 +516,13 @@ public class PanZoomController
 
         if (stopped()) {
             if (mState == PanZoomState.PANNING) {
-                mState = PanZoomState.PANNING_HOLD;
+                setState(PanZoomState.PANNING_HOLD);
             } else if (mState == PanZoomState.PANNING_LOCKED) {
-                mState = PanZoomState.PANNING_HOLD_LOCKED;
+                setState(PanZoomState.PANNING_HOLD_LOCKED);
             } else {
                 // should never happen, but handle anyway for robustness
                 Log.e(LOGTAG, "Impossible case " + mState + " when stopped in track");
-                mState = PanZoomState.PANNING_HOLD_LOCKED;
+                setState(PanZoomState.PANNING_HOLD_LOCKED);
             }
         }
 
@@ -548,7 +549,7 @@ public class PanZoomController
 
         ViewportMetrics bounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
         if (bounceStartMetrics.fuzzyEquals(metrics)) {
-            mState = PanZoomState.NOTHING;
+            setState(PanZoomState.NOTHING);
             return;
         }
 
@@ -562,7 +563,7 @@ public class PanZoomController
 
     /* Performs a bounce-back animation to the nearest valid viewport metrics. */
     private void bounce() {
-        mState = PanZoomState.BOUNCE;
+        setState(PanZoomState.BOUNCE);
         bounce(getValidViewportMetrics());
     }
 
@@ -686,7 +687,7 @@ public class PanZoomController
             /* Finally, if there's nothing else to do, complete the animation and go to sleep. */
             finishBounce();
             finishAnimation();
-            mState = PanZoomState.NOTHING;
+            setState(PanZoomState.NOTHING);
         }
 
         /* Performs one frame of a bounce animation. */
@@ -754,7 +755,7 @@ public class PanZoomController
                 bounce();
             } else {
                 finishAnimation();
-                mState = PanZoomState.NOTHING;
+                setState(PanZoomState.NOTHING);
             }
         }
     }
@@ -866,7 +867,7 @@ public class PanZoomController
         if (!mController.getAllowZoom())
             return false;
 
-        mState = PanZoomState.PINCHING;
+        setState(PanZoomState.PINCHING);
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         cancelTouch();
 
@@ -1028,7 +1029,7 @@ public class PanZoomController
      * pixels.
      */
     private boolean animatedZoomTo(RectF zoomToRect) {
-        mState = PanZoomState.ANIMATED_ZOOM;
+        setState(PanZoomState.ANIMATED_ZOOM);
         final float startZoom = mController.getZoomFactor();
 
         RectF viewport = mController.getViewport();
@@ -1070,7 +1071,6 @@ public class PanZoomController
     /** This function must be called from the UI thread. */
     public void abortPanning() {
         checkMainThread();
-        mState = PanZoomState.NOTHING;
         bounce();
     }
 }

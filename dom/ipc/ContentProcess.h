@@ -33,10 +33,8 @@ public:
     ~ContentProcess()
     { }
 
-    NS_OVERRIDE
-    virtual bool Init();
-    NS_OVERRIDE
-    virtual void CleanUp();
+    virtual bool Init() MOZ_OVERRIDE;
+    virtual void CleanUp() MOZ_OVERRIDE;
 
 private:
     ContentChild mContent;

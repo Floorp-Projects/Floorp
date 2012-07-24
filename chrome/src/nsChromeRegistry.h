@@ -57,9 +57,9 @@ public:
   NS_IMETHOD ReloadChrome();
   NS_IMETHOD RefreshSkins();
   NS_IMETHOD AllowScriptsForPackage(nsIURI* url,
-                                    bool* _retval NS_OUTPARAM);
+                                    bool* _retval);
   NS_IMETHOD AllowContentToAccess(nsIURI* url,
-                                  bool* _retval NS_OUTPARAM);
+                                  bool* _retval);
 
   // nsIChromeRegistry methods:
   NS_IMETHOD_(bool) WrappersEnabled(nsIURI *aURI);

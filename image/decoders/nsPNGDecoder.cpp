@@ -249,6 +249,18 @@ nsPNGDecoder::InitInternal()
     png_set_chunk_malloc_max(mPNG, 4000000L);
 #endif
 
+#ifdef PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED
+#ifndef PR_LOGGING
+  /* Disallow palette-index checking, for speed; we would ignore the warning
+   * anyhow unless we have defined PR_LOGGING.  This feature was added at
+   * libpng version 1.5.10 and is disabled in the embedded libpng but enabled
+   * by default in the system libpng.  This call also disables it in the
+   * system libpng, for decoding speed.  Bug #745202.
+   */
+    png_set_check_for_invalid_index(mPNG, 0);
+#endif
+#endif
+
   /* use this as libpng "progressive pointer" (retrieve in callbacks) */
   png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
                               nsPNGDecoder::info_callback,

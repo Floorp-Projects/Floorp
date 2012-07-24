@@ -660,7 +660,7 @@ JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
                     return NULL;
                 }
             }
-            if (!out.append(") { "))
+            if (!out.append(") {\n"))
                 return NULL;
         }
         if ((bodyOnly && !funCon) || addUseStrict) {
@@ -697,7 +697,7 @@ JSFunction::toString(JSContext *cx, bool bodyOnly, bool lambdaParen)
                 return NULL;
         }
         if (buildBody) {
-            if (!out.append(" }"))
+            if (!out.append("\n}"))
                 return NULL;
         }
         if (bodyOnly) {
