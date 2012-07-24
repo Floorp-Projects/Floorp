@@ -5342,29 +5342,32 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned i
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (script->function())
-        return JS_DecompileFunction(cx, script->function(), indent);
+    RootedFunction fun(cx, script->function());
+    if (fun)
+        return JS_DecompileFunction(cx, fun, indent);
     return script->sourceData(cx);
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunction(JSContext *cx, JSFunction *fun, unsigned indent)
+JS_DecompileFunction(JSContext *cx, JSFunction *funArg, unsigned indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fun);
-    return fun->toString(cx, false, !(indent & JS_DONT_PRETTY_PRINT));
+    assertSameCompartment(cx, funArg);
+    RootedFunction fun(cx, funArg);
+    return FunctionToString(cx, fun, false, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
+JS_DecompileFunctionBody(JSContext *cx, JSFunction *funArg, unsigned indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fun);
-    return fun->toString(cx, true, !(indent & JS_DONT_PRETTY_PRINT));
+    assertSameCompartment(cx, funArg);
+    RootedFunction fun(cx, funArg);
+    return FunctionToString(cx, fun, true, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_NEVER_INLINE JS_PUBLIC_API(JSBool)
