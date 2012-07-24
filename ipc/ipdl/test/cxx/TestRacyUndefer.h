@@ -23,17 +23,13 @@ public:
     void Main();
 
 protected:    
-    NS_OVERRIDE
-    virtual bool AnswerSpam();
+    virtual bool AnswerSpam() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerRaceWinTwice();
+    virtual bool AnswerRaceWinTwice() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvDone();
+    virtual bool RecvDone() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -51,19 +47,14 @@ public:
     virtual ~TestRacyUndeferChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvAwakenSpam();
-    NS_OVERRIDE
-    virtual bool RecvAwakenRaceWinTwice();
+    virtual bool RecvAwakenSpam() MOZ_OVERRIDE;
+    virtual bool RecvAwakenRaceWinTwice() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerRace();
+    virtual bool AnswerRace() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

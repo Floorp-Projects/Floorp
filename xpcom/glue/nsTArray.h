@@ -790,7 +790,7 @@ public:
   bool
   GreatestIndexLtEq(const Item& item,
                     const Comparator& comp,
-                    index_type* idx NS_OUTPARAM) const {
+                    index_type* idx) const {
     // Nb: we could replace all the uses of "BinaryIndexOf" with this
     // function, but BinaryIndexOf will be oh-so-slightly faster so
     // it's not strictly desired to do.

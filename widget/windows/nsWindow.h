@@ -101,7 +101,7 @@ public:
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate);
   NS_IMETHOD              SetSizeMode(PRInt32 aMode);
   NS_IMETHOD              Enable(bool aState);
-  NS_IMETHOD              IsEnabled(bool *aState);
+  virtual bool            IsEnabled() const;
   NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);

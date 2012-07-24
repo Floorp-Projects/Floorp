@@ -366,38 +366,68 @@ public class SyncAccounts {
   }
 
   /**
-   * Start sync settings activity.
+   * Bug 721760: try to start a vendor-specific Accounts & Sync activity on Moto
+   * Blur devices.
+   * <p>
+   * Bug 773562: actually start and catch <code>ActivityNotFoundException</code>,
+   * rather than just returning the <code>Intent</code> only, because some
+   * Moto devices fail to start the activity.
    *
-   * @param context current Android context.
+   * @param context
+   *          current Android context.
+   * @param vendorPackage
+   *          vendor specific package name.
+   * @param vendorClass
+   *          vendor specific class name.
+   * @return null on failure, otherwise the <code>Intent</code> started.
+   */
+  protected static Intent openVendorSyncSettings(Context context, final String vendorPackage, final String vendorClass) {
+    try {
+      final int contextFlags = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+      Context foreignContext = context.createPackageContext(vendorPackage, contextFlags);
+      Class<?> klass = foreignContext.getClassLoader().loadClass(vendorClass);
+
+      final Intent intent = new Intent(foreignContext, klass);
+      context.startActivity(intent);
+      Logger.info(LOG_TAG, "Vendor package " + vendorPackage + " and class " +
+          vendorClass + " found, and activity launched.");
+      return intent;
+    } catch (NameNotFoundException e) {
+      Logger.debug(LOG_TAG, "Vendor package " + vendorPackage + " not found. Skipping.");
+    } catch (ClassNotFoundException e) {
+      Logger.debug(LOG_TAG, "Vendor package " + vendorPackage + " found but class " +
+          vendorClass + " not found. Skipping.", e);
+    } catch (ActivityNotFoundException e) {
+      // Bug 773562 - android.content.ActivityNotFoundException on Motorola devices.
+      Logger.warn(LOG_TAG, "Vendor package " + vendorPackage + " and class " +
+          vendorClass + " found, but activity not launched. Skipping.", e);
+    } catch (Exception e) {
+      // Just in case.
+      Logger.warn(LOG_TAG, "Caught exception launching activity from vendor package " + vendorPackage +
+          " and class " + vendorClass + ". Ignoring.", e);
+    }
+    return null;
+  }
+
+  /**
+   * Start Sync settings activity.
+   *
+   * @param context
+   *          current Android context.
    * @return the <code>Intent</code> started.
    */
   public static Intent openSyncSettings(Context context) {
     // Bug 721760 - opening Sync settings takes user to Battery & Data Manager
     // on a variety of Motorola devices. This work around tries to load the
     // correct Intent by hand. Oh, Android.
-    try {
-      // Allow Motorola Blur package to be loaded.
-      final int contextFlags = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
-      Context foreignContext = context.createPackageContext(MOTO_BLUR_PACKAGE, contextFlags);
-      Class<?> motorolaAccounts = foreignContext.getClassLoader().loadClass(MOTO_BLUR_SETTINGS_ACTIVITY);
-      Logger.info(LOG_TAG, "Blur package found. Launching Moto activity.");
-
-      final Intent intent = new Intent(foreignContext, motorolaAccounts);
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-      context.startActivity(intent);
+    Intent intent = openVendorSyncSettings(context, MOTO_BLUR_PACKAGE, MOTO_BLUR_SETTINGS_ACTIVITY);
+    if (intent != null) {
       return intent;
-    } catch (NameNotFoundException e) {
-      Logger.debug(LOG_TAG, "Blur package not found. Launching Sync Settings normally.");
-    } catch (ClassNotFoundException e) {
-      Logger.warn(LOG_TAG, "Blur package found but class not found. Launching Sync Settings normally.", e);
-    } catch (ActivityNotFoundException e) {
-      // Bug 773562 - android.content.ActivityNotFoundException on Motorola devices.
-      Logger.warn(LOG_TAG, "Blur package and class found, but activity not found. Launching Sync Settings normally.", e);
     }
 
     // Open default Sync settings activity.
-    final Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
+    // Bug 774233: do not start activity as a new task (second run fails on some HTC devices).
     context.startActivity(intent); // We should always find this Activity.
     return intent;
   }

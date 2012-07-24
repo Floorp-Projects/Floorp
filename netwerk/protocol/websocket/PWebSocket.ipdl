@@ -26,11 +26,13 @@ parent:
             nsCString aOrigin,
             nsCString aProtocol,
             bool aSecure,
+            // Fields for imitating a nsILoadContext
             bool haveLoadContext,
             bool isContent,
             bool usePrivateBrowsing,
             bool isInBrowserElement,
-            PRUint32 appID);
+            PRUint32 appID,
+            nsCString extendedOrigin);
   Close(PRUint16 code, nsCString reason);
   SendMsg(nsCString aMsg);
   SendBinaryMsg(nsCString aMsg);

@@ -112,17 +112,15 @@ protected:
         return true;
     }
 
-    NS_OVERRIDE
     virtual bool
-    AnswerPaint(const NPRemoteEvent& event, int16_t* handled)
+    AnswerPaint(const NPRemoteEvent& event, int16_t* handled) MOZ_OVERRIDE
     {
         PaintTracker pt;
         return AnswerNPP_HandleEvent(event, handled);
     }
 
-    NS_OVERRIDE
     virtual bool
-    RecvWindowPosChanged(const NPRemoteEvent& event);
+    RecvWindowPosChanged(const NPRemoteEvent& event) MOZ_OVERRIDE;
 
     virtual bool
     AnswerNPP_Destroy(NPError* result);
@@ -133,8 +131,8 @@ protected:
     virtual bool
     DeallocPPluginScriptableObject(PPluginScriptableObjectChild* aObject);
 
-    NS_OVERRIDE virtual bool
-    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor);
+    virtual bool
+    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor) MOZ_OVERRIDE;
 
     virtual PBrowserStreamChild*
     AllocPBrowserStream(const nsCString& url,
@@ -177,8 +175,8 @@ protected:
                        const bool& file,
                        NPError* result);
 
-    NS_OVERRIDE virtual bool
-    DeallocPStreamNotify(PStreamNotifyChild* notifyData);
+    virtual bool
+    DeallocPStreamNotify(PStreamNotifyChild* notifyData) MOZ_OVERRIDE;
 
     virtual bool
     AnswerSetPluginFocus();
@@ -247,21 +245,17 @@ private:
 
     NPError DeallocateAsyncBitmapSurface(NPAsyncSurface *aSurface);
 
-    NS_OVERRIDE
     virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
-                                      const nsIntRect& aRect);
+                                      const nsIntRect& aRect) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual PPluginBackgroundDestroyerChild*
-    AllocPPluginBackgroundDestroyer();
+    AllocPPluginBackgroundDestroyer() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual bool
-    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor);
+    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual bool
-    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerChild* aActor);
+    DeallocPPluginBackgroundDestroyer(PPluginBackgroundDestroyerChild* aActor) MOZ_OVERRIDE;
 
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
@@ -334,7 +328,7 @@ private:
           mWindowed(isWindowed)
         {}
 
-        NS_OVERRIDE void Run();
+        void Run() MOZ_OVERRIDE;
 
         WNDPROC GetProc();
         HWND GetWnd() { return mWnd; }

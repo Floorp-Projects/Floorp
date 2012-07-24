@@ -1496,18 +1496,23 @@ var AddonDatabase = {
     getAllIcons: "SELECT addon_internal_id, size, url FROM icon " +
                  "ORDER BY addon_internal_id, size",
 
-    insertAddon: "INSERT INTO addon VALUES (NULL, :id, :type, :name, :version, " +
-                 ":creator, :creatorURL, :description, :fullDescription, " +
-                 ":developerComments, :eula, :homepageURL, :supportURL, " +
-                 ":contributionURL, :contributionAmount, :averageRating, " +
-                 ":reviewCount, :reviewURL, :totalDownloads, :weeklyDownloads, " +
-                 ":dailyUsers, :sourceURI, :repositoryStatus, :size, :updateDate)",
+    insertAddon: "INSERT INTO addon (id, type, name, version, " +
+                 "creator, creatorURL, description, fullDescription, " +
+                 "developerComments, eula, homepageURL, supportURL, " +
+                 "contributionURL, contributionAmount, averageRating, " +
+                 "reviewCount, reviewURL, totalDownloads, weeklyDownloads, " +
+                 "dailyUsers, sourceURI, repositoryStatus, size, updateDate) " +
+                 "VALUES (:id, :type, :name, :version, :creator, :creatorURL, " +
+                 ":description, :fullDescription, :developerComments, :eula, " +
+                 ":homepageURL, :supportURL, :contributionURL, " +
+                 ":contributionAmount, :averageRating, :reviewCount, " +
+                 ":reviewURL, :totalDownloads, :weeklyDownloads, :dailyUsers, " +
+                 ":sourceURI, :repositoryStatus, :size, :updateDate)",
 
-    insertDeveloper:  "INSERT INTO developer VALUES (:addon_internal_id, " +
+    insertDeveloper:  "INSERT INTO developer (addon_internal_id, " +
+                      "num, name, url) VALUES (:addon_internal_id, " +
                       ":num, :name, :url)",
 
-    // We specify column names here because the columns
-    // could be out of order due to schema changes.
     insertScreenshot: "INSERT INTO screenshot (addon_internal_id, " +
                       "num, url, width, height, thumbnailURL, " +
                       "thumbnailWidth, thumbnailHeight, caption) " +
@@ -1515,12 +1520,16 @@ var AddonDatabase = {
                       ":num, :url, :width, :height, :thumbnailURL, " +
                       ":thumbnailWidth, :thumbnailHeight, :caption)",
 
-    insertCompatibilityOverride: "INSERT INTO compatibility_override VALUES " +
+    insertCompatibilityOverride: "INSERT INTO compatibility_override " +
+                                 "(addon_internal_id, num, type, " +
+                                 "minVersion, maxVersion, appID, " +
+                                 "appMinVersion, appMaxVersion) VALUES " +
                                  "(:addon_internal_id, :num, :type, " +
                                  ":minVersion, :maxVersion, :appID, " +
                                  ":appMinVersion, :appMaxVersion)",
 
-    insertIcon: "INSERT INTO icon VALUES (:addon_internal_id, :size, :url)",
+    insertIcon: "INSERT INTO icon (addon_internal_id, size, url) " +
+                "VALUES (:addon_internal_id, :size, :url)",
 
     emptyAddon:       "DELETE FROM addon"
   },

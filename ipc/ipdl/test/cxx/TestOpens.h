@@ -27,12 +27,10 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
     virtual PTestOpensOpenedParent*
-    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess);
+    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
 
 } // namespace _ipdltest
@@ -48,15 +46,11 @@ public:
     virtual ~TestOpensOpenedParent() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvHello();
-    NS_OVERRIDE
-    virtual bool RecvHelloSync();
-    NS_OVERRIDE
-    virtual bool AnswerHelloRpc();
+    virtual bool RecvHello() MOZ_OVERRIDE;
+    virtual bool RecvHelloSync() MOZ_OVERRIDE;
+    virtual bool AnswerHelloRpc() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     Transport* mTransport;
 };
@@ -74,15 +68,12 @@ public:
     virtual ~TestOpensChild() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual PTestOpensOpenedChild*
-    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess);
+    AllocPTestOpensOpened(Transport* transport, ProcessId otherProcess) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
 
 } // namespace _ipdltest
@@ -99,13 +90,10 @@ public:
     virtual ~TestOpensOpenedChild() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvHi();
-    NS_OVERRIDE
-    virtual bool AnswerHiRpc();
+    virtual bool RecvHi() MOZ_OVERRIDE;
+    virtual bool AnswerHiRpc() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     bool mGotHi;
     Transport* mTransport;

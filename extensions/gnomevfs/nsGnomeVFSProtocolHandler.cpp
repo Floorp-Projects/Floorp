@@ -32,6 +32,7 @@ extern "C" {
 #include "prtime.h"
 #include "prprf.h"
 #include "plstr.h"
+#include "mozilla/Attributes.h"
 
 #define MOZ_GNOMEVFS_SCHEME              "moz-gnomevfs"
 #define MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS "network.gnomevfs.supported-protocols"
@@ -308,7 +309,7 @@ FileInfoComparator(gconstpointer a, gconstpointer b)
 
 //-----------------------------------------------------------------------------
 
-class nsGnomeVFSInputStream : public nsIInputStream
+class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
 {
   public:
     NS_DECL_ISUPPORTS
@@ -732,8 +733,8 @@ nsGnomeVFSInputStream::IsNonBlocking(bool *aResult)
 
 //-----------------------------------------------------------------------------
 
-class nsGnomeVFSProtocolHandler : public nsIProtocolHandler
-                                , public nsIObserver
+class nsGnomeVFSProtocolHandler MOZ_FINAL : public nsIProtocolHandler
+                                          , public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS

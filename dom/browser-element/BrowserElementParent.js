@@ -192,6 +192,13 @@ function BrowserElementParent(frameLoader) {
   defineDOMRequestMethod('getScreenshot', 'get-screenshot');
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
+
+  // Listen to mozvisibilitychange on the iframe's owner window, and forward it
+  // down to the child.
+  this._window.addEventListener('mozvisibilitychange',
+                                this._ownerVisibilityChange.bind(this),
+                                /* useCapture = */ false,
+                                /* wantsUntrusted = */ false);
 }
 
 BrowserElementParent.prototype = {
@@ -218,6 +225,14 @@ BrowserElementParent.prototype = {
 
   _recvHello: function(data) {
     debug("recvHello");
+
+    // Inform our child if our owner element's document is invisible.  Note
+    // that we must do so here, rather than in the BrowserElementParent
+    // constructor, because the BrowserElementChild may not be initialized when
+    // we run our constructor.
+    if (this._window.document.mozHidden) {
+      this._ownerVisibilityChange();
+    }
   },
 
   _fireCtxMenuEvent: function(data) {
@@ -411,6 +426,14 @@ BrowserElementParent.prototype = {
                      data.json.charCode);
 
     this._frameElement.dispatchEvent(evt);
+  },
+
+  /**
+   * Called when the visibility of the window which owns this iframe changes.
+   */
+  _ownerVisibilityChange: function() {
+    this._sendAsyncMsg('owner-visibility-change',
+                       {visible: !this._window.document.mozHidden});
   },
 };
 

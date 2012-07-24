@@ -11,6 +11,7 @@ class nsUrlClassifierLookupResult;
 [ptr] native ResultArray(nsTArray<nsUrlClassifierLookupResult>);
 
 interface nsIUrlClassifierHashCompleter;
+interface nsIPrincipal;
 
 // Interface for JS function callbacks
 [scriptable, function, uuid(4ca27b6b-a674-4b3d-ab30-d21e2da2dffb)]
@@ -71,18 +72,17 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(7aae3f3a-527d-488b-a448-45dca6db0e80)]
+[scriptable, uuid(e326ec41-46fd-4127-ad3c-3c58b2cdf196)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
    * Looks up a key in the database.
    *
-   * @param key: The URL to search for.  This URL will be canonicalized
-   *        by the service.
+   * @param key: The principal containing the information to search.
    * @param c: The callback will be called with a comma-separated list
    *        of tables to which the key belongs.
    */
-  void lookup(in ACString spec,
+  void lookup(in nsIPrincipal principal,
               in nsIUrlClassifierCallback c);
 
   /**
