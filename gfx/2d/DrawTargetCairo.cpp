@@ -14,6 +14,7 @@
 
 #include "Blur.h"
 #include "Logging.h"
+#include "Tools.h"
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-quartz.h"
@@ -219,6 +220,21 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
   return pat;
 }
 
+/**
+ * Returns true iff the the given operator should affect areas of the
+ * destination where the source is transparent. Among other things, this
+ * implies that a fully transparent source would still affect the canvas.
+ */
+static bool
+OperatorAffectsUncoveredAreas(CompositionOp op)
+{
+  return op == OP_IN ||
+         op == OP_OUT ||
+         op == OP_DEST_IN ||
+         op == OP_DEST_ATOP ||
+         op == OP_DEST_OUT;
+}
+
 static bool
 NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 {
@@ -259,18 +275,14 @@ DrawTargetCairo::GetSize()
 TemporaryRef<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
-  cairo_surface_t* csurf = cairo_get_target(mContext);
-  IntSize size;
-  if (GetCairoSurfaceSize(csurf, size)) {
-    cairo_content_t content = cairo_surface_get_content(csurf);
-    RefPtr<SourceSurfaceCairo> surf = new SourceSurfaceCairo(csurf, size,
-                                                             CairoContentToGfxFormat(content),
-                                                             this);
-    AppendSnapshot(surf);
-    return surf;
-  }
+  IntSize size = GetSize();
 
-  return NULL;
+  cairo_content_t content = cairo_surface_get_content(mSurface);
+  RefPtr<SourceSurfaceCairo> surf = new SourceSurfaceCairo(mSurface, size,
+                                                           CairoContentToGfxFormat(content),
+                                                           this);
+  AppendSnapshot(surf);
+  return surf;
 }
 
 void
@@ -299,8 +311,8 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   float sy = aSource.Height() / aDest.Height();
 
   cairo_matrix_t src_mat;
-  cairo_matrix_init_scale(&src_mat, sx, sy);
-  cairo_matrix_translate(&src_mat, aSource.X(), aSource.Y());
+  cairo_matrix_init_translate(&src_mat, aSource.X(), aSource.Y());
+  cairo_matrix_scale(&src_mat, sx, sy);
 
   cairo_surface_t* surf = NULL;
   if (aSurface->GetType() == SURFACE_CAIRO) {
@@ -312,16 +324,28 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
 
   cairo_save(mContext);
+  cairo_translate(mContext, aDest.X(), aDest.Y());
+
+  if (OperatorAffectsUncoveredAreas(aOptions.mCompositionOp) ||
+      aOptions.mCompositionOp == OP_SOURCE) {
+    cairo_push_group(mContext);
+      cairo_new_path(mContext);
+      cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
+      //TODO[nrc] remove comments if test ok
+      //cairo_clip(mContext);
+      cairo_set_source(mContext, pat);
+      //cairo_paint(mContext);
+      cairo_fill(mContext);
+    cairo_pop_group_to_source(mContext);
+  } else {
+    cairo_new_path(mContext);
+    cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
+    cairo_clip(mContext);
+    cairo_set_source(mContext, pat);
+  }
 
   cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
 
-  cairo_translate(mContext, aDest.X(), aDest.Y());
-
-  cairo_set_source(mContext, pat);
-
-  cairo_new_path(mContext);
-  cairo_rectangle(mContext, 0, 0, aDest.Width(), aDest.Height());
-  cairo_clip(mContext);
   cairo_paint_with_alpha(mContext, aOptions.mAlpha);
 
   cairo_restore(mContext);
@@ -337,13 +361,11 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                        Float aSigma,
                                        CompositionOp aOperator)
 {
-  WillChange();
-
   if (aSurface->GetType() != SURFACE_CAIRO) {
     return;
   }
 
-  SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
+  WillChange();
 
   Float width = aSurface->GetSize().width;
   Float height = aSurface->GetSize().height;
@@ -357,14 +379,16 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   }
 
   IntSize blursize = blur.GetSize();
-
   cairo_surface_t* blursurf = cairo_image_surface_create_for_data(blur.GetData(),
                                                                   CAIRO_FORMAT_A8,
                                                                   blursize.width,
                                                                   blursize.height,
                                                                   blur.GetStride());
 
+  ClearSurfaceForUnboundedSource(aOperator);
+  
   // Draw the source surface into the surface we're going to blur.
+  SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
   cairo_surface_t* surf = source->GetSurface();
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
 
@@ -383,26 +407,39 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   // Blur the result, then use that blurred result as a mask to draw the shadow
   // colour to the surface.
   blur.Blur();
-
   cairo_save(mContext);
-
-  cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
-
+  cairo_set_operator(mContext, GfxOpToCairoOp(aOperator));
   cairo_identity_matrix(mContext);
   cairo_translate(mContext, aDest.x, aDest.y);
 
-  cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
+  if (OperatorAffectsUncoveredAreas(aOperator) ||
+      aOperator == OP_SOURCE){
+    cairo_push_group(mContext);
+      cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
+      cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
+    cairo_pop_group_to_source(mContext);
+    cairo_paint(mContext);
 
-  // Now that the shadow has been drawn, we can draw the surface on top.
+    // Now that the shadow has been drawn, we can draw the surface on top.
+    cairo_push_group(mContext);
+      cairo_new_path(mContext);
+      cairo_rectangle(mContext, 0, 0, width, height);
+      //TODO[nrc] remove comments if test ok
+      //cairo_clip(mContext);
+      cairo_set_source(mContext, pat);
+      //cairo_paint(mContext);
+      cairo_fill(mContext);
+    cairo_pop_group_to_source(mContext);
+  } else {
+    cairo_set_source_rgba(mContext, aColor.r, aColor.g, aColor.b, aColor.a);
+    cairo_mask_surface(mContext, blursurf, aOffset.x, aOffset.y);
 
-  cairo_set_operator(mContext, GfxOpToCairoOp(aOperator));
-
-  cairo_set_source(mContext, pat);
-
-  cairo_new_path(mContext);
-  cairo_rectangle(mContext, 0, 0, width, height);
-  cairo_clip(mContext);
+    // Now that the shadow has been drawn, we can draw the surface on top.
+    cairo_set_source(mContext, pat);
+    cairo_new_path(mContext);
+    cairo_rectangle(mContext, 0, 0, width, height);
+    cairo_clip(mContext);
+  }
 
   cairo_paint(mContext);
 
@@ -424,8 +461,11 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
 
-  if (NeedIntermediateSurface(aPattern, aOptions)) {
+  if (NeedIntermediateSurface(aPattern, aOptions) ||
+      OperatorAffectsUncoveredAreas(aOptions.mCompositionOp)) {
     cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
+
+    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
 
     // Don't want operators to be applied twice
     cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
@@ -443,6 +483,7 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
     cairo_paint_with_alpha(mContext, aOptions.mAlpha);
   } else {
+    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
 
     if (aDrawType == DRAW_STROKE) {
@@ -661,11 +702,44 @@ DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) cons
   return builder;
 }
 
+void
+DrawTargetCairo::ClearSurfaceForUnboundedSource(const CompositionOp &aOperator)
+{
+  if (aOperator != OP_SOURCE)
+    return;
+  cairo_set_operator(mContext, CAIRO_OPERATOR_CLEAR);
+  // It doesn't really matter what the source is here, since Paint
+  // isn't bounded by the source and the mask covers the entire clip
+  // region.
+  cairo_paint(mContext);
+}
+
+
 TemporaryRef<GradientStops>
 DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {
   RefPtr<GradientStopsCairo> stops = new GradientStopsCairo(aStops, aNumStops);
   return stops;
+}
+
+/**
+ * Copies pixel data from aData into aSurface; aData must have the dimensions
+ * given in aSize, with a stride of aStride bytes and aPixelWidth bytes per pixel
+ */
+static void
+CopyDataToCairoSurface(cairo_surface_t* aSurface,
+                       unsigned char *aData,
+                       const IntSize &aSize,
+                       int32_t aStride,
+                       int32_t aPixelWidth)
+{
+  unsigned char* surfData = cairo_image_surface_get_data(aSurface);
+  for (int32_t y = 0; y < aSize.height; ++y) {
+    memcpy(surfData + y * aSize.width * aPixelWidth,
+           aData + y * aStride,
+           aSize.width * aPixelWidth);
+  }
+  cairo_surface_mark_dirty(aSurface);
 }
 
 TemporaryRef<SourceSurface>
@@ -674,13 +748,14 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              int32_t aStride,
                                              SurfaceFormat aFormat) const
 {
-  cairo_surface_t* surf = cairo_image_surface_create_for_data(aData,
-                                                              GfxFormatToCairoFormat(aFormat),
-                                                              aSize.width,
-                                                              aSize.height,
-                                                              aStride);
+  cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
+                                                     aSize.width,
+                                                     aSize.height);
+  CopyDataToCairoSurface(surf, aData, aSize, aStride, BytesPerPixel(aFormat));
+    
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);
+
   return source_surf;
 }
 
