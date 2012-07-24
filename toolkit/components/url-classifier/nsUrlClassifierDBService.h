@@ -31,6 +31,7 @@
 
 class nsUrlClassifierDBServiceWorker;
 class nsIThread;
+class nsIURI;
 
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.
@@ -66,7 +67,7 @@ private:
   // Disallow copy constructor
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
 
-  nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c,
+  nsresult LookupURI(nsIPrincipal* aPrincipal, nsIUrlClassifierCallback* c,
                      bool forceCheck, bool *didCheck);
 
   // Close db connection and join the background thread if it exists.

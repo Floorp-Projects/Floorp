@@ -47,7 +47,7 @@ FindByIndex(gfxFontEntry* aKey, nsIDOMFontFace* aData, void* aUserData)
 }
 
 NS_IMETHODIMP
-nsFontFaceList::Item(PRUint32 index, nsIDOMFontFace **_retval NS_OUTPARAM)
+nsFontFaceList::Item(PRUint32 index, nsIDOMFontFace **_retval)
 {
   NS_ENSURE_TRUE(index < mFontFaces.Count(), NS_ERROR_INVALID_ARG);
   FindByIndexData userData;

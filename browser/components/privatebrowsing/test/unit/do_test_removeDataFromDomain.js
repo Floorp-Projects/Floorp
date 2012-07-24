@@ -249,7 +249,11 @@ function add_permission(aURI)
   check_permission_exists(aURI, false);
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
-  pm.add(aURI, PERMISSION_TYPE, PERMISSION_VALUE);
+  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(aURI);
+
+  pm.addFromPrincipal(principal, PERMISSION_TYPE, PERMISSION_VALUE);
   check_permission_exists(aURI, true);
 }
 
@@ -265,7 +269,11 @@ function check_permission_exists(aURI, aExists)
 {
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
-  let perm = pm.testExactPermission(aURI, PERMISSION_TYPE);
+  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(aURI);
+
+  let perm = pm.testExactPermissionFromPrincipal(principal, PERMISSION_TYPE);
   let checker = aExists ? do_check_eq : do_check_neq;
   checker(perm, PERMISSION_VALUE);
 }

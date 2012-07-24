@@ -1,0 +1,45 @@
+<html>
+<body>
+
+<script>
+
+var numPrompts = 0;
+function handlePrompt(e) {
+  numPrompts++;
+
+  // The first two prompts should be "child1:ready" and "child2:ready".  Once
+  // we get both of these, forward the child's prompt up to our parent.
+  if (numPrompts == 2) {
+    // This has to happen here, because setVisibile doesn't exist on the iframe
+    // until BrowserElementChild.js is loaded in it.  (That's pretty broken...)
+    iframe2.setVisible(false);
+  }
+  else if (numPrompts == 3) {
+    if (e.detail.message != 'child2:hidden') {
+      alert("parent:fail Didn't get expected 'child2:hidden'.");
+    }
+
+    alert('parent:ready');
+  }
+  else if (numPrompts > 3) {
+    alert(e.detail.message);
+  }
+}
+
+var iframe1 = document.createElement('iframe');
+iframe1.mozbrowser = true;
+iframe1.addEventListener('mozbrowsershowmodalprompt', handlePrompt);
+
+var iframe2 = document.createElement('iframe');
+iframe2.mozbrowser = true;
+iframe2.addEventListener('mozbrowsershowmodalprompt', handlePrompt);
+
+iframe1.src = 'file_browserElement_SetVisibleFrames_Inner.html?child1';
+iframe2.src = 'file_browserElement_SetVisibleFrames_Inner.html?child2';
+document.body.appendChild(iframe1);
+document.body.appendChild(iframe2);
+
+</script>
+
+</body>
+</html>

@@ -30,8 +30,12 @@ function addOfflineApp(url)
   var uri = Components.classes["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService)
     .newURI(url, null, null);
-  permissionManager.add(uri, "offline-app",
-                        Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Components.interfaces.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+
+  permissionManager.addFromPrincipal(principal, "offline-app",
+                                     Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 }
 
 function removeOfflineApp(url)
@@ -41,7 +45,11 @@ function removeOfflineApp(url)
   var uri = Components.classes["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService)
     .newURI(url, null, null);
-  permissionManager.remove(uri.host, "offline-app");
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Components.interfaces.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(uri);
+
+  permissionManager.removeFromPrincipal(principal, "offline-app");
 }
 
 function doNextTest()

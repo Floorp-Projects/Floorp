@@ -19,7 +19,10 @@ var pm = Cc["@mozilla.org/permissionmanager;1"]
 var uri = Cc["@mozilla.org/network/io-service;1"]
          .getService(Ci.nsIIOService)
          .newURI(window.location.href, null, null);
-pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService(Ci.nsIScriptSecurityManager)
+                  .getNoAppCodebasePrincipal(uri);
+pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
 // Make the obsoleting.sjs return a valid manifest
 var req = new XMLHttpRequest();
@@ -36,7 +39,7 @@ req.onreadystatechange = function() {
 function finish()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  pm.remove(uri.asciiHost, "offline-app");
+  pm.removeFromPrincipal(principal, "offline-app");
 
   gTestWin.close();
   SimpleTest.finish();

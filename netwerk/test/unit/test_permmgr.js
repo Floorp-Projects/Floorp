@@ -36,6 +36,9 @@ function run_test() {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
 
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(Components.interfaces.nsIScriptSecurityManager);
+
   // nsIPermissionManager implementation is an extension; don't fail if it's not there
   if (!pm)
     return;
@@ -43,14 +46,18 @@ function run_test() {
   // put a few hosts in
   for (var i = 0; i < hosts.length; ++i) {
     var uri = ioService.newURI("http://" + hosts[i][0], null, null);
-    pm.add(uri, hosts[i][1], hosts[i][2]);
+    var principal = secMan.getNoAppCodebasePrincipal(uri);
+
+    pm.addFromPrincipal(principal, hosts[i][1], hosts[i][2]);
   }
 
   // test the result
   for (var i = 0; i < results.length; ++i) {
     var uri = ioService.newURI("http://" + results[i][0], null, null);
-    do_check_eq(pm.testPermission(uri, results[i][1]), results[i][2]);
-    do_check_eq(pm.testExactPermission(uri, results[i][1]), results[i][3]);
+    var principal = secMan.getNoAppCodebasePrincipal(uri);
+
+    do_check_eq(pm.testPermissionFromPrincipal(principal, results[i][1]), results[i][2]);
+    do_check_eq(pm.testExactPermissionFromPrincipal(principal, results[i][1]), results[i][3]);
   }
 
   // test the enumerator ...
@@ -65,7 +72,10 @@ function run_test() {
 
   // ... remove all the hosts ...
   for (var j = 0; j < perms.length; ++j) {
-    pm.remove(perms[j].host, perms[j].type);
+    var uri = ioService.newURI("http://" + perms[j].host, null, null);
+    var principal = secMan.getNoAppCodebasePrincipal(uri);
+
+    pm.removeFromPrincipal(principal, perms[j].type);
   }
   
   // ... ensure each and every element is equal ...

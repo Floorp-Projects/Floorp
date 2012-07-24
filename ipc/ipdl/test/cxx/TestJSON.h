@@ -33,26 +33,22 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
     virtual bool
     RecvTest(const JSONVariant& i,
-             JSONVariant* o);
+             JSONVariant* o) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestHandleParent* AllocPTestHandle()
+    virtual PTestHandleParent* AllocPTestHandle() MOZ_OVERRIDE
     {
         return mKid = new TestHandleParent();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestHandle(PTestHandleParent* actor)
+    virtual bool DeallocPTestHandle(PTestHandleParent* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -80,25 +76,21 @@ public:
     virtual ~TestJSONChild() { }
 
 protected:
-    NS_OVERRIDE
     virtual bool
-    RecvStart();
+    RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual PTestHandleChild* AllocPTestHandle()
+    virtual PTestHandleChild* AllocPTestHandle() MOZ_OVERRIDE
     {
         return mKid = new TestHandleChild();
     }
 
-    NS_OVERRIDE
-    virtual bool DeallocPTestHandle(PTestHandleChild* actor)
+    virtual bool DeallocPTestHandle(PTestHandleChild* actor) MOZ_OVERRIDE
     {
         delete actor;
         return true;
     }
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

@@ -17,8 +17,8 @@ class Image : public imgIContainer
 {
 public:
   // From NS_DECL_IMGICONTAINER:
-  NS_SCRIPTABLE NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
-  NS_SCRIPTABLE NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
+  NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
+  NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
 
   imgStatusTracker& GetStatusTracker() { return *mStatusTracker; }
 

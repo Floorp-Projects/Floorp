@@ -14,13 +14,16 @@ function testCleanHostKeys() {
 
       // Check with a clean host key
       var uri = ios.newURI("http://bar.com/a", null, null);
+      let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri);
 
       // Use the nsIURIClassifier interface (the
       // nsIUrlClassifierDBService will always queue a lookup,
       // nsIURIClassifier won't if the host key is known to be clean.
       var classifier = dbservice.QueryInterface(Ci.nsIURIClassifier);
-      var result = classifier.classify(uri, function(errorCode) {
-          var result2 = classifier.classify(uri, function() {
+      var result = classifier.classify(principal, function(errorCode) {
+          var result2 = classifier.classify(principal, function() {
               do_throw("shouldn't get a callback");
             });
           // second call shouldn't result in a callback.
@@ -50,12 +53,15 @@ function testUpdate() {
   doStreamUpdate(preUpdate, function() {
     // First lookup won't happen...
     var uri = ios.newURI("http://foo.com/a", null, null);
+    let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                      .getService(Components.interfaces.nsIScriptSecurityManager)
+                      .getNoAppCodebasePrincipal(uri);
 
     // Use the nsIURIClassifier interface (the
     // nsIUrlClassifierDBService will always queue a lookup,
     // nsIURIClassifier won't if the host key is known to be clean.
     var classifier = dbservice.QueryInterface(Ci.nsIURIClassifier);
-    var result = classifier.classify(uri, function(errorCode) {
+    var result = classifier.classify(principal, function(errorCode) {
       // shouldn't arrive here
       do_check_eq(errorCode, Cr.NS_OK);
       do_throw("shouldn't get a callback");
@@ -70,7 +76,7 @@ function testUpdate() {
           "urls" : addUrls
         }]);
     doStreamUpdate(update, function() {
-      var result2 = classifier.classify(uri, function(errorCode) {
+      var result2 = classifier.classify(principal, function(errorCode) {
         do_check_neq(errorCode, Cr.NS_OK);
         runNextTest();
       });
@@ -120,8 +126,11 @@ function testResetFullCache() {
 
       var spec = uris2.pop();
       var uri = ios.newURI("http://" + spec, null, null);
+      let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri);
 
-      var result = classifier.classify(uri, function(errorCode) {
+      var result = classifier.classify(principal, function(errorCode) {
       });
       runSecondLookup();
       // now look up a few more times.
@@ -146,7 +155,10 @@ function testResetFullCache() {
 
       uris2.push(spec);
       var uri = ios.newURI("http://" + spec, null, null);
-      var result = classifier.classify(uri, function(errorCode) {
+      let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(Components.interfaces.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri);
+      var result = classifier.classify(principal, function(errorCode) {
       });
       runInitialLookup();
       // None of these will generate a callback

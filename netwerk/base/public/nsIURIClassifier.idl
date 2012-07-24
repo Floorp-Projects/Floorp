@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
+interface nsIPrincipal;
 interface nsIChannel;
 
 /**
@@ -30,14 +30,14 @@ interface nsIURIClassifierCallback : nsISupports
  * The URI classifier service checks a URI against lists of phishing
  * and malware sites.
  */
-[scriptable, uuid(2de5c563-1203-43dd-a212-f5d56d530b6f)]
+[scriptable, uuid(617f1002-ec55-42c4-a7b0-ebb221ba9fa2)]
 interface nsIURIClassifier : nsISupports
 {
   /**
-   * Classify a URI.
+   * Classify a Principal using it's URI, appId and InBrowserElement state.
    *
-   * @param aURI
-   *        The URI that should be checked by the URI classifier.
+   * @param aPrincipal
+   *        The principal that should be checked by the URI classifier.
    * @param aCallback
    *        The URI classifier will call this callback when the URI has been
    *        classified.
@@ -47,6 +47,6 @@ interface nsIURIClassifier : nsISupports
    *         <code>true</code> if classification will be performed.  The
    *         callback will be called.
    */
-  boolean classify(in nsIURI aURI,
+  boolean classify(in nsIPrincipal aPrincipal,
                    in nsIURIClassifierCallback aCallback);
 };

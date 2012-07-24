@@ -69,6 +69,7 @@
 #include "nsIDocShellTreeNode.h"
 
 #include "nsIMarkupDocumentViewer.h"
+#include "mozilla/Attributes.h"
 
 #ifdef XP_MACOSX
 #include "nsINativeMenuService.h"
@@ -473,28 +474,63 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 }
 #endif
 
+namespace mozilla {
+
+class WebShellWindowTimerCallback MOZ_FINAL : public nsITimerCallback
+{
+public:
+  WebShellWindowTimerCallback(nsWebShellWindow* aWindow)
+    : mWindow(aWindow)
+  {}
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Notify(nsITimer* aTimer)
+  {
+    // Although this object participates in a refcount cycle (this -> mWindow
+    // -> mSPTimer -> this), mSPTimer is a one-shot timer and releases this
+    // after it fires.  So we don't need to release mWindow here.
+
+    mWindow->FirePersistenceTimer();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsWebShellWindow> mWindow;
+};
+
+NS_IMPL_THREADSAFE_ADDREF(WebShellWindowTimerCallback)
+NS_IMPL_THREADSAFE_RELEASE(WebShellWindowTimerCallback)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(WebShellWindowTimerCallback,
+                                    nsITimerCallback)
+
+} // namespace mozilla
+
 void
 nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
 {
   MutexAutoLock lock(mSPTimerLock);
   if (!mSPTimer) {
-    nsresult rv;
-    mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF_THIS(); // for the timer, which holds a reference to this window
+    mSPTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mSPTimer) {
+      NS_WARNING("Couldn't create @mozilla.org/timer;1 instance?");
+      return;
     }
   }
-  mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
-                                 SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+
+  nsRefPtr<WebShellWindowTimerCallback> callback =
+    new WebShellWindowTimerCallback(this);
+  mSPTimer->InitWithCallback(callback, SIZE_PERSISTENCE_TIMEOUT,
+                             nsITimer::TYPE_ONE_SHOT);
+
   PersistentAttributesDirty(aDirtyFlags);
 }
 
 void
-nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
+nsWebShellWindow::FirePersistenceTimer()
 {
-  nsWebShellWindow *win = static_cast<nsWebShellWindow *>(aClosure);
-  MutexAutoLock lock(win->mSPTimerLock);
-  win->SavePersistentAttributes();
+  MutexAutoLock lock(mSPTimerLock);
+  SavePersistentAttributes();
 }
 
 
@@ -747,7 +783,6 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
       mSPTimer->Cancel();
       SavePersistentAttributes();
       mSPTimer = nsnull;
-      NS_RELEASE_THIS(); // the timer held a reference to us
     }
   }
   return nsXULWindow::Destroy();

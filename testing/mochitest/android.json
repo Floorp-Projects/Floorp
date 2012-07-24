@@ -251,6 +251,7 @@
  "layout/style/test/test_compute_data_with_start_struct.html": "",
  "layout/style/test/test_inherit_computation.html": "",
  "layout/style/test/test_initial_computation.html": "",
+ "layout/style/test/test_transitions_per_property.html": "bug 775227",
  "layout/style/test/test_value_computation.html": "",
  "layout/style/test/test_visited_image_loading.html": "TIMED_OUT",
  "layout/style/test/test_visited_image_loading_empty.html": "TIMED_OUT",

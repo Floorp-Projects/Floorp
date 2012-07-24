@@ -10,6 +10,7 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "prlog.h"
+#include "nsIScriptSecurityManager.h"
 
 #if defined(PR_LOGGING)
 //
@@ -85,8 +86,17 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIScriptSecurityManager> securityManager =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = securityManager->GetChannelPrincipal(aChannel,
+                                              getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     bool expectCallback;
-    rv = uriClassifier->Classify(uri, this, &expectCallback);
+    rv = uriClassifier->Classify(principal, this, &expectCallback);
     if (NS_FAILED(rv)) return rv;
 
     if (expectCallback) {

@@ -12,7 +12,6 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
-import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.ui.PanZoomController;
 
 import java.io.*;
@@ -123,6 +122,7 @@ abstract public class GeckoApp
     private static LaunchState sLaunchState = LaunchState.Launching;
 
     abstract public int getLayout();
+    abstract public boolean hasTabsSideBar();
     abstract protected String getDefaultProfileName();
 
     public static boolean checkLaunchState(LaunchState checkState) {
@@ -233,14 +233,6 @@ abstract public class GeckoApp
                     // nothing
                 }
             }
-        }
-
-        // we don't support Honeycomb
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
-            Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
-        {
-            Log.w(LOGTAG, "Blocking plugins because of Honeycomb");
-            return new String[0];
         }
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
@@ -958,17 +950,13 @@ abstract public class GeckoApp
     public boolean areTabsShown() { return false; }
 
     public boolean hasPermanentMenuKey() {
-        boolean hasMenu = false;
+        boolean hasMenu = true;
 
         if (Build.VERSION.SDK_INT >= 11)
-            hasMenu = true;
+            hasMenu = false;
 
-        if (Build.VERSION.SDK_INT >= 14) {
-            if (!ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey())
-                hasMenu = true;
-            else
-                hasMenu = false;
-        }
+        if (Build.VERSION.SDK_INT >= 14)
+            hasMenu = ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey();
 
         return hasMenu;
     }
@@ -1319,7 +1307,7 @@ abstract public class GeckoApp
                     // Make all the items checked by default
                     states[i] = true;
                 } catch (JSONException e) {
-                    Log.i(LOGTAG, "JSONException: " + e);
+                    Log.i(LOGTAG, "JSONException", e);
                 }
             }
             builder.setMultiChoiceItems(items, states, new DialogInterface.OnMultiChoiceClickListener(){
@@ -1612,51 +1600,6 @@ abstract public class GeckoApp
                 }
             });
     }
-
-    public Surface createSurface() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return null;
-
-        SurfaceTextureLayer layer = SurfaceTextureLayer.create();
-        if (layer == null)
-            return null;
-
-        Surface surface = layer.getSurface();
-        tab.addPluginLayer(surface, layer);
-        return surface;
-    }
-
-    public void destroySurface(Surface surface) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        Layer layer = tab.removePluginLayer(surface);
-        hidePluginLayer(layer);
-    }
-
-    public void showSurface(Surface surface, int x, int y,
-                            int w, int h, boolean inverted, boolean blend) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        LayerView layerView = mLayerController.getView();
-        SurfaceTextureLayer layer = (SurfaceTextureLayer)tab.getPluginLayer(surface);
-        if (layer == null)
-            return;
-
-        layer.update(new Rect(x, y, x + w, y + h), inverted, blend);
-        layerView.addLayer(layer);
-
-        // FIXME: shouldn't be necessary, layer will request
-        // one when it gets first frame
-        layerView.requestRender();
-    }
     
     private void hidePluginLayer(Layer layer) {
         LayerView layerView = mLayerController.getView();
@@ -1668,19 +1611,6 @@ abstract public class GeckoApp
         LayerView layerView = mLayerController.getView();
         layerView.addLayer(layer);
         layerView.requestRender();
-    }
-
-    public void hideSurface(Surface surface) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-        if (tab == null)
-            return;
-
-        Layer layer = tab.getPluginLayer(surface);
-        if (layer == null)
-            return;
-
-        hidePluginLayer(layer);
     }
 
     public void requestRender() {
@@ -1735,7 +1665,9 @@ abstract public class GeckoApp
 
     public boolean isTablet() {
         int screenLayout = getResources().getConfiguration().screenLayout;
-        return ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE);
+        return (Build.VERSION.SDK_INT >= 11 &&
+                (((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) || 
+                 ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE)));
     }
 
     /** Called when the activity is first created. */
@@ -3051,7 +2983,7 @@ abstract public class GeckoApp
                 mAccessibilityEvent_setMaxScrollY =
                     AccessibilityEvent.class.getMethod("setMaxScrollY", int.class);
             } catch (NoSuchMethodException e) {
-                Log.e(LOGTAG, "Error initializing AccessibilityCompat: " + e);
+                Log.e(LOGTAG, "Error initializing AccessibilityCompat", e);
             }
             mInitialized = true;
         }
@@ -3063,7 +2995,7 @@ abstract public class GeckoApp
                 if (mAccessibilityEvent_setMaxScrollX != null)
                     mAccessibilityEvent_setMaxScrollX.invoke(event, maxScrollX);
             } catch (Exception e) {
-                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollX: " + e);
+                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollX", e);
             }
         }
 
@@ -3074,7 +3006,7 @@ abstract public class GeckoApp
                 if (mAccessibilityEvent_setMaxScrollY != null)
                     mAccessibilityEvent_setMaxScrollY.invoke(event, maxScrollY);
             } catch (Exception e) {
-                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollY: " + e);
+                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollY", e);
             }
         }
     }

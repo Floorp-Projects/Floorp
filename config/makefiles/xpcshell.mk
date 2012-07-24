@@ -15,7 +15,7 @@ $(error Must define relativesrcdir when defining XPCSHELL_TESTS.)
 endif
 
 define _INSTALL_TESTS
-$(DIR_INSTALL) $(wildcard $(srcdir)/$(dir)/*) $(testxpcobjdir)/$(relativesrcdir)/$(dir)
+$(call install_cmd, $(wildcard $(srcdir)/$(dir)/*) $(testxpcobjdir)/$(relativesrcdir)/$(dir))
 
 endef # do not remove the blank line!
 

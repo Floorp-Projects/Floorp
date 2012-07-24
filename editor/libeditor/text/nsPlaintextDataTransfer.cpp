@@ -341,7 +341,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
-      rv = InsertTextFromTransferable(trans, nsnull, nsnull, true);
+      rv = InsertTextFromTransferable(trans, nsnull, 0, true);
     }
   }
 
@@ -361,7 +361,7 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
   if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
     return NS_OK;
 
-  return InsertTextFromTransferable(aTransferable, nsnull, nsnull, true);
+  return InsertTextFromTransferable(aTransferable, nsnull, 0, true);
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPaste)

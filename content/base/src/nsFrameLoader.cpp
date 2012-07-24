@@ -1984,7 +1984,7 @@ nsFrameLoader::TryRemoteBrowser()
       nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
       if (!appsService) {
         NS_ERROR("Apps Service is not available!");
-        return NS_ERROR_FAILURE;
+        return false;
       }
 
       appsService->GetAppLocalIdByManifestURL(manifest, &appId);

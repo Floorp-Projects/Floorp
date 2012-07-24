@@ -26,20 +26,15 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame();
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvP1();
+    virtual bool RecvP1() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvP2();
+    virtual bool RecvP2() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvDone();
+    virtual bool RecvDone() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -65,20 +60,15 @@ public:
     virtual ~TestBlockChildChild() { }
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvPoke1();
+    virtual bool RecvPoke1() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerStackFrame();
+    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvPoke2();
+    virtual bool RecvPoke2() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvLastPoke();
+    virtual bool RecvLastPoke() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
