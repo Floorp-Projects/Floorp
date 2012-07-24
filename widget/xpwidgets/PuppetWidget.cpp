@@ -204,7 +204,7 @@ PuppetWidget::Invalidate(const nsIntRect& aRect)
 {
 #ifdef DEBUG
   debug_DumpInvalidate(stderr, this, &aRect,
-                       nsCAutoString("PuppetWidget"), nsnull);
+                       nsCAutoString("PuppetWidget"), 0);
 #endif
 
   if (mChild) {
@@ -241,7 +241,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
   debug_DumpEvent(stdout, event->widget, event,
-                  nsCAutoString("PuppetWidget"), nsnull);
+                  nsCAutoString("PuppetWidget"), 0);
 #endif
 
   NS_ABORT_IF_FALSE(!mChild || mChild->mWindowType == eWindowType_popup,
@@ -495,7 +495,7 @@ PuppetWidget::DispatchPaintEvent()
   {
 #ifdef DEBUG
     debug_DumpPaintEvent(stderr, this, &event,
-                         nsCAutoString("PuppetWidget"), nsnull);
+                         nsCAutoString("PuppetWidget"), 0);
 #endif
 
     if (mozilla::layers::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
@@ -569,7 +569,7 @@ PuppetWidget::GetNativeData(PRUint32 aDataType)
   switch (aDataType) {
   case NS_NATIVE_SHAREABLE_WINDOW: {
     NS_ABORT_IF_FALSE(mTabChild, "Need TabChild to get the nativeWindow from!");
-    mozilla::WindowsHandle nativeData = nsnull;
+    mozilla::WindowsHandle nativeData = 0;
     mTabChild->SendGetWidgetNativeData(&nativeData);
     return (void*)nativeData;
   }

@@ -23,11 +23,9 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool AnswerE();
+    virtual bool AnswerE() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -47,17 +45,13 @@ public:
     virtual ~TestRacyReentryChild();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool RecvN();
+    virtual bool RecvN() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual bool AnswerH();
+    virtual bool AnswerH() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

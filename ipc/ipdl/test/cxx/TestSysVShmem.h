@@ -23,14 +23,12 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
     virtual bool RecvTake(
             Shmem& mem,
             Shmem& unsafe,
-            const size_t& expectedSize);
+            const size_t& expectedSize) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -48,14 +46,12 @@ public:
     virtual ~TestSysVShmemChild() { }
 
 protected:
-    NS_OVERRIDE
     virtual bool RecvGive(
             Shmem& mem,
             Shmem& unsafe,
-            const size_t& expectedSize);
+            const size_t& expectedSize) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why)
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

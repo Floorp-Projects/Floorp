@@ -1098,7 +1098,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
   if (NS_FAILED(result)) {
     return result;
   }
-  PRInt32   theIndex = nsnull;
+  PRInt32   theIndex = 0;
 
   // Populate the tokenizer with the fabricated elements in the reverse
   // order such that <SELECT> is on the top fo the tokenizer followed by

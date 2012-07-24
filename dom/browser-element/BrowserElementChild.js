@@ -49,6 +49,15 @@ function BrowserElementChild() {
   // Maps outer window id --> weak ref to window.  Used by modal dialog code.
   this._windowIDDict = {};
 
+  // _forcedVisible corresponds to the visibility state our owner has set on us
+  // (via iframe.setVisible).  ownerVisible corresponds to whether the docShell
+  // whose window owns this element is visible.
+  //
+  // Our docShell is visible iff _forcedVisible and _ownerVisible are both
+  // true.
+  this._forcedVisible = true;
+  this._ownerVisible = true;
+
   this._init();
 };
 
@@ -64,6 +73,10 @@ BrowserElementChild.prototype = {
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
                                  Ci.nsIWebProgress.NOTIFY_SECURITY |
                                  Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+
+    docShell.QueryInterface(Ci.nsIWebNavigation)
+            .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
+                                .createInstance(Ci.nsISHistory);
 
     // This is necessary to get security web progress notifications.
     var securityUI = Cc['@mozilla.org/secure_browser_ui;1']
@@ -123,6 +136,7 @@ BrowserElementChild.prototype = {
     addMsgListener("stop", this._recvStop);
     addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
     addMsgListener("fire-ctx-callback", this._recvFireCtxCallback);
+    addMsgListener("owner-visibility-change", this._recvOwnerVisibilityChange);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
@@ -444,8 +458,24 @@ BrowserElementChild.prototype = {
 
   _recvSetVisible: function(data) {
     debug("Received setVisible message: (" + data.json.visible + ")");
-    if (docShell.isActive !== data.json.visible) {
-      docShell.isActive = data.json.visible;
+    this._forcedVisible = data.json.visible;
+    this._updateDocShellVisibility();
+  },
+
+  /**
+   * Called when the window which contains this iframe becomes hidden or
+   * visible.
+   */
+  _recvOwnerVisibilityChange: function(data) {
+    debug("Received ownerVisibilityChange: (" + data.json.visible + ")");
+    this._ownerVisible = data.json.visible;
+    this._updateDocShellVisibility();
+  },
+
+  _updateDocShellVisibility: function() {
+    var visible = this._forcedVisible && this._ownerVisible;
+    if (docShell.isActive !== visible) {
+      docShell.isActive = visible;
     }
   },
 

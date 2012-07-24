@@ -83,8 +83,8 @@ class NS_COM_GLUE GenericClassInfo : public nsIClassInfo
 public:
   struct ClassInfoData
   {
-    typedef NS_CALLBACK(GetInterfacesProc)(PRUint32* NS_OUTPARAM countp,
-                                           nsIID*** NS_OUTPARAM array);
+    typedef NS_CALLBACK(GetInterfacesProc)(PRUint32* countp,
+                                           nsIID*** array);
     typedef NS_CALLBACK(GetLanguageHelperProc)(PRUint32 language,
                                                nsISupports** helper);
 
@@ -109,7 +109,7 @@ private:
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
 #define NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
-     (PRUint32 * NS_OUTPARAM, nsIID *** NS_OUTPARAM);
+     (PRUint32 *, nsIID ***);
 
 #define NS_IMPL_CLASSINFO(_class, _getlanguagehelper, _flags, _cid)     \
   NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
@@ -132,8 +132,7 @@ private:
 
 #define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                 \
 NS_IMETHODIMP                                                                 \
-NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count NS_OUTPARAM,              \
-                                    nsIID ***array NS_OUTPARAM)               \
+NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
 {                                                                             \
     *count = _c;                                                              \
     *array = (nsIID **)nsMemory::Alloc(sizeof (nsIID *) * _c);

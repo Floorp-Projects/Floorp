@@ -170,6 +170,24 @@ GrallocBufferActor::Create(const gfxIntSize& aSize,
   return actor;
 }
 
+/*static*/ already_AddRefed<TextureImage>
+ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext* aGL,
+                                                     const SurfaceDescriptor& aDescriptor,
+                                                     GLenum aWrapMode)
+{
+  if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
+    return nsnull;
+  }
+  sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aDescriptor);
+  return aGL->CreateDirectTextureImage(buffer.get(), aWrapMode);
+}
+
+/*static*/ void
+ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
+{
+  // Nothing to be done for gralloc.
+}
+
 bool
 ShadowLayerManager::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 {
@@ -323,8 +341,7 @@ ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor& aDescript
     return false;
   }
 
-  sp<GraphicBuffer> buffer =
-    GrallocBufferActor::GetFrom(aDescriptor);
+  sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aDescriptor);
   // If the buffer wasn't lock()d, this probably blows up.  But since
   // PlatformCloseDescriptor() is private and only used by
   // AutoOpenSurface, we want to know if the logic is wrong there.
@@ -334,12 +351,6 @@ ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor& aDescript
 
 /*static*/ void
 ShadowLayerForwarder::PlatformSyncBeforeUpdate()
-{
-  // Nothing to be done for gralloc.
-}
-
-/*static*/ void
-ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
 {
   // Nothing to be done for gralloc.
 }

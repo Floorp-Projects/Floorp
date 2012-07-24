@@ -29,12 +29,12 @@ protected:
 public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_SCRIPTABLE NS_IMETHOD GetPreferences(char** prefBranch NS_OUTPARAM, char** id NS_OUTPARAM, char** subjectName NS_OUTPARAM, char** grantedList NS_OUTPARAM, char** deniedList NS_OUTPARAM, bool* isTrusted NS_OUTPARAM);
+  NS_IMETHOD GetPreferences(char** prefBranch, char** id, char** subjectName, char** grantedList, char** deniedList, bool* isTrusted);
   NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
   NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
-  NS_IMETHOD CanEnableCapability(const char* capability, PRInt16* _retval NS_OUTPARAM);
-  NS_IMETHOD IsCapabilityEnabled(const char* capability, void* annotation, bool* _retval NS_OUTPARAM);
-  NS_IMETHOD EnableCapability(const char* capability, void** annotation NS_INOUTPARAM);
+  NS_IMETHOD CanEnableCapability(const char* capability, PRInt16* _retval);
+  NS_IMETHOD IsCapabilityEnabled(const char* capability, void* annotation, bool* _retval);
+  NS_IMETHOD EnableCapability(const char* capability, void** annotation);
   NS_IMETHOD GetHasCertificate(bool* aHasCertificate);
   NS_IMETHOD GetFingerprint(nsACString& aFingerprint);
   NS_IMETHOD GetPrettyName(nsACString& aPrettyName);
@@ -114,15 +114,15 @@ class nsPrincipal : public nsBasePrincipal
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
-  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
+  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD GetHashValue(PRUint32* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
   NS_IMETHOD GetDomain(nsIURI** aDomain);
   NS_IMETHOD SetDomain(nsIURI* aDomain);
   NS_IMETHOD GetOrigin(char** aOrigin);
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
-  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
+  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
   NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);
@@ -192,15 +192,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
-  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
+  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD GetHashValue(PRUint32* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
   NS_IMETHOD GetDomain(nsIURI** aDomain);
   NS_IMETHOD SetDomain(nsIURI* aDomain);
   NS_IMETHOD GetOrigin(char** aOrigin);
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
-  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
+  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report);
   NS_IMETHOD GetExtendedOrigin(nsACString& aExtendedOrigin);
   NS_IMETHOD GetAppStatus(PRUint16* aAppStatus);

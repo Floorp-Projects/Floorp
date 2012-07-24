@@ -792,8 +792,11 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(bool aVisibility)
 NS_IMETHODIMP nsXULWindow::GetEnabled(bool *aEnabled)
 {
   NS_ENSURE_ARG_POINTER(aEnabled);
-  if (mWindow)
-    return mWindow->IsEnabled(aEnabled);
+
+  if (mWindow) {
+    *aEnabled = mWindow->IsEnabled();
+    return NS_OK;
+  }
 
   *aEnabled = true; // better guess than most
   return NS_ERROR_FAILURE;

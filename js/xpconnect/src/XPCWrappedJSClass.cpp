@@ -543,7 +543,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mDelegate)
 
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanCreateWrapper(const nsIID * iid,
-                                             char **_retval NS_OUTPARAM)
+                                             char **_retval)
 {
     // XXX This doesn't actually work because nsScriptSecurityManager doesn't
     // know what to do with "sameOrigin" for canCreateWrapper.
@@ -554,7 +554,7 @@ SameOriginCheckedComponent::CanCreateWrapper(const nsIID * iid,
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanCallMethod(const nsIID * iid,
                                           const PRUnichar *methodName,
-                                          char **_retval NS_OUTPARAM)
+                                          char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -563,7 +563,7 @@ SameOriginCheckedComponent::CanCallMethod(const nsIID * iid,
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanGetProperty(const nsIID * iid,
                                            const PRUnichar *propertyName,
-                                           char **_retval NS_OUTPARAM)
+                                           char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -572,7 +572,7 @@ SameOriginCheckedComponent::CanGetProperty(const nsIID * iid,
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanSetProperty(const nsIID * iid,
                                            const PRUnichar *propertyName,
-                                           char **_retval NS_OUTPARAM)
+                                           char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

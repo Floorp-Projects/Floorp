@@ -16,6 +16,8 @@
   <script type="application/javascript" src="outoflinexulscript.js"></script>
   <script type="application/javascript"><![CDATA[
 const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -36,5 +38,13 @@ var ns = {};
 Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);
 src = ns.NetUtil.asyncFetch.toSource();
 isnot(src.indexOf("return"), -1, "subscript should have source");
+
+var base = /.*\//.exec(window.location.href)[0];
+var reg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+var resolvedBase = reg.convertChromeURL(NetUtil.newURI(base)).spec;
+ns = {};
+Services.scriptloader.loadSubScript(resolvedBase + "subscript.js", ns);
+src = ns.NetUtil.asyncFetch.toSource();
+isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
   ]]></script>
 </window>

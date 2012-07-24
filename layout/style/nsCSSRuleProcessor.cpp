@@ -506,7 +506,7 @@ protected:
 
 RuleHash::RuleHash(bool aQuirksMode)
   : mRuleCount(0),
-    mUniversalRules(nsnull),
+    mUniversalRules(0),
     mEnumList(nsnull), mEnumListSize(0),
     mQuirksMode(aQuirksMode)
 #ifdef RULE_HASH_STATS

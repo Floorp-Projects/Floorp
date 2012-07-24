@@ -7,8 +7,8 @@ function test(str, arg, result)
 
     var fun = new Function('x', str);
 
-    var got = fun.toSource().replace(/\n/g,'');
-    var expect = '(function anonymous(x) { ' + str + ' })';
+    var got = fun.toSource();
+    var expect = '(function anonymous(x) {\n' + str + '\n})';
     if (got !== expect) {
         print("GOT:    " + got);
         print("EXPECT: " + expect);
