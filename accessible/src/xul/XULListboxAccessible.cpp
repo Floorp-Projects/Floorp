@@ -727,7 +727,7 @@ XULListitemAccessible::ContainerWidget() const
 
 XULListCellAccessible::
   XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
 {
 }
 
@@ -933,6 +933,13 @@ XULListCellAccessible::IsSelected(bool* aIsSelected)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULListCellAccessible. Accessible implementation
+
+void
+XULListCellAccessible::Shutdown()
+{
+  mTableCell = nsnull;
+  HyperTextAccessibleWrap::Shutdown();
+}
 
 role
 XULListCellAccessible::NativeRole()

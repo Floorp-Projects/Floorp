@@ -531,7 +531,7 @@ ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
 
 ARIAGridCellAccessible::
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
 {
 }
 
@@ -788,4 +788,11 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
                          stringIdx);
 
   return NS_OK;
+}
+
+void
+ARIAGridCellAccessible::Shutdown()
+{
+  mTableCell = nsnull;
+  HyperTextAccessibleWrap::Shutdown();
 }
