@@ -687,6 +687,9 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   if (backend == BACKEND_CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
+    if (!surf) {
+      return NULL;
+    }
 
     return CreateDrawTargetForSurface(surf, aSize);
   } else {
