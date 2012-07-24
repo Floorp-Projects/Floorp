@@ -250,7 +250,7 @@ DrawTargetCairo::~DrawTargetCairo()
 IntSize
 DrawTargetCairo::GetSize()
 {
-  return IntSize();
+  return mSize;
 }
 
 TemporaryRef<SourceSurface>
@@ -712,7 +712,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
 
   if (!cairo_surface_status(similar)) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
-    target->Init(similar);
+    target->Init(similar, aSize);
     return target;
   }
 
@@ -720,9 +720,10 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
 }
 
 bool
-DrawTargetCairo::Init(cairo_surface_t* aSurface)
+DrawTargetCairo::Init(cairo_surface_t* aSurface, const IntSize& aSize)
 {
   mContext = cairo_create(aSurface);
+  mSize = aSize;
 
   return true;
 }

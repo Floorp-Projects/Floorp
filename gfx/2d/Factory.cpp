@@ -365,11 +365,11 @@ Factory::GetD2DVRAMUsageSourceSurface()
 #endif // XP_WIN
 
 TemporaryRef<DrawTarget>
-Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface)
+Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize)
 {
 #ifdef USE_CAIRO
   RefPtr<DrawTargetCairo> newTarget = new DrawTargetCairo();
-  if (newTarget->Init(aSurface)) {
+  if (newTarget->Init(aSurface, aSize)) {
     return newTarget;
   }
 
