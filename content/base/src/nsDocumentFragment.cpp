@@ -9,6 +9,7 @@
 
 #include "nsIDOMDocumentFragment.h"
 #include "mozilla/dom/FragmentOrElement.h"
+#include "nsGenericElement.h" // for DOMCI_NODE_DATA
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
@@ -41,6 +42,12 @@ public:
   }
 
   // nsIContent
+  virtual already_AddRefed<nsINodeInfo>
+    GetExistingAttrNameFromQName(const nsAString& aStr) const
+  {
+    return nullptr;
+  }
+
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
