@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- This file is used to include shared UI components in different gecko app
+     layouts, such as gecko_app.xml and web_app.xml -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <AbsoluteLayout android:id="@+id/plugin_container"
+                    android:background="@android:color/transparent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"/>
+
+    <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                       android:layout_width="fill_parent"
+                                       android:layout_height="fill_parent"
+                                       android:visibility="gone"/>
+
+    <include layout="@layout/text_selection_handles"/>
+
+</merge>

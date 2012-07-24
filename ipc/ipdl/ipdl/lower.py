@@ -369,6 +369,12 @@ def _printErrorMessage(msg):
     return StmtExpr(
         ExprCall(ExprVar('NS_ERROR'), args=[ msg ]))
 
+def _protocolErrorBreakpoint(msg):
+    if isinstance(msg, str):
+        msg = ExprLiteral.String(msg)
+    return StmtExpr(ExprCall(ExprVar('mozilla::ipc::ProtocolErrorBreakpoint'),
+                             args=[ msg ]))
+
 def _printWarningMessage(msg):
     if isinstance(msg, str):
         msg = ExprLiteral.String(msg)
@@ -436,7 +442,7 @@ def errfnRecv(msg, errcode=_Result.ValuError):
 
 # used in Read() methods
 def errfnRead(msg):
-    return [ StmtReturn.FALSE ]
+    return [ _protocolErrorBreakpoint(msg), StmtReturn.FALSE ]
 
 def _destroyMethod():
     return ExprVar('ActorDestroy')
@@ -3183,6 +3189,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace('// See bug 589371\n\n', indent=1),
             _printErrorMessage('IPDL error:'),
             _printErrorMessage(msgvar),
+            _protocolErrorBreakpoint(msgvar),
             Whitespace.NL
         ])
         actorname = _actorName(p.name, self.side)
@@ -4090,7 +4097,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ExprBinary(ExprBinary(_NULL_ACTOR_ID, '==', idvar),
                        '&&',
                        ExprNot(nullablevar))))
-        ifbadid.addifstmt(StmtReturn.FALSE)
+        ifbadid.addifstmts([
+                _protocolErrorBreakpoint('bad ID for '+ self.protocol.name),
+                StmtReturn.FALSE
+        ])
         read.addstmts([ ifbadid, Whitespace.NL ])
         
         # if (NULL_ID == id)
@@ -4108,7 +4118,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ExprCast(_lookupListener(idvar), cxxtype, static=1))))
 
         ifnotfound = StmtIf(ExprNot(outactor))
-        ifnotfound.addifstmt(StmtReturn.FALSE)
+        ifnotfound.addifstmts([
+                _protocolErrorBreakpoint('could not look up '+ self.protocol.name),
+                StmtReturn.FALSE
+        ])
         ifnull.addelsestmt(ifnotfound)
 
         read.addstmts([

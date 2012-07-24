@@ -125,12 +125,12 @@ static const char g[] =
   "787F7DED3B30E1A22D09F1FBDA1ABBBFBF25CAE05A13F812E34563F99410E73B";
 
 NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
-                                  nsACString & aGX1 NS_OUTPARAM,
-                                  nsACString & aGV1 NS_OUTPARAM,
-                                  nsACString & aR1 NS_OUTPARAM,
-                                  nsACString & aGX2 NS_OUTPARAM,
-                                  nsACString & aGV2 NS_OUTPARAM,
-                                  nsACString & aR2 NS_OUTPARAM)
+                                  nsACString & aGX1,
+                                  nsACString & aGV1,
+                                  nsACString & aR1,
+                                  nsACString & aGX2,
+                                  nsACString & aGV2,
+                                  nsACString & aR2)
 {
   NS_ENSURE_STATE(round == JPAKENotStarted);
   NS_ENSURE_STATE(key == NULL);
@@ -203,9 +203,9 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
                                   const nsACString & aGX4,
                                   const nsACString & aGV4,
                                   const nsACString & aR4,
-                                  nsACString & aA NS_OUTPARAM,
-                                  nsACString & aGVA NS_OUTPARAM,
-                                  nsACString & aRA NS_OUTPARAM)
+                                  nsACString & aA,
+                                  nsACString & aGVA,
+                                  nsACString & aRA)
 {
   NS_ENSURE_STATE(round == JPAKEBeforeRound2);
   NS_ENSURE_STATE(key != NULL);
@@ -351,8 +351,8 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
                                  const nsACString & aGVB,
                                  const nsACString & aRB,
                                  const nsACString & aHKDFInfo,
-                                 nsACString & aAES256Key NS_OUTPARAM,
-                                 nsACString & aHMAC256Key NS_OUTPARAM)
+                                 nsACString & aAES256Key,
+                                 nsACString & aHMAC256Key)
 {
   static const unsigned AES256_KEY_SIZE = 256 / 8;
   static const unsigned HMAC_SHA256_KEY_SIZE = 256 / 8;

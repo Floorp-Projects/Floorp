@@ -676,23 +676,28 @@ Accessible::NativeState()
   state |= VisibilityState();
 
   nsIFrame *frame = GetFrame();
-  if (frame && (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
-    state |= states::FLOATING;
+  if (frame) {
+    if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+      state |= states::FLOATING;
 
-  // Check if a XUL element has the popup attribute (an attached popup menu).
-  if (mContent->IsXUL()) {
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
-      state |= states::HASPOPUP;
-
-    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
-    if (xulStyle && frame->IsBoxFrame()) {
-      // In XUL all boxes are either vertical or horizontal
-      if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL)
-        state |= states::VERTICAL;
-      else
-        state |= states::HORIZONTAL;
+    // XXX we should look at layout for non XUL box frames, but need to decide
+    // how that interacts with ARIA.
+    if (mContent->IsXUL() && frame->IsBoxFrame()) {
+      const nsStyleXUL* xulStyle = frame->GetStyleXUL();
+      if (xulStyle && frame->IsBoxFrame()) {
+        // In XUL all boxes are either vertical or horizontal
+        if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL)
+          state |= states::VERTICAL;
+        else
+          state |= states::HORIZONTAL;
+      }
     }
   }
+
+  // Check if a XUL element has the popup attribute (an attached popup menu).
+      if (mContent->IsXUL() && mContent->HasAttr(kNameSpaceID_None,
+                                                 nsGkAtoms::popup))
+        state |= states::HASPOPUP;
 
   // Bypass the link states specialization for non links.
   if (!mRoleMapEntry || mRoleMapEntry->roleRule == kUseNativeRole ||

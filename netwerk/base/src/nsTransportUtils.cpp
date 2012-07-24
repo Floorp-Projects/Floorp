@@ -77,7 +77,7 @@ public:
 
         mProxy->mSink->OnTransportStatus(mTransport, mStatus, mProgress,
                                          mProgressMax);
-        return nsnull;
+        return NS_OK;
     }
 
     nsRefPtr<nsTransportEventSinkProxy> mProxy;

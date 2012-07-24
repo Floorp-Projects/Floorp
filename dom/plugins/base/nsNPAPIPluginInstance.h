@@ -16,8 +16,13 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 #ifdef MOZ_WIDGET_ANDROID
+#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
+#include "GLContext.h"
+#include "nsSurfaceTexture.h"
+#include <map>
 class PluginEventRunnable;
+class SharedPluginTexture;
 #endif
 
 #include "mozilla/TimeStamp.h"
@@ -124,6 +129,7 @@ public:
   void NotifyOnScreen(bool aOnScreen);
   void MemoryPressure();
   void NotifyFullScreen(bool aFullScreen);
+  void NotifySize(nsIntSize size);
 
   bool IsOnScreen() {
     return mOnScreen;
@@ -142,6 +148,61 @@ public:
   void SetFullScreenOrientation(PRUint32 orientation);
 
   void SetWakeLock(bool aLock);
+
+  mozilla::gl::GLContext* GLContext();
+  
+  // For ANPOpenGL
+  class TextureInfo {
+  public:
+    TextureInfo() :
+      mTexture(0), mWidth(0), mHeight(0), mInternalFormat(0)
+    {
+    }
+
+    TextureInfo(GLuint aTexture, PRInt32 aWidth, PRInt32 aHeight, GLuint aInternalFormat) :
+      mTexture(aTexture), mWidth(aWidth), mHeight(aHeight), mInternalFormat(aInternalFormat)
+    {
+    }
+
+    GLuint mTexture;
+    PRInt32 mWidth;
+    PRInt32 mHeight;
+    GLuint mInternalFormat;
+  };
+
+  TextureInfo LockContentTexture();
+  void ReleaseContentTexture(TextureInfo& aTextureInfo);
+
+  // For ANPNativeWindow
+  void* AcquireContentWindow();
+
+  mozilla::gl::SharedTextureHandle CreateSharedHandle();
+
+  // For ANPVideo
+  class VideoInfo {
+  public:
+    VideoInfo(nsSurfaceTexture* aSurfaceTexture) :
+      mSurfaceTexture(aSurfaceTexture)
+    {
+    }
+
+    ~VideoInfo()
+    {
+      mSurfaceTexture = nsnull;
+    }
+
+    nsRefPtr<nsSurfaceTexture> mSurfaceTexture;
+    gfxRect mDimensions;
+  };
+
+  void* AcquireVideoWindow();
+  void ReleaseVideoWindow(void* aWindow);
+  void SetVideoDimensions(void* aWindow, gfxRect aDimensions);
+
+  void GetVideos(nsTArray<VideoInfo*>& aVideos);
+
+  void SetInverted(bool aInverted);
+  bool Inverted() { return mInverted; }
 #endif
 
   nsresult NewStreamListener(const char* aURL, void* notifyData,
@@ -220,7 +281,6 @@ protected:
 
 #ifdef MOZ_WIDGET_ANDROID
   PRUint32 mANPDrawingModel;
-  nsCOMPtr<nsIRunnable> mSurfaceGetter;
 
   friend class PluginEventRunnable;
 
@@ -230,6 +290,10 @@ protected:
   PRUint32 mFullScreenOrientation;
   bool mWakeLocked;
   bool mFullScreen;
+  bool mInverted;
+
+  nsRefPtr<SharedPluginTexture> mContentTexture;
+  nsRefPtr<nsSurfaceTexture> mContentSurface;
 #endif
 
   enum {
@@ -278,8 +342,13 @@ private:
 
   bool mUsePluginLayersPref;
 #ifdef MOZ_WIDGET_ANDROID
-  void* mSurface;
+  void EnsureSharedTexture();
+  nsSurfaceTexture* CreateSurfaceTexture();
+
+  std::map<void*, VideoInfo*> mVideos;
   bool mOnScreen;
+
+  nsIntSize mCurrentSize;
 #endif
 };
 

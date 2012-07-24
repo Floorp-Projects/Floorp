@@ -1631,15 +1631,15 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 }
 
                 // Ok, now we do the special object-plus-wrapper transplant.
-                ww = js_TransplantObjectWithWrapper(ccx, flat, ww, newobj,
-                                                    newwrapper);
+                ww = xpc::TransplantObjectWithWrapper(ccx, flat, ww, newobj,
+                                                      newwrapper);
                 if (!ww)
                     return NS_ERROR_FAILURE;
 
                 flat = newobj;
                 wrapper->SetWrapper(ww);
             } else {
-                flat = JS_TransplantObject(ccx, flat, newobj);
+                flat = xpc::TransplantObject(ccx, flat, newobj);
                 if (!flat)
                     return NS_ERROR_FAILURE;
             }

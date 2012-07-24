@@ -39,6 +39,7 @@ MOCHITEST_CHROME_FILES = \
 		test_APIExposer.xul \
 		test_chrometoSource.xul \
 		outoflinexulscript.js \
+		subscript.js \
 		test_cows.xul \
 		test_documentdomain.xul \
 		test_doublewrappedcompartments.xul \
@@ -55,6 +56,7 @@ MOCHITEST_CHROME_FILES = \
 		test_weakref.xul \
 		test_wrappers.xul \
 		test_bug771429.xul \
+		test_bug773962.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based

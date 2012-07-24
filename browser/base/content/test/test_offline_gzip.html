@@ -37,8 +37,15 @@ function finishTest() {
   var pm = Components.classes["@mozilla.org/permissionmanager;1"].
            getService(Components.interfaces.nsIPermissionManager);
 
-  pm.remove("mochi.test", "offline-app");
-  
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+              .getService(Components.interfaces.nsIIOService)
+              .newURI(window.frames[0].location, null, null);
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(Components.interfaces.nsIScriptSecurityManager)
+                   .getNoAppCodebasePrincipal(uri);
+
+  pm.removeFromPrincipal(principal, "offline-app");
+
   window.removeEventListener("message", handleMessageEvents, false);
 
   SimpleTest.finish();  

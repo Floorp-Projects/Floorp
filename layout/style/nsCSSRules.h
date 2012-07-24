@@ -162,7 +162,7 @@ public:
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
-                            nsAString & aResult NS_OUTPARAM) const;
+                            nsAString & aResult) const;
 
 protected:
   friend class nsCSSFontFaceRule;

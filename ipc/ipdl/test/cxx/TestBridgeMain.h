@@ -31,13 +31,11 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
     virtual PTestBridgeMainSubParent*
     AllocPTestBridgeMainSub(Transport* transport,
-                            ProcessId otherProcess);
+                            ProcessId otherProcess) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
 
 class TestBridgeMainSubParent :
@@ -50,15 +48,11 @@ public:
     virtual ~TestBridgeMainSubParent() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvHello();
-    NS_OVERRIDE
-    virtual bool RecvHelloSync();
-    NS_OVERRIDE
-    virtual bool AnswerHelloRpc();
+    virtual bool RecvHello() MOZ_OVERRIDE;
+    virtual bool RecvHelloSync() MOZ_OVERRIDE;
+    virtual bool AnswerHelloRpc() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     Transport* mTransport;
 };
@@ -76,11 +70,9 @@ public:
     virtual ~TestBridgeMainChild() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvStart();
+    virtual bool RecvStart() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     IPDLUnitTestSubprocess* mSubprocess;
 };
@@ -95,11 +87,9 @@ public:
     void Main();
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvBridgeEm();
+    virtual bool RecvBridgeEm() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
 
 //-----------------------------------------------------------------------------
@@ -113,16 +103,13 @@ public:
     virtual ~TestBridgeSubChild() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvPing();
+    virtual bool RecvPing() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
     virtual PTestBridgeMainSubChild*
     AllocPTestBridgeMainSub(Transport* transport,
-                            ProcessId otherProcess);
+                            ProcessId otherProcess) MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 };
 
 class TestBridgeMainSubChild :
@@ -136,13 +123,10 @@ public:
     virtual ~TestBridgeMainSubChild() {}
 
 protected:
-    NS_OVERRIDE
-    virtual bool RecvHi();
-    NS_OVERRIDE
-    virtual bool AnswerHiRpc();
+    virtual bool RecvHi() MOZ_OVERRIDE;
+    virtual bool AnswerHiRpc() MOZ_OVERRIDE;
 
-    NS_OVERRIDE
-    virtual void ActorDestroy(ActorDestroyReason why);
+    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     bool mGotHi;
     Transport* mTransport;

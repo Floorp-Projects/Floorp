@@ -389,7 +389,7 @@ nsSVGGradientFrame::GetStopFrame(PRInt32 aIndex, nsIFrame * *aStopFrame)
   AutoGradientReferencer gradientRef(this);
   nsSVGGradientFrame* next = GetReferencedGradientIfNotInUse();
   if (!next)
-    return nsnull;
+    return 0;
 
   return next->GetStopFrame(aIndex, aStopFrame);
 }

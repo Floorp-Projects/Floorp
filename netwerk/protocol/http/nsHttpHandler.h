@@ -94,6 +94,7 @@ public:
     PRUint32       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
     PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
+    PRUint32       ConnectTimeout()  { return mConnectTimeout; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -366,6 +367,10 @@ private:
     PRUint32       mSpdySendingChunkSize;
     PRIntervalTime mSpdyPingThreshold;
     PRIntervalTime mSpdyPingTimeout;
+
+    // The maximum amount of time to wait for socket transport to be
+    // established. In milliseconds.
+    PRUint32       mConnectTimeout;
 };
 
 //-----------------------------------------------------------------------------

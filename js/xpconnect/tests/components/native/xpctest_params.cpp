@@ -70,73 +70,73 @@ nsXPCTestParams::~nsXPCTestParams()
 }
 
 /* boolean testBoolean (in boolean a, inout boolean b); */
-NS_IMETHODIMP nsXPCTestParams::TestBoolean(bool a, bool *b NS_INOUTPARAM, bool *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestBoolean(bool a, bool *b, bool *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* octet testOctet (in octet a, inout octet b); */
-NS_IMETHODIMP nsXPCTestParams::TestOctet(PRUint8 a, PRUint8 *b NS_INOUTPARAM, PRUint8 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestOctet(PRUint8 a, PRUint8 *b, PRUint8 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* short testShort (in short a, inout short b); */
-NS_IMETHODIMP nsXPCTestParams::TestShort(PRInt16 a, PRInt16 *b NS_INOUTPARAM, PRInt16 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestShort(PRInt16 a, PRInt16 *b, PRInt16 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* long testLong (in long a, inout long b); */
-NS_IMETHODIMP nsXPCTestParams::TestLong(PRInt32 a, PRInt32 *b NS_INOUTPARAM, PRInt32 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestLong(PRInt32 a, PRInt32 *b, PRInt32 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* long long testLongLong (in long long a, inout long long b); */
-NS_IMETHODIMP nsXPCTestParams::TestLongLong(PRInt64 a, PRInt64 *b NS_INOUTPARAM, PRInt64 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestLongLong(PRInt64 a, PRInt64 *b, PRInt64 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* unsigned short testUnsignedShort (in unsigned short a, inout unsigned short b); */
-NS_IMETHODIMP nsXPCTestParams::TestUnsignedShort(PRUint16 a, PRUint16 *b NS_INOUTPARAM, PRUint16 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestUnsignedShort(PRUint16 a, PRUint16 *b, PRUint16 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* unsigned long testUnsignedLong (in unsigned long a, inout unsigned long b); */
-NS_IMETHODIMP nsXPCTestParams::TestUnsignedLong(PRUint32 a, PRUint32 *b NS_INOUTPARAM, PRUint32 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestUnsignedLong(PRUint32 a, PRUint32 *b, PRUint32 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* unsigned long long testUnsignedLongLong (in unsigned long long a, inout unsigned long long b); */
-NS_IMETHODIMP nsXPCTestParams::TestUnsignedLongLong(PRUint64 a, PRUint64 *b NS_INOUTPARAM, PRUint64 *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestUnsignedLongLong(PRUint64 a, PRUint64 *b, PRUint64 *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* float testFloat (in float a, inout float b); */
-NS_IMETHODIMP nsXPCTestParams::TestFloat(float a, float *b NS_INOUTPARAM, float *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestFloat(float a, float *b, float *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* double testDouble (in double a, inout float b); */
-NS_IMETHODIMP nsXPCTestParams::TestDouble(double a, float *b NS_INOUTPARAM, double *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestDouble(double a, float *b, double *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* char testChar (in char a, inout char b); */
-NS_IMETHODIMP nsXPCTestParams::TestChar(char a, char *b NS_INOUTPARAM, char *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestChar(char a, char *b, char *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* string testString (in string a, inout string b); */
-NS_IMETHODIMP nsXPCTestParams::TestString(const char * a, char * *b NS_INOUTPARAM, char * *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestString(const char * a, char * *b, char * *_retval)
 {
     nsDependentCString aprime(a);
     nsDependentCString bprime(*b);
@@ -151,13 +151,13 @@ NS_IMETHODIMP nsXPCTestParams::TestString(const char * a, char * *b NS_INOUTPARA
 }
 
 /* wchar testWchar (in wchar a, inout wchar b); */
-NS_IMETHODIMP nsXPCTestParams::TestWchar(PRUnichar a, PRUnichar *b NS_INOUTPARAM, PRUnichar *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestWchar(PRUnichar a, PRUnichar *b, PRUnichar *_retval)
 {
     GENERIC_METHOD_IMPL;
 }
 
 /* wstring testWstring (in wstring a, inout wstring b); */
-NS_IMETHODIMP nsXPCTestParams::TestWstring(const PRUnichar * a, PRUnichar * *b NS_INOUTPARAM, PRUnichar * *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestWstring(const PRUnichar * a, PRUnichar * *b, PRUnichar * *_retval)
 {
     nsDependentString aprime(a);
     nsDependentString bprime(*b);
@@ -172,32 +172,32 @@ NS_IMETHODIMP nsXPCTestParams::TestWstring(const PRUnichar * a, PRUnichar * *b N
 }
 
 /* DOMString testDOMString (in DOMString a, inout DOMString b); */
-NS_IMETHODIMP nsXPCTestParams::TestDOMString(const nsAString & a, nsAString & b NS_INOUTPARAM, nsAString & _retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestDOMString(const nsAString & a, nsAString & b, nsAString & _retval)
 {
     STRING_METHOD_IMPL;
 }
 
 
 /* AString testAString (in AString a, inout AString b); */
-NS_IMETHODIMP nsXPCTestParams::TestAString(const nsAString & a, nsAString & b NS_INOUTPARAM, nsAString & _retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestAString(const nsAString & a, nsAString & b, nsAString & _retval)
 {
     STRING_METHOD_IMPL;
 }
 
 /* AUTF8String testAUTF8String (in AUTF8String a, inout AUTF8String b); */
-NS_IMETHODIMP nsXPCTestParams::TestAUTF8String(const nsACString & a, nsACString & b NS_INOUTPARAM, nsACString & _retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestAUTF8String(const nsACString & a, nsACString & b, nsACString & _retval)
 {
     STRING_METHOD_IMPL;
 }
 
 /* ACString testACString (in ACString a, inout ACString b); */
-NS_IMETHODIMP nsXPCTestParams::TestACString(const nsACString & a, nsACString & b NS_INOUTPARAM, nsACString & _retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestACString(const nsACString & a, nsACString & b, nsACString & _retval)
 {
     STRING_METHOD_IMPL;
 }
 
 /* jsval testJsval (in jsval a, inout jsval b); */
-NS_IMETHODIMP nsXPCTestParams::TestJsval(const jsval & a, jsval & b NS_INOUTPARAM, jsval *_retval NS_OUTPARAM)
+NS_IMETHODIMP nsXPCTestParams::TestJsval(const jsval & a, jsval & b, jsval *_retval)
 {
     *_retval = b;
     b = a;
@@ -208,8 +208,8 @@ NS_IMETHODIMP nsXPCTestParams::TestJsval(const jsval & a, jsval & b NS_INOUTPARA
  *                      inout unsigned long bLength, [array, size_is (bLength)] inout short b,
  *                      out unsigned long rvLength, [array, size_is (rvLength), retval] out short rv); */
 NS_IMETHODIMP nsXPCTestParams::TestShortArray(PRUint32 aLength, PRInt16 *a,
-                                              PRUint32 *bLength NS_INOUTPARAM, PRInt16 **b NS_INOUTPARAM,
-                                              PRUint32 *rvLength NS_OUTPARAM, PRInt16 **rv NS_OUTPARAM)
+                                              PRUint32 *bLength, PRInt16 **b,
+                                              PRUint32 *rvLength, PRInt16 **rv)
 {
     BUFFER_METHOD_IMPL(PRInt16, 0, TAKE_OWNERSHIP_NOOP);
 }
@@ -218,8 +218,8 @@ NS_IMETHODIMP nsXPCTestParams::TestShortArray(PRUint32 aLength, PRInt16 *a,
  *                       inout unsigned long bLength, [array, size_is (bLength)] inout double b,
  *                       out unsigned long rvLength, [array, size_is (rvLength), retval] out double rv); */
 NS_IMETHODIMP nsXPCTestParams::TestDoubleArray(PRUint32 aLength, double *a,
-                                               PRUint32 *bLength NS_INOUTPARAM, double **b NS_INOUTPARAM,
-                                               PRUint32 *rvLength NS_OUTPARAM,  double **rv NS_OUTPARAM)
+                                               PRUint32 *bLength, double **b,
+                                               PRUint32 *rvLength,  double **rv)
 {
     BUFFER_METHOD_IMPL(double, 0, TAKE_OWNERSHIP_NOOP);
 }
@@ -228,8 +228,8 @@ NS_IMETHODIMP nsXPCTestParams::TestDoubleArray(PRUint32 aLength, double *a,
  *                       inout unsigned long bLength, [array, size_is (bLength)] inout string b,
  *                       out unsigned long rvLength, [array, size_is (rvLength), retval] out string rv); */
 NS_IMETHODIMP nsXPCTestParams::TestStringArray(PRUint32 aLength, const char * *a,
-                                               PRUint32 *bLength NS_INOUTPARAM, char * **b NS_INOUTPARAM,
-                                               PRUint32 *rvLength NS_OUTPARAM, char * **rv NS_OUTPARAM)
+                                               PRUint32 *bLength, char * **b,
+                                               PRUint32 *rvLength, char * **rv)
 {
     BUFFER_METHOD_IMPL(char*, 0, TAKE_OWNERSHIP_STRING);
 }
@@ -238,8 +238,8 @@ NS_IMETHODIMP nsXPCTestParams::TestStringArray(PRUint32 aLength, const char * *a
  *                        inout unsigned long bLength, [array, size_is (bLength)] inout wstring b,
  *                        out unsigned long rvLength, [array, size_is (rvLength), retval] out wstring rv); */
 NS_IMETHODIMP nsXPCTestParams::TestWstringArray(PRUint32 aLength, const PRUnichar * *a,
-                                                PRUint32 *bLength NS_INOUTPARAM, PRUnichar * **b NS_INOUTPARAM,
-                                                PRUint32 *rvLength NS_OUTPARAM, PRUnichar * **rv NS_OUTPARAM)
+                                                PRUint32 *bLength, PRUnichar * **b,
+                                                PRUint32 *rvLength, PRUnichar * **rv)
 {
     BUFFER_METHOD_IMPL(PRUnichar*, 0, TAKE_OWNERSHIP_WSTRING);
 }
@@ -248,8 +248,8 @@ NS_IMETHODIMP nsXPCTestParams::TestWstringArray(PRUint32 aLength, const PRUnicha
  *                          inout unsigned long bLength, [array, size_is (bLength)] inout nsIXPCTestInterfaceA b,
  *                          out unsigned long rvLength, [array, size_is (rvLength), retval] out nsIXPCTestInterfaceA rv); */
 NS_IMETHODIMP nsXPCTestParams::TestInterfaceArray(PRUint32 aLength, nsIXPCTestInterfaceA **a,
-                                                  PRUint32 *bLength NS_INOUTPARAM, nsIXPCTestInterfaceA * **b NS_INOUTPARAM,
-                                                  PRUint32 *rvLength NS_OUTPARAM, nsIXPCTestInterfaceA * **rv NS_OUTPARAM)
+                                                  PRUint32 *bLength, nsIXPCTestInterfaceA * **b,
+                                                  PRUint32 *rvLength, nsIXPCTestInterfaceA * **rv)
 {
     BUFFER_METHOD_IMPL(nsIXPCTestInterfaceA*, 0, TAKE_OWNERSHIP_INTERFACE);
 }
@@ -258,8 +258,8 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceArray(PRUint32 aLength, nsIXPCTestIn
  *                       inout unsigned long bLength, [size_is (bLength)] inout string b,
  *                       out unsigned long rvLength, [size_is (rvLength), retval] out string rv); */
 NS_IMETHODIMP nsXPCTestParams::TestSizedString(PRUint32 aLength, const char * a,
-                                               PRUint32 *bLength NS_INOUTPARAM, char * *b NS_INOUTPARAM,
-                                               PRUint32 *rvLength NS_OUTPARAM, char * *rv NS_OUTPARAM)
+                                               PRUint32 *bLength, char * *b,
+                                               PRUint32 *rvLength, char * *rv)
 {
     BUFFER_METHOD_IMPL(char, 1, TAKE_OWNERSHIP_NOOP);
 }
@@ -268,8 +268,8 @@ NS_IMETHODIMP nsXPCTestParams::TestSizedString(PRUint32 aLength, const char * a,
  *                        inout unsigned long bLength, [size_is (bLength)] inout wstring b,
  *                        out unsigned long rvLength, [size_is (rvLength), retval] out wstring rv); */
 NS_IMETHODIMP nsXPCTestParams::TestSizedWstring(PRUint32 aLength, const PRUnichar * a,
-                                                PRUint32 *bLength NS_INOUTPARAM, PRUnichar * *b NS_INOUTPARAM,
-                                                PRUint32 *rvLength NS_OUTPARAM, PRUnichar * *rv NS_OUTPARAM)
+                                                PRUint32 *bLength, PRUnichar * *b,
+                                                PRUint32 *rvLength, PRUnichar * *rv)
 {
     BUFFER_METHOD_IMPL(PRUnichar, 1, TAKE_OWNERSHIP_NOOP);
 }
@@ -278,8 +278,8 @@ NS_IMETHODIMP nsXPCTestParams::TestSizedWstring(PRUint32 aLength, const PRUnicha
  *                       inout nsIIDPtr bIID, [iid_is (bIID)] inout nsQIResult b,
  *                       out nsIIDPtr rvIID, [iid_is (rvIID), retval] out nsQIResult rv); */
 NS_IMETHODIMP nsXPCTestParams::TestInterfaceIs(const nsIID *aIID, void *a,
-                                               nsIID **bIID NS_INOUTPARAM, void **b NS_INOUTPARAM,
-                                               nsIID **rvIID NS_OUTPARAM, void **rv NS_OUTPARAM)
+                                               nsIID **bIID, void **b,
+                                               nsIID **rvIID, void **rv)
 {
     //
     // Getting the buffers and ownership right here can be a little tricky.
@@ -318,10 +318,10 @@ NS_IMETHODIMP nsXPCTestParams::TestInterfaceIs(const nsIID *aIID, void *a,
  *                            [retval, array, size_is (rvLength), iid_is (rvIID)] out nsQIResult rv); */
 NS_IMETHODIMP nsXPCTestParams::TestInterfaceIsArray(PRUint32 aLength, const nsIID *aIID,
                                                     void **a,
-                                                    PRUint32 *bLength NS_INOUTPARAM, nsIID **bIID NS_INOUTPARAM,
-                                                    void ***b NS_INOUTPARAM,
-                                                    PRUint32 *rvLength NS_OUTPARAM, nsIID **rvIID NS_OUTPARAM,
-                                                    void ***rv NS_OUTPARAM)
+                                                    PRUint32 *bLength, nsIID **bIID,
+                                                    void ***b,
+                                                    PRUint32 *rvLength, nsIID **rvIID,
+                                                    void ***rv)
 {
     // Transfer the IIDs. See the comments in TestInterfaceIs (above) for an
     // explanation of what we're doing.

@@ -6694,7 +6694,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
       {
         aData->OptionallyBreak(aRenderingContext, 
                                NSToCoordRound(provider.GetHyphenWidth()));
-      } {
+      } else {
         aData->OptionallyBreak(aRenderingContext);
       }
       wordStart = i;

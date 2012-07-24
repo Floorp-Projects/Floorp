@@ -33,23 +33,23 @@ public:
 
   // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
   // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
-  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth);
-  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
-  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType);
+  NS_IMETHOD GetWidth(PRInt32 *aWidth);
+  NS_IMETHOD GetHeight(PRInt32 *aHeight);
+  NS_IMETHOD GetType(PRUint16 *aType);
   NS_IMETHOD_(PRUint16) GetType(void);
-  NS_SCRIPTABLE NS_IMETHOD GetAnimated(bool *aAnimated);
-  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
-  NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
-  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval NS_OUTPARAM) { *_retval = NULL; return NS_OK; }
-  NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
-  NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
+  NS_IMETHOD GetAnimated(bool *aAnimated);
+  NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
+  NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval);
+  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval) { *_retval = NULL; return NS_OK; }
+  NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval);
+  NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval);
   NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, PRUint32 aFlags);
   NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_SCRIPTABLE NS_IMETHOD RequestDecode(void);
-  NS_SCRIPTABLE NS_IMETHOD LockImage(void);
-  NS_SCRIPTABLE NS_IMETHOD UnlockImage(void);
-  NS_SCRIPTABLE NS_IMETHOD RequestDiscard(void);
-  NS_SCRIPTABLE NS_IMETHOD ResetAnimation(void);
+  NS_IMETHOD RequestDecode(void);
+  NS_IMETHOD LockImage(void);
+  NS_IMETHOD UnlockImage(void);
+  NS_IMETHOD RequestDiscard(void);
+  NS_IMETHOD ResetAnimation(void);
   NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
   // END NS_DECL_IMGICONTAINER
 

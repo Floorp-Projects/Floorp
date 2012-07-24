@@ -349,12 +349,12 @@ getTextSelectionCountCB(AtkText *aText)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return 0;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, 0);
 
     PRInt32 selectionCount;
     nsresult rv = accText->GetSelectionCount(&selectionCount);

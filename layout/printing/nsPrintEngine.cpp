@@ -3180,7 +3180,7 @@ void
 nsPrintEngine::CloseProgressDialog(nsIWebProgressListener* aWebProgressListener)
 {
   if (aWebProgressListener) {
-    aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT, nsnull);
+    aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT, NS_OK);
   }
 }
 

@@ -130,7 +130,7 @@ interface nsIRILContactCallback : nsISupports
  * Helper that runs in the content process and exposes information
  * to the DOM.
  */
-[scriptable, uuid(d2ec602f-9746-4ada-b0c6-f1c1a3cf3578)]
+[scriptable, uuid(31ea634b-e710-49ce-bb7d-bfcbaa40fb00)]
 interface nsIRILContentHelper : nsIMobileConnectionProvider
 {
   void registerTelephonyCallback(in nsIRILTelephonyCallback callback);
@@ -149,6 +149,7 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
    * Functionality for making and managing phone calls.
    */
   void dial(in DOMString number);
+  void dialEmergency(in DOMString number);
   void hangUp(in unsigned long callIndex);
 
   void startTone(in DOMString dtmfChar);
