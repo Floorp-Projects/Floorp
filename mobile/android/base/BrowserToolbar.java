@@ -558,6 +558,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (!mHasSoftMenuButton)
             return false;
 
+        GeckoApp.mAppContext.invalidateOptionsMenu();
         if (mMenuPopup != null && !mMenuPopup.isShowing())
             mMenuPopup.showAsDropDown(mMenu);
 
