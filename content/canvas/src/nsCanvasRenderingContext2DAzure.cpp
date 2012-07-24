@@ -3044,7 +3044,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       const gfxTextRun::CompressedGlyph *glyphs = mTextRun->GetCharacterGlyphs();
 
       RefPtr<ScaledFont> scaledFont =
-        gfxPlatform::GetPlatform()->GetScaledFontForFont(font);
+        gfxPlatform::GetPlatform()->GetScaledFontForFont(mCtx->mTarget, font);
 
       if (!scaledFont) {
         // This can occur when something switched DirectWrite off.
