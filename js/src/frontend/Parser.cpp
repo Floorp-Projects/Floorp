@@ -2829,8 +2829,7 @@ PushBlocklikeStatement(StmtInfoTC *stmt, StmtType type, TreeContext *tc)
 }
 
 static ParseNode *
-NewBindingNode(JSAtom *atom, Parser *parser, StaticBlockObject *blockObj = NULL,
-               VarContext varContext = HoistVars)
+NewBindingNode(JSAtom *atom, Parser *parser, VarContext varContext = HoistVars)
 {
     TreeContext *tc = parser->tc;
 
@@ -2841,33 +2840,14 @@ NewBindingNode(JSAtom *atom, Parser *parser, StaticBlockObject *blockObj = NULL,
      * shadows existing decls and doesn't resolve existing lexdeps. Duplicate
      * names are caught by BindLet.
      */
-    if (!blockObj || varContext == HoistVars) {
-        ParseNode *pn = tc->decls.lookupFirst(atom);
-        AtomDefnPtr removal;
-        if (pn) {
-            JS_ASSERT(!pn->isPlaceholder());
-        } else {
-            removal = tc->lexdeps->lookup(atom);
-            pn = removal ? removal.value() : NULL;
-            JS_ASSERT_IF(pn, pn->isPlaceholder());
-        }
-
-        if (pn) {
-            JS_ASSERT(pn->isDefn());
-
-            /*
-             * A let binding at top level becomes a var before we get here, so if
-             * pn and tc have the same blockid then that id must not be the bodyid.
-             * If pn is a forward placeholder definition from the same or a higher
-             * block then we claim it.
-             */
-            JS_ASSERT_IF(blockObj && pn->pn_blockid == tc->blockid(),
-                         pn->pn_blockid != tc->bodyid);
-
-            if (pn->isPlaceholder() && pn->pn_blockid >= tc->blockid()) {
-                pn->pn_blockid = tc->blockid();
-                tc->lexdeps->remove(removal);
-                return pn;
+    if (varContext == HoistVars) {
+        if (AtomDefnPtr p = tc->lexdeps->lookup(atom)) {
+            ParseNode *lexdep = p.value();
+            JS_ASSERT(lexdep->isPlaceholder());
+            if (lexdep->pn_blockid >= tc->blockid()) {
+                lexdep->pn_blockid = tc->blockid();
+                tc->lexdeps->remove(p);
+                return lexdep;
             }
         }
     }
@@ -4195,7 +4175,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
         }
 
         PropertyName *name = tokenStream.currentToken().name();
-        pn2 = NewBindingNode(name, this, blockObj, varContext);
+        pn2 = NewBindingNode(name, this, varContext);
         if (!pn2)
             return NULL;
         if (data.op == JSOP_DEFCONST)
