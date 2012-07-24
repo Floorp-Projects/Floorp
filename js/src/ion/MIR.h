@@ -2200,7 +2200,7 @@ class MBinaryArithInstruction
     void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
 
     bool congruentTo(MDefinition *const &ins) const {
-        return congruentIfOperandsEqual(ins);
+        return MBinaryInstruction::congruentTo(ins);
     }
     AliasSet getAliasSet() const {
         if (specialization_ >= MIRType_Object)
