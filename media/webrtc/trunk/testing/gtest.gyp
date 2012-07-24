@@ -63,6 +63,16 @@
             ],
           },
         }],
+        ['OS == "win"', {
+          'defines': [
+            '_VARIADIC_MAX=10',
+          ],
+          'direct_dependent_settings': {
+            'defines': [
+              '_VARIADIC_MAX=10',
+            ],
+          },
+        }],
         ['os_posix == 1', {
           'defines': [
             # gtest isn't able to figure out when RTTI is disabled for gcc
