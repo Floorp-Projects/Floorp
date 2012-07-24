@@ -41,7 +41,7 @@ let tabSizeOrig = undefined;
 let remoteHostOrig = undefined;
 
 function setup() {
-  Components.utils.import("resource:///modules/devtools/Require.jsm", imports);
+  Components.utils.import("resource://gre/modules/devtools/Require.jsm", imports);
   imports.settings = imports.require("gcli/settings");
 
   tiltEnabled = imports.settings.getSetting("devtools.tilt.enabled");
