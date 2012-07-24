@@ -38,7 +38,7 @@ public:
     virtual gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
     
     mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     // to support IPC font list (sharing between chrome and content)
     void GetFontList(InfallibleTArray<FontListEntry>* retValue);

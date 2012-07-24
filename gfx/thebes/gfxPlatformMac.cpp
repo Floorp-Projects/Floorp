@@ -133,7 +133,7 @@ gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
 }
 
 RefPtr<ScaledFont>
-gfxPlatformMac::GetScaledFontForFont(gfxFont *aFont)
+gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     gfxMacFont *font = static_cast<gfxMacFont*>(aFont);
     return font->GetScaledFont();
