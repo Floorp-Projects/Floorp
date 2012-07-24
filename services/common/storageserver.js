@@ -711,9 +711,7 @@ StorageServerCollection.prototype = {
     if (newlines) {
       response.setHeader("Content-Type", "application/newlines", false);
       let normalized = data.map(function map(d) {
-        let result = JSON.stringify(d);
-
-        return result.replace("\n", "\\u000a");
+        return JSON.stringify(d);
       });
 
       body = normalized.join("\n") + "\n";
@@ -756,10 +754,9 @@ StorageServerCollection.prototype = {
       }
     } else if (inputMediaType == "application/newlines") {
       for each (let line in inputBody.split("\n")) {
-        let json = line.replace("\\u000a", "\n");
         let record;
         try {
-          record = JSON.parse(json);
+          record = JSON.parse(line);
         } catch (ex) {
           this._log.info("JSON parse error on line!");
           return sendMozSvcError(request, response, "8");
