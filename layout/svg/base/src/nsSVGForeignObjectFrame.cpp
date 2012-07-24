@@ -384,9 +384,14 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGForeignObjectFrame::GetCoveredRegion()
 {
-  // See bug 614732 comment 32:
-  //return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
-  return mCoveredRegion;
+  float x, y, w, h;
+  static_cast<nsSVGForeignObjectElement*>(mContent)->
+    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+  if (w < 0.0f) w = 0.0f;
+  if (h < 0.0f) h = 0.0f;
+  // GetCanvasTM includes the x,y translation
+  return ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTM(FOR_OUTERSVG_TM),
+                        PresContext());
 }
 
 void
@@ -416,9 +421,6 @@ nsSVGForeignObjectFrame::ReflowSVG()
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(x, y, w, h),
                            PresContext()->AppUnitsPerCSSPixel());
-  // GetCanvasTM includes the x,y translation
-  mCoveredRegion = ToCanvasBounds(gfxRect(0.0, 0.0, w, h),
-                     GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 
   // Since we'll invalidate our entire area at the end of this method, we
   // empty our cached dirty regions to prevent FlushDirtyRegion under DoReflow
@@ -471,10 +473,6 @@ nsSVGForeignObjectFrame::ReflowSVG()
 void
 nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  NS_ABORT_IF_FALSE(!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS) ||
-                    (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "Must be NS_STATE_SVG_NONDISPLAY_CHILD!");
-
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 

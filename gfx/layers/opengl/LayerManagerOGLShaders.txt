@@ -211,6 +211,20 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
+// Single texture in RGBA format for use with GL_TEXTURE_EXTERNAL_OES
+@shader sRGBATextureLayerExternal<mask:,Mask,Mask3D>FS
+$LAYER_FRAGMENT<mask>$
+#extension GL_OES_EGL_image_external : require
+uniform samplerExternalOES uTexture;
+uniform mat4 uTextureTransform;
+
+void main()
+{
+$FRAGMENT_CALC_MASK<mask>$
+  gl_FragColor = texture2D(uTexture, (uTextureTransform * vec4(vTexCoord.x, vTexCoord.y, 0.0, 1.0)).xy) * uLayerOpacity * mask;
+}
+@end
+
 
 // Single texture in RGBA format, but with a Rect texture.
 // Container layer needs this to render a FBO group.

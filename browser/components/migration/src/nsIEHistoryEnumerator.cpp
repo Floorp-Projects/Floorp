@@ -73,7 +73,7 @@ nsIEHistoryEnumerator::EnsureInitialized()
 }
 
 NS_IMETHODIMP
-nsIEHistoryEnumerator::HasMoreElements(bool* _retval NS_OUTPARAM)
+nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
 {
   *_retval = false;
 
@@ -124,7 +124,7 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval NS_OUTPARAM)
 }
 
 NS_IMETHODIMP
-nsIEHistoryEnumerator::GetNext(nsISupports** _retval NS_OUTPARAM)
+nsIEHistoryEnumerator::GetNext(nsISupports** _retval)
 {
   *_retval = nsnull;
 

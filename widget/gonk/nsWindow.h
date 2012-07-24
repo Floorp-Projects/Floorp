@@ -72,7 +72,7 @@ public:
                       PRInt32 aHeight,
                       bool aRepaint);
     NS_IMETHOD Enable(bool aState);
-    NS_IMETHOD IsEnabled(bool *aState);
+    virtual bool IsEnabled() const;
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
     NS_IMETHOD Invalidate(const nsIntRect &aRect);

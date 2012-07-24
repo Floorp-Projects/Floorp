@@ -233,21 +233,21 @@ public:
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT_BASIC(nsGenericHTMLFormElement::)
-  NS_SCRIPTABLE NS_IMETHOD Click() {
+  NS_IMETHOD Click() {
     return nsGenericHTMLFormElement::Click();
   }
-  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_SCRIPTABLE NS_IMETHOD Focus() {
+  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD Focus() {
     return nsGenericHTMLFormElement::Focus();
   }
-  NS_SCRIPTABLE NS_IMETHOD GetDraggable(bool* aDraggable) {
+  NS_IMETHOD GetDraggable(bool* aDraggable) {
     return nsGenericHTMLFormElement::GetDraggable(aDraggable);
   }
-  NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) {
     return nsGenericHTMLFormElement::GetInnerHTML(aInnerHTML);
   }
-  NS_SCRIPTABLE NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) {
     return nsGenericHTMLFormElement::SetInnerHTML(aInnerHTML);
   }
 
@@ -308,7 +308,7 @@ public:
    * @return whether the option is disabled
    */
   NS_IMETHOD IsOptionDisabled(PRInt32 aIndex,
-                              bool *aIsDisabled NS_OUTPARAM);
+                              bool *aIsDisabled);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
@@ -333,7 +333,7 @@ public:
                                        bool aClearAll,
                                        bool aSetDisabled,
                                        bool aNotify,
-                                       bool* aChangedSomething NS_OUTPARAM);
+                                       bool* aChangedSomething);
 
   /**
    * Finds the index of a given option element
@@ -346,7 +346,7 @@ public:
   NS_IMETHOD GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
                             PRInt32 aStartIndex,
                             bool aForward,
-                            PRInt32* aIndex NS_OUTPARAM);
+                            PRInt32* aIndex);
 
   /**
    * Called when an attribute is about to be changed

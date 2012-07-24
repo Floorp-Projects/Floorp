@@ -271,9 +271,8 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
-  // See bug 614732 comment 32:
-  //return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
-  return mCoveredRegion;
+  return nsSVGUtils::TransformFrameRectToOuterSVG(
+           mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 }
 
 void
@@ -308,10 +307,6 @@ nsSVGPathGeometryFrame::ReflowSVG()
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
             PresContext()->AppUnitsPerCSSPixel());
 
-  // See bug 614732 comment 32.
-  mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
-    mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
-
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off
@@ -344,10 +339,6 @@ nsSVGPathGeometryFrame::ReflowSVG()
 void
 nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  NS_ABORT_IF_FALSE(!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS) ||
-                    (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
-                    "Must be NS_STATE_SVG_NONDISPLAY_CHILD!");
-
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 

@@ -508,7 +508,6 @@ DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
 
 DOMCI_CLASS(MozSettingsEvent)
-DOMCI_CLASS(MozContactChangeEvent)
 
 DOMCI_CLASS(MozApplicationEvent)
 

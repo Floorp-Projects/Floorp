@@ -51,14 +51,12 @@ def attributeParamlist(a, getter):
     return ", ".join(l)
 
 def attributeAsNative(a, getter):
-        scriptable = a.isScriptable() and "NS_SCRIPTABLE " or ""
         deprecated = a.deprecated and "NS_DEPRECATED " or ""
-        params = {'scriptable': scriptable,
-                  'deprecated': deprecated,
+        params = {'deprecated': deprecated,
                   'returntype': attributeReturnType(a, 'NS_IMETHOD'),
                   'binaryname': attributeNativeName(a, getter),
                   'paramlist': attributeParamlist(a, getter)}
-        return "%(deprecated)s%(scriptable)s%(returntype)s %(binaryname)s(%(paramlist)s)" % params
+        return "%(deprecated)s%(returntype)s %(binaryname)s(%(paramlist)s)" % params
 
 def methodNativeName(m):
     return m.binaryname is not None and m.binaryname or firstCap(m.name)
@@ -76,12 +74,9 @@ def methodReturnType(m, macro):
         return macro
 
 def methodAsNative(m):
-    scriptable = m.isScriptable() and "NS_SCRIPTABLE " or ""
-
-    return "%s%s %s(%s)" % (scriptable,
-                            methodReturnType(m, 'NS_IMETHOD'),
-                            methodNativeName(m),
-                            paramlistAsNative(m))
+    return "%s %s(%s)" % (methodReturnType(m, 'NS_IMETHOD'),
+                          methodNativeName(m),
+                          paramlistAsNative(m))
 
 def paramlistAsNative(m, empty='void'):
     l = [paramAsNative(p) for p in m.params]
@@ -106,14 +101,8 @@ def paramlistAsNative(m, empty='void'):
     return ", ".join(l)
 
 def paramAsNative(p):
-    if p.paramtype == 'in':
-        typeannotate = ''
-    else:
-        typeannotate = ' NS_%sPARAM' % p.paramtype.upper()
-
-    return "%s%s%s" % (p.nativeType(),
-                       p.name,
-                       typeannotate)
+    return "%s%s" % (p.nativeType(),
+                     p.name)
 
 def paramlistNames(m):
     names = [p.name for p in m.params]
@@ -357,8 +346,6 @@ def write_interface(iface, fd):
     if not foundcdata:
         fd.write("NS_NO_VTABLE ")
 
-    if iface.attributes.scriptable:
-        fd.write("NS_SCRIPTABLE ")
     if iface.attributes.deprecated:
         fd.write("MOZ_DEPRECATED ")
     fd.write(iface.name)

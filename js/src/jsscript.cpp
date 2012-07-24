@@ -986,7 +986,7 @@ SourceCompressorThread::init()
     if (!done)
         return false;
     thread = PR_CreateThread(PR_USER_THREAD, compressorThread, this, PR_PRIORITY_NORMAL,
-                             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                             PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (!thread)
         return false;
     return true;
@@ -1206,7 +1206,7 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     JS_ASSERT_IF(ownSource, !tok);
 
 #ifdef JS_THREADSAFE
-    if (tok) {
+    if (tok && 0) {
         tok->ss = ss;
         tok->chars = src;
         cx->runtime->sourceCompressorThread.compress(tok);
@@ -1228,7 +1228,7 @@ ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSour
     size_t compressedLen;
     if (ownSource) {
         data.source = const_cast<jschar *>(src);
-    } else if (memlen >= COMPRESS_THRESHOLD &&
+    } else if (memlen >= COMPRESS_THRESHOLD && 0 &&
         TryCompressString(reinterpret_cast<const unsigned char *>(src), memlen,
                           data.compressed, &compressedLen))
     {

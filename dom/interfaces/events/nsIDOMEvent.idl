@@ -200,7 +200,7 @@ NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresCon
 nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsCompositionEvent *aEvent);
 nsresult
-NS_NewDOMMutationEvent(nsIDOMEvent** aResult NS_OUTPARAM, nsPresContext* aPresContext, class nsMutationEvent* aEvent);
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsMutationEvent* aEvent);
 nsresult
 NS_NewDOMPopupBlockedEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
@@ -256,8 +256,6 @@ nsresult
 NS_NewDOMSmsEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
 NS_NewDOMMozSettingsEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
-nsresult
-NS_NewDOMMozContactChangeEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
 NS_NewDOMMozWifiStatusChangeEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult

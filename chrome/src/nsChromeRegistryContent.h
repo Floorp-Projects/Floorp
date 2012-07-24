@@ -25,20 +25,20 @@ class nsChromeRegistryContent : public nsChromeRegistry
                             const nsTArray<OverrideMapping>& aOverrides,
                             const nsACString& aLocale);
 
-  NS_OVERRIDE NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
-                                              nsIUTF8StringEnumerator* *aResult);
-  NS_OVERRIDE NS_IMETHOD CheckForNewChrome();
-  NS_OVERRIDE NS_IMETHOD CheckForOSAccessibility();
-  NS_OVERRIDE NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                                 const PRUnichar* aData);
-  NS_OVERRIDE NS_IMETHOD IsLocaleRTL(const nsACString& package,
-                                     bool *aResult);
-  NS_OVERRIDE NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
-                                           nsACString& aLocale);
-  NS_OVERRIDE NS_IMETHOD GetStyleOverlays(nsIURI *aChromeURL,
-                                          nsISimpleEnumerator **aResult);
-  NS_OVERRIDE NS_IMETHOD GetXULOverlays(nsIURI *aChromeURL,
-                                        nsISimpleEnumerator **aResult);
+  NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
+                                  nsIUTF8StringEnumerator* *aResult) MOZ_OVERRIDE;
+  NS_IMETHOD CheckForNewChrome() MOZ_OVERRIDE;
+  NS_IMETHOD CheckForOSAccessibility() MOZ_OVERRIDE;
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const PRUnichar* aData) MOZ_OVERRIDE;
+  NS_IMETHOD IsLocaleRTL(const nsACString& package,
+                         bool *aResult) MOZ_OVERRIDE;
+  NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
+                               nsACString& aLocale) MOZ_OVERRIDE;
+  NS_IMETHOD GetStyleOverlays(nsIURI *aChromeURL,
+                              nsISimpleEnumerator **aResult) MOZ_OVERRIDE;
+  NS_IMETHOD GetXULOverlays(nsIURI *aChromeURL,
+                            nsISimpleEnumerator **aResult) MOZ_OVERRIDE;
 
  private:
   struct PackageEntry
@@ -56,11 +56,11 @@ class nsChromeRegistryContent : public nsChromeRegistry
   void RegisterResource(const ResourceMapping& aResource);
   void RegisterOverride(const OverrideMapping& aOverride);
 
-  NS_OVERRIDE nsresult UpdateSelectedLocale();
-  NS_OVERRIDE nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
-                                 const nsCString& aProvider,
-                                 const nsCString& aPath);
-  NS_OVERRIDE nsresult GetFlagsFromPackage(const nsCString& aPackage, PRUint32* aFlags);
+  nsresult UpdateSelectedLocale() MOZ_OVERRIDE;
+  nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
+                     const nsCString& aProvider,
+                     const nsCString& aPath) MOZ_OVERRIDE;
+  nsresult GetFlagsFromPackage(const nsCString& aPackage, PRUint32* aFlags) MOZ_OVERRIDE;
 
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
   nsCString mLocale;

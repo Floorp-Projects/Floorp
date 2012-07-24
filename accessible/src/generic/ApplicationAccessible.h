@@ -38,12 +38,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_SCRIPTABLE NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode);
-  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument);
-  NS_SCRIPTABLE NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument);
-  NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRUint32 aScrollType);
-  NS_SCRIPTABLE NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
-  NS_SCRIPTABLE NS_IMETHOD GetLanguage(nsAString& aLanguage);
+  NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode);
+  NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument);
+  NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument);
+  NS_IMETHOD ScrollTo(PRUint32 aScrollType);
+  NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD GetLanguage(nsAString& aLanguage);
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
