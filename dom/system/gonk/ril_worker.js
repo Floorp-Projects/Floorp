@@ -1016,7 +1016,8 @@ let RIL = {
     }
     let token = Buf.newParcel(REQUEST_GET_IMSI);
     Buf.writeUint32(1);
-    Buf.writeString(null);
+    let appIndex = this.iccStatus.gsmUmtsSubscriptionAppIndex;
+    Buf.writeString(this.iccStatus.apps[appIndex].aid);
     Buf.sendParcel();
   },
 
