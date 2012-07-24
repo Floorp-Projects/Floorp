@@ -1353,16 +1353,34 @@
       <field name="_brandBundle" readonly="true">
         Services.strings.createBundle("chrome://branding/locale/brand.properties");
       </field>
+      <property name="_viewsLeftMap">
+        <getter><![CDATA[
+          let viewsLeftMap = {};
+          try {
+            viewsLeftMap = JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
+          } catch (ex) {
+            // If the old preference exists, migrate it to the new one.
+            try {
+              let oldPref = Services.prefs.getIntPref("browser.syncPromoViewsLeft");
+              Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
+              viewsLeftMap.bookmarks = oldPref;
+              viewsLeftMap.passwords = oldPref;
+              Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
+                                         JSON.stringify(viewsLeftMap));
+            } catch (ex2) {}
+          }
+          return viewsLeftMap;
+        ]]></getter>
+      </property>
       <property name="_viewsLeft">
         <getter><![CDATA[
-          try {
-            return Services.prefs.getIntPref("browser.syncPromoViewsLeft");
-          } catch(ex) {}
-          return 5;
+          return this._viewsLeftMap[this._notificationType] || 5;
         ]]></getter>
         <setter><![CDATA[
-          Services.prefs.setIntPref("browser.syncPromoViewsLeft", val);
-          return val;
+          let map = this._viewsLeftMap;
+          map[this._notificationType] = val;
+          Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
+                                     JSON.stringify(map));
         ]]></setter>
       </property>
       <property name="_notificationType">
