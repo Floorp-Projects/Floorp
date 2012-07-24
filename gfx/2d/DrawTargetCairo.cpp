@@ -13,6 +13,7 @@
 #include "cairo.h"
 
 #include "Blur.h"
+#include "Logging.h"
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-quartz.h"
@@ -467,10 +468,31 @@ DrawTargetCairo::FillRect(const Rect &aRect,
 
 void
 DrawTargetCairo::CopySurface(SourceSurface *aSurface,
-                             const IntRect &aSourceRect,
-                             const IntPoint &aDestination)
+                             const IntRect &aSource,
+                             const IntPoint &aDest)
 {
   AutoPrepareForDrawing prep(this, mContext);
+
+  if (!aSurface || aSurface->GetType() != SURFACE_CAIRO) {
+    gfxWarning() << "Unsupported surface type specified";
+    return;
+  }
+
+  cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
+
+  cairo_save(mContext);
+
+  cairo_identity_matrix(mContext);
+
+  cairo_set_source_surface(mContext, surf, aDest.x - aSource.x, aDest.y - aSource.y);
+  cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
+
+  cairo_reset_clip(mContext);
+  cairo_new_path(mContext);
+  cairo_rectangle(mContext, aDest.x, aDest.y, aSource.width, aSource.height);
+  cairo_fill(mContext);
+
+  cairo_restore(mContext);
 }
 
 void
