@@ -52,7 +52,7 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 
-typedef void* SharedTextureHandle;
+typedef uintptr_t SharedTextureHandle;
 
 enum ShaderProgramType {
     RGBALayerProgramType,
