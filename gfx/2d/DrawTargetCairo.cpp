@@ -118,6 +118,51 @@ PatternIsCompatible(const Pattern& aPattern)
   }
 }
 
+static cairo_user_data_key_t surfaceDataKey;
+
+void
+ReleaseData(void* aData)
+{
+  static_cast<DataSourceSurface*>(aData)->Release();
+}
+
+/**
+ * Returns cairo surface for the given SourceSurface.
+ * If possible, it will use the cairo_surface associated with aSurface,
+ * otherwise, it will create a new cairo_surface.
+ * In either case, the caller must call cairo_surface_destroy on the
+ * result when it is done with it.
+ */
+cairo_surface_t*
+GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
+{
+  if (aSurface->GetType() == SURFACE_CAIRO) {
+    cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
+    cairo_surface_reference(surf);
+    return surf;
+  }
+
+  if (aSurface->GetType() == SURFACE_CAIRO_IMAGE) {
+    cairo_surface_t* surf =
+      static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
+    cairo_surface_reference(surf);
+    return surf;
+  }
+
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  cairo_surface_t* surf =
+    cairo_image_surface_create_for_data(data->GetData(),
+                                        GfxFormatToCairoFormat(data->GetFormat()),
+                                        data->GetSize().width,
+                                        data->GetSize().height,
+                                        data->Stride());
+  cairo_surface_set_user_data(surf,
+ 				                      &surfaceDataKey,
+ 				                      data.forget().drop(),
+ 				                      ReleaseData);
+  return surf;
+}
+
 // Never returns NULL. As such, you must always pass in Cairo-compatible
 // patterns, most notably gradients with a GradientStopCairo.
 // The pattern returned must have cairo_pattern_destroy() called on it by the
@@ -142,28 +187,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     case PATTERN_SURFACE:
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
-      cairo_surface_t* surf;
-
-      // After this block, |surf| always has an extra cairo reference to be
-      // destroyed. This makes creating new surfaces or reusing old ones more
-      // uniform.
-      if (pattern.mSurface->GetType() == SURFACE_CAIRO) {
-        const SourceSurfaceCairo* source = static_cast<const SourceSurfaceCairo*>(pattern.mSurface.get());
-        surf = source->GetSurface();
-        cairo_surface_reference(surf);
-      } else if (pattern.mSurface->GetType() == SURFACE_CAIRO_IMAGE) {
-        const DataSourceSurfaceCairo* source =
-          static_cast<const DataSourceSurfaceCairo*>(pattern.mSurface.get());
-        surf = source->GetSurface();
-        cairo_surface_reference(surf);
-      } else {
-        RefPtr<DataSourceSurface> source = pattern.mSurface->GetDataSurface();
-        surf = cairo_image_surface_create_for_data(source->GetData(),
-                                                   GfxFormatToCairoFormat(source->GetFormat()),
-                                                   source->GetSize().width,
-                                                   source->GetSize().height,
-                                                   source->Stride());
-      }
+      cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
 
       pat = cairo_pattern_create_for_surface(surf);
       cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(pattern.mFilter));
@@ -296,44 +320,6 @@ void
 DrawTargetCairo::PrepareForDrawing(cairo_t* aContext, const Path* aPath /* = NULL */)
 {
   WillChange(aPath);
-}
-
-static cairo_user_data_key_t surfaceDataKey;
-
-void
-ReleaseData(void* aData)
-{
-  static_cast<DataSourceSurface*>(aData)->Release();
-}
-
-/**
- * Returns cairo surface for the given SourceSurface.
- * If possible, it will use the cairo_surface associated with aSurface,
- * otherwise, it will create a new cairo_surface.
- * In either case, the caller must call cairo_surface_destroy on the
- * result when it is done with it.
- */
-cairo_surface_t*
-GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
-{
-  if (aSurface->GetType() == SURFACE_CAIRO) {
-    cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
-    cairo_surface_reference(surf);
-    return surf;
-  } else {
-    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
-    cairo_surface_t* surf =
-      cairo_image_surface_create_for_data(data->GetData(),
-                                          GfxFormatToCairoFormat(data->GetFormat()),
-                                          data->GetSize().width,
-                                          data->GetSize().height,
-                                          data->Stride());
-    cairo_surface_set_user_data(surf,
-                                 &surfaceDataKey,
-                                 data.forget(),
-                                 ReleaseData);
-    return surf;
-  }
 }
 
 void
