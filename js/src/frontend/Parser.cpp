@@ -854,6 +854,22 @@ MakeAssignment(ParseNode *pn, ParseNode *rhs, Parser *parser)
 static bool
 MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
 {
+    TreeContext *tc = parser->tc;
+
+    /*
+     * In a function, dn must have been bound to an argument or local to be in
+     * tc->decls. pn is going to take dn's place in tc->decls, so copy over the
+     * cookie and op so that pn gets the same binding.
+     */
+    if (tc->sc->inFunction()) {
+        JS_ASSERT(!dn->pn_cookie.isFree());
+        JS_ASSERT(dn->isBound());
+        pn->pn_cookie = dn->pn_cookie;
+        JS_ASSERT(JOF_OPTYPE(dn->getOp()) == JOF_QARG || JOF_OPTYPE(dn->getOp()) == JOF_LOCAL);
+        pn->setOp(JOF_OPTYPE(dn->getOp()) == JOF_QARG ? JSOP_GETARG : JSOP_GETLOCAL);
+        pn->pn_dflags |= PND_BOUND;
+    }
+
     /* Turn pn into a definition. */
     parser->tc->decls.updateFirst(atom, (Definition *) pn);
     pn->setDefn(true);
@@ -883,9 +899,8 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
      *
      * both asserts are valid.
      */
-    if (dn->kind() == Definition::FUNCTION) {
-        JS_ASSERT(dn->getKind() == PNK_FUNCTION);
-        JS_ASSERT(dn->isOp(JSOP_NOP));
+    if (dn->getKind() == PNK_FUNCTION) {
+        JS_ASSERT(dn->functionIsHoisted());
         pn->dn_uses = dn->pn_link;
         parser->prepareNodeForMutation(dn);
         dn->setKind(PNK_NOP);
@@ -1147,6 +1162,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
                     return false;
                 dn->pn_dflags |= PND_BOUND;
                 foundCallee = 1;
+                JS_ASSERT(dn->kind() == Definition::NAMED_LAMBDA);
                 continue;
             }
 
@@ -1461,25 +1477,24 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     pn->pn_cookie.makeFree();
     pn->pn_dflags = 0;
 
-    /*
-     * Record names for function statements in tc->decls so we know when to
-     * avoid optimizing variable references that might name a function.
-     */
+    /* Function statements add a binding to the enclosing scope. */
     bool bodyLevel = tc->atBodyLevel();
     if (kind == Statement) {
+        /*
+         * Handle redeclaration and optimize cases where we can statically bind the
+         * function (thereby avoiding JSOP_DEFFUN and dynamic name lookup).
+         */
         if (Definition *dn = tc->decls.lookupFirst(funName)) {
-            Definition::Kind dn_kind = dn->kind();
-
             JS_ASSERT(!dn->isUsed());
             JS_ASSERT(dn->isDefn());
 
-            if (context->hasStrictOption() || dn_kind == Definition::CONST) {
+            if (context->hasStrictOption() || dn->kind() == Definition::CONST) {
                 JSAutoByteString name;
-                Reporter reporter = (dn_kind != Definition::CONST)
+                Reporter reporter = (dn->kind() != Definition::CONST)
                                     ? &Parser::reportStrictWarning
                                     : &Parser::reportError;
                 if (!js_AtomToPrintableString(context, funName, &name) ||
-                    !(this->*reporter)(NULL, JSMSG_REDECLARED_VAR, Definition::kindString(dn_kind),
+                    !(this->*reporter)(NULL, JSMSG_REDECLARED_VAR, Definition::kindString(dn->kind()),
                                        name.ptr()))
                 {
                     return NULL;
@@ -1502,17 +1517,11 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
              * pre-created definition node for this function that primaryExpr
              * put in tc->lexdeps on first forward reference, and recycle pn.
              */
-
             if (Definition *fn = tc->lexdeps.lookupDefn(funName)) {
                 JS_ASSERT(fn->isDefn());
                 fn->setKind(PNK_FUNCTION);
                 fn->setArity(PN_FUNC);
                 fn->pn_pos.begin = pn->pn_pos.begin;
-
-                /*
-                 * Set fn->pn_pos.end too, in case of error before we parse the
-                 * closing brace.  See bug 640075.
-                 */
                 fn->pn_pos.end = pn->pn_pos.end;
 
                 fn->pn_body = NULL;
@@ -1525,41 +1534,64 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
             if (!Define(pn, funName, tc))
                 return NULL;
+
+            /*
+             * A function directly inside another's body needs only a local
+             * variable to bind its name to its value, and not an activation object
+             * property (it might also need the activation property, if the outer
+             * function contains with statements, e.g., but the stack slot wins
+             * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
+             * into a JSOP_GETLOCAL bytecode).
+             */
+            if (tc->sc->inFunction()) {
+                unsigned varIndex = tc->sc->bindings.numVars();
+                if (!tc->sc->bindings.addVariable(context, funName))
+                    return NULL;
+                if (!pn->pn_cookie.set(context, tc->staticLevel, varIndex))
+                    return NULL;
+                pn->setOp(JSOP_GETLOCAL);
+            }
         }
 
         /*
-         * A function directly inside another's body needs only a local
-         * variable to bind its name to its value, and not an activation object
-         * property (it might also need the activation property, if the outer
-         * function contains with statements, e.g., but the stack slot wins
-         * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
-         * into a JSOP_GETLOCAL bytecode).
+         * As a SpiderMonkey-specific extension, non-body-level function
+         * statements (e.g., functions in an "if" or "while" block) are
+         * dynamically bound when control flow reaches the statement. The
+         * emitter normally emits functions in two passes (see PNK_ARGSBODY).
+         * To distinguish
          */
-        if (bodyLevel && tc->sc->inFunction()) {
-            /*
-             * Define a local in the outer function so that BindNameToSlot
-             * can properly optimize accesses. Note that we need a local
-             * variable, not an argument, for the function statement. Thus
-             * we add a variable even if a parameter with the given name
-             * already exists.
-             */
-            BindingIter bi(context, tc->sc->bindings.lookup(context, funName));
-            if (!bi || bi->kind != CONSTANT) {
-                unsigned varIndex;
-                if (!bi || bi->kind == ARGUMENT) {
-                    varIndex = tc->sc->bindings.numVars();
-                    if (!tc->sc->bindings.addVariable(context, funName))
-                        return NULL;
-                } else {
-                    JS_ASSERT(bi->kind == VARIABLE);
-                    varIndex = bi.frameIndex();
-                }
+        if (bodyLevel) {
+            JS_ASSERT(pn->functionIsHoisted());
+            JS_ASSERT_IF(tc->sc->inFunction(), !pn->pn_cookie.isFree());
+            JS_ASSERT_IF(!tc->sc->inFunction(), pn->pn_cookie.isFree());
+        } else {
+            JS_ASSERT(tc->sc->strictModeState != StrictMode::STRICT);
+            JS_ASSERT(pn->pn_cookie.isFree());
+            tc->sc->setFunMightAliasLocals();
+            tc->sc->setFunHasExtensibleScope();
+            tc->sc->setFunIsHeavyweight();
+            pn->setOp(JSOP_DEFFUN);
 
-                if (!pn->pn_cookie.set(context, tc->staticLevel, varIndex))
+            /*
+             * Instead of setting bindingsAccessedDynamically, which would be
+             * overly conservative, remember the names of all function
+             * statements and mark any bindings with the same as aliased at the
+             * end of functionBody.
+             */
+            if (!tc->funcStmts) {
+                tc->funcStmts = context->new_<FuncStmtSet>(context);
+                if (!tc->funcStmts || !tc->funcStmts->init())
                     return NULL;
-                pn->pn_dflags |= PND_BOUND;
             }
+            if (!tc->funcStmts->put(funName))
+                return NULL;
         }
+
+        /* No further binding (in BindNameToSlot) is needed for functions. */
+        pn->pn_dflags |= PND_BOUND;
+    } else {
+        /* A function expression does not introduce any binding. */
+        pn->setOp(JSOP_LAMBDA);
     }
 
     TreeContext *outertc = tc;
@@ -1720,47 +1752,10 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         outertc->sc->setFunIsHeavyweight();
     }
 
-    JSOp op = JSOP_NOP;
-    if (kind == Expression) {
-        op = JSOP_LAMBDA;
-    } else {
-        if (!bodyLevel) {
-            /*
-             * Extension: in non-strict mode code, a function statement not at
-             * the top level of a function body or whole program, e.g., in a
-             * compound statement such as the "then" part of an "if" statement,
-             * binds a closure only if control reaches that sub-statement.
-             */
-            JS_ASSERT(outertc->sc->strictModeState != StrictMode::STRICT);
-            op = JSOP_DEFFUN;
-            outertc->sc->setFunMightAliasLocals();
-            outertc->sc->setFunHasExtensibleScope();
-            outertc->sc->setFunIsHeavyweight();
-
-            /*
-             * Instead of setting bindingsAccessedDynamically, which would be
-             * overly conservative, remember the names of all function
-             * statements and mark any bindings with the same as aliased at the
-             * end of functionBody.
-             */
-            if (!outertc->funcStmts) {
-                outertc->funcStmts = context->new_<FuncStmtSet>(context);
-                if (!outertc->funcStmts || !outertc->funcStmts->init())
-                    return NULL;
-            }
-            if (!outertc->funcStmts->put(funName))
-                return NULL;
-        }
-    }
 
     pn->pn_funbox = funbox;
-    pn->setOp(op);
     pn->pn_body->append(body);
     pn->pn_body->pn_pos = body->pn_pos;
-
-    JS_ASSERT_IF(!outertc->sc->inFunction() && bodyLevel && kind == Statement,
-                 pn->pn_cookie.isFree());
-
     pn->pn_blockid = outertc->blockid();
 
     if (!LeaveFunction(pn, this, funName, kind))
