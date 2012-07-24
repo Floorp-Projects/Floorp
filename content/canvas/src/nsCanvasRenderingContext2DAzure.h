@@ -464,8 +464,7 @@ public:
 
   // nsICanvasRenderingContextInternal
   NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-  NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height)
-  { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height);
 
   NS_IMETHOD Render(gfxContext *ctx,
                     gfxPattern::GraphicsFilter aFilter,
@@ -542,6 +541,11 @@ protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
                              JSObject** aRetval);
+
+  /**
+   * Internal method to complete initialisation, expects mTarget to have been set
+   */
+  nsresult Initialize(PRInt32 width, PRInt32 height);
 
   nsresult InitializeWithTarget(mozilla::gfx::DrawTarget *surface,
                                 PRInt32 width, PRInt32 height);
