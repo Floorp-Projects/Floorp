@@ -601,3 +601,15 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     }
   });
 });
+
+Services.obs.addObserver(function ContentHandler(subject, topic, data) {
+  let handler = JSON.parse(data);
+  new MozActivity({
+    name: 'view',
+    data: {
+      type: handler.type,
+      url: handler.url
+    }
+  });
+}, 'content-handler', false);
+
