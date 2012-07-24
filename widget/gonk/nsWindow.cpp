@@ -130,12 +130,6 @@ static void *frameBufferWatcher(void *) {
     return NULL;
 }
 
-static int
-CancelBufferNoop(ANativeWindow* aWindow, ANativeWindowBuffer* aBuffer)
-{
-    return 0;
-}
-
 } // anonymous namespace
 
 nsWindow::nsWindow()
@@ -153,12 +147,6 @@ nsWindow::nsWindow()
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
         gNativeWindow = new android::FramebufferNativeWindow();
-
-        // Bug 776742: FrambufferNativeWindow doesn't set the cancelBuffer
-        // function pointer, causing EGL to segfault when the window surface
-        // is destroyed (i.e. on process exit). This workaround stops us
-        // from hard crashing in that situation.
-        gNativeWindow->cancelBuffer = CancelBufferNoop;
 
         nsIntSize screenSize;
         bool gotFB = Framebuffer::GetSize(&screenSize);
