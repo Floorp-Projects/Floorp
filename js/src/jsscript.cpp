@@ -853,6 +853,7 @@ JSScript::initScriptCounts(JSContext *cx)
     cursor += length * sizeof(PCCounts);
 
     for (pc = code; pc < code + length; pc = next) {
+        JS_ASSERT(uintptr_t(cursor) % sizeof(double) == 0);
         scriptCounts.pcCountsVector[pc - code].counts = (double *) cursor;
         size_t capacity = PCCounts::numCounts(JSOp(*pc));
 #ifdef DEBUG
