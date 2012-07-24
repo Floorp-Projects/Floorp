@@ -532,11 +532,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   if (!srcBuffer) {
     nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
 
-    bool isWin32ImageSurf = false;
-
-    if (imgSurface && aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
-      isWin32ImageSurf = true;
-    }
+    bool isWin32ImageSurf = imgSurface &&
+                            aSurface->GetType() == gfxASurface::SurfaceTypeWin32;
 
     if (!imgSurface) {
       imgSurface = new gfxImageSurface(aSurface->GetSize(), OptimalFormatForContent(aSurface->GetContentType()));
@@ -572,8 +569,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 
     if (!srcBuffer) {
       // We need to check if our gfxASurface will keep the underlying data
-      // alive! This is true if gfxASurface actually -is- an ImageSurface or
-      // if it is a gfxWindowsSurface which supportes GetAsImageSurface.
+      // alive. This is true if gfxASurface actually -is- an ImageSurface or
+      // if it is a gfxWindowsSurface which supports GetAsImageSurface.
       if (imgSurface != aSurface && !isWin32ImageSurf) {
         // This shouldn't happen for now, it can be easily supported by making
         // a copy. For now let's just abort.
