@@ -6,7 +6,7 @@
 
 let [ define, require ] = (function() {
   let tempScope = {};
-  Components.utils.import("resource:///modules/devtools/Require.jsm", tempScope);
+  Components.utils.import("resource://gre/modules/devtools/Require.jsm", tempScope);
   return [ tempScope.define, tempScope.require ];
 })();
 
