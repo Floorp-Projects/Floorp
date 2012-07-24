@@ -26,7 +26,7 @@
 
 var EXPORTED_SYMBOLS = [ "gcli" ];
 
-Components.utils.import("resource://gre/modules/devtools/Require.jsm");
+Components.utils.import("resource://gre/modules/Require.jsm");
 Components.utils.import("resource:///modules/devtools/Console.jsm");
 Components.utils.import("resource:///modules/devtools/Browser.jsm");
 
