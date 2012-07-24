@@ -549,27 +549,6 @@ PRUint8 (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nsnull;
 namespace mozilla {
 namespace dom {
 
-static bool
-AzureCanvasEnabledOnPlatform()
-{
-#ifdef XP_WIN
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
-      gfxWindowsPlatform::RENDER_DIRECT2D ||
-      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
-    static bool checkedPref = false;
-    static bool preferSkia;
-    if (!checkedPref) {
-      preferSkia = Preferences::GetBool("gfx.canvas.azure.prefer-skia", false);
-      checkedPref = true;
-    }
-    return preferSkia;
-  }
-#elif !defined(XP_MACOSX) && !defined(ANDROID) && !defined(LINUX)
-  return false;
-#endif
-  return true;
-}
-
 bool
 AzureCanvasEnabled()
 {
@@ -579,7 +558,9 @@ AzureCanvasEnabled()
     azureEnabled = Preferences::GetBool("gfx.canvas.azure.enabled", false);
     checkedPref = true;
   }
-  return azureEnabled && AzureCanvasEnabledOnPlatform();
+
+  BackendType dontCare;
+  return azureEnabled && gfxPlatform::GetPlatform()->SupportsAzure(dontCare);
 }
 
 }
@@ -588,7 +569,9 @@ AzureCanvasEnabled()
 nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
-  if (!AzureCanvasEnabledOnPlatform()) {
+  // XXX[nrc] remove this check when Thebes canvas is removed
+  // (because we will always support Azure)
+  if (!AzureCanvasEnabled()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
