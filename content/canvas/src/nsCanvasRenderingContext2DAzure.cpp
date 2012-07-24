@@ -2493,6 +2493,7 @@ nsCanvasRenderingContext2DAzure::EnsureWritablePath()
   }
 
   if (!mPath) {
+    NS_ASSERTION(!mPathTransformWillUpdate, "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   } else if (!mPathTransformWillUpdate) {
     mPathBuilder = mPath->CopyToBuilder(fillRule);
@@ -2504,7 +2505,7 @@ nsCanvasRenderingContext2DAzure::EnsureWritablePath()
 }
 
 void
-nsCanvasRenderingContext2DAzure::EnsureUserSpacePath()
+nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = true */)
 {
   FillRule fillRule = CurrentState().fillRule;
 
@@ -2517,7 +2518,9 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath()
     mPathBuilder = nsnull;
   }
 
-  if (mPath && mPathTransformWillUpdate) {
+  if (aCommitTransform &&
+      mPath &&
+      mPathTransformWillUpdate) {
     mDSPathBuilder =
       mPath->TransformedCopyToBuilder(mPathToDS, fillRule);
     mPath = nsnull;
@@ -2531,6 +2534,7 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath()
 
     Matrix inverse = mTarget->GetTransform();
     if (!inverse.Invert()) {
+      NS_WARNING("Could not invert transform");
       return;
     }
 
@@ -2544,6 +2548,8 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath()
     mPathBuilder = mPath->CopyToBuilder(fillRule);
     mPath = mPathBuilder->Finish();
   }
+
+  NS_ASSERTION(mPath, "mPath should exist");
 }
 
 void
@@ -3607,9 +3613,14 @@ nsCanvasRenderingContext2DAzure::IsPointInPath(double x, double y)
     return false;
   }
 
-  EnsureUserSpacePath();
-
-  return mPath && mPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
+  EnsureUserSpacePath(false);
+  if (!mPath) {
+    return false;
+  }
+  if (mPathTransformWillUpdate) {
+    return mPath->ContainsPoint(Point(x, y), mPathToDS);
+  }
+  return mPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
 }
 
 NS_IMETHODIMP
@@ -4255,11 +4266,12 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
   RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty()) {
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    if (snapshot) {
+      readback = snapshot->GetDataSurface();
 
-    readback = snapshot->GetDataSurface();
-
-    srcStride = readback->Stride();
-    src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
+      srcStride = readback->Stride();
+      src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
+    }
   }
 
   // make sure sUnpremultiplyTable has been created
@@ -4267,6 +4279,8 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
 
   // NOTE! dst is the same as src, and this relies on reading
   // from src and advancing that ptr before writing to dst.
+  // NOTE! I'm not sure that it is, I think this comment might have been
+  // inherited from Thebes canvas and is no longer true
   uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
   for (int32_t j = 0; j < dstWriteRect.height; ++j) {
@@ -4598,8 +4612,8 @@ static PRUint8 g2DContextLayerUserData;
 
 already_AddRefed<CanvasLayer>
 nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                           CanvasLayer *aOldLayer,
-                                           LayerManager *aManager)
+                                                CanvasLayer *aOldLayer,
+                                                LayerManager *aManager)
 {
   if (!mValid) {
     return nsnull;
