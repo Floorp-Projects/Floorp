@@ -68,7 +68,7 @@ PlacesViewBase.prototype = {
     if (val) {
       this._resultNode = val.root;
       this._rootElt._placesNode = this._resultNode;
-      this._domNodes = new WeakMap();
+      this._domNodes = new Map();
       this._domNodes.set(this._resultNode, this._rootElt);
 
       // This calls _rebuild through invalidateContainer.
