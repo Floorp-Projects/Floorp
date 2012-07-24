@@ -261,7 +261,9 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #ifdef USE_CAIRO
   case NATIVE_FONT_CAIRO_FONT_FACE:
     {
-      return new ScaledFontBase(aSize);
+      ScaledFontBase* fontBase = new ScaledFontBase(aSize);
+      fontBase->SetCairoScaledFont(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont));
+      return fontBase;
     }
 #endif
   default:
