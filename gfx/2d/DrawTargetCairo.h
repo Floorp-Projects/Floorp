@@ -123,7 +123,7 @@ public:
 
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
-  bool Init(cairo_surface_t* aSurface);
+  bool Init(cairo_surface_t* aSurface, const IntSize& aSize);
 
   void SetPathObserver(CairoPathContext* aPathObserver);
 
@@ -157,6 +157,7 @@ private: // methods
 
 private: // data
   cairo_t* mContext;
+  IntSize mSize;
   std::vector<SourceSurfaceCairo*> mSnapshots;
   mutable RefPtr<CairoPathContext> mPathObserver;
 };

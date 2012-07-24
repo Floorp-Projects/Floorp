@@ -473,9 +473,9 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 cairo_user_data_key_t kDrawTarget;
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface)
+gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
-  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface());
+  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize);
   aSurface->SetData(&kDrawTarget, drawTarget, NULL);
   return drawTarget;
 }
@@ -691,7 +691,7 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
 
-    return CreateDrawTargetForSurface(surf);
+    return CreateDrawTargetForSurface(surf, aSize);
   } else {
     return Factory::CreateDrawTarget(backend, aSize, aFormat);
   }
