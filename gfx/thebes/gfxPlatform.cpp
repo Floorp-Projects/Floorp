@@ -605,7 +605,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 }
 
 RefPtr<ScaledFont>
-gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
+gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
   NativeFont nativeFont;
   nativeFont.mType = NATIVE_FONT_CAIRO_FONT_FACE;

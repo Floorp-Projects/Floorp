@@ -764,7 +764,7 @@ gfxWindowsPlatform::CreateOffscreenImageSurface(const gfxIntSize& aSize,
 }
 
 RefPtr<ScaledFont>
-gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
+gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     if (aFont->GetType() == gfxFont::FONT_TYPE_DWRITE) {
         gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
@@ -786,10 +786,14 @@ gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
     LOGFONT lf;
     GetObject(static_cast<gfxGDIFont*>(aFont)->GetHFONT(), sizeof(LOGFONT), &lf);
     nativeFont.mFont = &lf;
-    RefPtr<ScaledFont> scaledFont =
-    Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 
-    return scaledFont;
+    if (aTarget->GetType() == BACKEND_CAIRO) {
+      return Factory::CreateScaledFontWithCairo(nativeFont,
+                                                aFont->GetAdjustedSize(),
+                                                aFont->GetCairoScaledFont());
+    }
+
+    return Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 }
 
 already_AddRefed<gfxASurface>
