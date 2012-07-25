@@ -5,7 +5,6 @@
 #include "domstubs.idl"
 #include "nsIDOMContactProperties.idl"
 #include "nsIDOMEventTarget.idl"
-#include "nsIDOMEvent.idl"
 
 interface nsIArray;
 interface nsIDOMContactFindOptions;
@@ -20,25 +19,6 @@ interface nsIDOMContact : nsIDOMContactProperties
   readonly attribute jsval     updated;
 
   void init(in nsIDOMContactProperties properties);  // Workaround BUG 723206
-};
-
-[scriptable, builtinclass, uuid(6ed26570-b640-11e1-afa6-0800200c9a66)]
-interface nsIDOMMozContactChangeEvent : nsIDOMEvent
-{
-  readonly attribute DOMString contactID;
-  readonly attribute DOMString reason;
-
-  [noscript] void initMozContactChangeEvent(in DOMString aType,
-                                            in boolean aCanBubble,
-                                            in boolean aCancelable,
-                                            in DOMString aContactID,
-                                            in DOMString aReason);
-};
-
-dictionary MozContactChangeEventInit : EventInit
-{
-  DOMString contactID;
-  DOMString reason;
 };
 
 [scriptable, uuid(d88af7e0-a45f-11e1-b3dd-0800200c9a66)]
