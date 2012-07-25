@@ -6,7 +6,8 @@ import os
 import imp
 from tempfile import mkdtemp
 from shutil import rmtree
-import mozunit
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mozunit import MozTestRunner
 
 from UserString import UserString
 # Create a controlled configuration for use by expandlibs
@@ -384,4 +385,4 @@ class TestSymbolOrder(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    mozunit.main()
+    unittest.main(testRunner=MozTestRunner())

@@ -4,7 +4,7 @@ from StringIO import StringIO
 import os
 import sys
 import os.path
-import mozunit
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from Preprocessor import Preprocessor
 
@@ -43,4 +43,4 @@ class TestLineEndings(unittest.TestCase):
     self.assertEquals(self.pp.out.getvalue(), 'a\nb\nc\n')
 
 if __name__ == '__main__':
-  mozunit.main()
+  unittest.main()

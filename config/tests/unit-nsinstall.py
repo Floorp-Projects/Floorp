@@ -3,7 +3,7 @@ import unittest
 import os, sys, os.path, time
 from tempfile import mkdtemp
 from shutil import rmtree
-import mozunit
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from mozprocess import processhandler
 
 from nsinstall import nsinstall
@@ -170,4 +170,4 @@ class TestNsinstall(unittest.TestCase):
     #TODO: implement -R, -l, -L and test them!
 
 if __name__ == '__main__':
-  mozunit.main()
+  unittest.main()

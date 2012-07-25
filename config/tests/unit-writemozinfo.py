@@ -3,7 +3,8 @@ from __future__ import with_statement
 import unittest
 import os, sys, time, tempfile
 from StringIO import StringIO
-import mozunit
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from writemozinfo import build_dict, write_json, JsonValue, jsonify
 
@@ -238,4 +239,5 @@ class TestWriteJson(unittest.TestCase):
         self.assertEqual(32, d['bits'])
 
 if __name__ == '__main__':
-    mozunit.main()
+    unittest.main()
+  
