@@ -156,6 +156,7 @@ WebGLContext::WebGLContext()
     mContextLostErrorSet = false;
 
     mAlreadyGeneratedWarnings = 0;
+    mAlreadyWarnedAboutFakeVertexAttrib0 = false;
 }
 
 WebGLContext::~WebGLContext()
