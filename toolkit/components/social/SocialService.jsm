@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/MozSocialAPI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
@@ -29,13 +30,16 @@ let SocialServiceInternal = {
 XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
   // Initialize the service (add a pref observer)
   function prefObserver(subject, topic, data) {
-    SocialService._setEnabled(Services.prefs.getBoolPref(data));
+    SocialService._setEnabled(Services.prefs.getBoolPref("social.enabled"));
   }
   Services.prefs.addObserver("social.enabled", prefObserver, false);
   Services.obs.addObserver(function xpcomShutdown() {
     Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
     Services.prefs.removeObserver("social.enabled", prefObserver);
   }, "xpcom-shutdown", false);
+
+  // Initialize the MozSocialAPI
+  MozSocialAPI.enabled = SocialServiceInternal.enabled;
 
   // Now retrieve the providers
   let providers = {};
@@ -77,6 +81,7 @@ const SocialService = {
   _setEnabled: function _setEnabled(enable) {
     SocialServiceInternal.providerArray.forEach(function (p) p.enabled = enable);
     SocialServiceInternal.enabled = enable;
+    MozSocialAPI.enabled = enable;
     Services.obs.notifyObservers(null, "social:pref-changed", enable ? "enabled" : "disabled");
   },
 

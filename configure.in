@@ -363,6 +363,10 @@ else
     fi
 fi
 
+if test -n "$MOZ_WINCONSOLE"; then
+    AC_DEFINE(MOZ_WINCONSOLE)
+fi
+
 MOZ_TOOL_VARIABLES
 
 dnl ========================================================
@@ -4206,6 +4210,7 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
 ACCESSIBILITY=1
+MOZ_SYS_MSG=
 
 case "$target_os" in
     mingw*)
@@ -7313,7 +7318,7 @@ MOZ_ARG_ENABLE_BOOL(b2g-ril,
     MOZ_B2G_RIL=1,
     MOZ_B2G_RIL= )
 if test -n "$MOZ_B2G_RIL"; then
-   AC_DEFINE(MOZ_B2G_RIL)
+    AC_DEFINE(MOZ_B2G_RIL)
 fi
 AC_SUBST(MOZ_B2G_RIL)
 
@@ -7325,14 +7330,16 @@ MOZ_ARG_ENABLE_BOOL(b2g-bt,
     MOZ_B2G_BT=1,
     MOZ_B2G_BT= )
 if test -n "$MOZ_B2G_BT"; then
-   AC_DEFINE(MOZ_B2G_BT)
+    AC_DEFINE(MOZ_B2G_BT)
 fi
 AC_SUBST(MOZ_B2G_BT)
 
 dnl ========================================================
 dnl = Enable Support for System Messages API
 dnl ========================================================
-
+if test -n "$MOZ_SYS_MSG"; then
+    AC_DEFINE(MOZ_SYS_MSG)
+fi
 AC_SUBST(MOZ_SYS_MSG)
 
 dnl ========================================================

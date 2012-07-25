@@ -910,8 +910,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
         kProxyType_HTTP,
         kProxyType_SOCKS,
         kProxyType_SOCKS4,
-        kProxyType_DIRECT,
-        kProxyType_UNKNOWN
+        kProxyType_DIRECT
     };
 
     // resolve type; this allows us to avoid copying the type string into each

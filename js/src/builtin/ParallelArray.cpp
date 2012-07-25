@@ -395,7 +395,7 @@ ParallelArray_filter_impl(JSContext *cx, CallArgs args)
         if (!Invoke(cx, frame))
             return false;
 
-        if (js_ValueToBoolean(frame.rval()))
+        if (ToBoolean(frame.rval()))
             resBuffer->setDenseArrayElementWithType(cx, pos++, buffer->getDenseArrayElement(i));
     }
 

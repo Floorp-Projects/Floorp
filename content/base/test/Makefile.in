@@ -178,8 +178,6 @@ MOCHITEST_FILES_A = \
 		file_bug426646-1.html \
 		file_bug426646-2.html \
 		test_bug429157.html \
-		test_header.html \
-		header.sjs \
 		test_XHR.html \
 		file_XHR_pass1.xml \
 		file_XHR_pass2.txt \

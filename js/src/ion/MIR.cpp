@@ -1365,7 +1365,7 @@ MNot::foldsTo(bool useValueNumbers)
     if (operand()->isConstant()) {
        const Value &v = operand()->toConstant()->value();
         // ValueToBoolean can cause no side-effects, so this is safe.
-        return MConstant::New(BooleanValue(!js_ValueToBoolean(v)));
+        return MConstant::New(BooleanValue(!ToBoolean(v)));
     }
 
     // NOT of an object is always false
