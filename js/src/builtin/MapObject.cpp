@@ -80,13 +80,13 @@ class OrderedHashTable
     friend class Range;
 
   private:
-    Data **hashTable;           // power-of-2-sized hash table
+    Data **hashTable;           // hash table (has hashBuckets() elements)
     Data *data;                 // data vector, an array of Data objects
                                 // data[0:dataLength] are constructed
     uint32_t dataLength;        // number of constructed elements in data
     uint32_t dataCapacity;      // size of data, in elements
     uint32_t liveCount;         // dataLength less empty (removed) entries
-    uint32_t hashTableMask;     // size of hashTable, in elements, minus one
+    uint32_t hashShift;         // multiplicative hash shift
     Range *ranges;              // list of all live Ranges on this table
     AllocPolicy alloc;
 
@@ -116,7 +116,8 @@ class OrderedHashTable
         dataLength = 0;
         dataCapacity = capacity;
         liveCount = 0;
-        hashTableMask = buckets - 1;
+        hashShift = HashNumberSizeBits - initialBucketsLog2();
+        JS_ASSERT(hashBuckets() == buckets);
         return true;
     }
 
@@ -162,14 +163,12 @@ class OrderedHashTable
         if (dataLength == dataCapacity) {
             // If the hashTable is more than 1/4 deleted data, simply rehash in
             // place to free up some space. Otherwise, grow the table.
-            uint32_t newMask = liveCount >= dataCapacity * 0.75
-                             ? (hashTableMask << 1) | 1
-                             : hashTableMask;
-            if (!rehash(newMask))
+            uint32_t newHashShift = liveCount >= dataCapacity * 0.75 ? hashShift - 1 : hashShift;
+            if (!rehash(newHashShift))
                 return false;
         }
 
-        h &= hashTableMask;
+        h >>= hashShift;
         liveCount++;
         Data *e = &data[dataLength++];
         new (e) Data(element, hashTable[h]);
@@ -208,8 +207,8 @@ class OrderedHashTable
             r->onRemove(pos);
 
         // If many entries have been removed, try to shrink the table.
-        if (hashTableMask > initialBuckets() && liveCount < dataLength * minDataFill()) {
-            if (!rehash(hashTableMask >> 1))
+        if (hashBuckets() > initialBuckets() && liveCount < dataLength * minDataFill()) {
+            if (!rehash(hashShift + 1))
                 return false;
         }
         return true;
@@ -370,8 +369,8 @@ class OrderedHashTable
          */
         void rekeyFront(const Key &k) {
             Data &entry = ht.data[i];
-            HashNumber oldHash = prepareHash(Ops::getKey(entry.element)) & ht.hashTableMask;
-            HashNumber newHash = prepareHash(k) & ht.hashTableMask;
+            HashNumber oldHash = prepareHash(Ops::getKey(entry.element)) >> ht.hashShift;
+            HashNumber newHash = prepareHash(k) >> ht.hashShift;
             Ops::setKey(entry.element, k);
             if (newHash != oldHash) {
                 // Remove this entry from its old hash chain. (If this crashes
@@ -406,7 +405,7 @@ class OrderedHashTable
         void rekeyFrontWithSameHashCode(const Key &k) {
 #ifdef DEBUG
             // Assert that k falls in the same hash bucket as the old key.
-            HashNumber h = Ops::hash(k) & ht.hashTableMask;
+            HashNumber h = Ops::hash(k) >> ht.hashShift;
             Data *e = ht.hashTable[h];
             while (e && e != &ht.data[i])
                 e = e->chain;
@@ -419,16 +418,14 @@ class OrderedHashTable
     Range all() { return Range(*this); }
 
   private:
-    /*
-     * The number of buckets in the hash table initially.
-     * This must be a power of two.
-     */
-    static uint32_t initialBuckets() { return 2; }
+    /* Logarithm base 2 of the number of buckets in the hash table initially. */
+    static uint32_t initialBucketsLog2() { return 1; }
+    static uint32_t initialBuckets() { return 1 << initialBucketsLog2(); }
 
     /*
      * The maximum load factor (mean number of entries per bucket).
      * It is an invariant that
-     *     dataCapacity == floor((hashTableMask + 1) * fillFactor()).
+     *     dataCapacity == floor(hashBuckets() * fillFactor()).
      *
      * The fill factor should be between 2 and 4, and it should be chosen so that
      * the fill factor times sizeof(Data) is close to but <= a power of 2.
@@ -447,6 +444,11 @@ class OrderedHashTable
         return ScrambleHashCode(Ops::hash(l));
     }
 
+    /* The size of hashTable, in elements. Always a power of two. */
+    uint32_t hashBuckets() const {
+        return 1 << (HashNumberSizeBits - hashShift);
+    }
+
     void freeData(Data *data, uint32_t length) {
         for (Data *p = data + length; p != data; )
             (--p)->~Data();
@@ -454,7 +456,7 @@ class OrderedHashTable
     }
 
     Data *lookup(const Lookup &l, HashNumber h) {
-        for (Data *e = hashTable[h & hashTableMask]; e; e = e->chain) {
+        for (Data *e = hashTable[h >> hashShift]; e; e = e->chain) {
             if (Ops::match(Ops::getKey(e->element), l))
                 return e;
         }
@@ -475,12 +477,12 @@ class OrderedHashTable
 
     /* Compact the entries in |data| and rehash them. */
     void rehashInPlace() {
-        for (uint32_t i = 0; i <= hashTableMask; i++)
+        for (uint32_t i = 0, N = hashBuckets(); i < N; i++)
             hashTable[i] = NULL;
         Data *wp = data, *end = data + dataLength;
         for (Data *rp = data; rp != end; rp++) {
             if (!Ops::isEmpty(Ops::getKey(rp->element))) {
-                HashNumber h = prepareHash(Ops::getKey(rp->element)) & hashTableMask;
+                HashNumber h = prepareHash(Ops::getKey(rp->element)) >> hashShift;
                 if (rp != wp)
                     wp->element = Move(rp->element);
                 wp->chain = hashTable[h];
@@ -503,21 +505,22 @@ class OrderedHashTable
      * empty elements in data[0:dataLength]. On allocation failure, this
      * leaves everything as it was and returns false.
      */
-    bool rehash(uint32_t newMask) {
+    bool rehash(uint32_t newHashShift) {
         // If the size of the table is not changing, rehash in place to avoid
         // allocating memory.
-        if (newMask == hashTableMask) {
+        if (newHashShift == hashShift) {
             rehashInPlace();
             return true;
         }
 
-        Data **newHashTable = static_cast<Data **>(alloc.malloc_((newMask + 1) * sizeof(Data *)));
+        size_t newHashBuckets = 1 << (HashNumberSizeBits - newHashShift);
+        Data **newHashTable = static_cast<Data **>(alloc.malloc_(newHashBuckets * sizeof(Data *)));
         if (!newHashTable)
             return false;
-        for (uint32_t i = 0; i <= newMask; i++)
+        for (uint32_t i = 0; i < newHashBuckets; i++)
             newHashTable[i] = NULL;
 
-        uint32_t newCapacity = uint32_t((newMask + 1) * fillFactor());
+        uint32_t newCapacity = uint32_t(newHashBuckets * fillFactor());
         Data *newData = static_cast<Data *>(alloc.malloc_(newCapacity * sizeof(Data)));
         if (!newData) {
             alloc.free_(newHashTable);
@@ -527,7 +530,7 @@ class OrderedHashTable
         Data *wp = newData;
         for (Data *p = data, *end = data + dataLength; p != end; p++) {
             if (!Ops::isEmpty(Ops::getKey(p->element))) {
-                HashNumber h = prepareHash(Ops::getKey(p->element)) & newMask;
+                HashNumber h = prepareHash(Ops::getKey(p->element)) >> newHashShift;
                 new (wp) Data(Move(p->element), newHashTable[h]);
                 newHashTable[h] = wp;
                 wp++;
@@ -542,7 +545,8 @@ class OrderedHashTable
         data = newData;
         dataLength = liveCount;
         dataCapacity = newCapacity;
-        hashTableMask = newMask;
+        hashShift = newHashShift;
+        JS_ASSERT(hashBuckets() == newHashBuckets);
 
         compacted();
         return true;
@@ -683,7 +687,9 @@ HashableValue::hash() const
 
     // Having dispensed with strings, we can just hash asBits.
     uint64_t u = value.asRawBits();
-    return HashNumber((u >> 3) ^ (u >> (32 + 3)) ^ (u << (32 - 3)));
+    return HashNumber((u >> 3) ^
+                      (u >> (HashNumberSizeBits + 3)) ^
+                      (u << (HashNumberSizeBits - 3)));
 }
 
 bool
