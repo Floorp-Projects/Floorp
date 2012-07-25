@@ -11,6 +11,7 @@
 #include "nsDataHashtable.h"
 #include "nsGUIEvent.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 
 class nsCSSKeyframesRule;
@@ -88,6 +89,9 @@ struct ElementAnimation
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
 
+  bool CanPerformOnCompositor(mozilla::dom::Element* aElement,
+                              mozilla::TimeStamp aTime) const;
+
   mozilla::TimeStamp mStartTime; // with delay taken into account
   mozilla::TimeStamp mPauseStart;
   mozilla::TimeDuration mIterationDuration;
@@ -114,6 +118,26 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
   ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
                     nsAnimationManager *aAnimationManager);
 
+  // This function takes as input the start time, duration, and direction of an
+  // animation and returns the position in the current iteration.  Note that
+  // this only works when we know that the animation is currently running.
+  // This way of calling the function can be used from the compositor.  Note
+  // that if the animation has not started yet, has already ended, or is paused,
+  // it should not be run from the compositor.  When this function is called 
+  // from the main thread, we need the actual ElementAnimation* in order to 
+  // get correct animation-fill behavior and to fire animation events.
+  // This function returns -1 for the position if the animation should not be
+  // run (because it is not currently active and has no fill behavior.)
+  static double GetPositionInIteration(TimeStamp aStartTime,
+                                       TimeStamp aCurrentTime,
+                                       TimeDuration aDuration,
+                                       double aIterationCount,
+                                       PRUint32 aDirection,
+                                       bool IsForElement = true,
+                                       ElementAnimation* aAnimation = nsnull,
+                                       ElementAnimations* aEa = nsnull,
+                                       EventArray* aEventsToDispatch = nsnull);
+
   void EnsureStyleRuleFor(TimeStamp aRefreshTime,
                           EventArray &aEventsToDispatch);
 
@@ -126,6 +150,9 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
     aPresContext->PresShell()->RestyleForAnimation(mElement, styleHint);
   }
 
+  // True if this animation can be performed on the compositor thread.
+  bool CanPerformOnCompositorThread() const;
+  bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we
   // style without animation, we need to not use it so that we can
@@ -149,14 +176,39 @@ class nsAnimationManager : public mozilla::css::CommonAnimationManager
 {
 public:
   nsAnimationManager(nsPresContext *aPresContext)
-    : mozilla::css::CommonAnimationManager(aPresContext),
-      mKeyframesListIsDirty(true)
+    : mozilla::css::CommonAnimationManager(aPresContext)
+    , mKeyframesListIsDirty(true)
   {
     mKeyframesRules.Init(16); // FIXME: make infallible!
   }
 
+  static bool CanAnimateOpacity() {
+    static bool canAnimateOpacity =
+      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.animate-opacity", false) &&
+      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+    return canAnimateOpacity;
+  }
 
+  static bool CanAnimateTransform() {
+    static bool canAnimateTransform =
+      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.animate-transform", false) &&
+      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+    return canAnimateTransform;
+  }
 
+  static ElementAnimations* GetAnimationsForCompositor(nsIContent* aContent,
+                                                       nsCSSProperty aProperty)
+  {
+    if (!aContent->MayHaveAnimations())
+      return nsnull;
+    ElementAnimations* animations = static_cast<ElementAnimations*>(
+      aContent->GetProperty(nsGkAtoms::animationsProperty));
+    if (!animations)
+      return nsnull;
+    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+    return (propertyMatches && animations->CanPerformOnCompositorThread()) ?
+      animations : nsnull;
+  }
 
   // nsIStyleRuleProcessor (parts)
   virtual void RulesMatching(ElementRuleProcessorData* aData);
