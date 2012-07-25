@@ -591,6 +591,10 @@ class OrderedHashMap
         typedef Key KeyType;
         static void makeEmpty(Entry *e) {
             OrderedHashPolicy::makeEmpty(const_cast<Key *>(&e->key));
+
+            // Clear the value. Destroying it is another possibility, but that
+            // would complicate class Entry considerably.
+            e->value = Value();
         }
         static const Key &getKey(const Entry &e) { return e.key; }
         static void setKey(Entry &e, const Key &k) { const_cast<Key &>(e.key) = k; }
@@ -978,6 +982,15 @@ MapObject::set(JSContext *cx, unsigned argc, Value *vp)
 bool
 MapObject::delete_impl(JSContext *cx, CallArgs args)
 {
+    // MapObject::mark does not mark deleted entries. Incremental GC therefore
+    // requires that no RelocatableValue objects pointing to heap values be
+    // left alive in the ValueMap.
+    //
+    // OrderedHashMap::remove() doesn't destroy the removed entry. It merely
+    // calls OrderedHashMap::MapOps::makeEmpty. But that is sufficient, because
+    // makeEmpty clears the value by doing e->value = Value(), and in the case
+    // of a ValueMap, Value() means RelocatableValue(), which is the same as
+    // RelocatableValue(UndefinedValue()).
     JS_ASSERT(MapObject::is(args.thisv()));
 
     ValueMap &map = extract(args);
