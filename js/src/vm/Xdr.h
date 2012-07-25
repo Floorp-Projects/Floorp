@@ -25,7 +25,7 @@ namespace js {
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 123);
+static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 124);
 
 class XDRBuffer {
   public:

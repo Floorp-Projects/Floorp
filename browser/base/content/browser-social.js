@@ -11,6 +11,8 @@ let SocialUI = {
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
 
+    gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler, true, true);
+
     Social.init(this._providerReady.bind(this));
   },
 
@@ -31,6 +33,7 @@ let SocialUI = {
   observe: function SocialUI_observe(subject, topic, data) {
     switch (topic) {
       case "social:pref-changed":
+        this.updateToggleCommand();
         SocialShareButton.updateButtonHiddenState();
         SocialToolbar.updateButtonHiddenState();
         SocialSidebar.updateSidebar();
@@ -46,11 +49,103 @@ let SocialUI = {
     }
   },
 
+  get toggleCommand() {
+    return document.getElementById("Social:Toggle");
+  },
+
   // Called once Social.jsm's provider has been set
   _providerReady: function SocialUI_providerReady() {
+    // If we couldn't find a provider, nothing to do here.
+    if (!Social.provider)
+      return;
+
+    this.updateToggleCommand();
+
+    let toggleCommand = this.toggleCommand;
+    let label = gNavigatorBundle.getFormattedString("social.enable.label",
+                                                    [Social.provider.name]);
+    let accesskey = gNavigatorBundle.getString("social.enable.accesskey");
+    toggleCommand.setAttribute("label", label);
+    toggleCommand.setAttribute("accesskey", accesskey);
+
     SocialToolbar.init();
     SocialShareButton.init();
     SocialSidebar.init();
+  },
+
+  updateToggleCommand: function SocialUI_updateToggleCommand() {
+    let toggleCommand = this.toggleCommand;
+    toggleCommand.setAttribute("checked", Social.enabled);
+
+    // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
+    // need to update them manually.
+    // This should just be: toggleCommand.hidden = !Social.active;
+    for (let id of ["appmenu_socialToggle", "menu_socialToggle"]) {
+      let el = document.getElementById(id);
+      if (!el)
+        continue;
+
+      if (Social.active)
+        el.removeAttribute("hidden");
+      else
+        el.setAttribute("hidden", "true");
+    }
+  },
+
+  // This handles "ActivateSocialFeature" events fired against content documents
+  // in this window.
+  _activationEventHandler: function SocialUI_activationHandler(e) {
+    // Nothing to do if Social is already active, or we don't have a provider
+    // to enable yet.
+    if (Social.active || !Social.provider)
+      return;
+
+    let targetDoc = e.target;
+
+    // Event must be fired against the document
+    if (!(targetDoc instanceof HTMLDocument))
+      return;
+
+    // Ignore events fired in background tabs
+    if (targetDoc.defaultView.top != content)
+      return;
+
+    // Check that the associated document's origin is in our whitelist
+    let prePath = targetDoc.documentURIObject.prePath;
+    let whitelist = Services.prefs.getCharPref("browser.social.whitelist");
+    if (whitelist.split(",").indexOf(prePath) == -1)
+      return;
+
+    // If the last event was received < 1s ago, ignore this one
+    let now = Date.now();
+    if (now - Social.lastEventReceived < 1000)
+      return;
+    Social.lastEventReceived = now;
+
+    // Enable the social functionality, and indicate that it was activated
+    Social.active = true;
+
+    // Show a warning, allow undoing the activation
+    let description = document.getElementById("social-activation-message");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let message = gNavigatorBundle.getFormattedString("social.activated.message",
+                                                      [Social.provider.name, brandShortName]);
+    description.value = message;
+
+    SocialUI.notificationPanel.hidden = false;
+
+    setTimeout(function () {
+      SocialUI.notificationPanel.openPopup(SocialToolbar.button, "bottomcenter topright");
+    }.bind(this), 0);
+  },
+
+  get notificationPanel() {
+    return document.getElementById("socialActivatedNotification")
+  },
+
+  undoActivation: function SocialUI_undoActivation() {
+    Social.active = false;
+    this.notificationPanel.hidePopup();
   }
 }
 
@@ -153,22 +248,33 @@ var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
     document.getElementById("social-provider-image").setAttribute("image", Social.provider.iconURL);
-    
-    // handle button state
-    document.getElementById("social-statusarea-popup").addEventListener("popupshowing", function(e) {
-      document.getElementById("social-toolbar-button").setAttribute("open", "true");
-    }, false);
-    document.getElementById("social-statusarea-popup").addEventListener("popuphiding", function(e) {
-      document.getElementById("social-toolbar-button").removeAttribute("open");
-    }, false);
+
+    let removeItem = document.getElementById("social-remove-menuitem");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.remove.label",
+                                                    [brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
+    removeItem.setAttribute("label", label);
+    removeItem.setAttribute("accesskey", accesskey);
+
+    let statusAreaPopup = document.getElementById("social-statusarea-popup");
+    statusAreaPopup.addEventListener("popupshowing", function(e) {
+      this.button.setAttribute("open", "true");
+    }.bind(this));
+    statusAreaPopup.addEventListener("popuphidden", function(e) {
+      this.button.removeAttribute("open");
+    }.bind(this));
 
     this.updateButton();
     this.updateProfile();
   },
 
+  get button() {
+    return document.getElementById("social-toolbar-button");
+  },
+
   updateButtonHiddenState: function SocialToolbar_updateButtonHiddenState() {
-    let toolbarbutton = document.getElementById("social-toolbar-button");
-    toolbarbutton.hidden = !Social.uiVisible;
+    this.button.hidden = !Social.uiVisible;
   },
 
   updateProfile: function SocialToolbar_updateProfile() {
@@ -233,10 +339,10 @@ var SocialToolbar = {
     panel.hidden = false;
 
     function sizePanelToContent() {
-      // XXX Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
-      // XXX need to handle dynamic sizing
+      // FIXME: bug 764787: Maybe we can use nsIDOMWindowUtils.getRootBounds() here?
+      // Need to handle dynamic sizing
       let doc = notifBrowser.contentDocument;
-      // XXX "notif" is an implementation detail that we should get rid of
+      // "notif" is an implementation detail that we should get rid of
       // eventually
       let body = doc.getElementById("notif") || doc.body.firstChild;
       if (!body)
@@ -254,13 +360,13 @@ var SocialToolbar = {
     panel.addEventListener("popuphiding", function onpopuphiding() {
       panel.removeEventListener("popuphiding", onpopuphiding);
       // unload the panel
-      document.getElementById("social-toolbar-button").removeAttribute("open");
+      SocialToolbar.button.removeAttribute("open");
       notifBrowser.setAttribute("src", "about:blank");
     });
 
     notifBrowser.setAttribute("origin", Social.provider.origin);
     notifBrowser.setAttribute("src", iconImage.getAttribute("contentPanel"));
-    document.getElementById("social-toolbar-button").setAttribute("open", "true");
+    this.button.setAttribute("open", "true");
     panel.openPopup(iconImage, "bottomcenter topleft", 0, 0, false, false);
   }
 }

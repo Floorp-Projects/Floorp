@@ -18,6 +18,7 @@
 #include "gfxPattern.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "nsStyleAnimation.h"
 #include "LayersBackend.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
@@ -43,8 +44,14 @@ namespace gl {
 class GLContext;
 }
 
+namespace css {
+class ComputedTimingFunction;
+}
+
 namespace layers {
 
+class Animation;
+class CommonLayerAttributes;
 class Layer;
 class ThebesLayer;
 class ContainerLayer;
@@ -530,6 +537,13 @@ private:
 };
 
 class ThebesLayer;
+typedef InfallibleTArray<Animation> AnimationArray;
+
+struct AnimData {
+  InfallibleTArray<nsStyleAnimation::Value> mStartValues;
+  InfallibleTArray<nsStyleAnimation::Value> mEndValues;
+  InfallibleTArray<mozilla::css::ComputedTimingFunction*> mFunctions;
+};
 
 /**
  * A Layer represents anything that can be rendered onto a destination
@@ -551,7 +565,7 @@ public:
     TYPE_THEBES
   };
 
-  virtual ~Layer() {}
+  virtual ~Layer();
 
   /**
    * Returns the LayerManager this Layer belongs to. Note that the layer
@@ -702,9 +716,16 @@ public:
    * XXX Currently only transformations corresponding to 2D affine transforms
    * are supported.
    */
-  void SetTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
     mTransform = aMatrix;
+    Mutated();
+  }
+
+  void SetScale(float aXScale, float aYScale)
+  {
+    mXScale = aXScale;
+    mYScale = aYScale;
     Mutated();
   }
 
@@ -715,6 +736,14 @@ public:
    * with a displayport, but the layer does not move when that displayport scrolls.
    */
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
+
+  // Call AddAnimation to add an animation to this layer from layout code.
+  void AddAnimation(const Animation& aAnimation);
+  // ClearAnimations clears animations on this layer.
+  void ClearAnimations();
+  // This is only called when the layer tree is updated. Do not call this from
+  // layout code.  To add an animation to this layer, use AddAnimation.
+  void SetAnimations(const AnimationArray& aAnimations);
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -735,11 +764,15 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   virtual Layer* GetLastChild() { return nsnull; }
-  const gfx3DMatrix& GetTransform() { return mTransform; }
+  const gfx3DMatrix GetTransform();
+  const gfx3DMatrix& GetBaseTransform() { return mTransform; }
+  float GetXScale() { return mXScale; }
+  float GetYScale() { return mYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   Layer* GetMaskLayer() { return mMaskLayer; }
-
+  AnimationArray& GetAnimations() { return mAnimations; }
+  InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
   /**
    * DRAWING PHASE ONLY
    *
@@ -940,20 +973,7 @@ public:
 #endif
 
 protected:
-  Layer(LayerManager* aManager, void* aImplData) :
-    mManager(aManager),
-    mParent(nsnull),
-    mNextSibling(nsnull),
-    mPrevSibling(nsnull),
-    mImplData(aImplData),
-    mMaskLayer(nsnull),
-    mOpacity(1.0),
-    mContentFlags(0),
-    mUseClipRect(false),
-    mUseTileSourceRect(false),
-    mIsFixedPosition(false),
-    mDebugColorIndex(0)
-    {}
+  Layer(LayerManager* aManager, void* aImplData);
 
   void Mutated() { mManager->Mutated(this); }
 
@@ -968,7 +988,13 @@ protected:
    * Returns the local transform for this layer: either mTransform or,
    * for shadow layers, GetShadowTransform()
    */
-  const gfx3DMatrix& GetLocalTransform();
+  const gfx3DMatrix GetLocalTransform();
+
+  /**
+   * Returns the local opacity for this layer: either mOpacity or,
+   * for shadow layers, GetShadowOpacity()
+   */
+  const float GetLocalOpacity();
 
   /**
    * Computes a tweaked version of aTransform that snaps a point or a rectangle
@@ -994,7 +1020,11 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
+  float mXScale;
+  float mYScale;
   gfx3DMatrix mEffectiveTransform;
+  AnimationArray mAnimations;
+  InfallibleTArray<AnimData> mAnimationData;
   float mOpacity;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;

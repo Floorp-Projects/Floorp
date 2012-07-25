@@ -692,7 +692,7 @@ IndicatePropertyNotFound(JSContext *cx, PropertyDescriptor *desc)
 static bool
 ValueToBool(JSContext *cx, const Value &v, bool *bp)
 {
-    *bp = !!js_ValueToBoolean(v);
+    *bp = ToBoolean(v);
     return true;
 }
 

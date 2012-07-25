@@ -129,8 +129,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
     }
   }
 
-  nsPresContext *presCtx = aPresShell->GetPresContext();
-  MOZ_ASSERT(presCtx);
+  MOZ_ASSERT(aPresShell->GetPresContext());
 }
 
 

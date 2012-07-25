@@ -904,9 +904,8 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     BeginUpdateViewBatch();
     mPlaceHolderTxn = nsnull;
     mPlaceHolderName = aName;
-    nsCOMPtr<nsISelection> selection;
-    nsresult res = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(res)) {
+    nsRefPtr<Selection> selection = GetSelection();
+    if (selection) {
       mSelState = new nsSelectionState();
       mSelState->SaveSelection(selection);
     }
@@ -1979,7 +1978,7 @@ nsEditor::ArePreservingSelection()
 }
 
 void
-nsEditor::PreserveSelectionAcrossActions(nsISelection *aSel)
+nsEditor::PreserveSelectionAcrossActions(Selection* aSel)
 {
   mSavedSel.SaveSelection(aSel);
   mRangeUpdater.RegisterSelectionState(mSavedSel);

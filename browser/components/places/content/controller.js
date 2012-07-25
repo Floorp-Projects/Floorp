@@ -80,7 +80,7 @@ function PlacesController(aView) {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
 
-  this._cachedLivemarkInfoObjects = new WeakMap();
+  this._cachedLivemarkInfoObjects = new Map();
 }
 
 PlacesController.prototype = {

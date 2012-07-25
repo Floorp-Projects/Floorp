@@ -3,7 +3,7 @@ import unittest
 import os, sys, os.path, time
 from tempfile import mkdtemp
 from shutil import rmtree
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import mozunit
 
 from buildlist import addEntriesToListFile
 
@@ -77,4 +77,4 @@ class TestBuildList(unittest.TestCase):
     self.assertFileContains(testfile, ["a","b","c"])
 
 if __name__ == '__main__':
-  unittest.main()
+  mozunit.main()

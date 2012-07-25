@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+      function pingWorker() {
+        var port = navigator.mozSocial.getWorker().port;
+        port.postMessage({topic: "panel-message", result: "ok"});
+      }
+    </script>
+  </head>
+  <body onload="pingWorker();">
+    <p>This is a test social panel.</p>
+  </body>
+</html>

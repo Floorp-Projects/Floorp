@@ -1186,3 +1186,5 @@ pref("image.mem.max_decoded_image_kb", 256000);
 // Example social provider
 pref("social.manifest.motown", "{\"origin\":\"https://motown-dev.mozillalabs.com\",\"name\":\"MoTown\",\"workerURL\":\"https://motown-dev.mozillalabs.com/social/worker.js\",\"iconURL\":\"https://motown-dev.mozillalabs.com/images/motown-icon.png\",\"sidebarURL\":\"https://motown-dev.mozillalabs.com/social/sidebar\"}");
 pref("social.sidebar.open", true);
+pref("browser.social.whitelist", "");
+pref("social.active", false);

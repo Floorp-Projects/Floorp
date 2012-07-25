@@ -539,7 +539,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
   browserInfo.lpszTitle      = mTitle.get();
   browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
   browserInfo.hwndOwner      = adtw.get(); 
-  browserInfo.iImage         = nsnull;
+  browserInfo.iImage         = 0;
   browserInfo.lParam         = reinterpret_cast<LPARAM>(this);
 
   if (!aInitialDir.IsEmpty()) {
@@ -548,8 +548,8 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
     browserInfo.lParam = (LPARAM) aInitialDir.get();
     browserInfo.lpfn   = &BrowseCallbackProc;
   } else {
-    browserInfo.lParam = nsnull;
-    browserInfo.lpfn   = nsnull;
+    browserInfo.lParam = 0;
+    browserInfo.lpfn   = NULL;
   }
 
   LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
@@ -777,7 +777,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
               CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
             // Probably the default file name is too long or contains illegal
             // characters. Try again, without a starting file name.
-            ofn.lpstrFile[0] = nsnull;
+            ofn.lpstrFile[0] = L'\0';
             result = FilePickerWrapper(&ofn, PICKER_TYPE_SAVE);
           }
         }

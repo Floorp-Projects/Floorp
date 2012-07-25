@@ -3,7 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
+import unittest
 import inspect
+from StringIO import StringIO
+import os
 
 '''Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
@@ -11,10 +14,10 @@ unit test infrastructure expects tests to report.
 Usage:
 
 import unittest
-from mozunit import MozTestRunner
+import mozunit
 
 if __name__ == '__main__':
-    unittest.main(testRunner=MozTestRunner())
+    mozunit.main()
 '''
 
 class _MozTestResult(_TestResult):
@@ -68,3 +71,69 @@ class MozTestRunner(_TestRunner):
         test(result)
         result.printErrorList()
         return result
+
+class MockedFile(StringIO):
+    def __init__(self, context, filename, content = ''):
+        self.context = context
+        self.name = filename
+        StringIO.__init__(self, content)
+
+    def close(self):
+        self.context.files[self.name] = self.getvalue()
+        StringIO.close(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+class MockedOpen(object):
+    '''
+    Context manager diverting the open builtin such that opening files
+    can open "virtual" file instances given when creating a MockedOpen.
+
+    with MockedOpen({'foo': 'foo', 'bar': 'bar'}):
+        f = open('foo', 'r')
+
+    will thus open the virtual file instance for the file 'foo' to f.
+
+    MockedOpen also masks writes, so that creating or replacing files
+    doesn't touch the file system, while subsequently opening the file
+    will return the recorded content.
+
+    with MockedOpen():
+        f = open('foo', 'w')
+        f.write('foo')
+    self.assertRaises(Exception,f.open('foo', 'r'))
+    '''
+    def __init__(self, files = {}):
+        self.files = {}
+        for name, content in files.iteritems():
+            self.files[os.path.abspath(name)] = content
+
+    def __call__(self, name, mode = 'r'):
+        absname = os.path.abspath(name)
+        if 'w' in mode:
+            file = MockedFile(self, absname)
+        elif absname in self.files:
+            file = MockedFile(self, absname, self.files[absname])
+        elif 'a' in mode:
+            file = MockedFile(self, absname, self.open(name, 'r').read())
+        else:
+            file = self.open(name, mode)
+        if 'a' in mode:
+            file.seek(0, os.SEEK_END)
+        return file
+
+    def __enter__(self):
+        import __builtin__
+        self.open = __builtin__.open
+        __builtin__.open = self
+
+    def __exit__(self, type, value, traceback):
+        import __builtin__
+        __builtin__.open = self.open
+
+def main(*args):
+    unittest.main(testRunner=MozTestRunner(),*args)

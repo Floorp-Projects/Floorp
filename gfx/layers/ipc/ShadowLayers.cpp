@@ -41,7 +41,12 @@ public:
     , mOpen(false)
   {}
 
-  void Begin() { mOpen = true; }
+  void Begin(const nsIntRect& aTargetBounds, ScreenRotation aRotation)
+  {
+    mOpen = true;
+    mTargetBounds = aTargetBounds;
+    mTargetRotation = aRotation;
+  }
 
   void AddEdit(const Edit& aEdit)
   {
@@ -92,6 +97,8 @@ public:
   EditVector mPaints;
   BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
+  nsIntRect mTargetBounds;
+  ScreenRotation mTargetRotation;
   bool mSwapRequired;
 
 private:
@@ -123,11 +130,12 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
 }
 
 void
-ShadowLayerForwarder::BeginTransaction()
+ShadowLayerForwarder::BeginTransaction(const nsIntRect& aTargetBounds,
+                                       ScreenRotation aRotation)
 {
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(mTxn->Finished(), "uncommitted txn?");
-  mTxn->Begin();
+  mTxn->Begin(aTargetBounds, aRotation);
 }
 
 static PLayerChild*
@@ -291,7 +299,9 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     LayerAttributes attrs;
     CommonLayerAttributes& common = attrs.common();
     common.visibleRegion() = mutant->GetVisibleRegion();
-    common.transform() = mutant->GetTransform();
+    common.transform() = mutant->GetBaseTransform();
+    common.xScale() = mutant->GetXScale();
+    common.yScale() = mutant->GetYScale();
     common.contentFlags() = mutant->GetContentFlags();
     common.opacity() = mutant->GetOpacity();
     common.useClipRect() = !!mutant->GetClipRect();
@@ -305,6 +315,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
       common.maskLayerChild() = NULL;
     }
     common.maskLayerParent() = NULL;
+    common.animations() = mutant->GetAnimations();
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 
@@ -325,13 +336,16 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     cset.AppendElements(&mTxn->mPaints.front(), mTxn->mPaints.size());
   }
 
+  TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation);
+
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();
 
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(cset, mIsFirstPaint, aReplies)) {
+    if (!mShadowManager->SendUpdate(cset, targetConfig, mIsFirstPaint,
+                                    aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -340,7 +354,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     // assumes that aReplies is empty (DEBUG assertion)
     MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
-    if (!mShadowManager->SendUpdateNoSwap(cset, mIsFirstPaint)) {
+    if (!mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }

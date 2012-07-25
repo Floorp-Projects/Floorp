@@ -3642,6 +3642,29 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 }
 
 already_AddRefed<gfxFont>
+gfxFontGroup::TryOtherFamilyMembers(gfxFont* aFont, PRUint32 aCh)
+{
+    gfxFontFamily *family = aFont->GetFontEntry()->Family();
+    if (family && !aFont->GetFontEntry()->mIsProxy &&
+        family->TestCharacterMap(aCh)) {
+        // Note that we don't need the actual runScript in matchData for
+        // gfxFontFamily::SearchAllFontsForChar, it's only used for the
+        // system-fallback case. So we can just set it to 0 here.
+        GlobalFontMatch matchData(aCh, 0, &mStyle);
+        family->SearchAllFontsForChar(&matchData);
+        gfxFontEntry *fe = matchData.mBestMatch;
+        if (fe) {
+            bool needsBold = aFont->GetStyle()->weight >= 600 && !fe->IsBold();
+            nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, needsBold);
+            if (font) {
+                return font.forget();
+            }
+        }
+    }
+    return nsnull;
+}
+
+already_AddRefed<gfxFont>
 gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
                               PRInt32 aRunScript, gfxFont *aPrevMatchedFont,
                               PRUint8 *aMatchType)
@@ -3659,6 +3682,13 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
             *aMatchType = gfxTextRange::kFontGroup;
             firstFont->AddRef();
             return firstFont;
+        }
+        // It's possible that another font in the family (e.g. regular face,
+        // where the requested style was italic) will support the character
+        nsRefPtr<gfxFont> font = TryOtherFamilyMembers(firstFont, aCh);
+        if (font) {
+            *aMatchType = gfxTextRange::kFontGroup;
+            return font.forget();
         }
         // we don't need to check the first font again below
         ++nextIndex;
@@ -3705,22 +3735,10 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
             return font.forget();
         }
 
-        // check other faces of the family
-        gfxFontFamily *family = font->GetFontEntry()->Family();
-        if (family && !font->GetFontEntry()->mIsProxy &&
-            family->TestCharacterMap(aCh))
-        {
-            GlobalFontMatch matchData(aCh, aRunScript, &mStyle);
-            family->SearchAllFontsForChar(&matchData);
-            gfxFontEntry *fe = matchData.mBestMatch;
-            if (fe) {
-                bool needsBold =
-                    font->GetStyle()->weight >= 600 && !fe->IsBold();
-                font = fe->FindOrMakeFont(font->GetStyle(), needsBold);
-                if (font) {
-                    return font.forget();
-                }
-            }
+        font = TryOtherFamilyMembers(font, aCh);
+        if (font) {
+            *aMatchType = gfxTextRange::kFontGroup;
+            return font.forget();
         }
     }
 

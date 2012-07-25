@@ -303,11 +303,13 @@ nsresult
 nsPermissionManager::InitDB(bool aRemoveFile)
 {
   nsCOMPtr<nsIFile> permissionsFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
-  if (!permissionsFile)
-    return NS_ERROR_UNEXPECTED;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_PERMISSION_PARENT_DIR, getter_AddRefs(permissionsFile));
+  if (NS_FAILED(rv)) {
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
-  nsresult rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
+  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRemoveFile) {

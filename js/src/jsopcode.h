@@ -497,6 +497,8 @@ class PCCounts
     double *counts;
 #ifdef DEBUG
     size_t capacity;
+#elif JS_BITS_PER_WORD == 32
+    void *padding;
 #endif
 
  public:
@@ -614,6 +616,9 @@ class PCCounts
         return counts;
     }
 };
+
+/* Necessary for alignment with the script. */
+JS_STATIC_ASSERT(sizeof(PCCounts) % sizeof(Value) == 0);
 
 } /* namespace js */
 

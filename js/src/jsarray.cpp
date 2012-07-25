@@ -3091,7 +3091,7 @@ class ArrayEveryBehavior
   public:
     static bool shouldExit(Value &callval, Value *rval)
     {
-        if (!js_ValueToBoolean(callval)) {
+        if (!ToBoolean(callval)) {
             *rval = BooleanValue(false);
             return true;
         }
@@ -3105,7 +3105,7 @@ class ArraySomeBehavior
   public:
     static bool shouldExit(Value &callval, Value *rval)
     {
-        if (js_ValueToBoolean(callval)) {
+        if (ToBoolean(callval)) {
             *rval = BooleanValue(true);
             return true;
         }
@@ -3347,7 +3347,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
             if (!Invoke(cx, ag))
                 return false;
 
-            if (js_ValueToBoolean(ag.rval())) {
+            if (ToBoolean(ag.rval())) {
                 if(!SetArrayElement(cx, arr, to, kValue))
                     return false;
                 to++;

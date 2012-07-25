@@ -496,6 +496,10 @@
                         accesskey="&addons.accesskey;"
                         key="key_openAddons"
                         command="Tools:Addons"/>
+              <menuitem id="menu_socialToggle"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:Toggle"/>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
               <menuitem id="sync-setup"

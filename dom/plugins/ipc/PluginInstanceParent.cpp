@@ -1922,7 +1922,7 @@ bool
 PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
                                              NPRemoteWindow& aRemoteWindow)
 {
-    aRemoteWindow.window = nsnull;
+    aRemoteWindow.window = 0;
     aRemoteWindow.x      = aWindow->x;
     aRemoteWindow.y      = aWindow->y;
     aRemoteWindow.width  = aWindow->width;

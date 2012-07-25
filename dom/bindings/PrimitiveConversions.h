@@ -80,8 +80,9 @@ template<>
 struct PrimitiveConversionTraits<bool> {
   typedef JSBool jstype;
   typedef bool intermediateType;
-  static inline bool converter(JSContext* cx, JS::Value v, jstype* retval) {
-    return JS_ValueToBoolean(cx, v, retval);
+  static inline bool converter(JSContext* /* unused */, JS::Value v, jstype* retval) {
+    *retval = JS::ToBoolean(v);
+    return true;
   }
 };
 

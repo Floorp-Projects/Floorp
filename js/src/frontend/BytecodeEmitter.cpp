@@ -599,6 +599,8 @@ EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt)
                 stmt = stmt->down;
                 if (stmt == toStmt)
                     break;
+                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
+                    return false;
                 if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
                     return false;
                 if (!PopIterator(cx, bce))

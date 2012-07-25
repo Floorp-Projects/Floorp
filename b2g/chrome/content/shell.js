@@ -122,11 +122,14 @@ var shell = {
                 .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
                                     .createInstance(Ci.nsISHistory);
 
-    ['keydown', 'keypress', 'keyup'].forEach((function listenKey(type) {
-      window.addEventListener(type, this, false, true);
-      window.addEventListener(type, this, true, true);
-    }).bind(this));
-
+    // Capture all key events so we can filter out hardware buttons
+    // And send them to Gaia via mozChromeEvents.
+    // Ideally, hardware buttons wouldn't generate key events at all, or
+    // if they did, they would use keycodes that conform to DOM 3 Events.
+    // See discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=762362
+    window.addEventListener('keydown', this, true);
+    window.addEventListener('keypress', this, true);
+    window.addEventListener('keyup', this, true);
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener('mozfullscreenchange', this);
     window.addEventListener('sizemodechange', this);
@@ -165,11 +168,9 @@ var shell = {
   },
 
   stop: function shell_stop() {
-    ['keydown', 'keypress', 'keyup'].forEach((function unlistenKey(type) {
-      window.removeEventListener(type, this, false, true);
-      window.removeEventListener(type, this, true, true);
-    }).bind(this));
-
+    window.removeEventListener('keydown', this, true);
+    window.removeEventListener('keypress', this, true);
+    window.removeEventListener('keyup', this, true);
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
@@ -180,15 +181,66 @@ var shell = {
 #endif
   },
 
-  forwardKeyToContent: function shell_forwardKeyToContent(evt) {
-    let content = shell.contentBrowser.contentWindow;
-    let generatedEvent = content.document.createEvent('KeyboardEvent');
-    generatedEvent.initKeyEvent(evt.type, true, true, evt.view, evt.ctrlKey,
-                                evt.altKey, evt.shiftKey, evt.metaKey,
-                                evt.keyCode, evt.charCode);
+  // If this key event actually represents a hardware button, filter it here
+  // and send a mozChromeEvent with detail.type set to xxx-button-press or
+  // xxx-button-release instead.
+  filterHardwareKeys: function shell_filterHardwareKeys(evt) {
+    var type;
+    switch (evt.keyCode) {
+      case evt.DOM_VK_HOME:         // Home button
+        type = 'home-button';
+        break;
+      case evt.DOM_VK_SLEEP:        // Sleep button
+        type = 'sleep-button';
+        break;
+      case evt.DOM_VK_PAGE_UP:      // Volume up button
+        type = 'volume-up-button';
+        break;
+      case evt.DOM_VK_PAGE_DOWN:    // Volume down button
+        type = 'volume-down-button';
+        break;
+      case evt.DOM_VK_ESCAPE:       // Back button (should be disabled)
+        type = 'back-button';
+        break;
+      case evt.DOM_VK_CONTEXT_MENU: // Menu button
+        type = 'menu-button';
+        break;
+      default:                      // Anything else is a real key
+        return;  // Don't filter it at all; let it propagate to Gaia
+    }
 
-    content.document.documentElement.dispatchEvent(generatedEvent);
+    // If we didn't return, then the key event represents a hardware key
+    // and we need to prevent it from propagating to Gaia
+    evt.stopImmediatePropagation();
+    evt.preventDefault(); // Prevent keypress events (when #501496 is fixed).
+
+    // If it is a key down or key up event, we send a chrome event to Gaia.
+    // If it is a keypress event we just ignore it.
+    switch (evt.type) {
+      case 'keydown':
+        type = type + '-press';
+        break;
+      case 'keyup':
+        type = type + '-release';
+        break;
+      case 'keypress':
+        return;
+    }
+  
+    // On my device, the physical hardware buttons (sleep and volume)
+    // send multiple events (press press release release), but the
+    // soft home button just sends one.  This hack is to manually
+    // "debounce" the keys. If the type of this event is the same as
+    // the type of the last one, then don't send it.  We'll never send
+    // two presses or two releases in a row.
+    // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=761067
+    if (type !== this.lastHardwareButtonEventType) {
+      this.lastHardwareButtonEventType = type;
+      this.sendChromeEvent({type: type});
+    }
   },
+  
+  lastHardwareButtonEventType: null, // property for the hack above
 
   handleEvent: function shell_handleEvent(evt) {
     let content = this.contentBrowser.contentWindow;
@@ -196,17 +248,8 @@ var shell = {
       case 'keydown':
       case 'keyup':
       case 'keypress':
-        // Redirect the HOME key to System app and stop the applications from
-        // handling it.
-        let rootContentEvt = (evt.target.ownerDocument.defaultView == content);
-        if (!rootContentEvt && evt.eventPhase == evt.CAPTURING_PHASE &&
-            evt.keyCode == evt.DOM_VK_HOME) {
-          this.forwardKeyToContent(evt);
-          evt.preventDefault();
-          evt.stopImmediatePropagation();
-        }
+        this.filterHardwareKeys(evt);
         break;
-
       case 'mozfullscreenchange':
         // When the screen goes fullscreen make sure to set the focus to the
         // main window so noboby can prevent the ESC key to get out fullscreen
@@ -272,6 +315,9 @@ var shell = {
     let event = content.document.createEvent('CustomEvent');
     event.initCustomEvent(type, true, true, details ? details : {});
     content.dispatchEvent(event);
+  },
+  sendChromeEvent: function shell_sendChromeEvent(details) {
+    this.sendEvent(getContentWindow(), "mozChromeEvent", details);
   }
 };
 
@@ -310,7 +356,7 @@ nsBrowserAccess.prototype = {
 Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
   let msg = JSON.parse(data);
   let origin = Services.io.newURI(msg.manifest, null, null).prePath;
-  shell.sendEvent(shell.contentBrowser.contentWindow, 'mozChromeEvent', {
+  shell.sendChromeEvent({
     type: 'open-app',
     url: msg.uri,
     origin: origin,
@@ -415,12 +461,22 @@ var AlertsHelper = {
     return id;
   },
 
-  showAlertNotification: function alert_showAlertNotification(imageUrl, title, text, textClickable,
-                                                              cookie, alertListener, name) {
+  showAlertNotification: function alert_showAlertNotification(imageUrl,
+                                                              title,
+                                                              text,
+                                                              textClickable,
+                                                              cookie,
+                                                              alertListener,
+                                                              name)
+  {
     let id = this.registerListener(cookie, alertListener);
-    let content = shell.contentBrowser.contentWindow;
-    shell.sendEvent(content, "mozChromeEvent", { type: "desktop-notification", id: id, icon: imageUrl,
-                                                 title: title, text: text } );
+    shell.sendChromeEvent({
+      type: "desktop-notification",
+      id: id,
+      icon: imageUrl,
+      title: title,
+      text: text
+    });
   }
 }
 
@@ -456,7 +512,6 @@ var WebappsHelper = {
   },
 
   observe: function webapps_observe(subject, topic, data) {
-    let content = shell.contentBrowser.contentWindow;
     let json = JSON.parse(data);
     switch(topic) {
       case "webapps-launch":
@@ -465,7 +520,7 @@ var WebappsHelper = {
             return;
 
           let manifest = new DOMApplicationManifest(aManifest, json.origin);
-          shell.sendEvent(content, "mozChromeEvent", {
+          shell.sendChromeEvent({
             "type": "webapps-launch",
             "url": manifest.fullLaunchPath(json.startPoint),
             "origin": json.origin
@@ -474,7 +529,11 @@ var WebappsHelper = {
         break;
       case "webapps-ask-install":
         let id = this.registerInstaller(json);
-        shell.sendEvent(content, "mozChromeEvent", { type: "webapps-ask-install", id: id, app: json.app } );
+        shell.sendChromeEvent({
+          type: "webapps-ask-install",
+          id: id,
+          app: json.app
+        });
         break;
     }
   }
@@ -529,16 +588,28 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
       context.drawWindow(window, 0, 0, width, height,
                          'rgb(255,255,255)', flags);
 
-      shell.sendEvent(content, 'mozChromeEvent', {
-          type: 'take-screenshot-success',
-          file: canvas.mozGetAsFile('screenshot', 'image/png')
+      shell.sendChromeEvent({
+        type: 'take-screenshot-success',
+        file: canvas.mozGetAsFile('screenshot', 'image/png')
       });
     } catch (e) {
       dump('exception while creating screenshot: ' + e + '\n');
-      shell.sendEvent(content, 'mozChromeEvent', {
+      shell.sendChromeEvent({
         type: 'take-screenshot-error',
         error: String(e)
       });
     }
   });
 });
+
+Services.obs.addObserver(function ContentHandler(subject, topic, data) {
+  let handler = JSON.parse(data);
+  new MozActivity({
+    name: 'view',
+    data: {
+      type: handler.type,
+      url: handler.url
+    }
+  });
+}, 'content-handler', false);
+

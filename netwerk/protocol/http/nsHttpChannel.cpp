@@ -1635,7 +1635,7 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
     rv = ioService->NewChannelFromURI(upgradedURI, getter_AddRefs(newChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = SetupReplacementChannel(upgradedURI, newChannel, true, false);
+    rv = SetupReplacementChannel(upgradedURI, newChannel, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Inform consumers about this fake redirect
@@ -1732,7 +1732,7 @@ nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = SetupReplacementChannel(mURI, newChannel, true, true);
+    rv = SetupReplacementChannel(mURI, newChannel, true);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2280,7 +2280,7 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     rv = gHttpHandler->NewChannel(mURI, getter_AddRefs(newChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = SetupReplacementChannel(mURI, newChannel, true, false);
+    rv = SetupReplacementChannel(mURI, newChannel, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure the new channel loads from the fallback key.
@@ -3953,15 +3953,13 @@ nsHttpChannel::ClearBogusContentEncodingIfNeeded()
 nsresult
 nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                        nsIChannel   *newChannel,
-                                       bool          preserveMethod,
-                                       bool          forProxy)
+                                       bool          preserveMethod)
 {
     LOG(("nsHttpChannel::SetupReplacementChannel "
          "[this=%p newChannel=%p preserveMethod=%d]",
          this, newChannel, preserveMethod));
 
-    nsresult rv = HttpBaseChannel::SetupReplacementChannel(newURI, newChannel,
-                                                           preserveMethod, forProxy);
+    nsresult rv = HttpBaseChannel::SetupReplacementChannel(newURI, newChannel, preserveMethod);
     if (NS_FAILED(rv))
         return rv;
 
@@ -3982,28 +3980,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
             return NS_ERROR_NOT_RESUMABLE;
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
-    }
-
-    if (forProxy) {
-        // Transfer the cache info to the new channel, if needed.
-        nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(newChannel);
-        if (cachingChannel) {
-            // cacheKey is just mPostID wrapped in an nsISupportsPRUint32,
-            // we don't need to transfer it if it's 0.
-            if (mPostID) {
-                nsCOMPtr<nsISupports> cacheKey;
-                GetCacheKey(getter_AddRefs(cacheKey));
-                if (cacheKey) {
-                    cachingChannel->SetCacheKey(cacheKey);
-                }
-            }
-        }
-
-        nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel = do_QueryInterface(newChannel);
-        if (appCacheChannel) {
-            // app cache for write
-            appCacheChannel->SetApplicationCacheForWrite(mApplicationCacheForWrite);
-        }
     }
 
     return NS_OK;
@@ -4129,7 +4105,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     rv = ioService->NewChannelFromURI(mRedirectURI, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET, false);
+    rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 redirectFlags;

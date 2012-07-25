@@ -32,7 +32,8 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IABSORBINGTRANSACTION_IID)
 
-  NS_IMETHOD Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)=0;
+  NS_IMETHOD Init(nsIAtom* aName, nsSelectionState* aSelState,
+                  nsEditor* aEditor) = 0;
   
   NS_IMETHOD EndPlaceHolderBatch()=0;
   

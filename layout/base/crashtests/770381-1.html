@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style id="s"></style>
+<script>
+function boom() { document.getElementById("s").textContent = "div { opacity: 0.5; }"; }
+</script>
+</head>
+<body onload="document.documentElement.offsetHeight; boom();">
+<div><div>X</div></div>
+</body>
+</html>

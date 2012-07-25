@@ -180,9 +180,7 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *,
-                                             bool preserveMethod,
-                                             bool forProxy);
+    virtual nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
 
     // proxy specific methods
     nsresult ProxyFailover();

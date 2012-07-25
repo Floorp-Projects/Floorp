@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html contenteditable="true">
+<head>
+<script>
+
+function boom()
+{
+  document.execCommand("inserthtml", false, "b");
+  var myrange = document.createRange();
+  myrange.selectNodeContents(document.getElementsByTagName("img")[0]);
+  window.getSelection().addRange(myrange);
+  document.execCommand("strikethrough", false, null);
+}
+
+</script>
+</head>
+<body onload="boom();"><img></body>
+</html>

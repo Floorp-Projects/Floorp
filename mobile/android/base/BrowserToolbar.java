@@ -220,9 +220,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mMenu.setVisibility(View.VISIBLE);
             mMenu.setOnClickListener(new Button.OnClickListener() {
                 public void onClick(View view) {
-                    if (!GeckoApp.mAppContext.hasTabsSideBar() && GeckoApp.mAppContext.areTabsShown())
-                        return;
-
                     GeckoApp.mAppContext.openOptionsMenu();
                 }
             });

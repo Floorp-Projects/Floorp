@@ -885,10 +885,8 @@ DoIncDec(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &v, Val
         vp = &regs.sp[-1];                                                    \
         if (vp->isNull()) {                                                   \
             b = false;                                                        \
-        } else if (vp->isBoolean()) {                                         \
-            b = vp->toBoolean();                                              \
         } else {                                                              \
-            b = !!js_ValueToBoolean(*vp);                                     \
+            b = ToBoolean(*vp);                                               \
         }                                                                     \
     JS_END_MACRO
 

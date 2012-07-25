@@ -26,7 +26,4 @@ BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp);
 
 } /* namespace js */
 
-extern JSBool
-js_ValueToBoolean(const js::Value &v);
-
 #endif /* jsbool_h___ */

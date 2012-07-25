@@ -4902,6 +4902,13 @@ nsDocShell::SetParentNativeWindow(nativeWindow parentNativeWindow)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetNativeHandle(nsAString& aNativeHandle)
+{
+    // the nativeHandle should be accessed from nsIXULWindow
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetVisibility(bool * aVisibility)
 {
     NS_ENSURE_ARG_POINTER(aVisibility);

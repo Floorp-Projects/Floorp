@@ -43,6 +43,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data);
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsIFile* aAppDataDirectory,
                         const nsACString& aBuildID);
+bool GetLastRunCrashID(nsAString& id);
 
 // Registers an additional memory region to be included in the minidump
 nsresult RegisterAppMemory(void* ptr, size_t length);
@@ -164,7 +165,7 @@ bool SetRemoteExceptionHandler();
 
 bool UnsetRemoteExceptionHandler();
 
-#if defined(__ANDROID__)
+#if defined(MOZ_WIDGET_ANDROID)
 // Android builds use a custom library loader, so /proc/<pid>/maps
 // will just show anonymous mappings for all the non-system
 // shared libraries. This API is to work around that by providing

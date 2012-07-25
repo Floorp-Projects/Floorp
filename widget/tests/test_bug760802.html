@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=760802
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 760802</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=760802">Mozilla Bug 760802</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<iframe id="iframe_not_editable" width="300" height="150"
+        src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;"></iframe><br/>
+<pre id="test">
+<script type="application/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function getBaseWindowInterface(win) {
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem)
+    .treeOwner
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .nsIBaseWindow;
+}
+
+function shouldThrow(fun) {
+  try {
+    fun.call();
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+function doesntThrow(fun) !shouldThrow(fun)
+
+
+var baseWindow = getBaseWindowInterface(window);
+var nativeHandle = baseWindow.nativeHandle;
+$("display").innerHTML = "found nativeHandle for this window: "+nativeHandle;
+
+var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+var win = wm.getMostRecentWindow("navigator:browser");
+var docShell = win.gBrowser.docShell;
+
+ok(
+  shouldThrow(function(){docShell.getInterface(Ci.nsIBaseWindow).nativeHandle;}),
+  "nativeHandle should not be implemented for nsDocShell"
+);
+
+ok(typeof(nativeHandle) === "string", "nativeHandle should be a string");
+ok(nativeHandle.match(/^0x[0-9a-f]+$/), "nativeHandle should have a memory address format");
+
+var iWin = window.document.getElementById("iframe_not_editable").contentWindow;
+is(getBaseWindowInterface(iWin).nativeHandle, nativeHandle,
+              "the nativeHandle of an iframe should be its parent's nativeHandle");
+
+var dialog = window.openDialog("data:text/plain,this is an active window.", "_blank",
+                               "chrome,dialog=yes,width=100,height=100");
+
+isnot(getBaseWindowInterface(dialog).nativeHandle, "",
+      "the nativeHandle of a dialog should not be empty");
+
+dialog.close();
+
+todo(false, "the nativeHandle of a window without a mainWidget should be empty"); // how to build a window without a mainWidget ?
+
+</script>
+</pre>
+</body>
+</html>

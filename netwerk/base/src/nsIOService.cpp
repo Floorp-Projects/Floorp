@@ -592,18 +592,8 @@ nsIOService::LookupProxyInfo(nsIURI *aURI,
             NS_WARNING("failed to get protocol proxy service");
     }
     if (mProxyService) {
-        PRUint32 flags = 0;
-        if (aScheme->EqualsLiteral("http") || aScheme->EqualsLiteral("https"))
-            flags = nsIProtocolProxyService::RESOLVE_NON_BLOCKING;
         rv = mProxyService->Resolve(aProxyURI ? aProxyURI : aURI, aProxyFlags,
                                     getter_AddRefs(pi));
-        if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-            // Use an UNKNOWN proxy to defer resolution and avoid blocking.
-            rv = mProxyService->NewProxyInfo(NS_LITERAL_CSTRING("unknown"),
-                                             NS_LITERAL_CSTRING(""),
-                                             -1, 0, 0, nsnull,
-                                             getter_AddRefs(pi));
-        }
         if (NS_FAILED(rv))
             pi = nsnull;
     }

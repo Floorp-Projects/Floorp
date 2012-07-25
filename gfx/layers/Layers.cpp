@@ -17,6 +17,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Util.h"
 #include "LayerSorter.h"
+#include "AnimationCommon.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -220,6 +221,245 @@ LayerManager::CreateAsynchronousImageContainer()
 //--------------------------------------------------
 // Layer
 
+Layer::Layer(LayerManager* aManager, void* aImplData) :
+  mManager(aManager),
+  mParent(nsnull),
+  mNextSibling(nsnull),
+  mPrevSibling(nsnull),
+  mImplData(aImplData),
+  mMaskLayer(nsnull),
+  mXScale(1.0f),
+  mYScale(1.0f),
+  mOpacity(1.0),
+  mContentFlags(0),
+  mUseClipRect(false),
+  mUseTileSourceRect(false),
+  mIsFixedPosition(false),
+  mDebugColorIndex(0)
+{}
+
+Layer::~Layer()
+{}
+
+void
+Layer::AddAnimation(const Animation& aAnimation)
+{
+  if (!AsShadowableLayer() || !AsShadowableLayer()->HasShadow())
+    return;
+
+  MOZ_ASSERT(aAnimation.segments().Length() >= 1);
+
+  mAnimations.AppendElement(aAnimation);
+  Mutated();
+}
+
+void
+Layer::ClearAnimations()
+{
+  mAnimations.Clear();
+  mAnimationData.Clear();
+  Mutated();
+}
+
+static nsCSSValueList*
+CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
+{
+  nsAutoPtr<nsCSSValueList> result;
+  nsCSSValueList** resultTail = getter_Transfers(result);
+  for (PRUint32 i = 0; i < aFunctions.Length(); i++) {
+    nsRefPtr<nsCSSValue::Array> arr;
+    switch (aFunctions[i].type()) {
+      case TransformFunction::TRotationX:
+      {
+        float theta = aFunctions[i].get_RotationX().radians();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_rotatex, resultTail);
+        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TRotationY:
+      {
+        float theta = aFunctions[i].get_RotationY().radians();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_rotatey, resultTail);
+        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TRotationZ:
+      {
+        float theta = aFunctions[i].get_RotationZ().radians();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_rotatez, resultTail);
+        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TRotation:
+      {
+        float theta = aFunctions[i].get_Rotation().radians();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_rotate, resultTail);
+        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TRotation3D:
+      {
+        float x = aFunctions[i].get_Rotation3D().x();
+        float y = aFunctions[i].get_Rotation3D().y();
+        float z = aFunctions[i].get_Rotation3D().z();
+        float theta = aFunctions[i].get_Rotation3D().radians();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_rotate3d, resultTail);
+        arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
+        arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
+        arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
+        arr->Item(4).SetFloatValue(theta, eCSSUnit_Radian);
+        break;
+      }
+      case TransformFunction::TScale:
+      {
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_scale3d, resultTail);
+        arr->Item(1).SetFloatValue(aFunctions[i].get_Scale().x(), eCSSUnit_Number);
+        arr->Item(2).SetFloatValue(aFunctions[i].get_Scale().y(), eCSSUnit_Number);
+        arr->Item(3).SetFloatValue(aFunctions[i].get_Scale().z(), eCSSUnit_Number);
+        break;
+      }
+      case TransformFunction::TTranslation:
+      {
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_translate3d, resultTail);
+        arr->Item(1).SetFloatValue(aFunctions[i].get_Translation().x(), eCSSUnit_Pixel);
+        arr->Item(2).SetFloatValue(aFunctions[i].get_Translation().y(), eCSSUnit_Pixel);
+        arr->Item(3).SetFloatValue(aFunctions[i].get_Translation().z(), eCSSUnit_Pixel);
+        break;
+      }
+      case TransformFunction::TSkewX:
+      {
+        float x = aFunctions[i].get_SkewX().x();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_skewx, resultTail);
+        arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
+        break;
+      }
+      case TransformFunction::TSkewY:
+      {
+        float y = aFunctions[i].get_SkewY().y();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_skewy, resultTail);
+        arr->Item(1).SetFloatValue(y, eCSSUnit_Number);
+        break;
+      }
+      case TransformFunction::TTransformMatrix:
+      {
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_matrix3d, resultTail);
+        const gfx3DMatrix& matrix = aFunctions[i].get_TransformMatrix().value();
+        arr->Item(1).SetFloatValue(matrix._11, eCSSUnit_Number);
+        arr->Item(2).SetFloatValue(matrix._12, eCSSUnit_Number);
+        arr->Item(3).SetFloatValue(matrix._13, eCSSUnit_Number);
+        arr->Item(4).SetFloatValue(matrix._14, eCSSUnit_Number);
+        arr->Item(5).SetFloatValue(matrix._21, eCSSUnit_Number);
+        arr->Item(6).SetFloatValue(matrix._22, eCSSUnit_Number);
+        arr->Item(7).SetFloatValue(matrix._23, eCSSUnit_Number);
+        arr->Item(8).SetFloatValue(matrix._24, eCSSUnit_Number);
+        arr->Item(9).SetFloatValue(matrix._31, eCSSUnit_Number);
+        arr->Item(10).SetFloatValue(matrix._32, eCSSUnit_Number);
+        arr->Item(11).SetFloatValue(matrix._33, eCSSUnit_Number);
+        arr->Item(12).SetFloatValue(matrix._34, eCSSUnit_Number);
+        arr->Item(13).SetFloatValue(matrix._41, eCSSUnit_Number);
+        arr->Item(14).SetFloatValue(matrix._42, eCSSUnit_Number);
+        arr->Item(15).SetFloatValue(matrix._43, eCSSUnit_Number);
+        arr->Item(16).SetFloatValue(matrix._44, eCSSUnit_Number);
+        break;
+      }
+      case TransformFunction::TPerspective:
+      {
+        float perspective = aFunctions[i].get_Perspective().value();
+        arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_perspective, resultTail);
+        arr->Item(1).SetFloatValue(perspective, eCSSUnit_Pixel);
+        break;
+      }
+      default:
+        NS_ASSERTION(false, "All functions should be implemented?");
+    }
+  }
+  return result.forget();
+}
+
+void
+Layer::SetAnimations(const AnimationArray& aAnimations)
+{
+  mAnimations = aAnimations;
+  mAnimationData.Clear();
+  for (PRUint32 i = 0; i < mAnimations.Length(); i++) {
+    AnimData data;
+    InfallibleTArray<css::ComputedTimingFunction*>* functions =
+      &data.mFunctions;
+    nsTArray<AnimationSegment> segments = mAnimations.ElementAt(i).segments();
+    for (PRUint32 j = 0; j < segments.Length(); j++) {
+      TimingFunction tf = segments.ElementAt(j).sampleFn();
+      css::ComputedTimingFunction* ctf = new css::ComputedTimingFunction();
+      switch (tf.type()) {
+        case TimingFunction::TCubicBezierFunction: {
+          CubicBezierFunction cbf = tf.get_CubicBezierFunction();
+          ctf->Init(nsTimingFunction(cbf.x1(), cbf.y1(), cbf.x2(), cbf.y2()));
+          break;
+        }
+        default: {
+          NS_ASSERTION(tf.type() == TimingFunction::TStepFunction,
+                       "Function must be bezier or step");
+          StepFunction sf = tf.get_StepFunction();
+          nsTimingFunction::Type type = sf.type() == 1 ? nsTimingFunction::StepStart
+                                                       : nsTimingFunction::StepEnd;
+          ctf->Init(nsTimingFunction(type, sf.steps()));
+          break;
+        }
+      }
+      functions->AppendElement(ctf);
+    }
+
+    // Precompute the nsStyleAnimation::Values that we need if this is a transform
+    // animation.
+    InfallibleTArray<nsStyleAnimation::Value>* startValues =
+      &data.mStartValues;
+    InfallibleTArray<nsStyleAnimation::Value>* endValues =
+      &data.mEndValues;
+    for (PRUint32 j = 0; j < mAnimations[i].segments().Length(); j++) {
+      const AnimationSegment& segment = mAnimations[i].segments()[j];
+      if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
+        const InfallibleTArray<TransformFunction>& startFunctions =
+          segment.startState().get_ArrayOfTransformFunction();
+        nsStyleAnimation::Value startValue;
+        nsCSSValueList* startList;
+        if (startFunctions.Length() > 0) {
+          startList = CreateCSSValueList(startFunctions);
+        } else {
+          startList = new nsCSSValueList();
+          startList->mValue.SetNoneValue();
+        }
+        startValue.SetAndAdoptCSSValueListValue(startList, nsStyleAnimation::eUnit_Transform);
+        startValues->AppendElement(startValue);
+
+        const InfallibleTArray<TransformFunction>& endFunctions =
+          segment.endState().get_ArrayOfTransformFunction();
+        nsStyleAnimation::Value endValue;
+        nsCSSValueList* endList;
+        if (endFunctions.Length() > 0) {
+          endList = CreateCSSValueList(endFunctions);
+        } else {
+          endList = new nsCSSValueList();
+          endList->mValue.SetNoneValue();
+        }
+        endValue.SetAndAdoptCSSValueListValue(endList, nsStyleAnimation::eUnit_Transform);
+        endValues->AppendElement(endValue);
+      } else {
+        NS_ASSERTION(segment.endState().type() == Animatable::TOpacity,
+                     "Unknown Animatable type");
+        nsStyleAnimation::Value startValue;
+        startValue.SetFloatValue(segment.startState().get_Opacity().value());
+        startValues->AppendElement(startValue);
+
+        nsStyleAnimation::Value endValue;
+        endValue.SetFloatValue(segment.endState().get_Opacity().value());
+        endValues->AppendElement(endValue);
+      }
+    }
+    mAnimationData.AppendElement(data);
+  }
+
+  Mutated();
+}
+
 bool
 Layer::CanUseOpaqueSurface()
 {
@@ -304,7 +544,7 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
   return result;
 }
 
-nsIntRect 
+nsIntRect
 Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
                             const gfxMatrix* aWorldTransform)
 {
@@ -361,21 +601,42 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
   return currentClip.Intersect(scissor);
 }
 
-const gfx3DMatrix&
+const gfx3DMatrix
+Layer::GetTransform()
+{
+  gfx3DMatrix transform = mTransform;
+  transform.Scale(mXScale, mYScale, 1);
+  return transform;
+}
+
+const gfx3DMatrix
 Layer::GetLocalTransform()
 {
+  gfx3DMatrix transform;
+  if (ShadowLayer* shadow = AsShadowLayer()) {
+    transform = shadow->GetShadowTransform();
+  } else {
+    transform = mTransform;
+  }
+  transform.Scale(mXScale, mYScale, 1);
+  return transform;
+}
+
+const float
+Layer::GetLocalOpacity()
+{
   if (ShadowLayer* shadow = AsShadowLayer())
-    return shadow->GetShadowTransform();
-  return mTransform;
+    return shadow->GetShadowOpacity();
+  return mOpacity;
 }
 
 float
 Layer::GetEffectiveOpacity()
 {
-  float opacity = GetOpacity();
+  float opacity = GetLocalOpacity();
   for (ContainerLayer* c = GetParent(); c && !c->UseIntermediateSurface();
        c = c->GetParent()) {
-    opacity *= c->GetOpacity();
+    opacity *= c->GetLocalOpacity();
   }
   return opacity;
 }
@@ -387,6 +648,7 @@ Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurf
     mMaskLayer->mEffectiveTransform = aTransformToSurface;
 
 #ifdef DEBUG
+
     gfxMatrix maskTranslation;
     bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D(&maskTranslation);
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
@@ -790,7 +1052,7 @@ void
 LayerManager::Dump(FILE* aFile, const char* aPrefix)
 {
   FILE* file = FILEOrDefault(aFile);
- 
+
   fprintf(file, "<ul><li><a ");
 #ifdef MOZ_DUMP_PAINTING
   WriteSnapshotLinkToDumpFile(this, file);
@@ -807,7 +1069,7 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix)
     fprintf(file, "%s(null)</li></ul>", pfx.get());
     return;
   }
- 
+
   fprintf(file, "<ul>");
   GetRoot()->Dump(file, pfx.get());
   fprintf(file, "</ul></li></ul>");
@@ -941,5 +1203,5 @@ LayerManager::PrintInfo(nsACString& aTo, const char* aPrefix)
 
 PRLogModuleInfo* LayerManager::sLog;
 
-} // namespace layers 
+} // namespace layers
 } // namespace mozilla

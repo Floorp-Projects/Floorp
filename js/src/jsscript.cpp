@@ -357,6 +357,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         OwnFilename,
         ParentFilename,
         IsGenerator,
+        IsGeneratorExp,
         HaveSource,
         OwnSource,
         ExplicitUseStrict
@@ -525,6 +526,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         }
         if (script->isGenerator)
             scriptBits |= (1 << IsGenerator);
+        if (script->isGeneratorExp)
+            scriptBits |= (1 << IsGeneratorExp);
 
         JS_ASSERT(!script->compileAndGo);
         JS_ASSERT(!script->hasSingletons);
@@ -606,6 +609,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->setNeedsArgsObj(true);
         if (scriptBits & (1 << IsGenerator))
             script->isGenerator = true;
+        if (scriptBits & (1 << IsGeneratorExp))
+            script->isGeneratorExp = true;
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
@@ -848,6 +853,7 @@ JSScript::initScriptCounts(JSContext *cx)
     cursor += length * sizeof(PCCounts);
 
     for (pc = code; pc < code + length; pc = next) {
+        JS_ASSERT(uintptr_t(cursor) % sizeof(double) == 0);
         scriptCounts.pcCountsVector[pc - code].counts = (double *) cursor;
         size_t capacity = PCCounts::numCounts(JSOp(*pc));
 #ifdef DEBUG
@@ -1177,11 +1183,13 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     ScriptSource *ss = static_cast<ScriptSource *>(cx->malloc_(sizeof(*ss)));
     if (!ss)
         return NULL;
-    const size_t memlen = length * sizeof(jschar);
-    ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
-    if (!ss->data.compressed) {
-        cx->free_(ss);
-        return NULL;
+    if (!ownSource) {
+        const size_t memlen = length * sizeof(jschar);
+        ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
+        if (!ss->data.compressed) {
+            cx->free_(ss);
+            return NULL;
+        }
     }
     ss->next = NULL;
     ss->length_ = length;
@@ -1814,6 +1822,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
         script->isGenerator = bce->sc->funIsGenerator();
+        script->isGeneratorExp = bce->sc->funbox() && bce->sc->funbox()->inGenexpLambda;
         script->setFunction(bce->sc->fun());
     }
 
@@ -2289,6 +2298,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
+    dst->isGeneratorExp = src->isGeneratorExp;
 
     /*
      * initScriptCounts updates scriptCountsMap if necessary. The other script

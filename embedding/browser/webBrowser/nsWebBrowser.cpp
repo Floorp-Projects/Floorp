@@ -1378,6 +1378,12 @@ NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow aParentNativeWind
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::GetNativeHandle(nsAString& aNativeHandle)
+{
+   // the nativeHandle should be accessed from nsIXULWindow
+   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsWebBrowser::GetVisibility(bool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);

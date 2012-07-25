@@ -418,6 +418,12 @@ NS_IMETHODIMP nsChromeTreeOwner::SetParentNativeWindow(nativeWindow aParentNativ
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::GetNativeHandle(nsAString& aNativeHandle)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->GetNativeHandle(aNativeHandle);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::GetVisibility(bool* aVisibility)
 {
    NS_ENSURE_STATE(mXULWindow);

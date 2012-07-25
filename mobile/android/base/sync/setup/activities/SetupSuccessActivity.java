@@ -46,12 +46,9 @@ public class SetupSuccessActivity extends Activity {
     SyncAccounts.openSyncSettings(this);
   }
 
-
   public void launchBrowser(View target) {
     Intent intent = new Intent(Intent.ACTION_MAIN);
     intent.setClassName(GlobalConstants.BROWSER_INTENT_PACKAGE, GlobalConstants.BROWSER_INTENT_CLASS);
-    // Start Fennec as a new task. If Fennec is already running, bring it to the front.
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     startActivity(intent);
   }
 }
