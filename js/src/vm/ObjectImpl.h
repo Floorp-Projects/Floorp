@@ -79,7 +79,10 @@ class PropertyId
     SpecialId asSpecial() const {
         return JSID_TO_SPECIALID(id);
     }
-    jsid asId() const {
+    const jsid &asId() const {
+        return id;
+    }
+    jsid &asId() {
         return id;
     }
 
