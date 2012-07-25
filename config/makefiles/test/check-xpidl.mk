@@ -19,10 +19,7 @@ INSTALL := cp
 
 XPIDLSRCS = $(srcdir)/check-xpidl.mk
 
-# Avoid permutations induced by 'include {config,kitchen-sink}.mk'
-install_cmd ?= $(INSTALL) $(1)
 include $(topsrcdir)/config/makefiles/xpidl.mk
-
 
 $(call requiredfunction,topsrcdir)
 $(call requiredfunction,XPIDL_GEN_DIR)

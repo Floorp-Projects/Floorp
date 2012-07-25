@@ -39,8 +39,6 @@ endif #} INCLUDED_XPIDL_MK
 ###########################################################################
 ifdef _xpidl-todo_ #{
 
-$(call requiredfunction,install_cmd)
-
 ## Logic batch #1
 xpidl-install-src-preqs=\
   $(XPIDLSRCS) \
