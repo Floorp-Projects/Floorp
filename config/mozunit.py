@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
+import unittest
 import inspect
 
 '''Helper to make python unit tests report the way that the Mozilla
@@ -11,10 +12,10 @@ unit test infrastructure expects tests to report.
 Usage:
 
 import unittest
-from mozunit import MozTestRunner
+import mozunit
 
 if __name__ == '__main__':
-    unittest.main(testRunner=MozTestRunner())
+    mozunit.main()
 '''
 
 class _MozTestResult(_TestResult):
@@ -68,3 +69,6 @@ class MozTestRunner(_TestRunner):
         test(result)
         result.printErrorList()
         return result
+
+def main(*args):
+    unittest.main(testRunner=MozTestRunner(),*args)
