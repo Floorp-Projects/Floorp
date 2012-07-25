@@ -47,7 +47,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     needsBarrier_(false),
     gcState(NoGCScheduled),
     gcPreserveCode(false),
-    gcStarted(false),
     gcBytes(0),
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),
