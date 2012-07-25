@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsILocaleService.h"
+#include "nsReadableUtils.h"
 
 #include "nsWeakReference.h"
 
@@ -75,6 +76,7 @@ using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nsnull;
 static bool gEverInitialized = false;
+static nsTArray<nsCString>* gBackendList = nsnull;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nsnull;
@@ -223,11 +225,8 @@ gfxPlatform::gfxPlatform()
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
-    if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
-        mPreferredDrawTargetBackend = BACKEND_SKIA;
-    } else {
-        mPreferredDrawTargetBackend = BACKEND_NONE;
-    }
+    PRUint32 backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
+    InitCanvasBackend(backendMask);
 }
 
 gfxPlatform*
@@ -406,6 +405,9 @@ gfxPlatform::Shutdown()
     ImageBridgeChild::ShutDown();
 
     CompositorParent::ShutDown();
+
+    delete gBackendList;
+    gBackendList = nsnull;
 
     delete gPlatform;
     gPlatform = nsnull;
@@ -669,7 +671,7 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 }
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
 {
   BackendType backend;
   if (!SupportsAzure(backend)) {
@@ -684,7 +686,7 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   // now, but this might need to change in the future (using
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
-  if (backend == BACKEND_CAIRO) {
+  if (aBackend == BACKEND_CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
     if (!surf) {
@@ -693,9 +695,27 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
 
     return CreateDrawTargetForSurface(surf, aSize);
   } else {
-    return Factory::CreateDrawTarget(backend, aSize, aFormat);
+    return Factory::CreateDrawTarget(aBackend, aSize, aFormat);
   }
 }
+
+RefPtr<DrawTarget>
+gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+{
+  BackendType backend;
+  if (!SupportsAzure(backend)) {
+    return NULL;
+  }
+
+  RefPtr<DrawTarget> target = CreateDrawTargetForBackend(backend, aSize, aFormat);
+  if (target ||
+      mFallbackCanvasBackend == BACKEND_NONE) {
+    return target;
+  }
+
+  return CreateDrawTargetForBackend(mFallbackCanvasBackend, aSize, aFormat);
+}
+
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
@@ -705,6 +725,31 @@ gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize,
     return NULL;
   }
   return Factory::CreateDrawTargetForData(backend, aData, aSize, aStride, aFormat); 
+}
+
+bool
+gfxPlatform::SupportsAzure(BackendType& aBackend)
+{
+  if (mPreferredCanvasBackend != BACKEND_NONE) {
+    aBackend = mPreferredCanvasBackend;
+    return true;
+  }
+
+  return false;
+}
+
+/* static */ BackendType
+gfxPlatform::BackendTypeForName(const nsCString& aName)
+{
+  if (aName.EqualsLiteral("cairo"))
+    return BACKEND_CAIRO;
+  if (aName.EqualsLiteral("skia"))
+    return BACKEND_SKIA;
+  if (aName.EqualsLiteral("direct2d"))
+    return BACKEND_DIRECT2D;
+  if (aName.EqualsLiteral("cg"))
+    return BACKEND_COREGRAPHICS;
+  return BACKEND_NONE;
 }
 
 nsresult
@@ -1127,20 +1172,47 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
     }
 }
 
+void
+gfxPlatform::InitCanvasBackend(PRUint32 aBackendBitmask)
+{
+    mPreferredCanvasBackend = GetCanvasBackendPref(aBackendBitmask);
+    mFallbackCanvasBackend = GetCanvasBackendPref(aBackendBitmask & ~(1 << mPreferredCanvasBackend));
+}
+
+/* static */ BackendType
+gfxPlatform::GetCanvasBackendPref(PRUint32 aBackendBitmask)
+{
+    if (!gBackendList) {
+        gBackendList = new nsTArray<nsCString>();
+        nsCString prefString;
+        if (NS_SUCCEEDED(Preferences::GetCString("gfx.canvas.azure.backends", &prefString))) {
+            ParseString(prefString, ',', *gBackendList);
+        }
+    }
+
+    for (PRUint32 i = 0; i < gBackendList->Length(); ++i) {
+        BackendType result = BackendTypeForName((*gBackendList)[i]);
+        if ((1 << result) & aBackendBitmask) {
+            return result;
+        }
+    }
+    return BACKEND_NONE;
+}
+
 bool
 gfxPlatform::UseProgressiveTilePainting()
 {
-  static bool sUseProgressiveTilePainting;
-  static bool sUseProgressiveTilePaintingPrefCached = false;
+    static bool sUseProgressiveTilePainting;
+    static bool sUseProgressiveTilePaintingPrefCached = false;
 
-  if (!sUseProgressiveTilePaintingPrefCached) {
-    sUseProgressiveTilePaintingPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
-                                          "layers.progressive-paint",
-                                          false);
-  }
+    if (!sUseProgressiveTilePaintingPrefCached) {
+        sUseProgressiveTilePaintingPrefCached = true;
+        mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
+                                              "layers.progressive-paint",
+                                              false);
+    }
 
-  return sUseProgressiveTilePainting;
+    return sUseProgressiveTilePainting;
 }
 
 bool

@@ -69,6 +69,9 @@ gfxPlatformMac::gfxPlatformMac()
         DisableFontActivation();
     }
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
+
+    PRUint32 backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
+    InitCanvasBackend(backendMask);
 }
 
 gfxPlatformMac::~gfxPlatformMac()
@@ -137,18 +140,6 @@ gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     gfxMacFont *font = static_cast<gfxMacFont*>(aFont);
     return font->GetScaledFont();
-}
-
-bool
-gfxPlatformMac::SupportsAzure(BackendType& aBackend)
-{
-  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
-    aBackend = mPreferredDrawTargetBackend;
-  } else {
-    aBackend = BACKEND_COREGRAPHICS;
-  }
-
-  return true;
 }
 
 nsresult
