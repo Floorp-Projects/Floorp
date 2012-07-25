@@ -201,7 +201,6 @@ function createMochitestServer(serverBasePath)
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
   server.registerPathHandler("/server/debug", serverDebug);
-  server.registerPrefixHandler("/auth/", authPrefixHandler);
   server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
   server.registerContentType("jar", "application/x-jar");
   server.registerContentType("ogg", "application/ogg");
@@ -664,37 +663,4 @@ function defaultDirHandler(metadata, response)
   } catch (ex) {
     response.write(ex);
   }  
-}
-
-/**
- * Respond with 401 Authorization Required unless test sends proper
- * authorization (user: guest, pass: guest, which happens to be 
- * "Z3Vlc3Q6Z3Vlc3Q=" encoded), in which case fall back to the default handler.
- */
-function authPrefixHandler(metadata, response)
-{
-  if (!metadata.hasHeader("Authorization")) {
-    response.setStatusLine("1.1", 401, "Authorization Required");
-    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-    return;
-  }
-
-  let auth = metadata.getHeader("Authorization");
-  if (auth.indexOf("Basic ") == 0) {
-    let encoded = auth.substr(6);
-    if (encoded != "Z3Vlc3Q6Z3Vlc3Q=") {
-      response.setStatusLine("1.1", 401, "Authorization Required");
-      response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-      return;
-    }
-
-    // Breaking the abstraction... :(
-    // strip off the leading '/auth'
-    metadata._path = metadata.path.substr(5);
-    // call the default handler
-    server._handler._handleDefault(metadata, response);
-  } else {
-    response.setStatusLine("1.1", 400, "Bad Request");
-    return;
-  }
 }
