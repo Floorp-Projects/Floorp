@@ -561,21 +561,6 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Indicates that the last incremental slice exhausted the mark stack. */
     bool                gcLastMarkSlice;
 
-    /* Whether any sweeping will take place in the separate GC helper thread. */
-    bool                gcSweepOnBackgroundThread;
-
-    /*
-     * Incremental sweep state.
-     */
-    int                gcSweepPhase;
-    ptrdiff_t          gcSweepCompartmentIndex;
-    int                gcSweepKindIndex;
-
-    /*
-     * List head of arenas allocated during the sweep phase.
-     */
-    js::gc::ArenaHeader *gcArenasAllocatedDuringSweep;
-
     /*
      * Indicates that a GC slice has taken place in the middle of an animation
      * frame, rather than at the beginning. In this case, the next slice will be
