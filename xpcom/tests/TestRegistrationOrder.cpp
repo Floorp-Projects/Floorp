@@ -156,8 +156,20 @@ int main(int argc, char** argv)
   }
 
   ScopedLogging logging;
-  
+
+#ifdef XP_WIN
+  // On Windows, convert to backslashes
+  size_t regPathLen = strlen(argv[1]);
+  char* regPath = new char[regPathLen + 1];
+  for (size_t i = 0; i < regPathLen; i++) {
+    char curr = argv[1][i];
+    regPath[i] = (curr == '/') ? '\\' : curr;
+  }
+  regPath[regPathLen] = '\0';
+#else
   const char *regPath = argv[1];
+#endif
+
   XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
                           nsCOMPtr<nsIFile>(GetRegDirectory(regPath, "core", "component.manifest")));
   XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
