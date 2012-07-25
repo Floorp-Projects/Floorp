@@ -1183,11 +1183,13 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     ScriptSource *ss = static_cast<ScriptSource *>(cx->malloc_(sizeof(*ss)));
     if (!ss)
         return NULL;
-    const size_t memlen = length * sizeof(jschar);
-    ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
-    if (!ss->data.compressed) {
-        cx->free_(ss);
-        return NULL;
+    if (!ownSource) {
+        const size_t memlen = length * sizeof(jschar);
+        ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
+        if (!ss->data.compressed) {
+            cx->free_(ss);
+            return NULL;
+        }
     }
     ss->next = NULL;
     ss->length_ = length;
