@@ -120,7 +120,8 @@ PluginStreamListener::SetupPlugin()
     return NS_ERROR_UNEXPECTED;
   }
   nsObjectLoadingContent* olcc = static_cast<nsObjectLoadingContent*>(olc.get());
-  nsresult rv = olcc->InstantiatePluginInstance();
+  nsresult rv = olcc->InstantiatePluginInstance(mPluginDoc->GetType().get(),
+                                                mDocument->nsIDocument::GetDocumentURI());
   if (NS_FAILED(rv)) {
     return rv;
   }
