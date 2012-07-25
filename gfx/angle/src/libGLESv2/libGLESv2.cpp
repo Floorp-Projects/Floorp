@@ -236,17 +236,6 @@ bool validReadFormatType(GLenum format, GLenum type)
             return false;
         }
         break;
-      case GL_BGRA_EXT:
-        switch (type)
-        {
-          case GL_UNSIGNED_BYTE:
-          case GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT:
-          case GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT:
-            break;
-          default:
-            return false;
-        }
-        break;
       case gl::IMPLEMENTATION_COLOR_READ_FORMAT:
         switch (type)
         {
