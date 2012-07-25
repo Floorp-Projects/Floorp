@@ -11,7 +11,6 @@ from subprocess import list2cmdline, call
 from lib.results import NullTestOutput
 from lib.tests import TestCase
 from lib.results import ResultsSink
-from lib.progressbar import ProgressBar
 
 if (sys.platform.startswith('linux') or
     sys.platform.startswith('darwin')
@@ -148,11 +147,8 @@ def parse_args():
             raise SystemExit("Failed to open output file: " + str(ex))
 
     # Hide the progress bar if it will get in the way of other output.
-    options.hide_progress = (((options.show_cmd or options.show_output) and
-                              options.output_fp == sys.stdout) or
-                             options.tinderbox or
-                             ProgressBar.conservative_isatty() or
-                             options.hide_progress)
+    options.hide_progress = ((options.show_cmd or options.show_output) and
+                             options.output_fp == sys.stdout or options.tinderbox)
 
     return (options, requested_paths, excluded_paths)
 

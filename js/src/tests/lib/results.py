@@ -1,6 +1,6 @@
 import re
 from subprocess import list2cmdline
-from progressbar import NullProgressBar, ProgressBar
+from progressbar import ProgressBar
 
 class TestOutput:
     """Output from a test run."""
@@ -86,16 +86,9 @@ class ResultsSink:
         self.counts = {'PASS': 0, 'FAIL': 0, 'TIMEOUT': 0, 'SKIP': 0}
         self.n = 0
 
-        if options.hide_progress:
-            self.pb = NullProgressBar()
-        else:
-            fmt = [
-                {'value': 'PASS',    'color': ProgressBar.GREEN},
-                {'value': 'FAIL',    'color': ProgressBar.RED},
-                {'value': 'TIMEOUT', 'color': ProgressBar.BLUE},
-                {'value': 'SKIP',    'color': ProgressBar.GRAY},
-            ]
-            self.pb = ProgressBar(testcount, fmt)
+        self.pb = None
+        if not options.hide_progress:
+            self.pb = ProgressBar('', testcount, 21)
 
     def push(self, output):
         if output.timed_out:
@@ -143,14 +136,22 @@ class ResultsSink:
                 return
 
             if dev_label:
+                if self.pb:
+                    self.fp.write("\n")
                 def singular(label):
                     return "FIXED" if label == "FIXES" else label[:-1]
-                self.pb.message("%s - %s" % (singular(dev_label), output.test.path))
+                print >> self.fp, "%s - %s" % (singular(dev_label), output.test.path)
 
-        self.pb.update(self.n, self.counts)
+        if self.pb:
+            self.pb.label = '[%4d|%4d|%4d|%4d]'% (self.counts['PASS'],
+                                                  self.counts['FAIL'],
+                                                  self.counts['TIMEOUT'],
+                                                  self.counts['SKIP'])
+            self.pb.update(self.n)
 
     def finish(self, completed):
-        self.pb.finish(completed)
+        if self.pb:
+            self.pb.finish(completed)
         if not self.options.tinderbox:
             self.list(completed)
 
