@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=764125
+
+Test the correct behaviour for isPointInPath in the presence of multiple transforms,
+where only one tranform ought to be applied.
+-->
+<head>
+  <title>Test for Bug 764125</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=764125">Mozilla Bug 764125</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 764125 **/
+
+var c = document.createElement("canvas");
+
+var ctx = c.getContext("2d");
+ctx.translate(50, 0);
+ctx.rect(50, 0, 20, 20);
+ctx.translate(0, 50);
+ok(ctx.isPointInPath(60, 10) === false, "ctx.isPointInPath(60, 10) === false");
+ok(ctx.isPointInPath(110, 10) === true, "ctx.isPointInPath(110, 10) === true");
+ok(ctx.isPointInPath(110, 60) === false, "ctx.isPointInPath(110, 60) === false");
+</script>
+</pre>
+</body>
+</html>
