@@ -48,7 +48,6 @@ DOMCI_CLASS(DeviceLightEvent)
 #define MOZ_GENERATED_EVENT(_event_interface) DOMCI_CLASS(_event_interface)
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
-DOMCI_CLASS(DeviceOrientationEvent)
 DOMCI_CLASS(DeviceMotionEvent)
 DOMCI_CLASS(DeviceAcceleration)
 DOMCI_CLASS(DeviceRotationRate)
