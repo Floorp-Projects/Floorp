@@ -88,4 +88,6 @@
 #define NS_APP_STORAGE_50_FILE                  "UStor" // sqlite database used as mozStorage profile db
 
 #define NS_APP_INDEXEDDB_PARENT_DIR             "indexedDBPDir"
+
+#define NS_APP_PERMISSION_PARENT_DIR            "permissionDBPDir"
 #endif

@@ -2389,7 +2389,7 @@ DataViewObject::read(JSContext *cx, Handle<DataViewObject*> obj,
     if (!getDataPointer(cx, obj, args, sizeof(NativeType), &data))
         return false;
 
-    bool fromLittleEndian = args.length() >= 2 && js_ValueToBoolean(args[1]);
+    bool fromLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
     DataViewIO<NativeType>::fromBuffer(val, data, needToSwapBytes(fromLittleEndian));
     return true;
 }
@@ -2445,7 +2445,7 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
     if (!WebIDLCast(cx, args[1], &value))
         return false;
 
-    bool toLittleEndian = args.length() >= 3 && js_ValueToBoolean(args[2]);
+    bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
     DataViewIO<NativeType>::toBuffer(data, &value, needToSwapBytes(toLittleEndian));
     return true;
 }

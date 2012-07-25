@@ -722,7 +722,7 @@ HttpChannelChild::Redirect1Begin(const PRUint32& newChannelId,
   bool rewriteToGET = ShouldRewriteRedirectToGET(mResponseHead->Status(), 
                                                  mRequestHead.Method());
   
-  rv = SetupReplacementChannel(uri, newChannel, !rewriteToGET, false);
+  rv = SetupReplacementChannel(uri, newChannel, !rewriteToGET);
   if (NS_FAILED(rv)) {
     // Veto redirect.  nsHttpChannel decides to cancel or continue.
     OnRedirectVerifyCallback(rv);
