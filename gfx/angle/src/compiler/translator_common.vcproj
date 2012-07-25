@@ -585,7 +585,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\debug.h"
+				RelativePath=".\compilerdebug.h"
 				>
 			</File>
 			<File

@@ -6,7 +6,7 @@
 
 #include "compiler/Diagnostics.h"
 
-#include "compiler/debug.h"
+#include "compiler/compilerdebug.h"
 #include "compiler/InfoSink.h"
 #include "compiler/preprocessor/new/SourceLocation.h"
 

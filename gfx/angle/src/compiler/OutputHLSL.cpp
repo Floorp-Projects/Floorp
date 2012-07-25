@@ -7,7 +7,7 @@
 #include "compiler/OutputHLSL.h"
 
 #include "common/angleutils.h"
-#include "compiler/debug.h"
+#include "compiler/compilerdebug.h"
 #include "compiler/InfoSink.h"
 #include "compiler/UnfoldShortCircuit.h"
 #include "compiler/SearchSymbol.h"
