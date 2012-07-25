@@ -870,9 +870,12 @@ StorageServiceRequest.prototype = {
         return;
       }
 
-      if (response.status == 503) {
+      if (response.status >= 500 && response.status <= 599) {
+        this._log.error(response.status + " seen from server!");
         this._error = new StorageServiceRequestError();
-        this._error.server = new Error("503 Received.");
+        this._error.server = new Error(response.status + " status code.");
+        callOnComplete();
+        return;
       }
 
       callOnComplete();
@@ -994,20 +997,6 @@ StorageCollectionGetRequest.prototype = {
   },
 
   /**
-   * Only retrieve BSOs whose sortindex is higher than this integer value.
-   */
-  set index_above(value) {
-    this._namedArgs.index_above = value;
-  },
-
-  /**
-   * Only retrieve BSOs whose sortindex is lower than this integer value.
-   */
-  set index_below(value) {
-    this._namedArgs.index_below = value;
-  },
-
-  /**
    * Limit the max number of returned BSOs to this integer number.
    */
   set limit(value) {
@@ -1084,14 +1073,20 @@ StorageCollectionGetRequest.prototype = {
 function StorageCollectionSetRequest() {
   StorageServiceRequest.call(this);
 
-  this._lines = [];
-  this._size  = 0;
+  this.size = 0;
 
-  this.successfulIDs = new Set();
-  this.failures      = new Map();
+  // TODO Bug 775781 convert to Set and Map once iterable.
+  this.successfulIDs = [];
+  this.failures      = {};
+
+  this._lines = [];
 }
 StorageCollectionSetRequest.prototype = {
   __proto__: StorageServiceRequest.prototype,
+
+  get count() {
+    return this._lines.length;
+  },
 
   /**
    * Add a BasicStorageObject to this request.
@@ -1112,32 +1107,383 @@ StorageCollectionSetRequest.prototype = {
       throw new Error("Passed BSO must have id defined.");
     }
 
-    let line = JSON.stringify(bso).replace("\n", "\u000a");
+    this.addLine(JSON.stringify(bso));
+  },
 
+  /**
+   * Add a BSO (represented by its serialized newline-delimited form).
+   *
+   * You probably shouldn't use this. It is used for batching.
+   */
+  addLine: function addLine(line) {
     // This is off by 1 in the larger direction. We don't care.
-    this._size += line.length + "\n".length;
+    this.size += line.length + 1;
     this._lines.push(line);
   },
 
   _onDispatch: function _onDispatch() {
     this._data = this._lines.join("\n");
+    this.size = this._data.length;
   },
 
   _completeParser: function _completeParser(response) {
     let result = JSON.parse(response.body);
 
     for (let id of result.success) {
-      this.successfulIDs.add(id);
+      this.successfulIDs.push(id);
     }
 
     this.allSucceeded = true;
 
-    for (let [id, reasons] in result.failed) {
+    for (let [id, reasons] in Iterator(result.failed)) {
       this.failures[id] = reasons;
       this.allSucceeded = false;
     }
   },
 };
+
+/**
+ * Represents a batch upload of BSOs to an individual collection.
+ *
+ * This is a more intelligent way to upload may BSOs to the server. It will
+ * split the uploaded data into multiple requests so size limits, etc aren't
+ * exceeded.
+ *
+ * Once a client obtains an instance of this type, it calls `addBSO` for each
+ * BSO to be uploaded. When the client is done providing BSOs to be uploaded,
+ * it calls `finish`. When `finish` is called, no more BSOs can be added to the
+ * batch. When all requests created from this batch have finished, the callback
+ * provided to `finish` will be invoked.
+ *
+ * Clients can also explicitly flush pending outgoing BSOs via `flush`. This
+ * allows callers to control their own batching/chunking.
+ *
+ * Interally, this maintains a queue of StorageCollectionSetRequest to be
+ * issued. At most one request is allowed to be in-flight at once. This is to
+ * avoid potential conflicts on the server. And, in the case of conditional
+ * requests, it prevents requests from being declined due to the server being
+ * updated by another request issued by us.
+ *
+ * If a request errors for any reason, all queued uploads are abandoned and the
+ * `finish` callback is invoked as soon as possible. The `successfulIDs` and
+ * `failures` properties will contain data from all requests that had this
+ * response data. In other words, the IDs have BSOs that were never sent to the
+ * server are not lumped in to either property.
+ *
+ * Requests can be made conditional by setting `locallyModifiedVersion` to the
+ * most recent version of server data. As responses from the server are seen,
+ * the last server version is carried forward to subsequent requests.
+ *
+ * The server version from the last request is available in the
+ * `serverModifiedVersion` property. It should only be accessed during or
+ * after the callback passed to `finish`.
+ *
+ * @param client
+ *        (StorageServiceClient) Client instance to use for uploading.
+ *
+ * @param collection
+ *        (string) Collection the batch operation will upload to.
+ */
+function StorageCollectionBatchedSet(client, collection) {
+  this.client     = client;
+  this.collection = collection;
+
+  this._log = client._log;
+
+  this.locallyModifiedVersion = null;
+  this.serverModifiedVersion  = null;
+
+  // TODO Bug 775781 convert to Set and Map once iterable.
+  this.successfulIDs = [];
+  this.failures      = {};
+
+  // Request currently being populated.
+  this._stagingRequest = client.setBSOs(this.collection);
+
+  // Requests ready to be sent over the wire.
+  this._outgoingRequests = [];
+
+  // Whether we are waiting for a response.
+  this._requestInFlight = false;
+
+  this._onFinishCallback = null;
+  this._finished         = false;
+  this._errorEncountered = false;
+}
+StorageCollectionBatchedSet.prototype = {
+  /**
+   * Add a BSO to be uploaded as part of this batch.
+   */
+  addBSO: function addBSO(bso) {
+    if (this._errorEncountered) {
+      return;
+    }
+
+    let line = JSON.stringify(bso);
+
+    if (line.length > this.client.REQUEST_SIZE_LIMIT) {
+      throw new Error("BSO is larger than allowed limit: " + line.length +
+                      " > " + this.client.REQUEST_SIZE_LIMIT);
+    }
+
+    if (this._stagingRequest.size + line.length > this.client.REQUEST_SIZE_LIMIT) {
+      this._log.debug("Sending request because payload size would be exceeded");
+      this._finishStagedRequest();
+
+      this._stagingRequest.addLine(line);
+      return;
+    }
+
+    // We are guaranteed to fit within size limits.
+    this._stagingRequest.addLine(line);
+
+    if (this._stagingRequest.count >= this.client.REQUEST_BSO_COUNT_LIMIT) {
+      this._log.debug("Sending request because BSO count threshold reached.");
+      this._finishStagedRequest();
+      return;
+    }
+  },
+
+  finish: function finish(cb) {
+    if (this._finished) {
+      throw new Error("Batch request has already been finished.");
+    }
+
+    this.flush();
+
+    this._onFinishCallback = cb;
+    this._finished = true;
+    this._stagingRequest = null;
+  },
+
+  flush: function flush() {
+    if (this._finished) {
+      throw new Error("Batch request has been finished.");
+    }
+
+    if (!this._stagingRequest.count) {
+      return;
+    }
+
+    this._finishStagedRequest();
+  },
+
+  _finishStagedRequest: function _finishStagedRequest() {
+    this._outgoingRequests.push(this._stagingRequest);
+    this._sendOutgoingRequest();
+    this._stagingRequest = this.client.setBSOs(this.collection);
+  },
+
+  _sendOutgoingRequest: function _sendOutgoingRequest() {
+    if (this._requestInFlight || this._errorEncountered) {
+      return;
+    }
+
+    if (!this._outgoingRequests.length) {
+      return;
+    }
+
+    let request = this._outgoingRequests.shift();
+
+    if (this.locallyModifiedVersion) {
+      request.locallyModifiedVersion = this.locallyModifiedVersion;
+    }
+
+    request.dispatch(this._onBatchComplete.bind(this));
+    this._requestInFlight = true;
+  },
+
+  _onBatchComplete: function _onBatchComplete(error, request) {
+    this._requestInFlight = false;
+
+    this.serverModifiedVersion = request.serverTime;
+
+    // Only update if we had a value before. Otherwise, this breaks
+    // unconditional requests!
+    if (this.locallyModifiedVersion) {
+      this.locallyModifiedVersion = request.serverTime;
+    }
+
+    for (let id of request.successfulIDs) {
+      this.successfulIDs.push(id);
+    }
+
+    for (let [id, reason] in Iterator(request.failures)) {
+      this.failures[id] = reason;
+    }
+
+    if (request.error) {
+      this._errorEncountered = true;
+    }
+
+    this._checkFinish();
+  },
+
+  _checkFinish: function _checkFinish() {
+    if (this._outgoingRequests.length && !this._errorEncountered) {
+      this._sendOutgoingRequest();
+      return;
+    }
+
+    if (!this._onFinishCallback) {
+      return;
+    }
+
+    try {
+      this._onFinishCallback(this);
+    } catch (ex) {
+      this._log.warn("Exception when calling finished callback: " +
+                     CommonUtils.exceptionStr(ex));
+    }
+  },
+};
+Object.freeze(StorageCollectionBatchedSet.prototype);
+
+/**
+ * Manages a batch of BSO deletion requests.
+ *
+ * A single instance of this virtual request allows deletion of many individual
+ * BSOs without having to worry about server limits.
+ *
+ * Instances are obtained by calling `deleteBSOsBatching` on
+ * StorageServiceClient.
+ *
+ * Usage is roughly the same as StorageCollectionBatchedSet. Callers obtain
+ * an instance and select individual BSOs for deletion by calling `addID`.
+ * When the caller is finished marking BSOs for deletion, they call `finish`
+ * with a callback which will be invoked when all deletion requests finish.
+ *
+ * When the finished callback is invoked, any encountered errors will be stored
+ * in the `errors` property of this instance (which is passed to the callback).
+ * This will be an empty array if no errors were encountered. Else, it will
+ * contain the errors from the `onComplete` handler of request instances. The
+ * set of succeeded and failed IDs is not currently available.
+ *
+ * Deletes can be made conditional by setting `locallyModifiedVersion`. The
+ * behavior is the same as request types. The only difference is that the
+ * updated version from the server as a result of requests is carried forward
+ * to subsequent requests.
+ *
+ * The server version from the last request is stored in the
+ * `serverModifiedVersion` property. It is not safe to access this until the
+ * callback from `finish`.
+ *
+ * Like StorageCollectionBatchedSet, requests are issued serially to avoid
+ * race conditions on the server.
+ *
+ * @param client
+ *        (StorageServiceClient) Client request is associated with.
+ * @param collection
+ *        (string) Collection being operated on.
+ */
+function StorageCollectionBatchedDelete(client, collection) {
+  this.client     = client;
+  this.collection = collection;
+
+  this._log = client._log;
+
+  this.locallyModifiedVersion = null;
+  this.serverModifiedVersion  = null;
+  this.errors                 = [];
+
+  this._pendingIDs          = [];
+  this._requestInFlight     = false;
+  this._finished            = false;
+  this._finishedCallback    = null;
+}
+StorageCollectionBatchedDelete.prototype = {
+  addID: function addID(id) {
+    if (this._finished) {
+      throw new Error("Cannot add IDs to a finished instance.");
+    }
+
+    // If we saw errors already, don't do any work. This is an optimization
+    // and isn't strictly required, as _sendRequest() should no-op.
+    if (this.errors.length) {
+      return;
+    }
+
+    this._pendingIDs.push(id);
+
+    if (this._pendingIDs.length >= this.client.REQUEST_BSO_DELETE_LIMIT) {
+      this._sendRequest();
+    }
+  },
+
+  /**
+   * Finish this batch operation.
+   *
+   * No more IDs can be added to this operation. Existing IDs are flushed as
+   * a request. The passed callback will be called when all requests have
+   * finished.
+   */
+  finish: function finish(cb) {
+    if (this._finished) {
+      throw new Error("Batch delete instance has already been finished.");
+    }
+
+    this._finished = true;
+    this._finishedCallback = cb;
+
+    if (this._pendingIDs.length) {
+      this._sendRequest();
+    }
+  },
+
+  _sendRequest: function _sendRequest() {
+    // Only allow 1 active request at a time and don't send additional
+    // requests if one has failed.
+    if (this._requestInFlight || this.errors.length) {
+      return;
+    }
+
+    let ids = this._pendingIDs.splice(0, this.client.REQUEST_BSO_DELETE_LIMIT);
+    let request = this.client.deleteBSOs(this.collection, ids);
+
+    if (this.locallyModifiedVersion) {
+      request.locallyModifiedVersion = this.locallyModifiedVersion;
+    }
+
+    request.dispatch(this._onRequestComplete.bind(this));
+    this._requestInFlight = true;
+  },
+
+  _onRequestComplete: function _onRequestComplete(error, request) {
+    this._requestInFlight = false;
+
+    if (error) {
+      // We don't currently track metadata of what failed. This is an obvious
+      // feature that could be added.
+      this._log.warn("Error received from server: " + error);
+      this.errors.push(error);
+    }
+
+    this.serverModifiedVersion = request.serverTime;
+
+    // If performing conditional requests, carry forward the new server version
+    // so subsequent conditional requests work.
+    if (this.locallyModifiedVersion) {
+      this.locallyModifiedVersion = request.serverTime;
+    }
+
+    if (this._pendingIDs.length && !this.errors.length) {
+      this._sendRequest();
+      return;
+    }
+
+    if (!this._finishedCallback) {
+      return;
+    }
+
+    try {
+      this._finishedCallback(this);
+    } catch (ex) {
+      this._log.warn("Exception when invoking finished callback: " +
+                     CommonUtils.exceptionStr(ex));
+    }
+  },
+};
+Object.freeze(StorageCollectionBatchedDelete.prototype);
 
 /**
  * Construct a new client for the SyncStorage API, version 2.0.
@@ -1194,6 +1540,27 @@ StorageServiceClient.prototype = {
    * You probably want to change this.
    */
   userAgent: "StorageServiceClient",
+
+  /**
+   * Maximum size of entity bodies.
+   *
+   * TODO this should come from the server somehow. See bug 769759.
+   */
+  REQUEST_SIZE_LIMIT: 512000,
+
+  /**
+   * Maximum number of BSOs in requests.
+   *
+   * TODO this should come from the server somehow. See bug 769759.
+   */
+  REQUEST_BSO_COUNT_LIMIT: 100,
+
+  /**
+   * Maximum number of BSOs that can be deleted in a single DELETE.
+   *
+   * TODO this should come from the server. See bug 769759.
+   */
+  REQUEST_BSO_DELETE_LIMIT: 100,
 
   _baseURI: null,
   _log: null,
@@ -1584,11 +1951,9 @@ StorageServiceClient.prototype = {
    * has additional functions and properties specific to this operation. See
    * its documentation for more.
    *
-   * Future improvement: support streaming of uploaded records. Currently, data
-   * is buffered in the client before going over the wire. Ideally, we'd support
-   * sending over the wire as soon as data is available. This will require
-   * support in RESTRequest, which doesn't support streaming on requests, only
-   * responses.
+   * Most consumers interested in submitting multiple BSOs to the server will
+   * want to use `setBSOsBatching` instead. That API intelligently splits up
+   * requests as necessary, etc.
    *
    * Example usage:
    *
@@ -1636,6 +2001,30 @@ StorageServiceClient.prototype = {
   },
 
   /**
+   * This is a batching variant of setBSOs.
+   *
+   * Whereas `setBSOs` is a 1:1 mapping between function calls and HTTP
+   * requests issued, this one is a 1:N mapping. It will intelligently break
+   * up outgoing BSOs into multiple requests so size limits, etc aren't
+   * exceeded.
+   *
+   * Please see the documentation for `StorageCollectionBatchedSet` for
+   * usage info.
+   *
+   * @param collection
+   *        (string) Collection to operate on.
+   * @return
+   *        (StorageCollectionBatchedSet) Batched set instance.
+   */
+  setBSOsBatching: function setBSOsBatching(collection) {
+    if (!collection) {
+      throw new Error("collection argument must be defined.");
+    }
+
+    return new StorageCollectionBatchedSet(this, collection);
+  },
+
+  /**
    * Deletes a single BSO from a collection.
    *
    * The request can be made conditional by setting `locallyModifiedVersion`
@@ -1670,6 +2059,10 @@ StorageServiceClient.prototype = {
    * The request can be made conditional by setting `locallyModifiedVersion`
    * on the returned request instance.
    *
+   * If the number of BSOs to delete is potentially large, it is preferred to
+   * use `deleteBSOsBatching`. That API automatically splits the operation into
+   * multiple requests so server limits aren't exceeded.
+   *
    * @param collection
    *        (string) Name of collection to delete BSOs from.
    * @param ids
@@ -1686,6 +2079,24 @@ StorageServiceClient.prototype = {
     return this._getRequest(uri, "DELETE", {
       allowIfUnmodified: true,
     });
+  },
+
+  /**
+   * Bulk deletion of BSOs with no size limit.
+   *
+   * This allows a large amount of BSOs to be deleted easily. It will formulate
+   * multiple `deleteBSOs` queries so the client does not exceed server limits.
+   *
+   * @param collection
+   *        (string) Name of collection to delete BSOs from.
+   * @return StorageCollectionBatchedDelete
+   */
+  deleteBSOsBatching: function deleteBSOsBatching(collection) {
+    if (!collection) {
+      throw new Error("collection argument must be defined.");
+    }
+
+    return new StorageCollectionBatchedDelete(this, collection);
   },
 
   /**

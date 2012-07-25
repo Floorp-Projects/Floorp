@@ -470,29 +470,9 @@ class MinidumpWriter {
   }
 
   bool Dump() {
-    // The dynamic linker makes information available that helps gdb find all
-    // DSOs loaded into the program. If we can access this information, we dump
-    // it to a MD_LINUX_DSO_DEBUG stream.
-    struct r_debug* r_debug = NULL;
-    uint32_t dynamic_length = 0;
-#if !defined(__ANDROID__)
-    for (int i = 0;;) {
-      ElfW(Dyn) dyn;
-      dynamic_length += sizeof(dyn);
-      dumper_.CopyFromProcess(&dyn, crashing_tid_, _DYNAMIC+i++, sizeof(dyn));
-      if (dyn.d_tag == DT_DEBUG) {
-        r_debug = (struct r_debug*)dyn.d_un.d_ptr;
-        continue;
-      } else if (dyn.d_tag == DT_NULL)
-        break;
-    }
-#endif
-
     // A minidump file contains a number of tagged streams. This is the number
     // of stream which we write.
-    unsigned kNumWriters = 12;
-    if (r_debug)
-      ++kNumWriters;
+    unsigned kNumWriters = 13;
 
     TypedMDRVA<MDRawHeader> header(&minidump_writer_);
     TypedMDRVA<MDRawDirectory> dir(&minidump_writer_);
@@ -571,12 +551,10 @@ class MinidumpWriter {
       NullifyDirectoryEntry(&dirent);
     dir.CopyIndex(dir_index++, &dirent);
 
-    if (r_debug) {
-      dirent.stream_type = MD_LINUX_DSO_DEBUG;
-      if (!WriteDSODebugStream(&dirent, r_debug, dynamic_length))
-        NullifyDirectoryEntry(&dirent);
-      dir.CopyIndex(dir_index++, &dirent);
-    }
+    dirent.stream_type = MD_LINUX_DSO_DEBUG;
+    if (!WriteDSODebugStream(&dirent))
+      NullifyDirectoryEntry(&dirent);
+    dir.CopyIndex(dir_index++, &dirent);
 
     // If you add more directory entries, don't forget to update kNumWriters,
     // above.
@@ -1037,13 +1015,56 @@ class MinidumpWriter {
     return true;
   }
 
-  bool WriteDSODebugStream(MDRawDirectory* dirent, struct r_debug* r_debug,
-                           uint32_t dynamic_length) {
+  bool WriteDSODebugStream(MDRawDirectory* dirent) {
 #if defined(__ANDROID__)
     return false;
 #else
-    // The caller provided us with a pointer to "struct r_debug". We can
-    // look up the "r_map" field to get a linked list of all loaded DSOs.
+    ElfW(Phdr) *phdr = reinterpret_cast<ElfW(Phdr) *>(dumper_.auxv()[AT_PHDR]);
+    char *base;
+    int phnum = dumper_.auxv()[AT_PHNUM];
+    if (!phnum || !phdr)
+      return false;
+
+    // Assume the program base is at the beginning of the same page as the PHDR
+    base = reinterpret_cast<char *>(reinterpret_cast<uintptr_t>(phdr) & ~0xfff);
+
+    // Search for the program PT_DYNAMIC segment
+    ElfW(Addr) dyn_addr = 0;
+    for (; phnum >= 0; phnum--, phdr++) {
+      ElfW(Phdr) ph;
+      dumper_.CopyFromProcess(&ph, crashing_tid_, phdr, sizeof(ph));
+      // Adjust base address with the virtual address of the PT_LOAD segment
+      // corresponding to offset 0
+      if (ph.p_type == PT_LOAD && ph.p_offset == 0)
+        base -= ph.p_vaddr;
+      if (ph.p_type == PT_DYNAMIC)
+        dyn_addr = ph.p_vaddr;
+    }
+    if (!dyn_addr)
+      return false;
+
+    ElfW(Dyn) *dynamic = reinterpret_cast<ElfW(Dyn) *>(dyn_addr + base);
+
+    // The dynamic linker makes information available that helps gdb find all
+    // DSOs loaded into the program. If this information is indeed available,
+    // dump it to a MD_LINUX_DSO_DEBUG stream.
+    struct r_debug* r_debug = NULL;
+    uint32_t dynamic_length = 0;
+
+    for (int i = 0;;) {
+      ElfW(Dyn) dyn;
+      dynamic_length += sizeof(dyn);
+      dumper_.CopyFromProcess(&dyn, crashing_tid_, dynamic+i++, sizeof(dyn));
+      if (dyn.d_tag == DT_DEBUG) {
+        r_debug = reinterpret_cast<struct r_debug*>(dyn.d_un.d_ptr);
+        continue;
+      } else if (dyn.d_tag == DT_NULL) {
+        break;
+      }
+    }
+
+    // The "r_map" field of that r_debug struct contains a linked list of all
+    // loaded DSOs.
     // Our list of DSOs potentially is different from the ones in the crashing
     // process. So, we have to be careful to never dereference pointers
     // directly. Instead, we use CopyFromProcess() everywhere.
@@ -1106,10 +1127,10 @@ class MinidumpWriter {
     debug.get()->dso_count = dso_count;
     debug.get()->brk = (void*)debug_entry.r_brk;
     debug.get()->ldbase = (void*)debug_entry.r_ldbase;
-    debug.get()->dynamic = (void*)&_DYNAMIC;
+    debug.get()->dynamic = dynamic;
 
     char *dso_debug_data = new char[dynamic_length];
-    dumper_.CopyFromProcess(dso_debug_data, crashing_tid_, &_DYNAMIC,
+    dumper_.CopyFromProcess(dso_debug_data, crashing_tid_, dynamic,
                             dynamic_length);
     debug.CopyIndexAfterObject(0, dso_debug_data, dynamic_length);
     delete[] dso_debug_data;

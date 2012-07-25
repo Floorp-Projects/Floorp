@@ -298,8 +298,6 @@
 #define MOZ_GENERATED_EVENTS_INCLUDES
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENTS_INCLUDES
-#include "nsIDOMDeviceLightEvent.h"
-#include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNodeIterator.h"
@@ -815,9 +813,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PopupBlockedEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  // Device Light
-  NS_DEFINE_CLASSINFO_DATA(DeviceLightEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface)                \
@@ -826,9 +821,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-  // Device Orientation
-  NS_DEFINE_CLASSINFO_DATA(DeviceOrientationEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceMotionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceAcceleration, nsDOMGenericSH,
@@ -1730,7 +1722,6 @@ NS_DEFINE_EVENT_CTOR(MozSettingsEvent)
 NS_DEFINE_EVENT_CTOR(MozApplicationEvent)
 NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
-NS_DEFINE_EVENT_CTOR(DeviceLightEvent)
 #ifdef MOZ_B2G_RIL
 NS_DEFINE_EVENT_CTOR(MozWifiStatusChangeEvent)
 NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
@@ -1778,7 +1769,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozApplicationEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
-  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(DeviceLightEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(StorageEvent)
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
@@ -2600,11 +2590,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(DeviceLightEvent, nsIDOMDeviceLightEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceLightEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface)                         \
   DOM_CLASSINFO_MAP_BEGIN(_event_interface, nsIDOM##_event_interface) \
@@ -2613,11 +2598,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
-
-  DOM_CLASSINFO_MAP_BEGIN(DeviceOrientationEvent, nsIDOMDeviceOrientationEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceOrientationEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceMotionEvent, nsIDOMDeviceMotionEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceMotionEvent)
@@ -5972,6 +5952,9 @@ DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   }
   else if (aIID->Equals(NS_GET_IID(nsIIDBTransaction))) {
     interface = IDBConstant::IDBTransaction;
+  }
+  else {
+    MOZ_NOT_REACHED("unexpected IID");
   }
 
   for (int8_t i = 0; i < (int8_t)mozilla::ArrayLength(sIDBConstants); ++i) {

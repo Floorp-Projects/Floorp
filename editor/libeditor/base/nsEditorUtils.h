@@ -57,12 +57,12 @@ class NS_STACK_CLASS nsAutoSelectionReset
 {
   private:
     /** ref-counted reference to the selection that we are supposed to restore */
-    nsCOMPtr<nsISelection> mSel;
+    nsRefPtr<mozilla::Selection> mSel;
     nsEditor *mEd;  // non-owning ref to nsEditor
 
   public:
     /** constructor responsible for remembering all state needed to restore aSel */
-    nsAutoSelectionReset(nsISelection *aSel, nsEditor *aEd);
+    nsAutoSelectionReset(mozilla::Selection* aSel, nsEditor* aEd);
     
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();

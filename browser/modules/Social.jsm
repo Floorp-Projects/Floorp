@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
 
 let Social = {
+  lastEventReceived: 0,
   provider: null,
   init: function Social_init(callback) {
     if (this.provider) {
@@ -36,6 +37,25 @@ let Social = {
 
   get uiVisible() {
     return this.provider && this.provider.enabled && this.provider.port;
+  },
+
+  set enabled(val) {
+    SocialService.enabled = val;
+  },
+  get enabled() {
+    return SocialService.enabled;
+  },
+
+  get active() {
+    return Services.prefs.getBoolPref("social.active");
+  },
+  set active(val) {
+    Services.prefs.setBoolPref("social.active", !!val);
+    this.enabled = !!val;
+  },
+
+  toggle: function Social_toggle() {
+    this.enabled = !this.enabled;
   },
 
   toggleSidebar: function SocialSidebar_toggle() {
