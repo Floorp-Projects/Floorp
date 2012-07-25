@@ -601,7 +601,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   // if we have a mime type now.
   if (!mPluginInstance && mContent && !aContentType.IsEmpty()) {
     nsObjectLoadingContent *olc = static_cast<nsObjectLoadingContent*>(mContent.get());
-    rv = olc->InstantiatePluginInstance();
+    rv = olc->InstantiatePluginInstance(aContentType.get(), aURL.get());
     if (NS_SUCCEEDED(rv)) {
       rv = olc->GetPluginInstance(getter_AddRefs(mPluginInstance));
       if (NS_FAILED(rv)) {
