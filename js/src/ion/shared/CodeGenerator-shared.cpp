@@ -196,6 +196,13 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         uint32 exprStack = mir->stackDepth() - block->info().ninvoke();
         snapshots_.startFrame(fun, script, pc, exprStack);
 
+        // Ensure that all snapshot which are encoded can safely be used for
+        // bailouts.
+        DebugOnly<jsbytecode *> bailPC = pc;
+        if (mir->mode() == MResumePoint::ResumeAfter)
+          bailPC = GetNextPc(pc);
+        JS_ASSERT(exprStack == js_ReconstructStackDepth(gen->cx, script, bailPC));
+
 #ifdef TRACK_SNAPSHOTS
         LInstruction *ins = instruction();
 
