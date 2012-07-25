@@ -924,6 +924,7 @@ RoundUpPow2(size_t x)
 
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
+const unsigned HashNumberSizeBits = 32;
 
 namespace detail {
 
