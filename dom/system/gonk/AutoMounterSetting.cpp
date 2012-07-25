@@ -99,8 +99,6 @@ AutoMounterSetting::Observe(nsISupports *aSubject,
   if (strcmp(aTopic, MOZSETTINGS_CHANGED) != 0) {
     return NS_OK;
   }
-  LOG("%s: detected %s data = '%s'", __FUNCTION__, aTopic,
-      NS_LossyConvertUTF16toASCII(aData).get());
 
   // Note that this function gets called for any and all settings changes,
   // so we need to carefully check if we have the one we're interested in.
