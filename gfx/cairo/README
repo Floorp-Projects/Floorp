@@ -182,6 +182,8 @@ avoid-extend-none.patch: Avoid incorrectly using EXTEND_NONE (bug 751668)
 
 win32-ExtCreatePen-zero-size.patch: Don't pass zero width or dash lengths to ExtCreatePen (bug 768348)
 
+d2d-repeating-gradients.patch: Minimize number of gradient stops added to handle repeating with path fills (bug 768775)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
