@@ -1114,7 +1114,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
                        RoundToMatchResidual(scaledOffset.y, data->mActiveScrolledRootPosition.y));
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
-  layer->SetTransform(gfx3DMatrix::From2D(matrix));
+  layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_JAVA_COMPOSITOR
@@ -1267,9 +1267,7 @@ ContainerState::PopThebesLayerData()
       imageLayer->SetContainer(imageContainer);
       data->mImage->ConfigureLayer(imageLayer);
       // The layer's current transform is applied first, then the result is scaled.
-      gfx3DMatrix transform = imageLayer->GetTransform()*
-        gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-      imageLayer->SetTransform(transform);
+      imageLayer->SetScale(mParameters.mXScale, mParameters.mYScale);
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
@@ -1281,7 +1279,8 @@ ContainerState::PopThebesLayerData()
       colorLayer->SetColor(data->mSolidColor);
 
       // Copy transform
-      colorLayer->SetTransform(data->mLayer->GetTransform());
+      colorLayer->SetBaseTransform(data->mLayer->GetTransform());
+      colorLayer->SetScale(data->mLayer->GetXScale(), data->mLayer->GetYScale());
 
       // Clip colorLayer to its visible region, since ColorLayers are
       // allowed to paint outside the visible region. Here we rely on the
@@ -1780,7 +1779,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         // The layer's current transform is applied first, then the result is scaled.
         gfx3DMatrix transform = ownLayer->GetTransform()*
             gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-        ownLayer->SetTransform(transform);
+        ownLayer->SetBaseTransform(transform);
       }
 
       ownLayer->SetIsFixedPosition(
@@ -2124,7 +2123,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     scale = gfxSize(1.0, 1.0);
   }
 
-  aLayer->SetTransform(transform);
+  aLayer->SetBaseTransform(transform);
   // Store the inverse of our resolution-scale on the layer
   aLayer->SetScale(1.0f/float(scale.width), 1.0f/float(scale.height));
 
@@ -3132,7 +3131,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   }
 
   maskLayer->SetContainer(container);
-  maskLayer->SetTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
+  maskLayer->SetBaseTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
 
   // save the details of the clip in user data
   userData->mScaleX = newData.mScaleX;

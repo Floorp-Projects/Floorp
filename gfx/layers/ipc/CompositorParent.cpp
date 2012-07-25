@@ -526,7 +526,7 @@ SetShadowProperties(Layer* aLayer)
 {
   // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
-  shadow->SetShadowTransform(aLayer->GetTransform());
+  shadow->SetShadowTransform(aLayer->GetBaseTransform());
   shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   shadow->SetShadowClipRect(aLayer->GetClipRect());
   shadow->SetShadowOpacity(aLayer->GetOpacity());
@@ -696,7 +696,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 
   const FrameMetrics& metrics = container->GetFrameMetrics();
   const gfx3DMatrix& rootTransform = root->GetTransform();
-  const gfx3DMatrix& currentTransform = layer->GetTransform();
+  const gfx3DMatrix& currentTransform = layer->GetBaseTransform();
 
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code

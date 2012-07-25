@@ -602,6 +602,14 @@ Layer::CalculateScissorRect(const nsIntRect& aCurrentScissorRect,
 }
 
 const gfx3DMatrix
+Layer::GetTransform()
+{
+  gfx3DMatrix transform = mTransform;
+  transform.Scale(mXScale, mYScale, 1);
+  return transform;
+}
+
+const gfx3DMatrix
 Layer::GetLocalTransform()
 {
   gfx3DMatrix transform;
