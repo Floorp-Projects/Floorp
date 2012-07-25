@@ -613,3 +613,23 @@ Services.obs.addObserver(function ContentHandler(subject, topic, data) {
   });
 }, 'content-handler', false);
 
+(function geolocationStatusTracker() {
+  gGeolocationActiveCount = 0;
+
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    let oldCount = gGeolocationActiveCount;
+    if (aData == "starting") {
+      gGeolocationActiveCount += 1;
+    } else if (aData == "shutdown") {
+      gGeolocationActiveCount -= 1;
+    }
+
+    // We need to track changes from 1 <-> 0
+    if (gGeolocationActiveCount + oldCount == 1) {
+      shell.sendChromeEvent({
+        type: 'geolocation-status',
+        active: (gGeolocationActiveCount == 1)
+      });
+    }
+}, "geolocation-device-events", false);
+})();
