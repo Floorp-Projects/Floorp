@@ -1510,6 +1510,12 @@ public:
   static bool Are3DTransformsEnabled();
 
   /**
+   * Checks if off-main-thread transform and opacity animations are enabled.
+   */
+  static bool AreOpacityAnimationsEnabled();
+  static bool AreTransformAnimationsEnabled();
+
+  /**
    * Checks if we should forcibly use nearest pixel filtering for the
    * background.
    */

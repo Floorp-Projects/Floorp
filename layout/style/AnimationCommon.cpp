@@ -9,6 +9,7 @@
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsAnimationManager.h"
+#include "nsLayoutUtils.h"
 
 namespace mozilla {
 namespace css {
@@ -41,7 +42,7 @@ CommonAnimationManager::AddElementData(CommonElementAnimationData* aData)
     nsRefreshDriver *rd = mPresContext->RefreshDriver();
     rd->AddRefreshObserver(this, Flush_Style);
   }
-    
+
   PR_INSERT_BEFORE(aData, &mElementData);
 }
 
@@ -221,7 +222,7 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (aProperty == eCSSProperty_opacity) {
-    return nsAnimationManager::CanAnimateOpacity();
+    return nsLayoutUtils::AreOpacityAnimationsEnabled();
   }
   if (aProperty == eCSSProperty_transform && !(frame &&
       frame->Preserves3D() &&
@@ -229,7 +230,7 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
     if (frame && frame->IsSVGTransformed()) {
       return false;
     }
-    return nsAnimationManager::CanAnimateTransform();
+    return nsLayoutUtils::AreTransformAnimationsEnabled();
   }
   return false;
 }
