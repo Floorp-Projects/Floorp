@@ -657,11 +657,21 @@ toolbar button -->
 <!ENTITY socialToolbar.title        "Social Toolbar Button">
 <!ENTITY social.notLoggedIn.label   "Not logged in">
 
+<!-- LOCALIZATION NOTE (social.ok.label, social.ok.accesskey): this string is
+     used for the "OK" button for two different social panels. One appears when
+     the feature is activated (social.activated.* below), and the other when
+     the user clicks the "Share" button a second time (social.sharePopup.*
+     below). -->
+<!ENTITY social.ok.label       "OK">
+<!ENTITY social.ok.accesskey   "O">
+
 <!ENTITY social.sharePopup.undo.label     "Unshare">
 <!ENTITY social.sharePopup.undo.accesskey "U">
-<!ENTITY social.sharePopup.ok.label       "OK">
-<!ENTITY social.sharePopup.ok.accesskey   "O">
 <!ENTITY social.sharePopup.shared.label   "You shared this page.">
 <!ENTITY social.sharePopup.portrait.arialabel "User profile picture">
+
 <!ENTITY social.toggleSidebar.label "Show sidebar">
 <!ENTITY social.toggleSidebar.accesskey "s">
+
+<!ENTITY social.activated.button.label "Oops, undo">
+<!ENTITY social.activated.button.accesskey "u">

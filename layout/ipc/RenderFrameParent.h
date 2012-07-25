@@ -27,6 +27,7 @@ class InputEvent;
 namespace layers {
 class AsyncPanZoomController;
 class GestureEventListener;
+class TargetConfig;
 class ShadowLayersParent;
 }
 
@@ -41,6 +42,7 @@ class RenderFrameParent : public PRenderFrameParent,
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::TargetConfig TargetConfig;
   typedef mozilla::layers::ShadowLayersParent ShadowLayersParent;
   typedef FrameMetrics::ViewID ViewID;
 
@@ -70,6 +72,7 @@ public:
   void ContentViewScaleChanged(nsContentView* aView);
 
   virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+                                   const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
