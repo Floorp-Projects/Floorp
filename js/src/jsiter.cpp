@@ -735,7 +735,7 @@ Iterator(JSContext *cx, unsigned argc, Value *vp)
 
     bool keyonly = false;
     if (args.length() >= 2)
-        keyonly = js_ValueToBoolean(args[1]);
+        keyonly = ToBoolean(args[1]);
     unsigned flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
 
     if (!ValueToIterator(cx, flags, &args[0]))
