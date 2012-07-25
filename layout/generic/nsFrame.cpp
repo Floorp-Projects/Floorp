@@ -92,8 +92,6 @@
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsFontInflationData.h"
-#include "nsAnimationManager.h"
-#include "nsTransitionManager.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -937,20 +935,9 @@ nsIFrame::GetPaddingRect() const
 bool
 nsIFrame::IsTransformed() const
 {
-  return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+  return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
           (GetStyleDisplay()->HasTransform() ||
-           IsSVGTransformed() ||
-           (mContent &&
-            nsLayoutUtils::HasAnimationsForCompositor(mContent,
-                                                      eCSSProperty_transform))));
-}
-
-bool
-nsIFrame::HasOpacity() const
-{
-  return GetStyleDisplay()->mOpacity < 1.0f || (mContent &&
-           nsLayoutUtils::HasAnimationsForCompositor(mContent,
-                                                     eCSSProperty_opacity));
+           IsSVGTransformed());
 }
 
 bool
@@ -1768,6 +1755,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              nsDisplayList*        aList) {
   if (GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return NS_OK;
+
   // Replaced elements have their visibility handled here, because
   // they're visually atomic
   if (IsFrameOfType(eReplaced) && !IsVisibleForPainting(aBuilder))
@@ -1775,13 +1763,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   nsRect clipPropClip;
   const nsStyleDisplay* disp = GetStyleDisplay();
-  // We can stop right away if this is a zero-opacity stacking context,
-  // we're painting, and we're not animating opacity.
-  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
-      !nsLayoutUtils::HasAnimationsForCompositor(mContent,
-                                                 eCSSProperty_opacity)) {
+  // We can stop right away if this is a zero-opacity stacking context and
+  // we're painting.
+  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting())
     return NS_OK;
-  }
 
   bool applyClipPropClipping =
       ApplyClipPropClipping(aBuilder, disp, this, &clipPropClip);
@@ -1798,7 +1783,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         // gives us really weird results. I believe this is from points that lie beyond the
         // vanishing point. As a workaround we transform the overflow rect into screen space
         // and compare in that coordinate system.
-
+        
         // Transform the overflow rect into screen space
         nsRect overflow = GetVisualOverflowRectRelativeToSelf();
         nsPoint offset = aBuilder->ToReferenceFrame(this);
@@ -1935,6 +1920,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // resultList was emptied
     resultList.AppendToTop(item);
   }
+
   /* If there are any SVG effects, wrap the list up in an SVG effects item
    * (which also handles CSS group opacity). Note that we create an SVG effects
    * item even if resultList is empty, since a filter can produce graphical
@@ -1950,7 +1936,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* Else, if the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
    */
-  else if (HasOpacity() &&
+  else if (disp->mOpacity < 1.0f &&
            !nsSVGUtils::CanOptimizeOpacity(this) &&
            !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
@@ -2104,7 +2090,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
   const nsStyleDisplay* disp = child->GetStyleDisplay();
-  bool isVisuallyAtomic = child->HasOpacity()
+  bool isVisuallyAtomic = disp->mOpacity != 1.0f
     || child->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
@@ -4772,8 +4758,8 @@ nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
-      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nsnull, 
-                                                      nsnull, nsnull, nsnull, nsnull, aOutAncestor);
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
+                                                      scaleFactor, nsnull, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
