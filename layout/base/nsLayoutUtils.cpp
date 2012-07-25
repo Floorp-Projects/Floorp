@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "base/basictypes.h"
 #include "mozilla/Util.h"
 
 #include "nsLayoutUtils.h"
@@ -70,7 +71,7 @@
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
 #include "nsFontInflationData.h"
-
+#include "CompositorParent.h"
 #include "nsSVGUtils.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
@@ -150,11 +151,41 @@ nsLayoutUtils::Are3DTransformsEnabled()
 
   if (!s3DTransformPrefCached) {
     s3DTransformPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&s3DTransformsEnabled, 
+    mozilla::Preferences::AddBoolVarCache(&s3DTransformsEnabled,
                                           "layout.3d-transforms.enabled");
   }
 
   return s3DTransformsEnabled;
+}
+
+bool
+nsLayoutUtils::AreOpacityAnimationsEnabled()
+{
+  static bool sAreOpacityAnimationsEnabled;
+  static bool sOpacityPrefCached = false;
+
+  if (!sOpacityPrefCached) {
+    sOpacityPrefCached = true;
+    Preferences::AddBoolVarCache(&sAreOpacityAnimationsEnabled,
+                                 "layers.offmainthreadcomposition.animate-opacity");
+  }
+
+  return sAreOpacityAnimationsEnabled && CompositorParent::CompositorLoop();
+}
+
+bool
+nsLayoutUtils::AreTransformAnimationsEnabled()
+{
+  static bool sAreTransformAnimationsEnabled;
+  static bool sTransformPrefCached = false;
+
+  if (!sTransformPrefCached) {
+    sTransformPrefCached = true;
+    Preferences::AddBoolVarCache(&sAreTransformAnimationsEnabled,
+                                 "layers.offmainthreadcomposition.animate-transform");
+  }
+
+  return sAreTransformAnimationsEnabled && CompositorParent::CompositorLoop();
 }
 
 bool
