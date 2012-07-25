@@ -579,7 +579,7 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
                                   0, // no sharing - of course
                                   nsnull,
                                   CREATE_ALWAYS,
-                                  nsnull,
+                                  0,
                                   nsnull);
     if (mLockFileHandle == INVALID_HANDLE_VALUE) {
         // XXXbsmedberg: provide a profile-unlocker here!
