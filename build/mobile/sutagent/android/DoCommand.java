@@ -107,7 +107,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.10";
+    private final String prgVersion = "SUTAgentAndroid Version 1.11";
 
     public enum Command
         {
@@ -121,6 +121,7 @@ public class DoCommand {
         OS ("os"),
         ID ("id"),
         UPTIME ("uptime"),
+        UPTIMEMILLIS ("uptimemillis"),
         SETTIME ("settime"),
         SYSTIME ("systime"),
         SCREEN ("screen"),
@@ -421,6 +422,8 @@ public class DoCommand {
                     strReturn += "\n";
                     strReturn += GetUptime();
                     strReturn += "\n";
+                    strReturn += GetUptimeMillis();
+                    strReturn += "\n";
                     strReturn += GetScreenInfo();
                     strReturn += "\n";
                     strReturn += GetRotationInfo();
@@ -462,6 +465,10 @@ public class DoCommand {
 
                         case UPTIME:
                             strReturn = GetUptime();
+                            break;
+
+                        case UPTIMEMILLIS:
+                            strReturn = GetUptimeMillis();
                             break;
 
                         case MEMORY:
@@ -2924,6 +2931,11 @@ private void CancelNotification()
         return (sRet);
         }
 
+    public String GetUptimeMillis()
+        {
+        return Long.toString(SystemClock.uptimeMillis());
+        }
+ 
     public String NewKillProc(String sProcId, OutputStream out)
         {
         String sRet = "";
@@ -3771,6 +3783,7 @@ private void CancelNotification()
             "        [os]                 - os version for device\n" +
             "        [id]                 - unique identifier for device\n" +
             "        [uptime]             - uptime for device\n" +
+            "        [uptimemillis]       - uptime for device in milliseconds\n" +
             "        [systime]            - current system time\n" +
             "        [screen]             - width, height and bits per pixel for device\n" +
             "        [memory]             - physical, free, available, storage memory\n" +
