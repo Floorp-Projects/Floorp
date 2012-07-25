@@ -30,6 +30,9 @@ endif
 
 CPP_UNIT_TESTS += TestAppShellSteadyState.cpp
 
+MOCHITEST_FILES =	test_bug760802.html \
+		$(NULL)
+
 MOCHITEST_CHROME_FILES =	test_bug343416.xul \
 		test_bug429954.xul \
 		window_bug429954.xul \
@@ -92,14 +95,14 @@ MOCHITEST_CHROME_FILES  += taskbar_previews.xul \
 		window_mouse_scroll_win.html \
 		$(NULL)
 
-MOCHITEST_FILES =	test_bug565392.html \
+MOCHITEST_FILES +=	test_bug565392.html \
 		test_picker_no_crash.html \
 		window_picker_no_crash_child.html \
 		$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-MOCHITEST_FILES = 	plugin_scroll_invalidation.html \
+MOCHITEST_FILES += 	plugin_scroll_invalidation.html \
 		test_plugin_scroll_invalidation.html \
 		$(NULL)
 endif
