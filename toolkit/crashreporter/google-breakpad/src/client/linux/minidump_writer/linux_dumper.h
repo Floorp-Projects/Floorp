@@ -70,6 +70,9 @@ typedef struct
 #elif defined(__x86_64__)
 typedef Elf64_auxv_t elf_aux_entry;
 #endif
+
+typedef typeof(((elf_aux_entry*) 0)->a_un.a_val) elf_aux_val_t;
+
 // When we find the VDSO mapping in the process's address space, this
 // is the name we use for it when writing it to the minidump.
 // This should always be less than NAME_MAX!
@@ -145,6 +148,7 @@ class LinuxDumper {
   const wasteful_vector<pid_t> &threads() { return threads_; }
   const wasteful_vector<MappingInfo*> &mappings() { return mappings_; }
   const MappingInfo* FindMapping(const void* address) const;
+  const wasteful_vector<elf_aux_val_t> &auxv() { return auxv_; }
 
   // Find a block of memory to take as the stack given the top of stack pointer.
   //   stack: (output) the lowest address in the memory area
@@ -167,13 +171,8 @@ class LinuxDumper {
   bool ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                    uint8_t identifier[sizeof(MDGUID)]);
 
-  // Utility method to find the location of where the kernel has
-  // mapped linux-gate.so in memory(shows up in /proc/pid/maps as
-  // [vdso], but we can't guarantee that it's the only virtual dynamic
-  // shared object.  Parsing the auxilary vector for AT_SYSINFO_EHDR
-  // is the safest way to go.)
-  void* FindBeginningOfLinuxGateSharedLibrary(const pid_t pid) const;
  private:
+  bool ReadAuxv();
   bool EnumerateMappings(wasteful_vector<MappingInfo*>* result) const;
   bool EnumerateThreads(wasteful_vector<pid_t>* result) const;
 
@@ -184,6 +183,7 @@ class LinuxDumper {
   bool threads_suspended_;
   wasteful_vector<pid_t> threads_;  // the ids of all the threads
   wasteful_vector<MappingInfo*> mappings_;  // info from /proc/<pid>/maps
+  wasteful_vector<elf_aux_val_t> auxv_;  // info from /proc/<pid>/auxv
 };
 
 }  // namespace google_breakpad

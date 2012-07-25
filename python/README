@@ -1,0 +1,14 @@
+This directory contains common Python code.
+
+The basic rule is that if Python code is cross-module (that's "module" in the
+Mozilla meaning - as in "module ownership") and is MPL-compatible, it should
+go here.
+
+What should not go here:
+
+* Python that is not MPL-compatible (see other-licenses/)
+* Python that has good reason to remain close to its "owning" (Mozilla)
+  module (e.g. it is only being consumed from there).
+
+Historical information can be found at
+https://bugzilla.mozilla.org/show_bug.cgi?id=775243

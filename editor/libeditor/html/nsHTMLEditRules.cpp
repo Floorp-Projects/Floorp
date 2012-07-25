@@ -2869,7 +2869,7 @@ nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection,
 }
 
 nsresult
-nsHTMLEditRules::WillMakeList(nsISelection* aSelection,
+nsHTMLEditRules::WillMakeList(Selection* aSelection,
                               const nsAString* aListType,
                               bool aEntireList,
                               const nsAString* aBulletType,
@@ -3159,7 +3159,7 @@ nsHTMLEditRules::WillMakeList(nsISelection* aSelection,
 
 
 nsresult
-nsHTMLEditRules::WillRemoveList(nsISelection *aSelection, 
+nsHTMLEditRules::WillRemoveList(Selection* aSelection,
                                 bool aOrdered, 
                                 bool *aCancel,
                                 bool *aHandled)
@@ -3226,7 +3226,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
 
 
 nsresult
-nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection, 
+nsHTMLEditRules::WillMakeDefListItem(Selection* aSelection,
                                      const nsAString *aItemType, 
                                      bool aEntireList, 
                                      bool *aCancel,
@@ -3238,7 +3238,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
 }
 
 nsresult
-nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection, 
+nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
                                     const nsAString *aBlockType, 
                                     bool *aCancel,
                                     bool *aHandled)
@@ -3395,7 +3395,8 @@ nsHTMLEditRules::DidMakeBasicBlock(nsISelection *aSelection,
 }
 
 nsresult
-nsHTMLEditRules::WillIndent(nsISelection *aSelection, bool *aCancel, bool * aHandled)
+nsHTMLEditRules::WillIndent(Selection* aSelection,
+                            bool* aCancel, bool* aHandled)
 {
   nsresult res;
   if (mHTMLEditor->IsCSSEnabled()) {
@@ -3408,7 +3409,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, bool *aCancel, bool * aHan
 }
 
 nsresult
-nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, bool *aCancel, bool * aHandled)
+nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
+                               bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   
@@ -3614,7 +3616,8 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, bool *aCancel, bool * a
 }
 
 nsresult
-nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, bool *aCancel, bool * aHandled)
+nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
+                                bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   nsresult res = WillInsert(aSelection, aCancel);
@@ -3842,7 +3845,8 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, bool *aCancel, bool * 
 
 
 nsresult
-nsHTMLEditRules::WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHandled)
+nsHTMLEditRules::WillOutdent(Selection* aSelection,
+                             bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
@@ -4412,7 +4416,7 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode,
 
 
 nsresult
-nsHTMLEditRules::WillAlign(nsISelection *aSelection, 
+nsHTMLEditRules::WillAlign(Selection* aSelection,
                            const nsAString *alignType, 
                            bool *aCancel,
                            bool *aHandled)
@@ -8570,7 +8574,8 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
 //
 
 nsresult
-nsHTMLEditRules::WillAbsolutePosition(nsISelection *aSelection, bool *aCancel, bool * aHandled)
+nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
+                                      bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   nsresult res = WillInsert(aSelection, aCancel);
@@ -8786,8 +8791,8 @@ nsHTMLEditRules::DidAbsolutePosition()
 }
 
 nsresult
-nsHTMLEditRules::WillRemoveAbsolutePosition(nsISelection *aSelection, bool *aCancel, bool * aHandled)
-{
+nsHTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
+                                            bool* aCancel, bool* aHandled) {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
   nsresult res = WillInsert(aSelection, aCancel);
   NS_ENSURE_SUCCESS(res, res);
@@ -8808,7 +8813,7 @@ nsHTMLEditRules::WillRemoveAbsolutePosition(nsISelection *aSelection, bool *aCan
 }
 
 nsresult
-nsHTMLEditRules::WillRelativeChangeZIndex(nsISelection *aSelection,
+nsHTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
                                           PRInt32 aChange,
                                           bool *aCancel,
                                           bool * aHandled)

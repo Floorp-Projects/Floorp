@@ -1567,7 +1567,7 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.set enabled", 1);
     THIS_DEBUGGER(cx, argc, vp, "set enabled", args, dbg);
-    bool enabled = js_ValueToBoolean(args[0]);
+    bool enabled = ToBoolean(args[0]);
 
     if (enabled != dbg->enabled) {
         for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
@@ -2073,7 +2073,7 @@ class Debugger::ScriptQuery {
         Value innermostProperty;
         if (!query->getProperty(cx, cx->runtime->atomState.innermostAtom, &innermostProperty))
             return false;
-        innermost = js_ValueToBoolean(innermostProperty);
+        innermost = ToBoolean(innermostProperty);
         if (innermost) {
             /* Technically, we need only check hasLine, but this is clearer. */
             if (url.isUndefined() || !hasLine) {

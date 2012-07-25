@@ -150,15 +150,20 @@ bool GetThreadRegisters(ThreadInfo* info) {
   return true;
 }
 
+// All interesting auvx entry types are below AT_SYSINFO_EHDR
+#define AT_MAX AT_SYSINFO_EHDR
+
 LinuxDumper::LinuxDumper(int pid)
     : pid_(pid),
       threads_suspended_(false),
       threads_(&allocator_, 8),
-      mappings_(&allocator_) {
+      mappings_(&allocator_),
+      auxv_(&allocator_, AT_MAX + 1) {
 }
 
 bool LinuxDumper::Init() {
-  return EnumerateThreads(&threads_) &&
+  return ReadAuxv() &&
+         EnumerateThreads(&threads_) &&
          EnumerateMappings(&mappings_);
 }
 
@@ -271,34 +276,32 @@ LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
   return success;
 }
 
-void*
-LinuxDumper::FindBeginningOfLinuxGateSharedLibrary(const pid_t pid) const {
+bool
+LinuxDumper::ReadAuxv() {
   char auxv_path[80];
-  BuildProcPath(auxv_path, pid, "auxv");
+  BuildProcPath(auxv_path, pid_, "auxv");
 
   // If BuildProcPath errors out due to invalid input, we'll handle it when
   // we try to sys_open the file.
 
-  // Find the AT_SYSINFO_EHDR entry for linux-gate.so
-  // See http://www.trilithium.com/johan/2005/08/linux-gate/ for more
-  // information.
   int fd = sys_open(auxv_path, O_RDONLY, 0);
   if (fd < 0) {
-    return NULL;
+    return false;
   }
 
   elf_aux_entry one_aux_entry;
+  bool res = false;
   while (sys_read(fd,
                   &one_aux_entry,
                   sizeof(elf_aux_entry)) == sizeof(elf_aux_entry) &&
          one_aux_entry.a_type != AT_NULL) {
-    if (one_aux_entry.a_type == AT_SYSINFO_EHDR) {
-      close(fd);
-      return reinterpret_cast<void*>(one_aux_entry.a_un.a_val);
+    if (one_aux_entry.a_type <= AT_MAX) {
+      auxv_[one_aux_entry.a_type] = one_aux_entry.a_un.a_val;
+      res = true;
     }
   }
   close(fd);
-  return NULL;
+  return res;
 }
 
 bool
@@ -308,11 +311,13 @@ LinuxDumper::EnumerateMappings(wasteful_vector<MappingInfo*>* result) const {
 
   // linux_gate_loc is the beginning of the kernel's mapping of
   // linux-gate.so in the process.  It doesn't actually show up in the
-  // maps list as a filename, so we use the aux vector to find it's
-  // load location and special case it's entry when creating the list
-  // of mappings.
+  // maps list as a filename, but it can be found using the AT_SYSINFO_EHDR
+  // aux vector entry, which gives the information necessary to special
+  // case its entry when creating the list of mappings.
+  // See http://www.trilithium.com/johan/2005/08/linux-gate/ for more
+  // information.
   const void* linux_gate_loc;
-  linux_gate_loc = FindBeginningOfLinuxGateSharedLibrary(pid_);
+  linux_gate_loc = reinterpret_cast<void *>(auxv_[AT_SYSINFO_EHDR]);
 
   const int fd = sys_open(maps_path, O_RDONLY, 0);
   if (fd < 0)

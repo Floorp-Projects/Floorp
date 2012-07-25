@@ -43,12 +43,26 @@ static void Output(const char *fmt, ... )
   va_list ap;
   va_start(ap, fmt);
 
-#if defined(XP_WIN) && !MOZ_WINCONSOLE
-  PRUnichar msg[2048];
-  _vsnwprintf(msg, sizeof(msg)/sizeof(msg[0]), NS_ConvertUTF8toUTF16(fmt).get(), ap);
-  MessageBoxW(NULL, msg, L"XULRunner", MB_OK | MB_ICONERROR);
-#else
+#ifndef XP_WIN
   vfprintf(stderr, fmt, ap);
+#else
+  char msg[2048];
+  vsnprintf_s(msg, _countof(msg), _TRUNCATE, fmt, ap);
+
+  wchar_t wide_msg[2048];
+  MultiByteToWideChar(CP_UTF8,
+                      0,
+                      msg,
+                      -1,
+                      wide_msg,
+                      _countof(wide_msg));
+#if MOZ_WINCONSOLE
+  fwprintf_s(stderr, wide_msg);
+#else
+  MessageBoxW(NULL, wide_msg, L"Firefox", MB_OK
+                                        | MB_ICONERROR
+                                        | MB_SETFOREGROUND);
+#endif
 #endif
 
   va_end(ap);

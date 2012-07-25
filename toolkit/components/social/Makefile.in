@@ -15,6 +15,7 @@ EXTRA_JS_MODULES = \
   MessagePortWorker.js \
   SocialService.jsm \
   WorkerAPI.jsm \
+  MozSocialAPI.jsm \
   $(NULL)
 
 TEST_DIRS += \

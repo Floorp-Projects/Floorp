@@ -182,6 +182,44 @@
       </hbox>
     </panel>
 
+    <panel id="socialActivatedNotification"
+           type="arrow"
+           hidden="true"
+           consumeoutsideclicks="true"
+           align="start"
+           role="alert">
+      <hbox flex="1">
+        <image src="chrome://browser/content/social-icon.png" class="popup-notification-icon"/>
+        <vbox flex="1">
+          <description id="social-activation-message" class="popup-notification-description"/>
+          <spacer flex="1"/>
+          <hbox pack="end" align="center" class="popup-notification-button-container">
+#ifdef XP_UNIX
+        <button id="social-undoactivation-button"
+                label="&social.activated.button.label;"
+                accesskey="&social.activated.button.accesskey;"
+                onclick="SocialUI.undoActivation();"/>
+        <button default="true"
+                autofocus="autofocus"
+                label="&social.ok.label;"
+                accesskey="&social.ok.accesskey;"
+                oncommand="SocialUI.notificationPanel.hidePopup();"/>
+#else
+        <button default="true"
+                autofocus="autofocus"
+                label="&social.ok.label;"
+                accesskey="&social.ok.accesskey;"
+                oncommand="SocialUI.notificationPanel.hidePopup();"/>
+        <button id="social-undoactivation-button"
+                label="&social.activated.button.label;"
+                accesskey="&social.activated.button.accesskey;"
+                onclick="SocialUI.undoActivation();"/>
+#endif
+          </hbox>
+        </vbox>
+      </hbox>
+    </panel>
+
     <panel id="editSharePopup"
            type="arrow"
            orient="vertical"
@@ -214,16 +252,16 @@
                 class="editSharePopupBottomButton"
                 default="true"
                 autofocus="autofocus"
-                label="&social.sharePopup.ok.label;"
-                accesskey="&social.sharePopup.ok.accesskey;"
+                label="&social.ok.label;"
+                accesskey="&social.ok.accesskey;"
                 oncommand="SocialShareButton.dismissSharePopup();"/>
 #else
         <button id="editSharePopupOkButton"
                 class="editSharePopupBottomButton"
                 default="true"
                 autofocus="autofocus"
-                label="&social.sharePopup.ok.label;"
-                accesskey="&social.sharePopup.ok.accesskey;"
+                label="&social.ok.label;"
+                accesskey="&social.ok.accesskey;"
                 oncommand="SocialShareButton.dismissSharePopup();"/>
         <button id="editSharePopupUndoButton"
                 class="editSharePopupBottomButton"
@@ -638,6 +676,8 @@
                           oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();"/>
                 </vbox>
               </hbox>
+              <menuitem id="social-remove-menuitem"
+                        oncommand="Social.active = false;"/>
               <menuitem id="social-toggle-sidebar-menuitem"
                         type="checkbox"
                         autocheck="false"

@@ -358,3 +358,4 @@ asserts-if(winWidget,0-2) load 736924-1.html # bug 738803
 load 749816-1.html
 load 763223-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
+load 770381-1.html

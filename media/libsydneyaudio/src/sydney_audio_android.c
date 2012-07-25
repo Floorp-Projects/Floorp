@@ -381,8 +381,6 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     return SA_ERROR_NO_INIT;
   }
 
-  ALOG("%p - get position", s);
-
   JNIEnv *jenv = GetJNIForThread();
   *pos  = (*jenv)->CallIntMethod(jenv, s->output_unit, at.getpos);
 

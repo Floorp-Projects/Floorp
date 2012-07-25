@@ -322,7 +322,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
         }
         switch (c) {
           case 'b':
-            *va_arg(ap, JSBool *) = js_ValueToBoolean(*sp);
+            *va_arg(ap, JSBool *) = ToBoolean(*sp);
             break;
           case 'c':
             if (!JS_ValueToUint16(cx, *sp, va_arg(ap, uint16_t *)))
@@ -480,7 +480,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(d);
         break;
       case JSTYPE_BOOLEAN:
-        *vp = BOOLEAN_TO_JSVAL(js_ValueToBoolean(v));
+        *vp = BooleanValue(ToBoolean(v));
         return JS_TRUE;
       default: {
         char numBuf[12];
@@ -632,7 +632,7 @@ JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    *bp = js_ValueToBoolean(v);
+    *bp = ToBoolean(v);
     return JS_TRUE;
 }
 
@@ -5342,29 +5342,32 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned i
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (script->function())
-        return JS_DecompileFunction(cx, script->function(), indent);
+    RootedFunction fun(cx, script->function());
+    if (fun)
+        return JS_DecompileFunction(cx, fun, indent);
     return script->sourceData(cx);
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunction(JSContext *cx, JSFunction *fun, unsigned indent)
+JS_DecompileFunction(JSContext *cx, JSFunction *funArg, unsigned indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fun);
-    return fun->toString(cx, false, !(indent & JS_DONT_PRETTY_PRINT));
+    assertSameCompartment(cx, funArg);
+    RootedFunction fun(cx, funArg);
+    return FunctionToString(cx, fun, false, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_PUBLIC_API(JSString *)
-JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent)
+JS_DecompileFunctionBody(JSContext *cx, JSFunction *funArg, unsigned indent)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fun);
-    return fun->toString(cx, true, !(indent & JS_DONT_PRETTY_PRINT));
+    assertSameCompartment(cx, funArg);
+    RootedFunction fun(cx, funArg);
+    return FunctionToString(cx, fun, true, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 JS_NEVER_INLINE JS_PUBLIC_API(JSBool)

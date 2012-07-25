@@ -7,7 +7,9 @@
 #include "nsEditor.h"
 #include "IMETextTxn.h"
 #include "nsGkAtoms.h"
-#include "nsISelection.h"
+#include "mozilla/Selection.h"
+
+using namespace mozilla;
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(true), 
@@ -42,7 +44,9 @@ NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
 NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
 NS_IMPL_RELEASE_INHERITED(PlaceholderTxn, EditAggregateTxn)
 
-NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)
+NS_IMETHODIMP
+PlaceholderTxn::Init(nsIAtom* aName, nsSelectionState* aSelState,
+                     nsEditor* aEditor)
 {
   NS_ENSURE_TRUE(aEditor && aSelState, NS_ERROR_NULL_POINTER);
 
@@ -256,10 +260,9 @@ NS_IMETHODIMP PlaceholderTxn::Commit()
 
 NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
 {
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  return mEndSel.SaveSelection(selection);
+  mEndSel.SaveSelection(selection);
+  return NS_OK;
 }
 

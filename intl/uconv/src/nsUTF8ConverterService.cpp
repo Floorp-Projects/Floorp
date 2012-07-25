@@ -59,8 +59,11 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
                                             const char *aCharset, 
                                             bool aSkipCheck, 
                                             bool aAllowSubstitution,
+                                            PRUint8 aOptionalArgc,
                                             nsACString &aUTF8String)
 {
+  bool allowSubstitution = (aOptionalArgc == 1) ? aAllowSubstitution : true;
+
   // return if ASCII only or valid UTF-8 providing that the ASCII/UTF-8
   // check is requested. It may not be asked for if a caller suspects
   // that the input is in non-ASCII 7bit charset (ISO-2022-xx, HZ) or 
@@ -72,7 +75,7 @@ nsUTF8ConverterService::ConvertStringToUTF8(const nsACString &aString,
 
   aUTF8String.Truncate();
 
-  nsresult rv = ToUTF8(aString, aCharset, aAllowSubstitution, aUTF8String);
+  nsresult rv = ToUTF8(aString, aCharset, allowSubstitution, aUTF8String);
 
   // additional protection for cases where check is skipped and  the input
   // is actually in UTF-8 as opposed to aCharset. (i.e. caller's hunch

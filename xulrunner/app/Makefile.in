@@ -17,11 +17,7 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 PROGRAM = xulrunner$(BIN_SUFFIX)
-else
-PROGRAM = xulrunner-bin$(BIN_SUFFIX)
-endif
 
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
@@ -57,7 +53,6 @@ else
 MOZ_WINCONSOLE = 0
 endif
 endif
-DEFINES += -DMOZ_WINCONSOLE=$(MOZ_WINCONSOLE)
 
 # This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
 # shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
@@ -117,25 +112,6 @@ endif
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-ifeq (unix, $(MOZ_FS_LAYOUT))
-
-xulrunner:: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)
-	cat $< | sed -e "s|%MOZAPPDIR%|$(installdir)|" \
-                -e "s|%MOZ_USER_DIR%|.mozilla/xulrunner|" \
-                -e "s|%MOZ_APP_DISPLAYNAME%|$(MOZ_APP_DISPLAYNAME)|" > $@
-	chmod +x $@
-
-libs:: xulrunner
-	$(INSTALL) $< $(DIST)/bin
-
-install:: xulrunner
-	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
-
-GARBAGE += xulrunner
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
@@ -181,11 +157,11 @@ libs:: $(PROGRAM) $(FRAMEWORK_DIR)/Resources
 	rm -f $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/XUL \
-	      $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner-bin
+	      $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner
 	ln -s $(FRAMEWORK_VERSION) $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current
 	ln -s Versions/Current/libxpcom.dylib $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib
 	ln -s Versions/Current/XUL $(DIST)/$(FRAMEWORK_NAME).framework/XUL
-	ln -s Versions/Current/xulrunner-bin $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner-bin
+	ln -s Versions/Current/xulrunner $(DIST)/$(FRAMEWORK_NAME).framework/xulrunner
 
 clean clobber::
 	rm -rf $(DIST)/$(FRAMEWORK_NAME).framework

@@ -68,6 +68,12 @@ static pthread_t sFramebufferWatchThread;
 
 namespace {
 
+static PRUint32
+EffectiveScreenRotation()
+{
+    return (sScreenRotation + sPhysicalScreenRotation) % (360 / 90);
+}
+
 class ScreenOnOffEvent : public nsRunnable {
 public:
     ScreenOnOffEvent(bool on)
@@ -236,7 +242,8 @@ nsWindow::DoDraw(void)
 
             // No double-buffering needed.
             AutoLayerManagerSetup setupLayerManager(
-                gWindowToRedraw, ctx, BasicLayerManager::BUFFER_NONE);
+                gWindowToRedraw, ctx, BasicLayerManager::BUFFER_NONE,
+                ScreenRotation(EffectiveScreenRotation()));
             gWindowToRedraw->mEventCallback(&event);
         }
 
@@ -602,6 +609,12 @@ nsWindow::GetGLFrameBufferFormat()
     return LOCAL_GL_NONE;
 }
 
+nsIntRect
+nsWindow::GetNaturalBounds()
+{
+    return gScreenBounds;
+}
+
 // nsScreenGonk.cpp
 
 nsScreenGonk::nsScreenGonk(void *nativeScreen)
@@ -676,32 +689,16 @@ nsScreenGonk::SetRotation(PRUint32 aRotation)
         return NS_OK;
 
     sScreenRotation = aRotation;
-    sRotationMatrix.Reset();
-    switch ((aRotation + sPhysicalScreenRotation) % (360 / 90)) {
-    case nsIScreen::ROTATION_0_DEG:
-        sVirtualBounds = gScreenBounds;
-        break;
-    case nsIScreen::ROTATION_90_DEG:
-        sRotationMatrix.Translate(gfxPoint(gScreenBounds.width, 0));
-        sRotationMatrix.Rotate(M_PI / 2);
+    sRotationMatrix =
+        ComputeGLTransformForRotation(gScreenBounds,
+                                      ScreenRotation(EffectiveScreenRotation()));
+    PRUint32 rotation = EffectiveScreenRotation();
+    if (rotation == nsIScreen::ROTATION_90_DEG ||
+        rotation == nsIScreen::ROTATION_270_DEG) {
         sVirtualBounds = nsIntRect(0, 0, gScreenBounds.height,
-                                         gScreenBounds.width);
-        break;
-    case nsIScreen::ROTATION_180_DEG:
-        sRotationMatrix.Translate(gfxPoint(gScreenBounds.width,
-                                           gScreenBounds.height));
-        sRotationMatrix.Rotate(M_PI);
+                                   gScreenBounds.width);
+    } else {
         sVirtualBounds = gScreenBounds;
-        break;
-    case nsIScreen::ROTATION_270_DEG:
-        sRotationMatrix.Translate(gfxPoint(0, gScreenBounds.height));
-        sRotationMatrix.Rotate(M_PI * 3 / 2);
-        sVirtualBounds = nsIntRect(0, 0, gScreenBounds.height,
-                                         gScreenBounds.width);
-        break;
-    default:
-        MOZ_NOT_REACHED("Unknown rotation");
-        break;
     }
 
     for (unsigned int i = 0; i < sTopWindows.Length(); i++)

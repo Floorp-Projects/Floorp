@@ -663,6 +663,14 @@ add_test(function test_uri_construction() {
   run_next_test();
 });
 
+/**
+ * End of tests that rely on a single HTTP server.
+ * All tests after this point must begin and end their own.
+ */
+add_test(function eliminate_server() {
+  server.stop(run_next_test);
+});
+
 add_test(function test_new_channel() {
   _("Ensure a redirect to a new channel is handled properly.");
 
@@ -674,9 +682,9 @@ add_test(function test_new_channel() {
     response.setHeader("Content-Type", "text/plain");
     response.bodyOutputStream.write(body, body.length);
   }
-  let server2 = httpd_setup({"/resource": resourceHandler}, 8081);
+  let server = httpd_setup({"/resource": resourceHandler}, 8080);
 
-  let request = new AsyncResource("http://localhost:8080/redirect");
+  let request = new AsyncResource("http://localhost:8080/resource");
   request.get(function onRequest(error, content) {
     do_check_null(error);
     do_check_true(resourceRequested);
@@ -684,10 +692,6 @@ add_test(function test_new_channel() {
     do_check_true("content-type" in content.headers);
     do_check_eq("text/plain", content.headers["content-type"]);
 
-    server2.stop(run_next_test);
+    server.stop(run_next_test);
   });
-});
-
-add_test(function tear_down() {
-  server.stop(run_next_test);
 });

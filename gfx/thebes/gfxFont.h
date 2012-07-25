@@ -3181,6 +3181,12 @@ protected:
                                FontCreationCallback fc,
                                void *closure);
 
+    // Helper for font-matching:
+    // see if aCh is supported in any of the other faces from aFont's family;
+    // if so return the best style match, else return null.
+    already_AddRefed<gfxFont> TryOtherFamilyMembers(gfxFont* aFont,
+                                                    PRUint32 aCh);
+
     static bool FontResolverProc(const nsAString& aName, void *aClosure);
 
     static bool FindPlatformFont(const nsAString& aName,

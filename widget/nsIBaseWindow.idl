@@ -153,6 +153,17 @@ interface nsIBaseWindow : nsISupports
 	attribute nativeWindow parentNativeWindow;
 
 	/*
+	This is the handle (HWND, GdkWindow*, ...) to the native window of the
+	control, exposed as a DOMString.
+
+	@return DOMString in hex format with "0x" prepended, or empty string if
+	mainWidget undefined
+
+	@throws NS_ERROR_NOT_IMPLEMENTED for non-XULWindows
+	*/
+	readonly attribute DOMString nativeHandle;
+
+	/*
 	Attribute controls the visibility of the object behind this interface.
 	Setting this attribute to false will hide the control.  Setting it to 
 	true will show it.

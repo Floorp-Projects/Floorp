@@ -5973,6 +5973,9 @@ DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   else if (aIID->Equals(NS_GET_IID(nsIIDBTransaction))) {
     interface = IDBConstant::IDBTransaction;
   }
+  else {
+    MOZ_NOT_REACHED("unexpected IID");
+  }
 
   for (int8_t i = 0; i < (int8_t)mozilla::ArrayLength(sIDBConstants); ++i) {
     const IDBConstant& c = sIDBConstants[i];

@@ -43,7 +43,7 @@ public final class Tab {
     private int mFaviconSize;
     private JSONObject mIdentityData;
     private boolean mReaderEnabled;
-    private Drawable mThumbnail;
+    private BitmapDrawable mThumbnail;
     private int mHistoryIndex;
     private int mHistorySize;
     private int mParentId;
@@ -191,10 +191,9 @@ public final class Tab {
             public void run() {
                 if (b != null) {
                     try {
-                        if (mState == Tab.STATE_SUCCESS)
-                            saveThumbnailToDB(new BitmapDrawable(b));
-
                         mThumbnail = new BitmapDrawable(b);
+                        if (mState == Tab.STATE_SUCCESS)
+                            saveThumbnailToDB();
                     } catch (OutOfMemoryError oom) {
                         Log.e(LOGTAG, "Unable to create/scale bitmap", oom);
                         mThumbnail = null;
@@ -589,13 +588,13 @@ public final class Tab {
         }
     }
 
-    private void saveThumbnailToDB(BitmapDrawable thumbnail) {
+    private void saveThumbnailToDB() {
         try {
             String url = getURL();
             if (url == null)
                 return;
 
-            BrowserDB.updateThumbnailForUrl(mContentResolver, url, thumbnail);
+            BrowserDB.updateThumbnailForUrl(mContentResolver, url, mThumbnail);
         } catch (Exception e) {
             // ignore
         }
