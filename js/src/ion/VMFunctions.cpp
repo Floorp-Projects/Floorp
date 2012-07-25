@@ -215,7 +215,7 @@ template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString 
 bool
 ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 {
-    *output = !js_ValueToBoolean(input);
+    *output = !ToBoolean(input);
     return true;
 }
 
