@@ -494,4 +494,25 @@ private:
   void operator=(const nsThreadPoolNaming &) MOZ_DELETE;
 };
 
+/**
+ * Thread priority in most operating systems affect scheduling, not IO.  This
+ * helper is used to set the current thread to low IO priority for the lifetime
+ * of the created object.  You can only use this low priority IO setting within
+ * the context of the current thread.
+ */
+class NS_STACK_CLASS nsAutoLowPriorityIO
+{
+public:
+  nsAutoLowPriorityIO();
+  ~nsAutoLowPriorityIO();
+
+private:
+  bool lowIOPrioritySet;
+#if defined(XP_MACOSX)
+  int oldPriority;
+#endif
+};
+
+
+
 #endif  // nsThreadUtils_h__
