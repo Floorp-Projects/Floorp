@@ -448,13 +448,13 @@ stubs::GreaterEqual(VMFrame &f)
 JSBool JS_FASTCALL
 stubs::ValueToBoolean(VMFrame &f)
 {
-    return js_ValueToBoolean(f.regs.sp[-1]);
+    return ToBoolean(f.regs.sp[-1]);
 }
 
 void JS_FASTCALL
 stubs::Not(VMFrame &f)
 {
-    JSBool b = !js_ValueToBoolean(f.regs.sp[-1]);
+    JSBool b = !ToBoolean(f.regs.sp[-1]);
     f.regs.sp[-1].setBoolean(b);
 }
 

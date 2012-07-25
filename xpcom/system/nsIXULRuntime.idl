@@ -89,4 +89,10 @@ interface nsIXULRuntime : nsISupports
    * closed cleanly. This is set to 0 if there was no existing profile lock.
    */
   readonly attribute PRInt64 replacedLockTime;
+
+  /**
+   * Local ID of the minidump generated when the process crashed
+   * on the previous run. Can be passed directly to CrashSubmit.submit.
+   */
+  readonly attribute DOMString lastRunCrashID;
 };

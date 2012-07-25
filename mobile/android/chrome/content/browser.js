@@ -3227,7 +3227,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "dom-touch-listener-added", false);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
-    BrowserApp.deck.addEventListener("touchstart", this, false);
+    BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("click", SelectHelper, true);
   },
 
@@ -3500,7 +3500,7 @@ var BrowserEventHandler = {
       for (let i = 0; i < rects.length; i++) {
         let rect = rects[i];
         let inBounds =
-          (aX> rect.left  && aX < (rect.left + rect.width)) &&
+          (aX > rect.left && aX < (rect.left + rect.width)) &&
           (aY > rect.top && aY < (rect.top + rect.height));
         if (inBounds) {
           isTouchClick = false;
@@ -3511,8 +3511,8 @@ var BrowserEventHandler = {
       if (isTouchClick) {
         let rect = rects[0];
         if (rect.width != 0 || rect.height != 0) {
-          aX = Math.min(rect.left + rect.width, Math.max(rect.left, aX));
-          aY = Math.min(rect.top + rect.height, Math.max(rect.top,  aY));
+          aX = Math.min(Math.floor(rect.left + rect.width), Math.max(Math.ceil(rect.left), aX));
+          aY = Math.min(Math.floor(rect.top + rect.height), Math.max(Math.ceil(rect.top),  aY));
         }
       }
     }
@@ -3523,7 +3523,7 @@ var BrowserEventHandler = {
     let window = aElement.ownerDocument.defaultView;
     try {
       let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), 0, 1, 0, true);
+      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true);
     } catch(e) {
       Cu.reportError(e);
     }

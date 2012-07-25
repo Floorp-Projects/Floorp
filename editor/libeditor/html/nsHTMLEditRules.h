@@ -156,18 +156,38 @@ protected:
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult DeleteNonTableElements(nsINode* aNode);
-  nsresult WillMakeList(nsISelection *aSelection, const nsAString *aListType, bool aEntireList, const nsAString *aBulletType, bool *aCancel, bool *aHandled, const nsAString *aItemType=nsnull);
-  nsresult WillRemoveList(nsISelection *aSelection, bool aOrderd, bool *aCancel, bool *aHandled);
-  nsresult WillIndent(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult WillCSSIndent(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult WillHTMLIndent(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult WillAlign(nsISelection *aSelection, const nsAString *alignType, bool *aCancel, bool *aHandled);
-  nsresult WillAbsolutePosition(nsISelection *aSelection, bool *aCancel, bool * aHandled);
-  nsresult WillRemoveAbsolutePosition(nsISelection *aSelection, bool *aCancel, bool * aHandled);
-  nsresult WillRelativeChangeZIndex(nsISelection *aSelection, PRInt32 aChange, bool *aCancel, bool * aHandled);
-  nsresult WillMakeDefListItem(nsISelection *aSelection, const nsAString *aBlockType, bool aEntireList, bool *aCancel, bool *aHandled);
-  nsresult WillMakeBasicBlock(nsISelection *aSelection, const nsAString *aBlockType, bool *aCancel, bool *aHandled);
+  nsresult WillMakeList(mozilla::Selection* aSelection,
+                        const nsAString* aListType,
+                        bool aEntireList,
+                        const nsAString* aBulletType,
+                        bool* aCancel, bool* aHandled,
+                        const nsAString* aItemType = nsnull);
+  nsresult WillRemoveList(mozilla::Selection* aSelection,
+                          bool aOrdered, bool* aCancel, bool* aHandled);
+  nsresult WillIndent(mozilla::Selection* aSelection,
+                      bool* aCancel, bool* aHandled);
+  nsresult WillCSSIndent(mozilla::Selection* aSelection,
+                         bool* aCancel, bool* aHandled);
+  nsresult WillHTMLIndent(mozilla::Selection* aSelection,
+                          bool* aCancel, bool* aHandled);
+  nsresult WillOutdent(mozilla::Selection* aSelection,
+                       bool* aCancel, bool* aHandled);
+  nsresult WillAlign(mozilla::Selection* aSelection,
+                     const nsAString* alignType,
+                     bool* aCancel, bool* aHandled);
+  nsresult WillAbsolutePosition(mozilla::Selection* aSelection,
+                                bool* aCancel, bool* aHandled);
+  nsresult WillRemoveAbsolutePosition(mozilla::Selection* aSelection,
+                                      bool* aCancel, bool* aHandled);
+  nsresult WillRelativeChangeZIndex(mozilla::Selection* aSelection,
+                                    PRInt32 aChange,
+                                    bool* aCancel, bool* aHandled);
+  nsresult WillMakeDefListItem(mozilla::Selection* aSelection,
+                               const nsAString* aBlockType, bool aEntireList,
+                               bool* aCancel, bool* aHandled);
+  nsresult WillMakeBasicBlock(mozilla::Selection* aSelection,
+                              const nsAString* aBlockType,
+                              bool* aCancel, bool* aHandled);
   nsresult DidMakeBasicBlock(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   nsresult DidAbsolutePosition();
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
