@@ -48,6 +48,9 @@ Readability.prototype = {
   // it quits and just show a link.
   MAX_PAGES: 5,
 
+  // The number of iterations processed before yielding.
+  GEN_ITERATIONS: 100,
+
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
@@ -326,14 +329,28 @@ Readability.prototype = {
     node.readability.contentScore += this._getClassWeight(node);
   },
 
+  _grabArticle: function () {
+    let gen = this._grabArticleGenerator();
+    let iterate = function () {
+      for (let i = this.GEN_ITERATIONS; i--;) {
+        let result = gen.next();
+        if (result !== undefined) {
+          return result;
+        }
+      }
+      return iterate();
+    }.bind(this);
+    return iterate();
+  },
+
   /***
-   * grabArticle - Using a variety of metrics (content score, classname, element types), find the content that is
+   * grabArticleGenerator - Using a variety of metrics (content score, classname, element types), find the content that is
    *         most likely to be the stuff a user wants to read. Then return it wrapped up in a div.
    *
    * @param page a document to run upon. Needs to be a full document, complete with body.
    * @return Element
   **/
-  _grabArticle: function(page) {
+  _grabArticleGenerator: function(page) {
     while (true) {
       let doc = this._doc;
       let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
@@ -345,6 +362,7 @@ Readability.prototype = {
       let pageCacheHtml = page.innerHTML;
       let allElements = page.getElementsByTagName('*');
 
+      yield;
 
       // First, node prepping. Trash nodes that look cruddy (like ones with the
       // class name "comment", etc), and turn divs into P tags where they have been
@@ -401,6 +419,8 @@ Readability.prototype = {
             }
           }
         }
+
+        yield;
       }
 
       /**
@@ -452,6 +472,8 @@ Readability.prototype = {
 
         if (grandParentNode)
           grandParentNode.readability.contentScore += contentScore / 2;
+
+        yield;
       }
 
       // After we've calculated scores, loop through all of the possible
@@ -472,6 +494,8 @@ Readability.prototype = {
           candidates[c].readability.contentScore > topCandidate.readability.contentScore) {
           topCandidate = candidates[c];
         }
+
+        yield;
       }
 
       // If we still have no top candidate, just use the body as a last resort.
@@ -481,7 +505,7 @@ Readability.prototype = {
         // it's very unlikely to be a convertible page, just bail the check.
         if (isChecking) {
           dump('No top candidate found, failed readability check');
-          return null;
+          yield null;
         }
 
         topCandidate = doc.createElement("DIV");
@@ -496,7 +520,7 @@ Readability.prototype = {
 
         // Just return a non-null value, no need to post-process the article content
         // as we're just checking for readability.
-        return {};
+        yield {};
       }
 
       // Now that we have the top candidate, look through its siblings for content
@@ -568,10 +592,14 @@ Readability.prototype = {
           // the node when you append to another node.
           articleContent.appendChild(nodeToAppend);
         }
+
+        yield;
       }
 
       // So we have all of the content that we need. Now we clean it up for presentation.
       this._prepArticle(articleContent);
+
+      yield;
 
       if (this._curPageNum === 1)
         articleContent.innerHTML = '<div id="readability-page-1" class="page">' + articleContent.innerHTML + '</div>';
@@ -591,10 +619,10 @@ Readability.prototype = {
         } else if (this._flagIsActive(this.FLAG_CLEAN_CONDITIONALLY)) {
           this._removeFlag(this.FLAG_CLEAN_CONDITIONALLY);
         } else {
-          return null;
+          yield null;
         }
       } else {
-        return articleContent;
+        yield articleContent;
       }
     }
   },
