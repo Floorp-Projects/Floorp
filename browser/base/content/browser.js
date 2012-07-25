@@ -3091,17 +3091,6 @@ const DOMLinkHandler = {
             var targetDoc = link.ownerDocument;
             var uri = makeURI(link.href, targetDoc.characterSet);
 
-            // strip the user:pass from the uri to prevent brute-forcing
-            // attempts unbeknownst to the user (favicon requests don't
-            // prompt for auth)
-            if (uri.userPass != "") {
-              // setting the userPass can throw, so try/catch it
-              try {
-                uri.userPass = null;
-              }
-              catch (e) {}
-            }
-
             if (gBrowser.isFailedIcon(uri))
               break;
 
@@ -3146,7 +3135,7 @@ const DOMLinkHandler = {
               break;
 
             let tab = gBrowser.tabs[browserIndex];
-            gBrowser.setIcon(tab, uri);
+            gBrowser.setIcon(tab, link.href);
             iconAdded = true;
           }
           break;

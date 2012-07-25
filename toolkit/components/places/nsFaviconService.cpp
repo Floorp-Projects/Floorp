@@ -190,13 +190,6 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
 {
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   // If we are about to expire all favicons, don't bother setting a new one.
   if (mFaviconsExpirationRunning) {
@@ -355,13 +348,6 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
 {
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   if (mFaviconsExpirationRunning)
     return NS_OK;
@@ -478,13 +464,6 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
                                  PRTime aExpiration)
 {
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   if (mFaviconsExpirationRunning)
     return NS_OK;
@@ -659,14 +638,6 @@ nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
                                             PRTime aExpiration)
 {
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
-
   if (mFaviconsExpirationRunning)
     return NS_OK;
 
@@ -728,13 +699,6 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
   NS_ENSURE_ARG(aFaviconURI);
   NS_ENSURE_ARG_POINTER(aDataLen);
   NS_ENSURE_ARG_POINTER(aData);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   nsCOMPtr<nsIURI> defaultFaviconURI;
   nsresult rv = GetDefaultFavicon(getter_AddRefs(defaultFaviconURI));
@@ -813,13 +777,6 @@ nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
                                           nsAString& aDataURL)
 {
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   PRUint8* data;
   PRUint32 dataLen;
@@ -951,13 +908,6 @@ nsFaviconService::GetFaviconLinkForIcon(nsIURI* aFaviconURI,
 {
   NS_ENSURE_ARG(aFaviconURI);
   NS_ENSURE_ARG_POINTER(aOutputURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   nsCAutoString spec;
   if (aFaviconURI) {
@@ -984,13 +934,6 @@ NS_IMETHODIMP
 nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
 {
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
 
   nsCAutoString spec;
   nsresult rv = aFaviconURI->GetSpec(spec);
@@ -1029,14 +972,6 @@ NS_IMETHODIMP
 nsFaviconService::IsFailedFavicon(nsIURI* aFaviconURI, bool* _retval)
 {
   NS_ENSURE_ARG(aFaviconURI);
-#ifdef DEBUG
-  nsCAutoString userPass;
-  if (NS_SUCCEEDED(aFaviconURI->GetUserPass(userPass)) &&
-      !userPass.IsEmpty()) {
-    NS_WARNING("security concern: favicon URIs should not have username/password");
-  }
-#endif
-
   nsCAutoString spec;
   nsresult rv = aFaviconURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
