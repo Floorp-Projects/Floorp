@@ -1119,6 +1119,7 @@ add_test(function test_batching_set_conditional_success() {
 
   let lastServerVersion = Date.now();
   collection.insertBSO(new ServerBSO("foo", "bar", lastServerVersion));
+  collection.timestamp = lastServerVersion;
   do_check_eq(collection.timestamp, lastServerVersion);
 
   let requestCount = 0;
