@@ -22,7 +22,6 @@ public:
   // rest is brought forward from GfxInfoBase.
   NS_IMETHOD GetD2DEnabled(bool *aD2DEnabled);
   NS_IMETHOD GetDWriteEnabled(bool *aDWriteEnabled);
-  NS_IMETHOD GetAzureEnabled(bool *aAzureEnabled);
   NS_IMETHOD GetDWriteVersion(nsAString & aDwriteVersion);
   NS_IMETHOD GetCleartypeParameters(nsAString & aCleartypeParams);
   NS_IMETHOD GetAdapterDescription(nsAString & aAdapterDescription);
@@ -43,6 +42,7 @@ public:
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
+  using GfxInfoBase::GetAzureEnabled;
 
   virtual nsresult Init();
 
