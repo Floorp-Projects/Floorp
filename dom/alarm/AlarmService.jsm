@@ -228,8 +228,8 @@ let AlarmService = {
 
     if (this._currentAlarm) {
       debug("Fire system intent: " + JSON.stringify(this._currentAlarm));
-      if (this._currentAlarm.manifestURL)
-        messenger.sendMessage("alarm", this._currentAlarm, this._currentAlarm.manifestURL);
+      let manifestURI = Services.io.newURI(this._currentAlarm.manifestURL, null, null);
+      messenger.sendMessage("alarm", this._currentAlarm, manifestURI);
       this._currentAlarm = null;
     }
 
@@ -244,8 +244,8 @@ let AlarmService = {
       // fire system intent for it instead of setting it
       if (nextAlarmTime <= nowTime) {
         debug("Fire system intent: " + JSON.stringify(nextAlarm));
-        if (nextAlarm.manifestURL)
-          messenger.sendMessage("alarm", nextAlarm, nextAlarm.manifestURL);
+        let manifestURI = Services.io.newURI(nextAlarm.manifestURL, null, null);
+        messenger.sendMessage("alarm", nextAlarm, manifestURI);
       } else {
         this._currentAlarm = nextAlarm;
         break;

@@ -14,6 +14,7 @@
 #include "ImageLayers.h"
 #include "LayersBackend.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/WidgetUtils.h"
 
 class gfxSharedImageSurface;
 
@@ -116,7 +117,8 @@ public:
    * Begin recording a transaction to be forwarded atomically to a
    * ShadowLayerManager.
    */
-  void BeginTransaction();
+  void BeginTransaction(const nsIntRect& aTargetBounds,
+                        ScreenRotation aRotation);
 
   /**
    * The following methods may only be called after BeginTransaction()
