@@ -301,6 +301,9 @@ private:
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
+#ifdef XP_WIN
+    float mPluginCpuUsageOnHang;
+#endif
 
 #ifdef MOZ_X11
     // Dup of plugin's X socket, used to scope its resources to this
