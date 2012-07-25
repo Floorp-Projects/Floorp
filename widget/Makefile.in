@@ -43,16 +43,15 @@ endif
 endif
 
 
-EXPORTS_NAMESPACES = IPC
+EXPORTS_NAMESPACES = IPC mozilla
 
 EXPORTS_IPC = \
 		nsGUIEventIPC.h \
 		$(NULL)
 
-EXPORTS_NAMESPACES += mozilla
-
 EXPORTS_mozilla = \
 		LookAndFeel.h \
+		WidgetUtils.h \
 		$(NULL)
 
 ifdef MOZ_INSTRUMENT_EVENT_LOOP

@@ -258,6 +258,10 @@ _BROWSER_FILES = \
                  browser_bug734076.js \
                  browser_social_toolbar.js \
                  browser_social_sidebar.js \
+                 browser_social_mozSocial_API.js \
+                 social_panel.html \
+                 social_sidebar.html \
+                 social_worker.js \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

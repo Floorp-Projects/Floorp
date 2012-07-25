@@ -26,16 +26,18 @@ interface nsIUTF8ConverterService : nsISupports
    *        like ISO-2022-JP, HZ or UTF-7 (in its original form or
    *        a modified form used in IMAP folder names).
    * @param aAllowSubstitution when true, allow the decoder to substitute
-   *        invalid input sequences by replacement characters
+   *        invalid input sequences by replacement characters (defaults to
+   *        true)
    * @return the converted string in UTF-8.
    * @throws NS_ERROR_UCONV_NOCONV when there is no decoder for aCharset
    *         or error code of nsIUnicodeDecoder in case of conversion failure
    */
 
+    [optional_argc]
     AUTF8String convertStringToUTF8(in ACString aString, 
                                     in string   aCharset,
                                     in boolean  aSkipCheck,
-                                    in boolean  aAllowSubstitution);
+                                    [optional] in boolean aAllowSubstitution);
 
 /* XXX : To-be-added. convertStringFromUTF8 */
    
