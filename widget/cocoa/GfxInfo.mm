@@ -155,20 +155,6 @@ GfxInfo::GetD2DEnabled(bool *aEnabled)
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAzureEnabled(bool *aEnabled)
-{
-  bool azure = false;
-  nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
-  
-  if (NS_SUCCEEDED(rv) && azure) {
-    *aEnabled = true;
-  } else {
-    *aEnabled = false;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GfxInfo::GetDWriteEnabled(bool *aEnabled)
 {
   return NS_ERROR_FAILURE;
