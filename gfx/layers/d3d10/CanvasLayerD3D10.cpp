@@ -86,7 +86,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   }
 
   if (mUsingSharedTexture) {
-    mNeedsYFlip = false;
+    mNeedsYFlip = true;
   } else {
     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mBounds.width, mBounds.height, 1, 1);
     desc.Usage = D3D10_USAGE_DYNAMIC;
