@@ -52,7 +52,7 @@
     <string-array name="pref_private_data_entries">
         <item>@string/pref_private_data_history</item>
         <item>@string/pref_private_data_formdata</item>
-        <item>@string/pref_private_data_cookies</item>
+        <item>@string/pref_private_data_cookies2</item>
         <item>@string/pref_private_data_passwords</item>
         <item>@string/pref_private_data_cache</item>
         <item>@string/pref_private_data_offlineApps</item>
