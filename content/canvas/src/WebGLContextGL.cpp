@@ -442,6 +442,9 @@ NS_IMETHODIMP
 WebGLContext::BufferData(WebGLenum target, const JS::Value& data, GLenum usage,
                          JSContext* cx)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     if (data.isNull()) {
         BufferData(target, static_cast<ArrayBuffer*>(nsnull), usage);
         return NS_OK;
