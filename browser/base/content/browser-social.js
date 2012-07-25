@@ -378,6 +378,10 @@ var SocialToolbar = {
 var SocialSidebar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialSidebar_init() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    // setting isAppTab causes clicks on untargeted links to open new tabs
+    sbrowser.docShell.isAppTab = true;
+  
     this.updateSidebar();
   },
 
