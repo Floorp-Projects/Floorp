@@ -6,7 +6,7 @@
 
 // debug.cpp: Debugging utilities.
 
-#include "compiler/debug.h"
+#include "compiler/compilerdebug.h"
 
 #include <stdarg.h>
 #include <stdio.h>
