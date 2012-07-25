@@ -37,6 +37,7 @@ from StringIO import StringIO
 import subprocess
 import sys
 import tempfile
+import mozunit
 import unittest
 import xpt
 
@@ -763,4 +764,4 @@ class TestXPTLink(unittest.TestCase):
                          t3.interfaces[0].methods[0].params[0].type.element_type.iface)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()
