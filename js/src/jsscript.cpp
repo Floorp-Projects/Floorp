@@ -1140,6 +1140,7 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(ready());
     const jschar *chars;
+#if USE_ZLIB
     Rooted<JSFixedString *> cached(cx, NULL);
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
@@ -1167,6 +1168,9 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
     } else {
         chars = data.source;
     }
+#else
+    chars = data.source;
+#endif
     return js_NewStringCopyN(cx, chars + start, stop - start);
 }
 
@@ -1227,9 +1231,12 @@ ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSour
     const size_t memlen = length_ * sizeof(jschar);
     const size_t COMPRESS_THRESHOLD = 512;
 
+#if USE_ZLIB
     size_t compressedLen;
+#endif
     if (ownSource) {
         data.source = const_cast<jschar *>(src);
+#if USE_ZLIB
     } else if (memlen >= COMPRESS_THRESHOLD && 0 &&
         TryCompressString(reinterpret_cast<const unsigned char *>(src), memlen,
                           data.compressed, &compressedLen))
@@ -1239,6 +1246,7 @@ ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSour
         void *mem = rt->realloc_(data.compressed, compressedLength);
         data.compressed = static_cast<unsigned char *>(mem);
         JS_ASSERT(data.compressed);
+#endif
     } else {
         PodCopy(data.source, src, length_);
     }
