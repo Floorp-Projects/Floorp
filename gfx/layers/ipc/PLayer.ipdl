@@ -14,7 +14,7 @@ namespace layers {
  * PLayer represents a layer shared across thread contexts.
  */
 
-sync protocol PLayer {
+async protocol PLayer {
     manager PLayers;
 
     /**
@@ -32,7 +32,7 @@ sync protocol PLayer {
      * being deleted "soon" (usually immediately).
      */
 parent:
-    __delete__();
+    async __delete__();
 };
 
 } // layers
