@@ -59,26 +59,6 @@ GfxInfo::GetDWriteEnabled(bool *aEnabled)
   return NS_OK;
 }
 
-nsresult
-GfxInfo::GetAzureEnabled(bool *aEnabled)
-{
-  *aEnabled = false;
-
-  bool d2dEnabled = 
-    gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
-
-  if (d2dEnabled) {
-    bool azure = false;
-    nsresult rv = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", &azure);
-
-    if (NS_SUCCEEDED(rv) && azure) {
-      *aEnabled = true;
-    }
-  }
-
-  return NS_OK;
-}
-
 /* readonly attribute DOMString DWriteVersion; */
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
