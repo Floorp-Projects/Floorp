@@ -7150,12 +7150,9 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout,
 bool
 nsTextFrame::IsFloatingFirstLetterChild() const
 {
-  if (!(GetStateBits() & TEXT_FIRST_LETTER))
-    return false;
   nsIFrame* frame = GetParent();
-  if (!frame || frame->GetType() != nsGkAtoms::letterFrame)
-    return false;
-  return frame->GetStyleDisplay()->IsFloating();
+  return frame && frame->GetStyleDisplay()->IsFloating() &&
+         frame->GetType() == nsGkAtoms::letterFrame;
 }
 
 struct NewlineProperty {
