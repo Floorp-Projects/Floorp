@@ -529,20 +529,13 @@ abstract public class GeckoApp
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            if (getChildCount() == 0) {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                return;
-            }
-
-            int restrictedHeightSpec;
-            int childHeight = getChildAt(0).getHeight();
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
             DisplayMetrics metrics = new DisplayMetrics();
             ((Activity) GeckoApp.mAppContext).getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
             // heightPixels changes during rotation.
-            int preferredHeight = (int) (0.75 * metrics.heightPixels);
-            restrictedHeightSpec = MeasureSpec.makeMeasureSpec(childHeight <= preferredHeight ? childHeight : preferredHeight, MeasureSpec.EXACTLY);
+            int restrictedHeightSpec = MeasureSpec.makeMeasureSpec((int) (0.75 * metrics.heightPixels), MeasureSpec.AT_MOST);
 
             super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
         }
