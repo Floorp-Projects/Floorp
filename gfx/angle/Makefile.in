@@ -1,39 +1,7 @@
 # 
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is gecko.
-#
-# The Initial Developer of the Original Code is
-#   Mozilla 
-# Portions created by the Initial Developer are Copyright (C) 2010
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
@@ -60,9 +28,28 @@ LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
 VPATH += $(srcdir)/src
 VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/preprocessor
+VPATH += $(srcdir)/src/compiler/preprocessor/new
+VPATH += $(srcdir)/src/compiler/timing
+VPATH += $(srcdir)/src/compiler/depgraph
 
 CPPSRCS = \
-	Compiler.cpp \
+        Diagnostics.cpp \
+        PreprocessorDiagnostics.cpp \
+        DirectiveHandler.cpp \
+        PreprocessorDirectiveHandler.cpp \
+        DirectiveParser.cpp \
+        ExpressionParser.cpp \
+        Macro.cpp \
+        MacroExpander.cpp \
+        Tokenizer.cpp \
+        InitializeParseContext.cpp \
+        DependencyGraph.cpp \
+        DependencyGraphBuilder.cpp \
+        DependencyGraphOutput.cpp \
+        DependencyGraphTraverse.cpp \
+        RestrictFragmentShaderTiming.cpp \
+        RestrictVertexShaderTiming.cpp \
+        Compiler.cpp \
         DetectRecursion.cpp \
         InfoSink.cpp \
         Initialize.cpp \
@@ -78,13 +65,17 @@ CPPSRCS = \
         ShaderLang.cpp \
         SymbolTable.cpp \
         VariableInfo.cpp \
-        debug.cpp \
-        ossource_nspr.cpp \
+        compilerdebug.cpp \
         util.cpp \
         ValidateLimitations.cpp \
         ForLoopUnroll.cpp \
         MapLongVariableNames.cpp \
+        spooky.cpp \
         BuiltInFunctionEmulator.cpp \
+        Input.cpp \
+        Lexer.cpp \
+        Preprocessor.cpp \
+        Token.cpp \
         $(NULL)
 
 # flex/yacc generated files
@@ -102,19 +93,13 @@ CPPSRCS += \
         OutputESSL.cpp \
         OutputGLSLBase.cpp \
         TranslatorESSL.cpp \
-	$(NULL)
+        $(NULL)
 
-# Currently, only one or the other
-# can be selected.
-
-## HLSL translator backend
-##CPPSRCS += \
-##	CodeGenHLSL.cpp \
-##	OutputHLSL.cpp \
-##	TranslatorHLSL.cpp \
-##	UnfoldSelect.cpp \
-##	SearchSymbol.cpp \
-##	$(NULL)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += ossource_win.cpp $(NULL)
+else
+CPPSRCS += ossource_posix.cpp $(NULL)
+endif
 
 CSRCS   = \
         atom.c \
@@ -124,15 +109,16 @@ CSRCS   = \
         scanner.c \
         symbols.c \
         tokens.c \
-	$(NULL)
+        $(NULL)
 
-DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
+DEFINES += -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
 
 #these defines are from ANGLE's build_angle.gyp
 DEFINES += -DANGLE_DISABLE_TRACE
 DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
+DEFINES += -DANGLE_USE_NEW_PREPROCESSOR=1
 
-ifdef MOZ_ANGLE
+ifdef MOZ_ANGLE_RENDERER
 
 # libEGL depends on (links against!) libGLESv2!
 DIRS = src/libGLESv2 src/libEGL
