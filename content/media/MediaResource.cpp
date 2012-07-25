@@ -763,11 +763,22 @@ ChannelMediaResource::CacheClientSeek(PRInt64 aOffset, bool aResume)
     --mSuspendCount;
   }
 
+  mOffset = aOffset;
+
+  if (mSuspendCount > 0) {
+    // Close the existing channel to force the channel to be recreated at
+    // the correct offset upon resume.
+    if (mChannel) {
+      mIgnoreClose = true;
+      CloseChannel();
+    }
+    return NS_OK;
+  }
+
   nsresult rv = RecreateChannel();
   if (NS_FAILED(rv))
     return rv;
 
-  mOffset = aOffset;
   return OpenChannel(nsnull);
 }
 
