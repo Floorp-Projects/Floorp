@@ -199,12 +199,6 @@ struct NS_GFX nsRect :
   inline nsIntRect ScaleToInsidePixels(float aXScale, float aYScale,
                                        nscoord aAppUnitsPerPixel) const;
   inline nsIntRect ToInsidePixels(nscoord aAppUnitsPerPixel) const;
-
-  // This is here only to keep IPDL-generated code happy. DO NOT USE.
-  bool operator==(const nsRect& aRect) const
-  {
-    return IsEqualEdges(aRect);
-  }
 };
 
 struct NS_GFX nsIntRect :

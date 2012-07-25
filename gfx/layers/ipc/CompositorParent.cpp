@@ -21,15 +21,6 @@
 #include "nsIWidget.h"
 #include "RenderTrace.h"
 #include "ShadowLayersParent.h"
-#include "BasicLayers.h"
-#include "LayerManagerOGL.h"
-#include "nsIWidget.h"
-#include "nsGkAtoms.h"
-#include "RenderTrace.h"
-#include "nsStyleAnimation.h"
-#include "nsDisplayList.h"
-#include "AnimationCommon.h"
-#include "nsAnimationManager.h"
 
 using namespace base;
 using namespace mozilla::ipc;
@@ -421,15 +412,15 @@ CompositorParent::Composite()
     return;
   }
 
-  Layer* layer = mLayerManager->GetRoot();
-  AutoResolveRefLayers resolve(layer);
+  Layer* aLayer = mLayerManager->GetRoot();
+  AutoResolveRefLayers resolve(aLayer);
 
   bool requestNextFrame = TransformShadowTree(mLastCompose);
   if (requestNextFrame) {
     ScheduleComposition();
   }
 
-  RenderTraceLayers(layer, "0000");
+  RenderTraceLayers(aLayer, "0000");
 
   if (LAYERS_OPENGL == mLayerManager->GetBackendType() &&
       !mTargetConfig.naturalBounds().IsEmpty()) {
@@ -526,123 +517,14 @@ SetShadowProperties(Layer* aLayer)
 {
   // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
-  shadow->SetShadowTransform(aLayer->GetBaseTransform());
+  shadow->SetShadowTransform(aLayer->GetTransform());
   shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   shadow->SetShadowClipRect(aLayer->GetClipRect());
-  shadow->SetShadowOpacity(aLayer->GetOpacity());
 
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
     SetShadowProperties(child);
   }
-}
-
-
-// SampleValue should eventually take the CSS property as an argument.  This
-// will be needed if we ever animate two values with the same type but different
-// interpolation rules.
-static void
-SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aStart,
-            nsStyleAnimation::Value& aEnd, Animatable* aValue)
-{
-  nsStyleAnimation::Value interpolatedValue;
-  NS_ASSERTION(aStart.GetUnit() == aEnd.GetUnit() ||
-               aStart.GetUnit() == nsStyleAnimation::eUnit_None ||
-               aEnd.GetUnit() == nsStyleAnimation::eUnit_None, "Must have same unit");
-  if (aStart.GetUnit() == nsStyleAnimation::eUnit_Transform ||
-      aEnd.GetUnit() == nsStyleAnimation::eUnit_Transform) {
-    nsStyleAnimation::Interpolate(eCSSProperty_transform, aStart, aEnd,
-                                  aPortion, interpolatedValue);
-    nsCSSValueList* interpolatedList = interpolatedValue.GetCSSValueListValue();
-
-    TransformData& data = aAnimation.data().get_TransformData();
-    gfx3DMatrix transform =
-      nsDisplayTransform::GetResultingTransformMatrix(nsnull, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
-                                                      &data.bounds(), interpolatedList, &data.mozOrigin(),
-                                                      &data.perspectiveOrigin(), &data.perspective());
-
-    InfallibleTArray<TransformFunction>* functions = new InfallibleTArray<TransformFunction>();
-    functions->AppendElement(TransformMatrix(transform));
-    *aValue = *functions;
-    return;
-  }
-
-  NS_ASSERTION(aStart.GetUnit() == nsStyleAnimation::eUnit_Float, "Should be opacity");
-  nsStyleAnimation::Interpolate(eCSSProperty_opacity, aStart, aEnd,
-                                aPortion, interpolatedValue);
-  *aValue = interpolatedValue.GetFloatValue();
-}
-
-static bool
-SampleAnimations(Layer* aLayer, TimeStamp aPoint)
-{
-  AnimationArray& animations = aLayer->GetAnimations();
-  InfallibleTArray<AnimData>& animationData = aLayer->GetAnimationData();
-
-  bool activeAnimations = false;
-
-  for (PRUint32 i = animations.Length(); i-- !=0; ) {
-    Animation& animation = animations[i];
-    AnimData& animData = animationData[i];
-
-    double numIterations = animation.numIterations() != -1 ?
-      animation.numIterations() : NS_IEEEPositiveInfinity();
-    double positionInIteration =
-      ElementAnimations::GetPositionInIteration(animation.startTime(),
-                                                aPoint,
-                                                animation.duration(),
-                                                numIterations,
-                                                animation.direction());
-
-    if (positionInIteration == -1) {
-        animations.RemoveElementAt(i);
-        animationData.RemoveElementAt(i);
-        continue;
-    }
-
-    NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
-
-    int segmentIndex = 0;
-    AnimationSegment* segment = animation.segments().Elements();
-    while (segment->endPortion() < positionInIteration) {
-      ++segment;
-      ++segmentIndex;
-    }
-
-    double positionInSegment = (positionInIteration - segment->startPortion()) /
-                                 (segment->endPortion() - segment->startPortion());
-
-    double portion = animData.mFunctions[segmentIndex]->GetValue(positionInSegment);
-
-    activeAnimations = true;
-
-    // interpolate the property
-    Animatable interpolatedValue;
-    SampleValue(portion, animation, animData.mStartValues[segmentIndex],
-                animData.mEndValues[segmentIndex], &interpolatedValue);
-    ShadowLayer* shadow = aLayer->AsShadowLayer();
-    switch (interpolatedValue.type()) {
-    case Animatable::TOpacity:
-      shadow->SetShadowOpacity(interpolatedValue.get_Opacity().value());
-      break;
-   case Animatable::TArrayOfTransformFunction: {
-      gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
-      shadow->SetShadowTransform(matrix);
-      break;
-    }
-    default:
-      NS_WARNING("Unhandled animated property");
-    }
-  }
-
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    activeAnimations |= SampleAnimations(child, aPoint);
-  }
-
-  return activeAnimations;
 }
 
 bool
@@ -690,13 +572,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
   ContainerLayer* container = layer->AsContainerLayer();
   Layer* root = mLayerManager->GetRoot();
 
-  // NB: we must sample animations *before* sampling pan/zoom
-  // transforms.
-  wantNextFrame |= SampleAnimations(layer, mLastCompose);
-
   const FrameMetrics& metrics = container->GetFrameMetrics();
   const gfx3DMatrix& rootTransform = root->GetTransform();
-  const gfx3DMatrix& currentTransform = layer->GetBaseTransform();
+  const gfx3DMatrix& currentTransform = layer->GetTransform();
 
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code
@@ -789,6 +667,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     shadow->SetShadowTransform(treeTransform * currentTransform);
     TransformFixedLayers(layer, offset, scaleDiff);
   }
+
   return wantNextFrame;
 }
 
