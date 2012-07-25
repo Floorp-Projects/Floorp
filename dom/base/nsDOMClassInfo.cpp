@@ -299,7 +299,6 @@
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENTS_INCLUDES
 #include "nsIDOMDeviceLightEvent.h"
-#include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNodeIterator.h"
@@ -826,9 +825,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
 
-  // Device Orientation
-  NS_DEFINE_CLASSINFO_DATA(DeviceOrientationEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceMotionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DeviceAcceleration, nsDOMGenericSH,
@@ -2613,11 +2609,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
-
-  DOM_CLASSINFO_MAP_BEGIN(DeviceOrientationEvent, nsIDOMDeviceOrientationEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceOrientationEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DeviceMotionEvent, nsIDOMDeviceMotionEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceMotionEvent)

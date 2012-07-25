@@ -15,7 +15,8 @@ simple_events = [
     'PopStateEvent',
     'HashChangeEvent',
     'CloseEvent',
-    'MozContactChangeEvent'
+    'MozContactChangeEvent',
+    'DeviceOrientationEvent'
   ]
 
 """ include file names """
