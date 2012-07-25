@@ -379,7 +379,7 @@ class RelocatableValue : public EncapsulatedValue
   public:
     explicit inline RelocatableValue();
     explicit inline RelocatableValue(const Value &v);
-    explicit inline RelocatableValue(const RelocatableValue &v);
+    inline RelocatableValue(const RelocatableValue &v);
     inline ~RelocatableValue();
 
     inline RelocatableValue &operator=(const Value &v);
