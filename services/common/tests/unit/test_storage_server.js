@@ -497,9 +497,9 @@ add_test(function test_bso_get_unmodified_since() {
   server.registerUser("123", "password");
   server.startSynchronous(PORT);
   let collection = server.user("123").createCollection("testcoll");
-  collection.insert("bso0", {foo: "bar"});
+  let bso = collection.insert("bso0", {foo: "bar"});
 
-  let serverModified = collection.timestamp;
+  let serverModified = bso.modified;
 
   let request1 = localRequest("/2.0/123/storage/testcoll/bso0", "123",
                               "password");
