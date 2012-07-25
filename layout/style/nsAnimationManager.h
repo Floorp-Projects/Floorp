@@ -182,20 +182,6 @@ public:
     mKeyframesRules.Init(16); // FIXME: make infallible!
   }
 
-  static bool CanAnimateOpacity() {
-    static bool canAnimateOpacity =
-      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.animate-opacity", false) &&
-      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-    return canAnimateOpacity;
-  }
-
-  static bool CanAnimateTransform() {
-    static bool canAnimateTransform =
-      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.animate-transform", false) &&
-      mozilla::Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-    return canAnimateTransform;
-  }
-
   static ElementAnimations* GetAnimationsForCompositor(nsIContent* aContent,
                                                        nsCSSProperty aProperty)
   {
