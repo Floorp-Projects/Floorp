@@ -663,8 +663,8 @@ function Livemark(aLivemarkInfo)
   this._status = Ci.mozILivemark.STATUS_READY;
 
   // Hash of resultObservers, hashed by container.
-  this._resultObservers = new WeakMap();
-  // This keeps a list of the containers used as keys in the weakmap, since
+  this._resultObservers = new Map();
+  // This keeps a list of the containers used as keys in the map, since
   // it's not iterable.  In future may use an iterable Map.
   this._resultObserversList = [];
 
@@ -674,7 +674,7 @@ function Livemark(aLivemarkInfo)
 
   // Keeps a separate array of nodes for each requesting container, hashed by
   // the container itself.
-  this._nodes = new WeakMap();
+  this._nodes = new Map();
 
   this._guid = "";
   this._lastModified = 0;

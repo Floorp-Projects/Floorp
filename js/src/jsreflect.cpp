@@ -3197,7 +3197,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         if (!baseops::GetPropertyDefault(cx, config, locId, BooleanValue(true), &prop))
             return JS_FALSE;
 
-        loc = js_ValueToBoolean(prop);
+        loc = ToBoolean(prop);
 
         if (loc) {
             /* config.source */

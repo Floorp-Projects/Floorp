@@ -8,6 +8,7 @@
 #include "nsXULWindow.h"
 
 // Helper classes
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "prprf.h"
@@ -735,6 +736,22 @@ NS_IMETHODIMP nsXULWindow::SetParentNativeWindow(nativeWindow aParentNativeWindo
 {
   //XXX First Check In
   NS_ASSERTION(false, "Not Yet Implemented");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetNativeHandle(nsAString& aNativeHandle)
+{
+  nsCOMPtr<nsIWidget> mainWidget;
+  NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(mainWidget)), NS_ERROR_FAILURE);
+
+  if (mainWidget) {
+    nativeWindow nativeWindowPtr = mainWidget->GetNativeData(NS_NATIVE_WINDOW);
+    /* the nativeWindow pointer is converted to and exposed as a string. This
+       is a more reliable way not to lose information (as opposed to JS
+       |Number| for instance) */
+    aNativeHandle = NS_ConvertASCIItoUTF16(nsPrintfCString("0x%p", nativeWindowPtr));
+  }
+
   return NS_OK;
 }
 

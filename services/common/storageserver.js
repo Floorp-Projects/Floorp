@@ -132,13 +132,25 @@ ServerBSO.prototype = {
     }
 
     if (request.hasHeader("x-if-modified-since")) {
-      let headerModified = parseInt(request.getHeader("x-if-modified-since"));
+      let headerModified = parseInt(request.getHeader("x-if-modified-since"),
+                                    10);
       CommonUtils.ensureMillisecondsTimestamp(headerModified);
 
       if (headerModified >= this.modified) {
         code = 304;
         status = "Not Modified";
 
+        sendResponse();
+        return;
+      }
+    } else if (request.hasHeader("x-if-unmodified-since")) {
+      let requestModified = parseInt(request.getHeader("x-if-unmodified-since"),
+                                     10);
+      let serverModified = this.modified;
+
+      if (serverModified > requestModified) {
+        code = 412;
+        status = "Precondition Failed";
         sendResponse();
         return;
       }
@@ -411,26 +423,6 @@ StorageServerCollection.prototype = {
       }
     }
 
-    if (options.index_above) {
-      if (bso.sortindex === undefined) {
-        return false;
-      }
-
-      if (bso.sortindex <= options.index_above) {
-        return false;
-      }
-    }
-
-    if (options.index_below) {
-      if (bso.sortindex === undefined) {
-        return false;
-      }
-
-      if (bso.sortindex >= options.index_below) {
-        return false;
-      }
-    }
-
     return true;
   },
 
@@ -612,10 +604,11 @@ StorageServerCollection.prototype = {
         continue;
       }
       chunk = chunk.split("=");
+      let key = decodeURIComponent(chunk[0]);
       if (chunk.length == 1) {
-        options[chunk[0]] = "";
+        options[key] = "";
       } else {
-        options[chunk[0]] = chunk[1];
+        options[key] = decodeURIComponent(chunk[1]);
       }
     }
 
@@ -639,18 +632,6 @@ StorageServerCollection.prototype = {
 
       CommonUtils.ensureMillisecondsTimestamp(options.older);
       options.older = parseInt(options.older, 10);
-    }
-
-    if (options.index_above) {
-      if (!isInteger(options.index_above)) {
-        throw HTTP_400;
-      }
-    }
-
-    if (options.index_below) {
-      if (!isInteger(options.index_below)) {
-        throw HTTP_400;
-      }
     }
 
     if (options.limit) {
@@ -683,6 +664,16 @@ StorageServerCollection.prototype = {
         response.setStatusLine(request.httpVersion, 304, "Not Modified");
         return;
       }
+    } else if (request.hasHeader("x-if-unmodified-since")) {
+      let requestModified = parseInt(request.getHeader("x-if-unmodified-since"),
+                                     10);
+      let serverModified = this.timestamp;
+
+      if (serverModified > requestModified) {
+        response.setHeader("X-Last-Modified", "" + serverModified);
+        response.setStatusLine(request.httpVersion, 412, "Precondition Failed");
+        return;
+      }
     }
 
     if (options.full) {
@@ -710,9 +701,7 @@ StorageServerCollection.prototype = {
     if (newlines) {
       response.setHeader("Content-Type", "application/newlines", false);
       let normalized = data.map(function map(d) {
-        let result = JSON.stringify(d);
-
-        return result.replace("\n", "\\u000a");
+        return JSON.stringify(d);
       });
 
       body = normalized.join("\n") + "\n";
@@ -755,10 +744,9 @@ StorageServerCollection.prototype = {
       }
     } else if (inputMediaType == "application/newlines") {
       for each (let line in inputBody.split("\n")) {
-        let json = line.replace("\\u000a", "\n");
         let record;
         try {
-          record = JSON.parse(json);
+          record = JSON.parse(line);
         } catch (ex) {
           this._log.info("JSON parse error on line!");
           return sendMozSvcError(request, response, "8");

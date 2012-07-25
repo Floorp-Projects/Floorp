@@ -188,28 +188,6 @@ nsPlacesExportService::Init()
   return NS_OK;
 }
 
-// SyncChannelStatus
-//
-//    If a function returns an error, we need to set the channel status to be
-//    the same, but only if the channel doesn't have its own error. This returns
-//    the error code that should be sent to OnStopRequest.
-static nsresult
-SyncChannelStatus(nsIChannel* channel, nsresult status)
-{
-  nsresult channelStatus;
-  channel->GetStatus(&channelStatus);
-  if (NS_FAILED(channelStatus))
-    return channelStatus;
-
-  if (NS_SUCCEEDED(status))
-    return NS_OK; // caller and the channel are happy
-
-  // channel was OK, but caller wasn't: set the channel state
-  channel->Cancel(status);
-  return status;
-}
-
-
 static char kFileIntro[] =
     "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
     // Note: we write bookmarks in UTF-8
