@@ -218,7 +218,7 @@ nsSVGTextContainerFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
   while (node) {
     PRUint32 count = node->GetNumberOfChars();
     if (count > charnum) {
-      PRUint32 fragmentChars = NS_MIN(nchars, count);
+      PRUint32 fragmentChars = NS_MIN(nchars, count - charnum);
       float fragmentLength = node->GetSubStringLength(charnum, fragmentChars);
       length += fragmentLength;
       nchars -= fragmentChars;
