@@ -299,7 +299,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     LayerAttributes attrs;
     CommonLayerAttributes& common = attrs.common();
     common.visibleRegion() = mutant->GetVisibleRegion();
-    common.transform() = mutant->GetTransform();
+    common.transform() = mutant->GetBaseTransform();
     common.xScale() = mutant->GetXScale();
     common.yScale() = mutant->GetYScale();
     common.contentFlags() = mutant->GetContentFlags();
