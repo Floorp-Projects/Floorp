@@ -92,6 +92,7 @@
 #include "CSSCalc.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsFontInflationData.h"
+#include "nsAnimationManager.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -935,9 +936,18 @@ nsIFrame::GetPaddingRect() const
 bool
 nsIFrame::IsTransformed() const
 {
-  return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+  return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
           (GetStyleDisplay()->HasTransform() ||
-           IsSVGTransformed());
+           IsSVGTransformed() ||
+           (mContent &&
+            nsAnimationManager::GetAnimationsForCompositor(mContent, eCSSProperty_transform))));
+}
+
+bool
+nsIFrame::HasOpacity() const
+{
+  return GetStyleDisplay()->mOpacity < 1.0f || (mContent &&
+           nsAnimationManager::GetAnimationsForCompositor(mContent, eCSSProperty_opacity));
 }
 
 bool
@@ -1936,7 +1946,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* Else, if the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
    */
-  else if (disp->mOpacity < 1.0f &&
+  else if (HasOpacity() &&
            !nsSVGUtils::CanOptimizeOpacity(this) &&
            !resultList.IsEmpty()) {
     rv = resultList.AppendNewToTop(
@@ -2090,7 +2100,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects.
   const nsStyleDisplay* disp = child->GetStyleDisplay();
-  bool isVisuallyAtomic = disp->mOpacity != 1.0f
+  bool isVisuallyAtomic = child->HasOpacity()
     || child->IsTransformed()
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
@@ -4758,8 +4768,8 @@ nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
-      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
-                                                      scaleFactor, nsnull, aOutAncestor);
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nsnull, 
+                                                      nsnull, nsnull, nsnull, nsnull, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
