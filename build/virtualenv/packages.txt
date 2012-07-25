@@ -7,3 +7,5 @@ setup.py:testing/mozbase/mozprocess:develop
 setup.py:testing/mozbase/mozprofile:develop
 setup.py:testing/mozbase/mozrunner:develop
 setup.py:python/blessings:develop
+mozilla.pth:build
+mozilla.pth:config

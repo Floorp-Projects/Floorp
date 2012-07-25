@@ -5,9 +5,11 @@
 # This file contains code for populating the virtualenv environment for
 # Mozilla's build system. It is typically called as part of configure.
 
+from __future__ import with_statement
 import os.path
 import subprocess
 import sys
+import distutils.sysconfig
 
 def populate_virtualenv(top_source_directory, manifest_filename):
     """Populate the virtualenv from the contents of a manifest.
@@ -38,6 +40,11 @@ def populate_virtualenv(top_source_directory, manifest_filename):
 
             call_setup(os.path.join(top_source_directory, package[1]),
                 package[2:])
+        if package[0].endswith('.pth'):
+            assert len(package) == 2
+
+            with open(os.path.join(distutils.sysconfig.get_python_lib(), package[0]), 'a') as f:
+                f.write("%s\n" % os.path.join(top_source_directory, package[1]))
 
 def call_setup(directory, arguments):
     """Calls setup.py in a directory."""
