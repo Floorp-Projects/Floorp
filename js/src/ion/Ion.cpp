@@ -1209,13 +1209,11 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
 
         // This frame needs to be invalidated. We do the following:
         //
-        // 1. Increment the reference counter to keep the ionScript alive
-        //    for the invalidation bailout or for the exception handler.
-        // 2. Determine safepoint that corresponds to the current call.
-        // 3. From safepoint, get distance to the OSI-patchable offset.
-        // 4. From the IonScript, determine the distance between the
+        // 1. Determine safepoint that corresponds to the current call.
+        // 2. From safepoint, get distance to the OSI-patchable offset.
+        // 3. From the IonScript, determine the distance between the
         //    call-patchable offset and the invalidation epilogue.
-        // 5. Patch the OSI point with a call-relative to the
+        // 4. Patch the OSI point with a call-relative to the
         //    invalidation epilogue.
         //
         // The code generator ensures that there's enough space for us
@@ -1292,9 +1290,7 @@ ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool 
             IonSpew(IonSpew_Invalidate, " Invalidate %s:%u, IonScript %p",
                     co.script->filename, co.script->lineno, co.out.ion);
 
-            // Keep the ion script alive during the invalidation and flag this
-            // ionScript as being invalidated.  This increment is removed by the
-            // loop after the calls to InvalidateActivation.
+            // Cause the IonScript to be invalidated in InvalidateActivation.
             co.out.ion->incref();
             anyInvalidation = true;
         }
@@ -1312,11 +1308,9 @@ ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool 
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
-        const types::CompilerOutput &co = invalid[i];
-        JS_ASSERT(co.isValid());
-        if (co.isIon()) {
-            JSScript *script = co.script;
-            IonScript *ionScript = co.out.ion;
+        if (invalid[i].script->hasIonScript()) {
+            JSScript *script = invalid[i].script;
+            IonScript *ionScript = script->ion;
 
             JSCompartment *compartment = script->compartment();
             if (compartment->needsBarrier()) {
@@ -1327,7 +1321,7 @@ ion::Invalidate(FreeOp *fop, const Vector<types::CompilerOutput> &invalid, bool 
                 IonScript::Trace(compartment->barrierTracer(), ionScript);
             }
 
-            co.out.ion->decref(fop);
+            script->ion->decref(fop);
             script->ion = NULL;
         }
     }
