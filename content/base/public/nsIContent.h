@@ -11,7 +11,6 @@
 #include "nsChangeHint.h"
 #include "nsINode.h"
 #include "nsIDocument.h" // for IsInHTMLDocument
-#include "nsCSSProperty.h"
 
 // Forward declarations
 class nsIAtom;

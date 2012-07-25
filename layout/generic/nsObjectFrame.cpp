@@ -1723,7 +1723,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   gfxMatrix transform;
   transform.Translate(r.TopLeft());
 
-  layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, size.width, size.height));
   return layer.forget();
 }

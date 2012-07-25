@@ -108,10 +108,10 @@ public:
    * display lists that we make.
    */
   enum Mode {
-    PAINTING,
-    EVENT_DELIVERY,
-    PLUGIN_GEOMETRY,
-    OTHER
+	PAINTING,
+	EVENT_DELIVERY,
+	PLUGIN_GEOMETRY,
+	OTHER
   };
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, Mode aMode, bool aBuildCaret);
   ~nsDisplayListBuilder();
@@ -2341,13 +2341,6 @@ public:
                                     float aAppUnitsPerPixel,
                                     nsRect* aOutRect);
 
-  static gfxPoint3D GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
-                                                 float aAppUnitsPerPixel,
-                                                 const nsRect* aBoundsOverride);
-
-  static gfxPoint3D GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
-                                                   float aAppUnitsPerPixel);
-
   /**
    * Returns the bounds of a frame as defined for resolving percentage
    * <translation-value>s in CSS transforms.  If
@@ -2381,10 +2374,6 @@ public:
                                                  const nsPoint& aOrigin,
                                                  float aAppUnitsPerPixel,
                                                  const nsRect* aBoundsOverride = nsnull,
-                                                 const nsCSSValueList* aTransformOverride = nsnull,
-                                                 gfxPoint3D* aToMozOrigin = nsnull,
-                                                 gfxPoint3D* aToPerspectiveOrigin = nsnull,
-                                                 nscoord* aChildPerspective = nsnull, 
                                                  nsIFrame** aOutAncestor = nsnull);
   /**
    * Return true when we should try to prerender the entire contents of the
