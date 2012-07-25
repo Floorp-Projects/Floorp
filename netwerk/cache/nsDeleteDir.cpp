@@ -179,8 +179,16 @@ nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg)
   dirList = static_cast<nsCOMArray<nsIFile> *>(arg);
 
   bool shuttingDown = false;
-  for (PRInt32 i = 0; i < dirList->Count() && !shuttingDown; i++) {
-    gInstance->RemoveDir((*dirList)[i], &shuttingDown);
+
+  // Intentional extra braces to control variable sope.
+  {
+    // Low IO priority can only be set when running in the context of the
+    // current thread.  So this shouldn't be moved to where we set the priority
+    // of the Cache deleter thread using the nsThread's NSPR priority constants.
+    nsAutoLowPriorityIO autoLowPriority;
+    for (PRInt32 i = 0; i < dirList->Count() && !shuttingDown; i++) {
+      gInstance->RemoveDir((*dirList)[i], &shuttingDown);
+    }
   }
 
   {
