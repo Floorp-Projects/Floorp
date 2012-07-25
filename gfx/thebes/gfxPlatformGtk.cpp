@@ -743,11 +743,3 @@ gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     nativeFont.mFont = static_cast<gfxFT2FontBase*>(aFont)->GetFontOptions();
     return Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 }
-
-bool
-gfxPlatformGtk::SupportsAzure(BackendType& aBackend)
-{
-    aBackend = BACKEND_SKIA;
-    return true;
-}
-

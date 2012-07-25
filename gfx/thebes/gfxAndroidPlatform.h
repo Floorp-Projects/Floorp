@@ -33,8 +33,6 @@ public:
     CreateOffscreenSurface(const gfxIntSize& size,
                            gfxASurface::gfxContentType contentType);
     
-    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { aBackend = mozilla::gfx::BACKEND_SKIA; return true; }
-
     virtual gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
     
     mozilla::RefPtr<mozilla::gfx::ScaledFont>

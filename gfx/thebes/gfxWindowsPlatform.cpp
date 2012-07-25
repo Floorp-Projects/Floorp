@@ -515,6 +515,14 @@ gfxWindowsPlatform::UpdateRenderMode()
         }
     }
 #endif
+
+    PRUint32 backendMask = 1 << BACKEND_CAIRO;
+    if (mRenderMode == RENDER_DIRECT2D) {
+      backendMask |= 1 << BACKEND_DIRECT2D;
+    } else {
+      backendMask |= 1 << BACKEND_SKIA;
+    }
+    InitCanvasBackend(backendMask);
 }
 
 void
@@ -839,24 +847,6 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 #endif
 
   return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
-}
-
-bool
-gfxWindowsPlatform::SupportsAzure(BackendType& aBackend)
-{
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (mRenderMode == RENDER_DIRECT2D) {
-      aBackend = BACKEND_DIRECT2D;
-      return true;
-  }
-#endif
-  
-  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
-    aBackend = mPreferredDrawTargetBackend;
-    return true;
-  }
-
-  return false;
 }
 
 nsresult

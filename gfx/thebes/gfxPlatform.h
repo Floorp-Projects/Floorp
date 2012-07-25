@@ -195,8 +195,10 @@ public:
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
-    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { return false; }
+    // aBackend will be set to the preferred backend for Azure canvas
+    bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
 
+    // aObj will contain the preferred backend for Azure canvas
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       mozilla::gfx::BackendType backend;
       if (SupportsAzure(backend)) {
@@ -455,7 +457,30 @@ protected:
 
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
-                                               
+
+    /**
+     * Helper method, creates a draw target for a specific Azure backend.
+     * Used by CreateOffscreenDrawTarget.
+     */
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateDrawTargetForBackend(mozilla::gfx::BackendType aBackend,
+                                 const mozilla::gfx::IntSize& aSize,
+                                 mozilla::gfx::SurfaceFormat aFormat);
+
+    /**
+     * Initialise the preferred and fallback canvas backends
+     * aBackendBitmask specifies the backends which are acceptable to the caller.
+     * The backend used is determined by aBackendBitmask and the order specified
+     * by the gfx.canvas.azure.backends pref.
+     */
+    void InitCanvasBackend(PRUint32 aBackendBitmask);
+    /**
+     * returns the first backend named in the pref gfx.canvas.azure.backends
+     * which is a component of aBackendBitmask, a bitmask of backend types
+     */
+    static mozilla::gfx::BackendType GetCanvasBackendPref(PRUint32 aBackendBitmask);
+    static mozilla::gfx::BackendType BackendTypeForName(const nsCString& aName);
+
     PRInt8  mAllowDownloadableFonts;
     PRInt8  mDownloadableFontsSanitize;
 #ifdef MOZ_GRAPHITE
@@ -471,8 +496,10 @@ protected:
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;
 
-    // The preferred draw target backend to use
-    mozilla::gfx::BackendType mPreferredDrawTargetBackend;
+    // The preferred draw target backend to use for canvas
+    mozilla::gfx::BackendType mPreferredCanvasBackend;
+    // The fallback draw target backend to use for canvas, if the preferred backend fails
+    mozilla::gfx::BackendType mFallbackCanvasBackend;
 
 private:
     /**
