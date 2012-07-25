@@ -750,6 +750,9 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
+    if test $_MSC_VER -ge 1600; then
+        AC_DEFINE(HAVE_NULLPTR)
+    fi
 fi
 
 fi # COMPILE_ENVIRONMENT
