@@ -30,6 +30,9 @@
 #include "nsCRT.h"
 #include "nsNPAPIPlugin.h"
 #include "nsIFile.h"
+#include "nsPrintfCString.h"
+
+#include "prsystem.h"
 
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
@@ -106,6 +109,9 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mNPNIface(NULL)
     , mPlugin(NULL)
     , mTaskFactory(this)
+#ifdef XP_WIN
+    , mPluginCpuUsageOnHang(-1)
+#endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
     , mFlashProcess2(0)
@@ -169,8 +175,17 @@ PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
     CrashReporterParent* crashReporter = CrashReporter();
     if (crashReporter) {
         const nsString& hangID = crashReporter->HangID();
-        if (!hangID.IsEmpty())
+        if (!hangID.IsEmpty()) {
             notes.Put(CS("HangID"), NS_ConvertUTF16toUTF8(hangID));
+#ifdef XP_WIN
+            if (mPluginCpuUsageOnHang >= 0) {
+              notes.Put(CS("PluginCpuUsage"), 
+                        nsPrintfCString("%.2f", mPluginCpuUsageOnHang));
+              notes.Put(CS("NumberOfProcessors"),
+                        nsPrintfCString("%d", PR_GetNumberOfProcessors()));
+            }
+#endif
+        }
     }
 }
 #endif  // MOZ_CRASHREPORTER
@@ -200,6 +215,60 @@ PluginModuleParent::CleanupFromTimeout()
         Close();
 }
 
+#ifdef XP_WIN
+namespace {
+
+PRUint64
+FileTimeToUTC(const FILETIME& ftime) 
+{
+  ULARGE_INTEGER li;
+  li.LowPart = ftime.dwLowDateTime;
+  li.HighPart = ftime.dwHighDateTime;
+  return li.QuadPart;
+}
+
+bool 
+GetProcessCpuUsage(const base::ProcessHandle& processHandle, float& cpuUsage)
+{
+  FILETIME creationTime, exitTime, kernelTime, userTime, currentTime;
+  BOOL res;
+
+  ::GetSystemTimeAsFileTime(&currentTime);
+  res = ::GetProcessTimes(processHandle, &creationTime, &exitTime, &kernelTime, &userTime);
+  if (!res) {
+    NS_WARNING("failed to get process times");
+    return false;
+  }
+
+  PRUint64 sampleTimes[2];
+  PRUint64 cpuTimes[2];
+  
+  sampleTimes[0] = FileTimeToUTC(currentTime);
+  cpuTimes[0]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);
+
+  // we already hung for a while, a little bit longer won't matter
+  ::Sleep(50);
+
+  ::GetSystemTimeAsFileTime(&currentTime);
+  res = ::GetProcessTimes(processHandle, &creationTime, &exitTime, &kernelTime, &userTime);
+  if (!res) {
+    NS_WARNING("failed to get process times");
+    return false;
+  }
+
+  sampleTimes[1] = FileTimeToUTC(currentTime);
+  cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);    
+
+  const PRUint64 deltaSampleTime = sampleTimes[1] - sampleTimes[0];
+  const PRUint64 deltaCpuTime    = cpuTimes[1]    - cpuTimes[0];
+  cpuUsage = 100.f * (float(deltaCpuTime) / deltaSampleTime) / PR_GetNumberOfProcessors();
+
+  return true;
+}
+
+} // anonymous namespace
+#endif // #ifdef XP_WIN
+
 bool
 PluginModuleParent::ShouldContinueFromReplyTimeout()
 {
@@ -215,6 +284,13 @@ PluginModuleParent::ShouldContinueFromReplyTimeout()
                  NS_ConvertUTF16toUTF8(crashReporter->HangID()).get()));
     } else {
         NS_WARNING("failed to capture paired minidumps from hang");
+    }
+#endif
+
+#ifdef XP_WIN
+    float cpuUsage;
+    if (GetProcessCpuUsage(OtherProcess(), cpuUsage)) {
+      mPluginCpuUsageOnHang = cpuUsage;
     }
 #endif
 
