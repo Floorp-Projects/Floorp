@@ -6320,18 +6320,18 @@ let Reader = {
         let doc = tab.browser.contentWindow.document.cloneNode(true);
 
         let readability = new Readability(uri, doc);
-        article = readability.parse();
+        readability.parse(function (article) {
+          if (!article) {
+            this.log("Failed to parse page");
+            callback(null);
+            return;
+          }
 
-        if (!article) {
-          this.log("Failed to parse page");
-          callback(null);
-          return;
-        }
+          // Append URL to the article data
+          article.url = url;
 
-        // Append URL to the article data
-        article.url = url;
-
-        callback(article);
+          callback(article);
+        }.bind(this));
       }.bind(this));
     } catch (e) {
       this.log("Error parsing document from tab: " + e);
@@ -6358,7 +6358,7 @@ let Reader = {
         let doc = tab.browser.contentWindow.document;
 
         let readability = new Readability(uri, doc);
-        callback(readability.check());
+        readability.check(callback);
       }.bind(this));
     } catch (e) {
       this.log("Error checking tab readability: " + e);
@@ -6501,9 +6501,6 @@ let Reader = {
       }
 
       callback(doc);
-
-      // Request has finished, remove browser element
-      browser.parentNode.removeChild(browser);
     }.bind(this));
 
     browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
@@ -6519,33 +6516,37 @@ let Reader = {
       request.browser = this._downloadDocument(url, function(doc) {
         this.log("Finished loading page: " + doc);
 
-        // Delete reference to the browser element as we're
-        // now done with this request.
-        delete request.browser;
-
         if (!doc) {
           this.log("Error loading page");
           this._runCallbacksAndFinish(request, null);
+          return;
         }
 
         this.log("Parsing response with Readability");
 
         let uri = Services.io.newURI(url, null, null);
         let readability = new Readability(uri, doc);
-        let article = readability.parse();
+        readability.parse(function (article) {
+          // Delete reference to the browser element as we've finished parsing.
+          let browser = request.browser;
+          if (browser) {
+            browser.parentNode.removeChild(browser);
+            delete request.browser;
+          }
 
-        if (!article) {
-          this.log("Failed to parse page");
-          this._runCallbacksAndFinish(request, null);
-          return;
-        }
+          if (!article) {
+            this.log("Failed to parse page");
+            this._runCallbacksAndFinish(request, null);
+            return;
+          }
 
-        this.log("Parsing has been successful");
+          this.log("Parsing has been successful");
 
-        // Append URL to the article data
-        article.url = url;
+          // Append URL to the article data
+          article.url = url;
 
-        this._runCallbacksAndFinish(request, article);
+          this._runCallbacksAndFinish(request, article);
+        }.bind(this));
       }.bind(this));
     } catch (e) {
       this.log("Error downloading and parsing document: " + e);
