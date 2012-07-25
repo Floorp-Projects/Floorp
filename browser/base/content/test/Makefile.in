@@ -262,9 +262,6 @@ _BROWSER_FILES = \
                  social_panel.html \
                  social_sidebar.html \
                  social_worker.js \
-                 browser_favicon_no_userPass.js \
-                 favicon_no_userPass.html \
-                 icon.ico \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
