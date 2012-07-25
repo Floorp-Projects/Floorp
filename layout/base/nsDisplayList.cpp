@@ -39,6 +39,7 @@
 #include "nsSVGClipPathFrame.h"
 #include "sampler.h"
 #include "nsAnimationManager.h"
+#include "nsTransitionManager.h"
 #include "nsIViewManager.h"
 
 #include "mozilla/StandardInteger.h"
@@ -267,113 +268,144 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 }
 
 static void
-AddTransformAnimations(ElementAnimations* ea, Layer* aLayer,
-                       const nsPoint& aOrigin)
+AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
+                         ElementAnimation* ea, Layer* aLayer,
+                         AnimationData& aData)
 {
-  if (!ea)
-    return;
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
-  nsIFrame* frame = ea->mElement->GetPrimaryFrame();
-  nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(frame);
+  nsStyleContext* styleContext = aFrame->GetStyleContext();
+  nsPresContext* presContext = aFrame->PresContext();
+  nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
   float scale = nsDeviceContext::AppUnitsPerCSSPixel();
-  gfxPoint3D offsetToTransformOrigin =
-    nsDisplayTransform::GetDeltaToMozTransformOrigin(frame, scale, &bounds);
-  gfxPoint3D offsetToPerspectiveOrigin =
-    nsDisplayTransform::GetDeltaToMozPerspectiveOrigin(frame, scale);
-  nscoord perspective = 0.0;
-  nsStyleContext* parentStyleContext = frame->GetStyleContext()->GetParent();
-  if (parentStyleContext) {
-    const nsStyleDisplay* disp = parentStyleContext->GetStyleDisplay();
-    if (disp && disp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
-      perspective = disp->mChildPerspective.GetCoordValue();
-    }
-  }
+  float iterations = ea->mIterationCount != NS_IEEEPositiveInfinity()
+                     ? ea->mIterationCount : -1;
+  for (PRUint32 propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
+    AnimationProperty* property = &ea->mProperties[propIdx];
+    InfallibleTArray<AnimationSegment> segments;
 
-  for (PRUint32 animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
-    ElementAnimation* anim = &ea->mAnimations[animIdx];
-    if (!anim->CanPerformOnCompositor(ea->mElement, TimeStamp::Now())) {
+    if (aProperty != property->mProperty) {
       continue;
     }
-    float iterations = anim->mIterationCount != NS_IEEEPositiveInfinity()
-                         ? anim->mIterationCount : -1;
-    for (PRUint32 propIdx = 0; propIdx < anim->mProperties.Length(); propIdx++) {
-      AnimationProperty* property = &anim->mProperties[propIdx];
-      InfallibleTArray<AnimationSegment> segments;
 
-      if (property->mProperty != eCSSProperty_transform) {
-        continue;
-      }
+    for (PRUint32 segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
+      AnimationPropertySegment* segment = &property->mSegments[segIdx];
 
-      for (PRUint32 segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
-        AnimationPropertySegment* segment = &property->mSegments[segIdx];
+      if (aProperty == eCSSProperty_transform) {
         nsCSSValueList* list = segment->mFromValue.GetCSSValueListValue();
         InfallibleTArray<TransformFunction> fromFunctions;
-        AddTransformFunctions(list, frame->GetStyleContext(),
-                              frame->PresContext(), bounds,
+        AddTransformFunctions(list, styleContext,
+                              presContext, bounds,
                               scale, fromFunctions);
 
         list = segment->mToValue.GetCSSValueListValue();
         InfallibleTArray<TransformFunction> toFunctions;
-        AddTransformFunctions(list, frame->GetStyleContext(),
-                              frame->PresContext(), bounds,
+        AddTransformFunctions(list, styleContext,
+                              presContext, bounds,
                               scale, toFunctions);
 
         segments.AppendElement(AnimationSegment(fromFunctions, toFunctions,
                                                 segment->mFromKey, segment->mToKey,
                                                 ToTimingFunction(segment->mTimingFunction)));
-      }
-
-      if (segments.Length() == 0) {
-        continue;
-      }
-      aLayer->AddAnimation(Animation(anim->mStartTime,
-                                     anim->mIterationDuration,
-                                     segments,
-                                     iterations,
-                                     anim->mDirection,
-                                     TransformData(aOrigin, offsetToTransformOrigin,
-                                                   offsetToPerspectiveOrigin,
-                                                   bounds, perspective)));
-     }
-  }
-}
-
-static void
-AddOpacityAnimations(ElementAnimations* ea, Layer* aLayer)
-{
-  if (!ea)
-    return;
-  NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
-  for (PRUint32 animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
-    ElementAnimation* anim = &ea->mAnimations[animIdx];
-    float iterations = anim->mIterationCount != NS_IEEEPositiveInfinity()
-                         ? anim->mIterationCount : -1;
-    if (!anim->CanPerformOnCompositor(ea->mElement, TimeStamp::Now())) {
-      continue;
-    }
-    for (PRUint32 propIdx = 0; propIdx < anim->mProperties.Length(); propIdx++) {
-      AnimationProperty* property = &anim->mProperties[propIdx];
-      InfallibleTArray<AnimationSegment> segments;
-      if (property->mProperty != eCSSProperty_opacity) {
-        continue;
-      }
-
-      for (PRUint32 segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
-        AnimationPropertySegment* segment = &property->mSegments[segIdx];
+      } else if (aProperty == eCSSProperty_opacity) {
         segments.AppendElement(AnimationSegment(Opacity(segment->mFromValue.GetFloatValue()),
                                                 Opacity(segment->mToValue.GetFloatValue()),
                                                 segment->mFromKey,
                                                 segment->mToKey,
                                                 ToTimingFunction(segment->mTimingFunction)));
       }
+    }
 
-      aLayer->AddAnimation(Animation(anim->mStartTime,
-                                     anim->mIterationDuration,
-                                     segments,
-                                     iterations,
-                                     anim->mDirection,
-                                     null_t()));
-     }
+    aLayer->AddAnimation(Animation(ea->mStartTime,
+                                   ea->mIterationDuration,
+                                   segments,
+                                   iterations,
+                                   ea->mDirection,
+                                   aData));
+  }
+}
+
+static void
+AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayItem* aItem,
+                                   nsCSSProperty aProperty)
+{
+  aLayer->ClearAnimations();
+
+  nsIFrame* frame = aItem->GetUnderlyingFrame();
+  nsIContent* aContent = frame->GetContent();
+  ElementTransitions* et =
+    nsTransitionManager::GetTransitionsForCompositor(aContent, aProperty);
+
+  ElementAnimations* ea =
+    nsAnimationManager::GetAnimationsForCompositor(aContent, aProperty);
+
+  if (!ea && !et) {
+    return;
+  }
+
+  mozilla::TimeStamp currentTime =
+    frame->PresContext()->RefreshDriver()->MostRecentRefresh();
+  AnimationData data;
+  if (aProperty == eCSSProperty_transform) {
+    nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(frame);
+    float scale = nsDeviceContext::AppUnitsPerCSSPixel();
+    gfxPoint3D offsetToTransformOrigin =
+      nsDisplayTransform::GetDeltaToMozTransformOrigin(frame, scale, &bounds);
+    gfxPoint3D offsetToPerspectiveOrigin =
+      nsDisplayTransform::GetDeltaToMozPerspectiveOrigin(frame, scale);
+    nscoord perspective = 0.0;
+    nsStyleContext* parentStyleContext = frame->GetStyleContext()->GetParent();
+    if (parentStyleContext) {
+      const nsStyleDisplay* disp = parentStyleContext->GetStyleDisplay();
+      if (disp && disp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
+        perspective = disp->mChildPerspective.GetCoordValue();
+      }
+    }
+    nsPoint origin = aItem->ToReferenceFrame();
+
+    data = TransformData(origin, offsetToTransformOrigin,
+                         offsetToPerspectiveOrigin, bounds, perspective);
+  } else if (aProperty == eCSSProperty_opacity) {
+    data = null_t();
+  }
+
+  if (et) {
+    for (PRUint32 tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
+      ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
+      if (!pt->CanPerformOnCompositor(et->mElement, currentTime)) {
+         continue;
+       }
+
+      ElementAnimation anim;
+      anim.mIterationCount = 1;
+      anim.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
+      anim.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_NONE;
+      anim.mStartTime = pt->mStartTime;
+      anim.mIterationDuration = pt->mDuration;
+
+      AnimationProperty& prop = *anim.mProperties.AppendElement();
+      prop.mProperty = pt->mProperty;
+
+      AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
+      segment.mFromKey = 0;
+      segment.mToKey = 1;
+      segment.mFromValue = pt->mStartValue;
+      segment.mToValue = pt->mEndValue;
+      segment.mTimingFunction = pt->mTimingFunction;
+
+      AddAnimationsForProperty(frame, aProperty, &anim,
+                               aLayer, data);
+    }
+  }
+
+  if (ea) {
+    for (PRUint32 animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
+      ElementAnimation* anim = &ea->mAnimations[animIdx];
+      if (!anim->CanPerformOnCompositor(ea->mElement, currentTime)) {
+        continue;
+      }
+      AddAnimationsForProperty(frame, aProperty, anim,
+                               aLayer, data);
+    }
   }
 }
 
@@ -2322,12 +2354,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   container->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
-
-  container->ClearAnimations();
-  ElementAnimations* ea =
-    nsAnimationManager::GetAnimationsForCompositor(mFrame->GetContent(),
-                                                   eCSSProperty_opacity);
-  AddOpacityAnimations(ea, container);
+  AddAnimationsAndTransitionsToLayer(container, this, eCSSProperty_opacity);
 
   return container.forget();
 }
@@ -2355,8 +2382,8 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
-    if (nsAnimationManager::GetAnimationsForCompositor(mFrame->GetContent(),
-                                                       eCSSProperty_opacity)) {
+    if (nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(),
+                                                  eCSSProperty_opacity)) {
       return LAYER_ACTIVE;
     }
   }
@@ -3338,12 +3365,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_PRESERVE_3D);
   }
 
-  container->ClearAnimations();
-  ElementAnimations* ea =
-    nsAnimationManager::GetAnimationsForCompositor(mFrame->GetContent(),
-                                                   eCSSProperty_transform);
-  AddTransformAnimations(ea, container, ToReferenceFrame());
-
+  AddAnimationsAndTransitionsToLayer(container, this, eCSSProperty_transform);
   return container.forget();
 }
 
@@ -3359,8 +3381,8 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || mFrame->Preserves3D())
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
-    if (nsAnimationManager::GetAnimationsForCompositor(mFrame->GetContent(),
-                                                       eCSSProperty_transform)) {
+    if (nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(),
+                                                  eCSSProperty_transform)) {
       return LAYER_ACTIVE;
     }
   }

@@ -1498,6 +1498,13 @@ public:
                                         bool clear);
 
   /**
+   * Returns true if the content node has animations or transitions that can be
+   * performed on the compositor.
+   */
+  static bool HasAnimationsForCompositor(nsIContent* aContent,
+                                         nsCSSProperty aProperty);
+
+  /**
    * Checks if CSS 3D transforms are currently enabled.
    */
   static bool Are3DTransformsEnabled();
