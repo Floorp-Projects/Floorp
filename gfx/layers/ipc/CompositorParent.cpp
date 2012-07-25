@@ -34,6 +34,12 @@ namespace layers {
 // affects CrossProcessCompositorParent below.
 static CompositorParent* sCurrentCompositor;
 static Thread* sCompositorThread = nsnull;
+// When ContentParent::StartUp() is called, we use the Thread global.
+// When StartUpWithExistingThread() is used, we have to use the two
+// duplicated globals, because there's no API to make a Thread from an
+// existing thread.
+static PlatformThreadId sCompositorThreadID = 0;
+static MessageLoop* sCompositorLoop = nsnull;
 
 struct LayerTreeState {
   nsRefPtr<Layer> mRoot;
@@ -59,8 +65,19 @@ struct PanZoomUserData : public LayerUserData {
  */
 static const LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+void
+CompositorParent::StartUpWithExistingThread(MessageLoop* aMsgLoop,
+                                            PlatformThreadId aThreadID)
+{
+  MOZ_ASSERT(!sCompositorThread);
+  CreateCompositorMap();
+  sCompositorLoop = aMsgLoop;
+  sCompositorThreadID = aThreadID;
+}
+
 void CompositorParent::StartUp()
 {
+  MOZ_ASSERT(!sCompositorLoop);
   CreateCompositorMap();
   CreateThread();
 }
@@ -74,7 +91,7 @@ void CompositorParent::ShutDown()
 bool CompositorParent::CreateThread()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  if (sCompositorThread) {
+  if (sCompositorThread || sCompositorLoop) {
     return true;
   }
   sCompositorThread = new Thread("Compositor");
@@ -93,11 +110,13 @@ void CompositorParent::DestroyThread()
     delete sCompositorThread;
     sCompositorThread = nsnull;
   }
+  sCompositorLoop = nsnull;
+  sCompositorThreadID = 0;
 }
 
 MessageLoop* CompositorParent::CompositorLoop()
 {
-  return sCompositorThread ? sCompositorThread->message_loop() : nsnull;
+  return sCompositorThread ? sCompositorThread->message_loop() : sCompositorLoop;
 }
 
 CompositorParent::CompositorParent(nsIWidget* aWidget,
@@ -115,7 +134,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
 {
-  NS_ABORT_IF_FALSE(sCompositorThread != nsnull, 
+  NS_ABORT_IF_FALSE(sCompositorThread != nsnull || sCompositorThreadID,
                     "The compositor thread must be Initialized before instanciating a COmpositorParent.");
   MOZ_COUNT_CTOR(CompositorParent);
   mCompositorID = 0;
@@ -131,7 +150,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
 PlatformThreadId
 CompositorParent::CompositorThreadID()
 {
-  return sCompositorThread->thread_id();
+  return sCompositorThread ? sCompositorThread->thread_id() : sCompositorThreadID;
 }
 
 CompositorParent::~CompositorParent()
