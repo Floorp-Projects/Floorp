@@ -17,6 +17,9 @@
 
 #ifdef XP_WIN
 #include <windows.h>
+#include "nsWindowsHelpers.h"
+#elif defined(XP_MACOSX)
+#include <sys/resource.h>
 #endif
 
 #include <pratom.h>
@@ -289,3 +292,36 @@ nsThreadPoolNaming::SetThreadPoolName(const nsACString & aPoolName,
     PR_SetCurrentThreadName(name.BeginReading());
   }
 }
+
+// nsAutoLowPriorityIO
+nsAutoLowPriorityIO::nsAutoLowPriorityIO()
+{
+#if defined(XP_WIN)
+  lowIOPrioritySet = IsVistaOrLater() &&
+                     SetThreadPriority(GetCurrentThread(),
+                                       THREAD_MODE_BACKGROUND_BEGIN);
+#elif defined(XP_MACOSX)
+  oldPriority = getiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD);
+  lowIOPrioritySet = oldPriority != -1 &&
+                     setiopolicy_np(IOPOL_TYPE_DISK,
+                                    IOPOL_SCOPE_THREAD,
+                                    IOPOL_THROTTLE) != -1;
+#else
+  lowIOPrioritySet = false;
+#endif
+}
+
+nsAutoLowPriorityIO::~nsAutoLowPriorityIO()
+{
+#if defined(XP_WIN)
+  if (NS_LIKELY(lowIOPrioritySet)) {
+    // On Windows the old thread priority is automatically restored
+    SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
+  }
+#elif defined(XP_MACOSX)
+  if (NS_LIKELY(lowIOPrioritySet)) {
+    setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, oldPriority);
+  }
+#endif
+}
+
