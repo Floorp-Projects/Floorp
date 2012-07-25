@@ -127,7 +127,7 @@ js::PrepareForIncrementalGC(JSRuntime *rt)
         return;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->wasGCStarted())
+        if (c->needsBarrier())
             PrepareCompartmentForGC(c);
     }
 }

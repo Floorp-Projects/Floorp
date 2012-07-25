@@ -41,7 +41,6 @@ namespace js {
 
 class GCHelperThread;
 struct Shape;
-struct SliceBudget;
 
 namespace gc {
 
@@ -49,7 +48,6 @@ enum State {
     NO_INCREMENTAL,
     MARK_ROOTS,
     MARK,
-    SWEEP,
     INVALID
 };
 
@@ -148,34 +146,32 @@ IsNurseryAllocable(AllocKind kind)
 inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing);
 
-/*
- * ArenaList::head points to the start of the list. Normally cursor points
- * to the first arena in the list with some free things and all arenas
- * before cursor are fully allocated. However, as the arena currently being
- * allocated from is considered full while its list of free spans is moved
- * into the freeList, during the GC or cell enumeration, when an
- * unallocated freeList is moved back to the arena, we can see an arena
- * with some free cells before the cursor. The cursor is an indirect
- * pointer to allow for efficient list insertion at the cursor point and
- * other list manipulations.
- */
-struct ArenaList {
-    ArenaHeader     *head;
-    ArenaHeader     **cursor;
-
-    ArenaList() {
-        clear();
-    }
-
-    void clear() {
-        head = NULL;
-        cursor = &head;
-    }
-
-    void insert(ArenaHeader *arena);
-};
-
 struct ArenaLists {
+
+    /*
+     * ArenaList::head points to the start of the list. Normally cursor points
+     * to the first arena in the list with some free things and all arenas
+     * before cursor are fully allocated. However, as the arena currently being
+     * allocated from is considered full while its list of free spans is moved
+     * into the freeList, during the GC or cell enumeration, when an
+     * unallocated freeList is moved back to the arena, we can see an arena
+     * with some free cells before the cursor. The cursor is an indirect
+     * pointer to allow for efficient list insertion at the cursor point and
+     * other list manipulations.
+     */
+    struct ArenaList {
+        ArenaHeader     *head;
+        ArenaHeader     **cursor;
+
+        ArenaList() {
+            clear();
+        }
+
+        void clear() {
+            head = NULL;
+            cursor = &head;
+        }
+    };
 
   private:
     /*
@@ -216,17 +212,11 @@ struct ArenaLists {
     volatile uintptr_t backgroundFinalizeState[FINALIZE_LIMIT];
 
   public:
-    /* For each arena kind, a list of arenas remaining to be swept. */
-    ArenaHeader *arenaListsToSweep[FINALIZE_LIMIT];
-
-  public:
     ArenaLists() {
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
             freeLists[i].initAsEmpty();
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
             backgroundFinalizeState[i] = BFS_DONE;
-        for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
-            arenaListsToSweep[i] = NULL;
     }
 
     ~ArenaLists() {
@@ -264,10 +254,6 @@ struct ArenaLists {
                 return false;
         }
         return true;
-    }
-
-    bool arenasAreFull(AllocKind thingKind) const {
-        return !*arenaLists[thingKind].cursor;
     }
 
     void unmarkAll() {
@@ -378,18 +364,16 @@ struct ArenaLists {
         JS_ASSERT(freeLists[kind].isEmpty());
     }
 
-    void queueObjectsForSweep(FreeOp *fop);
-    void queueStringsForSweep(FreeOp *fop);
-    void queueShapesForSweep(FreeOp *fop);
-    void queueScriptsForSweep(FreeOp *fop);
+    void finalizeObjects(FreeOp *fop);
+    void finalizeStrings(FreeOp *fop);
+    void finalizeShapes(FreeOp *fop);
+    void finalizeScripts(FreeOp *fop);
 
-    bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
 
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
-    inline void queueForForegroundSweep(FreeOp *fop, AllocKind thingKind);
-    inline void queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind);
+    inline void finalizeLater(FreeOp *fop, AllocKind thingKind);
 
     inline void *allocateFromArena(JSCompartment *comp, AllocKind thingKind);
 };

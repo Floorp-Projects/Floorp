@@ -174,7 +174,6 @@ struct JSCompartment
 
     CompartmentGCState           gcState;
     bool                         gcPreserveCode;
-    bool                         gcStarted;
 
   public:
     bool isCollecting() const {
@@ -225,19 +224,6 @@ struct JSCompartment
 
     void setPreservingCode(bool preserving) {
         gcPreserveCode = preserving;
-    }
-
-    bool wasGCStarted() const {
-        return gcStarted;
-    }
-
-    void setGCStarted(bool started) {
-        JS_ASSERT(rt->isHeapBusy());
-        gcStarted = started;
-    }
-
-    bool isGCSweeping() {
-        return wasGCStarted() && rt->gcIncrementalState == js::gc::SWEEP;
     }
 
     size_t                       gcBytes;

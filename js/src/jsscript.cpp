@@ -1206,7 +1206,7 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
      * accessed even if the name was already in the table. At this point old
      * scripts pointing to the source may no longer be reachable.
      */
-    if (cx->runtime->gcIncrementalState != NO_INCREMENTAL && cx->runtime->gcIsFull)
+    if (cx->runtime->gcIncrementalState == MARK && cx->runtime->gcIsFull)
         ss->marked = true;
 #endif
 
@@ -1346,7 +1346,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr, ScriptSource **ssp)
         cleanup.protect(ss);
 #ifdef JSGC_INCREMENTAL
         // See comment in ScriptSource::createFromSource.
-        if (xdr->cx()->runtime->gcIncrementalState != NO_INCREMENTAL &&
+        if (xdr->cx()->runtime->gcIncrementalState == MARK &&
             xdr->cx()->runtime->gcIsFull)
             ss->marked = true;
 #endif
@@ -1414,7 +1414,7 @@ js::SaveScriptFilename(JSContext *cx, const char *filename)
      * scripts or exceptions pointing to the filename may no longer be
      * reachable.
      */
-    if (rt->gcIncrementalState != NO_INCREMENTAL && rt->gcIsFull)
+    if (rt->gcIncrementalState == MARK && rt->gcIsFull)
         sfe->marked = true;
 #endif
 

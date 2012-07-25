@@ -102,14 +102,12 @@ void
 Shape::removeChild(Shape *child)
 {
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(child->parent == this);
 
     KidsPointer *kidp = &kids;
 
     if (kidp->isShape()) {
         JS_ASSERT(kidp->toShape() == child);
         kidp->setNull();
-        child->parent = NULL;
         return;
     }
 
@@ -117,7 +115,6 @@ Shape::removeChild(Shape *child)
     JS_ASSERT(hash->count() >= 2);      /* otherwise kidp->isShape() should be true */
 
     hash->remove(child);
-    child->parent = NULL;
 
     if (hash->count() == 1) {
         /* Convert from HASH form back to SHAPE form. */
@@ -129,10 +126,27 @@ Shape::removeChild(Shape *child)
     }
 }
 
+/*
+ * We need a read barrier for the shape tree, since these are weak pointers.
+ */
+static Shape *
+ReadBarrier(Shape *shape)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = shape->compartment();
+    if (comp->needsBarrier()) {
+        Shape *tmp = shape;
+        MarkShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        JS_ASSERT(tmp == shape);
+    }
+#endif
+    return shape;
+}
+
 Shape *
 PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
 {
-    Shape *shape = NULL;
+    Shape *shape;
 
     JS_ASSERT(parent_);
 
@@ -146,42 +160,16 @@ PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const Sta
      */
     KidsPointer *kidp = &parent_->kids;
     if (kidp->isShape()) {
-        Shape *kid = kidp->toShape();
-        if (kid->matches(child))
-            shape = kid;
+        shape = kidp->toShape();
+        if (shape->matches(child))
+            return ReadBarrier(shape);
     } else if (kidp->isHash()) {
         shape = *kidp->toHash()->lookup(child);
+        if (shape)
+            return ReadBarrier(shape);
     } else {
         /* If kidp->isNull(), we always insert. */
     }
-
-#ifdef JSGC_INCREMENTAL
-    if (shape) {
-        JSCompartment *comp = shape->compartment();
-        if (comp->needsBarrier()) {
-            /*
-             * We need a read barrier for the shape tree, since these are weak
-             * pointers.
-             */
-            Shape *tmp = shape;
-            MarkShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
-            JS_ASSERT(tmp == shape);
-        } else if (comp->isGCSweeping() && !shape->isMarked() &&
-                   !shape->arenaHeader()->allocatedDuringIncremental)
-        {
-            /*
-             * The shape we've found is unreachable and due to be finalized, so
-             * remove our weak reference to it and don't use it.
-             */
-            JS_ASSERT(parent_->isMarked());
-            parent_->removeChild(shape);
-            shape = NULL;
-        }
-    }
-#endif
-
-    if (shape)
-        return shape;
 
     StackShape::AutoRooter childRoot(cx, &child);
     RootedShape parent(cx, parent_);
@@ -202,11 +190,6 @@ void
 Shape::finalize(FreeOp *fop)
 {
     if (!inDictionary()) {
-        /*
-         * Note that due to incremental sweeping, if !parent->isMarked() then
-         * the parent may point to a new shape allocated in the same cell that
-         * use to hold our parent.
-         */
         if (parent && parent->isMarked())
             parent->removeChild(this);
 
