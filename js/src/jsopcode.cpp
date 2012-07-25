@@ -6028,6 +6028,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
     LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
     jsbytecode *pc = script->code;
     unsigned pcdepth = 0;
+    unsigned hpcdepth = unsigned(-1);
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
         JSOp op = JSOp(*pc);
@@ -6074,15 +6075,26 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             }
         }
 
-        /* Ignore early-exit code, which is annotated SRC_HIDDEN. */
-        if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-            continue;
-
-        if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
-            return -1;
+        /*
+         * SRC_HIDDEN instructions annotate early-exit paths and do not affect
+         * the stack depth when not taken. However, when pc points into an
+         * early-exit path, hidden instructions need to be taken into account.
+         */
+        if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
+            if (hpcdepth == unsigned(-1))
+                hpcdepth = pcdepth;
+            if (SimulateOp(cx, script, op, cs, pc, pcstack, hpcdepth) < 0)
+                return -1;
+        } else {
+            hpcdepth = unsigned(-1);
+            if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
+                return -1;
+        }
 
     }
     LOCAL_ASSERT(pc == target);
+    if (hpcdepth != unsigned(-1))
+        return hpcdepth;
     return pcdepth;
 }
 
