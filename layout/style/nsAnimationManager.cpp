@@ -14,110 +14,13 @@
 
 using namespace mozilla;
 
-struct AnimationPropertySegment
+ElementAnimations::ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
+                                     nsAnimationManager *aAnimationManager)
+  : CommonElementAnimationData(aElement, aElementProperty,
+                               aAnimationManager),
+    mNeedsRefreshes(true)
 {
-  float mFromKey, mToKey;
-  nsStyleAnimation::Value mFromValue, mToValue;
-  css::ComputedTimingFunction mTimingFunction;
-};
-
-struct AnimationProperty
-{
-  nsCSSProperty mProperty;
-  InfallibleTArray<AnimationPropertySegment> mSegments;
-};
-
-/**
- * Data about one animation (i.e., one of the values of
- * 'animation-name') running on an element.
- */
-struct ElementAnimation
-{
-  ElementAnimation()
-    : mLastNotification(LAST_NOTIFICATION_NONE)
-  {
-  }
-
-  nsString mName; // empty string for 'none'
-  float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
-  PRUint8 mDirection;
-  PRUint8 mFillMode;
-  PRUint8 mPlayState;
-
-  bool FillsForwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
-  }
-  bool FillsBackwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
-  }
-
-  bool IsPaused() const {
-    return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
-  }
-
-  TimeStamp mStartTime; // with delay taken into account
-  TimeStamp mPauseStart;
-  TimeDuration mIterationDuration;
-
-  enum {
-    LAST_NOTIFICATION_NONE = PRUint32(-1),
-    LAST_NOTIFICATION_END = PRUint32(-2)
-  };
-  // One of the above constants, or an integer for the iteration
-  // whose start we last notified on.
-  PRUint32 mLastNotification;
-
-  InfallibleTArray<AnimationProperty> mProperties;
-};
-
-typedef nsAnimationManager::EventArray EventArray;
-typedef nsAnimationManager::AnimationEventInfo AnimationEventInfo;
-
-/**
- * Data about all of the animations running on an element.
- */
-struct ElementAnimations : public mozilla::css::CommonElementAnimationData
-{
-  ElementAnimations(dom::Element *aElement, nsIAtom *aElementProperty,
-                     nsAnimationManager *aAnimationManager)
-    : CommonElementAnimationData(aElement, aElementProperty,
-                                 aAnimationManager),
-      mNeedsRefreshes(true)
-  {
-  }
-
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                          EventArray &aEventsToDispatch);
-
-  bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == nsGkAtoms::animationsProperty;
-  }
-
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint hint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
-    aPresContext->PresShell()->RestyleForAnimation(mElement, hint);
-  }
-
-  // This style rule contains the style data for currently animating
-  // values.  It only matches when styling with animation.  When we
-  // style without animation, we need to not use it so that we can
-  // detect any new changes; if necessary we restyle immediately
-  // afterwards with animation.
-  // NOTE: If we don't need to apply any styles, mStyleRule will be
-  // null, but mStyleRuleRefreshTime will still be valid.
-  nsRefPtr<css::AnimValuesStyleRule> mStyleRule;
-  // The refresh time associated with mStyleRule.
-  TimeStamp mStyleRuleRefreshTime;
-
-  // False when we know that our current style rule is valid
-  // indefinitely into the future (because all of our animations are
-  // either completed or paused).  May be invalidated by a style change.
-  bool mNeedsRefreshes;
-
-  InfallibleTArray<ElementAnimation> mAnimations;
-};
+}
 
 static void
 ElementAnimationsPropertyDtor(void           *aObject,
