@@ -1,0 +1,2 @@
+conformance/glsl/functions/glsl-function-atan-xy.html
+conformance/glsl/misc/struct-nesting-under-maximum.html

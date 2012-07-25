@@ -1,5 +1,6 @@
 # HG changeset patch
-# Parent 268bda9ac676b6f4cca5aa044d0dcefff2008535
+# Parent 69255fe4cb94f1681bc9200db37c0ad3de171abc
+
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in

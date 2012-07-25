@@ -5,7 +5,7 @@
 //
 
 #include "compiler/OutputGLSLBase.h"
-#include "compiler/compilerdebug.h"
+#include "compiler/debug.h"
 
 namespace
 {

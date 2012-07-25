@@ -38,6 +38,7 @@ WHICH GENERATES THE GLSL ES LEXER (glslang_lex.cpp).
 %{
 #include "compiler/glslang.h"
 #include "compiler/ParseHelper.h"
+#include "compiler/preprocessor/new/Token.h"
 #include "compiler/util.h"
 #include "glslang_tab.h"
 
@@ -204,7 +205,7 @@ O           [0-7]
 
 0[xX]{H}+         { yylval->lex.i = strtol(yytext, 0, 0); return(INTCONSTANT); }
 0{O}+             { yylval->lex.i = strtol(yytext, 0, 0); return(INTCONSTANT); }
-0{D}+             { context->error(yylineno, "Invalid Octal number.", yytext, "", ""); context->recover(); return 0;}
+0{D}+             { context->error(yylineno, "Invalid Octal number.", yytext); context->recover(); return 0;}
 {D}+              { yylval->lex.i = strtol(yytext, 0, 0); return(INTCONSTANT); }
 
 {D}+{E}           { yylval->lex.f = static_cast<float>(atof_dot(yytext)); return(FLOATCONSTANT); }
@@ -271,9 +272,13 @@ O           [0-7]
 
 %%
 
+// Old preprocessor interface.
 extern "C" {
-// Preprocessor interface.
 #include "compiler/preprocessor/preprocess.h"
+
+extern int InitPreprocessor();
+extern int FinalizePreprocessor();
+extern void PredefineIntMacro(const char *name, int value);
 
 #define SETUP_CONTEXT(pp) \
     TParseContext* context = (TParseContext*) pp->pC; \
@@ -283,26 +288,26 @@ extern "C" {
 void CPPDebugLogMsg(const char *msg)
 {
     SETUP_CONTEXT(cpp);
-    context->infoSink.debug.message(EPrefixNone, msg);
+    context->trace(msg);
 }
 
 void CPPWarningToInfoLog(const char *msg)
 {
     SETUP_CONTEXT(cpp);
-    context->warning(yylineno, msg, "", "");
+    context->warning(yylineno, msg, "");
 }
 
 void CPPShInfoLogMsg(const char *msg)
 {
     SETUP_CONTEXT(cpp);
-    context->error(yylineno, msg, "", "");
+    context->error(yylineno, msg, "");
     context->recover();
 }
 
-void CPPErrorToInfoLog(char *msg)
+void CPPErrorToInfoLog(const char *msg)
 {
     SETUP_CONTEXT(cpp);
-    context->error(yylineno, msg, "", "");
+    context->error(yylineno, msg, "");
     context->recover();
 }
 
@@ -357,88 +362,15 @@ void DecLineNumber()
 void HandlePragma(const char **tokens, int numTokens)
 {
     SETUP_CONTEXT(cpp);
-    if (!strcmp(tokens[0], "optimize")) {
-        if (numTokens != 4) {
-            CPPShInfoLogMsg("optimize pragma syntax is incorrect");
-            return;
-        }
-        
-        if (strcmp(tokens[1], "(")) {
-            CPPShInfoLogMsg("\"(\" expected after 'optimize' keyword");
-            return;
-        }
-            
-        if (!strcmp(tokens[2], "on"))
-            context->contextPragma.optimize = true;
-        else if (!strcmp(tokens[2], "off"))
-            context->contextPragma.optimize = false;
-        else {
-            CPPShInfoLogMsg("\"on\" or \"off\" expected after '(' for 'optimize' pragma");
-            return;
-        }
-        
-        if (strcmp(tokens[3], ")")) {
-            CPPShInfoLogMsg("\")\" expected to end 'optimize' pragma");
-            return;
-        }
-    } else if (!strcmp(tokens[0], "debug")) {
-        if (numTokens != 4) {
-            CPPShInfoLogMsg("debug pragma syntax is incorrect");
-            return;
-        }
-        
-        if (strcmp(tokens[1], "(")) {
-            CPPShInfoLogMsg("\"(\" expected after 'debug' keyword");
-            return;
-        }
-            
-        if (!strcmp(tokens[2], "on"))
-            context->contextPragma.debug = true;
-        else if (!strcmp(tokens[2], "off"))
-            context->contextPragma.debug = false;
-        else {
-            CPPShInfoLogMsg("\"on\" or \"off\" expected after '(' for 'debug' pragma");
-            return;
-        }
-        
-        if (strcmp(tokens[3], ")")) {
-            CPPShInfoLogMsg("\")\" expected to end 'debug' pragma");
-            return;
-        }
-    } else {
-#ifdef PRAGMA_TABLE
-        //
-        // implementation specific pragma
-        // use ((TParseContext *)cpp->pC)->contextPragma.pragmaTable to store the information about pragma
-        // For now, just ignore the pragma that the implementation cannot recognize
-        // An Example of one such implementation for a pragma that has a syntax like
-        // #pragma pragmaname(pragmavalue)
-        // This implementation stores the current pragmavalue against the pragma name in pragmaTable.
-        //        
-        if (numTokens == 4 && !strcmp(tokens[1], "(") && !strcmp(tokens[3], ")")) {              
-            TPragmaTable& pragmaTable = ((TParseContext *)cpp->pC)->contextPragma.pragmaTable;
-            TPragmaTable::iterator iter;
-            iter = pragmaTable.find(TString(tokens[0]));
-            if (iter != pragmaTable.end()) {
-                iter->second = tokens[2];
-            } else {
-                pragmaTable[ tokens[0] ] = tokens[2];
-            }        
-        } else if (numTokens >= 2) {
-            TPragmaTable& pragmaTable = ((TParseContext *)cpp->pC)->contextPragma.pragmaTable;
-            TPragmaTable::iterator iter;
-            iter = pragmaTable.find(TString(tokens[0]));
-            if (iter != pragmaTable.end()) {
-                iter->second = tokens[1];
-            } else {
-                pragmaTable[ tokens[0] ] = tokens[1];
-            }
-        }
-#endif // PRAGMA_TABLE
-    }
+
+    if (numTokens != 4) return;
+    if (strcmp(tokens[1], "(") != 0) return;
+    if (strcmp(tokens[3], ")") != 0) return;
+
+    context->handlePragmaDirective(yylineno, tokens[0], tokens[2]);
 }
 
-void StoreStr(char *string)
+void StoreStr(const char *string)
 {
     SETUP_CONTEXT(cpp);
     TString strSrc;
@@ -460,71 +392,32 @@ void ResetTString(void)
     context->HashErrMsg = "";
 }
 
-TBehavior GetBehavior(const char* behavior)
-{
-    if (!strcmp("require", behavior))
-        return EBhRequire;
-    else if (!strcmp("enable", behavior))
-        return EBhEnable;
-    else if (!strcmp("disable", behavior))
-        return EBhDisable;
-    else if (!strcmp("warn", behavior))
-        return EBhWarn;
-    else {
-        CPPShInfoLogMsg((TString("behavior '") + behavior + "' is not supported").c_str());
-        return EBhDisable;
-    }        
-}
-
 void updateExtensionBehavior(const char* extName, const char* behavior)
 {
     SETUP_CONTEXT(cpp);
-    TBehavior behaviorVal = GetBehavior(behavior);
-    TMap<TString, TBehavior>:: iterator iter;
-    TString msg;
-    
-    // special cased for all extension
-    if (!strcmp(extName, "all")) {
-        if (behaviorVal == EBhRequire || behaviorVal == EBhEnable) {
-            CPPShInfoLogMsg("extension 'all' cannot have 'require' or 'enable' behavior");  
-            return;
-        } else {
-            for (iter = context->extensionBehavior.begin(); iter != context->extensionBehavior.end(); ++iter)
-                iter->second = behaviorVal;
-        }        
-    } else {
-        iter = context->extensionBehavior.find(TString(extName));
-        if (iter == context->extensionBehavior.end()) {
-            switch (behaviorVal) {
-            case EBhRequire:
-                CPPShInfoLogMsg((TString("extension '") + extName + "' is not supported").c_str());  
-                break;
-            case EBhEnable:
-            case EBhWarn:
-            case EBhDisable:
-                msg = TString("extension '") + extName + "' is not supported";
-                context->infoSink.info.message(EPrefixWarning, msg.c_str(), yylineno); 
-                break;
-            default:
-                break;
-            }
-            return;
-        } else
-            iter->second = behaviorVal;
-    }
+    context->handleExtensionDirective(yylineno, extName, behavior);
 }
 }  // extern "C"
 
 int string_input(char* buf, int max_size, yyscan_t yyscanner) {
-    int len;
+    int len = 0;
 
-    if ((len = yylex_CPP(buf, max_size)) == 0)
-        return 0;
-    if (len >= max_size) 
-        YY_FATAL_ERROR("input buffer overflow, can't enlarge buffer because scanner uses REJECT");
+#if ANGLE_USE_NEW_PREPROCESSOR
+    pp::Token token;
+    yyget_extra(yyscanner)->preprocessor.lex(&token);
+    len = token.type == pp::Token::LAST ? 0 : token.text.size();
+    if ((len > 0) && (len < max_size))
+        memcpy(buf, token.text.c_str(), len);
+    yyset_lineno(EncodeSourceLoc(token.location.file, token.location.line), yyscanner);
+#else
+    len = yylex_CPP(buf, max_size);
+#endif  // ANGLE_USE_NEW_PREPROCESSOR
 
-    buf[len] = ' ';
-    return len+1;
+    if (len >= max_size)
+        YY_FATAL_ERROR("Input buffer overflow");
+    else if (len > 0)
+        buf[len++] = ' ';
+    return len;
 }
 
 int check_type(yyscan_t yyscanner) {
@@ -555,9 +448,9 @@ void yyerror(TParseContext* context, const char* reason) {
     struct yyguts_t* yyg = (struct yyguts_t*) context->scanner;
 
     if (context->AfterEOF) {
-        context->error(yylineno, reason, "unexpected EOF", "");
+        context->error(yylineno, reason, "unexpected EOF");
     } else {
-        context->error(yylineno, reason, yytext, "");
+        context->error(yylineno, reason, yytext);
     }
     context->recover();
 }
@@ -576,7 +469,12 @@ int glslang_finalize(TParseContext* context) {
     if (scanner == NULL) return 0;
     
     context->scanner = NULL;
-    return yylex_destroy(scanner);
+    yylex_destroy(scanner);
+
+#if !ANGLE_USE_NEW_PREPROCESSOR
+    FinalizePreprocessor();
+#endif
+    return 0;
 }
 
 int glslang_scan(int count, const char* const string[], const int length[],
@@ -584,10 +482,30 @@ int glslang_scan(int count, const char* const string[], const int length[],
     yyrestart(NULL, context->scanner);
     yyset_lineno(EncodeSourceLoc(0, 1), context->scanner);
     context->AfterEOF = false;
-    
-    // Init preprocessor.
+
+    // Initialize preprocessor.
+#if ANGLE_USE_NEW_PREPROCESSOR
+    if (!context->preprocessor.init(count, string, length))
+        return 1;
+#else
+    if (InitPreprocessor())
+        return 1;
     cpp->pC = context;
     cpp->pastFirstStatement = 0;
-    return InitScannerInput(cpp, count, string, length);
+    if (InitScannerInput(cpp, count, string, length))
+        return 1;
+#endif  // ANGLE_USE_NEW_PREPROCESSOR
+
+    // Define extension macros.
+    const TExtensionBehavior& extBehavior = context->extensionBehavior();
+    for (TExtensionBehavior::const_iterator iter = extBehavior.begin();
+         iter != extBehavior.end(); ++iter) {
+#if ANGLE_USE_NEW_PREPROCESSOR
+        context->preprocessor.predefineMacro(iter->first.c_str(), 1);
+#else
+        PredefineIntMacro(iter->first.c_str(), 1);
+#endif
+    }
+    return 0;
 }
 

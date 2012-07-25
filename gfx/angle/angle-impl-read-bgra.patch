@@ -1,9 +1,10 @@
-# HG changeset patch
-# Parent 8b838be49f115022e403c850c24b28ad62d72ad6
+From: Jeff Gilbert <jgilbert@mozilla.com>
+Bug 724476 - ANGLE Bug 294 - Use BGRA/UBYTE as exposed fast format/type for readPixels
+
 diff --git a/gfx/angle/src/libGLESv2/Context.cpp b/gfx/angle/src/libGLESv2/Context.cpp
 --- a/gfx/angle/src/libGLESv2/Context.cpp
 +++ b/gfx/angle/src/libGLESv2/Context.cpp
-@@ -2518,16 +2518,17 @@ void Context::readPixels(GLint x, GLint 
+@@ -2520,16 +2520,17 @@ void Context::readPixels(GLint x, GLint 
      {
          if (desc.Format == D3DFMT_A8R8G8B8 &&
              format == GL_BGRA_EXT &&
@@ -21,7 +22,7 @@ diff --git a/gfx/angle/src/libGLESv2/Context.cpp b/gfx/angle/src/libGLESv2/Conte
  
          for (int i = 0; i < rect.right - rect.left; i++)
          {
-@@ -2665,20 +2666,20 @@ void Context::readPixels(GLint x, GLint 
+@@ -2666,20 +2667,20 @@ void Context::readPixels(GLint x, GLint 
                          ((unsigned short)(     a + 0.5f) << 15) |
                          ((unsigned short)(31 * r + 0.5f) << 10) |
                          ((unsigned short)(31 * g + 0.5f) << 5) |
