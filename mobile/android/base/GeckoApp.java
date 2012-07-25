@@ -711,6 +711,17 @@ abstract public class GeckoApp
                 return super.onOptionsItemSelected(item);
         }
     }
+ 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Custom Menu should be opened when hardware menu key is pressed.
+        if (Build.VERSION.SDK_INT >= 11 && keyCode == KeyEvent.KEYCODE_MENU) {
+            openOptionsMenu();
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
 
     private void shareCurrentUrl() {
       Tab tab = Tabs.getInstance().getSelectedTab();
