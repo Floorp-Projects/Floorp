@@ -5,7 +5,9 @@ from filecmp import dircmp
 from tempfile import mkdtemp
 from shutil import rmtree, copy2
 from zipfile import ZipFile
-import mozunit
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from mozunit import MozTestRunner
 from JarMaker import JarMaker
 
 if sys.platform == "win32":
@@ -278,4 +280,4 @@ class TestJarMaker(unittest.TestCase):
         self.assertTrue(not difference, difference)
 
 if __name__ == '__main__':
-    mozunit.main()
+    unittest.main(testRunner=MozTestRunner())

@@ -2,7 +2,7 @@ import unittest
 
 import sys
 import os.path
-import mozunit
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from printprereleasesuffix import get_prerelease_suffix
 
@@ -77,4 +77,4 @@ class TestGetPreReleaseSuffix(unittest.TestCase):
     self.assertEqual(self.c, '')
 
 if __name__ == '__main__':
-  mozunit.main()
+  unittest.main()

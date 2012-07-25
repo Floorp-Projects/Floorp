@@ -161,7 +161,6 @@ PYUNITS := \
   unit-buildlist.py \
   unit-expandlibs.py \
   unit-writemozinfo.py \
-  unit-mozunit.py \
   $(NULL)
 
 check-preqs = \
