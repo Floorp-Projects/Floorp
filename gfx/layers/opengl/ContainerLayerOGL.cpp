@@ -344,7 +344,18 @@ ShadowContainerLayerOGL::ShadowContainerLayerOGL(LayerManagerOGL *aManager)
  
 ShadowContainerLayerOGL::~ShadowContainerLayerOGL()
 {
-  Destroy();
+  // We don't Destroy() on destruction here because this destructor
+  // can be called after remote content has crashed, and it may not be
+  // safe to free the IPC resources of our children.  Those resources
+  // are automatically cleaned up by IPDL-generated code.
+  //
+  // In the common case of normal shutdown, either
+  // LayerManagerOGL::Destroy(), a parent
+  // *ContainerLayerOGL::Destroy(), or Disconnect() will trigger
+  // cleanup of our resources.
+  while (mFirstChild) {
+    ContainerRemoveChild(this, mFirstChild);
+  }
 }
 
 void
