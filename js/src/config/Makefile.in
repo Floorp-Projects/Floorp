@@ -43,7 +43,7 @@ include $(topsrcdir)/config/config.mk
 NO_INSTALL=1
 
 # Force wrap zlib system header if building js as a shared library.
-ifdef JS_SHARED_LIBRARY
+ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ZLIB))
 DEFINES += -DMOZ_NATIVE_ZLIB=1
 endif
 
