@@ -14,7 +14,8 @@ simple_events = [
     'PageTransitionEvent',
     'PopStateEvent',
     'HashChangeEvent',
-    'CloseEvent'
+    'CloseEvent',
+    'MozContactChangeEvent'
   ]
 
 """ include file names """
