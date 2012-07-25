@@ -85,6 +85,86 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "has-gczeal", &value))
         return false;
 
+#ifdef JS_MORE_DETERMINISTIC
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "more-deterministic", &value))
+        return false;
+
+#ifdef MOZ_PROFILING
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "profiling", &value))
+        return false;
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "dtrace", &value))
+        return false;
+
+#ifdef MOZ_TRACE_JSCALLS
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "trace-jscalls-api", &value))
+        return false;
+
+#ifdef JSGC_INCREMENTAL
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "incremental-gc", &value))
+        return false;
+
+#ifdef JSGC_GENERATIONAL
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "generational-gc", &value))
+        return false;
+
+#ifdef MOZ_VALGRIND
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "valgrind", &value))
+        return false;
+
+#ifdef JS_OOM_DO_BACKTRACES
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "oom-backtraces", &value))
+        return false;
+
+#ifdef JS_METHODJIT
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "methodjit", &value))
+        return false;
+
+#ifdef JS_HAS_XML_SUPPORT
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "e4x", &value))
+        return false;
+
     *vp = ObjectValue(*info);
     return true;
 }
@@ -383,7 +463,7 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
     }
 
-    gc::SetDeterministicGC(cx, js_ValueToBoolean(vp[2]));
+    gc::SetDeterministicGC(cx, ToBoolean(vp[2]));
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }

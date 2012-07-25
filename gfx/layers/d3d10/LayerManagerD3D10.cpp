@@ -20,6 +20,7 @@
 #include "ReadbackLayerD3D10.h"
 #include "ImageLayerD3D10.h"
 #include "mozilla/layers/PLayerChild.h"
+#include "mozilla/WidgetUtils.h"
 
 #include "../d3d9/Nv3DVUtils.h"
 
@@ -448,7 +449,6 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
   
   CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-  desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
   
   HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(texture));
 
@@ -729,7 +729,8 @@ LayerManagerD3D10::Render()
   if (mTarget) {
     PaintToTarget();
   } else if (mBackBuffer) {
-    ShadowLayerForwarder::BeginTransaction();
+    ShadowLayerForwarder::BeginTransaction(mWidget->GetNaturalBounds(),
+                                           ROTATION_0);
     
     nsIntRect contentRect = nsIntRect(0, 0, rect.width, rect.height);
     if (!mRootForShadowTree) {

@@ -70,6 +70,7 @@ public:
   virtual bool RecvResume() MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(ShadowLayersParent* aLayerTree,
+                                   const TargetConfig& aTargetConfig,
                                    bool isFirstPaint) MOZ_OVERRIDE;
   void Destroy();
 
@@ -227,6 +228,7 @@ private:
 
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;
+  TargetConfig mTargetConfig;
   CancelableTask *mCurrentCompositeTask;
   TimeStamp mLastCompose;
 #ifdef COMPOSITOR_PERFORMANCE_WARNING

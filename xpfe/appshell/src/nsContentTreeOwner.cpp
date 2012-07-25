@@ -635,6 +635,12 @@ NS_IMETHODIMP nsContentTreeOwner::SetParentNativeWindow(nativeWindow aParentNati
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsContentTreeOwner::GetNativeHandle(nsAString& aNativeHandle)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->GetNativeHandle(aNativeHandle);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::GetVisibility(bool* aVisibility)
 {
    NS_ENSURE_STATE(mXULWindow);
