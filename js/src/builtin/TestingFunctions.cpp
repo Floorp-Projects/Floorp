@@ -463,7 +463,7 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
     }
 
-    gc::SetDeterministicGC(cx, js_ValueToBoolean(vp[2]));
+    gc::SetDeterministicGC(cx, ToBoolean(vp[2]));
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
