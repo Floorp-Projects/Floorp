@@ -290,6 +290,7 @@ package-tests: \
   stage-mozbase \
   stage-tps \
   stage-modules \
+  stage-marionette \
   $(NULL)
 else
 # This staging area has been built for us by universal/flight.mk
@@ -369,6 +370,16 @@ stage-modules: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
 
+MARIONETTE_DIR=$(PKG_STAGE)/marionette
+stage-marionette: make-stage-dir
+	$(NSINSTALL) -D $(MARIONETTE_DIR)/tests
+	@(cd $(topsrcdir)/testing/marionette/client && tar --exclude marionette/tests $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR) && tar -xf -)
+	$(PYTHON) $(topsrcdir)/testing/marionette/client/marionette/tests/print-manifest-dirs.py \
+          $(topsrcdir) \
+          $(topsrcdir)/testing/marionette/client/marionette/tests/unit-tests.ini \
+          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS_QUIET) -) \
+          | (cd $(MARIONETTE_DIR)/tests && tar -xf -)
+
 stage-mozbase: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mozbase stage-package
 .PHONY: \
@@ -395,5 +406,6 @@ stage-mozbase: make-stage-dir
   stage-mozbase \
   stage-tps \
   stage-modules \
+  stage-marionette \
   $(NULL)
 

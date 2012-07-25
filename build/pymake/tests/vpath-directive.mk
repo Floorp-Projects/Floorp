@@ -1,8 +1,5 @@
-ifdef __WIN32__
-VPSEP = ;
-else
-VPSEP = :
-endif
+# On Windows, MSYS make takes Unix paths but Pymake takes Windows paths
+VPSEP := $(if $(and $(__WIN32__),$(.PYMAKE)),;,:)
 
 $(shell \
 mkdir subd1 subd2 subd3; \
