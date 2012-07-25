@@ -684,3 +684,4 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ProcessGlobal.js
+@BINPATH@/components/ContentHandler.js

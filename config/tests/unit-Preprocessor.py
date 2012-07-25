@@ -5,41 +5,14 @@ from StringIO import StringIO
 import os
 import sys
 import os.path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from mozunit import main, MockedOpen
 
 from Preprocessor import Preprocessor
 
-class NamedIO(StringIO):
-  def __init__(self, name, content):
-    self.name = name
-    StringIO.__init__(self, content)
-
-class MockedOpen(object):
-  """
-  Context manager diverting the open builtin such that opening files
-  can open NamedIO instances given when creating a MockedOpen.
-
-  with MockedOpen(NamedIO('foo', 'foo'), NamedIO('bar', 'bar')):
-    f = open('foo', 'r')
-
-  will thus assign the NamedIO instance for the file 'foo' to f.
-  """
-  def __init__(self, *files):
-    self.files = {}
-    for f in files:
-      self.files[os.path.abspath(f.name)] = f
-  def __call__(self, name, args):
-    absname = os.path.abspath(name)
-    if absname in self.files:
-      return self.files[absname]
-    return self.open(name, args)
-  def __enter__(self):
-    import __builtin__
-    self.open = __builtin__.open
-    __builtin__.open = self
-  def __exit__(self, type, value, traceback):
-    import __builtin__
-    __builtin__.open = self.open
+def NamedIO(name, content):
+  with open(name, 'w') as f:
+    f.write(content)
+  return name
 
 class TestPreprocessor(unittest.TestCase):
   """
@@ -539,13 +512,13 @@ octal value is not equal
       self.fail("Expected a Preprocessor.Error")
 
   def test_include(self):
-    with MockedOpen(NamedIO("foo/test", """#define foo foobarbaz
+    with MockedOpen({"foo/test": """#define foo foobarbaz
 #include @inc@
 @bar@
-"""),
-                      NamedIO("bar", """#define bar barfoobaz
+""",
+                     "bar": """#define bar barfoobaz
 @foo@
-""")):
+"""}):
       f = NamedIO("include.in", """#filter substitution
 #define inc ../bar
 #include foo/test""")
@@ -575,7 +548,7 @@ barfoobaz
       self.fail("Expected a Preprocessor.Error")
 
   def test_include_literal_at(self):
-    with MockedOpen(NamedIO("@foo@", "#define foo foobarbaz")):
+    with MockedOpen({"@foo@": "#define foo foobarbaz"}):
       f = NamedIO("include_literal_at.in", """#include @foo@
 #filter substitution
 @foo@
@@ -585,11 +558,11 @@ barfoobaz
 """)
 
   def test_command_line_literal_at(self):
-    with MockedOpen(NamedIO("@foo@.in", """@foo@
-""")):
+    with MockedOpen({"@foo@.in": """@foo@
+"""}):
       self.pp.handleCommandLine(['-Fsubstitution', '-Dfoo=foobarbaz', '@foo@.in'])
       self.assertEqual(self.pp.out.getvalue(), """foobarbaz
 """)
 
 if __name__ == '__main__':
-  unittest.main()
+  main()

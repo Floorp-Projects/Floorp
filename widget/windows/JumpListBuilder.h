@@ -55,65 +55,6 @@ private:
   friend class WinTaskbar;
 };
 
-
-class AsyncFaviconDataReady MOZ_FINAL : public nsIFaviconDataCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFAVICONDATACALLBACK
-
-  AsyncFaviconDataReady(nsIURI *aNewURI, nsCOMPtr<nsIThread> &aIOThread);
-private:
-  nsCOMPtr<nsIURI> mNewURI;
-  nsCOMPtr<nsIThread> mIOThread;
-};
-
-/**
-  * Asynchronously tries add the list to the build
-  */
-class AsyncWriteIconToDisk : public nsIRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
-  AsyncWriteIconToDisk(const nsAString &aIconPath,
-                       const nsACString &aMimeTypeOfInputData,
-                       PRUint8 *aData, 
-                       PRUint32 aDataLen);
-  virtual ~AsyncWriteIconToDisk();
-
-private:
-  nsAutoString mIconPath;
-  nsCAutoString mMimeTypeOfInputData;
-  nsAutoArrayPtr<PRUint8> mBuffer;
-  PRUint32 mBufferLength;
-};
-
-class AsyncDeleteIconFromDisk : public nsIRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  AsyncDeleteIconFromDisk(const nsAString &aIconPath);
-  virtual ~AsyncDeleteIconFromDisk();
-
-private:
-  nsAutoString mIconPath;
-};
-
-class AsyncDeleteAllFaviconsFromDisk : public nsIRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  AsyncDeleteAllFaviconsFromDisk();
-  virtual ~AsyncDeleteAllFaviconsFromDisk();
-};
-
 } // namespace widget
 } // namespace mozilla
 

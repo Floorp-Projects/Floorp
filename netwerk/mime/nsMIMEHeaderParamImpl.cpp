@@ -98,7 +98,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
         if (cvtUTF8 &&
             NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1, 
                 PromiseFlatCString(aFallbackCharset).get(), false, true,
-                                   str2))) {
+                                   1, str2))) {
           CopyUTF8toUTF16(str2, aResult);
           return NS_OK;
         }
@@ -292,7 +292,7 @@ bool IsValidOctetSequenceForCharset(nsACString& aCharset, const char *aOctets)
 
   nsresult rv = cvtUTF8->ConvertStringToUTF8(tmpRaw,
                                              PromiseFlatCString(aCharset).get(),
-                                             false, false, tmpDecoded);
+                                             false, false, 1, tmpDecoded);
 
   if (rv != NS_OK) {
     // we can't decode; charset may be unsupported, or the octet sequence
@@ -852,7 +852,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString utf8;
-  rv = cvtUTF8->ConvertStringToUTF8(value, charset.get(), true, false, utf8);
+  rv = cvtUTF8->ConvertStringToUTF8(value, charset.get(), true, false, 1, utf8);
   NS_ENSURE_SUCCESS(rv, rv);
 
   CopyUTF8toUTF16(utf8, aResult);
@@ -874,7 +874,7 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
     nsCOMPtr<nsIUTF8ConverterService> cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
     if (cvtUTF8)
       return cvtUTF8->ConvertStringToUTF8(aParamValue, aCharset,
-          true, true, aResult);
+          true, true, 1, aResult);
   }
 
   const nsAFlatCString& param = PromiseFlatCString(aParamValue);
@@ -1054,7 +1054,8 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
   if (cvtUTF8 &&
       NS_SUCCEEDED(
       cvtUTF8->ConvertStringToUTF8(Substring(aInput, aInput + aLen), 
-      aDefaultCharset, skipCheck, true, utf8Text))) {
+                                   aDefaultCharset, skipCheck, true, 1,
+                                   utf8Text))) {
     aOutput.Append(utf8Text);
   } else { // replace each octet with Unicode replacement char in UTF-8.
     for (PRUint32 i = 0; i < aLen; i++) {
@@ -1187,7 +1188,9 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
       if (cvtUTF8 &&
           NS_SUCCEEDED(
             cvtUTF8->ConvertStringToUTF8(nsDependentCString(decodedText),
-            charset, IS_7BIT_NON_ASCII_CHARSET(charset), true, utf8Text))) {
+                                         charset,
+                                         IS_7BIT_NON_ASCII_CHARSET(charset),
+                                         true, 1, utf8Text))) {
         aResult.Append(utf8Text);
       } else {
         aResult.Append(REPLACEMENT_CHAR);

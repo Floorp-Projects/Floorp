@@ -22,8 +22,8 @@ public:
    */
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 
-  GeckoContentController() {};
-  virtual ~GeckoContentController() {};
+  GeckoContentController() {}
+  virtual ~GeckoContentController() {}
 };
 
 }

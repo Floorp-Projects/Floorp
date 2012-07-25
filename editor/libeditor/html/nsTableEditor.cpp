@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
@@ -28,8 +29,6 @@
 #include "nsIHTMLEditor.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
-#include "nsISelectionPrivate.h"  // For nsISelectionPrivate::TABLESELECTION_ defines
 #include "nsISupportsUtils.h"
 #include "nsITableCellLayout.h" // For efficient access to table cell
 #include "nsITableEditor.h"
@@ -1953,9 +1952,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   // Save current selection to restore when done
   // This is needed so ReplaceContainer can monitor selection
   //  when replacing nodes
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   nsAutoSelectionReset selectionResetter(selection, this);
 
@@ -1965,7 +1962,8 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
 
   // This creates new node, moves children, copies attributes (true)
   //   and manages the selection!
-  res = ReplaceContainer(aSourceCell, address_of(newNode), newCellType, nsnull, nsnull, true);
+  nsresult res = ReplaceContainer(aSourceCell, address_of(newNode),
+                                  newCellType, nsnull, nsnull, true);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
 
@@ -2491,13 +2489,12 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
 NS_IMETHODIMP 
 nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
 {
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMElement> table;
-  res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aTable, getter_AddRefs(table));
+  nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"),
+                                             aTable, getter_AddRefs(table));
   NS_ENSURE_SUCCESS(res, res);
   // Don't fail if we didn't find a table
   NS_ENSURE_TRUE(table, NS_OK);

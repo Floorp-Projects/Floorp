@@ -14,7 +14,6 @@
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
-#include "Element.h"
 #include "nsIMemoryReporter.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -29,6 +28,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 
 #include "sampler.h"

@@ -136,7 +136,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
       }
     }
 
-    final Activity setupActivity = this;
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -147,7 +146,8 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
             R.string.sync_notification_oneaccount, Toast.LENGTH_LONG);
         toast.show();
 
-        SyncAccounts.openSyncSettings(setupActivity);
+        // Setting up Sync when an existing account exists only happens from Settings,
+        // so we can safely finish() the activity to return to Settings.
         finish();
       }
     });

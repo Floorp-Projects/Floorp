@@ -12,10 +12,23 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
+#include "nsThreadUtils.h"
+#include "nsICryptoHash.h"
+#include "nsIFaviconService.h" 
+#include "nsIDownloader.h"
+
+
 class nsWindow;
 
 namespace mozilla {
 namespace widget {
+
+class myDownloadObserver: public nsIDownloadObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOWNLOADOBSERVER
+};
 
 class WinUtils {
 public:
@@ -202,6 +215,99 @@ private:
    */
   static bool VistaCreateItemFromParsingNameInit();
 };
+
+class AsyncFaviconDataReady : public nsIFaviconDataCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFAVICONDATACALLBACK
+  
+  AsyncFaviconDataReady(nsIURI *aNewURI, 
+                        nsCOMPtr<nsIThread> &aIOThread, 
+                        const bool aURLShortcut);
+  nsresult OnFaviconDataNotAvailable(void);
+private:
+  nsCOMPtr<nsIURI> mNewURI;
+  nsCOMPtr<nsIThread> mIOThread;
+  const bool mURLShortcut;
+};
+
+/**
+  * Asynchronously tries add the list to the build
+  */
+class AsyncWriteIconToDisk : public nsIRunnable
+{
+public:
+  const bool mURLShortcut;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
+  AsyncWriteIconToDisk(const nsAString &aIconPath,
+                       const nsACString &aMimeTypeOfInputData,
+                       PRUint8 *aData, 
+                       PRUint32 aDataLen,
+                       const bool aURLShortcut);
+  virtual ~AsyncWriteIconToDisk();
+
+private:
+  nsAutoString mIconPath;
+  nsCAutoString mMimeTypeOfInputData;
+  nsAutoArrayPtr<PRUint8> mBuffer;
+  PRUint32 mBufferLength;
+};
+
+class AsyncDeleteIconFromDisk : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  AsyncDeleteIconFromDisk(const nsAString &aIconPath);
+  virtual ~AsyncDeleteIconFromDisk();
+
+private:
+  nsAutoString mIconPath;
+};
+
+class AsyncDeleteAllFaviconsFromDisk : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  AsyncDeleteAllFaviconsFromDisk();
+  virtual ~AsyncDeleteAllFaviconsFromDisk();
+};
+
+class FaviconHelper
+{
+public:
+  static const char kJumpListCacheDir[];
+  static const char kShortcutCacheDir[];
+  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
+                                       nsString &aICOFilePath,
+                                       nsCOMPtr<nsIThread> &aIOThread,
+                                       bool aURLShortcut);
+
+  static nsresult HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash, 
+                          nsIURI *aUri,
+                          nsACString& aUriHash);
+
+  static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
+                                    nsCOMPtr<nsIFile> &aICOFile,
+                                    bool aURLShortcut);
+
+  static nsresult 
+  CacheIconFileFromFaviconURIAsync(nsCOMPtr<nsIURI> aFaviconPageURI,
+                                   nsCOMPtr<nsIFile> aICOFile,
+                                   nsCOMPtr<nsIThread> &aIOThread,
+                                   bool aURLShortcut);
+
+  static PRInt32 GetICOCacheSecondsTimeout();
+};
+
+
 
 } // namespace widget
 } // namespace mozilla

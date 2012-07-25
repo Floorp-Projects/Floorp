@@ -2664,6 +2664,12 @@ namespace js {
  */
 extern JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
+
+/*
+ * DO NOT CALL THIS. Use JS::ToBoolean
+ */
+extern JS_PUBLIC_API(bool)
+ToBooleanSlow(const JS::Value &v);
 } /* namespace js */
 
 namespace JS {
@@ -2680,6 +2686,26 @@ ToNumber(JSContext *cx, const Value &v, double *out)
         return true;
     }
     return js::ToNumberSlow(cx, v, out);
+}
+
+JS_ALWAYS_INLINE bool
+ToBoolean(const Value &v)
+{
+    if (v.isBoolean())
+        return v.toBoolean();
+    if (v.isInt32())
+        return v.toInt32() != 0;
+    if (v.isObject())
+        return true;
+    if (v.isNullOrUndefined())
+        return false;
+    if (v.isDouble()) {
+        double d = v.toDouble();
+        return !MOZ_DOUBLE_IS_NaN(d) && d != 0;
+    }
+
+    /* Slow path. Handle Strings. */
+    return js::ToBooleanSlow(v);
 }
 
 } /* namespace JS */

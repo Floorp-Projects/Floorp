@@ -1,0 +1,271 @@
+From: Robert O'Callahan <robert@ocallahan.org>
+Bug 768775. Improve the precision of the calculation of the number of stops that need to be added to handle 'repeat' and 'reflect', when we're filling a path. r=bas
+
+diff --git a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+--- a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
++++ b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+@@ -1411,17 +1411,17 @@ static RefPtr<ID2D1Brush>
+ 
+ 	gradient_center.x = _cairo_fixed_to_float(source_pattern->c1.x);
+ 	gradient_center.y = _cairo_fixed_to_float(source_pattern->c1.y);
+ 
+ 	// Transform surface corners into pattern coordinates.
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_left.x, &top_left.y);
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_right.x, &top_right.y);
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_left.x, &bottom_left.y);
+-	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_right.x, &top_left.y);
++	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_right.x, &bottom_right.y);
+ 
+ 	// Find the corner furthest away from the gradient center in pattern space.
+ 	double largest = MAX(_cairo_d2d_point_dist(top_left, gradient_center), _cairo_d2d_point_dist(top_right, gradient_center));
+ 	largest = MAX(largest, _cairo_d2d_point_dist(bottom_left, gradient_center));
+ 	largest = MAX(largest, _cairo_d2d_point_dist(bottom_right, gradient_center));
+ 
+ 	unsigned int minSize = (unsigned int)ceil(largest);
+ 
+@@ -1531,16 +1531,17 @@ static RefPtr<ID2D1Brush>
+ 					   stopCollection,
+ 					   &brush);
+     delete [] stops;
+     return brush;
+ }
+ 
+ static RefPtr<ID2D1Brush>
+ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
++					cairo_path_fixed_t *fill_path,
+ 					cairo_linear_pattern_t *source_pattern)
+ {
+     if (source_pattern->p1.x == source_pattern->p2.x &&
+ 	source_pattern->p1.y == source_pattern->p2.y) {
+ 	// Cairo behavior in this situation is to draw a solid color the size of the last stop.
+ 	RefPtr<ID2D1SolidColorBrush> brush;
+ 	d2dsurf->rt->CreateSolidColorBrush(
+ 	    _cairo_d2d_color_from_cairo_color_stop(source_pattern->base.stops[source_pattern->base.n_stops - 1].color),
+@@ -1564,35 +1565,46 @@ static RefPtr<ID2D1Brush>
+     p1.x = _cairo_fixed_to_float(source_pattern->p1.x);
+     p1.y = _cairo_fixed_to_float(source_pattern->p1.y);
+     p2.x = _cairo_fixed_to_float(source_pattern->p2.x);
+     p2.y = _cairo_fixed_to_float(source_pattern->p2.y);
+ 
+     D2D1_GRADIENT_STOP *stops;
+     int num_stops = source_pattern->base.n_stops;
+     if (source_pattern->base.base.extend == CAIRO_EXTEND_REPEAT || source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+-
+-	RefPtr<IDXGISurface> surf;
+-	d2dsurf->surface->QueryInterface(&surf);
+-	DXGI_SURFACE_DESC desc;
+-	surf->GetDesc(&desc);
+-
+ 	// Get this when the points are not transformed yet.
+ 	double gradient_length = _cairo_d2d_point_dist(p1, p2);
+-
+-	// Calculate the repeat count needed;
+-	cairo_point_double_t top_left, top_right, bottom_left, bottom_right;
+-	top_left.x = bottom_left.x = top_left.y = top_right.y = 0;
+-	top_right.x = bottom_right.x = desc.Width;
+-	bottom_right.y = bottom_left.y = desc.Height;
++        cairo_point_double_t top_left, top_right, bottom_left, bottom_right;
++
++        if (fill_path) {
++            // Calculate the repeat count needed;
++            cairo_box_t fill_extents;
++            _cairo_path_fixed_extents (fill_path, &fill_extents);
++
++	    top_left.x = bottom_left.x = _cairo_fixed_to_double (fill_extents.p1.x);
++	    top_left.y = top_right.y = _cairo_fixed_to_double (fill_extents.p1.y);
++	    top_right.x = bottom_right.x = _cairo_fixed_to_double (fill_extents.p2.x);
++	    bottom_right.y = bottom_left.y = _cairo_fixed_to_double (fill_extents.p2.y);
++        } else {
++            RefPtr<IDXGISurface> surf;
++            d2dsurf->surface->QueryInterface(&surf);
++            DXGI_SURFACE_DESC desc;
++            surf->GetDesc(&desc);
++
++            top_left.x = bottom_left.x = 0;
++            top_left.y = top_right.y = 0;
++            top_right.x = bottom_right.x = desc.Width;
++            bottom_right.y = bottom_left.y = desc.Height;
++        }
++
+ 	// Transform the corners of our surface to pattern space.
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_left.x, &top_left.y);
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_right.x, &top_right.y);
+ 	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_left.x, &bottom_left.y);
+-	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_right.x, &top_left.y);
++	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_right.x, &bottom_right.y);
+ 
+ 	cairo_point_double_t u;
+ 	// Unit vector of the gradient direction.
+ 	u = _cairo_d2d_subtract_point(p2, p1);
+ 	_cairo_d2d_normalize_point(&u);
+ 
+ 	// (corner - p1) . u = |corner - p1| cos(a) where a is the angle between the two vectors.
+ 	// Coincidentally |corner - p1| cos(a) is actually also the distance our gradient needs to cover since
+@@ -1701,17 +1713,18 @@ static RefPtr<ID2D1Brush>
+  * \param d2dsurf Surface to create a brush for
+  * \param pattern The pattern to create a brush for
+  * \param unique We cache the bitmap/color brush for speed. If this
+  * needs a brush that is unique (i.e. when more than one is needed),
+  * this will make the function return a seperate brush.
+  * \return A brush object
+  */
+ static RefPtr<ID2D1Brush>
+-_cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
++_cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
++				    cairo_path_fixed_t *fill_path,
+ 				    const cairo_pattern_t *pattern,
+ 				    bool unique = false)
+ {
+     HRESULT hr;
+ 
+     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+ 	cairo_solid_pattern_t *sourcePattern =
+ 	    (cairo_solid_pattern_t*)pattern;
+@@ -1729,17 +1742,17 @@ static RefPtr<ID2D1Brush>
+ 		d2dsurf->solidColorBrush->SetColor(color);
+ 	    }
+ 	    return d2dsurf->solidColorBrush;
+ 	}
+ 
+     } else if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
+ 	cairo_linear_pattern_t *source_pattern =
+ 	    (cairo_linear_pattern_t*)pattern;
+-	return _cairo_d2d_create_linear_gradient_brush(d2dsurf, source_pattern);
++	return _cairo_d2d_create_linear_gradient_brush(d2dsurf, fill_path, source_pattern);
+     } else if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
+ 	cairo_radial_pattern_t *source_pattern =
+ 	    (cairo_radial_pattern_t*)pattern;
+ 	return _cairo_d2d_create_radial_gradient_brush(d2dsurf, source_pattern);
+     } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+ 	cairo_matrix_t mat = pattern->matrix;
+ 	cairo_matrix_invert(&mat);
+ 
+@@ -3228,17 +3241,17 @@ static cairo_int_status_t
+ 
+ 	if (unlikely(status))
+ 	    return status;
+     }
+ #endif
+ 
+     target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+ 
+-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
++    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
+ 								   source);
+     
+     if (!brush) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+     D2D1_SIZE_F size = target_rt->GetSize();
+     target_rt->FillRectangle(D2D1::RectF((FLOAT)0,
+@@ -3349,17 +3362,17 @@ static cairo_int_status_t
+ 							    source->filter,
+ 							    solidAlphaValue);
+ 	    if (rv != CAIRO_INT_STATUS_UNSUPPORTED) {
+ 		return rv;
+ 	    }
+ 	}
+     }
+ 
+-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
++    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, source);
+     if (!brush) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+     RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+ #ifndef ALWAYS_MANUAL_COMPOSITE
+     if (op != CAIRO_OPERATOR_OVER) {
+ #endif
+@@ -3389,17 +3402,17 @@ static cairo_int_status_t
+ 	brush->SetOpacity(1.0);
+ 
+ 	if (target_rt.get() != d2dsurf->rt.get()) {
+ 	    return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip);
+ 	}
+ 	return CAIRO_INT_STATUS_SUCCESS;
+     }
+ 
+-    RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, mask, true);
++    RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, mask, true);
+     if (!opacityBrush) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+     if (!d2dsurf->maskLayer) {
+ 	d2dsurf->rt->CreateLayer(&d2dsurf->maskLayer);
+     }
+     target_rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(),
+@@ -3475,17 +3488,17 @@ static cairo_int_status_t
+ 									     D2D1_FIGURE_BEGIN_FILLED);
+     
+     bool transformed = true;
+ 
+     if (_cairo_matrix_is_identity(ctm)) {
+       transformed = false;
+     }
+ 
+-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
++    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
+ 								   source);
+     if (!brush) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+ 
+     D2D1::Matrix3x2F mat;
+     if (transformed) {
+       // If we are transformed we will draw the geometry multiplied by the
+@@ -3602,31 +3615,31 @@ static cairo_int_status_t
+     }
+ 
+     if (is_box) {
+ 	float x1 = _cairo_fixed_to_float(box.p1.x);
+ 	float y1 = _cairo_fixed_to_float(box.p1.y);    
+ 	float x2 = _cairo_fixed_to_float(box.p2.x);    
+ 	float y2 = _cairo_fixed_to_float(box.p2.y);
+ 	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+-								       source);
++	    path, source);
+ 	if (!brush) {
+ 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+ 	}
+ 
+ 	target_rt->FillRectangle(D2D1::RectF(x1,
+ 					     y1,
+ 					     x2,
+ 					     y2),
+ 				 brush);
+     } else {
+ 	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, fill_rule, D2D1_FIGURE_BEGIN_FILLED);
+ 
+ 	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+-								       source);
++            path, source);
+ 	if (!brush) {
+ 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+ 	}
+ 	target_rt->FillGeometry(d2dpath, brush);
+     }
+ 
+     if (target_rt.get() != d2dsurf->rt.get()) {
+ 	double x1, y1, x2, y2;
+@@ -4138,17 +4151,17 @@ static cairo_int_status_t
+ 					DWRITE_TEXTURE_ALIASED_1x1 : DWRITE_TEXTURE_CLEARTYPE_3x1,
+ 					&bounds);
+ 	fontArea.x = bounds.left;
+ 	fontArea.y = bounds.top;
+ 	fontArea.width = bounds.right - bounds.left;
+ 	fontArea.height = bounds.bottom - bounds.top;
+     }
+ 
+-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
++    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst, NULL,
+ 								   source);
+ 
+     if (!brush) {
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+     
+     if (transform) {
+ 	D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);

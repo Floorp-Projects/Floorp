@@ -58,6 +58,7 @@ public:
   void UnMark(PRUint32 mask);
   bool HasFlag(PRUint32 flag);
   PRUint32 Flags();
+  bool HasSameNameAndMimes(const nsPluginTag *aPluginTag) const;
   bool IsEnabled();
   
   nsRefPtr<nsPluginTag> mNext;

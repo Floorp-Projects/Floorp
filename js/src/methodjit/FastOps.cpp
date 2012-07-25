@@ -570,7 +570,7 @@ mjit::Compiler::jsop_not()
     if (top->isConstant()) {
         const Value &v = top->getValue();
         frame.pop();
-        frame.push(BooleanValue(!js_ValueToBoolean(v)));
+        frame.push(BooleanValue(!ToBoolean(v)));
         return;
     }
 
@@ -846,7 +846,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
     FrameEntry *fe = frame.peek(-1);
 
     if (fe->isConstant()) {
-        JSBool b = js_ValueToBoolean(fe->getValue());
+        JSBool b = ToBoolean(fe->getValue());
 
         frame.pop();
 
@@ -873,7 +873,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
     FrameEntry *fe = frame.peek(-1);
 
     if (fe->isConstant()) {
-        JSBool b = js_ValueToBoolean(fe->getValue());
+        JSBool b = ToBoolean(fe->getValue());
 
         /* Short-circuit. */
         if ((op == JSOP_OR && b == JS_TRUE) ||

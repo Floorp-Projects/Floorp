@@ -470,7 +470,6 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
 
   CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-  desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
   HRESULT hr;
 
   if (!mTexture) {

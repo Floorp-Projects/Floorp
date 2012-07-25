@@ -379,6 +379,25 @@ bool nsPluginTag::IsEnabled()
   return HasFlag(NS_PLUGIN_FLAG_ENABLED) && !HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED);
 }
 
+bool
+nsPluginTag::HasSameNameAndMimes(const nsPluginTag *aPluginTag) const
+{
+  NS_ENSURE_TRUE(aPluginTag, false);
+
+  if ((!mName.Equals(aPluginTag->mName)) ||
+      (mMimeTypes.Length() != aPluginTag->mMimeTypes.Length())) {
+    return false;
+  }
+
+  for (PRUint32 i = 0; i < mMimeTypes.Length(); i++) {
+    if (!mMimeTypes[i].Equals(aPluginTag->mMimeTypes[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void nsPluginTag::TryUnloadPlugin(bool inShutdown)
 {
   // We never want to send NPP_Shutdown to an in-process plugin unless

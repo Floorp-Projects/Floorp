@@ -126,11 +126,13 @@ class Preprocessor:
                                                             'file': self.context['FILE'],
                                                             'le': self.LE})
         self.writtenLines = ln
-    aLine = self.applyFilters(aLine)
+    filteredLine = self.applyFilters(aLine)
+    if filteredLine != aLine:
+      self.actionLevel = 2
     # ensure our line ending. Only need to handle \n, as we're reading
     # with universal line ending support, at least for files.
-    aLine = re.sub('\n', self.LE, aLine)
-    self.out.write(aLine)
+    filteredLine = re.sub('\n', self.LE, filteredLine)
+    self.out.write(filteredLine)
   
   def handleCommandLine(self, args, defaultToStdin = False):
     """
