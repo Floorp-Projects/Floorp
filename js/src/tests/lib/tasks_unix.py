@@ -61,7 +61,8 @@ def get_max_wait(tasks, results, timeout):
         return None
 
     # If we have a progress-meter, we need to wake up to update it frequently.
-    wait = min(wait, PROGRESS_BAR_GRANULARITY)
+    if results.pb is not None:
+        wait = min(wait, PROGRESS_BAR_GRANULARITY)
 
     return wait
 
@@ -194,7 +195,8 @@ def run_all_tests(tests, results, options):
         kill_undead(tasks, results, options.timeout)
         tasks = reap_zombies(tasks, results, options.timeout)
 
-        results.pb.poke()
+        if results.pb:
+            results.pb.update(results.n)
 
     return True
 
