@@ -170,6 +170,8 @@ EXPORTS
     glVertexAttribDivisorANGLE      @172
     glDrawArraysInstancedANGLE      @173
     glDrawElementsInstancedANGLE    @174
+    glProgramBinaryOES              @175
+    glGetProgramBinaryOES           @176
 
     ; EGL dependencies
     glCreateContext                 @144 NONAME

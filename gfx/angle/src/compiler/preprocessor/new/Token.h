@@ -10,6 +10,8 @@
 #include <ostream>
 #include <string>
 
+#include "SourceLocation.h"
+
 namespace pp
 {
 
@@ -17,6 +19,8 @@ struct Token
 {
     enum Type
     {
+        LAST = 0,  // EOF.
+
         IDENTIFIER = 258,
 
         CONST_INT,
@@ -42,48 +46,59 @@ struct Token
         OP_RIGHT_ASSIGN,
         OP_AND_ASSIGN,
         OP_XOR_ASSIGN,
-        OP_OR_ASSIGN
+        OP_OR_ASSIGN,
+
+        // Preprocessing token types.
+        // These types are used by the preprocessor internally.
+        // Preprocessor clients must not depend or check for them.
+        PP_HASH,
+        PP_NUMBER,
+        PP_OTHER
     };
     enum Flags
     {
-        HAS_LEADING_SPACE = 1 << 0
-    };
-    struct Location
-    {
-        Location() : line(0), string(0) { }
-        bool equals(const Location& other) const
-        {
-            return (line == other.line) && (string == other.string);
-        }
-
-        int line;
-        int string;
+        AT_START_OF_LINE   = 1 << 0,
+        HAS_LEADING_SPACE  = 1 << 1,
+        EXPANSION_DISABLED = 1 << 2
     };
 
     Token() : type(0), flags(0) { }
 
-    bool equals(const Token& other) const
-    {
-        return (type == other.type) &&
-               (flags == other.flags) &&
-               (location.equals(other.location)) &&
-               (value == other.value);
-    }
+    void reset();
+    bool equals(const Token& other) const;
+
+    // Returns true if this is the first token on line.
+    // It disregards any leading whitespace.
+    bool atStartOfLine() const { return (flags & AT_START_OF_LINE) != 0; }
+    void setAtStartOfLine(bool start);
 
     bool hasLeadingSpace() const { return (flags & HAS_LEADING_SPACE) != 0; }
-    void setHasLeadingSpace(bool space)
-    {
-        if (space)
-            flags |= HAS_LEADING_SPACE;
-        else
-            flags &= ~HAS_LEADING_SPACE;
-    }
+    void setHasLeadingSpace(bool space);
+
+    bool expansionDisabled() const { return (flags & EXPANSION_DISABLED) != 0; }
+    void setExpansionDisabled(bool disable);
+
+    // Converts text into numeric value for CONST_INT and CONST_FLOAT token.
+    // Returns false if the parsed value cannot fit into an int or float.
+    bool iValue(int* value) const;
+    bool uValue(unsigned int* value) const;
+    bool fValue(float* value) const;
 
     int type;
-    int flags;
-    Location location;
-    std::string value;
+    unsigned int flags;
+    SourceLocation location;
+    std::string text;
 };
+
+inline bool operator==(const Token& lhs, const Token& rhs)
+{
+    return lhs.equals(rhs);
+}
+
+inline bool operator!=(const Token& lhs, const Token& rhs)
+{
+    return !lhs.equals(rhs);
+}
 
 extern std::ostream& operator<<(std::ostream& out, const Token& token);
 

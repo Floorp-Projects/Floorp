@@ -1,5 +1,6 @@
-# HG changeset patch
-# Parent 8d84c8d4e3ed41a4941afdf9d51819b19ca64716
+From: Jeff Gilbert <jgilbert@mozilla.com>
+Bug 724476 - ANGLE Bug 293 - Enforce readPixels format/type semantics
+
 diff --git a/gfx/angle/src/libGLESv2/libGLESv2.cpp b/gfx/angle/src/libGLESv2/libGLESv2.cpp
 --- a/gfx/angle/src/libGLESv2/libGLESv2.cpp
 +++ b/gfx/angle/src/libGLESv2/libGLESv2.cpp

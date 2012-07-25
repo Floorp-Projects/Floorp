@@ -271,21 +271,21 @@ extern void yyerror(TParseContext* context, const char* reason);
 #define FRAG_VERT_ONLY(S, L) {  \
     if (context->shaderType != SH_FRAGMENT_SHADER &&  \
         context->shaderType != SH_VERTEX_SHADER) {  \
-        context->error(L, " supported in vertex/fragment shaders only ", S, "", "");  \
+        context->error(L, " supported in vertex/fragment shaders only ", S);  \
         context->recover();  \
     }  \
 }
 
 #define VERTEX_ONLY(S, L) {  \
     if (context->shaderType != SH_VERTEX_SHADER) {  \
-        context->error(L, " supported in vertex shaders only ", S, "", "");  \
+        context->error(L, " supported in vertex shaders only ", S);  \
         context->recover();  \
     }  \
 }
 
 #define FRAG_ONLY(S, L) {  \
     if (context->shaderType != SH_FRAGMENT_SHADER) {  \
-        context->error(L, " supported in fragment shaders only ", S, "", "");  \
+        context->error(L, " supported in fragment shaders only ", S);  \
         context->recover();  \
     }  \
 }
@@ -658,26 +658,26 @@ static const yytype_int16 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   165,   165,   200,   203,   216,   221,   226,   232,   235,
-     308,   311,   420,   430,   443,   451,   550,   553,   561,   565,
-     572,   576,   583,   589,   598,   606,   661,   668,   678,   681,
-     691,   701,   722,   723,   724,   729,   730,   739,   751,   752,
-     760,   771,   775,   776,   786,   796,   806,   819,   820,   830,
-     843,   847,   851,   855,   856,   869,   870,   883,   884,   897,
-     898,   915,   916,   929,   930,   931,   932,   933,   937,   940,
-     951,   959,   986,   991,   998,  1036,  1039,  1046,  1054,  1075,
-    1096,  1107,  1136,  1141,  1151,  1156,  1166,  1169,  1172,  1175,
-    1181,  1188,  1191,  1213,  1231,  1255,  1278,  1282,  1300,  1308,
-    1340,  1360,  1449,  1458,  1481,  1484,  1490,  1498,  1506,  1514,
-    1524,  1531,  1534,  1537,  1543,  1546,  1561,  1565,  1569,  1573,
-    1582,  1587,  1592,  1597,  1602,  1607,  1612,  1617,  1622,  1627,
-    1633,  1639,  1645,  1650,  1655,  1664,  1673,  1678,  1691,  1691,
-    1705,  1705,  1714,  1717,  1732,  1768,  1772,  1778,  1786,  1802,
-    1806,  1810,  1811,  1817,  1818,  1819,  1820,  1821,  1825,  1826,
-    1826,  1826,  1836,  1837,  1841,  1841,  1842,  1842,  1847,  1850,
-    1860,  1863,  1869,  1870,  1874,  1882,  1886,  1896,  1901,  1918,
-    1918,  1923,  1923,  1930,  1930,  1938,  1941,  1947,  1950,  1956,
-    1960,  1967,  1974,  1981,  1988,  1999,  2008,  2012,  2019,  2022,
-    2028,  2028
+     314,   317,   426,   436,   449,   457,   557,   560,   568,   572,
+     579,   583,   590,   596,   605,   613,   668,   675,   685,   688,
+     698,   708,   729,   730,   731,   736,   737,   746,   758,   759,
+     767,   778,   782,   783,   793,   803,   813,   826,   827,   837,
+     850,   854,   858,   862,   863,   876,   877,   890,   891,   904,
+     905,   922,   923,   936,   937,   938,   939,   940,   944,   947,
+     958,   966,   993,   998,  1005,  1043,  1046,  1053,  1061,  1082,
+    1103,  1114,  1143,  1148,  1158,  1163,  1173,  1176,  1179,  1182,
+    1188,  1195,  1198,  1220,  1238,  1262,  1285,  1289,  1307,  1315,
+    1347,  1367,  1456,  1465,  1488,  1491,  1497,  1505,  1513,  1521,
+    1531,  1538,  1541,  1544,  1550,  1553,  1568,  1572,  1576,  1580,
+    1589,  1594,  1599,  1604,  1609,  1614,  1619,  1624,  1629,  1634,
+    1640,  1646,  1652,  1657,  1662,  1671,  1680,  1685,  1698,  1698,
+    1712,  1712,  1721,  1724,  1739,  1775,  1779,  1785,  1793,  1809,
+    1813,  1817,  1818,  1824,  1825,  1826,  1827,  1828,  1832,  1833,
+    1833,  1833,  1843,  1844,  1848,  1848,  1849,  1849,  1854,  1857,
+    1867,  1870,  1876,  1877,  1881,  1889,  1893,  1903,  1908,  1925,
+    1925,  1930,  1930,  1937,  1937,  1945,  1948,  1954,  1957,  1963,
+    1967,  1974,  1981,  1988,  1995,  2006,  2015,  2019,  2026,  2029,
+    2035,  2035
 };
 #endif
 
@@ -2071,7 +2071,7 @@ yyreduce:
         const TSymbol* symbol = (yyvsp[(1) - (1)].lex).symbol;
         const TVariable* variable;
         if (symbol == 0) {
-            context->error((yyvsp[(1) - (1)].lex).line, "undeclared identifier", (yyvsp[(1) - (1)].lex).string->c_str(), "");
+            context->error((yyvsp[(1) - (1)].lex).line, "undeclared identifier", (yyvsp[(1) - (1)].lex).string->c_str());
             context->recover();
             TType type(EbtFloat, EbpUndefined);
             TVariable* fakeVariable = new TVariable((yyvsp[(1) - (1)].lex).string, type);
@@ -2080,7 +2080,7 @@ yyreduce:
         } else {
             // This identifier can only be a variable type symbol
             if (! symbol->isVariable()) {
-                context->error((yyvsp[(1) - (1)].lex).line, "variable expected", (yyvsp[(1) - (1)].lex).string->c_str(), "");
+                context->error((yyvsp[(1) - (1)].lex).line, "variable expected", (yyvsp[(1) - (1)].lex).string->c_str());
                 context->recover();
             }
             variable = static_cast<const TVariable*>(symbol);
@@ -2115,7 +2115,7 @@ yyreduce:
         // check for overflow for constants
         //
         if (abs((yyvsp[(1) - (1)].lex).i) >= (1 << 16)) {
-            context->error((yyvsp[(1) - (1)].lex).line, " integer constant overflow", "", "");
+            context->error((yyvsp[(1) - (1)].lex).line, " integer constant overflow", "");
             context->recover();
         }
         ConstantUnion *unionArray = new ConstantUnion[1];
@@ -2161,9 +2161,9 @@ yyreduce:
     {
         if (!(yyvsp[(1) - (4)].interm.intermTypedNode)->isArray() && !(yyvsp[(1) - (4)].interm.intermTypedNode)->isMatrix() && !(yyvsp[(1) - (4)].interm.intermTypedNode)->isVector()) {
             if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode())
-                context->error((yyvsp[(2) - (4)].lex).line, " left of '[' is not of type array, matrix, or vector ", (yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode()->getSymbol().c_str(), "");
+                context->error((yyvsp[(2) - (4)].lex).line, " left of '[' is not of type array, matrix, or vector ", (yyvsp[(1) - (4)].interm.intermTypedNode)->getAsSymbolNode()->getSymbol().c_str());
             else
-                context->error((yyvsp[(2) - (4)].lex).line, " left of '[' is not of type array, matrix, or vector ", "expression", "");
+                context->error((yyvsp[(2) - (4)].lex).line, " left of '[' is not of type array, matrix, or vector ", "expression");
             context->recover();
         }
         if ((yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getQualifier() == EvqConst && (yyvsp[(3) - (4)].interm.intermTypedNode)->getQualifier() == EvqConst) {
@@ -2180,7 +2180,10 @@ yyreduce:
         } else {
             if ((yyvsp[(3) - (4)].interm.intermTypedNode)->getQualifier() == EvqConst) {
                 if (((yyvsp[(1) - (4)].interm.intermTypedNode)->isVector() || (yyvsp[(1) - (4)].interm.intermTypedNode)->isMatrix()) && (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getNominalSize() <= (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() && !(yyvsp[(1) - (4)].interm.intermTypedNode)->isArray() ) {
-                    context->error((yyvsp[(2) - (4)].lex).line, "", "[", "field selection out of range '%d'", (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst());
+                    std::stringstream extraInfoStream;
+                    extraInfoStream << "field selection out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() << "'";
+                    std::string extraInfo = extraInfoStream.str();
+                    context->error((yyvsp[(2) - (4)].lex).line, "", "[", extraInfo.c_str());
                     context->recover();
                 } else {
                     if ((yyvsp[(1) - (4)].interm.intermTypedNode)->isArray()) {
@@ -2193,7 +2196,10 @@ yyreduce:
                                     context->recover();
                             }
                         } else if ( (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() >= (yyvsp[(1) - (4)].interm.intermTypedNode)->getType().getArraySize()) {
-                            context->error((yyvsp[(2) - (4)].lex).line, "", "[", "array index out of range '%d'", (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst());
+                            std::stringstream extraInfoStream;
+                            extraInfoStream << "array index out of range '" << (yyvsp[(3) - (4)].interm.intermTypedNode)->getAsConstantUnion()->getUnionArrayPointer()->getIConst() << "'";
+                            std::string extraInfo = extraInfoStream.str();
+                            context->error((yyvsp[(2) - (4)].lex).line, "", "[", extraInfo.c_str());
                             context->recover();
                         }
                     }
@@ -2244,7 +2250,7 @@ yyreduce:
 
     {
         if ((yyvsp[(1) - (3)].interm.intermTypedNode)->isArray()) {
-            context->error((yyvsp[(3) - (3)].lex).line, "cannot apply dot operator to an array", ".", "");
+            context->error((yyvsp[(3) - (3)].lex).line, "cannot apply dot operator to an array", ".");
             context->recover();
         }
 
@@ -2289,7 +2295,7 @@ yyreduce:
             }
 
             if (fields.wholeRow || fields.wholeCol) {
-                context->error((yyvsp[(2) - (3)].lex).line, " non-scalar fields not implemented yet", ".", "");
+                context->error((yyvsp[(2) - (3)].lex).line, " non-scalar fields not implemented yet", ".");
                 context->recover();
                 ConstantUnion *unionArray = new ConstantUnion[1];
                 unionArray->setIConst(0);
@@ -2307,7 +2313,7 @@ yyreduce:
             bool fieldFound = false;
             const TTypeList* fields = (yyvsp[(1) - (3)].interm.intermTypedNode)->getType().getStruct();
             if (fields == 0) {
-                context->error((yyvsp[(2) - (3)].lex).line, "structure has no fields", "Internal Error", "");
+                context->error((yyvsp[(2) - (3)].lex).line, "structure has no fields", "Internal Error");
                 context->recover();
                 (yyval.interm.intermTypedNode) = (yyvsp[(1) - (3)].interm.intermTypedNode);
             } else {
@@ -2339,13 +2345,13 @@ yyreduce:
                         (yyval.interm.intermTypedNode)->setType(*(*fields)[i].type);
                     }
                 } else {
-                    context->error((yyvsp[(2) - (3)].lex).line, " no such field in structure", (yyvsp[(3) - (3)].lex).string->c_str(), "");
+                    context->error((yyvsp[(2) - (3)].lex).line, " no such field in structure", (yyvsp[(3) - (3)].lex).string->c_str());
                     context->recover();
                     (yyval.interm.intermTypedNode) = (yyvsp[(1) - (3)].interm.intermTypedNode);
                 }
             }
         } else {
-            context->error((yyvsp[(2) - (3)].lex).line, " field selection requires structure, vector, or matrix on left hand side", (yyvsp[(3) - (3)].lex).string->c_str(), "");
+            context->error((yyvsp[(2) - (3)].lex).line, " field selection requires structure, vector, or matrix on left hand side", (yyvsp[(3) - (3)].lex).string->c_str());
             context->recover();
             (yyval.interm.intermTypedNode) = (yyvsp[(1) - (3)].interm.intermTypedNode);
         }
@@ -2444,9 +2450,10 @@ yyreduce:
                         //
                         (yyval.interm.intermTypedNode) = context->intermediate.addUnaryMath(op, (yyvsp[(1) - (1)].interm).intermNode, 0, context->symbolTable);
                         if ((yyval.interm.intermTypedNode) == 0)  {
-                            context->error((yyvsp[(1) - (1)].interm).intermNode->getLine(), " wrong operand type", "Internal Error",
-                                "built in unary operator function.  Type: %s",
-                                static_cast<TIntermTyped*>((yyvsp[(1) - (1)].interm).intermNode)->getCompleteString().c_str());
+                            std::stringstream extraInfoStream;
+                            extraInfoStream << "built in unary operator function.  Type: " << static_cast<TIntermTyped*>((yyvsp[(1) - (1)].interm).intermNode)->getCompleteString();
+                            std::string extraInfo = extraInfoStream.str();
+                            context->error((yyvsp[(1) - (1)].interm).intermNode->getLine(), " wrong operand type", "Internal Error", extraInfo.c_str());
                             YYERROR;
                         }
                     } else {
@@ -2470,7 +2477,7 @@ yyreduce:
                         qual = fnCandidate->getParam(i).type->getQualifier();
                         if (qual == EvqOut || qual == EvqInOut) {
                             if (context->lValueErrorCheck((yyval.interm.intermTypedNode)->getLine(), "assign", (yyval.interm.intermTypedNode)->getAsAggregate()->getSequence()[i]->getAsTyped())) {
-                                context->error((yyvsp[(1) - (1)].interm).intermNode->getLine(), "Constant value cannot be passed for 'out' or 'inout' parameters.", "Error", "");
+                                context->error((yyvsp[(1) - (1)].interm).intermNode->getLine(), "Constant value cannot be passed for 'out' or 'inout' parameters.", "Error");
                                 context->recover();
                             }
                         }
@@ -2500,7 +2507,7 @@ yyreduce:
   case 17:
 
     {
-        context->error((yyvsp[(3) - (3)].interm).line, "methods are not supported", "", "");
+        context->error((yyvsp[(3) - (3)].interm).line, "methods are not supported", "");
         context->recover();
         (yyval.interm) = (yyvsp[(3) - (3)].interm);
     }
@@ -2611,7 +2618,7 @@ yyreduce:
             default: break;
             }
             if (op == EOpNull) {
-                context->error((yyvsp[(1) - (1)].interm.type).line, "cannot construct this type", getBasicString((yyvsp[(1) - (1)].interm.type).type), "");
+                context->error((yyvsp[(1) - (1)].interm.type).line, "cannot construct this type", getBasicString((yyvsp[(1) - (1)].interm.type).type));
                 context->recover();
                 (yyvsp[(1) - (1)].interm.type).type = EbtFloat;
                 op = EOpConstructFloat;
@@ -3105,12 +3112,12 @@ yyreduce:
         TFunction* prevDec = static_cast<TFunction*>(context->symbolTable.find((yyvsp[(1) - (2)].interm.function)->getMangledName()));
         if (prevDec) {
             if (prevDec->getReturnType() != (yyvsp[(1) - (2)].interm.function)->getReturnType()) {
-                context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same return type", (yyvsp[(1) - (2)].interm.function)->getReturnType().getBasicString(), "");
+                context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same return type", (yyvsp[(1) - (2)].interm.function)->getReturnType().getBasicString());
                 context->recover();
             }
             for (int i = 0; i < prevDec->getParamCount(); ++i) {
                 if (prevDec->getParam(i).type->getQualifier() != (yyvsp[(1) - (2)].interm.function)->getParam(i).type->getQualifier()) {
-                    context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same parameter qualifiers", (yyvsp[(1) - (2)].interm.function)->getParam(i).type->getQualifierString(), "");
+                    context->error((yyvsp[(2) - (2)].lex).line, "overloaded functions must have the same parameter qualifiers", (yyvsp[(1) - (2)].interm.function)->getParam(i).type->getQualifierString());
                     context->recover();
                 }
             }
@@ -3167,7 +3174,7 @@ yyreduce:
             //
             // This parameter > first is void
             //
-            context->error((yyvsp[(2) - (3)].lex).line, "cannot be an argument type except for '(void)'", "void", "");
+            context->error((yyvsp[(2) - (3)].lex).line, "cannot be an argument type except for '(void)'", "void");
             context->recover();
             delete (yyvsp[(3) - (3)].interm).param.type;
         } else {
@@ -3182,7 +3189,7 @@ yyreduce:
 
     {
         if ((yyvsp[(1) - (3)].interm.type).qualifier != EvqGlobal && (yyvsp[(1) - (3)].interm.type).qualifier != EvqTemporary) {
-            context->error((yyvsp[(2) - (3)].lex).line, "no qualifiers allowed for function return", getQualifierString((yyvsp[(1) - (3)].interm.type).qualifier), "");
+            context->error((yyvsp[(2) - (3)].lex).line, "no qualifiers allowed for function return", getQualifierString((yyvsp[(1) - (3)].interm.type).qualifier));
             context->recover();
         }
         // make sure a sampler is not involved as well...
@@ -3203,7 +3210,7 @@ yyreduce:
 
     {
         if ((yyvsp[(1) - (2)].interm.type).type == EbtVoid) {
-            context->error((yyvsp[(2) - (2)].lex).line, "illegal use of type 'void'", (yyvsp[(2) - (2)].lex).string->c_str(), "");
+            context->error((yyvsp[(2) - (2)].lex).line, "illegal use of type 'void'", (yyvsp[(2) - (2)].lex).string->c_str());
             context->recover();
         }
         if (context->reservedErrorCheck((yyvsp[(2) - (2)].lex).line, *(yyvsp[(2) - (2)].lex).string))
@@ -3324,7 +3331,7 @@ yyreduce:
     {
         if ((yyvsp[(1) - (3)].interm).type.type == EbtInvariant && !(yyvsp[(3) - (3)].lex).symbol)
         {
-            context->error((yyvsp[(3) - (3)].lex).line, "undeclared identifier declared as invariant", (yyvsp[(3) - (3)].lex).string->c_str(), "");
+            context->error((yyvsp[(3) - (3)].lex).line, "undeclared identifier declared as invariant", (yyvsp[(3) - (3)].lex).string->c_str());
             context->recover();
         }
 
@@ -3452,7 +3459,7 @@ yyreduce:
   case 98:
 
     {
-        context->error((yyvsp[(2) - (4)].lex).line, "unsized array declarations not supported", (yyvsp[(2) - (4)].lex).string->c_str(), "");
+        context->error((yyvsp[(2) - (4)].lex).line, "unsized array declarations not supported", (yyvsp[(2) - (4)].lex).string->c_str());
         context->recover();
 
         TIntermSymbol* symbol = context->intermediate.addSymbol(0, *(yyvsp[(2) - (4)].lex).string, TType((yyvsp[(1) - (4)].interm.type)), (yyvsp[(2) - (4)].lex).line);
@@ -3530,7 +3537,7 @@ yyreduce:
         (yyval.interm).type.setBasic(EbtInvariant, EvqInvariantVaryingOut, (yyvsp[(2) - (2)].lex).line);
         if (!(yyvsp[(2) - (2)].lex).symbol)
         {
-            context->error((yyvsp[(2) - (2)].lex).line, "undeclared identifier declared as invariant", (yyvsp[(2) - (2)].lex).string->c_str(), "");
+            context->error((yyvsp[(2) - (2)].lex).line, "undeclared identifier declared as invariant", (yyvsp[(2) - (2)].lex).string->c_str());
             context->recover();
             
             (yyval.interm).intermAggregate = 0;
@@ -3549,7 +3556,7 @@ yyreduce:
         (yyval.interm.type) = (yyvsp[(1) - (1)].interm.type);
 
         if ((yyvsp[(1) - (1)].interm.type).array) {
-            context->error((yyvsp[(1) - (1)].interm.type).line, "not supported", "first-class array", "");
+            context->error((yyvsp[(1) - (1)].interm.type).line, "not supported", "first-class array");
             context->recover();
             (yyvsp[(1) - (1)].interm.type).setArray(false);
         }
@@ -3560,19 +3567,19 @@ yyreduce:
 
     {
         if ((yyvsp[(2) - (2)].interm.type).array) {
-            context->error((yyvsp[(2) - (2)].interm.type).line, "not supported", "first-class array", "");
+            context->error((yyvsp[(2) - (2)].interm.type).line, "not supported", "first-class array");
             context->recover();
             (yyvsp[(2) - (2)].interm.type).setArray(false);
         }
 
         if ((yyvsp[(1) - (2)].interm.type).qualifier == EvqAttribute &&
             ((yyvsp[(2) - (2)].interm.type).type == EbtBool || (yyvsp[(2) - (2)].interm.type).type == EbtInt)) {
-            context->error((yyvsp[(2) - (2)].interm.type).line, "cannot be bool or int", getQualifierString((yyvsp[(1) - (2)].interm.type).qualifier), "");
+            context->error((yyvsp[(2) - (2)].interm.type).line, "cannot be bool or int", getQualifierString((yyvsp[(1) - (2)].interm.type).qualifier));
             context->recover();
         }
         if (((yyvsp[(1) - (2)].interm.type).qualifier == EvqVaryingIn || (yyvsp[(1) - (2)].interm.type).qualifier == EvqVaryingOut) &&
             ((yyvsp[(2) - (2)].interm.type).type == EbtBool || (yyvsp[(2) - (2)].interm.type).type == EbtInt)) {
-            context->error((yyvsp[(2) - (2)].interm.type).line, "cannot be bool or int", getQualifierString((yyvsp[(1) - (2)].interm.type).qualifier), "");
+            context->error((yyvsp[(2) - (2)].interm.type).line, "cannot be bool or int", getQualifierString((yyvsp[(1) - (2)].interm.type).qualifier));
             context->recover();
         }
         (yyval.interm.type) = (yyvsp[(2) - (2)].interm.type);
@@ -3861,7 +3868,7 @@ yyreduce:
 
     {
         if (!context->supportsExtension("GL_OES_EGL_image_external")) {
-            context->error((yyvsp[(1) - (1)].lex).line, "unsupported type", "samplerExternalOES", "");
+            context->error((yyvsp[(1) - (1)].lex).line, "unsupported type", "samplerExternalOES");
             context->recover();
         }
         FRAG_VERT_ONLY("samplerExternalOES", (yyvsp[(1) - (1)].lex).line);
@@ -3874,7 +3881,7 @@ yyreduce:
 
     {
         if (!context->supportsExtension("GL_ARB_texture_rectangle")) {
-            context->error((yyvsp[(1) - (1)].lex).line, "unsupported type", "sampler2DRect", "");
+            context->error((yyvsp[(1) - (1)].lex).line, "unsupported type", "sampler2DRect");
             context->recover();
         }
         FRAG_VERT_ONLY("sampler2DRect", (yyvsp[(1) - (1)].lex).line);
@@ -4335,7 +4342,7 @@ yyreduce:
 
     {
         if (context->loopNestingLevel <= 0) {
-            context->error((yyvsp[(1) - (2)].lex).line, "continue statement only allowed in loops", "", "");
+            context->error((yyvsp[(1) - (2)].lex).line, "continue statement only allowed in loops", "");
             context->recover();
         }
         (yyval.interm.intermNode) = context->intermediate.addBranch(EOpContinue, (yyvsp[(1) - (2)].lex).line);
@@ -4346,7 +4353,7 @@ yyreduce:
 
     {
         if (context->loopNestingLevel <= 0) {
-            context->error((yyvsp[(1) - (2)].lex).line, "break statement only allowed in loops", "", "");
+            context->error((yyvsp[(1) - (2)].lex).line, "break statement only allowed in loops", "");
             context->recover();
         }
         (yyval.interm.intermNode) = context->intermediate.addBranch(EOpBreak, (yyvsp[(1) - (2)].lex).line);
@@ -4358,7 +4365,7 @@ yyreduce:
     {
         (yyval.interm.intermNode) = context->intermediate.addBranch(EOpReturn, (yyvsp[(1) - (2)].lex).line);
         if (context->currentFunctionType->getBasicType() != EbtVoid) {
-            context->error((yyvsp[(1) - (2)].lex).line, "non-void function must return a value", "return", "");
+            context->error((yyvsp[(1) - (2)].lex).line, "non-void function must return a value", "return");
             context->recover();
         }
     }
@@ -4370,10 +4377,10 @@ yyreduce:
         (yyval.interm.intermNode) = context->intermediate.addBranch(EOpReturn, (yyvsp[(2) - (3)].interm.intermTypedNode), (yyvsp[(1) - (3)].lex).line);
         context->functionReturnsValue = true;
         if (context->currentFunctionType->getBasicType() == EbtVoid) {
-            context->error((yyvsp[(1) - (3)].lex).line, "void function cannot return a value", "return", "");
+            context->error((yyvsp[(1) - (3)].lex).line, "void function cannot return a value", "return");
             context->recover();
         } else if (*(context->currentFunctionType) != (yyvsp[(2) - (3)].interm.intermTypedNode)->getType()) {
-            context->error((yyvsp[(1) - (3)].lex).line, "function return is not matching type:", "return", "");
+            context->error((yyvsp[(1) - (3)].lex).line, "function return is not matching type:", "return");
             context->recover();
         }
     }
@@ -4421,6 +4428,15 @@ yyreduce:
 
     {
         TFunction* function = (yyvsp[(1) - (1)].interm).function;
+        
+        const TSymbol *builtIn = context->symbolTable.findBuiltIn(function->getMangledName());
+        
+        if (builtIn)
+        {
+            context->error((yyvsp[(1) - (1)].interm).line, "built-in functions cannot be redefined", function->getName().c_str());
+            context->recover();
+        }
+        
         TFunction* prevDec = static_cast<TFunction*>(context->symbolTable.find(function->getMangledName()));
         //
         // Note:  'prevDec' could be 'function' if this is the first time we've seen function
@@ -4431,7 +4447,7 @@ yyreduce:
             //
             // Then this function already has a body.
             //
-            context->error((yyvsp[(1) - (1)].interm).line, "function already has a body", function->getName().c_str(), "");
+            context->error((yyvsp[(1) - (1)].interm).line, "function already has a body", function->getName().c_str());
             context->recover();
         }
         prevDec->setDefined();
@@ -4441,7 +4457,7 @@ yyreduce:
         //
         if (function->getName() == "main") {
             if (function->getParamCount() > 0) {
-                context->error((yyvsp[(1) - (1)].interm).line, "function cannot take any parameter(s)", function->getName().c_str(), "");
+                context->error((yyvsp[(1) - (1)].interm).line, "function cannot take any parameter(s)", function->getName().c_str());
                 context->recover();
             }
             if (function->getReturnType().getBasicType() != EbtVoid) {
@@ -4473,7 +4489,7 @@ yyreduce:
                 // Insert the parameters with name in the symbol table.
                 //
                 if (! context->symbolTable.insert(*variable)) {
-                    context->error((yyvsp[(1) - (1)].interm).line, "redefinition", variable->getName().c_str(), "");
+                    context->error((yyvsp[(1) - (1)].interm).line, "redefinition", variable->getName().c_str());
                     context->recover();
                     delete variable;
                 }
@@ -4514,9 +4530,8 @@ yyreduce:
 
         // store the pragma information for debug and optimize and other vendor specific
         // information. This information can be queried from the parse tree
-        (yyval.interm.intermNode)->getAsAggregate()->setOptimize(context->contextPragma.optimize);
-        (yyval.interm.intermNode)->getAsAggregate()->setDebug(context->contextPragma.debug);
-        (yyval.interm.intermNode)->getAsAggregate()->addToPragmaTable(context->contextPragma.pragmaTable);
+        (yyval.interm.intermNode)->getAsAggregate()->setOptimize(context->pragma().optimize);
+        (yyval.interm.intermNode)->getAsAggregate()->setDebug(context->pragma().debug);
 
         if ((yyvsp[(3) - (3)].interm.intermNode) && (yyvsp[(3) - (3)].interm.intermNode)->getAsAggregate())
             (yyval.interm.intermNode)->getAsAggregate()->setEndLine((yyvsp[(3) - (3)].interm.intermNode)->getAsAggregate()->getEndLine());
