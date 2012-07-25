@@ -1,0 +1,6 @@
+# HG changeset patch
+# Parent a98ccd93f2ab811670cb50edca50f6381274a345
+
+diff --git a/gfx/angle/src/compiler/preprocessor/new/DirectiveHandler.cpp b/gfx/angle/src/compiler/preprocessor/new/PreprocessorDirectiveHandler.cpp
+rename from gfx/angle/src/compiler/preprocessor/new/DirectiveHandler.cpp
+rename to gfx/angle/src/compiler/preprocessor/new/PreprocessorDirectiveHandler.cpp
