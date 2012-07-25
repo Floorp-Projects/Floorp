@@ -153,8 +153,6 @@ struct JSFunction : public JSObject
     inline const js::Value &getBoundFunctionArgument(unsigned which) const;
     inline size_t getBoundFunctionArgumentCount() const;
 
-    JSString *toString(JSContext *cx, bool bodyOnly, bool pretty);
-
   private:
     inline js::FunctionExtended *toExtended();
     inline const js::FunctionExtended *toExtended() const;
@@ -247,6 +245,8 @@ JSFunction::toExtended() const
 }
 
 namespace js {
+
+JSString *FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lambdaParen);
 
 template<XDRMode mode>
 bool
