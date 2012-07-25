@@ -329,18 +329,27 @@ Readability.prototype = {
     node.readability.contentScore += this._getClassWeight(node);
   },
 
-  _grabArticle: function () {
+  _grabArticle: function (callback) {
     let gen = this._grabArticleGenerator();
     let iterate = function () {
       for (let i = this.GEN_ITERATIONS; i--;) {
-        let result = gen.next();
+        let result;
+        try {
+          // Parse can be interrupted if document changes (will throw dead
+          // object exception)
+          result = gen.next();
+        } catch (e) {
+          dump("Caught exception while grabbing article, aborting");
+          result = null;
+        }
         if (result !== undefined) {
-          return result;
+          callback(result);
+          return;
         }
       }
-      return iterate();
+      setTimeout(iterate, 0);
     }.bind(this);
-    return iterate();
+    iterate();
   },
 
   /***
@@ -1055,6 +1064,9 @@ Readability.prototype = {
           this._flags = 0x1 | 0x2 | 0x4;
 
           let nextPageLink = this._findNextPageLink(page);
+          
+          // NOTE: if we end up supporting _appendNextPage(), we'll need to
+          // change this call to be async
           let content = this._grabArticle(page);
 
           if (!content) {
@@ -1282,10 +1294,12 @@ Readability.prototype = {
    *
    * @return void
    **/
-  parse: function() {
+  parse: function (callback) {
     let uri = this._uri;
-    if ((uri.prePath + "/") === uri.spec)
-      return null;
+    if ((uri.prePath + "/") === uri.spec) {
+      callback(null);
+      return;
+    }
 
     // Remove script tags from the document.
     this._removeScripts(this._doc);
@@ -1303,36 +1317,42 @@ Readability.prototype = {
     this._prepDocument();
 
     let articleTitle = this._getArticleTitle();
-    let articleContent = this._grabArticle();
+    this._grabArticle(function (articleContent) {
+      if (!articleContent) {
+        callback(null);
+        return;
+      }
 
-    if (!articleContent)
-      return null;
+      // If we're simply checking whether the document is convertible
+      // or not, we don't need to do any post-processing on the article
+      // content, just return a non-null value (see check() method)
+      if (this._flagIsActive(this.FLAG_READABILITY_CHECK)) {
+        callback({});
+        return;
+      }
 
-    // If we're simply checking whether the document is convertible
-    // or not, we don't need to do any post-processing on the article
-    // content, just return a non-null value (see check() method)
-    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
-      return {};
+      this._postProcessContent(articleContent);
 
-    this._postProcessContent(articleContent);
+      // if (nextPageLink) {
+      //   // Append any additional pages after a small timeout so that people
+      //   // can start reading without having to wait for this to finish processing.
+      //   setTimeout((function() {
+      //     this._appendNextPage(nextPageLink);
+      //   }).bind(this), 500);
+      // }
 
-    // if (nextPageLink) {
-    //   // Append any additional pages after a small timeout so that people
-    //   // can start reading without having to wait for this to finish processing.
-    //   setTimeout((function() {
-    //     this._appendNextPage(nextPageLink);
-    //   }).bind(this), 500);
-    // }
-
-    return { title: this._getInnerText(articleTitle),
-             content: articleContent.innerHTML };
+      callback({ title: this._getInnerText(articleTitle),
+                 content: articleContent.innerHTML });
+    }.bind(this));
   },
 
-  check: function() {
+  check: function (callback) {
     // Set proper flags for parsing document in readability check mode, skipping
     // any DOM manipulation.
     this._flags = this.FLAG_READABILITY_CHECK;
 
-    return (this.parse() != null);
+    this.parse(function (result) {
+      callback(result != null);
+    });
   }
 };
