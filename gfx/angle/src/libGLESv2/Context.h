@@ -40,6 +40,7 @@ struct TranslatedIndexData;
 class Buffer;
 class Shader;
 class Program;
+class ProgramBinary;
 class Texture;
 class Texture2D;
 class TextureCubeMap;
@@ -74,8 +75,8 @@ enum
     MAX_FRAGMENT_UNIFORM_VECTORS_SM3 = 224 - 3,
     MAX_DRAW_BUFFERS = 1,
 
-    IMPLEMENTATION_COLOR_READ_FORMAT = GL_BGRA_EXT,
-    IMPLEMENTATION_COLOR_READ_TYPE = GL_UNSIGNED_BYTE
+    IMPLEMENTATION_COLOR_READ_FORMAT = GL_RGB,
+    IMPLEMENTATION_COLOR_READ_TYPE = GL_UNSIGNED_SHORT_5_6_5
 };
 
 enum QueryType
@@ -90,7 +91,6 @@ const float ALIASED_LINE_WIDTH_RANGE_MIN = 1.0f;
 const float ALIASED_LINE_WIDTH_RANGE_MAX = 1.0f;
 const float ALIASED_POINT_SIZE_RANGE_MIN = 1.0f;
 const float ALIASED_POINT_SIZE_RANGE_MAX_SM2 = 1.0f;
-const float ALIASED_POINT_SIZE_RANGE_MAX_SM3 = 64.0f;
 
 struct Color
 {
@@ -244,7 +244,7 @@ class VertexDeclarationCache
     VertexDeclarationCache();
     ~VertexDeclarationCache();
 
-    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], Program *program, GLsizei instances, GLsizei *repeatDraw);
+    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], ProgramBinary *programBinary, GLsizei instances, GLsizei *repeatDraw);
 
     void markStateDirty();
 
@@ -281,7 +281,8 @@ class Context
 
     void makeCurrent(egl::Display *display, egl::Surface *surface);
 
-    void markAllStateDirty();
+    virtual void markAllStateDirty();
+    void markDxUniformsDirty();
 
     virtual void markContextLost();
     bool isContextLost();
@@ -416,6 +417,8 @@ class Context
     void bindDrawFramebuffer(GLuint framebuffer);
     void bindRenderbuffer(GLuint renderbuffer);
     void useProgram(GLuint program);
+    void linkProgram(GLuint program);
+    void setProgramBinary(GLuint program, const void *binary, GLint length);
 
     void beginQuery(GLenum target, GLuint query);
     void endQuery(GLenum target);
@@ -438,7 +441,7 @@ class Context
 
     Buffer *getArrayBuffer();
     Buffer *getElementArrayBuffer();
-    Program *getCurrentProgram();
+    ProgramBinary *getCurrentProgramBinary();
     Texture2D *getTexture2D();
     TextureCubeMap *getTextureCubeMap();
     Texture *getSamplerTexture(unsigned int sampler, TextureType type);
@@ -470,6 +473,7 @@ class Context
     virtual bool isResetNotificationEnabled();
 
     bool supportsShaderModel3() const;
+    float getMaximumPointSize() const;
     int getMaximumVaryingVectors() const;
     unsigned int getMaximumVertexTextureImageUnits() const;
     unsigned int getMaximumCombinedTextureImageUnits() const;
@@ -495,9 +499,13 @@ class Context
     bool supportsFloat16RenderableTextures() const;
     bool supportsLuminanceTextures() const;
     bool supportsLuminanceAlphaTextures() const;
+    bool supportsDepthTextures() const;
     bool supports32bitIndices() const;
     bool supportsNonPower2Texture() const;
     bool supportsInstancing() const;
+    bool supportsTextureFilterAnisotropy() const;
+
+    float getTextureMaxAnisotropy() const;
 
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, 
                          GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
@@ -580,7 +588,7 @@ class Context
 
     unsigned int mAppliedTextureSerialPS[MAX_TEXTURE_IMAGE_UNITS];
     unsigned int mAppliedTextureSerialVS[MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF];
-    unsigned int mAppliedProgramSerial;
+    unsigned int mAppliedProgramBinarySerial;
     unsigned int mAppliedRenderTargetSerial;
     unsigned int mAppliedDepthbufferSerial;
     unsigned int mAppliedStencilbufferSerial;
@@ -591,10 +599,11 @@ class Context
     bool mRenderTargetDescInitialized;
     D3DSURFACE_DESC mRenderTargetDesc;
     bool mDxUniformsDirty;
-    Program *mCachedCurrentProgram;
+    BindingPointer<ProgramBinary> mCurrentProgramBinary;
     Framebuffer *mBoundDrawFramebuffer;
 
     bool mSupportsShaderModel3;
+    float mMaximumPointSize;
     bool mSupportsVertexTexture;
     bool mSupportsNonPower2Texture;
     bool mSupportsInstancing;
@@ -602,6 +611,7 @@ class Context
     int  mMaxTextureDimension;
     int  mMaxCubeTextureDimension;
     int  mMaxTextureLevel;
+    float mMaxTextureAnisotropy;
     std::map<D3DFORMAT, bool *> mMultiSampleSupport;
     GLsizei mMaxSupportedSamples;
     bool mSupportsEventQueries;
@@ -617,7 +627,9 @@ class Context
     bool mSupportsFloat16RenderableTextures;
     bool mSupportsLuminanceTextures;
     bool mSupportsLuminanceAlphaTextures;
+    bool mSupportsDepthTextures;
     bool mSupports32bitIndices;
+    bool mSupportsTextureFilterAnisotropy;
     int mNumCompressedTextureFormats;
 
     // state caching flags

@@ -1,206 +1,787 @@
 <?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject ProjectType="Visual C++" Version="8.00" Name="translator_common" ProjectGUID="{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}" RootNamespace="compiler" Keyword="Win32Proj" TargetFrameworkVersion="131072">
-  <Platforms>
-    <Platform Name="Win32" />
-  </Platforms>
-  <ToolFiles>
-  </ToolFiles>
-  <Configurations>
-    <Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\common" ConfigurationType="4" CharacterSet="0">
-      <Tool Name="VCPreBuildEventTool" />
-      <Tool Name="VCCustomBuildTool" />
-      <Tool Name="VCXMLDataGeneratorTool" />
-      <Tool Name="VCWebServiceProxyGeneratorTool" />
-      <Tool Name="VCMIDLTool" />
-      <Tool Name="VCCLCompilerTool" Optimization="0" AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX" MinimalRebuild="true" BasicRuntimeChecks="3" RuntimeLibrary="1" UsePrecompiledHeader="0" WarningLevel="3" Detect64BitPortabilityProblems="false" DebugInformationFormat="4" />
-      <Tool Name="VCManagedResourceCompilerTool" />
-      <Tool Name="VCResourceCompilerTool" />
-      <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" />
-      <Tool Name="VCALinkTool" />
-      <Tool Name="VCXDCMakeTool" />
-      <Tool Name="VCBscMakeTool" />
-      <Tool Name="VCFxCopTool" />
-      <Tool Name="VCPostBuildEventTool" />
-    </Configuration>
-    <Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\common" ConfigurationType="4" CharacterSet="0" WholeProgramOptimization="1">
-      <Tool Name="VCPreBuildEventTool" />
-      <Tool Name="VCCustomBuildTool" />
-      <Tool Name="VCXMLDataGeneratorTool" />
-      <Tool Name="VCWebServiceProxyGeneratorTool" />
-      <Tool Name="VCMIDLTool" />
-      <Tool Name="VCCLCompilerTool" Optimization="2" InlineFunctionExpansion="2" AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="3" Detect64BitPortabilityProblems="false" DebugInformationFormat="3" />
-      <Tool Name="VCManagedResourceCompilerTool" />
-      <Tool Name="VCResourceCompilerTool" />
-      <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" />
-      <Tool Name="VCALinkTool" />
-      <Tool Name="VCXDCMakeTool" />
-      <Tool Name="VCBscMakeTool" />
-      <Tool Name="VCFxCopTool" />
-      <Tool Name="VCPostBuildEventTool" />
-    </Configuration>
-  </Configurations>
-  <References>
-  </References>
-  <Files>
-    <Filter Name="Source Files" Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx" UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-      <File RelativePath=".\Compiler.cpp">
-      </File>
-      <File RelativePath=".\debug.cpp">
-      </File>
-      <File RelativePath=".\glslang.l">
-        <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" AdditionalDependencies="" Outputs="" />
-        </FileConfiguration>
-        <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" AdditionalDependencies="" Outputs="" />
-        </FileConfiguration>
-      </File>
-      <File RelativePath=".\glslang.y">
-        <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" Outputs="" />
-        </FileConfiguration>
-        <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" Outputs="" />
-        </FileConfiguration>
-      </File>
-      <File RelativePath=".\InfoSink.cpp">
-      </File>
-      <File RelativePath=".\Initialize.cpp">
-      </File>
-      <File RelativePath=".\InitializeDll.cpp">
-      </File>
-      <File RelativePath=".\Intermediate.cpp">
-      </File>
-      <File RelativePath=".\intermOut.cpp">
-      </File>
-      <File RelativePath=".\IntermTraverse.cpp">
-      </File>
-      <File RelativePath=".\ossource_win.cpp">
-      </File>
-      <File RelativePath=".\parseConst.cpp">
-      </File>
-      <File RelativePath=".\ParseHelper.cpp">
-      </File>
-      <File RelativePath=".\PoolAlloc.cpp">
-      </File>
-      <File RelativePath=".\QualifierAlive.cpp">
-      </File>
-      <File RelativePath=".\RemoveTree.cpp">
-      </File>
-      <File RelativePath=".\ShaderLang.cpp">
-      </File>
-      <File RelativePath=".\SymbolTable.cpp">
-      </File>
-      <File RelativePath=".\util.cpp">
-      </File>
-      <File RelativePath=".\ValidateLimitations.cpp">
-      </File>
-      <File RelativePath=".\VariableInfo.cpp">
-      </File>
-      <Filter Name="preprocessor">
-        <File RelativePath=".\preprocessor\atom.c">
-        </File>
-        <File RelativePath=".\preprocessor\cpp.c">
-        </File>
-        <File RelativePath=".\preprocessor\cppstruct.c">
-        </File>
-        <File RelativePath=".\preprocessor\memory.c">
-        </File>
-        <File RelativePath=".\preprocessor\scanner.c">
-        </File>
-        <File RelativePath=".\preprocessor\symbols.c">
-        </File>
-        <File RelativePath=".\preprocessor\tokens.c">
-        </File>
-      </Filter>
-      <Filter Name="generated">
-        <File RelativePath=".\glslang_lex.cpp">
-        </File>
-        <File RelativePath=".\glslang_tab.cpp">
-        </File>
-      </Filter>
-    </Filter>
-    <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl;inc;xsd" UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-      <File RelativePath=".\BaseTypes.h">
-      </File>
-      <File RelativePath=".\Common.h">
-      </File>
-      <File RelativePath=".\ConstantUnion.h">
-      </File>
-      <File RelativePath=".\debug.h">
-      </File>
-      <File RelativePath=".\InfoSink.h">
-      </File>
-      <File RelativePath=".\Initialize.h">
-      </File>
-      <File RelativePath=".\InitializeDll.h">
-      </File>
-      <File RelativePath=".\InitializeGlobals.h">
-      </File>
-      <File RelativePath=".\InitializeParseContext.h">
-      </File>
-      <File RelativePath=".\intermediate.h">
-      </File>
-      <File RelativePath=".\localintermediate.h">
-      </File>
-      <File RelativePath=".\MMap.h">
-      </File>
-      <File RelativePath=".\osinclude.h">
-      </File>
-      <File RelativePath=".\ParseHelper.h">
-      </File>
-      <File RelativePath=".\PoolAlloc.h">
-      </File>
-      <File RelativePath=".\QualifierAlive.h">
-      </File>
-      <File RelativePath=".\RemoveTree.h">
-      </File>
-      <File RelativePath="..\..\include\GLSLANG\ResourceLimits.h">
-      </File>
-      <File RelativePath="..\..\include\GLSLANG\ShaderLang.h">
-      </File>
-      <File RelativePath=".\ShHandle.h">
-      </File>
-      <File RelativePath=".\SymbolTable.h">
-      </File>
-      <File RelativePath=".\Types.h">
-      </File>
-      <File RelativePath=".\util.h">
-      </File>
-      <File RelativePath=".\ValidateLimitations.h">
-      </File>
-      <File RelativePath=".\VariableInfo.h">
-      </File>
-      <Filter Name="preprocessor">
-        <File RelativePath=".\preprocessor\atom.h">
-        </File>
-        <File RelativePath=".\preprocessor\compile.h">
-        </File>
-        <File RelativePath=".\preprocessor\cpp.h">
-        </File>
-        <File RelativePath=".\preprocessor\memory.h">
-        </File>
-        <File RelativePath=".\preprocessor\parser.h">
-        </File>
-        <File RelativePath=".\preprocessor\preprocess.h">
-        </File>
-        <File RelativePath=".\preprocessor\scanner.h">
-        </File>
-        <File RelativePath=".\preprocessor\slglobals.h">
-        </File>
-        <File RelativePath=".\preprocessor\symbols.h">
-        </File>
-        <File RelativePath=".\preprocessor\tokens.h">
-        </File>
-      </Filter>
-      <Filter Name="generated">
-        <File RelativePath=".\glslang_tab.h">
-        </File>
-      </Filter>
-    </Filter>
-  </Files>
-  <Globals>
-  </Globals>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="translator_common"
+	ProjectGUID="{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}"
+	RootNamespace="compiler"
+	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\common"
+			ConfigurationType="4"
+			CharacterSet="0"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;ANGLE_USE_NEW_PREPROCESSOR=1"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702;4718"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="0"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4267;4512;4702;4718"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\common"
+			ConfigurationType="4"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0;ANGLE_USE_NEW_PREPROCESSOR=1"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702;4718"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4267;4512;4702;4718"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\BuiltInFunctionEmulator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Compiler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\debug.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DetectRecursion.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagnostics.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DirectiveHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ForLoopUnroll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\glslang.l"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						AdditionalDependencies=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						AdditionalDependencies=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						AdditionalDependencies=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						AdditionalDependencies=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\glslang.y"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description=""
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\InfoSink.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Initialize.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\InitializeDll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\InitializeParseContext.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Intermediate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\intermOut.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IntermTraverse.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MapLongVariableNames.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ossource_win.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\parseConst.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolAlloc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\QualifierAlive.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoveTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShaderLang.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolTable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ValidateLimitations.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableInfo.cpp"
+				>
+			</File>
+			<Filter
+				Name="preprocessor"
+				>
+				<File
+					RelativePath=".\preprocessor\atom.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\cpp.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\cppstruct.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\memory.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\scanner.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\symbols.c"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\tokens.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="generated"
+				>
+				<File
+					RelativePath=".\glslang_lex.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\glslang_tab.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="depgraph"
+				>
+				<File
+					RelativePath=".\depgraph\DependencyGraph.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\depgraph\DependencyGraphBuilder.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\depgraph\DependencyGraphOutput.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\depgraph\DependencyGraphTraverse.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="timing"
+				>
+				<File
+					RelativePath=".\timing\RestrictFragmentShaderTiming.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\timing\RestrictVertexShaderTiming.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
+			<File
+				RelativePath=".\BaseTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BuiltInFunctionEmulator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Common.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConstantUnion.h"
+				>
+			</File>
+			<File
+				RelativePath=".\debug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DetectRecursion.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Diagnostics.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DirectiveHandler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ForLoopUnroll.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InfoSink.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Initialize.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InitializeDll.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InitializeGlobals.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InitializeParseContext.h"
+				>
+			</File>
+			<File
+				RelativePath=".\intermediate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\localintermediate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MapLongVariableNames.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MMap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\osinclude.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseHelper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PoolAlloc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\QualifierAlive.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RemoveTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RenameFunction.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\GLSLANG\ResourceLimits.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\GLSLANG\ShaderLang.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShHandle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SymbolTable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ValidateLimitations.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VariableInfo.h"
+				>
+			</File>
+			<Filter
+				Name="preprocessor"
+				>
+				<File
+					RelativePath=".\preprocessor\atom.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\compile.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\cpp.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\length_limits.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\memory.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\parser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\preprocess.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\scanner.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\slglobals.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\symbols.h"
+					>
+				</File>
+				<File
+					RelativePath=".\preprocessor\tokens.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="generated"
+				>
+				<File
+					RelativePath=".\glslang_tab.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="timing"
+				>
+				<File
+					RelativePath=".\timing\RestrictFragmentShaderTiming.h"
+					>
+				</File>
+				<File
+					RelativePath=".\timing\RestrictVertexShaderTiming.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="depgraph"
+				>
+				<File
+					RelativePath=".\depgraph\DependencyGraph.h"
+					>
+				</File>
+				<File
+					RelativePath=".\depgraph\DependencyGraphBuilder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\depgraph\DependencyGraphOutput.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
 </VisualStudioProject>

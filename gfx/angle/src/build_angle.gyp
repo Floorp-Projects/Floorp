@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The ANGLE Project Authors. All rights reserved.
+# Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -7,6 +7,7 @@
     'defines': [
       'ANGLE_DISABLE_TRACE',
       'ANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0',
+      'ANGLE_USE_NEW_PREPROCESSOR=1',
     ],
   },
   'targets': [
@@ -16,15 +17,41 @@
       'include_dirs': [
       ],
       'sources': [
+        'compiler/preprocessor/new/Diagnostics.cpp',
+        'compiler/preprocessor/new/Diagnostics.h',
+        'compiler/preprocessor/new/DirectiveHandler.cpp',
+        'compiler/preprocessor/new/DirectiveHandler.h',
+        'compiler/preprocessor/new/DirectiveParser.cpp',
+        'compiler/preprocessor/new/DirectiveParser.h',
+        'compiler/preprocessor/new/ExpressionParser.cpp',
+        'compiler/preprocessor/new/ExpressionParser.h',
         'compiler/preprocessor/new/Input.cpp',
         'compiler/preprocessor/new/Input.h',
         'compiler/preprocessor/new/Lexer.cpp',
         'compiler/preprocessor/new/Lexer.h',
-        'compiler/preprocessor/new/pp_lex.cpp',
+        'compiler/preprocessor/new/Macro.cpp',
+        'compiler/preprocessor/new/Macro.h',
+        'compiler/preprocessor/new/MacroExpander.cpp',
+        'compiler/preprocessor/new/MacroExpander.h',
+        'compiler/preprocessor/new/numeric_lex.h',
+        'compiler/preprocessor/new/pp_utils.h',
         'compiler/preprocessor/new/Preprocessor.cpp',
         'compiler/preprocessor/new/Preprocessor.h',
+        'compiler/preprocessor/new/SourceLocation.h',
         'compiler/preprocessor/new/Token.cpp',
         'compiler/preprocessor/new/Token.h',
+        'compiler/preprocessor/new/Tokenizer.cpp',
+        'compiler/preprocessor/new/Tokenizer.h',
+      ],
+      'conditions': [
+        ['OS=="mac"', {
+          'xcode_settings': {
+            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
+          },
+        }],
+        ['OS=="linux"', {
+          'cflags': ['<@(gcc_or_clang_warnings)']
+        }],
       ],
     },
     {
@@ -49,6 +76,11 @@
         'compiler/debug.h',
         'compiler/DetectRecursion.cpp',
         'compiler/DetectRecursion.h',
+        'compiler/Diagnostics.h',
+        'compiler/Diagnostics.cpp',
+        'compiler/DirectiveHandler.h',
+        'compiler/DirectiveHandler.cpp',
+        'compiler/ExtensionBehavior.h',
         'compiler/ForLoopUnroll.cpp',
         'compiler/ForLoopUnroll.h',
         'compiler/glslang.h',
@@ -62,6 +94,7 @@
         'compiler/InitializeDll.cpp',
         'compiler/InitializeDll.h',
         'compiler/InitializeGlobals.h',
+        'compiler/InitializeParseContext.cpp',
         'compiler/InitializeParseContext.h',
         'compiler/Intermediate.cpp',
         'compiler/intermediate.h',
@@ -81,6 +114,7 @@
         'compiler/QualifierAlive.h',
         'compiler/RemoveTree.cpp',
         'compiler/RemoveTree.h',
+        'compiler/RenameFunction.h',
         'compiler/ShHandle.h',
         'compiler/SymbolTable.cpp',
         'compiler/SymbolTable.h',
@@ -99,8 +133,6 @@
         'compiler/preprocessor/cpp.h',
         'compiler/preprocessor/cppstruct.c',
         'compiler/preprocessor/length_limits.h',
-        'compiler/preprocessor/lexer_glue.cpp',
-        'compiler/preprocessor/lexer_glue.h',
         'compiler/preprocessor/memory.c',
         'compiler/preprocessor/memory.h',
         'compiler/preprocessor/parser.h',
@@ -112,12 +144,33 @@
         'compiler/preprocessor/symbols.h',
         'compiler/preprocessor/tokens.c',
         'compiler/preprocessor/tokens.h',
+        # Dependency graph
+        'compiler/depgraph/DependencyGraph.cpp',
+        'compiler/depgraph/DependencyGraph.h',
+        'compiler/depgraph/DependencyGraphBuilder.cpp',
+        'compiler/depgraph/DependencyGraphBuilder.h',
+        'compiler/depgraph/DependencyGraphOutput.cpp',
+        'compiler/depgraph/DependencyGraphOutput.h',
+        'compiler/depgraph/DependencyGraphTraverse.cpp',
+        # Timing restrictions
+        'compiler/timing/RestrictFragmentShaderTiming.cpp',
+        'compiler/timing/RestrictFragmentShaderTiming.h',
+        'compiler/timing/RestrictVertexShaderTiming.cpp',
+        'compiler/timing/RestrictVertexShaderTiming.h',
       ],
       'conditions': [
         ['OS=="win"', {
           'sources': ['compiler/ossource_win.cpp'],
         }, { # else: posix
           'sources': ['compiler/ossource_posix.cpp'],
+        }],
+        ['OS=="mac"', {
+          'xcode_settings': {
+            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
+          },
+        }],
+        ['OS=="linux"', {
+          'cflags': ['<@(gcc_or_clang_warnings)']
         }],
       ],
     },
@@ -148,6 +201,16 @@
         'compiler/VersionGLSL.cpp',
         'compiler/VersionGLSL.h',
       ],
+      'conditions': [
+        ['OS=="mac"', {
+          'xcode_settings': {
+            'WARNING_CFLAGS': ['<@(gcc_or_clang_warnings)']
+          },
+        }],
+        ['OS=="linux"', {
+          'cflags': ['<@(gcc_or_clang_warnings)']
+        }],
+      ],
     },
   ],
   'conditions': [
@@ -166,13 +229,15 @@
           ],
           'sources': [
             'compiler/ShaderLang.cpp',
+            'compiler/DetectDiscontinuity.cpp',
+            'compiler/DetectDiscontinuity.h',
             'compiler/CodeGenHLSL.cpp',
             'compiler/OutputHLSL.cpp',
             'compiler/OutputHLSL.h',
             'compiler/TranslatorHLSL.cpp',
             'compiler/TranslatorHLSL.h',
-            'compiler/UnfoldSelect.cpp',
-            'compiler/UnfoldSelect.h',
+            'compiler/UnfoldShortCircuit.cpp',
+            'compiler/UnfoldShortCircuit.h',
             'compiler/SearchSymbol.cpp',
             'compiler/SearchSymbol.h',
           ],
@@ -198,6 +263,7 @@
             'libGLESv2/vertexconversion.h',
             'libGLESv2/VertexDataManager.cpp',
             'libGLESv2/VertexDataManager.h',
+            'libGLESv2/BinaryStream.h',
             'libGLESv2/Blit.cpp',
             'libGLESv2/Blit.h',
             'libGLESv2/Buffer.cpp',
@@ -218,6 +284,8 @@
             'libGLESv2/mathutil.h',
             'libGLESv2/Program.cpp',
             'libGLESv2/Program.h',
+            'libGLESv2/ProgramBinary.cpp',
+            'libGLESv2/ProgramBinary.h',
             'libGLESv2/Query.h',
             'libGLESv2/Query.cpp',
             'libGLESv2/Renderbuffer.cpp',

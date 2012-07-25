@@ -1445,9 +1445,3 @@ TIntermTyped* TIntermediate::promoteConstantUnion(TBasicType promoteTo, TIntermC
     return addConstantUnion(leftUnionArray, TType(promoteTo, t.getPrecision(), t.getQualifier(), t.getNominalSize(), t.isMatrix(), t.isArray()), node->getLine());
 }
 
-void TIntermAggregate::addToPragmaTable(const TPragmaTable& pTable)
-{
-    assert(!pragmaTable);
-    pragmaTable = new TPragmaTable();
-    *pragmaTable = pTable;
-}

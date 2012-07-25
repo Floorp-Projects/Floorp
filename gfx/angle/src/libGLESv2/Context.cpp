@@ -22,6 +22,7 @@
 #include "libGLESv2/Fence.h"
 #include "libGLESv2/FrameBuffer.h"
 #include "libGLESv2/Program.h"
+#include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/Query.h"
 #include "libGLESv2/RenderBuffer.h"
 #include "libGLESv2/Shader.h"
@@ -140,6 +141,7 @@ Context::Context(const egl::Config *config, const gl::Context *shareContext, boo
     bindRenderbuffer(0);
 
     mState.currentProgram = 0;
+    mCurrentProgramBinary.set(NULL);
 
     mState.packAlignment = 4;
     mState.unpackAlignment = 4;
@@ -184,6 +186,7 @@ Context::~Context()
         }
         mState.currentProgram = 0;
     }
+    mCurrentProgramBinary.set(NULL);
 
     while (!mFramebufferMap.empty())
     {
@@ -263,6 +266,7 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mBlit = new Blit(this);
 
         mSupportsShaderModel3 = mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(3, 0);
+        mMaximumPointSize = mDeviceCaps.MaxPointSize;
         mSupportsVertexTexture = mDisplay->getVertexTextureSupport();
         mSupportsNonPower2Texture = mDisplay->getNonPower2TextureSupport();
         mSupportsInstancing = mDisplay->getInstancingSupport();
@@ -272,8 +276,9 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mMaxCubeTextureDimension = std::min(mMaxTextureDimension, (int)gl::IMPLEMENTATION_MAX_CUBE_MAP_TEXTURE_SIZE);
         mMaxRenderbufferDimension = mMaxTextureDimension;
         mMaxTextureLevel = log2(mMaxTextureDimension) + 1;
-        TRACE("MaxTextureDimension=%d, MaxCubeTextureDimension=%d, MaxRenderbufferDimension=%d, MaxTextureLevel=%d",
-              mMaxTextureDimension, mMaxCubeTextureDimension, mMaxRenderbufferDimension, mMaxTextureLevel);
+        mMaxTextureAnisotropy = mDisplay->getTextureFilterAnisotropySupport();
+        TRACE("MaxTextureDimension=%d, MaxCubeTextureDimension=%d, MaxRenderbufferDimension=%d, MaxTextureLevel=%d, MaxTextureAnisotropy=%f",
+              mMaxTextureDimension, mMaxCubeTextureDimension, mMaxRenderbufferDimension, mMaxTextureLevel, mMaxTextureAnisotropy);
 
         const D3DFORMAT renderBufferFormats[] =
         {
@@ -310,6 +315,8 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mSupportsFloat16Textures = mDisplay->getFloat16TextureSupport(&mSupportsFloat16LinearFilter, &mSupportsFloat16RenderableTextures);
         mSupportsLuminanceTextures = mDisplay->getLuminanceTextureSupport();
         mSupportsLuminanceAlphaTextures = mDisplay->getLuminanceAlphaTextureSupport();
+        mSupportsDepthTextures = mDisplay->getDepthTextureSupport();
+        mSupportsTextureFilterAnisotropy = mMaxTextureAnisotropy >= 2.0f;
 
         mSupports32bitIndices = mDeviceCaps.MaxVertexIndex >= (1 << 16);
 
@@ -379,7 +386,7 @@ void Context::markAllStateDirty()
         mAppliedTextureSerialVS[t] = 0;
     }
 
-    mAppliedProgramSerial = 0;
+    mAppliedProgramBinarySerial = 0;
     mAppliedRenderTargetSerial = 0;
     mAppliedDepthbufferSerial = 0;
     mAppliedStencilbufferSerial = 0;
@@ -402,7 +409,11 @@ void Context::markAllStateDirty()
     mDitherStateDirty = true;
     mFrontFaceDirty = true;
     mDxUniformsDirty = true;
-    mCachedCurrentProgram = NULL;
+}
+
+void Context::markDxUniformsDirty()
+{
+    mDxUniformsDirty = true;
 }
 
 void Context::markContextLost()
@@ -973,7 +984,6 @@ void Context::deleteShader(GLuint shader)
 void Context::deleteProgram(GLuint program)
 {
     mResourceManager->deleteProgram(program);
-    mCachedCurrentProgram = NULL;
 }
 
 void Context::deleteTexture(GLuint texture)
@@ -1137,12 +1147,13 @@ void Context::useProgram(GLuint program)
     {
         Program *newProgram = mResourceManager->getProgram(program);
         Program *oldProgram = mResourceManager->getProgram(priorProgram);
-        mCachedCurrentProgram = NULL;
+        mCurrentProgramBinary.set(NULL);
         mDxUniformsDirty = true;
 
         if (newProgram)
         {
             newProgram->addRef();
+            mCurrentProgramBinary.set(newProgram->getProgramBinary());
         }
         
         if (oldProgram)
@@ -1150,6 +1161,37 @@ void Context::useProgram(GLuint program)
             oldProgram->release();
         }
     }
+}
+
+void Context::linkProgram(GLuint program)
+{
+    Program *programObject = mResourceManager->getProgram(program);
+
+    bool linked = programObject->link();
+
+    // if the current program was relinked successfully we
+    // need to install the new executables
+    if (linked && program == mState.currentProgram)
+    {
+        mCurrentProgramBinary.set(programObject->getProgramBinary());
+        mDxUniformsDirty = true;
+    }
+}
+
+void Context::setProgramBinary(GLuint program, const void *binary, GLint length)
+{
+    Program *programObject = mResourceManager->getProgram(program);
+
+    bool loaded = programObject->setProgramBinary(binary, length);
+
+    // if the current program was reloaded successfully we
+    // need to install the new executables
+    if (loaded && program == mState.currentProgram)
+    {
+        mCurrentProgramBinary.set(programObject->getProgramBinary());
+        mDxUniformsDirty = true;
+    }
+
 }
 
 void Context::beginQuery(GLenum target, GLuint query)
@@ -1314,13 +1356,9 @@ Buffer *Context::getElementArrayBuffer()
     return mState.elementArrayBuffer.get();
 }
 
-Program *Context::getCurrentProgram()
+ProgramBinary *Context::getCurrentProgramBinary()
 {
-    if (!mCachedCurrentProgram)
-    {
-        mCachedCurrentProgram = mResourceManager->getProgram(mState.currentProgram);
-    }
-    return mCachedCurrentProgram;
+    return mCurrentProgramBinary.get();
 }
 
 Texture2D *Context::getTexture2D()
@@ -1399,7 +1437,7 @@ bool Context::getFloatv(GLenum pname, GLfloat *params)
         break;
       case GL_ALIASED_POINT_SIZE_RANGE:
         params[0] = gl::ALIASED_POINT_SIZE_RANGE_MIN;
-        params[1] = supportsShaderModel3() ? gl::ALIASED_POINT_SIZE_RANGE_MAX_SM3 : gl::ALIASED_POINT_SIZE_RANGE_MAX_SM2;
+        params[1] = getMaximumPointSize();
         break;
       case GL_DEPTH_RANGE:
         params[0] = mState.zNear;
@@ -1416,6 +1454,13 @@ bool Context::getFloatv(GLenum pname, GLfloat *params)
         params[1] = mState.blendColor.green;
         params[2] = mState.blendColor.blue;
         params[3] = mState.blendColor.alpha;
+        break;
+      case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
+        if (!supportsTextureFilterAnisotropy())
+        {
+            return false;
+        }
+        *params = mMaxTextureAnisotropy;
         break;
       default:
         return false;
@@ -1646,6 +1691,12 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_RESET_NOTIFICATION_STRATEGY_EXT:
         *params = mResetStrategy;
         break;
+      case GL_NUM_PROGRAM_BINARY_FORMATS_OES:
+        *params = 1;
+        break;
+      case GL_PROGRAM_BINARY_FORMATS_OES:
+        *params = GL_PROGRAM_BINARY_ANGLE;
+        break;
       default:
         return false;
     }
@@ -1737,6 +1788,8 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
       case GL_TEXTURE_BINDING_2D:
       case GL_TEXTURE_BINDING_CUBE_MAP:
       case GL_RESET_NOTIFICATION_STRATEGY_EXT:
+      case GL_NUM_PROGRAM_BINARY_FORMATS_OES:
+      case GL_PROGRAM_BINARY_FORMATS_OES:
         {
             *type = GL_INT;
             *numParams = 1;
@@ -1817,6 +1870,14 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
             *numParams = 4;
         }
         break;
+      case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
+        if (!supportsTextureFilterAnisotropy())
+        {
+            return false;
+        }
+        *type = GL_FLOAT;
+        *numParams = 1;
+        break;
       default:
         return false;
     }
@@ -1835,13 +1896,31 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         return error(GL_INVALID_FRAMEBUFFER_OPERATION, false);
     }
 
+    // if there is no color attachment we must synthesize a NULL colorattachment
+    // to keep the D3D runtime happy.  This should only be possible if depth texturing.
+    Renderbuffer *renderbufferObject = NULL;
+    if (framebufferObject->getColorbufferType() != GL_NONE)
+    {
+        renderbufferObject = framebufferObject->getColorbuffer();
+    }
+    else
+    {
+        renderbufferObject = framebufferObject->getNullColorbuffer();
+    }
+    if (!renderbufferObject)
+    {
+        ERR("unable to locate renderbuffer for FBO.");
+        return false;
+    }
+
     bool renderTargetChanged = false;
-    unsigned int renderTargetSerial = framebufferObject->getRenderTargetSerial();
+    unsigned int renderTargetSerial = renderbufferObject->getSerial();
     if (renderTargetSerial != mAppliedRenderTargetSerial)
     {
-        IDirect3DSurface9 *renderTarget = framebufferObject->getRenderTarget();
+        IDirect3DSurface9 *renderTarget = renderbufferObject->getRenderTarget();
         if (!renderTarget)
         {
+            ERR("render target pointer unexpectedly null.");
             return false;   // Context must be lost
         }
         mDevice->SetRenderTarget(0, renderTarget);
@@ -1856,25 +1935,27 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     unsigned int stencilbufferSerial = 0;
     if (framebufferObject->getDepthbufferType() != GL_NONE)
     {
-        depthStencil = framebufferObject->getDepthbuffer()->getDepthStencil();
+        Renderbuffer *depthbuffer = framebufferObject->getDepthbuffer();
+        depthStencil = depthbuffer->getDepthStencil();
         if (!depthStencil)
         {
             ERR("Depth stencil pointer unexpectedly null.");
             return false;
         }
         
-        depthbufferSerial = framebufferObject->getDepthbuffer()->getSerial();
+        depthbufferSerial = depthbuffer->getSerial();
     }
     else if (framebufferObject->getStencilbufferType() != GL_NONE)
     {
-        depthStencil = framebufferObject->getStencilbuffer()->getDepthStencil();
+        Renderbuffer *stencilbuffer = framebufferObject->getStencilbuffer();
+        depthStencil = stencilbuffer->getDepthStencil();
         if (!depthStencil)
         {
             ERR("Depth stencil pointer unexpectedly null.");
             return false;
         }
         
-        stencilbufferSerial = framebufferObject->getStencilbuffer()->getSerial();
+        stencilbufferSerial = stencilbuffer->getSerial();
     }
 
     if (depthbufferSerial != mAppliedDepthbufferSerial ||
@@ -1887,9 +1968,14 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         mDepthStencilInitialized = true;
     }
 
+    if (depthStencil)
+    {
+        depthStencil->Release();
+    }
+
     if (!mRenderTargetDescInitialized || renderTargetChanged)
     {
-        IDirect3DSurface9 *renderTarget = framebufferObject->getRenderTarget();
+        IDirect3DSurface9 *renderTarget = renderbufferObject->getRenderTarget();
         if (!renderTarget)
         {
             return false;   // Context must be lost
@@ -1915,11 +2001,10 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     }
     else
     {
-        RECT rect = transformPixelRect(mState.viewportX, mState.viewportY, mState.viewportWidth, mState.viewportHeight, mRenderTargetDesc.Height);
-        viewport.X = clamp(rect.left, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
-        viewport.Y = clamp(rect.top, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
-        viewport.Width = clamp(rect.right - rect.left, 0L, static_cast<LONG>(mRenderTargetDesc.Width) - static_cast<LONG>(viewport.X));
-        viewport.Height = clamp(rect.bottom - rect.top, 0L, static_cast<LONG>(mRenderTargetDesc.Height) - static_cast<LONG>(viewport.Y));
+        viewport.X = clamp(mState.viewportX, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
+        viewport.Y = clamp(mState.viewportY, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
+        viewport.Width = clamp(mState.viewportWidth, 0L, static_cast<LONG>(mRenderTargetDesc.Width) - static_cast<LONG>(viewport.X));
+        viewport.Height = clamp(mState.viewportHeight, 0L, static_cast<LONG>(mRenderTargetDesc.Height) - static_cast<LONG>(viewport.Y));
         viewport.MinZ = zNear;
         viewport.MaxZ = zFar;
     }
@@ -1941,11 +2026,11 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     {
         if (mState.scissorTest)
         {
-            RECT rect = transformPixelRect(mState.scissorX, mState.scissorY, mState.scissorWidth, mState.scissorHeight, mRenderTargetDesc.Height);
-            rect.left = clamp(rect.left, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
-            rect.top = clamp(rect.top, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
-            rect.right = clamp(rect.right, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
-            rect.bottom = clamp(rect.bottom, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
+            RECT rect;
+            rect.left = clamp(mState.scissorX, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
+            rect.top = clamp(mState.scissorY, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
+            rect.right = clamp(mState.scissorX + mState.scissorWidth, 0L, static_cast<LONG>(mRenderTargetDesc.Width));
+            rect.bottom = clamp(mState.scissorY + mState.scissorHeight, 0L, static_cast<LONG>(mRenderTargetDesc.Height));
             mDevice->SetScissorRect(&rect);
             mDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
         }
@@ -1959,27 +2044,26 @@ bool Context::applyRenderTarget(bool ignoreViewport)
 
     if (mState.currentProgram && mDxUniformsDirty)
     {
-        Program *programObject = getCurrentProgram();
+        ProgramBinary *programBinary = getCurrentProgramBinary();
 
-        GLint halfPixelSize = programObject->getDxHalfPixelSizeLocation();
+        GLint halfPixelSize = programBinary->getDxHalfPixelSizeLocation();
         GLfloat xy[2] = {1.0f / viewport.Width, -1.0f / viewport.Height};
-        programObject->setUniform2fv(halfPixelSize, 1, xy);
+        programBinary->setUniform2fv(halfPixelSize, 1, xy);
 
-        // These values are used for computing gl_FragCoord in Program::linkVaryings(). The approach depends on Shader Model 3.0 support.
-        GLint coord = programObject->getDxCoordLocation();
-        float h = mSupportsShaderModel3 ? mRenderTargetDesc.Height : mState.viewportHeight / 2.0f;
-        GLfloat whxy[4] = {mState.viewportWidth / 2.0f, h, 
+        // These values are used for computing gl_FragCoord in Program::linkVaryings().
+        GLint coord = programBinary->getDxCoordLocation();
+        GLfloat whxy[4] = {mState.viewportWidth / 2.0f, mState.viewportHeight / 2.0f, 
                           (float)mState.viewportX + mState.viewportWidth / 2.0f, 
                           (float)mState.viewportY + mState.viewportHeight / 2.0f};
-        programObject->setUniform4fv(coord, 1, whxy);
+        programBinary->setUniform4fv(coord, 1, whxy);
 
-        GLint depth = programObject->getDxDepthLocation();
+        GLint depth = programBinary->getDxDepthLocation();
         GLfloat dz[2] = {(zFar - zNear) / 2.0f, (zNear + zFar) / 2.0f};
-        programObject->setUniform2fv(depth, 1, dz);
+        programBinary->setUniform2fv(depth, 1, dz);
 
-        GLint depthRange = programObject->getDxDepthRangeLocation();
+        GLint depthRange = programBinary->getDxDepthRangeLocation();
         GLfloat nearFarDiff[3] = {zNear, zFar, zFar - zNear};
-        programObject->setUniform3fv(depthRange, 1, nearFarDiff);
+        programBinary->setUniform3fv(depthRange, 1, nearFarDiff);
         mDxUniformsDirty = false;
     }
 
@@ -1989,19 +2073,17 @@ bool Context::applyRenderTarget(bool ignoreViewport)
 // Applies the fixed-function state (culling, depth test, alpha blending, stenciling, etc) to the Direct3D 9 device
 void Context::applyState(GLenum drawMode)
 {
-    Program *programObject = getCurrentProgram();
+    ProgramBinary *programBinary = getCurrentProgramBinary();
 
     Framebuffer *framebufferObject = getDrawFramebuffer();
 
-    GLenum adjustedFrontFace = adjustWinding(mState.frontFace);
+    GLint frontCCW = programBinary->getDxFrontCCWLocation();
+    GLint ccw = (mState.frontFace == GL_CCW);
+    programBinary->setUniform1iv(frontCCW, 1, &ccw);
 
-    GLint frontCCW = programObject->getDxFrontCCWLocation();
-    GLint ccw = (adjustedFrontFace == GL_CCW);
-    programObject->setUniform1iv(frontCCW, 1, &ccw);
-
-    GLint pointsOrLines = programObject->getDxPointsOrLinesLocation();
+    GLint pointsOrLines = programBinary->getDxPointsOrLinesLocation();
     GLint alwaysFront = !isTriangleMode(drawMode);
-    programObject->setUniform1iv(pointsOrLines, 1, &alwaysFront);
+    programBinary->setUniform1iv(pointsOrLines, 1, &alwaysFront);
 
     D3DADAPTER_IDENTIFIER9 *identifier = mDisplay->getAdapterIdentifier();
     bool zeroColorMaskAllowed = identifier->VendorId != 0x1002;
@@ -2015,7 +2097,7 @@ void Context::applyState(GLenum drawMode)
     {
         if (mState.cullFace)
         {
-            mDevice->SetRenderState(D3DRS_CULLMODE, es2dx::ConvertCullMode(mState.cullMode, adjustedFrontFace));
+            mDevice->SetRenderState(D3DRS_CULLMODE, es2dx::ConvertCullMode(mState.cullMode, mState.frontFace));
         }
         else
         {
@@ -2115,32 +2197,32 @@ void Context::applyState(GLenum drawMode)
             gl::Renderbuffer *stencilbuffer = framebufferObject->getStencilbuffer();
             GLuint maxStencil = (1 << stencilbuffer->getStencilSize()) - 1;
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilWritemask);
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilWritemask);
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
                                    es2dx::ConvertComparison(mState.stencilFunc));
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilRef < (GLint)maxStencil) ? mState.stencilRef : maxStencil);
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilMask);
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilRef < (GLint)maxStencil) ? mState.stencilRef : maxStencil);
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilMask);
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilFail));
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilPassDepthFail));
-            mDevice->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
+            mDevice->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
                                    es2dx::ConvertStencilOp(mState.stencilPassDepthPass));
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilBackWritemask);
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilBackWritemask);
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
                                    es2dx::ConvertComparison(mState.stencilBackFunc));
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilBackRef < (GLint)maxStencil) ? mState.stencilBackRef : maxStencil);
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilBackMask);
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilBackRef < (GLint)maxStencil) ? mState.stencilBackRef : maxStencil);
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilBackMask);
 
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilBackFail));
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilBackPassDepthFail));
-            mDevice->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
+            mDevice->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
                                    es2dx::ConvertStencilOp(mState.stencilBackPassDepthPass));
         }
         else
@@ -2256,7 +2338,8 @@ GLenum Context::applyVertexBuffer(GLint first, GLsizei count, GLsizei instances,
         return err;
     }
 
-    return mVertexDeclarationCache.applyDeclaration(mDevice, attributes, getCurrentProgram(), instances, repeatDraw);
+    ProgramBinary *programBinary = getCurrentProgramBinary();
+    return mVertexDeclarationCache.applyDeclaration(mDevice, attributes, programBinary, instances, repeatDraw);
 }
 
 // Applies the indices and element array bindings to the Direct3D 9 device
@@ -2279,19 +2362,20 @@ GLenum Context::applyIndexBuffer(const GLvoid *indices, GLsizei count, GLenum mo
 // Applies the shaders and shader constants to the Direct3D 9 device
 void Context::applyShaders()
 {
-    Program *programObject = getCurrentProgram();
-    if (programObject->getSerial() != mAppliedProgramSerial)
+    ProgramBinary *programBinary = getCurrentProgramBinary();
+
+    if (programBinary->getSerial() != mAppliedProgramBinarySerial)
     {
-        IDirect3DVertexShader9 *vertexShader = programObject->getVertexShader();
-        IDirect3DPixelShader9 *pixelShader = programObject->getPixelShader();
+        IDirect3DVertexShader9 *vertexShader = programBinary->getVertexShader();
+        IDirect3DPixelShader9 *pixelShader = programBinary->getPixelShader();
 
         mDevice->SetPixelShader(pixelShader);
         mDevice->SetVertexShader(vertexShader);
-        programObject->dirtyAllUniforms();
-        mAppliedProgramSerial = programObject->getSerial();
+        programBinary->dirtyAllUniforms();
+        mAppliedProgramBinarySerial = programBinary->getSerial();
     }
 
-    programObject->applyUniforms();
+    programBinary->applyUniforms();
 }
 
 // Applies the textures and sampler states to the Direct3D 9 device
@@ -2310,48 +2394,56 @@ void Context::applyTextures()
 // and sets the texture and its addressing/filtering state (or NULL when inactive).
 void Context::applyTextures(SamplerType type)
 {
-    Program *programObject = getCurrentProgram();
+    ProgramBinary *programBinary = getCurrentProgramBinary();
 
     int samplerCount = (type == SAMPLER_PIXEL) ? MAX_TEXTURE_IMAGE_UNITS : MAX_VERTEX_TEXTURE_IMAGE_UNITS_VTF;   // Range of Direct3D 9 samplers of given sampler type
     unsigned int *appliedTextureSerial = (type == SAMPLER_PIXEL) ? mAppliedTextureSerialPS : mAppliedTextureSerialVS;
     int d3dSamplerOffset = (type == SAMPLER_PIXEL) ? 0 : D3DVERTEXTEXTURESAMPLER0;
-    int samplerRange = programObject->getUsedSamplerRange(type);
+    int samplerRange = programBinary->getUsedSamplerRange(type);
 
     for (int samplerIndex = 0; samplerIndex < samplerRange; samplerIndex++)
     {
-        int textureUnit = programObject->getSamplerMapping(type, samplerIndex);   // OpenGL texture image unit index
+        int textureUnit = programBinary->getSamplerMapping(type, samplerIndex);   // OpenGL texture image unit index
         int d3dSampler = samplerIndex + d3dSamplerOffset;
 
         if (textureUnit != -1)
         {
-            TextureType textureType = programObject->getSamplerTextureType(type, samplerIndex);
+            TextureType textureType = programBinary->getSamplerTextureType(type, samplerIndex);
 
             Texture *texture = getSamplerTexture(textureUnit, textureType);
+            unsigned int texSerial = texture->getTextureSerial();
 
-            if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyParameters() || texture->hasDirtyImages())
+            if (appliedTextureSerial[samplerIndex] != texSerial || texture->hasDirtyParameters() || texture->hasDirtyImages())
             {
                 IDirect3DBaseTexture9 *d3dTexture = texture->getTexture();
 
                 if (d3dTexture)
                 {
-                    if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyParameters())
+                    if (appliedTextureSerial[samplerIndex] != texSerial || texture->hasDirtyParameters())
                     {
                         GLenum wrapS = texture->getWrapS();
                         GLenum wrapT = texture->getWrapT();
                         GLenum minFilter = texture->getMinFilter();
                         GLenum magFilter = texture->getMagFilter();
+                        float maxAnisotropy = texture->getMaxAnisotropy();
 
                         mDevice->SetSamplerState(d3dSampler, D3DSAMP_ADDRESSU, es2dx::ConvertTextureWrap(wrapS));
                         mDevice->SetSamplerState(d3dSampler, D3DSAMP_ADDRESSV, es2dx::ConvertTextureWrap(wrapT));
 
-                        mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAGFILTER, es2dx::ConvertMagFilter(magFilter));
+                        mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAGFILTER, es2dx::ConvertMagFilter(magFilter, maxAnisotropy));
                         D3DTEXTUREFILTERTYPE d3dMinFilter, d3dMipFilter;
-                        es2dx::ConvertMinFilter(minFilter, &d3dMinFilter, &d3dMipFilter);
+                        es2dx::ConvertMinFilter(minFilter, &d3dMinFilter, &d3dMipFilter, maxAnisotropy);
                         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MINFILTER, d3dMinFilter);
                         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MIPFILTER, d3dMipFilter);
+                        mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAXMIPLEVEL, texture->getLodOffset());
+
+                        if (supportsTextureFilterAnisotropy())
+                        {
+                            mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAXANISOTROPY, (DWORD)maxAnisotropy);
+                        }
                     }
 
-                    if (appliedTextureSerial[samplerIndex] != texture->getTextureSerial() || texture->hasDirtyImages())
+                    if (appliedTextureSerial[samplerIndex] != texSerial || texture->hasDirtyImages())
                     {
                         mDevice->SetTexture(d3dSampler, d3dTexture);
                     }
@@ -2361,7 +2453,7 @@ void Context::applyTextures(SamplerType type)
                     mDevice->SetTexture(d3dSampler, getIncompleteTexture(textureType)->getTexture());
                 }
 
-                appliedTextureSerial[samplerIndex] = texture->getTextureSerial();
+                appliedTextureSerial[samplerIndex] = texSerial;
                 texture->resetDirty();
             }
         }
@@ -2429,7 +2521,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
 
     HRESULT result;
     IDirect3DSurface9 *systemSurface = NULL;
-    bool directToPixels = getPackReverseRowOrder() && getPackAlignment() <= 4 && mDisplay->isD3d9ExDevice() &&
+    bool directToPixels = !getPackReverseRowOrder() && getPackAlignment() <= 4 && mDisplay->isD3d9ExDevice() &&
                           x == 0 && y == 0 && UINT(width) == desc.Width && UINT(height) == desc.Height &&
                           desc.Format == D3DFMT_A8R8G8B8 && format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE;
     if (directToPixels)
@@ -2451,6 +2543,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
         if (FAILED(result))
         {
             ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+            renderTarget->Release();
             return error(GL_OUT_OF_MEMORY);
         }
     }
@@ -2481,13 +2574,13 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
         return;
     }
 
-    D3DLOCKED_RECT lock;
-    RECT rect = transformPixelRect(x, y, width, height, desc.Height);
-    rect.left = clamp(rect.left, 0L, static_cast<LONG>(desc.Width));
-    rect.top = clamp(rect.top, 0L, static_cast<LONG>(desc.Height));
-    rect.right = clamp(rect.right, 0L, static_cast<LONG>(desc.Width));
-    rect.bottom = clamp(rect.bottom, 0L, static_cast<LONG>(desc.Height));
+    RECT rect;
+    rect.left = clamp(x, 0L, static_cast<LONG>(desc.Width));
+    rect.top = clamp(y, 0L, static_cast<LONG>(desc.Height));
+    rect.right = clamp(x + width, 0L, static_cast<LONG>(desc.Width));
+    rect.bottom = clamp(y + height, 0L, static_cast<LONG>(desc.Height));
 
+    D3DLOCKED_RECT lock;
     result = systemSurface->LockRect(&lock, &rect, D3DLOCK_READONLY);
 
     if (FAILED(result))
@@ -2505,13 +2598,13 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
     int inputPitch;
     if (getPackReverseRowOrder())
     {
-        source = (unsigned char*)lock.pBits;
-        inputPitch = lock.Pitch;
+        source = ((unsigned char*)lock.pBits) + lock.Pitch * (rect.bottom - rect.top - 1);
+        inputPitch = -lock.Pitch;
     }
     else
     {
-        source = ((unsigned char*)lock.pBits) + lock.Pitch * (rect.bottom - rect.top - 1);
-        inputPitch = -lock.Pitch;
+        source = (unsigned char*)lock.pBits;
+        inputPitch = lock.Pitch;
     }
 
     for (int j = 0; j < rect.bottom - rect.top; j++)
@@ -2523,7 +2616,6 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
             // Fast path for EXT_read_format_bgra, given
             // an RGBA source buffer.  Note that buffers with no
             // alpha go through the slow path below.
-            // Note that this is also the combo exposed by IMPLEMENTATION_COLOR_READ_TYPE/FORMAT
             memcpy(dest + j * outputPitch,
                    source + j * inputPitch,
                    (rect.right - rect.left) * 4);
@@ -2671,10 +2763,10 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                   default: UNREACHABLE();
                 }
                 break;
-              case GL_RGB:
+              case GL_RGB:   // IMPLEMENTATION_COLOR_READ_FORMAT
                 switch (type)
                 {
-                  case GL_UNSIGNED_SHORT_5_6_5:
+                  case GL_UNSIGNED_SHORT_5_6_5:   // IMPLEMENTATION_COLOR_READ_TYPE
                     dest16[i + j * outputPitch / sizeof(unsigned short)] = 
                         ((unsigned short)(31 * b + 0.5f) << 0) |
                         ((unsigned short)(63 * g + 0.5f) << 5) |
@@ -2739,6 +2831,7 @@ void Context::clear(GLbitfield mask)
             
             D3DSURFACE_DESC desc;
             depthStencil->GetDesc(&desc);
+            depthStencil->Release();
 
             unsigned int stencilSize = dx2es::GetStencilSize(desc.Format);
             stencilUnmasked = (0x1 << stencilSize) - 1;
@@ -2953,7 +3046,7 @@ void Context::drawArrays(GLenum mode, GLint first, GLsizei count, GLsizei instan
     applyShaders();
     applyTextures();
 
-    if (!getCurrentProgram()->validateSamplers(false))
+    if (!getCurrentProgramBinary()->validateSamplers(NULL))
     {
         return error(GL_INVALID_OPERATION);
     }
@@ -3043,7 +3136,7 @@ void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid
     applyShaders();
     applyTextures();
 
-    if (!getCurrentProgram()->validateSamplers(false))
+    if (!getCurrentProgramBinary()->validateSamplers(false))
     {
         return error(GL_INVALID_OPERATION);
     }
@@ -3319,6 +3412,11 @@ bool Context::supportsShaderModel3() const
     return mSupportsShaderModel3;
 }
 
+float Context::getMaximumPointSize() const
+{
+    return mSupportsShaderModel3 ? mMaximumPointSize : ALIASED_POINT_SIZE_RANGE_MAX_SM2;
+}
+
 int Context::getMaximumVaryingVectors() const
 {
     return mSupportsShaderModel3 ? MAX_VARYING_VECTORS_SM3 : MAX_VARYING_VECTORS_SM2;
@@ -3453,6 +3551,11 @@ bool Context::supportsLuminanceAlphaTextures() const
     return mSupportsLuminanceAlphaTextures;
 }
 
+bool Context::supportsDepthTextures() const
+{
+    return mSupportsDepthTextures;
+}
+
 bool Context::supports32bitIndices() const
 {
     return mSupports32bitIndices;
@@ -3466,6 +3569,16 @@ bool Context::supportsNonPower2Texture() const
 bool Context::supportsInstancing() const
 {
     return mSupportsInstancing;
+}
+
+bool Context::supportsTextureFilterAnisotropy() const
+{
+    return mSupportsTextureFilterAnisotropy;
+}
+
+float Context::getTextureMaxAnisotropy() const
+{
+    return mMaxTextureAnisotropy;
 }
 
 void Context::detachBuffer(GLuint buffer)
@@ -3678,6 +3791,7 @@ void Context::initExtensionString()
     }
 
     mExtensionString += "GL_OES_packed_depth_stencil ";
+    mExtensionString += "GL_OES_get_program_binary ";
     mExtensionString += "GL_OES_rgb8_rgba8 ";
     mExtensionString += "GL_OES_standard_derivatives ";
 
@@ -3717,10 +3831,20 @@ void Context::initExtensionString()
         mExtensionString += "GL_EXT_texture_compression_dxt1 ";
     }
 
+    if (supportsTextureFilterAnisotropy())
+    {
+        mExtensionString += "GL_EXT_texture_filter_anisotropic ";
+    }
+
     mExtensionString += "GL_EXT_texture_format_BGRA8888 ";
     mExtensionString += "GL_EXT_texture_storage ";
 
     // ANGLE-specific extensions
+    if (supportsDepthTextures())
+    {
+        mExtensionString += "GL_ANGLE_depth_texture ";
+    }
+
     mExtensionString += "GL_ANGLE_framebuffer_blit ";
     if (getMaxSupportedSamples() != 0)
     {
@@ -3821,17 +3945,17 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
 
     if (srcY0 < srcY1)
     {
-        sourceRect.top = readBufferHeight - srcY1;
-        destRect.top = drawBufferHeight - dstY1;
-        sourceRect.bottom = readBufferHeight - srcY0;
-        destRect.bottom = drawBufferHeight - dstY0;
+        sourceRect.bottom = srcY1;
+        destRect.bottom = dstY1;
+        sourceRect.top = srcY0;
+        destRect.top = dstY0;
     }
     else
     {
-        sourceRect.top = readBufferHeight - srcY0;
-        destRect.top = drawBufferHeight - dstY0;
-        sourceRect.bottom = readBufferHeight - srcY1;
-        destRect.bottom = drawBufferHeight - dstY1;
+        sourceRect.bottom = srcY0;
+        destRect.bottom = dstY0;
+        sourceRect.top = srcY1;
+        destRect.top = dstY1;
     }
 
     RECT sourceScissoredRect = sourceRect;
@@ -4044,7 +4168,13 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
 
         if (blitDepthStencil)
         {
-            HRESULT result = mDevice->StretchRect(readFramebuffer->getDepthStencil(), NULL, drawFramebuffer->getDepthStencil(), NULL, D3DTEXF_NONE);
+            IDirect3DSurface9* readDepthStencil = readFramebuffer->getDepthStencil();
+            IDirect3DSurface9* drawDepthStencil = drawFramebuffer->getDepthStencil();
+
+            HRESULT result = mDevice->StretchRect(readDepthStencil, NULL, drawDepthStencil, NULL, D3DTEXF_NONE);
+
+            readDepthStencil->Release();
+            drawDepthStencil->Release();
 
             if (FAILED(result))
             {
@@ -4075,7 +4205,7 @@ VertexDeclarationCache::~VertexDeclarationCache()
     }
 }
 
-GLenum VertexDeclarationCache::applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], Program *program, GLsizei instances, GLsizei *repeatDraw)
+GLenum VertexDeclarationCache::applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], ProgramBinary *programBinary, GLsizei instances, GLsizei *repeatDraw)
 {
     *repeatDraw = 1;
 
@@ -4171,7 +4301,7 @@ GLenum VertexDeclarationCache::applyDeclaration(IDirect3DDevice9 *device, Transl
             element->Type = attributes[i].type;
             element->Method = D3DDECLMETHOD_DEFAULT;
             element->Usage = D3DDECLUSAGE_TEXCOORD;
-            element->UsageIndex = program->getSemanticIndex(i);
+            element->UsageIndex = programBinary->getSemanticIndex(i);
             element++;
         }
     }
