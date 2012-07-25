@@ -7310,8 +7310,9 @@ NewXMLObject(JSContext *cx, JSXML *xml)
 }
 
 JSObject *
-js_GetXMLObject(JSContext *cx, JSXML *xml)
+js_GetXMLObject(JSContext *cx, JSXML *xmlArg)
 {
+    Rooted<JSXML*> xml(cx, xmlArg);
     JSObject *obj;
 
     obj = xml->object;
@@ -7399,12 +7400,12 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     cx->runtime->gcExactScanningEnabled = false;
 
     JS_ASSERT(obj->isNative());
-    GlobalObject *global = &obj->asGlobal();
+    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    JSObject *xmlProto = global->createBlankPrototype(cx, &XMLClass);
+    RootedObject xmlProto(cx, global->createBlankPrototype(cx, &XMLClass));
     if (!xmlProto)
         return NULL;
-    JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
+    Rooted<JSXML*> xml(cx, js_NewXML(cx, JSXML_CLASS_TEXT));
     if (!xml)
         return NULL;
     xmlProto->setPrivate(xml);
@@ -7449,7 +7450,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the isXMLName function. */
-    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
+    if (!JS_DefineFunction(cx, global, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
     return xmlProto;
