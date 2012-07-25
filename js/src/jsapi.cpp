@@ -322,7 +322,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
         }
         switch (c) {
           case 'b':
-            *va_arg(ap, JSBool *) = js_ValueToBoolean(*sp);
+            *va_arg(ap, JSBool *) = ToBoolean(*sp);
             break;
           case 'c':
             if (!JS_ValueToUint16(cx, *sp, va_arg(ap, uint16_t *)))
@@ -480,7 +480,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(d);
         break;
       case JSTYPE_BOOLEAN:
-        *vp = BOOLEAN_TO_JSVAL(js_ValueToBoolean(v));
+        *vp = BooleanValue(ToBoolean(v));
         return JS_TRUE;
       default: {
         char numBuf[12];
@@ -632,7 +632,7 @@ JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    *bp = js_ValueToBoolean(v);
+    *bp = ToBoolean(v);
     return JS_TRUE;
 }
 
