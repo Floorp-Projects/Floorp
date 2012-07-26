@@ -615,57 +615,53 @@ gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
   return scaledFont;
 }
 
-UserDataKey kThebesSurfaceKey;
-void
-DestroyThebesSurface(void *data)
+cairo_user_data_key_t kDrawSourceSurface;
+static void
+DataSourceSurfaceDestroy(void *dataSourceSurface)
 {
-  gfxASurface *surface = static_cast<gfxASurface*>(data);
-  surface->Release();
+  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
+}
+
+cairo_user_data_key_t kDrawTargetForSurface;
+static void
+DataDrawTargetDestroy(void *aTarget)
+{
+  static_cast<DrawTarget*>(aTarget)->Release();
 }
 
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  // If we have already created a thebes surface, we can just return it.
-  void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
-  if (surface) {
-    nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
-    return surf.forget();
-  }
-
-  nsRefPtr<gfxASurface> surf;
   if (aTarget->GetType() == BACKEND_CAIRO) {
     cairo_surface_t* csurf =
       static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
-    surf = gfxASurface::Wrap(csurf);
-  } else {
-    // The semantics of this part of the function are sort of weird. If we
-    // don't have direct support for the backend, we snapshot the first time
-    // and then return the snapshotted surface for the lifetime of the draw
-    // target. Sometimes it seems like this works out, but it seems like it
-    // might result in no updates ever.
-    RefPtr<SourceSurface> source = aTarget->Snapshot();
-    RefPtr<DataSourceSurface> data = source->GetDataSurface();
-
-    if (!data) {
-      return NULL;
-    }
-
-    IntSize size = data->GetSize();
-    gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
-
-    // We need to make a copy here because data might change its data under us
-    nsRefPtr<gfxImageSurface> imageSurf = new gfxImageSurface(gfxIntSize(size.width, size.height), format, false);
- 
-    bool resultOfCopy = imageSurf->CopyFrom(source);
-    NS_ASSERTION(resultOfCopy, "Failed to copy surface.");
-    surf = imageSurf;
+    return gfxASurface::Wrap(csurf);
   }
 
-  // add a reference to be held by the drawTarget
-  // careful, the reference graph is getting complicated here
-  surf->AddRef();
-  aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+  // The semantics of this part of the function are sort of weird. If we
+  // don't have direct support for the backend, we snapshot the first time
+  // and then return the snapshotted surface for the lifetime of the draw
+  // target. Sometimes it seems like this works out, but it seems like it
+  // might result in no updates ever.
+  RefPtr<SourceSurface> source = aTarget->Snapshot();
+  RefPtr<DataSourceSurface> data = source->GetDataSurface();
+
+  if (!data) {
+    return NULL;
+  }
+
+  IntSize size = data->GetSize();
+  gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
+
+
+  nsRefPtr<gfxASurface> surf =
+    new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
+                        data->Stride(), format);
+
+  surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
+  // keep the draw target alive as long as we need its data
+  aTarget->AddRef();
+  surf->SetData(&kDrawTargetForSurface, aTarget, DataDrawTargetDestroy);
 
   return surf.forget();
 }
