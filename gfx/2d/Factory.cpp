@@ -220,6 +220,15 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
       return newTarget;
     }
 #endif
+#ifdef XP_MACOSX
+  case BACKEND_COREGRAPHICS:
+    {
+      RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
+      if (newTarget->Init(aData, aSize, aStride, aFormat))
+        return newTarget;
+      break;
+    }
+#endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
     return NULL;
