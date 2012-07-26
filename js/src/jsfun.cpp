@@ -530,8 +530,10 @@ FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
          size_t *bodyStart, size_t *bodyEnd)
 {
     // We don't need principals, since those are only used for error reporting.
-    TokenStream ts(cx, NULL, NULL, chars, length, "internal-FindBody", 0,
-                   fun->script()->getVersion(), NULL);
+    CompileOptions options(cx);
+    options.setFileAndLine("internal-findBody", 0)
+           .setVersion(fun->script()->getVersion());
+    TokenStream ts(cx, options, chars, length, NULL);
     JS_ASSERT(chars[0] == '(');
     int nest = 0;
     bool onward = true;
@@ -1165,6 +1167,11 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals);
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
+    CompileOptions options(cx);
+    options.setPrincipals(principals)
+           .setOriginPrincipals(originPrincipals)
+           .setFileAndLine(filename, lineno);
+
     unsigned n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
         /*
@@ -1242,9 +1249,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
          * here (duplicate argument names, etc.) will be detected when we
          * compile the function body.
          */
-        TokenStream ts(cx, principals, originPrincipals,
-                       collected_args, args_length, filename, lineno, cx->findVersion(),
-                       /* strictModeGetter = */ NULL);
+        TokenStream ts(cx, options, collected_args, args_length, /* strictModeGetter = */ NULL);
 
         /* The argument string may be empty or contain no tokens. */
         TokenKind tt = ts.getToken();
@@ -1333,9 +1338,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     if (hasRest)
         fun->setHasRest();
 
-    bool ok = frontend::CompileFunctionBody(cx, fun, principals, originPrincipals,
-                                            &bindings, chars, length, filename, lineno,
-                                            cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, options, &bindings, chars, length);
     args.rval().setObject(*fun);
     return ok;
 }
