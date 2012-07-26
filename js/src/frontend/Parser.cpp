@@ -850,38 +850,15 @@ MakeAssignment(ParseNode *pn, ParseNode *rhs, Parser *parser)
     return lhs;
 }
 
-static ParseNode *
+/* See comment for use in Parser::functionDef. */
+static bool
 MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
 {
-    /*
-     * If dn is arg, or in [var, const, let] and has an initializer, then we
-     * must rewrite it to be an assignment node, whose freshly allocated
-     * left-hand side becomes a use of pn.
-     */
-    if (dn->canHaveInitializer()) {
-        ParseNode *rhs = dn->expr();
-        if (rhs) {
-            ParseNode *lhs = MakeAssignment(dn, rhs, parser);
-            if (!lhs)
-                return NULL;
-            //pn->dn_uses = lhs;
-            dn = (Definition *) lhs;
-        }
+    /* Turn pn into a definition. */
+    parser->tc->decls.updateFirst(atom, (Definition *) pn);
+    pn->setDefn(true);
 
-        dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME);
-    } else if (dn->kind() == Definition::FUNCTION) {
-        JS_ASSERT(dn->isOp(JSOP_NOP));
-        parser->prepareNodeForMutation(dn);
-        dn->setKind(PNK_NAME);
-        dn->setArity(PN_NAME);
-        dn->pn_atom = atom;
-    }
-
-    /* Now make dn no longer a definition, rather a use of pn. */
-    JS_ASSERT(dn->isKind(PNK_NAME));
-    JS_ASSERT(dn->isArity(PN_NAME));
-    JS_ASSERT(dn->pn_atom == atom);
-
+    /* Change all uses of dn to be uses of pn. */
     for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
         JS_ASSERT(pnu->isUsed());
         JS_ASSERT(!pnu->isDefn());
@@ -891,12 +868,58 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, Parser *parser)
     pn->pn_dflags |= dn->pn_dflags & PND_USE2DEF_FLAGS;
     pn->dn_uses = dn;
 
+    /*
+     * A PNK_FUNCTION node must be a definition, so convert shadowed function
+     * statements into nops. This is valid since all body-level function
+     * statement initialization happens at the beginning of the function
+     * (thus, only the last statement's effect is visible). E.g., in
+     *
+     *   function outer() {
+     *     function g() { return 1 }
+     *     assertEq(g(), 2);
+     *     function g() { return 2 }
+     *     assertEq(g(), 2);
+     *   }
+     *
+     * both asserts are valid.
+     */
+    if (dn->kind() == Definition::FUNCTION) {
+        JS_ASSERT(dn->getKind() == PNK_FUNCTION);
+        JS_ASSERT(dn->isOp(JSOP_NOP));
+        pn->dn_uses = dn->pn_link;
+        parser->prepareNodeForMutation(dn);
+        dn->setKind(PNK_NOP);
+        dn->setArity(PN_NULLARY);
+        return true;
+    }
+
+    /*
+     * If dn is arg, or in [var, const, let] and has an initializer, then we
+     * must rewrite it to be an assignment node, whose freshly allocated
+     * left-hand side becomes a use of pn.
+     */
+    if (dn->canHaveInitializer()) {
+        if (ParseNode *rhs = dn->expr()) {
+            ParseNode *lhs = MakeAssignment(dn, rhs, parser);
+            if (!lhs)
+                return false;
+            pn->dn_uses = lhs;
+            dn->pn_link = NULL;
+            dn = (Definition *) lhs;
+        }
+    }
+
+    /* Turn dn into a use of pn. */
+    JS_ASSERT(dn->isKind(PNK_NAME));
+    JS_ASSERT(dn->isArity(PN_NAME));
+    JS_ASSERT(dn->pn_atom == atom);
+    dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME);
     dn->setDefn(false);
     dn->setUsed(true);
     dn->pn_lexdef = (Definition *) pn;
     dn->pn_cookie.makeFree();
     dn->pn_dflags &= ~PND_BOUND;
-    return dn;
+    return true;
 }
 
 bool
@@ -1463,14 +1486,16 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
                 }
             }
 
-            if (bodyLevel) {
-                tc->decls.updateFirst(funName, (Definition *) pn);
-                pn->setDefn(true);
-                pn->dn_uses = dn; /* dn->dn_uses is now pn_link */
-
-                if (!MakeDefIntoUse(dn, pn, funName, this))
-                    return NULL;
-            }
+            /*
+             * Body-level function statements are effectively variable
+             * declarations where the initialization is hoisted to the
+             * beginning of the block. This means that any other variable
+             * declaration with the same name is really just an assignment to
+             * the function's binding (which is mutable), so turn any existing
+             * declaration into a use.
+             */
+            if (bodyLevel && !MakeDefIntoUse(dn, pn, funName, this))
+                return NULL;
         } else if (bodyLevel) {
             /*
              * If this function was used before it was defined, claim the
@@ -6925,7 +6950,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     if (!js_AtomToPrintableString(context, atom, &name))
                         return NULL;
 
-                    Reporter reporter = 
+                    Reporter reporter =
                         (oldAssignType == VALUE && assignType == VALUE && !tc->sc->needStrictChecks())
                         ? &Parser::reportWarning
                         : (tc->sc->needStrictChecks() ? &Parser::reportStrictModeError : &Parser::reportError);

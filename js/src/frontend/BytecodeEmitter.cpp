@@ -6517,13 +6517,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_NAME:
-        /*
-         * Cope with a left-over function definition that was replaced by a use
-         * of a later function definition of the same name. See FunctionDef and
-         * MakeDefIntoUse in Parser.cpp.
-         */
-        if (pn->isOp(JSOP_NOP))
-            break;
         if (!EmitNameOp(cx, bce, pn, false))
             return false;
         break;
@@ -6645,6 +6638,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
 #endif /* JS_HAS_XML_SUPPORT */
+
+      case PNK_NOP:
+        JS_ASSERT(pn->getArity() == PN_NULLARY);
+        break;
 
       default:
         JS_ASSERT(0);

@@ -2272,6 +2272,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
       }
 #endif
 
+      case PNK_NOP:
+        return builder.emptyStatement(&pn->pn_pos, dst);
+
       default:
         LOCAL_NOT_REACHED("unexpected statement type");
     }
