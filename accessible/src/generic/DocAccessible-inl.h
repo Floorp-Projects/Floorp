@@ -39,7 +39,7 @@ DocAccessible::UpdateText(nsIContent* aTextNode)
     mNotificationController->ScheduleTextUpdate(aTextNode);
 }
 
-  inline void
+inline void
 DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
 {
   mozilla::a11y::role role = aAccessible->Role();

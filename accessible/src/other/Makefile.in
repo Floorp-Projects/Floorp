@@ -22,14 +22,14 @@ CPPSRCS = \
 
 EXPORTS = \
   nsAccessNodeWrap.h \
-	$(null)
+  $(null)
 
 EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
-	AccessibleWrap.h \
-	HyperTextAccessibleWrap.h \
-	$(null)
+  AccessibleWrap.h \
+  HyperTextAccessibleWrap.h \
+  $(null)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
