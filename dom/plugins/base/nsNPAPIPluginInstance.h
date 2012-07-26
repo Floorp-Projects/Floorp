@@ -286,6 +286,7 @@ protected:
 
   nsTArray<nsCOMPtr<PluginEventRunnable>> mPostedEvents;
   void PopPostedEvent(PluginEventRunnable* r);
+  void OnSurfaceTextureFrameAvailable();
 
   PRUint32 mFullScreenOrientation;
   bool mWakeLocked;
