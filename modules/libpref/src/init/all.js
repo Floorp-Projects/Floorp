@@ -226,10 +226,10 @@ pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
 #ifdef XP_WIN
-pref("gfx.canvas.azure.enabled", true);
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
-pref("gfx.canvas.azure.backends", "direct2d");
+pref("gfx.canvas.azure.enabled", true);
+pref("gfx.canvas.azure.backends", "direct2d,cairo");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
@@ -237,7 +237,7 @@ pref("gfx.canvas.azure.enabled", true);
 pref("gfx.canvas.azure.backends", "cg");
 #else
 pref("gfx.canvas.azure.enabled", false);
-pref("gfx.canvas.azure.backends", "cairo,skia");
+pref("gfx.canvas.azure.backends", "cairo");
 #endif
 #endif
 
