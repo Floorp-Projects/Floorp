@@ -61,15 +61,20 @@
   <!-- Theme Styles -->
   <style name="SyncTheme" parent="@android:style/Theme.NoTitleBar"/>
 
+  <!-- Top title bar: a text view with the Sync icon to the left. -->
   <style name="SyncTop">
+    <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
-    <item name="android:gravity">left</item>
-    <item name="android:orientation">horizontal</item>
+    <item name="android:gravity">center_vertical|left</item>
+    <item name="android:drawableLeft">@drawable/icon</item>
+    <item name="android:padding">4dp</item>
+    <item name="android:drawablePadding">4dp</item>
     <item name="android:layout_alignParentTop">true</item>
     <item name="android:background">@android:drawable/bottom_bar</item>
   </style>
-    <style name="SyncBottom">
+  <!-- Bottom bar: a horizontal linear layout with buttons in it. -->
+  <style name="SyncBottom">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">center</item>
@@ -94,12 +99,5 @@
     <item name="android:textColor">#FFFFFF</item>
     <item name="android:textSize">35sp</item>
     <item name="android:text">@string/sync_pin_default</item>
-  </style>
-  <style name="SyncTopIcon">
-    <item name="android:src">@drawable/sync_fx_icon</item>
-    <item name="android:layout_width">wrap_content</item>
-    <item name="android:layout_height">wrap_content</item>
-    <item name="android:paddingTop">2dp</item>
-    <item name="android:paddingLeft">4dp</item>
   </style>
 </resources>
