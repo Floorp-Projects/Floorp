@@ -124,10 +124,6 @@ public final class Tab {
         return mUrl;
     }
 
-    public String getTitle() {
-        return mTitle;
-    }
-
     public String getDisplayTitle() {
         if (mTitle != null && mTitle.length() > 0) {
             return mTitle;
@@ -413,7 +409,7 @@ public final class Tab {
                 if (url == null)
                     return;
 
-                BrowserDB.addBookmark(mContentResolver, getTitle(), url);
+                BrowserDB.addBookmark(mContentResolver, mTitle, url);
             }
         });
     }
