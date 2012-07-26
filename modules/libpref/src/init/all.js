@@ -166,7 +166,9 @@ pref("media.webm.enabled", true);
 #ifdef MOZ_GSTREAMER
 pref("media.h264.enabled", true);
 #endif
-
+#ifdef MOZ_WEBRTC
+pref("media.navigator.enabled", false);
+#endif
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
