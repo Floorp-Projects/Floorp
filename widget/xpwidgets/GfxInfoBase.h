@@ -41,12 +41,10 @@ public:
   // using GfxInfoBase::GetFeatureStatus;
   // using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   // using GfxInfoBase::GetWebGLParameter;
-  // using GfxInfoBase::GetAzureEnabled;
   // to import the relevant methods into their namespace.
   NS_IMETHOD GetFeatureStatus(PRInt32 aFeature, PRInt32 *_retval);
   NS_IMETHOD GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString & _retval);
   NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval);
-  NS_IMETHOD GetAzureEnabled(bool *aAzureEnabled);
 
   NS_IMETHOD GetFailures(PRUint32 *failureCount, char ***failures);
   NS_IMETHOD_(void) LogFailure(const nsACString &failure);

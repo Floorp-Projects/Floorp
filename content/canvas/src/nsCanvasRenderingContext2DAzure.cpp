@@ -552,15 +552,8 @@ namespace dom {
 bool
 AzureCanvasEnabled()
 {
-  static bool checkedPref = false;
-  static bool azureEnabled;
-  if (!checkedPref) {
-    azureEnabled = Preferences::GetBool("gfx.canvas.azure.enabled", false);
-    checkedPref = true;
-  }
-
   BackendType dontCare;
-  return azureEnabled && gfxPlatform::GetPlatform()->SupportsAzure(dontCare);
+  return gfxPlatform::GetPlatform()->SupportsAzureCanvas(dontCare);
 }
 
 }
