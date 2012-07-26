@@ -450,7 +450,7 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
 // redeclarations (TOK_NAME nodes with lexdef)
 
 assertStmt("function f() { function g() { } function g() { } }",
-           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+           funDecl(ident("f"), [], blockStmt([emptyStmt,
                                               funDecl(ident("g"), [], blockStmt([]))])));
 
 // Fails due to parser quirks (bug 638577)
