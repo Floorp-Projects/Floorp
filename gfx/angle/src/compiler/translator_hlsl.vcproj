@@ -1,72 +1,347 @@
 <?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject ProjectType="Visual C++" Version="8.00" Name="translator_hlsl" ProjectGUID="{5620F0E4-6C43-49BC-A178-B804E1A0C3A7}" RootNamespace="CrossCompilerHLSL" Keyword="Win32Proj" TargetFrameworkVersion="196613">
-  <Platforms>
-    <Platform Name="Win32" />
-  </Platforms>
-  <ToolFiles>
-  </ToolFiles>
-  <Configurations>
-    <Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\hlsl" ConfigurationType="4" CharacterSet="1">
-      <Tool Name="VCPreBuildEventTool" />
-      <Tool Name="VCCustomBuildTool" />
-      <Tool Name="VCXMLDataGeneratorTool" />
-      <Tool Name="VCWebServiceProxyGeneratorTool" />
-      <Tool Name="VCMIDLTool" />
-      <Tool Name="VCCLCompilerTool" Optimization="0" AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX" MinimalRebuild="true" BasicRuntimeChecks="3" RuntimeLibrary="1" UsePrecompiledHeader="0" WarningLevel="3" DebugInformationFormat="4" />
-      <Tool Name="VCManagedResourceCompilerTool" />
-      <Tool Name="VCResourceCompilerTool" />
-      <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" />
-      <Tool Name="VCALinkTool" />
-      <Tool Name="VCXDCMakeTool" />
-      <Tool Name="VCBscMakeTool" />
-      <Tool Name="VCFxCopTool" />
-      <Tool Name="VCPostBuildEventTool" />
-    </Configuration>
-    <Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\hlsl" ConfigurationType="4" CharacterSet="1" WholeProgramOptimization="1">
-      <Tool Name="VCPreBuildEventTool" />
-      <Tool Name="VCCustomBuildTool" />
-      <Tool Name="VCXMLDataGeneratorTool" />
-      <Tool Name="VCWebServiceProxyGeneratorTool" />
-      <Tool Name="VCMIDLTool" />
-      <Tool Name="VCCLCompilerTool" Optimization="2" InlineFunctionExpansion="2" EnableIntrinsicFunctions="true" AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SECURE_SCL=0" RuntimeLibrary="0" EnableFunctionLevelLinking="true" UsePrecompiledHeader="0" WarningLevel="3" DebugInformationFormat="3" />
-      <Tool Name="VCManagedResourceCompilerTool" />
-      <Tool Name="VCResourceCompilerTool" />
-      <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" />
-      <Tool Name="VCALinkTool" />
-      <Tool Name="VCXDCMakeTool" />
-      <Tool Name="VCBscMakeTool" />
-      <Tool Name="VCFxCopTool" />
-      <Tool Name="VCPostBuildEventTool" />
-    </Configuration>
-  </Configurations>
-  <References>
-  </References>
-  <Files>
-    <Filter Name="Source Files" Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx" UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-      <File RelativePath=".\CodeGenHLSL.cpp">
-      </File>
-      <File RelativePath=".\OutputHLSL.cpp">
-      </File>
-      <File RelativePath=".\SearchSymbol.cpp">
-      </File>
-      <File RelativePath=".\TranslatorHLSL.cpp">
-      </File>
-      <File RelativePath=".\UnfoldSelect.cpp">
-      </File>
-    </Filter>
-    <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl;inc;xsd" UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-      <File RelativePath=".\OutputHLSL.h">
-      </File>
-      <File RelativePath=".\SearchSymbol.h">
-      </File>
-      <File RelativePath=".\TranslatorHLSL.h">
-      </File>
-      <File RelativePath=".\UnfoldSelect.h">
-      </File>
-    </Filter>
-  </Files>
-  <Globals>
-  </Globals>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="translator_hlsl"
+	ProjectGUID="{5620F0E4-6C43-49BC-A178-B804E1A0C3A7}"
+	RootNamespace="CrossCompilerHLSL"
+	Keyword="Win32Proj"
+	TargetFrameworkVersion="196613"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\hlsl"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				DebugInformationFormat="4"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\hlsl"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SECURE_SCL=0"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				WarnAsError="true"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702"
+				DebugInformationFormat="3"
+				WarnAsError="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="$(ProjectDir)../;$(ProjectDir)../../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_SECURE_SCL=0"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DisableSpecificWarnings="4100;4127;4189;4239;4244;4245;4512;4702"
+				DebugInformationFormat="3"
+				WarnAsError="true"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\CodeGenHLSL.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DetectDiscontinuity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputHLSL.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SearchSymbol.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TranslatorHLSL.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UnfoldShortCircuit.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
+			<File
+				RelativePath=".\DetectDiscontinuity.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OutputHLSL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SearchSymbol.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TranslatorHLSL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UnfoldShortCircuit.h"
+				>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
 </VisualStudioProject>

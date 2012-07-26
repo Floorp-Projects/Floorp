@@ -169,14 +169,6 @@ abstract public class GeckoApp
                 updatePopups(tab);
                 invalidateOptionsMenu();
                 break;
-
-            case LOAD_ERROR:
-            case START:
-            case STOP:
-                // The options menu only applies to the selected tab.
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    invalidateOptionsMenu();
-                break;
         }
     }
 
@@ -196,6 +188,7 @@ abstract public class GeckoApp
     private static final String TYPE_NATIVE = "native";
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
+    // Returns null if plugins are blocked on the device.
     String[] getPluginDirectories() {
 
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
@@ -204,7 +197,7 @@ abstract public class GeckoApp
             // disable Flash on pre-HC Tegra (bug 703056)
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
-                return new String[0];
+                return null;
             }
 
             // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
@@ -219,7 +212,7 @@ abstract public class GeckoApp
                         version.indexOf("Nova") != -1)
                     {
                         Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
-                        return new String[0];
+                        return null;
                     }
                 }
             } catch (IOException ex) {

@@ -1268,6 +1268,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 
 #socialUserDisplayName {
   -moz-appearance: none;
+  color: #fff;
   border: none;
   background-color: transparent;
   margin-top: 0;
