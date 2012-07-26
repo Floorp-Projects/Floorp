@@ -11,21 +11,48 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .alertBox {
-  border: 2px solid #7B969C;
+  border: 1px solid threedshadow;
   background-color: -moz-Dialog;
   min-height: 50px;
+  padding: 8px;
+}
+
+@media (-moz-windows-default-theme) {
+  .alertBox {
+    background-image: linear-gradient(to bottom, white 1px, rgba(255,255,255,0) 15px);
+  }
+}
+
+.alertBox[origin="top"] {
+  border-top: none;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.alertBox[origin="right"] {
+  border-right: none;
+  border-bottom-left-radius: 3px;
+  border-top-left-radius: 3px;
+}
+
+.alertBox[origin="bottom"] {
+  border-bottom: none;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.alertBox[origin="left"] {
+  border-left: none;
+  border-bottom-right-radius: 3px;
+  border-top-right-radius: 3px;
 }
 
 .alertBox[orient="horizontal"] > .alertImageBox {
-  -moz-margin-start: 4px;
-  -moz-margin-end: 6px;
-  min-height: 46px;
+  -moz-margin-end: 8px;
 }
 
 .alertBox[orient="vertical"] > .alertImageBox {
-  margin-top: 6px;
-  margin-bottom: 4px;
-  min-width: 46px;
+  margin-bottom: 8px;
 }
 
 .alertTitle {
@@ -58,14 +85,6 @@ label {
   color: #424F63;
 }
 
-.alertBox[orient="horizontal"] > .alertTextBox {
-  -moz-padding-end: 10px;
-  padding-top: 5px;
-}
-
 .alertBox[orient="vertical"] > .alertTextBox {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 5px;
-  margin-bottom: 8px;
   -moz-box-align: center;
 }
