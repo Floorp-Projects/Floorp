@@ -7,16 +7,16 @@ const TEST_URI = "http://example.com/";
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", testFilterButtons, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testFilterButtons);
+  }, true);
 }
 
-function testFilterButtons() {
-  browser.removeEventListener("load", testFilterButtons, true);
-  openConsole();
-
-  let hud = HUDService.getHudByWindow(content);
+function testFilterButtons(aHud) {
+  hud = aHud;
   hudId = hud.hudId;
-  hudBox = hud.HUDBox;
+  hudBox = hud.ui.rootElement;
 
   testMenuFilterButton("net");
   testMenuFilterButton("css");
@@ -52,7 +52,7 @@ function testMenuFilterButton(aCategory) {
     chooseMenuItem(menuItem);
     ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
        aCategory + " is checked after clicking it");
-    ok(HUDService.filterPrefs[hudId][prefKey], prefKey + " messages are " +
+    ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
        "on after clicking the appropriate menu item");
     menuItem = menuItem.nextSibling;
   }
@@ -64,13 +64,13 @@ function testMenuFilterButton(aCategory) {
   chooseMenuItem(firstMenuItem);
   ok(!isChecked(firstMenuItem), "the first menu item for category " +
      aCategory + " is no longer checked after clicking it");
-  ok(!HUDService.filterPrefs[hudId][prefKey], prefKey + " messages are " +
+  ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
      "turned off after clicking the appropriate menu item");
   ok(isChecked(button), "the button for category " + aCategory + " is still " +
      "checked after turning off its first menu item");
 
   // Turn all the filters off by clicking the main part of the button.
-  let anonymousNodes = document.getAnonymousNodes(button);
+  let anonymousNodes = hud.ui.document.getAnonymousNodes(button);
   let subbutton;
   for (let i = 0; i < anonymousNodes.length; i++) {
     let node = anonymousNodes[i];
@@ -90,7 +90,7 @@ function testMenuFilterButton(aCategory) {
     let prefKey = menuItem.getAttribute("prefKey");
     ok(!isChecked(menuItem), "menu item " + prefKey + " for category " +
        aCategory + " is no longer checked after clicking the button");
-    ok(!HUDService.filterPrefs[hudId][prefKey], prefKey + " messages are " +
+    ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
        "off after clicking the button");
     menuItem = menuItem.nextSibling;
   }
@@ -106,7 +106,7 @@ function testMenuFilterButton(aCategory) {
     let prefKey = menuItem.getAttribute("prefKey");
     ok(isChecked(menuItem), "menu item " + prefKey + " for category " +
        aCategory + " is checked after clicking the button");
-    ok(HUDService.filterPrefs[hudId][prefKey], prefKey + " messages are " +
+    ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
        "on after clicking the button");
     menuItem = menuItem.nextSibling;
   }

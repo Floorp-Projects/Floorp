@@ -10,17 +10,14 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testClosingAfterCompletion,
-                           false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testClosingAfterCompletion);
+  }, true);
 }
 
-function testClosingAfterCompletion() {
-  browser.removeEventListener("DOMContentLoaded",
-                              testClosingAfterCompletion, false);
-
-  openConsole();
-
-  let inputNode = HUDService.getHudByWindow(content).jsterm.inputNode;
+function testClosingAfterCompletion(hud) {
+  let inputNode = hud.jsterm.inputNode;
 
   let errorWhileClosing = false;
   function errorListener(evt) {
@@ -33,7 +30,7 @@ function testClosingAfterCompletion() {
   inputNode.focus();
   EventUtils.synthesizeKey("k", { accelKey: true, shiftKey: true });
 
-  // We can't test for errors right away, because the error occures after a
+  // We can't test for errors right away, because the error occurs after a
   // setTimeout(..., 0) in the WebConsole code.
   executeSoon(function() {
     browser.removeEventListener("error", errorListener, false);
