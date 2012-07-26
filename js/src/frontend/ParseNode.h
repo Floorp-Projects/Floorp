@@ -69,6 +69,7 @@ class UpvarCookie
  * The long comment after this enum block describes the kinds in detail.
  */
 enum ParseNodeKind {
+    PNK_NOP,
     PNK_SEMI,
     PNK_COMMA,
     PNK_CONDITIONAL,
@@ -476,6 +477,7 @@ enum ParseNodeKind {
  *                                if-guarded PNK_ARRAYPUSH
  * PNK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
  *                              pn_kid: array comprehension expression
+ * PNK_NOP            nullary
  */
 enum ParseNodeArity {
     PN_NULLARY,                         /* 0 kids, only pn_atom/pn_dval/etc. */
