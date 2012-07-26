@@ -1256,12 +1256,13 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LMathFunctionD : public LInstructionHelper<1, 1, 0>
+class LMathFunctionD : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(MathFunctionD);
-    LMathFunctionD(const LAllocation &input) {
+    LMathFunctionD(const LAllocation &input, const LDefinition &temp) {
         setOperand(0, input);
+        setTemp(0, temp);
     }
 
     const LAllocation *input() {
@@ -1270,8 +1271,15 @@ class LMathFunctionD : public LInstructionHelper<1, 1, 0>
     const LDefinition *output() {
         return getDef(0);
     }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
     MMathFunction *mir() const {
         return mir_->toMathFunction();
+    }
+
+    bool isCall() const {
+        return true;
     }
 };
 
