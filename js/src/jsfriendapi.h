@@ -632,6 +632,7 @@ SizeOfJSContext();
     D(DEBUG_GC)                                 \
     D(DEBUG_MODE_GC)                            \
     D(TRANSPLANT)                               \
+    D(RESET)                                    \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \
