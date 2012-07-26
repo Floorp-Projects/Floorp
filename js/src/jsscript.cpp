@@ -570,16 +570,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
         // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
         // staticLevel is set below.
-        script = JSScript::Create(cx,
-                                  enclosingScope,
-                                  !!(scriptBits & (1 << SavedCallerFun)),
-                                  /* principals = */ NULL,
-                                  /* originPrincipals = */ NULL,
-                                  /* compileAndGo = */ false,
-                                  !!(scriptBits & (1 << NoScriptRval)),
-                                  version_,
-                                  /* staticLevel = */ 0,
-                                  NULL, 0, 0);
+        CompileOptions options(cx);
+        options.setVersion(version_)
+               .setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)));
+        script = JSScript::Create(cx, enclosingScope, !!(scriptBits & (1 << SavedCallerFun)),
+                                  options, /* staticLevel = */ 0, NULL, 0, 0);
         if (!script || !JSScript::partiallyInit(cx, script,
                                                 length, nsrcnotes, natoms, nobjects,
                                                 nregexps, ntrynotes, nconsts, nClosedArgs,
@@ -1557,8 +1552,7 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 
 JSScript *
 JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun,
-                 JSPrincipals *principals, JSPrincipals *originPrincipals,
-                 bool compileAndGo, bool noScriptRval, JSVersion version, unsigned staticLevel,
+                 const CompileOptions &options, unsigned staticLevel,
                  ScriptSource *ss, uint32_t bufStart, uint32_t bufEnd)
 {
     JSScript *script = js_NewGCScript(cx);
@@ -1571,21 +1565,22 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     script->savedCallerFun = savedCallerFun;
 
     /* Establish invariant: principals implies originPrincipals. */
-    if (principals) {
-        script->principals = principals;
-        script->originPrincipals = originPrincipals ? originPrincipals : principals;
+    if (options.principals) {
+        script->principals = options.principals;
+        script->originPrincipals
+            = options.originPrincipals ? options.originPrincipals : options.principals;
         JS_HoldPrincipals(script->principals);
         JS_HoldPrincipals(script->originPrincipals);
-    } else if (originPrincipals) {
-        script->originPrincipals = originPrincipals;
+    } else if (options.originPrincipals) {
+        script->originPrincipals = options.originPrincipals;
         JS_HoldPrincipals(script->originPrincipals);
     }
 
-    script->compileAndGo = compileAndGo;
-    script->noScriptRval = noScriptRval;
-
-    script->version = version;
-    JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
+    script->compileAndGo = options.compileAndGo;
+    script->noScriptRval = options.noScriptRval;
+ 
+    script->version = options.version;
+    JS_ASSERT(script->getVersion() == options.version);     // assert that no overflow occurred
 
     // This is an unsigned-to-uint16_t conversion, test for too-high values.
     // In practice, recursion in Parser and/or BytecodeEmitter will blow the
@@ -2253,10 +2248,14 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
+    CompileOptions options(cx);
+    options.setPrincipals(cx->compartment->principals)
+           .setOriginPrincipals(src->originPrincipals)
+           .setCompileAndGo(src->compileAndGo)
+           .setNoScriptRval(src->noScriptRval)
+           .setVersion(src->getVersion());
     JSScript *dst = JSScript::Create(cx, enclosingScope, src->savedCallerFun,
-                                     cx->compartment->principals, src->originPrincipals,
-                                     src->compileAndGo, src->noScriptRval,
-                                     src->getVersion(), src->staticLevel,
+                                     options, src->staticLevel,
                                      src->source, src->sourceStart, src->sourceEnd);
     if (!dst) {
         Foreground::free_(data);

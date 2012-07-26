@@ -560,9 +560,7 @@ struct JSScript : public js::gc::Cell
 
   public:
     static JSScript *Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
-                            JSPrincipals *principals, JSPrincipals *originPrincipals,
-                            bool compileAndGo, bool noScriptRval,
-                            JSVersion version, unsigned staticLevel,
+                            const JS::CompileOptions &options, unsigned staticLevel,
                             js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
 
     // Three ways ways to initialize a JSScript.  Callers of partiallyInit()

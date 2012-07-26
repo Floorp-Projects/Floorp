@@ -3407,13 +3407,13 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
      * calls and properly compute a static level. In practice, any non-zero
      * static level will suffice.
      */
-    JSPrincipals *prin = fp->scopeChain()->principals(cx);
-    bool compileAndGo = true;
-    bool noScriptRval = false;
-    JSScript *script = frontend::CompileScript(cx, env, fp, prin, prin,
-                                               compileAndGo, noScriptRval,
-                                               chars, length, filename, lineno,
-                                               cx->findVersion(), NULL, /* staticLimit = */ 1);
+    CompileOptions options(cx);
+    options.setPrincipals(fp->scopeChain()->principals(cx))
+           .setCompileAndGo(true)
+           .setNoScriptRval(false)
+           .setFileAndLine(filename, lineno);
+    JSScript *script = frontend::CompileScript(cx, env, fp, options, chars, length,
+                                               /* source = */ NULL, /* staticLimit = */ 1);
     if (!script)
         return false;
 
