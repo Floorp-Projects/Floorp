@@ -549,11 +549,37 @@ PRUint8 (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nsnull;
 namespace mozilla {
 namespace dom {
 
+static bool
+AzureCanvasEnabledOnPlatform()
+{
+#ifdef XP_WIN
+  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() !=
+      gfxWindowsPlatform::RENDER_DIRECT2D ||
+      !gfxWindowsPlatform::GetPlatform()->DWriteEnabled()) {
+    static bool checkedPref = false;
+    static bool preferSkia;
+    if (!checkedPref) {
+      preferSkia = Preferences::GetBool("gfx.canvas.azure.prefer-skia", false);
+      checkedPref = true;
+    }
+    return preferSkia;
+  }
+#elif !defined(XP_MACOSX) && !defined(ANDROID) && !defined(LINUX)
+  return false;
+#endif
+  return true;
+}
+
 bool
 AzureCanvasEnabled()
 {
-  BackendType dontCare;
-  return gfxPlatform::GetPlatform()->SupportsAzureCanvas(dontCare);
+  static bool checkedPref = false;
+  static bool azureEnabled;
+  if (!checkedPref) {
+    azureEnabled = Preferences::GetBool("gfx.canvas.azure.enabled", false);
+    checkedPref = true;
+  }
+  return azureEnabled && AzureCanvasEnabledOnPlatform();
 }
 
 }
@@ -562,9 +588,7 @@ AzureCanvasEnabled()
 nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
-  // XXX[nrc] remove this check when Thebes canvas is removed
-  // (because we will always support Azure)
-  if (!AzureCanvasEnabled()) {
+  if (!AzureCanvasEnabledOnPlatform()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -890,12 +914,30 @@ nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
 }
 
 nsresult
-nsCanvasRenderingContext2DAzure::Initialize(PRInt32 width, PRInt32 height)
+nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt32 width, PRInt32 height)
 {
+  Reset();
+
+  NS_ASSERTION(mCanvasElement, "Must have a canvas element!");
+  mDocShell = nsnull;
+
   mWidth = width;
   mHeight = height;
 
-  if (!mValid) {
+  // This first time this is called on this object is via
+  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
+  // non-null, otherwise we'll return an error here and GetContext won't
+  // return this context object and we'll never enter this code again.
+  // All other times this method is called, if target is null then
+  // mTarget won't be changed, i.e. it will remain non-null, or else it
+  // will be set to non-null.
+  // In all cases, any usable canvas context will have non-null mTarget.
+
+  if (target) {
+    mValid = true;
+    mTarget = target;
+  } else {
+    mValid = false;
     // Create a dummy target in the hopes that it will help us deal with users
     // calling into us after having changed the size where the size resulted
     // in an inability to create a correct DrawTarget.
@@ -925,45 +967,6 @@ nsCanvasRenderingContext2DAzure::Initialize(PRInt32 width, PRInt32 height)
   }
 
   return mValid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-nsresult
-nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt32 width, PRInt32 height)
-{
-  Reset();
-
-  NS_ASSERTION(mCanvasElement, "Must have a canvas element!");
-  mDocShell = nsnull;
-
-  // This first time this is called on this object is via
-  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
-  // non-null, otherwise we'll return an error here and GetContext won't
-  // return this context object and we'll never enter this code again.
-  // All other times this method is called, if target is null then
-  // mTarget won't be changed, i.e. it will remain non-null, or else it
-  // will be set to non-null.
-  // In all cases, any usable canvas context will have non-null mTarget.
-
-  if (target) {
-    mValid = true;
-    mTarget = target;
-  } else {
-    mValid = false;
-  }
-
-  return Initialize(width, height);
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height)
-{
-  mDocShell = shell;
-  mThebesSurface = surface;
-
-  mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, IntSize(width, height));
-  mValid = mTarget != nsnull;
-
-  return Initialize(width, height);
 }
 
 NS_IMETHODIMP
@@ -2490,7 +2493,6 @@ nsCanvasRenderingContext2DAzure::EnsureWritablePath()
   }
 
   if (!mPath) {
-    NS_ASSERTION(!mPathTransformWillUpdate, "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   } else if (!mPathTransformWillUpdate) {
     mPathBuilder = mPath->CopyToBuilder(fillRule);
@@ -2502,7 +2504,7 @@ nsCanvasRenderingContext2DAzure::EnsureWritablePath()
 }
 
 void
-nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = true */)
+nsCanvasRenderingContext2DAzure::EnsureUserSpacePath()
 {
   FillRule fillRule = CurrentState().fillRule;
 
@@ -2515,9 +2517,7 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = 
     mPathBuilder = nsnull;
   }
 
-  if (aCommitTransform &&
-      mPath &&
-      mPathTransformWillUpdate) {
+  if (mPath && mPathTransformWillUpdate) {
     mDSPathBuilder =
       mPath->TransformedCopyToBuilder(mPathToDS, fillRule);
     mPath = nsnull;
@@ -2531,7 +2531,6 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = 
 
     Matrix inverse = mTarget->GetTransform();
     if (!inverse.Invert()) {
-      NS_WARNING("Could not invert transform");
       return;
     }
 
@@ -2545,8 +2544,6 @@ nsCanvasRenderingContext2DAzure::EnsureUserSpacePath(bool aCommitTransform /* = 
     mPathBuilder = mPath->CopyToBuilder(fillRule);
     mPath = mPathBuilder->Finish();
   }
-
-  NS_ASSERTION(mPath, "mPath should exist");
 }
 
 void
@@ -3047,7 +3044,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       const gfxTextRun::CompressedGlyph *glyphs = mTextRun->GetCharacterGlyphs();
 
       RefPtr<ScaledFont> scaledFont =
-        gfxPlatform::GetPlatform()->GetScaledFontForFont(mCtx->mTarget, font);
+        gfxPlatform::GetPlatform()->GetScaledFontForFont(font);
 
       if (!scaledFont) {
         // This can occur when something switched DirectWrite off.
@@ -3107,21 +3104,21 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
         AdjustedTarget(mCtx)->
           FillGlyphs(scaledFont, buffer,
                      CanvasGeneralPattern().
-                       ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
-                     DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
+                        ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
+                      DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
 
         const ContextState& state = *mState;
         AdjustedTarget(mCtx)->
           Stroke(path, CanvasGeneralPattern().
-                   ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
-                 StrokeOptions(state.lineWidth, state.lineJoin,
-                               state.lineCap, state.miterLimit,
-                               state.dash.Length(),
-                               state.dash.Elements(),
-                               state.dashOffset),
-                 DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
+                    ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
+                  StrokeOptions(state.lineWidth, state.lineJoin,
+                                state.lineCap, state.miterLimit,
+                                state.dash.Length(),
+                                state.dash.Elements(),
+                                state.dashOffset),
+                  DrawOptions(state.globalAlpha, mCtx->UsedOperation()));
 
       }
     }
@@ -3610,14 +3607,9 @@ nsCanvasRenderingContext2DAzure::IsPointInPath(double x, double y)
     return false;
   }
 
-  EnsureUserSpacePath(false);
-  if (!mPath) {
-    return false;
-  }
-  if (mPathTransformWillUpdate) {
-    return mPath->ContainsPoint(Point(x, y), mPathToDS);
-  }
-  return mPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
+  EnsureUserSpacePath();
+
+  return mPath && mPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
 }
 
 NS_IMETHODIMP
@@ -3676,14 +3668,12 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
       // This might not be an Azure canvas!
       srcSurf = srcCanvas->GetSurfaceSnapshot();
 
-      if (srcSurf) {
-        if (mCanvasElement) {
-          // Do security check here.
-          CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
-                                                element->NodePrincipal(),
-                                               canvas->IsWriteOnly(),
-                                                false);
-        }
+      if (srcSurf && mCanvasElement) {
+        // Do security check here.
+        CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
+                                              element->NodePrincipal(),
+                                              canvas->IsWriteOnly(),
+                                              false);
         imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
       }
     }
@@ -4265,12 +4255,11 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
   RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty()) {
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-    if (snapshot) {
-      readback = snapshot->GetDataSurface();
 
-      srcStride = readback->Stride();
-      src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
-    }
+    readback = snapshot->GetDataSurface();
+
+    srcStride = readback->Stride();
+    src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
   }
 
   // make sure sUnpremultiplyTable has been created
@@ -4278,8 +4267,6 @@ nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
 
   // NOTE! dst is the same as src, and this relies on reading
   // from src and advancing that ptr before writing to dst.
-  // NOTE! I'm not sure that it is, I think this comment might have been
-  // inherited from Thebes canvas and is no longer true
   uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
   for (int32_t j = 0; j < dstWriteRect.height; ++j) {
@@ -4611,8 +4598,8 @@ static PRUint8 g2DContextLayerUserData;
 
 already_AddRefed<CanvasLayer>
 nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                                CanvasLayer *aOldLayer,
-                                                LayerManager *aManager)
+                                           CanvasLayer *aOldLayer,
+                                           LayerManager *aManager)
 {
   if (!mValid) {
     return nsnull;
@@ -4682,9 +4669,3 @@ nsCanvasRenderingContext2DAzure::MarkContextClean()
   mInvalidateCount = 0;
 }
 
-
-bool
-nsCanvasRenderingContext2DAzure::ShouldForceInactiveLayer(LayerManager *aManager)
-{
-    return !aManager->CanUseCanvasLayerForSize(gfxIntSize(mWidth, mHeight));
-}

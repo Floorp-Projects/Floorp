@@ -39,7 +39,9 @@ public:
                                                 gfxASurface::gfxImageFormat format);
     
     mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
+      GetScaledFontForFont(gfxFont *aFont);
+
+    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
 
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,

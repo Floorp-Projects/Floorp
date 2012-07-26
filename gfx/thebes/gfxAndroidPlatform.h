@@ -33,10 +33,12 @@ public:
     CreateOffscreenSurface(const gfxIntSize& size,
                            gfxASurface::gfxContentType contentType);
     
+    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { aBackend = mozilla::gfx::BACKEND_SKIA; return true; }
+
     virtual gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
     
     mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
+      GetScaledFontForFont(gfxFont *aFont);
 
     // to support IPC font list (sharing between chrome and content)
     void GetFontList(InfallibleTArray<FontListEntry>* retValue);

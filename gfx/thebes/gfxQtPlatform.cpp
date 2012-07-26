@@ -606,3 +606,10 @@ gfxQtPlatform::GetOffscreenFormat()
     return sOffscreenFormat;
 }
 
+bool
+gfxQtPlatform::SupportsAzure(BackendType& aBackend)
+{
+  aBackend = BACKEND_SKIA;
+  return true;
+}
+

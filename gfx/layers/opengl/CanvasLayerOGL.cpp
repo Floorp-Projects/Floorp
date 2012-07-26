@@ -75,7 +75,6 @@ CanvasLayerOGL::Initialize(const Data& aData)
 
   if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    mCanvasSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
     mNeedsYFlip = false;
   } else if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
@@ -163,7 +162,11 @@ CanvasLayerOGL::UpdateSurface()
   } else {
     nsRefPtr<gfxASurface> updatedAreaSurface;
 
-    if (mCanvasSurface) {
+    if (mDrawTarget) {
+      // TODO: This is suboptimal - We should have direct handling for the surface types instead of
+      // going via a gfxASurface.
+      updatedAreaSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    } else if (mCanvasSurface) {
       updatedAreaSurface = mCanvasSurface;
     } else if (mCanvasGLContext) {
       gfxIntSize size(mBounds.width, mBounds.height);
@@ -223,8 +226,13 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     
     drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
 
+    nsRefPtr<gfxASurface> surf = mCanvasSurface;
+    if (mDrawTarget) {
+      surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    }
+
     mLayerProgram =
-      gl()->UploadSurfaceToTexture(mCanvasSurface,
+      gl()->UploadSurfaceToTexture(surf,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mTexture,
                                    true,
