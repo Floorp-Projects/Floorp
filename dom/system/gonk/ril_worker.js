@@ -585,6 +585,7 @@ let RIL = {
    * One of the RADIO_STATE_* constants.
    */
   radioState: GECKO_RADIOSTATE_UNAVAILABLE,
+  _isInitialRadioState: true,
 
   /**
    * ICC status. Keeps a reference of the data response to the
@@ -3502,6 +3503,15 @@ RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
   let radioState = Buf.readUint32();
+
+  // Ensure radio state at boot time.
+  if (this._isInitialRadioState) {
+    this._isInitialRadioState = false;
+    if (radioState != RADIO_STATE_OFF) {
+      this.setRadioPower({on: false});
+      return;
+    }
+  }
 
   let newState;
   if (radioState == RADIO_STATE_UNAVAILABLE) {
