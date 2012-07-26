@@ -3117,29 +3117,6 @@ TypeObject::print(JSContext *cx)
 // Type Analysis
 /////////////////////////////////////////////////////////////////////
 
-/*
- * If the bytecode immediately following code/pc is a test of the value
- * pushed by code, that value should be marked as possibly void.
- */
-static inline bool
-CheckNextTest(jsbytecode *pc)
-{
-    jsbytecode *next = pc + GetBytecodeLength(pc);
-    switch ((JSOp)*next) {
-      case JSOP_IFEQ:
-      case JSOP_IFNE:
-      case JSOP_NOT:
-      case JSOP_OR:
-      case JSOP_AND:
-      case JSOP_TYPEOF:
-      case JSOP_TYPEOFEXPR:
-        return true;
-      default:
-        /* TRAP ok here */
-        return false;
-    }
-}
-
 static inline TypeObject *
 GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
@@ -3387,9 +3364,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
         if (op == JSOP_CALLGNAME)
             pushed[0].addPropagateThis(cx, script, pc, Type::UnknownType());
-
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, Type::UndefinedType());
         break;
       }
 
@@ -3555,8 +3529,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             poppedTypes(pc, 0)->addCallProperty(cx, script, pc, id);
 
         seen->addSubset(cx, &pushed[0]);
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, Type::UndefinedType());
         break;
       }
 
@@ -3574,8 +3546,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         seen->addSubset(cx, &pushed[0]);
         if (op == JSOP_CALLELEM)
             pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType(), poppedTypes(pc, 1));
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, Type::UndefinedType());
         break;
       }
 
