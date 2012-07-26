@@ -3092,6 +3092,11 @@
             case "resize":
               if (aEvent.target != window)
                 break;
+
+              let sizemode = document.documentElement.getAttribute("sizemode");
+              TabsInTitlebar.allowedBy("sizemode",
+                                       sizemode == "maximized" || sizemode == "fullscreen");
+
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
@@ -3099,6 +3104,7 @@
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
+
               this.tabbrowser.updateWindowResizers();
               break;
             case "mouseout":
