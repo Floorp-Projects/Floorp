@@ -680,7 +680,7 @@ LIRGenerator::visitMathFunction(MMathFunction *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Double);
     JS_ASSERT(ins->input()->type() == MIRType_Double);
-    LMathFunctionD *lir = new LMathFunctionD(useRegister(ins->input()));
+    LMathFunctionD *lir = new LMathFunctionD(useRegister(ins->input()), tempFixed(CallTempReg0));
     return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
 }
 

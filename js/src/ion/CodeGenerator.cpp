@@ -1531,15 +1531,12 @@ CodeGenerator::visitAbsI(LAbsI *ins)
 bool
 CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 {
+    Register temp = ToRegister(ins->temp());
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
 
     MathCache *mathCache = gen->cx->runtime->getMathCache(gen->cx);
 
-    saveVolatile(ReturnFloatReg);
-
-    // It's safe to use any volatile register as temp now.
-    Register temp = RegisterSet::Volatile().takeGeneral();
     masm.setupUnalignedABICall(2, temp);
     masm.movePtr(ImmWord(mathCache), temp);
     masm.passABIArg(temp);
@@ -1564,8 +1561,6 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
     }
 
     masm.callWithABI(funptr, MacroAssembler::DOUBLE);
-
-    restoreVolatile(ReturnFloatReg);
     return true;
 }
 
