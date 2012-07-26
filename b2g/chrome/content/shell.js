@@ -614,7 +614,7 @@ Services.obs.addObserver(function ContentHandler(subject, topic, data) {
 }, 'content-handler', false);
 
 (function geolocationStatusTracker() {
-  gGeolocationActiveCount = 0;
+  let gGeolocationActiveCount = 0;
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     let oldCount = gGeolocationActiveCount;
