@@ -5,15 +5,10 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout" >
-  <LinearLayout
-    android:id="@+id/failure_top"
-    style="@style/SyncTop" >
-  <ImageView
-    style="@style/SyncTopIcon" />
   <TextView
-    style="@style/SyncTextTitle"
-    android:text="@string/sync_title_fail" />
-  </LinearLayout>
+      style="@style/SyncTop"
+      android:id="@+id/failure_top"
+      android:text="@string/sync_title_fail" />
 
   <TextView
     android:id="@+id/failure_subtitle1"
