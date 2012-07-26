@@ -1887,6 +1887,7 @@ const WSP_HEADER_FIELDS = (function () {
     names[name] = names[number] = entry;
   }
 
+  // Encoding Version: 1.1
   //add("accept",               0x00);
   //add("accept-charset",       0x01); Deprecated
   //add("accept-encoding",      0x02); Deprecated
@@ -1934,6 +1935,8 @@ const WSP_HEADER_FIELDS = (function () {
   //add("warning",              0x2C);
   //add("www-authenticate",     0x2D);
   //add("content-disposition",  0x2E); Deprecated
+
+  // Encoding Version: 1.2
   add("x-wap-application-id",   0x2F, ApplicationIdValue);
   add("x-wap-content-uri",      0x30, UriValue);
   add("x-wap-initiator-uri",    0x31, UriValue);
@@ -1943,6 +1946,8 @@ const WSP_HEADER_FIELDS = (function () {
   add("profile",                0x35, UriValue);
   //add("profile-diff",         0x36);
   //add("profile-warning",      0x37); Deprecated
+
+  // Encoding Version: 1.3
   //add("expect",               0x38);
   //add("te",                   0x39);
   //add("trailer",              0x3A);
@@ -1955,6 +1960,8 @@ const WSP_HEADER_FIELDS = (function () {
   //add("set-cookie",           0x41);
   //add("cookie",               0x42);
   //add("encoding-version",     0x43);
+
+  // Encoding Version: 1.4
   //add("profile-warning",      0x44);
   //add("content-disposition",  0x45);
   //add("x-wap-security",       0x46);
@@ -1977,7 +1984,10 @@ const WSP_WELL_KNOWN_CONTENT_TYPES = (function () {
   }
 
   // Well Known Values
+  // Encoding Version: 1.2
   add("application/vnd.wap.multipart.related", 0x33);
+
+  // Encoding Version: 1.4
   add("application/vnd.wap.mms-message", 0x3E);
 
   return types;
@@ -1999,6 +2009,7 @@ const WSP_WELL_KNOWN_PARAMS = (function () {
     params[name] = params[number] = entry;
   }
 
+  // Encoding Version: 1.1
   add("q",                 0x00, QValue);
   add("charset",           0x01, WellKnownCharset);
   add("level",             0x02, VersionValue);
@@ -2007,23 +2018,29 @@ const WSP_WELL_KNOWN_PARAMS = (function () {
   //add("filename",        0x06); Deprecated
   add("differences",       0x07, FieldName);
   add("padding",           0x08, ShortInteger);
+
+  // Encoding Version: 1.2
   add("type",              0x09, TypeValue);
   add("start",             0x0A, TextValue); // Deprecated, but used in some carriers, eg. T-Mobile.
   //add("start-info",      0x0B); Deprecated
+
+  // Encoding Version: 1.3
   //add("comment",         0x0C); Deprecated
   //add("domain",          0x0D); Deprecated
   add("max-age",           0x0E, DeltaSecondsValue);
   //add("path",            0x0F); Deprecated
   add("secure",            0x10, NoValue);
+
+  // Encoding Version: 1.4
   add("sec",               0x11, ShortInteger);
   add("mac",               0x12, TextValue);
   add("creation-date",     0x13, DateValue);
   add("modification-date", 0x14, DateValue);
   add("read-date",         0x15, DateValue);
   add("size",              0x16, IntegerValue);
-  add("name",              0x17, TextValue);
+  //add("name",            0x17, TextValue); // Not supported in some carriers, eg. Hinet.
   add("filename",          0x18, TextValue);
-  add("start",             0x19, TextValue);
+  //add("start",           0x19, TextValue); // Not supported in some carriers, eg. Hinet.
   add("start-info",        0x1A, TextValue);
   add("comment",           0x1B, TextValue);
   add("domain",            0x1C, TextValue);
