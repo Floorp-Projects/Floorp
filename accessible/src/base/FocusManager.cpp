@@ -8,7 +8,6 @@
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsEventShell.h"
 #include "Role.h"
 #include "RootAccessible.h"
 

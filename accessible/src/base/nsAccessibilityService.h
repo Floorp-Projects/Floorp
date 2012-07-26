@@ -169,6 +169,12 @@ public:
   void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
   /**
+   * Notify the accessibility service that the given presshell is
+   * being destroyed.
+   */
+  void PresShellDestroyed(nsIPresShell* aPresShell);
+
+  /**
    * Notify that presshell is activated.
    */
   virtual void PresShellActivated(nsIPresShell* aPresShell);

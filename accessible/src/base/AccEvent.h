@@ -8,7 +8,7 @@
 
 #include "nsIAccessibleEvent.h"
 
-#include "mozilla/a11y/Accessible.h"
+#include "Accessible.h"
 
 class nsAccEvent;
 class DocAccessible;

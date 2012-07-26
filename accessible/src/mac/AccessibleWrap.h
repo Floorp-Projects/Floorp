@@ -13,6 +13,7 @@
 #include <objc/objc.h>
 
 #include "Accessible.h"
+#include "nsAccUtils.h"
 #include "States.h"
 
 #include "nsCOMPtr.h"

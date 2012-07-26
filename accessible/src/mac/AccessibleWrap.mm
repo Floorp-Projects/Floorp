@@ -7,7 +7,6 @@
 #include "nsObjCExceptions.h"
 
 #include "Accessible-inl.h"
-#include "nsAccUtils.h"
 #include "Role.h"
 
 #import "mozAccessible.h"

@@ -11,7 +11,6 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
-#include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "RootAccessible.h"
@@ -85,7 +84,6 @@ DocAccessible::
   mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible;
-  mPresShell->SetAccDocument(this);
 
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -636,8 +634,6 @@ DocAccessible::Shutdown()
   if (logging::IsEnabled(logging::eDocDestroy))
     logging::DocDestroy("document shutdown", mDocument, this);
 #endif
-
-  mPresShell->SetAccDocument(nsnull);
 
   if (mNotificationController) {
     mNotificationController->Shutdown();

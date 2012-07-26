@@ -76,7 +76,6 @@ class nsRefreshDriver;
 class nsARefreshObserver;
 #ifdef ACCESSIBILITY
 class nsAccessibilityService;
-class DocAccessible;
 #endif
 class nsIWidget;
 struct nsArenaMemoryStats;
@@ -275,13 +274,6 @@ public:
   nsPresContext* GetPresContext() const { return mPresContext; }
 
   nsIViewManager* GetViewManager() const { return mViewManager; }
-
-#ifdef ACCESSIBILITY
-  void SetAccDocument(DocAccessible* aAccDocument)
-  {
-    mAccDocument = aAccDocument;
-  }
-#endif
 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet* StyleSet() const { return mStyleSet; }
@@ -1331,9 +1323,6 @@ protected:
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
   nsWeakPtr                 mForwardingContainer;
-#ifdef ACCESSIBILITY
-  DocAccessible* mAccDocument;
-#endif
 
 #ifdef DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
