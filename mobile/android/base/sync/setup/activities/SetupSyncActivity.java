@@ -50,9 +50,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   private LinearLayout        pinError;
 
   // UI elements for pairing through PIN generation.
-  private TextView            setupTitleView;
-  private TextView            setupNoDeviceLinkTitleView;
-  private TextView            setupSubtitleView;
   private TextView            pinTextView1;
   private TextView            pinTextView2;
   private TextView            pinTextView3;
@@ -590,23 +587,9 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
         setContentView(R.layout.sync_setup);
 
         // Set up UI.
-        setupTitleView = ((TextView) findViewById(R.id.setup_title));
-        setupSubtitleView = (TextView) findViewById(R.id.setup_subtitle);
-        setupNoDeviceLinkTitleView = (TextView) findViewById(R.id.link_nodevice);
         pinTextView1 = ((TextView) findViewById(R.id.text_pin1));
         pinTextView2 = ((TextView) findViewById(R.id.text_pin2));
         pinTextView3 = ((TextView) findViewById(R.id.text_pin3));
-
-        // UI checks.
-        if (setupTitleView == null) {
-          Logger.error(LOG_TAG, "No title view.");
-        }
-        if (setupSubtitleView == null) {
-          Logger.error(LOG_TAG, "No subtitle view.");
-        }
-        if (setupNoDeviceLinkTitleView == null) {
-          Logger.error(LOG_TAG, "No 'no device' link view.");
-        }
       }
     });
   }
