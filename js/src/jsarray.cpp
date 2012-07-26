@@ -3080,16 +3080,16 @@ array_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
 class ArrayForEachBehavior
 {
   public:
-    static bool shouldExit(Value &callval, Value *rval) { return false; }
+    static bool shouldExit(Value &callbackRval, Value *rval) { return false; }
     static Value lateExitValue() { return UndefinedValue(); }
 };
 
 class ArrayEveryBehavior
 {
   public:
-    static bool shouldExit(Value &callval, Value *rval)
+    static bool shouldExit(Value &callbackRval, Value *rval)
     {
-        if (!ToBoolean(callval)) {
+        if (!ToBoolean(callbackRval)) {
             *rval = BooleanValue(false);
             return true;
         }
@@ -3101,9 +3101,9 @@ class ArrayEveryBehavior
 class ArraySomeBehavior
 {
   public:
-    static bool shouldExit(Value &callval, Value *rval)
+    static bool shouldExit(Value &callbackRval, Value *rval)
     {
-        if (ToBoolean(callval)) {
+        if (ToBoolean(callbackRval)) {
             *rval = BooleanValue(true);
             return true;
         }
