@@ -107,6 +107,17 @@ add_test(function test_Octet_encode() {
   run_next_test();
 });
 
+//// Octet.encodeMultiple ////
+
+add_test(function test_Octet_encodeMultiple() {
+  wsp_encode_test_ex(function (data, input) {
+    WSP.Octet.encodeMultiple(data, input);
+    return data.array;
+  }, [0, 1, 2, 3], [0, 1, 2, 3]);
+
+  run_next_test();
+});
+
 //
 // Test target: Text
 //
@@ -303,6 +314,14 @@ add_test(function test_QuotedString_decode() {
   run_next_test();
 });
 
+//// QuotedString.encode ////
+
+add_test(function test_QuotedString_encode() {
+  wsp_encode_test(WSP.QuotedString, "B2G", [34].concat(strToCharCodeArray("B2G")));
+
+  run_next_test();
+});
+
 //
 // Test target: ShortInteger
 //
@@ -341,7 +360,7 @@ add_test(function test_ShortInteger_encode() {
 
 //// LongInteger.decode ////
 
-function LongInteger_testcases(target) {
+function LongInteger_decode_testcases(target) {
   // Test LongInteger of zero octet
   wsp_decode_test(target, [0, 0], null, "CodeError");
   wsp_decode_test(target, [1, 0x80], 0x80);
@@ -356,7 +375,38 @@ function LongInteger_testcases(target) {
   wsp_decode_test(target, [31], null, "CodeError");
 }
 add_test(function test_LongInteger_decode() {
-  LongInteger_testcases(WSP.LongInteger);
+  LongInteger_decode_testcases(WSP.LongInteger);
+
+  run_next_test();
+});
+
+//// LongInteger.encode ////
+
+function LongInteger_encode_testcases(target) {
+  wsp_encode_test(target, 0x80,           [1, 0x80]);
+  wsp_encode_test(target, 0x8002,         [2, 0x80, 2]);
+  wsp_encode_test(target, 0x800203,       [3, 0x80, 2, 3]);
+  wsp_encode_test(target, 0x80020304,     [4, 0x80, 2, 3, 4]);
+  wsp_encode_test(target, 0x8002030405,   [5, 0x80, 2, 3, 4, 5]);
+  wsp_encode_test(target, 0x800203040506, [6, 0x80, 2, 3, 4, 5, 6]);
+  // Test LongInteger of more than 6 octets
+  wsp_encode_test(target, 0x1000000000000, null, "CodeError");
+  // Test input empty array
+  wsp_encode_test(target, [], null, "CodeError");
+  // Test input octets array of length 1..30
+  let array = [];
+  for (let i = 1; i <= 30; i++) {
+    array.push(i);
+    wsp_encode_test(target, array, [i].concat(array));
+  }
+  // Test input octets array of 31 elements.
+  array.push(31);
+  wsp_encode_test(target, array, null, "CodeError");
+}
+add_test(function test_LongInteger_encode() {
+  wsp_encode_test(WSP.LongInteger, 0, [1, 0]);
+
+  LongInteger_encode_testcases(WSP.LongInteger);
 
   run_next_test();
 });
@@ -385,8 +435,25 @@ add_test(function test_UintVar_decode() {
   run_next_test();
 });
 
+//// UintVar.encode ////
+
+add_test(function test_UintVar_encode() {
+  // Test up to max 53 bits integer
+  wsp_encode_test(WSP.UintVar, 0, [0]);
+  wsp_encode_test(WSP.UintVar, 0x7F, [0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x3FFF, [0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x1FFFFF, [0xFF, 0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0xFFFFFFF, [0xFF, 0xFF, 0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x7FFFFFFFF, [0xFF, 0xFF, 0xFF, 0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x3FFFFFFFFFF, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x1FFFFFFFFFFFF, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F]);
+  wsp_encode_test(WSP.UintVar, 0x1FFFFFFFFFFFFF, [0x8F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F]);
+
+  run_next_test();
+});
+
 //
-// Test target: ConstrainedEncoding (decodeAlternatives)
+// Test target: ConstrainedEncoding
 //
 
 //// ConstrainedEncoding.decode ////
@@ -394,6 +461,15 @@ add_test(function test_UintVar_decode() {
 add_test(function test_ConstrainedEncoding_decode() {
   wsp_decode_test(WSP.ConstrainedEncoding, [0x80], 0);
   wsp_decode_test(WSP.ConstrainedEncoding, [32, 0], " ");
+
+  run_next_test();
+});
+
+//// ConstrainedEncoding.encode ////
+
+add_test(function test_ConstrainedEncoding_encode() {
+  wsp_encode_test(WSP.ConstrainedEncoding, 0, [0x80 | 0]);
+  wsp_encode_test(WSP.ConstrainedEncoding, "A", [65, 0]);
 
   run_next_test();
 });
@@ -418,6 +494,22 @@ add_test(function test_ValueLength_decode() {
   run_next_test();
 });
 
+//// ValueLength.encode ////
+
+add_test(function test_ValueLength_encode() {
+  for (let i = 0; i < 256; i++) {
+    if (i < 31) {
+      wsp_encode_test(WSP.ValueLength, i, [i]);
+    } else if (i < 128) {
+      wsp_encode_test(WSP.ValueLength, i, [31, i]);
+    } else {
+      wsp_encode_test(WSP.ValueLength, i, [31, (0x80 | (i / 128)), i % 128]);
+    }
+  }
+
+  run_next_test();
+});
+
 //
 // Test target: NoValue
 //
@@ -429,6 +521,19 @@ add_test(function test_NoValue_decode() {
   for (let i = 1; i < 256; i++) {
     wsp_decode_test(WSP.NoValue, [i], null, "CodeError");
   }
+
+  run_next_test();
+});
+
+//// NoValue.encode ////
+
+add_test(function test_NoValue_encode() {
+  wsp_encode_test(WSP.NoValue, undefined, [0]);
+  wsp_encode_test(WSP.NoValue, null, [0]);
+  wsp_encode_test(WSP.NoValue, 0, null, "CodeError");
+  wsp_encode_test(WSP.NoValue, "", null, "CodeError");
+  wsp_encode_test(WSP.NoValue, [], null, "CodeError");
+  wsp_encode_test(WSP.NoValue, {}, null, "CodeError");
 
   run_next_test();
 });
@@ -448,6 +553,18 @@ add_test(function test_TextValue_decode() {
   run_next_test();
 });
 
+//// TextValue.encode ////
+
+add_test(function test_TextValue_encode() {
+  wsp_encode_test(WSP.TextValue, undefined, [0]);
+  wsp_encode_test(WSP.TextValue, null, [0]);
+  wsp_encode_test(WSP.TextValue, "", [0]);
+  wsp_encode_test(WSP.TextValue, "A", [65, 0]);
+  wsp_encode_test(WSP.TextValue, "\x80", [34, 128, 0]);
+
+  run_next_test();
+});
+
 //
 // Test target: IntegerValue
 //
@@ -459,7 +576,19 @@ add_test(function test_IntegerValue_decode() {
     wsp_decode_test(WSP.IntegerValue, [i], i & 0x7F);
   }
 
-  LongInteger_testcases(WSP.IntegerValue);
+  LongInteger_decode_testcases(WSP.IntegerValue);
+
+  run_next_test();
+});
+
+//// IntegerValue.decode ////
+
+add_test(function test_IntegerValue_encode() {
+  for (let i = 0; i < 128; i++) {
+    wsp_encode_test(WSP.IntegerValue, i, [0x80 | i]);
+  }
+
+  LongInteger_encode_testcases(WSP.IntegerValue);
 
   run_next_test();
 });
@@ -474,6 +603,14 @@ add_test(function test_DateValue_decode() {
   wsp_decode_test(WSP.DateValue, [0, 0], null, "CodeError");
   wsp_decode_test(WSP.DateValue, [1, 0x80], new Date(0x80 * 1000));
   wsp_decode_test(WSP.DateValue, [31], null, "CodeError");
+
+  run_next_test();
+});
+
+//// DateValue.encode ////
+
+add_test(function test_DateValue_encode() {
+  wsp_encode_test(WSP.DateValue, new Date(0x80 * 1000), [1, 0x80]);
 
   run_next_test();
 });
@@ -500,6 +637,18 @@ add_test(function test_QValue_decode() {
   run_next_test();
 });
 
+//// QValue.encode ////
+
+add_test(function test_QValue_encode() {
+  wsp_encode_test(WSP.QValue, 0, [1]);
+  wsp_encode_test(WSP.QValue, 0.99, [100]);
+  wsp_encode_test(WSP.QValue, 0.001, [101]);
+  wsp_encode_test(WSP.QValue, 0.999, [0x88, 0x4B]);
+  wsp_encode_test(WSP.QValue, 1, null, "CodeError");
+
+  run_next_test();
+});
+
 //
 // Test target: VersionValue
 //
@@ -520,6 +669,22 @@ add_test(function test_VersionValue_decode() {
       } else {
         wsp_decode_test(WSP.VersionValue, [major + 0x30, 0x2E, minor + 0x30, 0], version);
       }
+    }
+  }
+
+  run_next_test();
+});
+
+//// VersionValue.encode ////
+
+add_test(function test_VersionValue_encode() {
+  for (let major = 1; major < 8; major++) {
+    let version = (major << 4) | 0x0F;
+    wsp_encode_test(WSP.VersionValue, version, [0x80 | version]);
+
+    for (let minor = 0; minor < 15; minor++) {
+      version = (major << 4) | minor;
+      wsp_encode_test(WSP.VersionValue, version, [0x80 | version]);
     }
   }
 
@@ -554,6 +719,17 @@ add_test(function test_TypeValue_decode() {
                   "application/vnd.wap.multipart.related");
   // Test for NotWellKnownEncodingError
   wsp_decode_test(WSP.TypeValue, [0x80], null, "NotWellKnownEncodingError");
+
+  run_next_test();
+});
+
+//// TypeValue.encode ////
+
+add_test(function test_TypeValue_encode() {
+  wsp_encode_test(WSP.TypeValue, "no/such.type",
+                  [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
+  wsp_encode_test(WSP.TypeValue, "application/vnd.wap.multipart.related",
+                  [0x33 | 0x80]);
 
   run_next_test();
 });
@@ -623,6 +799,59 @@ add_test(function test_Parameter_decodeMultiple() {
       return WSP.Parameter.decodeMultiple(data, 13);
     }, [1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0], {start: "<smil>", a: "B"}
   );
+
+  run_next_test();
+});
+
+//// Parameter.encodeTypedParameter ////
+
+add_test(function test_Parameter_encodeTypedParameter() {
+  function func(data, input) {
+    WSP.Parameter.encodeTypedParameter(data, input);
+    return data.array;
+  }
+
+  // Test for NotWellKnownEncodingError
+  wsp_encode_test_ex(func, {name: "xxx", value: 0}, null, "NotWellKnownEncodingError");
+  wsp_encode_test_ex(func, {name: "q", value: 0}, [0x80, 1]);
+  wsp_encode_test_ex(func, {name: "name", value: "A"}, [0x85, 65, 0]);
+
+  run_next_test();
+});
+
+//// Parameter.encodeUntypedParameter ////
+
+add_test(function test_Parameter_encodeUntypedParameter() {
+  function func(data, input) {
+    WSP.Parameter.encodeUntypedParameter(data, input);
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, {name: "q", value: 0}, [113, 0, 0x80]);
+  wsp_encode_test_ex(func, {name: "name", value: "A"}, [110, 97, 109, 101, 0, 65, 0]);
+
+  run_next_test();
+});
+
+//// Parameter.encodeMultiple ////
+
+add_test(function test_Parameter_encodeMultiple() {
+  function func(data, input) {
+    WSP.Parameter.encodeMultiple(data, input);
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, {q: 0, n: "A"}, [0x80, 1, 110, 0, 65, 0]);
+
+  run_next_test();
+});
+
+//// Parameter.encode ////
+
+add_test(function test_Parameter_encode() {
+
+  wsp_encode_test(WSP.Parameter, {name: "q", value: 0}, [0x80, 1]);
+  wsp_encode_test(WSP.Parameter, {name: "n", value: "A"}, [110, 0, 65, 0]);
 
   run_next_test();
 });
@@ -722,6 +951,15 @@ add_test(function test_FieldName_decode() {
   run_next_test();
 });
 
+//// FieldName.encode ////
+
+add_test(function test_FieldName_encode() {
+  wsp_encode_test(WSP.FieldName, "", [0]);
+  wsp_encode_test(WSP.FieldName, "date", [0x92]);
+
+  run_next_test();
+});
+
 //
 // Test target: AcceptCharsetValue
 //
@@ -748,6 +986,24 @@ add_test(function test_AcceptCharsetValue_decode() {
   run_next_test();
 });
 
+//// AcceptCharsetValue.encodeAnyCharset ////
+
+add_test(function test_AcceptCharsetValue_encodeAnyCharset() {
+  function func(data, input) {
+    WSP.AcceptCharsetValue.encodeAnyCharset(data, input);
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, null, [0x80]);
+  wsp_encode_test_ex(func, undefined, [0x80]);
+  wsp_encode_test_ex(func, {}, [0x80]);
+  wsp_encode_test_ex(func, {charset: null}, [0x80]);
+  wsp_encode_test_ex(func, {charset: "*"}, [0x80]);
+  wsp_encode_test_ex(func, {charset: "en"}, null, "CodeError");
+
+  run_next_test();
+});
+
 //
 // Test target: WellKnownCharset
 //
@@ -762,6 +1018,16 @@ add_test(function test_WellKnownCharset_decode() {
   wsp_decode_test(WSP.WellKnownCharset, [1, 3], {charset: "ansi_x3.4-1968"});
   // Test for array-typed return value from IntegerValue
   wsp_decode_test(WSP.WellKnownCharset, [7, 0, 0, 0, 0, 0, 0, 0, 3], null, "CodeError");
+
+  run_next_test();
+});
+
+//// WellKnownCharset.encode ////
+
+add_test(function test_WellKnownCharset_encode() {
+  // Test for Any-charset
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "*"}, [0x80]);
+  wsp_encode_test(WSP.WellKnownCharset, {charset: "UTF-8"}, [128 + 106]);
 
   run_next_test();
 });
@@ -844,6 +1110,70 @@ add_test(function test_ContentTypeValue_decode() {
   wsp_decode_test(WSP.ContentTypeValue, [0x33 | 0x80],
     {media: "application/vnd.wap.multipart.related", params: null}
   );
+
+  run_next_test();
+});
+
+//// ContentTypeValue.encodeConstrainedMedia ////
+
+add_test(function test_ContentTypeValue_encodeConstrainedMedia() {
+  function func(data, input) {
+    WSP.ContentTypeValue.encodeConstrainedMedia(data, input);
+    return data.array;
+  }
+
+  // Test media type with additional parameters.
+  wsp_encode_test_ex(func, {media: "a", params: [{a: "b"}]}, null, "CodeError");
+  wsp_encode_test_ex(func, {media: "no/such.type"},
+                     [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
+  wsp_encode_test_ex(func, {media: "application/vnd.wap.multipart.related"},
+                     [0x33 | 0x80]);
+
+  run_next_test();
+});
+
+//// ContentTypeValue.encodeMediaType ////
+
+add_test(function test_ContentTypeValue_encodeMediaType() {
+  function func(data, input) {
+    WSP.ContentTypeValue.encodeMediaType(data, input);
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, {media: "no/such.type"},
+                     [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
+  wsp_encode_test_ex(func, {media: "application/vnd.wap.multipart.related"},
+                     [0x33 | 0x80]);
+  wsp_encode_test_ex(func, {media: "a", params: {b: "c", q: 0}},
+                     [97, 0, 98, 0, 99, 0, 128, 1]);
+
+  run_next_test();
+});
+
+//// ContentTypeValue.encodeContentGeneralForm ////
+
+add_test(function test_ContentTypeValue_encodeContentGeneralForm() {
+  function func(data, input) {
+    WSP.ContentTypeValue.encodeContentGeneralForm(data, input);
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, {media: "a", params: {b: "c", q: 0}},
+                     [8, 97, 0, 98, 0, 99, 0, 128, 1]);
+
+  run_next_test();
+});
+
+//// ContentTypeValue.encode ////
+
+add_test(function test_ContentTypeValue_encode() {
+  wsp_encode_test(WSP.ContentTypeValue, {media: "no/such.type"},
+                  [110, 111, 47, 115, 117, 99, 104, 46, 116, 121, 112, 101, 0]);
+  wsp_encode_test(WSP.ContentTypeValue,
+                  {media: "application/vnd.wap.multipart.related"},
+                  [0x33 | 0x80]);
+  wsp_encode_test(WSP.ContentTypeValue, {media: "a", params: {b: "c", q: 0}},
+                  [8, 97, 0, 98, 0, 99, 0, 128, 1]);
 
   run_next_test();
 });
