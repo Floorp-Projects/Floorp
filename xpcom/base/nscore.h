@@ -329,7 +329,11 @@ typedef PRUint32 nsrefcnt;
  * for C, fall back to longs.  See bugs 547964 and 626472.
  */
 #ifndef HAVE_NULLPTR
-#if defined(_WIN64)
+#ifndef __cplusplus
+# define nullptr ((void*)0)
+#elif defined(__GNUC__)
+# define nullptr __null
+#elif defined(_WIN64)
 # define nullptr 0LL
 #else
 # define nullptr 0L
@@ -337,7 +341,6 @@ typedef PRUint32 nsrefcnt;
 #endif /* defined(HAVE_NULLPTR) */
 
 #define nsnull nullptr
-
 
 #include "nsError.h"
 
