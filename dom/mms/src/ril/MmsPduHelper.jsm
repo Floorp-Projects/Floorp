@@ -1550,6 +1550,15 @@ const MMS_PDU_TYPES = (function () {
     };
   }
 
+  add(MMS_PDU_TYPE_SEND_REQ, true, ["x-mms-message-type",
+                                    "x-mms-transaction-id",
+                                    "x-mms-mms-version",
+                                    "from",
+                                    "content-type"]);
+  add(MMS_PDU_TYPE_SEND_CONF, false, ["x-mms-message-type",
+                                      "x-mms-transaction-id",
+                                      "x-mms-mms-version",
+                                      "x-mms-response-status"]);
   add(MMS_PDU_TYPE_NOTIFICATION_IND, false, ["x-mms-message-type",
                                              "x-mms-transaction-id",
                                              "x-mms-mms-version",
@@ -1565,6 +1574,12 @@ const MMS_PDU_TYPES = (function () {
                                            "x-mms-transaction-id",
                                            "x-mms-mms-version",
                                            "x-mms-status"]);
+  add(MMS_PDU_TYPE_DELIVERY_IND, false, ["x-mms-message-type",
+                                         "x-mms-mms-version",
+                                         "message-id",
+                                         "to",
+                                         "date",
+                                         "x-mms-status"]);
 
   return pdus;
 })();

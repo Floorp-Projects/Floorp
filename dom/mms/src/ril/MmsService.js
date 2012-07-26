@@ -41,6 +41,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gpps",
                                    "@mozilla.org/network/protocol-proxy-service;1",
                                    "nsIProtocolProxyService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
@@ -228,6 +232,84 @@ MmsService.prototype = {
   },
 
   /**
+   * Send M-Send.req to MMSC
+   */
+  sendSendRequest: function sendSendRequest(msg, callback) {
+    msg.headers["x-mms-message-type"] = MMS.MMS_PDU_TYPE_SEND_REQ;
+    if (!msg.headers["x-mms-transaction-id"]) {
+      // Create an unique transaction id
+      let tid = gUUIDGenerator.generateUUID().toString();
+      msg.headers["x-mms-transaction-id"] = tid;
+    }
+    msg.headers["x-mms-mms-version"] = MMS.MMS_VERSION;
+
+    // Let MMS Proxy Relay insert from address automatically for us
+    msg.headers["from"] = null;
+
+    msg.headers["date"] = new Date();
+    msg.headers["x-mms-message-class"] = "personal";
+    msg.headers["x-mms-expiry"] = 7 * 24 * 60 * 60;
+    msg.headers["x-mms-priority"] = 129;
+    msg.headers["x-mms-read-report"] = true;
+    msg.headers["x-mms-delivery-report"] = true;
+
+    let messageSize = 0;
+
+    if (msg.content) {
+      messageSize = msg.content.length;
+    } else if (msg.parts) {
+      for (let i = 0; i < msg.parts.length; i++) {
+        messageSize += msg.parts[i].content.length;
+      }
+
+      let contentType = {
+        params: {
+          // `The type parameter must be specified and its value is the MIME
+          // media type of the "root" body part.` ~ RFC 2387 clause 3.1
+          type: msg.parts[0].headers["content-type"].media,
+        },
+      };
+
+      // `The Content-Type in M-Send.req and M-Retrieve.conf SHALL be
+      // application/vnd.wap.multipart.mixed when there is no presentation, and
+      // application/vnd.wap.multipart.related SHALL be used when there is SMIL
+      // presentation available.` ~ OMA-TS-MMS_CONF-V1_3-20110913-A clause 10.2.1
+      if (contentType.params.type === "application/smil") {
+        contentType.media = "application/vnd.wap.multipart.related";
+
+        // `The start parameter, if given, is the content-ID of the compound
+        // object's "root".` ~ RFC 2387 clause 3.2
+        contentType.params.start = msg.parts[0].headers["content-id"];
+      } else {
+        contentType.media = "application/vnd.wap.multipart.mixed";
+      }
+
+      // Assign to Content-Type
+      msg.headers["content-type"] = contentType;
+    }
+
+    // Assign to X-Mms-Message-Size
+    msg.headers["x-mms-message-size"] = messageSize;
+
+    debug("msg: " + JSON.stringify(msg));
+
+    let istream = MMS.PduHelper.compose(null, msg);
+    if (!istream) {
+      debug("sendSendRequest: failed to compose M-Send.ind PDU");
+      callback(MMS.MMS_PDU_ERROR_PERMANENT_FAILURE, null);
+      return;
+    }
+
+    this.sendMmsRequest("POST", this.MMSC, istream, (function (status, data) {
+      if (!data) {
+        callback(MMS.MMS_PDU_ERROR_PERMANENT_FAILURE, null);
+      } else if (!this.parseStreamAndDispatch(data, {msg: msg, callback: callback})) {
+        callback(MMS.MMS_PDU_RESPONSE_ERROR_UNSUPPORTED_MESSAGE, null);
+      }
+    }).bind(this));
+  },
+
+  /**
    * @param file
    *        A nsIFile object indicating where to save the data.
    * @param data
@@ -317,11 +399,17 @@ MmsService.prototype = {
     debug("parseStreamAndDispatch: msg = " + JSON.stringify(msg));
 
     switch (msg.type) {
+      case MMS.MMS_PDU_TYPE_SEND_CONF:
+        this.handleSendConfirmation(msg, options);
+        break;
       case MMS.MMS_PDU_TYPE_NOTIFICATION_IND:
         this.handleNotificationIndication(msg, options);
         break;
       case MMS.MMS_PDU_TYPE_RETRIEVE_CONF:
         this.handleRetrieveConfirmation(msg, options);
+        break;
+      case MMS.MMS_PDU_TYPE_DELIVERY_IND:
+        this.handleDeliveryIndication(msg, options);
         break;
       default:
         debug("Unsupported X-MMS-Message-Type: " + msg.type);
@@ -329,6 +417,34 @@ MmsService.prototype = {
     }
 
     return true;
+  },
+
+  /**
+   * Handle incoming M-Send.conf PDU.
+   *
+   * @param msg
+   *        The M-Send.conf message object.
+   */
+  handleSendConfirmation: function handleSendConfirmation(msg, options) {
+    let status = msg.headers["x-mms-response-status"];
+    if (status == null) {
+      return;
+    }
+
+    if (status == MMS.MMS_PDU_ERROR_OK) {
+      // `This ID SHALL always be present after the MMS Proxy-Relay accepted
+      // the corresponding M-Send.req PDU. The ID enables a MMS Client to match
+      // delivery reports or read-report PDUs with previously sent MM.`
+      let messageId = msg.headers["message-id"];
+      options.msg.headers["message-id"] = messageId;
+    } else if ((status >= MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE)
+               && (status < MMS.MMS_PDU_ERROR_PERMANENT_FAILURE)) {
+      return;
+    }
+
+    if (options.callback) {
+      options.callback(status, msg);
+    }
   },
 
   /**
@@ -394,6 +510,14 @@ MmsService.prototype = {
     }
 
     this.saveMessageContent(msg, callbackIfValid.bind(null, MMS.MMS_PDU_ERROR_OK));
+  },
+
+  /**
+   * Handle incoming M-Delivery.ind PDU.
+   */
+  handleDeliveryIndication: function handleDeliveryIndication(msg) {
+    let messageId = msg.headers["message-id"];
+    debug("handleDeliveryIndication: got delivery report for " + messageId);
   },
 
   /**

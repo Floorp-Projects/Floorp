@@ -2488,6 +2488,9 @@ const WSP_WELL_KNOWN_CONTENT_TYPES = (function () {
   }
 
   // Well Known Values
+  // Encoding Version: 1.1
+  add("application/vnd.wap.multipart.mixed", 0x23);
+
   // Encoding Version: 1.2
   add("application/vnd.wap.multipart.related", 0x33);
 
