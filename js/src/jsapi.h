@@ -2007,6 +2007,10 @@ typedef JSObject *
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
+typedef void
+(* JSCompartmentNameCallback)(JSRuntime *rt, JSCompartment *compartment,
+                              char *buf, size_t bufsize);
+
 /*
  * Read structured data from the reader r. This hook is used to read a value
  * previously serialized by a call to the WriteStructuredCloneOp hook.
@@ -3118,6 +3122,9 @@ JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API(void)
 JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback callback);
+
+extern JS_PUBLIC_API(void)
+JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallbacks(JSRuntime *rt,

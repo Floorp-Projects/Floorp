@@ -447,6 +447,9 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Compartment destroy callback. */
     JSDestroyCompartmentCallback destroyCompartmentCallback;
 
+    /* Call this to get the name of a compartment. */
+    JSCompartmentNameCallback compartmentNameCallback;
+
     js::ActivityCallback  activityCallback;
     void                 *activityCallbackArg;
 
