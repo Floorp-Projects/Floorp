@@ -151,13 +151,6 @@ function server_headers(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function server_redirect(metadata, response) {
-  let body = "Redirecting";
-  response.setStatusLine(metadata.httpVersion, 307, "TEMPORARY REDIRECT");
-  response.setHeader("Location", "http://localhost:8081/resource");
-  response.bodyOutputStream.write(body, body.length);
-}
-
 let quotaValue;
 Observers.add("weave:service:quota:remaining",
               function (subject) { quotaValue = subject; });
@@ -180,8 +173,7 @@ function run_test() {
     "/backoff": server_backoff,
     "/pac2": server_pac,
     "/quota-notice": server_quota_notice,
-    "/quota-error": server_quota_error,
-    "/redirect": server_redirect
+    "/quota-error": server_quota_error
   });
 
   Svc.Prefs.set("network.numRetries", 1); // speed up test
@@ -682,9 +674,19 @@ add_test(function test_new_channel() {
     response.setHeader("Content-Type", "text/plain");
     response.bodyOutputStream.write(body, body.length);
   }
-  let server = httpd_setup({"/resource": resourceHandler}, 8080);
 
-  let request = new AsyncResource("http://localhost:8080/resource");
+  function redirectHandler(metadata, response) {
+    let body = "Redirecting";
+    response.setStatusLine(metadata.httpVersion, 307, "TEMPORARY REDIRECT");
+    response.setHeader("Location", "http://localhost:8080/resource");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  let server = httpd_setup({"/resource": resourceHandler,
+                            "/redirect": redirectHandler},
+                            8080);
+
+  let request = new AsyncResource("http://localhost:8080/redirect");
   request.get(function onRequest(error, content) {
     do_check_null(error);
     do_check_true(resourceRequested);
