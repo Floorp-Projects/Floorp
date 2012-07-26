@@ -49,16 +49,6 @@ bindinggen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
-# Include rules.mk before any of our targets so our first target is coming from
-# rules.mk and running make with no target in this dir does the right thing.
-include $(topsrcdir)/config/rules.mk
-
-$(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
-                             ../%.webidl \
-                             $(NULL)
-	$(MAKE) -C .. $*Binding.h
-	$(MAKE) -C .. $*Binding.cpp
-
 MOCHITEST_FILES = \
   test_enums.html \
   test_integers.html \
@@ -70,6 +60,15 @@ MOCHITEST_FILES = \
   forOf_iframe.html \
   $(NULL)
 
+# Include rules.mk before any of our targets so our first target is coming from
+# rules.mk and running make with no target in this dir does the right thing.
+include $(topsrcdir)/config/rules.mk
+
+$(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
+                             ../%.webidl \
+                             $(NULL)
+	$(MAKE) -C .. $*Binding.h
+	$(MAKE) -C .. $*Binding.cpp
 
 check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
