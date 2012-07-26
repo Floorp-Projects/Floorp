@@ -88,6 +88,8 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
     nsRefPtr<nsGeoPosition> mPosition;
   };
 
+  MOZ_ASSERT(location);
+
   nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(location->latitude,
                                                         location->longitude,
                                                         location->altitude,
@@ -243,7 +245,7 @@ GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
 GonkGPSGeolocationProvider::~GonkGPSGeolocationProvider()
 {
   ShutdownNow();
-  sSingleton = NULL;
+  sSingleton = nsnull;
 }
 
 already_AddRefed<GonkGPSGeolocationProvider>
@@ -262,11 +264,11 @@ GonkGPSGeolocationProvider::GetGPSInterface()
   hw_module_t* module;
 
   if (hw_get_module(GPS_HARDWARE_MODULE_ID, (hw_module_t const**)&module))
-    return NULL;
+    return nsnull;
 
   hw_device_t* device;
   if (module->methods->open(module, GPS_HARDWARE_MODULE_ID, &device))
-    return NULL;
+    return nsnull;
 
   gps_device_t* gps_device = (gps_device_t *)device;
   const GpsInterface* result = gps_device->get_gps_interface(gps_device);
@@ -280,12 +282,17 @@ GonkGPSGeolocationProvider::GetGPSInterface()
 void
 GonkGPSGeolocationProvider::RequestDataConnection()
 {
+  if (!mRIL) {
+    return;
+  }
+
   // TODO: Bug 772747 - We should ask NetworkManager or RIL to open
   // SUPL type connection for us.
   const nsAdoptingString& apnName = Preferences::GetString("geo.gps.apn.name");
   const nsAdoptingString& apnUser = Preferences::GetString("geo.gps.apn.user");
   const nsAdoptingString& apnPass = Preferences::GetString("geo.gps.apn.password");
   if (apnName && apnUser && apnPass) {
+    mCid.Truncate();
     mRIL->SetupDataCall(1 /* DATACALL_RADIOTECHNOLOGY_GSM */,
                         apnName, apnUser, apnPass,
                         3 /* DATACALL_AUTH_PAP_OR_CHAP */,
@@ -296,6 +303,14 @@ GonkGPSGeolocationProvider::RequestDataConnection()
 void
 GonkGPSGeolocationProvider::ReleaseDataConnection()
 {
+  if (!mRIL) {
+    return;
+  }
+
+  if (mCid.IsEmpty()) {
+    // We didn't request data call or the data call failed, bail out.
+    return;
+  }
   mRIL->DeactivateDataCall(mCid, NS_LITERAL_STRING("Close SUPL session"));
 }
 
@@ -303,6 +318,10 @@ void
 GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mRIL) {
+    return;
+  }
 
   AGpsSetIDType type = AGPS_SETID_TYPE_NONE;
 
@@ -333,6 +352,10 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (!mRIL) {
+    return;
+  }
+
   nsCOMPtr<nsIRilContext> rilCtx;
   mRIL->GetRilContext(getter_AddRefs(rilCtx));
 
@@ -354,7 +377,9 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
       cell->GetLac(&location.u.cellID.lac);
       cell->GetCid(&location.u.cellID.cid);
     }
-    mAGpsRilInterface->set_ref_location(&location, sizeof(location));
+    if (mAGpsRilInterface) {
+      mAGpsRilInterface->set_ref_location(&location, sizeof(location));
+    }
   }
 }
 
@@ -391,6 +416,8 @@ GonkGPSGeolocationProvider::Init()
 void
 GonkGPSGeolocationProvider::StartGPS()
 {
+  MOZ_ASSERT(mGpsInterface);
+
   PRInt32 update = Preferences::GetInt("geo.default.update", kDefaultPeriod);
 
   if (mSupportsMSA || mSupportsMSB) {
@@ -425,6 +452,7 @@ void
 GonkGPSGeolocationProvider::SetupAGPS()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mAGpsRilInterface);
 
   const nsAdoptingCString& suplServer = Preferences::GetCString("geo.gps.supl_server");
   PRInt32 suplPort = Preferences::GetInt("geo.gps.supl_port", -1);
@@ -437,8 +465,12 @@ GonkGPSGeolocationProvider::SetupAGPS()
 
   // Setup network state listener
   nsIInterfaceRequestor* ireq = dom::gonk::SystemWorkerManager::GetInterfaceRequestor();
-  mRIL = do_GetInterface(ireq);
-  mRIL->RegisterDataCallCallback(this);
+  if (ireq) {
+    mRIL = do_GetInterface(ireq);
+    if (mRIL) {
+      mRIL->RegisterDataCallCallback(this);
+    }
+  }
 
   return;
 }
@@ -472,6 +504,8 @@ GonkGPSGeolocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Shutdown()
 {
+  MOZ_ASSERT(mInitThread);
+
   if (!mStarted) {
     return NS_OK;
   }
@@ -485,17 +519,20 @@ GonkGPSGeolocationProvider::Shutdown()
 void
 GonkGPSGeolocationProvider::ShutdownNow()
 {
-  if (!mGpsInterface) {
+  if (!mStarted) {
     return;
   }
+  mStarted = false;
 
   if (mRIL) {
     mRIL->UnregisterDataCallCallback(this);
   }
 
-  mGpsInterface->stop();
-  mGpsInterface->cleanup();
-  mStarted = false;
+  if (mGpsInterface) {
+    mGpsInterface->stop();
+    mGpsInterface->cleanup();
+  }
+
   mInitThread = nsnull;
 }
 
@@ -511,6 +548,7 @@ NS_IMETHODIMP
 GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
 {
   MOZ_ASSERT(aDataCall);
+  MOZ_ASSERT(mAGpsInterface);
   nsCOMPtr<nsIRILDataCallInfo> datacall = aDataCall;
 
   PRUint32 callState;
