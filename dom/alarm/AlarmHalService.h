@@ -7,6 +7,7 @@
 
 #include "base/basictypes.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Services.h"
 #include "nsIAlarmHalService.h"
@@ -28,7 +29,6 @@ public:
   void Init();
   virtual ~AlarmHalService();
 
-  static nsRefPtr<AlarmHalService> sSingleton;
   static already_AddRefed<nsIAlarmHalService> GetInstance();
 
   // Implementing hal::AlarmObserver
@@ -37,6 +37,7 @@ public:
 private:
   bool mAlarmEnabled;
   nsCOMPtr<nsIAlarmFiredCb> mAlarmFiredCb;
+  static StaticRefPtr<AlarmHalService> sSingleton;
 
   // TODO The mTimezoneChangedCb would be called 
   // when a timezone-changed event is detected 

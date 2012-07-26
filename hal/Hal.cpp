@@ -17,6 +17,7 @@
 #include "nsIWebNavigation.h"
 #include "nsITabChild.h"
 #include "nsIDocShell.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "WindowIdentifier.h"
 #include "mozilla/dom/ScreenOrientation.h"
@@ -74,7 +75,7 @@ WindowIsActive(nsIDOMWindow *window)
   return !hidden;
 }
 
-nsAutoPtr<WindowIdentifier::IDArrayType> gLastIDToVibrate;
+StaticAutoPtr<WindowIdentifier::IDArrayType> gLastIDToVibrate;
 
 void InitLastIDToVibrate()
 {
