@@ -799,6 +799,77 @@ DrawTargetCG::DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDest,
 }
 
 bool
+DrawTargetCG::Init(unsigned char* aData,
+                   const IntSize &aSize,
+                   int32_t aStride,
+                   SurfaceFormat aFormat)
+{
+  // XXX: we should come up with some consistent semantics for dealing
+  // with zero area drawtargets
+  if (aSize.width <= 0 || aSize.height <= 0 ||
+      // 32767 is the maximum size supported by cairo
+      // we clamp to that to make it easier to interoperate
+      aSize.width > 32767 || aSize.height > 32767) {
+    mColorSpace = NULL;
+    mCg = NULL;
+    mData = NULL;
+    return false;
+  }
+
+  //XXX: handle SurfaceFormat
+
+  //XXX: we'd be better off reusing the Colorspace across draw targets
+  mColorSpace = CGColorSpaceCreateDeviceRGB();
+
+  if (aData == NULL) {
+    // XXX: Currently, Init implicitly clears, that can often be a waste of time
+    mData = calloc(aSize.height * aStride, 1);
+    aData = static_cast<unsigned char*>(mData);  
+  } else {
+    // mData == NULL means DrawTargetCG doesn't own the image data and will not
+    // delete it in the destructor
+    mData = NULL;
+  }
+
+  mSize = aSize;
+  
+  int bitsPerComponent = 8;
+
+  CGBitmapInfo bitinfo;
+
+  bitinfo = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
+
+  // XXX: what should we do if this fails?
+  mCg = CGBitmapContextCreate (aData,
+                               mSize.width,
+                               mSize.height,
+                               bitsPerComponent,
+                               aStride,
+                               mColorSpace,
+                               bitinfo);
+
+
+  assert(mCg);
+  // CGContext's default to have the origin at the bottom left
+  // so flip it to the top left
+  CGContextTranslateCTM(mCg, 0, mSize.height);
+  CGContextScaleCTM(mCg, 1, -1);
+  // See Bug 722164 for performance details
+  // Medium or higher quality lead to expensive interpolation
+  // for canvas we want to use low quality interpolation
+  // to have competitive performance with other canvas
+  // implementation.
+  // XXX: Create input parameter to control interpolation and
+  //      use the default for content.
+  CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
+
+  // XXX: set correct format
+  mFormat = FORMAT_B8G8R8A8;
+
+  return true;
+}
+
+bool
 DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
 {
   // XXX: we should come up with some consistent semantics for dealing
@@ -834,66 +905,12 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
 }
 
 bool
-DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
+DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &aFormat)
 {
-  // XXX: we should come up with some consistent semantics for dealing
-  // with zero area drawtargets
-  if (aSize.width <= 0 || aSize.height <= 0 ||
-      // 32767 is the maximum size supported by cairo
-      // we clamp to that to make it easier to interoperate
-      aSize.width > 32767 || aSize.height > 32767) {
-    mColorSpace = NULL;
-    mCg = NULL;
-    mData = NULL;
-    return false;
-  }
-
-  //XXX: handle SurfaceFormat
-
-  //XXX: we'd be better off reusing the Colorspace across draw targets
-  mColorSpace = CGColorSpaceCreateDeviceRGB();
-
-  mSize = aSize;
-
-  int bitsPerComponent = 8;
-  int stride = mSize.width*4;
-
-  CGBitmapInfo bitinfo;
-
-  bitinfo = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
-
-  // XXX: currently we allocate ourselves so that we can easily return a gfxImageSurface
-  // we might not need to later if once we don't need to support gfxImageSurface
-  //XXX: currently Init implicitly clears, that can often be a waste of time
-  mData = calloc(mSize.height * stride, 1);
-  // XXX: what should we do if this fails?
-  mCg = CGBitmapContextCreate (mData,
-                               mSize.width,
-                               mSize.height,
-                               bitsPerComponent,
-                               stride,
-                               mColorSpace,
-                               bitinfo);
-
-
-  assert(mCg);
-  // CGContext's default to have the origin at the bottom left
-  // so flip it to the top left
-  CGContextTranslateCTM(mCg, 0, mSize.height);
-  CGContextScaleCTM(mCg, 1, -1);
-  // See Bug 722164 for performance details
-  // Medium or higher quality lead to expensive interpolation
-  // for canvas we want to use low quality interpolation
-  // to have competitive performance with other canvas
-  // implementation.
-  // XXX: Create input parameter to control interpolation and
-  //      use the default for content.
-  CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
-
-  //XXX: set correct format
-  mFormat = FORMAT_B8G8R8A8;
-
-  return true;
+  int stride = aSize.width*4;
+  
+  // Calling Init with aData == NULL will allocate.
+  return Init(NULL, aSize, stride, aFormat);
 }
 
 TemporaryRef<PathBuilder>
