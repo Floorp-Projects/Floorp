@@ -10,11 +10,8 @@ relativesrcdir 	= browser/devtools/tilt/test
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_BROWSER_FILES = head.js
-
-# browser_tilt* disabled on Linux due to bug 759157
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_BROWSER_FILES += \
+MOCHITEST_BROWSER_FILES = \
+	head.js \
 	browser_tilt_01_lazy_getter.js \
 	browser_tilt_02_notifications-seq.js \
 	browser_tilt_02_notifications.js \
@@ -60,6 +57,5 @@ MOCHITEST_BROWSER_FILES += \
 	browser_tilt_visualizer.js \
 	browser_tilt_zoom.js \
 	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

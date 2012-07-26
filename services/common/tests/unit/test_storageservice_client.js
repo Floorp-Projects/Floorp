@@ -12,7 +12,11 @@ function run_test() {
   run_next_test();
 }
 
-function getEmptyServer(user="765", password="password") {
+function getRandomUser() {
+  return "" + (Math.floor(Math.random() * 100000) + 1);
+}
+
+function getEmptyServer(user=getRandomUser(), password="password") {
   let users = {};
   users[user] = password;
 
@@ -23,7 +27,7 @@ function getEmptyServer(user="765", password="password") {
   });
 }
 
-function getClient(user="765", password="password") {
+function getClient(user=getRandomUser(), password="password") {
   let client = new StorageServiceClient(BASE_URI + "/" + user);
   client.addListener({
     onDispatch: function onDispatch(request) {
@@ -35,7 +39,7 @@ function getClient(user="765", password="password") {
   return client;
 }
 
-function getServerAndClient(user="765", password="password") {
+function getServerAndClient(user=getRandomUser(), password="password") {
   let server = getEmptyServer(user, password);
   let client = getClient(user, password);
 
@@ -644,9 +648,9 @@ add_test(function test_set_bsos_simple() {
     do_check_null(error);
 
     let successful = req.successfulIDs;
-    do_check_eq(successful.size(), 2);
-    do_check_true(successful.has(bso0.id));
-    do_check_true(successful.has(bso1.id));
+    do_check_eq(successful.length, 2);
+    do_check_eq(successful.indexOf(bso0.id), 0);
+    do_check_true(successful.indexOf(bso1.id), 1);
 
     server.stop(run_next_test);
   });
@@ -701,7 +705,7 @@ add_test(function test_set_bsos_newline() {
 
   request.dispatch(function onComplete(error, request) {
     do_check_null(error);
-    do_check_eq(request.successfulIDs.size(), 2);
+    do_check_eq(request.successfulIDs.length, 2);
 
     let coll = user.collection("testcoll");
     do_check_eq(coll.bso("bso0").payload, bso0.payload);
@@ -963,5 +967,412 @@ add_test(function test_network_error_listener() {
   request.dispatch(function() {
     do_check_true(listenerCalled);
     run_next_test();
+  });
+});
+
+add_test(function test_batching_set_too_large() {
+  _("Ensure we throw when attempting to add a BSO that is too large to fit.");
+
+  let [server, client, username] = getServerAndClient();
+
+  let request = client.setBSOsBatching("testcoll");
+  let payload = "";
+
+  // The actual length of the payload is a little less. But, this ensures we
+  // exceed it.
+  for (let i = 0; i < client.REQUEST_SIZE_LIMIT; i++) {
+    payload += i;
+  }
+
+  let bso = new BasicStorageObject("bso");
+  bso.payload = payload;
+  do_check_throws(function add() { request.addBSO(bso); });
+
+  server.stop(run_next_test);
+});
+
+add_test(function test_batching_set_basic() {
+  _("Ensure batching set works with single requests.");
+
+  let [server, client, username] = getServerAndClient();
+
+  let request = client.setBSOsBatching("testcoll");
+  for (let i = 0; i < 10; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "payload" + i;
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(request.successfulIDs.length, 10);
+
+    let collection = server.user(username).collection("testcoll");
+    do_check_eq(collection.timestamp, request.serverModifiedVersion);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_batch_count() {
+  _("Ensure multiple outgoing request batching works when count is exceeded.");
+
+  let [server, client, username] = getServerAndClient();
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let request = client.setBSOsBatching("testcoll");
+  for (let i = 1; i <= 300; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "XXXXXXX";
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(request.successfulIDs.length, 300);
+    do_check_eq(requestCount, 3);
+
+    let collection = server.user(username).collection("testcoll");
+    do_check_eq(collection.timestamp, request.serverModifiedVersion);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_batch_size() {
+  _("Ensure outgoing requests batch when size is exceeded.");
+
+  let [server, client, username] = getServerAndClient();
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  };
+
+  let limit = client.REQUEST_SIZE_LIMIT;
+
+  let request = client.setBSOsBatching("testcoll");
+
+  // JavaScript: Y U NO EASY REPETITION FUNCTIONALITY?
+  let data = [];
+  for (let i = (limit / 2) - 100; i; i -= 1) {
+    data.push("X");
+  }
+
+  let payload = data.join("");
+
+  for (let i = 0; i < 4; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = payload;
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(request.successfulIDs.length, 4);
+    do_check_eq(requestCount, 2);
+
+    let collection = server.user(username).collection("testcoll");
+    do_check_eq(collection.timestamp, request.serverModifiedVersion);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_flush() {
+  _("Ensure flushing batch sets works.");
+
+  let [server, client, username] = getServerAndClient();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let request = client.setBSOsBatching("testcoll");
+  for (let i = 1; i < 101; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "foo";
+    request.addBSO(bso);
+
+    if (i % 10 == 0) {
+      request.flush();
+    }
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(request.successfulIDs.length, 100);
+    do_check_eq(requestCount, 10);
+
+    let collection = server.user(username).collection("testcoll");
+    do_check_eq(collection.timestamp, request.serverModifiedVersion);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_conditional_success() {
+  _("Ensure conditional requests for batched sets work properly.");
+
+  let [server, client, username] = getServerAndClient();
+
+  let collection = server.user(username).createCollection("testcoll");
+
+  let lastServerVersion = Date.now();
+  collection.insertBSO(new ServerBSO("foo", "bar", lastServerVersion));
+  collection.timestamp = lastServerVersion;
+  do_check_eq(collection.timestamp, lastServerVersion);
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let request = client.setBSOsBatching("testcoll");
+  request.locallyModifiedVersion = collection.timestamp;
+
+  for (let i = 1; i < 251; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "foo" + i;
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 3);
+
+    do_check_eq(collection.timestamp, request.serverModifiedVersion);
+    do_check_eq(collection.timestamp, request.locallyModifiedVersion);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_initial_failure() {
+  _("Ensure that an initial request failure setting BSOs is handled properly.");
+
+  let [server, client, username] = getServerAndClient();
+
+  let collection = server.user(username).createCollection("testcoll");
+  collection.timestamp = Date.now();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let request = client.setBSOsBatching("testcoll");
+  request.locallyModifiedVersion = collection.timestamp - 1;
+
+  for (let i = 1; i < 250; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "foo" + i;
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 1);
+
+    do_check_eq(request.successfulIDs.length, 0);
+    do_check_eq(Object.keys(request.failures).length, 0);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batching_set_subsequent_failure() {
+  _("Ensure a non-initial failure during batching set is handled properly.");
+
+  let [server, client, username] = getServerAndClient();
+  let collection = server.user(username).createCollection("testcoll");
+  collection.timestamp = Date.now();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+
+    if (requestCount == 1) {
+      return;
+    }
+
+    collection.timestamp++;
+  }
+
+  let request = client.setBSOsBatching("testcoll");
+  request.locallyModifiedVersion = collection.timestamp;
+
+  for (let i = 0; i < 250; i++) {
+    let bso = new BasicStorageObject("bso" + i);
+    bso.payload = "foo" + i;
+    request.addBSO(bso);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 2);
+    do_check_eq(request.successfulIDs.length, 100);
+    do_check_eq(Object.keys(request.failures).length, 0);
+
+    server.stop(run_next_test);
+  });
+});
+
+function getBatchedDeleteData(collection="testcoll") {
+  let [server, client, username] = getServerAndClient();
+
+  let serverBSOs = {};
+  for (let i = 1000; i; i -= 1) {
+    serverBSOs["bso" + i] = new ServerBSO("bso" + i, "payload" + i);
+  }
+
+  let user = server.user(username);
+  user.createCollection(collection, serverBSOs);
+
+  return [server, client, username, collection];
+}
+
+add_test(function test_batched_delete_single() {
+  _("Ensure batched delete with single request works.");
+
+  let [server, client, username, collection] = getBatchedDeleteData();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount += 1;
+  }
+
+  let request = client.deleteBSOsBatching(collection);
+  for (let i = 1; i < 51; i += 1) {
+    request.addID("bso" + i);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 1);
+    do_check_eq(request.errors.length, 0);
+
+    let coll = server.user(username).collection(collection);
+    do_check_eq(coll.count(), 950);
+
+    do_check_eq(request.serverModifiedVersion, coll.timestamp);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batched_delete_multiple() {
+  _("Ensure batched delete splits requests properly.");
+
+  let [server, client, username, collection] = getBatchedDeleteData();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount += 1;
+  }
+
+  let request = client.deleteBSOsBatching(collection);
+  for (let i = 1; i < 251; i += 1) {
+    request.addID("bso" + i);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 3);
+    do_check_eq(request.errors.length, 0);
+
+    let coll = server.user(username).collection(collection);
+    do_check_eq(coll.count(), 750);
+
+    do_check_eq(request.serverModifiedVersion, coll.timestamp);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batched_delete_conditional_success() {
+  _("Ensure conditional batched delete all work.");
+
+  let [server, client, username, collection] = getBatchedDeleteData();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let serverCollection = server.user(username).collection(collection);
+  let initialTimestamp = serverCollection.timestamp;
+
+  let request = client.deleteBSOsBatching(collection);
+  request.locallyModifiedVersion = initialTimestamp;
+
+  for (let i = 1; i < 251; i += 1) {
+    request.addID("bso" + 1);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 3);
+    do_check_eq(request.errors.length, 0);
+
+    do_check_true(request.locallyModifiedVersion > initialTimestamp);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batched_delete_conditional_initial_failure() {
+  _("Ensure conditional batched delete failure on initial request works.");
+
+  // The client needs to issue multiple requests but the first one was
+  // rejected. The client should only issue that initial request.
+  let [server, client, username, collection] = getBatchedDeleteData();
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+  }
+
+  let serverCollection = server.user(username).collection(collection);
+  let request = client.deleteBSOsBatching(collection);
+  request.locallyModifiedVersion = serverCollection.timestamp - 1;
+
+  for (let i = 1; i < 251; i += 1) {
+    request.addID("bso" + i);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 1);
+    do_check_eq(request.errors.length, 1);
+
+    server.stop(run_next_test);
+  });
+});
+
+add_test(function test_batched_delete_conditional_subsequent_failure() {
+  _("Ensure conditional batched delete failure on non-initial request.");
+
+  let [server, client, username, collection] = getBatchedDeleteData();
+
+  let serverCollection = server.user(username).collection(collection);
+
+  let requestCount = 0;
+  server.callback.onRequest = function onRequest() {
+    requestCount++;
+
+    if (requestCount <= 1) {
+      return;
+    }
+
+    // Advance collection's timestamp on subsequent requests so request is
+    // rejected.
+    serverCollection.timestamp++;
+  }
+
+  let request = client.deleteBSOsBatching(collection);
+  request.locallyModifiedVersion = serverCollection.timestamp;
+
+  for (let i = 1; i < 251; i += 1) {
+    request.addID("bso" + i);
+  }
+
+  request.finish(function onFinish(request) {
+    do_check_eq(requestCount, 2);
+    do_check_eq(request.errors.length, 1);
+
+    server.stop(run_next_test);
   });
 });

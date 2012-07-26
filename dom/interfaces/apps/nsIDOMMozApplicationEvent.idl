@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface mozIDOMApplication;
+
+[scriptable, builtinclass, uuid(8f2bfba8-f10e-4f63-a5e0-7a7056e1dbe6)]
+interface nsIDOMMozApplicationEvent : nsIDOMEvent
+{
+  readonly attribute mozIDOMApplication application;
+
+  [noscript] void initMozApplicationEvent(in DOMString aType,
+                                          in boolean aCanBubble,
+                                          in boolean aCancelable,
+                                          in mozIDOMApplication aApplication);
+};
+
+dictionary MozApplicationEventInit : EventInit
+{
+  mozIDOMApplication application;
+};
