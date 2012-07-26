@@ -192,7 +192,7 @@ nsPluginInstanceOwner::GetImageContainer()
   SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(img.get());
   pluginImage->SetData(data);
 
-  container->SetCurrentImage(img);
+  container->SetCurrentImageInTransaction(img);
 
   float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
   float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
@@ -1813,7 +1813,7 @@ already_AddRefed<ImageContainer> nsPluginInstanceOwner::GetImageContainerForVide
 
   SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(img.get());
   pluginImage->SetData(data);
-  container->SetCurrentImage(img);
+  container->SetCurrentImageInTransaction(img);
 
   return container.forget();
 }
@@ -3714,7 +3714,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       AutoLockImage autoLock(container);
       Image *image = autoLock.GetImage();
       if (image && (image->GetFormat() == Image::MAC_IO_SURFACE) && mObjectFrame) {
-        // Undo what we did to the current image in SetCurrentImage().
+        // Undo what we did to the current image in SetCurrentImageInTransaction().
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
         oglImage->SetUpdateCallback(nsnull, nsnull);
         oglImage->SetDestroyCallback(nsnull);
@@ -3723,11 +3723,11 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
         // to do ourselves what OnDestroyImage() would have done.
         NS_RELEASE_THIS();
       }
-      // Important! Unlock here otherwise SetCurrentImage will deadlock with
+      // Important! Unlock here otherwise SetCurrentImageInTransaction will deadlock with
       // our lock if we have a RemoteImage.
       autoLock.Unlock();
 #endif
-      container->SetCurrentImage(nsnull);
+      container->SetCurrentImageInTransaction(nsnull);
     }
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
