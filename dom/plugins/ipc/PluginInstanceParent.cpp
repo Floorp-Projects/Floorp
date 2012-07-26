@@ -755,7 +755,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
         MacIOSurfaceImage::Data ioData;
         ioData.mIOSurface = ioSurface;
         ioImage->SetData(ioData);
-        container->SetCurrentImage(ioImage);
+        container->SetCurrentImageInTransaction(ioImage);
 
         NS_IF_ADDREF(container);
         *aContainer = container;
@@ -770,7 +770,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
     cairoData.mSize = mFrontSurface->GetSize();
     pluginImage->SetData(cairoData);
 
-    container->SetCurrentImage(pluginImage);
+    container->SetCurrentImageInTransaction(pluginImage);
 
     NS_IF_ADDREF(container);
     *aContainer = container;

@@ -928,7 +928,7 @@ RasterImage::GetImageContainer(ImageContainer **_retval)
 
   NS_ASSERTION(image->GetFormat() == cairoFormat, "Wrong format");
   static_cast<CairoImage*>(image.get())->SetData(cairoData);
-  mImageContainer->SetCurrentImage(image);
+  mImageContainer->SetCurrentImageInTransaction(image);
 
   *_retval = mImageContainer;
   NS_ADDREF(*_retval);
