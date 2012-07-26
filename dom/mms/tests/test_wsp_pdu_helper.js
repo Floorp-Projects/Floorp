@@ -581,10 +581,10 @@ add_test(function test_Parameter_decodeTypedParameter() {
   wsp_decode_test_ex(func, [1, 0x10, 48, 46, 57, 57, 0],
                      {name: "secure", value: "0.99"});
   // Test for TextString
-  wsp_decode_test_ex(func, [1, 0x19, 60, 115, 109, 105, 108, 62, 0],
+  wsp_decode_test_ex(func, [1, 0x0A, 60, 115, 109, 105, 108, 62, 0],
                      {name: "start", value: "<smil>"});
   // Test for skipValue
-  wsp_decode_test_ex(func, [1, 0x19, 128], null);
+  wsp_decode_test_ex(func, [1, 0x0A, 128], null);
 
   run_next_test();
 });
@@ -609,7 +609,7 @@ add_test(function test_Parameter_decodeUntypedParameter() {
 //// Parameter.decode ////
 
 add_test(function test_Parameter_decode() {
-  wsp_decode_test(WSP.Parameter, [1, 0x19, 60, 115, 109, 105, 108, 62, 0],
+  wsp_decode_test(WSP.Parameter, [1, 0x0A, 60, 115, 109, 105, 108, 62, 0],
                   {name: "start", value: "<smil>"});
   wsp_decode_test(WSP.Parameter, [65, 0, 66, 0], {name: "a", value: "B"});
 
@@ -621,7 +621,7 @@ add_test(function test_Parameter_decode() {
 add_test(function test_Parameter_decodeMultiple() {
   wsp_decode_test_ex(function (data) {
       return WSP.Parameter.decodeMultiple(data, 13);
-    }, [1, 0x19, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0], {start: "<smil>", a: "B"}
+    }, [1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0], {start: "<smil>", a: "B"}
   );
 
   run_next_test();
@@ -814,7 +814,7 @@ add_test(function test_ContentTypeValue_decodeMediaType() {
   );
   wsp_decode_test_ex(function (data) {
       return WSP.ContentTypeValue.decodeMediaType(data, 14);
-    }, [0x3E | 0x80, 1, 0x19, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
+    }, [0x3E | 0x80, 1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
     {media: "application/vnd.wap.mms-message", params: {start: "<smil>", a: "B"}}
   );
 
@@ -826,7 +826,7 @@ add_test(function test_ContentTypeValue_decodeMediaType() {
 add_test(function test_ContentTypeValue_decodeContentGeneralForm() {
   wsp_decode_test_ex(function (data) {
       return WSP.ContentTypeValue.decodeContentGeneralForm(data);
-    }, [14, 0x3E | 0x80, 1, 0x19, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
+    }, [14, 0x3E | 0x80, 1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
     {media: "application/vnd.wap.mms-message", params: {start: "<smil>", a: "B"}}
   );
 
@@ -837,7 +837,7 @@ add_test(function test_ContentTypeValue_decodeContentGeneralForm() {
 
 add_test(function test_ContentTypeValue_decode() {
   wsp_decode_test(WSP.ContentTypeValue,
-    [14, 0x3E | 0x80, 1, 0x19, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
+    [14, 0x3E | 0x80, 1, 0x0A, 60, 115, 109, 105, 108, 62, 0, 65, 0, 66, 0],
     {media: "application/vnd.wap.mms-message", params: {start: "<smil>", a: "B"}}
   );
 

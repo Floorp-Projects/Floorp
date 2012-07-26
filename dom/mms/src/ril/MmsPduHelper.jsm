@@ -1211,7 +1211,7 @@ const MMS_PDU_TYPES = (function () {
 /**
  * Header field names and assigned numbers.
  *
- * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.4
+ * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.4
  */
 const MMS_HEADER_FIELDS = (function () {
   let names = {};
@@ -1304,6 +1304,7 @@ const MMS_WELL_KNOWN_PARAMS = (function () {
     params[name] = params[number] = entry;
   }
 
+  // Encoding Version: 1.2
   add("type", 0x02, WSP.TypeValue);
 
   return params;
