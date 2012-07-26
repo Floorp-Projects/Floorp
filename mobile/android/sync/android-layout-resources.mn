@@ -8,4 +8,3 @@ res/layout/sync_setup_jpake_waiting.xml
 res/layout/sync_setup_nointernet.xml
 res/layout/sync_setup_pair.xml
 res/layout/sync_setup_success.xml
-res/layout/sync_stub.xml

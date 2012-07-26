@@ -5,15 +5,10 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout" >
-  <LinearLayout
-    android:id="@+id/waiting_top"
-    style="@style/SyncTop" >
-  <ImageView
-    style="@style/SyncTopIcon" />
   <TextView
-    style="@style/SyncTextTitle"
+    style="@style/SyncTop"
+    android:id="@+id/waiting_top"
     android:text="@string/sync_title_connect" />
-  </LinearLayout>
 
   <ProgressBar
     android:id="@+id/waiting_content1"

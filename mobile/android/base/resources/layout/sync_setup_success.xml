@@ -6,22 +6,18 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout" >
 
-  <LinearLayout
+  <TextView
+    style="@style/SyncTop"
     android:id="@+id/success_top"
-    style="@style/SyncTop" >
-    <ImageView
-      style="@style/SyncTopIcon"/>
-    <TextView
-      style="@style/SyncTextTitle"
-      android:text="@string/sync_title_success" />
-  </LinearLayout>
+    android:text="@string/sync_title_success" />
+
   <TextView
     android:id="@+id/setup_success_subtitle"
-	style="@style/SyncTextItem"
-	android:gravity="left"
+    style="@style/SyncTextItem"
+    android:gravity="left"
     android:padding="20dp"
     android:layout_below="@id/success_top"
-	android:text="@string/sync_subtitle_success" />
+    android:text="@string/sync_subtitle_success" />
 
   <LinearLayout
     style="@style/SyncBottom"

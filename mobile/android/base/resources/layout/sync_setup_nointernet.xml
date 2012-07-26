@@ -5,21 +5,18 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout" >
-  <LinearLayout
+  <TextView
+    style="@style/SyncTop"
     android:id="@+id/internet_top"
-    style="@style/SyncTop">
-    <ImageView
-      style="@style/SyncTopIcon" />
-    <TextView
-      style="@style/SyncTextTitle"
-      android:text="@string/sync_title_fail" />
-  </LinearLayout>
+    android:text="@string/sync_title_fail" />
+
   <TextView
     style="@style/SyncTextItem"
     android:layout_below="@id/internet_top"
     android:layout_marginTop="20dp"
     android:gravity="center"
     android:text="@string/sync_subtitle_nointernet" />
+
   <LinearLayout
     style="@style/SyncBottom" >
     <Button
