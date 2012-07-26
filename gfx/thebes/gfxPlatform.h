@@ -130,7 +130,7 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
       case mozilla::gfx::BACKEND_NONE:
         return "none";
   }
-  MOZ_NOT_REACHED("Incomplet switch");
+  MOZ_NOT_REACHED("Incomplete switch");
 }
 
 class THEBES_API gfxPlatform {
@@ -196,14 +196,11 @@ public:
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
     // aBackend will be set to the preferred backend for Azure canvas
-    bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
+    bool SupportsAzureCanvas(mozilla::gfx::BackendType& aBackend);
 
     // aObj will contain the preferred backend for Azure canvas
-    void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
-      mozilla::gfx::BackendType backend;
-      if (SupportsAzure(backend)) {
-        aObj.DefineProperty("AzureBackend", GetBackendName(backend)); 
-      }
+    void GetAzureCanvasBackendInfo(mozilla::widget::InfoObject &aObj) {
+      aObj.DefineProperty("AzureBackend", GetBackendName(mPreferredCanvasBackend));
     }
 
     /*
@@ -496,11 +493,6 @@ protected:
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;
 
-    // The preferred draw target backend to use for canvas
-    mozilla::gfx::BackendType mPreferredCanvasBackend;
-    // The fallback draw target backend to use for canvas, if the preferred backend fails
-    mozilla::gfx::BackendType mFallbackCanvasBackend;
-
 private:
     /**
      * Start up Thebes.
@@ -513,7 +505,13 @@ private:
     nsTArray<PRUint32> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
-    mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureBackendCollector;
+
+    // The preferred draw target backend to use for canvas
+    mozilla::gfx::BackendType mPreferredCanvasBackend;
+    // The fallback draw target backend to use for canvas, if the preferred backend fails
+    mozilla::gfx::BackendType mFallbackCanvasBackend;
+
+    mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     bool mWorkAroundDriverBugs;
 };
 

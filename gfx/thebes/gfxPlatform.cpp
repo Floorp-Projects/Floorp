@@ -213,7 +213,7 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
-  : mAzureBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureCanvasBackendInfo)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -674,7 +674,7 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
 {
   BackendType backend;
-  if (!SupportsAzure(backend)) {
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
 
@@ -703,7 +703,7 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
   BackendType backend;
-  if (!SupportsAzure(backend)) {
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
 
@@ -721,21 +721,19 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
   BackendType backend;
-  if (!SupportsAzure(backend)) {
+  if (!SupportsAzureCanvas(backend)) {
     return NULL;
   }
   return Factory::CreateDrawTargetForData(backend, aData, aSize, aStride, aFormat); 
 }
 
 bool
-gfxPlatform::SupportsAzure(BackendType& aBackend)
+gfxPlatform::SupportsAzureCanvas(BackendType& aBackend)
 {
-  if (mPreferredCanvasBackend != BACKEND_NONE) {
-    aBackend = mPreferredCanvasBackend;
-    return true;
-  }
-
-  return false;
+  NS_ASSERTION(mFallbackCanvasBackend == BACKEND_NONE || mPreferredCanvasBackend != BACKEND_NONE,
+               "fallback backend with no preferred backend");
+  aBackend = mPreferredCanvasBackend;
+  return mPreferredCanvasBackend != BACKEND_NONE;
 }
 
 /* static */ BackendType
@@ -1175,6 +1173,12 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
 void
 gfxPlatform::InitCanvasBackend(PRUint32 aBackendBitmask)
 {
+    if (!Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
+        mPreferredCanvasBackend = BACKEND_NONE;
+        mFallbackCanvasBackend = BACKEND_NONE;
+        return;
+    }
+
     mPreferredCanvasBackend = GetCanvasBackendPref(aBackendBitmask);
     mFallbackCanvasBackend = GetCanvasBackendPref(aBackendBitmask & ~(1 << mPreferredCanvasBackend));
 }
