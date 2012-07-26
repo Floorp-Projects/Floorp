@@ -87,9 +87,9 @@ public:
    * PostDesktopNotification
    * Uses alert service to display a notification
    */
-  void PostDesktopNotification();
+  nsresult PostDesktopNotification();
 
-  void SetAllow(bool aAllow);
+  nsresult SetAllow(bool aAllow);
 
   /*
    * Creates and dispatches a dom event of type aName
