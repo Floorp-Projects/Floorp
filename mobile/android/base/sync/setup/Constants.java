@@ -8,7 +8,6 @@ import android.content.Intent;
 
 public class Constants {
   // Constants for Firefox Sync SyncAdapter Accounts.
-  public static final String ACCOUNTTYPE_SYNC     = "org.mozilla.firefox_sync";
   public static final String OPTION_SYNCKEY       = "option.synckey";
   public static final String OPTION_USERNAME      = "option.username";
   public static final String AUTHTOKEN_TYPE_PLAIN = "auth.plain";
