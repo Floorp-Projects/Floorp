@@ -71,9 +71,12 @@ add_test(function test_Address_decode() {
   // Test for alphanum-shortcode
   wsp_decode_test(MMS.Address, strToCharCodeArray("H0wD0Y0uTurnTh1s0n"),
                       {address: "H0wD0Y0uTurnTh1s0n", type: "alphanum"});
-  // Test for other unknown typed sequence
+  // Test for email address
   wsp_decode_test(MMS.Address, strToCharCodeArray("Joe User <joe@user.org>"),
-                      {address: "Joe User <joe@user.org>", type: "unknown"});
+                      {address: "Joe User <joe@user.org>", type: "email"});
+  // Test for invalid address
+  wsp_decode_test(MMS.Address, strToCharCodeArray("@@@@@"),
+                  null, "CodeError");
 
   run_next_test();
 });
