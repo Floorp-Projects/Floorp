@@ -15,9 +15,7 @@
 #include "nsParentalControlsServiceWin.h"
 #endif
 
-#ifdef ALERTS_SERVICE
 #include "nsAlertsService.h"
-#endif
 
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
@@ -45,9 +43,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
 #endif
 
-#ifdef ALERTS_SERVICE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-#endif
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
                                          nsDownloadManager::GetSingleton) 
@@ -87,9 +83,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
-#ifdef ALERTS_SERVICE
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
-#endif
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
 #endif
@@ -112,9 +106,7 @@ NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
   { &kNS_USERINFO_CID, false, NULL, nsUserInfoConstructor },
-#ifdef ALERTS_SERVICE
   { &kNS_ALERTSSERVICE_CID, false, NULL, nsAlertsServiceConstructor },
-#endif
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { &kNS_PARENTALCONTROLSSERVICE_CID, false, NULL, nsParentalControlsServiceWinConstructor },
 #endif
@@ -139,9 +131,7 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
   { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
-#ifdef ALERTS_SERVICE
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
-#endif
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },
 #endif

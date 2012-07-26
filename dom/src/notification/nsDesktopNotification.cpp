@@ -24,21 +24,21 @@ NS_IMPL_ISUPPORTS1(AlertServiceObserver, nsIObserver)
 /* nsDesktopNotification                                                    */
 /* ------------------------------------------------------------------------ */
 
-void
+nsresult
 nsDOMDesktopNotification::PostDesktopNotification()
 {
   nsCOMPtr<nsIAlertsService> alerts = do_GetService("@mozilla.org/alerts-service;1");
   if (!alerts)
-    return;
+    return NS_ERROR_NOT_IMPLEMENTED;
 
   if (!mObserver)
     mObserver = new AlertServiceObserver(this);
 
-  alerts->ShowAlertNotification(mIconURL, mTitle, mDescription,
-                                true, 
-                                EmptyString(),
-                                mObserver,
-                                EmptyString());
+  return alerts->ShowAlertNotification(mIconURL, mTitle, mDescription,
+                                       true,
+                                       EmptyString(),
+                                       mObserver,
+                                       EmptyString());
 }
 
 DOMCI_DATA(DesktopNotification, nsDOMDesktopNotification)
@@ -145,14 +145,16 @@ nsDOMDesktopNotification::DispatchNotificationEvent(const nsString& aName)
   }
 }
 
-void
+nsresult
 nsDOMDesktopNotification::SetAllow(bool aAllow)
 {
   mAllow = aAllow;
 
   // if we have called Show() already, lets go ahead and post a notification
   if (mShowHasBeenCalled && aAllow)
-    PostDesktopNotification();
+    return PostDesktopNotification();
+
+  return NS_OK;
 }
 
 void
@@ -176,8 +178,7 @@ nsDOMDesktopNotification::Show()
   if (!mAllow)
     return NS_OK;
 
-  PostDesktopNotification();
-  return NS_OK;
+  return PostDesktopNotification();
 }
 
 NS_IMETHODIMP
@@ -277,17 +278,17 @@ nsDesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
 NS_IMETHODIMP
 nsDesktopNotificationRequest::Cancel()
 {
-  mDesktopNotification->SetAllow(false);
+  nsresult rv = mDesktopNotification->SetAllow(false);
   mDesktopNotification = nullptr;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsDesktopNotificationRequest::Allow()
 {
-  mDesktopNotification->SetAllow(true);
+  nsresult rv = mDesktopNotification->SetAllow(true);
   mDesktopNotification = nullptr;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

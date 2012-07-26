@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 function AlertsService() { }
 
 AlertsService.prototype = {
-  classID: Components.ID("{5dce03b2-8faa-4b6e-9242-6ddb0411750c}"),
+  classID: Components.ID("{fe33c107-82a4-41d6-8c64-5353267e04c9}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAlertsService]),
 
   showAlertNotification: function(aImageUrl, aTitle, aText, aTextClickable, aCookie, aAlertListener, aName) {
