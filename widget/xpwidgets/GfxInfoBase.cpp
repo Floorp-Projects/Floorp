@@ -724,22 +724,6 @@ GfxInfoBase::GetWebGLParameter(const nsAString& aParam,
   return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }
 
-nsresult
-GfxInfoBase::GetAzureEnabled(bool *aEnabled)
-{
-  static bool azure = false;
-  static bool azureInited = false;
-
-  if (!azureInited) {
-    azure = mozilla::Preferences::GetBool("gfx.canvas.azure.enabled", false);
-    azureInited = true;
-  }
-
-  *aEnabled = azure;
-
-  return NS_OK;
-}
-
 void
 GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 {

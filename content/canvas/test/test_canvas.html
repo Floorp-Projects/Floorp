@@ -44,7 +44,8 @@ function IsAzureEnabled() {
 
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    enabled = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).AzureEnabled;
+    var backend = Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).getInfo().AzureBackend;
+    enabled = (backend != "none");
   } catch (e) { }
 
   return enabled;
