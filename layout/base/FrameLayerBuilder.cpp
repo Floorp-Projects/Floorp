@@ -3132,7 +3132,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     data.mSurface = surface;
     data.mSize = surfaceSize;
     static_cast<CairoImage*>(image.get())->SetData(data);
-    container->SetCurrentImage(image);
+    container->SetCurrentImageInTransaction(image);
 
     GetMaskLayerImageCache()->PutImage(key, container);
   }
