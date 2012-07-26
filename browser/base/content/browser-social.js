@@ -348,7 +348,7 @@ var SocialToolbar = {
       let doc = notifBrowser.contentDocument;
       // "notif" is an implementation detail that we should get rid of
       // eventually
-      let body = doc.getElementById("notif") || doc.body.firstChild;
+      let body = doc.getElementById("notif") || (doc.body && doc.body.firstChild);
       if (!body)
         return;
       let h = body.scrollHeight > 0 ? body.scrollHeight : 300;
