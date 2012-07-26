@@ -239,10 +239,6 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     {
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
-  case NATIVE_FONT_GDI_FONT_FACE:
-    {
-      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
-    }
 #endif
 #ifdef XP_MACOSX
   case NATIVE_FONT_MAC_FONT_FACE:
@@ -251,6 +247,12 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     }
 #endif
 #ifdef USE_SKIA
+#ifdef WIN32
+  case NATIVE_FONT_GDI_FONT_FACE:
+    {
+      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
+    }
+#endif
 #ifdef MOZ_ENABLE_FREETYPE
   case NATIVE_FONT_SKIA_FONT_FACE:
     {
@@ -261,9 +263,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #ifdef USE_CAIRO
   case NATIVE_FONT_CAIRO_FONT_FACE:
     {
-      ScaledFontBase* fontBase = new ScaledFontBase(aSize);
-      fontBase->SetCairoScaledFont(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont));
-      return fontBase;
+      return new ScaledFontBase(aSize);
     }
 #endif
   default:
@@ -367,11 +367,11 @@ Factory::GetD2DVRAMUsageSourceSurface()
 #endif // XP_WIN
 
 TemporaryRef<DrawTarget>
-Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize)
+Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface)
 {
 #ifdef USE_CAIRO
   RefPtr<DrawTargetCairo> newTarget = new DrawTargetCairo();
-  if (newTarget->Init(aSurface, aSize)) {
+  if (newTarget->Init(aSurface)) {
     return newTarget;
   }
 

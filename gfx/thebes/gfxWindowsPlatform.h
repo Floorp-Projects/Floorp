@@ -108,9 +108,11 @@ public:
                                   gfxASurface::gfxContentType aContentType);
 
     virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
+      GetScaledFontForFont(gfxFont *aFont);
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
+    
+    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
 
     enum RenderMode {
         /* Use GDI and windows surfaces */
