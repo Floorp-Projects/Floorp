@@ -25,7 +25,7 @@ interface nsIHttpAuthenticableChannel;
  * called.
  */
 
-[scriptable, uuid(c68f3def-c7c8-4ee8-861c-eef49a48b702)]
+[scriptable, uuid(1b74d211-8980-42d4-b0ce-caafa73f4a0f)]
 interface nsIHttpChannelAuthProvider : nsICancelable
 {
   /**
@@ -42,13 +42,11 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    *        the http status received.
    * @param sslConnectFailed
    *        if the last ssl tunnel connection attempt was or not successful.
-   * @param callback
-   *        the callback to be called when it returns NS_ERROR_IN_PROGRESS.
-   *        The implementation must hold a weak reference.
    *
    * @returns NS_OK if the credentials were got and set successfully.
    *          NS_ERROR_IN_PROGRESS if the credentials are going to be asked to
-   *                               the user. The channel reference must be
+   *                               the user or other blocking event such as DNS
+   *                               is incurred. The channel reference must be
    *                               alive until the feedback from
    *                               nsIHttpAuthenticableChannel's methods or
    *                               until disconnect be called.
@@ -68,8 +66,13 @@ interface nsIHttpChannelAuthProvider : nsICancelable
   void checkForSuperfluousAuth();
 
   /**
-   * Cancel pending user auth prompts and release the callback and channel
-   * weak references.
+   * Cancel pending user auth prompts and release the channel
+   * weak reference.
    */
   void disconnect(in nsresult status);
+
+  /**
+   * The host portion of the URI, possibly canonicalized
+   */
+  readonly attribute ACString asciiHostForAuth;
 };

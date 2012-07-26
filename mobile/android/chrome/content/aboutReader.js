@@ -205,6 +205,16 @@ let AboutReader = {
       return;
 
     this._toolbarElement.classList.toggle("toolbar-hidden");
+
+    if (!visible && !this._hasUsedToolbar) {
+      this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
+      if (!this._hasUsedToolbar) {
+        gChromeWin.NativeWindow.toast.show(gStrings.GetStringFromName("aboutReader.toolbarTip"), "short");
+
+        Services.prefs.setBoolPref("reader.has_used_toolbar", true);
+        this._hasUsedToolbar = true;
+      }
+    }
   },
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
