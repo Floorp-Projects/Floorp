@@ -2846,6 +2846,11 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
         return JS::NullValue();
     }
 
+    if (!mBoundRenderbuffer) {
+        ErrorInvalidOperation("getRenderbufferParameter: no render buffer is bound");
+        return JS::NullValue();
+    }
+
     MakeContextCurrent();
 
     switch (pname) {
@@ -2864,13 +2869,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
         }
         case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         {
-            GLint i = 0;
-            gl->fGetRenderbufferParameteriv(target, pname, &i);
-            if (i == LOCAL_GL_DEPTH24_STENCIL8)
-            {
-                i = LOCAL_GL_DEPTH_STENCIL;
-            }
-            return JS::NumberValue(uint32_t(i));
+            return JS::NumberValue(mBoundRenderbuffer->InternalFormat());
         }
         default:
             ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
