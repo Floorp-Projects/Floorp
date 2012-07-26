@@ -12,6 +12,7 @@
 
 #include "ISimpleDOMDocument.h"
 
+#include "nsAccUtils.h"
 #include "DocAccessible.h"
 #include "nsIDocShellTreeItem.h"
 

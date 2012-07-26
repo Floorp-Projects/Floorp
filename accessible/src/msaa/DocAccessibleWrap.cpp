@@ -8,7 +8,6 @@
 #include "Compatibility.h"
 #include "DocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
-#include "nsCoreUtils.h"
 #include "nsIAccessibilityService.h"
 #include "nsWinUtils.h"
 #include "Role.h"

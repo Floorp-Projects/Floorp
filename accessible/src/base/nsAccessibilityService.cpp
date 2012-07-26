@@ -25,7 +25,6 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
-#include "nsEventShell.h"
 #include "nsIAccessibleProvider.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
@@ -568,6 +567,31 @@ nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
       RecreateAccessible(presShell, aImageFrame->GetContent());
     }
   }
+}
+
+void
+nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
+{
+  // Presshell destruction will automatically destroy shells for descendant
+  // documents, so no need to worry about those. Just shut down the accessible
+  // for this one document. That keeps us from having bad behavior in case of
+  // deep bushy subtrees.
+  // When document subtree containing iframe is hidden then we don't get
+  // pagehide event for the iframe's underlying document and its presshell is
+  // destroyed before we're notified styles were changed. Shutdown the document
+  // accessible early.
+  nsIDocument* doc = aPresShell->GetDocument();
+  if (!doc)
+    return;
+
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eDocDestroy))
+    logging::DocDestroy("presshell destroyed", doc);
+#endif
+
+  DocAccessible* docAccessible = GetDocAccessibleFromCache(doc);
+  if (docAccessible)
+    docAccessible->Shutdown();
 }
 
 void
