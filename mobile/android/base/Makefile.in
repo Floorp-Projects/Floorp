@@ -16,10 +16,6 @@ DIST_FILES = package-name.txt
 
 include $(topsrcdir)/mobile/android/base/android-sync-files.mk
 
-#These SYNC_ variables could be moved to android-sync/fennec-copy-code.sh
-SYNC_RES_XML=res/xml/sync_authenticator.xml
-SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
-
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AboutHomeSection.java \
@@ -241,6 +237,9 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes res sync db
 
+MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
+MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
+
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
@@ -248,19 +247,29 @@ ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
 
 # we released these builds to the public with shared IDs and need to keep them
 ifeq (org.mozilla.firefox,$(ANDROID_PACKAGE_NAME))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
+MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
 else ifeq (org.mozilla.firefox_beta,$(ANDROID_PACKAGE_NAME))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
+MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
 else ifeq (org.mozilla.fennec_aurora,$(ANDROID_PACKAGE_NAME))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
+MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
 else ifeq (org.mozilla.fennec,$(ANDROID_PACKAGE_NAME))
-DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
+MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
 endif
 
 else
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
-DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
+endif
+
+ifdef MOZ_ANDROID_SHARED_ID
+DEFINES += -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)"
+endif
+ifdef MOZ_ANDROID_SHARED_ACCOUNT_TYPE
+DEFINES += -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)"
 endif
 
 RES_LAYOUT = \
