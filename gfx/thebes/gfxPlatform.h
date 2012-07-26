@@ -38,9 +38,6 @@ class gfxTextRun;
 class nsIURI;
 class nsIAtom;
 
-extern mozilla::gfx::UserDataKey kThebesSurfaceKey;
-void DestroyThebesSurface(void *data);
-
 extern cairo_user_data_key_t kDrawTarget;
 
 // pref lang id's for font prefs
@@ -175,9 +172,12 @@ public:
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
-     * Creates a SourceSurface for a gfxASurface. This surface should -not- be
-     * held around by the user after the underlying gfxASurface has been
-     * destroyed as a copy of the data is not guaranteed.
+     * Creates a SourceSurface for a gfxASurface. This function does no caching,
+     * so the caller should cache the gfxASurface if it will be used frequently.
+     * The returned surface keeps a reference to aTarget, so it is OK to keep the
+     * surface, even if aTarget changes.
+     * aTarget should not keep a reference to the returned surface because that
+     * will cause a cycle.
      */
     virtual mozilla::RefPtr<mozilla::gfx::SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
