@@ -45,7 +45,6 @@ public:
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
-  using GfxInfoBase::GetAzureEnabled;
 
   void EnsureInitializedFromGfxInfoData();
 
