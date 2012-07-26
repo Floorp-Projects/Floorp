@@ -88,17 +88,18 @@
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
-    <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();"/>
+    <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();" disabled="true" hidden="true"/>
     <command id="Tools:DevToolbarFocus" oncommand="DeveloperToolbar.focus();" disabled="true"/>
     <command id="Tools:WebConsole" oncommand="HUDConsoleUI.toggleHUD();"/>
-    <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();"/>
-    <command id="Tools:Debugger" oncommand="DebuggerUI.toggleDebugger();"/>
-    <command id="Tools:RemoteDebugger" oncommand="DebuggerUI.toggleRemoteDebugger();"/>
-    <command id="Tools:ChromeDebugger" oncommand="DebuggerUI.toggleChromeDebugger();"/>
-    <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();"/>
-    <command id="Tools:StyleEditor" oncommand="StyleEditor.toggle();"/>
-    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();"/>
+    <command id="Tools:Inspect" oncommand="InspectorUI.toggleInspectorUI();" disabled="true" hidden="true"/>
+    <command id="Tools:Debugger" oncommand="DebuggerUI.toggleDebugger();" disabled="true" hidden="true"/>
+    <command id="Tools:RemoteDebugger" oncommand="DebuggerUI.toggleRemoteDebugger();" disabled="true" hidden="true"/>
+    <command id="Tools:ChromeDebugger" oncommand="DebuggerUI.toggleChromeDebugger();" disabled="true" hidden="true"/>
+    <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();" disabled="true" hidden="true"/>
+    <command id="Tools:StyleEditor" oncommand="StyleEditor.toggle();" disabled="true" hidden="true"/>
+    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();" disabled="true" hidden="true"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
+    <command id="Tools:ErrorConsole" oncommand="toJavaScriptConsole()" disabled="true" hidden="true"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
     <command id="Tools:PrivateBrowsing" oncommand="gPrivateBrowsingUI.toggleMode();"/>
@@ -190,8 +191,7 @@
                  label="&devToolbarMenu.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:DevToolbar"
-                 key="key_devToolbar"
-                 disabled="true" hidden="true"/>
+                 key="key_devToolbar"/>
     <broadcaster id="devtoolsMenuBroadcaster_WebConsole"
                  label="&webConsoleCmd.label;"
                  type="checkbox" autocheck="false"
@@ -201,48 +201,40 @@
                  label="&inspectMenu.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:Inspect"
-                 key="key_inspect"
-                 disabled="true" hidden="true"/>
+                 key="key_inspect"/>
     <broadcaster id="devtoolsMenuBroadcaster_Debugger"
                  label="&debuggerMenu.label2;"
                  type="checkbox" autocheck="false"
                  command="Tools:Debugger"
-                 key="key_debugger"
-                 disabled="true" hidden="true"/>
+                 key="key_debugger"/>
     <broadcaster id="devtoolsMenuBroadcaster_RemoteDebugger"
                  label="&remoteDebuggerMenu.label;"
-                 command="Tools:RemoteDebugger"
-                 disabled="true" hidden="true"/>
+                 command="Tools:RemoteDebugger"/>
     <broadcaster id="devtoolsMenuBroadcaster_ChromeDebugger"
                  label="&chromeDebuggerMenu.label;"
-                 command="Tools:ChromeDebugger"
-                 disabled="true" hidden="true"/>
+                 command="Tools:ChromeDebugger"/>
     <broadcaster id="devtoolsMenuBroadcaster_Scratchpad"
                  label="&scratchpad.label;"
                  command="Tools:Scratchpad"
-                 key="key_scratchpad"
-                 disabled="true" hidden="true"/>
+                 key="key_scratchpad"/>
     <broadcaster id="devtoolsMenuBroadcaster_StyleEditor"
                  label="&styleeditor.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:StyleEditor"
-                 key="key_styleeditor"
-                 disabled="true" hidden="true"/>
+                 key="key_styleeditor"/>
     <broadcaster id="devtoolsMenuBroadcaster_ResponsiveUI"
                  label="&responsiveDesignTool.label;"
                  type="checkbox" autocheck="false"
                  command="Tools:ResponsiveUI"
-                 key="key_responsiveUI"
-                 disabled="true" hidden="true"/>
+                 key="key_responsiveUI"/>
     <broadcaster id="devtoolsMenuBroadcaster_PageSource"
                  label="&pageSourceCmd.label;"
                  key="key_viewSource"
                  command="View:PageSource"/>
     <broadcaster id="devtoolsMenuBroadcaster_ErrorConsole"
-                 hidden="true"
                  label="&errorConsoleCmd.label;"
                  key="key_errorConsole"
-                 oncommand="toJavaScriptConsole();"/>
+                 command="Tools:ErrorConsole"/>
     <broadcaster id="devtoolsMenuBroadcaster_GetMoreTools"
                  label="&getMoreDevtoolsCmd.label;"
                  oncommand="openUILinkIn('https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/', 'tab');"/>
@@ -292,7 +284,7 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_openAddons" key="&addons.commandkey;" command="Tools:Addons" modifiers="accel,shift"/>
-    <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift" disabled="true"/>
+    <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" command="Tools:ErrorConsole" modifiers="accel,shift"/>
     <key id="key_devToolbar" keycode="&devToolbar.keycode;" modifiers="shift"
          keytext="&devToolbar.keytext;" command="Tools:DevToolbarFocus"/>
     <key id="key_webConsole" key="&webConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();"

@@ -304,6 +304,8 @@ def write_getter(a, iface, fd):
         fd.write("    JSBool b;\n")
         fd.write("    MOZ_ALWAYS_TRUE(JS_ValueToBoolean(aCx, v, &b));\n")
         fd.write("    aDict.%s = b;\n" % a.name)
+    elif realtype.count("PRUint32"):
+        fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("PRInt32"):
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAInt32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("double"):
