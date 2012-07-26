@@ -52,22 +52,22 @@ CPPSRCS += \
 endif
 
 EXPORTS = \
-					CAccessibleValue.h \
-					ia2AccessibleAction.h \
-					ia2AccessibleComponent.h \
-					ia2AccessibleEditableText.h \
-					ia2AccessibleHyperlink.h \
-					ia2AccessibleHypertext.h \
-					ia2AccessibleText.h \
+  				CAccessibleValue.h \
+  				ia2AccessibleAction.h \
+  				ia2AccessibleComponent.h \
+  				ia2AccessibleEditableText.h \
+  				ia2AccessibleHyperlink.h \
+  				ia2AccessibleHypertext.h \
+  				ia2AccessibleText.h \
   nsAccessNodeWrap.h \
   $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/a11y \
 
 EXPORTS_mozilla/a11y = \
-	AccessibleWrap.h \
-	HyperTextAccessibleWrap.h \
-	$(null)
+  AccessibleWrap.h \
+  HyperTextAccessibleWrap.h \
+  $(null)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
