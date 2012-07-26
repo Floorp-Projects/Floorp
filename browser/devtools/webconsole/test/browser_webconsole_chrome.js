@@ -16,7 +16,7 @@ function test() {
 function testChrome(hud) {
   ok(hud, "we have a console");
   
-  ok(hud.HUDBox, "we have the console display");
+  ok(hud.iframe, "we have the console iframe");
 
   let jsterm = hud.jsterm;
   ok(jsterm, "we have a jsterm");

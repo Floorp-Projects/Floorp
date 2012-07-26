@@ -3231,6 +3231,25 @@ stack[anonid=browserStack][responsivemode] {
   background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }
 
+/* Web Console */
+
+.web-console-frame {
+  border-bottom: 1px solid #aaa;
+}
+
+.web-console-frame[animated] {
+  transition: height 100ms;
+}
+
+.web-console-splitter {
+  border-top: none;
+}
+
+.web-console-panel {
+  -moz-appearance: none;
+  background-color: white;
+}
+
 /* Developer Toolbar */
 
 .developer-toolbar-button {
