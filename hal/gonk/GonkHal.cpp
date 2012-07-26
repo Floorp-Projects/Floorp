@@ -688,7 +688,7 @@ DestroyAlarmData(void* aData)
 // Runs on alarm-watcher thread.
 void ShutDownAlarm(int aSigno)
 {
-  if (aSigno == SIGUSR2) {
+  if (aSigno == SIGUSR1) {
     sAlarmData->mShuttingDown = true;
   }
   return;
@@ -740,8 +740,8 @@ EnableAlarm()
   sigemptyset(&actions.sa_mask);
   actions.sa_flags = 0;
   actions.sa_handler = ShutDownAlarm;
-  if (sigaction(SIGUSR2, &actions, NULL)) {
-    HAL_LOG(("Failed to set SIGUSR2 signal for alarm-watcher thread."));
+  if (sigaction(SIGUSR1, &actions, NULL)) {
+    HAL_LOG(("Failed to set SIGUSR1 signal for alarm-watcher thread."));
     return false;
   }
 
@@ -773,7 +773,7 @@ DisableAlarm()
 
   // The cancel will interrupt the thread and destroy it, freeing the
   // data pointed at by sAlarmData.
-  DebugOnly<int> err = pthread_kill(sAlarmFireWatcherThread, SIGUSR2);
+  DebugOnly<int> err = pthread_kill(sAlarmFireWatcherThread, SIGUSR1);
   MOZ_ASSERT(!err);
 }
 
