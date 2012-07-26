@@ -44,6 +44,8 @@ public:
   bool GetTransformMatrix(gfx3DMatrix& aMatrix);
   int ID() { return mID; }
 
+  // The callback is guaranteed to be called on the main thread even
+  // if the upstream callback is received on a different thread
   void SetFrameAvailableCallback(nsIRunnable* aRunnable);
 
   // Only should be called by AndroidJNI when we get a
