@@ -4786,6 +4786,21 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
         return true;
     }
 
+    /* Handle lenth accesses of optimize 'arguments'. */
+    if (name == cx->runtime->atomState.lengthAtom &&
+        cx->typeInferenceEnabled() &&
+        analysis->poppedTypes(PC, 0)->isMagicArguments(cx) &&
+        knownPushedType(0) == JSVAL_TYPE_INT32)
+    {
+        frame.pop();
+        RegisterID reg = frame.allocReg();
+        masm.load32(Address(JSFrameReg, StackFrame::offsetOfNumActual()), reg);
+        frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+        if (script->hasScriptCounts)
+            bumpPropCount(PC, PCCounts::PROP_DEFINITE);
+        return true;
+    }
+
     if (top->mightBeType(JSVAL_TYPE_OBJECT) &&
         JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled() &&
         !hasTypeBarriers(PC) && knownPushedType(0) == JSVAL_TYPE_INT32) {
@@ -4864,18 +4879,6 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
                 bumpPropCount(PC, PCCounts::PROP_DEFINITE);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
-            return true;
-        }
-
-        /*
-         * Check if we are accessing the 'length' of the lazy arguments for the
-         * current frame.
-         */
-        if (types->isMagicArguments(cx)) {
-            frame.pop();
-            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfNumActual()), JSVAL_TYPE_INT32);
-            if (script->hasScriptCounts)
-                bumpPropCount(PC, PCCounts::PROP_DEFINITE);
             return true;
         }
     }
