@@ -3,10 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -39,12 +39,30 @@ VPATH += $(srcdir)/..
 VPATH += $(srcdir)/../compiler
 VPATH += $(srcdir)/../compiler/preprocessor
 VPATH += $(srcdir)/../compiler/preprocessor/new
+VPATH += $(srcdir)/../compiler/timing
+VPATH += $(srcdir)/../compiler/depgraph
 VPATH += $(srcdir)/../common
 
 # Translator/compiler first
 
 CPPSRCS = \
-	Compiler.cpp \
+        Diagnostics.cpp \
+        PreprocessorDiagnostics.cpp \
+        DirectiveHandler.cpp \
+        PreprocessorDirectiveHandler.cpp \
+        DirectiveParser.cpp \
+        ExpressionParser.cpp \
+        Macro.cpp \
+        MacroExpander.cpp \
+        Tokenizer.cpp \
+        InitializeParseContext.cpp \
+        DependencyGraph.cpp \
+        DependencyGraphBuilder.cpp \
+        DependencyGraphOutput.cpp \
+        DependencyGraphTraverse.cpp \
+        RestrictFragmentShaderTiming.cpp \
+        RestrictVertexShaderTiming.cpp \
+        Compiler.cpp \
         DetectRecursion.cpp \
         InfoSink.cpp \
         Initialize.cpp \
@@ -61,40 +79,44 @@ CPPSRCS = \
         SymbolTable.cpp \
         VariableInfo.cpp \
         compilerdebug.cpp \
-        ossource_win.cpp \
         util.cpp \
         ValidateLimitations.cpp \
-	ForLoopUnroll.cpp \
-	MapLongVariableNames.cpp \
-	spooky.cpp \
+        ForLoopUnroll.cpp \
+        MapLongVariableNames.cpp \
+        spooky.cpp \
         BuiltInFunctionEmulator.cpp \
         Input.cpp \
         Lexer.cpp \
-        pp_lex.cpp \
         Preprocessor.cpp \
         Token.cpp \
-        lexer_glue.cpp \
-	$(NULL)
+        $(NULL)
 
 # flex/yacc generated files
 CPPSRCS += \
-	glslang_lex.cpp \
-	glslang_tab.cpp \
-	$(NULL)
+        glslang_lex.cpp \
+        glslang_tab.cpp \
+        $(NULL)
 
 # HLSL translator backend
 CPPSRCS += \
-	CodeGenHLSL.cpp \
-	OutputHLSL.cpp \
-	TranslatorHLSL.cpp \
-	UnfoldSelect.cpp \
-	SearchSymbol.cpp \
+        CodeGenHLSL.cpp \
+        OutputHLSL.cpp \
+        TranslatorHLSL.cpp \
+        SearchSymbol.cpp \
         OutputESSL.cpp \
         OutputGLSLBase.cpp \
         TranslatorESSL.cpp \
-	$(NULL)
+        DetectDiscontinuity.cpp \
+        UnfoldShortCircuit.cpp \
+        $(NULL)
 
-CSRCS   = \
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += ossource_win.cpp $(NULL)
+else
+CPPSRCS += ossource_posix.cpp $(NULL)
+endif
+
+CSRCS = \
         atom.c \
         cpp.c \
         cppstruct.c \
@@ -102,7 +124,7 @@ CSRCS   = \
         scanner.c \
         symbols.c \
         tokens.c \
-	$(NULL)
+        $(NULL)
 
 DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBGLESV2_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
 
@@ -114,27 +136,28 @@ ifndef MOZ_DEBUG
 DEFINES += -D_SECURE_SCL=0
 endif
 
-CPPSRCS	+= \
-	debug.cpp \
-	Blit.cpp \
-	Buffer.cpp \
-	Context.cpp \
-	Fence.cpp \
-	Framebuffer.cpp \
-	libGLESv2.cpp \
-	main.cpp \
-	Program.cpp \
-	RefCountObject.cpp \
-	Query.cpp \
-	Renderbuffer.cpp \
-	ResourceManager.cpp \
-	Shader.cpp \
-	Texture.cpp \
-	utilities.cpp \
-	HandleAllocator.cpp \
-	IndexDataManager.cpp \
-	VertexDataManager.cpp \
-	$(NULL)
+CPPSRCS += \
+        debug.cpp \
+        Blit.cpp \
+        Buffer.cpp \
+        Context.cpp \
+        Fence.cpp \
+        Framebuffer.cpp \
+        libGLESv2.cpp \
+        main.cpp \
+        Program.cpp \
+        ProgramBinary.cpp \
+        RefCountObject.cpp \
+        Query.cpp \
+        Renderbuffer.cpp \
+        ResourceManager.cpp \
+        Shader.cpp \
+        Texture.cpp \
+        utilities.cpp \
+        HandleAllocator.cpp \
+        IndexDataManager.cpp \
+        VertexDataManager.cpp \
+        $(NULL)
 
 DEFFILE = $(srcdir)/libGLESv2.def
 RCFILE = $(srcdir)/libGLESv2.rc
@@ -143,4 +166,4 @@ include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
                    "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3dx9.lib" \
-		   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/D3DCompiler.lib"
+                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/D3DCompiler.lib"

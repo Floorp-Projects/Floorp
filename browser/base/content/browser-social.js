@@ -43,6 +43,7 @@ let SocialUI = {
         break;
       case "social:profile-changed":
         SocialToolbar.updateProfile();
+        SocialShareButton.updateProfileInfo();
         break;
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
@@ -153,7 +154,10 @@ let SocialShareButton = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
     this.updateButtonHiddenState();
+    this.updateProfileInfo();
+  },
 
+  updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("editSharePopupHeader");
     let profile = Social.provider.profile;
     if (profile && profile.portrait && profile.displayName) {

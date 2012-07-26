@@ -3,10 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH    = ../../../..
-topsrcdir  = @top_srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -43,67 +43,6 @@ VPATH += $(srcdir)/.. \
 
 # Translator/compiler first
 
-CPPSRCS = \
-  Compiler.cpp \
-  DetectRecursion.cpp \
-  InfoSink.cpp \
-  Initialize.cpp \
-  InitializeDll.cpp \
-  Intermediate.cpp \
-  intermOut.cpp \
-  IntermTraverse.cpp \
-  parseConst.cpp \
-  ParseHelper.cpp \
-  PoolAlloc.cpp \
-  QualifierAlive.cpp \
-  RemoveTree.cpp \
-  ShaderLang.cpp \
-  SymbolTable.cpp \
-  VariableInfo.cpp \
-  compilerdebug.cpp \
-  ossource_win.cpp \
-  util.cpp \
-  ValidateLimitations.cpp \
-  ForLoopUnroll.cpp \
-  MapLongVariableNames.cpp \
-  spooky.cpp \
-  BuiltInFunctionEmulator.cpp \
-  Input.cpp \
-  Lexer.cpp \
-  pp_lex.cpp \
-  Preprocessor.cpp \
-  Token.cpp \
-  lexer_glue.cpp \
-  $(NULL)
-
-# flex/yacc generated files
-CPPSRCS += \
-  glslang_lex.cpp \
-  glslang_tab.cpp \
-  $(NULL)
-
-# HLSL translator backend
-CPPSRCS += \
-  CodeGenHLSL.cpp \
-  OutputHLSL.cpp \
-  TranslatorHLSL.cpp \
-  UnfoldSelect.cpp \
-  SearchSymbol.cpp \
-  OutputESSL.cpp \
-  OutputGLSLBase.cpp \
-  TranslatorESSL.cpp \
-  $(NULL)
-
-CSRCS   = \
-  atom.c \
-  cpp.c \
-  cppstruct.c \
-  memory.c \
-  scanner.c \
-  symbols.c \
-  tokens.c \
-  $(NULL)
-
 DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBEGL_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
 
 #these defines are from ANGLE's build_angle.gyp
@@ -114,7 +53,7 @@ ifndef MOZ_DEBUG
 DEFINES += -D_SECURE_SCL=0
 endif
 
-CPPSRCS += \
+CPPSRCS = \
   debug.cpp \
   RefCountObject.cpp \
   Config.cpp \
