@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
+#include "mozilla/Attributes.h"
 #include <stdio.h>
 
 namespace mozilla {
@@ -109,7 +110,7 @@ struct CategoriesSeen {
 
 } // anonymous namespace
 
-class MapsReporter : public nsIMemoryMultiReporter
+class MapsReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
   MapsReporter();
