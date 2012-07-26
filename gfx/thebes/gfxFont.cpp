@@ -1783,7 +1783,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
 
     } else {
       RefPtr<ScaledFont> scaledFont =
-        gfxPlatform::GetPlatform()->GetScaledFontForFont(dt, this);
+        gfxPlatform::GetPlatform()->GetScaledFontForFont(this);
       
       if (!scaledFont) {
         return;

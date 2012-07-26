@@ -48,7 +48,6 @@
 #include "nsTArray.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsILocaleService.h"
-#include "nsReadableUtils.h"
 
 #include "nsWeakReference.h"
 
@@ -76,7 +75,6 @@ using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nsnull;
 static bool gEverInitialized = false;
-static nsTArray<nsCString>* gBackendList = nsnull;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nsnull;
@@ -213,7 +211,7 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
-  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureCanvasBackendInfo)
+  : mAzureBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -225,8 +223,11 @@ gfxPlatform::gfxPlatform()
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
-    PRUint32 backendMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    InitCanvasBackend(backendMask);
+    if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+        mPreferredDrawTargetBackend = BACKEND_SKIA;
+    } else {
+        mPreferredDrawTargetBackend = BACKEND_NONE;
+    }
 }
 
 gfxPlatform*
@@ -406,9 +407,6 @@ gfxPlatform::Shutdown()
 
     CompositorParent::ShutDown();
 
-    delete gBackendList;
-    gBackendList = nsnull;
-
     delete gPlatform;
     gPlatform = nsnull;
 }
@@ -475,9 +473,9 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
 cairo_user_data_key_t kDrawTarget;
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
+gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface)
 {
-  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize);
+  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface());
   aSurface->SetData(&kDrawTarget, drawTarget, NULL);
   return drawTarget;
 }
@@ -534,8 +532,11 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   if (!srcBuffer) {
     nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
 
-    bool isWin32ImageSurf = imgSurface &&
-                            aSurface->GetType() == gfxASurface::SurfaceTypeWin32;
+    bool isWin32ImageSurf = false;
+
+    if (imgSurface && aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
+      isWin32ImageSurf = true;
+    }
 
     if (!imgSurface) {
       imgSurface = new gfxImageSurface(aSurface->GetSize(), OptimalFormatForContent(aSurface->GetContentType()));
@@ -571,8 +572,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 
     if (!srcBuffer) {
       // We need to check if our gfxASurface will keep the underlying data
-      // alive. This is true if gfxASurface actually -is- an ImageSurface or
-      // if it is a gfxWindowsSurface which supports GetAsImageSurface.
+      // alive! This is true if gfxASurface actually -is- an ImageSurface or
+      // if it is a gfxWindowsSurface which supportes GetAsImageSurface.
       if (imgSurface != aSurface && !isWin32ImageSurf) {
         // This shouldn't happen for now, it can be easily supported by making
         // a copy. For now let's just abort.
@@ -604,73 +605,77 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 }
 
 RefPtr<ScaledFont>
-gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
+gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
 {
   NativeFont nativeFont;
   nativeFont.mType = NATIVE_FONT_CAIRO_FONT_FACE;
-  nativeFont.mFont = aFont->GetCairoScaledFont();
+  nativeFont.mFont = aFont;
   RefPtr<ScaledFont> scaledFont =
     Factory::CreateScaledFontForNativeFont(nativeFont,
                                            aFont->GetAdjustedSize());
   return scaledFont;
 }
 
-cairo_user_data_key_t kDrawSourceSurface;
-static void
-DataSourceSurfaceDestroy(void *dataSourceSurface)
+UserDataKey kThebesSurfaceKey;
+void
+DestroyThebesSurface(void *data)
 {
-  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
-}
-
-cairo_user_data_key_t kDrawTargetForSurface;
-static void
-DataDrawTargetDestroy(void *aTarget)
-{
-  static_cast<DrawTarget*>(aTarget)->Release();
+  gfxASurface *surface = static_cast<gfxASurface*>(data);
+  surface->Release();
 }
 
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
+  // If we have already created a thebes surface, we can just return it.
+  void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
+  if (surface) {
+    nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
+    return surf.forget();
+  }
+
+  nsRefPtr<gfxASurface> surf;
   if (aTarget->GetType() == BACKEND_CAIRO) {
     cairo_surface_t* csurf =
       static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
-    return gfxASurface::Wrap(csurf);
+    surf = gfxASurface::Wrap(csurf);
+  } else {
+    // The semantics of this part of the function are sort of weird. If we
+    // don't have direct support for the backend, we snapshot the first time
+    // and then return the snapshotted surface for the lifetime of the draw
+    // target. Sometimes it seems like this works out, but it seems like it
+    // might result in no updates ever.
+    RefPtr<SourceSurface> source = aTarget->Snapshot();
+    RefPtr<DataSourceSurface> data = source->GetDataSurface();
+
+    if (!data) {
+      return NULL;
+    }
+
+    IntSize size = data->GetSize();
+    gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
+
+    // We need to make a copy here because data might change its data under us
+    nsRefPtr<gfxImageSurface> imageSurf = new gfxImageSurface(gfxIntSize(size.width, size.height), format, false);
+ 
+    bool resultOfCopy = imageSurf->CopyFrom(source);
+    NS_ASSERTION(resultOfCopy, "Failed to copy surface.");
+    surf = imageSurf;
   }
 
-  // The semantics of this part of the function are sort of weird. If we
-  // don't have direct support for the backend, we snapshot the first time
-  // and then return the snapshotted surface for the lifetime of the draw
-  // target. Sometimes it seems like this works out, but it seems like it
-  // might result in no updates ever.
-  RefPtr<SourceSurface> source = aTarget->Snapshot();
-  RefPtr<DataSourceSurface> data = source->GetDataSurface();
-
-  if (!data) {
-    return NULL;
-  }
-
-  IntSize size = data->GetSize();
-  gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
-
-
-  nsRefPtr<gfxASurface> surf =
-    new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
-                        data->Stride(), format);
-
-  surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
-  // keep the draw target alive as long as we need its data
-  aTarget->AddRef();
-  surf->SetData(&kDrawTargetForSurface, aTarget, DataDrawTargetDestroy);
+  // add a reference to be held by the drawTarget
+  // careful, the reference graph is getting complicated here
+  surf->AddRef();
+  aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
 
   return surf.forget();
 }
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
+gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
   BackendType backend;
-  if (!SupportsAzureCanvas(backend)) {
+  if (!SupportsAzure(backend)) {
     return NULL;
   }
 
@@ -682,68 +687,24 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   // now, but this might need to change in the future (using
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
-  if (aBackend == BACKEND_CAIRO) {
+  if (backend == BACKEND_CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
-    if (!surf) {
-      return NULL;
-    }
 
-    return CreateDrawTargetForSurface(surf, aSize);
+    return CreateDrawTargetForSurface(surf);
   } else {
-    return Factory::CreateDrawTarget(aBackend, aSize, aFormat);
+    return Factory::CreateDrawTarget(backend, aSize, aFormat);
   }
 }
-
-RefPtr<DrawTarget>
-gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
-{
-  BackendType backend;
-  if (!SupportsAzureCanvas(backend)) {
-    return NULL;
-  }
-
-  RefPtr<DrawTarget> target = CreateDrawTargetForBackend(backend, aSize, aFormat);
-  if (target ||
-      mFallbackCanvasBackend == BACKEND_NONE) {
-    return target;
-  }
-
-  return CreateDrawTargetForBackend(mFallbackCanvasBackend, aSize, aFormat);
-}
-
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
   BackendType backend;
-  if (!SupportsAzureCanvas(backend)) {
+  if (!SupportsAzure(backend)) {
     return NULL;
   }
   return Factory::CreateDrawTargetForData(backend, aData, aSize, aStride, aFormat); 
-}
-
-bool
-gfxPlatform::SupportsAzureCanvas(BackendType& aBackend)
-{
-  NS_ASSERTION(mFallbackCanvasBackend == BACKEND_NONE || mPreferredCanvasBackend != BACKEND_NONE,
-               "fallback backend with no preferred backend");
-  aBackend = mPreferredCanvasBackend;
-  return mPreferredCanvasBackend != BACKEND_NONE;
-}
-
-/* static */ BackendType
-gfxPlatform::BackendTypeForName(const nsCString& aName)
-{
-  if (aName.EqualsLiteral("cairo"))
-    return BACKEND_CAIRO;
-  if (aName.EqualsLiteral("skia"))
-    return BACKEND_SKIA;
-  if (aName.EqualsLiteral("direct2d"))
-    return BACKEND_DIRECT2D;
-  if (aName.EqualsLiteral("cg"))
-    return BACKEND_COREGRAPHICS;
-  return BACKEND_NONE;
 }
 
 nsresult
@@ -1166,53 +1127,20 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
     }
 }
 
-void
-gfxPlatform::InitCanvasBackend(PRUint32 aBackendBitmask)
-{
-    if (!Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
-        mPreferredCanvasBackend = BACKEND_NONE;
-        mFallbackCanvasBackend = BACKEND_NONE;
-        return;
-    }
-
-    mPreferredCanvasBackend = GetCanvasBackendPref(aBackendBitmask);
-    mFallbackCanvasBackend = GetCanvasBackendPref(aBackendBitmask & ~(1 << mPreferredCanvasBackend));
-}
-
-/* static */ BackendType
-gfxPlatform::GetCanvasBackendPref(PRUint32 aBackendBitmask)
-{
-    if (!gBackendList) {
-        gBackendList = new nsTArray<nsCString>();
-        nsCString prefString;
-        if (NS_SUCCEEDED(Preferences::GetCString("gfx.canvas.azure.backends", &prefString))) {
-            ParseString(prefString, ',', *gBackendList);
-        }
-    }
-
-    for (PRUint32 i = 0; i < gBackendList->Length(); ++i) {
-        BackendType result = BackendTypeForName((*gBackendList)[i]);
-        if ((1 << result) & aBackendBitmask) {
-            return result;
-        }
-    }
-    return BACKEND_NONE;
-}
-
 bool
 gfxPlatform::UseProgressiveTilePainting()
 {
-    static bool sUseProgressiveTilePainting;
-    static bool sUseProgressiveTilePaintingPrefCached = false;
+  static bool sUseProgressiveTilePainting;
+  static bool sUseProgressiveTilePaintingPrefCached = false;
 
-    if (!sUseProgressiveTilePaintingPrefCached) {
-        sUseProgressiveTilePaintingPrefCached = true;
-        mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
-                                              "layers.progressive-paint",
-                                              false);
-    }
+  if (!sUseProgressiveTilePaintingPrefCached) {
+    sUseProgressiveTilePaintingPrefCached = true;
+    mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
+                                          "layers.progressive-paint",
+                                          false);
+  }
 
-    return sUseProgressiveTilePainting;
+  return sUseProgressiveTilePainting;
 }
 
 bool
