@@ -15,14 +15,15 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace ipc {
 
 class MessagePump;
 
-class DoWorkRunnable : public nsIRunnable,
-                       public nsITimerCallback
+class DoWorkRunnable MOZ_FINAL : public nsIRunnable,
+                                 public nsITimerCallback
 {
 public:
   DoWorkRunnable(MessagePump* aPump)
