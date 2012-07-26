@@ -731,6 +731,7 @@ JSRuntime::JSRuntime()
     interpreterFrames(NULL),
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
+    compartmentNameCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),
 #ifdef JS_THREADSAFE
@@ -1396,6 +1397,12 @@ JS_PUBLIC_API(void)
 JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback callback)
 {
     rt->destroyCompartmentCallback = callback;
+}
+
+JS_PUBLIC_API(void)
+JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback)
+{
+    rt->compartmentNameCallback = callback;
 }
 
 JS_PUBLIC_API(JSWrapObjectCallback)
