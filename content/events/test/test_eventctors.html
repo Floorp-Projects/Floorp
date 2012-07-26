@@ -425,6 +425,24 @@ is(e.value, 1, "value should be 1");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// DeviceOrientationEvent
+e = new DeviceOrientationEvent("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.alpha, 0);
+is(e.beta, 0);
+is(e.gamma, 0);
+is(e.absolute, false);
+
+e = new DeviceOrientationEvent("hello", { alpha: 1, beta: 2, gamma: 3, absolute: true } );
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event should not be trusted");
+is(e.alpha, 1);
+is(e.beta, 2);
+is(e.gamma, 3);
+is(e.absolute, true);
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
 
 // MouseEvent
 

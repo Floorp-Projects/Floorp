@@ -36,8 +36,6 @@ CPPSRCS		= \
 		nsDOMDragEvent.cpp \
 		nsDOMMutationEvent.cpp \
 		nsDOMPopupBlockedEvent.cpp \
-		nsDOMDeviceLightEvent.cpp \
-		nsDOMDeviceOrientationEvent.cpp \
 		nsDOMDeviceMotionEvent.cpp \
 		nsDOMBeforeUnloadEvent.cpp \
 		nsDOMXULCommandEvent.cpp \
@@ -65,7 +63,6 @@ CPPSRCS		= \
 		nsDOMSettingsEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCompositionEvent.cpp \
-		nsDOMApplicationEvent.cpp \
 		$(NULL)
 
 ifdef MOZ_B2G_RIL

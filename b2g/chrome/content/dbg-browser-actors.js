@@ -5,6 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 'use strict';
+/**
+ * B2G-specific actors that extend BrowserRootActor and BrowserTabActor,
+ * overriding some of their methods.
+ */
 
 /**
  * The function that creates the root actor. DebuggerServer expects to find this
@@ -24,67 +28,52 @@ function createRootActor(connection) {
  *        The conection to the client.
  */
 function DeviceRootActor(connection) {
-  this.conn = connection;
-  this._tabActors = new WeakMap();
-  this._tabActorPool = null;
-  this._actorFactories = null;
+  BrowserRootActor.call(this, connection);
   this.browser = Services.wm.getMostRecentWindow('navigator:browser');
 }
 
-DeviceRootActor.prototype = {
-  /**
-   * Return a 'hello' packet as specified by the Remote Debugging Protocol.
-   */
-  sayHello: function DRA_sayHello() {
-    return {
-      from: 'root',
-      applicationType: 'browser',
-      traits: []
-    };
-  },
+DeviceRootActor.prototype = new BrowserRootActor();
 
-  /**
-   * Disconnects the actor from the browser window.
-   */
-  disconnect: function DRA_disconnect() {
-    let actor = this._tabActors.get(this.browser);
-    if (actor) {
-      actor.exit();
-    }
-  },
+/**
+ * Disconnects the actor from the browser window.
+ */
+DeviceRootActor.prototype.disconnect = function DRA_disconnect() {
+  let actor = this._tabActors.get(this.browser);
+  if (actor) {
+    actor.exit();
+  }
+};
 
-  /**
-   * Handles the listTabs request.  Builds a list of actors for the single
-   * tab (window) running in the process. The actors will survive
-   * until at least the next listTabs request.
-   */
-  onListTabs: function DRA_onListTabs() {
-    let actor = this._tabActors.get(this.browser);
-    if (!actor) {
-      actor = new DeviceTabActor(this.conn, this.browser);
-      // this.actorID is set by ActorPool when an actor is put into one.
-      actor.parentID = this.actorID;
-      this._tabActors.set(this.browser, actor);
-    }
-
-    let actorPool = new ActorPool(this.conn);
-    actorPool.addActor(actor);
-
-    // Now drop the old actorID -> actor map. Actors that still mattered were
-    // added to the new map, others will go away.
-    if (this._tabActorPool) {
-      this.conn.removeActorPool(this._tabActorPool);
-    }
-    this._tabActorPool = actorPool;
-    this.conn.addActorPool(this._tabActorPool);
-
-    return {
-      'from': 'root',
-      'selected': 0,
-      'tabs': [actor.grip()]
-    };
+/**
+ * Handles the listTabs request.  Builds a list of actors for the single
+ * tab (window) running in the process. The actors will survive
+ * until at least the next listTabs request.
+ */
+DeviceRootActor.prototype.onListTabs = function DRA_onListTabs() {
+  let actor = this._tabActors.get(this.browser);
+  if (!actor) {
+    actor = new DeviceTabActor(this.conn, this.browser);
+    // this.actorID is set by ActorPool when an actor is put into one.
+    actor.parentID = this.actorID;
+    this._tabActors.set(this.browser, actor);
   }
 
+  let actorPool = new ActorPool(this.conn);
+  actorPool.addActor(actor);
+
+  // Now drop the old actorID -> actor map. Actors that still mattered were
+  // added to the new map, others will go away.
+  if (this._tabActorPool) {
+    this.conn.removeActorPool(this._tabActorPool);
+  }
+  this._tabActorPool = actorPool;
+  this.conn.addActorPool(this._tabActorPool);
+
+  return {
+    'from': 'root',
+    'selected': 0,
+    'tabs': [actor.grip()]
+  };
 };
 
 /**
@@ -104,219 +93,58 @@ DeviceRootActor.prototype.requestTypes = {
  *        The browser instance that contains this tab.
  */
 function DeviceTabActor(connection, browser) {
-  this.conn = connection;
-  this._browser = browser;
+  BrowserTabActor.call(this, connection, browser);
 }
 
-DeviceTabActor.prototype = {
-  get browser() {
-    return this._browser;
-  },
+DeviceTabActor.prototype = new BrowserTabActor();
 
-  get exited() {
-    return !this.browser;
-  },
-
-  get attached() {
-    return !!this._attached
-  },
-
-  _tabPool: null,
-  get tabActorPool() {
-    return this._tabPool;
-  },
-
-  _contextPool: null,
-  get contextActorPool() {
-    return this._contextPool;
-  },
-
-  /**
-   * Add the specified breakpoint to the default actor pool connection, in order
-   * to be alive as long as the server is.
-   *
-   * @param BreakpointActor actor
-   *        The actor object.
-   */
-  addToBreakpointPool: function DTA_addToBreakpointPool(actor) {
-    this.conn.addActor(actor);
-  },
-
-  /**
-   * Remove the specified breakpint from the default actor pool.
-   *
-   * @param string actor
-   *        The actor ID.
-   */
-  removeFromBreakpointPool: function DTA_removeFromBreakpointPool(actor) {
-    this.conn.removeActor(actor);
-  },
-
-  actorPrefix: 'tab',
-
-  grip: function DTA_grip() {
-    dbg_assert(!this.exited,
-               'grip() should not be called on exited browser actor.');
-    dbg_assert(this.actorID,
-               'tab should have an actorID.');
-    return {
-      'actor': this.actorID,
-      'title': this.browser.title,
-      'url': this.browser.document.documentURI
-    }
-  },
-
-  /**
-   * Called when the actor is removed from the connection.
-   */
-  disconnect: function DTA_disconnect() {
-    this._detach();
-  },
-
-  /**
-   * Called by the root actor when the underlying tab is closed.
-   */
-  exit: function DTA_exit() {
-    if (this.exited) {
-      return;
-    }
-
-    if (this.attached) {
-      this._detach();
-      this.conn.send({
-        'from': this.actorID,
-        'type': 'tabDetached'
-      });
-    }
-
-    this._browser = null;
-  },
-
-  /**
-   * Does the actual work of attaching to a tab.
-   */
-  _attach: function DTA_attach() {
-    if (this._attached) {
-      return;
-    }
-
-    // Create a pool for tab-lifetime actors.
-    dbg_assert(!this._tabPool, 'Should not have a tab pool if we were not attached.');
-    this._tabPool = new ActorPool(this.conn);
-    this.conn.addActorPool(this._tabPool);
-
-    // ... and a pool for context-lifetime actors.
-    this._pushContext();
-
-    this._attached = true;
-  },
-
-  /**
-   * Creates a thread actor and a pool for context-lifetime actors. It then sets
-   * up the content window for debugging.
-   */
-  _pushContext: function DTA_pushContext() {
-    dbg_assert(!this._contextPool, "Can't push multiple contexts");
-
-    this._contextPool = new ActorPool(this.conn);
-    this.conn.addActorPool(this._contextPool);
-
-    this.threadActor = new ThreadActor(this);
-    this._addDebuggees(this.browser.wrappedJSObject);
-    this._contextPool.addActor(this.threadActor);
-  },
-
-  /**
-   * Add the provided window and all windows in its frame tree as debuggees.
-   */
-  _addDebuggees: function DTA__addDebuggees(content) {
-    this.threadActor.addDebuggee(content);
-    let frames = content.frames;
-    for (let i = 0; i < frames.length; i++) {
-      this._addDebuggees(frames[i]);
-    }
-  },
-
-  /**
-   * Exits the current thread actor and removes the context-lifetime actor pool.
-   * The content window is no longer being debugged after this call.
-   */
-  _popContext: function DTA_popContext() {
-    dbg_assert(!!this._contextPool, 'No context to pop.');
-
-    this.conn.removeActorPool(this._contextPool);
-    this._contextPool = null;
-    this.threadActor.exit();
-    this.threadActor = null;
-  },
-
-  /**
-   * Does the actual work of detaching from a tab.
-   */
-  _detach: function DTA_detach() {
-    if (!this.attached) {
-      return;
-    }
-
-    this._popContext();
-
-    // Shut down actors that belong to this tab's pool.
-    this.conn.removeActorPool(this._tabPool);
-    this._tabPool = null;
-
-    this._attached = false;
-  },
-
-  // Protocol Request Handlers
-
-  onAttach: function DTA_onAttach(aRequest) {
-    if (this.exited) {
-      return { type: 'exited' };
-    }
-
-    this._attach();
-
-    return { type: 'tabAttached', threadActor: this.threadActor.actorID };
-  },
-
-  onDetach: function DTA_onDetach(aRequest) {
-    if (!this.attached) {
-      return { error: 'wrongState' };
-    }
-
-    this._detach();
-
-    return { type: 'detached' };
-  },
-
-  /**
-   * Prepare to enter a nested event loop by disabling debuggee events.
-   */
-  preNest: function DTA_preNest() {
-    let windowUtils = this.browser
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
-    windowUtils.suppressEventHandling(true);
-    windowUtils.suspendTimeouts();
-  },
-
-  /**
-   * Prepare to exit a nested event loop by enabling debuggee events.
-   */
-  postNest: function DTA_postNest(aNestData) {
-    let windowUtils = this.browser
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
-    windowUtils.resumeTimeouts();
-    windowUtils.suppressEventHandling(false);
+DeviceTabActor.prototype.grip = function DTA_grip() {
+  dbg_assert(!this.exited,
+             'grip() should not be called on exited browser actor.');
+  dbg_assert(this.actorID,
+             'tab should have an actorID.');
+  return {
+    'actor': this.actorID,
+    'title': this.browser.title,
+    'url': this.browser.document.documentURI
   }
-
 };
 
 /**
- * The request types this actor can handle.
+ * Creates a thread actor and a pool for context-lifetime actors. It then sets
+ * up the content window for debugging.
  */
-DeviceTabActor.prototype.requestTypes = {
-  'attach': DeviceTabActor.prototype.onAttach,
-  'detach': DeviceTabActor.prototype.onDetach
+DeviceTabActor.prototype._pushContext = function DTA_pushContext() {
+  dbg_assert(!this._contextPool, "Can't push multiple contexts");
+
+  this._contextPool = new ActorPool(this.conn);
+  this.conn.addActorPool(this._contextPool);
+
+  this.threadActor = new ThreadActor(this);
+  this._addDebuggees(this.browser.wrappedJSObject);
+  this._contextPool.addActor(this.threadActor);
+};
+
+// Protocol Request Handlers
+
+/**
+ * Prepare to enter a nested event loop by disabling debuggee events.
+ */
+DeviceTabActor.prototype.preNest = function DTA_preNest() {
+  let windowUtils = this.browser
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
+  windowUtils.suppressEventHandling(true);
+  windowUtils.suspendTimeouts();
+};
+
+/**
+ * Prepare to exit a nested event loop by enabling debuggee events.
+ */
+DeviceTabActor.prototype.postNest = function DTA_postNest(aNestData) {
+  let windowUtils = this.browser
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
+  windowUtils.resumeTimeouts();
+  windowUtils.suppressEventHandling(false);
 };

@@ -34,8 +34,12 @@ function consoleOpened(aHud) {
 
     ok(popup.isOpen, "popup is open");
 
+    // |props| values, and the following properties:
+    // __defineGetter__  __defineSetter__ __lookupGetter__ __lookupSetter__
+    // constructor hasOwnProperty isPrototypeOf propertyIsEnumerable
+    // toLocaleString toSource toString unwatch valueOf watch.
     let props = WCU.namesAndValuesOf(content.wrappedJSObject.document.body);
-    is(popup.itemCount, props.length, "popup.itemCount is correct");
+    is(popup.itemCount, 14 + props.length, "popup.itemCount is correct");
 
     popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);
 
