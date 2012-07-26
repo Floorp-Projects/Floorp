@@ -25,7 +25,7 @@ AlarmHalService::Init()
   }
 }
 
-/* static */ nsRefPtr<AlarmHalService> AlarmHalService::sSingleton;
+/* static */ StaticRefPtr<AlarmHalService> AlarmHalService::sSingleton;
 
 /* static */ already_AddRefed<nsIAlarmHalService>
 AlarmHalService::GetInstance()
