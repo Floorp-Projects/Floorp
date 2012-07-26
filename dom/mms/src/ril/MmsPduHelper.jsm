@@ -92,8 +92,13 @@ let Address = {
       type = "num";
     } else if (str.match(/^\w+$/)) {
       type = "alphanum";
+    } else if (str.indexOf("@") > 0) {
+      // E-mail should match the definition of `mailbox` as described in section
+      // 3.4 of RFC2822, but excluding the obsolete definitions as indicated by
+      // the "obs-" prefix. Here we match only a `@` character.
+      type = "email";
     } else {
-      type = "unknown";
+      throw new WSP.CodeError("Address: invalid address");
     }
 
     return {address: str, type: type};
