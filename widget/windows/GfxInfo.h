@@ -42,7 +42,6 @@ public:
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
-  using GfxInfoBase::GetAzureEnabled;
 
   virtual nsresult Init();
 
