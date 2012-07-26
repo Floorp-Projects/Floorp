@@ -5593,7 +5593,7 @@ if test "$MOZ_GSTREAMER"; then
                       gstreamer-plugins-base-$GST_API_VERSION)
     if test -n "$GSTREAMER_LIBS"; then
        _SAVE_LDFLAGS=$LDFLAGS
-       LDFLAGS="$LDFLAGS -lgstvideo-$GST_API_VERSION"
+       LDFLAGS="$LDFLAGS $GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
        AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
        if test -n "$_HAVE_LIBGSTVIDEO" ; then
           GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
