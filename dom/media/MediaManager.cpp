@@ -113,7 +113,7 @@ public:
     nsCOMPtr<nsDOMMediaStream> stream = nsDOMMediaStream::CreateInputStream();
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetOuterWindowWithId(mWindowID));
+      (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
 
     if (window && window->GetExtantDoc()) {
       stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
