@@ -8,7 +8,10 @@
    override the default Mozilla plugin finder service with their own mechanism. */
 embed:-moz-type-unsupported,
 applet:-moz-type-unsupported,
-object:-moz-has-handlerref:-moz-type-unsupported {
+object:-moz-has-handlerref:-moz-type-unsupported,
+embed:-moz-type-unsupported-platform,
+applet:-moz-type-unsupported-platform,
+object:-moz-has-handlerref:-moz-type-unsupported-platform {
     display: inline-block;
     overflow: hidden;
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;

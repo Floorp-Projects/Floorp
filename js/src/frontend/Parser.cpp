@@ -104,20 +104,19 @@ PushStatementTC(TreeContext *tc, StmtInfoTC *stmt, StmtType type)
     stmt->isFunctionBodyBlock = false;
 }
 
-Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
-               const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
-               bool foldConstants, bool compileAndGo)
+Parser::Parser(JSContext *cx, const CompileOptions &options,
+               const jschar *chars, size_t length, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
     strictModeGetter(this),
-    tokenStream(cx, prin, originPrin, chars, length, fn, ln, v, &strictModeGetter),
+    tokenStream(cx, options, chars, length, &strictModeGetter),
     tempPoolMark(NULL),
     allocator(cx),
     traceListHead(NULL),
     tc(NULL),
     keepAtoms(cx->runtime),
     foldConstants(foldConstants),
-    compileAndGo(compileAndGo)
+    compileAndGo(options.compileAndGo)
 {
     cx->activeCompilations++;
 }
@@ -2216,114 +2215,59 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom_, Parser *parser)
     if (defs.empty()) {
         if (!Define(pn, atom, tc))
             return false;
-    } else {
-        Definition *dn = defs.front();
-        Definition::Kind dn_kind = dn->kind();
 
-        if (dn_kind == Definition::ARG) {
-            JSAutoByteString name;
-            if (!js_AtomToPrintableString(cx, atom, &name))
-                return false;
+        if (data->op == JSOP_DEFCONST)
+            pn->pn_dflags |= PND_CONST;
 
-            if (data->op == JSOP_DEFCONST) {
-                parser->reportError(pn, JSMSG_REDECLARED_PARAM, name.ptr());
-                return false;
-            }
-            if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, name.ptr()))
-                return false;
-        } else {
-            bool error = (data->op == JSOP_DEFCONST ||
-                          dn_kind == Definition::CONST ||
-                          (dn_kind == Definition::LET &&
-                           (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
+        if (tc->sc->inFunction())
+            return BindFunctionLocal(cx, data, defs, tc);
 
-            if (cx->hasStrictOption()
-                ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
-                : error)
-            {
-                JSAutoByteString name;
-                Parser::Reporter reporter =
-                    error ? &Parser::reportError : &Parser::reportStrictWarning;
-                if (!js_AtomToPrintableString(cx, atom, &name) ||
-                    !(parser->*reporter)(pn, JSMSG_REDECLARED_VAR,
-                                         Definition::kindString(dn_kind), name.ptr()))
-                {
-                    return false;
-                }
-            }
-        }
-
-        /*
-         * A var declaration never recreates an existing binding, it restates
-         * it and possibly reinitializes its value. Beware that if pn becomes a
-         * use of |defs.defn()|, and if we have an initializer for this var or
-         * const (typically a const would ;-), then pn must be rewritten into a
-         * PNK_ASSIGN node. See js::Parser::variables, further below.
-         *
-         * A case such as let (x = 1) { var x = 2; print(x); } is even harder.
-         * There the x definition is hoisted but the x = 2 assignment mutates
-         * the block-local binding of x.
-         */
-        if (!pn->isUsed()) {
-            /* Make pnu be a fresh name node that uses dn. */
-            ParseNode *pnu = pn;
-
-            if (pn->isDefn()) {
-                pnu = NameNode::create(PNK_NAME, atom, parser, parser->tc);
-                if (!pnu)
-                    return false;
-            }
-
-            LinkUseToDef(pnu, dn);
-            pnu->setOp(JSOP_NAME);
-        }
-
-        /* Find the first non-let binding of this atom. */
-        while (dn->kind() == Definition::LET) {
-            defs.popFront();
-            if (defs.empty())
-                break;
-            dn = defs.front();
-        }
-
-        if (dn) {
-            JS_ASSERT_IF(data->op == JSOP_DEFCONST,
-                         dn->kind() == Definition::CONST);
-            return true;
-        }
-
-        /*
-         * A var or const that is shadowed by one or more let bindings of the
-         * same name, but that has not been declared until this point, must be
-         * hoisted above the let bindings.
-         */
-        if (!pn->isDefn()) {
-            if (tc->lexdeps->lookup(atom)) {
-                tc->lexdeps->remove(atom);
-            } else {
-                ParseNode *pn2 = NameNode::create(PNK_NAME, atom, parser, parser->tc);
-                if (!pn2)
-                    return false;
-
-                /* The token stream may be past the location for pn. */
-                pn2->pn_pos = pn->pn_pos;
-                pn = pn2;
-            }
-            pn->setOp(JSOP_NAME);
-        }
-
-        if (!tc->decls.addHoist(atom, (Definition *) pn))
-            return false;
-        pn->setDefn(true);
-        pn->pn_dflags &= ~PND_PLACEHOLDER;
+        return true;
     }
 
-    if (data->op == JSOP_DEFCONST)
-        pn->pn_dflags |= PND_CONST;
+    /*
+     * There was a previous declaration with the same name. The standard
+     * disallows several forms of redeclaration. Critically,
+     *   let (x) { var x; } // error
+     * is not allowed which allows us to turn any non-error redeclaration
+     * into a use of the initial declaration.
+     */
+    Definition *dn = defs.front();
+    Definition::Kind dn_kind = dn->kind();
+    if (dn_kind == Definition::ARG) {
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name))
+            return false;
 
-    if (tc->sc->inFunction())
-        return BindFunctionLocal(cx, data, defs, tc);
+        if (data->op == JSOP_DEFCONST) {
+            parser->reportError(pn, JSMSG_REDECLARED_PARAM, name.ptr());
+            return false;
+        }
+        if (!parser->reportStrictWarning(pn, JSMSG_VAR_HIDES_ARG, name.ptr()))
+            return false;
+    } else {
+        bool error = (data->op == JSOP_DEFCONST ||
+                      dn_kind == Definition::CONST ||
+                      (dn_kind == Definition::LET &&
+                       (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
 
+        if (cx->hasStrictOption()
+            ? data->op != JSOP_DEFVAR || dn_kind != Definition::VAR
+            : error)
+        {
+            JSAutoByteString name;
+            Parser::Reporter reporter =
+                error ? &Parser::reportError : &Parser::reportStrictWarning;
+            if (!js_AtomToPrintableString(cx, atom, &name) ||
+                !(parser->*reporter)(pn, JSMSG_REDECLARED_VAR,
+                                     Definition::kindString(dn_kind), name.ptr()))
+            {
+                return false;
+            }
+        }
+    }
+
+    LinkUseToDef(pn, dn);
     return true;
 }
 
@@ -2884,8 +2828,7 @@ PushBlocklikeStatement(StmtInfoTC *stmt, StmtType type, TreeContext *tc)
 }
 
 static ParseNode *
-NewBindingNode(JSAtom *atom, Parser *parser, StaticBlockObject *blockObj = NULL,
-               VarContext varContext = HoistVars)
+NewBindingNode(JSAtom *atom, Parser *parser, VarContext varContext = HoistVars)
 {
     TreeContext *tc = parser->tc;
 
@@ -2896,33 +2839,14 @@ NewBindingNode(JSAtom *atom, Parser *parser, StaticBlockObject *blockObj = NULL,
      * shadows existing decls and doesn't resolve existing lexdeps. Duplicate
      * names are caught by BindLet.
      */
-    if (!blockObj || varContext == HoistVars) {
-        ParseNode *pn = tc->decls.lookupFirst(atom);
-        AtomDefnPtr removal;
-        if (pn) {
-            JS_ASSERT(!pn->isPlaceholder());
-        } else {
-            removal = tc->lexdeps->lookup(atom);
-            pn = removal ? removal.value() : NULL;
-            JS_ASSERT_IF(pn, pn->isPlaceholder());
-        }
-
-        if (pn) {
-            JS_ASSERT(pn->isDefn());
-
-            /*
-             * A let binding at top level becomes a var before we get here, so if
-             * pn and tc have the same blockid then that id must not be the bodyid.
-             * If pn is a forward placeholder definition from the same or a higher
-             * block then we claim it.
-             */
-            JS_ASSERT_IF(blockObj && pn->pn_blockid == tc->blockid(),
-                         pn->pn_blockid != tc->bodyid);
-
-            if (pn->isPlaceholder() && pn->pn_blockid >= tc->blockid()) {
-                pn->pn_blockid = tc->blockid();
-                tc->lexdeps->remove(removal);
-                return pn;
+    if (varContext == HoistVars) {
+        if (AtomDefnPtr p = tc->lexdeps->lookup(atom)) {
+            ParseNode *lexdep = p.value();
+            JS_ASSERT(lexdep->isPlaceholder());
+            if (lexdep->pn_blockid >= tc->blockid()) {
+                lexdep->pn_blockid = tc->blockid();
+                tc->lexdeps->remove(p);
+                return lexdep;
             }
         }
     }
@@ -4250,7 +4174,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
         }
 
         PropertyName *name = tokenStream.currentToken().name();
-        pn2 = NewBindingNode(name, this, blockObj, varContext);
+        pn2 = NewBindingNode(name, this, varContext);
         if (!pn2)
             return NULL;
         if (data.op == JSOP_DEFCONST)
