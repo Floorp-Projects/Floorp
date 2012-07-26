@@ -2967,9 +2967,7 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, WebGLenum pname)
             return JS::BooleanValue(prog->IsDeleteRequested());
         case LOCAL_GL_LINK_STATUS:
         {
-            GLint i = 0;
-            gl->fGetProgramiv(progname, pname, &i);
-            return JS::BooleanValue(bool(i));
+            return JS::BooleanValue(prog->LinkStatus());
         }
         case LOCAL_GL_VALIDATE_STATUS:
         {
@@ -3709,11 +3707,20 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
         return;
     }
 
-    MakeContextCurrent();
-    gl->fLinkProgram(progname);
-
     GLint ok;
-    gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+    if (gl->WorkAroundDriverBugs() &&
+        program->HasBadShaderAttached())
+    {
+        // it's a common driver bug, caught by program-test.html, that linkProgram doesn't
+        // correctly preserve the state of an in-use program that has been attached a bad shader
+        // see bug 777883
+        ok = false;
+    } else {
+        MakeContextCurrent();
+        gl->fLinkProgram(progname);
+        gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+    }
+
     if (ok) {
         bool updateInfoSucceeded = program->UpdateInfo();
         program->SetLinkStatus(updateInfoSucceeded);
@@ -3745,8 +3752,8 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
             for (size_t i = 0; i < program->AttachedShaders().Length(); i++) {
 
                 WebGLShader* shader = program->AttachedShaders()[i];
-                GetShaderInfoLog(shader, log, rv);
-                if (rv.Failed() || log.IsEmpty())
+                
+                if (shader->CompileStatus())
                     continue;
 
                 const char *shaderTypeName = nsnull;
@@ -3759,6 +3766,8 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
                     NS_ABORT();
                     shaderTypeName = "<unknown>";
                 }
+
+                GetShaderInfoLog(shader, log, rv);
 
                 GenerateWarning("linkProgram: a %s shader used in this program failed to "
                                 "compile, with this log:\n%s\n",
@@ -4911,6 +4920,8 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
     WebGLuint shadername = shader->GLName();
 
+    shader->SetCompileStatus(false);
+
     MakeContextCurrent();
 
     ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
@@ -4993,6 +5004,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
                 shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
             }
             ShDestruct(compiler);
+            shader->SetCompileStatus(false);
             return;
         }
 
@@ -5081,6 +5093,9 @@ WebGLContext::CompileShader(WebGLShader *shader)
         ShDestruct(compiler);
 
         gl->fCompileShader(shadername);
+        GLint ok;
+        gl->fGetShaderiv(shadername, LOCAL_GL_COMPILE_STATUS, &ok);
+        shader->SetCompileStatus(ok);
     }
 #endif
 }
