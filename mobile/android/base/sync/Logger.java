@@ -41,7 +41,8 @@ public class Logger {
     final Set<LogWriter> defaultLogWriters = new LinkedHashSet<LogWriter>();
     LogWriter log = new AndroidLogWriter();
     LogWriter cache = new AndroidLevelCachingLogWriter(log);
-    LogWriter single = new SingleTagLogWriter(GLOBAL_LOG_TAG, cache);
+    final String processedPackage = GlobalConstants.BROWSER_INTENT_PACKAGE.replace("org.mozilla.", "");
+    LogWriter single = new SingleTagLogWriter(processedPackage, new SingleTagLogWriter(GLOBAL_LOG_TAG, cache));
     defaultLogWriters.add(single);
     return defaultLogWriters;
   }

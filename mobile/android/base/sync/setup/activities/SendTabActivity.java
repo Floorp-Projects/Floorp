@@ -9,6 +9,7 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
+import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
@@ -87,7 +88,7 @@ public class SendTabActivity extends Activity {
 
   private void redirectIfNoSyncAccount() {
     accountManager = AccountManager.get(getApplicationContext());
-    Account[] accts = accountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
+    Account[] accts = accountManager.getAccountsByType(GlobalConstants.ACCOUNTTYPE_SYNC);
 
     // A Sync account exists.
     if (accts.length > 0) {
