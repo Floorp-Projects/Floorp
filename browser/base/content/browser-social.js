@@ -253,6 +253,9 @@ var SocialToolbar = {
   init: function SocialToolbar_init() {
     document.getElementById("social-provider-image").setAttribute("image", Social.provider.iconURL);
 
+    let notifBrowser = document.getElementById("social-notification-browser");
+    notifBrowser.docShell.isAppTab = true;
+
     let removeItem = document.getElementById("social-remove-menuitem");
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
     let label = gNavigatorBundle.getFormattedString("social.remove.label",
