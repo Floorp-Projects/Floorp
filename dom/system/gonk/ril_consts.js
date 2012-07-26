@@ -460,6 +460,7 @@ const GET_RESPONSE_EF_SIZE_BYTES = 15;
 
 // EF path
 const EF_PATH_MF_SIM = "3f00";
+const EF_PATH_DF_PHONEBOOK = "5f3a";
 const EF_PATH_DF_TELECOM = "7f10";
 const EF_PATH_DF_GSM = "7f20";
 
