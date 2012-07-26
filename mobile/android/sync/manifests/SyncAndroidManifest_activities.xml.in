@@ -1,5 +1,5 @@
         <activity
-            android:icon="@drawable/sync_ic_launcher"
+            android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize|stateHidden"
@@ -37,7 +37,7 @@
         </receiver>
 
         <activity
-            android:icon="@drawable/sync_ic_launcher"
+            android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
             android:configChanges="orientation"
             android:windowSoftInputMode="adjustResize|stateHidden"

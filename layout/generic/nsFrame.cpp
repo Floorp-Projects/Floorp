@@ -2088,7 +2088,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   bool isPositioned = !isSVG && disp->IsPositioned();
   if (isVisuallyAtomic || isPositioned || (!isSVG && disp->IsFloating()) ||
       ((disp->mClipFlags & NS_STYLE_CLIP_RECT) &&
-       IsSVGContentWithCSSClip(this)) ||
+       IsSVGContentWithCSSClip(child)) ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // If you change this, also change IsPseudoStackingContextFromStyle()
     pseudoStackingContext = true;

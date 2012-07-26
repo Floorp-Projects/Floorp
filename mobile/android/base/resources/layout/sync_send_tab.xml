@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout.Vertical" >
-  <LinearLayout
-    android:id="@+id/sendtab_top"
-    style="@style/SyncTop" >
-    <ImageView
-      style="@style/SyncTopIcon" />
-    <TextView
-      style="@style/SyncTextTitle"
+  <TextView
+      style="@style/SyncTop"
+      android:id="@+id/sendtab_top"
       android:text="@string/sync_title_send_tab" />
-  </LinearLayout>
 
   <ListView
     android:id="@+id/device_list"
