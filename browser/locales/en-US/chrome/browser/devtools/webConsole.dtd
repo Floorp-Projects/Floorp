@@ -8,6 +8,8 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
+<!ENTITY window.title "Web Console">
+
 <!ENTITY networkPanel.requestURL                  "Request URL">
 <!ENTITY networkPanel.requestMethod               "Request Method">
 <!ENTITY networkPanel.statusCode                  "Status Code">
@@ -24,3 +26,55 @@
 <!ENTITY networkPanel.responseNoBody              "No Response Body">
 <!ENTITY networkPanel.responseImage               "Received Image">
 <!ENTITY networkPanel.responseImageCached         "Cached Image">
+
+<!-- LOCALIZATION NOTE (saveBodies.label): You can see this string in the Web
+   - Console context menu. -->
+<!ENTITY saveBodies.label     "Log Request and Response Bodies">
+<!ENTITY saveBodies.accesskey "L">
+
+<!-- LOCALIZATION NOTE (btnPageNet.label): This string is used for the menu
+  -  button that allows users to toggle the network logging output.
+  -  This string and the following strings toggle various kinds of output
+  -  filters. -->
+<!ENTITY btnPageNet.label   "Net">
+<!ENTITY btnPageNet.tooltip "Log network access">
+<!ENTITY btnPageCSS.label   "CSS">
+<!ENTITY btnPageCSS.tooltip "Log CSS parsing errors">
+<!ENTITY btnPageJS.label    "JS">
+<!ENTITY btnPageJS.tooltip  "Log JavaScript exceptions">
+
+<!-- LOCALIZATION NOTE (btnPageLogging): This is used as the text of the
+  -  the toolbar. It shows or hides messages that the web developer inserted on
+  -  the page for debugging purposes, using calls such console.log() and
+  -  console.error(). -->
+<!ENTITY btnPageLogging.label   "Logging">
+<!ENTITY btnPageLogging.tooltip "Log messages sent to the window.console object">
+<!ENTITY btnConsoleErrors       "Errors">
+<!ENTITY btnConsoleInfo         "Info">
+<!ENTITY btnConsoleWarnings     "Warnings">
+<!ENTITY btnConsoleLog          "Log">
+
+<!-- LOCALIZATION NOTE (btnPosition.label): The label shown for the menu which
+  -  allows the user to toggle between the Web Console positioning types. -->
+<!ENTITY btnPosition.label     "Position">
+
+<!-- LOCALIZATION NOTE (btnPosition.tooltip): The tooltip shown when the user
+  -  hovers the Position button in the Web Console toolbar. -->
+<!ENTITY btnPosition.tooltip   "Position the Web Console above or below the document">
+
+<!-- LOCALIZATION NOTE (positionMenu.above): When this option is selected the
+  -  Web Console interface is displayed above the web page. -->
+<!ENTITY positionMenu.above    "Above">
+
+<!-- LOCALIZATION NOTE (positionMenu.below): When this option is selected the
+  -  Web Console interface is displayed below the web page. -->
+<!ENTITY positionMenu.below    "Below">
+
+<!-- LOCALIZATION NOTE (positionMenu.window): When this option is selected the
+  -  Web Console interface is displayed in a floating panel. -->
+<!ENTITY positionMenu.window   "Window">
+
+<!ENTITY filterBox.placeholder "Filter">
+<!ENTITY btnClear.label        "Clear">
+<!ENTITY btnClear.tooltip      "Clear the Web Console output">
+<!ENTITY btnClose.tooltip      "Close the Web Console">

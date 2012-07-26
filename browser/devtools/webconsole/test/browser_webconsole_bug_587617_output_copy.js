@@ -10,6 +10,8 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
+let HUD, outputNode;
+
 function test() {
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
@@ -18,7 +20,9 @@ function test() {
   }, true);
 }
 
-function consoleOpened(HUD) {
+function consoleOpened(aHud) {
+  HUD = aHud;
+
   // See bugs 574036, 586386 and 587617.
   outputNode = HUD.outputNode;
   let selection = getSelection();
@@ -61,18 +65,17 @@ function consoleOpened(HUD) {
 // properly as well.
 function testContextMenuCopy() {
   let contextMenuId = outputNode.getAttribute("context");
-  let contextMenu = document.getElementById(contextMenuId);
+  let contextMenu = HUD.ui.document.getElementById(contextMenuId);
   ok(contextMenu, "the output node has a context menu");
 
-  let copyItem = contextMenu.querySelector("*[buttonType=\"copy\"]");
+  let copyItem = contextMenu.querySelector("*[command='cmd_copy']");
   ok(copyItem, "the context menu on the output node has a \"Copy\" item");
 
-  let commandEvent = document.createEvent("XULCommandEvent");
-  commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                false, false, null);
-  copyItem.dispatchEvent(commandEvent);
+  copyItem.doCommand();
 
   let selectedNode = outputNode.getItemAtIndex(0);
+
+  HUD = outputNode = null;
   waitForClipboard(getExpectedClipboardText(selectedNode), clipboardSetup,
     finishTest, finishTest);
 }
