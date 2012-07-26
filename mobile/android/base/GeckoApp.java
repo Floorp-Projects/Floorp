@@ -194,12 +194,6 @@ abstract public class GeckoApp
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
         if (isTegra) {
-            // disable Flash on pre-HC Tegra (bug 703056)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
-                return null;
-            }
-
             // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
             File vfile = new File("/proc/version");
             FileReader vreader = null;
