@@ -15,7 +15,6 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsEventShell.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"

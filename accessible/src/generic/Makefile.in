@@ -32,8 +32,6 @@ EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
   Accessible.h \
-  DocAccessible.h \
-  HyperTextAccessible.h \
   $(null)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
