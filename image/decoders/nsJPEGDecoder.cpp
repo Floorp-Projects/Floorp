@@ -189,7 +189,9 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, PRUint32 aCount)
 
   /* Return here if there is a fatal error within libjpeg. */
   nsresult error_code;
-  if ((error_code = setjmp(mErr.setjmp_buffer)) != 0) {
+  // XXX: This cast to nsresult makes absolutely no sense and is thoroughly
+  // broken (bug 778103).  I hope this code path is never hit.
+  if ((error_code = (nsresult)setjmp(mErr.setjmp_buffer)) != 0) {
     if (error_code == NS_ERROR_FAILURE) {
       PostDataError();
       /* Error due to corrupt stream - return NS_OK and consume silently
