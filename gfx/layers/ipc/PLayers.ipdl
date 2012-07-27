@@ -14,6 +14,14 @@ include protocol PRenderFrame;
 
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/WidgetUtils.h";
+include "mozilla/TimeStamp.h";
+
+using gfxPoint3D;
+using nscoord;
+using nsRect;
+using nsPoint;
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -42,7 +50,7 @@ struct OpCreateRefLayer        { PLayer layer; };
 struct ThebesBuffer {
   SurfaceDescriptor buffer;
   nsIntRect rect;
-  nsIntPoint rotation; 
+  nsIntPoint rotation;
 };
 union OptionalThebesBuffer { ThebesBuffer; null_t; };
 
@@ -51,24 +59,129 @@ union CanvasSurface {
   null_t;
 };
 
-// Change a layer's attributes
+struct CubicBezierFunction {
+  float x1;
+  float y1;
+  float x2;
+  float y2;
+};
+
+struct StepFunction {
+  int steps;
+  // 1 = nsTimingFunction::StepStart, 2 = nsTimingFunction::StepEnd
+  int type;
+};
+
+union TimingFunction {
+  CubicBezierFunction;
+  StepFunction;
+};
+
+struct Color { gfxRGBA value; };
+struct Opacity { float value; };
+struct Perspective { float value; };
+struct RotationX { float radians; };
+struct RotationY { float radians; };
+struct RotationZ { float radians; };
+struct Rotation { float radians; };
+struct Rotation3D {
+  float x;
+  float y;
+  float z;
+  float radians;
+};
+struct Scale {
+  float x;
+  float y;
+  float z;
+};
+struct SkewX { float x; };
+struct SkewY { float y; };
+struct TransformMatrix { gfx3DMatrix value; };
+struct Translation {
+  float x;
+  float y;
+  float z;
+};
+
+union TransformFunction {
+  Perspective;
+  RotationX;
+  RotationY;
+  RotationZ;
+  Rotation;
+  Rotation3D;
+  Scale;
+  SkewX;
+  SkewY;
+  Translation;
+  TransformMatrix;
+};
+
+union Animatable {
+  Color;
+  Opacity;
+  TransformFunction[];
+};
+
+struct AnimationSegment {
+  Animatable startState;
+  Animatable endState;
+  float startPortion;
+  float endPortion;
+  TimingFunction sampleFn;
+};
+
+// Transforms need extra information to correctly convert the list of transform
+// functions to a gfx3DMatrix that can be applied directly to the layer.
+struct TransformData {
+  nsPoint origin;
+  gfxPoint3D mozOrigin;
+  gfxPoint3D perspectiveOrigin;
+  nsRect bounds;
+  nscoord perspective;
+};
+
+union AnimationData {
+  null_t;
+  TransformData;
+};
+
+struct Animation {
+  TimeStamp startTime;
+  TimeDuration duration;
+  // For each frame, the interpolation point is computed based on the
+  // startTime, the direction, the duration, and the current time.
+  // The segments must uniquely cover the portion from 0.0 to 1.0
+  AnimationSegment[] segments;
+  // How many times to repeat the animation.  < 0 means "forever".
+  float numIterations;
+  // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
+  int32_t direction;
+  AnimationData data;
+};
+
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
-  gfx3DMatrix transform;
+  TransformMatrix transform;
+  float xScale;
+  float yScale;
   PRUint32 contentFlags;
-  float opacity;
+  Opacity opacity;
   bool useClipRect;
   nsIntRect clipRect;
   bool isFixedPosition;
   gfxPoint fixedPositionAnchor;
   nullable PLayer maskLayer;
+  // Animated colors will only honored for ColorLayers.
+  Animation[] animations;
 };
 
 struct ThebesLayerAttributes {
   nsIntRegion validRegion;
 };
 struct ContainerLayerAttributes{ FrameMetrics metrics; };
-struct ColorLayerAttributes    { gfxRGBA color; };
+struct ColorLayerAttributes    { Color color; };
 struct CanvasLayerAttributes   { GraphicsFilterType filter; };
 struct RefLayerAttributes      { int64_t id; };
 struct ImageLayerAttributes    {
