@@ -9,6 +9,7 @@
 
 #include "nsGUIEvent.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace layers {
@@ -164,8 +165,8 @@ public:
   PRInt32 GetPageEnd();
 
   virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint) = 0;
-  virtual PRInt32 GetRectLength(const nsIntRect& aRect) = 0;
-  virtual PRInt32 GetRectOffset(const nsIntRect& aRect) = 0;
+  virtual PRInt32 GetRectLength(const gfx::Rect& aRect) = 0;
+  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect) = 0;
 
 protected:
   PRInt32 mPos;
@@ -179,16 +180,16 @@ class AxisX : public Axis {
 public:
   AxisX(AsyncPanZoomController* mAsyncPanZoomController);
   virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint);
-  virtual PRInt32 GetRectLength(const nsIntRect& aRect);
-  virtual PRInt32 GetRectOffset(const nsIntRect& aRect);
+  virtual PRInt32 GetRectLength(const gfx::Rect& aRect);
+  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect);
 };
 
 class AxisY : public Axis {
 public:
   AxisY(AsyncPanZoomController* mAsyncPanZoomController);
   virtual PRInt32 GetPointOffset(const nsIntPoint& aPoint);
-  virtual PRInt32 GetRectLength(const nsIntRect& aRect);
-  virtual PRInt32 GetRectOffset(const nsIntRect& aRect);
+  virtual PRInt32 GetRectLength(const gfx::Rect& aRect);
+  virtual PRInt32 GetRectOffset(const gfx::Rect& aRect);
 };
 
 }

@@ -225,32 +225,34 @@ PRInt32 Axis::GetOrigin() {
 
 PRInt32 Axis::GetViewportLength() {
   nsIntRect viewport = mAsyncPanZoomController->GetFrameMetrics().mViewport;
-  return GetRectLength(viewport);
+  gfx::Rect scaledViewport = gfx::Rect(viewport.x, viewport.y, viewport.width, viewport.height);
+  scaledViewport.ScaleRoundIn(1 / mAsyncPanZoomController->GetFrameMetrics().mResolution.width);
+  return GetRectLength(scaledViewport);
 }
 
 PRInt32 Axis::GetPageStart() {
-  nsIntRect pageRect = mAsyncPanZoomController->GetFrameMetrics().mContentRect;
+  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
   return GetRectOffset(pageRect);
 }
 
 PRInt32 Axis::GetPageLength() {
-  nsIntRect pageRect = mAsyncPanZoomController->GetFrameMetrics().mContentRect;
+  gfx::Rect pageRect = mAsyncPanZoomController->GetFrameMetrics().mCSSContentRect;
   return GetRectLength(pageRect);
 }
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
 
-  float currentScale = metrics.mResolution.width;
   gfx::Rect cssContentRect = metrics.mCSSContentRect;
-  cssContentRect.ScaleRoundIn(currentScale * aScale);
 
-  nsIntRect contentRect = nsIntRect(cssContentRect.x,
-                                    cssContentRect.y,
-                                    cssContentRect.width,
-                                    cssContentRect.height);
+  float currentScale = metrics.mResolution.width;
+  gfx::Rect viewport = gfx::Rect(metrics.mViewport.x,
+                                 metrics.mViewport.y,
+                                 metrics.mViewport.width,
+                                 metrics.mViewport.height);
+  viewport.ScaleRoundIn(1 / (currentScale * aScale));
 
-  return GetRectLength(contentRect) < GetRectLength(metrics.mViewport);
+  return GetRectLength(cssContentRect) < GetRectLength(viewport);
 }
 
 AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
@@ -264,14 +266,14 @@ PRInt32 AxisX::GetPointOffset(const nsIntPoint& aPoint)
   return aPoint.x;
 }
 
-PRInt32 AxisX::GetRectLength(const nsIntRect& aRect)
+PRInt32 AxisX::GetRectLength(const gfx::Rect& aRect)
 {
-  return aRect.width;
+  return NS_lround(aRect.width);
 }
 
-PRInt32 AxisX::GetRectOffset(const nsIntRect& aRect)
+PRInt32 AxisX::GetRectOffset(const gfx::Rect& aRect)
 {
-  return aRect.x;
+  return NS_lround(aRect.x);
 }
 
 AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
@@ -285,14 +287,14 @@ PRInt32 AxisY::GetPointOffset(const nsIntPoint& aPoint)
   return aPoint.y;
 }
 
-PRInt32 AxisY::GetRectLength(const nsIntRect& aRect)
+PRInt32 AxisY::GetRectLength(const gfx::Rect& aRect)
 {
-  return aRect.height;
+  return NS_lround(aRect.height);
 }
 
-PRInt32 AxisY::GetRectOffset(const nsIntRect& aRect)
+PRInt32 AxisY::GetRectOffset(const gfx::Rect& aRect)
 {
-  return aRect.y;
+  return NS_lround(aRect.y);
 }
 
 }
