@@ -347,10 +347,12 @@ ImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
     target->AddEventListener(NS_LITERAL_STRING("resize"), this, false);
     target->AddEventListener(NS_LITERAL_STRING("keypress"), this, false);
 
-    if (!nsContentUtils::IsChildOfSameType(this)) {
+    if (!nsContentUtils::IsChildOfSameType(this) &&
+        GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
       LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelImageDocument.css"));
       LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelImageDocument.css"));
     }
+    BecomeInteractive();
   }
 }
 

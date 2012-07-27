@@ -179,6 +179,7 @@ PluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject
         CreateSyntheticPluginDocument();
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
     }
+    BecomeInteractive();
   } else {
     mStreamListener = nsnull;
   }
