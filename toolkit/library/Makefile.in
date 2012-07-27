@@ -416,7 +416,6 @@ CPPSRCS += \
 
 GARBAGE += \
   $(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
-  $(wildcard *.$(OBJ_SUFFIX)) \
   $(RDF_UTIL_SRC_LCPPSRCS) \
   $(NULL)
 
