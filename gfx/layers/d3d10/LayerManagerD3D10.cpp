@@ -484,8 +484,11 @@ TemporaryRef<DrawTarget>
 LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
                                     SurfaceFormat aFormat)
 {
+  BackendType backend;
   if ((aFormat != FORMAT_B8G8R8A8 &&
-       aFormat != FORMAT_B8G8R8X8)) {
+       aFormat != FORMAT_B8G8R8X8) ||
+       !gfxPlatform::GetPlatform()->SupportsAzureCanvas(backend) ||
+       backend != BACKEND_DIRECT2D) {
     return LayerManager::CreateDrawTarget(aSize, aFormat);
   }
 
@@ -631,9 +634,12 @@ LayerManagerD3D10::VerifyBufferSize()
     }
 
     mRTView = nsnull;
-    if (gfxWindowsPlatform::IsOptimus() ||
-        gfxWindowsPlatform::IsRunningInWindows8Metro()) {
+    if (gfxWindowsPlatform::IsOptimus()) { 
       mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+                                DXGI_FORMAT_B8G8R8A8_UNORM,
+                                0);
+    } else if (gfxWindowsPlatform::IsRunningInWindows8Metro()) {
+      mSwapChain->ResizeBuffers(2, rect.width, rect.height,
                                 DXGI_FORMAT_B8G8R8A8_UNORM,
                                 0);
     } else {

@@ -229,7 +229,6 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     if (!gtk_widget_has_grab(sGrabWidget))
         return;
 
-    GdkModifierType state;
     if (event->type == GDK_MOTION_NOTIFY) {
         if (sMotionEvent) {
             gdk_event_free(sMotionEvent);

@@ -60,7 +60,7 @@ let tests = {
       next();
     }
     Services.obs.addObserver(ob, "social:profile-changed", false);
-    provider.workerAPI._port.postMessage({topic: "test-profile", data: expect});
+    provider.port.postMessage({topic: "test-profile", data: expect});
   },
 
   testAmbientNotification: function(next) {
@@ -76,7 +76,7 @@ let tests = {
       next();
     }
     Services.obs.addObserver(ob, "social:ambient-notification-changed", false);
-    provider.workerAPI._port.postMessage({topic: "test-ambient", data: expect});
+    provider.port.postMessage({topic: "test-ambient", data: expect});
   },
 
   testProfileCleared: function(next) {
@@ -93,5 +93,22 @@ let tests = {
     }
     Services.obs.addObserver(ob, "social:profile-changed", false);
     provider.workerAPI._port.postMessage({topic: "test-profile", data: sent});
+  },
+
+  testCookies: function(next) {
+    provider.port.onmessage = function onMessage(event) {
+      let {topic, data} = event.data;
+      if (topic == "test.cookies-get-response") {
+        is(data.length, 1, "got one cookie");
+        is(data[0].name, "cheez", "cookie has the correct name");
+        is(data[0].value, "burger", "cookie has the correct value");
+        Services.cookies.remove('.example.com', '/', 'cheez', false);
+        next();
+      }
+    }
+    var MAX_EXPIRY = Math.pow(2, 62);
+    Services.cookies.add('.example.com', '/', 'cheez', 'burger', false, false, true, MAX_EXPIRY);
+    provider.port.postMessage({topic: "test.cookies-get"});
   }
+
 };

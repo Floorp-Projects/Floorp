@@ -261,7 +261,7 @@ Prompt.prototype = {
 
   nsIPrompt_promptPassword: function nsIPrompt_promptPassword(
       aTitle, aText, aPassword, aCheckMsg, aCheckState) {
-    let inputs = [{ type: "password", hint: "Password", value: aPassword.value || "" }];
+    let inputs = [{ type: "password", hint: PromptUtils.getLocaleString("password", "passwdmgr"), value: aPassword.value || "" }];
     let data = this.commonPrompt(aTitle, aText, null, aCheckMsg, aCheckState, inputs);
 
     let ok = data.button == 0;

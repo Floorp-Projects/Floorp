@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-[uuid(6e35dbc0-49ef-4e2c-b1ea-b72ec64450a2)]
+[uuid(fb82a326-1311-4c45-b5b3-84eb883d4b70)]
 interface nsIAuthModule : nsISupports
 {
     /**
@@ -116,6 +116,13 @@ interface nsIAuthModule : nsISupports
                 in unsigned long   aInTokenLength,
                 out voidPtr        aOutToken,
                 out unsigned long  aOutTokenLength);
+
+    /* Flags defining various properties of the auth module. */
+    readonly attribute unsigned long moduleProperties;
+
+    /* The service name in Init() is required to be the Canonical DNS
+       name for that host */
+    const unsigned long CANONICAL_NAME_REQUIRED = (1<<0);
 };
 
 %{C++

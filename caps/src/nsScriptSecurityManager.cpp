@@ -60,6 +60,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3057,7 +3058,7 @@ nsresult nsScriptSecurityManager::Init()
     return NS_OK;
 }
 
-static nsRefPtr<nsScriptSecurityManager> gScriptSecMan;
+static StaticRefPtr<nsScriptSecurityManager> gScriptSecMan;
 
 jsid nsScriptSecurityManager::sEnabledID   = JSID_VOID;
 

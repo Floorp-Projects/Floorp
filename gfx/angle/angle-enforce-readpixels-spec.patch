@@ -1,9 +1,9 @@
 # HG changeset patch
-# Parent 8d84c8d4e3ed41a4941afdf9d51819b19ca64716
+# Parent a1fed68f51737972901e0d6fc829d3e044a453bd
 diff --git a/gfx/angle/src/libGLESv2/libGLESv2.cpp b/gfx/angle/src/libGLESv2/libGLESv2.cpp
 --- a/gfx/angle/src/libGLESv2/libGLESv2.cpp
 +++ b/gfx/angle/src/libGLESv2/libGLESv2.cpp
-@@ -98,27 +98,16 @@ bool validReadFormatType(GLenum format, 
+@@ -231,27 +231,16 @@ bool validReadFormatType(GLenum format, 
          switch (type)
          {
            case GL_UNSIGNED_BYTE:

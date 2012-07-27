@@ -5,16 +5,11 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   style="@style/SyncLayout" >
-  <LinearLayout
+  <TextView
+    style="@style/SyncTop"
     android:id="@+id/pair_top"
-    style="@style/SyncTop" >
-    <ImageView
-      style="@style/SyncTopIcon" />
-    <TextView
-      android:id="@+id/setup_title"
-      style="@style/SyncTextTitle"
-      android:text="@string/sync_title_pair" />
-  </LinearLayout>
+    android:text="@string/sync_title_pair" />
+
   <ScrollView
     style="@style/SyncLayout"
     android:layout_below="@id/pair_top"

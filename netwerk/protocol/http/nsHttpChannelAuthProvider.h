@@ -16,6 +16,8 @@
 #include "nsIURI.h"
 #include "nsHttpAuthCache.h"
 #include "nsProxyInfo.h"
+#include "nsIDNSListener.h"
+#include "mozilla/Attributes.h"
 
 class nsIHttpAuthenticator;
 
@@ -56,6 +58,9 @@ private:
                               nsIHttpAuthenticator **auth);
     void     ParseRealm(const char *challenge, nsACString &realm);
     void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
+    bool     AuthModuleRequiresCanonicalName(nsISupports *state);
+    nsresult ResolveHost();
+
     /**
      * Following three methods return NS_ERROR_IN_PROGRESS when
      * nsIAuthPrompt2.asyncPromptAuth method is called. This result indicates
@@ -105,12 +110,16 @@ private:
      */
     nsresult ProcessSTSHeader();
 
+    void SetDNSQuery(nsICancelable *aQuery) { mDNSQuery = aQuery; }
+    void SetCanonicalizedHost(nsACString &aHost) { mCanonicalizedHost = aHost; }
+
 private:
     nsIHttpAuthenticableChannel      *mAuthChannel;  // weak ref
 
     nsCOMPtr<nsIURI>                  mURI;
     nsCOMPtr<nsProxyInfo>             mProxyInfo;
     nsCString                         mHost;
+    nsCString                         mCanonicalizedHost;
     PRInt32                           mPort;
     bool                              mUsingSSL;
 
@@ -140,6 +149,22 @@ private:
     PRUint32                          mTriedProxyAuth           : 1;
     PRUint32                          mTriedHostAuth            : 1;
     PRUint32                          mSuppressDefensiveAuth    : 1;
+    PRUint32                          mResolvedHost             : 1;
+
+    // define a separate threadsafe class for use with the DNS callback
+    class DNSCallback MOZ_FINAL : public nsIDNSListener
+    {
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIDNSLISTENER
+
+        DNSCallback(nsHttpChannelAuthProvider *authProvider)
+            : mAuthProvider(authProvider)
+        { }
+
+    private:
+        nsRefPtr<nsHttpChannelAuthProvider> mAuthProvider;
+    };
+    nsCOMPtr<nsICancelable>          mDNSQuery;
 };
 
 #endif // nsHttpChannelAuthProvider_h__

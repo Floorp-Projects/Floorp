@@ -177,6 +177,8 @@ struct JSXML : js::gc::Cell {
 
     static void writeBarrierPre(JSXML *xml);
     static void writeBarrierPost(JSXML *xml, void *addr);
+
+    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_XML; }
 };
 
 /* xml_flags values */

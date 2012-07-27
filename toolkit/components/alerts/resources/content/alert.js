@@ -68,33 +68,36 @@ function onAlertLoad()
   gOpenTime           = Services.prefs.getIntPref("alerts.totalOpenTime");
   gDisableSlideEffect = Services.prefs.getBoolPref("alerts.disableSlidingEffect");
 
+  var alertBox = document.getElementById("alertBox");
   // Make sure that the contents are fixed at the window edge facing the
   // screen's center so that the window looks like "sliding in" and not
   // like "unfolding". The default packing of "start" only works for
   // vertical-bottom and horizontal-right positions, so we change it here.
   if (gOrigin & NS_ALERT_HORIZONTAL)
   {
-    if (gOrigin & NS_ALERT_LEFT)
+    if (gOrigin & NS_ALERT_LEFT) {
       document.documentElement.pack = "end";
+      alertBox.setAttribute("origin", "left");
+    } else {
+      alertBox.setAttribute("origin", "right");
+    }
 
     // Additionally, change the orientation so the packing works as intended
     document.documentElement.orient = "horizontal";
   }
   else
   {
-    if (gOrigin & NS_ALERT_TOP)
+    if (gOrigin & NS_ALERT_TOP) {
       document.documentElement.pack = "end";
+      alertBox.setAttribute("origin", "top");
+    } else {
+      alertBox.setAttribute("origin", "bottom");
+    }
   }
 
-  var alertBox = document.getElementById("alertBox");
   alertBox.orient = (gOrigin & NS_ALERT_HORIZONTAL) ? "vertical" : "horizontal";
 
   sizeToContent();
-
-  // Work around a bug where sizeToContent() leaves a border outside of the content
-  var contentDim = document.getElementById("alertBox").boxObject;
-  if (window.innerWidth == contentDim.width + 1)
-    --window.innerWidth;
 
   // Start with a 1px width/height, because 0 causes trouble with gtk1/2
   gCurrentSize = 1;

@@ -47,6 +47,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     needsBarrier_(false),
     gcState(NoGCScheduled),
     gcPreserveCode(false),
+    gcStarted(false),
     gcBytes(0),
     gcTriggerBytes(0),
     gcHeapGrowthFactor(3.0),
@@ -570,7 +571,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
         {
             gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
-            oldAlloc.freeAll();
+            rt->freeLifoAlloc.transferFrom(&oldAlloc);
             if (types.constrainedOutputs) {
                 fop->delete_(types.constrainedOutputs);
                 types.constrainedOutputs = NULL;

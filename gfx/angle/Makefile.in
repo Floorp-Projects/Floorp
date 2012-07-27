@@ -29,9 +29,27 @@ VPATH += $(srcdir)/src
 VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/preprocessor
 VPATH += $(srcdir)/src/compiler/preprocessor/new
+VPATH += $(srcdir)/src/compiler/timing
+VPATH += $(srcdir)/src/compiler/depgraph
 
 CPPSRCS = \
-	Compiler.cpp \
+        Diagnostics.cpp \
+        PreprocessorDiagnostics.cpp \
+        DirectiveHandler.cpp \
+        PreprocessorDirectiveHandler.cpp \
+        DirectiveParser.cpp \
+        ExpressionParser.cpp \
+        Macro.cpp \
+        MacroExpander.cpp \
+        Tokenizer.cpp \
+        InitializeParseContext.cpp \
+        DependencyGraph.cpp \
+        DependencyGraphBuilder.cpp \
+        DependencyGraphOutput.cpp \
+        DependencyGraphTraverse.cpp \
+        RestrictFragmentShaderTiming.cpp \
+        RestrictVertexShaderTiming.cpp \
+        Compiler.cpp \
         DetectRecursion.cpp \
         InfoSink.cpp \
         Initialize.cpp \
@@ -48,7 +66,6 @@ CPPSRCS = \
         SymbolTable.cpp \
         VariableInfo.cpp \
         compilerdebug.cpp \
-        ossource_nspr.cpp \
         util.cpp \
         ValidateLimitations.cpp \
         ForLoopUnroll.cpp \
@@ -57,10 +74,8 @@ CPPSRCS = \
         BuiltInFunctionEmulator.cpp \
         Input.cpp \
         Lexer.cpp \
-        pp_lex.cpp \
         Preprocessor.cpp \
         Token.cpp \
-        lexer_glue.cpp \
         $(NULL)
 
 # flex/yacc generated files
@@ -78,19 +93,13 @@ CPPSRCS += \
         OutputESSL.cpp \
         OutputGLSLBase.cpp \
         TranslatorESSL.cpp \
-	$(NULL)
+        $(NULL)
 
-# Currently, only one or the other
-# can be selected.
-
-## HLSL translator backend
-##CPPSRCS += \
-##	CodeGenHLSL.cpp \
-##	OutputHLSL.cpp \
-##	TranslatorHLSL.cpp \
-##	UnfoldSelect.cpp \
-##	SearchSymbol.cpp \
-##	$(NULL)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += ossource_win.cpp $(NULL)
+else
+CPPSRCS += ossource_posix.cpp $(NULL)
+endif
 
 CSRCS   = \
         atom.c \
@@ -100,13 +109,14 @@ CSRCS   = \
         scanner.c \
         symbols.c \
         tokens.c \
-	$(NULL)
+        $(NULL)
 
-DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
+DEFINES += -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
 
 #these defines are from ANGLE's build_angle.gyp
 DEFINES += -DANGLE_DISABLE_TRACE
 DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
+DEFINES += -DANGLE_USE_NEW_PREPROCESSOR=1
 
 ifdef MOZ_ANGLE_RENDERER
 

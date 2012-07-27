@@ -4,6 +4,9 @@ deps = {
 
   "trunk/third_party/googletest":
       "http://googletest.googlecode.com/svn/trunk@573", #release 1.6.0
+
+  "trunk/third_party/googlemock":
+      "http://googlemock.googlecode.com/svn/trunk@387", #release 1.6.0
 }
 
 hooks = [
