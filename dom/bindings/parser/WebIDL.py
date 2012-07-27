@@ -1863,6 +1863,10 @@ class IDLAttribute(IDLInterfaceMember):
     def handleExtendedAttribute(self, name, list):
         if name == "TreatNonCallableAsNull":
             self.type.markTreatNonCallableAsNull();
+        if name == "SetterInfallible" and self.readonly:
+            raise WebIDLError("Readonly attributes must not be flagged as "
+                              "[SetterInfallible]",
+                              [self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, name, list)
 
     def resolve(self, parentScope):
@@ -2273,6 +2277,17 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         raise WebIDLError("Signatures with %d arguments for method '%s' are not "
                           "distinguishable" % (argc, self.identifier.name),
                           locations)
+
+    def handleExtendedAttribute(self, name, list):
+        if name == "GetterInfallible":
+            raise WebIDLError("Methods must not be flagged as "
+                              "[GetterInfallible]",
+                              [self.location])
+        if name == "SetterInfallible":
+            raise WebIDLError("Methods must not be flagged as "
+                              "[SetterInfallible]",
+                              [self.location])
+        IDLInterfaceMember.handleExtendedAttribute(self, name, list)
 
 class IDLImplementsStatement(IDLObject):
     def __init__(self, location, implementor, implementee):
