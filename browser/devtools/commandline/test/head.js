@@ -7,7 +7,7 @@ const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/commandlin
 
 let console = (function() {
   let tempScope = {};
-  Components.utils.import("resource:///modules/devtools/Console.jsm", tempScope);
+  Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
   return tempScope.console;
 })();
 
