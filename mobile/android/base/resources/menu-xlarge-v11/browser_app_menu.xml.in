@@ -18,7 +18,8 @@
 
     <item gecko:id="@+id/bookmark"
           gecko:icon="@drawable/ic_menu_bookmark_add"
-          gecko:title="@string/bookmark"/>
+          gecko:title="@string/bookmark"
+          gecko:showAsAction="true"/>
 
     <item gecko:id="@+id/share"
           gecko:icon="@drawable/ic_menu_share"
@@ -65,8 +66,4 @@
     <item gecko:id="@+id/toggle_profiling"
           gecko:title="@string/toggle_profiling" />
 #endif
-
-    <item gecko:id="@+id/quit"
-          gecko:title="@string/quit"
-          gecko:orderInCategory="10" />
 </menu>

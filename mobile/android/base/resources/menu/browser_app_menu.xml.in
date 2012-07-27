@@ -59,8 +59,4 @@
     <item android:id="@+id/toggle_profiling"
           android:title="@string/toggle_profiling" />
 #endif
-
-    <item android:id="@+id/quit"
-          android:title="@string/quit"
-          android:orderInCategory="10" />
 </menu>

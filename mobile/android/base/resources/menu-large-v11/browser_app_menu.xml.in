@@ -8,11 +8,13 @@
 
     <item gecko:id="@+id/reload"
           gecko:icon="@drawable/ic_menu_reload"
-          gecko:title="@string/reload"/>
+          gecko:title="@string/reload"
+          gecko:showAsAction="true"/>
 
     <item gecko:id="@+id/forward"
           gecko:icon="@drawable/ic_menu_forward"
-          gecko:title="@string/forward"/>
+          gecko:title="@string/forward"
+          gecko:visible="false"/>
 
     <item gecko:id="@+id/bookmark"
           gecko:icon="@drawable/ic_menu_bookmark_add"
@@ -38,7 +40,7 @@
           gecko:icon="@drawable/ic_menu_desktop_mode"
           gecko:title="@string/desktop_mode"
           gecko:checkable="true" />
-
+    
     <item gecko:id="@+id/site_settings"
           gecko:icon="@drawable/ic_menu_clear_site_settings"
           gecko:title="@string/site_settings_title" />
@@ -63,8 +65,4 @@
     <item gecko:id="@+id/toggle_profiling"
           gecko:title="@string/toggle_profiling" />
 #endif
-
-    <item gecko:id="@+id/quit"
-          gecko:title="@string/quit"
-          gecko:orderInCategory="10" />
 </menu>
