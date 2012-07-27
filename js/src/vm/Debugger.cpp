@@ -233,7 +233,7 @@ void
 BreakpointSite::recompile(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
-    if (script->hasMJITInfo()) {
+    if (script->hasJITInfo()) {
         mjit::Recompiler::clearStackReferences(fop, script);
         mjit::ReleaseScriptCode(fop, script);
     }
