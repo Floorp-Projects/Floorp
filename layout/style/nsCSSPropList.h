@@ -1101,7 +1101,7 @@ CSS_PROP_TABLEBORDER(
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_Custom) // XXX bug 3935
+    eStyleAnimType_Custom)
 CSS_PROP_SHORTHAND(
     -moz-border-start,
     border_start,
@@ -2118,7 +2118,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HN,
     nsnull,
     offsetof(nsStyleDisplay, mOpacity),
-    eStyleAnimType_float) // XXX bug 3935
+    eStyleAnimType_float)
 CSS_PROP_DISPLAY(
     -moz-orient,
     orient,
