@@ -1069,6 +1069,15 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 
     NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
 
+    // If the private is null, that means that the object has already been torn
+    // down, possible because the owning plugin was destroyed (there can be
+    // multiple plugins, so the fact that it was destroyed does not prevent one
+    // of its dead JS objects from being passed to another plugin). There's not
+    // much use in wrapping such a dead object, so we just return null, causing
+    // us to throw.
+    if (!npobj)
+      return nsnull;
+
     if (LookupNPP(npobj) == npp)
       return _retainobject(npobj);
   }
