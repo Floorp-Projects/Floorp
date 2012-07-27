@@ -11,12 +11,12 @@ class TestWindowSwitching(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
 
-        current_window = self.marionette.current_window_handle
+        self.current_window = self.marionette.current_window_handle
         link = self.marionette.find_element("link text", "Open new window")
         link.click()
 
         windows = self.marionette.window_handles
-        windows.remove(current_window)
+        windows.remove(self.current_window)
         self.marionette.switch_to_window(windows[0])
 
         title = self.marionette.execute_script("return document.title")
@@ -40,6 +40,11 @@ class TestWindowSwitching(MarionetteTestCase):
             time.sleep(1)
 
         self.assertEqual(other_window, self.marionette.current_window_handle)
-        self.marionette.switch_to_window(current_window)
-        self.assertEqual(current_window, self.marionette.current_window_handle)
+        self.marionette.switch_to_window(self.current_window)
+        self.assertEqual(self.current_window, self.marionette.current_window_handle)
 
+    def tearDown(self):
+        window_handles = self.marionette.window_handles
+        window_handles.remove(self.current_window)
+        for handle in window_handles:
+            self.marionette.close(handle)
