@@ -400,6 +400,11 @@ Services.obs.addObserver(function onSystemMessage(subject, topic, data) {
       output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
       output.write(prompt, prompt.length);
       input.asyncWait(reader, 0, 0, Services.tm.mainThread);
+    },
+    onStopListening: function repl_onStopListening() {
+      if (output) {
+        output.close();
+      }
     }
   }
   let serverPort = Services.prefs.getIntPref('b2g.remote-js.port');
