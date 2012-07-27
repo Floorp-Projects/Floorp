@@ -341,52 +341,16 @@ Navigator::GetVendorSub(nsAString& aVendorSub)
 NS_IMETHODIMP
 Navigator::GetProduct(nsAString& aProduct)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString product;
-  rv = service->GetProduct(product);
-  CopyASCIItoUTF16(product, aProduct);
-
-  return rv;
+  aProduct.AssignLiteral("Gecko");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 Navigator::GetProductSub(nsAString& aProductSub)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
-    const nsAdoptingString& override =
-      Preferences::GetString("general.productSub.override");
-
-    if (override) {
-      aProductSub = override;
-      return NS_OK;
-    }
-
-    // 'general.useragent.productSub' backwards compatible with 1.8 branch.
-    const nsAdoptingString& override2 =
-      Preferences::GetString("general.useragent.productSub");
-
-    if (override2) {
-      aProductSub = override2;
-      return NS_OK;
-    }
-  }
-
-  nsresult rv;
-
-  nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString productSub;
-  rv = service->GetProductSub(productSub);
-  CopyASCIItoUTF16(productSub, aProductSub);
-
-  return rv;
+  // Legacy build ID hardcoded for backward compatibility (bug 776376)
+  aProductSub.AssignLiteral("20100101");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

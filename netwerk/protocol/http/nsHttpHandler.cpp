@@ -1464,20 +1464,6 @@ nsHttpHandler::GetAppVersion(nsACString &value)
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProduct(nsACString &value)
-{
-    value = mProduct;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetProductSub(nsACString &value)
-{
-    value = mProductSub;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpHandler::GetPlatform(nsACString &value)
 {
     value = mPlatform;
