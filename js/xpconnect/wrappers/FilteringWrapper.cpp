@@ -7,6 +7,7 @@
 #include "FilteringWrapper.h"
 #include "AccessCheck.h"
 #include "WaiveXrayWrapper.h"
+#include "ChromeObjectWrapper.h"
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
 
@@ -104,7 +105,6 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
 
 #define SOW FilteringWrapper<CrossCompartmentSecurityWrapper, OnlyIfSubjectIsSystem>
 #define SCSOW FilteringWrapper<SameCompartmentSecurityWrapper, OnlyIfSubjectIsSystem>
-#define COW FilteringWrapper<CrossCompartmentSecurityWrapper, ExposedPropertiesOnly>
 #define XOW FilteringWrapper<XrayWrapper<CrossCompartmentSecurityWrapper>, \
                              CrossOriginAccessiblePropertiesOnly>
 #define PXOW   FilteringWrapper<XrayProxy, \
@@ -125,7 +125,6 @@ template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                               WrapperFactory::SOW_FLAG);
 template<> SCSOW SCSOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                                   WrapperFactory::SOW_FLAG);
-template<> COW COW::singleton(0);
 template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
                               WrapperFactory::PARTIALLY_TRANSPARENT);
 template<> PXOW PXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
@@ -141,12 +140,11 @@ template<> CW CW::singleton(0);
 template<> XCW XCW::singleton(0);
 
 template class SOW;
-template class COW;
 template class XOW;
 template class PXOW;
 template class DXOW;
 template class NNXOW;
 template class LW;
 template class XLW;
-
+template class ChromeObjectWrapperBase;
 }
