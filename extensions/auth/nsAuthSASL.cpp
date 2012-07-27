@@ -149,3 +149,10 @@ nsAuthSASL::Wrap(const void *inToken,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsAuthSASL::GetModuleProperties(PRUint32 *flags)
+{
+    *flags = 0;
+    return NS_OK;
+}

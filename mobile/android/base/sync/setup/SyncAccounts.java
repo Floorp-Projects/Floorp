@@ -8,6 +8,7 @@ import java.io.File;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
@@ -50,7 +51,7 @@ public class SyncAccounts {
    * Do not call this method from the main thread.
    */
   public static boolean syncAccountsExist(Context c) {
-    final boolean accountsExist = AccountManager.get(c).getAccountsByType(Constants.ACCOUNTTYPE_SYNC).length > 0;
+    final boolean accountsExist = AccountManager.get(c).getAccountsByType(GlobalConstants.ACCOUNTTYPE_SYNC).length > 0;
     if (accountsExist) {
       return true;
     }
@@ -286,13 +287,13 @@ public class SyncAccounts {
       Logger.info(LOG_TAG, "Setting explicit server URL: " + serverURL);
     }
 
-    final Account account = new Account(username, Constants.ACCOUNTTYPE_SYNC);
+    final Account account = new Account(username, GlobalConstants.ACCOUNTTYPE_SYNC);
     final Bundle userbundle = new Bundle();
 
     // Add sync key and server URL.
     userbundle.putString(Constants.OPTION_SYNCKEY, syncKey);
     userbundle.putString(Constants.OPTION_SERVER, serverURL);
-    Logger.debug(LOG_TAG, "Adding account for " + Constants.ACCOUNTTYPE_SYNC);
+    Logger.debug(LOG_TAG, "Adding account for " + GlobalConstants.ACCOUNTTYPE_SYNC);
     boolean result = false;
     try {
       result = accountManager.addAccountExplicitly(account, password, userbundle);

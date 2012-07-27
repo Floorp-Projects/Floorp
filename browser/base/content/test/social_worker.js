@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let testPort;
+let testPort, sidebarPort;
 
 onconnect = function(e) {
   let port = e.ports[0];
@@ -13,8 +13,27 @@ onconnect = function(e) {
         testPort = port;
         break;
       case "sidebar-message":
+        sidebarPort = port;
         if (testPort && event.data.result == "ok")
           testPort.postMessage({topic:"got-sidebar-message"});
+        break;
+      case "service-window-message":
+        testPort.postMessage({topic:"got-service-window-message"});
+        break;
+      case "service-window-closed-message":
+        testPort.postMessage({topic:"got-service-window-closed-message"});
+        break;
+      case "test-service-window":
+        sidebarPort.postMessage({topic:"test-service-window"});
+        break;
+      case "test-service-window-twice":
+        sidebarPort.postMessage({topic:"test-service-window-twice"});
+        break;
+      case "test-service-window-twice-result":
+        testPort.postMessage({topic: "test-service-window-twice-result", result: event.data.result })
+        break;
+      case "test-close-service-window":
+        sidebarPort.postMessage({topic:"test-close-service-window"});
         break;
       case "panel-message":
         if (testPort && event.data.result == "ok")

@@ -14,7 +14,7 @@ function sendIndicatorPDU(pdu, listener, nextTest) {
   let commandCompleted = false;
   let sawEvent = false;
 
- voicemail.addEventListener("statuschanged", function statusChanged(event) {
+  voicemail.addEventListener("statuschanged", function statusChanged(event) {
     voicemail.removeEventListener("statuschanged", statusChanged);
 
     try {
@@ -151,10 +151,10 @@ const MWI_LEVEL3_ACTIVE_UDH_MSG_COUNT = 3;
 const MWI_LEVEL3_ACTIVE_BODY = "3 new voicemails";
 const MWI_LEVEL3_ACTIVE_UD = PDUBuilder.buildUserData({
   headers: [{
-    id: PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION,
+    id: RIL.PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION,
     length: 2,
     octets: [
-      PDU_MWI_STORE_TYPE_DISCARD,
+      RIL.PDU_MWI_STORE_TYPE_DISCARD,
       MWI_LEVEL3_ACTIVE_UDH_MSG_COUNT
     ]
   }],
@@ -189,10 +189,10 @@ function testLevel3DiscardActive() {
 const MWI_LEVEL3_INACTIVE_BODY = "No unread voicemails";
 const MWI_LEVEL3_INACTIVE_UD = PDUBuilder.buildUserData({
   headers: [{
-    id: PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION,
+    id: RIL.PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION,
     length: 2,
     octets: [
-      PDU_MWI_STORE_TYPE_DISCARD,
+      RIL.PDU_MWI_STORE_TYPE_DISCARD,
       0 // messageCount
     ]
   }],

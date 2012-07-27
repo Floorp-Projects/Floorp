@@ -16,4 +16,6 @@ public class GlobalConstants {
                                           " (" + PRODUCT_NAME + ")";
   public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
   public static final String BROWSER_INTENT_CLASS = BROWSER_INTENT_PACKAGE + ".App";
+
+  public static final String ACCOUNTTYPE_SYNC     = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@";
 }

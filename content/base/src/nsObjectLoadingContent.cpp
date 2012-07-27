@@ -41,6 +41,7 @@
 #include "nsPluginError.h"
 
 // Util headers
+#include "prenv.h"
 #include "prlog.h"
 
 #include "nsAutoPtr.h"
@@ -1220,9 +1221,16 @@ nsObjectLoadingContent::ObjectState() const
         case ePluginCrashed:
           state |= NS_EVENT_STATE_HANDLER_CRASHED;
           break;
-        case ePluginUnsupported:
-          state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
+        case ePluginUnsupported: {
+          // Check to see if plugins are blocked on this platform.
+          char* pluginsBlocked = PR_GetEnv("MOZ_PLUGINS_BLOCKED");
+          if (pluginsBlocked && pluginsBlocked[0] == '1') {
+            state |= NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM;
+          } else {
+            state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
+          }
           break;
+        }
         case ePluginOutdated:
         case ePluginOtherState:
           // Do nothing, but avoid a compile warning

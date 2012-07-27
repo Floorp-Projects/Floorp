@@ -442,6 +442,9 @@ NS_IMETHODIMP
 WebGLContext::BufferData(WebGLenum target, const JS::Value& data, GLenum usage,
                          JSContext* cx)
 {
+    if (!IsContextStable())
+        return NS_OK;
+
     if (data.isNull()) {
         BufferData(target, static_cast<ArrayBuffer*>(nsnull), usage);
         return NS_OK;
@@ -1525,8 +1528,17 @@ WebGLContext::DoFakeVertexAttrib0(WebGLuint vertexCount)
     if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
         return true;
 
+    if (!mAlreadyWarnedAboutFakeVertexAttrib0) {
+        GenerateWarning("Drawing without vertex attrib 0 array enabled forces the browser "
+                        "to do expensive emulation work when running on desktop OpenGL "
+                        "platforms, for example on Mac. It is preferable to always draw "
+                        "with vertex attrib 0 array enabled, by using bindAttribLocation "
+                        "to bind some always-used attribute to location 0.");
+        mAlreadyWarnedAboutFakeVertexAttrib0 = true;
+    }
+
     CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(WebGLfloat);
-    
+
     if (!checked_dataSize.isValid()) {
         ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
                          "with %d vertices. Try reducing the number of vertices.", vertexCount);
@@ -5022,9 +5034,13 @@ WebGLContext::CompileShader(WebGLShader *shader)
             // we always query uniform info, regardless of useShaderSourceTranslation,
             // as we need it to validate uniform setter calls, and it doesn't rely on
             // shader translation.
+            char mappedNameLength = strlen(mapped_name);
+            char mappedNameLastChar = mappedNameLength > 1
+                                      ? mapped_name[mappedNameLength - 1]
+                                      : 0;
             shader->mUniformInfos.AppendElement(WebGLUniformInfo(
                                                     size,
-                                                    length > 1 && mapped_name[length - 1] == ']',
+                                                    mappedNameLastChar == ']',
                                                     type));
         }
 

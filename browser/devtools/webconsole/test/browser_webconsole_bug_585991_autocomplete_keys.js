@@ -35,33 +35,58 @@ function consoleOpened(aHud) {
 
     ok(popup.isOpen, "popup is open");
 
-    is(popup.itemCount, 4, "popup.itemCount is correct");
+    // 4 values, and the following properties:
+    // __defineGetter__  __defineSetter__ __lookupGetter__ __lookupSetter__
+    // hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString
+    // toSource unwatch valueOf watch constructor.
+    is(popup.itemCount, 18, "popup.itemCount is correct");
 
-    let sameItems = popup.getItems();
-    is(sameItems.every(function(aItem, aIndex) {
-      return aItem.label == "item" + aIndex;
-    }), true, "getItems returns back the same items");
+    let sameItems = popup.getItems().map(function(e) {return e.label;});
+    ok(sameItems.every(function(prop, index) {
+      return [
+        "__defineGetter__",
+        "__defineSetter__",
+        "__lookupGetter__",
+        "__lookupSetter__",
+        "constructor",
+        "hasOwnProperty",
+        "isPrototypeOf",
+        "item0",
+        "item1",
+        "item2",
+        "item3",
+        "propertyIsEnumerable",
+        "toLocaleString",
+        "toSource",
+        "toString",
+        "unwatch",
+        "valueOf",
+        "watch",
+      ][index] === prop}), "getItems returns the items we expect");
 
     is(popup.selectedIndex, -1, "no index is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
-      
+
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
-    is(popup.selectedItem.label, "item0", "item0 is selected");
-    is(completeNode.value, prefix + "item0", "completeNode.value holds item0");
+    is(popup.selectedItem.label, "__defineGetter__", "__defineGetter__ is selected");
+    is(completeNode.value, prefix + "__defineGetter__",
+        "completeNode.value holds __defineGetter__");
 
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     is(popup.selectedIndex, 1, "index 1 is selected");
-    is(popup.selectedItem.label, "item1", "item1 is selected");
-    is(completeNode.value, prefix + "item1", "completeNode.value holds item1");
+    is(popup.selectedItem.label, "__defineSetter__", "__defineSetter__ is selected");
+    is(completeNode.value, prefix + "__defineSetter__",
+        "completeNode.value holds __defineSetter__");
 
     EventUtils.synthesizeKey("VK_UP", {});
 
     is(popup.selectedIndex, 0, "index 0 is selected");
-    is(popup.selectedItem.label, "item0", "item0 is selected");
-    is(completeNode.value, prefix + "item0", "completeNode.value holds item0");
+    is(popup.selectedItem.label, "__defineGetter__", "__defineGetter__ is selected");
+    is(completeNode.value, prefix + "__defineGetter__",
+        "completeNode.value holds __defineGetter__");
 
     popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);
 
@@ -83,7 +108,7 @@ function autocompletePopupHidden()
 
   ok(!popup.isOpen, "popup is not open");
 
-  is(inputNode.value, "window.foobarBug585991.item0",
+  is(inputNode.value, "window.foobarBug585991.__defineGetter__",
      "completion was successful after VK_TAB");
 
   ok(!completeNode.value, "completeNode is empty");
@@ -93,16 +118,17 @@ function autocompletePopupHidden()
 
     ok(popup.isOpen, "popup is open");
 
-    is(popup.itemCount, 4, "popup.itemCount is correct");
+    is(popup.itemCount, 18, "popup.itemCount is correct");
 
     is(popup.selectedIndex, -1, "no index is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
-    
+
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
-    is(popup.selectedItem.label, "item0", "item0 is selected");
-    is(completeNode.value, prefix + "item0", "completeNode.value holds item0");
+    is(popup.selectedItem.label, "__defineGetter__", "__defineGetter__ is selected");
+    is(completeNode.value, prefix + "__defineGetter__",
+        "completeNode.value holds __defineGetter__");
 
     popup._panel.addEventListener("popuphidden", function onHidden() {
       popup._panel.removeEventListener("popuphidden", onHidden, false);
@@ -140,29 +166,31 @@ function testReturnKey()
 
     ok(popup.isOpen, "popup is open");
 
-    is(popup.itemCount, 4, "popup.itemCount is correct");
-    
+    is(popup.itemCount, 18, "popup.itemCount is correct");
+
     is(popup.selectedIndex, -1, "no index is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
-    is(popup.selectedItem.label, "item0", "item0 is selected");
-    is(completeNode.value, prefix + "item0", "completeNode.value holds item0");
+    is(popup.selectedItem.label, "__defineGetter__", "__defineGetter__ is selected");
+    is(completeNode.value, prefix + "__defineGetter__",
+        "completeNode.value holds __defineGetter__");
 
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     is(popup.selectedIndex, 1, "index 1 is selected");
-    is(popup.selectedItem.label, "item1", "item1 is selected");
-    is(completeNode.value, prefix + "item1", "completeNode.value holds item1");
+    is(popup.selectedItem.label, "__defineSetter__", "__defineSetter__ is selected");
+    is(completeNode.value, prefix + "__defineSetter__",
+        "completeNode.value holds __defineSetter__");
 
     popup._panel.addEventListener("popuphidden", function onHidden() {
       popup._panel.removeEventListener("popuphidden", onHidden, false);
 
       ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
-      is(inputNode.value, "window.foobarBug585991.item1",
+      is(inputNode.value, "window.foobarBug585991.__defineSetter__",
          "completion was successful after VK_RETURN");
 
       ok(!completeNode.value, "completeNode is empty");

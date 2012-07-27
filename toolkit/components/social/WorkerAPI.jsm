@@ -8,6 +8,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
 
 const EXPORTED_SYMBOLS = ["WorkerAPI"];
 
@@ -25,6 +28,9 @@ function WorkerAPI(provider, port) {
   // used for the api.
   // later we might even include an API version - version 0 for now!
   this._port.postMessage({topic: "social.initialize"});
+  
+  // backwards compat, remove after Aug 1.
+  this._port.postMessage({topic: "social.cookie-changed"});
 }
 
 WorkerAPI.prototype = {
@@ -51,6 +57,18 @@ WorkerAPI.prototype = {
     },
     "social.ambient-notification": function (data) {
       this._provider.setAmbientNotification(data);
+    },
+    "social.cookies-get": function(data) {
+      let document = getFrameWorkerHandle(this._provider.workerURL, null).document;
+      let cookies = document.cookie.split(";");
+      let results = [];
+      cookies.forEach(function(aCookie) {
+        let [name, value] = aCookie.split("=");
+        results.push({name: unescape(name.trim()),
+                      value: unescape(value.trim())});
+      });
+      this._port.postMessage({topic: "social.cookies-get-response",
+                              data: results});
     },
     
     // XXX backwards compat for existing providers, remove these eventually
