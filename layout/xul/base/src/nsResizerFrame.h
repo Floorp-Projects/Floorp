@@ -47,6 +47,7 @@ protected:
                             const SizeInfo& aSizeInfo, SizeInfo* aOriginalSizeInfo);
   static void MaybePersistOriginalSize(nsIContent* aContent, const SizeInfo& aSizeInfo);
   static void RestoreOriginalSize(nsIContent* aContent);
+
 protected:
 	nsIntRect mMouseDownRect;
 	nsIntPoint mMouseDownPoint;

@@ -33,6 +33,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsBoxFrame.h"
+#include "nsDOMTouchEvent.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
@@ -2172,4 +2173,36 @@ nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
 {
   nsXULEventRedirectorWrapper wrapper(this);
   return wrapper.WrapLists(aBuilder, this, aIn, aOut);
+}
+
+bool
+nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
+  nsIntPoint refPoint;
+  bool res = GetEventPoint(aEvent, refPoint);
+  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
+  return res;
+}
+
+bool
+nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
+  NS_ENSURE_TRUE(aEvent, false);
+
+  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    // return false if there is more than one touch on the page, or if
+    // we can't find a touch point
+    if (touchEvent->touches.Length() != 1) {
+      return false;
+    }
+  
+    nsIDOMTouch *touch = touchEvent->touches.SafeElementAt(0);
+    if (!touch) {
+      return false;
+    }
+    nsDOMTouch* domtouch = static_cast<nsDOMTouch*>(touch);
+    aPoint = domtouch->mRefPoint;
+  } else {
+    aPoint = aEvent->refPoint;
+  }
+  return true;
 }

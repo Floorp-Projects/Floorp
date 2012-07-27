@@ -62,9 +62,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   bool doDefault = true;
 
   switch (aEvent->message) {
+    case NS_TOUCH_START:
     case NS_MOUSE_BUTTON_DOWN: {
-      if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
+      if (aEvent->eventStructType == NS_TOUCH_EVENT ||
+          (aEvent->eventStructType == NS_MOUSE_EVENT &&
+        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
       {
         nsCOMPtr<nsIBaseWindow> window;
         nsIPresShell* presShell = aPresContext->GetPresShell();
@@ -112,21 +114,26 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
                                      &mMouseDownRect.width, &mMouseDownRect.height);
         }
 
+        // remember current mouse coordinates
+        nsIntPoint refPoint;
+        if (!GetEventPoint(aEvent, refPoint))
+          return NS_OK;
+        mMouseDownPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
+
         // we're tracking
         mTrackingMouseMove = true;
-
-        // remember current mouse coordinates
-        mMouseDownPoint = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
 
         nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
       }
     }
     break;
 
+  case NS_TOUCH_END:
   case NS_MOUSE_BUTTON_UP: {
 
-    if (mTrackingMouseMove && aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
+      if (aEvent->eventStructType == NS_TOUCH_EVENT ||
+          (aEvent->eventStructType == NS_MOUSE_EVENT &&
+        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
     {
       // we're done tracking.
       mTrackingMouseMove = false;
@@ -138,6 +145,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   }
   break;
 
+  case NS_TOUCH_MOVE:
   case NS_MOUSE_MOVE: {
     if (mTrackingMouseMove)
     {
@@ -160,7 +168,10 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
       // retrieve the offset of the mousemove event relative to the mousedown.
       // The difference is how much the resize needs to be
-      nsIntPoint screenPoint(aEvent->refPoint + aEvent->widget->WidgetToScreenOffset());
+      nsIntPoint refPoint;
+      if (!GetEventPoint(aEvent, refPoint))
+        return NS_OK;
+      nsIntPoint screenPoint(refPoint + aEvent->widget->WidgetToScreenOffset());
       nsIntPoint mouseMove(screenPoint - mMouseDownPoint);
 
       // Determine which direction to resize by checking the dir attribute.

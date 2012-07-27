@@ -574,40 +574,6 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-bool
-nsSliderFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
-  nsIntPoint refPoint;
-  nsresult rv;
-  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
-    rv = GetTouchPoint(static_cast<nsTouchEvent*>(aEvent), refPoint);
-    if (NS_FAILED(rv))
-       return false;
-  } else {
-    refPoint = aEvent->refPoint;
-  }
-  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
-  return true;
-}
-
-bool
-nsSliderFrame::GetTouchPoint(nsTouchEvent* aEvent, nsIntPoint &aPoint)
-{
-  NS_ENSURE_TRUE(aEvent, false);
-  // return false if there is more than one touch on the page, or if
-  // we can't find a touch point
-  if (aEvent->touches.Length() != 1) {
-    return false;
-  }
-
-  nsIDOMTouch *touch = aEvent->touches.SafeElementAt(0);
-  if (!touch) {
-    return false;
-  }
-  nsDOMTouch* domtouch = static_cast<nsDOMTouch*>(touch);
-  aPoint = domtouch->mRefPoint;
-  return true;
-}
-
 // Helper function to collect the "scroll to click" metric. Beware of
 // caching this, users expect to be able to change the system preference
 // and see the browser change its behavior immediately.
