@@ -144,6 +144,7 @@ class LifoAlloc
 
     BumpChunk   *first;
     BumpChunk   *latest;
+    BumpChunk   *last;
     size_t      markCount;
     size_t      defaultChunkSize_;
 
@@ -161,9 +162,18 @@ class LifoAlloc
 
     void reset(size_t defaultChunkSize) {
         JS_ASSERT(RoundUpPow2(defaultChunkSize) == defaultChunkSize);
-        first = latest = NULL;
+        first = latest = last = NULL;
         defaultChunkSize_ = defaultChunkSize;
         markCount = 0;
+    }
+
+    void append(BumpChunk *start, BumpChunk *end) {
+        JS_ASSERT(start && end);
+        if (last)
+            last->setNext(start);
+        else
+            first = latest = start;
+        last = end;
     }
 
   public:
@@ -176,15 +186,18 @@ class LifoAlloc
         other->reset(defaultChunkSize_);
     }
 
+    /* Append allocated chunks from |other|. They are removed from |other|. */
+    void transferFrom(LifoAlloc *other);
+
+    /* Append unused chunks from |other|. They are removed from |other|. */
+    void transferUnusedFrom(LifoAlloc *other);
+
     ~LifoAlloc() { freeAll(); }
 
     size_t defaultChunkSize() const { return defaultChunkSize_; }
 
     /* Frees all held memory. */
     void freeAll();
-
-    /* Should be called on GC in order to release any held chunks. */
-    void freeUnused();
 
     JS_ALWAYS_INLINE
     void *alloc(size_t n) {
