@@ -173,7 +173,7 @@ public:
    *                      will be set to NULL.
    * @return  status code
    */
-  PRInt32 FindInit(const char * aPattern, nsZipFind** aFind);
+  nsresult FindInit(const char * aPattern, nsZipFind** aFind);
 
   /*
    * Gets an undependent handle to the mapped file.

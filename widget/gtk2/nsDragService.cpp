@@ -1412,7 +1412,7 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
         if (item) {
             PRUint32 tmpDataLen = 0;
             void    *tmpData = NULL;
-            nsresult rv = 0;
+            nsresult rv = NS_OK;
             nsCOMPtr<nsISupports> data;
             rv = item->GetTransferData(kURLMime,
                                        getter_AddRefs(data),

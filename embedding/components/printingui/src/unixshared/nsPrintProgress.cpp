@@ -27,7 +27,7 @@ nsPrintProgress::nsPrintProgress(nsIPrintSettings* aPrintSettings)
   m_closeProgress = false;
   m_processCanceled = false;
   m_pendingStateFlags = -1;
-  m_pendingStateValue = 0;
+  m_pendingStateValue = NS_OK;
   m_PrintSetting = aPrintSettings;
 }
 
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByU
   if(m_PrintSetting)
     m_PrintSetting->SetIsCancelled(true);
   m_processCanceled = aProcessCanceledByUser;
-  OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, false);
+  OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, NS_OK);
   return NS_OK;
 }
 
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
   {
     m_listenerList->AppendElement(listener);
     if (m_closeProgress || m_processCanceled)
-      listener->OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, 0);
+      listener->OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, NS_OK);
     else
     {
       listener->OnStatusChange(nullptr, nullptr, 0, m_pendingStatus.get());

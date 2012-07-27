@@ -72,7 +72,7 @@ protected:
   virtual nsresult LogMessage(gfxProxyFontEntry *aProxy,
                               const char *aMessage,
                               PRUint32 aFlags = nsIScriptError::errorFlag,
-                              nsresult aStatus = 0);
+                              nsresult aStatus = NS_OK);
 
   nsresult CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
                          const gfxFontFaceSrc *aFontFaceSrc,

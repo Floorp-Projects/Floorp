@@ -2926,7 +2926,8 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
 
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
-      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+      nsresult ec;
+      PRInt32 val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec) && val > aCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex;
       }
@@ -2945,7 +2946,8 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
 
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
-      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+      nsresult ec;
+      PRInt32 val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec)) {
         if ((aCurrentTabIndex == 0 && val > tabIndex) ||
             (val < aCurrentTabIndex && val > tabIndex) ) {

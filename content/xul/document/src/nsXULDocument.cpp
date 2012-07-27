@@ -4422,7 +4422,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild,
         if (!posStr.IsEmpty()) {
             nsresult rv;
             // Positions are one-indexed.
-            PRInt32 pos = posStr.ToInteger(reinterpret_cast<PRInt32*>(&rv));
+            PRInt32 pos = posStr.ToInteger(&rv);
             // Note: if the insertion index (which is |pos - 1|) would be less
             // than 0 or greater than the number of children aParent has, then
             // don't insert, since the position is bogus.  Just skip on to

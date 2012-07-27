@@ -114,7 +114,7 @@ SetProperty(OperatorData* aOperatorData,
     else return;  // input is not applicable
 
     // aValue is assumed to be a digit from 0 to 7
-    PRInt32 error = 0;
+    nsresult error = NS_OK;
     float space = aValue.ToFloat(&error) / 18.0;
     if (error) return;
 

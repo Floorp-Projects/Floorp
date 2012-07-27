@@ -230,7 +230,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aErrorCode will contain error if one occurs
          * @return  double-precision float rep of string value
          */
-      double ToDouble( PRInt32* aErrorCode ) const;
+      double ToDouble( nsresult* aErrorCode ) const;
 
         /**
          * Perform string to single-precision float conversion.
@@ -238,7 +238,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aErrorCode will contain error if one occurs
          * @return  single-precision float rep of string value
          */
-      float ToFloat( PRInt32* aErrorCode ) const {
+      float ToFloat( nsresult* aErrorCode ) const {
         return (float)ToDouble(aErrorCode);
       }
 
@@ -249,10 +249,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
          * @return  int rep of string value, and possible (out) error code
          */
-      PRInt32 ToInteger( PRInt32* aErrorCode, PRUint32 aRadix=kRadix10 ) const;
-      PRInt32 ToInteger( nsresult* aErrorCode, PRUint32 aRadix=kRadix10 ) const {
-        return ToInteger(reinterpret_cast<PRInt32*>(aErrorCode), aRadix);
-      }
+      PRInt32 ToInteger( nsresult* aErrorCode, PRUint32 aRadix=kRadix10 ) const;
 
         /**
          * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost

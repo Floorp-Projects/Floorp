@@ -259,7 +259,7 @@ protected:
     virtual nsresult LogMessage(gfxProxyFontEntry *aProxy,
                                 const char *aMessage,
                                 PRUint32 aFlags = nsIScriptError::errorFlag,
-                                nsresult aStatus = 0) = 0;
+                                nsresult aStatus = NS_OK) = 0;
 
     const PRUint8* SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
                                         const PRUint8* aData,

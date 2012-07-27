@@ -1013,7 +1013,7 @@ bool nsXULWindow::LoadPositionFromXUL()
   PRInt32 currY = 0;
   PRInt32 currWidth = 0;
   PRInt32 currHeight = 0;
-  PRInt32 errorCode;
+  nsresult errorCode;
   PRInt32 temp;
 
   GetPositionAndSize(&currX, &currY, &currWidth, &currHeight);
@@ -1080,7 +1080,7 @@ bool nsXULWindow::LoadSizeFromXUL()
 
   PRInt32 currWidth = 0;
   PRInt32 currHeight = 0;
-  PRInt32 errorCode;
+  nsresult errorCode;
   PRInt32 temp;
 
   GetSize(&currWidth, &currHeight);
@@ -1212,7 +1212,7 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   // zlevel
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("zlevel"), stateString);
   if (NS_SUCCEEDED(rv) && stateString.Length() > 0) {
-    PRInt32  errorCode;
+    nsresult errorCode;
     PRUint32 zLevel = stateString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && zLevel >= lowestZ && zLevel <= highestZ)
       SetZLevel(zLevel);

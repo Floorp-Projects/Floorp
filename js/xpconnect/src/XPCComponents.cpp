@@ -42,7 +42,7 @@ using mozilla::dom::DestroyProtoOrIfaceCache;
 /***************************************************************************/
 // stuff used by all
 
-static nsresult ThrowAndFail(unsigned errNum, JSContext* cx, bool* retval)
+static nsresult ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval)
 {
     XPCThrower::Throw(errNum, cx);
     *retval = false;

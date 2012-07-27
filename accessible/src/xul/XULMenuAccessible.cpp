@@ -213,7 +213,7 @@ XULMenuitemAccessible::KeyboardShortcut() const
   if (keyStr.IsEmpty()) {
     nsAutoString keyCodeStr;
     keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCodeStr);
-    PRUint32 errorCode;
+    nsresult errorCode;
     key = keyStr.ToInteger(&errorCode, kAutoDetect);
   } else {
     key = keyStr[0];

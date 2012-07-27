@@ -313,7 +313,7 @@ nsXFormsRangeAccessible::GetMaximumValue(double *aMaximumValue)
   nsresult rv = sXFormsService->GetRangeEnd(DOMNode, value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   *aMaximumValue = value.ToDouble(&error);
   return error;
 }
@@ -328,7 +328,7 @@ nsXFormsRangeAccessible::GetMinimumValue(double *aMinimumValue)
   nsresult rv = sXFormsService->GetRangeStart(DOMNode, value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   *aMinimumValue = value.ToDouble(&error);
   return error;
 }
@@ -343,7 +343,7 @@ nsXFormsRangeAccessible::GetMinimumIncrement(double *aMinimumIncrement)
   nsresult rv = sXFormsService->GetRangeStep(DOMNode, value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   *aMinimumIncrement = value.ToDouble(&error);
   return error;
 }
@@ -358,7 +358,7 @@ nsXFormsRangeAccessible::GetCurrentValue(double *aCurrentValue)
   nsresult rv = sXFormsService->GetValue(DOMNode, value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   *aCurrentValue = value.ToDouble(&error);
   return error;
 }

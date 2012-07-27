@@ -629,7 +629,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
 
-    PRInt32 err;
+    nsresult err;
     if (!left.IsEmpty()) {
       PRInt32 x = left.ToInteger(&err);
       if (NS_SUCCEEDED(err))
@@ -1791,7 +1791,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
   nsAutoString left, top;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
-  PRInt32 err1, err2;
+  nsresult err1, err2;
   PRInt32 xpos = left.ToInteger(&err1);
   PRInt32 ypos = top.ToInteger(&err2);
 

@@ -4750,7 +4750,7 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
       rv = firstChild->GetTitle(title);
       NS_ENSURE_SUCCESS(rv, rv);
       nsNavHistory* history = nsNavHistory::GetHistoryService();
-      NS_ENSURE_TRUE(history, 0);
+      NS_ENSURE_TRUE(history, NS_OK);
       nsCAutoString todayLabel;
       history->GetStringFromName(
         NS_LITERAL_STRING("finduri-AgeInDays-is-0").get(), todayLabel);

@@ -10292,7 +10292,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSString *jsstr = IdToString(cx, id);
   if (!jsstr) {
-    return JS_FALSE;
+    return NS_OK;
   }
 
   JSObject *proto = ::JS_GetPrototype(realObj);

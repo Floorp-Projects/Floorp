@@ -3955,7 +3955,7 @@ nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom,
     content->GetAttr(kNameSpaceID_None, aAtom, value);
     if (!value.IsEmpty())
     {
-      PRInt32 error;
+      nsresult error;
       // convert it to appunits
       nscoord result = nsPresContext::CSSPixelsToAppUnits(value.ToInteger(&error));
       nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
