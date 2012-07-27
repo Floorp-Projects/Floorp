@@ -307,7 +307,10 @@ protected:
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
-   * work.
+   * work. Note that only one paint request can be active at a time. If a paint
+   * request is made while a paint is currently happening, it gets queued up. If
+   * a new paint request arrives before a paint is completed, the old request
+   * gets discarded.
    */
   void RequestContentRepaint();
 
@@ -334,6 +337,25 @@ private:
     PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
   };
 
+  enum ContentPainterStatus {
+    // A paint may be happening, but it is not due to any action taken by this
+    // thread. For example, content could be invalidating itself, but
+    // AsyncPanZoomController has nothing to do with that.
+    CONTENT_IDLE,
+    // Set every time we dispatch a request for a repaint. When a
+    // ShadowLayersUpdate arrives and the metrics of this frame have changed, we
+    // toggle this off and assume that the paint has completed.
+    CONTENT_PAINTING,
+    // Set when we have a new displayport in the pipeline that we want to paint.
+    // When a ShadowLayersUpdate comes in, we dispatch a new repaint using
+    // mFrameMetrics.mDisplayPort (the most recent request) if this is toggled.
+    // This is distinct from CONTENT_PAINTING in that it signals that a repaint
+    // is happening, whereas this signals that we want to repaint as soon as the
+    // previous paint finishes. When the request is eventually made, it will use
+    // the most up-to-date metrics.
+   CONTENT_PAINTING_AND_PAINT_PENDING
+  };
+
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
@@ -344,6 +366,10 @@ private:
   // These are the metrics at last content paint, the most recent
   // values we were notified of in NotifyLayersUpdate().
   FrameMetrics mLastContentPaintMetrics;
+  // The last metrics that we requested a paint for. These are used to make sure
+  // that we're not requesting a paint of the same thing that's already drawn.
+  // If we don't do this check, we don't get a ShadowLayersUpdated back.
+  FrameMetrics mLastPaintRequestMetrics;
 
   AxisX mX;
   AxisY mY;
@@ -363,6 +389,12 @@ private:
   nsIntPoint mLastZoomFocus;
   PanZoomState mState;
   int mDPI;
+
+  // Stores the current paint status of the frame that we're managing. Repaints
+  // may be triggered by other things (like content doing things), in which case
+  // this status will not be updated. It is only changed when this class
+  // requests a repaint.
+  ContentPainterStatus mContentPainterStatus;
 
   friend class Axis;
 };
