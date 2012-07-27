@@ -161,6 +161,11 @@ function checkPayload(request, reason, successfulPings) {
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  if (isWindows) {
+    do_check_true(payload.simpleMeasurements.startupSessionRestoreReadBytes > 0);
+    do_check_true(payload.simpleMeasurements.startupSessionRestoreWriteBytes > 0);
+  }
 
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
