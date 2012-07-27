@@ -3295,51 +3295,69 @@ stack[anonid=browserStack][responsivemode] {
 }
 
 
-/* === social toolbar button === */
-
-.social-statusarea-container {
-  -moz-appearance: toolbarbutton;
-  margin: 0 2px;
-  padding: 3px;
-}
-
+/* social toolbar button */
 .social-statusarea-container {
   -moz-appearance: none;
   margin: 2px; /* make sure we have the correct platform spacing*/
   padding: 1px;
+  border: 1px solid transparent;
+  border-radius: 2px;
 }
 
-/* aero look for hover */
-#social-toolbar-button[open="true"] > .social-statusarea-container,
 .social-statusarea-container:hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
+              0 1px hsla(210,54%,20%,.03),
+              0 0 2px hsla(210,54%,20%,.1);
+}
+
+#social-toolbar-button[open="true"] > .social-statusarea-container {
+  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
-  box-shadow: 0 1px hsla(0,0%,100%,.85) inset,
-              0 1px hsla(210,54%,20%,.1),
-              0 0 2px hsla(210,54%,20%,.4);
+  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+              0 0 1px hsla(210,54%,20%,.2) inset;
 }
 
 /* favicon for the service */
 #social-provider-image {
-  width: 20px;
-  height: 20px;
-  max-height: 20px;
-  max-width: 20px;
-  padding: 2px;
+  -moz-appearance: none;
+  border: none;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 2px 5px;
+  margin: 0;
+  background: transparent;
   list-style-image: url("chrome://browser/skin/social/social.png");
+}
+
+#social-provider-image > .button-box > .box-inherit > .button-icon {
+  max-height: 16px;
+  max-width: 16px;
+}
+
+#social-provider-image > .button-box {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+
+#social-provider-image > .button-box > .button-menu-dropmarker {
+  display: none;
 }
 
 /* hbox that hold notification icons */
 #social-status-iconbox {
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
 }
 
 /* hbox that surrounds an image and its counter */
 .social-notification-icon-container {
-  cursor: pointer;
-  padding: 0px;
-  margin: 0px;
+  padding: 0;
+  margin: 0;
   position: relative;
 }
 
@@ -3363,39 +3381,34 @@ stack[anonid=browserStack][responsivemode] {
 /* notification image */
 .social-notification-icon-image {
   padding: 2px;
-  margin: 0px;
+  margin: 0;
   min-width: 20px;
   max-width: 32px;
   max-height: 20px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-/* === end of social toolbar button === */
-
-/* === social toolbar provider menu  === */
-
-/* popups that hang off our toolbaritem */
+/* social toolbar provider menu */
 #social-statusarea-popup {
-  margin-top:0px;
+  margin-top: 0;
   margin-left: -12px;
   margin-right: -12px;
 }
 
 #social-statusarea-user {
-  border-bottom:1px solid rgb(221,221,221);
-  background-color:-moz-Dialog;
-  color:black;
-  cursor:default;
-  position:relative;
-  font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
-  font-size:12px;
+  border-bottom: 1px solid rgb(221,221,221);
+  background-color: -moz-Dialog;
+  color: -moz-dialogtext;
+  position: relative;
+  font: message-box;
+  font-size: 12px;
 }
 
 #social-statusarea-user-portrait {
-  width:32px;
-  height:32px;
-  border-radius:2px;
-  margin:10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  margin: 10px;
   list-style-image: url("chrome://browser/skin/social/social.png");
 }
 
@@ -3412,15 +3425,9 @@ stack[anonid=browserStack][responsivemode] {
   text-decoration: underline;
 }
 
-/* === end of social toolbar provider menu === */
-
-/* === end of social toolbar panels === */
-
 #social-notification-panel {
   min-height: 100px;
   min-width: 100px;
   max-height: 600px;
   max-width: 400px;
 }
-
-/* === end of social toolbar panels === */
