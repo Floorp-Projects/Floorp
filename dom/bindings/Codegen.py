@@ -2340,7 +2340,8 @@ if (%s.IsNull()) {
             type.inner, descriptorProvider,
             {
                 'result' :  "%s[i]" % result,
-                'successCode': ("if (!JS_SetElement(cx, returnArray, i, &tmp)) {\n"
+                'successCode': ("if (!JS_DefineElement(cx, returnArray, i, tmp,\n"
+                                "                      NULL, NULL, JSPROP_ENUMERATE)) {\n"
                                 "  return false;\n"
                                 "}"),
                 'jsvalRef': "tmp",

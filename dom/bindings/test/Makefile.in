@@ -58,6 +58,7 @@ MOCHITEST_FILES = \
   test_traceProtos.html \
   test_forOf.html \
   forOf_iframe.html \
+  test_sequence_wrapping.html \
   $(NULL)
 
 # Include rules.mk before any of our targets so our first target is coming from
