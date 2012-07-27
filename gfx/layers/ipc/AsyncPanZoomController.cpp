@@ -655,14 +655,9 @@ const nsIntRect AsyncPanZoomController::CalculatePendingDisplayPort() {
   }
 
   gfx::Rect shiftedDisplayPort = displayPort;
-  // Both the scroll offset and displayport are in CSS pixels.  We're scaling
-  // the scroll offset because Gecko will internally scale the displayport by
-  // the resolution, so we'll get clipping at the far bottom or far right if we
-  // directly get the intersection of the displayport offset by the scroll
-  // offset and the CSS content rect.
-  shiftedDisplayPort.MoveBy(scrollOffset.x / scale, scrollOffset.y / scale);
+  shiftedDisplayPort.MoveBy(scrollOffset.x, scrollOffset.y);
   displayPort = shiftedDisplayPort.Intersect(mFrameMetrics.mCSSContentRect);
-  displayPort.MoveBy(-scrollOffset.x / scale, -scrollOffset.y / scale);
+  displayPort.MoveBy(-scrollOffset.x, -scrollOffset.y);
 
   // Round the displayport so we don't get any truncation, then get the nsIntRect
   // from this.
