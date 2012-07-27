@@ -10,7 +10,7 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsContentList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"

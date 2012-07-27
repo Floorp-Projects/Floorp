@@ -25,7 +25,7 @@
 #include "nsLayoutUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsPresState.h"
-#include "nsLayoutErrors.h"
+#include "nsError.h"
 #include "nsFocusManager.h"
 #include "nsHTMLFormElement.h"
 #include "nsIConstraintValidation.h"

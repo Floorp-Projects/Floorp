@@ -9,7 +9,7 @@
 #include "SVGAnimatedNumberList.h"
 #include "nsSVGElement.h"
 #include "nsIDOMSVGNumber.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsContentUtils.h"
 
 // See the architecture comment in DOMSVGAnimatedNumberList.h.

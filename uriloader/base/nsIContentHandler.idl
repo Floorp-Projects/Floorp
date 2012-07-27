@@ -33,10 +33,3 @@ interface nsIContentHandler : nsISupports
                      in nsIInterfaceRequestor aWindowContext,
                      in nsIRequest aRequest);
 };
-
-
-%{C++
-
-#define NS_ERROR_WONT_HANDLE_CONTENT   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 1)
-
-%}

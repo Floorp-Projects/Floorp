@@ -42,8 +42,5 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIElementObserver, NS_IELEMENTOBSERVER_IID)
 
-#define NS_HTMLPARSER_VALID_META_CHARSET NS_ERROR_GENERATE_SUCCESS( \
-                                          NS_ERROR_MODULE_HTMLPARSER,3000)
-
 #endif /* nsIElementObserver_h__ */
 

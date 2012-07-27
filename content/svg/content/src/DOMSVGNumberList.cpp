@@ -6,7 +6,7 @@
 #include "nsSVGElement.h"
 #include "DOMSVGNumberList.h"
 #include "DOMSVGNumber.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "SVGAnimatedNumberList.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

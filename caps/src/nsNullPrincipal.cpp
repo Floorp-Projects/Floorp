@@ -19,7 +19,7 @@
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
 

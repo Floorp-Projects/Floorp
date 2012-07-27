@@ -6,7 +6,7 @@
 #include "txPatternParser.h"
 #include "txExprLexer.h"
 #include "nsGkAtoms.h"
-#include "txError.h"
+#include "nsError.h"
 #include "txStringUtils.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"

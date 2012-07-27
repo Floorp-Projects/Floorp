@@ -19,7 +19,7 @@
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIIdleService.h"
 
 #ifdef XP_WIN
@@ -132,7 +132,6 @@
 #include "nsComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
-#include "nsDOMError.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"

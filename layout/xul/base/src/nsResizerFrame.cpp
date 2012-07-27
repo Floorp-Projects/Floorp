@@ -27,7 +27,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsIScreenManager.h"
 #include "mozilla/dom/Element.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 
 using namespace mozilla;
 

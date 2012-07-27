@@ -78,18 +78,6 @@ class nsIView;
 typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
   AccessibleHashtable;
 
-// see Accessible::GetAttrValue
-#define NS_OK_NO_ARIA_VALUE \
-NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
-
-// see Accessible::GetNameInternal
-#define NS_OK_EMPTY_NAME \
-NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
-
-// see Accessible::GetNameInternal
-#define NS_OK_NAME_FROM_TOOLTIP \
-NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
-
 
 #define NS_ACCESSIBLE_IMPL_IID                          \
 {  /* 133c8bf4-4913-4355-bd50-426bd1d6e1ad */           \

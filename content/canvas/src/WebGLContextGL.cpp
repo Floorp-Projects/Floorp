@@ -13,7 +13,7 @@
 #include "gfxPlatform.h"
 
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsLayoutUtils.h"
 
 #include "CanvasUtils.h"

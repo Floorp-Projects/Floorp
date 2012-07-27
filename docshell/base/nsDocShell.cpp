@@ -96,7 +96,7 @@
 #include "nsDocShellEditorData.h"
 
 // Helper Classes
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsEscape.h"
 
 // Interfaces Needed
@@ -179,9 +179,7 @@
 #include "nsIWebBrowserPrint.h"
 #endif
 
-#include "nsPluginError.h"
 #include "nsContentUtils.h"
-#include "nsContentErrors.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 
@@ -228,12 +226,6 @@ static PRUint32 gValidateOrigin = 0xffffffff;
 // all documents have loaded in milliseconds before favoring normal
 // native event dispatch priorites over performance
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
-
-// This is needed for displaying an error message 
-// when navigation is attempted on a document when printing
-// The value arbitrary as long as it doesn't conflict with
-// any of the other values in the errors in DisplayLoadError
-#define NS_ERROR_DOCUMENT_IS_PRINTMODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,2001)
 
 #ifdef PR_LOGGING
 #ifdef DEBUG

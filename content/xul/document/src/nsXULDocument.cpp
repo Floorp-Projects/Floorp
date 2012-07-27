@@ -26,7 +26,7 @@
 // Note the ALPHABETICAL ORDERING
 #include "nsXULDocument.h"
 
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
 #include "nsIView.h"
@@ -80,7 +80,6 @@
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsEventDispatcher.h"
-#include "nsContentErrors.h"
 #include "nsIObserverService.h"
 #include "nsNodeUtils.h"
 #include "nsIDocShellTreeItem.h"

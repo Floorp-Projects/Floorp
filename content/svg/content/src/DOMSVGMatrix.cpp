@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGMatrix.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include <math.h>
 #include "nsContentUtils.h"
 
