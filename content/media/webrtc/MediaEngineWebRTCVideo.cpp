@@ -287,8 +287,8 @@ MediaEngineWebRTCVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
     return NS_ERROR_FAILURE;
   }
 
-  const char* path = NS_ConvertUTF16toUTF8(*mSnapshotPath).get();
-  if (vieFile->GetCaptureDeviceSnapshot(mCapIndex, path) < 0) {
+  NS_ConvertUTF16toUTF8 path(*mSnapshotPath);
+  if (vieFile->GetCaptureDeviceSnapshot(mCapIndex, path.get()) < 0) {
     delete mSnapshotPath;
     mSnapshotPath = NULL;
     return NS_ERROR_FAILURE;

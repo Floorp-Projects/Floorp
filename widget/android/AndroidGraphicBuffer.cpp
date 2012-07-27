@@ -443,27 +443,27 @@ AndroidGraphicBuffer::IsBlacklisted()
   if (!AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "BOARD", board))
     return true;
 
-  const char* boardUtf8 = NS_ConvertUTF16toUTF8(board).get();
+  NS_ConvertUTF16toUTF8 boardUtf8(board);
 
   if (Preferences::GetBool("direct-texture.force.enabled", false)) {
-    LOG("allowing board '%s' due to prefs override", boardUtf8);
+    LOG("allowing board '%s' due to prefs override", boardUtf8.get());
     return false;
   }
 
   if (Preferences::GetBool("direct-texture.force.disabled", false)) {
-    LOG("disallowing board '%s' due to prefs override", boardUtf8);
+    LOG("disallowing board '%s' due to prefs override", boardUtf8.get());
     return true;
   }
 
   // FIXME: (Bug 722605) use something better than a linear search
   for (int i = 0; sAllowedBoards[i]; i++) {
     if (board.Find(sAllowedBoards[i]) >= 0) {
-      LOG("allowing board '%s' based on '%s'\n", boardUtf8, sAllowedBoards[i]);
+      LOG("allowing board '%s' based on '%s'\n", boardUtf8.get(), sAllowedBoards[i]);
       return false;
     }
   }
 
-  LOG("disallowing board: %s\n", boardUtf8);
+  LOG("disallowing board: %s\n", boardUtf8.get());
   return true;
 }
 
