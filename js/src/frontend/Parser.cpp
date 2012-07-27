@@ -108,7 +108,7 @@ Parser::Parser(JSContext *cx, const CompileOptions &options,
                const jschar *chars, size_t length, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    strictModeGetter(this),
+    strictModeGetter(thisForCtor()),
     tokenStream(cx, options, chars, length, &strictModeGetter),
     tempPoolMark(NULL),
     allocator(cx),
