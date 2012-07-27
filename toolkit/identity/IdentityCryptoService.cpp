@@ -70,7 +70,9 @@ PRErrorCode_to_nsresult(PRErrorCode error)
   }
 
   // From NSSErrorsService::GetXPCOMFromNSSError
-  return NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, -1 * error);
+  // XXX Don't make up nsresults, it's supposed to be an enum (bug 778113)
+  return (nsresult)NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
+                                             -1 * error);
 }
 
 // IMPORTANT: This must be called immediately after the function returning the
