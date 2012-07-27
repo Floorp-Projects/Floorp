@@ -113,7 +113,7 @@ EXPORTS_mozilla += perfprobe.h
 endif
 
 
-GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
