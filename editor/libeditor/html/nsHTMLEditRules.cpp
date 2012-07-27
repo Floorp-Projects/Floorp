@@ -3349,8 +3349,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
         nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
         res = mHTMLEditor->DeleteNode(curNode);
         NS_ENSURE_SUCCESS(res, res);
-        res = arrayOfNodes.RemoveObjectAt(0);
-        NS_ENSURE_SUCCESS(res, res);
+        arrayOfNodes.RemoveObjectAt(0);
       }
       // put selection in new block
       res = aSelection->Collapse(theBlock,0);
@@ -3483,8 +3482,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
       nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      res = arrayOfNodes.RemoveObjectAt(0);
-      NS_ENSURE_SUCCESS(res, res);
+      arrayOfNodes.RemoveObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -3670,8 +3668,7 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
       nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      res = arrayOfNodes.RemoveObjectAt(0);
-      NS_ENSURE_SUCCESS(res, res);
+      arrayOfNodes.RemoveObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -8641,8 +8638,7 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
       nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      res = arrayOfNodes.RemoveObjectAt(0);
-      NS_ENSURE_SUCCESS(res, res);
+      arrayOfNodes.RemoveObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(thePositionedDiv,0);
