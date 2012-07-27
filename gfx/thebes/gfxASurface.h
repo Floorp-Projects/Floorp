@@ -36,17 +36,17 @@ public:
     nsrefcnt Release(void);
 
     // These functions exist so that browsercomps can refcount a gfxASurface
-    virtual nsresult AddRefExternal(void)
+    virtual nsrefcnt AddRefExternal(void)
     {
       return AddRef();
     }
-    virtual nsresult ReleaseExternal(void)
+    virtual nsrefcnt ReleaseExternal(void)
     {
       return Release();
     }
 #else
-    virtual nsresult AddRef(void);
-    virtual nsresult Release(void);
+    virtual nsrefcnt AddRef(void);
+    virtual nsrefcnt Release(void);
 #endif
 
 public:
