@@ -120,6 +120,13 @@ class Builtin(object):
 builtinNames = [
     Builtin('boolean', 'bool'),
     Builtin('void', 'void'),
+    Builtin('int16_t', 'int16_t', True, True),
+    Builtin('int32_t', 'int32_t', True, True),
+    Builtin('int64_t', 'int64_t', True, False),
+    Builtin('uint8_t', 'uint8_t'),
+    Builtin('uint16_t', 'uint16_t', False, True),
+    Builtin('uint32_t', 'uint32_t', False, True),
+    Builtin('uint64_t', 'uint64_t', False, False),
     Builtin('octet', 'PRUint8'),
     Builtin('short', 'PRInt16', True, True),
     Builtin('long', 'PRInt32', True, True),
