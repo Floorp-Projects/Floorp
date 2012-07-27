@@ -196,9 +196,9 @@ nsDownloadManager::RemoveAllDownloads()
   for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
     nsRefPtr<nsDownload> dl = mCurrentDownloads[0];
 
-    nsresult result;
+    nsresult result = NS_OK;
     if (dl->IsPaused() && GetQuitBehavior() != QUIT_AND_CANCEL)
-      result = mCurrentDownloads.RemoveObject(dl);
+      mCurrentDownloads.RemoveObject(dl);
     else
       result = CancelDownload(dl->mID);
 

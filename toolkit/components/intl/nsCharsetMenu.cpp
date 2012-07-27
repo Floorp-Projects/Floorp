@@ -1193,11 +1193,9 @@ nsresult nsCharsetMenu::AddCharsetToItemArray(nsTArray<nsMenuEntry*> *aArray,
 
   if (aArray != NULL) {
     if (aPlace < 0) {
-      res = aArray->AppendElement(item) != nullptr;
-      if (NS_FAILED(res)) goto done;
+      aArray->AppendElement(item);
     } else {
-      res = aArray->InsertElementsAt(aPlace, 1, item) != nullptr;
-      if (NS_FAILED(res)) goto done;
+      aArray->InsertElementsAt(aPlace, 1, item);
     }
   }
 
