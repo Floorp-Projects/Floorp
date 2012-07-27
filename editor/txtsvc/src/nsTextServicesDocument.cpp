@@ -1867,13 +1867,13 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // Make sure that both nodes are text nodes -- otherwise we don't care.
 
   result = aLeftNode->GetNodeType(&type);
-  NS_ENSURE_SUCCESS(result, false);
+  NS_ENSURE_SUCCESS(result, NS_OK);
   if (nsIDOMNode::TEXT_NODE != type) {
     return NS_OK;
   }
 
   result = aRightNode->GetNodeType(&type);
-  NS_ENSURE_SUCCESS(result, false);
+  NS_ENSURE_SUCCESS(result, NS_OK);
   if (nsIDOMNode::TEXT_NODE != type) {
     return NS_OK;
   }

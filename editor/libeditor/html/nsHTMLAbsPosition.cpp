@@ -233,7 +233,7 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
   }
 
   if (!zIndexStr.EqualsLiteral("auto")) {
-    PRInt32 errorCode;
+    nsresult errorCode;
     *aZindex = zIndexStr.ToInteger(&errorCode);
   }
 

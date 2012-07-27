@@ -1572,7 +1572,7 @@ nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsGkAtoms::selected == aName) {
     nsAutoString val(aValue);
-    PRInt32 error = 0;
+    nsresult error = NS_OK;
     bool selected = false;
     PRInt32 indx = val.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)

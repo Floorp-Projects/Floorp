@@ -87,7 +87,7 @@ ConsumeEntity(nsScannerSharedSubstring& aString,
           writable.Append(amp);
           result = NS_OK;
         } else {
-          PRInt32 err;
+          nsresult err;
           theNCRValue = entity.ToInteger(&err, kAutoDetect);
           AppendNCR(writable, theNCRValue);
         }
@@ -1453,7 +1453,7 @@ CCommentToken::ConsumeQuirksComment(nsScanner& aScanner)
 nsresult
 CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
 {
-  nsresult result = true;
+  nsresult result = NS_OK;
 
   if (aFlag & NS_IPARSER_FLAG_STRICT_MODE) {
     // Enabling strict comment parsing for Bug 53011 and 2749 contradicts!
@@ -2165,7 +2165,7 @@ CEntityToken::TranslateToUnicodeStr(nsString& aString)
     PRUnichar theChar0 = mTextValue.CharAt(0);
 
     if (kHashsign == theChar0) {
-      PRInt32 err = 0;
+      nsresult err = NS_OK;
 
       value = mTextValue.ToInteger(&err, kAutoDetect);
 

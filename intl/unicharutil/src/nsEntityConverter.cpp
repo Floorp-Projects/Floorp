@@ -43,7 +43,7 @@ nsEntityConverter::LoadVersionPropertyFile()
     nsresult rv = bundleService->CreateBundle(url.get(), getter_AddRefs(entities));
     if (NS_FAILED(rv)) return rv;
     
-    PRInt32	result;
+    nsresult result;
 
     nsAutoString key;
     nsXPIDLString value;

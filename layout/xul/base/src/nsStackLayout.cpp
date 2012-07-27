@@ -178,7 +178,7 @@ nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsMargin& aOf
   if (content) {
     bool ltr = aChild->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
     nsAutoString value;
-    PRInt32 error;
+    nsresult error;
 
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::start, value);
     if (!value.IsEmpty()) {

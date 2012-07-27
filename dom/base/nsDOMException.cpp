@@ -70,7 +70,7 @@ static struct ResultStruct
   const char* mMessage;
 } gDOMErrorMsgMap[] = {
 #include "domerr.msg"
-  {0, 0, nullptr, nullptr}   // sentinel to mark end of array
+  {NS_OK, 0, nullptr, nullptr}   // sentinel to mark end of array
 };
 
 #undef DOM4_MSG_DEF
@@ -205,7 +205,7 @@ nsDOMException::GetMessageMoz(char **aMessage)
 }
 
 NS_IMETHODIMP
-nsDOMException::GetResult(PRUint32* aResult)
+nsDOMException::GetResult(nsresult* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 

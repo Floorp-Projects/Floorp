@@ -167,7 +167,7 @@ CreateFoo( void** result )
     *result = foop;
 
     printf("<<CreateFoo()\n");
-    return 0;
+    return NS_OK;
   }
 
 void
@@ -261,7 +261,7 @@ CreateBar( void** result )
     *result = barp;
 
     printf("<<CreateBar()\n");
-    return 0;
+    return NS_OK;
   }
 
 void

@@ -1024,7 +1024,7 @@ nsFtpState::R_mdtm() {
 
             // Save lastModified time for downloaded files.
             nsCAutoString timeString;
-            PRInt32 error;
+            nsresult error;
             PRExplodedTime exTime;
 
             mResponseMsg.Mid(timeString, 0, 4);
@@ -2188,7 +2188,7 @@ nsFtpState::ReadCacheEntry()
     nsXPIDLCString serverType;
     mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
     nsCAutoString serverNum(serverType.get());
-    PRInt32 err;
+    nsresult err;
     mServerType = serverNum.ToInteger(&err);
     
     mChannel->PushStreamConverter("text/ftp-dir",

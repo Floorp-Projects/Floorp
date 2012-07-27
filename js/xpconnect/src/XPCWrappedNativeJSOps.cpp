@@ -17,7 +17,7 @@
 // All of the exceptions thrown into JS from this file go through here.
 // That makes this a nice place to set a breakpoint.
 
-static JSBool Throw(unsigned errNum, JSContext* cx)
+static JSBool Throw(nsresult errNum, JSContext* cx)
 {
     XPCThrower::Throw(errNum, cx);
     return false;

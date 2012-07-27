@@ -1658,7 +1658,7 @@ SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                   Uint32QuerySetter setter)
 {
   nsresult rv;
-  PRUint32 value = aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv));
+  PRUint32 value = aValue.ToInteger(&rv);
   if (NS_SUCCEEDED(rv)) {
     rv = (aQuery->*setter)(value);
     if (NS_FAILED(rv)) {
@@ -1673,7 +1673,7 @@ SetOptionsKeyUint32(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions
                   Uint32OptionsSetter setter)
 {
   nsresult rv;
-  PRUint32 value = aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv));
+  PRUint32 value = aValue.ToInteger(&rv);
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {
@@ -1689,8 +1689,7 @@ SetOptionsKeyUint16(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions
                     Uint16OptionsSetter setter)
 {
   nsresult rv;
-  PRUint16 value = static_cast<PRUint16>
-                              (aValue.ToInteger(reinterpret_cast<PRInt32*>(&rv)));
+  PRUint16 value = static_cast<PRUint16>(aValue.ToInteger(&rv));
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);
     if (NS_FAILED(rv)) {

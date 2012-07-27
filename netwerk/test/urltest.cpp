@@ -128,7 +128,7 @@ nsresult writeout(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 {
     if (!i_pURL) return NS_ERROR_FAILURE;
     nsCString temp;
-    int rv = writeoutto(i_pURL, getter_Copies(temp), urlFactory);
+    nsresult rv = writeoutto(i_pURL, getter_Copies(temp), urlFactory);
     printf("%s\n%s\n", i_pURL, temp.get());
     return rv;
 }
@@ -248,7 +248,7 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
     return NS_OK;
 }
 
-int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
+nsresult doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 {
     if (i_URL && i_relativePortion)
     {

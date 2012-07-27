@@ -480,7 +480,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
                             : style.Length() - widthOffset);
           nsAutoString widthstr;
           style.Mid(widthstr, widthOffset+6, length);
-          PRInt32 err;
+          nsresult err;
           PRInt32 col = widthstr.ToInteger(&err);
 
           if (NS_SUCCEEDED(err)) {
@@ -563,7 +563,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
         nsAutoString startAttr;
         PRInt32 startVal = 1;
         if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::start, startAttr))) {
-          PRInt32 rv = 0;
+          nsresult rv = NS_OK;
           startVal = startAttr.ToInteger(&rv);
           if (NS_FAILED(rv))
             startVal = 1;
@@ -581,7 +581,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
         if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::value, valueAttr))) {
-          PRInt32 rv = 0;
+          nsresult rv = NS_OK;
           PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv))
             mOLStack[mOLStackIndex-1] = valueAttrVal;
