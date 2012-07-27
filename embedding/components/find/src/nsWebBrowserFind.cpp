@@ -36,7 +36,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsFind.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsFocusManager.h"
 #include "mozilla/Services.h"
 

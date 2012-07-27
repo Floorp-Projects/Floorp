@@ -30,7 +30,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"

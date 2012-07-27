@@ -7,7 +7,7 @@
 #include "SVGAnimatedLengthList.h"
 #include "SVGLength.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsString.h"
 #include "nsSVGUtils.h"
 #include "nsCharSeparatedTokenizer.h"

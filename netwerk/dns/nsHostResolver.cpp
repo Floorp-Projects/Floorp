@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include "nsHostResolver.h"
-#include "nsNetError.h"
+#include "nsError.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 #include "nsAutoPtr.h"

@@ -13,7 +13,7 @@
 #include "nsIDOMRect.h"
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
 #include "nsIURI.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
   : mType(CSS_PX)

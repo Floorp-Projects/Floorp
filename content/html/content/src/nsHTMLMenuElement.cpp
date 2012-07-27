@@ -11,7 +11,7 @@
 #include "nsEventDispatcher.h"
 #include "nsHTMLMenuItemElement.h"
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 enum MenuType
 {

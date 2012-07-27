@@ -35,7 +35,7 @@
 #include "nsString.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 
 #include "nsICategoryManager.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service

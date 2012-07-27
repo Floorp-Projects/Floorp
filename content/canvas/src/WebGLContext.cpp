@@ -11,7 +11,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIGfxInfo.h"
 
 #include "nsIPropertyBag.h"

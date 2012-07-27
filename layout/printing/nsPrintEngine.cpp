@@ -16,7 +16,7 @@
 #include "nsIFrame.h"
 #include "nsIURI.h"
 #include "nsITextToSubURI.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 
 // Print Options
 #include "nsIPrintSettings.h"

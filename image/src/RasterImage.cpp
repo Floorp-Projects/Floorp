@@ -6,7 +6,7 @@
 #include "base/histogram.h"
 #include "nsComponentManagerUtils.h"
 #include "imgIContainerObserver.h"
-#include "ImageErrors.h"
+#include "nsError.h"
 #include "Decoder.h"
 #include "imgIDecoderObserver.h"
 #include "RasterImage.h"

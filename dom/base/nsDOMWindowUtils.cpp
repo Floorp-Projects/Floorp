@@ -6,7 +6,7 @@
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsDOMWindowUtils.h"
 #include "nsQueryContentEventResult.h"
