@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LayoutHelpers",
                                   "resource:///modules/devtools/LayoutHelpers.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource:///modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
