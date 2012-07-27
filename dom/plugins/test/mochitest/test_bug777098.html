@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=777098
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 777098</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="go();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=777098">Mozilla Bug 777098</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for passing dead NPObjects back into plugins. **/
+SimpleTest.waitForExplicitFinish();
+
+function go() {
+  var plugin = document.getElementById('plugin');
+
+  // Get wrapped npobject from plugin (plugin.__proto__)
+  var val = plugin.getObjectValue();
+
+  // Force a re-instantiate by re-setting dummy uri,
+  // making val a wrapper for a dead plugin
+  plugin.data = plugin.data;
+
+  // The correct behavior is an exception, if plugin.checkObjectValue succeeds
+  // the plugin wasn't torn down for some reason, and if we crash... that's bad
+  function pluginCheck() {
+    try {
+      plugin.checkObjectValue(val);
+    } catch (e) {
+      return true;
+    }
+    return false;
+  }
+
+  // Spin the event loop so the instantiation can complete
+  window.setTimeout(function () {
+    ok(pluginCheck(), "Shouldn't explode");
+
+    // All done.
+    SimpleTest.finish();
+  }, 0);
+}
+
+</script>
+</pre>
+
+<object data="data:text/plain,a" width=200 height=200 type="application/x-test" id="plugin"></object>
+
+</body>
+</html>
