@@ -49,6 +49,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private PropertyAnimator mMainLayoutAnimator;
 
+    private FindInPageBar mFindInPageBar;
+
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -182,6 +184,8 @@ abstract public class BrowserApp extends GeckoApp
 
         if (mTabsPanel != null)
             mTabsPanel.setTabsLayoutChangeListener(this);
+
+        mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
         if (savedInstanceState != null) {
             mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
@@ -520,16 +524,15 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        mMenu = menu;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
 
         // Inform the menu about the action-items bar. 
         if (menu instanceof GeckoMenu && isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.gecko_menu, mMenu);
+        inflater.inflate(R.menu.browser_app_menu, mMenu);
         return true;
     }
 
@@ -566,8 +569,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu aMenu)
-    {
+    public boolean onPrepareOptionsMenu(Menu aMenu) {
         if (aMenu == null)
             return false;
 
@@ -634,5 +636,93 @@ abstract public class BrowserApp extends GeckoApp
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Tab tab = null;
+        Intent intent = null;
+        switch (item.getItemId()) {
+            case R.id.bookmark:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    if (item.isChecked()) {
+                        tab.removeBookmark();
+                        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.ic_menu_bookmark_add);
+                    } else {
+                        tab.addBookmark();
+                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.ic_menu_bookmark_remove);
+                    }
+                }
+                return true;
+            case R.id.share:
+                shareCurrentUrl();
+                return true;
+            case R.id.reading_list:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    if (item.isChecked()) {
+                        tab.removeFromReadingList();
+                        item.setIcon(R.drawable.ic_menu_reading_list_add);
+                        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
+                    } else {
+                        tab.addToReadingList();
+                        item.setIcon(R.drawable.ic_menu_reading_list_remove);
+                    }
+                }
+                return true;
+            case R.id.reload:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doReload();
+                return true;
+            case R.id.forward:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doForward();
+                return true;
+            case R.id.save_as_pdf:
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
+                return true;
+            case R.id.settings:
+                intent = new Intent(this, GeckoPreferences.class);
+                startActivity(intent);
+                return true;
+            case R.id.site_settings:
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+                return true;
+            case R.id.addons:
+                loadUrlInTab("about:addons");
+                return true;
+            case R.id.downloads:
+                loadUrlInTab("about:downloads");
+                return true;
+            case R.id.apps:
+                loadUrlInTab("about:apps");
+                return true;
+            case R.id.char_encoding:
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
+                return true;
+            case R.id.find_in_page:
+                mFindInPageBar.show();
+                return true;
+            case R.id.desktop_mode:
+                Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab == null)
+                    return true;
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("desktopMode", !item.isChecked());
+                    args.put("tabId", selectedTab.getId());
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "error building json arguments");
+                }
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
