@@ -194,19 +194,19 @@ JSScript::hasClearedGlobal() const
 
 #ifdef JS_METHODJIT
 inline bool
-JSScript::ensureHasJITInfo(JSContext *cx)
+JSScript::ensureHasMJITInfo(JSContext *cx)
 {
-    if (jitInfo)
+    if (mJITInfo)
         return true;
-    jitInfo = cx->new_<JITScriptSet>();
-    return jitInfo != NULL;
+    mJITInfo = cx->new_<JITScriptSet>();
+    return mJITInfo != NULL;
 }
 
 inline void
-JSScript::destroyJITInfo(js::FreeOp *fop)
+JSScript::destroyMJITInfo(js::FreeOp *fop)
 {
-    fop->delete_(jitInfo);
-    jitInfo = NULL;
+    fop->delete_(mJITInfo);
+    mJITInfo = NULL;
 }
 #endif /* JS_METHODJIT */
 
