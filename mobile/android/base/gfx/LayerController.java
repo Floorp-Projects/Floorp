@@ -120,7 +120,7 @@ public class LayerController {
         return mViewportMetrics.zoomFactor;
     }
 
-    public Bitmap getBackgroundPattern()    { return getDrawable("background"); }
+    public Bitmap getBackgroundPattern()    { return getDrawable("tabs_tray_selected_bg"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
 
     public PanZoomController getPanZoomController()                                 { return mPanZoomController; }
