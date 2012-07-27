@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=767779
+-->
+<head>
+  <title>Test for Bug 767779</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <script type="application/javascript" src="animationPolling.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=767779">Mozilla Bug 767779</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+const FAILURE_TIMEOUT = 30000; // Fail early after 30 seconds
+
+function main()
+{
+  // referenceDiv's size and color correspond to the last frame of the GIF
+  var animTest = new AnimationTest(20, FAILURE_TIMEOUT, 'referenceDiv',
+                                   'animatedGif', 'debug');
+  animTest.beginTest();
+}
+
+window.onload = main;
+</script>
+</pre>
+<div id="content"> <!-- style="display: none" -->
+  <div id="referenceDiv" style="height: 40px; width: 40px;
+                                display: none; background: #18ff00;"></div>
+  <div id="animatedImage">
+    <img id="animatedGif" src="bug767779.sjs" style="display: none;"/>
+      <div id="text-descr"></div>
+  </div>
+  <div id="debug" style="display:none">
+  </div>
+</div>
+</body>
+</html>

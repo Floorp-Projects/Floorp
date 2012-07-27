@@ -2161,6 +2161,7 @@ Tab.prototype = {
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("MozScrolledAreaChanged", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
+    this.browser.addEventListener("PluginNotFound", this, true);
     this.browser.addEventListener("pageshow", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
@@ -2253,6 +2254,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
+    this.browser.removeEventListener("PluginNotFound", this, true);
     this.browser.removeEventListener("MozScrolledAreaChanged", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
@@ -2798,6 +2800,21 @@ Tab.prototype = {
 
           NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
         }, true);
+        break;
+      }
+
+      case "PluginNotFound": {
+        let plugin = aEvent.target;
+        plugin.clientTop; // force style flush
+
+        // On devices where we don't support Flash, there will be a "Learn More..." link in
+        // the missing plugin error message.
+        let learnMoreLink = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "unsupportedLearnMoreLink");
+        if (learnMoreLink) {
+          let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+          learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
+          learnMoreLink.href = learnMoreUrl;
+        }
         break;
       }
 

@@ -823,12 +823,13 @@ public:
             return true;
         }
 
-        EGLint result = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSyncObject, 0, LOCAL_EGL_FOREVER);
+        // wait at most 1 second; this should really be never/rarely hit
+        const uint64_t ns_per_ms = 1000 * 1000;
+        EGLTime timeout = 1000 * ns_per_ms;
+
+        EGLint result = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSyncObject, 0, timeout);
         sEGLLibrary.fDestroySync(EGL_DISPLAY(), mSyncObject);
         mSyncObject = nsnull;
-
-        // we should never expire a 'forever' timeout
-        MOZ_ASSERT(result != LOCAL_EGL_TIMEOUT_EXPIRED);
 
         return result == LOCAL_EGL_CONDITION_SATISFIED;
     }
@@ -879,9 +880,10 @@ GLContextEGL::UpdateSharedHandle(TextureImage::TextureShareType aType,
     fBindTexture(LOCAL_GL_TEXTURE_2D, oldtex);
     BindUserReadFBO(prevRead);
 
-    // Make Shared Handle fully resolved in order to
-    // guarantee content ready to draw in different thread GLContext
-    GuaranteeResolve();
+    // Make sure our copy is finished, so that we can be ready to draw
+    // in different thread GLContext.  If we have KHR_fence_sync, then
+    // we insert a sync object, otherwise we have to do a GuaranteeResolve.
+    wrap->MakeSync();
 }
 
 SharedTextureHandle
@@ -1279,6 +1281,9 @@ public:
                 break;
             case gfxASurface::ImageFormatRGB16_565:
                 mShaderType = RGBXLayerProgramType;
+                break;
+            case gfxASurface::ImageFormatA8:
+                mShaderType = RGBALayerProgramType;
                 break;
             default:
                 MOZ_NOT_REACHED("Unknown update format");
@@ -1835,6 +1840,7 @@ public:
                                                         (EGLClientBuffer) mGraphicBuffer->getNativeBuffer(),
                                                         eglImageAttributes);
                 if (!mEGLImage) {
+                    mGraphicBuffer = nsnull;
                     LOG("Could not create EGL images: ERROR (0x%04x)", sEGLLibrary.fGetError());
                     return false;
                 }
@@ -1842,6 +1848,7 @@ public:
                 return true;
             }
 
+            mGraphicBuffer = nsnull;
             LOG("GraphicBufferAllocator::alloc failed");
             return false;
         }

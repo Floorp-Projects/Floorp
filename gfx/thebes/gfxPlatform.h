@@ -38,9 +38,6 @@ class gfxTextRun;
 class nsIURI;
 class nsIAtom;
 
-extern mozilla::gfx::UserDataKey kThebesSurfaceKey;
-void DestroyThebesSurface(void *data);
-
 extern cairo_user_data_key_t kDrawTarget;
 
 // pref lang id's for font prefs
@@ -130,7 +127,7 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
       case mozilla::gfx::BACKEND_NONE:
         return "none";
   }
-  MOZ_NOT_REACHED("Incomplet switch");
+  MOZ_NOT_REACHED("Incomplete switch");
 }
 
 class THEBES_API gfxPlatform {
@@ -172,18 +169,21 @@ public:
                                                         gfxASurface::gfxImageFormat format);
 
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
-      CreateDrawTargetForSurface(gfxASurface *aSurface);
+      CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
-     * Creates a SourceSurface for a gfxASurface. This surface should -not- be
-     * held around by the user after the underlying gfxASurface has been
-     * destroyed as a copy of the data is not guaranteed.
+     * Creates a SourceSurface for a gfxASurface. This function does no caching,
+     * so the caller should cache the gfxASurface if it will be used frequently.
+     * The returned surface keeps a reference to aTarget, so it is OK to keep the
+     * surface, even if aTarget changes.
+     * aTarget should not keep a reference to the returned surface because that
+     * will cause a cycle.
      */
     virtual mozilla::RefPtr<mozilla::gfx::SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
 
     virtual mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
@@ -195,13 +195,12 @@ public:
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
-    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend) { return false; }
+    // aBackend will be set to the preferred backend for Azure canvas
+    bool SupportsAzureCanvas(mozilla::gfx::BackendType& aBackend);
 
-    void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
-      mozilla::gfx::BackendType backend;
-      if (SupportsAzure(backend)) {
-        aObj.DefineProperty("AzureBackend", GetBackendName(backend)); 
-      }
+    // aObj will contain the preferred backend for Azure canvas
+    void GetAzureCanvasBackendInfo(mozilla::widget::InfoObject &aObj) {
+      aObj.DefineProperty("AzureBackend", GetBackendName(mPreferredCanvasBackend));
     }
 
     /*
@@ -455,7 +454,30 @@ protected:
 
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
-                                               
+
+    /**
+     * Helper method, creates a draw target for a specific Azure backend.
+     * Used by CreateOffscreenDrawTarget.
+     */
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
+      CreateDrawTargetForBackend(mozilla::gfx::BackendType aBackend,
+                                 const mozilla::gfx::IntSize& aSize,
+                                 mozilla::gfx::SurfaceFormat aFormat);
+
+    /**
+     * Initialise the preferred and fallback canvas backends
+     * aBackendBitmask specifies the backends which are acceptable to the caller.
+     * The backend used is determined by aBackendBitmask and the order specified
+     * by the gfx.canvas.azure.backends pref.
+     */
+    void InitCanvasBackend(PRUint32 aBackendBitmask);
+    /**
+     * returns the first backend named in the pref gfx.canvas.azure.backends
+     * which is a component of aBackendBitmask, a bitmask of backend types
+     */
+    static mozilla::gfx::BackendType GetCanvasBackendPref(PRUint32 aBackendBitmask);
+    static mozilla::gfx::BackendType BackendTypeForName(const nsCString& aName);
+
     PRInt8  mAllowDownloadableFonts;
     PRInt8  mDownloadableFontsSanitize;
 #ifdef MOZ_GRAPHITE
@@ -471,9 +493,6 @@ protected:
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;
 
-    // The preferred draw target backend to use
-    mozilla::gfx::BackendType mPreferredDrawTargetBackend;
-
 private:
     /**
      * Start up Thebes.
@@ -486,7 +505,13 @@ private:
     nsTArray<PRUint32> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
-    mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureBackendCollector;
+
+    // The preferred draw target backend to use for canvas
+    mozilla::gfx::BackendType mPreferredCanvasBackend;
+    // The fallback draw target backend to use for canvas, if the preferred backend fails
+    mozilla::gfx::BackendType mFallbackCanvasBackend;
+
+    mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     bool mWorkAroundDriverBugs;
 };
 

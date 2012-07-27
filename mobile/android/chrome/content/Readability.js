@@ -78,6 +78,9 @@ Readability.prototype = {
   **/
   _postProcessContent: function(articleContent) {
     this._fixImageFloats(articleContent);
+
+    // Readability cannot open relative uris so we convert them to absolute uris. 
+    this._fixRelativeUris(articleContent);
   },
 
   /**
@@ -97,6 +100,48 @@ Readability.prototype = {
 
       if (image.offsetWidth > imageWidthThreshold)
         image.className += " blockImage";
+    }
+  },
+
+  /**
+   * Converts each <a> and <img> uri in the given element to an absolute URI.
+   *
+   * @param Element
+   * @return void
+   */
+  _fixRelativeUris: function(articleContent) {
+    let baseUri = this._uri;
+    let ioService = Cc["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService);
+
+    // Fix links.
+    let links = articleContent.getElementsByTagName('a');
+    for (let i = links.length - 1; i >= 0; i--) {
+      links[i].href = this._newURIErrorWrapper(links[i].href, baseUri, ioService);
+    }
+
+    // Fix images.
+    let images = articleContent.getElementsByTagName('img');
+    for (let i = images.length - 1; i >= 0; i--) {
+      images[i].src = this._newURIErrorWrapper(images[i].src, baseUri, ioService);
+    }
+  },
+
+  /**
+   * Converts the given parameters into a new nsIURI object and returns the "spec" attribute of it.
+   * Catches errors of the newURI method and returns an appropriate value.
+   *
+   * @param string
+   * @param nsIURI
+   * @param nsIIOService
+   * @return string
+   */
+  _newURIErrorWrapper: function(aSpec, aBaseURI, ioService) {
+    try {
+      return ioService.newURI(aSpec, null, aBaseURI).spec;
+    } catch (err) {
+      dump("_newURIErrorWrapper: " + err.message);
+      return "";
     }
   },
 

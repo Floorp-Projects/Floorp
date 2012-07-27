@@ -123,7 +123,7 @@ public:
 
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
-  bool Init(cairo_surface_t* aSurface);
+  bool Init(cairo_surface_t* aSurface, const IntSize& aSize);
 
   void SetPathObserver(CairoPathContext* aPathObserver);
 
@@ -155,8 +155,13 @@ private: // methods
   // target; for example, because we're going to be destroyed.
   void MarkSnapshotsIndependent();
 
+  // If the current operator is "source" then clear the destination before we
+  // draw into it, to simulate the effect of an unbounded source operator.
+  void ClearSurfaceForUnboundedSource(const CompositionOp &aOperator);
 private: // data
   cairo_t* mContext;
+  cairo_surface_t* mSurface;
+  IntSize mSize;
   std::vector<SourceSurfaceCairo*> mSnapshots;
   mutable RefPtr<CairoPathContext> mPathObserver;
 };

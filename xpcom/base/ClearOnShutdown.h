@@ -16,14 +16,18 @@
  *   template<class SmartPtr>
  *   void ClearOnShutdown(SmartPtr *aPtr)
  *
- * This function takes a pointer to a smart pointer (i.e., nsCOMPtr<T>*,
- * nsRefPtr<T>*, or nsAutoPtr<T>*) and nulls the smart pointer on shutdown.
+ * This function takes a pointer to a smart pointer and nulls the smart pointer
+ * on shutdown.
  *
  * This is useful if you have a global smart pointer object which you don't
  * want to "leak" on shutdown.
  *
- * There is no way to undo a call to ClearOnShutdown, so you can call it only
- * on smart pointers which you know will live until the program shuts down.
+ * Although ClearOnShutdown will work with any smart pointer (i.e., nsCOMPtr,
+ * nsRefPtr, nsAutoPtr, StaticRefPtr, and StaticAutoPtr), you probably want to
+ * use it only with StaticRefPtr and StaticAutoPtr.  There is no way to undo a
+ * call to ClearOnShutdown, so you can call it only on smart pointers which you
+ * know will live until the program shuts down.  In practice, these are likely
+ * global variables, which should be Static{Ref,Auto}Ptr.
  *
  * ClearOnShutdown is currently main-thread only because we don't want to
  * accidentally free an object from a different thread than the one it was

@@ -55,6 +55,7 @@ MOCHITEST_FILES = \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \
 	test_bug753758.html \
+	test_bug764125.html \
 	test_drawImage_edge_cases.html \
 	$(NULL)
 

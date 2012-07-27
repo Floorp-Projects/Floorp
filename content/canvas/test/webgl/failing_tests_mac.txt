@@ -1,2 +1,1 @@
 conformance/glsl/misc/glsl-function-nodes.html
-conformance/programs/program-test.html

@@ -9,7 +9,7 @@
     // a main thread front-end/worker thread implementation that makes sure
     // that we are not executing synchronous IO code in the main thread.
 
-    throw new Error("osfile_shared.jsm cannot be used from the main thread yet");
+    throw new Error("osfile_shared_allthreads.jsm cannot be used from the main thread yet");
   }
 
   (function(exports) {
