@@ -39,12 +39,13 @@ static double FlushToZero(double aVal)
     return aVal;
 }
 
-static float
+float
 ProcessTranslatePart(const nsCSSValue& aValue,
                      nsStyleContext* aContext,
                      nsPresContext* aPresContext,
                      bool& aCanStoreInRuleTree,
-                     nscoord aSize, float aAppUnitsPerMatrixUnit)
+                     nscoord aSize,
+                     float aAppUnitsPerMatrixUnit)
 {
   nscoord offset = 0;
   float percent = 0.0f;
