@@ -85,6 +85,15 @@ public:
   virtual JSObject* WrapObject(JSContext* cx, JSObject* scope);
 };
 
+class OnlyForUseInConstructor : public nsISupports,
+                                public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+};
+
 class TestInterface : public nsISupports,
                       public nsWrapperCache
 {
@@ -109,9 +118,15 @@ public:
                                               ErrorResult&);
   static
   already_AddRefed<TestInterface> Constructor(nsISupports*,
-                                              NonNull<TestNonCastableInterface>&,
+                                              TestNonCastableInterface&,
                                               ErrorResult&);
-
+  /*  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*,
+                                              uint32_t, uint32_t,
+                                              const TestInterfaceOrOnlyForUseInConstructor&,
+                                              ErrorResult&);
+  */
+  
   // Integer types
   int8_t GetReadonlyByte(ErrorResult&);
   int8_t GetWritableByte(ErrorResult&);

@@ -316,6 +316,8 @@ def getTypes(descriptor):
     Get all argument and return types for all members of the descriptor
     """
     members = [m for m in descriptor.interface.members]
+    if descriptor.interface.ctor():
+        members.append(descriptor.interface.ctor())
     signatures = [s for m in members if m.isMethod() for s in m.signatures()]
     types = []
     for s in signatures:
@@ -474,6 +476,8 @@ def UnionConversions(descriptors):
                     unionConversions[name] = CGUnionConversionStruct(type, d)
 
         members = [m for m in d.interface.members]
+        if d.interface.ctor():
+            members.append(d.interface.ctor())
         signatures = [s for m in members if m.isMethod() for s in m.signatures()]
         for s in signatures:
             assert len(s) == 2
