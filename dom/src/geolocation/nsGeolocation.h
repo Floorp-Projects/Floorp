@@ -107,6 +107,8 @@ public:
 
   nsresult Init();
 
+  void HandleMozsettingChanged(const PRUnichar* aData);
+
   // Management of the nsGeolocation objects
   void AddLocator(nsGeolocation* locator);
   void RemoveLocator(nsGeolocation* locator);

@@ -518,6 +518,7 @@ nsresult nsGeolocationService::Init()
     return NS_ERROR_FAILURE;
 
   obs->AddObserver(this, "quit-application", false);
+  obs->AddObserver(this, "mozsettings-changed", false);
 
   nsCOMPtr<nsISimpleEnumerator> geoproviders;
   catMan->EnumerateCategory("geolocation-provider", getter_AddRefs(geoproviders));
@@ -575,6 +576,61 @@ nsGeolocationService::~nsGeolocationService()
 {
 }
 
+void
+nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
+{
+    // The string that we're interested in will be a JSON string that looks like:
+    //  {"key":"gelocation.enabled","value":true}
+
+    nsCOMPtr<nsIThreadJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (!stack) {
+      return;
+    }
+
+    JSContext *cx = stack->GetSafeJSContext();
+    if (!cx) {
+      return;
+    }
+
+    nsDependentString dataStr(aData);
+    JS::Value val;
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) || !val.isObject()) {
+      return;
+    }
+
+    JSObject &obj(val.toObject());
+    JS::Value key;
+    if (!JS_GetProperty(cx, &obj, "key", &key) || !key.isString()) {
+      return;
+    }
+
+    JSBool match;
+    if (!JS_StringEqualsAscii(cx, key.toString(), "geolocation.enabled", &match) || (match != JS_TRUE)) {
+      return;
+    }
+
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value) || !value.isBoolean()) {
+      return;
+    }
+
+    if (value.toBoolean() == false)
+    {
+      // turn things off
+      for (PRUint32 i = 0; i< mGeolocators.Length(); i++)
+      {
+	mGeolocators[i]->Shutdown();
+      }
+      StopDevice();
+      Update(nsnull);
+      mLastPosition = nsnull;
+      sGeoEnabled = false;
+    }
+    else {
+      sGeoEnabled = true;
+    }
+}
+
 NS_IMETHODIMP
 nsGeolocationService::Observe(nsISupports* aSubject,
                               const char* aTopic,
@@ -585,6 +641,7 @@ nsGeolocationService::Observe(nsISupports* aSubject,
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, "quit-application");
+      obs->RemoveObserver(this, "mozsettings-changed");
     }
 
     for (PRUint32 i = 0; i< mGeolocators.Length(); i++)
@@ -592,6 +649,12 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 
     StopDevice();
 
+    return NS_OK;
+  }
+
+  if (!strcmp("mozsettings-changed", aTopic))
+  {
+    HandleMozsettingChanged(aData);
     return NS_OK;
   }
   
@@ -909,9 +972,6 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
 {
   NS_ENSURE_ARG_POINTER(callback);
 
-  if (!sGeoEnabled)
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -924,6 +984,12 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
 
   nsresult rv = request->Init(cx, options);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!sGeoEnabled) {
+    nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
+    NS_DispatchToMainThread(ev);
+    return NS_OK;
+  }
 
   if (mOwner) {
     if (!RegisterRequestWithPrompt(request))
@@ -954,9 +1020,6 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
 
   NS_ENSURE_ARG_POINTER(callback);
 
-  if (!sGeoEnabled)
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -970,7 +1033,18 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
   nsresult rv = request->Init(cx, options);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mOwner) {
+  if (!sGeoEnabled) {
+    nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
+
+    // need to hand back an index/reference.
+    mWatchingCallbacks.AppendElement(request);
+    *_retval = mWatchingCallbacks.Length() - 1;
+
+    NS_DispatchToMainThread(ev);
+    return NS_OK;
+  }
+
+ if (mOwner) {
     if (!RegisterRequestWithPrompt(request))
       return NS_ERROR_NOT_AVAILABLE;
 
