@@ -1150,14 +1150,11 @@ XULTreeItemAccessible::Name(nsString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessible: nsAccessNode implementation
 
-bool
+void
 XULTreeItemAccessible::Init()
 {
-  if (!XULTreeItemAccessibleBase::Init())
-    return false;
-
+  XULTreeItemAccessibleBase::Init();
   Name(mCachedName);
-  return true;
 }
 
 void
