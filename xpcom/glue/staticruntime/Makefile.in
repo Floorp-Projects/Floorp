@@ -32,7 +32,7 @@ SDK_LIBRARY     	= \
 	$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS)
 
 FORCE_STATIC_LIB = 1
 
