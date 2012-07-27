@@ -51,6 +51,16 @@ using mozilla::ipc::GeckoChildProcessHost;
 static const int kMagicAndroidSystemPropFd = 5;
 #endif
 
+static const bool kLowRightsSubprocesses =
+  // We currently only attempt to drop privileges on gonk, because we
+  // have no plugins or extensions to worry about breaking.
+#ifdef MOZ_WIDGET_GONK
+  true
+#else
+  false
+#endif
+  ;
+
 static bool
 ShouldHaveDirectoryService()
 {
@@ -414,6 +424,9 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 #if defined(OS_LINUX) || defined(OS_MACOSX)
   base::environment_map newEnvVars;
+  base::ChildPrivileges privs = kLowRightsSubprocesses ?
+                                base::UNPRIVILEGED :
+                                base::SAME_PRIVILEGES_AS_PARENT;
   // XPCOM may not be initialized in some subprocesses.  We don't want
   // to initialize XPCOM just for the directory service, especially
   // since LD_LIBRARY_PATH is already set correctly in subprocesses
@@ -579,7 +592,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
   base::LaunchApp(childArgv, mFileMap,
 #if defined(OS_LINUX) || defined(OS_MACOSX)
-                  newEnvVars,
+                  newEnvVars, privs,
 #endif
                   false, &process, arch);
 
