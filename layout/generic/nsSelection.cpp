@@ -431,7 +431,9 @@ nsSelectionIterator::IsDone()
 {
   PRInt32 cnt = mDomSelection->mRanges.Length();
   if (mIndex >= 0 && mIndex < cnt) {
-    return NS_ENUMERATOR_FALSE;
+    // XXX This is completely incompatible with the meaning of nsresult.
+    // NS_ENUMERATOR_FALSE is defined to be 1.  (bug 778111)
+    return (nsresult)NS_ENUMERATOR_FALSE;
   }
   return NS_OK;
 }
