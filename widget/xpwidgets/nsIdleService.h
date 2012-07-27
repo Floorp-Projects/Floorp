@@ -65,11 +65,6 @@ private:
   nsIIdleService* mIdleService;
 
   /**
-   * Set to true when the instantiated object has a idle observer.
-   */
-  bool mObservesIdle;
-
-  /**
    * Place to hold the timer used by this class to determine when a day has
    * passed, after that it will wait for idle time to be detected.
    */
