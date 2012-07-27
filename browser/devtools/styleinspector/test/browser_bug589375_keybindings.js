@@ -69,7 +69,6 @@ function SI_test()
     info("search filter is focused");
     info("tabbing to property expander node");
     EventUtils.synthesizeKey("VK_TAB", {}, iframe.contentWindow);
-    EventUtils.synthesizeKey("VK_TAB", {}, iframe.contentWindow);
   });
 
   info("Making sure that the style inspector panel is focused");
