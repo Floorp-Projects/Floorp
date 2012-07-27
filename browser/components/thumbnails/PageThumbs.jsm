@@ -137,7 +137,12 @@ let PageThumbs = {
     telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
       .add(new Date() - telemetryCaptureTime);
 
-    canvas.mozFetchAsStream(aCallback, this.contentType);
+    // Fetch the canvas data on the next event loop tick so that we allow
+    // some event processing in between drawing to the canvas and encoding
+    // its data. We want to block the UI as short as possible. See bug 744100.
+    Services.tm.currentThread.dispatch(function () {
+      canvas.mozFetchAsStream(aCallback, this.contentType);
+    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   /**

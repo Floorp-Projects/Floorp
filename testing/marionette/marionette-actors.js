@@ -1374,14 +1374,21 @@ MarionetteDriverActor.prototype = {
         let nullPrevious = (this.curBrowser.curFrameId == null);
         let curWin = this.getCurrentWindow();
         let frameObject = curWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getOuterWindowWithId(message.json.value);
-        let reg = this.curBrowser.register(message.json.value, message.json.href);
-        if (reg) {
-          this.curBrowser.elementManager.seenItems[reg] = frameObject; //add to seenItems
-          if (nullPrevious && (this.curBrowser.curFrameId != null)) {
-            this.sendAsync("newSession", {B2G: (appName == "B2G")});
-            if (this.curBrowser.newSession) {
-              this.sendResponse(reg);
-            }
+        let browserType;
+        try {
+          browserType = message.target.getAttribute("type");
+        } catch (ex) {
+          // browserType remains undefined.
+        }
+        let reg;
+        if (!browserType || browserType != "content") {
+          reg = this.curBrowser.register(message.json.value, message.json.href); 
+        }
+        this.curBrowser.elementManager.seenItems[reg] = frameObject; //add to seenItems
+        if (nullPrevious && (this.curBrowser.curFrameId != null)) {
+          this.sendAsync("newSession", {B2G: (appName == "B2G")});
+          if (this.curBrowser.newSession) {
+            this.sendResponse(reg);
           }
         }
         return reg;
