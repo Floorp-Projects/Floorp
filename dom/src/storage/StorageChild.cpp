@@ -8,6 +8,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsDOMError.h"
 
+#include "sampler.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -140,6 +142,7 @@ StorageChild::GetKey(bool aCallerSecure, PRUint32 aIndex, nsAString& aKey)
 nsIDOMStorageItem*
 StorageChild::GetValue(bool aCallerSecure, const nsAString& aKey, nsresult* rv)
 {
+  SAMPLE_LABEL("StorageChild", "GetValue");
   nsresult rv2 = *rv = NS_OK;
   StorageItem storageItem;
   SendGetValue(aCallerSecure, mSessionOnly, nsString(aKey), &storageItem, &rv2);
