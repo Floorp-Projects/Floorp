@@ -12,7 +12,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
-Cu.import("resource://gre/modules/ctypes.jsm"); 
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -177,52 +176,6 @@ function getUpdateChannel() {
   return channel;
 }
 
-/**
- * Read current process I/O counters.
- */            
-let processInfo = {
-  _initialized: false,
-  _IO_COUNTERS: null,
-  _kernel32: null,
-  _GetProcessIoCounters: null,
-  _GetCurrentProcess: null,
-  getCounters: function() {
-    let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-    if (isWindows)
-      return this.getCounters_Windows();
-    return null;
-  },
-  getCounters_Windows: function() {
-    if (!this._initialized){
-      this._IO_COUNTERS = new ctypes.StructType("IO_COUNTERS", [
-        {'readOps': ctypes.unsigned_long_long},
-        {'writeOps': ctypes.unsigned_long_long},
-        {'otherOps': ctypes.unsigned_long_long},
-        {'readBytes': ctypes.unsigned_long_long},
-        {'writeBytes': ctypes.unsigned_long_long},
-        {'otherBytes': ctypes.unsigned_long_long} ]);
-      try {
-        this._kernel32 = ctypes.open("Kernel32.dll");
-        this._GetProcessIoCounters = this._kernel32.declare("GetProcessIoCounters", 
-          ctypes.winapi_abi,
-          ctypes.bool, // return
-          ctypes.voidptr_t, // hProcess
-          this._IO_COUNTERS.ptr); // lpIoCounters
-        this._GetCurrentProcess = this._kernel32.declare("GetCurrentProcess", 
-          ctypes.winapi_abi,
-          ctypes.voidptr_t); // return
-        this._initialized = true;
-      } catch (err) { 
-        return null; 
-      }
-    }
-    let io = new this._IO_COUNTERS();
-    if(!this._GetProcessIoCounters(this._GetCurrentProcess(), io.address()))
-      return null;
-    return [parseInt(io.readBytes), parseInt(io.writeBytes)];  
-  }
-};
-
 function TelemetryPing() {}
 
 TelemetryPing.prototype = {
@@ -237,10 +190,8 @@ TelemetryPing.prototype = {
   _slowSQLStartup: {},
   _prevSession: null,
   _hasWindowRestoredObserver: false,
-  _hasXulWindowVisibleObserver: false,
   _pendingPings: [],
   _doLoadSaveNotifications: false,
-  _startupIO : {},
   _hashID: Ci.nsICryptoHash.SHA256,
   // The number of outstanding saved pings that we have issued loading
   // requests for.
@@ -532,9 +483,6 @@ TelemetryPing.prototype = {
 	|| Object.keys(this._slowSQLStartup.otherThreads).length) {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
-    
-    for (let ioCounter in this._startupIO)
-      payloadObj.simpleMeasurements[ioCounter] = this._startupIO[ioCounter];
 
     let slug = (isTestPing ? reason : this._uuid);
     payloadObj.info = this.getMetadata(reason);
@@ -724,9 +672,7 @@ TelemetryPing.prototype = {
     Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
-    Services.obs.addObserver(this, "xul-window-visible", false);
     this._hasWindowRestoredObserver = true;
-    this._hasXulWindowVisibleObserver = true;
 
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
@@ -906,10 +852,6 @@ TelemetryPing.prototype = {
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       this._hasWindowRestoredObserver = false;
     }
-    if (this._hasXulWindowVisibleObserver) {
-      Services.obs.removeObserver(this, "xul-window-visible");
-      this._hasXulWindowVisibleObserver = false;
-    }
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "quit-application-granted");
@@ -948,15 +890,6 @@ TelemetryPing.prototype = {
         this.attachObservers()
       }
       break;
-    case "xul-window-visible":
-      Services.obs.removeObserver(this, "xul-window-visible");
-      this._hasXulWindowVisibleObserver = false;   
-      var counters = processInfo.getCounters();
-      if (counters) {
-        [this._startupIO.startupWindowVisibleReadBytes, 
-          this._startupIO.startupWindowVisibleWriteBytes] = counters;
-      }
-      break;
     case "sessionstore-windows-restored":
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       this._hasWindowRestoredObserver = false;
@@ -965,11 +898,6 @@ TelemetryPing.prototype = {
       gWasDebuggerAttached = debugService.isDebuggerAttached;
       // fall through
     case "test-gather-startup":
-      var counters = processInfo.getCounters();
-      if (counters) {  
-        [this._startupIO.startupSessionRestoreReadBytes, 
-          this._startupIO.startupSessionRestoreWriteBytes] = counters;
-      }
       this.gatherStartupInformation();
       break;
     case "idle-daily":
