@@ -4140,6 +4140,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Broken Content Detected. e.g. Content-MD5 check failure.
             error.AssignLiteral("corruptedContentError");
             break;
+        default:
+            break;
         }
     }
 
