@@ -1146,8 +1146,7 @@ nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
        child;
        child = child->GetNextSibling()) {
     bool isBlock = IsBlockNode(child->AsDOMNode());
-    bool isFormat = child->IsElement() &&
-                    nsHTMLEditUtils::IsFormatNode(child->AsElement());
+    bool isFormat = nsHTMLEditUtils::IsFormatNode(child);
     if (isBlock && !isFormat) {
       // if it's a div, etc, recurse
       AppendInnerFormatNodes(aArray, child);
@@ -2813,8 +2812,7 @@ nsresult
 nsHTMLEditRules::DeleteNonTableElements(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
-  if (!aNode->IsElement() ||
-      !nsHTMLEditUtils::IsTableElementButNotTable(aNode->AsElement())) {
+  if (!nsHTMLEditUtils::IsTableElementButNotTable(aNode)) {
     return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
   }
 
@@ -5839,7 +5837,7 @@ nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
 
   while (curNode->IsElement() &&
          (curNode->AsElement()->IsHTML(nsGkAtoms::div) ||
-          nsHTMLEditUtils::IsList(curNode->AsElement()) ||
+          nsHTMLEditUtils::IsList(curNode) ||
           curNode->AsElement()->IsHTML(nsGkAtoms::blockquote))) {
     // dive as long as there is only one child, and it is a list, div, blockquote
     PRUint32 numChildren = mHTMLEditor->CountEditableChildren(curNode);
@@ -6205,15 +6203,14 @@ nsINode*
 nsHTMLEditRules::IsInListItem(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, nullptr);
-  if (aNode->IsElement() && nsHTMLEditUtils::IsListItem(aNode->AsElement())) {
+  if (nsHTMLEditUtils::IsListItem(aNode)) {
     return aNode;
   }
 
   nsINode* parent = aNode->GetNodeParent();
   while (parent && mHTMLEditor->IsDescendantOfEditorRoot(parent) &&
-         !(parent->IsElement() &&
-           nsHTMLEditUtils::IsTableElement(parent->AsElement()))) {
-    if (nsHTMLEditUtils::IsListItem(parent->AsElement())) {
+         !nsHTMLEditUtils::IsTableElement(parent)) {
+    if (nsHTMLEditUtils::IsListItem(parent)) {
       return parent;
     }
     parent = parent->GetNodeParent();
