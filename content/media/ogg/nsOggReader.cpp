@@ -1623,7 +1623,10 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       else {
         // Page is for a stream we don't know about (possibly a chained
         // ogg), return an error.
-        return PAGE_SYNC_ERROR;
+        //
+        // XXX Invalid cast of PageSyncResult to nsresult -- this has numeric
+        // value 1 and will pass an NS_SUCCEEDED() check (bug 778105)
+        return (nsresult)PAGE_SYNC_ERROR;
       }
     }
 
