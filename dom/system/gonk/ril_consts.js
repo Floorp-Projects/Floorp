@@ -459,10 +459,11 @@ const READ_RECORD_ABSOLUTE_MODE = 4;
 const GET_RESPONSE_EF_SIZE_BYTES = 15;
 
 // EF path
-const EF_PATH_MF_SIM = "3f00";
+const EF_PATH_MF_SIM       = "3f00";
 const EF_PATH_DF_PHONEBOOK = "5f3a";
-const EF_PATH_DF_TELECOM = "7f10";
-const EF_PATH_DF_GSM = "7f20";
+const EF_PATH_DF_TELECOM   = "7f10";
+const EF_PATH_DF_GSM       = "7f20";
+const EF_PATH_ADF_USIM     = "7fff";
 
 // Status code of sw1 for ICC I/O,
 // see GSM11.11 and TS 51.011 clause 9.4, and ISO 7816-4
