@@ -1280,6 +1280,9 @@ public:
             case gfxASurface::ImageFormatRGB16_565:
                 mShaderType = RGBXLayerProgramType;
                 break;
+            case gfxASurface::ImageFormatA8:
+                mShaderType = RGBALayerProgramType;
+                break;
             default:
                 MOZ_NOT_REACHED("Unknown update format");
             }
@@ -1835,6 +1838,7 @@ public:
                                                         (EGLClientBuffer) mGraphicBuffer->getNativeBuffer(),
                                                         eglImageAttributes);
                 if (!mEGLImage) {
+                    mGraphicBuffer = nsnull;
                     LOG("Could not create EGL images: ERROR (0x%04x)", sEGLLibrary.fGetError());
                     return false;
                 }
@@ -1842,6 +1846,7 @@ public:
                 return true;
             }
 
+            mGraphicBuffer = nsnull;
             LOG("GraphicBufferAllocator::alloc failed");
             return false;
         }
