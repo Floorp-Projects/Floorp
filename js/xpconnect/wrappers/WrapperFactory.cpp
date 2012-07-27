@@ -10,6 +10,7 @@
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
 #include "XPCWrapper.h"
+#include "ChromeObjectWrapper.h"
 
 #include "xpcprivate.h"
 #include "dombindings.h"
@@ -383,8 +384,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ComponentsObjectPolicy>::singleton;
         } else {
-            wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
-                                        ExposedPropertiesOnly>::singleton;
+            wrapper = &ChromeObjectWrapper::singleton;
 
             // If the prototype of the chrome object being wrapped is a prototype
             // for a standard class, use the one from the content compartment so
