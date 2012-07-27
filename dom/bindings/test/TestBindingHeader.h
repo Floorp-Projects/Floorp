@@ -412,6 +412,7 @@ public:
   void PassSequenceOfDictionaries(const Sequence<Dict>&, ErrorResult&);
   void PassDictionaryOrLong(const Dict&, ErrorResult&);
   void PassDictionaryOrLong(int32_t, ErrorResult&);
+  void PassDictContainingDict(const DictContainingDict&, ErrorResult&);
 
   // Methods and properties imported via "implements"
   bool GetImplementedProperty(ErrorResult&);
