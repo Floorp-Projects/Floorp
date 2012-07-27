@@ -1567,7 +1567,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
-    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, Value *);
+    typedef bool (*pf)(JSContext *, HandleScript, jsbytecode *, HandleValue, HandleValue, Value *);
     static const VMFunction AddInfo = FunctionInfo<pf>(js::AddValues);
     static const VMFunction SubInfo = FunctionInfo<pf>(js::SubValues);
     static const VMFunction MulInfo = FunctionInfo<pf>(js::MulValues);
@@ -1577,6 +1577,8 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
+    pushArg(ImmWord(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
+    pushArg(ImmGCPtr(current->mir()->info().script()));
 
     switch (lir->jsop()) {
       case JSOP_ADD:

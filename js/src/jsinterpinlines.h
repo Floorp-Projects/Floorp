@@ -477,14 +477,15 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 }
 
 static JS_ALWAYS_INLINE bool
-AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &lhs, const Value &rhs,
+             Value *res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
         int32_t sum = l + r;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
             res->setDouble(double(l) + double(r));
-            types::TypeScript::MonitorOverflow(cx);
+            types::TypeScript::MonitorOverflow(cx, script, pc);
         } else {
             res->setInt32(sum);
         }
@@ -493,7 +494,7 @@ AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
     if (IsXML(lhs) && IsXML(rhs)) {
         if (!js_ConcatenateXML(cx, &lhs.toObject(), &rhs.toObject(), res))
             return false;
-        types::TypeScript::MonitorUnknown(cx);
+        types::TypeScript::MonitorUnknown(cx, script, pc);
     } else
 #endif
     {
@@ -533,7 +534,7 @@ AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
             if (!str)
                 return false;
             if (lIsObject || rIsObject)
-                types::TypeScript::MonitorString(cx);
+                types::TypeScript::MonitorString(cx, script, pc);
             res->setString(str);
         } else {
             double l, r;
@@ -542,7 +543,7 @@ AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
             l += r;
             if (!res->setNumber(l) &&
                 (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                types::TypeScript::MonitorOverflow(cx);
+                types::TypeScript::MonitorOverflow(cx, script, pc);
             }
         }
     }
@@ -550,31 +551,34 @@ AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 }
 
 static JS_ALWAYS_INLINE bool
-SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+SubOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+             Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 - d2;
     if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
-        types::TypeScript::MonitorOverflow(cx);
+        types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+MulOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+             Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 * d2;
     if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
-        types::TypeScript::MonitorOverflow(cx);
+        types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+DivOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+             Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
@@ -582,12 +586,13 @@ DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     res->setNumber(NumberDiv(d1, d2));
 
     if (d2 == 0 || (res->isDouble() && !(lhs.isDouble() || rhs.isDouble())))
-        types::TypeScript::MonitorOverflow(cx);
+        types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+             Value *res)
 {
     int32_t l, r;
     if (lhs.isInt32() && rhs.isInt32() &&
@@ -602,7 +607,7 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
         return false;
 
     res->setNumber(NumberMod(d1, d2));
-    types::TypeScript::MonitorOverflow(cx);
+    types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
@@ -904,7 +909,8 @@ BitRsh(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-UrshOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *out)
+UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &lhs, const Value &rhs,
+              Value *out)
 {
     uint32_t left;
     int32_t  right;
@@ -912,7 +918,7 @@ UrshOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *out)
         return false;
     left >>= right & 31;
     if (!out->setNumber(uint32_t(left)))
-        types::TypeScript::MonitorOverflow(cx);
+        types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
