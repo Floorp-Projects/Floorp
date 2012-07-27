@@ -1276,13 +1276,6 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
     AutoValueArray autoArray(cx, (Value *) elems, arrayInitialized);
 
     /*
-     * In case an incremental GC is already running, we need to write barrier
-     * the elements before (temporarily) destroying them.
-     */
-    if (obj->compartment()->needsBarrier())
-        obj->prepareElementRangeForOverwrite(0, arrayInitialized);
-
-    /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
      * on error. This is gross, but a better way is not obvious. Note: the
      * exact contents of the array are not preserved on error.
@@ -1295,6 +1288,18 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
                                                oldShape->getObjectParent(), kind);
     if (!shape)
         return false;
+
+    /*
+     * In case an incremental GC is already running, we need to write barrier
+     * the elements before (temporarily) destroying them.
+     *
+     * Note: this has to happen after getInitialShape (which can trigger
+     * incremental GC) and *before* we overwrite shape, making us no longer a
+     * dense array.
+     */
+    if (obj->compartment()->needsBarrier())
+        obj->prepareElementRangeForOverwrite(0, arrayInitialized);
+
     obj->shape_ = shape;
 
     /* Reset to an empty dense array. */
