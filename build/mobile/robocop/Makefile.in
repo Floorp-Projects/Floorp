@@ -31,11 +31,66 @@ _JAVA_HARNESS = \
   PaintedSurface.java \
   $(NULL)
 
-_JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
+_JAVA_TESTS := \
+  BaseTest.java \
+  ContentProviderTest.java \
+  MotionEventHelper.java \
+  MotionEventReplayer.java \
+  PixelTest.java \
+  testAboutPage.java \
+  testAllPagesTab.java \
+  testAwesomebar.java \
+  testAxisLocking.java \
+  testBookmark.java \
+  testBookmarklets.java \
+  testBookmarksTab.java \
+  testBrowserProvider.java \
+  testBrowserProviderPerf.java \
+  testCheck.java \
+  testCheck2.java \
+  testCheck3.java \
+  testFlingCorrectness.java \
+  testFormHistory.java \
+  testHistoryTab.java \
+  testJarReader.java \
+  testLoad.java \
+  testMigration.java \
+  testNewTab.java \
+  testOverscroll.java \
+  testPan.java \
+  testPanCorrectness.java \
+  testPasswordEncrypt.java \
+  testPasswordProvider.java \
+  testPermissions.java \
+  testSearchSuggestions.java \
+  testWebContentContextMenu.java \
+  test_bug720538.java \
+  $(NULL)
 
-_TEST_FILES = \
-  $(wildcard $(TESTPATH)/*.html) \
-  $(wildcard $(TESTPATH)/*.sjs) \
+_JAVA_TESTS := $(addprefix $(TESTPATH)/,$(_JAVA_TESTS))
+
+_TEST_HTML := \
+  robocop_big_link.html \
+  robocop_big_mailto.html \
+  robocop_blank_01.html \
+  robocop_blank_02.html \
+  robocop_blank_03.html \
+  robocop_boxes.html \
+  robocop_geolocation.html \
+  test_bug720538.html \
+  $(NULL)
+
+_TEST_HTML := $(addprefix $(TESTPATH)/,$(_TEST_HTML))
+
+_TEST_SUGGESTIONS := \
+  robocop_suggestions.sjs \
+  $(NULL)
+
+_TEST_SUGGESTIONS := $(addprefix $(TESTPATH)/,$(_TEST_SUGGESTIONS))
+
+_TEST_FILES := \
+  $(_TEST_HTML) \
+  $(_TEST_SUGGESTIONS) \
   $(NULL)
 
 _ROBOCOP_TOOLS = \
