@@ -803,11 +803,8 @@ nsXULAppInfo::InvalidateCachesOnRestart()
       return NS_ERROR_NOT_AVAILABLE;
     }
     static const char kInvalidationHeader[] = NS_LINEBREAK "InvalidateCaches=1" NS_LINEBREAK;
-    rv = PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
+    PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
     PR_Close(fd);
-    
-    if (NS_FAILED(rv))
-      return rv;
   }
   return NS_OK;
 }
