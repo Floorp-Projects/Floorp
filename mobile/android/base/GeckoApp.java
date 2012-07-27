@@ -105,7 +105,6 @@ abstract public class GeckoApp
     private LayerController mLayerController;
     private GeckoLayerClient mLayerClient;
     private AbsoluteLayout mPluginContainer;
-    private FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -455,42 +454,11 @@ abstract public class GeckoApp
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         mMenu = menu;
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.gecko_menu, mMenu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu aMenu)
-    {
-        if (aMenu == null)
-            return false;
-
-        int ids[] = {
-            R.id.reload,
-            R.id.settings,
-            R.id.bookmark,
-            R.id.forward,
-            R.id.save_as_pdf,
-            R.id.share,
-            R.id.char_encoding,
-            R.id.find_in_page,
-            R.id.addons,
-            R.id.downloads,
-            R.id.apps,
-            R.id.site_settings
-        };
-
-        for (int id : ids) {
-            if (aMenu.findItem(id) == null)
-                continue;
-            aMenu.findItem(id).setVisible(false);
-        }
-
+        inflater.inflate(R.menu.gecko_app_menu, mMenu);
         return true;
     }
 
@@ -596,8 +564,6 @@ abstract public class GeckoApp
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Tab tab = null;
-        Intent intent = null;
         switch (item.getItemId()) {
             case R.id.quit:
                 synchronized(sLaunchState) {
@@ -608,84 +574,6 @@ abstract public class GeckoApp
                         System.exit(0);
                     sLaunchState = LaunchState.GeckoExiting;
                 }
-                return true;
-            case R.id.bookmark:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    if (item.isChecked()) {
-                        tab.removeBookmark();
-                        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
-                        item.setIcon(R.drawable.ic_menu_bookmark_add);
-                    } else {
-                        tab.addBookmark();
-                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                        item.setIcon(R.drawable.ic_menu_bookmark_remove);
-                    }
-                }
-                return true;
-            case R.id.share:
-                shareCurrentUrl();
-                return true;
-            case R.id.reading_list:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    if (item.isChecked()) {
-                        tab.removeFromReadingList();
-                        item.setIcon(R.drawable.ic_menu_reading_list_add);
-                        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
-                    } else {
-                        tab.addToReadingList();
-                        item.setIcon(R.drawable.ic_menu_reading_list_remove);
-                    }
-                }
-                return true;
-            case R.id.reload:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null)
-                    tab.doReload();
-                return true;
-            case R.id.forward:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null)
-                    tab.doForward();
-                return true;
-            case R.id.save_as_pdf:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
-                return true;
-            case R.id.settings:
-                intent = new Intent(this, GeckoPreferences.class);
-                startActivity(intent);
-                return true;
-            case R.id.site_settings:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
-                return true;
-            case R.id.addons:
-                loadUrlInTab("about:addons");
-                return true;
-            case R.id.downloads:
-                loadUrlInTab("about:downloads");
-                return true;
-            case R.id.apps:
-                loadUrlInTab("about:apps");
-                return true;
-            case R.id.char_encoding:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
-                return true;
-            case R.id.find_in_page:
-                mFindInPageBar.show();
-                return true;
-            case R.id.desktop_mode:
-                Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab == null)
-                    return true;
-                JSONObject args = new JSONObject();
-                try {
-                    args.put("desktopMode", !item.isChecked());
-                    args.put("tabId", selectedTab.getId());
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "error building json arguments");
-                }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -703,7 +591,7 @@ abstract public class GeckoApp
         return super.onKeyDown(keyCode, event);
     }
 
-    private void shareCurrentUrl() {
+    protected void shareCurrentUrl() {
       Tab tab = Tabs.getInstance().getSelectedTab();
       if (tab == null)
         return;
@@ -1870,7 +1758,6 @@ abstract public class GeckoApp
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
-        mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
