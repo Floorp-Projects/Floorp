@@ -4140,7 +4140,8 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
         nsAutoString tabIndexStr;
         ancestorContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr);
         if (!tabIndexStr.IsEmpty()) {
-          PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
+          nsresult rv;
+          PRInt32 tabIndexVal = tabIndexStr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
             aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
             break;

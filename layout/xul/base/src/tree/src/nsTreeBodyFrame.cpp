@@ -190,7 +190,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::size, size);
     if (!size.IsEmpty()) {
-      PRInt32 err;
+      nsresult err;
       desiredRows = size.ToInteger(&err);
       mHasFixedRowCount = true;
       mPageLength = desiredRows;
@@ -204,7 +204,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
     nsAutoString rows;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
     if (!rows.IsEmpty()) {
-      PRInt32 err;
+      nsresult err;
       desiredRows = rows.ToInteger(&err);
       mPageLength = desiredRows;
     }
@@ -355,7 +355,7 @@ nsTreeBodyFrame::EnsureView()
         box->GetProperty(NS_LITERAL_STRING("topRow").get(),
                          getter_Copies(rowStr));
         nsAutoString rowStr2(rowStr);
-        PRInt32 error;
+        nsresult error;
         PRInt32 rowIndex = rowStr2.ToInteger(&error);
 
         // Set our view.
@@ -3719,7 +3719,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     nsAutoString value;
     mView->GetCellValue(aRowIndex, aColumn, value);
 
-    PRInt32 rv;
+    nsresult rv;
     PRInt32 intValue = value.ToInteger(&rv);
     if (intValue < 0)
       intValue = 0;

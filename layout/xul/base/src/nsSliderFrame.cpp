@@ -171,7 +171,7 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
     nsAutoString value;
     content->GetAttr(kNameSpaceID_None, atom, value);
     if (!value.IsEmpty()) {
-      PRInt32 error;
+      nsresult error;
 
       // convert it to an integer
       defaultValue = value.ToInteger(&error);

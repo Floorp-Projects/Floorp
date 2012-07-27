@@ -327,7 +327,7 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(PRUint32 requestedTimeout)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::UpdateError(PRUint32 result)
+nsUrlClassifierStreamUpdater::UpdateError(nsresult result)
 {
   LOG(("nsUrlClassifierStreamUpdater::UpdateError [this=%p]", this));
 
@@ -408,10 +408,11 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
         // 404 or other error, pass error status back
         LOG(("HTTP request returned failure code."));
 
-        rv = httpChannel->GetResponseStatus(&status);
+        PRUint32 requestStatus;
+        rv = httpChannel->GetResponseStatus(&requestStatus);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        strStatus.AppendInt(status);
+        strStatus.AppendInt(requestStatus);
         downloadError = true;
       }
     }

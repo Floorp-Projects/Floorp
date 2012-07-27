@@ -696,8 +696,8 @@ RDFContentSinkImpl::ParseText(nsIRDFNode **aResult)
 
     case eRDFContentSinkParseMode_Int:
         {
-            PRInt32 i, err;
-            i = value.ToInteger(&err);
+            nsresult err;
+            PRInt32 i = value.ToInteger(&err);
             nsIRDFInt *result;
             gRDFService->GetIntLiteral(i, &result);
             *aResult = result;

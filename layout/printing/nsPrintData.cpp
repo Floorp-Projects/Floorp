@@ -123,7 +123,7 @@ nsPrintData::DoOnProgressChange(PRInt32      aProgress,
     nsIWebProgressListener* wpl = mPrintProgressListeners.ObjectAt(i);
     wpl->OnProgressChange(nullptr, nullptr, aProgress, aMaxProgress, aProgress, aMaxProgress);
     if (aDoStartStop) {
-      wpl->OnStateChange(nullptr, nullptr, aFlag, 0);
+      wpl->OnStateChange(nullptr, nullptr, aFlag, NS_OK);
     }
   }
 }

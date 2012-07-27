@@ -3056,7 +3056,7 @@ Accessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
   if (attrValue.IsEmpty())
     return NS_OK;
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   double value = attrValue.ToDouble(&error);
   if (NS_SUCCEEDED(error))
     *aValue = value;

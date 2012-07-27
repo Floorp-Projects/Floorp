@@ -111,7 +111,7 @@ ProgressMeterAccessible<Max>::GetMaximumValue(double* aMaximumValue)
 
   nsAutoString value;
   if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, value)) {
-    PRInt32 result = NS_OK;
+    nsresult result = NS_OK;
     *aMaximumValue = value.ToDouble(&result);
     return result;
   }
@@ -159,7 +159,7 @@ ProgressMeterAccessible<Max>::GetCurrentValue(double* aCurrentValue)
   if (attrValue.IsEmpty())
     return NS_OK;
 
-  PRInt32 error = NS_OK;
+  nsresult error = NS_OK;
   double value = attrValue.ToDouble(&error);
   if (NS_FAILED(error))
     return NS_OK; // Zero value because of wrong markup.

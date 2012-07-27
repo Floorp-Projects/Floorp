@@ -581,7 +581,7 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
                 if (nondigit && *nondigit)
                     return NS_ERROR_MALFORMED_URI;
 
-                PRInt32 err;
+                nsresult err;
                 *port = buf.ToInteger(&err);
                 if (NS_FAILED(err) || *port <= 0)
                     return NS_ERROR_MALFORMED_URI;

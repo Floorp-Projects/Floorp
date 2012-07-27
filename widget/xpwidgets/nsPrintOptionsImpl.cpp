@@ -1088,7 +1088,7 @@ nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, PRInt32& aTwips,
     rv = Preferences::GetString(aMarginPref, &str);
   }
   if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
-    PRInt32 errCode;
+    nsresult errCode;
     float inches = str.ToFloat(&errCode);
     if (NS_SUCCEEDED(errCode)) {
       aTwips = NS_INCHES_TO_INT_TWIPS(inches);

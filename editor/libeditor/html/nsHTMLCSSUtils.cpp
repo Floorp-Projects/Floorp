@@ -1155,7 +1155,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         valueString.AssignLiteral("bold");
       } else {
         PRInt32 weight = 0;
-        PRInt32 errorCode;
+        nsresult errorCode;
         nsAutoString value(valueString);
         weight = value.ToInteger(&errorCode, 10);
         if (400 < weight) {

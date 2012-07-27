@@ -470,7 +470,7 @@ nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
   // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();
   if (content && content->IsXUL()) {
-    PRInt32 error;
+    nsresult error;
     nsAutoString value;
 
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
@@ -651,7 +651,7 @@ nsIBox::AddCSSPrefSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeig
     // <select>
     if (content && content->IsXUL()) {
         nsAutoString value;
-        PRInt32 error;
+        nsresult error;
 
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
         if (!value.IsEmpty()) {
@@ -755,7 +755,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
     nsIContent* content = aBox->GetContent();
     if (content && content->IsXUL()) {
         nsAutoString value;
-        PRInt32 error;
+        nsresult error;
 
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::minwidth, value);
         if (!value.IsEmpty())
@@ -818,7 +818,7 @@ nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeigh
     nsIContent* content = aBox->GetContent();
     if (content && content->IsXUL()) {
         nsAutoString value;
-        PRInt32 error;
+        nsresult error;
 
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::maxwidth, value);
         if (!value.IsEmpty()) {
@@ -856,7 +856,7 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
     // attribute value overrides CSS
     nsIContent* content = aBox->GetContent();
     if (content && content->IsXUL()) {
-        PRInt32 error;
+        nsresult error;
         nsAutoString value;
 
         content->GetAttr(kNameSpaceID_None, nsGkAtoms::flex, value);
