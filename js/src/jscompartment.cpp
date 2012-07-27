@@ -233,7 +233,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (vp->isObject()) {
             RootedObject obj(cx, &vp->toObject());
             JS_ASSERT(obj->isCrossCompartmentWrapper());
-            if (global->getClass() != &dummy_class && obj->getParent() != global) {
+            if (obj->getParent() != global) {
                 do {
                     if (!JSObject::setParent(cx, obj, global))
                         return false;
