@@ -573,10 +573,10 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(scriptAddr, t0);
 
         // Test that:
-        // - script->jitInfo is not NULL
-        // - script->jitInfo->jitHandle{Ctor,Normal}->value is neither NULL nor UNJITTABLE, and
-        // - script->jitInfo->jitHandle{Ctor,Normal}->value->arityCheckEntry is not NULL.
-        masm.loadPtr(Address(t0, JSScript::offsetOfJITInfo()), t0);
+        // - script->mJITInfo is not NULL
+        // - script->mJITInfo->jitHandle{Ctor,Normal}->value is neither NULL nor UNJITTABLE, and
+        // - script->mJITInfo->jitHandle{Ctor,Normal}->value->arityCheckEntry is not NULL.
+        masm.loadPtr(Address(t0, JSScript::offsetOfMJITInfo()), t0);
         Jump hasNoJitInfo = masm.branchPtr(Assembler::Equal, t0, ImmPtr(NULL));
         size_t offset = JSScript::JITScriptSet::jitHandleOffset(callingNew,
                                                                 f.cx->compartment->needsBarrier());
