@@ -11,7 +11,7 @@ VPATH           := @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          := txmgr
-DIRS            := public src idl
+PARALLEL_DIRS   := public src idl
 
 ifdef ENABLE_TESTS
 TOOL_DIRS       += tests
