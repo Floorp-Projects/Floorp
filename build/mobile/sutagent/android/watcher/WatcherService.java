@@ -905,10 +905,15 @@ public class WatcherService extends Service
             if (nMaxStrikes > 0)
                 {
                     String sRet = SendPing(sPingTarget);
-                    if (!sRet.contains("3 received") && ++nStrikes >= nMaxStrikes)
+                    if (!sRet.contains("3 received"))
                         {
-                            Log.e("Watcher", String.format("Number of failed ping attempts to %s (%s) exceeded maximum (%s), running reboot!", sPingTarget, nStrikes, nMaxStrikes));
-                            RunReboot(null);
+                            Log.i("Watcher", String.format("Failed ping attempt (remaining: %s)!",
+                                                           nMaxStrikes - nStrikes));
+                            if (++nStrikes >= nMaxStrikes)
+                                {
+                                    Log.e("Watcher", String.format("Number of failed ping attempts to %s (%s) exceeded maximum (%s), running reboot!", sPingTarget, nStrikes, nMaxStrikes));
+                                    RunReboot(null);
+                                }
                         }
                     else
                         {
