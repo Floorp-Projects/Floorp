@@ -54,7 +54,8 @@ AsyncPanZoomController::AsyncPanZoomController(GeckoContentController* aGeckoCon
      mMonitor("AsyncPanZoomController"),
      mLastSampleTime(TimeStamp::Now()),
      mState(NOTHING),
-     mDPI(72)
+     mDPI(72),
+     mContentPainterStatus(CONTENT_IDLE)
 {
   if (aGestures == USE_GESTURE_DETECTOR) {
     mGestureEventListener = new GestureEventListener(this);
@@ -681,7 +682,26 @@ void AsyncPanZoomController::ScheduleComposite() {
 
 void AsyncPanZoomController::RequestContentRepaint() {
   mFrameMetrics.mDisplayPort = CalculatePendingDisplayPort();
-  mGeckoContentController->RequestContentRepaint(mFrameMetrics);
+
+  // If we're trying to paint what we already think is painted, discard this
+  // request since it's a pointless paint.
+  nsIntRect oldDisplayPort = mLastPaintRequestMetrics.mDisplayPort,
+            newDisplayPort = mFrameMetrics.mDisplayPort;
+  oldDisplayPort.MoveBy(mLastPaintRequestMetrics.mViewportScrollOffset);
+  newDisplayPort.MoveBy(mFrameMetrics.mViewportScrollOffset);
+
+  if (oldDisplayPort.IsEqualEdges(newDisplayPort) &&
+      mFrameMetrics.mResolution.width == mLastPaintRequestMetrics.mResolution.width) {
+    return;
+  }
+
+  if (mContentPainterStatus == CONTENT_IDLE) {
+    mContentPainterStatus = CONTENT_PAINTING;
+    mLastPaintRequestMetrics = mFrameMetrics;
+    mGeckoContentController->RequestContentRepaint(mFrameMetrics);
+  } else {
+    mContentPainterStatus = CONTENT_PAINTING_AND_PAINT_PENDING;
+  }
 }
 
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
@@ -741,7 +761,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aViewportFr
 
   mLastContentPaintMetrics = aViewportFrame;
 
+  if (mContentPainterStatus != CONTENT_IDLE) {
+    if (mContentPainterStatus == CONTENT_PAINTING_AND_PAINT_PENDING) {
+      mContentPainterStatus = CONTENT_IDLE;
+      RequestContentRepaint();
+    } else {
+      mContentPainterStatus = CONTENT_IDLE;
+    }
+  }
+
   if (aIsFirstPaint || mFrameMetrics.IsDefault()) {
+    mContentPainterStatus = CONTENT_IDLE;
+
     mX.StopTouch();
     mY.StopTouch();
     mFrameMetrics = aViewportFrame;
