@@ -198,20 +198,24 @@ function test() {
       event.initEvent("input", true, false);
       gURLBar.dispatchEvent(event);
 
-      executeSoon(function() {
-        is(browser.userTypedValue, "example.org",
-           "userTypedValue was set when changing gURLBar.value");
-        is(browser.userTypedClear, 0,
-           "userTypedClear was not changed when changing gURLBar.value");
+      browser.addEventListener("load", function onLoad() {
+        browser.removeEventListener("load", onLoad, true);
 
-        // Now make sure ss gets these values too
-        let newState = JSON.parse(ss.getBrowserState());
-        is(newState.windows[0].tabs[0].userTypedValue, "example.org",
-           "sessionstore got correct userTypedValue");
-        is(newState.windows[0].tabs[0].userTypedClear, 0,
-           "sessionstore got correct userTypedClear");
-        runNextTest();
-      });
+        executeSoon(function () {
+          is(browser.userTypedValue, "example.org",
+             "userTypedValue was set when changing gURLBar.value");
+          is(browser.userTypedClear, 0,
+             "userTypedClear was not changed when changing gURLBar.value");
+
+          // Now make sure ss gets these values too
+          let newState = JSON.parse(ss.getBrowserState());
+          is(newState.windows[0].tabs[0].userTypedValue, "example.org",
+             "sessionstore got correct userTypedValue");
+          is(newState.windows[0].tabs[0].userTypedClear, 0,
+             "sessionstore got correct userTypedClear");
+          runNextTest();
+        });
+      }, true);
     });
   }
 
