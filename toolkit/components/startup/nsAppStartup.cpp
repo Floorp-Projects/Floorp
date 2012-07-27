@@ -349,6 +349,7 @@ RecordShutdownEndTimeStamp() {
     PR_Delete(tmpName.get());
     return;
   }
+  PR_Delete(name.get());
   PR_Rename(tmpName.get(), name.get());
 }
 }
