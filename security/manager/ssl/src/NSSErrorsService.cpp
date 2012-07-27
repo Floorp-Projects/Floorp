@@ -71,10 +71,11 @@ NSSErrorsService::GetXPCOMFromNSSError(PRInt32 aNSPRCode, nsresult *aXPCOMErrorC
 
   // The error codes within each module may be a 16 bit value.
   // For simplicity let's use the positive value of the NSS code.
+  // XXX Don't make up nsresults, it's supposed to be an enum (bug 778113)
 
   *aXPCOMErrorCode =
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
-                              -1 * aNSPRCode);
+    (nsresult)NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
+                                        -1 * aNSPRCode);
   return NS_OK;
 }
 
