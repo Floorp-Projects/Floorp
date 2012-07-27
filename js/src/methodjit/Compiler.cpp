@@ -111,7 +111,7 @@ mjit::Compiler::compile()
 
     CompileStatus status = performCompilation();
     if (status != Compile_Okay && status != Compile_Retry) {
-        if (!outerScript->ensureHasJITInfo(cx))
+        if (!outerScript->ensureHasMJITInfo(cx))
             return Compile_Error;
         JSScript::JITScriptHandle *jith = outerScript->jitHandle(isConstructing, cx->compartment->needsBarrier());
         JSScript::ReleaseCode(cx->runtime->defaultFreeOp(), jith);
@@ -930,7 +930,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (frame->hasPushedSPSFrame() && !cx->runtime->spsProfiler.enabled())
         return Compile_Skipped;
 
-    if (script->hasJITInfo()) {
+    if (script->hasMJITInfo()) {
         JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());
         if (jith->isUnjittable())
             return Compile_Abort;
@@ -953,7 +953,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 
     uint64_t gcNumber = cx->runtime->gcNumber;
 
-    if (!script->ensureHasJITInfo(cx))
+    if (!script->ensureHasMJITInfo(cx))
         return Compile_Error;
 
     JSScript::JITScriptHandle *jith = script->jitHandle(construct, cx->compartment->needsBarrier());

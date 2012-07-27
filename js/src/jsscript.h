@@ -441,7 +441,7 @@ struct JSScript : public js::gc::Cell
 
   private:
 #ifdef JS_METHODJIT
-    JITScriptSet *jitInfo;
+    JITScriptSet *mJITInfo;
 #endif
     js::HeapPtrFunction function_;
     js::HeapPtrObject   enclosingScope_;
@@ -680,24 +680,24 @@ struct JSScript : public js::gc::Cell
     friend class js::mjit::CallCompiler;
 
   public:
-    bool hasJITInfo() {
-        return jitInfo != NULL;
+    bool hasMJITInfo() {
+        return mJITInfo != NULL;
     }
 
-    static size_t offsetOfJITInfo() { return offsetof(JSScript, jitInfo); }
+    static size_t offsetOfMJITInfo() { return offsetof(JSScript, mJITInfo); }
 
-    inline bool ensureHasJITInfo(JSContext *cx);
-    inline void destroyJITInfo(js::FreeOp *fop);
+    inline bool ensureHasMJITInfo(JSContext *cx);
+    inline void destroyMJITInfo(js::FreeOp *fop);
 
     JITScriptHandle *jitHandle(bool constructing, bool barriers) {
-        JS_ASSERT(jitInfo);
+        JS_ASSERT(mJITInfo);
         return constructing
-               ? (barriers ? &jitInfo->jitHandleCtorBarriered : &jitInfo->jitHandleCtor)
-               : (barriers ? &jitInfo->jitHandleNormalBarriered : &jitInfo->jitHandleNormal);
+               ? (barriers ? &mJITInfo->jitHandleCtorBarriered : &mJITInfo->jitHandleCtor)
+               : (barriers ? &mJITInfo->jitHandleNormalBarriered : &mJITInfo->jitHandleNormal);
     }
 
     js::mjit::JITScript *getJIT(bool constructing, bool barriers) {
-        if (!jitInfo)
+        if (!mJITInfo)
             return NULL;
         JITScriptHandle *jith = jitHandle(constructing, barriers);
         return jith->isValid() ? jith->getValid() : NULL;
