@@ -370,12 +370,6 @@ GfxInfo::GetDWriteEnabled(bool *aEnabled)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-GfxInfo::GetAzureEnabled(bool *aEnabled)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute DOMString DWriteVersion; */
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)

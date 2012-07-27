@@ -467,25 +467,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         private static final int VIEW_TYPE_COUNT = 2;
 
         public ListView listView = null;
-    	private PromptListItem[] mList;
     	private int mResourceId = -1;
     	PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
             super(context, textViewResourceId, objects);
-            mList = objects;
             mResourceId = textViewResourceId;
     	}
-
-        public int getCount() {
-            return mList.length;
-        }
-
-        public PromptListItem getItem(int position) {
-            return mList[position];
-        }
-
-        public long getItemId(int position) {
-            return mList[position].id;
-        }
 
         @Override
         public int getItemViewType(int position) {
@@ -548,6 +534,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                           viewHolder.paddingBottom);
         }
 
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             PromptListItem item = getItem(position);
             ViewHolder viewHolder = null;

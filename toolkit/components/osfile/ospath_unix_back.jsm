@@ -14,6 +14,10 @@
  *   parse (see later);
  * - all path concatenations go through function |join|.
  */
+if (typeof Components != "undefined") {
+  var EXPORTED_SYMBOLS = ["OS"];
+  Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
+}
 (function(exports) {
    "use strict";
    if (!exports.OS) {

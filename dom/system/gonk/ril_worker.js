@@ -1841,7 +1841,7 @@ let RIL = {
       return;
     }
 
-    let token = Buf.newParcel(REQUEST_DEACTIVATE_DATA_CALL);
+    let token = Buf.newParcel(REQUEST_DEACTIVATE_DATA_CALL, options);
     Buf.writeUint32(2);
     Buf.writeString(options.cid);
     Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);

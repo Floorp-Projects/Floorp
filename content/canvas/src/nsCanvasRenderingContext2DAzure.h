@@ -464,8 +464,7 @@ public:
 
   // nsICanvasRenderingContextInternal
   NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-  NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height)
-  { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height);
 
   NS_IMETHOD Render(gfxContext *ctx,
                     gfxPattern::GraphicsFilter aFilter,
@@ -483,6 +482,7 @@ public:
   already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                 CanvasLayer *aOldLayer,
                                                 LayerManager *aManager);
+  virtual bool ShouldForceInactiveLayer(LayerManager *aManager);
   void MarkContextClean();
   NS_IMETHOD SetIsIPC(bool isIPC);
   // this rect is in canvas device space
@@ -542,6 +542,11 @@ protected:
                              uint32_t aWidth, uint32_t aHeight,
                              JSObject** aRetval);
 
+  /**
+   * Internal method to complete initialisation, expects mTarget to have been set
+   */
+  nsresult Initialize(PRInt32 width, PRInt32 height);
+
   nsresult InitializeWithTarget(mozilla::gfx::DrawTarget *surface,
                                 PRInt32 width, PRInt32 height);
 
@@ -596,11 +601,14 @@ protected:
   /* This function ensures there is a writable pathbuilder available, this
    * pathbuilder may be working in user space or in device space or
    * device space.
+   * After calling this function mPathTransformWillUpdate will be false
    */
   void EnsureWritablePath();
 
   // Ensures a path in UserSpace is available.
-  void EnsureUserSpacePath();
+  // If aCommitTransform is true, then any transform on the context will be
+  // used for the path.
+  void EnsureUserSpacePath(bool aCommitTransform = true);
 
   void TransformWillUpdate();
 
