@@ -792,12 +792,6 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& aSize,
     return glContext.forget();
 }
 
-already_AddRefed<GLContext>
-GLContextProviderWGL::CreateForNativePixmapSurface(gfxASurface *aSurface)
-{
-    return nsnull;
-}
-
 static nsRefPtr<GLContextWGL> gGlobalContext[WGLLibrary::LIBS_MAX];
 
 GLContext *

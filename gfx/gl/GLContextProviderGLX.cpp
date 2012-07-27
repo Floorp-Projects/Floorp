@@ -1300,63 +1300,6 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
     return glContext.forget();
 }
 
-already_AddRefed<GLContext>
-GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
-{
-    if (!sGLXLibrary.EnsureInitialized()) {
-        return nsnull;
-    }
-
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
-        NS_WARNING("GLContextProviderGLX::CreateForNativePixmapSurface called with non-Xlib surface");
-        return nsnull;
-    }
-
-    nsAutoTArray<int, 20> attribs;
-
-#define A1_(_x)  do { attribs.AppendElement(_x); } while(0)
-#define A2_(_x,_y)  do {                                                \
-        attribs.AppendElement(_x);                                      \
-        attribs.AppendElement(_y);                                      \
-    } while(0)
-
-    A2_(GLX_DOUBLEBUFFER, False);
-    A2_(GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT);
-    A1_(0);
-
-    int numFormats;
-    Display *display = DefaultXDisplay();
-    int xscreen = DefaultScreen(display);
-
-    ScopedXFree<GLXFBConfig> cfg(sGLXLibrary.xChooseFBConfig(display,
-                                                             xscreen,
-                                                             attribs.Elements(),
-                                                             &numFormats));
-    if (!cfg) {
-        return nsnull;
-    }
-    NS_ASSERTION(numFormats > 0,
-                 "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
-
-    gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
-
-    GLXPixmap glxpixmap = sGLXLibrary.xCreatePixmap(display,
-                                                    cfg[0],
-                                                    xs->XDrawable(),
-                                                    NULL);
-
-    nsRefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(ContextFormat(ContextFormat::BasicRGB24),
-                                                                     display,
-                                                                     glxpixmap,
-                                                                     cfg[0],
-                                                                     NULL,
-                                                                     NULL,
-                                                                     false,
-                                                                     xs);
-
-    return glContext.forget();
-}
-
 static nsRefPtr<GLContext> gGlobalContext;
 
 GLContext *
