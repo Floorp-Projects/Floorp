@@ -74,6 +74,8 @@
 
 #include "mozilla/Util.h" // for DebugOnly
 
+#include "sampler.h"
+
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 #include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
@@ -280,6 +282,8 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
+  SAMPLER_INIT();
+  SAMPLE_LABEL("Startup", "XRE_InitChildProcess");
 
   sChildProcessType = aProcess;
 
