@@ -2613,7 +2613,7 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     using BytecodeRange::frontOffset;
 
     BytecodeRangeWithLineNumbers(JSContext *cx, JSScript *script)
-      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code), skip(cx, this)
+      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code), skip(cx, thisForCtor())
     {
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
@@ -2631,6 +2631,8 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     size_t frontLineNumber() const { return lineno; }
 
   private:
+    BytecodeRangeWithLineNumbers *thisForCtor() { return this; }
+
     void updateLine() {
         /*
          * Determine the current line number by reading all source notes up to

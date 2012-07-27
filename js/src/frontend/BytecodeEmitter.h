@@ -52,7 +52,7 @@ class GCConstList {
     void finish(ConstArray *array);
 };
 
-class StmtInfoBCE;
+struct StmtInfoBCE;
 
 struct BytecodeEmitter
 {
