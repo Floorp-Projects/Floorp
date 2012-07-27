@@ -716,7 +716,7 @@ public:
    * XXX Currently only transformations corresponding to 2D affine transforms
    * are supported.
    */
-  void SetTransform(const gfx3DMatrix& aMatrix)
+  void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
     mTransform = aMatrix;
     Mutated();
@@ -764,7 +764,8 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   virtual Layer* GetLastChild() { return nsnull; }
-  const gfx3DMatrix& GetTransform() { return mTransform; }
+  const gfx3DMatrix GetTransform();
+  const gfx3DMatrix& GetBaseTransform() { return mTransform; }
   float GetXScale() { return mXScale; }
   float GetYScale() { return mYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }

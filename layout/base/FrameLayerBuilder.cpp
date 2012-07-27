@@ -947,6 +947,7 @@ ContainerState::CreateOrRecycleColorLayer()
     // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
     layer->SetMaskLayer(nsnull);
+    layer->SetScale(1.0f, 1.0f);
   } else {
     // Create a new layer
     layer = mManager->CreateColorLayer();
@@ -970,6 +971,7 @@ ContainerState::CreateOrRecycleImageLayer()
     // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
     layer->SetMaskLayer(nsnull);
+    layer->SetScale(1.0f, 1.0f);
   } else {
     // Create a new layer
     layer = mManager->CreateImageLayer();
@@ -987,6 +989,7 @@ ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
   nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
   if (result) {
     mRecycledMaskImageLayers.Remove(aLayer);
+    result->SetScale(1.0f, 1.0f);
     // XXX if we use clip on mask layers, null it out here
   } else {
     // Create a new layer
@@ -1061,6 +1064,7 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
     layer->SetMaskLayer(nsnull);
+    layer->SetScale(1.0f, 1.0f);
 
     data = static_cast<ThebesDisplayItemLayerUserData*>
         (layer->GetUserData(&gThebesDisplayItemLayerUserData));
@@ -1114,7 +1118,8 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
                        RoundToMatchResidual(scaledOffset.y, data->mActiveScrolledRootPosition.y));
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
-  layer->SetTransform(gfx3DMatrix::From2D(matrix));
+  layer->SetBaseTransform(gfx3DMatrix::From2D(matrix));
+  layer->SetScale(1.0f, 1.0f);
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_JAVA_COMPOSITOR
@@ -1269,7 +1274,7 @@ ContainerState::PopThebesLayerData()
       // The layer's current transform is applied first, then the result is scaled.
       gfx3DMatrix transform = imageLayer->GetTransform()*
         gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-      imageLayer->SetTransform(transform);
+      imageLayer->SetBaseTransform(transform);
       if (data->mItemClip.mHaveClipRect) {
         nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
         imageLayer->IntersectClipRect(clip);
@@ -1280,8 +1285,9 @@ ContainerState::PopThebesLayerData()
       colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
       colorLayer->SetColor(data->mSolidColor);
 
-      // Copy transform
-      colorLayer->SetTransform(data->mLayer->GetTransform());
+      // Copy transform and scale
+      colorLayer->SetBaseTransform(data->mLayer->GetBaseTransform());
+      colorLayer->SetScale(data->mLayer->GetXScale(), data->mLayer->GetYScale());
 
       // Clip colorLayer to its visible region, since ColorLayers are
       // allowed to paint outside the visible region. Here we rely on the
@@ -1780,7 +1786,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         // The layer's current transform is applied first, then the result is scaled.
         gfx3DMatrix transform = ownLayer->GetTransform()*
             gfx3DMatrix::ScalingMatrix(mParameters.mXScale, mParameters.mYScale, 1.0f);
-        ownLayer->SetTransform(transform);
+        ownLayer->SetBaseTransform(transform);
       }
 
       ownLayer->SetIsFixedPosition(
@@ -2124,7 +2130,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     scale = gfxSize(1.0, 1.0);
   }
 
-  aLayer->SetTransform(transform);
+  aLayer->SetBaseTransform(transform);
   // Store the inverse of our resolution-scale on the layer
   aLayer->SetScale(1.0f/float(scale.width), 1.0f/float(scale.height));
 
@@ -3132,7 +3138,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   }
 
   maskLayer->SetContainer(container);
-  maskLayer->SetTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
+  maskLayer->SetBaseTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
 
   // save the details of the clip in user data
   userData->mScaleX = newData.mScaleX;
