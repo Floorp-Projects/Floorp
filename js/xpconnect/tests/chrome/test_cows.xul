@@ -92,7 +92,7 @@ function COWTests() {
     //is(cow.foo, undefined, "one test to rule them all");
     //return;
 
-    const PROPS_TO_TEST = ['foo', 'bar', '__proto__', 'prototype', 'constructor'];
+    const PROPS_TO_TEST = ['foo', 'bar', 'prototype'];
 
     var empty = {};
     // Once we flip the default for __exposedProps__, this should behave
