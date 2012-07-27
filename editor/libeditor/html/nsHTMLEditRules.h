@@ -308,7 +308,15 @@ protected:
                                   PRInt32 aSelOffset, 
                                   nsIEditor::EDirection &aDirection,
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
-  nsresult InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, bool *aResult);
+  /**
+   * Returns true if aNode1 or aNode2 or both is the descendant of some type of
+   * table element, but their nearest table element ancestors differ.  "Table
+   * element" here includes not just <table> but also <td>, <tbody>, <tr>, etc.
+   * The nodes count as being their own descendants for this purpose, so a
+   * table element is its own nearest table element ancestor.
+   */
+  bool     InDifferentTableElements(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  bool     InDifferentTableElements(nsINode* aNode1, nsINode* aNode2);
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsINode *aNode, bool *aResult);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);

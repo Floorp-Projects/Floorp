@@ -2094,11 +2094,8 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
       
       // don't cross table boundaries
-      if (leftNode && rightNode)
-      {
-        bool bInDifTblElems;
-        res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
-        if (NS_FAILED(res) || bInDifTblElems) return res;
+      if (leftNode && rightNode && InDifferentTableElements(leftNode, rightNode)) {
+        return NS_OK;
       }
       
       if (bDeletedBR)
@@ -2173,9 +2170,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
 
       // don't cross table boundaries
-      bool bInDifTblElems;
-      res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
-      if (NS_FAILED(res) || bInDifTblElems) return res;
+      if (InDifferentTableElements(leftNode, rightNode)) {
+        return NS_OK;
+      }
 
       // find the relavent blocks
       if (IsBlockNode(leftNode))
@@ -2993,13 +2990,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
 
     // make sure we don't assemble content that is in different table cells
     // into the same list.  respect table cell boundaries when listifying.
-    if (curList) {
-      bool bInDifTblElems;
-      res = InDifferentTableElements(curList, curNode, &bInDifTblElems);
-      NS_ENSURE_SUCCESS(res, res);
-      if (bInDifTblElems) {
-        curList = nullptr;
-      }
+    if (curList && InDifferentTableElements(curList, curNode)) {
+      curList = nullptr;
     }
 
     // if curNode is a Break, delete it, and quit remembering prev list item
@@ -3802,13 +3794,8 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
         // or if this node doesn't go in blockquote we used earlier.
         // One reason it might not go in prio blockquote is if we are now
         // in a different table cell. 
-        if (curQuote)
-        {
-          bool bInDifTblElems;
-          res = InDifferentTableElements(curQuote, curNode, &bInDifTblElems);
-          NS_ENSURE_SUCCESS(res, res);
-          if (bInDifTblElems)
-            curQuote = nullptr;
+        if (curQuote && InDifferentTableElements(curQuote, curNode)) {
+          curQuote = nullptr;
         }
         
         if (!curQuote) 
@@ -7567,10 +7554,9 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
   if (nearNode)
   {
     // don't cross any table elements
-    bool bInDifTblElems;
-    res = InDifferentTableElements(nearNode, aSelNode, &bInDifTblElems);
-    NS_ENSURE_SUCCESS(res, res);
-    if (bInDifTblElems) return NS_OK;  
+    if (InDifferentTableElements(nearNode, aSelNode)) {
+      return NS_OK;
+    }
     
     // otherwise, ok, we have found a good spot to put the selection
     *outSelectableNode = do_QueryInterface(nearNode);
@@ -7579,33 +7565,28 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
 }
 
 
-nsresult
-nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, bool *aResult)
+bool nsHTMLEditRules::InDifferentTableElements(nsIDOMNode* aNode1,
+                                               nsIDOMNode* aNode2)
 {
-  NS_ASSERTION(aNode1 && aNode2 && aResult, "null args");
-  NS_ENSURE_TRUE(aNode1 && aNode2 && aResult, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node1 = do_QueryInterface(aNode1);
+  nsCOMPtr<nsINode> node2 = do_QueryInterface(aNode2);
+  return InDifferentTableElements(node1, node2);
+}
 
-  nsCOMPtr<nsIDOMNode> tn1, tn2, node = aNode1, temp;
-  *aResult = false;
-  
-  while (node && !nsHTMLEditUtils::IsTableElement(node))
-  {
-    node->GetParentNode(getter_AddRefs(temp));
-    node = temp;
+bool
+nsHTMLEditRules::InDifferentTableElements(nsINode* aNode1, nsINode* aNode2)
+{
+  MOZ_ASSERT(aNode1 && aNode2);
+
+  while (aNode1 && !nsHTMLEditUtils::IsTableElement(aNode1)) {
+    aNode1 = aNode1->GetNodeParent();
   }
-  tn1 = node;
-  
-  node = aNode2;
-  while (node && !nsHTMLEditUtils::IsTableElement(node))
-  {
-    node->GetParentNode(getter_AddRefs(temp));
-    node = temp;
+
+  while (aNode2 && !nsHTMLEditUtils::IsTableElement(aNode2)) {
+    aNode2 = aNode2->GetNodeParent();
   }
-  tn2 = node;
-  
-  *aResult = (tn1 != tn2);
-  
-  return NS_OK;
+
+  return aNode1 != aNode2;
 }
 
 
