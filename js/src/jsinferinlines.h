@@ -283,7 +283,7 @@ struct AutoEnterCompilation
     {
         CompilerOutput *co = info.compilerOutput(cx);
 #ifdef JS_METHODJIT
-        if (co->script->hasJITInfo())
+        if (co->script->hasMJITInfo())
             co->mjit = co->script->getJIT(co->constructing, co->barriers);
 #endif
         info.outputIndex = RecompileInfo::NoCompilerRunning;
