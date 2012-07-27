@@ -86,7 +86,9 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
 NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(bool forceClose)
 {
   m_closeProgress = true;
-  return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose);
+  // XXX Invalid cast of bool to nsresult (bug 778106)
+  return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP,
+                       (nsresult)forceClose);
 }
 
 /* nsIPrompt GetPrompter (); */
