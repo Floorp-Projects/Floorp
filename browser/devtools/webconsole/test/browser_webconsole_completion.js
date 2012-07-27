@@ -50,6 +50,14 @@ function testCompletion(hud) {
   is(input.selectionEnd, 8, "end selection is alright");
   is(jsterm.completeNode.value.replace(/ /g, ""), "", "'docu' completed");
 
+  // Test typing 'window.O' and press tab.
+  input.value = "window.O";
+  input.setSelectionRange(8, 8);
+  jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
+  yield;
+
+  is(input.value, "window.Object", "'window.O' tab completion");
+
   // Test typing 'document.getElem'.
   input.value = "document.getElem";
   input.setSelectionRange(16, 16);

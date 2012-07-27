@@ -1359,6 +1359,7 @@ protected:
     bool mContextLostErrorSet;
 
     int mAlreadyGeneratedWarnings;
+    bool mAlreadyWarnedAboutFakeVertexAttrib0;
 
     bool ShouldGenerateWarnings() const {
         return mAlreadyGeneratedWarnings < 32;

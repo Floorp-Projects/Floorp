@@ -32,7 +32,8 @@ html|a {
   background-position: center;
   background-repeat: no-repeat;
 }
-:-moz-type-unsupported .icon {
+:-moz-type-unsupported .icon,
+:-moz-type-unsupported-platform .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginMissing.png);
 }
 :-moz-type-unsupported .icon[status="ready"] {

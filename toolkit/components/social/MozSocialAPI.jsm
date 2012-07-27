@@ -41,15 +41,6 @@ function injectController(doc, topic, data) {
                                   .QueryInterface(Ci.nsIDocShell)
                                   .chromeEventHandler;
 
-    // If the containing browser isn't one of the social browsers, nothing to
-    // do here.
-    // XXX this is app-specific, might want some mechanism for consumers to
-    // whitelist other IDs/windowtypes  
-    if (!(containingBrowser.id == "social-sidebar-browser" ||
-          containingBrowser.id == "social-notification-browser")) {
-      return;
-    }
-
     let origin = containingBrowser.getAttribute("origin");
     if (!origin) {
       return;
@@ -92,6 +83,18 @@ function attachToWindow(provider, targetWindow) {
     },
     hasBeenIdleFor: function () {
       return false;
+    },
+    openServiceWindow: function(toURL, name, options) {
+      return openServiceWindow(provider, targetWindow, toURL, name, options);
+    },
+    getAttention: function() {
+      let mainWindow = targetWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                         .getInterface(Components.interfaces.nsIWebNavigation)
+                         .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                         .getInterface(Components.interfaces.nsIDOMWindow);
+      mainWindow.getAttention();
     }
   };
 
@@ -127,4 +130,60 @@ function attachToWindow(provider, targetWindow) {
 
 function schedule(callback) {
   Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+}
+
+function openServiceWindow(provider, contentWindow, url, name, options) {
+  // resolve partial URLs and check prePath matches
+  let uri;
+  let fullURL;
+  try {
+    fullURL = contentWindow.document.documentURIObject.resolve(url);
+    uri = Services.io.newURI(fullURL, null, null);
+  } catch (ex) {
+    Cu.reportError("openServiceWindow: failed to resolve window URL: " + url + "; " + ex);
+    return null;
+  }
+
+  if (provider.origin != uri.prePath) {
+    Cu.reportError("openServiceWindow: unable to load new location, " +
+                   provider.origin + " != " + uri.prePath);
+    return null;
+  }
+
+  function getChromeWindow(contentWin) {
+    return contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsIDocShellTreeItem)
+                     .rootTreeItem
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
+
+  }
+  let chromeWindow = Services.ww.getWindowByName("social-service-window-" + name,
+                                                 getChromeWindow(contentWindow));
+  let tabbrowser = chromeWindow && chromeWindow.gBrowser;
+  if (tabbrowser &&
+      tabbrowser.selectedBrowser.getAttribute("origin") == provider.origin) {
+    return tabbrowser.contentWindow;
+  }
+
+  let serviceWindow = contentWindow.openDialog(fullURL, name,
+                                               "chrome=no,dialog=no" + options);
+
+  // Get the newly opened window's containing XUL window
+  chromeWindow = getChromeWindow(serviceWindow);
+
+  // set the window's name and origin attribute on its browser, so that it can
+  // be found via getWindowByName
+  chromeWindow.name = "social-service-window-" + name;
+  chromeWindow.gBrowser.selectedBrowser.setAttribute("origin", provider.origin);
+
+  // we dont want the default title the browser produces, we'll fixup whenever
+  // it changes.
+  serviceWindow.addEventListener("DOMTitleChanged", function() {
+    let sep = xulWindow.document.documentElement.getAttribute("titlemenuseparator");
+    xulWindow.document.title = provider.name + sep + serviceWindow.document.title;
+  });
+
+  return serviceWindow;
 }

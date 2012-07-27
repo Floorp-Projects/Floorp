@@ -355,6 +355,26 @@ JS_FLOOR_LOG2W(size_t n)
     return js_FloorLog2wImpl(n);
 }
 
+/*
+ * JS_ROTATE_LEFT32
+ *
+ * There is no rotate operation in the C Language so the construct (a << 4) |
+ * (a >> 28) is used instead. Most compilers convert this to a rotate
+ * instruction but some versions of MSVC don't without a little help.  To get
+ * MSVC to generate a rotate instruction, we have to use the _rotl intrinsic
+ * and use a pragma to make _rotl inline.
+ *
+ * MSVC in VS2005 will do an inline rotate instruction on the above construct.
+ */
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64) || \
+    defined(_M_X64))
+#include <stdlib.h>
+#pragma intrinsic(_rotl)
+#define JS_ROTATE_LEFT32(a, bits) _rotl(a, bits)
+#else
+#define JS_ROTATE_LEFT32(a, bits) (((a) << (bits)) | ((a) >> (32 - (bits))))
+#endif
+
 JS_END_EXTERN_C
 
 #ifdef __cplusplus
@@ -902,6 +922,51 @@ RoundUpPow2(size_t x)
     return size_t(1) << JS_CEILING_LOG2W(x);
 }
 
+/* Integral types for all hash functions. */
+typedef uint32_t HashNumber;
+const unsigned HashNumberSizeBits = 32;
+
+namespace detail {
+
+/*
+ * Given a raw hash code, h, return a number that can be used to select a hash
+ * bucket.
+ *
+ * This function aims to produce as uniform an output distribution as possible,
+ * especially in the most significant (leftmost) bits, even though the input
+ * distribution may be highly nonrandom, given the constraints that this must
+ * be deterministic and quick to compute.
+ *
+ * Since the leftmost bits of the result are best, the hash bucket index is
+ * computed by doing ScrambleHashCode(h) / (2^32/N) or the equivalent
+ * right-shift, not ScrambleHashCode(h) % N or the equivalent bit-mask.
+ *
+ * FIXME: OrderedHashTable uses a bit-mask; see bug 775896.
+ */
+inline HashNumber
+ScrambleHashCode(HashNumber h)
+{
+    /*
+     * Simply returning h would not cause any hash tables to produce wrong
+     * answers. But it can produce pathologically bad performance: The caller
+     * right-shifts the result, keeping only the highest bits. The high bits of
+     * hash codes are very often completely entropy-free. (So are the lowest
+     * bits.)
+     *
+     * So we use Fibonacci hashing, as described in Knuth, The Art of Computer
+     * Programming, 6.4. This mixes all the bits of the input hash code h.
+     * 
+     * The value of goldenRatio is taken from the hex
+     * expansion of the golden ratio, which starts 1.9E3779B9....
+     * This value is especially good if values with consecutive hash codes
+     * are stored in a hash table; see Knuth for details.
+     */
+    static const HashNumber goldenRatio = 0x9E3779B9U;
+    return h * goldenRatio;
+}
+
+} /* namespace detail */
+
 } /* namespace js */
 
 namespace JS {
@@ -917,7 +982,7 @@ namespace JS {
  * a live integer value.
  */
 
-inline void PoisonPtr(uintptr_t *v)
+inline void PoisonPtr(void *v)
 {
 #if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
     uint8_t *ptr = (uint8_t *) v + 3;

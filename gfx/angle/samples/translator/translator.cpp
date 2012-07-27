@@ -26,7 +26,7 @@ enum TFailCode {
 static void usage();
 static ShShaderType FindShaderType(const char* fileName);
 static bool CompileFile(char* fileName, ShHandle compiler, int compileOptions);
-static void LogMsg(char* msg, const char* name, const int num, const char* logName);
+static void LogMsg(const char* msg, const char* name, const int num, const char* logName);
 static void PrintActiveVariables(ShHandle compiler, ShShaderInfo varType, bool mapLongVariableNames);
 
 // If NUM_SOURCE_STRINGS is set to a value > 1, the input file data is
@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
     char* buffer = 0;
     int bufferLen = 0;
     int numAttribs = 0, numUniforms = 0;
+    ShShaderSpec spec = SH_GLES2_SPEC;
     ShShaderOutput output = SH_ESSL_OUTPUT;
 
     ShInitialize();
@@ -85,6 +86,20 @@ int main(int argc, char* argv[])
             case 'u': compileOptions |= SH_ATTRIBUTES_UNIFORMS; break;
             case 'l': compileOptions |= SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX; break;
             case 'e': compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS; break;
+            case 'd': compileOptions |= SH_DEPENDENCY_GRAPH; break;
+            case 't': compileOptions |= SH_TIMING_RESTRICTIONS; break;
+            case 's':
+                if (argv[0][2] == '=') {
+                    switch (argv[0][3]) {
+                        case 'e': spec = SH_GLES2_SPEC; break;
+                        case 'w': spec = SH_WEBGL_SPEC; break;
+                        case 'c': spec = SH_CSS_SHADERS_SPEC; break;
+                        default: failCode = EFailUsage;
+                    }                    
+                } else {
+                    failCode = EFailUsage;
+                }
+                break;
             case 'b':
                 if (argv[0][2] == '=') {
                     switch (argv[0][3]) {
@@ -102,6 +117,7 @@ int main(int argc, char* argv[])
                     switch (argv[0][3]) {
                     case 'i': resources.OES_EGL_image_external = 1; break;
                     case 'd': resources.OES_standard_derivatives = 1; break;
+                    case 'r': resources.ARB_texture_rectangle = 1; break;
                     default: failCode = EFailUsage;
                     }
                 } else {
@@ -116,13 +132,13 @@ int main(int argc, char* argv[])
             case SH_VERTEX_SHADER:
                 if (vertexCompiler == 0)
                     vertexCompiler = ShConstructCompiler(
-                        SH_VERTEX_SHADER, SH_GLES2_SPEC, output, &resources);
+                        SH_VERTEX_SHADER, spec, output, &resources);
                 compiler = vertexCompiler;
                 break;
             case SH_FRAGMENT_SHADER:
                 if (fragmentCompiler == 0)
                     fragmentCompiler = ShConstructCompiler(
-                        SH_FRAGMENT_SHADER, SH_GLES2_SPEC, output, &resources);
+                        SH_FRAGMENT_SHADER, spec, output, &resources);
                 compiler = fragmentCompiler;
                 break;
             default: break;
@@ -196,11 +212,17 @@ void usage()
         "       -u       : print active attribs and uniforms\n"
         "       -l       : unroll for-loops with integer indices\n"
         "       -e       : emulate certain built-in functions (workaround for driver bugs)\n"
+        "       -t       : enforce experimental timing restrictions\n"
+        "       -d       : print dependency graph used to enforce timing restrictions\n"
+        "       -s=e     : use GLES2 spec (this is by default)\n"
+        "       -s=w     : use WebGL spec\n"
+        "       -s=c     : use CSS Shaders spec\n"
         "       -b=e     : output GLSL ES code (this is by default)\n"
         "       -b=g     : output GLSL code\n"
         "       -b=h     : output HLSL code\n"
         "       -x=i     : enable GL_OES_EGL_image_external\n"
-        "       -x=d     : enable GL_OES_EGL_standard_derivatives\n");
+        "       -x=d     : enable GL_OES_EGL_standard_derivatives\n"
+        "       -x=r     : enable ARB_texture_rectangle\n");
 }
 
 //
@@ -243,7 +265,7 @@ bool CompileFile(char* fileName, ShHandle compiler, int compileOptions)
     return ret ? true : false;
 }
 
-void LogMsg(char* msg, const char* name, const int num, const char* logName)
+void LogMsg(const char* msg, const char* name, const int num, const char* logName)
 {
     printf("#### %s %s %d %s ####\n", msg, name, num, logName);
 }
@@ -272,7 +294,7 @@ void PrintActiveVariables(ShHandle compiler, ShShaderInfo varType, bool mapLongV
 
     int activeVars = 0, size = 0;
     ShDataType type = SH_NONE;
-    char* typeName = NULL;
+    const char* typeName = NULL;
     ShGetInfo(compiler, varType, &activeVars);
     for (int i = 0; i < activeVars; ++i) {
         switch (varType) {

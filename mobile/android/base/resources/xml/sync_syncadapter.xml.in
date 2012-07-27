@@ -6,7 +6,7 @@
 
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
     android:contentAuthority="@ANDROID_PACKAGE_NAME@.db.browser"
-    android:accountType="org.mozilla.firefox_sync"
+    android:accountType="@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@"
     android:supportsUploading="true"
     android:userVisible="true"
 />
