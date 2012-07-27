@@ -1789,7 +1789,7 @@ ArenaLists::queueShapesForSweep(FreeOp *fop)
 void
 ArenaLists::queueIonCodeForSweep(FreeOp *fop)
 {
-    finalizeNow(fop, FINALIZE_SCRIPT);
+    finalizeNow(fop, FINALIZE_IONCODE);
 }
 
 static void
