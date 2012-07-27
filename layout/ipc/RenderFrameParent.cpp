@@ -317,7 +317,7 @@ ClearContainer(ContainerLayer* aContainer)
 // used for small software rendering tasks, like drawWindow.  That's
 // currently implemented by a BasicLayerManager without a backing
 // widget, and hence in non-retained mode.
-static bool
+inline static bool
 IsTempLayerManager(LayerManager* aManager)
 {
   return (mozilla::layers::LAYERS_BASIC == aManager->GetBackendType() &&
