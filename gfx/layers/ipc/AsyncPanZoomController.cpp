@@ -455,7 +455,6 @@ void AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent) {
   mX.StartTouch(touch.mScreenPoint.x);
   mY.StartTouch(touch.mScreenPoint.y);
   mState = PANNING;
-  mLastRepaint = aEvent.mTime;
 
   if (angle < AXIS_LOCK_ANGLE || angle > (M_PI - AXIS_LOCK_ANGLE)) {
     mY.LockPanning();
@@ -505,10 +504,7 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
     ScrollBy(nsIntPoint(xDisplacement, yDisplacement));
     ScheduleComposite();
 
-    if (aEvent.mTime - mLastRepaint >= PAN_REPAINT_INTERVAL) {
-      RequestContentRepaint();
-      mLastRepaint = aEvent.mTime;
-    }
+    RequestContentRepaint();
   }
 }
 
