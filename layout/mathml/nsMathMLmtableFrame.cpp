@@ -269,10 +269,15 @@ MapAllAttributesIntoCSS(nsIFrame* aTableFrame)
 }
 
 // the align attribute of mtable can have a row number which indicates
-// from where to anchor the table, e.g., top5 means anchor the table at
-// the top of the 5th row, axis-1 means anchor the table on the axis of
-// the last row (could have been nicer if the REC used the '#' separator,
-// e.g., top#5, or axis#-1)
+// from where to anchor the table, e.g., top 5 means anchor the table at
+// the top of the 5th row, axis -1 means anchor the table on the axis of
+// the last row
+
+// The REC says that the syntax is 
+// '\s*(top|bottom|center|baseline|axis)(\s+-?[0-9]+)?\s*' 
+// the parsing could have been simpler with that syntax
+// but for backward compatibility we make optional 
+// the whitespaces between the alignment name and the row number
 
 enum eAlign {
   eAlign_top,
@@ -289,6 +294,11 @@ ParseAlignAttribute(nsString& aValue, eAlign& aAlign, PRInt32& aRowIndex)
   aRowIndex = 0;
   aAlign = eAlign_axis;
   PRInt32 len = 0;
+
+  // we only have to remove the leading spaces because 
+  // ToInteger ignores the whitespaces around the number
+  aValue.CompressWhitespace(true, false);
+
   if (0 == aValue.Find("top")) {
     len = 3; // 3 is the length of 'top'
     aAlign = eAlign_top;
