@@ -298,6 +298,8 @@ interface TestInterface {
   void passSequenceOfDictionaries(sequence<Dict> x);
   void passDictionaryOrLong(optional Dict x);
   void passDictionaryOrLong(long x);
+
+  void passDictContainingDict(optional DictContainingDict arg);
 };
 
 interface TestNonWrapperCacheInterface {
@@ -358,4 +360,8 @@ dictionary ParentDict : GrandparentDict {
   long c = 5;
   TestInterface someInterface;
   TestExternalInterface someExternalInterface;
+};
+
+dictionary DictContainingDict {
+  Dict memberDict;
 };

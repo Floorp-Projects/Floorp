@@ -4050,14 +4050,13 @@ class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
         self.dictionary = dictionary;
         self.workers = descriptorProvider.workers
-        if dictionary.parent:
-            parentCGThing = CGDictionary(dictionary.parent, descriptorProvider)
-            self.generatable = parentCGThing.generatable
-            if not self.generatable:
-                # Nothing else to do here
-                return
-        else:
+        if all(CGDictionary(d, descriptorProvider).generatable for
+               d in CGDictionary.getDictionaryDependencies(dictionary)):
             self.generatable = True
+        else:
+            self.generatable = False
+            # Nothing else to do here
+            return
         # Getting a conversion template for interface types can fail
         # if we don't have a relevant descriptor when self.workers is True.
         # If that happens, just mark ourselves as not being
@@ -4248,6 +4247,17 @@ class CGDictionary(CGThing):
     def makeIdName(name):
         return name + "_id"
 
+    @staticmethod
+    def getDictionaryDependencies(dictionary):
+        deps = set();
+        if dictionary.parent:
+            deps.add(dictionary.parent)
+        for member in dictionary.members:
+            if member.type.isDictionary():
+                deps.add(member.type.unroll().inner)
+        return deps
+
+
 class CGRegisterProtos(CGAbstractMethod):
     def __init__(self, config):
         CGAbstractMethod.__init__(self, None, 'Register', 'void',
@@ -4350,17 +4360,25 @@ class CGBindingRoot(CGThing):
                      for fun in [makeEnum, makeEnumTypedef] ]
 
         # Do codegen for all the dictionaries.  We have to be a bit careful
-        # here, because we have to generate these in order from least derived to
-        # most derived so that class inheritance works out.
+        # here, because we have to generate these in order from least derived
+        # to most derived so that class inheritance works out.  We also have to
+        # generate members before the dictionary that contains them.
         #
         # XXXbz this will fail if we have two webidl files A and B such that A
         # declares a dictionary which inherits from a dictionary in B and B
         # declares a dictionary (possibly a different one!) that inherits from a
         # dictionary in A.  The good news is that I expect this to never happen.
         reSortedDictionaries = []
+        dictionaries = set(dictionaries)
         while len(dictionaries) != 0:
-            toMove = [d for d in dictionaries if d.parent not in dictionaries]
-            dictionaries = [d for d in dictionaries if d.parent in dictionaries]
+            # Find the dictionaries that don't depend on anything else anymore
+            # and move them over.
+            toMove = [d for d in dictionaries if
+                      len(CGDictionary.getDictionaryDependencies(d) &
+                          dictionaries) == 0]
+            if len(toMove) == 0:
+                raise TypeError("Loop in dictionary dependency graph")
+            dictionaries = dictionaries - set(toMove)
             reSortedDictionaries.extend(toMove)
 
         dictionaries = reSortedDictionaries
