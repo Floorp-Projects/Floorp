@@ -733,6 +733,13 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #if defined(MOZ_WIDGET_GONK)
   doReport = false;
   headlessClient = true;
+#elif defined(XP_WIN)
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+    doReport = ShouldReport();
+  } else {
+    doReport = false;
+    headlessClient = true;
+  }
 #else
   // this environment variable prevents us from launching
   // the crash reporter client
