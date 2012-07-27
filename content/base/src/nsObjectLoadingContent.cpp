@@ -38,7 +38,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 
-#include "nsPluginError.h"
+#include "nsError.h"
 
 // Util headers
 #include "prenv.h"

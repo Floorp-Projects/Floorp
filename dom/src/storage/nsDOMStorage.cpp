@@ -12,7 +12,7 @@ using mozilla::dom::ContentChild;
 
 #include "prnetdb.h"
 #include "nsCOMPtr.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
 #include "nsUnicharUtils.h"

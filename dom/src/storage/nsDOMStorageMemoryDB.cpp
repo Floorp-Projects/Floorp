@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsDOMStorage.h"
 #include "nsDOMStorageMemoryDB.h"
 #include "nsNetUtil.h"

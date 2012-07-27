@@ -29,7 +29,7 @@
 
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsStyleUtil.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSParser.h"

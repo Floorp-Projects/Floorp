@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsISaveAsCharset.h"
 #include "nsIFile.h"

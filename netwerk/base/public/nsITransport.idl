@@ -161,10 +161,3 @@ interface nsITransportEventSink : nsISupports
                            in unsigned long long aProgress,
                            in unsigned long long aProgressMax);
 };
-
-%{C++
-#define NS_NET_STATUS_READING \
-  static_cast<nsresult>(nsITransport::STATUS_READING)
-#define NS_NET_STATUS_WRITING \
-  static_cast<nsresult>(nsITransport::STATUS_WRITING)
-%}

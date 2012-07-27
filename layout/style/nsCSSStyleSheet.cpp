@@ -24,7 +24,7 @@
 #include "nsICSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
 #include "nsICSSLoaderObserver.h"

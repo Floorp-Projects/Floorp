@@ -5,7 +5,7 @@
 
 #include "txMozillaXSLTProcessor.h"
 #include "nsContentCID.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"

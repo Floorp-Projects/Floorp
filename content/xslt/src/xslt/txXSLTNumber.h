@@ -6,7 +6,7 @@
 #ifndef TRANSFRMX_TXXSLTNUMBER_H
 #define TRANSFRMX_TXXSLTNUMBER_H
 
-#include "txError.h"
+#include "nsError.h"
 #include "txList.h"
 #include "nsString.h"
 

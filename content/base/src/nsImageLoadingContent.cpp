@@ -12,7 +12,7 @@
 
 #include "nsImageLoadingContent.h"
 #include "nsAutoPtr.h"
-#include "nsContentErrors.h"
+#include "nsError.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"

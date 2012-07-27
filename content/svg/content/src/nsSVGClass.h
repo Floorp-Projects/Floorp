@@ -8,7 +8,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsISMILAttr.h"
 #include "nsString.h"

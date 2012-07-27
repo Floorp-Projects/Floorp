@@ -11,7 +11,7 @@
 #include "nsITreeSelection.h"
 #include "nsChildIterator.h"
 #include "nsContentUtils.h"
-#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsTreeBodyFrame.h"
 
 NS_IMPL_CYCLE_COLLECTION_1(nsTreeBoxObject, mView)

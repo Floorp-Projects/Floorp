@@ -10,7 +10,7 @@
 #include "txExprLexer.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
-#include "txError.h"
+#include "nsError.h"
 #include "txXMLUtils.h"
 
 /**

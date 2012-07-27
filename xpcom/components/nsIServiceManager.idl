@@ -58,16 +58,6 @@ interface nsIServiceManager : nsISupports
 
 
 %{C++
-#define NS_ERROR_SERVICE_NOT_AVAILABLE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 22)
-/**
- * @status DEPRECATED
- */
-#define NS_ERROR_SERVICE_NOT_FOUND      NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 22)
-/**
- * @status DEPRECATED
- */
-#define NS_ERROR_SERVICE_IN_USE         NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM, 23)
-
 // Observing xpcom autoregistration.  Topics will be 'start' and 'stop'.
 #define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
 
