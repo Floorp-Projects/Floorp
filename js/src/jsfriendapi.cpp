@@ -439,6 +439,15 @@ js::SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const js::Value &valu
     obj->setSlot(slot, value);
 }
 
+JS_FRIEND_API(bool)
+js::GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver_, jsid id_,
+               Value *vp)
+{
+    RootedObject receiver(cx, receiver_);
+    RootedId id(cx, id_);
+    return obj->getGeneric(cx, receiver, id, vp);
+}
+
 void
 js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
 {
