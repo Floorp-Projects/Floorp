@@ -16,7 +16,6 @@
 
     throw new Error("osfile_unix_front.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_shared.jsm");
   importScripts("resource://gre/modules/osfile/osfile_unix_back.jsm");
   importScripts("resource://gre/modules/osfile/ospath_unix_back.jsm");
   (function(exports) {
@@ -173,59 +172,6 @@
        }
      };
 
-     /**
-      * A File-related error.
-      *
-      * To obtain a human-readable error message, use method |toString|.
-      * To determine the cause of the error, use the various |becauseX|
-      * getters. To determine the operation that failed, use field
-      * |operation|.
-      *
-      * Additionally, this implementation offers a field
-      * |unixErrno|, which holds the OS-specific error
-      * constant. If you need this level of detail, you may match the value
-      * of this field against the error constants of |OS.Constants.libc|.
-      *
-      * @param {string=} operation The operation that failed. If unspecified,
-      * the name of the calling function is taken to be the operation that
-      * failed.
-      * @param {number=} lastError The OS-specific constant detailing the
-      * reason of the error. If unspecified, this is fetched from the system
-      * status.
-      *
-      * @constructor
-      * @extends {OS.Shared.Error}
-      */
-     File.Error = function(operation, errno) {
-       operation = operation || "unknown operation";
-       OS.Shared.Error.call(this, operation);
-       this.unixErrno = errno || ctypes.errno;
-     };
-     File.Error.prototype = new OS.Shared.Error();
-     File.Error.prototype.toString = function toString() {
-       return "Unix error " + this.unixErrno +
-         " during operation " + this.operation +
-         " (" + UnixFile.strerror(this.unixErrno).readString() + ")";
-     };
-
-     /**
-      * |true| if the error was raised because a file or directory
-      * already exists, |false| otherwise.
-      */
-     Object.defineProperty(File.Error.prototype, "becauseExists", {
-       get: function becauseExists() {
-         return this.unixErrno == OS.Constants.libc.EEXISTS;
-       }
-     });
-     /**
-      * |true| if the error was raised because a file or directory
-      * does not exist, |false| otherwise.
-      */
-     Object.defineProperty(File.Error.prototype, "becauseNoSuchFile", {
-       get: function becauseNoSuchFile() {
-         return this.unixErrno == OS.Constants.libc.ENOENT;
-       }
-     });
 
      // Constant used to normalize options.
      const noOptions = {};
@@ -886,6 +832,8 @@
      File.POS_END = exports.OS.Constants.libc.SEEK_END;
 
      File.Unix = exports.OS.Unix.File;
+     File.Error = exports.OS.Shared.Unix.Error;
      exports.OS.File = File;
+
    })(this);
 }

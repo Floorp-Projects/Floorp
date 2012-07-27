@@ -29,6 +29,8 @@ let AboutReader = {
   init: function Reader_init() {
     dump("Init()");
 
+    Services.obs.addObserver(this, "Reader:FaviconReturn", false);
+
     this._article = null;
 
     dump("Feching toolbar, header and content notes from about:reader");
@@ -88,6 +90,16 @@ let AboutReader = {
     }
   },
 
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "Reader:FaviconReturn": {
+        let info = JSON.parse(aData);
+        this._loadFavicon(info.url, info.faviconUrl);
+        break;
+      }
+    }
+  },
+
   handleEvent: function Reader_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "touchstart":
@@ -112,6 +124,8 @@ let AboutReader = {
 
   uninit: function Reader_uninit() {
     dump("Uninit()");
+
+    Services.obs.removeObserver(this, "Reader:FaviconReturn", false);
 
     let body = document.body;
     body.removeEventListener("touchstart", this, false);
@@ -205,6 +219,16 @@ let AboutReader = {
       return;
 
     this._toolbarElement.classList.toggle("toolbar-hidden");
+
+    if (!visible && !this._hasUsedToolbar) {
+      this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
+      if (!this._hasUsedToolbar) {
+        gChromeWin.NativeWindow.toast.show(gStrings.GetStringFromName("aboutReader.toolbarTip"), "short");
+
+        Services.prefs.setBoolPref("reader.has_used_toolbar", true);
+        this._hasUsedToolbar = true;
+      }
+    }
   },
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
@@ -233,6 +257,26 @@ let AboutReader = {
     }.bind(this));
   },
 
+  _requestFavicon: function Reader_requestFavicon() {
+    gChromeWin.sendMessageToJava({
+      gecko: {
+        type: "Reader:FaviconRequest",
+        url: this._article.url
+      }
+    });
+  },
+
+  _loadFavicon: function Reader_loadFavicon(url, faviconUrl) {
+    if (this._article.url !== url)
+      return;
+
+    let link = document.createElement('link');
+    link.rel = 'shortcut icon';
+    link.href = faviconUrl;
+
+    document.getElementsByTagName('head')[0].appendChild(link);
+  },
+
   _showError: function Reader_showError(error) {
     this._titleElement.style.display = "none";
     this._contentElement.innerHTML = error;
@@ -254,6 +298,8 @@ let AboutReader = {
 
     this._toolbarEnabled = true;
     this._setToolbarVisibility(true);
+
+    this._requestFavicon();
   },
 
   _hideContent: function Reader_hideContent() {

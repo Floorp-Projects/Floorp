@@ -12,6 +12,7 @@ relativesrcdir  = image/test/mochitest
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES =   imgutils.js \
+                animationPolling.js \
                 lime100x100.svg \
                 test_bug399925.html \
                 bug399925.gif \
@@ -57,6 +58,9 @@ MOCHITEST_FILES =   imgutils.js \
                 bug733553-iframe.html \
                 bug733553.sjs \
                 animated-gif2.gif \
+                test_bug767779.html \
+                bug767779.sjs \
+                animated-gif_trailing-garbage.gif \
 		test_error_events.html \
 		error-early.png \
 		test_drawDiscardedImage.html \

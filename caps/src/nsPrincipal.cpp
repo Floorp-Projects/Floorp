@@ -1159,6 +1159,12 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
     return rv;
   }
 
+  nsCOMPtr<nsIURI> domain;
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(domain));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   PRUint32 appId;
   rv = aStream->Read32(&appId);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1169,12 +1175,6 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 
   rv = Init(fingerprint, subjectName, prettyName, cert, codebase, appId, inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> domain;
-  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(domain));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   SetDomain(domain);
 

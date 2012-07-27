@@ -16,7 +16,7 @@
     throw new Error("osfile_win_front.jsm cannot be used from the main thread yet");
   }
 
-  importScripts("resource://gre/modules/osfile/osfile_shared.jsm");
+  importScripts("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
   importScripts("resource://gre/modules/osfile/osfile_win_back.jsm");
   importScripts("resource://gre/modules/osfile/ospath_win_back.jsm");
 
@@ -197,75 +197,6 @@
          return new File.Info(gFileInfo);
        }
      };
-
-     /**
-      * A File-related error.
-      *
-      * To obtain a human-readable error message, use method |toString|.
-      * To determine the cause of the error, use the various |becauseX|
-      * getters. To determine the operation that failed, use field
-      * |operation|.
-      *
-      * Additionally, this implementation offers a field
-      * |winLastError|, which holds the OS-specific error
-      * constant. If you need this level of detail, you may match the value
-      * of this field against the error constants of |OS.Constants.Win|.
-      *
-      * @param {string=} operation The operation that failed. If unspecified,
-      * the name of the calling function is taken to be the operation that
-      * failed.
-      * @param {number=} lastError The OS-specific constant detailing the
-      * reason of the error. If unspecified, this is fetched from the system
-      * status.
-      *
-      * @constructor
-      * @extends {OS.Shared.Error}
-      */
-     File.Error = function FileError(operation, lastError) {
-       operation = operation || File.Error.caller.name || "unknown operation";
-       OS.Shared.Error.call(this, operation);
-       this.winLastError = lastError || ctypes.winLastError;
-     };
-     File.Error.prototype = new OS.Shared.Error();
-     File.Error.prototype.toString = function toString() {
-         let buf = new (ctypes.ArrayType(ctypes.jschar, 1024))();
-         let result = WinFile.FormatMessage(
-           OS.Constants.Win.FORMAT_MESSAGE_FROM_SYSTEM |
-           OS.Constants.Win.FORMAT_MESSAGE_IGNORE_INSERTS,
-           null,
-           /* The error number */ this.winLastError,
-           /* Default language */ 0,
-           /* Output buffer*/     buf,
-           /* Minimum size of buffer */ 1024,
-           /* Format args*/       null
-         );
-         if (!result) {
-           buf = "additional error " +
-             ctypes.winLastError +
-             " while fetching system error message";
-         }
-         return "Win error " + this.winLastError + " during operation "
-           + this.operation + " (" + buf.readString() + " )";
-     };
-
-     /**
-      * |true| if the error was raised because a file or directory
-      * already exists, |false| otherwise.
-      */
-     Object.defineProperty(File.Error.prototype, "becauseExists", {
-       get: function becauseExists() {
-         return this.winLastError == OS.Constants.Win.ERROR_FILE_EXISTS;
-       }
-     });
-     /**
-      * |true| if the error was raised because a file or directory
-      * does not exist, |false| otherwise.
-      */
-     Object.defineProperty(File.Error.prototype, "becauseNoSuchFile", {
-       get: function becauseNoSuchFile() {
-         return this.winLastError == OS.Constants.Win.ERROR_FILE_NOT_FOUND;
-       }
-     });
 
      // Constant used to normalize options.
      const noOptions = {};
@@ -894,6 +825,9 @@
      File.POS_END = Const.FILE_END;
 
      File.Win = exports.OS.Win.File;
+     File.Error = exports.OS.Shared.Win.Error;
      exports.OS.File = File;
+
+     exports.OS.Path = exports.OS.Win.Path;
    })(this);
 }

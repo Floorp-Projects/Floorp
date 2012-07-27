@@ -239,14 +239,13 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!ss)
             return NULL;
 
+        CompileOptions options(cx);
+        options.setNoScriptRval(true)
+               .setVersion(JSVERSION_DEFAULT);
         Rooted<JSScript*> script(cx, JSScript::Create(cx,
                                                       /* enclosingScope = */ NullPtr(),
                                                       /* savedCallerFun = */ false,
-                                                      /* principals = */ NULL,
-                                                      /* originPrincipals = */ NULL,
-                                                      /* compileAndGo = */ false,
-                                                      /* noScriptRval = */ true,
-                                                      JSVERSION_DEFAULT,
+                                                      options,
                                                       /* staticLevel = */ 0,
                                                       ss,
                                                       0,
@@ -450,14 +449,14 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 #if JS_HAS_XML_SUPPORT
            (!VersionHasAllowXML(cx->findVersion()) || js_InitXMLClasses(cx, global)) &&
 #endif
-#if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, global) &&
-#endif
            js_InitDateClass(cx, global) &&
            js_InitWeakMapClass(cx, global) &&
            js_InitProxyClass(cx, global) &&
            js_InitMapClass(cx, global) &&
-           js_InitSetClass(cx, global);
+           GlobalObject::initMapIteratorProto(cx, global) &&
+           js_InitSetClass(cx, global) &&
+           GlobalObject::initSetIteratorProto(cx, global);
 }
 
 void

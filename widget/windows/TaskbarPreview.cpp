@@ -61,7 +61,7 @@ GetRenderingContext(nsIDocShell *shell, gfxASurface *surface,
 
   if (!ctx) {
     // create the canvas rendering context
-    ctx = do_CreateInstance("@mozilla.org/content/2dthebes-canvas-rendering-context;1", &rv);
+    ctx = do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=2d", &rv);
     if (NS_FAILED(rv)) {
       NS_WARNING("Could not create nsICanvasRenderingContext2D for tab previews!");
       return rv;

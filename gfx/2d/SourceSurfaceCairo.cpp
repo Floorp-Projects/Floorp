@@ -103,6 +103,7 @@ SourceSurfaceCairo::DrawTargetWillChange()
     cairo_set_source(ctx, pat);
     cairo_paint(ctx);
     cairo_destroy(ctx);
+    cairo_pattern_destroy(pat);
 
     // Swap in this new surface.
     cairo_surface_destroy(mSurface);

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libEGL", "libEGL\libEGL.vcproj", "{E746FCA9-64C3-433E-85E8-9A5A67AB7ED6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B5871A7A-968C-42E3-A33B-981E6F448E78} = {B5871A7A-968C-42E3-A33B-981E6F448E78}
@@ -17,6 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "translator_hlsl", "compiler
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "translator_common", "compiler\translator_common.vcproj", "{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325} = {FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "preprocessor", "compiler\preprocessor\new\preprocessor.vcproj", "{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,9 +63,16 @@ Global
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Release|Win32.Build.0 = Release|Win32
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Release|x64.ActiveCfg = Release|x64
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Release|x64.Build.0 = Release|x64
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Debug|Win32.Build.0 = Debug|Win32
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Debug|x64.ActiveCfg = Debug|x64
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Debug|x64.Build.0 = Debug|x64
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Release|Win32.ActiveCfg = Release|Win32
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Release|Win32.Build.0 = Release|Win32
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Release|x64.ActiveCfg = Release|x64
+		{FBE32DF3-0FB0-4F2F-A424-2C21BD7BC325}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
-obal

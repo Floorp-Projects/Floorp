@@ -2007,6 +2007,10 @@ typedef JSObject *
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
+typedef void
+(* JSCompartmentNameCallback)(JSRuntime *rt, JSCompartment *compartment,
+                              char *buf, size_t bufsize);
+
 /*
  * Read structured data from the reader r. This hook is used to read a value
  * previously serialized by a call to the WriteStructuredCloneOp hook.
@@ -3119,6 +3123,9 @@ JS_GetImplementationVersion(void);
 extern JS_PUBLIC_API(void)
 JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback callback);
 
+extern JS_PUBLIC_API(void)
+JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
+
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallbacks(JSRuntime *rt,
                           JSWrapObjectCallback callback,
@@ -4074,7 +4081,7 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 21)
+#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 23)
 #define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
@@ -4930,6 +4937,64 @@ JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          const char *filename, unsigned lineno,
                                          JSVersion version);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+/* Options for JavaScript compilation. */
+struct CompileOptions {
+    JSPrincipals *principals;
+    JSPrincipals *originPrincipals;
+    JSVersion version;
+    bool versionSet;
+    bool utf8;
+    const char *filename;
+    unsigned lineno;
+    bool compileAndGo;
+    bool noScriptRval;
+
+    CompileOptions(JSContext *cx);
+    CompileOptions &setPrincipals(JSPrincipals *p) { principals = p; return *this; }
+    CompileOptions &setOriginPrincipals(JSPrincipals *p) { originPrincipals = p; return *this; }
+    CompileOptions &setVersion(JSVersion v) { version = v; versionSet = true; return *this; }
+    CompileOptions &setUTF8(bool u) { utf8 = u; return *this; }
+    CompileOptions &setFileAndLine(const char *f, unsigned l) {
+        filename = f; lineno = l; return *this;
+    }
+    CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
+    CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
+};
+
+extern JS_PUBLIC_API(JSScript *)
+Compile(JSContext *cx, JSHandleObject obj, CompileOptions options,
+        const char *bytes, size_t length);
+
+extern JS_PUBLIC_API(JSScript *)
+Compile(JSContext *cx, JSHandleObject obj, CompileOptions options,
+        const jschar *chars, size_t length);
+
+extern JS_PUBLIC_API(JSScript *)
+Compile(JSContext *cx, JSHandleObject obj, CompileOptions options, FILE *file);
+
+extern JS_PUBLIC_API(JSScript *)
+Compile(JSContext *cx, JSHandleObject obj, CompileOptions options, const char *filename);
+
+extern JS_PUBLIC_API(JSFunction *)
+CompileFunction(JSContext *cx, JSHandleObject obj, CompileOptions options,
+                const char *name, unsigned nargs, const char **argnames,
+                const char *bytes, size_t length);
+
+extern JS_PUBLIC_API(JSFunction *)
+CompileFunction(JSContext *cx, JSHandleObject obj, CompileOptions options,
+                const char *name, unsigned nargs, const char **argnames,
+                const jschar *chars, size_t length);
+
+} /* namespace JS */
+
+JS_BEGIN_EXTERN_C
+#endif /* __cplusplus */
+
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned indent);
 
@@ -5048,6 +5113,24 @@ JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
                                               const jschar *chars, unsigned length,
                                               const char *filename, unsigned lineno,
                                               jsval *rval, JSVersion version);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+extern JS_PUBLIC_API(bool)
+Evaluate(JSContext *cx, JSHandleObject obj, CompileOptions options,
+         const jschar *chars, size_t length, jsval *rval);
+
+extern JS_PUBLIC_API(bool)
+Evaluate(JSContext *cx, JSHandleObject obj, CompileOptions options,
+         const char *bytes, size_t length, jsval *rval);
+
+} /* namespace JS */
+
+JS_BEGIN_EXTERN_C
+#endif
 
 extern JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, unsigned argc,

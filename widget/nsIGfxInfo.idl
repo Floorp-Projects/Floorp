@@ -16,7 +16,6 @@ interface nsIGfxInfo : nsISupports
    */
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
-  readonly attribute boolean AzureEnabled;
   readonly attribute DOMString DWriteVersion;
   readonly attribute DOMString cleartypeParameters;
 

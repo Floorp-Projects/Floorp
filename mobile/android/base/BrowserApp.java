@@ -62,11 +62,10 @@ abstract public class BrowserApp extends GeckoApp
                     maybeCancelFaviconLoad(tab);
                 }
                 break;
+            case LOAD_ERROR:
             case START:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    invalidateOptionsMenu();
-                }
             case STOP:
+            case MENU_UPDATED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     invalidateOptionsMenu();
                 }

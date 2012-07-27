@@ -1,0 +1,6 @@
+# HG changeset patch
+# Parent 2cd2556d673d90f79dc29a78a927d2a38b92e14b
+
+diff --git a/gfx/angle/src/compiler/preprocessor/new/Diagnostics.cpp b/gfx/angle/src/compiler/preprocessor/new/PreprocessorDiagnostics.cpp
+rename from gfx/angle/src/compiler/preprocessor/new/Diagnostics.cpp
+rename to gfx/angle/src/compiler/preprocessor/new/PreprocessorDiagnostics.cpp

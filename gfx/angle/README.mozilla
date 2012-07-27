@@ -1,18 +1,35 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/
 
-Current revision: r1042
+Current revision: r1242
 
 == Applied local patches ==
 
 In this order:
-  angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
-  angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
-  angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
-  angle-enforce-readpixels-spec.patch - see bug 724476.
-  angle-impl-read-bgra.patch - see bug 724476.
-  angle-long-identifier-hash-spooky.patch - see bug 676071
+
+  angle-renaming-debug.patch
+    rename debug.h to compilerdebug.h to avoid conflict in our makefiles
+
+  angle-renaming-preprocessor-diagonostics.patch
+    rename one of the two Diagnostics.cpp to avoid conflict in our makefiles
+
+  angle-renaming-preprocessor-directivehandler.patch
+    rename one of the two DirectiveHandler.cpp to avoid conflict in our makefiles
+
+  angle-enforce-readpixels-spec.patch
+    see bug 724476
+
+  angle-impl-read-bgra.patch
+    see bug 724476
+
+  gfx/angle/angle-long-identifier-hash-spooky.patch
+    see bug 676071
+
+  angle-abort-on-oom-in-preprocessor.patch
+    see bug 680840. Probably not useful anymore now that we're on the new
+    preprocessor, but it doesn't hurt to keep it around a bit longer.
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
+Therefore, changes made to the Makefile.in files should not be stored in the local .patch files.
 
 == How to update this ANGLE copy ==
 

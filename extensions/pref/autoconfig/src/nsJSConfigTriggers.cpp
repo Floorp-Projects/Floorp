@@ -19,6 +19,9 @@
 #include "nsIJSContextStack.h"
 #include "nspr.h"
 #include "mozilla/Attributes.h"
+#include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsJSPrincipals.h"
 
 extern PRLogModuleInfo *MCD;
 
@@ -192,8 +195,11 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     }
 
     JS_BeginRequest(autoconfig_cx);
-    ok = JS_EvaluateScript(autoconfig_cx, autoconfig_glob,
-                           js_buffer, length, filename, 0, nsnull);
+    nsCOMPtr<nsIPrincipal> principal;
+    nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(principal));
+    ok = JS_EvaluateScriptForPrincipals(autoconfig_cx, autoconfig_glob, 
+                                        nsJSPrincipals::get(principal),
+                                        js_buffer, length, filename, 0, nsnull);
     JS_EndRequest(autoconfig_cx);
 
     JS_MaybeGC(autoconfig_cx);

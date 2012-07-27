@@ -542,8 +542,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (keywordCol != -1)
             keyword = cursor.getString(keywordCol);
 
-        // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
-        int id = cursor.getInt(cursor.getColumnIndexOrThrow(Combined._ID));
+        // Use the history id in order to allow removing history entries
+        int id = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
 
         subject = new ContextMenuSubject(id,
                                         cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),

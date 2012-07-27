@@ -530,8 +530,10 @@ FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
          size_t *bodyStart, size_t *bodyEnd)
 {
     // We don't need principals, since those are only used for error reporting.
-    TokenStream ts(cx, NULL, NULL, chars, length, "internal-FindBody", 0,
-                   fun->script()->getVersion(), NULL);
+    CompileOptions options(cx);
+    options.setFileAndLine("internal-findBody", 0)
+           .setVersion(fun->script()->getVersion());
+    TokenStream ts(cx, options, chars, length, NULL);
     JS_ASSERT(chars[0] == '(');
     int nest = 0;
     bool onward = true;
@@ -552,23 +554,25 @@ FindBody(JSContext *cx, HandleFunction fun, const jschar *chars, size_t length,
             break;
         }
     } while (onward);
-    DebugOnly<bool> braced = ts.matchToken(TOK_LC);
-    if (ts.getToken() == TOK_ERROR)
+    TokenKind tt = ts.getToken();
+    if (tt == TOK_ERROR)
         return false;
+    bool braced = tt == TOK_LC;
     JS_ASSERT(!!(fun->flags & JSFUN_EXPR_CLOSURE) ^ braced);
     *bodyStart = ts.offsetOfToken(ts.currentToken());
-    RangedPtr<const jschar> p(chars, length);
-    p = chars + length;
-    for (; unicode::IsSpaceOrBOM2(p[-1]); p--)
-        ;
-    if (p[-1] == '}') {
-        p--;
-        for (; unicode::IsSpaceOrBOM2(p[-1]); p--)
-            ;
+    if (braced)
+        *bodyStart += 1;
+    RangedPtr<const jschar> end(chars, length);
+    end = chars + length;
+    if (end[-1] == '}') {
+        end--;
     } else {
         JS_ASSERT(!braced);
+        for (; unicode::IsSpaceOrBOM2(end[-1]); end--)
+            ;
     }
-    *bodyEnd = p.get() - chars;
+    *bodyEnd = end.get() - chars;
+    JS_ASSERT(*bodyStart <= *bodyEnd);
     return true;
 }
 
@@ -672,7 +676,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
                     if (!out.append("/* use strict */ "))
                         return NULL;
                 } else {
-                    if (!out.append("\"use strict\";\n"))
+                    if (!out.append("\n\"use strict\";\n"))
                         return NULL;
                 }
             }
@@ -1163,6 +1167,11 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals);
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
+    CompileOptions options(cx);
+    options.setPrincipals(principals)
+           .setOriginPrincipals(originPrincipals)
+           .setFileAndLine(filename, lineno);
+
     unsigned n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
         /*
@@ -1240,9 +1249,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
          * here (duplicate argument names, etc.) will be detected when we
          * compile the function body.
          */
-        TokenStream ts(cx, principals, originPrincipals,
-                       collected_args, args_length, filename, lineno, cx->findVersion(),
-                       /* strictModeGetter = */ NULL);
+        TokenStream ts(cx, options, collected_args, args_length, /* strictModeGetter = */ NULL);
 
         /* The argument string may be empty or contain no tokens. */
         TokenKind tt = ts.getToken();
@@ -1331,9 +1338,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
     if (hasRest)
         fun->setHasRest();
 
-    bool ok = frontend::CompileFunctionBody(cx, fun, principals, originPrincipals,
-                                            &bindings, chars, length, filename, lineno,
-                                            cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, options, &bindings, chars, length);
     args.rval().setObject(*fun);
     return ok;
 }

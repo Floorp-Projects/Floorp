@@ -750,6 +750,9 @@ if test -n "$_WIN32_MSVC"; then
     AC_DEFINE(HAVE_IO_H)
     AC_DEFINE(HAVE_SETBUF)
     AC_DEFINE(HAVE_ISATTY)
+    if test $_MSC_VER -ge 1600; then
+        AC_DEFINE(HAVE_NULLPTR)
+    fi
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -5348,7 +5351,7 @@ MOZ_ARG_WITH_BOOL(system-libvpx,
 [  --with-system-libvpx    Use system libvpx (located with pkgconfig)],
     MOZ_NATIVE_LIBVPX=1)
 
-MOZ_LIBVPX_INCLUDES=
+MOZ_LIBVPX_CFLAGS=
 MOZ_LIBVPX_LIBS=
 
 if test -n "$MOZ_VP8"; then
@@ -5365,18 +5368,20 @@ if test -n "$MOZ_VP8"; then
         dnl === libvpx Version check ===
         dnl ============================
         dnl Check to see if we have a system libvpx package.
-        PKG_CHECK_MODULES(LIBVPX, vpx >= 1.0.0)
+        PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.0.0)
 
         MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [], 
          [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
 
+        _SAVE_LIBS=$LIBS
         AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [], 
          [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
+        LIBS=$_SAVE_LIBS
     fi
 fi
 
 AC_SUBST(MOZ_NATIVE_LIBVPX)
-AC_SUBST(MOZ_LIBVPX_INCLUDES)
+AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test "$MOZ_WEBM"; then
@@ -5590,7 +5595,7 @@ if test "$MOZ_GSTREAMER"; then
                       gstreamer-plugins-base-$GST_API_VERSION)
     if test -n "$GSTREAMER_LIBS"; then
        _SAVE_LDFLAGS=$LDFLAGS
-       LDFLAGS="$LDFLAGS -lgstvideo-$GST_API_VERSION"
+       LDFLAGS="$LDFLAGS $GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
        AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
        if test -n "$_HAVE_LIBGSTVIDEO" ; then
           GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
@@ -8782,7 +8787,7 @@ dnl Create a virtualenv where we can install local Python packages
 AC_MSG_RESULT([Creating Python virtualenv])
 rm -rf _virtualenv
 mkdir -p _virtualenv
-MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/other-licenses/virtualenv/virtualenv.py --system-site-packages ./_virtualenv
+MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/python/virtualenv/virtualenv.py --system-site-packages ./_virtualenv
 case "$host_os" in
 mingw*)
     PYTHON=$MOZ_BUILD_ROOT/_virtualenv/Scripts/python.exe

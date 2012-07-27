@@ -407,6 +407,8 @@ def main():
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
 
+    print dm.getInfo()
+
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
         dm.killProcess(procName)
@@ -485,6 +487,7 @@ def main():
         sys.exit(1)
 
     print ''.join(logcat[-500:-1])
+    print dm.getInfo()
     sys.exit(retVal)
         
 if __name__ == "__main__":

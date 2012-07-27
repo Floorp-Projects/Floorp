@@ -53,9 +53,8 @@ struct Parser : private AutoGCRooter
     const bool          compileAndGo:1;
 
   public:
-    Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
-           const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion version,
-           bool foldConstants, bool compileAndGo);
+    Parser(JSContext *cx, const CompileOptions &options,
+           const jschar *chars, size_t length, bool foldConstants);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);

@@ -169,14 +169,6 @@ abstract public class GeckoApp
                 updatePopups(tab);
                 invalidateOptionsMenu();
                 break;
-
-            case LOAD_ERROR:
-            case START:
-            case STOP:
-                // The options menu only applies to the selected tab.
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    invalidateOptionsMenu();
-                break;
         }
     }
 
@@ -196,17 +188,12 @@ abstract public class GeckoApp
     private static final String TYPE_NATIVE = "native";
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
+    // Returns null if plugins are blocked on the device.
     String[] getPluginDirectories() {
 
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
         if (isTegra) {
-            // disable Flash on pre-HC Tegra (bug 703056)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
-                return new String[0];
-            }
-
             // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
             File vfile = new File("/proc/version");
             FileReader vreader = null;
@@ -219,7 +206,7 @@ abstract public class GeckoApp
                         version.indexOf("Nova") != -1)
                     {
                         Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
-                        return new String[0];
+                        return null;
                     }
                 }
             } catch (IOException ex) {
@@ -726,7 +713,7 @@ abstract public class GeckoApp
           return;
 
       GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                    Intent.ACTION_SEND, tab.getTitle());
+                                    Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -862,6 +849,30 @@ abstract public class GeckoApp
             return;
 
         tab.setReaderEnabled(true);
+    }
+
+    void handleFaviconRequest(final String url) {
+        (new GeckoAsyncTask<Void, Void, String>() {
+            @Override
+            public String doInBackground(Void... params) {
+                return getFavicons().getFaviconUrlForPageUrl(url);
+            }
+
+            @Override
+            public void onPostExecute(String faviconUrl) {
+                if (faviconUrl != null) {
+                    JSONObject args = new JSONObject();
+                    try {
+                        args.put("url", url);
+                        args.put("faviconUrl", faviconUrl);
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "error building json arguments");
+                    }
+
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
+                }
+            }
+        }).execute();
     }
 
     void handleLoadError(final int tabId, final String uri, final String title) {
@@ -1044,6 +1055,9 @@ abstract public class GeckoApp
             } else if (event.equals("Content:ReaderEnabled")) {
                 final int tabId = message.getInt("tabID");
                 handleReaderEnabled(tabId);
+            } else if (event.equals("Reader:FaviconRequest")) {
+                final String url = message.getString("url");
+                handleFaviconRequest(url);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
@@ -1875,6 +1889,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Reader:FaviconRequest", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
@@ -2239,6 +2254,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Reader:FaviconRequest", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
@@ -2940,7 +2956,7 @@ abstract public class GeckoApp
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null) {
                     String url = tab.getURL();
-                    String title = tab.getTitle();
+                    String title = tab.getDisplayTitle();
                     BitmapDrawable favicon = (BitmapDrawable)(tab.getFavicon());
                     if (url != null && title != null) {
                         GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon.getBitmap(), "");
