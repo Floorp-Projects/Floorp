@@ -3284,6 +3284,12 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
+extern JS_PUBLIC_API(JSBool)
+JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp);
+
+extern JS_PUBLIC_API(JSProtoKey)
+JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj);
+
 /*
  * Returns the original value of |Function.prototype| from the global object in
  * which |forObj| was created.

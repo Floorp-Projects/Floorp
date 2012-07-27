@@ -2226,6 +2226,30 @@ JS_GetClassObject(JSContext *cx, JSObject *obj_, JSProtoKey key, JSObject **objp
     return result;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp_)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    RootedObject global(cx, cx->compartment->maybeGlobal());
+    if (!global)
+        return false;
+    RootedObject objp(cx);
+    bool result = js_GetClassPrototype(cx, global, key, &objp);
+    *objp_ = objp;
+    return result;
+}
+
+JS_PUBLIC_API(JSProtoKey)
+JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    JS_ASSERT(!IsCrossCompartmentWrapper(obj));
+    return js_IdentifyClassPrototype(obj);
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
 {
