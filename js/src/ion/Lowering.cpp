@@ -1046,8 +1046,12 @@ LIRGenerator::visitRegExp(MRegExp *ins)
 bool
 LIRGenerator::visitLambda(MLambda *ins)
 {
-    if (ins->fun()->hasSingletonType()) {
-        // This function is only executed once, so we don't bother inlining it.
+    if (ins->fun()->hasSingletonType() || types::UseNewTypeForClone(ins->fun())) {
+        // If the function has a singleton type, this instruction will only be
+        // executed once so we don't bother inlining it.
+        //
+        // If UseNewTypeForClone is true, we will assign a singleton type to
+        // the clone and we have to clone the script, we can't do that inline.
         LLambdaForSingleton *lir = new LLambdaForSingleton(useRegister(ins->scopeChain()));
         return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
     }
