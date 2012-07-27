@@ -2230,6 +2230,9 @@ class CGArgumentConverter(CGThing):
                  invalidEnumValueFatal=True):
         CGThing.__init__(self)
         self.argument = argument
+        if argument.variadic:
+            raise TypeError("We don't support variadic arguments yet " +
+                            str(argument.location))
         # XXXbz should optional jsval args get JSVAL_VOID? What about
         # others?
         replacer = {
@@ -3043,6 +3046,7 @@ class FakeArgument():
     def __init__(self, type):
         self.type = type
         self.optional = False
+        self.variadic = False
 
 class CGSetterCall(CGGetterSetterCall):
     """
