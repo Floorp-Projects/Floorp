@@ -3177,10 +3177,10 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * access to the AutoCompartment definition here.  We statically assert in
      * jsapi.cpp that we have the right size here.
      *
-     * In practice, 32-bit Windows and Android get 16-word |bytes|, while
-     * other platforms get 13-word |bytes|.
+     * In practice, 32-bit Windows and Android get 16-word |bytes|, while other
+     * platforms get 12-word |bytes|.
      */
-    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 13];
+    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 12];
 
   protected:
     js::AutoCompartment *getAutoCompartment() {
