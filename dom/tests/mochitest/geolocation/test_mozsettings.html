@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=478911
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=777594">Mozilla Bug 777594</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function toggleGeolocationSetting(value, callback) {
+  var mozSettings = window.navigator.mozSettings;
+  var lock = mozSettings.getLock();
+
+  var geoenabled = {"geolocation.enabled": value};
+
+  req = lock.set(geoenabled);
+  req.onsuccess = function () {
+    ok(true, "set done");
+    callback();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+resume_geolocationProvider();
+force_prompt(true);
+
+
+var comp = SpecialPowers.wrap(Components);
+SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
+SpecialPowers.addPermission("websettings-read", true, document);
+SpecialPowers.addPermission("websettings-readwrite", true, document);
+comp.utils.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+
+toggleGeolocationSetting(false, function() {
+    ok(true, "turned off geolocation via mozSettings");
+    setTimeout(function() {
+	navigator.geolocation.getCurrentPosition(successCallbackAfterMozsetting, failureCallbackAfterMozsetting);
+      }, 500); // need to wait a bit for all of these async callbacks to finish
+  });
+
+function successCallbackAfterMozsetting(position) {
+  ok(false, "Success callback should not have been called after setting geolocation.enabled to false.");
+
+  toggleGeolocationSetting(true, function() {
+      reset_prompt();
+      SimpleTest.finish();
+    });
+}
+
+function failureCallbackAfterMozsetting(error) {
+  ok(true, "Geolocation didn't work after setting geolocation.enabled to false.");
+
+  toggleGeolocationSetting(true, function() {
+      reset_prompt();
+      SimpleTest.finish();
+    });
+ }
+
+</script>
+</pre>
+</body>
+</html>
+
