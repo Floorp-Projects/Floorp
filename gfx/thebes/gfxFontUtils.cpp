@@ -1841,14 +1841,10 @@ gfxFontUtils::ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID,
         
         // -- decode if necessary and make nsString
         nsAutoString name;
-        nsresult rv;
         
-        rv = DecodeFontName(nameTable + nameStringsBase + nameoff, namelen, 
-                            platformID, PRUint32(nameRecord->encodingID),
-                            PRUint32(nameRecord->languageID), name);
-        
-        if (NS_FAILED(rv))
-            continue;
+        DecodeFontName(nameTable + nameStringsBase + nameoff, namelen,
+                       platformID, PRUint32(nameRecord->encodingID),
+                       PRUint32(nameRecord->languageID), name);
             
         PRUint32 k, numNames;
         bool foundName = false;
