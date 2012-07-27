@@ -1359,6 +1359,7 @@ protected:
     bool mContextLostErrorSet;
 
     int mAlreadyGeneratedWarnings;
+    bool mAlreadyWarnedAboutFakeVertexAttrib0;
 
     bool ShouldGenerateWarnings() const {
         return mAlreadyGeneratedWarnings < 32;
@@ -2120,6 +2121,7 @@ public:
         , mType(stype)
         , mNeedsTranslation(true)
         , mAttribMaxNameLength(0)
+        , mCompileStatus(false)
     {
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateShader(mType);
@@ -2157,6 +2159,14 @@ public:
     void SetNeedsTranslation() { mNeedsTranslation = true; }
     bool NeedsTranslation() const { return mNeedsTranslation; }
 
+    void SetCompileStatus (bool status) {
+        mCompileStatus = status;
+    }
+
+    bool CompileStatus() const {
+        return mCompileStatus;
+    }
+
     void SetTranslationSuccess() {
         mTranslationLog.SetIsVoid(true);
         mNeedsTranslation = false;
@@ -2182,6 +2192,7 @@ protected:
     nsTArray<WebGLMappedIdentifier> mUniforms;
     nsTArray<WebGLUniformInfo> mUniformInfos;
     int mAttribMaxNameLength;
+    bool mCompileStatus;
 };
 
 /** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]" in bracketPart
@@ -2301,6 +2312,15 @@ public:
         return
             HasAttachedShaderOfType(LOCAL_GL_VERTEX_SHADER) &&
             HasAttachedShaderOfType(LOCAL_GL_FRAGMENT_SHADER);
+    }
+
+    bool HasBadShaderAttached() {
+        for (uint32_t i = 0; i < mAttachedShaders.Length(); ++i) {
+            if (mAttachedShaders[i] && !mAttachedShaders[i]->CompileStatus()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool NextGeneration()

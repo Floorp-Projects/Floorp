@@ -261,6 +261,7 @@ _BROWSER_FILES = \
                  browser_social_mozSocial_API.js \
                  social_panel.html \
                  social_sidebar.html \
+                 social_window.html \
                  social_worker.js \
                  $(NULL)
 

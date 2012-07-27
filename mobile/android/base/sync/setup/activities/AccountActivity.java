@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.setup.activities;
 import java.util.Locale;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.setup.Constants;
@@ -264,8 +265,8 @@ public class AccountActivity extends AccountAuthenticatorActivity {
 
         Bundle resultBundle = new Bundle();
         resultBundle.putString(AccountManager.KEY_ACCOUNT_NAME, syncAccount.username);
-        resultBundle.putString(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNTTYPE_SYNC);
-        resultBundle.putString(AccountManager.KEY_AUTHTOKEN, Constants.ACCOUNTTYPE_SYNC);
+        resultBundle.putString(AccountManager.KEY_ACCOUNT_TYPE, GlobalConstants.ACCOUNTTYPE_SYNC);
+        resultBundle.putString(AccountManager.KEY_AUTHTOKEN, GlobalConstants.ACCOUNTTYPE_SYNC);
         setAccountAuthenticatorResult(resultBundle);
 
         setResult(RESULT_OK);

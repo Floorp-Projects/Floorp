@@ -5,6 +5,22 @@
 {
   'variables': {
     'component%': 'static_library',
+    'gcc_or_clang_warnings': [
+      '-Wall',
+      '-Wchar-subscripts',
+      '-Werror',
+      '-Wextra',
+      '-Wformat=2',
+      '-Winit-self',
+      '-Wno-sign-compare',
+      '-Wno-unused-function',
+      '-Wno-unused-parameter',
+      '-Wno-unknown-pragmas',
+      '-Wpacked',
+      '-Wpointer-arith',
+      '-Wundef',
+      '-Wwrite-strings',
+    ],
   },
   'target_defaults': {
     'default_configuration': 'Debug',

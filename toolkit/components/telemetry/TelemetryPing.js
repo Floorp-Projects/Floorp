@@ -133,6 +133,10 @@ function getSimpleMeasurements() {
            .getService(Ci.nsIJSEngineTelemetryStats)
            .telemetryValue;
 
+  let shutdownDuration = si.lastShutdownDuration;
+  if (shutdownDuration)
+    ret.shutdownDuration = shutdownDuration;
+
   return ret;
 }
 
@@ -458,7 +462,8 @@ TelemetryPing.prototype = {
         Telemetry.histogramFrom("STARTUP_" + name, name);
       }
     }
-    this._slowSQLStartup = Telemetry.slowSQL;
+    // Bug 777220: Temporarily turn off slowSQL reporting
+    this._slowSQLStartup = {mainThread:{}, otherThreads:{}};
   },
 
   getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
@@ -468,7 +473,8 @@ TelemetryPing.prototype = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: getSimpleMeasurements(),
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
-      slowSQL: Telemetry.slowSQL,
+      // Bug 777220: Temporarily turn off slowSQL reporting
+      slowSQL: {mainThread:{}, otherThreads:{}},
       chromeHangs: Telemetry.chromeHangs,
       addonHistograms: this.getAddonHistograms()
     };

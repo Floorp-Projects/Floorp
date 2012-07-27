@@ -23,9 +23,6 @@ class SyncPreference extends Preference {
 
     @Override
     protected void onClick() {
-        // Make sure we use the same account type as our bundled version of Sync!
-        final String accountType = org.mozilla.gecko.sync.setup.Constants.ACCOUNTTYPE_SYNC;
-
         // Show Sync setup if no accounts exist; otherwise, show account settings.
         if (SyncAccounts.syncAccountsExist(mContext)) {
             SyncAccounts.openSyncSettings(mContext);

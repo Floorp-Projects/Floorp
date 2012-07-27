@@ -436,7 +436,11 @@ public class GeckoInputConnection
     }
 
     private static InputMethodManager getInputMethodManager() {
-        Context context = getView().getContext();
+        View view = getView();
+        if (view == null) {
+            return null;
+        }
+        Context context = view.getContext();
         return InputMethods.getInputMethodManager(context);
     }
 

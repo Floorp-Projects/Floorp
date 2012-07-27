@@ -48,7 +48,7 @@ for (i = 0; i < passFiles.length; ++i) {
   is(xhr.status, passFiles[i][2], "wrong status");
   is(xhr.getResponseHeader("Content-Type"), passFiles[i][3], "wrong content type");
   var headers = xhr.getAllResponseHeaders();
-  ok(/(?:^|\n)Content-Type:\s*([^\n]*)\n/i.test(headers) &&
+  ok(/(?:^|\n)Content-Type:\s*([^\r\n]*)\r\n/i.test(headers) &&
      RegExp.$1 === passFiles[i][3], "wrong response headers");
   if (xhr.responseXML) {
     is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),

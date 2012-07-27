@@ -63,7 +63,6 @@ CPPSRCS		= \
 		nsDOMSettingsEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCompositionEvent.cpp \
-		nsDOMApplicationEvent.cpp \
 		$(NULL)
 
 ifdef MOZ_B2G_RIL

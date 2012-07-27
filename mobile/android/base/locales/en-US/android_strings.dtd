@@ -103,7 +103,7 @@ size. -->
 <!ENTITY pref_import_android "Import from Android">
 <!ENTITY pref_private_data_history "Browsing &amp; download history">
 <!ENTITY pref_private_data_formdata "Form &amp; search history">
-<!ENTITY pref_private_data_cookies "Cookies &amp; active logins">
+<!ENTITY pref_private_data_cookies2 "Cookies &amp; active logins">
 <!ENTITY pref_private_data_passwords "Saved passwords">
 <!ENTITY pref_private_data_cache "Cache">
 <!ENTITY pref_private_data_offlineApps "Offline website data">

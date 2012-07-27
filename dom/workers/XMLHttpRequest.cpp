@@ -1604,9 +1604,13 @@ XMLHttpRequest::DispatchPrematureAbortEvent(JSObject* aTarget,
                                             ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mProxy);
   MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aEventType <= STRING_COUNT);
+
+  if (!mProxy) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   JSContext* cx = GetJSContext();
 

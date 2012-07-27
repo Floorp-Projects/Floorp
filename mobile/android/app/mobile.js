@@ -685,3 +685,6 @@ pref("reader.margin_size", 5);
 
 // The default color scheme in reader (light, dark, sepia)
 pref("reader.color_scheme", "light");
+
+// Used to show a first-launch tip in reader
+pref("reader.has_used_toolbar", false);

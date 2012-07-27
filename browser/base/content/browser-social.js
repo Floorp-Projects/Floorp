@@ -43,6 +43,7 @@ let SocialUI = {
         break;
       case "social:profile-changed":
         SocialToolbar.updateProfile();
+        SocialShareButton.updateProfileInfo();
         break;
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
@@ -153,7 +154,10 @@ let SocialShareButton = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SSB_init() {
     this.updateButtonHiddenState();
+    this.updateProfileInfo();
+  },
 
+  updateProfileInfo: function SSB_updateProfileInfo() {
     let profileRow = document.getElementById("editSharePopupHeader");
     let profile = Social.provider.profile;
     if (profile && profile.portrait && profile.displayName) {
@@ -344,7 +348,7 @@ var SocialToolbar = {
       let doc = notifBrowser.contentDocument;
       // "notif" is an implementation detail that we should get rid of
       // eventually
-      let body = doc.getElementById("notif") || doc.body.firstChild;
+      let body = doc.getElementById("notif") || (doc.body && doc.body.firstChild);
       if (!body)
         return;
       let h = body.scrollHeight > 0 ? body.scrollHeight : 300;
@@ -374,6 +378,10 @@ var SocialToolbar = {
 var SocialSidebar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialSidebar_init() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    // setting isAppTab causes clicks on untargeted links to open new tabs
+    sbrowser.docShell.isAppTab = true;
+  
     this.updateSidebar();
   },
 

@@ -10,7 +10,7 @@ interface nsILoadGroup;
 interface nsIURI;
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(701093ac-5c7f-429c-99e3-423b041fccb4)]
+[scriptable, uuid(ea5f7698-c4e4-48fd-aa54-6fdcf1dc349b)]
 interface nsIHttpAuthenticableChannel : nsIProxiedChannel
 {
     /**
@@ -70,6 +70,11 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      * The WWW-Authenticate response header.
      */
     readonly attribute ACString WWWChallenges;
+
+    /**
+     * The host portion of the URI, possibly canonicalized
+     */
+    readonly attribute ACString asciiHostForAuth;
 
     /**
      * Sets the Proxy-Authorization request header. An empty string 

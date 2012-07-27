@@ -138,7 +138,7 @@ DiscardingEnabled()
 namespace mozilla {
 namespace image {
 
-/* static */ nsRefPtr<RasterImage::DecodeWorker> RasterImage::DecodeWorker::sSingleton;
+/* static */ StaticRefPtr<RasterImage::DecodeWorker> RasterImage::DecodeWorker::sSingleton;
 
 #ifndef DEBUG
 NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
@@ -1451,10 +1451,16 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
   // This call should come straight from necko - no reentrancy allowed
   NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
 
+  // Image is already decoded, we shouldn't be getting data, but it could
+  // be extra garbage data at the end of a file.
+  if (mDecoded) {
+    return NS_OK;
+  }
+
   // Starting a new part's frames, let's clean up before we add any
   // This needs to happen just before we start getting EnsureFrame() call(s),
   // so that there's no gap for anything to miss us.
-  if (mBytesDecoded == 0) {
+  if (mMultipart && mBytesDecoded == 0) {
     // Our previous state may have been animated, so let's clean up
     if (mAnimating) {
       StopAnimation();

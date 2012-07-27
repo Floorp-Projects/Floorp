@@ -5,6 +5,7 @@
 #
 # Unit tests for xpidl.py
 
+import mozunit
 import unittest
 import xpidl
 
@@ -94,4 +95,4 @@ attribute long bar;
         self.assertEqual("long", a.type)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

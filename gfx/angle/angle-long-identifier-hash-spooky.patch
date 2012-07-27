@@ -1,30 +1,10 @@
 # HG changeset patch
-# Parent 268bda9ac676b6f4cca5aa044d0dcefff2008535
-diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
---- a/gfx/angle/Makefile.in
-+++ b/gfx/angle/Makefile.in
-@@ -79,16 +79,17 @@ CPPSRCS = \
-         SymbolTable.cpp \
-         VariableInfo.cpp \
-         compilerdebug.cpp \
-         ossource_nspr.cpp \
-         util.cpp \
-         ValidateLimitations.cpp \
-         ForLoopUnroll.cpp \
-         MapLongVariableNames.cpp \
-+        spooky.cpp \
-         BuiltInFunctionEmulator.cpp \
-         $(NULL)
- 
- # flex/yacc generated files
- CPPSRCS += \
-         glslang_lex.cpp \
-         glslang_tab.cpp \
-         $(NULL)
+# Parent c5e7517cbb1c38ce9821ba3deca88768b4dff066
+
 diff --git a/gfx/angle/src/compiler/MapLongVariableNames.cpp b/gfx/angle/src/compiler/MapLongVariableNames.cpp
 --- a/gfx/angle/src/compiler/MapLongVariableNames.cpp
 +++ b/gfx/angle/src/compiler/MapLongVariableNames.cpp
-@@ -1,27 +1,30 @@
+@@ -1,29 +1,36 @@
  //
  // Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
@@ -43,15 +23,23 @@ diff --git a/gfx/angle/src/compiler/MapLongVariableNames.cpp b/gfx/angle/src/com
 -    stream << "webgl_";
 -    if (isGlobal)
 -        stream << "g";
--    stream << id << "_";
+-    stream << id;
+-    if (name[0] != '_')
+-        stream << "_";
 -    stream << name.substr(0, MAX_SHORTENED_IDENTIFIER_SIZE - stream.str().size());
 +    uint64 hash = SpookyHash::Hash64(name.data(), name.length(), 0);
-+    stream << "webgl_"
++
++    // We want to avoid producing a string with a double underscore,
++    // which would be an illegal GLSL identifier. We can assume that the
++    // original identifier doesn't have a double underscore, otherwise
++    // it's illegal anyway.
++    stream << (name[0] == '_' ? "webgl" : "webgl_")
 +           << name.substr(0, 9)
-+           << "_"
++           << (name[8] == '_' ? "" : "_")
 +           << std::hex
 +           << hash;
-+    ASSERT(stream.str().length() == MAX_SHORTENED_IDENTIFIER_SIZE);
++    ASSERT(stream.str().length() <= MAX_SHORTENED_IDENTIFIER_SIZE);
++    ASSERT(stream.str().length() >= MAX_SHORTENED_IDENTIFIER_SIZE - 2);
      return stream.str();
  }
  
@@ -711,45 +699,3 @@ new file mode 100644
 +
 +
 +
-diff --git a/gfx/angle/src/libEGL/Makefile.in b/gfx/angle/src/libEGL/Makefile.in
---- a/gfx/angle/src/libEGL/Makefile.in
-+++ b/gfx/angle/src/libEGL/Makefile.in
-@@ -91,16 +91,17 @@ CPPSRCS = \
-   SymbolTable.cpp \
-   VariableInfo.cpp \
-   compilerdebug.cpp \
-   ossource_win.cpp \
-   util.cpp \
-   ValidateLimitations.cpp \
-   ForLoopUnroll.cpp \
-   MapLongVariableNames.cpp \
-+  spooky.cpp \
-   BuiltInFunctionEmulator.cpp \
-   $(NULL)
- 
- # flex/yacc generated files
- CPPSRCS += \
-   glslang_lex.cpp \
-   glslang_tab.cpp \
-   $(NULL)
-diff --git a/gfx/angle/src/libGLESv2/Makefile.in b/gfx/angle/src/libGLESv2/Makefile.in
---- a/gfx/angle/src/libGLESv2/Makefile.in
-+++ b/gfx/angle/src/libGLESv2/Makefile.in
-@@ -91,16 +91,17 @@ CPPSRCS = \
-         SymbolTable.cpp \
-         VariableInfo.cpp \
-         compilerdebug.cpp \
-         ossource_win.cpp \
-         util.cpp \
-         ValidateLimitations.cpp \
- 	ForLoopUnroll.cpp \
- 	MapLongVariableNames.cpp \
-+	spooky.cpp \
-         BuiltInFunctionEmulator.cpp \
- 	$(NULL)
- 
- # flex/yacc generated files
- CPPSRCS += \
- 	glslang_lex.cpp \
- 	glslang_tab.cpp \
- 	$(NULL)

@@ -548,12 +548,12 @@ BluetoothDBusService::SendDiscoveryMessage(const nsAString& aAdapterPath,
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
-  const char* s = NS_ConvertUTF16toUTF8(aAdapterPath).get();
+  NS_ConvertUTF16toUTF8 s(aAdapterPath);
   if (!dbus_func_args_async(mConnection,
                             1000,
                             GetVoidCallback,
                             (void*)aRunnable,
-                            s,
+                            s.get(),
                             DBUS_ADAPTER_IFACE,
                             aMessageName,
                             DBUS_TYPE_INVALID)) {
