@@ -5,7 +5,7 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
-[scriptable, uuid(9814fdf0-5ac3-11e0-80e3-0800200c9a66)]
+[scriptable, uuid(c48126d9-2ddd-485b-a51a-378e917e75f8)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
     /**
@@ -26,16 +26,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * @return The complete version (major and minor) string. (eg. "5.0")
      */
     readonly attribute ACString appVersion;
-
-    /**
-     * @return The product name.
-     */
-    readonly attribute ACString product;
-
-    /**
-     * @return A product sub string.
-     */
-    readonly attribute ACString productSub;
 
     /**
      * Get the current platform.
