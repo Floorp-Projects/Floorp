@@ -1021,7 +1021,10 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
                                                                             \
   nsCOMPtr<nsINode> kungFuDeathGrip = it;                                   \
   nsresult rv = it->Init();                                                 \
-  rv |= const_cast<_elementName*>(this)->CopyInnerTo(it);                   \
+  nsresult rv2 = const_cast<_elementName*>(this)->CopyInnerTo(it);          \
+  if (NS_FAILED(rv2)) {                                                     \
+    rv = rv2;                                                               \
+  }                                                                         \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \

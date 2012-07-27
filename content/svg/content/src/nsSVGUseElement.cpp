@@ -107,17 +107,17 @@ nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   }
 
   nsCOMPtr<nsINode> kungFuDeathGrip(it);
-  nsresult rv = it->Init();
-  rv |= const_cast<nsSVGUseElement*>(this)->CopyInnerTo(it);
+  nsresult rv1 = it->Init();
+  nsresult rv2 = const_cast<nsSVGUseElement*>(this)->CopyInnerTo(it);
 
   // nsSVGUseElement specific portion - record who we cloned from
   it->mOriginal = const_cast<nsSVGUseElement*>(this);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
     kungFuDeathGrip.swap(*aResult);
   }
 
-  return rv;
+  return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
 //----------------------------------------------------------------------
