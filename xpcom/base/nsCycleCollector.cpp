@@ -1949,19 +1949,19 @@ public:
 
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
                                              size_t objsz,
-                                             const char *objname) {};
+                                             const char *objname) {}
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
                                        size_t objsz,
-                                       const char *objname) {};
-    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {};
-    NS_IMETHOD_(void) NoteJSRoot(void *root) {};
+                                       const char *objname) {}
+    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) {}
+    NS_IMETHOD_(void) NoteJSRoot(void *root) {}
     NS_IMETHOD_(void) NoteNativeRoot(void *root,
-                                     nsCycleCollectionParticipant *helper) {};
-    NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {};
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {};
+                                     nsCycleCollectionParticipant *helper) {}
+    NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {}
     bool MayHaveChild() {
         return mMayHaveChild;
-    };
+    }
 private:
     bool mMayHaveChild;
 };
@@ -1975,7 +1975,7 @@ ChildFinder::NoteXPCOMChild(nsISupports *child)
     ToParticipant(child, &cp);
     if (cp && !cp->CanSkip(child, true))
         mMayHaveChild = true;
-};
+}
 
 NS_IMETHODIMP_(void)
 ChildFinder::NoteNativeChild(void *child,
@@ -1983,7 +1983,7 @@ ChildFinder::NoteNativeChild(void *child,
 {
     if (child)
         mMayHaveChild = true;
-};
+}
 
 NS_IMETHODIMP_(void)
 ChildFinder::NoteJSChild(void *child)
@@ -1991,7 +1991,7 @@ ChildFinder::NoteJSChild(void *child)
     if (child && xpc_GCThingIsGrayCCThing(child)) {
         mMayHaveChild = true;
     }
-};
+}
 
 static bool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)

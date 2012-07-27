@@ -121,14 +121,13 @@ frontend::IsIdentifier(JSLinearString *str)
 #endif
 
 /* Initialize members that aren't initialized in |init|. */
-TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
-                         const jschar *base, size_t length, const char *fn, unsigned ln,
-                         JSVersion v, StrictModeGetter *smg)
+TokenStream::TokenStream(JSContext *cx, const CompileOptions &options,
+                         const jschar *base, size_t length, StrictModeGetter *smg)
   : tokens(),
     tokensRoot(cx, &tokens),
     cursor(),
     lookahead(),
-    lineno(ln),
+    lineno(options.lineno),
     flags(),
     linebase(base),
     prevLinebase(NULL),
@@ -136,15 +135,16 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
     prevLinebaseRoot(cx, &prevLinebase),
     userbuf(base, length),
     userbufRoot(cx, &userbuf),
-    filename(fn),
+    filename(options.filename),
     sourceMap(NULL),
     listenerTSData(),
     tokenbuf(cx),
-    version(v),
-    allowXML(VersionHasAllowXML(v)),
-    moarXML(VersionHasMoarXML(v)),
+    version(options.version),
+    allowXML(VersionHasAllowXML(options.version)),
+    moarXML(VersionHasMoarXML(options.version)),
     cx(cx),
-    originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin)),
+    originPrincipals(JSScript::normalizeOriginPrincipals(options.principals,
+                                                         options.originPrincipals)),
     strictModeGetter(smg)
 {
     if (originPrincipals)
@@ -154,7 +154,7 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
     void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
 
     if (listener)
-        listener(fn, ln, base, length, &listenerTSData, listenerData);
+        listener(options.filename, options.lineno, base, length, &listenerTSData, listenerData);
 
     /*
      * This table holds all the token kinds that satisfy these properties:
@@ -209,7 +209,7 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
      * parser needing it (the so-called "pump-priming" model) might be a better
      * way to address the dependency from statements on the current token.
      */
-    tokens[0].pos.begin.lineno = tokens[0].pos.end.lineno = ln;
+    tokens[0].pos.begin.lineno = tokens[0].pos.end.lineno = options.lineno;
 }
 
 #ifdef _MSC_VER

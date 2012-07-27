@@ -35,15 +35,9 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
     worker.postMessage("start");
   }
 
-  SimpleTest.waitForExplicitFinish();
+  runTest();
 
-  const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
-  if (isWinXP){
-    todo(false, "Test disabled on WinXP due to bug 718260 crashes");
-    SimpleTest.finish();
-  } else {
-    runTest();
-  }
+  SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

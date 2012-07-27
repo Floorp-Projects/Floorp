@@ -1,27 +1,50 @@
 # HG changeset patch
-# Parent f22671e05062a082c7b22192868b804fbf42653b
-diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
---- a/gfx/angle/Makefile.in
-+++ b/gfx/angle/Makefile.in
-@@ -73,17 +73,17 @@ CPPSRCS = \
-         parseConst.cpp \
-         ParseHelper.cpp \
-         PoolAlloc.cpp \
-         QualifierAlive.cpp \
-         RemoveTree.cpp \
-         ShaderLang.cpp \
-         SymbolTable.cpp \
-         VariableInfo.cpp \
--        debug.cpp \
-+        compilerdebug.cpp \
-         ossource_nspr.cpp \
-         util.cpp \
-         ValidateLimitations.cpp \
-         ForLoopUnroll.cpp \
-         MapLongVariableNames.cpp \
-         BuiltInFunctionEmulator.cpp \
-         $(NULL)
+# Parent 8e2ee5b1a34208fd10f501fdee330878e20df599
+
+diff --git a/gfx/angle/src/compiler/Diagnostics.cpp b/gfx/angle/src/compiler/Diagnostics.cpp
+--- a/gfx/angle/src/compiler/Diagnostics.cpp
++++ b/gfx/angle/src/compiler/Diagnostics.cpp
+@@ -1,17 +1,17 @@
+ //
+ // Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
  
+ #include "compiler/Diagnostics.h"
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ #include "compiler/InfoSink.h"
+ #include "compiler/preprocessor/new/SourceLocation.h"
+ 
+ TDiagnostics::TDiagnostics(TInfoSink& infoSink) :
+     mInfoSink(infoSink),
+     mNumErrors(0),
+     mNumWarnings(0)
+ {
+diff --git a/gfx/angle/src/compiler/DirectiveHandler.cpp b/gfx/angle/src/compiler/DirectiveHandler.cpp
+--- a/gfx/angle/src/compiler/DirectiveHandler.cpp
++++ b/gfx/angle/src/compiler/DirectiveHandler.cpp
+@@ -3,17 +3,17 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ #include "compiler/DirectiveHandler.h"
+ 
+ #include <sstream>
+ 
+-#include "compiler/debug.h"
++#include "compiler/compilerdebug.h"
+ #include "compiler/Diagnostics.h"
+ 
+ static TBehavior getBehavior(const std::string& str)
+ {
+     static const std::string kRequire("require");
+     static const std::string kEnable("enable");
+     static const std::string kDisable("disable");
+     static const std::string kWarn("warn");
 diff --git a/gfx/angle/src/compiler/OutputGLSLBase.cpp b/gfx/angle/src/compiler/OutputGLSLBase.cpp
 --- a/gfx/angle/src/compiler/OutputGLSLBase.cpp
 +++ b/gfx/angle/src/compiler/OutputGLSLBase.cpp
@@ -46,8 +69,7 @@ diff --git a/gfx/angle/src/compiler/OutputGLSLBase.cpp b/gfx/angle/src/compiler/
 diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/OutputHLSL.cpp
 --- a/gfx/angle/src/compiler/OutputHLSL.cpp
 +++ b/gfx/angle/src/compiler/OutputHLSL.cpp
-@@ -1,17 +1,17 @@
- //
+@@ -2,17 +2,17 @@
  // Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
@@ -55,16 +77,17 @@ diff --git a/gfx/angle/src/compiler/OutputHLSL.cpp b/gfx/angle/src/compiler/Outp
  
  #include "compiler/OutputHLSL.h"
  
+ #include "common/angleutils.h"
 -#include "compiler/debug.h"
 +#include "compiler/compilerdebug.h"
  #include "compiler/InfoSink.h"
- #include "compiler/UnfoldSelect.h"
+ #include "compiler/UnfoldShortCircuit.h"
  #include "compiler/SearchSymbol.h"
+ #include "compiler/DetectDiscontinuity.h"
  
  #include <stdio.h>
  #include <algorithm>
  
- namespace sh
 diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
 --- a/gfx/angle/src/compiler/Types.h
 +++ b/gfx/angle/src/compiler/Types.h
@@ -87,8 +110,10 @@ diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
  struct TTypeLine {
      TType* type;
      int line;
-diff --git a/gfx/angle/src/compiler/compilerdebug.cpp b/gfx/angle/src/compiler/compilerdebug.cpp
---- a/gfx/angle/src/compiler/compilerdebug.cpp
+diff --git a/gfx/angle/src/compiler/debug.cpp b/gfx/angle/src/compiler/compilerdebug.cpp
+rename from gfx/angle/src/compiler/debug.cpp
+rename to gfx/angle/src/compiler/compilerdebug.cpp
+--- a/gfx/angle/src/compiler/debug.cpp
 +++ b/gfx/angle/src/compiler/compilerdebug.cpp
 @@ -1,17 +1,17 @@
  //
@@ -97,8 +122,7 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.cpp b/gfx/angle/src/compiler/c
  // found in the LICENSE file.
  //
  
--// debug.cpp: Debugging utilities.
-+// compilerdebug.cpp: Debugging utilities.
+ // debug.cpp: Debugging utilities.
  
 -#include "compiler/debug.h"
 +#include "compiler/compilerdebug.h"
@@ -106,12 +130,14 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.cpp b/gfx/angle/src/compiler/c
  #include <stdarg.h>
  #include <stdio.h>
  
+ #include "compiler/InitializeParseContext.h"
  #include "compiler/ParseHelper.h"
  
  static const int kTraceBufferLen = 1024;
- 
-diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/compilerdebug.h
---- a/gfx/angle/src/compiler/compilerdebug.h
+diff --git a/gfx/angle/src/compiler/debug.h b/gfx/angle/src/compiler/compilerdebug.h
+rename from gfx/angle/src/compiler/debug.h
+rename to gfx/angle/src/compiler/compilerdebug.h
+--- a/gfx/angle/src/compiler/debug.h
 +++ b/gfx/angle/src/compiler/compilerdebug.h
 @@ -1,15 +1,15 @@
  //
@@ -133,7 +159,7 @@ diff --git a/gfx/angle/src/compiler/compilerdebug.h b/gfx/angle/src/compiler/com
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h
-@@ -31,17 +31,17 @@
+@@ -32,17 +32,17 @@
  #include <windows.h>
  #elif defined(ANGLE_OS_POSIX)
  #include <pthread.h>
@@ -155,8 +181,7 @@ diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclu
 diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
 --- a/gfx/angle/src/compiler/preprocessor/atom.c
 +++ b/gfx/angle/src/compiler/preprocessor/atom.c
-@@ -45,17 +45,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
- //
+@@ -46,17 +46,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
  // atom.c
  //
  
@@ -164,6 +189,7 @@ diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler
  #include <stdio.h>
  #include <string.h>
  
+ #include "common/angleutils.h"
 -#include "compiler/debug.h"
 +#include "compiler/compilerdebug.h"
  #include "compiler/preprocessor/slglobals.h"
@@ -177,8 +203,7 @@ diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler
 diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compiler/preprocessor/tokens.c
 --- a/gfx/angle/src/compiler/preprocessor/tokens.c
 +++ b/gfx/angle/src/compiler/preprocessor/tokens.c
-@@ -45,17 +45,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
- // tokens.c
+@@ -46,17 +46,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
  //
  
  #include <stdlib.h>
@@ -186,6 +211,7 @@ diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compil
  #include <string.h>
  #include <ctype.h>
  
+ #include "common/angleutils.h"
 -#include "compiler/debug.h"
 +#include "compiler/compilerdebug.h"
  #include "compiler/preprocessor/slglobals.h"
@@ -196,3 +222,25 @@ diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compil
  #pragma warning(disable: 4152)
  #endif
  
+diff --git a/gfx/angle/src/compiler/translator_common.vcproj b/gfx/angle/src/compiler/translator_common.vcproj
+--- a/gfx/angle/src/compiler/translator_common.vcproj
++++ b/gfx/angle/src/compiler/translator_common.vcproj
+@@ -580,17 +580,17 @@
+ 				RelativePath=".\Common.h"
+ 				>
+ 			</File>
+ 			<File
+ 				RelativePath=".\ConstantUnion.h"
+ 				>
+ 			</File>
+ 			<File
+-				RelativePath=".\debug.h"
++				RelativePath=".\compilerdebug.h"
+ 				>
+ 			</File>
+ 			<File
+ 				RelativePath=".\DetectRecursion.h"
+ 				>
+ 			</File>
+ 			<File
+ 				RelativePath=".\Diagnostics.h"

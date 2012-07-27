@@ -91,50 +91,6 @@ InitSSPI()
 
 //-----------------------------------------------------------------------------
 
-static nsresult
-MakeSN(const char *principal, nsCString &result)
-{
-    nsresult rv;
-
-    nsCAutoString buf(principal);
-
-    // The service name looks like "protocol@hostname", we need to map
-    // this to a value that SSPI expects.  To be consistent with IE, we
-    // need to map '@' to '/' and canonicalize the hostname.
-    PRInt32 index = buf.FindChar('@');
-    if (index == kNotFound)
-        return NS_ERROR_UNEXPECTED;
-    
-    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // This could be expensive if our DNS cache cannot satisfy the request.
-    // However, we should have at least hit the OS resolver once prior to
-    // reaching this code, so provided the OS resolver has this information
-    // cached, we should not have to worry about blocking on this function call
-    // for very long.  NOTE: because we ask for the canonical hostname, we
-    // might end up requiring extra network activity in cases where the OS
-    // resolver might not have enough information to satisfy the request from
-    // its cache.  This is not an issue in versions of Windows up to WinXP.
-    nsCOMPtr<nsIDNSRecord> record;
-    rv = dns->Resolve(Substring(buf, index + 1),
-                      nsIDNSService::RESOLVE_CANONICAL_NAME,
-                      getter_AddRefs(record));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCAutoString cname;
-    rv = record->GetCanonicalName(cname);
-    if (NS_SUCCEEDED(rv)) {
-        result = StringHead(buf, index) + NS_LITERAL_CSTRING("/") + cname;
-        LOG(("Using SPN of [%s]\n", result.get()));
-    }
-    return rv;
-}
-
-//-----------------------------------------------------------------------------
-
 nsAuthSSPI::nsAuthSSPI(pType package)
     : mServiceFlags(REQ_DEFAULT)
     , mMaxTokenLen(0)
@@ -208,23 +164,13 @@ nsAuthSSPI::Init(const char *serviceName,
 
     package = (SEC_WCHAR *) pTypeName[(int)mPackage];
 
-    if (mPackage == PACKAGE_TYPE_NTLM) {
-        // (bug 535193) For NTLM, just use the uri host, do not do canonical host lookups.
-        // The incoming serviceName is in the format: "protocol@hostname", SSPI expects
-        // "<service class>/<hostname>", so swap the '@' for a '/'.
-        mServiceName.Assign(serviceName);
-        PRInt32 index = mServiceName.FindChar('@');
-        if (index == kNotFound)
-            return NS_ERROR_UNEXPECTED;
-        mServiceName.Replace(index, 1, '/');
-    }
-    else {
-        // Kerberos requires the canonical host, MakeSN takes care of this through a
-        // DNS lookup.
-        rv = MakeSN(serviceName, mServiceName);
-        if (NS_FAILED(rv))
-            return rv;
-    }
+    // The incoming serviceName is in the format: "protocol@hostname", SSPI expects
+    // "<service class>/<hostname>", so swap the '@' for a '/'.
+    mServiceName.Assign(serviceName);
+    PRInt32 index = mServiceName.FindChar('@');
+    if (index == kNotFound)
+        return NS_ERROR_UNEXPECTED;
+    mServiceName.Replace(index, 1, '/');
 
     mServiceFlags = serviceFlags;
 
@@ -652,4 +598,17 @@ nsAuthSSPI::Wrap(const void *inToken,
     }
 
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAuthSSPI::GetModuleProperties(PRUint32 *flags)
+{
+    *flags = 0;
+
+    // (bug 535193) For NTLM, just use the uri host, do not do canonical host
+    // lookups. But Kerberos requires the canonical host.
+    if (mPackage != PACKAGE_TYPE_NTLM)
+        *flags |= CANONICAL_NAME_REQUIRED;
+
+    return NS_OK;
 }
