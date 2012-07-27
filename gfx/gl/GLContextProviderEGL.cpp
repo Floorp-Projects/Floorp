@@ -2619,42 +2619,6 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
 #endif
 }
 
-already_AddRefed<GLContext>
-GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
-{
-    if (!sEGLLibrary.EnsureInitialized())
-        return nsnull;
-
-#ifdef MOZ_X11
-    EGLSurface surface = nsnull;
-    EGLConfig config = nsnull;
-
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
-        // Not implemented
-        return nsnull;
-    }
-
-    surface = CreateEGLSurfaceForXSurface(aSurface, &config);
-    if (!config) {
-        return nsnull;
-    }
-
-    GLContextEGL *shareContext = GetGlobalContextEGL();
-    gfxXlibSurface* xsurface = static_cast<gfxXlibSurface*>(aSurface);
-
-    nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateGLContext(DepthToGLFormat(xsurface->XRenderFormat()->depth),
-                                      surface, config, shareContext, false);
-
-    glContext->HoldSurface(aSurface);
-
-    return glContext.forget().get();
-#else
-    // Not implemented
-    return nsnull;
-#endif
-}
-
 GLContext *
 GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
