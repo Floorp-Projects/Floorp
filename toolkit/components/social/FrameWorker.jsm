@@ -253,6 +253,10 @@ function WorkerHandle(port, worker) {
   this._worker = worker;
 }
 WorkerHandle.prototype = {
+  get document() {
+    return this._worker.frame.contentDocument;
+  },
+
   // XXX - workers have no .close() method, but *do* have a .terminate()
   // method which we should implement. However, the worker spec doesn't define
   // a callback to be made in the worker when this happens - it all just dies.
