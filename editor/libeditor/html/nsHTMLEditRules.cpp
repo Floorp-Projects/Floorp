@@ -2169,8 +2169,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         return NS_OK;
       }
 
-      // don't cross table boundaries
+      // don't cross table boundaries -- cancel it
       if (InDifferentTableElements(leftNode, rightNode)) {
+        *aCancel = true;
         return NS_OK;
       }
 
