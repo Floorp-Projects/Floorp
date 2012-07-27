@@ -35,6 +35,7 @@
 #include "mozilla/Hal.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 #include "Connection.h"
 #include "MobileConnection.h"
 #include "nsIIdleObserver.h"
@@ -608,7 +609,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(VibrateWindowListener, nsIDOMEventListener)
 
-nsRefPtr<VibrateWindowListener> gVibrateWindowListener;
+StaticRefPtr<VibrateWindowListener> gVibrateWindowListener;
 
 NS_IMETHODIMP
 VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)

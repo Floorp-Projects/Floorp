@@ -414,7 +414,6 @@ public class BookmarksTab extends AwesomeBarTab {
             if (keywordCol != -1)
                 keyword = cursor.getString(keywordCol);
 
-            // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
             int id = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
 
             subject = new ContextMenuSubject(id,

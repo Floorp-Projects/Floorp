@@ -90,10 +90,10 @@ class ResultsSink:
             self.pb = NullProgressBar()
         else:
             fmt = [
-                {'value': 'PASS',    'color': ProgressBar.GREEN},
-                {'value': 'FAIL',    'color': ProgressBar.RED},
-                {'value': 'TIMEOUT', 'color': ProgressBar.BLUE},
-                {'value': 'SKIP',    'color': ProgressBar.GRAY},
+                {'value': 'PASS',    'color': 'green'},
+                {'value': 'FAIL',    'color': 'red'},
+                {'value': 'TIMEOUT', 'color': 'blue'},
+                {'value': 'SKIP',    'color': 'brightgray'},
             ]
             self.pb = ProgressBar(testcount, fmt)
 

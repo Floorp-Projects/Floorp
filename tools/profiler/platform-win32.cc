@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <windows.h>
+#include <mmsystem.h>
 #include "platform.h"
 #include <process.h>
 
@@ -63,11 +64,22 @@ class SamplerThread : public Thread {
 
   // Implement Thread::Run().
   virtual void Run() {
+
+    // By default we'll not adjust the timer resolution which tends to be around
+    // 16ms. However, if the requested interval is sufficiently low we'll try to
+    // adjust the resolution to match.
+    if (interval_ < 10)
+        ::timeBeginPeriod(interval_);
+
     while (sampler_->IsActive()) {
       if (!sampler_->IsPaused())
         SampleContext(sampler_);
       OS::Sleep(interval_);
     }
+
+    // disable any timer resolution changes we've made
+    if (interval_ < 10)
+        ::timeEndPeriod(interval_);
   }
 
   void SampleContext(Sampler* sampler) {

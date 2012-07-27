@@ -387,8 +387,14 @@ struct JSRuntime : js::RuntimeFriendFields
     js::StackSpace stackSpace;
 
     /* Temporary arena pool used while compiling and decompiling. */
-    static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
+    static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
     js::LifoAlloc tempLifoAlloc;
+
+    /*
+     * Free LIFO blocks are transferred to this allocator before being freed on
+     * the background GC thread.
+     */
+    js::LifoAlloc freeLifoAlloc;
 
   private:
     /*

@@ -1942,6 +1942,12 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 
 protected:
@@ -2162,6 +2168,12 @@ public:
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerParameters& aParameters)
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
   NS_DISPLAY_DECL_NAME("Zoom", TYPE_ZOOM)
 
   // Get the app units per dev pixel ratio of the child document.

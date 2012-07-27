@@ -133,6 +133,10 @@ function getSimpleMeasurements() {
            .getService(Ci.nsIJSEngineTelemetryStats)
            .telemetryValue;
 
+  let shutdownDuration = si.lastShutdownDuration;
+  if (shutdownDuration)
+    ret.shutdownDuration = shutdownDuration;
+
   return ret;
 }
 

@@ -2,23 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * This file can be used in the following contexts:
- *
- *  1. included from a non-osfile worker thread using importScript
- *   (it serves to define a synchronous API for that worker thread)
- *   (bug 707679)
- *
- *  2. included from the main thread using Components.utils.import
- *   (it serves to define the asynchronous API, whose implementation
- *    resides in the worker thread)
- *   (bug 729057)
- *
- * 3. included from the osfile worker thread using importScript
- *   (it serves to define the implementation of the asynchronous API)
- *   (bug 729057)
- */
-
 {
   if (typeof Components != "undefined") {
     // We do not wish osfile_unix_back.jsm to be used directly as a main thread
@@ -28,7 +11,8 @@
 
     throw new Error("osfile_unix_back.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_shared.jsm");
+  importScripts("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  importScripts("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
   (function(exports) {
      "use strict";
      if (!exports.OS) {
@@ -42,36 +26,21 @@
      }
      exports.OS.Unix.File = {};
 
-     let LOG = OS.Shared.LOG.bind(OS.Shared, "Unix");
-
-     // Open libc
-     let libc;
-     let libc_candidates =  [ "libsystem.B.dylib",
-                              "libc.so.6",
-                              "libc.so" ];
-     for (let i = 0; i < libc_candidates.length; ++i) {
-       try {
-         libc = ctypes.open(libc_candidates[i]);
-         break;
-       } catch (x) {
-         LOG("Could not open libc "+libc_candidates[i]);
-       }
-     }
-     if (!libc) {
-       throw new Error("Could not open any libc.");
-     }
+     let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Unix", "back");
+     let libc = exports.OS.Shared.Unix.libc;
 
      /**
       * Initialize the Unix module.
       *
       * @param {function=} declareFFI
       */
+     // FIXME: Both |init| and |aDeclareFFI| are deprecated, we should remove them
      let init = function init(aDeclareFFI) {
        let declareFFI;
        if (aDeclareFFI) {
          declareFFI = aDeclareFFI.bind(null, libc);
        } else {
-         declareFFI = OS.Shared.declareFFI.bind(null, libc);
+         declareFFI = exports.OS.Shared.Unix.declareFFI;
        }
 
        // Shorthands
@@ -468,11 +437,6 @@
                     /*len*/    Types.size_t,
                     /*flags*/  Types.unsigned_int); // Linux/Android-specific
 
-       UnixFile.strerror =
-         declareFFI("strerror", ctypes.default_abi,
-                    /*return*/ Types.null_or_string,
-                    /*errnum*/ Types.int);
-
        UnixFile.symlink =
          declareFFI("symlink", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
@@ -594,12 +558,6 @@
          array[1] = ctypes.CDataFinalizer(_pipebuf[1], _close);
          return result;
        };
-
-       // Export useful stuff for extensibility
-
-       exports.OS.Unix.libc = libc;
-       exports.OS.Unix.declareFFI = declareFFI;
-
      };
      exports.OS.Unix.File._init = init;
    })(this);
