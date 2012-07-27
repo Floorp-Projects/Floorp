@@ -4147,6 +4147,10 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 {
     JS_AbortIfWrongThread(rt);
 
+    ContextIter cx(rt);
+    if (!cx.done())
+        MaybeCheckStackRoots(cx);
+
 #ifdef JS_GC_ZEAL
     if (rt->gcDeterministicOnly && !IsDeterministicGCReason(reason))
         return;

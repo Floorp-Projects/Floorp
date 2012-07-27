@@ -20,9 +20,6 @@
 
 namespace js {
 
-/* Defined in jsapi.cpp */
-extern Class dummy_class;
-
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
  * helps date-format-xparb.js.  It also avoids skewing the results for
@@ -530,7 +527,6 @@ class AutoCompartment
   public:
     JSContext * const context;
     JSCompartment * const origin;
-    JSObject * const target;
     JSCompartment * const destination;
   private:
     Maybe<DummyFrameGuard> frame;
