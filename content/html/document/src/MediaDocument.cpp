@@ -194,6 +194,26 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   return NS_OK;
 }
 
+void
+MediaDocument::BecomeInteractive()
+{
+  // In principle, if we knew the readyState code to work, we could infer
+  // restoration from GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE.
+  bool restoring = false;
+  nsPIDOMWindow* window = GetWindow();
+  if (window) {
+    nsIDocShell* docShell = window->GetDocShell();
+    if (docShell) {
+      docShell->GetRestoringDocument(&restoring);
+    }
+  }
+  if (!restoring) {
+    MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING,
+               "Bad readyState");
+    SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+  }
+}
+
 nsresult
 MediaDocument::CreateSyntheticDocument()
 {
