@@ -3327,7 +3327,10 @@ nsHTMLInputElement::SaveState()
   }
 
   if (mDisabledChanged) {
-    rv |= GetPrimaryPresState(this, &state);
+    nsresult tmp = GetPrimaryPresState(this, &state);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
     if (state) {
       // We do not want to save the real disabled state but the disabled
       // attribute.

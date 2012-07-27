@@ -8796,13 +8796,16 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
     nsRefPtr<nsContentList> list =
       domdoc->GetElementsByTagName(NS_LITERAL_STRING("*"));
     if (!list) {
-      rv |= NS_ERROR_OUT_OF_MEMORY;
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv |= WrapNative(cx, JS_GetGlobalForScopeChain(cx),
-                     static_cast<nsINodeList*>(list), list, false,
-                     &collection, getter_AddRefs(holder));
+    nsresult tmp = WrapNative(cx, JS_GetGlobalForScopeChain(cx),
+                              static_cast<nsINodeList*>(list), list, false,
+                              &collection, getter_AddRefs(holder));
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
 
     list.forget(nodeList);
 
