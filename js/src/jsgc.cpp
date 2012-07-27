@@ -3179,7 +3179,7 @@ ShouldPreserveJITCode(JSCompartment *c, int64_t currentTime)
 }
 
 static void
-BeginMarkPhase(JSRuntime *rt, bool isIncremental)
+BeginMarkPhase(JSRuntime *rt)
 {
     int64_t currentTime = PRMJ_Now();
 
@@ -3190,7 +3190,7 @@ BeginMarkPhase(JSRuntime *rt, bool isIncremental)
      * arenas. This purge call ensures that we only mark arenas that have had
      * allocations after the incremental GC started.
      */
-    if (isIncremental) {
+    if (rt->gcIsIncremental) {
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
             c->arenas.purge();
     }
@@ -3214,7 +3214,7 @@ BeginMarkPhase(JSRuntime *rt, bool isIncremental)
     JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
 
     /* For non-incremental GC the following sweep discards the jit code. */
-    if (isIncremental) {
+    if (rt->gcIsIncremental) {
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_DISCARD_CODE);
             c->discardJitCode(rt->defaultFreeOp());
@@ -3307,7 +3307,7 @@ ValidateIncrementalMarking(JSRuntime *rt);
 #endif
 
 static void
-EndMarkPhase(JSRuntime *rt, bool isIncremental)
+EndMarkPhase(JSRuntime *rt)
 {
     {
         gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_MARK);
@@ -3317,7 +3317,7 @@ EndMarkPhase(JSRuntime *rt, bool isIncremental)
     JS_ASSERT(rt->gcMarker.isDrained());
 
 #ifdef DEBUG
-    if (isIncremental)
+    if (rt->gcIsIncremental)
         ValidateIncrementalMarking(rt);
 #endif
 
@@ -3884,10 +3884,10 @@ IncrementalCollectSlice(JSRuntime *rt,
     }
 #endif
 
-    bool isIncremental = rt->gcIncrementalState != NO_INCREMENTAL ||
-                         budget != SliceBudget::Unlimited ||
-                         zeal == ZealIncrementalRootsThenFinish ||
-                         zeal == ZealIncrementalMarkAllThenFinish;
+    rt->gcIsIncremental = rt->gcIncrementalState != NO_INCREMENTAL ||
+                          budget != SliceBudget::Unlimited ||
+                          zeal == ZealIncrementalRootsThenFinish ||
+                          zeal == ZealIncrementalMarkAllThenFinish;
 
     if (rt->gcIncrementalState == NO_INCREMENTAL) {
         rt->gcIncrementalState = MARK_ROOTS;
@@ -3897,7 +3897,7 @@ IncrementalCollectSlice(JSRuntime *rt,
     switch (rt->gcIncrementalState) {
 
       case MARK_ROOTS:
-        BeginMarkPhase(rt, isIncremental);
+        BeginMarkPhase(rt);
         PushZealSelectedObjects(rt);
 
         rt->gcIncrementalState = MARK;
@@ -3932,7 +3932,7 @@ IncrementalCollectSlice(JSRuntime *rt,
             break;
         }
 
-        EndMarkPhase(rt, isIncremental);
+        EndMarkPhase(rt);
 
         rt->gcIncrementalState = SWEEP;
 
