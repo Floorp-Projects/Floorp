@@ -447,7 +447,7 @@ public:
     if (sDestructorOrderArr && mVal != sDestructorOrderArr[sDestructorCount]) {
       fail("~SimpleTransaction expected %d got %d.\n",
            mVal, sDestructorOrderArr[sDestructorCount]);
-      exit(NS_ERROR_FAILURE);
+      exit(-1);
     }
 
     ++sDestructorCount;
@@ -470,7 +470,7 @@ public:
     if (sDoOrderArr && mVal != sDoOrderArr[sDoCount]) {
       fail("DoTransaction expected %d got %d.\n",
            mVal, sDoOrderArr[sDoCount]);
-      exit(NS_ERROR_FAILURE);
+      exit(-1);
     }
 
     ++sDoCount;
@@ -493,7 +493,7 @@ public:
     if (sUndoOrderArr && mVal != sUndoOrderArr[sUndoCount]) {
       fail("UndoTransaction expected %d got %d.\n",
            mVal, sUndoOrderArr[sUndoCount]);
-      exit(NS_ERROR_FAILURE);
+      exit(-1);
     }
 
     ++sUndoCount;
@@ -516,7 +516,7 @@ public:
     if (sRedoOrderArr && mVal != sRedoOrderArr[sRedoCount]) {
       fail("RedoTransaction expected %d got %d.\n",
            mVal, sRedoOrderArr[sRedoCount]);
-      exit(NS_ERROR_FAILURE);
+      exit(-1);
     }
 
     ++sRedoCount;
