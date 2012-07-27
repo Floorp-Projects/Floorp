@@ -2100,7 +2100,7 @@ BEGIN_CASE(JSOP_URSH)
 {
     Value lval = regs.sp[-2];
     Value rval = regs.sp[-1];
-    if (!UrshOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!UrshOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2110,7 +2110,7 @@ BEGIN_CASE(JSOP_ADD)
 {
     Value lval = regs.sp[-2];
     Value rval = regs.sp[-1];
-    if (!AddOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!AddOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2121,7 +2121,7 @@ BEGIN_CASE(JSOP_SUB)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!SubOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2132,7 +2132,7 @@ BEGIN_CASE(JSOP_MUL)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!MulOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2143,7 +2143,7 @@ BEGIN_CASE(JSOP_DIV)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!DivOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2154,7 +2154,7 @@ BEGIN_CASE(JSOP_MOD)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
+    if (!ModOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -4123,37 +4123,43 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, const Value &index, const 
 }
 
 bool
-js::AddValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::AddValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return AddOperation(cx, lhs, rhs, res);
+    return AddOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::SubValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return SubOperation(cx, lhs, rhs, res);
+    return SubOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::MulValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return MulOperation(cx, lhs, rhs, res);
+    return MulOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::DivValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return DivOperation(cx, lhs, rhs, res);
+    return DivOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::ModValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return ModOperation(cx, lhs, rhs, res);
+    return ModOperation(cx, script, pc, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+js::UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
+              Value *res)
 {
-    return UrshOperation(cx, lhs, rhs, res);
+    return UrshOperation(cx, script, pc, lhs, rhs, res);
 }

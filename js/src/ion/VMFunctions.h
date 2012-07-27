@@ -179,6 +179,7 @@ template <> struct TypeToDataType<HandleObject> { static const DataType result =
 template <> struct TypeToDataType<HandleString> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
 
 // Convert argument types to properties of the argument known by the jit.
@@ -200,6 +201,9 @@ template <> struct TypeToArgProperties<HandlePropertyName> {
 };
 template <> struct TypeToArgProperties<HandleFunction> {
     static const uint32 result = TypeToArgProperties<JSFunction *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandleScript> {
+    static const uint32 result = TypeToArgProperties<JSScript *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleValue> {
     static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
