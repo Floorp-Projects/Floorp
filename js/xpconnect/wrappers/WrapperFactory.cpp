@@ -314,6 +314,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     JSCompartment *target = js::GetContextCompartment(cx);
     bool usingXray = false;
 
+    // By default we use the wrapped proto of the underlying object as the
+    // prototype for our wrapper, but we may select something different below.
+    JSObject *proxyProto = wrappedProto;
+
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = GetCompartmentPrivate(target);
     if (AccessCheck::isChrome(target)) {
@@ -381,6 +385,34 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         } else {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ExposedPropertiesOnly>::singleton;
+
+            // If the prototype of the chrome object being wrapped is a prototype
+            // for a standard class, use the one from the content compartment so
+            // that we can safely take advantage of things like .forEach().
+            //
+            // If the prototype chain of chrome object |obj| looks like this:
+            //
+            // obj => foo => bar => chromeWin.StandardClass.prototype
+            //
+            // The prototype chain of COW(obj) looks lke this:
+            //
+            // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
+            JSProtoKey key = JSProto_Null;
+            JSObject *unwrappedProto = NULL;
+            if (wrappedProto && IsCrossCompartmentWrapper(wrappedProto) &&
+                (unwrappedProto = Wrapper::wrappedObject(wrappedProto))) {
+                JSAutoEnterCompartment ac;
+                if (!ac.enter(cx, obj))
+                    return NULL;
+                key = JS_IdentifyClassPrototype(cx, unwrappedProto);
+            }
+            if (key != JSProto_Null) {
+                JSObject *homeProto;
+                if (!JS_GetClassPrototype(cx, key, &homeProto))
+                    return NULL;
+                MOZ_ASSERT(homeProto);
+                proxyProto = homeProto;
+            }
         }
     } else if (AccessCheck::subsumes(target, origin)) {
         // For the same-origin case we use a transparent wrapper, unless one
@@ -449,7 +481,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         }
     }
 
-    JSObject *wrapperObj = Wrapper::New(cx, obj, wrappedProto, parent, wrapper);
+    JSObject *wrapperObj = Wrapper::New(cx, obj, proxyProto, parent, wrapper);
     if (!wrapperObj || !usingXray)
         return wrapperObj;
 
