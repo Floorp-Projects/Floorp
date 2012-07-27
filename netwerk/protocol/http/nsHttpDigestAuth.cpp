@@ -79,7 +79,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
                                    nsCString                   &httpMethod,
                                    nsCString                   &path)
 {
-  nsresult rv;
+  nsresult rv, rv2;
   nsCOMPtr<nsIURI> uri;
   rv = authChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
@@ -94,17 +94,17 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpAuthenticableChannel *authChannel,
         // just call it.)
         //
         PRInt32 port;
-        rv  = uri->GetAsciiHost(path);
-        rv |= uri->GetPort(&port);
-        if (NS_SUCCEEDED(rv)) {
+        rv = uri->GetAsciiHost(path);
+        rv2 = uri->GetPort(&port);
+        if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2)) {
           path.Append(':');
           path.AppendInt(port < 0 ? NS_HTTPS_DEFAULT_PORT : port);
         }
       }
       else { 
-        rv  = authChannel->GetRequestMethod(httpMethod);
-        rv |= uri->GetPath(path);
-        if (NS_SUCCEEDED(rv)) {
+        rv = authChannel->GetRequestMethod(httpMethod);
+        rv2 = uri->GetPath(path);
+        if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2)) {
           //
           // strip any fragment identifier from the URL path.
           //

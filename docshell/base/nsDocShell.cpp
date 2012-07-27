@@ -4270,7 +4270,8 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     if (aURI)
     {
         nsresult rv = aURI->GetSpec(url);
-        rv |= aURI->GetOriginCharset(charset);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = aURI->GetOriginCharset(charset);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aURL)

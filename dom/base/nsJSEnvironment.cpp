@@ -756,32 +756,50 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                           "KillScriptTitle",
                                           title);
 
-  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+  nsresult tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                            "StopScriptButton",
                                            stopButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
 
-  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                            "WaitForScriptButton",
                                            waitButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
 
-  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                            "DontAskAgain",
                                            neverShowDlg);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
 
 
   if (debugPossible) {
-    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              "DebugScriptButton",
                                              debugButton);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
 
-    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              "KillScriptWithDebugMessage",
                                              msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
   }
   else {
-    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                              "KillScriptMessage",
                                              msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
   }
 
   //GetStringFromName can return NS_OK and still give NULL string
