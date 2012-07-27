@@ -55,7 +55,7 @@ using namespace mozilla;
 static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
                                 const nsAString & aProperty)
 {
-  NS_ENSURE_ARG_POINTER(aDecl);
+  MOZ_ASSERT(aDecl);
 
   nsCOMPtr<nsIDOMCSSValue> value;
   // get the computed CSSValue of the property
