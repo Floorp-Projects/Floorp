@@ -1253,7 +1253,8 @@ xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph)
     JSObject *obj = cache->GetWrapper();
     if (!obj || !IS_SLIM_WRAPPER(obj))
         return NS_OK;
-    return MorphSlimWrapper(cx, obj);
+    NS_ENSURE_STATE(MorphSlimWrapper(cx, obj));
+    return NS_OK;
 }
 
 static nsresult
@@ -1664,8 +1665,7 @@ MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
             // The parent of wrapper is a slim wrapper, in this case
             // we need to morph the parent so that we can reparent it.
 
-            rv = MorphSlimWrapper(ccx, newParent);
-            NS_ENSURE_SUCCESS(rv, rv);
+            NS_ENSURE_STATE(MorphSlimWrapper(ccx, newParent));
         }
 
         XPCWrappedNative *parentWrapper =
