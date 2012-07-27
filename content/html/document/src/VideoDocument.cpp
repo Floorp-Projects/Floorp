@@ -70,9 +70,13 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   // anything that might require it....
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
-  if (aScriptGlobalObject && !nsContentUtils::IsChildOfSameType(this)) {
-    LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
-    LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelVideoDocument.css"));
+  if (aScriptGlobalObject) {
+    if (!nsContentUtils::IsChildOfSameType(this) &&
+        GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
+      LinkStylesheet(NS_LITERAL_STRING("resource://gre/res/TopLevelVideoDocument.css"));
+      LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/TopLevelVideoDocument.css"));
+    }
+    BecomeInteractive();
   }
 }
 

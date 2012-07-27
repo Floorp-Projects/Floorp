@@ -7253,7 +7253,9 @@ nsDocShell::RestoreFromHistory()
     mLSHE->GetRefreshURIList(getter_AddRefs(refreshURIList));
 
     // Reattach to the window object.
+    mIsRestoringDocument = true; // for MediaDocument::BecomeInteractive
     rv = mContentViewer->Open(windowState, mLSHE);
+    mIsRestoringDocument = false;
 
     // Hack to keep nsDocShellEditorData alive across the
     // SetContentViewer(nsnull) call below.

@@ -1095,6 +1095,11 @@ txMozillaXSLTProcessor::notifyError()
     }
     URIUtils::ResetWithSource(document, mSource);
 
+    MOZ_ASSERT(document->GetReadyStateEnum() ==
+                 nsIDocument::READYSTATE_UNINITIALIZED,
+               "Bad readyState.");
+    document->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
+
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
     nsCOMPtr<nsIDOMElement> element;
@@ -1145,6 +1150,11 @@ txMozillaXSLTProcessor::notifyError()
             return;
         }
     }
+
+    MOZ_ASSERT(document->GetReadyStateEnum() ==
+                 nsIDocument::READYSTATE_LOADING,
+               "Bad readyState.");
+    document->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
 
     mObserver->OnTransformDone(mTransformResult, document);
 }
