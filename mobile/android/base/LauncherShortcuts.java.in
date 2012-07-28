@@ -23,7 +23,6 @@ import android.widget.*;
 import android.database.sqlite.*;
 import android.database.*;
 import android.view.*;
-import android.net.Uri;
 import android.graphics.*;
 
 

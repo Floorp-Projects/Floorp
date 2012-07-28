@@ -10,7 +10,6 @@ import org.mozilla.gecko.GeckoAppShell;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;

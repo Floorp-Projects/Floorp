@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;

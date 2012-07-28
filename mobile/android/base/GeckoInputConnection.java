@@ -9,7 +9,6 @@ import android.R;
 import android.content.Context;
 import android.os.Build;
 import android.os.SystemClock;
-import android.provider.Settings.Secure;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
