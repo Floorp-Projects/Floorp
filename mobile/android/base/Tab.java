@@ -30,10 +30,7 @@ import java.util.regex.Matcher;
 
 public final class Tab {
     private static final String LOGTAG = "GeckoTab";
-    private static final int kThumbnailWidth = 136;
-    private static final int kThumbnailHeight = 78;
 
-    private static float sDensity = 0.0f;
     private static Pattern sColorPattern;
     private int mId;
     private String mUrl;
@@ -165,19 +162,12 @@ public final class Tab {
         mThumbnailBuffer = null;
     }
 
-    float getDensity() {
-        if (sDensity == 0.0f) {
-            sDensity = GeckoApp.mAppContext.getDisplayMetrics().density;
-        }
-        return sDensity;
-    }
-
     int getThumbnailWidth() {
-        return (int)(kThumbnailWidth * getDensity());
+        return (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
     }
 
     int getThumbnailHeight() {
-        return (int)(kThumbnailHeight * getDensity());
+        return (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_height));
     }
 
     public void updateThumbnail(final Bitmap b) {

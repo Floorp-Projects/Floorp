@@ -9,8 +9,8 @@
                 android:paddingTop="4dip">
 
     <ImageView android:id="@+id/thumbnail"
-               android:layout_width="136dip"
-               android:layout_height="78dip"
+               android:layout_width="@dimen/tab_thumbnail_width"
+               android:layout_height="@dimen/tab_thumbnail_height"
                android:layout_centerHorizontal="true"
                android:paddingTop="2dip"
                android:layout_alignParentTop="true"

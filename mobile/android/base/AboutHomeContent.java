@@ -656,7 +656,7 @@ public class AboutHomeContent extends ScrollView
 
         public TopSitesGridView(Context context, AttributeSet attrs) {
             super(context, attrs);
-            mDisplayDensity = GeckoApp.mAppContext.getDisplayMetrics().density;
+            mDisplayDensity = context.getResources().getDisplayMetrics().density;
         }
 
         @Override
