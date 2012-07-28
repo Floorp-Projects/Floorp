@@ -4,10 +4,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.SurfaceBits;
+import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONArray;
 
