@@ -1,0 +1,221 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Archive Reader Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function createZipFileWithData(fileData) {
+    var Cc = SpecialPowers.wrap(Components).classes;
+    var Ci = SpecialPowers.wrap(Components).interfaces;
+
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+    testFile.append("fileArchiveReader.zip");
+    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  function createTextFileWithData(fileData) {
+    var Cc = SpecialPowers.wrap(Components).classes;
+    var Ci = SpecialPowers.wrap(Components).interfaces;
+
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+    testFile.append("fileArchiveReader.txt");
+    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+    outStream.write(fileData, fileData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  function testSteps()
+  {
+    var binaryString = '504B03040A00000000002E6BF14000000000000000000000000005001C00746573742F555409000337CA055039CA055075780B' +
+                       '000104E803000004E8030000504B03041400000008002D6BF1401780E15015000000580200000A001C00746573742F612E7478' +
+                       '74555409000336CA05503ACA055075780B000104E803000004E8030000CB48CDC9C95728CF2FCA49E1CA18658FB2A9C4060050' +
+                       '4B03040A00000000002F88EC40662E847010000000100000000A001C00746573742F622E74787455540900035A65FF4F42C505' +
+                       '5075780B000104E803000004E803000068656C6C6F20776F726C642C2032210A504B01021E030A00000000002E6BF140000000' +
+                       '000000000000000000050018000000000000001000FD4100000000746573742F555405000337CA055075780B000104E8030000' +
+                       '04E8030000504B01021E031400000008002D6BF1401780E15015000000580200000A0018000000000001000000B4813F000000' +
+                       '746573742F612E747874555405000336CA055075780B000104E803000004E8030000504B01021E030A00000000002F88EC4066' +
+                       '2E847010000000100000000A0018000000000001000000B48198000000746573742F622E74787455540500035A65FF4F75780B' +
+                       '000104E803000004E8030000504B05060000000003000300EB000000EC0000000000';
+
+    var binaryData = "";
+    for (var i = 0, len = binaryString.length / 2; i < len; ++i) {
+      var hex = binaryString[i * 2] + binaryString[i * 2 + 1];
+      binaryData += String.fromCharCode(parseInt(hex,16));
+    }
+
+    var binaryFile = createZipFileWithData(binaryData);
+    var textFile = createTextFileWithData("Hello World");
+
+    var status;
+
+    // Create - wrong 1
+    try {
+      var r = new ArchiveReader();
+      status = false;
+    }
+    catch(e) {
+      status = true;
+    }
+    ok(status, "ArchiveReader() without args MUST fail");
+
+    // Create - wrong 2
+    try {
+      var r = new ArchiveReader(true);
+      status = false;
+    }
+    catch(e) {
+      status = true;
+    }
+    ok(status, "ArchiveReader() without a blob arg MUST fail");
+
+    // Create - wrong 3
+    try {
+      var r = new ArchiveReader("hello world");
+      status = false;
+    }
+    catch(e) {
+      status = true;
+    }
+    ok(status, "ArchiveReader() without a blob arg MUST fail");
+
+    // Create - good! (but with a text file)
+    var rt = new ArchiveReader(textFile);
+    isnot(rt, null, "ArchiveReader cannot be null");
+
+    // GetFilename
+    var handle = rt.getFilenames();
+    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
+    handle.onsuccess = function() {
+      ok(false, "ArchiveReader.getFilenames() should return a 'failure' if the input file is not a zip");
+    }
+    handle.onerror = function() {
+      ok(true, "ArchiveReader.getFilenames() should return a 'error' if the input file is a zip file");
+      is(this.reader, rt, "ArchiveRequest.reader == ArchiveReader");
+    }
+
+    // Create - good!
+    var r = new ArchiveReader(binaryFile);
+    isnot(r, null, "ArchiveReader cannot be null");
+
+    // GetFilename
+    handle = r.getFilenames();
+    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
+    handle.onsuccess = function() {
+      ok(true, "ArchiveReader.getFilenames() should return a 'success'");
+      is(this.result instanceof Array, true, "ArchiveReader.getFilenames() should return an array");
+      is(this.result.length, 2, "ArchiveReader.getFilenames(): the array contains 2 items");
+      is(this.result[0], "test/a.txt", "ArchiveReader.getFilenames(): first file is 'test/a.txt'");
+      is(this.result[1], "test/b.txt", "ArchiveReader.getFilenames(): second file is 'test/b.txt'");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+    }
+    handle.onerror = function() {
+      ok(false, "ArchiveReader.getFilenames() should not return any 'error'");
+    }
+
+    // GetFile - wrong (no args)
+    try {
+      r.getFile();
+      status = false;
+    }
+    catch(e) {
+      status = true;
+    }
+    ok(status, "ArchiveReader.getFile() without args fail");
+
+    var handle2 = r.getFile("hello world");
+    isnot(handle2, null, "ArchiveReader.getFile() cannot be null");
+    handle2.onsuccess = function() {
+      ok(false, "ArchiveReader.getFile('unknown file') should not return a 'success'");
+    }
+    handle2.onerror = function() {
+      ok(true, "ArchiveReader.getFile('unknown file') should return an 'error'");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+    }
+
+    var handle3 = r.getFile("test/b.txt");
+    isnot(handle3, null, "ArchiveReader.getFile() cannot be null");
+    handle3.onsuccess = function() {
+      ok(true, "ArchiveReader.getFile('test/b.txt') should return a 'success'");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+      is(this.result.name, "test/b.txt", "ArchiveReader.getFile('test/b.txt') the name MUST be 'test/b.txt'");
+      is(this.result.type, "text/plain", "ArchiveReader.getFile('test/b.txt') the type MUST be 'text/plain'");
+
+      var fr = new FileReader();
+      fr.readAsText(this.result);
+      fr.onerror = function() {
+        ok(false, "ArchiveReader + FileReader should work!");
+      }
+      fr.onload = function(event) {
+        is(event.target.result, "hello world, 2!\n", "ArchiveReader + FileReader are working together.");
+      }
+    }
+
+    handle3.onerror = function() {
+      ok(false, "ArchiveReader.getFile('test/b.txt') should not return an 'error'");
+    }
+
+    var handle4 = r.getFile("test/a.txt");
+    isnot(handle4, null, "ArchiveReader.getFile() cannot be null");
+    handle4.onsuccess = function() {
+      ok(true, "ArchiveReader.getFile('test/a.txt') should return a 'success'");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+      is(this.result.name, "test/a.txt", "ArchiveReader.getFile('test/a.txt') the name MUST be 'test/a.txt'");
+      is(this.result.type, "text/plain", "ArchiveReader.getFile('test/a.txt') the type MUST be 'text/plain'");
+
+      var fr = new FileReader();
+      fr.readAsText(this.result);
+      fr.onerror = function() {
+        ok(false, "ArchiveReader + FileReader should work!");
+      }
+      fr.onload = function(event) {
+        is(event.target.result.length, 600, "ArchiveReader + FileReader are working with a compress data");
+        var p = event.target.result.trim().split('\n');
+        is(p.length, 50, "ArchiveReader + FileReader are working with a compress data");
+
+        for (var i = 0; i < p.length; ++i)
+          is(p[i], "hello world", "ArchiveReader + FileReader are working with a compress data");
+      }
+    }
+    handle4.onerror = function() {
+      ok(false, "ArchiveReader.getFile('test/a.txt') should not return an 'error'");
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();">
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+</body>
+
+</html>
