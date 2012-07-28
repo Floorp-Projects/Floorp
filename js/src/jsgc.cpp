@@ -1708,6 +1708,8 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
 void
 ArenaLists::queueObjectsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_OBJECT);
+
     finalizeNow(fop, FINALIZE_OBJECT0);
     finalizeNow(fop, FINALIZE_OBJECT2);
     finalizeNow(fop, FINALIZE_OBJECT4);
@@ -1730,6 +1732,8 @@ ArenaLists::queueObjectsForSweep(FreeOp *fop)
 void
 ArenaLists::queueStringsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_STRING);
+
     queueForBackgroundSweep(fop, FINALIZE_SHORT_STRING);
     queueForBackgroundSweep(fop, FINALIZE_STRING);
 
@@ -1739,12 +1743,15 @@ ArenaLists::queueStringsForSweep(FreeOp *fop)
 void
 ArenaLists::queueScriptsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SCRIPT);
     finalizeNow(fop, FINALIZE_SCRIPT);
 }
 
 void
 ArenaLists::queueShapesForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SHAPE);
+
     queueForForegroundSweep(fop, FINALIZE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_BASE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_TYPE_OBJECT);
