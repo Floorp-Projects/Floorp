@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.InputConnectionHandler;
+import org.mozilla.gecko.gfx.LayerController;
+
 import android.R;
 import android.content.Context;
 import android.os.Build;
@@ -36,9 +39,6 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-
-import org.mozilla.gecko.gfx.InputConnectionHandler;
-import org.mozilla.gecko.gfx.LayerController;
 
 import java.util.Timer;
 import java.util.TimerTask;

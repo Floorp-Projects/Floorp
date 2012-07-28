@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Color;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 
 public final class BitmapUtils {
     public static int getDominantColor(Bitmap source) {

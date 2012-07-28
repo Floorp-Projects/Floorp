@@ -4,9 +4,10 @@
 
 package org.mozilla.gecko;
 
-import java.util.concurrent.SynchronousQueue;
 import android.content.Intent;
 import android.util.Log;
+
+import java.util.concurrent.SynchronousQueue;
 
 class FilePickerResultHandlerSync extends FilePickerResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandlerSync";

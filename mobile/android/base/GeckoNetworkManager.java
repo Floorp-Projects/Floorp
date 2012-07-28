@@ -5,17 +5,14 @@
 
 package org.mozilla.gecko;
 
-import android.util.Log;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 /*
  * A part of the work of GeckoNetworkManager is to give an estimation of the

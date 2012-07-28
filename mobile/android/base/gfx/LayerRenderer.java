@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.gfx.Layer.RenderContext;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,12 +19,13 @@ import android.opengl.GLES20;
 import android.os.SystemClock;
 import android.util.Log;
 
-import javax.microedition.khronos.egl.EGLConfig;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.microedition.khronos.egl.EGLConfig;
 
 /**
  * The layer renderer implements the rendering logic for a layer view.

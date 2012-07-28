@@ -5,8 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.RectF;
 import org.mozilla.gecko.FloatUtils;
+
+import android.graphics.RectF;
 
 /*
  * This class keeps track of the area we request Gecko to paint, as well

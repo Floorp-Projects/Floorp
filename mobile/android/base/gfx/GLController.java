@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.view.SurfaceHolder;
-
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGL11;
 import javax.microedition.khronos.egl.EGLConfig;
