@@ -295,14 +295,14 @@ abstract public class BrowserApp extends GeckoApp
     public View getActionBarLayout() {
         int actionBarRes;
 
-        if (!GeckoApp.mAppContext.hasPermanentMenuKey() || GeckoApp.mAppContext.isTablet())
+        if (!hasPermanentMenuKey() || isTablet())
            actionBarRes = R.layout.browser_toolbar_menu;
         else
            actionBarRes = R.layout.browser_toolbar;
 
-        LinearLayout actionBar = (LinearLayout) LayoutInflater.from(GeckoApp.mAppContext).inflate(actionBarRes, null);
+        LinearLayout actionBar = (LinearLayout) LayoutInflater.from(this).inflate(actionBarRes, null);
         actionBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
-                                                                (int) mAppContext.getResources().getDimension(R.dimen.browser_toolbar_height)));
+                                                                (int) getResources().getDimension(R.dimen.browser_toolbar_height)));
         return actionBar;
     }
 
@@ -506,12 +506,7 @@ abstract public class BrowserApp extends GeckoApp
         if (mAboutHomeContent == null)
             return;
 
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-            public void run() {
-                mAboutHomeContent.update(GeckoApp.mAppContext,
-                        EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
-            }
-        });
+        mAboutHomeContent.update(this, EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
     }
 
     public void showAboutHome() {
@@ -536,7 +531,7 @@ abstract public class BrowserApp extends GeckoApp
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
                     mAboutHomeContent.init();
-                    mAboutHomeContent.update(GeckoApp.mAppContext, AboutHomeContent.UpdateFlags.ALL);
+                    mAboutHomeContent.update(mAppContext, AboutHomeContent.UpdateFlags.ALL);
                     mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                         public void callback(String url) {
                             mBrowserToolbar.setProgressVisibility(true);
@@ -545,7 +540,7 @@ abstract public class BrowserApp extends GeckoApp
                     });
                     mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
-                    mAboutHomeContent.update(GeckoApp.mAppContext,
+                    mAboutHomeContent.update(mAppContext,
                                              EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
                                                         AboutHomeContent.UpdateFlags.REMOTE_TABS));
                 }
