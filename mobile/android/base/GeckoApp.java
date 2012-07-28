@@ -35,7 +35,6 @@ import android.view.inputmethod.*;
 import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.widget.*;
 import android.hardware.*;
