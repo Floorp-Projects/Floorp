@@ -39,4 +39,17 @@ DocAccessible::UpdateText(nsIContent* aTextNode)
     mNotificationController->ScheduleTextUpdate(aTextNode);
 }
 
+inline void
+DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
+{
+  mozilla::a11y::role role = aAccessible->Role();
+  if (role == mozilla::a11y::roles::ENTRY ||
+      role == mozilla::a11y::roles::COMBOBOX) {
+    nsRefPtr<AccEvent> valueChangeEvent =
+      new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
+                   eAutoDetect, AccEvent::eRemoveDupes);
+    FireDelayedAccessibleEvent(valueChangeEvent);
+    }
+  }
+
 #endif
