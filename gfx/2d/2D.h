@@ -303,6 +303,13 @@ public:
   virtual IntSize GetSize() const = 0;
   virtual SurfaceFormat GetFormat() const = 0;
 
+  /* This returns false if some event has made this source surface invalid for
+   * usage with current DrawTargets. For example in the case of Direct2D this
+   * could return false if we have switched devices since this surface was
+   * created.
+   */
+  virtual bool IsValid() const { return true; }
+
   /*
    * This function will get a DataSourceSurface for this surface, a
    * DataSourceSurface's data can be accessed directly.
