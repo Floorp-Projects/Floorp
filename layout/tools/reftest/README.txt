@@ -106,13 +106,16 @@ must be one of the following:
                          fast on a 32-bit system but inordinately slow on a
                          64-bit system).
 
-      fuzzy  This allows a test to pass if the pixel value differences
-             are <= 2. It can also be used with '!=' to ensure that the
-             difference is greater than 2.
+      fuzzy(maxDiff, diffCount)
+          This allows a test to pass if the pixel value differences are <=
+          maxDiff and the total number of different pixels is <= diffCount.
+          It can also be used with '!=' to ensure that the difference is
+          greater than maxDiff.
 
-      fuzzy-if(condition) If the condition is met, the test is treated as if
-                          'fuzzy' had been specified. This is useful if there
-                          are differences on particular platforms.
+      fuzzy-if(condition, maxDiff, diffCount)
+          If the condition is met, the test is treated as if 'fuzzy' had been
+          specified. This is useful if there are differences on particular
+          platforms.
 
       require-or(cond1&&cond2&&...,fallback)
           Require some particular setup be performed or environmental
