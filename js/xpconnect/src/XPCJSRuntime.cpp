@@ -22,7 +22,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
-#include "nsLayoutStatics.h"
 #include "nsContentUtils.h"
 #include "nsCCUncollectableMarker.h"
 #include "jsfriendapi.h"
@@ -553,7 +552,7 @@ xpc_UnmarkSkippableJSHolders()
 template<class T> static void
 DoDeferredRelease(nsTArray<T> &array)
 {
-    while (true) {
+    while (1) {
         PRUint32 count = array.Length();
         if (!count) {
             array.Compact();
@@ -563,74 +562,6 @@ DoDeferredRelease(nsTArray<T> &array)
         array.RemoveElementAt(count-1);
         NS_RELEASE(wrapper);
     }
-}
-
-class IncrementalReleaseRunnable : public nsRunnable
-{
-    nsTArray<nsISupports *> items;
-
-    static const PRTime SliceMillis = 10; /* ms */
-
-  public:
-    IncrementalReleaseRunnable(nsTArray<nsISupports *> &items);
-    virtual ~IncrementalReleaseRunnable();
-
-    NS_DECL_NSIRUNNABLE
-};
-
-IncrementalReleaseRunnable::IncrementalReleaseRunnable(nsTArray<nsISupports *> &items)
-{
-    nsLayoutStatics::AddRef();
-    this->items.SwapElements(items);
-}
-
-IncrementalReleaseRunnable::~IncrementalReleaseRunnable()
-{
-    nsLayoutStatics::Release();
-}
-
-NS_IMETHODIMP
-IncrementalReleaseRunnable::Run()
-{
-    MOZ_ASSERT(NS_IsMainThread());
-
-    TimeDuration sliceTime = TimeDuration::FromMilliseconds(SliceMillis);
-    TimeStamp started = TimeStamp::Now();
-    PRUint32 counter = 0;
-    while (true) {
-        PRUint32 count = items.Length();
-        if (!count)
-            break;
-
-        nsISupports *wrapper = items[count - 1];
-        items.RemoveElementAt(count - 1);
-        NS_RELEASE(wrapper);
-
-        /* We don't want to read the clock too often. */
-        counter++;
-        if (counter == 100) {
-            counter = 0;
-            if (TimeStamp::Now() - started >= sliceTime)
-                break;
-        }
-    }
-
-    if (items.Length()) {
-        nsresult rv = NS_DispatchToMainThread(this);
-        if (NS_FAILED(rv))
-            Run();
-    }
-
-    return NS_OK;
-}
-
-static void
-ReleaseIncrementally(nsTArray<nsISupports *> &array)
-{
-    nsRefPtr<IncrementalReleaseRunnable> runnable = new IncrementalReleaseRunnable(array);
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv))
-        runnable->Run();
 }
 
 /* static */ void
@@ -655,10 +586,14 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
         case JSGC_END:
         {
             // Do any deferred releases of native objects.
-            if (js::WasIncrementalGC(rt))
-                ReleaseIncrementally(self->mNativesToReleaseArray);
-            else
-                DoDeferredRelease(self->mNativesToReleaseArray);
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+            printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
+                   self->mNativesToReleaseArray.Length());
+#endif
+            DoDeferredRelease(self->mNativesToReleaseArray);
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+            printf("XPC - End deferred Releases\n");
+#endif
 
             self->GetXPConnect()->ClearGCBeforeCC();
             break;
