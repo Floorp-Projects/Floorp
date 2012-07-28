@@ -55,15 +55,17 @@ public:
 
 protected:
   enum GestureState {
-    NoGesture = 0,
-    InPinchGesture
+    // There's no gesture going on, and we don't think we're about to enter one.
+    GESTURE_NONE,
+    // There's a pinch happening, which occurs when there are two touch inputs.
+    GESTURE_PINCH,
+    // A touch start has happened and it may turn into a tap. We use this
+    // because, if we put down two fingers and then lift them very quickly, this
+    // may be mistaken for a tap.
+    GESTURE_WAITING_SINGLE_TAP,
+    // A single tap has happened for sure, and we're waiting for a second tap.
+    GESTURE_WAITING_DOUBLE_TAP
   };
-
-  /**
-   * Maximum time for a touch on the screen and corresponding lift of the finger
-   * to be considered a tap.
-   */
-  enum { MAX_TAP_TIME = 500 };
 
   /**
    * Attempts to handle the event as a pinch event. If it is not a pinch event,
@@ -100,6 +102,24 @@ protected:
    */
   nsEventStatus HandleTapCancel(const MultiTouchInput& aEvent);
 
+  /**
+   * Attempts to handle a double tap. This happens when we get two single taps
+   * within a short time. In general, this will not attempt to block the touch
+   * event from being passed along to AsyncPanZoomController since APZC needs to
+   * know about touches ending (and we only know if a touch was a double tap
+   * once it ends).
+   */
+  nsEventStatus HandleDoubleTap(const MultiTouchInput& aEvent);
+
+  /**
+   * Times out a single tap we think may be turned into a double tap. This will
+   * also send a single tap if we're still in the "GESTURE_WAITING_DOUBLE_TAP"
+   * state when this is called. This should be called a short time after a
+   * single tap is detected, and the delay on it should be enough that the user
+   * has time to tap again (to make a double tap).
+   */
+  void TimeoutDoubleTap();
+
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
 
   /**
@@ -107,6 +127,10 @@ protected:
    * this array, even if we choose not to handle it. When it ends, we remove it.
    */
   nsTArray<SingleTouchData> mTouches;
+
+  /**
+   * Current gesture we're dealing with.
+   */
   GestureState mState;
 
   /**
@@ -117,9 +141,28 @@ protected:
 
   /**
    * Stores the time a touch started, used for detecting a tap gesture. Only
-   * valid when there's exactly one touch in mTouches.
+   * valid when there's exactly one touch in mTouches. This is the time that the
+   * first touch was inserted into the array. This is a PRUint64 because it is
+   * initialized from interactions with InputData, which stores its timestamps as
+   * a PRUint64.
    */
-  PRUint64 mTouchStartTime;
+  PRUint64 mTapStartTime;
+
+  /**
+   * Cached copy of the last touch input, only valid when in the
+   * "GESTURE_WAITING_DOUBLE_TAP" state. This is used to forward along to
+   * AsyncPanZoomController if a single tap needs to be sent (since it is sent
+   * shortly after the user actually taps, since we need to wait for a double
+   * tap).
+   */
+  MultiTouchInput mLastTouchInput;
+
+  /**
+   * Task used to timeout a double tap. This gets posted to the UI thread such
+   * that it runs a short time after a single tap happens. We cache it so that
+   * we can cancel it if a double tap actually comes in.
+   */
+  CancelableTask *mDoubleTapTimeoutTask;
 };
 
 }
