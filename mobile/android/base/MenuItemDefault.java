@@ -6,9 +6,9 @@ package org.mozilla.gecko;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -19,21 +19,16 @@ public class MenuItemDefault extends LinearLayout
                              implements GeckoMenuItem.Layout {
     private static final String LOGTAG = "GeckoMenuItemDefault";
 
-    private Context mContext;
-
     private ImageView mIcon;
     private TextView mTitle;
     private ImageView mCheck;
 
     public MenuItemDefault(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        setLayoutParams(new LayoutParams((int) (240 * metrics.density),
-                                         (int) (44 * metrics.density)));
+        Resources res = context.getResources();
+        setLayoutParams(new LayoutParams((int) (res.getDimension(R.dimen.menu_item_row_width)),
+                                         (int) (res.getDimension(R.dimen.menu_item_row_height))));
         setBackgroundResource(R.drawable.menu_item_bg);
 
         inflate(context, R.layout.menu_item, this);

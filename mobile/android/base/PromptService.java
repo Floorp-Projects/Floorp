@@ -44,39 +44,21 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     private AlertDialog mDialog = null;
     private static LayoutInflater mInflater;
 
-    private final static int GROUP_PADDING_SIZE = 32; // in dip units
-    private static int mGroupPaddingSize = 0; // calculated from GROUP_PADDING_SIZE. In pixel units
-
-    private final static int LEFT_RIGHT_TEXT_WITH_ICON_PADDING = 10; // in dip units
-    private static int mLeftRightTextWithIconPadding = 0; // calculated from LEFT_RIGHT_TEXT_WITH_ICON_PADDING.
-
-    private final static int TOP_BOTTOM_TEXT_WITH_ICON_PADDING = 8; // in dip units
-    private static int mTopBottomTextWithIconPadding = 0; // calculated from TOP_BOTTOM_TEXT_WITH_ICON_PADDING.
-
-    private final static int ICON_TEXT_PADDING = 10; // in dip units
-    private static int mIconTextPadding = 0; // calculated from ICON_TEXT_PADDING.
-
-    private final static int ICON_SIZE = 72; // in dip units
-    private static int mIconSize = 0; // calculated from ICON_SIZE.
+    private int mGroupPaddingSize;
+    private int mLeftRightTextWithIconPadding;
+    private int mTopBottomTextWithIconPadding;
+    private int mIconTextPadding;
+    private int mIconSize;
 
     PromptService() {
         mInflater = LayoutInflater.from(GeckoApp.mAppContext);
+
         Resources res = GeckoApp.mAppContext.getResources();
-        mGroupPaddingSize = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                           GROUP_PADDING_SIZE,
-                                                           res.getDisplayMetrics());
-        mLeftRightTextWithIconPadding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                                       LEFT_RIGHT_TEXT_WITH_ICON_PADDING,
-                                                                       res.getDisplayMetrics());
-        mTopBottomTextWithIconPadding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                                       TOP_BOTTOM_TEXT_WITH_ICON_PADDING,
-                                                                       res.getDisplayMetrics());
-        mIconTextPadding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                          ICON_TEXT_PADDING,
-                                                          res.getDisplayMetrics());
-        mIconSize = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                   ICON_SIZE,
-                                                   res.getDisplayMetrics());
+        mGroupPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_group_padding_size));
+        mLeftRightTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_left_right_text_with_icon_padding));
+        mTopBottomTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_top_bottom_text_with_icon_padding));
+        mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
+        mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
 
         GeckoAppShell.registerGeckoEventListener("Prompt:Show", this);
     }
