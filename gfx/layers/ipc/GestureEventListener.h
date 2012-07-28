@@ -113,10 +113,10 @@ protected:
 
   /**
    * Times out a single tap we think may be turned into a double tap. This will
-   * also send a single tap if we're still in the "WaitingDoubleTap" state when
-   * this is called. This should be called a short time after a single tap is
-   * detected, and the delay on it should be enough that the user has time to
-   * tap again (to make a double tap).
+   * also send a single tap if we're still in the "GESTURE_WAITING_DOUBLE_TAP"
+   * state when this is called. This should be called a short time after a
+   * single tap is detected, and the delay on it should be enough that the user
+   * has time to tap again (to make a double tap).
    */
   void TimeoutDoubleTap();
 
@@ -150,7 +150,7 @@ protected:
 
   /**
    * Cached copy of the last touch input, only valid when in the
-   * "WaitingDoubleTap" state. This is used to forward along to
+   * "GESTURE_WAITING_DOUBLE_TAP" state. This is used to forward along to
    * AsyncPanZoomController if a single tap needs to be sent (since it is sent
    * shortly after the user actually taps, since we need to wait for a double
    * tap).
