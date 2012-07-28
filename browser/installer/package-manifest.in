@@ -493,10 +493,6 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
-#ifdef MOZ_SAFE_BROWSING
-@BINPATH@/components/nsSafebrowsingApplication.manifest
-@BINPATH@/components/nsSafebrowsingApplication.js
-#endif
 #ifdef MOZ_URL_CLASSIFIER
 @BINPATH@/components/nsURLClassifier.manifest
 @BINPATH@/components/nsUrlClassifierHashCompleter.js

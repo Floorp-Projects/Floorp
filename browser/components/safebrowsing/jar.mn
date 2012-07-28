@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-* content/browser/safebrowsing/sb-loader.js                    (content/sb-loader.js)
 * content/browser/safebrowsing/report-phishing-overlay.xul     (content/report-phishing-overlay.xul)
   content/browser/safebrowsing/blockedSite.xhtml               (content/blockedSite.xhtml)
 % overlay chrome://browser/content/browser.xul         chrome://browser/content/safebrowsing/report-phishing-overlay.xul

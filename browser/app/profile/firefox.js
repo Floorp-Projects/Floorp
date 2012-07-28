@@ -721,6 +721,9 @@ pref("browser.safebrowsing.enabled", true);
 // Prevent loading of pages identified as malware
 pref("browser.safebrowsing.malware.enabled", true);
 
+// Debug logging to error console
+pref("browser.safebrowsing.debug", false);
+
 // Non-enhanced mode (local url lists) URL list to check for updates
 pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
 
