@@ -5,16 +5,16 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.GfxInfoThread;
+
 import android.content.Intent;
-import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
-
-import org.mozilla.gecko.gfx.GfxInfoThread;
 
 public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";

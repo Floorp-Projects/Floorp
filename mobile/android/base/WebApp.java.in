@@ -6,13 +6,14 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import android.view.MenuItem;
-import android.util.Log;
-import android.os.Bundle;
-import android.content.Intent;
 
 public class WebApp extends GeckoApp {
     protected int mWebAppIndex;

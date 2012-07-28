@@ -6,10 +6,11 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
+import android.view.MenuItem;
+
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import android.view.MenuItem;
 
 public class App extends BrowserApp {
     public int getLayout() { return R.layout.gecko_app; }

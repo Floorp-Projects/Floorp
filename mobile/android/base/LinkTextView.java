@@ -5,9 +5,9 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
+import android.util.AttributeSet;
 import android.widget.TextView;
 
 public class LinkTextView extends TextView {

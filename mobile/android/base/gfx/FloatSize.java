@@ -6,6 +6,7 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.FloatUtils;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 

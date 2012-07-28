@@ -4,15 +4,15 @@
 
 package org.mozilla.gecko;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.mozilla.gecko.db.BrowserContract;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class TabsAccessor {
     private static final String LOGTAG = "GeckoTabsAccessor";

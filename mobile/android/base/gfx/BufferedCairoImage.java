@@ -6,7 +6,9 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
+
 import android.graphics.Bitmap;
+
 import java.nio.ByteBuffer;
 
 /** A Cairo image that simply saves a buffer of pixel data. */

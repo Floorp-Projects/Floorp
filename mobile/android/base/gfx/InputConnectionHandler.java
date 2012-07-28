@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.KeyEvent;
 
 public interface InputConnectionHandler
 {

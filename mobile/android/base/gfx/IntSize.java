@@ -5,9 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.util.FloatMath;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.util.FloatMath;
 
 public class IntSize {
     public final int width, height;
