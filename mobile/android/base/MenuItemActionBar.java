@@ -9,8 +9,8 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 
 public class MenuItemActionBar extends ImageButton
                                implements GeckoMenuItem.Layout {

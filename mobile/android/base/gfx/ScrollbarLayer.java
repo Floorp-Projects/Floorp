@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.FloatUtils;
+import org.mozilla.gecko.GeckoAppShell;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,8 +19,6 @@ import android.opengl.GLES20;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import org.mozilla.gecko.FloatUtils;
-import org.mozilla.gecko.GeckoAppShell;
 
 /**
  * Draws a small rect. This is scaled to become a scrollbar.

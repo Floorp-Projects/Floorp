@@ -4,18 +4,18 @@
 
 package org.mozilla.gecko;
 
+import android.graphics.drawable.BitmapDrawable;
+import android.util.Log;
+
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.EmptyStackException;
 import java.util.Stack;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-import java.io.InputStream;
-import java.io.IOException;
-
-import android.graphics.drawable.BitmapDrawable;
-import android.util.Log;
 
 /* Reads out of a multiple level deep jar file such as
  *  jar:jar:file:///data/app/org.mozilla.fennec.apk!/omni.ja!/chrome/chrome/content/branding/favicon32.png

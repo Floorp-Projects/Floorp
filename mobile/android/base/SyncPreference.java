@@ -5,13 +5,13 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
+
 import android.content.Context;
 import android.content.Intent;
 import android.preference.Preference;
 import android.util.AttributeSet;
-
-import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 class SyncPreference extends Preference {
     private Context mContext;

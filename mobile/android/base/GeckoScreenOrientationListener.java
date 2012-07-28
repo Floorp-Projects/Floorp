@@ -5,10 +5,10 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
-import android.content.pm.ActivityInfo;
 
 public class GeckoScreenOrientationListener
 {
