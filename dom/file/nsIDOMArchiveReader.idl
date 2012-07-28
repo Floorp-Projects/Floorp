@@ -1,0 +1,23 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMArchiveRequest;
+
+[scriptable, builtinclass, uuid(a616ab85-fc3a-4028-9f10-f8620ee1b8e1)]
+interface nsIDOMArchiveReader : nsISupports
+{
+  nsIDOMArchiveRequest getFilenames();
+  nsIDOMArchiveRequest getFile(in DOMString filename);
+};
+
+%{ C++
+#define NS_ARCHIVEREADER_CID                         \
+{0xb6b8c817, 0x4e9a, 0x46f8,                         \
+{0x9e, 0x3e, 0x3d, 0x96, 0x79, 0x01, 0xa2, 0x80}}
+#define NS_ARCHIVEREADER_CONTRACTID \
+"@mozilla.org/files/archivereader;1"
+%}

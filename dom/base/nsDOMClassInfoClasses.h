@@ -367,6 +367,8 @@ DOMCI_CLASS(FileList)
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 DOMCI_CLASS(FileReader)
+DOMCI_CLASS(ArchiveReader)
+DOMCI_CLASS(ArchiveRequest)
 DOMCI_CLASS(MozURLProperty)
 DOMCI_CLASS(MozBlobBuilder)
 
