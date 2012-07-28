@@ -776,21 +776,13 @@ LIRGenerator::visitDiv(MDiv *ins)
 bool
 LIRGenerator::visitMod(MMod *ins)
 {
-    JS_ASSERT(ins->lhs()->type() == ins->rhs()->type());
-
-    if (ins->specialization() == MIRType_Int32) {
-        JS_ASSERT(ins->type() == MIRType_Int32);
+    if (ins->type() == MIRType_Int32 &&
+        ins->specialization() == MIRType_Int32)
+    {
         JS_ASSERT(ins->lhs()->type() == MIRType_Int32);
         return lowerModI(ins);
     }
-
-    if (ins->specialization() == MIRType_Double) {
-        JS_ASSERT(ins->type() == MIRType_Double);
-        JS_ASSERT(ins->lhs()->type() == MIRType_Double);
-        LModD *lir = new LModD(useRegister(ins->lhs()), useRegister(ins->rhs()),
-                               tempFixed(CallTempReg0));
-        return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
-    }
+    // TODO: Implement for ins->specialization() == MIRType_Double
 
     return lowerBinaryV(JSOP_MOD, ins);
 }

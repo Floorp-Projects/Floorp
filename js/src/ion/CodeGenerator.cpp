@@ -1565,23 +1565,6 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 }
 
 bool
-CodeGenerator::visitModD(LModD *ins)
-{
-    FloatRegister lhs = ToFloatRegister(ins->lhs());
-    FloatRegister rhs = ToFloatRegister(ins->rhs());
-    Register temp = ToRegister(ins->temp());
-
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
-
-    masm.setupUnalignedABICall(2, temp);
-    masm.passABIArg(lhs);
-    masm.passABIArg(rhs);
-
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NumberMod), MacroAssembler::DOUBLE);
-    return true;
-}
-
-bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     typedef bool (*pf)(JSContext *, HandleScript, jsbytecode *, HandleValue, HandleValue, Value *);

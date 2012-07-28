@@ -934,6 +934,12 @@ MBinaryArithInstruction::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
         }
     }
 
+    // Don't specialize mod with double result (bug 716694).
+    if (isMod() && rval == MIRType_Double) {
+        specialization_ = MIRType_None;
+        return;
+    }
+
     // Don't specialize as int32 if one of the operands is undefined,
     // since ToNumber(undefined) is NaN.
     if (rval == MIRType_Int32 && (lhs == MIRType_Undefined || rhs == MIRType_Undefined)) {
@@ -943,8 +949,7 @@ MBinaryArithInstruction::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
 
     specialization_ = rval;
 
-    if (isAdd() || isMul())
-        setCommutative();
+    setCommutative();
     setResultType(rval);
 }
 
