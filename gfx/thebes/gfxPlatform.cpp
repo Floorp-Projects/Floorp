@@ -503,7 +503,13 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   void *userData = aSurface->GetData(&kSourceSurface);
 
   if (userData) {
-    return static_cast<SourceSurface*>(userData);
+    SourceSurface *surf = static_cast<SourceSurface*>(userData);
+
+    if (surf->IsValid()) {
+      return surf;
+    }
+    // We can just continue here as when setting new user data the destroy
+    // function will be called for the old user data.
   }
 
   SurfaceFormat format;
