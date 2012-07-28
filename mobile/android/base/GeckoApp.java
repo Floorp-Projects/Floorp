@@ -98,9 +98,9 @@ abstract public class GeckoApp
     private Favicons mFavicons;
     private TextSelection mTextSelection;
 
-    public DoorHangerPopup mDoorHangerPopup;
-    public FormAssistPopup mFormAssistPopup;
-    public TabsPanel mTabsPanel;
+    protected DoorHangerPopup mDoorHangerPopup;
+    protected FormAssistPopup mFormAssistPopup;
+    protected TabsPanel mTabsPanel;
 
     private LayerController mLayerController;
     private GeckoLayerClient mLayerClient;
@@ -561,7 +561,7 @@ abstract public class GeckoApp
         return metrics;
     }
 
-    void getAndProcessThumbnailForTab(final Tab tab) {
+    public void getAndProcessThumbnailForTab(final Tab tab) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
         
@@ -617,6 +617,11 @@ abstract public class GeckoApp
     private boolean shouldUpdateThumbnail(Tab tab) {
         return (Tabs.getInstance().isSelectedTab(tab) || areTabsShown());
     }
+
+    public void hideFormAssistPopup() {
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.hide();
+    } 
 
     void updatePopups(final Tab tab) {
         mDoorHangerPopup.updatePopup();
@@ -1253,6 +1258,14 @@ abstract public class GeckoApp
         }, 500);
     }
 
+    public void showToast(final int resId, final int duration) {
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Toast.makeText(mAppContext, resId, duration);
+            }
+        });
+    }
+
     void handleShowToast(final String message, final String duration) {
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1503,6 +1516,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGlobalExceptionHandler();
 
         mAppContext = this;
+        Tabs.getInstance().attachToActivity(this);
 
         // Check to see if the activity is restarted after configuration change.
         if (getLastNonConfigurationInstance() != null) {
