@@ -106,7 +106,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreFixedSlotT(LStoreFixedSlotT *ins);
     bool visitAbsI(LAbsI *lir);
     bool visitMathFunctionD(LMathFunctionD *ins);
-    bool visitModD(LModD *ins);
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareS(LCompareS *lir);
     bool visitCompareV(LCompareV *lir);
