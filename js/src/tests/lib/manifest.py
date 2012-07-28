@@ -105,29 +105,23 @@ class NullXULInfoTester:
     def test(self, cond):
         return False
 
-def _parse_one(parts, xul_tester):
-    script = None
-    enable = True
-    expect = True
-    random = False
-    slow = False
-    debugMode = False
-
+def _parse_one(testcase, xul_tester):
     pos = 0
+    parts = testcase.terms.split()
     while pos < len(parts):
         if parts[pos] == 'fails':
-            expect = False
+            testcase.expect = False
             pos += 1
         elif parts[pos] == 'skip':
-            expect = enable = False
+            testcase.expect = testcase.enable = False
             pos += 1
         elif parts[pos] == 'random':
-            random = True
+            testcase.random = True
             pos += 1
         elif parts[pos].startswith('fails-if'):
             cond = parts[pos][len('fails-if('):-1]
             if xul_tester.test(cond):
-                expect = False
+                testcase.expect = False
             pos += 1
         elif parts[pos].startswith('asserts-if'):
             # This directive means we may flunk some number of
@@ -136,49 +130,55 @@ def _parse_one(parts, xul_tester):
         elif parts[pos].startswith('skip-if'):
             cond = parts[pos][len('skip-if('):-1]
             if xul_tester.test(cond):
-                expect = enable = False
+                testcase.expect = testcase.enable = False
             pos += 1
         elif parts[pos].startswith('random-if'):
             cond = parts[pos][len('random-if('):-1]
             if xul_tester.test(cond):
-                random = True
+                testcase.random = True
             pos += 1
         elif parts[pos].startswith('require-or'):
             cond = parts[pos][len('require-or('):-1]
             (preconditions, fallback_action) = re.split(",", cond)
             for precondition in re.split("&&", preconditions):
                 if precondition == 'debugMode':
-                    debugMode = True
+                    testcase.options.append('-d')
                 elif precondition == 'true':
                     pass
                 else:
                     if fallback_action == "skip":
-                        expect = enable = False
+                        testcase.expect = testcase.enable = False
                     elif fallback_action == "fail":
-                        expect = False
+                        testcase.expect = False
                     elif fallback_action == "random":
-                        random = True
+                        testcase.random = True
                     else:
                         raise Exception(("Invalid precondition '%s' or fallback " +
                                          " action '%s'") % (precondition, fallback_action))
                     break
             pos += 1
-        elif parts[pos] == 'script':
-            script = parts[pos+1]
-            pos += 2
         elif parts[pos] == 'slow':
-            slow = True
+            testcase.slow = True
             pos += 1
         elif parts[pos] == 'silentfail':
             # silentfails use tons of memory, and Darwin doesn't support ulimit.
             if xul_tester.test("xulRuntime.OS == 'Darwin'"):
-                expect = enable = False
+                testcase.expect = testcase.enable = False
             pos += 1
         else:
             print 'warning: invalid manifest line element "%s"'%parts[pos]
             pos += 1
 
-    return script, (enable, expect, random, slow, debugMode)
+def _build_manifest_script_entry(t):
+    line = []
+    if t.terms:
+        line.append(t.terms)
+    line.append("script")
+    line.append(k)
+    if t.comment:
+        line.append("#")
+        line.append(t.comment)
+    return ' '.join(line)
 
 def _map_prefixes_left(test_list):
     """
@@ -196,6 +196,12 @@ def _map_prefixes_left(test_list):
     return byprefix
 
 def _emit_manifest_at(location, relative, test_list, depth):
+    """
+    location  - str: absolute path where we want to write the manifest
+    relative  - str: relative path from topmost manifest directory to current
+    test_list - [str]: list of all test paths and directorys
+    depth     - int: number of dirs we are below the topmost manifest dir
+    """
     manifests = _map_prefixes_left(test_list)
 
     filename = os.path.join(location, 'jstests.list')
@@ -210,16 +216,8 @@ def _emit_manifest_at(location, relative, test_list, depth):
         else:
             numTestFiles += 1
             assert(len(test_list) == 1)
-            t = test_list[0]
-            line = []
-            if t.terms:
-                line.append(t.terms)
-            line.append("script")
-            line.append(k)
-            if t.comment:
-                line.append("#")
-                line.append(t.comment)
-            manifest.append(' '.join(line))
+            line = _build_manifest_script_entry(test_list[0])
+            manifest.append(line)
 
     # Always present our manifest in sorted order.
     manifest.sort()
@@ -276,12 +274,7 @@ def _parse_test_header(fullpath, testcase, xul_tester):
     testcase.terms = matches.group(2)
     testcase.comment = matches.group(4)
 
-    _, properties = _parse_one(testcase.terms.split(), xul_tester)
-    testcase.enable = properties[0]
-    testcase.expect = properties[1]
-    testcase.random = properties[2]
-    testcase.slow = properties[3]
-    testcase.debugMode = properties[4]
+    _parse_one(testcase, xul_tester)
 
 def load(location, xul_tester, reldir = ''):
     """
@@ -314,12 +307,7 @@ def load(location, xul_tester, reldir = ''):
             continue
 
         # Parse the test header and load the test.
-        testcase = TestCase(os.path.join(reldir, filename),
-                            enable = True,
-                            expect = True,
-                            random = False,
-                            slow = False,
-                            debugMode = False)
+        testcase = TestCase(os.path.join(reldir, filename))
         _parse_test_header(fullpath, testcase, xul_tester)
         tests.append(testcase)
     return tests
