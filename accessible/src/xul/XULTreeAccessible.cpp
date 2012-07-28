@@ -9,6 +9,7 @@
 #include "nsAccCache.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
+#include "nsEventShell.h"
 #include "DocAccessible.h"
 #include "Relation.h"
 #include "Role.h"

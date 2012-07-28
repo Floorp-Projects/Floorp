@@ -11,6 +11,7 @@
 
 #include "Compatibility.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
 #include "RootAccessible.h"
