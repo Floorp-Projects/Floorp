@@ -1456,7 +1456,7 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                 if (!equal) {
                     gDumpLog("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
                     gDumpLog("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
-                    gDumpLog("REFTEST number of differing pixels: " + differences + " max difference: " + maxDifference.value + "\n");
+                    gDumpLog("REFTEST max difference: " + maxDifference.value + " number of differing pixels: " + differences + "\n");
                 } else {
                     gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
                 }
