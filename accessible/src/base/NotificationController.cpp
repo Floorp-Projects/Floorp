@@ -176,7 +176,7 @@ NotificationController::IsUpdatePending()
 void
 NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 {
-  Telemetry::AutoTimer<Telemetry::A11Y_UPDATE_TIME> updateTimer();
+  Telemetry::AutoTimer<Telemetry::A11Y_UPDATE_TIME> updateTimer;
 
   // If the document accessible that notification collector was created for is
   // now shut down, don't process notifications anymore.
