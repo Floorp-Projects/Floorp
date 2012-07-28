@@ -1202,9 +1202,8 @@ function UpdateCanvasCache(url, canvas)
 // asynchronously resized (e.g. by the window manager, to make
 // it fit on screen) at unpredictable times.
 // Fortunately this is pretty cheap.
-function DoDrawWindow(canvas, x, y, w, h)
+function DoDrawWindow(ctx, x, y, w, h)
 {
-    var ctx = canvas.getContext("2d");
     var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW;
     var testRect = gBrowser.getBoundingClientRect();
     if (gIgnoreWindowSize ||
@@ -1241,7 +1240,6 @@ function DoDrawWindow(canvas, x, y, w, h)
     LogInfo("DoDrawWindow " + x + "," + y + "," + w + "," + h);
     ctx.drawWindow(gContainingWindow, x, y, w, h, "rgb(255,255,255)",
                    gDrawWindowFlags);
-    LogInfo("DoDrawWindow snapshot: " + canvas.toDataURL() + "\n");
 }
 
 function InitCurrentCanvasWithSnapshot()
@@ -1257,7 +1255,8 @@ function InitCurrentCanvasWithSnapshot()
         gCurrentCanvas = AllocateCanvas();
     }
 
-    DoDrawWindow(gCurrentCanvas, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
+    var ctx = gCurrentCanvas.getContext("2d");
+    DoDrawWindow(ctx, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
     return true;
 }
 
@@ -1280,7 +1279,7 @@ function UpdateCurrentCanvasForInvalidation(rects)
 
         ctx.save();
         ctx.translate(left, top);
-        DoDrawWindow(gCurrentCanvas, left, top, right - left, bottom - top);
+        DoDrawWindow(ctx, left, top, right - left, bottom - top);
         ctx.restore();
     }
 }
