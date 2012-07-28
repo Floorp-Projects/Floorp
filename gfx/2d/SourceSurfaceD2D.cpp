@@ -34,6 +34,12 @@ SourceSurfaceD2D::GetFormat() const
   return mFormat;
 }
 
+bool
+SourceSurfaceD2D::IsValid() const
+{
+  return mDevice == Factory::GetDirect3D10Device();
+}
+
 TemporaryRef<DataSourceSurface>
 SourceSurfaceD2D::GetDataSurface()
 {
@@ -68,6 +74,7 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
   }
 
   DrawTargetD2D::mVRAMUsageSS += GetByteSize();
+  mDevice = Factory::GetDirect3D10Device();
 
   return true;
 }
@@ -103,6 +110,7 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
     return false;
   }
 
+  aTexture->GetDevice(byRef(mDevice));
   DrawTargetD2D::mVRAMUsageSS += GetByteSize();
 
   return true;
