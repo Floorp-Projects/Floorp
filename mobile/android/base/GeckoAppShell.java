@@ -13,16 +13,12 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
-import org.mozilla.gecko.FloatUtils;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.gfx.RectUtils;
 
 import java.io.*;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.net.URL;
-import java.net.MalformedURLException;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
@@ -54,7 +50,6 @@ import android.net.NetworkInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.*;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class GeckoAppShell
