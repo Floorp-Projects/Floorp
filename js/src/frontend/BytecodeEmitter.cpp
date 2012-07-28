@@ -4864,7 +4864,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                .setVersion(parent->getVersion());
         Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
                                                       parent->staticLevel + 1,
-                                                      bce->script->source,
+                                                      bce->script->scriptSource(),
                                                       funbox->bufStart, funbox->bufEnd));
         if (!script)
             return false;
