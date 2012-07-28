@@ -182,7 +182,7 @@ abstract public class BrowserApp extends GeckoApp
         LinearLayout actionBar = (LinearLayout) getActionBarLayout();
         mMainLayout.addView(actionBar, 0);
 
-        mBrowserToolbar = new BrowserToolbar(mAppContext);
+        mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
 
         if (mTabsPanel != null)
