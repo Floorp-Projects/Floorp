@@ -13,6 +13,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.graphics.PixelFormat;
 import android.view.SurfaceHolder;
@@ -31,7 +32,6 @@ import java.nio.IntBuffer;
 public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
     private static String LOGTAG = "GeckoLayerView";
 
-    private Context mContext;
     private LayerController mController;
     private TouchEventHandler mTouchEventHandler;
     private GLController mGLController;
@@ -48,18 +48,18 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
     public static final int PAINT_BEFORE_FIRST = 1;
     public static final int PAINT_AFTER_FIRST = 2;
 
-
-    public LayerView(Context context, LayerController controller) {
-        super(context);
+    public LayerView(Context context, AttributeSet attrs) {
+        super(context, attrs);
 
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
         holder.setFormat(PixelFormat.RGB_565);
-
         mGLController = new GLController(this);
-        mContext = context;
+    }
+
+    void connect(LayerController controller) {
         mController = controller;
-        mTouchEventHandler = new TouchEventHandler(context, this, mController);
+        mTouchEventHandler = new TouchEventHandler(getContext(), this, mController);
         mRenderer = new LayerRenderer(this);
         mInputConnectionHandler = null;
 
