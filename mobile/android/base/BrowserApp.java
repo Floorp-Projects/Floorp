@@ -206,7 +206,7 @@ abstract public class BrowserApp extends GeckoApp
     public void onContentChanged() {
         super.onContentChanged();
         if (mAboutHomeContent != null)
-            mAboutHomeContent.onActivityContentChanged(this);
+            mAboutHomeContent.onActivityContentChanged();
     }
 
     @Override
@@ -506,7 +506,7 @@ abstract public class BrowserApp extends GeckoApp
         if (mAboutHomeContent == null)
             return;
 
-        mAboutHomeContent.update(this, EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
+        mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
     }
 
     public void showAboutHome() {
@@ -531,7 +531,7 @@ abstract public class BrowserApp extends GeckoApp
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
                     mAboutHomeContent.init();
-                    mAboutHomeContent.update(mAppContext, AboutHomeContent.UpdateFlags.ALL);
+                    mAboutHomeContent.update(AboutHomeContent.UpdateFlags.ALL);
                     mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                         public void callback(String url) {
                             mBrowserToolbar.setProgressVisibility(true);
@@ -540,8 +540,7 @@ abstract public class BrowserApp extends GeckoApp
                     });
                     mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
-                    mAboutHomeContent.update(mAppContext,
-                                             EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
+                    mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
                                                         AboutHomeContent.UpdateFlags.REMOTE_TABS));
                 }
             
