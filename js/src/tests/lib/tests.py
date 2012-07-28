@@ -86,8 +86,7 @@ class Test(object):
         cmd = cmd + Test.prefix_command(dirname)
         if self.debugMode:
             cmd += [ '-d' ]
-        # There is a test that requires the path to start with './'.
-        cmd += [ '-f', './' + self.path ]
+        cmd += [ '-f', self.path ]
         return cmd
 
     def run(self, js_cmd_prefix, timeout=30.0):
