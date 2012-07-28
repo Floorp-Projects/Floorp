@@ -30,11 +30,12 @@ Features to add:
   html { padding: 0; }
   body { padding: 4px; }
 
-  #pixelarea, #itemlist, #images { position: absolute; }
+  #pixelarea, #itemlist, #images, #updates { position: absolute; }
   #itemlist, #images { overflow: auto; }
   #pixelarea { top: 0; left: 0; width: 320px; height: 84px; overflow: visible }
   #itemlist { top: 84px; left: 0; width: 320px; bottom: 0; }
   #images { top: 0; bottom: 0; left: 320px; right: 0; }
+  #updates { top: 30px; bottom: 0; left: 1150px; right: 0; }
 
   #leftpane { width: 320px; }
   #images { position: fixed; top: 10px; left: 340px; }
@@ -206,6 +207,7 @@ var gTestItems;
 function process_log(contents) {
   var lines = contents.split(/[\r\n]+/);
   gTestItems = [];
+  var logTestIndex = 0;
   for (var j in lines) {
     var line = lines[j];
     var match = line.match(/^(?:NEXT ERROR )?REFTEST (.*)$/);
@@ -217,7 +219,7 @@ function process_log(contents) {
       var state = match[1];
       var random = match[2];
       var url = match[3];
-                        var extra = match[4];
+      var extra = match[4];
       gTestItems.push(
         {
           pass: !state.match(/DEBUG-INFO$|FAIL$/),
@@ -226,14 +228,43 @@ function process_log(contents) {
           random: (random == "(EXPECTED RANDOM)"),
           skip: (extra == " (SKIP)"),
           url: url,
-          images: []
+          images: [],
+          updates1: [],
+          updates2: []
         });
+      logTestIndex = 0;
       continue;
     }
     match = line.match(/^  IMAGE[^:]*: (.*)$/);
     if (match) {
       var item = gTestItems[gTestItems.length - 1];
       item.images.push(match[1]);
+      continue;
+    }
+    match = line.match(/^INFO \| Saved log: START (.*)$/);
+    if (match) {
+      logTestIndex++;
+      continue;
+    }
+    match = line.match(/^INFO \| Saved log: DoDrawWindow snapshot: (.*)$/);
+    if (match) {
+      var item = gTestItems[gTestItems.length - 1];
+      if (logTestIndex == 1) {
+        item.updates1[item.updates1.length - 1].image = match[1];
+      } else {
+        item.updates2[item.updates2.length - 1].image = match[1];
+      }
+      continue;
+    }
+    match = line.match(/^INFO \| Saved log: (.*)$/);
+    if (match) {
+      var item = gTestItems[gTestItems.length - 1];
+      if (logTestIndex == 1) {
+        item.updates1.push({ text: match[1], image: ""});
+      } else {
+        item.updates2.push({ text: match[1], image: ""});
+      }
+      continue;
     }
   }
 
@@ -334,19 +365,97 @@ function show_images(i) {
     ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
   }
 
+  while (ID("update-contents").firstChild) {
+    ID("update-contents").removeChild(ID("update-contents").firstChild);
+  }
+
+  var paintCount = 0;
+  var insertUpdates = function(node, element, index) {
+    var tr = document.createElement("tr");
+    var td = document.createElement("td");
+    var text = document.createTextNode(element.text);
+    var image = element.image;
+    var count = paintCount;
+    if (image != "") {
+      tr.onclick = function() { clickLogData(image, index == -1 ? -1 : count); };
+      var a = document.createElement("a");
+      a.href = "#nothing" + index;
+      if (index != -1) {
+        a.appendChild(document.createTextNode("Paint " + paintCount++ + ": "));
+      }
+      a.appendChild(text);
+      td.appendChild(a);
+    } else {
+      td.appendChild(text);
+    }
+    td.className = "url";
+    tr.appendChild(td);
+    node.appendChild(tr);
+  };
+
+  for (var i = 0; i < item.updates1.length; ++i) {
+    insertUpdates(ID("update-contents"), item.updates1[i], i);
+  }
+  paintCount = 0;
+  insertUpdates(ID("update-contents"), { text: "Final Image", image: item.images[0] }, -1);
+  ID("update-contents").style.display = "";
+  ID("update-1-current-image").style.display = "";
+  
+  for (var i = 0; i < item.updates2.length; ++i) {
+    insertUpdates(ID("update-contents2"), item.updates2[i], i);
+  }
+  insertUpdates(ID("update-contents2"), { text: "Final Image", image: item.images[1] }, -1);
+  ID("update-contents2").style.display = "none";
+  ID("update-2-current-image").style.display = "none";
+
   cell.style.display = "";
 
   get_image_data(item.images[0], function(data) { gImage1Data = data });
   get_image_data(item.images[1], function(data) { gImage2Data = data });
 }
 
+function clickLogData(data, count) {
+  if (ID("image1").style.display == "") {
+    ID("image1").setAttributeNS(XLINK_NS, "xlink:href", data);
+    // Making the href be #image1 doesn't seem to work
+    ID("feimage1").setAttributeNS(XLINK_NS, "xlink:href", data);
+    if (count != -1) {
+      ID("update-1-current-image").textContent = "Current Image after paint " + count;
+    } else {
+      ID("update-1-current-image").textContent = "Current Image is the result";
+    }
+
+    get_image_data(data, function(data) { gImage1Data = data });
+
+  } else {
+    ID("image2").setAttributeNS(XLINK_NS, "xlink:href", data);
+    // Making the href be #image1 doesn't seem to work
+    ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", data);
+    if (count != -1) {
+      ID("update-2-current-image").textContent = "Current Image after paint " + count;
+    } else {
+      ID("update-2-current-image").textContent = "Current Image is the result";
+    }
+
+    get_image_data(data, function(data) { gImage2Data = data });
+  }
+}
+
 function show_image(i) {
   if (i == 1) {
     ID("image1").style.display = "";
     ID("image2").style.display = "none";
+    ID("update-contents").style.display = "";
+    ID("update-contents2").style.display = "none";
+    ID("update-1-current-image").style.display = "";
+    ID("update-2-current-image").style.display = "none";
   } else {
     ID("image1").style.display = "none";
     ID("image2").style.display = "";
+    ID("update-contents").style.display = "none";
+    ID("update-contents2").style.display = "";
+    ID("update-1-current-image").style.display = "none";
+    ID("update-2-current-image").style.display = "";
   }
 }
 
@@ -572,6 +681,17 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
       </g>
       <rect id="diffrect" filter="url(#showDifferences)" pointer-events="none" x="0" y="0" width="100%" height="100%" />
     </svg>
+  </div>
+  <div id="updates">
+    <div id="update-1-current-image"></div>
+    <div id="update-2-current-image" style="display:none"></div>
+    Timeline:
+    <table>
+      <tbody id="update-contents">
+      </tbody>
+      <tbody id="update-contents2" style="display:none">
+      </tbody>
+    </table>
   </div>
 </div>
 
