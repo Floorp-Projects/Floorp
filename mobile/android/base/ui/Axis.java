@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.ui;
 
-import org.mozilla.gecko.FloatUtils;
+import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONArray;
 

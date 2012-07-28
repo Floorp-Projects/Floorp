@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.util.FloatUtils;
 
 import org.json.JSONObject;
 
