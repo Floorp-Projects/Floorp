@@ -242,6 +242,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/content/xbl/src \
 		   -I$(topsrcdir)/view/src \
 		   -I$(topsrcdir)/dom/base \
+		   -I$(topsrcdir)/dom/file \
 		   -I$(topsrcdir)/dom/src/json \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
