@@ -140,6 +140,14 @@ XPCOMUtils.defineLazyGetter(this, "Social", function() {
   return tmp.Social;
 });
 
+#ifdef MOZ_SAFE_BROWSING
+XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/SafeBrowsing.jsm", tmp);
+  return tmp.SafeBrowsing;
+});
+#endif
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -154,6 +162,7 @@ let gInitialPages = [
 #include browser-fullZoom.js
 #include browser-places.js
 #include browser-plugins.js
+#include browser-safebrowsing.js
 #include browser-social.js
 #include browser-tabPreviews.js
 #include browser-tabview.js
@@ -1240,6 +1249,10 @@ var gBrowserInit = {
     let TelemetryTimestamps = tmp.TelemetryTimestamps;
     TelemetryTimestamps.add("delayedStartupStarted");
     gDelayedStartupTimeoutId = null;
+
+#ifdef MOZ_SAFE_BROWSING
+    SafeBrowsing.init();
+#endif
 
     Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
@@ -2580,7 +2593,7 @@ function BrowserOnClick(event) {
             label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
             accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
             callback: function() {
-              openUILinkIn(safebrowsing.getReportURL('MalwareError'), 'tab');
+              openUILinkIn(gSafeBrowsing.getReportURL('MalwareError'), 'tab');
             }
           };
         } else {
@@ -2589,7 +2602,7 @@ function BrowserOnClick(event) {
             label: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.label"),
             accessKey: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.accessKey"),
             callback: function() {
-              openUILinkIn(safebrowsing.getReportURL('Error'), 'tab');
+              openUILinkIn(gSafeBrowsing.getReportURL('Error'), 'tab');
             }
           };
         }
