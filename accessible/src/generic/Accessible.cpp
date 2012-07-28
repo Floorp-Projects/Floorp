@@ -7,6 +7,7 @@
 
 #include "nsIXBLAccessible.h"
 
+#include "AccCollector.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"

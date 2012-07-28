@@ -6,7 +6,7 @@
 #include "TextUpdater.h"
 
 #include "Accessible-inl.h"
-#include "DocAccessible.h"
+#include "DocAccessible-inl.h"
 #include "TextLeafAccessible.h"
 
 using namespace mozilla::a11y;
