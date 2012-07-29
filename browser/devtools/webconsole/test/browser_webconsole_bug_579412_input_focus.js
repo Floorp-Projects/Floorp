@@ -15,11 +15,11 @@ function test() {
 function testInputFocus() {
   browser.removeEventListener("DOMContentLoaded", testInputFocus, false);
 
-  openConsole();
+  openConsole(null, function(hud) {
+    let inputNode = hud.jsterm.inputNode;
+    ok(inputNode.getAttribute("focused"), "input node is focused");
 
-  let inputNode = HUDService.getHudByWindow(content).jsterm.inputNode;
-  ok(inputNode.getAttribute("focused"), "input node is focused");
-
-  finishTest();
+    finishTest();
+  });
 }
 

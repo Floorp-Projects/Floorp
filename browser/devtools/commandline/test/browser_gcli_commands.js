@@ -29,38 +29,47 @@ function testEcho() {
 }
 
 function testConsole(tab) {
+  let hud = null;
+  function onWebConsoleOpen(aSubject) {
+    Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
+
+    aSubject.QueryInterface(Ci.nsISupportsString);
+    hud = imported.HUDService.getHudReferenceById(aSubject.data);
+    ok(hud.hudId in imported.HUDService.hudReferences, "console open");
+
+    hud.jsterm.execute("pprint(window)", onExecute);
+  }
+
+  Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
+
   DeveloperToolbarTest.exec({
     typed: "console open",
     args: {},
     blankOutput: true,
   });
 
-  let hud = imported.HUDService.getHudByWindow(content);
-  ok(hud.hudId in imported.HUDService.hudReferences, "console open");
+  function onExecute() {
+    let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
+    ok(labels.length > 0, "output for pprint(window)");
 
-  hud.jsterm.execute("pprint(window)");
+    DeveloperToolbarTest.exec({
+      typed: "console clear",
+      args: {},
+      blankOutput: true,
+    });
 
-  /*
-  // The web console is async and we can't force it with hud._flushMessageQueue
-  // So we are skipping the test for output until we have an event to wait on
-  let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-  ok(labels.length > 0, "output for pprint(window)");
-  */
+    let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
+    is(labels.length, 0, "no output in console");
 
-  DeveloperToolbarTest.exec({
-    typed: "console clear",
-    args: {},
-    blankOutput: true,
-  });
+    DeveloperToolbarTest.exec({
+      typed: "console close",
+      args: {},
+      blankOutput: true,
+    });
 
-  let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-  is(labels.length, 0, "no output in console");
+    ok(!(hud.hudId in imported.HUDService.hudReferences), "console closed");
 
-  DeveloperToolbarTest.exec({
-    typed: "console close",
-    args: {},
-    blankOutput: true,
-  });
-
-  ok(!(hud.hudId in imported.HUDService.hudReferences), "console closed");
+    imported = undefined;
+    finish();
+  }
 }

@@ -9,16 +9,14 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testJSInputExpansion, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testJSInputExpansion);
+  }, true);
 }
 
-function testJSInputExpansion() {
-  browser.removeEventListener("DOMContentLoaded", testJSInputExpansion,
-                              false);
-
-  openConsole();
-
-  let jsterm = HUDService.getHudByWindow(content).jsterm;
+function testJSInputExpansion(hud) {
+  let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
   input.focus();
 
@@ -30,9 +28,7 @@ function testJSInputExpansion() {
   input.selectionStart = length;
   function getHeight()
   {
-    let h = browser.contentDocument.defaultView.getComputedStyle(input, null)
-      .getPropertyValue("height");
-    return parseInt(h);
+    return input.clientHeight;
   }
   let initialHeight = getHeight();
   // Performs an "d". This will trigger/test for the input event that should
