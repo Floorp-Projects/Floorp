@@ -9,6 +9,7 @@
 
 #include "nsIInputStream.h"
 #include "zlib.h"
+#include "mozilla/Attributes.h"
 
 USING_FILE_NAMESPACE
 
@@ -16,7 +17,7 @@ USING_FILE_NAMESPACE
 
 // a internat input stream object
 
-class ArchiveInputStream : public nsIInputStream
+class ArchiveInputStream MOZ_FINAL : public nsIInputStream
 {
 public:
   ArchiveInputStream(ArchiveReader* aReader,
