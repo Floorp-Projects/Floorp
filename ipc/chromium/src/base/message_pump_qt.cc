@@ -80,7 +80,7 @@ MessagePumpQt::scheduleDelayedIfNeeded(const Time& delayed_work_time)
   // std::min only works on exact same types.
   int laterMsecs = later.InMilliseconds() > std::numeric_limits<int>::max() ?
     std::numeric_limits<int>::max() : later.InMilliseconds();
-  mTimer->start(laterMsecs);
+  mTimer->start(laterMsecs > 0 ? laterMsecs : 0);
 }
 
 void

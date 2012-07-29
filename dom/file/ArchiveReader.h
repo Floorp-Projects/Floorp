@@ -15,14 +15,14 @@
 #include "nsCOMArray.h"
 #include "nsIChannel.h"
 #include "nsIDOMFile.h"
-
+#include "mozilla/Attributes.h"
 
 BEGIN_FILE_NAMESPACE
 
 class ArchiveRequest;
 
-class ArchiveReader : public nsIDOMArchiveReader,
-                      public nsIJSNativeInitializer
+class ArchiveReader MOZ_FINAL : public nsIDOMArchiveReader,
+                                public nsIJSNativeInitializer
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
