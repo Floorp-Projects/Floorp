@@ -85,7 +85,7 @@ function consoleOpened(HUD) {
       }, false);
 
       let node = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(node, 2, 2, {});
+      EventUtils.synthesizeMouse(node, 2, 2, {}, HUD.iframeWindow);
     },
     failureFn: finishTest,
   });

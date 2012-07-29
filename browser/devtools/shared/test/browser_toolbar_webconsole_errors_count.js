@@ -155,9 +155,9 @@ function test() {
   }
 
   function doClearConsoleButton(hud) {
-    let clearButton = hud.HUDBox
+    let clearButton = hud.ui.rootElement
                       .querySelector(".webconsole-clear-console-button");
-    EventUtils.synthesizeMouse(clearButton, 2, 2, {}, window);
+    EventUtils.synthesizeMouse(clearButton, 2, 2, {}, hud.iframeWindow);
 
     is(hud.outputNode.textContent.indexOf("foobarBug762996click"), -1,
        "clear console button worked");

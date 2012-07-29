@@ -38,8 +38,6 @@ function consoleOpened(aHud) {
 }
 
 function testLiveFilteringOnSearchStrings() {
-  // TODO: bug 744732 - broken live filtering tests.
-
   setStringFilter("http");
   isnot(countMessageNodes(), 0, "the log nodes are not hidden when the " +
     "search string is set to \"http\"");
@@ -88,7 +86,7 @@ function countMessageNodes() {
 
   let messageNodes = outputNode.querySelectorAll(".hud-log");
   let displayedMessageNodes = 0;
-  let view = hud.chromeWindow;
+  let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
     let computedStyle = view.getComputedStyle(messageNodes[i], null);
     if (computedStyle.display !== "none") {
@@ -101,7 +99,7 @@ function countMessageNodes() {
 
 function setStringFilter(aValue)
 {
-  hud.filterBox.value = aValue;
-  HUDService.adjustVisibilityOnSearchStringChange(hud.hudId, aValue);
+  hud.ui.filterBox.value = aValue;
+  hud.ui.adjustVisibilityOnSearchStringChange();
 }
 
