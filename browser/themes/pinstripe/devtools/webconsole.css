@@ -4,21 +4,6 @@
 
 %include ../shared.inc
 
-.hud-box {
-  border-bottom: 1px solid #aaa;
-  text-shadow: none;
-}
-
-.hud-box.animated {
-  transition: height 100ms;
-}
-
-.hud-splitter {
-  border-bottom: solid #a5a5a5 1px;
-  background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
-    -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
-}
-
 .hud-outer-wrapper {
   width: 100%;
   height: 100%;
@@ -327,6 +312,10 @@
   display: block;
 }
 
+.jsterm-input-container {
+  background: white;
+}
+
 .jsterm-input-node,
 .jsterm-complete-node {
   border: none;
@@ -361,15 +350,4 @@
 
 .hud-console-filter-toolbar:-moz-lwtheme {
   border-top: @scopeBarSeparatorBorder@;
-}
-
-.web-console-panel {
-  -moz-appearance: none;
-  background-color: white;
-}
-
-.web-console-panel > .hud-box {
-  height: 100%;
-  width: 100%;
-  background-color: white;
 }
