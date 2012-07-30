@@ -109,7 +109,7 @@ public:
   ColorModel
   GetOutputColorModel(nsSVGFilterInstance* aInstance) {
     return ColorModel(
-          (OperatesOnSRGB(aInstance, -1, nsnull) ?
+          (OperatesOnSRGB(aInstance, -1, nullptr) ?
              ColorModel::SRGB : ColorModel::LINEAR_RGB),
           (OperatesOnPremultipledAlpha(-1) ?
              ColorModel::PREMULTIPLIED : ColorModel::UNPREMULTIPLIED));

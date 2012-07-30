@@ -68,7 +68,7 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
                                       nsTableCellReflowState& aReflowState)
 {
   nsMargin collapseBorder;
-  nsMargin* pCollapseBorder = nsnull;
+  nsMargin* pCollapseBorder = nullptr;
   if (aBorderCollapse) {
     // we only reflow cells, so don't need to check frame type
     nsBCTableCellFrame* bcCellFrame = (nsBCTableCellFrame*)aReflowState.frame;
@@ -175,7 +175,7 @@ nsTableRowFrame::AppendFrames(ChildListID     aListID,
 {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
-  const nsFrameList::Slice& newCells = mFrames.AppendFrames(nsnull, aFrameList);
+  const nsFrameList::Slice& newCells = mFrames.AppendFrames(nullptr, aFrameList);
 
   // Add the new cell frames to the table
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -202,7 +202,7 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
   //Insert Frames in the frame list
-  const nsFrameList::Slice& newCells = mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  const nsFrameList::Slice& newCells = mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
 
   // Get the table frame
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -307,7 +307,7 @@ nsTableRowFrame::GetFirstCell()
     }
     childFrame = childFrame->GetNextSibling();
   }
-  return nsnull;
+  return nullptr;
 }
 
 /**
@@ -560,7 +560,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  nsDisplayTableItem* item = nsnull;
+  nsDisplayTableItem* item = nullptr;
   if (IsVisibleInSelection(aBuilder)) {
     bool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
     if (isRoot) {
@@ -582,10 +582,10 @@ PRIntn
 nsTableRowFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != GetPrevInFlow()) {
+  if (nullptr != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != GetNextInFlow()) {
+  if (nullptr != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -793,7 +793,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       nsHTMLReflowMetrics desiredSize;
       nsReflowStatus  status;
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, status);
-      kidFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+      kidFrame->DidReflow(aPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
 
       continue;
     }
@@ -926,7 +926,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       // Place the child
       desiredSize.width = availCellWidth;
 
-      FinishReflowChild(kidFrame, aPresContext, nsnull, desiredSize, x, 0, 0);
+      FinishReflowChild(kidFrame, aPresContext, nullptr, desiredSize, x, 0, 0);
 
       nsTableFrame::InvalidateFrame(kidFrame, kidRect, kidVisualOverflow,
                                     firstReflow);
@@ -1081,7 +1081,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
                                 (aCellFrame->GetStateBits() &
                                    NS_FRAME_FIRST_REFLOW) != 0);
   
-  aCellFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+  aCellFrame->DidReflow(aPresContext, nullptr, NS_FRAME_REFLOW_FINISHED);
 
   return desiredSize.height;
 }
@@ -1266,7 +1266,7 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
                                  PRInt32           aColIndex)
 {
   // Find the cell frame where col index < aColIndex
-  nsTableCellFrame* priorCell = nsnull;
+  nsTableCellFrame* priorCell = nullptr;
   for (nsIFrame* child = mFrames.FirstChild(); child;
        child = child->GetNextSibling()) {
     nsTableCellFrame *cellFrame = do_QueryFrame(child);
@@ -1300,10 +1300,10 @@ nsTableRowFrame::GetNextRow() const
     }
     childFrame = childFrame->GetNextSibling();
   }
-  return nsnull;
+  return nullptr;
 }
 
-NS_DECLARE_FRAME_PROPERTY(RowUnpaginatedHeightProperty, nsnull)
+NS_DECLARE_FRAME_PROPERTY(RowUnpaginatedHeightProperty, nullptr)
 
 void 
 nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
@@ -1349,7 +1349,7 @@ nsTableRowFrame::CreateAccessible()
                                                     PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 /**

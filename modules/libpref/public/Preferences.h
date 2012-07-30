@@ -67,7 +67,7 @@ public:
    */
   static nsIPrefService* GetService()
   {
-    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
     return sPreferences;
   }
 
@@ -77,7 +77,7 @@ public:
    */
   static nsIPrefBranch* GetRootBranch()
   {
-    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
     return sRootBranch;
   }
 
@@ -87,7 +87,7 @@ public:
    */
   static nsIPrefBranch* GetDefaultRootBranch()
   {
-    NS_ENSURE_TRUE(InitStaticMembers(), nsnull);
+    NS_ENSURE_TRUE(InitStaticMembers(), nullptr);
     return sDefaultRootBranch;
   }
 
@@ -234,10 +234,10 @@ public:
    */
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
-                                   void* aClosure = nsnull);
+                                   void* aClosure = nullptr);
   static nsresult UnregisterCallback(PrefChangedFunc aCallback,
                                      const char* aPref,
-                                     void* aClosure = nsnull);
+                                     void* aClosure = nullptr);
 
   /**
    * Adds the aVariable to cache table.  aVariable must be a pointer for a

@@ -61,11 +61,11 @@ nsImageLoader::Destroy()
 {
   // Destroy the chain with only one level of recursion.
   nsRefPtr<nsImageLoader> list = mNextLoader;
-  mNextLoader = nsnull;
+  mNextLoader = nullptr;
   while (list) {
     nsRefPtr<nsImageLoader> todestroy = list;
     list = todestroy->mNextLoader;
-    todestroy->mNextLoader = nsnull;
+    todestroy->mNextLoader = nullptr;
     todestroy->Destroy();
   }
 
@@ -74,13 +74,13 @@ nsImageLoader::Destroy()
                                           &mRequestRegistered);
   }
 
-  mFrame = nsnull;
+  mFrame = nullptr;
 
   if (mRequest) {
     mRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
   }
 
-  mRequest = nsnull;
+  mRequest = nullptr;
 }
 
 nsresult
@@ -146,7 +146,7 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
 
   // Take requested actions
   if (mActions & ACTION_REDRAW_ON_DECODE) {
-    DoRedraw(nsnull);
+    DoRedraw(nullptr);
   }
   return NS_OK;
 }
@@ -173,7 +173,7 @@ NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
 
   // Take requested actions
   if (mActions & ACTION_REDRAW_ON_LOAD) {
-    DoRedraw(nsnull);
+    DoRedraw(nullptr);
   }
   return NS_OK;
 }

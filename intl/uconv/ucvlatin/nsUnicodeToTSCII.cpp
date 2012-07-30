@@ -448,7 +448,7 @@ nsUnicodeToTamilTTF::SetOutputErrorBehavior(PRInt32 aBehavior,
                                             nsIUnicharEncoder *aEncoder, 
                                             PRUnichar aChar)
 {
-  if (aBehavior == kOnError_CallBack && aEncoder == nsnull)
+  if (aBehavior == kOnError_CallBack && aEncoder == nullptr)
     return NS_ERROR_NULL_POINTER;
   mErrEncoder = aEncoder;
   mErrBehavior = aBehavior;

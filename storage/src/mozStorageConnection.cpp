@@ -49,7 +49,7 @@
 #define DEFAULT_CACHE_SIZE_PAGES 2000
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gStorageLog = nsnull;
+PRLogModuleInfo* gStorageLog = nullptr;
 #endif
 
 namespace mozilla {
@@ -367,8 +367,8 @@ public:
     // mConnection and it's nice to avoid for mCallbackEvent too.  We do not
     // null out mCallingThread because it is conceivable the async thread might
     // still be 'in' the object.
-    mConnection = nsnull;
-    mCallbackEvent = nsnull;
+    mConnection = nullptr;
+    mCallbackEvent = nullptr;
 
     return NS_OK;
   }
@@ -388,10 +388,10 @@ Connection::Connection(Service *aService,
 : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
 , sharedDBMutex("Connection::sharedDBMutex")
 , threadOpenedOn(do_GetCurrentThread())
-, mDBConn(nsnull)
+, mDBConn(nullptr)
 , mAsyncExecutionThreadShuttingDown(false)
 , mTransactionInProgress(false)
-, mProgressHandler(nsnull)
+, mProgressHandler(nullptr)
 , mFlags(aFlags)
 , mStorageService(aService)
 {
@@ -441,13 +441,13 @@ Connection::getAsyncExecutionTarget()
   // If we are shutting down the asynchronous thread, don't hand out any more
   // references to the thread.
   if (mAsyncExecutionThreadShuttingDown)
-    return nsnull;
+    return nullptr;
 
   if (!mAsyncExecutionThread) {
     nsresult rv = ::NS_NewThread(getter_AddRefs(mAsyncExecutionThread));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to create async thread.");
-      return nsnull;
+      return nullptr;
     }
     static nsThreadPoolNaming naming;
     naming.SetThreadPoolName(NS_LITERAL_CSTRING("mozStorage"),
@@ -482,7 +482,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
     srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, aVFSName);
   }
   if (srv != SQLITE_OK) {
-    mDBConn = nsnull;
+    mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
@@ -534,7 +534,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   srv = executeSql(cacheSizeQuery.get());
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
-    mDBConn = nsnull;
+    mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
@@ -542,7 +542,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   srv = registerFunctions(mDBConn);
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
-    mDBConn = nsnull;
+    mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
@@ -550,7 +550,7 @@ Connection::initialize(nsIFile *aDatabaseFile,
   srv = registerCollations(mDBConn, mStorageService);
   if (srv != SQLITE_OK) {
     ::sqlite3_close(mDBConn);
-    mDBConn = nsnull;
+    mDBConn = nullptr;
     return convertResultCode(srv);
   }
 
@@ -1355,7 +1355,7 @@ Connection::SetProgressHandler(PRInt32 aGranularity,
   NS_IF_ADDREF(*_oldHandler = mProgressHandler);
 
   if (!aHandler || aGranularity <= 0) {
-    aHandler = nsnull;
+    aHandler = nullptr;
     aGranularity = 0;
   }
   mProgressHandler = aHandler;
@@ -1373,7 +1373,7 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler **_oldHandler)
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   NS_IF_ADDREF(*_oldHandler = mProgressHandler);
 
-  mProgressHandler = nsnull;
+  mProgressHandler = nullptr;
   ::sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
 
   return NS_OK;

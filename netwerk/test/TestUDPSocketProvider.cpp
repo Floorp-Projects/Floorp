@@ -59,18 +59,18 @@ main(int argc, char* argv[])
 
     int returnCode = 0;
     nsresult rv = NS_OK;
-    PRFileDesc *serverFD = nsnull;
+    PRFileDesc *serverFD = nullptr;
 
     do { // act both as a scope for nsCOMPtrs to be released before XPCOM
          // shutdown, as well as a easy way to abort the test
         PRStatus status = PR_SUCCESS;
 
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
         nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
         UDP_ASSERT(registrar, "Null nsIComponentRegistrar");
         if (registrar)
-            registrar->AutoRegister(nsnull);
+            registrar->AutoRegister(nullptr);
 
         // listen for a incoming UDP connection on localhost
         serverFD = PR_OpenUDPSocket(PR_AF_INET);
@@ -101,7 +101,7 @@ main(int argc, char* argv[])
         nsCOMPtr<nsISocketTransport> transport;
         const char *protocol = "udp";
         rv = sts->CreateTransport(&protocol, 1, NS_LITERAL_CSTRING("localhost"),
-                                  UDP_PORT, nsnull, getter_AddRefs(transport));
+                                  UDP_PORT, nullptr, getter_AddRefs(transport));
         UDP_ASSERT_NSRESULT("Cannot create transport");
         
         PRUint32 count, read;
@@ -151,7 +151,7 @@ main(int argc, char* argv[])
                     err, PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT));
         }
     }
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");    
 
     return returnCode;

@@ -70,7 +70,7 @@ nsXMLElement::DoGetID() const
   NS_ASSERTION(HasID(), "Unexpected call");
 
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(GetIDAttributeName());
-  return attrVal ? attrVal->GetAtomValue() : nsnull;
+  return attrVal ? attrVal->GetAtomValue() : nullptr;
 }
 
 void

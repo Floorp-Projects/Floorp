@@ -66,7 +66,7 @@ PR_STATIC_ASSERT (HighThreadThreshold <= MAX_RESOLVER_THREADS);
 //----------------------------------------------------------------------------
 
 #if defined(PR_LOGGING)
-static PRLogModuleInfo *gHostResolverLog = nsnull;
+static PRLogModuleInfo *gHostResolverLog = nullptr;
 #define LOG(args) PR_LOG(gHostResolverLog, PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
@@ -151,8 +151,8 @@ private:
 nsHostRecord::nsHostRecord(const nsHostKey *key)
     : addr_info_lock("nsHostRecord.addr_info_lock")
     , addr_info_gencnt(0)
-    , addr_info(nsnull)
-    , addr(nsnull)
+    , addr_info(nullptr)
+    , addr(nullptr)
     , negative(false)
     , resolving(false)
     , onQueue(false)
@@ -286,7 +286,7 @@ HostDB_ClearEntry(PLDHashTable *table,
         PRInt32 now = (PRInt32) NowInMinutes();
         PRInt32 diff = (PRInt32) he->rec->expiration - now;
         LOG(("Record for [%s] expires in %d minute(s).\n", he->rec->host, diff));
-        void *iter = nsnull;
+        void *iter = nullptr;
         PRNetAddr addr;
         char buf[64];
         for (;;) {
@@ -369,7 +369,7 @@ nsHostResolver::Init()
 {
     NS_TIME_FUNCTION;
 
-    PL_DHashTableInit(&mDB, &gHostDB_ops, nsnull, sizeof(nsHostDBEnt), 0);
+    PL_DHashTableInit(&mDB, &gHostDB_ops, nullptr, sizeof(nsHostDBEnt), 0);
 
     mShutdown = false;
 
@@ -397,7 +397,7 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
         while (node != aPendingQ) {
             nsHostRecord *rec = static_cast<nsHostRecord *>(node);
             node = node->next;
-            OnLookupComplete(rec, NS_ERROR_ABORT, nsnull);
+            OnLookupComplete(rec, NS_ERROR_ABORT, nullptr);
         }
     }
 }
@@ -429,7 +429,7 @@ nsHostResolver::Shutdown()
             mIdleThreadCV.NotifyAll();
         
         // empty host database
-        PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nsnull);
+        PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nullptr);
     }
     
     ClearPendingQueue(&pendingQHigh);

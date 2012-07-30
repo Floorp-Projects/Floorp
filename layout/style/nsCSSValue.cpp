@@ -1317,7 +1317,7 @@ nsCSSValueList::CloneInto(nsCSSValueList* aList) const
 {
     NS_ASSERTION(!aList->mNext, "Must be an empty list!");
     aList->mValue = mValue;
-    aList->mNext = mNext ? mNext->Clone() : nsnull;
+    aList->mNext = mNext ? mNext->Clone() : nullptr;
 }
 
 void
@@ -1683,7 +1683,7 @@ nsCSSValue::URL::GetURI() const
     // Be careful to not null out mURI before we've passed it as the base URI
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),
-              NS_ConvertUTF16toUTF8(GetBufferValue(mString)), nsnull, mURI);
+              NS_ConvertUTF16toUTF8(GetBufferValue(mString)), nullptr, mURI);
     newURI.swap(mURI);
   }
 
@@ -1720,7 +1720,7 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
       nsContentUtils::CanLoadImage(aURI, aDocument, aDocument,
                                    aOriginPrincipal)) {
     nsContentUtils::LoadImage(aURI, aDocument, aOriginPrincipal, aReferrer,
-                              nsnull, nsIRequest::LOAD_NORMAL,
+                              nullptr, nsIRequest::LOAD_NORMAL,
                               getter_AddRefs(mRequest));
   }
 }

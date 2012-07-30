@@ -83,7 +83,7 @@ public:
    */
   nsHTMLOptionElement *ItemAsOption(PRUint32 aIndex)
   {
-    return mElements.SafeElementAt(aIndex, nsnull);
+    return mElements.SafeElementAt(aIndex, nullptr);
   }
 
   /**
@@ -219,7 +219,7 @@ public:
   {
     if (aContent && aContent->IsHTML(nsGkAtoms::select))
       return static_cast<nsHTMLSelectElement*>(aContent);
-    return nsnull;
+    return nullptr;
   }
  
   // nsISupports
@@ -596,7 +596,7 @@ protected:
   /**
    * Insert aElement before the node given by aBefore
    */
-  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nsnull);
+  nsresult Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore = nullptr);
 
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;

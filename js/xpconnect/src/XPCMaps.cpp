@@ -48,7 +48,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         Position = Key->GetPosition();
     } else {
         Set      = (XPCNativeSet*) Key;
-        Addition = nsnull;
+        Addition = nullptr;
         Position = 0;
     }
 
@@ -124,12 +124,12 @@ Native2WrappedNativeMap::newMap(int size)
     // use the map, so we abort immediately to provide a more useful
     // crash stack.
     NS_RUNTIMEABORT("Ran out of memory.");
-    return nsnull;
+    return nullptr;
 }
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int size)
 {
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nullptr,
                               sizeof(Entry), size);
 }
 
@@ -177,12 +177,12 @@ IID2WrappedJSClassMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int size)
 {
-    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), size);
 }
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
@@ -214,12 +214,12 @@ IID2NativeInterfaceMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 IID2NativeInterfaceMap::IID2NativeInterfaceMap(int size)
 {
-    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), size);
 }
 
 IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
@@ -256,12 +256,12 @@ ClassInfo2NativeSetMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int size)
 {
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nullptr,
                               sizeof(Entry), size);
 }
 
@@ -296,12 +296,12 @@ ClassInfo2WrappedNativeProtoMap::newMap(int size)
     // use the map, so we abort immediately to provide a more useful
     // crash stack.
     NS_RUNTIMEABORT("Ran out of memory.");
-    return nsnull;
+    return nullptr;
 }
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int size)
 {
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nullptr,
                               sizeof(Entry), size);
 }
 
@@ -421,12 +421,12 @@ NativeSetMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 NativeSetMap::NativeSetMap(int size)
 {
-    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), size);
 }
 
 NativeSetMap::~NativeSetMap()
@@ -488,12 +488,12 @@ IID2ThisTranslatorMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 IID2ThisTranslatorMap::IID2ThisTranslatorMap(int size)
 {
-    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), size);
 }
 
 IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
@@ -569,12 +569,12 @@ XPCNativeScriptableSharedMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int size)
 {
-    mTable = JS_NewDHashTable(&Entry::sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), size);
 }
 
 XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
@@ -623,12 +623,12 @@ XPCWrappedNativeProtoMap::newMap(int size)
     if (map && map->mTable)
         return map;
     delete map;
-    return nsnull;
+    return nullptr;
 }
 
 XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int size)
 {
-    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nullptr,
                               sizeof(JSDHashEntryStub), size);
 }
 

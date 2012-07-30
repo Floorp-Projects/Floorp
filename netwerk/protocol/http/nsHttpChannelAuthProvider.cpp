@@ -22,9 +22,9 @@
 #include "nsIDNSRecord.h"
 
 nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
-    : mAuthChannel(nsnull)
-    , mProxyAuthContinuationState(nsnull)
-    , mAuthContinuationState(nsnull)
+    : mAuthChannel(nullptr)
+    , mProxyAuthContinuationState(nullptr)
+    , mAuthContinuationState(nullptr)
     , mProxyAuth(false)
     , mTriedProxyAuth(false)
     , mTriedHostAuth(false)
@@ -178,7 +178,7 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders()
     if (proxyHost && UsingHttpProxy())
         SetAuthorizationHeader(authCache, nsHttp::Proxy_Authorization,
                                "http", proxyHost, ProxyPort(),
-                               nsnull, // proxy has no path
+                               nullptr, // proxy has no path
                                mProxyIdent);
 
     if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
@@ -230,11 +230,11 @@ nsHttpChannelAuthProvider::Cancel(nsresult status)
 
     if (mAsyncPromptAuthCancelable) {
         mAsyncPromptAuthCancelable->Cancel(status);
-        mAsyncPromptAuthCancelable = nsnull;
+        mAsyncPromptAuthCancelable = nullptr;
     }
     if (mDNSQuery) {
         mDNSQuery->Cancel(status);
-        mDNSQuery = nsnull;
+        mDNSQuery = nullptr;
     }
     return NS_OK;
 }
@@ -242,15 +242,15 @@ nsHttpChannelAuthProvider::Cancel(nsresult status)
 NS_IMETHODIMP
 nsHttpChannelAuthProvider::Disconnect(nsresult status)
 {
-    mAuthChannel = nsnull;
+    mAuthChannel = nullptr;
 
     if (mAsyncPromptAuthCancelable) {
         mAsyncPromptAuthCancelable->Cancel(status);
-        mAsyncPromptAuthCancelable = nsnull;
+        mAsyncPromptAuthCancelable = nullptr;
     }
     if (mDNSQuery) {
         mDNSQuery->Cancel(status);
-        mDNSQuery = nsnull;
+        mDNSQuery = nullptr;
     }
 
     NS_IF_RELEASE(mProxyAuthContinuationState);
@@ -282,7 +282,7 @@ SetIdent(nsHttpAuthIdentity &ident,
          PRUnichar *passBuf)
 {
     const PRUnichar *user = userBuf;
-    const PRUnichar *domain = nsnull;
+    const PRUnichar *domain = nullptr;
 
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         ParseUserDomain(userBuf, &user, &domain);
@@ -386,9 +386,9 @@ nsHttpChannelAuthProvider::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
     // if the credentials are not reusable, then we don't bother sticking
     // them in the auth cache.
     rv = authCache->SetAuthEntry(scheme, host, port, directory, realm,
-                                 saveCreds ? *result : nsnull,
-                                 saveChallenge ? challenge : nsnull,
-                                 saveIdentity ? &ident : nsnull,
+                                 saveCreds ? *result : nullptr,
+                                 saveChallenge ? challenge : nullptr,
+                                 saveIdentity ? &ident : nullptr,
                                  sessionState);
     return rv;
 }
@@ -526,7 +526,7 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
         const char *p = eol + 1;
 
         // get the challenge string (LF separated -- see nsHttpHeaderArray)
-        if ((eol = strchr(p, '\n')) != nsnull)
+        if ((eol = strchr(p, '\n')) != nullptr)
             challenge.Assign(p, eol - p);
         else
             challenge.Assign(p);
@@ -570,7 +570,7 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
                 // processed and all remaining challenges to use later in
                 // OnAuthAvailable and now immediately return
                 mCurrentChallenge = challenge;
-                mRemainingChallenges = eol ? eol+1 : nsnull;
+                mRemainingChallenges = eol ? eol+1 : nullptr;
                 return rv;
             }
 
@@ -691,7 +691,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     // in the cache have changed, in which case we'd want to give them a
     // try instead.
     //
-    nsHttpAuthEntry *entry = nsnull;
+    nsHttpAuthEntry *entry = nullptr;
     authCache->GetAuthEntryForDomain(scheme.get(), host, port,
                                      realm.get(), &entry);
 
@@ -723,7 +723,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
                 // corresponding entry from the auth cache.
                 authCache->ClearAuthEntry(scheme.get(), host,
                                           port, realm.get());
-                entry = nsnull;
+                entry = nullptr;
                 ident->Clear();
             }
             else if (!identFromURI ||
@@ -814,7 +814,7 @@ GetAuthType(const char *challenge, nsCString &authType)
     const char *p;
 
     // get the challenge type
-    if ((p = strchr(challenge, ' ')) != nsnull)
+    if ((p = strchr(challenge, ' ')) != nullptr)
         authType.Assign(challenge, p - challenge);
     else
         authType.Assign(challenge);
@@ -990,7 +990,7 @@ nsHttpChannelAuthProvider::PromptForIdentity(PRUint32            level,
     if (NS_FAILED(rv)) return rv;
 
     rv =
-        authPrompt->AsyncPromptAuth(channel, this, nsnull, level, holder,
+        authPrompt->AsyncPromptAuth(channel, this, nullptr, level, holder,
                                     getter_AddRefs(mAsyncPromptAuthCancelable));
 
     if (NS_SUCCEEDED(rv)) {
@@ -1024,7 +1024,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(nsISupports *aContext,
     LOG(("nsHttpChannelAuthProvider::OnAuthAvailable [this=%p channel=%p]",
         this, mAuthChannel));
 
-    mAsyncPromptAuthCancelable = nsnull;
+    mAsyncPromptAuthCancelable = nullptr;
     if (!mAuthChannel)
         return NS_OK;
 
@@ -1044,7 +1044,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(nsISupports *aContext,
     ParseRealm(mCurrentChallenge.get(), realm);
 
     nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
-    nsHttpAuthEntry *entry = nsnull;
+    nsHttpAuthEntry *entry = nullptr;
     authCache->GetAuthEntryForDomain(scheme.get(), host, port,
                                      realm.get(), &entry);
 
@@ -1098,7 +1098,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports *aContext,
     LOG(("nsHttpChannelAuthProvider::OnAuthCancelled [this=%p channel=%p]",
         this, mAuthChannel));
 
-    mAsyncPromptAuthCancelable = nsnull;
+    mAsyncPromptAuthCancelable = nullptr;
     if (!mAuthChannel)
         return NS_OK;
 
@@ -1236,10 +1236,10 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
         // The actual value is irrelevant but we shouldn't be handing out
         // malformed JSBools to XPConnect.
         bool checkState = false;
-        rv = prompt->ConfirmEx(nsnull, msg,
+        rv = prompt->ConfirmEx(nullptr, msg,
                                nsIPrompt::BUTTON_POS_1_DEFAULT +
                                nsIPrompt::STD_YES_NO_BUTTONS,
-                               nsnull, nsnull, nsnull, nsnull,
+                               nullptr, nullptr, nullptr, nullptr,
                                &checkState, &choice);
         if (NS_FAILED(rv))
             return true;
@@ -1247,7 +1247,7 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
         confirmed = choice == 0;
     }
     else {
-        rv = prompt->Confirm(nsnull, msg, &confirmed);
+        rv = prompt->Confirm(nullptr, msg, &confirmed);
         if (NS_FAILED(rv))
             return true;
     }
@@ -1264,7 +1264,7 @@ nsHttpChannelAuthProvider::SetAuthorizationHeader(nsHttpAuthCache    *authCache,
                                                   const char         *path,
                                                   nsHttpAuthIdentity &ident)
 {
-    nsHttpAuthEntry *entry = nsnull;
+    nsHttpAuthEntry *entry = nullptr;
     nsresult rv;
 
     // set informations that depend on whether
@@ -1382,7 +1382,7 @@ nsHttpChannelAuthProvider::DNSCallback::OnLookupComplete(nsICancelable *request,
                                                          nsresult       rv)
 {
     nsCString cname;
-    mAuthProvider->SetDNSQuery(nsnull);
+    mAuthProvider->SetDNSQuery(nullptr);
 
     LOG(("nsHttpChannelAuthProvider::OnLookupComplete this=%p "
          "rv=%X\n", mAuthProvider.get(), rv));
@@ -1394,12 +1394,12 @@ nsHttpChannelAuthProvider::DNSCallback::OnLookupComplete(nsICancelable *request,
         LOG(("nsHttpChannelAuthProvider::OnLookupComplete this=%p "
              "resolved to %s\n", mAuthProvider.get(), cname.get()));
         mAuthProvider->SetCanonicalizedHost(cname);
-        mAuthProvider->OnAuthAvailable(nsnull, nsnull);
+        mAuthProvider->OnAuthAvailable(nullptr, nullptr);
     }
     else {
         LOG(("nsHttpChannelAuthProvider::OnLookupComplete this=%p "
              "GetCanonicalName failed\n", mAuthProvider.get()));
-        mAuthProvider->OnAuthCancelled(nsnull, false);
+        mAuthProvider->OnAuthCancelled(nullptr, false);
     }
     return NS_OK;
 }

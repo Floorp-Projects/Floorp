@@ -26,7 +26,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPoint)
   // We may not belong to a list, so we must null check tmp->mList.
   if (tmp->mList) {
-    tmp->mList->mItems[tmp->mListIndex] = nsnull;
+    tmp->mList->mItems[tmp->mListIndex] = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -153,7 +153,7 @@ void
 DOMSVGPoint::RemovingFromList()
 {
   mPt = InternalItem();
-  mList = nsnull;
+  mList = nullptr;
   NS_ABORT_IF_FALSE(!mIsReadonly, "mIsReadonly set for list");
   mIsAnimValItem = false;
 }

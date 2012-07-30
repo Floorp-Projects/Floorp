@@ -157,7 +157,7 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
         return rv;
     }
 
-    rv = module->Init(service.get(), req_flags, nsnull, nsnull, nsnull);
+    rv = module->Init(service.get(), req_flags, nullptr, nullptr, nullptr);
 
     if (NS_FAILED(rv)) {
         NS_RELEASE(module);
@@ -245,7 +245,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
         //
         // Initializing, don't use an input token.
         //
-        inToken = nsnull;
+        inToken = nullptr;
         inTokenLen = 0;
     }
 
@@ -264,7 +264,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     //
     // base64 encode the output token.
     //
-    char *encoded_token = PL_Base64Encode((char *)outToken, outTokenLen, nsnull);
+    char *encoded_token = PL_Base64Encode((char *)outToken, outTokenLen, nullptr);
 
     nsMemory::Free(outToken);
 

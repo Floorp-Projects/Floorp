@@ -14,7 +14,7 @@ nsresult
 txXSLTEnvironmentFunctionCall::evaluate(txIEvalContext* aContext,
                                         txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (!requireParams(1, 1, aContext)) {
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;

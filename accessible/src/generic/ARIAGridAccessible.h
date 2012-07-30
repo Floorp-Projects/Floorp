@@ -10,7 +10,9 @@
 
 #include "HyperTextAccessibleWrap.h"
 #include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "xpcAccessibleTable.h"
+#include "xpcAccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -95,7 +97,9 @@ protected:
  * Accessible for ARIA gridcell and rowheader/columnheader.
  */
 class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
-                               public nsIAccessibleTableCell
+                               public nsIAccessibleTableCell,
+                               public TableCellAccessible,
+                               public xpcAccessibleTableCell
 {
 public:
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -104,9 +108,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTableCell
-  NS_DECL_NSIACCESSIBLETABLECELL
+  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL
 
   // Accessible
+  virtual void Shutdown();
   virtual void ApplyARIAState(PRUint64* aState) const;
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };

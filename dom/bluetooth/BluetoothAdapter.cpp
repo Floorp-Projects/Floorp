@@ -76,7 +76,7 @@ public:
   ReleaseMembers()
   {
     BluetoothReplyRunnable::ReleaseMembers();
-    mAdapterPtr = nsnull;
+    mAdapterPtr = nullptr;
   }
 private:
   nsRefPtr<BluetoothAdapter> mAdapterPtr;
@@ -142,7 +142,7 @@ BluetoothAdapter::Create(nsPIDOMWindow* aOwner, const nsAString& aPath)
   adapter->BindToOwner(aOwner);
   if (NS_FAILED(bs->RegisterBluetoothSignalHandler(aPath, adapter))) {
     NS_WARNING("Failed to register object with observer!");
-    return nsnull;
+    return nullptr;
   }
   return adapter.forget();
 }

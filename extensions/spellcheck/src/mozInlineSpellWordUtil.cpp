@@ -102,7 +102,7 @@ FindNextNode(nsINode* aNode, nsINode* aRoot,
   
   // Don't look at siblings or otherwise outside of aRoot
   if (aNode == aRoot)
-    return nsnull;
+    return nullptr;
 
   next = aNode->GetNextSibling();
   if (next)
@@ -116,7 +116,7 @@ FindNextNode(nsINode* aNode, nsINode* aRoot,
     
     next = aNode->GetParent();
     if (next == aRoot || ! next)
-      return nsnull;
+      return nullptr;
     aNode = next;
     
     next = aNode->GetNextSibling();
@@ -288,7 +288,7 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
   if (mNextWordIndex < 0 ||
       mNextWordIndex >= PRInt32(mRealWords.Length())) {
     mNextWordIndex = -1;
-    *aRange = nsnull;
+    *aRange = nullptr;
     *aSkipChecking = true;
     return NS_OK;
   }
@@ -618,7 +618,7 @@ mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(PRInt32 aSoftTextOffset,
 {
   NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
   if (!mSoftTextValid)
-    return NodeOffset(nsnull, -1);
+    return NodeOffset(nullptr, -1);
   
   // The invariant is that the range start..end includes the last mapping,
   // if any, such that mSoftTextOffset <= aSoftTextOffset
@@ -635,7 +635,7 @@ mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(PRInt32 aSoftTextOffset,
   }
   
   if (start >= end)
-    return NodeOffset(nsnull, -1);
+    return NodeOffset(nullptr, -1);
 
   // 'start' is now the last mapping, if any, such that
   // mSoftTextOffset <= aSoftTextOffset.
@@ -655,7 +655,7 @@ mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(PRInt32 aSoftTextOffset,
   if (offset >= 0 && offset <= map.mLength)
     return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + offset);
     
-  return NodeOffset(nsnull, -1);
+  return NodeOffset(nullptr, -1);
 }
 
 PRInt32

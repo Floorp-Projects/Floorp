@@ -90,7 +90,7 @@ private:
   nsWeakPtr               mDocShell;
   nsString                mTooltip;
 
-  // The preview currently marked as active in the taskbar. nsnull if no
+  // The preview currently marked as active in the taskbar. nullptr if no
   // preview is active (some other window is).
   static TaskbarPreview  *sActivePreview;
 };

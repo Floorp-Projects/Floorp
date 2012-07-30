@@ -39,13 +39,12 @@ static double FlushToZero(double aVal)
     return aVal;
 }
 
-float
+static float
 ProcessTranslatePart(const nsCSSValue& aValue,
                      nsStyleContext* aContext,
                      nsPresContext* aPresContext,
                      bool& aCanStoreInRuleTree,
-                     nscoord aSize,
-                     float aAppUnitsPerMatrixUnit)
+                     nscoord aSize, float aAppUnitsPerMatrixUnit)
 {
   nscoord offset = 0;
   float percent = 0.0f;
@@ -600,7 +599,7 @@ ReadTransforms(const nsCSSValueList* aList,
 {
   gfx3DMatrix result;
 
-  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
+  for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
     NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
                  "Stream should consist solely of functions!");

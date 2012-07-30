@@ -94,8 +94,8 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
     nsCOMPtr<nsITransferable> nullData =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    nullData->Init(nsnull);
-    rv = clipboard->SetData(nullData, nsnull,
+    nullData->Init(nullptr);
+    rv = clipboard->SetData(nullData, nullptr,
                             nsIClipboard::kGlobalClipboard);
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
@@ -107,7 +107,7 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
 nsresult
 NS_NewClipboardPrivacyHandler(nsClipboardPrivacyHandler ** aHandler)
 {
-  NS_PRECONDITION(aHandler != nsnull, "null ptr");
+  NS_PRECONDITION(aHandler != nullptr, "null ptr");
   if (!aHandler)
     return NS_ERROR_NULL_POINTER;
 

@@ -149,7 +149,7 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
  * Following is the implementation of UPowerClient.
  */
 
-UPowerClient* UPowerClient::sInstance = nsnull;
+UPowerClient* UPowerClient::sInstance = nullptr;
 
 /* static */ UPowerClient*
 UPowerClient::GetInstance()
@@ -162,9 +162,9 @@ UPowerClient::GetInstance()
 }
 
 UPowerClient::UPowerClient()
-  : mDBusConnection(nsnull)
-  , mUPowerProxy(nsnull)
-  , mTrackedDevice(nsnull)
+  : mDBusConnection(nullptr)
+  , mUPowerProxy(nullptr)
+  , mTrackedDevice(nullptr)
   , mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)
   , mRemainingTime(kDefaultRemainingTime)
@@ -181,7 +181,7 @@ UPowerClient::~UPowerClient()
 void
 UPowerClient::BeginListening()
 {
-  GError* error = nsnull;
+  GError* error = nullptr;
   mDBusConnection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 
   if (!mDBusConnection) {
@@ -199,7 +199,7 @@ UPowerClient::BeginListening()
   // Listening to signals the DBus connection is going to get so we will know
   // when it is lost and we will be able to disconnect cleanly.
   dbus_connection_add_filter(dbusConnection, ConnectionSignalFilter, this,
-                             nsnull);
+                             nullptr);
 
   mUPowerProxy = dbus_g_proxy_new_for_name(mDBusConnection,
                                            "org.freedesktop.UPower",
@@ -217,7 +217,7 @@ UPowerClient::BeginListening()
   dbus_g_proxy_add_signal(mUPowerProxy, "DeviceChanged", G_TYPE_STRING,
                           G_TYPE_INVALID);
   dbus_g_proxy_connect_signal(mUPowerProxy, "DeviceChanged",
-                              G_CALLBACK (DeviceChanged), this, nsnull);
+                              G_CALLBACK (DeviceChanged), this, nullptr);
 }
 
 void
@@ -236,13 +236,13 @@ UPowerClient::StopListening()
                                  G_CALLBACK (DeviceChanged), this);
 
   g_free(mTrackedDevice);
-  mTrackedDevice = nsnull;
+  mTrackedDevice = nullptr;
 
   g_object_unref(mUPowerProxy);
-  mUPowerProxy = nsnull;
+  mUPowerProxy = nullptr;
 
   dbus_g_connection_unref(mDBusConnection);
-  mDBusConnection = nsnull;
+  mDBusConnection = nullptr;
 
   // We should now show the default values, not the latest we got.
   mLevel = kDefaultLevel;
@@ -255,15 +255,15 @@ UPowerClient::UpdateTrackedDevice()
 {
   GType typeGPtrArray = dbus_g_type_get_collection("GPtrArray",
                                                    DBUS_TYPE_G_OBJECT_PATH);
-  GPtrArray* devices = nsnull;
-  GError* error = nsnull;
+  GPtrArray* devices = nullptr;
+  GError* error = nullptr;
 
   // If that fails, that likely means upower isn't installed.
   if (!dbus_g_proxy_call(mUPowerProxy, "EnumerateDevices", &error, G_TYPE_INVALID,
                          typeGPtrArray, &devices, G_TYPE_INVALID)) {
     g_printerr ("Error: %s\n", error->message);
 
-    mTrackedDevice = nsnull;
+    mTrackedDevice = nullptr;
     g_error_free(error);
     return;
   }
@@ -332,8 +332,8 @@ UPowerClient::GetDeviceProperties(const gchar* aDevice)
                                                         aDevice,
                                                         "org.freedesktop.DBus.Properties"));
 
-  GError* error = nsnull;
-  GHashTable* hashTable = nsnull;
+  GError* error = nullptr;
+  GHashTable* hashTable = nullptr;
   GType typeGHashTable = dbus_g_type_get_map("GHashTable", G_TYPE_STRING,
                                             G_TYPE_VALUE);
   if (!dbus_g_proxy_call(proxy, "GetAll", &error, G_TYPE_STRING,
@@ -341,7 +341,7 @@ UPowerClient::GetDeviceProperties(const gchar* aDevice)
                          typeGHashTable, &hashTable, G_TYPE_INVALID)) {
     g_printerr("Error: %s\n", error->message);
     g_error_free(error);
-    return nsnull;
+    return nullptr;
   }
 
   return hashTable;

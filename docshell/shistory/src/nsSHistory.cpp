@@ -44,7 +44,7 @@ using namespace mozilla;
 static const char* kObservedPrefs[] = {
   PREF_SHISTORY_SIZE,
   PREF_SHISTORY_MAX_TOTAL_VIEWERS,
-  nsnull
+  nullptr
 };
 
 static PRInt32  gHistoryMaxSize = 50;
@@ -120,7 +120,7 @@ protected:
   ~nsSHistoryObserver() {}
 };
 
-static nsSHistoryObserver* gObserver = nsnull;
+static nsSHistoryObserver* gObserver = nullptr;
 
 NS_IMPL_ISUPPORTS1(nsSHistoryObserver, nsIObserver)
 
@@ -147,7 +147,7 @@ GetContentViewerForTransaction(nsISHTransaction *aTrans)
   nsCOMPtr<nsISHEntry> entry;
   aTrans->GetSHEntry(getter_AddRefs(entry));
   if (!entry) {
-    return nsnull;
+    return nullptr;
   }
 
   nsCOMPtr<nsISHEntry> ownerEntry;
@@ -176,7 +176,7 @@ EvictContentViewerForTransaction(nsISHTransaction *aTrans)
 
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
-    ownerEntry->SetContentViewer(nsnull);
+    ownerEntry->SetContentViewer(nullptr);
     ownerEntry->SyncPresentationState();
     viewer->Destroy();
   }
@@ -188,7 +188,7 @@ EvictContentViewerForTransaction(nsISHTransaction *aTrans)
 //***    nsSHistory: Object Management
 //*****************************************************************************
 
-nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0), mRequestedIndex(-1)
+nsSHistory::nsSHistory() : mListRoot(nullptr), mIndex(-1), mLength(0), mRequestedIndex(-1)
 {
   // Add this new SHistory object to the list
   PR_APPEND_LINK(this, &gSHistoryList);
@@ -640,11 +640,11 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
     nsCOMPtr<nsISHTransaction> nextTxn;
     if (mListRoot) {
       mListRoot->GetNext(getter_AddRefs(nextTxn));
-      mListRoot->SetNext(nsnull);
+      mListRoot->SetNext(nullptr);
     }
     mListRoot = nextTxn;
     if (mListRoot) {
-      mListRoot->SetPrev(nsnull);
+      mListRoot->SetPrev(nullptr);
     }
     cnt++;        
   }
@@ -686,7 +686,7 @@ nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
   // one we have in store. 
   nsWeakPtr listener = do_GetWeakReference(aListener);  
   if (listener == mListener) {
-    mListener = nsnull;
+    mListener = nullptr;
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1282,13 +1282,13 @@ nsSHistory::RemoveDuplicate(PRInt32 aIndex, bool aKeepNext)
     NS_ENSURE_TRUE(txToKeep, false);
     txToRemove->GetNext(getter_AddRefs(txNext));
     txToRemove->GetPrev(getter_AddRefs(txPrev));
-    txToRemove->SetNext(nsnull);
-    txToRemove->SetPrev(nsnull);
+    txToRemove->SetNext(nullptr);
+    txToRemove->SetPrev(nullptr);
     if (aKeepNext) {
       if (txPrev) {
         txPrev->SetNext(txToKeep);
       } else {
-        txToKeep->SetPrev(nsnull);
+        txToKeep->SetPrev(nullptr);
       }
     } else {
       txToKeep->SetNext(txNext);
@@ -1433,7 +1433,7 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 NS_IMETHODIMP
 nsSHistory::GetReferringURI(nsIURI** aURI)
 {
-  *aURI = nsnull;
+  *aURI = nullptr;
   // Not implemented
   return NS_OK;
 }
@@ -1664,7 +1664,7 @@ nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsID
     nChild->GetDocshellID(&docshellID);
 
     // Then find the associated docshell.
-    nsIDocShell* dsChild = nsnull;
+    nsIDocShell* dsChild = nullptr;
     PRInt32 count = docshells.Count();
     for (PRInt32 j = 0; j < count; ++j) {
       PRUint64 shellID = 0;
@@ -1774,7 +1774,7 @@ nsSHEnumerator::nsSHEnumerator(nsSHistory * aSHistory):mIndex(-1)
 
 nsSHEnumerator::~nsSHEnumerator()
 {
-  mSHistory = nsnull;
+  mSHistory = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsISimpleEnumerator)

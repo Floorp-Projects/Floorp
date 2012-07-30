@@ -29,7 +29,7 @@ nsXBLPrototypeResources::~nsXBLPrototypeResources()
 {
   MOZ_COUNT_DTOR(nsXBLPrototypeResources);
   if (mLoader) {
-    mLoader->mResources = nsnull;
+    mLoader->mResources = nullptr;
     NS_RELEASE(mLoader);
   }
 }
@@ -78,7 +78,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // We have scoped stylesheets.  Reload any chrome stylesheets we
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
   // they'll still be in the chrome cache.
-  mRuleProcessor = nsnull;
+  mRuleProcessor = nullptr;
 
   sheet_array_type oldSheets(mStyleSheetList);
   mStyleSheetList.Clear();

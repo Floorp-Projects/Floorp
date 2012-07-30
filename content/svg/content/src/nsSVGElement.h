@@ -116,7 +116,7 @@ public:
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
-  // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
+  // nullptr for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx() const;
 
   enum TransformTypes {
@@ -154,7 +154,7 @@ public:
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
-  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nsnull; }
+  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nullptr; }
 
   bool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
@@ -222,6 +222,16 @@ public:
   void DidAnimateTransformList();
   void DidAnimateString(PRUint8 aAttrEnum);
 
+  enum {
+    /**
+     * Flag to indicate to GetAnimatedXxx() methods that the object being
+     * requested should be allocated if it hasn't already been allocated, and
+     * that the method should not return null. Only applicable to methods that
+     * need to allocate the object that they return.
+     */
+    DO_ALLOCATE = 0x1
+  };
+
   nsSVGLength2* GetAnimatedLength(const nsIAtom *aAttrName);
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
@@ -231,19 +241,30 @@ public:
   void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
   SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
   virtual SVGAnimatedPointList* GetAnimatedPointList() {
-    return nsnull;
+    return nullptr;
   }
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
     // DOM interface 'SVGAnimatedPathData' (*inherited* by nsSVGPathElement)
     // has a member called 'animatedPathSegList' member, so we have a shorter
     // name so we don't get hidden by the GetAnimatedPathSegList declared by
     // NS_DECL_NSIDOMSVGANIMATEDPATHDATA.
-    return nsnull;
+    return nullptr;
   }
-  // Despite the fact that animated transform lists are used for a variety of
-  // attributes, no SVG element uses more than one.
-  virtual SVGAnimatedTransformList* GetAnimatedTransformList() {
-    return nsnull;
+  /**
+   * Get the SVGAnimatedTransformList for this element.
+   *
+   * Despite the fact that animated transform lists are used for a variety of
+   * attributes, no SVG element uses more than one.
+   *
+   * It's relatively uncommon for elements to have their transform attribute
+   * set, so to save memory the SVGAnimatedTransformList is not allocated until
+   * the attribute is set/animated or its DOM wrapper is created. Callers that
+   * require the SVGAnimatedTransformList to be allocated and for this method
+   * to return non-null must pass the DO_ALLOCATE flag.
+   */
+  virtual SVGAnimatedTransformList* GetAnimatedTransformList(
+                                                        PRUint32 aFlags = 0) {
+    return nullptr;
   }
 
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName);
@@ -256,13 +277,13 @@ public:
   void SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue);
 
   virtual nsIAtom* GetPointListAttrName() const {
-    return nsnull;
+    return nullptr;
   }
   virtual nsIAtom* GetPathDataAttrName() const {
-    return nsnull;
+    return nullptr;
   }
   virtual nsIAtom* GetTransformListAttrName() const {
-    return nsnull;
+    return nullptr;
   }
 
 protected:

@@ -52,13 +52,13 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mLineNumber(1)
  , mInlinesOpen(0)
  , mInCharacters(false)
- , mBuffer(nsnull)
+ , mBuffer(nullptr)
  , mSyntaxHighlight(Preferences::GetBool("view_source.syntax_highlight",
                                          true))
  , mOpSink(aOpSink)
- , mCurrentRun(nsnull)
- , mAmpersand(nsnull)
- , mSlash(nsnull)
+ , mCurrentRun(nullptr)
+ , mAmpersand(nullptr)
+ , mSlash(nullptr)
  , mHandles(new nsIContent*[NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH])
  , mHandlesUsed(0)
 {
@@ -78,13 +78,13 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   mOpQueue.AppendElement()->Init(STANDARDS_MODE);
 
-  nsIContent** root = CreateElement(nsHtml5Atoms::html, nsnull);
+  nsIContent** root = CreateElement(nsHtml5Atoms::html, nullptr);
   mOpQueue.AppendElement()->Init(eTreeOpAppendToDocument, root);
   mStack.AppendElement(root);
 
-  Push(nsGkAtoms::head, nsnull);
+  Push(nsGkAtoms::head, nullptr);
 
-  Push(nsGkAtoms::title, nsnull);
+  Push(nsGkAtoms::title, nullptr);
   // XUL will add the "Source of: " prefix.
   PRUint32 length = aTitle.Length();
   if (length > PR_INT32_MAX) {
@@ -484,14 +484,14 @@ nsHtml5Highlighter::DropBuffer(PRInt32 aPos)
   NS_PRECONDITION(mBuffer, "No buffer to drop!");
   mPos = aPos;
   FlushChars();
-  mBuffer = nsnull;
+  mBuffer = nullptr;
 }
 
 void
 nsHtml5Highlighter::StartSpan()
 {
   FlushChars();
-  Push(nsGkAtoms::span, nsnull);
+  Push(nsGkAtoms::span, nullptr);
   ++mInlinesOpen;
 }
 
@@ -515,7 +515,7 @@ nsHtml5Highlighter::StartCharacters()
 {
   NS_PRECONDITION(!mInCharacters, "Already in characters!");
   FlushChars();
-  Push(nsGkAtoms::span, nsnull);
+  Push(nsGkAtoms::span, nullptr);
   mCurrentRun = CurrentNode();
   mInCharacters = true;
 }
@@ -536,7 +536,7 @@ void
 nsHtml5Highlighter::StartA()
 {
   FlushChars();
-  Push(nsGkAtoms::a, nsnull);
+  Push(nsGkAtoms::a, nullptr);
   AddClass(sAttributeValue);
   ++mInlinesOpen;
 }
@@ -578,7 +578,7 @@ nsHtml5Highlighter::FlushChars()
             mCStart = i;
           }
           ++mLineNumber;
-          Push(nsGkAtoms::span, nsnull);
+          Push(nsGkAtoms::span, nullptr);
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
           NS_ASSERTION(treeOp, "Tree op allocation failed.");
           treeOp->InitAddLineNumberId(CurrentNode(), mLineNumber);

@@ -71,7 +71,7 @@ public:
          aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
         !aPresContext ||
         !((nsGUIEvent*)aEvent)->widget) {
-      return (nsnull == aDefaultClientPoint ? nsIntPoint(0, 0) :
+      return (nullptr == aDefaultClientPoint ? nsIntPoint(0, 0) :
         nsIntPoint(aDefaultClientPoint->x, aDefaultClientPoint->y));
     }
 

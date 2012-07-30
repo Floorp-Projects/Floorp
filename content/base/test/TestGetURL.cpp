@@ -42,13 +42,13 @@ nsresult TestGetURL(const nsCString& aURL)
   rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   TEST_ENSURE_SUCCESS(rv, "Couldn't get system principal!");
 
-  rv = xhr->Init(systemPrincipal, nsnull, nsnull, nsnull);
+  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
   rv = xhr->Open(getString, aURL, false, empty, empty);
   TEST_ENSURE_SUCCESS(rv, "OpenRequest failed!");
 
-  rv = xhr->Send(nsnull);
+  rv = xhr->Send(nullptr);
   TEST_ENSURE_SUCCESS(rv, "Send failed!");
 
   nsAutoString response;

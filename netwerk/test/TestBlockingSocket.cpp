@@ -23,7 +23,7 @@
 //
 // set NSPR_LOG_MODULES=Test:5
 //
-static PRLogModuleInfo *gTestLog = nsnull;
+static PRLogModuleInfo *gTestLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
@@ -49,7 +49,7 @@ RunBlockingTest(const nsACString &host, PRInt32 port, nsIFile *file)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISocketTransport> trans;
-    rv = sts->CreateTransport(nsnull, 0, host, port, nsnull, getter_AddRefs(trans));
+    rv = sts->CreateTransport(nullptr, 0, host, port, nullptr, getter_AddRefs(trans));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIOutputStream> output;
@@ -102,7 +102,7 @@ main(int argc, char* argv[])
     char* fileName = argv[3];
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
 #if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
@@ -124,7 +124,7 @@ main(int argc, char* argv[])
         PR_Sleep(PR_SecondsToInterval(5));
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return NS_OK;
 }

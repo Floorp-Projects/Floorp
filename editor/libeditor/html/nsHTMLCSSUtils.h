@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsTArray.h"                   // for nsTArray
-#include "nscore.h"                     // for nsAString, nsresult, nsnull
+#include "nscore.h"                     // for nsAString, nsresult, nullptr
 #include "prtypes.h"                    // for PRUint8, PRInt32, PRUint32
 
 class ChangeCSSInlineStyleTxn;
@@ -91,10 +91,10 @@ public:
     */
   bool IsCSSEditableProperty(nsIContent* aNode, nsIAtom* aProperty,
                              const nsAString* aAttribute,
-                             const nsAString* aValue = nsnull);
+                             const nsAString* aValue = nullptr);
   bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty,
                              const nsAString* aAttribute,
-                             const nsAString* aValue = nsnull);
+                             const nsAString* aValue = nullptr);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *
@@ -174,7 +174,7 @@ public:
     *
     * @param aNode          [IN] a DOM node
     * @param aHTMLProperty  [IN] an atom containing an HTML property
-    * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
+    * @param aAttribute     [IN] a pointer to an attribute name or nullptr if irrelevant
     * @param aValueString   [OUT] the list of css values
     * @param aStyleType     [IN] eSpecified or eComputed
     */
@@ -189,7 +189,7 @@ public:
     *
     * @param aNode          [IN] a DOM node
     * @param aHTMLProperty  [IN] an atom containing an HTML property
-    * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
+    * @param aAttribute     [IN] a pointer to an attribute name or nullptr if irrelevant
     * @param aIsSet         [OUT] a boolean being true if the css properties are set
     * @param aValueString   [IN/OUT] the attribute value (in) the list of css values (out)
     * @param aStyleType     [IN] eSpecified or eComputed
@@ -214,7 +214,7 @@ public:
     *
     * @param aNode          [IN] a DOM node
     * @param aHTMLProperty  [IN] an atom containing an HTML property
-    * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
+    * @param aAttribute     [IN] a pointer to an attribute name or nullptr if irrelevant
     * @param aValue         [IN] the attribute value
     * @param aCount         [OUT] the number of CSS properties set by the call
     * @param aSuppressTransaction [IN] a boolean indicating, when true,
@@ -239,7 +239,7 @@ public:
     *
     * @param aNode          [IN] a DOM node
     * @param aHTMLProperty  [IN] an atom containing an HTML property
-    * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
+    * @param aAttribute     [IN] a pointer to an attribute name or nullptr if irrelevant
     * @param aValue         [IN] the attribute value
     * @param aSuppressTransaction [IN] a boolean indicating, when true,
     *                                  that no transaction should be recorded
@@ -345,7 +345,7 @@ private:
     *
     * @param aNode              [IN] the DOM node
     * @param aHTMLProperty      [IN] an atom containing an HTML property
-    * @param aAttribute         [IN] a pointer to an attribute name or nsnull if irrelevant
+    * @param aAttribute         [IN] a pointer to an attribute name or nullptr if irrelevant
     * @param aValue             [IN] the attribute value
     * @param aPropertyArray     [OUT] the array of css properties
     * @param aValueArray        [OUT] the array of values for the css properties above

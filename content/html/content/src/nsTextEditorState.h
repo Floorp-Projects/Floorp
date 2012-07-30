@@ -130,7 +130,7 @@ public:
   nsFrameSelection* GetConstFrameSelection();
   nsresult BindToFrame(nsTextControlFrame* aFrame);
   void UnbindFromFrame(nsTextControlFrame* aFrame);
-  nsresult PrepareEditor(const nsAString *aValue = nsnull);
+  nsresult PrepareEditor(const nsAString *aValue = nullptr);
   void InitializeKeyboardEventListeners();
 
   void SetValue(const nsAString& aValue, bool aUserInput,
@@ -231,7 +231,7 @@ private:
 
   nsresult InitializeRootNode();
 
-  void FinishedRestoringSelection() { mRestoringSelection = nsnull; }
+  void FinishedRestoringSelection() { mRestoringSelection = nullptr; }
 
   class InitializationGuard {
   public:

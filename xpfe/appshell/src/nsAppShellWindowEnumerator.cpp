@@ -165,7 +165,7 @@ NS_IMPL_ISUPPORTS1(nsAppShellWindowEnumerator, nsISimpleEnumerator)
 nsAppShellWindowEnumerator::nsAppShellWindowEnumerator(
     const PRUnichar* aTypeString,
     nsWindowMediator& aMediator) :
-      mWindowMediator(&aMediator), mType(aTypeString), mCurrentPosition(nsnull)
+      mWindowMediator(&aMediator), mType(aTypeString), mCurrentPosition(nullptr)
 {
   mWindowMediator->AddEnumerator(this);
   NS_ADDREF(mWindowMediator);
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsASDOMWindowEnumerator::GetNext(nsISupports **retval)
   if (!retval)
     return NS_ERROR_INVALID_ARG;
 
-  *retval = nsnull;
+  *retval = nullptr;
   if (mCurrentPosition) {
     nsCOMPtr<nsIDOMWindow> domWindow;
     GetDOMWindow(mCurrentPosition->mWindow, domWindow);
@@ -251,7 +251,7 @@ NS_IMETHODIMP nsASXULWindowEnumerator::GetNext(nsISupports **retval)
   if (!retval)
     return NS_ERROR_INVALID_ARG;
 
-  *retval = nsnull;
+  *retval = nullptr;
   if (mCurrentPosition) {
     CallQueryInterface(mCurrentPosition->mWindow, retval);
     mCurrentPosition = FindNext();
@@ -284,7 +284,7 @@ nsWindowInfo *nsASDOMWindowEarlyToLateEnumerator::FindNext()
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mYounger;
   listEnd = mWindowMediator->mOldestWindow;
@@ -295,7 +295,7 @@ nsWindowInfo *nsASDOMWindowEarlyToLateEnumerator::FindNext()
     info = info->mYounger;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -329,7 +329,7 @@ nsWindowInfo *nsASXULWindowEarlyToLateEnumerator::FindNext()
      pick up newly added windows anyway (if they occurred previous to our
      current position) so we just don't worry about that. */
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mYounger;
   listEnd = mWindowMediator->mOldestWindow;
@@ -340,7 +340,7 @@ nsWindowInfo *nsASXULWindowEarlyToLateEnumerator::FindNext()
     info = info->mYounger;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -368,7 +368,7 @@ nsWindowInfo *nsASDOMWindowFrontToBackEnumerator::FindNext()
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mLower;
   listEnd = mWindowMediator->mTopmostWindow;
@@ -379,7 +379,7 @@ nsWindowInfo *nsASDOMWindowFrontToBackEnumerator::FindNext()
     info = info->mLower;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -407,7 +407,7 @@ nsWindowInfo *nsASXULWindowFrontToBackEnumerator::FindNext()
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mLower;
   listEnd = mWindowMediator->mTopmostWindow;
@@ -418,7 +418,7 @@ nsWindowInfo *nsASXULWindowFrontToBackEnumerator::FindNext()
     info = info->mLower;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -431,7 +431,7 @@ nsASDOMWindowBackToFrontEnumerator::nsASDOMWindowBackToFrontEnumerator(
   nsASDOMWindowEnumerator(aTypeString, aMediator)
 {
   mCurrentPosition = aMediator.mTopmostWindow ?
-                     aMediator.mTopmostWindow->mHigher : nsnull;
+                     aMediator.mTopmostWindow->mHigher : nullptr;
   AdjustInitialPosition();
 }
 
@@ -447,7 +447,7 @@ nsWindowInfo *nsASDOMWindowBackToFrontEnumerator::FindNext()
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mHigher;
   listEnd = mWindowMediator->mTopmostWindow;
@@ -460,7 +460,7 @@ nsWindowInfo *nsASDOMWindowBackToFrontEnumerator::FindNext()
     info = info->mHigher;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -473,7 +473,7 @@ nsASXULWindowBackToFrontEnumerator::nsASXULWindowBackToFrontEnumerator(
       nsASXULWindowEnumerator(aTypeString, aMediator)
 {
   mCurrentPosition = aMediator.mTopmostWindow ?
-                     aMediator.mTopmostWindow->mHigher : nsnull;
+                     aMediator.mTopmostWindow->mHigher : nullptr;
   AdjustInitialPosition();
 }
 
@@ -489,7 +489,7 @@ nsWindowInfo *nsASXULWindowBackToFrontEnumerator::FindNext()
 
   // see nsXULWindowEarlyToLateEnumerator::FindNext
   if (!mCurrentPosition)
-    return nsnull;
+    return nullptr;
 
   info = mCurrentPosition->mHigher;
   listEnd = mWindowMediator->mTopmostWindow;
@@ -502,5 +502,5 @@ nsWindowInfo *nsASXULWindowBackToFrontEnumerator::FindNext()
     info = info->mHigher;
   }
 
-  return nsnull;
+  return nullptr;
 }

@@ -46,9 +46,9 @@ TearoffType*
 nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(SimpleType* aSimple)
 {
   if (!mTable.IsInitialized())
-    return nsnull;
+    return nullptr;
 
-  TearoffType *tearoff = nsnull;
+  TearoffType *tearoff = nullptr;
 
 #ifdef DEBUG
   bool found =
@@ -71,7 +71,7 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(SimpleType* aSimple,
 
   // We shouldn't be adding a tear-off if there already is one. If that happens,
   // something is wrong.
-  if (mTable.Get(aSimple, nsnull)) {
+  if (mTable.Get(aSimple, nullptr)) {
     NS_ABORT_IF_FALSE(false, "There is already a tear-off for this object.");
     return;
   }

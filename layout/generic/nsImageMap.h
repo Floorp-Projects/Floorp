@@ -30,7 +30,7 @@ public:
 
   /**
    * Return the first area element (in content order) for the given aX,aY pixel
-   * coordinate or nsnull if the coordinate is outside all areas.
+   * coordinate or nullptr if the coordinate is outside all areas.
    */
   nsIContent* GetArea(nscoord aX, nscoord aY) const;
 

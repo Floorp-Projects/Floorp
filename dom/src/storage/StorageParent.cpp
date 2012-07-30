@@ -17,11 +17,11 @@ namespace dom {
 StorageParent::StorageParent(const StorageConstructData& aData)
 {
   if (aData.type() == StorageConstructData::Tnull_t) {
-    mStorage = new DOMStorageImpl(nsnull);
+    mStorage = new DOMStorageImpl(nullptr);
   } else {
     const StorageClone& clone = aData.get_StorageClone();
     StorageParent* other = static_cast<StorageParent*>(clone.actorParent());
-    mStorage = new DOMStorageImpl(nsnull, *other->mStorage.get());
+    mStorage = new DOMStorageImpl(nullptr, *other->mStorage.get());
     mStorage->CloneFrom(clone.callerSecure(), other->mStorage);
   }
 }

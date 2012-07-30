@@ -92,7 +92,7 @@ inline already_AddRefed<nsINetUtil>
 do_GetNetUtil(nsresult *error = 0) 
 {
     nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
-    already_AddRefed<nsINetUtil> ret = nsnull;
+    already_AddRefed<nsINetUtil> ret = nullptr;
     if (io)
         CallQueryInterface(io, &ret.mRawPtr);
 
@@ -131,9 +131,9 @@ net_EnsureIOService(nsIIOService **ios, nsCOMPtr<nsIIOService> &grip)
 inline nsresult
 NS_NewURI(nsIURI **result, 
           const nsACString &spec, 
-          const char *charset = nsnull,
-          nsIURI *baseURI = nsnull,
-          nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
+          const char *charset = nullptr,
+          nsIURI *baseURI = nullptr,
+          nsIIOService *ioService = nullptr)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> grip;
@@ -146,9 +146,9 @@ NS_NewURI(nsIURI **result,
 inline nsresult
 NS_NewURI(nsIURI* *result, 
           const nsAString& spec, 
-          const char *charset = nsnull,
-          nsIURI* baseURI = nsnull,
-          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+          const char *charset = nullptr,
+          nsIURI* baseURI = nullptr,
+          nsIIOService* ioService = nullptr)     // pass in nsIIOService to optimize callers
 {
     return NS_NewURI(result, NS_ConvertUTF16toUTF8(spec), charset, baseURI, ioService);
 }
@@ -156,16 +156,16 @@ NS_NewURI(nsIURI* *result,
 inline nsresult
 NS_NewURI(nsIURI* *result, 
           const char *spec,
-          nsIURI* baseURI = nsnull,
-          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+          nsIURI* baseURI = nullptr,
+          nsIIOService* ioService = nullptr)     // pass in nsIIOService to optimize callers
 {
-    return NS_NewURI(result, nsDependentCString(spec), nsnull, baseURI, ioService);
+    return NS_NewURI(result, nsDependentCString(spec), nullptr, baseURI, ioService);
 }
 
 inline nsresult
 NS_NewFileURI(nsIURI* *result, 
               nsIFile* spec, 
-              nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+              nsIIOService* ioService = nullptr)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> grip;
@@ -178,11 +178,11 @@ NS_NewFileURI(nsIURI* *result,
 inline nsresult
 NS_NewChannel(nsIChannel           **result,
               nsIURI                *uri,
-              nsIIOService          *ioService = nsnull,    // pass in nsIIOService to optimize callers
-              nsILoadGroup          *loadGroup = nsnull,
-              nsIInterfaceRequestor *callbacks = nsnull,
+              nsIIOService          *ioService = nullptr,    // pass in nsIIOService to optimize callers
+              nsILoadGroup          *loadGroup = nullptr,
+              nsIInterfaceRequestor *callbacks = nullptr,
               PRUint32               loadFlags = nsIRequest::LOAD_NORMAL,
-              nsIChannelPolicy      *channelPolicy = nsnull)
+              nsIChannelPolicy      *channelPolicy = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> grip;
@@ -224,11 +224,11 @@ NS_NewChannel(nsIChannel           **result,
 inline nsresult
 NS_OpenURI(nsIInputStream       **result,
            nsIURI                *uri,
-           nsIIOService          *ioService = nsnull,     // pass in nsIIOService to optimize callers
-           nsILoadGroup          *loadGroup = nsnull,
-           nsIInterfaceRequestor *callbacks = nsnull,
+           nsIIOService          *ioService = nullptr,     // pass in nsIIOService to optimize callers
+           nsILoadGroup          *loadGroup = nullptr,
+           nsIInterfaceRequestor *callbacks = nullptr,
            PRUint32               loadFlags = nsIRequest::LOAD_NORMAL,
-           nsIChannel           **channelOut = nsnull)
+           nsIChannel           **channelOut = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
@@ -240,7 +240,7 @@ NS_OpenURI(nsIInputStream       **result,
         if (NS_SUCCEEDED(rv)) {
             *result = stream;
             if (channelOut) {
-                *channelOut = nsnull;
+                *channelOut = nullptr;
                 channel.swap(*channelOut);
             }
         }
@@ -252,9 +252,9 @@ inline nsresult
 NS_OpenURI(nsIStreamListener     *listener, 
            nsISupports           *context, 
            nsIURI                *uri,
-           nsIIOService          *ioService = nsnull,     // pass in nsIIOService to optimize callers
-           nsILoadGroup          *loadGroup = nsnull,
-           nsIInterfaceRequestor *callbacks = nsnull,
+           nsIIOService          *ioService = nullptr,     // pass in nsIIOService to optimize callers
+           nsILoadGroup          *loadGroup = nullptr,
+           nsIInterfaceRequestor *callbacks = nullptr,
            PRUint32               loadFlags = nsIRequest::LOAD_NORMAL)
 {
     nsresult rv;
@@ -270,7 +270,7 @@ inline nsresult
 NS_MakeAbsoluteURI(nsACString       &result,
                    const nsACString &spec, 
                    nsIURI           *baseURI, 
-                   nsIIOService     *unused = nsnull)
+                   nsIIOService     *unused = nullptr)
 {
     nsresult rv;
     if (!baseURI) {
@@ -289,7 +289,7 @@ inline nsresult
 NS_MakeAbsoluteURI(char        **result,
                    const char   *spec, 
                    nsIURI       *baseURI, 
-                   nsIIOService *unused = nsnull)
+                   nsIIOService *unused = nullptr)
 {
     nsresult rv;
     nsCAutoString resultBuf;
@@ -306,7 +306,7 @@ inline nsresult
 NS_MakeAbsoluteURI(nsAString       &result,
                    const nsAString &spec, 
                    nsIURI          *baseURI,
-                   nsIIOService    *unused = nsnull)
+                   nsIIOService    *unused = nullptr)
 {
     nsresult rv;
     if (!baseURI) {
@@ -331,7 +331,7 @@ NS_MakeAbsoluteURI(nsAString       &result,
  */
 inline PRInt32
 NS_GetDefaultPort(const char *scheme,
-                  nsIIOService* ioService = nsnull)
+                  nsIIOService* ioService = nullptr)
 {
   nsresult rv;
 
@@ -373,7 +373,7 @@ NS_StringToACE(const nsACString &idn, nsACString &result)
  */
 inline PRInt32
 NS_GetRealPort(nsIURI* aURI,
-               nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+               nsIIOService* ioService = nullptr)     // pass in nsIIOService to optimize callers
 {
     PRInt32 port;
     nsresult rv = aURI->GetPort(&port);
@@ -418,7 +418,7 @@ NS_NewInputStreamChannel(nsIChannel      **result,
     if (contentCharset && !contentCharset->IsEmpty())
         rv |= chan->SetContentCharset(*contentCharset);
     if (NS_SUCCEEDED(rv)) {
-        *result = nsnull;
+        *result = nullptr;
         chan.swap(*result);
     }
     return rv;
@@ -430,7 +430,7 @@ NS_NewInputStreamChannel(nsIChannel      **result,
                          nsIInputStream   *stream,
                          const nsACString &contentType    = EmptyCString())
 {
-    return NS_NewInputStreamChannel(result, uri, stream, contentType, nsnull);
+    return NS_NewInputStreamChannel(result, uri, stream, contentType, nullptr);
 }
 
 inline nsresult
@@ -460,7 +460,7 @@ NS_NewInputStreamPump(nsIInputStreamPump **result,
         rv = pump->Init(stream, streamPos, streamLen,
                         segsize, segcount, closeWhenDone);
         if (NS_SUCCEEDED(rv)) {
-            *result = nsnull;
+            *result = nullptr;
             pump.swap(*result);
         }
     }
@@ -488,7 +488,7 @@ NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
         rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered,
                           chunkSize, closeSource, closeSink);
         if (NS_SUCCEEDED(rv)) {
-            *result = nsnull;
+            *result = nullptr;
             copier.swap(*result);
         }
     }
@@ -505,7 +505,7 @@ NS_NewLoadGroup(nsILoadGroup      **result,
     if (NS_SUCCEEDED(rv)) {
         rv = group->SetGroupObserver(obs);
         if (NS_SUCCEEDED(rv)) {
-            *result = nsnull;
+            *result = nullptr;
             group.swap(*result);
         }
     }
@@ -515,7 +515,7 @@ NS_NewLoadGroup(nsILoadGroup      **result,
 inline nsresult
 NS_NewDownloader(nsIStreamListener   **result,
                  nsIDownloadObserver  *observer,
-                 nsIFile              *downloadLocation = nsnull)
+                 nsIFile              *downloadLocation = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIDownloader> downloader =
@@ -538,7 +538,7 @@ NS_NewStreamLoader(nsIStreamLoader        **result,
     if (NS_SUCCEEDED(rv)) {
         rv = loader->Init(observer);
         if (NS_SUCCEEDED(rv)) {
-            *result = nsnull;
+            *result = nullptr;
             loader.swap(*result);
         }
     }
@@ -549,17 +549,17 @@ inline nsresult
 NS_NewStreamLoader(nsIStreamLoader        **result,
                    nsIURI                  *uri,
                    nsIStreamLoaderObserver *observer,
-                   nsISupports             *context   = nsnull,
-                   nsILoadGroup            *loadGroup = nsnull,
-                   nsIInterfaceRequestor   *callbacks = nsnull,
+                   nsISupports             *context   = nullptr,
+                   nsILoadGroup            *loadGroup = nullptr,
+                   nsIInterfaceRequestor   *callbacks = nullptr,
                    PRUint32                 loadFlags = nsIRequest::LOAD_NORMAL,
-                   nsIURI                  *referrer  = nsnull)
+                   nsIURI                  *referrer  = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
-                       nsnull,
+                       nullptr,
                        loadGroup,
                        callbacks,
                        loadFlags);
@@ -584,7 +584,7 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **result,
     if (NS_SUCCEEDED(rv)) {
         rv = loader->Init(observer);
         if (NS_SUCCEEDED(rv)) {
-            *result = nsnull;
+            *result = nullptr;
             loader.swap(*result);
         }
     }
@@ -622,13 +622,13 @@ NS_ImplementChannelOpen(nsIChannel      *channel,
     nsresult rv = NS_NewSyncStreamListener(getter_AddRefs(listener),
                                            getter_AddRefs(stream));
     if (NS_SUCCEEDED(rv)) {
-        rv = channel->AsyncOpen(listener, nsnull);
+        rv = channel->AsyncOpen(listener, nullptr);
         if (NS_SUCCEEDED(rv)) {
             PRUint32 n;
             // block until the initial response is received or an error occurs.
             rv = stream->Available(&n);
             if (NS_SUCCEEDED(rv)) {
-                *result = nsnull;
+                *result = nullptr;
                 stream.swap(*result);
             }
         }
@@ -639,7 +639,7 @@ NS_ImplementChannelOpen(nsIChannel      *channel,
 inline nsresult
 NS_NewRequestObserverProxy(nsIRequestObserver **result,
                            nsIRequestObserver  *observer,
-                           nsIEventTarget      *target = nsnull)
+                           nsIEventTarget      *target = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIRequestObserverProxy> proxy =
@@ -655,7 +655,7 @@ NS_NewRequestObserverProxy(nsIRequestObserver **result,
 inline nsresult
 NS_NewSimpleStreamListener(nsIStreamListener **result,
                            nsIOutputStream    *sink,
-                           nsIRequestObserver *observer = nsnull)
+                           nsIRequestObserver *observer = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsISimpleStreamListener> listener = 
@@ -671,7 +671,7 @@ NS_NewSimpleStreamListener(nsIStreamListener **result,
 inline nsresult
 NS_CheckPortSafety(PRInt32       port,
                    const char   *scheme,
-                   nsIIOService *ioService = nsnull)
+                   nsIIOService *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> grip;
@@ -710,14 +710,14 @@ NS_NewProxyInfo(const nsACString &type,
     nsCOMPtr<nsIProtocolProxyService> pps =
             do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nsnull,
+        rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nullptr,
                                result);
     return rv; 
 }
 
 inline nsresult
 NS_GetFileProtocolHandler(nsIFileProtocolHandler **result,
-                          nsIIOService            *ioService = nsnull)
+                          nsIIOService            *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> grip;
@@ -734,7 +734,7 @@ NS_GetFileProtocolHandler(nsIFileProtocolHandler **result,
 inline nsresult
 NS_GetFileFromURLSpec(const nsACString  &inURL,
                       nsIFile          **result,
-                      nsIIOService      *ioService = nsnull)
+                      nsIIOService      *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIFileProtocolHandler> fileHandler;
@@ -747,7 +747,7 @@ NS_GetFileFromURLSpec(const nsACString  &inURL,
 inline nsresult
 NS_GetURLSpecFromFile(nsIFile      *file,
                       nsACString   &url,
-                      nsIIOService *ioService = nsnull)
+                      nsIIOService *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIFileProtocolHandler> fileHandler;
@@ -767,7 +767,7 @@ NS_GetURLSpecFromFile(nsIFile      *file,
 inline nsresult
 NS_GetURLSpecFromActualFile(nsIFile      *file,
                             nsACString   &url,
-                            nsIIOService *ioService = nsnull)
+                            nsIIOService *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIFileProtocolHandler> fileHandler;
@@ -787,7 +787,7 @@ NS_GetURLSpecFromActualFile(nsIFile      *file,
 inline nsresult
 NS_GetURLSpecFromDir(nsIFile      *file,
                      nsACString   &url,
-                     nsIIOService *ioService = nsnull)
+                     nsIIOService *ioService = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsIFileProtocolHandler> fileHandler;
@@ -809,7 +809,7 @@ NS_GetReferrerFromChannel(nsIChannel *channel,
                           nsIURI **referrer)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
-    *referrer = nsnull;
+    *referrer = nullptr;
 
     nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
     if (props) {
@@ -820,7 +820,7 @@ NS_GetReferrerFromChannel(nsIChannel *channel,
                                          NS_GET_IID(nsIURI),
                                          reinterpret_cast<void **>(referrer));
       if (NS_FAILED(rv))
-        *referrer = nsnull;
+        *referrer = nullptr;
     }
 
     // if that didn't work, we can still try to get the referrer from the
@@ -830,7 +830,7 @@ NS_GetReferrerFromChannel(nsIChannel *channel,
       if (chan) {
         rv = chan->GetReferrer(referrer);
         if (NS_FAILED(rv))
-          *referrer = nsnull;
+          *referrer = nullptr;
       }
     }
     return rv;
@@ -1115,7 +1115,7 @@ NS_NewPostDataStream(nsIInputStream  **result,
                      bool              isFile,
                      const nsACString &data,
                      PRUint32          encodeFlags,
-                     nsIIOService     *unused = nsnull)
+                     nsIIOService     *unused = nullptr)
 {
     nsresult rv;
 
@@ -1197,7 +1197,7 @@ NS_ReadInputStreamToString(nsIInputStream *aInputStream,
 inline nsresult
 NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
                                    nsIURI                   *uri,
-                                   nsIIOService             *ioService = nsnull)
+                                   nsIIOService             *ioService = nullptr)
 {
     nsCOMPtr<nsIInputStream> in;
     nsresult rv = NS_OpenURI(getter_AddRefs(in), uri, ioService);
@@ -1207,7 +1207,7 @@ NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
         if (NS_SUCCEEDED(rv)) {
             rv = properties->Load(in);
             if (NS_SUCCEEDED(rv)) {
-                *result = nsnull;
+                *result = nullptr;
                 properties.swap(*result);
             }
         }
@@ -1218,9 +1218,9 @@ NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
 inline nsresult
 NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **result,
                                        const nsACString        &spec,
-                                       const char              *charset = nsnull,
-                                       nsIURI                  *baseURI = nsnull,
-                                       nsIIOService            *ioService = nsnull)     
+                                       const char              *charset = nullptr,
+                                       nsIURI                  *baseURI = nullptr,
+                                       nsIIOService            *ioService = nullptr)     
 {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = 
@@ -1245,7 +1245,7 @@ NS_QueryNotificationCallbacks(nsIChannel   *channel,
                               void        **result)
 {
     NS_PRECONDITION(channel, "null channel");
-    *result = nsnull;
+    *result = nullptr;
 
     nsCOMPtr<nsIInterfaceRequestor> cbs;
     channel->GetNotificationCallbacks(getter_AddRefs(cbs));
@@ -1282,7 +1282,7 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
                               const nsIID            &iid,
                               void                  **result)
 {
-    *result = nsnull;
+    *result = nullptr;
 
     if (callbacks)
         callbacks->GetInterface(iid, result);
@@ -1398,7 +1398,7 @@ inline void
 NS_QueryAuthPrompt2(nsIChannel      *aChannel,
                     nsIAuthPrompt2 **aAuthPrompt)
 {
-    *aAuthPrompt = nsnull;
+    *aAuthPrompt = nullptr;
 
     // We want to use any auth prompt we can find on the channel's callbacks,
     // and if that fails use the loadgroup's prompt (if any)
@@ -1516,7 +1516,7 @@ inline nsresult
 NS_ImplGetInnermostURI(nsINestedURI* nestedURI, nsIURI** result)
 {
     // Make it safe to use swap()
-    *result = nsnull;
+    *result = nullptr;
 
     return NS_DoImplGetInnermostURI(nestedURI, result);
 }
@@ -1572,12 +1572,12 @@ NS_TryToSetImmutable(nsIURI* uri)
  */
 inline already_AddRefed<nsIURI>
 NS_TryToMakeImmutable(nsIURI* uri,
-                      nsresult* outRv = nsnull)
+                      nsresult* outRv = nullptr)
 {
     nsresult rv;
     nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
 
-    nsIURI* result = nsnull;
+    nsIURI* result = nullptr;
     if (NS_SUCCEEDED(rv)) {
         NS_ASSERTION(util, "do_GetNetUtil lied");
         rv = util->ToImmutableURI(uri, &result);
@@ -1627,7 +1627,7 @@ NS_GetInnermostURI(nsIURI *uri)
 
     nsresult rv = nestedURI->GetInnermostURI(&uri);
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     return uri;
@@ -1643,7 +1643,7 @@ NS_GetInnermostURI(nsIURI *uri)
 inline nsresult
 NS_GetFinalChannelURI(nsIChannel* channel, nsIURI** uri)
 {
-    *uri = nsnull;
+    *uri = nullptr;
     nsLoadFlags loadFlags = 0;
     nsresult rv = channel->GetLoadFlags(&loadFlags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1900,7 +1900,7 @@ NS_CheckIsJavaCompatibleURLString(nsCString& urlString, bool *result)
   PRUint32 schemePos = 0;
   PRInt32 schemeLen = 0;
   urlParser->ParseURL(urlString.get(), -1, &schemePos, &schemeLen,
-                      nsnull, nsnull, nsnull, nsnull);
+                      nullptr, nullptr, nullptr, nullptr);
   if (schemeLen != -1) {
     nsCString scheme;
     scheme.Assign(urlString.get() + schemePos, schemeLen);
@@ -1973,7 +1973,7 @@ NS_GetContentDispositionFromToken(const nsAString& aDispToken)
  * @param aChan the channel the header came from
  */
 inline PRUint32
-NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan = nsnull)
+NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan = nullptr)
 {
   nsresult rv;
   nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
@@ -1989,7 +1989,7 @@ NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan 
   }
 
   nsAutoString dispToken;
-  rv = mimehdrpar->GetParameter(aHeader, "", fallbackCharset, true, nsnull,
+  rv = mimehdrpar->GetParameter(aHeader, "", fallbackCharset, true, nullptr,
                                 dispToken);
 
   if (NS_FAILED(rv)) {
@@ -2011,7 +2011,7 @@ NS_GetContentDispositionFromHeader(const nsACString& aHeader, nsIChannel *aChan 
 inline nsresult
 NS_GetFilenameFromDisposition(nsAString& aFilename,
                               const nsACString& aDisposition,
-                              nsIURI* aURI = nsnull)
+                              nsIURI* aURI = nullptr)
 {
   aFilename.Truncate();
 
@@ -2028,12 +2028,12 @@ NS_GetFilenameFromDisposition(nsAString& aFilename,
     url->GetOriginCharset(fallbackCharset);
   // Get the value of 'filename' parameter
   rv = mimehdrpar->GetParameter(aDisposition, "filename",
-                                fallbackCharset, true, nsnull,
+                                fallbackCharset, true, nullptr,
                                 aFilename);
   if (NS_FAILED(rv) || aFilename.IsEmpty()) {
     // Try 'name' parameter, instead.
     rv = mimehdrpar->GetParameter(aDisposition, "name", fallbackCharset,
-                                  true, nsnull, aFilename);
+                                  true, nullptr, aFilename);
   }
 
   if (NS_FAILED(rv)) {

@@ -97,7 +97,7 @@ nsGfxCheckboxControlFrame::CreateAccessible()
                                                     PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 

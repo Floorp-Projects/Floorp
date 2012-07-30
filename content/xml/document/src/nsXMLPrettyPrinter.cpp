@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS2(nsXMLPrettyPrinter,
                    nsIDocumentObserver,
                    nsIMutationObserver)
 
-nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mDocument(nsnull),
+nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mDocument(nullptr),
                                            mUpdateDepth(0),
                                            mUnhookPending(false)
 {
@@ -98,7 +98,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMDocument> xslDocument;
-    rv = nsSyncLoadService::LoadDocument(xslUri, nsnull, nsnull, true,
+    rv = nsSyncLoadService::LoadDocument(xslUri, nullptr, nullptr, true,
                                          getter_AddRefs(xslDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -189,7 +189,7 @@ nsXMLPrettyPrinter::Unhook()
                               NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint"));
     }
 
-    mDocument = nsnull;
+    mDocument = nullptr;
 
     NS_RELEASE_THIS();
 }
@@ -235,7 +235,7 @@ nsXMLPrettyPrinter::ContentRemoved(nsIDocument* aDocument,
 void
 nsXMLPrettyPrinter::NodeWillBeDestroyed(const nsINode* aNode)
 {
-    mDocument = nsnull;
+    mDocument = nullptr;
     NS_RELEASE_THIS();
 }
 

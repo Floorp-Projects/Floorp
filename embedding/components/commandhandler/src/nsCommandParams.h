@@ -98,9 +98,9 @@ protected:
         case eBooleanType:      mData.mBoolean = false;  break;
         case eLongType:         mData.mLong = 0;            break;
         case eDoubleType:       mData.mDouble = 0.0;        break;
-        case eWStringType:      delete mData.mString; mData.mString = nsnull;     break;
-        case eISupportsType:    mISupports = nsnull;        break;    // clear the nsCOMPtr
-        case eStringType:       delete mData.mCString; mData.mCString = nsnull;   break;
+        case eWStringType:      delete mData.mString; mData.mString = nullptr;     break;
+        case eISupportsType:    mISupports = nullptr;        break;    // clear the nsCOMPtr
+        case eStringType:       delete mData.mCString; mData.mCString = nullptr;   break;
         default:
           NS_ERROR("Unknown type");
       }

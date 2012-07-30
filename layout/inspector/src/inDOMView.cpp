@@ -59,9 +59,9 @@ public:
 
 inDOMViewNode::inDOMViewNode(nsIDOMNode* aNode) :
   node(aNode),
-  parent(nsnull),
-  next(nsnull),
-  previous(nsnull),
+  parent(nullptr),
+  next(nullptr),
+  previous(nullptr),
   level(0),
   isOpen(false),
   isContainer(false),
@@ -88,10 +88,10 @@ inDOMView::inDOMView() :
 
 inDOMView::~inDOMView()
 {
-  SetRootNode(nsnull);
+  SetRootNode(nullptr);
 }
 
-#define DOMVIEW_ATOM(name_, value_) nsIAtom* inDOMView::name_ = nsnull;
+#define DOMVIEW_ATOM(name_, value_) nsIAtom* inDOMView::name_ = nullptr;
 #include "inDOMViewAtomList.h"
 #undef DOMVIEW_ATOM
 
@@ -152,7 +152,7 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
     // as the first node in the buffer
     if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
       // allocate new node array
-      AppendNode(CreateNode(aNode, nsnull));
+      AppendNode(CreateNode(aNode, nullptr));
     } else {
       // place only the children of the root node in the buffer
       ExpandNode(-1);
@@ -170,7 +170,7 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
     if (doc)
       doc->AddMutationObserver(this);
   } else {
-    mRootDocument = nsnull;
+    mRootDocument = nullptr;
   }
 
   if (mTree)
@@ -182,7 +182,7 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
 NS_IMETHODIMP
 inDOMView::GetNodeFromRowIndex(PRInt32 rowIndex, nsIDOMNode **_retval)
 {
-  inDOMViewNode* viewNode = nsnull;
+  inDOMViewNode* viewNode = nullptr;
   RowToNode(rowIndex, &viewNode);
   if (!viewNode) return NS_ERROR_FAILURE;
   *_retval = viewNode->node;
@@ -297,7 +297,7 @@ inDOMView::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 NS_IMETHODIMP
 inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *properties)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(row, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -391,7 +391,7 @@ inDOMView::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 NS_IMETHODIMP
 inDOMView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(row, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -432,7 +432,7 @@ inDOMView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 NS_IMETHODIMP
 inDOMView::IsContainer(PRInt32 index, bool *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -443,7 +443,7 @@ inDOMView::IsContainer(PRInt32 index, bool *_retval)
 NS_IMETHODIMP
 inDOMView::IsContainerOpen(PRInt32 index, bool *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -454,7 +454,7 @@ inDOMView::IsContainerOpen(PRInt32 index, bool *_retval)
 NS_IMETHODIMP
 inDOMView::IsContainerEmpty(PRInt32 index, bool *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -465,7 +465,7 @@ inDOMView::IsContainerEmpty(PRInt32 index, bool *_retval)
 NS_IMETHODIMP
 inDOMView::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -476,14 +476,14 @@ inDOMView::GetLevel(PRInt32 index, PRInt32 *_retval)
 NS_IMETHODIMP
 inDOMView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(rowIndex, &node);
   if (!node) return NS_ERROR_FAILURE;
 
   // GetParentIndex returns -1 if there is no parent  
   *_retval = -1;
   
-  inDOMViewNode* checkNode = nsnull;
+  inDOMViewNode* checkNode = nullptr;
   PRInt32 i = rowIndex - 1;
   do {
     nsresult rv = RowToNode(i, &checkNode);
@@ -505,11 +505,11 @@ inDOMView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 inDOMView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, bool *_retval)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(rowIndex, &node);
   if (!node) return NS_ERROR_FAILURE;
 
-  *_retval = node->next != nsnull;
+  *_retval = node->next != nullptr;
 
   return NS_OK;
 }
@@ -517,7 +517,7 @@ inDOMView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, bool *_retval)
 NS_IMETHODIMP
 inDOMView::ToggleOpenState(PRInt32 index)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(index, &node);
   if (!node) return NS_ERROR_FAILURE;
 
@@ -707,7 +707,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     PRUint32 attrCount;
     attrs->GetLength(&attrCount);
 
-    inDOMViewNode* contentNode = nsnull;
+    inDOMViewNode* contentNode = nullptr;
     PRInt32 contentRow;
     PRInt32 attrRow;
     if (mRootNode == content &&
@@ -727,7 +727,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     }
 
     inDOMViewNode* newNode = CreateNode(domAttr, contentNode);
-    inDOMViewNode* insertNode = nsnull;
+    inDOMViewNode* insertNode = nullptr;
     RowToNode(attrRow, &insertNode);
     if (insertNode) {
       if (contentNode &&
@@ -745,7 +745,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     // node and remove it.
 
     // get the row of the content node
-    inDOMViewNode* contentNode = nsnull;
+    inDOMViewNode* contentNode = nullptr;
     PRInt32 contentRow;
     PRInt32 baseLevel;
     if (NS_SUCCEEDED(NodeToRow(content, &contentRow))) {
@@ -760,7 +760,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     }
 
     // search for the attribute node that was removed
-    inDOMViewNode* checkNode = nsnull;
+    inDOMViewNode* checkNode = nullptr;
     PRInt32 row = 0;
     for (row = contentRow+1; row < GetRowCount(); ++row) {
       checkNode = GetNodeAt(row);
@@ -824,7 +824,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   PRInt32 parentRow = 0;
   if (NS_FAILED(rv = NodeToRow(parent, &parentRow)))
     return;
-  inDOMViewNode* parentNode = nsnull;
+  inDOMViewNode* parentNode = nullptr;
   if (NS_FAILED(rv = RowToNode(parentRow, &parentNode)))
     return;
 
@@ -843,7 +843,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   // get the previous sibling of the inserted content
   nsCOMPtr<nsIDOMNode> previous;
   GetRealPreviousSibling(childDOMNode, parent, getter_AddRefs(previous));
-  inDOMViewNode* previousNode = nsnull;
+  inDOMViewNode* previousNode = nullptr;
 
   PRInt32 row = 0;
   if (previous) {
@@ -906,7 +906,7 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
   // The parent may no longer be a container.  Note that we don't want
   // to access oldNode after calling RemoveNode, so do this now.
   inDOMViewNode* parentNode = oldNode->parent;
-  bool isOnlyChild = oldNode->previous == nsnull && oldNode->next == nsnull;
+  bool isOnlyChild = oldNode->previous == nullptr && oldNode->next == nullptr;
   
   // Keep track of how many rows we are removing.  It's at least one,
   // but if we're open it's more.
@@ -1042,7 +1042,7 @@ inDOMView::RemoveAllNodes()
 void
 inDOMView::ExpandNode(PRInt32 aRow)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   RowToNode(aRow, &node);
 
   nsCOMArray<nsIDOMNode> kids;
@@ -1052,8 +1052,8 @@ inDOMView::ExpandNode(PRInt32 aRow)
 
   nsTArray<inDOMViewNode*> list(kidCount);
 
-  inDOMViewNode* newNode = nsnull;
-  inDOMViewNode* prevNode = nsnull;
+  inDOMViewNode* newNode = nullptr;
+  inDOMViewNode* prevNode = nullptr;
 
   for (PRInt32 i = 0; i < kidCount; ++i) {
     newNode = CreateNode(kids[i], node);
@@ -1074,7 +1074,7 @@ inDOMView::ExpandNode(PRInt32 aRow)
 void
 inDOMView::CollapseNode(PRInt32 aRow)
 {
-  inDOMViewNode* node = nsnull;
+  inDOMViewNode* node = nullptr;
   nsresult rv = RowToNode(aRow, &node);
   if (NS_FAILED(rv)) {
     return;

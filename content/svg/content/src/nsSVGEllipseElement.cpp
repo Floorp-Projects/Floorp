@@ -146,7 +146,7 @@ nsSVGEllipseElement::ConstructPath(gfxContext *aCtx)
 {
   float x, y, rx, ry;
 
-  GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
+  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
   if (rx > 0.0f && ry > 0.0f) {
     aCtx->Save();

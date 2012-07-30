@@ -164,7 +164,7 @@ NS_IMETHODIMP
 nsMozIconURI::SetSpec(const nsACString &aSpec)
 {
   // Reset everything to default values.
-  mIconURL = nsnull;
+  mIconURL = nullptr;
   mSize = DEFAULT_IMAGE_SIZE;
   mContentType.Truncate();
   mFileName.Truncate();
@@ -252,7 +252,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  ioService->NewURI(iconPath, nsnull, nsnull, getter_AddRefs(uri));
+  ioService->NewURI(iconPath, nullptr, nullptr, getter_AddRefs(uri));
   mIconURL = do_QueryInterface(uri);
   if (mIconURL)
     mFileName.Truncate();

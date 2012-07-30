@@ -40,7 +40,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 1;
-static nsIEventQueue* gEventQ = nsnull;
+static nsIEventQueue* gEventQ = nullptr;
 
 //
 //----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ TestProvider::OnStopRequest(nsIRequest* request, nsISupports* context,
         treq->GetTransport(getter_AddRefs(transport));
         if (transport) {
             nsCOMPtr<nsIRequest> readRequest;
-            transport->AsyncRead(listener, nsnull, 0, 0, 0, getter_AddRefs(readRequest));
+            transport->AsyncRead(listener, nullptr, 0, 0, 0, getter_AddRefs(readRequest));
         }
     } else
         gKeepRunning = 0;
@@ -288,7 +288,7 @@ main(int argc, char* argv[])
 
     // Create the socket transport...
     nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(transport));
+    rv = sts->CreateTransport(hostName, port, nullptr, 0, 0, getter_AddRefs(transport));
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: socket transport!");
         return rv;
@@ -298,7 +298,7 @@ main(int argc, char* argv[])
 
     if (!sync) {
         nsCOMPtr<nsIRequest> request;
-        rv = transport->AsyncWrite(new TestProvider(buffer), nsnull, 0, 0, 0, getter_AddRefs(request));
+        rv = transport->AsyncWrite(new TestProvider(buffer), nullptr, 0, 0, 0, getter_AddRefs(request));
         if (NS_FAILED(rv)) {
             NS_WARNING("failed calling: AsyncWrite!");
             return rv;

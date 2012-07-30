@@ -48,7 +48,7 @@ inline mozilla::a11y::TextLeafAccessible*
 Accessible::AsTextLeaf()
 {
   return mFlags & eTextLeafAccessible ?
-    static_cast<mozilla::a11y::TextLeafAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::TextLeafAccessible*>(this) : nullptr;
 }
 
 #endif

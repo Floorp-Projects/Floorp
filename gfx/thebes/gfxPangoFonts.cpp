@@ -122,7 +122,7 @@ public:
 static PRFuncPtr
 FindFunctionSymbol(const char *name)
 {
-    PRLibrary *lib = nsnull;
+    PRLibrary *lib = nullptr;
     PRFuncPtr result = PR_FindFunctionSymbolAndLibrary(name, &lib);
     if (lib) {
         PR_UnloadLibrary(lib);
@@ -571,11 +571,11 @@ static gfxDownloadedFcFontEntry *GetDownloadedFontEntry(FcPattern *aPattern)
 {
     FcValue value;
     if (FcPatternGet(aPattern, kFontEntryFcProp, 0, &value) != FcResultMatch)
-        return nsnull;
+        return nullptr;
 
     if (value.type != FcTypeFTFace) {
         NS_NOTREACHED("Wrong type for -moz-font-entry font property");
-        return nsnull;
+        return nullptr;
     }
 
     return static_cast<gfxDownloadedFcFontEntry*>(value.u.f);
@@ -1405,7 +1405,7 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
     for (int v = 0;
          FcPatternGetString(mSortPattern,
                             FC_FAMILY, v, &family) == FcResultMatch; ++v) {
-        const nsTArray< nsCountedRef<FcPattern> > *familyFonts = nsnull;
+        const nsTArray< nsCountedRef<FcPattern> > *familyFonts = nullptr;
 
         // Is this an @font-face family?
         bool isUserFont = false;
@@ -1599,7 +1599,7 @@ gfxFcFontSet::GetFontPatternAt(PRUint32 i)
     while (i >= mFonts.Length()) {
         while (!mFcFontSet) {
             if (mHaveFallbackFonts)
-                return nsnull;
+                return nullptr;
 
             mFcFontSet = SortFallbackFonts();
             mHaveFallbackFonts = true;
@@ -2038,7 +2038,7 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
             return nsRefPtr<gfxFont>(aPrevMatchedFont).forget();
         }
         // VS alone. it's meaningless to search different fonts
-        return nsnull;
+        return nullptr;
     }
 
     // The real fonts that fontconfig provides for generic/fallback families
@@ -2112,7 +2112,7 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 // Sanity-check: spot-check a few constants to confirm that Thebes and
@@ -2211,7 +2211,7 @@ gfxFcFont::ShapeWord(gfxContext *aContext,
 
         // Wrong font type for HarfBuzz
         fontEntry->SkipHarfBuzz();
-        mHarfBuzzShaper = nsnull;
+        mHarfBuzzShaper = nullptr;
     }
 
     bool ok = InitGlyphRunWithPango(aShapedWord, aString);
@@ -2239,7 +2239,7 @@ gfxPangoFontGroup::NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
 {
     gfxFontconfigUtils *utils = gfxFontconfigUtils::GetFontconfigUtils();
     if (!utils)
-        return nsnull;
+        return nullptr;
 
     // The font face name from @font-face { src: local() } is not well
     // defined.
@@ -2260,7 +2260,7 @@ gfxPangoFontGroup::NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
 
     nsAutoRef<FcPattern> pattern(FcPatternCreate());
     if (!pattern)
-        return nsnull;
+        return nullptr;
 
     NS_ConvertUTF16toUTF8 fullname(aFullname);
     FcPatternAddString(pattern, FC_FULLNAME,
@@ -2278,7 +2278,7 @@ gfxPangoFontGroup::NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
             return new gfxLocalFcFontEntry(aProxyEntry, fonts);
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 /* static */ FT_Library
@@ -2296,7 +2296,7 @@ gfxPangoFontGroup::GetFTLibrary()
         gfxFontStyle style;
         nsRefPtr<gfxPangoFontGroup> fontGroup =
             new gfxPangoFontGroup(NS_LITERAL_STRING("sans-serif"),
-                                  &style, nsnull);
+                                  &style, nullptr);
 
         gfxFcFont *font = fontGroup->GetBaseFont();
         if (!font)
@@ -2326,7 +2326,7 @@ gfxPangoFontGroup::NewFontEntry(const gfxProxyFontEntry &aProxyEntry,
         FT_New_Memory_Face(GetFTLibrary(), aFontData, aLength, 0, &face);
     if (error != 0) {
         NS_Free((void*)aFontData);
-        return nsnull;
+        return nullptr;
     }
 
     return new gfxDownloadedFcFontEntry(aProxyEntry, aFontData, face);
@@ -2809,7 +2809,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
         }
 
         g.SetComplex(aShapedWord->IsClusterStart(utf16Offset), false, 0);
-        aShapedWord->SetGlyphs(utf16Offset, g, nsnull);
+        aShapedWord->SetGlyphs(utf16Offset, g, nullptr);
     }
     *aUTF16Offset = utf16Offset;
     return NS_OK;

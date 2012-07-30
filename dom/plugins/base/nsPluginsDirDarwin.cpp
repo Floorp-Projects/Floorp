@@ -98,13 +98,13 @@ static char* CFStringRefToUTF8Buffer(CFStringRef cfString)
                                         kCFStringEncodingUTF8) + 1;
   char* newBuffer = static_cast<char*>(NS_Alloc(bufferLength));
   if (!newBuffer) {
-    return nsnull;
+    return nullptr;
   }
 
   if (!::CFStringGetCString(cfString, newBuffer, bufferLength,
                             kCFStringEncodingUTF8)) {
     NS_Free(newBuffer);
-    return nsnull;
+    return nullptr;
   }
 
   newBuffer = static_cast<char*>(NS_Realloc(newBuffer,
@@ -397,7 +397,7 @@ static bool IsCompatibleArch(nsIFile *file)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 {
-  *outLibrary = nsnull;
+  *outLibrary = nullptr;
 
   nsresult rv = NS_OK;
 

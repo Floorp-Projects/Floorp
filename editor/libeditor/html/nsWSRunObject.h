@@ -91,7 +91,7 @@ public:
   typedef void (WSType::*bool_type)();
   operator bool_type() const
   {
-    return mEnum ? &WSType::bool_conversion_helper : nsnull;
+    return mEnum ? &WSType::bool_conversion_helper : nullptr;
   }
 };
 
@@ -302,7 +302,7 @@ class NS_STACK_CLASS nsWSRunObject
         if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
           // Not sure if this is needed, but it'll maintain the same
           // functionality
-          mTextNode = nsnull;
+          mTextNode = nullptr;
         }
       }
       WSPoint(nsIContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 

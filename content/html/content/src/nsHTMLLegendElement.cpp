@@ -77,7 +77,7 @@ nsHTMLLegendElement::GetFieldSet()
     return parent;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -155,7 +155,7 @@ nsHTMLLegendElement::Focus()
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> result;
-  return fm->MoveFocus(nsnull, this, nsIFocusManager::MOVEFOCUS_FORWARD,
+  return fm->MoveFocus(nullptr, this, nsIFocusManager::MOVEFOCUS_FORWARD,
                        nsIFocusManager::FLAG_NOPARENTFRAME,
                        getter_AddRefs(result));
 }

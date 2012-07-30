@@ -38,7 +38,7 @@ public:
 
     nsXULTemplateQueryProcessorRDF* GetProcessor()
     {
-        return (mQuery ? mQuery->Processor() : nsnull);
+        return (mQuery ? mQuery->Processor() : nullptr);
     }
 
     /**

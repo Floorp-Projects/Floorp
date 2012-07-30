@@ -62,10 +62,10 @@ CanvasLayerOGL::Destroy()
 void
 CanvasLayerOGL::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mCanvasSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(mCanvasSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mGLContext != nsnull &&
-      aData.mSurface != nsnull)
+  if (aData.mGLContext != nullptr &&
+      aData.mSurface != nullptr)
   {
     NS_WARNING("CanvasLayerOGL can't have both surface and GLContext");
     return;
@@ -110,7 +110,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
-
+      
   // Check the maximum texture size supported by GL. glTexImage2D supports
   // images of up to 2 + GL_MAX_TEXTURE_SIZE
   GLint texSize = gl()->GetMaxTextureSize();
@@ -119,7 +119,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
     MakeTextureIfNeeded(gl(), mTexture);
     // This should only ever occur with 2d canvas, WebGL can't already have a texture
     // of this size can it?
-    NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget,
+    NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget, 
                       "Invalid texture size when WebGL surface already exists at that size?");
   }
 }
@@ -206,7 +206,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
-  ShaderProgramOGL *program = nsnull;
+  ShaderProgramOGL *program = nullptr;
 
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
@@ -284,14 +284,14 @@ IsValidSharedTexDescriptor(const SurfaceDescriptor& aDescriptor)
 }
 
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
-  : ShadowCanvasLayer(aManager, nsnull)
+  : ShadowCanvasLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mNeedsYFlip(false)
   , mTexture(0)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
-
+ 
 ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
 {}
 
@@ -348,7 +348,7 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
 void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
-  mTexImage = nsnull;
+  mTexImage = nullptr;
   if (mTexture) {
     gl()->MakeCurrent();
     gl()->fDeleteTextures(1, &mTexture);

@@ -13,12 +13,12 @@ using namespace mozilla;
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(true), 
-                                    mForwarding(nsnull),
-                                    mIMETextTxn(nsnull),
+                                    mForwarding(nullptr),
+                                    mIMETextTxn(nullptr),
                                     mCommitted(false),
-                                    mStartSel(nsnull),
+                                    mStartSel(nullptr),
                                     mEndSel(),
-                                    mEditor(nsnull)
+                                    mEditor(nullptr)
 {
 }
 

@@ -35,7 +35,7 @@ SVGTransformListSMILType::Destroy(nsSMILValue& aValue) const
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value type");
   TransformArray* params = static_cast<TransformArray*>(aValue.mU.mPtr);
   delete params;
-  aValue.mU.mPtr = nsnull;
+  aValue.mU.mPtr = nullptr;
   aValue.mType = &nsSMILNullType::sSingleton;
 }
 
@@ -275,7 +275,7 @@ SVGTransformListSMILType::Interpolate(const nsSMILValue& aStartVal,
   // then if the type of the start transform doesn't match the end then we
   // can't interpolate and should just use 0, 0, 0
   static float identityParams[3] = { 0.f };
-  const float* startParams = nsnull;
+  const float* startParams = nullptr;
   if (startTransforms.Length() == 1) {
     const SVGTransformSMILData& startTransform = startTransforms[0];
     if (startTransform.mTransformType == endTransform.mTransformType) {

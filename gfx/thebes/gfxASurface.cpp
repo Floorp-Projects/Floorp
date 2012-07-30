@@ -294,7 +294,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
                                   const gfxIntSize& aSize)
 {
     if (!mSurface || !mSurfaceValid) {
-      return nsnull;
+      return nullptr;
     }
     
     cairo_surface_t *surface =
@@ -302,7 +302,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
                                      aSize.width, aSize.height);
     if (cairo_surface_status(surface)) {
         cairo_surface_destroy(surface);
-        return nsnull;
+        return nullptr;
     }
 
     nsRefPtr<gfxASurface> result = Wrap(surface);
@@ -488,7 +488,7 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
     nsRefPtr<gfxASurface> tmp = 
       CreateSimilarSurface(GetContentType(), 
                            gfxIntSize(aSourceRect.width, aSourceRect.height));
-    // CreateSimilarSurface can return nsnull if the current surface is
+    // CreateSimilarSurface can return nullptr if the current surface is
     // in an error state. This isn't good, but its better to carry
     // on with the error surface instead of crashing.
     NS_ASSERTION(tmp, "Must have temporary surface to move pixels!");
@@ -521,35 +521,35 @@ struct SurfaceMemoryReporterAttrs {
 };
 
 static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
-    {"gfx-surface-image", nsnull},
-    {"gfx-surface-pdf", nsnull},
-    {"gfx-surface-ps", nsnull},
+    {"gfx-surface-image", nullptr},
+    {"gfx-surface-pdf", nullptr},
+    {"gfx-surface-ps", nullptr},
     {"gfx-surface-xlib",
      "Memory used by xlib surfaces to store pixmaps. This memory lives in "
      "the X server's process rather than in this application, so the bytes "
      "accounted for here aren't counted in vsize, resident, explicit, or any of "
      "the other measurements on this page."},
-    {"gfx-surface-xcb", nsnull},
-    {"gfx-surface-glitz???", nsnull},       // should never be used
-    {"gfx-surface-quartz", nsnull},
-    {"gfx-surface-win32", nsnull},
-    {"gfx-surface-beos", nsnull},
-    {"gfx-surface-directfb???", nsnull},    // should never be used
-    {"gfx-surface-svg", nsnull},
-    {"gfx-surface-os2", nsnull},
-    {"gfx-surface-win32printing", nsnull},
-    {"gfx-surface-quartzimage", nsnull},
-    {"gfx-surface-script", nsnull},
-    {"gfx-surface-qpainter", nsnull},
-    {"gfx-surface-recording", nsnull},
-    {"gfx-surface-vg", nsnull},
-    {"gfx-surface-gl", nsnull},
-    {"gfx-surface-drm", nsnull},
-    {"gfx-surface-tee", nsnull},
-    {"gfx-surface-xml", nsnull},
-    {"gfx-surface-skia", nsnull},
-    {"gfx-surface-subsurface", nsnull},
-    {"gfx-surface-d2d", nsnull},
+    {"gfx-surface-xcb", nullptr},
+    {"gfx-surface-glitz???", nullptr},       // should never be used
+    {"gfx-surface-quartz", nullptr},
+    {"gfx-surface-win32", nullptr},
+    {"gfx-surface-beos", nullptr},
+    {"gfx-surface-directfb???", nullptr},    // should never be used
+    {"gfx-surface-svg", nullptr},
+    {"gfx-surface-os2", nullptr},
+    {"gfx-surface-win32printing", nullptr},
+    {"gfx-surface-quartzimage", nullptr},
+    {"gfx-surface-script", nullptr},
+    {"gfx-surface-qpainter", nullptr},
+    {"gfx-surface-recording", nullptr},
+    {"gfx-surface-vg", nullptr},
+    {"gfx-surface-gl", nullptr},
+    {"gfx-surface-drm", nullptr},
+    {"gfx-surface-tee", nullptr},
+    {"gfx-surface-xml", nullptr},
+    {"gfx-surface-skia", nullptr},
+    {"gfx-surface-subsurface", nullptr},
+    {"gfx-surface-d2d", nullptr},
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
@@ -678,7 +678,7 @@ gfxASurface::PrintAsDataURL()
 void
 gfxASurface::CopyAsDataURL()
 {
-  WriteAsPNG_internal(nsnull, false);
+  WriteAsPNG_internal(nullptr, false);
 }
 
 /**
@@ -789,7 +789,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   }
 
   // base 64, result will be NULL terminated
-  char* encodedImg = PL_Base64Encode(imgData, imgSize, nsnull);
+  char* encodedImg = PL_Base64Encode(imgData, imgSize, nullptr);
   PR_Free(imgData);
   if (!encodedImg) // not sure why this would fail
     return;
@@ -816,7 +816,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
-      clipboard->CopyString(NS_ConvertASCIItoUTF16(string), nsnull);
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(string), nullptr);
     }
   }
 

@@ -34,7 +34,7 @@ public:
     : mRequest(request) {
     if (mRequest && NS_FAILED(mRequest->Suspend())) {
       NS_WARNING("Couldn't suspend pump");
-      mRequest = nsnull;
+      mRequest = nullptr;
     }
   }
   ~ScopedRequestSuspender() {
@@ -136,12 +136,12 @@ nsBaseChannel::ContinueRedirect()
       return rv;
   }
 
-  mRedirectChannel = nsnull;
+  mRedirectChannel = nullptr;
 
   // close down this channel
   Cancel(NS_BINDING_REDIRECTED);
-  mListener = nsnull;
-  mListenerContext = nsnull;
+  mListener = nullptr;
+  mListenerContext = nullptr;
 
   return NS_OK;
 }
@@ -192,7 +192,7 @@ nsBaseChannel::PushStreamConverter(const char *fromType,
     if (invalidatesContentLength)
       SetContentLength64(-1);
     if (result) {
-      *result = nsnull;
+      *result = nullptr;
       converter.swap(*result);
     }
   }
@@ -227,7 +227,7 @@ nsBaseChannel::BeginPumpingData()
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
                                  true);
   if (NS_SUCCEEDED(rv))
-    rv = mPump->AsyncRead(this, nsnull);
+    rv = mPump->AsyncRead(this, nullptr);
 
   return rv;
 }
@@ -263,15 +263,15 @@ nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result)
     // Notify our consumer ourselves
     mListener->OnStartRequest(this, mListenerContext);
     mListener->OnStopRequest(this, mListenerContext, mStatus);
-    mListener = nsnull;
-    mListenerContext = nsnull;
+    mListener = nullptr;
+    mListenerContext = nullptr;
   }
 
   if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   // Drop notification callbacks to prevent cycles.
-  mCallbacks = nsnull;
+  mCallbacks = nullptr;
   CallbacksChanged();
 }
 
@@ -560,7 +560,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   // Ensure that this is an allowed port before proceeding.
   nsresult rv = NS_CheckPortSafety(mURI);
   if (NS_FAILED(rv)) {
-    mCallbacks = nsnull;
+    mCallbacks = nullptr;
     return rv;
   }
 
@@ -576,10 +576,10 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   // this method fails.
   rv = BeginPumpingData();
   if (NS_FAILED(rv)) {
-    mPump = nsnull;
-    mListener = nsnull;
-    mListenerContext = nsnull;
-    mCallbacks = nsnull;
+    mPump = nullptr;
+    mListener = nullptr;
+    mListenerContext = nullptr;
+    mCallbacks = nullptr;
     return rv;
   }
 
@@ -590,7 +590,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   SUSPEND_PUMP_FOR_SCOPE();
 
   if (mLoadGroup)
-    mLoadGroup->AddRequest(this, nsnull);
+    mLoadGroup->AddRequest(this, nullptr);
 
   ClassifyURI();
 
@@ -714,20 +714,20 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     mStatus = status;
 
   // Cause IsPending to return false.
-  mPump = nsnull;
+  mPump = nullptr;
 
   mListener->OnStopRequest(this, mListenerContext, mStatus);
-  mListener = nsnull;
-  mListenerContext = nsnull;
+  mListener = nullptr;
+  mListenerContext = nullptr;
 
   // No need to suspend pump in this scope since we will not be receiving
   // any more events from it.
 
   if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   // Drop notification callbacks to prevent cycles.
-  mCallbacks = nsnull;
+  mCallbacks = nullptr;
   CallbacksChanged();
 
   return NS_OK;
@@ -748,7 +748,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     PRUint64 prog = PRUint64(offset) + count;
     PRUint64 progMax = ContentLength64();
-    OnTransportStatus(nsnull, nsITransport::STATUS_READING, prog, progMax);
+    OnTransportStatus(nullptr, nsITransport::STATUS_READING, prog, progMax);
   }
 
   return rv;

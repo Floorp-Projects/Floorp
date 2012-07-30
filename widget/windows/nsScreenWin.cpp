@@ -10,10 +10,10 @@ nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
   : mScreen(inScreen)
 {
 #ifdef DEBUG
-  HDC hDCScreen = ::GetDC(nsnull);
+  HDC hDCScreen = ::GetDC(nullptr);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
   NS_ASSERTION ( ::GetDeviceCaps(hDCScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
-  ::ReleaseDC(nsnull,hDCScreen);
+  ::ReleaseDC(nullptr,hDCScreen);
 #endif
 
   // nothing else to do. I guess we could cache a bunch of information
@@ -44,14 +44,14 @@ nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
     }
   }
   if (!success) {
-     HDC hDCScreen = ::GetDC(nsnull);
+     HDC hDCScreen = ::GetDC(nullptr);
      NS_ASSERTION(hDCScreen,"GetDC Failure");
     
      *outTop = *outLeft = 0;
      *outWidth = ::GetDeviceCaps(hDCScreen, HORZRES);
      *outHeight = ::GetDeviceCaps(hDCScreen, VERTRES); 
      
-     ::ReleaseDC(nsnull, hDCScreen);
+     ::ReleaseDC(nullptr, hDCScreen);
   }
   return NS_OK;
 
@@ -93,7 +93,7 @@ NS_IMETHODIMP
 nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
   //XXX not sure how to get this info for multiple monitors, this might be ok...
-  HDC hDCScreen = ::GetDC(nsnull);
+  HDC hDCScreen = ::GetDC(nullptr);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
 
   PRInt32 depth = ::GetDeviceCaps(hDCScreen, BITSPIXEL);
@@ -105,7 +105,7 @@ nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
   }
   *aPixelDepth = depth;
 
-  ::ReleaseDC(nsnull, hDCScreen);
+  ::ReleaseDC(nullptr, hDCScreen);
   return NS_OK;
 
 } // GetPixelDepth

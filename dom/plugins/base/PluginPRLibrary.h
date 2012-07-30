@@ -18,21 +18,21 @@ class PluginPRLibrary : public PluginLibrary
 public:
     PluginPRLibrary(const char* aFilePath, PRLibrary* aLibrary) :
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-        mNP_Initialize(nsnull),
+        mNP_Initialize(nullptr),
 #else
-        mNP_Initialize(nsnull),
+        mNP_Initialize(nullptr),
 #endif
-        mNP_Shutdown(nsnull),
-        mNP_GetMIMEDescription(nsnull),
+        mNP_Shutdown(nullptr),
+        mNP_GetMIMEDescription(nullptr),
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-        mNP_GetValue(nsnull),
+        mNP_GetValue(nullptr),
 #endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
-        mNP_GetEntryPoints(nsnull),
+        mNP_GetEntryPoints(nullptr),
 #endif
-        mNPP_New(nsnull),
-        mNPP_ClearSiteData(nsnull),
-        mNPP_GetSitesWithData(nsnull),
+        mNPP_New(nullptr),
+        mNPP_ClearSiteData(nullptr),
+        mNPP_GetSitesWithData(nullptr),
         mLibrary(aLibrary),
         mFilePath(aFilePath)
     {

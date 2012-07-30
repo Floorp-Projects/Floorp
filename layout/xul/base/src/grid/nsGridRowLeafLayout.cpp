@@ -111,9 +111,9 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
   if (grid) {
     nsGridRow* column;
     PRInt32 count = grid->GetColumnCount(isHorizontal); 
-    nsBoxSize* start = nsnull;
-    nsBoxSize* last = nsnull;
-    nsBoxSize* current = nsnull;
+    nsBoxSize* start = nullptr;
+    nsBoxSize* last = nullptr;
+    nsBoxSize* current = nullptr;
     nsIBox* child = aBox->GetChildBox();
     for (int i=0; i < count; i++)
     {
@@ -151,8 +151,8 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
       // or equal to our left or right
       PRInt32 firstIndex = 0;
       PRInt32 lastIndex = 0;
-      nsGridRow* firstRow = nsnull;
-      nsGridRow* lastRow = nsnull;
+      nsGridRow* firstRow = nullptr;
+      nsGridRow* lastRow = nullptr;
       grid->GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, !isHorizontal);
 
       if (i == firstIndex || i == lastIndex) {

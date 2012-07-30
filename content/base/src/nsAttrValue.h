@@ -249,7 +249,7 @@ public:
   bool ParseEnumValue(const nsAString& aValue,
                         const EnumTable* aTable,
                         bool aCaseSensitive,
-                        const EnumTable* aDefaultValue = nsnull);
+                        const EnumTable* aDefaultValue = nullptr);
 
   /**
    * Parse a string into an integer. Can optionally parse percent (n%).
@@ -420,7 +420,7 @@ private:
                           bool* aStrict,
                           PRInt32* aErrorCode,
                           bool aCanBePercent = false,
-                          bool* aIsPercent = nsnull) const;
+                          bool* aIsPercent = nullptr) const;
   // Given an enum table and a particular entry in that table, return
   // the actual integer value we should store.
   PRInt32 EnumTableEntryToValue(const EnumTable* aEnumTable,

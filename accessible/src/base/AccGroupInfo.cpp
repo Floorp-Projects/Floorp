@@ -10,7 +10,7 @@
 using namespace mozilla::a11y;
 
 AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
-  mPosInSet(0), mSetSize(0), mParent(nsnull)
+  mPosInSet(0), mSetSize(0), mParent(nullptr)
 {
   MOZ_COUNT_CTOR(AccGroupInfo);
   Accessible* parent = aItem->Parent();

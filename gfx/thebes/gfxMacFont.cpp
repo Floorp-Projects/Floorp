@@ -21,8 +21,8 @@ using namespace mozilla::gfx;
 gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                        bool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
-      mCGFont(nsnull),
-      mFontFace(nsnull)
+      mCGFont(nullptr),
+      mFontFace(nullptr)
 {
     mApplySyntheticBold = aNeedsBold;
 
@@ -373,7 +373,7 @@ gfxMacFont::GetFontTable(PRUint32 aTag)
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 // Try to initialize font metrics via platform APIs (CG/CT),

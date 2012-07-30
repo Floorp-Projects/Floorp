@@ -42,7 +42,7 @@ NumberResult::stringValue(nsString& aResult)
 const nsString*
 NumberResult::stringValuePointer()
 {
-    return nsnull;
+    return nullptr;
 }
 
 bool NumberResult::booleanValue() {

@@ -382,7 +382,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParam
     if (aWindow && (permission == nsIPopupWindowManager::DENY_POPUP)) {
       nsCOMPtr<nsIDOMDocument> domDoc = aWindow->GetExtantDocument();
       nsGlobalWindow::FirePopupBlockedEvent(
-        domDoc, aWindow, nsnull, EmptyString(), EmptyString()
+        domDoc, aWindow, nullptr, EmptyString(), EmptyString()
       );
       return NS_ERROR_FAILURE;
     }
@@ -462,7 +462,7 @@ MediaManager::OnNavigation(PRUint64 aWindowID)
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
       listeners->ElementAt(i);
     listener->Invalidate();
-    listener = nsnull;
+    listener = nullptr;
   }
   listeners->Clear();
 
@@ -482,7 +482,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   // Close off any remaining active windows.
   mActiveWindows.Clear();
-  sSingleton = nsnull;
+  sSingleton = nullptr;
 
   return NS_OK;
 }

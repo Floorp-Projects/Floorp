@@ -64,7 +64,7 @@ inline nsresult
 NS_WriteOptionalObject(nsIObjectOutputStream* aStream, nsISupports* aObject,
                        bool aIsStrongRef)
 {
-    bool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteObject(aObject, aIsStrongRef);
@@ -75,7 +75,7 @@ inline nsresult
 NS_WriteOptionalSingleRefObject(nsIObjectOutputStream* aStream,
                                 nsISupports* aObject)
 {
-    bool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteSingleRefObject(aObject);
@@ -88,7 +88,7 @@ NS_WriteOptionalCompoundObject(nsIObjectOutputStream* aStream,
                                const nsIID& aIID,
                                bool aIsStrongRef)
 {
-    bool nonnull = (aObject != nsnull);
+    bool nonnull = (aObject != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteCompoundObject(aObject, aIID, aIsStrongRef);

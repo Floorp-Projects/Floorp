@@ -20,11 +20,11 @@
 
 PRUint32 nsWindowDataSource::windowCount = 0;
 
-nsIRDFResource* nsWindowDataSource::kNC_Name = nsnull;
-nsIRDFResource* nsWindowDataSource::kNC_WindowRoot = nsnull;
-nsIRDFResource* nsWindowDataSource::kNC_KeyIndex = nsnull;
+nsIRDFResource* nsWindowDataSource::kNC_Name = nullptr;
+nsIRDFResource* nsWindowDataSource::kNC_WindowRoot = nullptr;
+nsIRDFResource* nsWindowDataSource::kNC_KeyIndex = nullptr;
 
-nsIRDFService*  nsWindowDataSource::gRDFService = nsnull;
+nsIRDFService*  nsWindowDataSource::gRDFService = nullptr;
 
 PRUint32 nsWindowDataSource::gRefCnt = 0;
 
@@ -89,8 +89,8 @@ nsWindowDataSource::Observe(nsISupports *aSubject, const char* aTopic, const PRU
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         // release these objects so that they release their reference
         // to us
-        mContainer = nsnull;
-        mInner = nsnull;
+        mContainer = nullptr;
+        mInner = nullptr;
     }
 
     return NS_OK;
@@ -308,7 +308,7 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
                              getter_AddRefs(windowResource));
 
     // now reverse-lookup in the hashtable
-    findWindowClosure closure = { windowResource.get(), nsnull };
+    findWindowClosure closure = { windowResource.get(), nullptr };
     mWindowResources.Enumerate(findWindow, (void*)&closure);
     if (closure.resultWindow) {
 

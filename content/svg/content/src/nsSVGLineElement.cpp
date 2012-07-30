@@ -151,7 +151,7 @@ void
 nsSVGLineElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
   float x1, y1, x2, y2;
 
-  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
+  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
   float angle = atan2(y2 - y1, x2 - x1);
 
@@ -164,7 +164,7 @@ nsSVGLineElement::ConstructPath(gfxContext *aCtx)
 {
   float x1, y1, x2, y2;
 
-  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
+  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
   aCtx->MoveTo(gfxPoint(x1, y1));
   aCtx->LineTo(gfxPoint(x2, y2));

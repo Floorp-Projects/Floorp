@@ -70,7 +70,7 @@ public:
     // Determine if the given header value exists.
     bool HasHeaderValue(nsHttpAtom header, const char *value) const
     {
-        return FindHeaderValue(header, value) != nsnull;
+        return FindHeaderValue(header, value) != nullptr;
     }
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
@@ -78,8 +78,8 @@ public:
     // parse a header line, return the header atom and a pointer to the 
     // header value (the substring of the header line -- do not free).
     nsresult ParseHeaderLine(const char *line,
-                             nsHttpAtom *header=nsnull,
-                             char **value=nsnull);
+                             nsHttpAtom *header=nullptr,
+                             char **value=nullptr);
 
     void Flatten(nsACString &, bool pruneProxyHeaders=false);
 

@@ -115,7 +115,7 @@ class MozQGraphicsView : public QGraphicsView
     Q_OBJECT
 
 public:
-    MozQGraphicsView(QWidget * aParent = nsnull)
+    MozQGraphicsView(QWidget * aParent = nullptr)
      : QGraphicsView (new QGraphicsScene(), aParent)
      , mEventHandler(this)
      , mTopLevelWidget(NULL)
@@ -257,7 +257,7 @@ class MozMGraphicsView : public MWindow
 {
     Q_OBJECT
 public:
-    MozMGraphicsView(QWidget* aParent = nsnull)
+    MozMGraphicsView(QWidget* aParent = nullptr)
      : MWindow(aParent)
      , mEventHandler(this)
      , mTopLevelWidget(NULL)

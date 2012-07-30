@@ -53,7 +53,7 @@ GetPrimaryScreen()
 {
   nsCOMPtr<nsIScreenManager> screenMgr =
     do_GetService("@mozilla.org/gfx/screenmanager;1");
-  NS_ENSURE_TRUE(screenMgr, nsnull);
+  NS_ENSURE_TRUE(screenMgr, nullptr);
 
   nsCOMPtr<nsIScreen> screen;
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));

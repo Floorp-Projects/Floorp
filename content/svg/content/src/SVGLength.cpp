@@ -208,8 +208,8 @@ SVGLength::GetUserUnitsPerPercent(const nsSVGElement *aElement, PRUint8 aAxis)
 // These items must be at the same index as the nsIDOMSVGLength constants!
 static nsIAtom** const unitMap[] =
 {
-  nsnull, /* SVG_LENGTHTYPE_UNKNOWN */
-  nsnull, /* SVG_LENGTHTYPE_NUMBER */
+  nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
+  nullptr, /* SVG_LENGTHTYPE_NUMBER */
   &nsGkAtoms::percentage,
   &nsGkAtoms::em,
   &nsGkAtoms::ex,

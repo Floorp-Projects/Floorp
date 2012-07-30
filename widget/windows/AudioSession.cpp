@@ -300,7 +300,7 @@ AudioSession::StopInternal()
   if (mAudioSessionControl) {
     mAudioSessionControl->SetGroupingParam((LPCGUID)&blankId, NULL);
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
-    mAudioSessionControl = nsnull;
+    mAudioSessionControl = nullptr;
   }
 }
 
@@ -421,7 +421,7 @@ AudioSession::OnSessionDisconnectedInternal()
     return NS_OK;
 
   mAudioSessionControl->UnregisterAudioSessionNotification(this);
-  mAudioSessionControl = nsnull;
+  mAudioSessionControl = nullptr;
 
   mState = AUDIO_SESSION_DISCONNECTED;
   CoUninitialize();

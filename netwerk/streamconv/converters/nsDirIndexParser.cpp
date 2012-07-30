@@ -36,7 +36,7 @@ nsresult
 nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
-  mFormat = nsnull;
+  mFormat = nullptr;
 
   // get default charset to be used for directory listings (fallback to
   // ISO-8859-1 if pref is unavailable).
@@ -136,7 +136,7 @@ nsDirIndexParser::gFieldTable[] = {
   { "Last-Modified", FIELD_LASTMODIFIED },
   { "Content-Type", FIELD_CONTENTTYPE },
   { "File-Type", FIELD_FILETYPE },
-  { nsnull, FIELD_UNKNOWN }
+  { nullptr, FIELD_UNKNOWN }
 };
 
 nsrefcnt nsDirIndexParser::gRefCntParser = 0;
@@ -172,7 +172,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   delete[] mFormat;
   mFormat = new int[num+1];
   // Prevent NULL Deref - Bug 443299 
-  if (mFormat == nsnull)
+  if (mFormat == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
   mFormat[num] = -1;
   
@@ -267,7 +267,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       nsAutoString entryuri;
       
       if (gTextToSubURI) {
-        PRUnichar   *result = nsnull;
+        PRUnichar   *result = nullptr;
         if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(mEncoding.get(), filename.get(),
                                                                 &result)) && (result)) {
           if (*result) {
