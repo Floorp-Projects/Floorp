@@ -24,7 +24,7 @@ nsSVGEnumMapping nsSVGGradientElement::sSpreadMethodMap[] = {
   {&nsGkAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
   {&nsGkAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
   {&nsGkAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGGradientElement::sEnumInfo[2] =
@@ -92,9 +92,10 @@ NS_IMETHODIMP nsSVGGradientElement::GetGradientUnits(nsIDOMSVGAnimatedEnumeratio
 /* readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform; */
 NS_IMETHODIMP nsSVGGradientElement::GetGradientTransform(nsIDOMSVGAnimatedTransformList * *aGradientTransform)
 {
-  *aGradientTransform =
-    DOMSVGAnimatedTransformList::GetDOMWrapper(GetAnimatedTransformList(), this)
-    .get();
+  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
+  // to allocate the SVGAnimatedTransformList if it hasn't already done so:
+  *aGradientTransform = DOMSVGAnimatedTransformList::GetDOMWrapper(
+                          GetAnimatedTransformList(DO_ALLOCATE), this).get();
   return NS_OK;
 }
 
@@ -203,9 +204,9 @@ NS_IMETHODIMP nsSVGLinearGradientElement::GetY2(nsIDOMSVGAnimatedLength * *aY2)
 // nsSVGElement methods
 
 SVGAnimatedTransformList*
-nsSVGGradientElement::GetAnimatedTransformList()
+nsSVGGradientElement::GetAnimatedTransformList(PRUint32 aFlags)
 {
-  if (!mGradientTransform) {
+  if (!mGradientTransform && (aFlags & DO_ALLOCATE)) {
     mGradientTransform = new SVGAnimatedTransformList();
   }
   return mGradientTransform;

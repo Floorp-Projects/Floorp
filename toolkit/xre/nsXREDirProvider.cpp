@@ -72,7 +72,7 @@ CloneAndAppend(nsIFile* aFile, const char* name)
   return file.forget();
 }
 
-nsXREDirProvider* gDirServiceProvider = nsnull;
+nsXREDirProvider* gDirServiceProvider = nullptr;
 
 nsXREDirProvider::nsXREDirProvider() :
   mProfileNotified(false)
@@ -82,7 +82,7 @@ nsXREDirProvider::nsXREDirProvider() :
 
 nsXREDirProvider::~nsXREDirProvider()
 {
-  gDirServiceProvider = nsnull;
+  gDirServiceProvider = nullptr;
 }
 
 nsXREDirProvider*
@@ -288,10 +288,10 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       rv = file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_ROOT_DIR)) {
-    rv = GetUserProfilesRootDir(getter_AddRefs(file), nsnull, nsnull, nsnull);
+    rv = GetUserProfilesRootDir(getter_AddRefs(file), nullptr, nullptr, nullptr);
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR)) {
-    rv = GetUserProfilesLocalDir(getter_AddRefs(file), nsnull, nsnull, nsnull);
+    rv = GetUserProfilesLocalDir(getter_AddRefs(file), nullptr, nullptr, nullptr);
   }
   else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE) && gArgv[0]) {
     nsCOMPtr<nsIFile> lf;
@@ -478,7 +478,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   if (appP2) {
     rv = appP2->GetFiles(aProperty, getter_AddRefs(appEnum));
     if (NS_FAILED(rv)) {
-      appEnum = nsnull;
+      appEnum = nullptr;
     }
     else if (rv != NS_SUCCESS_AGGREGATE_RESULT) {
       NS_ADDREF(*aResult = appEnum);
@@ -600,7 +600,7 @@ nsXREDirProvider::LoadAppBundleDirs()
   }
 }
 
-static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
+static const char *const kAppendPrefDir[] = { "defaults", "preferences", nullptr };
 
 #ifdef DEBUG_bsmedberg
 static void
@@ -622,12 +622,12 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
                                    nsISimpleEnumerator** aResult)
 {
   nsresult rv = NS_OK;
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   if (!strcmp(aProperty, XRE_EXTENSIONS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 
-    static const char *const kAppendNothing[] = { nsnull };
+    static const char *const kAppendNothing[] = { nullptr };
 
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendNothing, directories);
@@ -667,7 +667,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     // NS_APP_CHROME_DIR_LIST is only used to get default (native) icons
     // for OS window decoration.
 
-    static const char *const kAppendChromeDir[] = { "chrome", nsnull };
+    static const char *const kAppendChromeDir[] = { "chrome", nullptr };
     nsCOMArray<nsIFile> directories;
     LoadDirIntoArray(mXULAppDir,
                      kAppendChromeDir,
@@ -682,7 +682,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
   else if (!strcmp(aProperty, NS_APP_PLUGINS_DIR_LIST)) {
-    static const char *const kAppendPlugins[] = { "plugins", nsnull };
+    static const char *const kAppendPlugins[] = { "plugins", nullptr };
     nsCOMArray<nsIFile> directories;
 
     // The root dirserviceprovider does quite a bit for us: we're mainly
@@ -753,28 +753,28 @@ nsXREDirProvider::DoStartup()
     }
 
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
-    obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
+    obsSvc->NotifyObservers(nullptr, "profile-do-change", kStartup);
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
     if (em) {
-      em->Observe(nsnull, "addons-startup", nsnull);
+      em->Observe(nullptr, "addons-startup", nullptr);
     } else {
       NS_WARNING("Failed to create Addons Manager.");
     }
 
     LoadExtensionBundleDirectories();
 
-    obsSvc->NotifyObservers(nsnull, "load-extension-defaults", nsnull);
-    obsSvc->NotifyObservers(nsnull, "profile-after-change", kStartup);
+    obsSvc->NotifyObservers(nullptr, "load-extension-defaults", nullptr);
+    obsSvc->NotifyObservers(nullptr, "profile-after-change", kStartup);
 
     // Any component that has registered for the profile-after-change category
     // should also be created at this time.
-    (void)NS_CreateServicesFromCategory("profile-after-change", nsnull,
+    (void)NS_CreateServicesFromCategory("profile-after-change", nullptr,
                                         "profile-after-change");
 
     if (gSafeMode && safeModeNecessary) {
       static const PRUnichar kCrashed[] = {'c','r','a','s','h','e','d','\0'};
-      obsSvc->NotifyObservers(nsnull, "safemode-forced", kCrashed);
+      obsSvc->NotifyObservers(nullptr, "safemode-forced", kCrashed);
     }
 
     // 1 = Regular mode, 2 = Safe mode, 3 = Safe mode forced
@@ -787,7 +787,7 @@ nsXREDirProvider::DoStartup()
     }
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SAFE_MODE_USAGE, mode);
 
-    obsSvc->NotifyObservers(nsnull, "profile-initial-state", nsnull);
+    obsSvc->NotifyObservers(nullptr, "profile-initial-state", nullptr);
   }
   return NS_OK;
 }
@@ -839,7 +839,7 @@ nsXREDirProvider::DoShutdown()
         (do_GetService("@mozilla.org/js/xpc/RuntimeService;1"));
       if (rtsvc)
       {
-        JSRuntime *rt = nsnull;
+        JSRuntime *rt = nullptr;
         rtsvc->GetRuntime(&rt);
         if (rt)
           ::JS_GC(rt);

@@ -160,7 +160,7 @@ nsAssignmentSet::GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const
         }
     }
 
-    *aValue = nsnull;
+    *aValue = nullptr;
     return false;
 }
 
@@ -327,7 +327,7 @@ TestNode::Propagate(InstantiationSet& aInstantiations,
 
     aTakenInstantiations = false;
 
-    nsresult rv = FilterInstantiations(aInstantiations, nsnull);
+    nsresult rv = FilterInstantiations(aInstantiations, nullptr);
     if (NS_FAILED(rv))
         return rv;
 
@@ -400,7 +400,7 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
         rv = mParent->Constrain(aInstantiations);
 
         if (NS_SUCCEEDED(rv) && cantHandleYet)
-            rv = FilterInstantiations(aInstantiations, nsnull);
+            rv = FilterInstantiations(aInstantiations, nullptr);
     }
     else {
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
@@ -419,7 +419,7 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
 //----------------------------------------------------------------------
 
 ReteNodeSet::ReteNodeSet()
-    : mNodes(nsnull), mCount(0), mCapacity(0)
+    : mNodes(nullptr), mCount(0), mCapacity(0)
 {
 }
 
@@ -431,7 +431,7 @@ ReteNodeSet::~ReteNodeSet()
 nsresult
 ReteNodeSet::Add(ReteNode* aNode)
 {
-    NS_PRECONDITION(aNode != nsnull, "null ptr");
+    NS_PRECONDITION(aNode != nullptr, "null ptr");
     if (! aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -458,7 +458,7 @@ nsresult
 ReteNodeSet::Clear()
 {
     delete[] mNodes;
-    mNodes = nsnull;
+    mNodes = nullptr;
     mCount = mCapacity = 0;
     return NS_OK;
 }

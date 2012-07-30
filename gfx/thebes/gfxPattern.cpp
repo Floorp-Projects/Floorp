@@ -124,7 +124,7 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 {
   if (mGfxPattern) {
     mGfxPattern->~Pattern();
-    mGfxPattern = nsnull;
+    mGfxPattern = nullptr;
   }
 
   if (!mPattern) {
@@ -371,10 +371,10 @@ already_AddRefed<gfxASurface>
 gfxPattern::GetSurface()
 {
   if (mPattern) {
-    cairo_surface_t *surf = nsnull;
+    cairo_surface_t *surf = nullptr;
 
     if (cairo_pattern_get_surface (mPattern, &surf) != CAIRO_STATUS_SUCCESS)
-        return nsnull;
+        return nullptr;
 
     return gfxASurface::Wrap(surf);
   } else {

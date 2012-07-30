@@ -31,7 +31,7 @@ public:
   {
     if (mIMC) {
       ::ImmReleaseContext(mWnd, mIMC);
-      mIMC = nsnull;
+      mIMC = nullptr;
     }
   }
 
@@ -51,7 +51,7 @@ protected:
     NS_ERROR("Don't create nsIMEContext without window handle");
   }
 
-  nsIMEContext(const nsIMEContext &aSrc) : mWnd(nsnull), mIMC(nsnull)
+  nsIMEContext(const nsIMEContext &aSrc) : mWnd(nullptr), mIMC(nullptr)
   {
     NS_ERROR("Don't copy nsIMEContext");
   }
@@ -201,10 +201,10 @@ protected:
    *  @param aReferenceWidget The origin widget of aCursorRect.
    *                          Typically, this is mReferenceWidget of the
    *                          composing events. If the aCursorRect is in screen
-   *                          coordinates, set nsnull.
+   *                          coordinates, set nullptr.
    *  @param aCursorRect      The cursor rect.
    *  @param aNewOriginWidget aOutRect will be in this widget's coordinates. If
-   *                          this is nsnull, aOutRect will be in screen
+   *                          this is nullptr, aOutRect will be in screen
    *                          coordinates.
    *  @param aOutRect         The converted cursor rect.
    */
@@ -236,7 +236,7 @@ protected:
    *  The aOffset value is offset in the contents.  So, when you need offset
    *  in the composition string, you need to subtract mCompositionStart from it.
    */
-  bool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nsnull);
+  bool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nullptr);
   void DispatchTextEvent(nsWindow* aWindow, const nsIMEContext &aIMEContext,
                          bool aCheckAttr = true);
   void SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList);

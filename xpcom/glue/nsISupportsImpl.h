@@ -165,7 +165,7 @@ public:
         if (NS_UNLIKELY(!NS_CycleCollectorForget2(e))) {
           NS_NOTREACHED("forget should not fail when reference count hits 0");
           // Clear the entry's pointer to us.
-          e->mObject = nsnull;
+          e->mObject = nullptr;
         }
         mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
       } else {
@@ -203,7 +203,7 @@ public:
       NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
 #endif
     // The entry will be added to the free list later. 
-    NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject = nsnull;
+    NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject = nullptr;
     unmarkPurple();
   }
 
@@ -544,7 +544,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   },
 
 #define NS_INTERFACE_TABLE_END_WITH_PTR(_ptr)                                 \
-  { nsnull, 0 } };                                                            \
+  { nullptr, 0 } };                                                            \
   rv = NS_TableDrivenQI(static_cast<void*>(_ptr),                             \
                         table, aIID, aInstancePtr);
 
@@ -1418,28 +1418,28 @@ _class::GetInterfaces(PRUint32* _count, nsIID*** _array)                      \
 NS_IMETHODIMP                                                                 \
 _class::GetHelperForLanguage(PRUint32 _language, nsISupports** _retval)       \
 {                                                                             \
-  *_retval = nsnull;                                                          \
+  *_retval = nullptr;                                                          \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
 _class::GetContractID(char** _contractID)                                     \
 {                                                                             \
-  *_contractID = nsnull;                                                      \
+  *_contractID = nullptr;                                                      \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
 _class::GetClassDescription(char** _classDescription)                         \
 {                                                                             \
-  *_classDescription = nsnull;                                                \
+  *_classDescription = nullptr;                                                \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \
 NS_IMETHODIMP                                                                 \
 _class::GetClassID(nsCID** _classID)                                          \
 {                                                                             \
-  *_classID = nsnull;                                                         \
+  *_classID = nullptr;                                                         \
   return NS_OK;                                                               \
 }                                                                             \
                                                                               \

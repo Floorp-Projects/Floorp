@@ -97,9 +97,9 @@ nsBarProp::GetBrowserChrome()
   // Check that the window is still alive.
   nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
   if (!domwin)
-    return nsnull;
+    return nullptr;
 
-  nsIWebBrowserChrome *browserChrome = nsnull;
+  nsIWebBrowserChrome *browserChrome = nullptr;
   mDOMWindow->GetWebBrowserChrome(&browserChrome);
   return browserChrome;
 }

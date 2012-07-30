@@ -14,7 +14,7 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
-static nsITimer* sUpdateTimer = nsnull;
+static nsITimer* sUpdateTimer = nullptr;
 
 void UpdateHandler(nsITimer *aTimer, void *aClosure)
 {

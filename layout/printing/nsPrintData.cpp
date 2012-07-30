@@ -33,14 +33,14 @@ static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 //-- nsPrintData Class Impl
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
-  mType(aType), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
+  mType(aType), mDebugFilePtr(nullptr), mPrintObject(nullptr), mSelectedPO(nullptr),
   mPrintDocList(0), mIsIFrameSelected(false),
   mIsParentAFrameSet(false), mOnStartSent(false),
   mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
   mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintablePages(0), mNumPagesPrinted(0),
   mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
-  mBrandName(nsnull)
+  mBrandName(nullptr)
 {
   MOZ_COUNT_CTOR(nsPrintData);
   nsCOMPtr<nsIStringBundle> brandBundle;
@@ -121,9 +121,9 @@ nsPrintData::DoOnProgressChange(PRInt32      aProgress,
 {
   for (PRInt32 i=0;i<mPrintProgressListeners.Count();i++) {
     nsIWebProgressListener* wpl = mPrintProgressListeners.ObjectAt(i);
-    wpl->OnProgressChange(nsnull, nsnull, aProgress, aMaxProgress, aProgress, aMaxProgress);
+    wpl->OnProgressChange(nullptr, nullptr, aProgress, aMaxProgress, aProgress, aMaxProgress);
     if (aDoStartStop) {
-      wpl->OnStateChange(nsnull, nsnull, aFlag, 0);
+      wpl->OnStateChange(nullptr, nullptr, aFlag, 0);
     }
   }
 }

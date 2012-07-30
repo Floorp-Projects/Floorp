@@ -248,7 +248,7 @@ public:
     // updating security info.
     void FireDummyOnLocationChange()
     {
-        FireOnLocationChange(this, nsnull, mCurrentURI,
+        FireOnLocationChange(this, nullptr, mCurrentURI,
                              LOCATION_CHANGE_SAME_DOCUMENT);
     }
 
@@ -519,7 +519,7 @@ protected:
     nsresult   RefreshURIFromQueue();
     NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI,
                                 const PRUnichar *aURL,
-                                nsIChannel* aFailedChannel = nsnull);
+                                nsIChannel* aFailedChannel = nullptr);
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
                              const char *aErrorPage,
                              const PRUnichar *aErrorType,
@@ -624,7 +624,7 @@ protected:
     // RestoreFromHistory is called from a PLEvent.
     nsresult RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring);
 
-    // Call BeginRestore(nsnull, false) for each child of this shell.
+    // Call BeginRestore(nullptr, false) for each child of this shell.
     nsresult BeginRestoreChildren();
 
     // Method to get our current position and size without flushing
@@ -666,7 +666,7 @@ protected:
     public:
         NS_DECL_NSIRUNNABLE
         RestorePresentationEvent(nsDocShell *ds) : mDocShell(ds) {}
-        void Revoke() { mDocShell = nsnull; }
+        void Revoke() { mDocShell = nullptr; }
     private:
         nsRefPtr<nsDocShell> mDocShell;
     };

@@ -120,7 +120,7 @@ nsIFrame*
 nsSVGRenderingObserver::GetReferencedFrame()
 {
   Element* referencedElement = GetReferencedElement();
-  return referencedElement ? referencedElement->GetPrimaryFrame() : nsnull;
+  return referencedElement ? referencedElement->GetPrimaryFrame() : nullptr;
 }
 
 nsIFrame*
@@ -134,7 +134,7 @@ nsSVGRenderingObserver::GetReferencedFrame(nsIAtom* aFrameType, bool* aOK)
       *aOK = false;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -142,7 +142,7 @@ nsSVGIDRenderingObserver::DoUpdate()
 {
   if (mFramePresShell->IsDestroying()) {
     // mFrame is no longer valid. Bail out.
-    mFrame = nsnull;
+    mFrame = nullptr;
     return;
   }
   if (mElement.get() && mInObserverList) {
@@ -229,7 +229,7 @@ nsSVGFilterFrame *
 nsSVGFilterProperty::GetFilterFrame()
 {
   return static_cast<nsSVGFilterFrame *>
-    (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nsnull));
+    (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nullptr));
 }
 
 static void
@@ -334,7 +334,7 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
                   nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
 {
   if (!aURI)
-    return nsnull;
+    return nullptr;
 
   FrameProperties props = aFrame->Properties();
   nsSVGRenderingObserver *prop =
@@ -343,7 +343,7 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
     return prop;
   prop = aCreate(aURI, aFrame, false);
   if (!prop)
-    return nsnull;
+    return nullptr;
   NS_ADDREF(prop);
   props.Set(aProperty, static_cast<nsISupports*>(prop));
   return prop;
@@ -379,7 +379,7 @@ GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
                         nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
 {
   if (!aURI)
-    return nsnull;
+    return nullptr;
 
   FrameProperties props = aFrame->Properties();
   nsSVGEffects::URIObserverHashtable *hashtable =
@@ -428,7 +428,7 @@ nsSVGClipPathFrame *
 nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
 {
   if (!mClipPath)
-    return nsnull;
+    return nullptr;
   nsSVGClipPathFrame *frame = static_cast<nsSVGClipPathFrame *>
     (mClipPath->GetReferencedFrame(nsGkAtoms::svgClipPathFrame, aOK));
   if (frame && aOK && *aOK) {
@@ -441,7 +441,7 @@ nsSVGMaskFrame *
 nsSVGEffects::EffectProperties::GetMaskFrame(bool *aOK)
 {
   if (!mMask)
-    return nsnull;
+    return nullptr;
   return static_cast<nsSVGMaskFrame *>
     (mMask->GetReferencedFrame(nsGkAtoms::svgMaskFrame, aOK));
 }
@@ -486,7 +486,7 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
   if (!aFrame->GetStyleSVGReset()->mFilter)
-    return nsnull;
+    return nullptr;
 
   return static_cast<nsSVGFilterProperty *>
     (aFrame->Properties().Get(FilterProperty()));

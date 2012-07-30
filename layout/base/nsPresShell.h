@@ -503,13 +503,13 @@ protected:
     }
     if (gCaptureInfo.mContent &&
         gCaptureInfo.mContent->OwnerDoc() == mDocument) {
-      SetCapturingContent(nsnull, 0);
+      SetCapturingContent(nullptr, 0);
     }
   }
 
   nsresult HandleRetargetedEvent(nsEvent* aEvent, nsEventStatus* aStatus, nsIContent* aTarget)
   {
-    PushCurrentEventInfo(nsnull, nsnull);
+    PushCurrentEventInfo(nullptr, nullptr);
     mCurrentEventContent = aTarget;
     nsresult rv = NS_OK;
     if (GetCurrentEventFrame()) {
@@ -547,7 +547,7 @@ protected:
     }
 
     nsDelayedInputEvent()
-    : nsDelayedEvent(), mEvent(nsnull) {}
+    : nsDelayedEvent(), mEvent(nullptr) {}
 
     nsInputEvent* mEvent;
   };
@@ -613,7 +613,7 @@ protected:
       if (mPresShell) {
         mPresShell->GetPresContext()->RefreshDriver()->
           RemoveRefreshObserver(this, Flush_Display);
-        mPresShell = nsnull;
+        mPresShell = nullptr;
       }
     }
     virtual void WillRefresh(mozilla::TimeStamp aTime) {

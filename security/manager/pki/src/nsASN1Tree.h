@@ -44,7 +44,7 @@ protected:
     myNode *parent;
     
     myNode() {
-      child = next = parent = nsnull;
+      child = next = parent = nullptr;
     }
   };
 
@@ -65,8 +65,8 @@ protected:
                             PRInt32 &index_counter, PRInt32 &level_counter,
                             PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel);
   myNode *FindNodeFromIndex(PRInt32 wantedIndex, 
-                            PRInt32 *optionalOutParentIndex = nsnull, 
-                            PRInt32 *optionalOutLevel = nsnull);
+                            PRInt32 *optionalOutParentIndex = nullptr, 
+                            PRInt32 *optionalOutLevel = nullptr);
 
 };
 #endif //_NSSASNTREE_H_

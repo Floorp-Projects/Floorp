@@ -83,7 +83,7 @@ class nsSTSHostEntry : public PLDHashEntryHdr
 
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-      return PL_DHashStringKey(nsnull, aKey);
+      return PL_DHashStringKey(nullptr, aKey);
     }
 
     // force the hashtable to use the copy constructor.

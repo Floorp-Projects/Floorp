@@ -88,7 +88,7 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsLeafBoxFrame(aShell, aContext), mAccessKeyInfo(nsnull), mCropType(CropRight),
+  nsLeafBoxFrame(aShell, aContext), mAccessKeyInfo(nullptr), mCropType(CropRight),
   mNeedsReflowCallback(false)
 {
     MarkIntrinsicWidthsDirty();
@@ -109,7 +109,7 @@ nsTextBoxFrame::Init(nsIContent*      aContent,
 
     bool aResize;
     bool aRedraw;
-    UpdateAttributes(nsnull, aResize, aRedraw); /* update all */
+    UpdateAttributes(nullptr, aResize, aRedraw); /* update all */
 
     // register access key
     RegUnregAccessKey(true);
@@ -224,10 +224,10 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
     aResize = false;
     aRedraw = false;
 
-    if (aAttribute == nsnull || aAttribute == nsGkAtoms::crop) {
+    if (aAttribute == nullptr || aAttribute == nsGkAtoms::crop) {
         static nsIContent::AttrValuesArray strings[] =
           {&nsGkAtoms::left, &nsGkAtoms::start, &nsGkAtoms::center,
-           &nsGkAtoms::right, &nsGkAtoms::end, nsnull};
+           &nsGkAtoms::right, &nsGkAtoms::end, nullptr};
         CroppingStyle cropType;
         switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
                                           strings, eCaseMatters)) {
@@ -253,12 +253,12 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
         }
     }
 
-    if (aAttribute == nsnull || aAttribute == nsGkAtoms::value) {
+    if (aAttribute == nullptr || aAttribute == nsGkAtoms::value) {
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
         doUpdateTitle = true;
     }
 
-    if (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey) {
+    if (aAttribute == nullptr || aAttribute == nsGkAtoms::accesskey) {
         mNeedsReflowCallback = true;
         // Ensure that layout is refreshed and reflow callback called.
         aResize = true;
@@ -328,7 +328,7 @@ nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                                  PaintTextShadowCallback,
                                  (void*)this);
 
-  PaintTextToContext(aCtx, nsPoint(0, 0), nsnull);
+  PaintTextToContext(aCtx, nsPoint(0, 0), nullptr);
 }
 
 void
@@ -836,7 +836,7 @@ nsTextBoxFrame::UpdateAccessIndex()
         if (mAccessKey.IsEmpty()) {
             if (mAccessKeyInfo) {
                 delete mAccessKeyInfo;
-                mAccessKeyInfo = nsnull;
+                mAccessKeyInfo = nullptr;
             }
         } else {
             if (!mAccessKeyInfo) {

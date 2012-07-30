@@ -61,7 +61,7 @@ extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 nsNSSSocketInfo::nsNSSSocketInfo()
-  : mFd(nsnull),
+  : mFd(nullptr),
     mCertVerificationState(before_cert_verification),
     mForSTARTTLS(false),
     mSSL3Enabled(false),
@@ -133,7 +133,7 @@ NS_IMETHODIMP
 nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
   if (!aCallbacks) {
-    mCallbacks = nsnull;
+    mCallbacks = nullptr;
     return NS_OK;
   }
 
@@ -146,8 +146,8 @@ static void
 getSecureBrowserUI(nsIInterfaceRequestor * callbacks,
                    nsISecureBrowserUI ** result)
 {
-  NS_ASSERTION(result != nsnull, "result parameter to getSecureBrowserUI is null");
-  *result = nsnull;
+  NS_ASSERTION(result != nullptr, "result parameter to getSecureBrowserUI is null");
+  *result = nullptr;
 
   NS_ASSERTION(NS_IsMainThread(),
                "getSecureBrowserUI called off the main thread");
@@ -236,7 +236,7 @@ nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
   // Ensure that the server certificate covers the hostname that would
   // like to join this connection
 
-  CERTCertificate *nssCert = nsnull;
+  CERTCertificate *nssCert = nullptr;
   CERTCertificateCleaner nsscertCleaner(nssCert);
 
   nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(SSLStatus()->mServerCert);
@@ -370,7 +370,7 @@ private:
 void nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
 {
   NS_ASSERTION(_result, "_result parameter to GetPreviousCert is null");
-  *_result = nsnull;
+  *_result = nullptr;
 
   nsRefPtr<PreviousCertRunnable> runnable = new PreviousCertRunnable(mCallbacks);
   nsresult rv = runnable->DispatchToMainThreadAndWait();
@@ -465,22 +465,22 @@ void nsSSLIOLayerHelpers::Cleanup()
 {
   if (mTLSIntolerantSites) {
     delete mTLSIntolerantSites;
-    mTLSIntolerantSites = nsnull;
+    mTLSIntolerantSites = nullptr;
   }
 
   if (mTLSTolerantSites) {
     delete mTLSTolerantSites;
-    mTLSTolerantSites = nsnull;
+    mTLSTolerantSites = nullptr;
   }
 
   if (mRenegoUnrestrictedSites) {
     delete mRenegoUnrestrictedSites;
-    mRenegoUnrestrictedSites = nsnull;
+    mRenegoUnrestrictedSites = nullptr;
   }
 
   if (mutex) {
     delete mutex;
-    mutex = nsnull;
+    mutex = nullptr;
   }
 }
 
@@ -549,14 +549,14 @@ getSocketInfoIfRunning(PRFileDesc * fd, Operation op,
       fd->identity != nsSSLIOLayerHelpers::nsSSLIOLayerIdentity) {
     NS_ERROR("bad file descriptor passed to getSocketInfoIfRunning");
     PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
-    return nsnull;
+    return nullptr;
   }
 
   nsNSSSocketInfo *socketInfo = (nsNSSSocketInfo*)fd->secret;
 
   if (socketInfo->isAlreadyShutDown() || socketInfo->isPK11LoggedOut()) {
     PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, 0);
-    return nsnull;
+    return nullptr;
   }
 
   if (socketInfo->GetErrorCode()) {
@@ -570,7 +570,7 @@ getSocketInfoIfRunning(PRFileDesc * fd, Operation op,
 
     // If we get here, it is probably because cert verification failed and this
     // is the first I/O attempt since that failure.
-    return nsnull;
+    return nullptr;
   }
 
   return socketInfo;
@@ -678,10 +678,10 @@ PRStatus nsNSSSocketInfo::CloseSocketAndDestroy(
   PRStatus status = mFd->methods->close(mFd);
   
   // the nsNSSSocketInfo instance can out-live the connection, so we need some
-  // indication that the connection has been closed. mFd == nsnull is that
+  // indication that the connection has been closed. mFd == nullptr is that
   // indication. This is needed, for example, when the connection is closed
   // before we have finished validating the server's certificate.
-  mFd = nsnull;
+  mFd = nullptr;
   
   if (status != PR_SUCCESS) return status;
 
@@ -990,10 +990,10 @@ nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
 bool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = false;
 PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
-Mutex *nsSSLIOLayerHelpers::mutex = nsnull;
-nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
-nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
-nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nsnull;
+Mutex *nsSSLIOLayerHelpers::mutex = nullptr;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSIntolerantSites = nullptr;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSTolerantSites = nullptr;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nullptr;
 bool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = false;
 PRInt32 nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
 
@@ -1244,7 +1244,7 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
   
   if (mRenegoUnrestrictedSites) {
     delete mRenegoUnrestrictedSites;
-    mRenegoUnrestrictedSites = nsnull;
+    mRenegoUnrestrictedSites = nullptr;
   }
 
   mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
@@ -1854,8 +1854,8 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("[%p] Not returning client cert due to previous join\n", socket));
-    *pRetCert = nsnull;
-    *pRetKey = nsnull;
+    *pRetCert = nullptr;
+    *pRetKey = nullptr;
     return SECSuccess;
   }
 
@@ -2031,7 +2031,7 @@ if (hasRemembered)
       {
         nsCOMPtr<nsIX509Cert> found_cert;
         nsresult find_rv = 
-          certdb->FindCertByDBKey(rememberedDBKey.get(), nsnull,
+          certdb->FindCertByDBKey(rememberedDBKey.get(), nullptr,
                                   getter_AddRefs(found_cert));
         if (NS_SUCCEEDED(find_rv) && found_cert) {
           nsNSSCertificate *obj_cert = reinterpret_cast<nsNSSCertificate *>(found_cert.get());
@@ -2303,10 +2303,10 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
                      bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
-  PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
+  PRFileDesc* sslSock = SSL_ImportFD(nullptr, fd);
   if (!sslSock) {
     NS_ASSERTION(false, "NSS: Error importing socket");
-    return nsnull;
+    return nullptr;
   }
   SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
@@ -2334,7 +2334,7 @@ loser:
   if (sslSock) {
     PR_Close(sslSock);
   }
-  return nsnull;
+  return nullptr;
 }
 
 static nsresult
@@ -2421,7 +2421,7 @@ nsSSLIOLayerAddToSocket(PRInt32 family,
                         bool anonymousLoad)
 {
   nsNSSShutDownPreventionLock locker;
-  PRFileDesc* layer = nsnull;
+  PRFileDesc* layer = nullptr;
   nsresult rv;
 
   nsNSSSocketInfo* infoObject = new nsNSSSocketInfo();

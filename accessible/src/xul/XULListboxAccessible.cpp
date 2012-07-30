@@ -136,7 +136,7 @@ XULListboxAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 void
 XULListboxAccessible::Shutdown()
 {
-  mTable = nsnull;
+  mTable = nullptr;
   XULSelectControlAccessible::Shutdown();
 }
 
@@ -209,7 +209,7 @@ XULListboxAccessible::NativeRole()
 PRUint32
 XULListboxAccessible::ColCount()
 {
-  nsIContent* headContent = nsnull;
+  nsIContent* headContent = nullptr;
   for (nsIContent* childContent = mContent->GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
     if (childContent->NodeInfo()->Equals(nsGkAtoms::listcols,
@@ -249,19 +249,19 @@ XULListboxAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
 { 
   nsCOMPtr<nsIDOMXULSelectControlElement> control =
     do_QueryInterface(mContent);
-  NS_ENSURE_TRUE(control, nsnull);
+  NS_ENSURE_TRUE(control, nullptr);
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
   control->GetItemAtIndex(aRowIndex, getter_AddRefs(item));
   if (!item)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIContent> itemContent(do_QueryInterface(item));
   if (!itemContent)
-    return nsnull;
+    return nullptr;
 
   Accessible* row = mDoc->GetAccessible(itemContent);
-  NS_ENSURE_TRUE(row, nsnull);
+  NS_ENSURE_TRUE(row, nullptr);
 
   return row->GetChildAt(aColumnIndex);
 }
@@ -560,12 +560,12 @@ XULListboxAccessible::ContainerWidget() const
         if (inputNode) {
           Accessible* input = 
             mDoc->GetAccessible(inputNode);
-          return input ? input->ContainerWidget() : nsnull;
+          return input ? input->ContainerWidget() : nullptr;
         }
       }
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -588,19 +588,19 @@ Accessible*
 XULListitemAccessible::GetListAccessible()
 {
   if (IsDefunct())
-    return nsnull;
+    return nullptr;
   
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
     do_QueryInterface(mContent);
   if (!listItem)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIDOMXULSelectControlElement> list;
   listItem->GetControl(getter_AddRefs(list));
 
   nsCOMPtr<nsIContent> listContent(do_QueryInterface(list));
   if (!listContent)
-    return nsnull;
+    return nullptr;
 
   return mDoc->GetAccessible(listContent);
 }
@@ -727,7 +727,7 @@ XULListitemAccessible::ContainerWidget() const
 
 XULListCellAccessible::
   XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
 {
 }
 
@@ -745,7 +745,7 @@ NS_IMETHODIMP
 XULListCellAccessible::GetTable(nsIAccessibleTable** aTable)
 {
   NS_ENSURE_ARG_POINTER(aTable);
-  *aTable = nsnull;
+  *aTable = nullptr;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -848,7 +848,7 @@ NS_IMETHODIMP
 XULListCellAccessible::GetColumnHeaderCells(nsIArray** aHeaderCells)
 {
   NS_ENSURE_ARG_POINTER(aHeaderCells);
-  *aHeaderCells = nsnull;
+  *aHeaderCells = nullptr;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -858,7 +858,7 @@ XULListCellAccessible::GetColumnHeaderCells(nsIArray** aHeaderCells)
   NS_ENSURE_STATE(table); // we expect to be in a listbox (table)
 
   // Get column header cell from XUL listhead.
-  Accessible* list = nsnull;
+  Accessible* list = nullptr;
 
   nsRefPtr<Accessible> tableAcc(do_QueryObject(table));
   PRUint32 tableChildCount = tableAcc->ChildCount();
@@ -897,7 +897,7 @@ NS_IMETHODIMP
 XULListCellAccessible::GetRowHeaderCells(nsIArray** aHeaderCells)
 {
   NS_ENSURE_ARG_POINTER(aHeaderCells);
-  *aHeaderCells = nsnull;
+  *aHeaderCells = nullptr;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -933,6 +933,13 @@ XULListCellAccessible::IsSelected(bool* aIsSelected)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULListCellAccessible. Accessible implementation
+
+void
+XULListCellAccessible::Shutdown()
+{
+  mTableCell = nullptr;
+  HyperTextAccessibleWrap::Shutdown();
+}
 
 role
 XULListCellAccessible::NativeRole()

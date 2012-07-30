@@ -199,7 +199,7 @@ nsDOMFileBase::Slice(PRInt64 aStart, PRInt64 aEnd,
                      const nsAString& aContentType, PRUint8 optional_argc,
                      nsIDOMBlob **aBlob)
 {
-  *aBlob = nsnull;
+  *aBlob = nullptr;
 
   // Truncate aStart and aEnd so that we stay within this file.
   PRUint64 thisLength;
@@ -330,7 +330,7 @@ nsDOMFileBase::GetFileInfo(indexedDB::FileManager* aFileManager)
 {
   if (indexedDB::IndexedDatabaseManager::IsClosed()) {
     NS_ERROR("Shouldn't be called after shutdown!");
-    return nsnull;
+    return nullptr;
   }
 
   // A slice created from a stored file must keep the file info alive.
@@ -354,7 +354,7 @@ nsDOMFileBase::GetFileInfo(indexedDB::FileManager* aFileManager)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP

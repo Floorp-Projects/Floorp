@@ -270,7 +270,7 @@ NS_IMETHODIMP nsMIMEInputStream::SetEOF(void) {
 nsresult
 nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
-    *result = nsnull;
+    *result = nullptr;
 
     if (outer)
         return NS_ERROR_NO_AGGREGATION;

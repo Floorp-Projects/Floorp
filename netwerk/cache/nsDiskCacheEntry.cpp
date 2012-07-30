@@ -26,13 +26,13 @@
 nsCacheEntry *
 nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
 {
-    nsCacheEntry * entry = nsnull;
+    nsCacheEntry * entry = nullptr;
     nsresult       rv = nsCacheEntry::Create(Key(),
                                              nsICache::STREAM_BASED,
                                              nsICache::STORE_ON_DISK,
                                              device,
                                              &entry);
-    if (NS_FAILED(rv) || !entry) return nsnull;
+    if (NS_FAILED(rv) || !entry) return nullptr;
     
     entry->SetFetchCount(mFetchCount);
     entry->SetLastFetched(mLastFetched);
@@ -45,7 +45,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
     rv = entry->UnflattenMetaData(MetaData(), mMetaDataSize);
     if (NS_FAILED(rv)) {
         delete entry;
-        return nsnull;
+        return nullptr;
     }
 
     // Restore security info, if present
@@ -56,7 +56,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
                                   getter_AddRefs(infoObj));
         if (NS_FAILED(rv)) {
             delete entry;
-            return nsnull;
+            return nullptr;
         }
         entry->SetSecurityInfo(infoObj);
     }

@@ -134,7 +134,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 {
   NS_ENSURE_ARG_POINTER(aParentNode);
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
   NS_ENSURE_TRUE(parentContent, NS_OK);
@@ -224,7 +224,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
     if (content) {
       nsAutoScriptBlocker scriptBlocker;
       // Need to check whether aShell has been destroyed (but not yet deleted).
-      // In that case presContext->GetPresShell() returns nsnull.
+      // In that case presContext->GetPresShell() returns nullptr.
       // See bug 338129.
       if (aShell && aShell->GetPresContext() &&
           aShell->GetPresContext()->GetPresShell() == aShell) {
@@ -303,7 +303,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
     res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"),
-                                      nsnull,
+                                      nullptr,
                                       getter_AddRefs(cellElement));
     NS_ENSURE_SUCCESS(res, res);
   }

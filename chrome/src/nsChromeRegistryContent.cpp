@@ -56,7 +56,7 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
     nsresult rv = NS_NewURI(getter_AddRefs(content),
                             aPackage.contentBaseURI.spec,
                             aPackage.contentBaseURI.charset.get(),
-                            nsnull, io);
+                            nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
@@ -64,7 +64,7 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
     nsresult rv = NS_NewURI(getter_AddRefs(locale),
                             aPackage.localeBaseURI.spec,
                             aPackage.localeBaseURI.charset.get(),
-                            nsnull, io);
+                            nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
@@ -73,7 +73,7 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
     nsresult rv = NS_NewURI(getter_AddRefs(skin),
                             aPackage.skinBaseURI.spec,
                             aPackage.skinBaseURI.charset.get(),
-                            nsnull, io);
+                            nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
@@ -108,7 +108,7 @@ nsChromeRegistryContent::RegisterResource(const ResourceMapping& aResource)
     nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI),
                             aResource.resolvedURI.spec,
                             aResource.resolvedURI.charset.get(),
-                            nsnull, io);                 
+                            nullptr, io);                 
     if (NS_FAILED(rv))
       return;
   }
@@ -129,12 +129,12 @@ nsChromeRegistryContent::RegisterOverride(const OverrideMapping& aOverride)
   nsresult rv = NS_NewURI(getter_AddRefs(chromeURI),
                           aOverride.originalURI.spec,
                           aOverride.originalURI.charset.get(),
-                          nsnull, io);
+                          nullptr, io);
   if (NS_FAILED(rv))
     return;
 
   rv = NS_NewURI(getter_AddRefs(overrideURI), aOverride.overrideURI.spec,
-                 aOverride.overrideURI.charset.get(), nsnull, io);
+                 aOverride.overrideURI.charset.get(), nullptr, io);
   if (NS_FAILED(rv))
     return;
   
@@ -148,7 +148,7 @@ nsChromeRegistryContent::GetBaseURIFromPackage(const nsCString& aPackage,
 {
   PackageEntry* entry;
   if (!mPackagesHash.Get(aPackage, &entry)) {
-    return nsnull;
+    return nullptr;
   }
 
   if (aProvider.EqualsLiteral("locale")) {
@@ -160,7 +160,7 @@ nsChromeRegistryContent::GetBaseURIFromPackage(const nsCString& aPackage,
   else if (aProvider.EqualsLiteral("content")) {
     return entry->contentBaseURI;
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsresult

@@ -286,17 +286,17 @@ NS_NewCharsetMenu(nsISupports * aOuter, const nsIID & aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aOuter) {
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
   nsCharsetMenu* inst = new nsCharsetMenu();
   if (!inst) {
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult res = inst->QueryInterface(aIID, aResult);
   if (NS_FAILED(res)) {
-    *aResult = nsnull;
+    *aResult = nullptr;
     delete inst;
   }
   return res;
@@ -497,7 +497,7 @@ nsCharsetMenu::nsCharsetMenu()
   //get pref service
   nsCOMPtr<nsIPrefService> PrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
   if (NS_SUCCEEDED(res))
-    res = PrefService->GetBranch(nsnull, getter_AddRefs(mPrefs));
+    res = PrefService->GetBranch(nullptr, getter_AddRefs(mPrefs));
 
   //register event listener
   mCharsetMenuObserver = new nsCharsetMenuObserver(this);
@@ -1193,10 +1193,10 @@ nsresult nsCharsetMenu::AddCharsetToItemArray(nsTArray<nsMenuEntry*> *aArray,
 
   if (aArray != NULL) {
     if (aPlace < 0) {
-      res = aArray->AppendElement(item) != nsnull;
+      res = aArray->AppendElement(item) != nullptr;
       if (NS_FAILED(res)) goto done;
     } else {
-      res = aArray->InsertElementsAt(aPlace, 1, item) != nsnull;
+      res = aArray->InsertElementsAt(aPlace, 1, item) != nullptr;
       if (NS_FAILED(res)) goto done;
     }
   }
@@ -1645,7 +1645,7 @@ nsresult nsCharsetMenu::ReorderMenuItemArray(nsTArray<nsMenuEntry*> * aArray)
   charsetMenuSortRecord *array = new charsetMenuSortRecord [count];
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
   for (i = 0; i < count; i++)
-    array[i].key = nsnull;
+    array[i].key = nullptr;
 
   res = GetCollation(getter_AddRefs(collation));
   if (NS_FAILED(res))
@@ -1680,8 +1680,8 @@ done:
 nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
 {
   nsresult res = NS_OK;
-  nsCOMPtr<nsILocale> locale = nsnull;
-  nsICollationFactory * collationFactory = nsnull;
+  nsCOMPtr<nsILocale> locale = nullptr;
+  nsICollationFactory * collationFactory = nullptr;
   
   nsCOMPtr<nsILocaleService> localeServ = 
            do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);

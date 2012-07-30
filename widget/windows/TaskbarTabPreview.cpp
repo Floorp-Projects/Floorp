@@ -190,7 +190,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 /* static */
 LRESULT CALLBACK
 TaskbarTabPreview::GlobalWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam) {
-  TaskbarTabPreview *preview(nsnull);
+  TaskbarTabPreview *preview(nullptr);
   if (nMsg == WM_CREATE) {
     CREATESTRUCT *cs = reinterpret_cast<CREATESTRUCT*>(lParam);
     preview = reinterpret_cast<TaskbarTabPreview*>(cs->lpCreateParams);

@@ -256,7 +256,7 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   }
 
   inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
-    const char *str = nsnull;
+    const char *str = nullptr;
     *len = 0;
     mozilla::DebugOnly<nsresult> rv = GetSharedUTF8String(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
@@ -265,7 +265,7 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   }
 
   inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
-    const PRUnichar *str = nsnull;
+    const PRUnichar *str = nullptr;
     *len = 0;
     mozilla::DebugOnly<nsresult> rv = GetSharedString(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
@@ -274,7 +274,7 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   }
 
   inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
-    const PRUint8 *blob = nsnull;
+    const PRUint8 *blob = nullptr;
     *len = 0;
     mozilla::DebugOnly<nsresult> rv = GetSharedBlob(idx, len, &blob);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),

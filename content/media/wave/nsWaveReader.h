@@ -42,7 +42,7 @@ public:
   }
 
 private:
-  bool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nsnull);
+  bool ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nullptr);
   bool LoadRIFFChunk();
   bool ScanForwardUntil(PRUint32 aWantedChunk, PRUint32* aChunkSize);
   bool LoadFormatChunk();

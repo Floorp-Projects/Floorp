@@ -110,7 +110,7 @@ StartupCache::InitSingleton()
   rv = StartupCache::gStartupCache->Init();
   if (NS_FAILED(rv)) {
     delete StartupCache::gStartupCache;
-    StartupCache::gStartupCache = nsnull;
+    StartupCache::gStartupCache = nullptr;
   }
   return rv;
 }
@@ -121,7 +121,7 @@ enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCac
 
 StartupCache::StartupCache() 
   : mArchive(NULL), mStartupWriteInitiated(false), mWriteThread(NULL),
-    mMappingMemoryReporter(nsnull), mDataMemoryReporter(nsnull) { }
+    mMappingMemoryReporter(nullptr), mDataMemoryReporter(nullptr) { }
 
 StartupCache::~StartupCache() 
 {
@@ -134,11 +134,11 @@ StartupCache::~StartupCache()
   // or the write thread is still running.
   WaitOnWriteThread();
   WriteToDisk();
-  gStartupCache = nsnull;
+  gStartupCache = nullptr;
   (void)::NS_UnregisterMemoryReporter(mMappingMemoryReporter);
   (void)::NS_UnregisterMemoryReporter(mDataMemoryReporter);
-  mMappingMemoryReporter = nsnull;
-  mDataMemoryReporter = nsnull;
+  mMappingMemoryReporter = nullptr;
+  mDataMemoryReporter = nullptr;
 }
 
 nsresult
@@ -336,11 +336,11 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, PRUint32 len)
   
 #ifdef DEBUG
   mTable.Get(idStr, &entry);
-  NS_ASSERTION(entry == nsnull, "Existing entry in StartupCache.");
+  NS_ASSERTION(entry == nullptr, "Existing entry in StartupCache.");
   
   if (mArchive) {
     nsZipItem* zipItem = mArchive->GetItem(id);
-    NS_ASSERTION(zipItem == nsnull, "Existing entry in disk StartupCache.");
+    NS_ASSERTION(zipItem == nullptr, "Existing entry in disk StartupCache.");
   }
 #endif
   
@@ -669,7 +669,7 @@ StartupCacheDebugOutputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
 }
 #endif //DEBUG
 
-StartupCacheWrapper* StartupCacheWrapper::gStartupCacheWrapper = nsnull;
+StartupCacheWrapper* StartupCacheWrapper::gStartupCacheWrapper = nullptr;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(StartupCacheWrapper, nsIStartupCache)
 

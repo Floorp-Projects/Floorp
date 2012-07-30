@@ -46,7 +46,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     *_retval = !!JS_ResolveStandardClass(cx, obj, id, &resolved);
     if (!*_retval) {
-        *objp_ = nsnull;
+        *objp_ = nullptr;
         return NS_OK;
     }
 
@@ -92,7 +92,7 @@ oom:
     while (index)
         nsMemory::Free(array[--index]);
     nsMemory::Free(array);
-    *aArray = nsnull;
+    *aArray = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -101,7 +101,7 @@ NS_IMETHODIMP
 BackstagePass::GetHelperForLanguage(PRUint32 language,
                                     nsISupports **retval)
 {
-    *retval = nsnull;
+    *retval = nullptr;
     return NS_OK;
 }
 
@@ -109,7 +109,7 @@ BackstagePass::GetHelperForLanguage(PRUint32 language,
 NS_IMETHODIMP
 BackstagePass::GetContractID(char * *aContractID)
 {
-    *aContractID = nsnull;
+    *aContractID = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -126,7 +126,7 @@ BackstagePass::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP
 BackstagePass::GetClassID(nsCID * *aClassID)
 {
-    *aClassID = nsnull;
+    *aClassID = nullptr;
     return NS_OK;
 }
 

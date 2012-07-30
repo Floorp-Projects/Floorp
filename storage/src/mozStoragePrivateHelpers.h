@@ -63,7 +63,7 @@ void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
  *        The JavaScript value to convert.  All primitive types are supported,
  *        but only Date objects are supported from the Date family.  Date
  *        objects are coerced to PRTime (nanoseconds since epoch) values.
- * @return the variant if conversion was successful, nsnull if conversion
+ * @return the variant if conversion was successful, nullptr if conversion
  *         failed.  The caller is responsible for addref'ing if non-null.
  */
 nsIVariant *convertJSValToVariant(JSContext *aCtx, jsval aValue);

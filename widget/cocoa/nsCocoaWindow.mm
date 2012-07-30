@@ -96,7 +96,7 @@ static void RollUpPopups()
 }
 
 nsCocoaWindow::nsCocoaWindow()
-: mParent(nsnull)
+: mParent(nullptr)
 , mWindow(nil)
 , mDelegate(nil)
 , mSheetWindowParent(nil)
@@ -153,7 +153,7 @@ nsCocoaWindow::~nsCocoaWindow()
       childView->ResetParent();
     } else {
       nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
-      childWindow->mParent = nsnull;
+      childWindow->mParent = nullptr;
       kid = kid->GetPrevSibling();
     }
   }
@@ -468,8 +468,8 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
   NS_ADDREF(mPopupContentView);
 
   nsIWidget* thisAsWidget = static_cast<nsIWidget*>(this);
-  mPopupContentView->Create(thisAsWidget, nsnull, aRect, aHandleEventFunction,
-                            aContext, nsnull);
+  mPopupContentView->Create(thisAsWidget, nullptr, aRect, aHandleEventFunction,
+                            aContext, nullptr);
 
   ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
   [mWindow setContentView:newContentView];
@@ -508,7 +508,7 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
 nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
 {
   if (mWindowType != eWindowType_sheet)
-    return nsnull;
+    return nullptr;
   nsCocoaWindow *parent = static_cast<nsCocoaWindow*>(mParent);
   while (parent && (parent->mWindowType == eWindowType_sheet))
     parent = static_cast<nsCocoaWindow*>(parent->mParent);
@@ -519,7 +519,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
-  void* retVal = nsnull;
+  void* retVal = nullptr;
   
   switch (aDataType) {
     // to emulate how windows works, we always have to return a NSView
@@ -535,7 +535,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
       
     case NS_NATIVE_GRAPHIC:
       // There isn't anything that makes sense to return here,
-      // and it doesn't matter so just return nsnull.
+      // and it doesn't matter so just return nullptr.
       NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
   }
@@ -669,7 +669,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         [NSApp endSheet:nativeParentWindow];
       }
 
-      nsCocoaWindow* sheetShown = nsnull;
+      nsCocoaWindow* sheetShown = nullptr;
       if (NS_SUCCEEDED(piParentWidget->GetChildSheet(true, &sheetShown)) &&
           (!sheetShown || sheetShown == this)) {
         // If this sheet is already the sheet actually being shown, don't
@@ -786,7 +786,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
         
         [TopLevelWindowData deactivateInWindow:mWindow];
 
-        nsCocoaWindow* siblingSheetToShow = nsnull;
+        nsCocoaWindow* siblingSheetToShow = nullptr;
         bool parentIsSheet = false;
 
         if (nativeParentWindow && piParentWidget &&
@@ -975,7 +975,7 @@ nsCocoaWindow::GetLayerManager(PLayersChild* aShadowManager,
                                               aPersistence,
                                               aAllowRetaining);
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
@@ -1412,7 +1412,7 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(bool aShown, nsCocoaWindow** _retval)
     child = child->GetNextSibling();
   }
 
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   return NS_OK;
 }
@@ -1551,9 +1551,9 @@ nsCocoaWindow::ReportSizeEvent()
 void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
 {
   if (mMenuBar)
-    mMenuBar->SetParent(nsnull);
+    mMenuBar->SetParent(nullptr);
   if (!mWindow) {
-    mMenuBar = nsnull;
+    mMenuBar = nullptr;
     return;
   }
   mMenuBar = aMenuBar;
@@ -1641,7 +1641,7 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  gRollupListener = nsnull;
+  gRollupListener = nullptr;
   NS_IF_RELEASE(gRollupWidget);
   
   if (aDoCapture) {
@@ -1829,7 +1829,7 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 {
   if (mPopupContentView)
     return mPopupContentView->GetThebesSurface();
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()

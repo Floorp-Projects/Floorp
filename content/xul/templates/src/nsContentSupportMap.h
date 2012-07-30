@@ -34,7 +34,7 @@ public:
             return NS_ERROR_OUT_OF_MEMORY;
 
         Entry* entry = reinterpret_cast<Entry*>(hdr);
-        NS_ASSERTION(entry->mMatch == nsnull, "over-writing entry");
+        NS_ASSERTION(entry->mMatch == nullptr, "over-writing entry");
         entry->mContent = aElement;
         entry->mMatch   = aMatch;
         return NS_OK; }

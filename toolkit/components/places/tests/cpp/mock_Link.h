@@ -20,7 +20,7 @@ public:
 
   mock_Link(void (*aHandlerFunction)(nsLinkState),
             bool aRunNextTest = true)
-  : mozilla::dom::Link(nsnull)
+  : mozilla::dom::Link(nullptr)
   , mHandler(aHandlerFunction)
   , mRunNextTest(aRunNextTest)
   {
@@ -104,7 +104,7 @@ already_AddRefed<nsIURI>
 Link::GetURI() const 
 {
   NS_NOTREACHED("Unexpected call to Link::GetURI");
-  return nsnull; // suppress compiler warning
+  return nullptr; // suppress compiler warning
 }
 
 size_t

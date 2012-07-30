@@ -16,7 +16,7 @@ static nsresult
 NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
-    NS_ASSERTION(aOuter == nsnull, "no aggregation");
+    NS_ASSERTION(aOuter == nullptr, "no aggregation");
     nsIAccessibilityService* accessibility;
     rv = NS_GetAccessibilityService(&accessibility);
     if (NS_FAILED(rv)) {

@@ -77,7 +77,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -115,7 +115,7 @@ public:
   {
     if (aContent->IsHTML(nsGkAtoms::frameset))
       return static_cast<nsHTMLFrameSetElement*>(aContent);
-    return nsnull;
+    return nullptr;
   }
 
 private:

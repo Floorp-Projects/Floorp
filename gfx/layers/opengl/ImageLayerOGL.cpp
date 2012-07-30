@@ -62,7 +62,7 @@ public:
     mContext->fDeleteTextures(1, &mTexture);
 
     // Ensure context is released on the main thread
-    mContext = nsnull;
+    mContext = nullptr;
     return NS_OK;
   }
 
@@ -125,7 +125,7 @@ GLTexture::Release()
     mTexture = 0;
   }
 
-  mContext = nsnull;
+  mContext = nullptr;
 }
 
 TextureRecycleBin::TextureRecycleBin()
@@ -257,8 +257,8 @@ ImageLayerOGL::RenderLayer(int,
     if (data && data->mTextures->GetGLContext() != gl()) {
       // If these textures were allocated by another layer manager,
       // clear them out and re-allocate below.
-      data = nsnull;
-      yuvImage->SetBackendData(LAYERS_OPENGL, nsnull);
+      data = nullptr;
+      yuvImage->SetBackendData(LAYERS_OPENGL, nullptr);
     }
 
     if (!data) {
@@ -320,8 +320,8 @@ ImageLayerOGL::RenderLayer(int,
     if (data && data->mTexture.GetGLContext() != gl()) {
       // If this texture was allocated by another layer manager, clear
       // it out and re-allocate below.
-      data = nsnull;
-      cairoImage->SetBackendData(LAYERS_OPENGL, nsnull);
+      data = nullptr;
+      cairoImage->SetBackendData(LAYERS_OPENGL, nullptr);
     }
 
     if (!data) {
@@ -388,7 +388,7 @@ ImageLayerOGL::RenderLayer(int,
        // the plugin IO Surface and make sure we grab the
        // new image
        ioImage->Update(GetContainer());
-       image = nsnull;
+       image = nullptr;
        autoLock.Refresh();
        image = autoLock.GetImage();
        gl()->MakeCurrent();
@@ -694,7 +694,7 @@ ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
 }
 
 ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
-  : ShadowImageLayer(aManager, nsnull)
+  : ShadowImageLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mSharedHandle(0)
   , mInverted(false)
@@ -1019,7 +1019,7 @@ ShadowImageLayerOGL::CleanupResources()
   mYUVTexture[0].Release();
   mYUVTexture[1].Release();
   mYUVTexture[2].Release();
-  mTexImage = nsnull;
+  mTexImage = nullptr;
 }
 
 } /* layers */

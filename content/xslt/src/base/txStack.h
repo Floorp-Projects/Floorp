@@ -20,7 +20,7 @@ public:
     inline void* peek()
     {
         NS_ASSERTION(!isEmpty(), "peeking at empty stack");
-        return !isEmpty() ? ElementAt(Length() - 1) : nsnull;
+        return !isEmpty() ? ElementAt(Length() - 1) : nullptr;
     }
 
     /**
@@ -42,7 +42,7 @@ public:
      */
     inline void* pop()
     {
-        void* object = nsnull;
+        void* object = nullptr;
         NS_ASSERTION(!isEmpty(), "popping from empty stack");
         if (!isEmpty())
         {
@@ -109,7 +109,7 @@ public:
     inline void* next()
     {
         if (mPosition == mStack->Length()) {
-            return nsnull;
+            return nullptr;
         }
         return mStack->ElementAt(mPosition++);
     }

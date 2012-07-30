@@ -55,7 +55,7 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSObject *obj = nsnull;
+  JSObject *obj = nullptr;
   rv = aStatement->mStatementParamsHolder->GetJSObject(&obj);
   NS_ENSURE_SUCCESS(rv, rv);
 

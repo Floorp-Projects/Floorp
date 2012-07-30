@@ -1182,7 +1182,7 @@ nsXMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     const PRUnichar* c = iter.get();
     const PRUnichar* fragmentStart = c;
     const PRUnichar* fragmentEnd = c + fragmentLength;
-    const char* entityText = nsnull;
+    const char* entityText = nullptr;
 
     advanceLength = 0;
     // for each character in this chunk, check if it

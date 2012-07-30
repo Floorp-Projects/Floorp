@@ -237,7 +237,7 @@ MediaEngineWebRTCVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
    * return from this function after cleaning up the temporary stream object
    * and caling Stop() on the media source.
    */
-  *aFile = nsnull;
+  *aFile = nullptr;
   if (!mInitDone || mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }

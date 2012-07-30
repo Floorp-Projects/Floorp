@@ -177,7 +177,7 @@ CGLError nsIOSurfaceLib::CGLTexImageIOSurface2D(CGLContextObj ctxt,
 CFStringRef nsIOSurfaceLib::GetIOConst(const char* symbole) {
   CFStringRef *address = (CFStringRef*)dlsym(sIOSurfaceFramework, symbole);
   if (!address)
-    return nsnull;
+    return nullptr;
 
   return *address;
 }
@@ -196,7 +196,7 @@ void nsIOSurfaceLib::LoadLibrary() {
   }
   if (!sOpenGLFramework) {
     dlclose(sIOSurfaceFramework);
-    sIOSurfaceFramework = nsnull;
+    sIOSurfaceFramework = nullptr;
     return;
   }
 
@@ -231,8 +231,8 @@ void nsIOSurfaceLib::CloseLibrary() {
   if (sOpenGLFramework) {
     dlclose(sOpenGLFramework);
   }
-  sIOSurfaceFramework = nsnull;
-  sOpenGLFramework = nsnull;
+  sIOSurfaceFramework = nullptr;
+  sOpenGLFramework = nullptr;
 }
 
 nsIOSurface::~nsIOSurface() {
@@ -241,14 +241,14 @@ nsIOSurface::~nsIOSurface() {
 
 already_AddRefed<nsIOSurface> nsIOSurface::CreateIOSurface(int aWidth, int aHeight) { 
   if (!nsIOSurfaceLib::isInit())
-    return nsnull;
+    return nullptr;
 
   CFMutableDictionaryRef props = ::CFDictionaryCreateMutable(
                       kCFAllocatorDefault, 4,
                       &kCFTypeDictionaryKeyCallBacks,
                       &kCFTypeDictionaryValueCallBacks);
   if (!props)
-    return nsnull;
+    return nullptr;
 
   int32_t bytesPerElem = 4;
   CFNumberRef cfWidth = ::CFNumberCreate(NULL, kCFNumberSInt32Type, &aWidth);
@@ -270,12 +270,12 @@ already_AddRefed<nsIOSurface> nsIOSurface::CreateIOSurface(int aWidth, int aHeig
   ::CFRelease(props);
 
   if (!surfaceRef)
-    return nsnull;
+    return nullptr;
 
   nsRefPtr<nsIOSurface> ioSurface = new nsIOSurface(surfaceRef);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
-    return nsnull;
+    return nullptr;
   }
 
   return ioSurface.forget();
@@ -283,16 +283,16 @@ already_AddRefed<nsIOSurface> nsIOSurface::CreateIOSurface(int aWidth, int aHeig
 
 already_AddRefed<nsIOSurface> nsIOSurface::LookupSurface(IOSurfaceID aIOSurfaceID) { 
   if (!nsIOSurfaceLib::isInit())
-    return nsnull;
+    return nullptr;
 
   IOSurfacePtr surfaceRef = nsIOSurfaceLib::IOSurfaceLookup(aIOSurfaceID);
   if (!surfaceRef)
-    return nsnull;
+    return nullptr;
 
   nsRefPtr<nsIOSurface> ioSurface = new nsIOSurface(surfaceRef);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
-    return nsnull;
+    return nullptr;
   }
   return ioSurface.forget();
 }
@@ -369,8 +369,8 @@ nsCARenderer::~nsCARenderer() {
 }
 
 CGColorSpaceRef CreateSystemColorSpace() {
-    CMProfileRef system_profile = nsnull;
-    CGColorSpaceRef cspace = nsnull;
+    CMProfileRef system_profile = nullptr;
+    CGColorSpaceRef cspace = nullptr;
 
     if (::CMGetSystemProfile(&system_profile) == noErr) {
       // Create a colorspace with the systems profile
@@ -396,7 +396,7 @@ void nsCARenderer::Destroy() {
     // Bug 556453:
     // Explicitly remove the layer from the renderer
     // otherwise it does not always happen right away.
-    caRenderer.layer = nsnull;
+    caRenderer.layer = nullptr;
     [caRenderer release];
   }
   if (mOpenGLContext) {
@@ -428,9 +428,9 @@ void nsCARenderer::Destroy() {
 
   mCARenderer = nil;
   mFBOTexture = 0;
-  mOpenGLContext = nsnull;
-  mCGImage = nsnull;
-  mIOSurface = nsnull;
+  mOpenGLContext = nullptr;
+  mCGImage = nullptr;
+  mIOSurface = nullptr;
   mFBO = 0;
   mIOTexture = 0;
 }
@@ -448,7 +448,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
   }
 
   CALayer* layer = (CALayer*)aCALayer;
-  CARenderer* caRenderer = nsnull;
+  CARenderer* caRenderer = nullptr;
 
   CGLPixelFormatAttribute attributes[] = {
     kCGLPFAAccelerated,
@@ -470,7 +470,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
     return NS_ERROR_FAILURE;
   }
 
-  if (::CGLCreateContext(format, nsnull, &mOpenGLContext) != kCGLNoError) {
+  if (::CGLCreateContext(format, nullptr, &mOpenGLContext) != kCGLNoError) {
     mUnsupportedWidth = aWidth;
     mUnsupportedHeight = aHeight;
     Destroy();
@@ -502,7 +502,7 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight,
     }
     memset(mCGData, 0, aWidth*aHeight*4);
 
-    CGDataProviderRef dataProvider = nsnull;
+    CGDataProviderRef dataProvider = nullptr;
     dataProvider = ::CGDataProviderCreateWithData(mCGData,
                                         mCGData, aHeight*aWidth*4,
                                         cgdata_release_callback);
@@ -640,7 +640,7 @@ void nsCARenderer::AttachIOSurface(nsRefPtr<nsIOSurface> aSurface) {
       aSurface->GetIOSurfaceID() == mIOSurface->GetIOSurfaceID()) {
     // This object isn't needed since we already have a
     // handle to the same io surface.
-    aSurface = nsnull;
+    aSurface = nullptr;
     return;
   }
 

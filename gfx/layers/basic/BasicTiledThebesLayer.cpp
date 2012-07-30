@@ -106,7 +106,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
     if (aPaintRegion.IsComplex()) {
       printf_stderr("Complex region\n");
       nsIntRegionRectIterator it(aPaintRegion);
-      for (const nsIntRect* rect = it.Next(); rect != nsnull; rect = it.Next()) {
+      for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
         printf_stderr(" rect %i, %i, %i, %i\n", rect->x, rect->y, rect->width, rect->height);
       }
     }
@@ -124,10 +124,10 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   }
 #endif
 
-  mThebesLayer = nsnull;
-  mCallback = nsnull;
-  mCallbackData = nsnull;
-  mSinglePaintBuffer = nsnull;
+  mThebesLayer = nullptr;
+  mCallback = nullptr;
+  mCallbackData = nullptr;
+  mSinglePaintBuffer = nullptr;
 }
 
 BasicTiledLayerTile
@@ -189,7 +189,7 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
 #endif
 
   nsIntRegionRectIterator it(aDirtyRegion);
-  for (const nsIntRect* rect = it.Next(); rect != nsnull; rect = it.Next()) {
+  for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
     printf_stderr(" break into subrect %i, %i, %i, %i\n", rect->x, rect->y, rect->width, rect->height);
 #endif
@@ -287,7 +287,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   mTiledBuffer.ReadLock();
   if (aMaskLayer) {
     static_cast<BasicImplData*>(aMaskLayer->ImplData())
-      ->Paint(aContext, nsnull);
+      ->Paint(aContext, nullptr);
   }
 
   // Create a heap copy owned and released by the compositor. This is needed

@@ -106,7 +106,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          mTrackingMouseMove = false;
 
          // end capture
-         nsIPresShell::SetCapturingContent(nsnull, 0);
+         nsIPresShell::SetCapturingContent(nullptr, 0);
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
          doDefault = false;

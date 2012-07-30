@@ -22,17 +22,17 @@ refAtCB(AtkTable *aTable, gint aRow, gint aColumn)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
                             getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accTable, nullptr);
 
     nsCOMPtr<nsIAccessible> cell;
     nsresult rv = accTable->GetCellAt(aRow, aColumn,getter_AddRefs(cell));
     if (NS_FAILED(rv) || !cell)
-        return nsnull;
+        return nullptr;
 
     AtkObject* cellAtkObj = AccessibleWrap::GetAtkObject(cell);
     if (cellAtkObj) {
@@ -175,13 +175,13 @@ getCaptionCB(AtkTable* aTable)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
   TableAccessible* table = accWrap->AsTable();
-  NS_ENSURE_TRUE(table, nsnull);
+  NS_ENSURE_TRUE(table, nullptr);
 
   Accessible* caption = table->Caption();
-  return caption ? AccessibleWrap::GetAtkObject(caption) : nsnull;
+  return caption ? AccessibleWrap::GetAtkObject(caption) : nullptr;
 }
 
 static const gchar*
@@ -189,16 +189,16 @@ getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
                             getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accTable, nullptr);
 
     nsAutoString autoStr;
     nsresult rv = accTable->GetColumnDescription(aColumn, autoStr);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     return AccessibleWrap::ReturnString(autoStr);
 }
@@ -208,17 +208,17 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
                             getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accTable, nullptr);
 
     nsCOMPtr<nsIAccessible> accCell;
     accTable->GetCellAt(0, aColumn, getter_AddRefs(accCell));
     if (!accCell)
-        return nsnull;
+        return nullptr;
 
     // If the cell at the first row is column header then assume it is column
     // header for all rows,
@@ -236,13 +236,13 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
             nsresult rv;
             nsCOMPtr<nsIAccessible> accHeaderCell =
                 do_QueryElementAt(headerCells, 0, &rv);
-            NS_ENSURE_SUCCESS(rv, nsnull);
+            NS_ENSURE_SUCCESS(rv, nullptr);
 
             return AccessibleWrap::GetAtkObject(accHeaderCell);
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 static const gchar*
@@ -250,16 +250,16 @@ getRowDescriptionCB(AtkTable *aTable, gint aRow)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
                             getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accTable, nullptr);
 
     nsAutoString autoStr;
     nsresult rv = accTable->GetRowDescription(aRow, autoStr);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     return AccessibleWrap::ReturnString(autoStr);
 }
@@ -269,17 +269,17 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleTable> accTable;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleTable),
                             getter_AddRefs(accTable));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    NS_ENSURE_TRUE(accTable, nullptr);
 
     nsCOMPtr<nsIAccessible> accCell;
     accTable->GetCellAt(aRow, 0, getter_AddRefs(accCell));
     if (!accCell)
-      return nsnull;
+      return nullptr;
 
     // If the cell at the first column is row header then assume it is row
     // header for all columns,
@@ -297,13 +297,13 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
         nsresult rv;
         nsCOMPtr<nsIAccessible> accHeaderCell =
             do_QueryElementAt(headerCells, 0, &rv);
-        NS_ENSURE_SUCCESS(rv, nsnull);
+        NS_ENSURE_SUCCESS(rv, nullptr);
 
         return AccessibleWrap::GetAtkObject(accHeaderCell);
       }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 static AtkObject*
@@ -313,7 +313,7 @@ getSummaryCB(AtkTable *aTable)
   // link an accessible object to specify a summary. There is closes method
   // in nsIAccessibleTable::summary to get a summary as a string which is not
   // mapped directly to ATK.
-  return nsnull;
+  return nullptr;
 }
 
 static gint
@@ -332,7 +332,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint **aSelected)
     PRInt32 *columns = NULL;
     nsresult rv = accTable->GetSelectedColumnIndices(&size, &columns);
     if (NS_FAILED(rv) || (size == 0) || !columns) {
-        *aSelected = nsnull;
+        *aSelected = nullptr;
         return 0;
     }
 
@@ -367,7 +367,7 @@ getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
     PRInt32 *rows = NULL;
     nsresult rv = accTable->GetSelectedRowIndices(&size, &rows);
     if (NS_FAILED(rv) || (size == 0) || !rows) {
-        *aSelected = nsnull;
+        *aSelected = nullptr;
         return 0;
     }
 

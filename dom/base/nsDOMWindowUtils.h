@@ -29,7 +29,7 @@ protected:
   // frame of our window to the nearest widget in the app units of our window.
   // Add this offset to any event offset we're given to make it relative to the
   // widget returned by GetWidget.
-  nsIWidget* GetWidget(nsPoint* aOffset = nsnull);
+  nsIWidget* GetWidget(nsPoint* aOffset = nullptr);
   nsIWidget* GetWidgetForElement(nsIDOMElement* aElement);
 
   nsIPresShell* GetPresShell();

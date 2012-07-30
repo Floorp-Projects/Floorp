@@ -104,7 +104,7 @@ nsPopupSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // it can be our great-grandparent.
   nsIRootBox *rootBox = nsIRootBox::GetRootBox(PresContext()->GetPresShell());
   if (rootBox) {
-    rootBox->SetPopupSetFrame(nsnull);
+    rootBox->SetPopupSetFrame(nullptr);
   }
 
   nsBoxFrame::DestroyFrom(aDestructRoot);
@@ -119,7 +119,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
   // lay out all of our currently open popups.
   for (nsFrameList::Enumerator e(mPopupList); !e.AtEnd(); e.Next()) {
     nsMenuPopupFrame* popupChild = static_cast<nsMenuPopupFrame*>(e.get());
-    popupChild->LayoutPopup(aState, nsnull, false);
+    popupChild->LayoutPopup(aState, nullptr, false);
   }
 
   return rv;
@@ -145,7 +145,7 @@ nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList)
                  "adding wrong type of frame in popupset's ::popupList");
   }
 #endif
-  mPopupList.InsertFrames(nsnull, nsnull, aPopupFrameList);
+  mPopupList.InsertFrames(nullptr, nullptr, aPopupFrameList);
 }
 
 #ifdef DEBUG
@@ -163,10 +163,10 @@ nsPopupSetFrame::List(FILE* out, PRInt32 aIndent) const
   if (GetNextSibling()) {
     fprintf(out, " next=%p", static_cast<void*>(GetNextSibling()));
   }
-  if (nsnull != GetPrevContinuation()) {
+  if (nullptr != GetPrevContinuation()) {
     fprintf(out, " prev-continuation=%p", static_cast<void*>(GetPrevContinuation()));
   }
-  if (nsnull != GetNextContinuation()) {
+  if (nullptr != GetNextContinuation()) {
     fprintf(out, " next-continuation=%p", static_cast<void*>(GetNextContinuation()));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);

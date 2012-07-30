@@ -116,7 +116,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
 
     if (!mReceivedControlData) {
         // parameter can be null cause the channel fills them in.
-        OnTransportStatus(nsnull, NS_NET_STATUS_BEGIN_FTP_TRANSACTION, 0, 0);
+        OnTransportStatus(nullptr, NS_NET_STATUS_BEGIN_FTP_TRANSACTION, 0, 0);
         mReceivedControlData = true;
     }
 
@@ -241,7 +241,7 @@ nsFtpState::EstablishControlConnection()
     LOG(("FTP:(%x) trying cached control\n", this));
         
     // Look to see if we can use a cached control connection:
-    nsFtpControlConnection *connection = nsnull;
+    nsFtpControlConnection *connection = nullptr;
     // Don't use cached control if anonymous (bug #473371)
     if (!mChannel->HasLoadFlag(nsIRequest::LOAD_ANONYMOUS))
         gFtpHandler->RemoveConnection(mChannel->URI(), &connection);
@@ -273,8 +273,8 @@ nsFtpState::EstablishControlConnection()
         LOG(("FTP:(%p) cached CC(%p) is unusable\n", this,
             mControlConnection.get()));
 
-        mControlConnection->WaitData(nsnull);
-        mControlConnection = nsnull;
+        mControlConnection->WaitData(nullptr);
+        mControlConnection = nullptr;
     }
 
     LOG(("FTP:(%p) creating CC\n", this));
@@ -295,7 +295,7 @@ nsFtpState::EstablishControlConnection()
     if (NS_FAILED(rv)) {
         LOG(("FTP:(%p) CC(%p) failed to connect [rv=%x]\n", this,
             mControlConnection.get(), rv));
-        mControlConnection = nsnull;
+        mControlConnection = nullptr;
         return rv;
     }
 
@@ -896,7 +896,7 @@ nsFtpState::R_syst() {
             nsCOMPtr<nsIPrompt> prompter;
             mChannel->GetCallback(prompter);
             if (prompter)
-                prompter->Alert(nsnull, formattedString.get());
+                prompter->Alert(nullptr, formattedString.get());
             
             // since we just alerted the user, clear mResponseMsg,
             // which is displayed to the user.
@@ -1117,7 +1117,7 @@ nsFtpState::S_list() {
         // open cache entry for writing, and configure it to receive data.
         if (NS_FAILED(InstallCacheListener())) {
             mCacheEntry->Doom();
-            mCacheEntry = nsnull;
+            mCacheEntry = nullptr;
         }
     }
 
@@ -1180,7 +1180,7 @@ nsFtpState::R_retr() {
         // See bug 122548
         if (mCacheEntry) {
             (void)mCacheEntry->Doom();
-            mCacheEntry = nsnull;
+            mCacheEntry = nullptr;
         }
         if (HasPendingCallback())
             mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
@@ -1420,8 +1420,8 @@ nsFtpState::R_pasv() {
 
         if (newDataConn) {
             mDataTransport->Close(NS_ERROR_ABORT);
-            mDataTransport = nsnull;
-            mDataStream = nsnull;
+            mDataTransport = nullptr;
+            mDataStream = nullptr;
         }
     }
 
@@ -1451,7 +1451,7 @@ nsFtpState::R_pasv() {
                 return FTP_ERROR;
         }
 
-        rv =  sts->CreateTransport(nsnull, 0, host,
+        rv =  sts->CreateTransport(nullptr, 0, host,
                                    port, mChannel->ProxyInfo(),
                                    getter_AddRefs(strans)); // the data socket
         if (NS_FAILED(rv))
@@ -1495,7 +1495,7 @@ nsFtpState::R_pasv() {
             if (NS_FAILED(rv))
                 return FTP_ERROR;
         
-            rv = copier->AsyncCopy(this, nsnull);
+            rv = copier->AsyncCopy(this, nullptr);
             if (NS_FAILED(rv))
                 return FTP_ERROR;
 
@@ -1611,7 +1611,7 @@ nsFtpState::InstallCacheListener()
             do_CreateInstance(NS_STREAMLISTENERTEE_CONTRACTID);
     NS_ENSURE_STATE(tee);
 
-    nsresult rv = tee->Init(mChannel->StreamListener(), out, nsnull);
+    nsresult rv = tee->Init(mChannel->StreamListener(), out, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mChannel->SetStreamListener(tee);
@@ -1792,7 +1792,7 @@ nsFtpState::KillControlConnection()
         return;
 
     // kill the reference to ourselves in the control connection.
-    mControlConnection->WaitData(nsnull);
+    mControlConnection->WaitData(nullptr);
 
     if (NS_SUCCEEDED(mInternalError) &&
         NS_SUCCEEDED(mControlStatus) &&
@@ -1817,7 +1817,7 @@ nsFtpState::KillControlConnection()
         mControlConnection->Disconnect(NS_BINDING_ABORTED);
     }     
 
-    mControlConnection = nsnull;
+    mControlConnection = nullptr;
 }
 
 nsresult
@@ -1842,7 +1842,7 @@ nsFtpState::StopProcessing()
         nsCOMPtr<nsIPrompt> prompter;
         mChannel->GetCallback(prompter);
         if (prompter)
-            prompter->Alert(nsnull, NS_ConvertASCIItoUTF16(mResponseMsg).get());
+            prompter->Alert(nullptr, NS_ConvertASCIItoUTF16(mResponseMsg).get());
     }
     
     nsresult broadcastErrorCode = mControlStatus;
@@ -1854,7 +1854,7 @@ nsFtpState::StopProcessing()
     KillControlConnection();
 
     // XXX This can fire before we are done loading data.  Is that a problem?
-    OnTransportStatus(nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, 0, 0);
+    OnTransportStatus(nullptr, NS_NET_STATUS_END_FTP_TRANSACTION, 0, 0);
 
     if (NS_FAILED(broadcastErrorCode))
         CloseWithStatus(broadcastErrorCode);
@@ -2029,7 +2029,7 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
     // Ignore the progressMax value from the socket.  We know the true size of
     // the file based on the response from our SIZE request. Additionally, only
     // report the max progress based on where we started/resumed.
-    mChannel->OnTransportStatus(nsnull, status, progress,
+    mChannel->OnTransportStatus(nullptr, status, progress,
                                 mFileSize - mChannel->StartPos());
     return NS_OK;
 }
@@ -2080,7 +2080,7 @@ NS_IMETHODIMP
 nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *context,
                           nsresult status)
 {
-    mUploadRequest = nsnull;
+    mUploadRequest = nullptr;
 
     // Close() will be called when reply to STOR command is received
     // see bug #389394
@@ -2134,19 +2134,19 @@ nsFtpState::CloseWithStatus(nsresult status)
 
     if (mUploadRequest) {
         mUploadRequest->Cancel(NS_ERROR_ABORT);
-        mUploadRequest = nsnull;
+        mUploadRequest = nullptr;
     }
 
     if (mDataTransport) {
         // Shutdown the data transport.
         mDataTransport->Close(NS_ERROR_ABORT);
-        mDataTransport = nsnull;
+        mDataTransport = nullptr;
     }
 
-    mDataStream = nsnull;
+    mDataStream = nullptr;
     if (mDoomCache && mCacheEntry)
         mCacheEntry->Doom();
-    mCacheEntry = nsnull;
+    mCacheEntry = nullptr;
 
     return nsBaseContentStream::CloseWithStatus(status);
 }

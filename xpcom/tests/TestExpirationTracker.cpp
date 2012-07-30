@@ -155,7 +155,7 @@ template <PRUint32 K> static bool test_random() {
         }
         PR_Sleep(PR_MillisecondsToInterval(sleepPeriodMS));
         // Process pending timer events
-        NS_ProcessPendingEvents(nsnull);
+        NS_ProcessPendingEvents(nullptr);
       }
       tracker.DoRandomOperation();
     }
@@ -178,7 +178,7 @@ static const struct Test {
   DECL_TEST(test_random3),
   DECL_TEST(test_random4),
   DECL_TEST(test_random8),
-  { nsnull, nsnull }
+  { nullptr, nullptr }
 };
 
 }
@@ -190,15 +190,15 @@ int main(int argc, char **argv) {
   if (argc > 1)
     count = atoi(argv[1]);
 
-  if (NS_FAILED(NS_InitXPCOM2(nsnull, nsnull, nsnull)))
+  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
     return -1;
 
   while (count--) {
-    for (const Test* t = tests; t->name != nsnull; ++t) {
+    for (const Test* t = tests; t->name != nullptr; ++t) {
       printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
     }
   }
   
-  NS_ShutdownXPCOM(nsnull);
+  NS_ShutdownXPCOM(nullptr);
   return 0;
 }

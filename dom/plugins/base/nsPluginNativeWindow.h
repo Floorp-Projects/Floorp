@@ -64,7 +64,7 @@ public:
     if (aPluginInstance)
       aPluginInstance->SetWindow(this);
     else if (mPluginInstance)
-      mPluginInstance->SetWindow(nsnull);
+      mPluginInstance->SetWindow(nullptr);
 
     SetPluginInstance(aPluginInstance);
     return NS_OK;

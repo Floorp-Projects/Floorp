@@ -70,7 +70,7 @@ nsHTTPDownloadEvent::Run()
   NS_ENSURE_STATE(ios);
 
   nsCOMPtr<nsIChannel> chan;
-  ios->NewChannel(mRequestSession->mURL, nsnull, nsnull, getter_AddRefs(chan));
+  ios->NewChannel(mRequestSession->mURL, nullptr, nullptr, getter_AddRefs(chan));
   NS_ENSURE_STATE(chan);
 
   // Disabled because it breaks authentication with a proxy, when such proxy
@@ -127,15 +127,15 @@ nsHTTPDownloadEvent::Run()
                           mListener);
 
   if (NS_SUCCEEDED(rv))
-    rv = hchan->AsyncOpen(mListener->mLoader, nsnull);
+    rv = hchan->AsyncOpen(mListener->mLoader, nullptr);
 
   if (NS_FAILED(rv)) {
     mListener->mResponsibleForDoneSignal = false;
     mResponsibleForDoneSignal = true;
 
     NS_RELEASE(mListener->mLoadGroup);
-    mListener->mLoadGroup = nsnull;
-    mListener->mLoadGroupOwnerThread = nsnull;
+    mListener->mLoadGroup = nullptr;
+    mListener->mLoadGroupOwnerThread = nullptr;
   }
 
   return NS_OK;
@@ -146,7 +146,7 @@ struct nsCancelHTTPDownloadEvent : nsRunnable {
 
   NS_IMETHOD Run() {
     mListener->FreeLoadGroup(true);
-    mListener = nsnull;
+    mListener = nullptr;
     return NS_OK;
   }
 };
@@ -317,7 +317,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
                                                        const char **http_response_data,
                                                        PRUint32 *http_response_data_len)
 {
-  if (pPollDesc) *pPollDesc = nsnull;
+  if (pPollDesc) *pPollDesc = nullptr;
   if (http_response_code) *http_response_code = 0;
   if (http_response_content_type) *http_response_content_type = 0;
   if (http_response_headers) *http_response_headers = 0;
@@ -386,7 +386,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
         // made me aware of this possibility. (kaie)
 
         MutexAutoUnlock unlock(waitLock);
-        NS_ProcessNextEvent(nsnull);
+        NS_ProcessNextEvent(nullptr);
       }
 
       waitCondition.Wait(wait_interval);
@@ -508,18 +508,18 @@ void nsNSSHttpInterface::registerHttpClient()
 
 void nsNSSHttpInterface::unregisterHttpClient()
 {
-  SEC_RegisterDefaultHttpClient(nsnull);
+  SEC_RegisterDefaultHttpClient(nullptr);
 }
 
 nsHTTPListener::nsHTTPListener()
-: mResultData(nsnull),
+: mResultData(nullptr),
   mResultLen(0),
   mLock("nsHTTPListener.mLock"),
   mCondition(mLock, "nsHTTPListener.mCondition"),
   mWaitFlag(true),
   mResponsibleForDoneSignal(false),
-  mLoadGroup(nsnull),
-  mLoadGroupOwnerThread(nsnull)
+  mLoadGroup(nullptr),
+  mLoadGroupOwnerThread(nullptr)
 {
 }
 
@@ -539,7 +539,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPListener, nsIStreamLoaderObserver)
 void
 nsHTTPListener::FreeLoadGroup(bool aCancelLoad)
 {
-  nsILoadGroup *lg = nsnull;
+  nsILoadGroup *lg = nullptr;
 
   MutexAutoLock locker(mLock);
 
@@ -550,7 +550,7 @@ nsHTTPListener::FreeLoadGroup(bool aCancelLoad)
     }
     else {
       lg = mLoadGroup;
-      mLoadGroup = nsnull;
+      mLoadGroup = nullptr;
     }
   }
 
@@ -631,10 +631,10 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
 {
   if (!NS_IsMainThread()) {
     NS_ERROR("ShowProtectedAuthPrompt called off the main thread");
-    return nsnull;
+    return nullptr;
   }
 
-  char* protAuthRetVal = nsnull;
+  char* protAuthRetVal = nullptr;
 
   // Get protected auth dialogs
   nsITokenDialogs* dialogs = 0;
@@ -671,7 +671,7 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
                   protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
                   break;
               default:
-                  protAuthRetVal = nsnull;
+                  protAuthRetVal = nullptr;
                   break;
               
           }
@@ -692,7 +692,7 @@ class PK11PasswordPromptRunnable : public SyncRunnableBase
 public:
   PK11PasswordPromptRunnable(PK11SlotInfo* slot, 
                              nsIInterfaceRequestor* ir)
-    : mResult(nsnull),
+    : mResult(nullptr),
       mSlot(slot),
       mIR(ir)
   {
@@ -708,14 +708,14 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
-  PRUnichar *password = nsnull;
+  PRUnichar *password = nullptr;
   bool value = false;
   nsCOMPtr<nsIPrompt> prompt;
 
   /* TODO: Retry should generate a different dialog message */
 /*
   if (retry)
-    return nsnull;
+    return nullptr;
 */
 
   if (!mIR)
@@ -725,7 +725,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
   else
   {
     prompt = do_GetInterface(mIR);
-    NS_ASSERTION(prompt != nsnull, "callbacks does not implement nsIPrompt");
+    NS_ASSERTION(prompt != nullptr, "callbacks does not implement nsIPrompt");
   }
 
   if (!prompt)
@@ -762,8 +762,8 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
       // Although the exact value is ignored, we must not pass invalid
       // bool values through XPConnect.
       bool checkState = false;
-      rv = prompt->PromptPassword(nsnull, promptString.get(),
-                                  &password, nsnull, &checkState, &value);
+      rv = prompt->PromptPassword(nullptr, promptString.get(),
+                                  &password, nullptr, &checkState, &value);
     }
   }
   
@@ -786,8 +786,8 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
 void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsNSSShutDownPreventionLock locker;
   PRInt32 sslStatus;
-  char* signer = nsnull;
-  char* cipherName = nsnull;
+  char* signer = nullptr;
+  char* cipherName = nullptr;
   PRInt32 keyLength;
   nsresult rv;
   PRInt32 encryptBits;
@@ -804,7 +804,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsSSLIOLayerHelpers::rememberTolerantSite(infoObject);
 
   if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
-                                       &encryptBits, &signer, nsnull)) {
+                                       &encryptBits, &signer, nullptr)) {
     return;
   }
 
@@ -845,7 +845,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
 
   CERTCertificate *peerCert = SSL_PeerCertificate(fd);
-  const char* caName = nsnull; // caName is a pointer only, no ownership
+  const char* caName = nullptr; // caName is a pointer only, no ownership
   char* certOrgName = CERT_GetOrgName(&peerCert->issuer);
   CERT_DestroyCertificate(peerCert);
   caName = certOrgName ? certOrgName : signer;
@@ -885,7 +885,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     if (serverCert) {
       nsRefPtr<nsNSSCertificate> nssc = nsNSSCertificate::Create(serverCert);
       CERT_DestroyCertificate(serverCert);
-      serverCert = nsnull;
+      serverCert = nullptr;
 
       nsCOMPtr<nsIX509Cert> prevcert;
       infoObject->GetPreviousCert(getter_AddRefs(prevcert));
@@ -932,7 +932,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
         state == SSL_NEXT_PROTO_NEGOTIATED)
       infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
     else
-      infoObject->SetNegotiatedNPN(nsnull, 0);
+      infoObject->SetNegotiatedNPN(nullptr, 0);
 
     infoObject->SetHandshakeCompleted();
   }
@@ -954,65 +954,65 @@ static struct OCSPDefaultResponders myDefaultOCSPResponders[] = {
   /* COMODO */
   {
     "CN=AddTrust External CA Root,OU=AddTrust External TTP Network,O=AddTrust AB,C=SE",
-    nsnull, "rb2YejS0Jvf6xCZU7wO94CTLVBo=", nsnull,
+    nullptr, "rb2YejS0Jvf6xCZU7wO94CTLVBo=", nullptr,
     "http://ocsp.comodoca.com"
   },
   {
     "CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nsnull, "C1jli8ZMFTekQKkwqSG+RzZaVv8=", nsnull,
+    nullptr, "C1jli8ZMFTekQKkwqSG+RzZaVv8=", nullptr,
     "http://ocsp.comodoca.com"
   },
   {
     "CN=COMODO EV SGC CA,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nsnull, "f/ZMNigUrs0eN6/eWvJbw6CsK/4=", nsnull,
+    nullptr, "f/ZMNigUrs0eN6/eWvJbw6CsK/4=", nullptr,
     "http://ocsp.comodoca.com"
   },
   {
     "CN=COMODO EV SSL CA,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB",
-    nsnull, "aRZJ7LZ1ZFrpAyNgL1RipTRcPuI=", nsnull,
+    nullptr, "aRZJ7LZ1ZFrpAyNgL1RipTRcPuI=", nullptr,
     "http://ocsp.comodoca.com"
   },
   {
     "CN=UTN - DATACorp SGC,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US",
-    nsnull, "UzLRs89/+uDxoF2FTpLSnkUdtE8=", nsnull,
+    nullptr, "UzLRs89/+uDxoF2FTpLSnkUdtE8=", nullptr,
     "http://ocsp.usertrust.com"
   },
   {
     "CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US",
-    nsnull, "oXJfJhsomEOVXQc31YWWnUvSw0U=", nsnull,
+    nullptr, "oXJfJhsomEOVXQc31YWWnUvSw0U=", nullptr,
     "http://ocsp.usertrust.com"
   },
   /* Network Solutions */
   {
     "CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US",
-    nsnull, "ITDJ+wDXTpjah6oq0KcusUAxp0w=", nsnull,
+    nullptr, "ITDJ+wDXTpjah6oq0KcusUAxp0w=", nullptr,
     "http://ocsp.netsolssl.com"
   },
   {
     "CN=Network Solutions EV SSL CA,O=Network Solutions L.L.C.,C=US",
-    nsnull, "tk6FnYQfGx3UUolOB5Yt+d7xj8w=", nsnull,
+    nullptr, "tk6FnYQfGx3UUolOB5Yt+d7xj8w=", nullptr,
     "http://ocsp.netsolssl.com"
   },
   /* GlobalSign */
   {
     "CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE",
-    nsnull, "YHtmGkUNl8qJUC99BM00qP/8/Us=", nsnull,
+    nullptr, "YHtmGkUNl8qJUC99BM00qP/8/Us=", nullptr,
     "http://ocsp.globalsign.com/ExtendedSSLCACross"
   },
   {
     "CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R2",
-    nsnull, "m+IHV2ccHsBqBt5ZtJot39wZhi4=", nsnull,
+    nullptr, "m+IHV2ccHsBqBt5ZtJot39wZhi4=", nullptr,
     "http://ocsp.globalsign.com/ExtendedSSLCA"
   },
   {
     "CN=GlobalSign Extended Validation CA,O=GlobalSign,OU=Extended Validation CA",
-    nsnull, "NLH5yYxrNUTMCGkK7uOjuVy/FuA=", nsnull,
+    nullptr, "NLH5yYxrNUTMCGkK7uOjuVy/FuA=", nullptr,
     "http://ocsp.globalsign.com/ExtendedSSL"
   },
   /* Trustwave */
   {
     "CN=SecureTrust CA,O=SecureTrust Corporation,C=US",
-    nsnull, "QjK2FvoE/f5dS3rD/fdMQB1aQ68=", nsnull,
+    nullptr, "QjK2FvoE/f5dS3rD/fdMQB1aQ68=", nullptr,
     "http://ocsp.trustwave.com"
   }
 };
@@ -1020,7 +1020,7 @@ static struct OCSPDefaultResponders myDefaultOCSPResponders[] = {
 static const unsigned int numResponders =
     (sizeof myDefaultOCSPResponders) / (sizeof myDefaultOCSPResponders[0]);
 
-static CERT_StringFromCertFcn oldOCSPAIAInfoCallback = nsnull;
+static CERT_StringFromCertFcn oldOCSPAIAInfoCallback = nullptr;
 
 /*
  * See if we have a hard-coded default responder for this certificate's
@@ -1049,7 +1049,7 @@ char* PR_CALLBACK MyAlternateOCSPAIAInfoCallback(CERTCertificate *cert) {
   if (oldOCSPAIAInfoCallback)
     return (*oldOCSPAIAInfoCallback)(cert);
 
-  return nsnull;
+  return nullptr;
 }
 
 void cleanUpMyDefaultOCSPResponders() {
@@ -1058,11 +1058,11 @@ void cleanUpMyDefaultOCSPResponders() {
   for (i=0; i < numResponders; i++) {
     if (myDefaultOCSPResponders[i].issuerName) {
       CERT_DestroyName(myDefaultOCSPResponders[i].issuerName);
-      myDefaultOCSPResponders[i].issuerName = nsnull;
+      myDefaultOCSPResponders[i].issuerName = nullptr;
     }
     if (myDefaultOCSPResponders[i].issuerKeyID) {
       SECITEM_FreeItem(myDefaultOCSPResponders[i].issuerKeyID, true);
-      myDefaultOCSPResponders[i].issuerKeyID = nsnull;
+      myDefaultOCSPResponders[i].issuerKeyID = nullptr;
     }
   }
 }
@@ -1082,8 +1082,8 @@ SECStatus RegisterMyOCSPAIAInfoCallback() {
     if (!(myDefaultOCSPResponders[i].issuerName))
       goto loser;
     // Create a SECItem from the Base64 authority key identifier keyID.
-    myDefaultOCSPResponders[i].issuerKeyID = NSSBase64_DecodeBuffer(nsnull,
-          nsnull, myDefaultOCSPResponders[i].issuerKeyID_base64,
+    myDefaultOCSPResponders[i].issuerKeyID = NSSBase64_DecodeBuffer(nullptr,
+          nullptr, myDefaultOCSPResponders[i].issuerKeyID_base64,
           (PRUint32)PORT_Strlen(myDefaultOCSPResponders[i].issuerKeyID_base64));
     if (!(myDefaultOCSPResponders[i].issuerKeyID))
       goto loser;
@@ -1111,12 +1111,12 @@ SECStatus UnregisterMyOCSPAIAInfoCallback() {
 
   // Unregister our alternate OCSP Responder URL lookup function.
   rv = CERT_RegisterAlternateOCSPAIAInfoCallBack(oldOCSPAIAInfoCallback,
-                                                 nsnull);
+                                                 nullptr);
   if (rv != SECSuccess)
     return rv;
 
   // Tidy up.
-  oldOCSPAIAInfoCallback = nsnull;
+  oldOCSPAIAInfoCallback = nullptr;
   cleanUpMyDefaultOCSPResponders();
   return SECSuccess;
 }

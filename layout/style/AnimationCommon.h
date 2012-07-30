@@ -107,12 +107,6 @@ public:
   typedef nsTimingFunction::Type Type;
   void Init(const nsTimingFunction &aFunction);
   double GetValue(double aPortion) const;
-  const nsSMILKeySpline* GetFunction() const {
-    NS_ASSERTION(mType == nsTimingFunction::Function, "Type mismatch");
-    return &mTimingFunction;
-  }
-  Type GetType() const { return mType; }
-  PRUint32 GetSteps() const { return mSteps; }
 private:
   Type mType;
   nsSMILKeySpline mTimingFunction;
@@ -147,10 +141,6 @@ struct CommonElementAnimationData : public PRCList
     // This will call our destructor.
     mElement->DeleteProperty(mElementProperty);
   }
-
-  static bool
-  CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                 nsCSSProperty aProperty);
 
   dom::Element *mElement;
 

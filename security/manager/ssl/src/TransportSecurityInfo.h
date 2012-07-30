@@ -142,7 +142,7 @@ public:
   static void Cleanup()
   {
     delete sInstance;
-    sInstance = nsnull;
+    sInstance = nullptr;
   }
 private:
   Mutex mMutex;

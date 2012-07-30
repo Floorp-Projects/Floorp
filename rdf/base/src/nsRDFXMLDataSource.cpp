@@ -372,7 +372,7 @@ static const char kResourceURIPrefix[] = "resource:";
 nsresult
 NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
@@ -483,7 +483,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     nsCOMPtr<nsIRequest> request;
 
     // Null LoadGroup ?
-    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull);
+    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nullptr);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> in;
     rv = channel->Open(getter_AddRefs(in));
@@ -517,7 +517,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         }
     }
 
-    rv = aConsumer->OnStartRequest(channel, nsnull);
+    rv = aConsumer->OnStartRequest(channel, nullptr);
 
     PRUint32 offset = 0;
     while (NS_SUCCEEDED(rv)) {
@@ -533,7 +533,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         if (avail == 0)
             break; // eof
 
-        rv = aConsumer->OnDataAvailable(channel, nsnull, bufStream, offset, avail);
+        rv = aConsumer->OnDataAvailable(channel, nullptr, bufStream, offset, avail);
         if (NS_SUCCEEDED(rv))
             offset += avail;
     }
@@ -542,7 +542,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         channel->Cancel(rv);
 
     channel->GetStatus(&rv);
-    aConsumer->OnStopRequest(channel, nsnull, rv);
+    aConsumer->OnStopRequest(channel, nullptr, rv);
 
     // Notify load observers
     for (i = mObservers.Count() - 1; i >= 0; --i) {
@@ -553,7 +553,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
         if (obs) {
             if (NS_FAILED(rv))
-                obs->OnError(this, rv, nsnull);
+                obs->OnError(this, rv, nullptr);
 
             obs->OnEndLoad(this);
         }
@@ -572,7 +572,7 @@ RDFXMLDataSourceImpl::GetLoaded(bool* _result)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Init(const char* uri)
 {
-    NS_PRECONDITION(mInner != nsnull, "not initialized");
+    NS_PRECONDITION(mInner != nullptr, "not initialized");
     if (! mInner)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -598,7 +598,7 @@ RDFXMLDataSourceImpl::Init(const char* uri)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::GetURI(char* *aURI)
 {
-    *aURI = nsnull;
+    *aURI = nullptr;
     if (!mURL) {
         return NS_OK;
     }
@@ -790,7 +790,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::FlushTo(const char *aURI)
 {
-    NS_PRECONDITION(aURI != nsnull, "not initialized");
+    NS_PRECONDITION(aURI != nullptr, "not initialized");
     if (!aURI)
         return NS_ERROR_NULL_POINTER;
 
@@ -938,13 +938,13 @@ RDFXMLDataSourceImpl::Refresh(bool aBlocking)
     if (aBlocking) {
         rv = BlockingParse(mURL, this);
 
-        mListener = nsnull; // release the parser
+        mListener = nullptr; // release the parser
 
         if (NS_FAILED(rv)) return rv;
     }
     else {
         // Null LoadGroup ?
-        rv = NS_OpenURI(this, nsnull, mURL, nsnull, nsnull, this);
+        rv = NS_OpenURI(this, nullptr, mURL, nullptr, nullptr, this);
         if (NS_FAILED(rv)) return rv;
 
         // So we don't try to issue two asynchronous loads at once.
@@ -1118,7 +1118,7 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIRequest *request,
             nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
             if (obs) {
-                obs->OnError(this, status, nsnull);
+                obs->OnError(this, status, nullptr);
             }
         }
     }
@@ -1126,7 +1126,7 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIRequest *request,
     nsresult rv;
     rv = mListener->OnStopRequest(request, ctxt, status);
 
-    mListener = nsnull; // release the parser
+    mListener = nullptr; // release the parser
 
     return rv;
 }

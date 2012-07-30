@@ -251,7 +251,7 @@ def init_value(attribute):
     realtype = realtype.strip(' ')
     if attribute.defvalue is None:
         if realtype.endswith('*'):
-            return "nsnull"
+            return "nullptr"
         if realtype == "bool":
             return "false"
         if realtype.count("nsAString"):

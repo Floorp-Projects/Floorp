@@ -162,7 +162,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   // Walk up the domain tree, most specific to least specific,
   // looking for matches at each level.  Note that a given level may
   // have multiple attributes (e.g. IsWild() and IsNormal()).
-  const char *prevDomain = nsnull;
+  const char *prevDomain = nullptr;
   const char *currDomain = aHostname.get();
   const char *nextDot = strchr(currDomain, '.');
   const char *end = currDomain + aHostname.Length();

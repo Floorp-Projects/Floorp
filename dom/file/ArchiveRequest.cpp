@@ -67,7 +67,7 @@ nsresult
 ArchiveRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
-  aVisitor.mParentTarget = nsnull;
+  aVisitor.mParentTarget = nullptr;
   return NS_OK;
 }
 
@@ -162,7 +162,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
                                    jsval* aValue,
                                    nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
-  JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nsnull);
+  JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nullptr);
   nsresult rv;
 
   if (!array) {
@@ -208,7 +208,7 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
 
     if (filename == mFilename) {
       JSObject* scope = JS_GetGlobalForScopeChain(aCx);
-      nsresult rv = nsContentUtils::WrapNative(aCx, scope, file, aValue, nsnull, true);
+      nsresult rv = nsContentUtils::WrapNative(aCx, scope, file, aValue, nullptr, true);
       return rv;
     }
   }

@@ -157,7 +157,7 @@ MediaEngineDefaultVideoSource::Stop()
 nsresult
 MediaEngineDefaultVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
 {
-  *aFile = nsnull;
+  *aFile = nullptr;
 
 #ifndef MOZ_WIDGET_ANDROID
   return NS_ERROR_NOT_IMPLEMENTED;

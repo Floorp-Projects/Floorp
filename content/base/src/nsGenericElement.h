@@ -87,7 +87,7 @@ public:
 
   void DropReference()
   {
-    mNode = nsnull;
+    mNode = nullptr;
   }
 
   virtual nsINode* GetParentObject()
@@ -145,7 +145,7 @@ public:
 
   void NoticeNodeDestruction()
   {
-    mNode = nsnull;
+    mNode = nullptr;
   }
 
 private:
@@ -250,7 +250,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   /**
    * Helper for SetAttr/SetParsedAttr. This method will return true if aNotify
@@ -317,7 +317,7 @@ public:
 
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 /*aNamespaceID*/, nsIAtom* /*aName*/)
   {
-    return nsnull;
+    return nullptr;
   }
   virtual nsICSSDeclaration* GetSMILOverrideStyle();
   virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
@@ -402,7 +402,7 @@ public:
   }
   nsresult AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
-    return InsertBefore(aNewChild, nsnull, aReturn);
+    return InsertBefore(aNewChild, nullptr, aReturn);
   }
 
   // nsIDOMElement method implementation
@@ -472,7 +472,7 @@ public:
    * aSourceEvent. If aFullDispatch is true, the event will be dispatched
    * through the full dispatching of the presshell of the aPresContext; if it's
    * false the event will be dispatched only as a DOM event.
-   * If aPresContext is nsnull, this does nothing.
+   * If aPresContext is nullptr, this does nothing.
    */
   static nsresult DispatchClickEvent(nsPresContext* aPresContext,
                                      nsInputEvent* aSourceEvent,
@@ -486,7 +486,7 @@ public:
    * will be dispatched through the full dispatching of the presshell of the
    * aPresContext; if it's false the event will be dispatched only as a DOM
    * event.
-   * If aPresContext is nsnull, this does nothing.
+   * If aPresContext is nullptr, this does nothing.
    */
   using nsIContent::DispatchEvent;
   static nsresult DispatchEvent(nsPresContext* aPresContext,
@@ -530,13 +530,13 @@ public:
   /**
    * Returns the attribute map, if there is one.
    *
-   * @return existing attribute map or nsnull.
+   * @return existing attribute map or nullptr.
    */
   nsDOMAttributeMap *GetAttributeMap()
   {
     nsDOMSlots *slots = GetExistingDOMSlots();
 
-    return slots ? slots->mAttributeMap.get() : nsnull;
+    return slots ? slots->mAttributeMap.get() : nullptr;
   }
 
   virtual void RecompileScriptEventListeners()
@@ -979,7 +979,7 @@ private:
    */
   nsRect GetClientAreaRect();
 
-  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nsnull);
+  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
 
   nsContentList* GetChildrenList();
 };
@@ -992,7 +992,7 @@ private:
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
-  *aResult = nsnull;                                                        \
+  *aResult = nullptr;                                                        \
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
   _elementName *it = new _elementName(ni.forget());                         \
   if (!it) {                                                                \
@@ -1012,7 +1012,7 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
-  *aResult = nsnull;                                                        \
+  *aResult = nullptr;                                                        \
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
   _elementName *it = new _elementName(ni.forget());                         \
   if (!it) {                                                                \
@@ -1053,7 +1053,7 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   NS_IMETHODIMP                                                         \
   _class::Set##_method(const nsAString& aValue)                         \
   {                                                                     \
-    return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, nsnull, aValue, true); \
+    return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, nullptr, aValue, true); \
   }
 
 /**

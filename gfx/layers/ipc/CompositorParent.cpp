@@ -21,15 +21,6 @@
 #include "nsIWidget.h"
 #include "RenderTrace.h"
 #include "ShadowLayersParent.h"
-#include "BasicLayers.h"
-#include "LayerManagerOGL.h"
-#include "nsIWidget.h"
-#include "nsGkAtoms.h"
-#include "RenderTrace.h"
-#include "nsStyleAnimation.h"
-#include "nsDisplayList.h"
-#include "AnimationCommon.h"
-#include "nsAnimationManager.h"
 
 using namespace base;
 using namespace mozilla::ipc;
@@ -42,13 +33,13 @@ namespace layers {
 // CompositorParent, but that's not always true.  This assumption only
 // affects CrossProcessCompositorParent below.
 static CompositorParent* sCurrentCompositor;
-static Thread* sCompositorThread = nsnull;
+static Thread* sCompositorThread = nullptr;
 // When ContentParent::StartUp() is called, we use the Thread global.
 // When StartUpWithExistingThread() is used, we have to use the two
 // duplicated globals, because there's no API to make a Thread from an
 // existing thread.
 static PlatformThreadId sCompositorThreadID = 0;
-static MessageLoop* sCompositorLoop = nsnull;
+static MessageLoop* sCompositorLoop = nullptr;
 
 struct LayerTreeState {
   nsRefPtr<Layer> mRoot;
@@ -106,7 +97,7 @@ bool CompositorParent::CreateThread()
   sCompositorThread = new Thread("Compositor");
   if (!sCompositorThread->Start()) {
     delete sCompositorThread;
-    sCompositorThread = nsnull;
+    sCompositorThread = nullptr;
     return false;
   }
   return true;
@@ -117,9 +108,9 @@ void CompositorParent::DestroyThread()
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
   if (sCompositorThread) {
     delete sCompositorThread;
-    sCompositorThread = nsnull;
+    sCompositorThread = nullptr;
   }
-  sCompositorLoop = nsnull;
+  sCompositorLoop = nullptr;
   sCompositorThreadID = 0;
 }
 
@@ -143,7 +134,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
 {
-  NS_ABORT_IF_FALSE(sCompositorThread != nsnull || sCompositorThreadID,
+  NS_ABORT_IF_FALSE(sCompositorThread != nullptr || sCompositorThreadID,
                     "The compositor thread must be Initialized before instanciating a COmpositorParent.");
   MOZ_COUNT_CTOR(CompositorParent);
   mCompositorID = 0;
@@ -373,10 +364,10 @@ public:
    * phase.
    */
   AutoResolveRefLayers(Layer* aRoot) : mRoot(aRoot)
-  { WalkTheTree<Resolve>(mRoot, nsnull); }
+  { WalkTheTree<Resolve>(mRoot, nullptr); }
 
   ~AutoResolveRefLayers()
-  { WalkTheTree<Detach>(mRoot, nsnull); }
+  { WalkTheTree<Detach>(mRoot, nullptr); }
 
 private:
   enum Op { Resolve, Detach };
@@ -440,15 +431,15 @@ CompositorParent::Composite()
     return;
   }
 
-  Layer* layer = mLayerManager->GetRoot();
-  AutoResolveRefLayers resolve(layer);
+  Layer* aLayer = mLayerManager->GetRoot();
+  AutoResolveRefLayers resolve(aLayer);
 
   bool requestNextFrame = TransformShadowTree(mLastCompose);
   if (requestNextFrame) {
     ScheduleComposition();
   }
 
-  RenderTraceLayers(layer, "0000");
+  RenderTraceLayers(aLayer, "0000");
 
   if (LAYERS_OPENGL == mLayerManager->GetBackendType() &&
       !mTargetConfig.naturalBounds().IsEmpty()) {
@@ -545,123 +536,14 @@ SetShadowProperties(Layer* aLayer)
 {
   // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
-  shadow->SetShadowTransform(aLayer->GetBaseTransform());
+  shadow->SetShadowTransform(aLayer->GetTransform());
   shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
   shadow->SetShadowClipRect(aLayer->GetClipRect());
-  shadow->SetShadowOpacity(aLayer->GetOpacity());
 
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
     SetShadowProperties(child);
   }
-}
-
-
-// SampleValue should eventually take the CSS property as an argument.  This
-// will be needed if we ever animate two values with the same type but different
-// interpolation rules.
-static void
-SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aStart,
-            nsStyleAnimation::Value& aEnd, Animatable* aValue)
-{
-  nsStyleAnimation::Value interpolatedValue;
-  NS_ASSERTION(aStart.GetUnit() == aEnd.GetUnit() ||
-               aStart.GetUnit() == nsStyleAnimation::eUnit_None ||
-               aEnd.GetUnit() == nsStyleAnimation::eUnit_None, "Must have same unit");
-  if (aStart.GetUnit() == nsStyleAnimation::eUnit_Transform ||
-      aEnd.GetUnit() == nsStyleAnimation::eUnit_Transform) {
-    nsStyleAnimation::Interpolate(eCSSProperty_transform, aStart, aEnd,
-                                  aPortion, interpolatedValue);
-    nsCSSValueList* interpolatedList = interpolatedValue.GetCSSValueListValue();
-
-    TransformData& data = aAnimation.data().get_TransformData();
-    gfx3DMatrix transform =
-      nsDisplayTransform::GetResultingTransformMatrix(nsnull, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
-                                                      &data.bounds(), interpolatedList, &data.mozOrigin(),
-                                                      &data.perspectiveOrigin(), &data.perspective());
-
-    InfallibleTArray<TransformFunction>* functions = new InfallibleTArray<TransformFunction>();
-    functions->AppendElement(TransformMatrix(transform));
-    *aValue = *functions;
-    return;
-  }
-
-  NS_ASSERTION(aStart.GetUnit() == nsStyleAnimation::eUnit_Float, "Should be opacity");
-  nsStyleAnimation::Interpolate(eCSSProperty_opacity, aStart, aEnd,
-                                aPortion, interpolatedValue);
-  *aValue = interpolatedValue.GetFloatValue();
-}
-
-static bool
-SampleAnimations(Layer* aLayer, TimeStamp aPoint)
-{
-  AnimationArray& animations = aLayer->GetAnimations();
-  InfallibleTArray<AnimData>& animationData = aLayer->GetAnimationData();
-
-  bool activeAnimations = false;
-
-  for (PRUint32 i = animations.Length(); i-- !=0; ) {
-    Animation& animation = animations[i];
-    AnimData& animData = animationData[i];
-
-    double numIterations = animation.numIterations() != -1 ?
-      animation.numIterations() : NS_IEEEPositiveInfinity();
-    double positionInIteration =
-      ElementAnimations::GetPositionInIteration(animation.startTime(),
-                                                aPoint,
-                                                animation.duration(),
-                                                numIterations,
-                                                animation.direction());
-
-    if (positionInIteration == -1) {
-        animations.RemoveElementAt(i);
-        animationData.RemoveElementAt(i);
-        continue;
-    }
-
-    NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
-                          positionInIteration <= 1.0,
-                        "position should be in [0-1]");
-
-    int segmentIndex = 0;
-    AnimationSegment* segment = animation.segments().Elements();
-    while (segment->endPortion() < positionInIteration) {
-      ++segment;
-      ++segmentIndex;
-    }
-
-    double positionInSegment = (positionInIteration - segment->startPortion()) /
-                                 (segment->endPortion() - segment->startPortion());
-
-    double portion = animData.mFunctions[segmentIndex]->GetValue(positionInSegment);
-
-    activeAnimations = true;
-
-    // interpolate the property
-    Animatable interpolatedValue;
-    SampleValue(portion, animation, animData.mStartValues[segmentIndex],
-                animData.mEndValues[segmentIndex], &interpolatedValue);
-    ShadowLayer* shadow = aLayer->AsShadowLayer();
-    switch (interpolatedValue.type()) {
-    case Animatable::TOpacity:
-      shadow->SetShadowOpacity(interpolatedValue.get_Opacity().value());
-      break;
-   case Animatable::TArrayOfTransformFunction: {
-      gfx3DMatrix matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
-      shadow->SetShadowTransform(matrix);
-      break;
-    }
-    default:
-      NS_WARNING("Unhandled animated property");
-    }
-  }
-
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    activeAnimations |= SampleAnimations(child, aPoint);
-  }
-
-  return activeAnimations;
 }
 
 bool
@@ -709,13 +591,9 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
   ContainerLayer* container = layer->AsContainerLayer();
   Layer* root = mLayerManager->GetRoot();
 
-  // NB: we must sample animations *before* sampling pan/zoom
-  // transforms.
-  wantNextFrame |= SampleAnimations(layer, mLastCompose);
-
   const FrameMetrics& metrics = container->GetFrameMetrics();
   const gfx3DMatrix& rootTransform = root->GetTransform();
-  const gfx3DMatrix& currentTransform = layer->GetBaseTransform();
+  const gfx3DMatrix& currentTransform = layer->GetTransform();
 
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code
@@ -808,6 +686,7 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
     shadow->SetShadowTransform(treeTransform * currentTransform);
     TransformFixedLayers(layer, offset, scaleDiff);
   }
+
   return wantNextFrame;
 }
 
@@ -923,25 +802,25 @@ static CompositorMap* sCompositorMap;
 
 void CompositorParent::CreateCompositorMap()
 {
-  if (sCompositorMap == nsnull) {
+  if (sCompositorMap == nullptr) {
     sCompositorMap = new CompositorMap;
   }
 }
 
 void CompositorParent::DestroyCompositorMap()
 {
-  if (sCompositorMap != nsnull) {
+  if (sCompositorMap != nullptr) {
     NS_ASSERTION(sCompositorMap->empty(), 
                  "The Compositor map should be empty when destroyed>");
     delete sCompositorMap;
-    sCompositorMap = nsnull;
+    sCompositorMap = nullptr;
   }
 }
 
 CompositorParent* CompositorParent::GetCompositor(PRUint64 id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
-  return it != sCompositorMap->end() ? it->second : nsnull;
+  return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
 void CompositorParent::AddCompositor(CompositorParent* compositor, PRUint64* outID)
@@ -957,7 +836,7 @@ CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {
-    return nsnull;
+    return nullptr;
   }
   sCompositorMap->erase(it);
   return it->second;
@@ -1076,7 +955,7 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
   ProcessHandle handle;
   if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
     // XXX need to kill |aOtherProcess|, it's boned
-    return nsnull;
+    return nullptr;
   }
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
@@ -1104,7 +983,7 @@ GetIndirectShadowTree(uint64_t aId)
 {
   LayerTreeMap::const_iterator cit = sIndirectLayerTrees.find(aId);
   if (sIndirectLayerTrees.end() == cit) {
-    return nsnull;
+    return nullptr;
   }
   return &cit->second;
 }

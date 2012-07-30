@@ -536,7 +536,7 @@ class nsTSubstring_CharT
         {
           if (!EnsureMutable(newLen))
             {
-              *data = nsnull;
+              *data = nullptr;
               return 0;
             }
 
@@ -593,7 +593,7 @@ class nsTSubstring_CharT
          * base type, which helps avoid converting to nsTAString.
          */
       nsTSubstring_CharT(const substring_tuple_type& tuple)
-        : mData(nsnull),
+        : mData(nullptr),
           mLength(0),
           mFlags(F_NONE)
         {

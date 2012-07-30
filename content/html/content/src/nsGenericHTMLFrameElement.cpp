@@ -44,7 +44,7 @@ nsresult
 nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
   NS_PRECONDITION(aContentDocument, "Null out param");
-  *aContentDocument = nsnull;
+  *aContentDocument = nullptr;
 
   nsCOMPtr<nsIDOMWindow> win;
   GetContentWindow(getter_AddRefs(win));
@@ -60,7 +60,7 @@ nsresult
 nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 {
   NS_PRECONDITION(aContentWindow, "Null out param");
-  *aContentWindow = nsnull;
+  *aContentWindow = nullptr;
 
   nsresult rv = EnsureFrameLoader();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -195,7 +195,7 @@ nsGenericHTMLFrameElement::UnbindFromTree(bool aDeep, bool aNullParent)
     // loader... we don't want to tear down the docshell.  Food for
     // later bug.
     mFrameLoader->Destroy();
-    mFrameLoader = nsnull;
+    mFrameLoader = nullptr;
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -224,7 +224,7 @@ nsGenericHTMLFrameElement::DestroyContent()
 {
   if (mFrameLoader) {
     mFrameLoader->Destroy();
-    mFrameLoader = nsnull;
+    mFrameLoader = nullptr;
   }
 
   nsGenericHTMLElement::DestroyContent();

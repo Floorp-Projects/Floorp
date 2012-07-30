@@ -19,10 +19,10 @@ ChildIterator::Init(nsIContent*    aContent,
                     ChildIterator* aLast)
 {
   // Initialize out parameters to be equal, in case of failure.
-  aFirst->mContent = aLast->mContent = nsnull;
-  aFirst->mChild   = aLast->mChild   = nsnull;
+  aFirst->mContent = aLast->mContent = nullptr;
+  aFirst->mChild   = aLast->mChild   = nullptr;
   
-  NS_PRECONDITION(aContent != nsnull, "no content");
+  NS_PRECONDITION(aContent != nullptr, "no content");
   if (! aContent)
     return NS_ERROR_NULL_POINTER;
 
@@ -44,7 +44,7 @@ ChildIterator::Init(nsIContent*    aContent,
     aLast->mIndex = length;
   } else {
     aFirst->mChild = aContent->GetFirstChild();
-    aLast->mChild = nsnull;
+    aLast->mChild = nullptr;
   }
 
   return NS_OK;

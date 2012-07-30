@@ -68,7 +68,7 @@ public:
 
 private:
   nsresult Load(imgIRequest *aImage);
-  /* if aDamageRect is nsnull, the whole frame is redrawn. */
+  /* if aDamageRect is nullptr, the whole frame is redrawn. */
   void DoRedraw(const nsRect* aDamageRect);
 
   nsIFrame *mFrame;

@@ -10,7 +10,7 @@
 nsDOMCompositionEvent::nsDOMCompositionEvent(nsPresContext* aPresContext,
                                              nsCompositionEvent* aEvent)
   : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                 new nsCompositionEvent(false, 0, nsnull))
+                 new nsCompositionEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_COMPOSITION_EVENT,
                "event type mismatch");
@@ -35,7 +35,7 @@ nsDOMCompositionEvent::~nsDOMCompositionEvent()
 {
   if (mEventIsInternal) {
     delete static_cast<nsCompositionEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 

@@ -14,7 +14,7 @@ nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decode
 {
   readable = bytes;
   stateLoop(stateSave);
-  readable = nsnull;
+  readable = nullptr;
   if (mUnicodeDecoder) {
     mUnicodeDecoder.forget(decoder);
     charset.Assign(mCharset);
@@ -67,7 +67,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     return false;
   } else if (NS_FAILED(res)) {
     NS_ERROR("Getting an encoding decoder failed in a bad way.");
-    mUnicodeDecoder = nsnull;
+    mUnicodeDecoder = nullptr;
     return false;
   } else {
     NS_ASSERTION(mUnicodeDecoder, "Getter nsresult and object don't match.");

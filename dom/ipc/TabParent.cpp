@@ -59,7 +59,7 @@ using namespace mozilla::dom::indexedDB;
 namespace mozilla {
 namespace dom {
 
-TabParent *TabParent::mIMETabParent = nsnull;
+TabParent *TabParent::mIMETabParent = nullptr;
 
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
@@ -113,7 +113,7 @@ void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mIMETabParent == this)
-    mIMETabParent = nsnull;
+    mIMETabParent = nullptr;
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader) {
     frameLoader->DestroyChild();
@@ -128,7 +128,7 @@ TabParent::RecvMoveFocus(const bool& aForward)
     nsCOMPtr<nsIDOMElement> dummy;
     PRUint32 type = aForward ? PRUint32(nsIFocusManager::MOVEFOCUS_FORWARD)
                              : PRUint32(nsIFocusManager::MOVEFOCUS_BACKWARD);
-    fm->MoveFocus(nsnull, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
+    fm->MoveFocus(nullptr, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
                   getter_AddRefs(dummy));
   }
   return true;
@@ -158,7 +158,7 @@ TabParent::AnswerCreateWindow(PBrowserParent** retval)
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
-    mBrowserDOMWindow->OpenURIInFrame(nsnull, nsnull,
+    mBrowserDOMWindow->OpenURIInFrame(nullptr, nullptr,
                                       nsIBrowserDOMWindow::OPEN_NEWTAB,
                                       nsIBrowserDOMWindow::OPEN_NEW,
                                       getter_AddRefs(frameLoaderOwner));
@@ -354,7 +354,7 @@ bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const nsString& aJSON)
 {
-  return ReceiveMessage(aMessage, false, aJSON, nsnull);
+  return ReceiveMessage(aMessage, false, aJSON, nullptr);
 }
 
 bool
@@ -386,7 +386,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
     return true;
 
   *aSeqno = mIMESeqno;
-  mIMETabParent = aFocus ? this : nsnull;
+  mIMETabParent = aFocus ? this : nullptr;
   mIMESelectionAnchor = 0;
   mIMESelectionFocus = 0;
   nsresult rv = widget->OnIMEFocusChange(aFocus);
@@ -560,7 +560,7 @@ TabParent::SendSelectionEvent(nsSelectionEvent& event)
 TabParent::GetFrom(nsFrameLoader* aFrameLoader)
 {
   if (!aFrameLoader) {
-    return nsnull;
+    return nullptr;
   }
   PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
   return static_cast<TabParent*>(remoteBrowser);
@@ -571,7 +571,7 @@ TabParent::GetFrom(nsIContent* aContent)
 {
   nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aContent);
   if (!loaderOwner) {
-    return nsnull;
+    return nullptr;
   }
   nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
   return GetFrom(frameLoader);
@@ -581,7 +581,7 @@ RenderFrameParent*
 TabParent::GetRenderFrame()
 {
   if (ManagedPRenderFrameParent().IsEmpty()) {
-    return nsnull;
+    return nullptr;
   }
   return static_cast<RenderFrameParent*>(ManagedPRenderFrameParent()[0]);
 }
@@ -637,7 +637,7 @@ TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
   // When the input mode is set to anything but IMEState::DISABLED,
   // mIMETabParent should be set to this
   mIMETabParent =
-    aIMEEnabled != static_cast<PRInt32>(IMEState::DISABLED) ? this : nsnull;
+    aIMEEnabled != static_cast<PRInt32>(IMEState::DISABLED) ? this : nullptr;
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget || !AllowContentIME())
     return true;
@@ -658,7 +658,7 @@ TabParent::RecvSetInputContext(const PRInt32& aIMEEnabled,
 
   nsAutoString state;
   state.AppendInt(aIMEEnabled);
-  observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
+  observerService->NotifyObservers(nullptr, "ime-enabled-state-changed", state.get());
 
   return true;
 }
@@ -908,7 +908,7 @@ TabParent::AllocPOfflineCacheUpdate(const URI& aManifestURI,
   nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aClientID,
                                  stickDocument);
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   POfflineCacheUpdateParent* result = update.get();
   update.forget();
@@ -952,7 +952,7 @@ already_AddRefed<nsFrameLoader>
 TabParent::GetFrameLoader() const
 {
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
-  return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nsnull;
+  return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
 }
 
 void
@@ -984,11 +984,11 @@ TabParent::GetWidget() const
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
   if (!content)
-    return nsnull;
+    return nullptr;
 
   nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
   return widget.forget();

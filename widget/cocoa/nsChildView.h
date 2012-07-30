@@ -390,7 +390,7 @@ public:
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsDeviceContext *aContext,
-                                 nsWidgetInitData *aInitData = nsnull);
+                                 nsWidgetInitData *aInitData = nullptr);
 
   NS_IMETHOD              Destroy();
 

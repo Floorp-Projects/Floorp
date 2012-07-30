@@ -70,7 +70,7 @@ nsAnnotationService::~nsAnnotationService()
   NS_ASSERTION(gAnnotationService == this,
                "Deleting a non-singleton instance of the service");
   if (gAnnotationService == this)
-    gAnnotationService = nsnull;
+    gAnnotationService = nullptr;
 }
 
 
@@ -309,7 +309,7 @@ nsAnnotationService::SetItemAnnotationString(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  nsresult rv = SetAnnotationStringInternal(nsnull, aItemId, aName, aValue,
+  nsresult rv = SetAnnotationStringInternal(nullptr, aItemId, aName, aValue,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -384,7 +384,7 @@ nsAnnotationService::SetItemAnnotationInt32(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  nsresult rv = SetAnnotationInt32Internal(nsnull, aItemId, aName, aValue,
+  nsresult rv = SetAnnotationInt32Internal(nullptr, aItemId, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -459,7 +459,7 @@ nsAnnotationService::SetItemAnnotationInt64(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  nsresult rv = SetAnnotationInt64Internal(nsnull, aItemId, aName, aValue,
+  nsresult rv = SetAnnotationInt64Internal(nullptr, aItemId, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -534,7 +534,7 @@ nsAnnotationService::SetItemAnnotationDouble(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  nsresult rv = SetAnnotationDoubleInternal(nsnull, aItemId, aName, aValue,
+  nsresult rv = SetAnnotationDoubleInternal(nullptr, aItemId, aName, aValue,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -618,7 +618,7 @@ nsAnnotationService::SetItemAnnotationBinary(PRInt64 aItemId,
   if (aExpiration == EXPIRE_WITH_HISTORY)
     return NS_ERROR_INVALID_ARG;
 
-  nsresult rv = SetAnnotationBinaryInternal(nsnull, aItemId, aName, aData,
+  nsresult rv = SetAnnotationBinaryInternal(nullptr, aItemId, aName, aData,
                                             aDataLen, aMimeType, aFlags,
                                             aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -658,7 +658,7 @@ nsAnnotationService::GetItemAnnotationString(PRInt64 aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -728,7 +728,7 @@ nsAnnotationService::GetItemAnnotation(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -798,7 +798,7 @@ nsAnnotationService::GetItemAnnotationInt32(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -840,7 +840,7 @@ nsAnnotationService::GetItemAnnotationInt64(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -881,7 +881,7 @@ nsAnnotationService::GetItemAnnotationType(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -921,7 +921,7 @@ nsAnnotationService::GetItemAnnotationDouble(PRInt64 aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -972,7 +972,7 @@ nsAnnotationService::GetItemAnnotationBinary(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_dataLen);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1037,7 +1037,7 @@ nsAnnotationService::GetItemAnnotationInfo(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_storageType);
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = StartGetAnnotation(nsnull, aItemId, aName, statement);
+  nsresult rv = StartGetAnnotation(nullptr, aItemId, aName, statement);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1070,7 +1070,7 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
   NS_ENSURE_ARG_POINTER(_results);
 
   *_resultCount = 0;
-  *_results = nsnull;
+  *_results = nullptr;
   nsCOMArray<nsIURI> results;
 
   nsresult rv = GetPagesWithAnnotationCOMArray(aName, &results);
@@ -1143,7 +1143,7 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
   NS_ENSURE_ARG_POINTER(_results);
 
   *_resultCount = 0;
-  *_results = nsnull;
+  *_results = nullptr;
   nsTArray<PRInt64> results;
 
   nsresult rv = GetItemsWithAnnotationTArray(aName, &results);
@@ -1203,7 +1203,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
   NS_ENSURE_ARG_POINTER(_result);
 
   *_count = 0;
-  *_result = nsnull;
+  *_result = nullptr;
 
   nsTArray<nsCString> names;
   nsresult rv = GetAnnotationNamesTArray(aURI, 0, &names);
@@ -1223,7 +1223,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
       for (PRUint32 j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
       nsMemory::Free(*_result);
-      *_result = nsnull;
+      *_result = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     var->SetAsAUTF8String(names[i]);
@@ -1295,10 +1295,10 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId,
   NS_ENSURE_ARG_POINTER(_result);
 
   *_count = 0;
-  *_result = nsnull;
+  *_result = nullptr;
 
   nsTArray<nsCString> names;
-  nsresult rv = GetAnnotationNamesTArray(nsnull, aItemId, &names);
+  nsresult rv = GetAnnotationNamesTArray(nullptr, aItemId, &names);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (names.Length() == 0)
@@ -1315,7 +1315,7 @@ nsAnnotationService::GetItemAnnotationNames(PRInt64 aItemId,
       for (PRUint32 j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
       nsMemory::Free(*_result);
-      *_result = nsnull;
+      *_result = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     var->SetAsAUTF8String(names[i]);
@@ -1350,7 +1350,7 @@ nsAnnotationService::ItemHasAnnotation(PRInt64 aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsresult rv = HasAnnotationInternal(nsnull, aItemId, aName, _retval);
+  nsresult rv = HasAnnotationInternal(nullptr, aItemId, aName, _retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1426,7 +1426,7 @@ nsAnnotationService::RemoveItemAnnotation(PRInt64 aItemId,
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
 
-  nsresult rv = RemoveAnnotationInternal(nsnull, aItemId, aName);
+  nsresult rv = RemoveAnnotationInternal(nullptr, aItemId, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationRemoved(aItemId, aName));
@@ -2019,7 +2019,7 @@ nsAnnotationService::Observe(nsISupports *aSubject,
       };
 
       nsCOMPtr<mozIStoragePendingStatement> ps;
-      rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), nsnull,
+      rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
                                          getter_AddRefs(ps));
       NS_ENSURE_SUCCESS(rv, rv);
     }

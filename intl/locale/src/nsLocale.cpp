@@ -23,7 +23,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale, nsILocale)
 
 nsLocale::nsLocale(void)
-:  fHashtable(nsnull), fCategoryCount(0)
+:  fHashtable(nullptr), fCategoryCount(0)
 {
   fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
                                &nsLocale::Hash_CompareNSString,

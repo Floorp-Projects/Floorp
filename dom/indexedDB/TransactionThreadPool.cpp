@@ -24,7 +24,7 @@ const PRUint32 kThreadLimit = 20;
 const PRUint32 kIdleThreadLimit = 5;
 const PRUint32 kIdleThreadTimeoutMs = 30000;
 
-TransactionThreadPool* gInstance = nsnull;
+TransactionThreadPool* gInstance = nullptr;
 bool gShutdown = false;
 
 inline
@@ -83,7 +83,7 @@ TransactionThreadPool::~TransactionThreadPool()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(gInstance == this, "Different instances!");
-  gInstance = nsnull;
+  gInstance = nullptr;
 }
 
 // static
@@ -95,7 +95,7 @@ TransactionThreadPool::GetOrCreate()
     nsAutoPtr<TransactionThreadPool> pool(new TransactionThreadPool());
 
     nsresult rv = pool->Init();
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     gInstance = pool.forget();
   }
@@ -122,7 +122,7 @@ TransactionThreadPool::Shutdown()
       NS_WARNING("Failed to shutdown thread pool!");
     }
     delete gInstance;
-    gInstance = nsnull;
+    gInstance = nullptr;
   }
 }
 
@@ -162,7 +162,7 @@ TransactionThreadPool::Cleanup()
 
   // Make sure the pool is still accessible while any callbacks generated from
   // the other threads are processed.
-  rv = NS_ProcessPendingEvents(nsnull);
+  rv = NS_ProcessPendingEvents(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mCompleteCallbacks.IsEmpty()) {
@@ -173,7 +173,7 @@ TransactionThreadPool::Cleanup()
     mCompleteCallbacks.Clear();
 
     // And make sure they get processed.
-    rv = NS_ProcessPendingEvents(nsnull);
+    rv = NS_ProcessPendingEvents(nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -305,7 +305,7 @@ TransactionThreadPool::TransactionCanRun(IDBTransaction* aTransaction,
   if (!mTransactionsInProgress.Get(databaseId, &dbTransactionInfo)) {
     // First transaction for this database, fine to run.
     *aCanRun = true;
-    *aExistingQueue = nsnull;
+    *aExistingQueue = nullptr;
     return NS_OK;
   }
 
@@ -345,12 +345,12 @@ TransactionThreadPool::TransactionCanRun(IDBTransaction* aTransaction,
   if (writeOverlap ||
       (readOverlap && mode == IDBTransaction::READ_WRITE)) {
     *aCanRun = false;
-    *aExistingQueue = nsnull;
+    *aExistingQueue = nullptr;
     return NS_OK;
   }
 
   *aCanRun = true;
-  *aExistingQueue = nsnull;
+  *aExistingQueue = nullptr;
   return NS_OK;
 }
 
@@ -397,7 +397,7 @@ TransactionThreadPool::Dispatch(IDBTransaction* aTransaction,
 
 #ifdef DEBUG
   if (aTransaction->mMode == IDBTransaction::VERSION_CHANGE) {
-    NS_ASSERTION(!mTransactionsInProgress.Get(databaseId, nsnull),
+    NS_ASSERTION(!mTransactionsInProgress.Get(databaseId, nullptr),
                  "Shouldn't have anything in progress!");
   }
 #endif
@@ -559,7 +559,7 @@ TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback& aCallback)
 
   for (PRUint32 index = 0; index < aCallback.mDatabases.Length(); index++) {
     if (mTransactionsInProgress.Get(aCallback.mDatabases[index]->Id(),
-                                    nsnull)) {
+                                    nullptr)) {
       return false;
     }
   }
@@ -637,7 +637,7 @@ TransactionThreadPool::TransactionQueue::Run()
     for (PRUint32 index = 0; index < count; index++) {
       nsCOMPtr<nsIRunnable>& runnable = queue[index];
       runnable->Run();
-      runnable = nsnull;
+      runnable = nullptr;
     }
 
     if (count) {
@@ -680,7 +680,7 @@ FinishTransactionRunnable::Run()
 
   if (mFinishRunnable) {
     mFinishRunnable->Run();
-    mFinishRunnable = nsnull;
+    mFinishRunnable = nullptr;
   }
 
   return NS_OK;

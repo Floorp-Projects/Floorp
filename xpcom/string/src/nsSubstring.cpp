@@ -220,7 +220,7 @@ nsStringBuffer::FromString(const nsAString& str)
         static_cast<const nsAStringAccessor*>(&str);
 
     if (!(accessor->flags() & nsSubstring::F_SHARED))
-      return nsnull;
+      return nullptr;
 
     return FromData(accessor->data());
   }
@@ -232,7 +232,7 @@ nsStringBuffer::FromString(const nsACString& str)
         static_cast<const nsACStringAccessor*>(&str);
 
     if (!(accessor->flags() & nsCSubstring::F_SHARED))
-      return nsnull;
+      return nullptr;
 
     return FromData(accessor->data());
   }

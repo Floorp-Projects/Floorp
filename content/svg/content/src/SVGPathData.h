@@ -220,7 +220,7 @@ protected:
 class SVGPathDataAndOwner : public SVGPathData
 {
 public:
-  SVGPathDataAndOwner(nsSVGElement *aElement = nsnull)
+  SVGPathDataAndOwner(nsSVGElement *aElement = nullptr)
     : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
   {}
 

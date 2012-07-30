@@ -208,7 +208,7 @@ public:
   ~PluginBackgroundSink()
   {
     if (mFrame) {
-      mFrame->mBackgroundSink = nsnull;
+      mFrame->mBackgroundSink = nullptr;
     }
   }
 
@@ -223,7 +223,7 @@ public:
       BeginUpdate(const nsIntRect& aRect, PRUint64 aSequenceNumber)
   {
     if (!AcceptUpdate(aSequenceNumber))
-      return nsnull;
+      return nullptr;
     return mFrame->mInstanceOwner->BeginUpdateBackground(aRect);
   }
 
@@ -232,7 +232,7 @@ public:
     return mFrame->mInstanceOwner->EndUpdateBackground(aContext, aRect);
   }
 
-  void Destroy() { mFrame = nsnull; }
+  void Destroy() { mFrame = nullptr; }
 
 protected:
   bool AcceptUpdate(PRUint64 aSequenceNumber) {
@@ -274,7 +274,7 @@ nsObjectFrame::CreateAccessible()
   return accService ?
     accService->CreateHTMLObjectFrameAccessible(this, mContent,
                                                 PresContext()->PresShell()) :
-    nsnull;
+    nullptr;
 }
 
 #ifdef XP_WIN
@@ -316,9 +316,9 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   if (mInstanceOwner) {
-    mInstanceOwner->SetFrame(nsnull);
+    mInstanceOwner->SetFrame(nullptr);
   }
-  SetInstanceOwner(nsnull);
+  SetInstanceOwner(nullptr);
 
   nsObjectFrameSuper::DestroyFrom(aDestructRoot);
 }
@@ -399,7 +399,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
       NS_ERROR("Could not create inner view");
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    viewMan->InsertChild(view, mInnerView, nsnull, true);
+    viewMan->InsertChild(view, mInnerView, nullptr, true);
 
     mWidget->SetParent(parentWidget);
     mWidget->Show(true);
@@ -676,7 +676,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 nsresult
 nsObjectFrame::CallSetWindow(bool aCheckIsHidden)
 {
-  NPWindow *win = nsnull;
+  NPWindow *win = nullptr;
  
   nsresult rv = NS_ERROR_FAILURE;
   nsRefPtr<nsNPAPIPluginInstance> pi;
@@ -758,7 +758,7 @@ nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 
             mWidget->Show(false);
             mWidget->Enable(false);
-            mWidget->SetParent(nsnull);
+            mWidget->SetParent(nullptr);
           }
         }
       } else {
@@ -1125,7 +1125,7 @@ nsresult
 nsObjectFrame::PluginEventNotifier::Run() {
   nsCOMPtr<nsIObserverService> obsSvc =
     mozilla::services::GetObserverService();
-  obsSvc->NotifyObservers(nsnull, "plugin-changed-event", mEventType.get());
+  obsSvc->NotifyObservers(nullptr, "plugin-changed-event", mEventType.get());
   return NS_OK;
 }
 
@@ -1169,7 +1169,7 @@ nsObjectFrame::IsTransparentMode() const
   if (!mInstanceOwner)
     return false;
 
-  NPWindow *window = nsnull;
+  NPWindow *window = nullptr;
   mInstanceOwner->GetWindow(window);
   if (!window) {
     return false;
@@ -1220,7 +1220,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayList replacedContent;
 
   if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseAsyncRendering()) {
-    NPWindow* window = nsnull;
+    NPWindow* window = nullptr;
     mInstanceOwner->GetWindow(window);
     bool isVisible = window && window->width > 0 && window->height > 0;
     if (isVisible && aBuilder->ShouldSyncDecodeImages()) {
@@ -1245,7 +1245,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // We don't need this on Android, and it just confuses things
 #if !MOZ_WIDGET_ANDROID
     if (aBuilder->IsPaintingToWindow() &&
-        GetLayerState(aBuilder, nsnull) == LAYER_ACTIVE &&
+        GetLayerState(aBuilder, nullptr) == LAYER_ACTIVE &&
         IsTransparentMode()) {
       rv = replacedContent.AppendNewToTop(new (aBuilder)
           nsDisplayPluginReadback(aBuilder, this));
@@ -1255,7 +1255,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 #if MOZ_WIDGET_ANDROID
     if (aBuilder->IsPaintingToWindow() &&
-        GetLayerState(aBuilder, nsnull) == LAYER_ACTIVE) {
+        GetLayerState(aBuilder, nullptr) == LAYER_ACTIVE) {
 
       nsTArray<nsNPAPIPluginInstance::VideoInfo*> videos;
       mInstanceOwner->GetVideos(videos);
@@ -1285,7 +1285,7 @@ GetPSFromRC(nsRenderingContext& aRenderingContext)
   nsRefPtr<gfxASurface>
     surf = aRenderingContext.ThebesContext()->CurrentSurface();
   if (!surf || surf->CairoStatus())
-    return nsnull;
+    return nullptr;
   return (void *)(static_cast<gfxOS2Surface*>
                   (static_cast<gfxASurface*>(surf.get()))->GetPS());
 }
@@ -1299,7 +1299,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   if (!obj)
     return;
 
-  nsIFrame* frame = nsnull;
+  nsIFrame* frame = nullptr;
   obj->GetPrintFrame(&frame);
   if (!frame)
     return;
@@ -1320,7 +1320,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
 
   // now we need to setup the correct location for printing
   NPWindow window;
-  window.window = nsnull;
+  window.window = nullptr;
 
   // prepare embedded mode printing struct
   NPPrint npprint;
@@ -1507,7 +1507,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   // XXX Calling DidReflow here makes no sense!!!
   nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
   frame->DidReflow(presContext,
-                   nsnull, status);  // DidReflow will take care of it
+                   nullptr, status);  // DidReflow will take care of it
 }
 
 already_AddRefed<ImageContainer>
@@ -1549,7 +1549,7 @@ nsObjectFrame::UpdateImageLayer(const gfxRect& aRect)
 
 #ifdef XP_MACOSX
   if (!mInstanceOwner->UseAsyncRendering()) {
-    mInstanceOwner->DoCocoaEventDrawRect(aRect, nsnull);
+    mInstanceOwner->DoCocoaEventDrawRect(aRect, nullptr);
     // This makes sure the image on the container is up to date.
     // XXX - Eventually we probably just want to make sure DoCocoaEventDrawRect
     // updates the image container, to make this truly use 'push' semantics
@@ -1593,22 +1593,22 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                           nsDisplayItem* aItem)
 {
   if (!mInstanceOwner)
-    return nsnull;
+    return nullptr;
 
-  NPWindow* window = nsnull;
+  NPWindow* window = nullptr;
   mInstanceOwner->GetWindow(window);
   if (!window)
-    return nsnull;
+    return nullptr;
 
   if (window->width <= 0 || window->height <= 0)
-    return nsnull;
+    return nullptr;
 
   // Create image
   nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
 
   if (!container) {
     // This can occur if our instance is gone.
-    return nsnull;
+    return nullptr;
   }
 
   gfxIntSize size;
@@ -1635,7 +1635,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
       // Initialize ImageLayer
       layer = aManager->CreateImageLayer();
       if (!layer)
-        return nsnull;
+        return nullptr;
     }
 
     NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
@@ -1665,13 +1665,13 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
     nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainerForVideo(videoInfo);
     if (!container)
-      return nsnull;
+      return nullptr;
 
     if (!layer) {
       // Initialize ImageLayer
       layer = aManager->CreateImageLayer();
       if (!layer)
-        return nsnull;
+        return nullptr;
     }
 
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
@@ -1692,7 +1692,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     if (!layer) {
       layer = aManager->CreateReadbackLayer();
       if (!layer)
-        return nsnull;
+        return nullptr;
     }
     NS_ASSERTION(layer->GetType() == Layer::TYPE_READBACK, "Bad layer type");
 
@@ -1700,7 +1700,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     if (readback->GetSize() != nsIntSize(size.width, size.height)) {
       // This will destroy any old background sink and notify us that the
       // background is now unknown
-      readback->SetSink(nsnull);
+      readback->SetSink(nullptr);
       readback->SetSize(nsIntSize(size.width, size.height));
 
       if (mBackgroundSink) {
@@ -1723,7 +1723,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   gfxMatrix transform;
   transform.Translate(r.TopLeft());
 
-  layer->SetBaseTransform(gfx3DMatrix::From2D(transform));
+  layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, size.width, size.height));
   return layer.forget();
 }
@@ -1903,7 +1903,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         pluginEvent.wParam = 0;
         pluginEvent.lParam = 0;
         if (pluginEvent.event)
-          inst->HandleEvent(&pluginEvent, nsnull);
+          inst->HandleEvent(&pluginEvent, nullptr);
       }
       do {
         HDC hdc = nativeDraw.BeginNativeDrawing();
@@ -1959,7 +1959,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
           pluginEvent.event = WM_WINDOWPOSCHANGED;
           pluginEvent.wParam = 0;
           pluginEvent.lParam = (LPARAM)&winpos;
-          inst->HandleEvent(&pluginEvent, nsnull);
+          inst->HandleEvent(&pluginEvent, nullptr);
         }
 
         inst->SetWindow(window);
@@ -2139,7 +2139,7 @@ nsObjectFrame::HandlePress(nsPresContext* aPresContext,
 nsresult
 nsObjectFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
 {
-  *aPluginInstance = nsnull;
+  *aPluginInstance = nullptr;
 
   if (!mInstanceOwner) {
     return NS_OK;
@@ -2200,7 +2200,7 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
     child = child->GetNextSibling();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 /*static*/ void

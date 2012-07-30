@@ -53,7 +53,7 @@ private:
         nsFtpControlConnection *conn;
         char                   *key;
         
-        timerStruct() : conn(nsnull), key(nsnull) {}
+        timerStruct() : conn(nullptr), key(nullptr) {}
         
         ~timerStruct() {
             if (timer)
