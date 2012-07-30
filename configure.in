@@ -3621,11 +3621,15 @@ MOZ_TLS=
 if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
+  # OpenBSD doesn't have TLS support, and the test succeeds with clang++
   case "${target}" in
     mips*-*)
       :
       ;;
     *-android*|*-linuxandroid*)
+      :
+      ;;
+    *-openbsd*)
       :
       ;;
     *)
