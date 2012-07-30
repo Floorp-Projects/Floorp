@@ -1590,10 +1590,6 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answe
         ok = CheckSideEffects(cx, bce, pn->maybeExpr(), answer);
         break;
 
-      case PN_NAMESET:
-        ok = CheckSideEffects(cx, bce, pn->pn_tree, answer);
-        break;
-
       case PN_NULLARY:
         if (pn->isKind(PNK_DEBUGGER))
             *answer = true;

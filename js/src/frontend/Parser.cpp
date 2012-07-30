@@ -980,26 +980,19 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
              * case), and nowhere else, currently.
              */
             if (dn != outer_dn) {
-                ParseNode **pnup = &dn->dn_uses;
-                ParseNode *pnu;
-
-                while ((pnu = *pnup) != NULL) {
-                    pnu->pn_lexdef = outer_dn;
-                    pnup = &pnu->pn_link;
+                if (ParseNode *pnu = dn->dn_uses) {
+                    while (true) {
+                        pnu->pn_lexdef = outer_dn;
+                        if (!pnu->pn_link)
+                            break;
+                        pnu = pnu->pn_link;
+                    }
+                    pnu->pn_link = outer_dn->dn_uses;
+                    outer_dn->dn_uses = dn->dn_uses;
+                    dn->dn_uses = NULL;
                 }
 
-                /*
-                 * Make dn be a use that redirects to outer_dn, because we
-                 * can't replace dn with outer_dn in all the pn_namesets in
-                 * the AST where it may be. Instead we make it forward to
-                 * outer_dn. See Definition::resolve.
-                 */
-                *pnup = outer_dn->dn_uses;
-                outer_dn->dn_uses = dn;
                 outer_dn->pn_dflags |= dn->pn_dflags & ~PND_PLACEHOLDER;
-                dn->setDefn(false);
-                dn->setUsed(true);
-                dn->pn_lexdef = outer_dn;
             }
 
             /* Mark the outer dn as escaping. */
@@ -4814,11 +4807,6 @@ CompExprTransplanter::transplant(ParseNode *pn)
             if (!AdjustBlockId(pn, adjust, tc))
                 return false;
         }
-        break;
-
-      case PN_NAMESET:
-        if (!transplant(pn->pn_tree))
-            return false;
         break;
 
       case PN_NULLARY:
