@@ -1158,12 +1158,12 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
-            const size_t memlen = sizeof(jschar) * (length_ + 1);
-            jschar *decompressed = static_cast<jschar *>(cx->malloc_(memlen));
+            const size_t nbytes = sizeof(jschar) * (length_ + 1);
+            jschar *decompressed = static_cast<jschar *>(cx->malloc_(nbytes));
             if (!decompressed)
                 return NULL;
-            if (!DecompressString(data.compressed, compressedLength,
-                                  reinterpret_cast<unsigned char *>(decompressed), memlen)) {
+            if (!DecompressString(data.compressed, compressedLength_,
+                                  reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
                 JS_ReportOutOfMemory(cx);
                 cx->free_(decompressed);
                 return NULL;
@@ -1196,8 +1196,8 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     if (!ss)
         return NULL;
     if (!ownSource) {
-        const size_t memlen = length * sizeof(jschar);
-        ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(memlen));
+        const size_t nbytes = length * sizeof(jschar);
+        ss->data.compressed = static_cast<unsigned char *>(cx->malloc_(nbytes));
         if (!ss->data.compressed) {
             cx->free_(ss);
             return NULL;
@@ -1205,7 +1205,7 @@ ScriptSource::createFromSource(JSContext *cx, const jschar *src, uint32_t length
     }
     ss->next = NULL;
     ss->length_ = length;
-    ss->compressedLength = 0;
+    ss->compressedLength_ = 0;
     ss->marked = ss->onRuntime_ = false;
     ss->argumentsNotIncluded_ = argumentsNotIncluded;
 #ifdef DEBUG
@@ -1231,22 +1231,22 @@ void
 ScriptSource::considerCompressing(JSRuntime *rt, const jschar *src, bool ownSource)
 {
     JS_ASSERT(!ready());
-    const size_t memlen = length_ * sizeof(jschar);
-    const size_t COMPRESS_THRESHOLD = 512;
 
 #if USE_ZLIB
-    size_t compressedLen;
+    const size_t nbytes = length_ * sizeof(jschar);
+    const size_t COMPRESS_THRESHOLD = 512;
+    size_t compressedLength;
 #endif
     if (ownSource) {
         data.source = const_cast<jschar *>(src);
 #if USE_ZLIB
-    } else if (memlen >= COMPRESS_THRESHOLD && 0 &&
-        TryCompressString(reinterpret_cast<const unsigned char *>(src), memlen,
-                          data.compressed, &compressedLen))
+    } else if (nbytes >= COMPRESS_THRESHOLD && 0 &&
+        TryCompressString(reinterpret_cast<const unsigned char *>(src), nbytes,
+                          data.compressed, &compressedLength))
     {
-        JS_ASSERT(compressedLen < memlen);
-        compressedLength = compressedLen;
-        void *mem = rt->realloc_(data.compressed, compressedLength);
+        JS_ASSERT(compressedLength < nbytes);
+        compressedLength_ = compressedLength;
+        void *mem = rt->realloc_(data.compressed, compressedLength_);
         data.compressed = static_cast<unsigned char *>(mem);
         JS_ASSERT(data.compressed);
 #endif
@@ -1360,14 +1360,15 @@ ScriptSource::performXDR(XDRState<mode> *xdr, ScriptSource **ssp)
     }
     if (!xdr->codeUint32(&ss->length_))
         return false;
-    if (!xdr->codeUint32(&ss->compressedLength))
+    if (!xdr->codeUint32(&ss->compressedLength_))
         return false;
+
     uint8_t argumentsNotIncluded = ss->argumentsNotIncluded_;
     if (!xdr->codeUint8(&argumentsNotIncluded))
         return false;
     ss->argumentsNotIncluded_ = argumentsNotIncluded;
-    size_t byteLen = ss->compressed() ? ss->compressedLength :
-        (ss->length_ * sizeof(jschar));
+
+    size_t byteLen = ss->compressed() ? ss->compressedLength_ : (ss->length_ * sizeof(jschar));
     if (mode == XDR_DECODE) {
         ss->data.compressed = static_cast<unsigned char *>(xdr->cx()->malloc_(byteLen));
         if (!ss->data.compressed)

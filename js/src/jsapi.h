@@ -3759,7 +3759,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 #ifdef JS_GC_ZEAL
 # define JS_SET_TRACING_LOCATION(trc, location)                               \
     JS_BEGIN_MACRO                                                            \
-        if ((trc)->realLocation == NULL || (location) == NULL)                \
+        if (!(trc)->realLocation || !(location))                              \
             (trc)->realLocation = (location);                                 \
     JS_END_MACRO
 #else
