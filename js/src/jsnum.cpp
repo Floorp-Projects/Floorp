@@ -351,7 +351,7 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() == 1 ||
         (args[1].isInt32() && (args[1].toInt32() == 0 || args[1].toInt32() == 10))) {
         if (args[0].isInt32()) {
-            args.rval() = args[0];
+            args.rval().set(args[0]);
             return true;
         }
         /*
@@ -665,7 +665,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
     int digits = nint - num;
     const char *end = num + digits;
     if (!digits) {
-        args.rval() = StringValue(str);
+        args.rval().setString(str);
         return true;
     }
 
@@ -741,7 +741,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
         Rooted<Value> v(cx, StringValue(str));
         bool ok = !!cx->localeCallbacks->localeToUnicode(cx, buf, v.address());
         if (ok)
-            args.rval() = v;
+            args.rval().set(v);
         cx->free_(buf);
         return ok;
     }
@@ -751,7 +751,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
     if (!str)
         return false;
 
-    args.rval() = StringValue(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -810,7 +810,7 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
     JSString *str = js_NewStringCopyZ(cx, numStr);
     if (!str)
         return false;
-    args.rval() = StringValue(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -1158,12 +1158,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, global, number_functions))
         return NULL;
 
+    RootedValue valueNaN(cx, cx->runtime->NaNValue);
+    RootedValue valueInfinity(cx, cx->runtime->positiveInfinityValue);
+
     /* ES5 15.1.1.1, 15.1.1.2 */
-    if (!DefineNativeProperty(cx, global, cx->runtime->atomState.NaNAtom,
-                              cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
+    if (!DefineNativeProperty(cx, global, cx->runtime->atomState.NaNAtom, valueNaN,
+                              JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
-        !DefineNativeProperty(cx, global, cx->runtime->atomState.InfinityAtom,
-                              cx->runtime->positiveInfinityValue,
+        !DefineNativeProperty(cx, global, cx->runtime->atomState.InfinityAtom, valueInfinity,
                               JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
     {

@@ -53,7 +53,7 @@ class WatchpointMap {
     void unwatchObject(JSObject *obj);
     void clear();
 
-    bool triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    bool triggerWatchpoint(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
     static bool markAllIteratively(JSTracer *trc);
     bool markIteratively(JSTracer *trc);

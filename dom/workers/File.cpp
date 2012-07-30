@@ -115,7 +115,7 @@ private:
   }
 
   static JSBool
-  GetSize(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetSize(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "size");
     if (!blob) {
@@ -128,7 +128,7 @@ private:
       return false;
     }
 
-    if (!JS_NewNumberValue(aCx, double(size), aVp)) {
+    if (!JS_NewNumberValue(aCx, double(size), aVp.address())) {
       return false;
     }
 
@@ -136,7 +136,7 @@ private:
   }
 
   static JSBool
-  GetType(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetType(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
   {
     nsIDOMBlob* blob = GetInstancePrivate(aCx, aObj, "type");
     if (!blob) {
@@ -154,7 +154,7 @@ private:
       return false;
     }
 
-    *aVp = STRING_TO_JSVAL(jsType);
+    aVp.set(STRING_TO_JSVAL(jsType));
 
     return true;
   }
@@ -306,7 +306,7 @@ private:
   }
 
   static JSBool
-  GetMozFullPath(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetMozFullPath(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "mozFullPath");
     if (!file) {
@@ -327,12 +327,12 @@ private:
       return false;
     }
 
-    *aVp = STRING_TO_JSVAL(jsFullPath);
+    aVp.set(STRING_TO_JSVAL(jsFullPath));
     return true;
   }
 
   static JSBool
-  GetName(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, jsval* aVp)
+  GetName(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
   {
     nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "name");
     if (!file) {
@@ -349,7 +349,7 @@ private:
       return false;
     }
 
-    *aVp = STRING_TO_JSVAL(jsName);
+    aVp.set(STRING_TO_JSVAL(jsName));
     return true;
   }
 };

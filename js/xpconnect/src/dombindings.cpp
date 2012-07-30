@@ -251,14 +251,14 @@ ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *calle
 
 template<class LC>
 JSBool
-ListBase<LC>::length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+ListBase<LC>::length_getter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
     if (!instanceIsListObject(cx, obj, NULL))
         return false;
     PRUint32 length;
     getListObject(obj)->GetLength(&length);
     JS_ASSERT(int32_t(length) >= 0);
-    *vp = UINT_TO_JSVAL(length);
+    vp.set(UINT_TO_JSVAL(length));
     return true;
 }
 
@@ -353,9 +353,9 @@ enum {
 };
 
 static JSBool
-InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp);
+InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp);
 static JSBool
-InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp);
+InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 js::Class sInterfacePrototypeClass = {
     "Object",
@@ -370,7 +370,7 @@ js::Class sInterfacePrototypeClass = {
 };
 
 static JSBool
-InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval *vp)
+InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, JSMutableHandleValue vp)
 {
     if (JSID_IS_STRING(id) && JS_InstanceOf(cx, obj, Jsvalify(&sInterfacePrototypeClass), NULL))
         js::SetReservedSlot(obj, 0, PrivateUint32Value(CHECK_CACHE));
@@ -378,7 +378,7 @@ InvalidateProtoShape_add(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval
 }
 
 static JSBool
-InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, jsval *vp)
+InvalidateProtoShape_set(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp)
 {
     return InvalidateProtoShape_add(cx, obj, id, vp);
 }
@@ -955,7 +955,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy_, JSObject *proto, jsid i
             if (!vp)
                 return true;
 
-            return sProtoProperties[n].getter(cx, proxy, id, vp);
+            return sProtoProperties[n].getter(cx, proxy, id, JSMutableHandleValue::fromMarkedLocation(vp));
         }
     }
     for (size_t n = 0; n < sProtoMethodsCount; ++n) {
