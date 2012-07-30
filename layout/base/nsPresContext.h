@@ -1082,7 +1082,7 @@ protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
-  
+
   nsPresContextType     mType;
   nsIPresShell*         mShell;         // [WEAK]
   nsCOMPtr<nsIDocument> mDocument;
@@ -1091,7 +1091,7 @@ protected:
                                         // Cannot reintroduce cycles
                                         // since there is no dependency
                                         // from gfx back to layout.
-  nsEventStateManager* mEventManager;   // [STRONG]
+  nsRefPtr<nsEventStateManager> mEventManager;
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
   nsRefPtr<nsAnimationManager> mAnimationManager;
