@@ -64,12 +64,22 @@ public class CommandProcessor {
       this.args = args;
     }
 
+    /**
+     * Get list of arguments as strings.  Individual arguments may be null.
+     *
+     * @return list of strings.
+     */
     public synchronized List<String> getArgsList() {
       if (argsList == null) {
         ArrayList<String> argsList = new ArrayList<String>(args.size());
 
         for (int i = 0; i < args.size(); i++) {
-          argsList.add(args.get(i).toString());
+          final Object arg = args.get(i);
+          if (arg == null) {
+            argsList.add(null);
+            continue;
+          }
+          argsList.add(arg.toString());
         }
         this.argsList = argsList;
       }
