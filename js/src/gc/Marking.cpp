@@ -243,6 +243,7 @@ DeclMarkerImpl(String, JSAtom)
 DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
+DeclMarkerImpl(String, PropertyName)
 DeclMarkerImpl(TypeObject, types::TypeObject)
 #if JS_HAS_XML_SUPPORT
 DeclMarkerImpl(XML, JSXML)
