@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+
+  var msg4Count = 0;
+  function IdleHandler4() {
+    msg4Count++;
+    dump("msg 4 Count: " + msg4Count + "\n");
+    if (msg4Count === 1) {
+      window.parent.IFrame2_Callback();
+    }
+  }
+  var idleObserver4 = {time: 4, onidle: IdleHandler4, onactive: IdleHandler4};
+
+  function Test() {
+    dump("Test2\n");
+    window.navigator.addIdleObserver(idleObserver4);
+    window.parent.idleServiceObj.idleTime = 1000;
+    window.parent.idleServiceObj.testIdleBackService(idleObserver4, "idle");
+  }
+
+  </script>
+</head>
+<body onload="Test();">
+  This is iframe 2.
+</body>
+</html>
+
