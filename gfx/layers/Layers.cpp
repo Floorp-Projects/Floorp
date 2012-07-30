@@ -383,12 +383,12 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   mAnimationData.Clear();
   for (PRUint32 i = 0; i < mAnimations.Length(); i++) {
     AnimData data;
-    InfallibleTArray<css::ComputedTimingFunction*>* functions =
+    InfallibleTArray<css::ComputedTimingFunction>* functions =
       &data.mFunctions;
     nsTArray<AnimationSegment> segments = mAnimations.ElementAt(i).segments();
     for (PRUint32 j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
-      css::ComputedTimingFunction* ctf = new css::ComputedTimingFunction();
+      css::ComputedTimingFunction* ctf = functions->AppendElement();
       switch (tf.type()) {
         case TimingFunction::TCubicBezierFunction: {
           CubicBezierFunction cbf = tf.get_CubicBezierFunction();
@@ -405,7 +405,6 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
           break;
         }
       }
-      functions->AppendElement(ctf);
     }
 
     // Precompute the nsStyleAnimation::Values that we need if this is a transform

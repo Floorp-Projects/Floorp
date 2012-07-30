@@ -633,7 +633,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     double positionInSegment = (positionInIteration - segment->startPortion()) /
                                  (segment->endPortion() - segment->startPortion());
 
-    double portion = animData.mFunctions[segmentIndex]->GetValue(positionInSegment);
+    double portion = animData.mFunctions[segmentIndex].GetValue(positionInSegment);
 
     activeAnimations = true;
 
