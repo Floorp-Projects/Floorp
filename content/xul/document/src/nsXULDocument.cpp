@@ -2538,7 +2538,8 @@ nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
         // This is needed because the code in ResumeWalk loads the overlays
         // by processing the last item of mUnloadedOverlays and removing it
         // from the array.
-        rv = mUnloadedOverlays.InsertObjectAt(uri, 0);
+        mUnloadedOverlays.InsertElementAt(0, uri);
+        rv = NS_OK;
     } else if (rv == NS_ERROR_MALFORMED_URI) {
         // The URL is bad, move along. Don't propagate for now.
         // XXX report this to the Error Console (bug 359846)
@@ -2585,8 +2586,7 @@ nsXULDocument::AddChromeOverlays()
         }
 
         // Same comment as in nsXULDocument::InsertXULOverlayPI
-        rv = mUnloadedOverlays.InsertObjectAt(uri, 0);
-        if (NS_FAILED(rv)) break;
+        mUnloadedOverlays.InsertElementAt(0, uri);
     }
 
     return rv;
@@ -3052,12 +3052,12 @@ nsXULDocument::ResumeWalk()
         mState = eState_Overlay;
 
         // If there are no overlay URIs, then we're done.
-        PRUint32 count = mUnloadedOverlays.Count();
+        PRUint32 count = mUnloadedOverlays.Length();
         if (! count)
             break;
 
         nsCOMPtr<nsIURI> uri = mUnloadedOverlays[count-1];
-        mUnloadedOverlays.RemoveObjectAt(count-1);
+        mUnloadedOverlays.RemoveElementAt(count - 1);
 
         bool shouldReturn, failureFromContent;
         rv = LoadOverlayInternal(uri, false, &shouldReturn,
