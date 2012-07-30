@@ -1749,8 +1749,10 @@ var XPIProvider = {
       return;
 
     let data = this.enabledAddons;
-    for (let id in this.bootstrappedAddons)
-      data += (data ? "," : "") + id + ":" + this.bootstrappedAddons[id].version;
+    for (let id in this.bootstrappedAddons) {
+      data += (data ? "," : "") + encodeURIComponent(id) + ":" +
+              encodeURIComponent(this.bootstrappedAddons[id].version);
+    }
 
     try {
       Services.appinfo.annotateCrashReport("Add-ons", data);

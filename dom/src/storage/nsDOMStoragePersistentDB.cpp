@@ -22,6 +22,8 @@
 #include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
 
+#include "sampler.h"
+
 using namespace mozilla;
 
 // Temporary tables for a storage scope will be flushed if found older
@@ -425,6 +427,7 @@ nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
                                       nsAString& aValue,
                                       bool* aSecure)
 {
+  SAMPLE_LABEL("nsDOMStoragePersistentDB", "GetKeyValue");
   nsresult rv;
 
   rv = MaybeCommitInsertTransaction();

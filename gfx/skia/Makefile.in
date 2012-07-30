@@ -402,3 +402,8 @@ SkBlitRect_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 SkUtils_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
 endif
+
+ifdef GNU_CC
+CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
+CFLAGS := $(filter-out -pedantic,$(CFLAGS))
+endif

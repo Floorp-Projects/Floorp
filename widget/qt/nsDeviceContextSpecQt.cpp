@@ -59,7 +59,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
         gfxASurface** aSurface)
 {
     NS_ENSURE_ARG_POINTER(aSurface);
-    *aSurface = nsnull;
+    *aSurface = nullptr;
 
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::GetPrinterNameList(
         nsIStringEnumerator** aPrinterNameList)
 {
     NS_ENSURE_ARG_POINTER(aPrinterNameList);
-    *aPrinterNameList = nsnull;
+    *aPrinterNameList = nullptr;
 
     QList<QPrinterInfo> qprinters = QPrinterInfo::availablePrinters();
     if (qprinters.size() == 0)

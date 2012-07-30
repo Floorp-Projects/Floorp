@@ -125,7 +125,7 @@ nsTableCaptionFrame::CreateAccessible()
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 
@@ -170,7 +170,7 @@ nsTableOuterFrame::CreateAccessible()
                                                  PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 
@@ -259,7 +259,7 @@ nsTableOuterFrame::InsertFrames(ChildListID     aListID,
     NS_ASSERTION(aFrameList.IsEmpty() ||
                  aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
                  "inserting non-caption frame into captionList");
-    mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+    mCaptionFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
 
     // Reflow the new caption frame. It's already marked dirty, so
     // just tell the pres shell.
@@ -369,8 +369,8 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
 {
   nsMargin collapseBorder;
   nsMargin collapsePadding(0,0,0,0);
-  nsMargin* pCollapseBorder  = nsnull;
-  nsMargin* pCollapsePadding = nsnull;
+  nsMargin* pCollapseBorder  = nullptr;
+  nsMargin* pCollapsePadding = nullptr;
   if (aReflowState.frame == InnerTableFrame() &&
       InnerTableFrame()->IsBorderCollapse()) {
     collapseBorder  = InnerTableFrame()->GetIncludedOuterBCBorder();
@@ -498,7 +498,7 @@ static nscoord
 ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
                      nsIFrame *aChildFrame,
                      nsSize aCBSize, nscoord aAvailableWidth,
-                     nscoord *aMarginResult = nsnull)
+                     nscoord *aMarginResult = nullptr)
 {
   AutoMaybeDisableFontInflation an(aChildFrame);
 

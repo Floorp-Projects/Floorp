@@ -6,6 +6,9 @@
   <text id="b" x="20" y="20">b</text>
   <text id="a" x="20" y="30">a</text>
   <text id="y" x="20" y="40">y</text>
+  <text id="tspan">
+    <tspan x="20" y="20">b</tspan>
+  </text>
   <g id="v">
     <circle cx="100" cy="50" r="5"/>
     <path d="M 100,100 L 100,200"/>

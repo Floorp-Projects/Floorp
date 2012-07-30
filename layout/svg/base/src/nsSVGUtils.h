@@ -315,7 +315,7 @@ public:
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
    * must be an SVG frame. If aFrame is of type nsGkAtoms::svgOuterSVGFrame,
-   * returns nsnull.
+   * returns nullptr.
    */
   static nsSVGDisplayContainerFrame* GetNearestSVGViewport(nsIFrame *aFrame);
 
@@ -339,7 +339,7 @@ public:
    *   entire visual overflow rect.
    */
   static void InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate = false,
-                               const nsRect *aBoundsSubArea = nsnull,
+                               const nsRect *aBoundsSubArea = nullptr,
                                PRUint32 aFlags = 0);
 
   /**

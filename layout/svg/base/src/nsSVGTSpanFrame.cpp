@@ -162,7 +162,7 @@ nsSVGTSpanFrame::GetNextGlyphFrame()
   
   NS_ASSERTION(GetParent(), "null parent");
   nsISVGGlyphFragmentNode *node = do_QueryFrame(GetParent());
-  return node ? node->GetNextGlyphFrame() : nsnull;
+  return node ? node->GetNextGlyphFrame() : nullptr;
 }
 
 NS_IMETHODIMP_(void)

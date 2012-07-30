@@ -180,7 +180,7 @@ SVGMotionSMILType::Destroy(nsSMILValue& aValue) const
   MotionSegmentArray* arr = static_cast<MotionSegmentArray*>(aValue.mU.mPtr);
   delete arr;
 
-  aValue.mU.mPtr = nsnull;
+  aValue.mU.mPtr = nullptr;
   aValue.mType = &nsSMILNullType::sSingleton;
 }
 

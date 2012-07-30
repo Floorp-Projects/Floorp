@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_BEGIN(nsBaseCommandController)
 NS_INTERFACE_MAP_END
 
 nsBaseCommandController::nsBaseCommandController()
-  : mCommandContextRawPtr(nsnull)
+  : mCommandContextRawPtr(nullptr)
 {
 }
 
@@ -47,8 +47,8 @@ nsBaseCommandController::Init(nsIControllerCommandTable *aCommandTable)
 NS_IMETHODIMP
 nsBaseCommandController::SetCommandContext(nsISupports *aCommandContext)
 {
-  mCommandContextWeakPtr = nsnull;
-  mCommandContextRawPtr = nsnull;
+  mCommandContextWeakPtr = nullptr;
+  mCommandContextRawPtr = nullptr;
 
   if (aCommandContext) {
     nsCOMPtr<nsISupportsWeakReference> weak = do_QueryInterface(aCommandContext);

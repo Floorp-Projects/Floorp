@@ -177,7 +177,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (aStreamListener) {
-    *aStreamListener = nsnull;
+    *aStreamListener = nullptr;
   }
 
   {
@@ -204,7 +204,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
 
   nsBuiltinDecoder* cloneDonor = static_cast<nsBuiltinDecoder*>(aCloneDonor);
   if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
-                                           cloneDonor->mDecoderStateMachine : nsnull))) {
+                                           cloneDonor->mDecoderStateMachine : nullptr))) {
     LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
     return NS_ERROR_FAILURE;
   }
@@ -257,7 +257,7 @@ nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(mDecoderStateMachine != nsnull, "Should have state machine.");
+  NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if (mPlayState == PLAY_STATE_SEEKING) {
@@ -386,7 +386,7 @@ double nsBuiltinDecoder::GetCurrentTime()
 already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  return mResource ? mResource->GetCurrentPrincipal() : nsnull;
+  return mResource ? mResource->GetCurrentPrincipal() : nullptr;
 }
 
 void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,

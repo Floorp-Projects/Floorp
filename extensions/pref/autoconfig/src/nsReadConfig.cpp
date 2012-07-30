@@ -67,7 +67,7 @@ static void DisplayError(void)
     if (NS_FAILED(rv))
         return;
 
-    promptService->Alert(nsnull, title.get(), err.get());
+    promptService->Alert(nullptr, title.get(), err.get());
 }
 
 // nsISupports Implementation
@@ -131,7 +131,7 @@ nsresult nsReadConfig::readConfigFile()
     if (NS_FAILED(rv))
         return rv;
 
-    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(defaultPrefBranch));
+    rv = prefService->GetDefaultBranch(nullptr, getter_AddRefs(defaultPrefBranch));
     if (NS_FAILED(rv))
         return rv;
         
@@ -176,7 +176,7 @@ nsresult nsReadConfig::readConfigFile()
     // of the cfg file meaning the file can not be renamed (successfully).
 
     nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    rv = prefService->GetBranch(nullptr, getter_AddRefs(prefBranch));
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 obscureValue = 0;
@@ -264,7 +264,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
         location += aFileName;
 
         nsCOMPtr<nsIURI> uri;
-        rv = ioService->NewURI(location, nsnull, nsnull, getter_AddRefs(uri));
+        rv = ioService->NewURI(location, nullptr, nullptr, getter_AddRefs(uri));
         if (NS_FAILED(rv))
             return rv;
 

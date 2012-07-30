@@ -33,7 +33,7 @@ nsresult
 GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
                                  txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     if (!requireParams(0, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 

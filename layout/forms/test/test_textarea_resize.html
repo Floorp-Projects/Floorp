@@ -10,7 +10,7 @@
 <div id="content" style="display: none">
 </div>
 
-<textarea id="textarea" style="-moz-appearance: none; border: 2px solid black; padding: 3px; -moz-box-sizing: border-box;">Text</textarea>
+<textarea id="textarea" style="-moz-appearance: none; border: 2px solid black; padding: 3px; -moz-box-sizing: border-box; min-width: 15px; min-height: 15px;">Text</textarea>
 
 <pre id="test">
 <script type="application/javascript">
@@ -19,50 +19,59 @@
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() SimpleTest.executeSoon(doTheTest));
 
-// First, test the default value which is 'both', then test explicitly
+// -1 means use the default value which is 'both', then test explicitly
 // setting each possible value.
-var currentResize = "both";
+var currentResize = -1;
 var currentBoxSizing = 0;
+var currentPointer = 0;
 var resizeTypes = [ "horizontal", "vertical", "none", "inherit", "both" ];
 var boxSizingTypes = [ "", "border-box", "padding-box" ];
+var pointerTypes = [ synthesizeMouse, synthesizeTouch]
 
 function doTheTest() {
+  runTest(pointerTypes[currentPointer]);
+}
+
+function runTest(aPointerFunc) {
   var boxSizingText = " with box sizing " + (currentBoxSizing ? boxSizingTypes[currentBoxSizing] : "content-box");
 
   var textarea = $("textarea");
   var rect = textarea.getBoundingClientRect();
+  var touch = aPointerFunc.name.match(/Touch/);
+  // -1 means use the default value of resize, i.e. "both"
+  var type = (currentResize == -1) ? "both" : resizeTypes[currentResize];
   // assume that the resizer is in the lower right corner
 
-  synthesizeMouse(textarea, rect.width - 10, rect.height - 10, { type:"mousedown" });
-  synthesizeMouse(textarea, rect.width + 40, rect.height + 40, { type:"mousemove" });
+  aPointerFunc(textarea, rect.width - 10, rect.height - 10, { type: touch ? "touchstart" : "mousedown" });
+  aPointerFunc(textarea, rect.width + 40, rect.height + 40, { type: touch ? "touchmove" : "mousemove" });
 
   var newrect = textarea.getBoundingClientRect();
-  var hchange = (currentResize == "both" || currentResize == "horizontal");
-  var vchange = (currentResize == "both" || currentResize == "vertical");
+  var hchange = (type == "both" || type == "horizontal");
+  var vchange = (type == "both" || type == "vertical");
 
   is(Math.round(newrect.width), Math.round(rect.width + (hchange ? 50 : 0)),
-     currentResize + " width has increased" + boxSizingText);
+     type + " width has increased" + boxSizingText + " using " + aPointerFunc.name);
   is(Math.round(newrect.height), Math.round(rect.height + (vchange ? 50 : 0)),
-     currentResize + " height has increased" + boxSizingText);
+     type + " height has increased" + boxSizingText + " using " + aPointerFunc.name);
 
-  synthesizeMouse(textarea, rect.width - 20, rect.height - 20, { type:"mousemove" });
+  aPointerFunc(textarea, rect.width - 20, rect.height - 20, { type: touch ? "touchmove" : "mousemove" });
 
   newrect = textarea.getBoundingClientRect();
 
   is(Math.round(newrect.width), Math.round(rect.width - (hchange ? 10 : 0)),
-     currentResize + " width has decreased" + boxSizingText);
+     type + " width has decreased" + boxSizingText + " using " + aPointerFunc.name);
   is(Math.round(newrect.height), Math.round(rect.height - (vchange ? 10 : 0)),
-     currentResize + " height has decreased" + boxSizingText);
+     type + " height has decreased" + boxSizingText + " using " + aPointerFunc.name);
 
-  synthesizeMouse(textarea, rect.width - 220, rect.height - 220, { type:"mousemove" });
+  aPointerFunc(textarea, rect.width - 220, rect.height - 220, { type: touch ? "touchmove" : "mousemove" });
 
   newrect = textarea.getBoundingClientRect();
   ok(hchange ? newrect.width >= 15 : Math.round(newrect.width) == Math.round(rect.width),
-     currentResize + " width decreased below minimum" + boxSizingText);
+     type + " width decreased below minimum" + boxSizingText + " using " + newrect.width);
   ok(vchange ? newrect.height >= 15 : Math.round(newrect.height) == Math.round(rect.height),
-     currentResize + " height decreased below minimum" + boxSizingText);
+     type + " height decreased below minimum" + boxSizingText + " using " + aPointerFunc.name);
 
-  synthesizeMouse(textarea, rect.width - 8, rect.height - 8, { type:"mouseup" });
+  aPointerFunc(textarea, rect.width - 8, rect.height - 8, { type: touch ? "touchend" : "mouseup" });
 
   textarea.style.width = "auto";
   textarea.style.height = "auto";
@@ -70,16 +79,19 @@ function doTheTest() {
   if (currentBoxSizing++ <= boxSizingTypes.length) {
     textarea.style.MozBoxSizing = boxSizingTypes[currentBoxSizing];
     SimpleTest.executeSoon(doTheTest);
-  }
-  else {
+  } else {
     currentBoxSizing = 0;
-    currentResize = resizeTypes.shift();
-    if (currentResize) {
-      textarea.style.resize = currentResize;
+    if (++currentResize < resizeTypes.length) {
+      textarea.style.resize = resizeTypes[currentResize];
       SimpleTest.executeSoon(doTheTest);
-    }
-    else {
-      SimpleTest.finish();
+    } else {
+      currentResize = -1;
+      textarea.style.resize = "";
+      if (++currentPointer < pointerTypes.length) {
+        SimpleTest.executeSoon(doTheTest);
+      } else {
+        SimpleTest.finish();
+      }
     }
   }
 }

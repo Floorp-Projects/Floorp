@@ -31,6 +31,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/StaticPtr.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -167,7 +168,7 @@ public:
   NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
   // END NS_DECL_IMGICONTAINER
 
-  RasterImage(imgStatusTracker* aStatusTracker = nsnull);
+  RasterImage(imgStatusTracker* aStatusTracker = nullptr);
   virtual ~RasterImage();
 
   virtual nsresult StartAnimation();
@@ -425,7 +426,7 @@ private:
     NS_IMETHOD Run();
 
   private: /* statics */
-    static nsRefPtr<DecodeWorker> sSingleton;
+    static StaticRefPtr<DecodeWorker> sSingleton;
 
   private: /* methods */
     DecodeWorker()

@@ -234,13 +234,13 @@ protected:
                 (new(mBuf) implementation_type(traits::sEmptyBuffer, PRUint32(0)))->
                     SetIsVoid(behavior != eEmpty);
                 mValid = true;
-                return nsnull;
+                return nullptr;
             }
 
             s = JS_ValueToString(cx, v);
             if (!s) {
                 mValid = false;
-                return nsnull;
+                return nullptr;
             }
             *pval = STRING_TO_JSVAL(s);  // Root the new string.
         }
@@ -307,7 +307,7 @@ public:
 
 struct xpc_qsSelfRef
 {
-    xpc_qsSelfRef() : ptr(nsnull) {}
+    xpc_qsSelfRef() : ptr(nullptr) {}
     explicit xpc_qsSelfRef(nsISupports *p) : ptr(p) {}
     ~xpc_qsSelfRef() { NS_IF_RELEASE(ptr); }
 
@@ -392,7 +392,7 @@ xpc_qsUnwrapThis(JSContext *cx,
         return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 
     if (NS_FAILED(rv))
-        *ppThis = nsnull;
+        *ppThis = nullptr;
     return true;
 }
 
@@ -413,12 +413,12 @@ castNativeFromWrapper(JSContext *cx,
         cur = obj;
         wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
                   (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
-                  nsnull;
-        tearoff = nsnull;
+                  nullptr;
+        tearoff = nullptr;
     } else {
         *rv = getWrapper(cx, obj, &wrapper, &cur, &tearoff);
         if (NS_FAILED(*rv))
-            return nsnull;
+            return nullptr;
     }
 
     nsISupports *native;
@@ -428,22 +428,22 @@ castNativeFromWrapper(JSContext *cx,
     } else if (cur && IS_SLIM_WRAPPER(cur)) {
         native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
     } else {
-        native = nsnull;
+        native = nullptr;
     }
 
     *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
 
     if (!native)
-        return nsnull;
+        return nullptr;
 
     NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(cur)), "Not a wrapper?");
 
     XPCWrappedNativeJSClass *clasp =
       (XPCWrappedNativeJSClass*)js::GetObjectClass(cur);
     if (!(clasp->interfacesBitmap & (1 << interfaceBit)))
-        return nsnull;
+        return nullptr;
 
-    *pRef = nsnull;
+    *pRef = nullptr;
     *pVal = OBJECT_TO_JSVAL(cur);
 
     if (lccx) {
@@ -514,9 +514,9 @@ castNativeArgFromWrapper(JSContext *cx,
 {
     JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
     if (!src)
-        return nsnull;
+        return nullptr;
 
-    return castNativeFromWrapper(cx, src, bit, pArgRef, vp, nsnull, rv);
+    return castNativeFromWrapper(cx, src, bit, pArgRef, vp, nullptr, rv);
 }
 
 inline nsWrapperCache*
@@ -534,7 +534,7 @@ xpc_qsGetWrapperCache(nsGlobalWindow *not_allowed);
 inline nsWrapperCache*
 xpc_qsGetWrapperCache(void *p)
 {
-    return nsnull;
+    return nullptr;
 }
 
 /** Convert an XPCOM pointer to jsval. Return true on success.
@@ -642,7 +642,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, unsigned argc, Op pop)
     JSFunction *fun =
         js::NewFunctionByIdWithReserved(cx, PropertyOpForwarder<Op>, argc, 0, obj, id);
     if (!fun)
-        return nsnull;
+        return nullptr;
 
     JSObject *funobj = JS_GetFunctionObject(fun);
 
@@ -650,12 +650,12 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, unsigned argc, Op pop)
 
     // Unfortunately, we cannot guarantee that Op is aligned. Use a
     // second object to work around this.
-    JSObject *ptrobj = JS_NewObject(cx, &PointerHolderClass, nsnull, funobj);
+    JSObject *ptrobj = JS_NewObject(cx, &PointerHolderClass, nullptr, funobj);
     if (!ptrobj)
-        return nsnull;
+        return nullptr;
     Op *popp = new Op;
     if (!popp)
-        return nsnull;
+        return nullptr;
     *popp = pop;
     JS_SetPrivate(ptrobj, popp);
 

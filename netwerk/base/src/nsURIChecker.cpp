@@ -51,8 +51,8 @@ nsURIChecker::SetStatusAndCallBack(nsresult aStatus)
     if (mObserver) {
         mObserver->OnStartRequest(this, mObserverContext);
         mObserver->OnStopRequest(this, mObserverContext, mStatus);
-        mObserver = nsnull;
-        mObserverContext = nsnull;
+        mObserver = nullptr;
+        mObserverContext = nullptr;
     }
 }
 
@@ -176,9 +176,9 @@ nsURIChecker::AsyncCheck(nsIRequestObserver *aObserver,
     mChannel->SetNotificationCallbacks(this);
     
     // and start the request:
-    nsresult rv = mChannel->AsyncOpen(this, nsnull);
+    nsresult rv = mChannel->AsyncOpen(this, nullptr);
     if (NS_FAILED(rv))
-        mChannel = nsnull;
+        mChannel = nullptr;
     else {
         // ok, wait for OnStartRequest to fire.
         mIsPending = true;
@@ -296,7 +296,7 @@ nsURIChecker::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     if (mChannel == request) {
         // break reference cycle between us and the channel (see comment in
         // AsyncCheckURI)
-        mChannel = nsnull;
+        mChannel = nullptr;
     }
     return NS_OK;
 }

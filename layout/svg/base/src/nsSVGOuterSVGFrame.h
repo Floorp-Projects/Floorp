@@ -152,7 +152,7 @@ protected:
    * embedded in an HTML 'object', 'embed' or 'applet' element. Set
    * aEmbeddingFrame to obtain the nsIFrame for the embedding HTML element.
    */
-  bool IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame = nsnull);
+  bool IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame = nullptr);
 
   /* Returns true if our content is the document element and our document is
    * being used as an image.

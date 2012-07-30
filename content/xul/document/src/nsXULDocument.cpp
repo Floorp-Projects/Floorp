@@ -221,7 +221,7 @@ nsXULDocument::nsXULDocument(void)
 
 nsXULDocument::~nsXULDocument()
 {
-    NS_ASSERTION(mNextSrcLoadWaiter == nsnull,
+    NS_ASSERTION(mNextSrcLoadWaiter == nullptr,
         "unreferenced document still waiting for script source to load?");
 
     // In case we failed somewhere early on and the forward observer
@@ -263,7 +263,7 @@ nsXULDocument::~nsXULDocument()
 nsresult
 NS_NewXULDocument(nsIXULDocument** result)
 {
-    NS_PRECONDITION(result != nsnull, "null ptr");
+    NS_PRECONDITION(result != nullptr, "null ptr");
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
@@ -352,7 +352,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
     delete tmp->mTemplateBuilderTable;
-    tmp->mTemplateBuilderTable = nsnull;
+    tmp->mTemplateBuilderTable = nullptr;
 
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCommandDispatcher)
     //XXX We should probably unlink all the objects we traverse.
@@ -462,7 +462,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // already.
     nsXULPrototypeDocument* proto = IsChromeURI(mDocumentURI) ?
             nsXULPrototypeCache::GetInstance()->GetPrototype(mDocumentURI) :
-            nsnull;
+            nullptr;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::ResumeWalk
@@ -806,12 +806,12 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
         PL_DHashMoveEntryStub,
         ClearBroadcasterMapEntry,
         PL_DHashFinalizeStub,
-        nsnull
+        nullptr
     };
 
     if (! mBroadcasterMap) {
         mBroadcasterMap =
-            PL_NewDHashTable(&gOps, nsnull, sizeof(BroadcasterMapEntry),
+            PL_NewDHashTable(&gOps, nullptr, sizeof(BroadcasterMapEntry),
                              PL_DHASH_MIN_SIZE);
 
         if (! mBroadcasterMap)
@@ -956,7 +956,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsEventDispatcher::Dispatch(child, aPresContext, &event, nsnull,
+            nsEventDispatcher::Dispatch(child, aPresContext, &event, nullptr,
                                         &status);
         }
     }
@@ -1348,7 +1348,7 @@ nsXULDocument::IsCapabilityEnabled(const char* aCapabilityLabel)
 
     // NodePrincipal is guarantied to be non-null
     bool enabled = false;
-    rv = NodePrincipal()->IsCapabilityEnabled(aCapabilityLabel, nsnull, &enabled);
+    rv = NodePrincipal()->IsCapabilityEnabled(aCapabilityLabel, nullptr, &enabled);
     if (NS_FAILED(rv))
         return false;
  
@@ -1511,7 +1511,7 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
 {
-    *aNode = nsnull;
+    *aNode = nullptr;
 
     nsCOMPtr<nsIDOMNode> node;
     nsCOMPtr<nsPIWindowRoot> rootWin = GetWindowRoot();
@@ -1553,7 +1553,7 @@ NS_IMETHODIMP
 nsXULDocument::GetPopupRangeParent(nsIDOMNode** aRangeParent)
 {
     NS_ENSURE_ARG_POINTER(aRangeParent);
-    *aRangeParent = nsnull;
+    *aRangeParent = nullptr;
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (!pm)
@@ -1595,7 +1595,7 @@ nsXULDocument::GetPopupRangeOffset(PRInt32* aRangeOffset)
 NS_IMETHODIMP
 nsXULDocument::GetTooltipNode(nsIDOMNode** aNode)
 {
-    *aNode = nsnull;
+    *aNode = nullptr;
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
@@ -1627,7 +1627,7 @@ Element*
 nsXULDocument::GetElementById(const nsAString& aId)
 {
     if (!CheckGetElementByIdArg(aId))
-        return nsnull;
+        return nullptr;
 
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
     if (entry) {
@@ -1642,7 +1642,7 @@ nsXULDocument::GetElementById(const nsAString& aId)
                      "nsRefMapEntries should have nonempty content lists");
         return refEntry->GetFirstElement();
     }
-    return nsnull;
+    return nullptr;
 }
 
 nsresult
@@ -1799,7 +1799,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
                               nsGkAtoms::_true, eCaseMatters)) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-        NS_ASSERTION(domelement != nsnull, "not a DOM element");
+        NS_ASSERTION(domelement != nullptr, "not a DOM element");
         if (! domelement)
             return NS_ERROR_UNEXPECTED;
 
@@ -1850,7 +1850,7 @@ nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent,
         mTemplateBuilderTable->Get(aContent, aResult);
     }
     else
-        *aResult = nsnull;
+        *aResult = nullptr;
 
     return NS_OK;
 }
@@ -1907,7 +1907,7 @@ NS_IMETHODIMP
 nsXULDocument::CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode** aReturn)
 {
     // We don't allow cloning of a document
-    *aReturn = nsnull;
+    *aReturn = nullptr;
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -1978,17 +1978,17 @@ nsXULDocument::StartLayout(void)
     if (shell) {
         // Resize-reflow this time
         nsPresContext *cx = shell->GetPresContext();
-        NS_ASSERTION(cx != nsnull, "no pres context");
+        NS_ASSERTION(cx != nullptr, "no pres context");
         if (! cx)
             return NS_ERROR_UNEXPECTED;
 
         nsCOMPtr<nsISupports> container = cx->GetContainer();
-        NS_ASSERTION(container != nsnull, "pres context has no container");
+        NS_ASSERTION(container != nullptr, "pres context has no container");
         if (! container)
             return NS_ERROR_UNEXPECTED;
 
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-        NS_ASSERTION(docShell != nsnull, "container is not a docshell");
+        NS_ASSERTION(docShell != nullptr, "container is not a docshell");
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
@@ -2070,7 +2070,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 
     rv = mCurrentPrototype->InitPrincipal(aURI, aDocumentPrincipal);
     if (NS_FAILED(rv)) {
-        mCurrentPrototype = nsnull;
+        mCurrentPrototype = nullptr;
         return rv;
     }    
 
@@ -2258,7 +2258,7 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
 //
 
 nsXULDocument::ContextStack::ContextStack()
-    : mTop(nsnull), mDepth(0)
+    : mTop(nullptr), mDepth(0)
 {
 }
 
@@ -2529,7 +2529,7 @@ nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
     // Add the overlay to our list of overlays that need to be processed.
     nsCOMPtr<nsIURI> uri;
 
-    rv = NS_NewURI(getter_AddRefs(uri), href, nsnull,
+    rv = NS_NewURI(getter_AddRefs(uri), href, nullptr,
                    mCurrentPrototype->GetURI());
     if (NS_SUCCEEDED(rv)) {
         // We insert overlays into mUnloadedOverlays at the same index in
@@ -2598,11 +2598,11 @@ nsXULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURL, nsnull);
+    rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr);
     if (NS_FAILED(rv)) return rv;
 
     if (aObserver) {
-        nsIObserver* obs = nsnull;
+        nsIObserver* obs = nullptr;
         if (!mOverlayLoadObservers.IsInitialized()) {
             mOverlayLoadObservers.Init();
         }
@@ -2672,7 +2672,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     // the cached document will, see bug 565610.
     bool overlayIsChrome = IsChromeURI(aURI);
     mCurrentPrototype = overlayIsChrome && documentIsChrome ?
-        nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nsnull;
+        nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nullptr;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::StartDocumentLoad
@@ -2725,7 +2725,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
         // OnStartRequest from the parser, so just pass in a null principal for
         // now.
         nsCOMPtr<nsIParser> parser;
-        rv = PrepareToLoadPrototype(aURI, "view", nsnull, getter_AddRefs(parser));
+        rv = PrepareToLoadPrototype(aURI, "view", nullptr, getter_AddRefs(parser));
         if (NS_FAILED(rv)) return rv;
 
         // Predicate mIsWritingFastLoad on the XUL cache being enabled,
@@ -2751,7 +2751,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         nsCOMPtr<nsIChannel> channel;
-        rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, group);
+        rv = NS_NewChannel(getter_AddRefs(channel), aURI, nullptr, group);
 
         if (NS_SUCCEEDED(rv)) {
             // Set the owner of the channel to be our principal so
@@ -2760,12 +2760,12 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
             // compartment.
             channel->SetOwner(NodePrincipal());
 
-            rv = channel->AsyncOpen(listener, nsnull);
+            rv = channel->AsyncOpen(listener, nullptr);
         }
 
         if (NS_FAILED(rv)) {
             // Abandon this prototype
-            mCurrentPrototype = nsnull;
+            mCurrentPrototype = nullptr;
 
             // The parser won't get an OnStartRequest and
             // OnStopRequest, so it needs a Terminate.
@@ -2829,7 +2829,7 @@ nsXULDocument::ResumeWalk()
     // cached copy of the document becomes stale.
     nsresult rv;
     nsCOMPtr<nsIURI> overlayURI =
-        mCurrentPrototype ? mCurrentPrototype->GetURI() : nsnull;
+        mCurrentPrototype ? mCurrentPrototype->GetURI() : nullptr;
 
     while (1) {
         // Begin (or resume) walking the current prototype.
@@ -2868,7 +2868,7 @@ nsXULDocument::ResumeWalk()
                                                "nsIStyleSheetLinkingElement?");
                             bool willNotify;
                             bool isAlternate;
-                            ssle->UpdateStyleSheet(nsnull, &willNotify,
+                            ssle->UpdateStyleSheet(nullptr, &willNotify,
                                                    &isAlternate);
                         }
                     }
@@ -3020,7 +3020,7 @@ nsXULDocument::ResumeWalk()
 
                     nsContentUtils::ReportToConsole(
                                         nsIScriptError::warningFlag,
-                                        "XUL Document", nsnull,
+                                        "XUL Document", nullptr,
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
                                         params, ArrayLength(params),
@@ -3395,9 +3395,9 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
         // Note: the loader will keep itself alive while it's loading.
         nsCOMPtr<nsIStreamLoader> loader;
         rv = NS_NewStreamLoader(getter_AddRefs(loader), aScriptProto->mSrcURI,
-                                this, nsnull, group);
+                                this, nullptr, group);
         if (NS_FAILED(rv)) {
-            mCurrentScriptProto = nsnull;
+            mCurrentScriptProto = nullptr;
             return rv;
         }
 
@@ -3453,7 +3453,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
     // the compile/execute code, and in the while loop that resumes walks
     // of other documents that raced to load this script
     nsXULPrototypeScript* scriptProto = mCurrentScriptProto;
-    mCurrentScriptProto = nsnull;
+    mCurrentScriptProto = nullptr;
 
     // Clear the prototype's loading flag before executing the script or
     // resuming document walks, in case any of those control flows starts a
@@ -3530,14 +3530,14 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                 nsIScriptGlobalObject* global =
                     mCurrentPrototype->GetScriptGlobalObject();
 
-                NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
+                NS_ASSERTION(global != nullptr, "master prototype w/o global?!");
                 if (global) {
                     nsIScriptContext *scriptContext = \
                           global->GetScriptContext();
-                    NS_ASSERTION(scriptContext != nsnull,
+                    NS_ASSERTION(scriptContext != nullptr,
                                  "Failed to get script context for language");
                     if (scriptContext)
-                        scriptProto->SerializeOutOfLine(nsnull, global);
+                        scriptProto->SerializeOutOfLine(nullptr, global);
                 }
             }
         }
@@ -3553,14 +3553,14 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
     // Resume walking other documents that waited for this one's load, first
     // executing the script we just compiled, in each doc's script context
     nsXULDocument* doc;
-    while ((doc = *docp) != nsnull) {
+    while ((doc = *docp) != nullptr) {
         NS_ASSERTION(doc->mCurrentScriptProto == scriptProto,
                      "waiting for wrong script to load?");
-        doc->mCurrentScriptProto = nsnull;
+        doc->mCurrentScriptProto = nullptr;
 
         // Unlink doc from scriptProto's list before executing and resuming
         *docp = doc->mNextSrcLoadWaiter;
-        doc->mNextSrcLoadWaiter = nsnull;
+        doc->mNextSrcLoadWaiter = nullptr;
 
         // Execute only if we loaded and compiled successfully, then resume
         if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject &&
@@ -3578,7 +3578,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 nsresult
 nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObject)
 {
-    NS_PRECONDITION(aScriptObject != nsnull && aContext != nsnull, "null ptr");
+    NS_PRECONDITION(aScriptObject != nullptr && aContext != nullptr, "null ptr");
     if (! aScriptObject || ! aContext)
         return NS_ERROR_NULL_POINTER;
 
@@ -3586,13 +3586,13 @@ nsXULDocument::ExecuteScript(nsIScriptContext * aContext, JSScript* aScriptObjec
 
     // Execute the precompiled script with the given version
     JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
-    return aContext->ExecuteScript(aScriptObject, global, nsnull, nsnull);
+    return aContext->ExecuteScript(aScriptObject, global, nullptr, nullptr);
 }
 
 nsresult
 nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
 {
-    NS_PRECONDITION(aScript != nsnull, "null ptr");
+    NS_PRECONDITION(aScript != nullptr, "null ptr");
     NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
     NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
 
@@ -3603,7 +3603,7 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     nsCOMPtr<nsIScriptContext> context =
       mScriptGlobalObject->GetScriptContext();
     // failure getting a script context is fatal.
-    NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(context != nullptr, NS_ERROR_UNEXPECTED);
 
     if (aScript->mScriptObject.mObject)
         rv = ExecuteScript(context, aScript->mScriptObject.mObject);
@@ -3618,11 +3618,11 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                           Element** aResult)
 {
     // Create a content model element from a prototype element.
-    NS_PRECONDITION(aPrototype != nsnull, "null ptr");
+    NS_PRECONDITION(aPrototype != nullptr, "null ptr");
     if (! aPrototype)
         return NS_ERROR_NULL_POINTER;
 
-    *aResult = nsnull;
+    *aResult = nullptr;
     nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
@@ -3798,7 +3798,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         if (! bodyContent) {
             nsresult rv =
                 document->CreateElem(nsDependentAtomString(nsGkAtoms::treechildren),
-                                     nsnull, kNameSpaceID_XUL,
+                                     nullptr, kNameSpaceID_XUL,
                                      getter_AddRefs(bodyContent));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4022,7 +4022,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         nsIAtom *idAtom = currContent->GetID();
 
-        nsIContent *elementInDocument = nsnull;
+        nsIContent *elementInDocument = nullptr;
         if (idAtom) {
             nsDependentAtomString id(idAtom);
 
@@ -4224,8 +4224,8 @@ nsXULDocument::FindBroadcaster(Element* aElement,
 {
     nsresult rv;
     nsINodeInfo *ni = aElement->NodeInfo();
-    *aListener = nsnull;
-    *aBroadcaster = nsnull;
+    *aListener = nullptr;
+    *aBroadcaster = nullptr;
 
     if (ni->Equals(nsGkAtoms::observes, kNameSpaceID_XUL)) {
         // It's an <observes> element, which means that the actual
@@ -4247,7 +4247,7 @@ nsXULDocument::FindBroadcaster(Element* aElement,
         }
 
         if (NS_FAILED(CallQueryInterface(parent, aListener)))
-            *aListener = nsnull;
+            *aListener = nullptr;
 
         aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::element, aBroadcasterID);
         if (aBroadcasterID.IsEmpty()) {
@@ -4282,7 +4282,7 @@ nsXULDocument::FindBroadcaster(Element* aElement,
         }
 
         if (NS_FAILED(CallQueryInterface(aElement, aListener)))
-            *aListener = nsnull;
+            *aListener = nullptr;
 
         aAttribute.AssignLiteral("*");
     }
@@ -4345,7 +4345,7 @@ nsXULDocument::CheckBroadcasterHookup(Element* aElement,
         nsCOMPtr<nsIContent> content =
             do_QueryInterface(listener);
 
-        NS_ASSERTION(content != nsnull, "not an nsIContent");
+        NS_ASSERTION(content != nullptr, "not an nsIContent");
         if (! content)
             return rv;
 
@@ -4387,7 +4387,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild,
     if (!posStr.IsEmpty()) {
         nsIDocument *document = aParent->OwnerDoc();
 
-        nsIContent *content = nsnull;
+        nsIContent *content = nullptr;
 
         char* str = ToNewCString(posStr);
         char* rest;
@@ -4542,7 +4542,7 @@ nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
         }
 
         // Make sure to avoid cycles
-        mPrototype = nsnull;
+        mPrototype = nullptr;
     }
         
     return NS_OK;
@@ -4573,7 +4573,7 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
     // Drop the reference to the document to break cycle between the
     // document, the parser, the content sink, and the parser
     // observer.
-    mDocument = nsnull;
+    mDocument = nullptr;
 
     return rv;
 }
@@ -4584,7 +4584,7 @@ nsXULDocument::GetWindowRoot()
     nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
     nsCOMPtr<nsIDOMWindow> window(do_GetInterface(ir));
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(window));
-    return piWin ? piWin->GetTopWindowRoot() : nsnull;
+    return piWin ? piWin->GetTopWindowRoot() : nullptr;
 }
 
 bool
@@ -4595,7 +4595,7 @@ nsXULDocument::IsDocumentRightToLeft()
     Element* element = GetRootElement();
     if (element) {
         static nsIContent::AttrValuesArray strings[] =
-            {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
+            {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nullptr};
         switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
                                          strings, eCaseMatters)) {
             case 0: return false;

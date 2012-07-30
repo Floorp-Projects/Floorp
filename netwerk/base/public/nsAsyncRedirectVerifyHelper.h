@@ -114,7 +114,7 @@ public:
      */
     void DontCallback()
     {
-        mCallback = nsnull;
+        mCallback = nullptr;
     }
 private:
     nsIAsyncVerifyRedirectCallback* mCallback;

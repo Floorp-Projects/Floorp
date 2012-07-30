@@ -14,33 +14,24 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testCloseButton, false);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, testCloseButton);
+  }, true);
 }
 
-function testCloseButton() {
-  browser.removeEventListener("DOMContentLoaded", testCloseButton, false);
-
-  openConsole();
-
-  let hud = HUDService.getHudByWindow(content);
+function testCloseButton(hud) {
   let hudId = hud.hudId;
-
   HUDService.disableAnimation(hudId);
-  executeSoon(function() {
-    let closeButton = hud.HUDBox.querySelector(".webconsole-close-button");
+  waitForFocus(function() {
+    let closeButton = hud.ui.closeButton;
     ok(closeButton != null, "we have the close button");
 
-    // XXX: ASSERTION: ###!!! ASSERTION: XPConnect is being called on a scope without a 'Components' property!: 'Error', file /home/ddahl/code/moz/mozilla-central/mozilla-central/js/src/xpconnect/src/xpcwrappednativescope.cpp, line 795
+    EventUtils.synthesizeMouse(closeButton, 2, 2, {}, hud.iframeWindow);
 
-    closeButton.addEventListener("command", function() {
-      closeButton.removeEventListener("command", arguments.callee, false);
+    ok(!(hudId in HUDService.hudReferences), "the console is closed when " +
+       "the close button is pressed");
 
-      ok(!(hudId in HUDService.hudReferences), "the console is closed when " +
-         "the close button is pressed");
-      closeButton = null;
-      finishTest();
-    }, false);
-
-    EventUtils.synthesizeMouse(closeButton, 2, 2, {});
-  });
+    finishTest();
+  }, hud.iframeWindow);
 }

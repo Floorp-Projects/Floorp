@@ -172,7 +172,7 @@ nsHTMLScriptElement::ParseAttribute(PRInt32 aNamespaceID,
 nsresult
 nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsHTMLScriptElement* it =

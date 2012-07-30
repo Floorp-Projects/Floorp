@@ -117,3 +117,29 @@ def WebIDLTest(parser, harness):
                 "doFloats",
        [("Float",
         [("::TestMethods::doFloats::arg1", "arg1", "Float", False, False)])])
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [GetterInfallible] void foo();
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should not allow [GetterInfallible] on methods")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [SetterInfallible] void foo();
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should not allow [SetterInfallible] on methods")

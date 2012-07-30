@@ -133,7 +133,7 @@ public:
   /**
    * Get the entry associated with a key.
    * @param     aKey the key to retrieve
-   * @return    pointer to the entry class, if the key exists; nsnull if the
+   * @return    pointer to the entry class, if the key exists; nullptr if the
    *            key doesn't exist
    */
   EntryType* GetEntry(KeyType aKey) const
@@ -146,7 +146,7 @@ public:
                             const_cast<PLDHashTable*>(&mTable),
                             EntryType::KeyToPointer(aKey),
                             PL_DHASH_LOOKUP));
-    return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry : nsnull;
+    return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry : nullptr;
   }
 
   /**
@@ -162,7 +162,7 @@ public:
   /**
    * Get the entry associated with a key, or create a new entry,
    * @param     aKey the key to retrieve
-   * @return    pointer to the entry class retreived; nsnull only if memory
+   * @return    pointer to the entry class retreived; nullptr only if memory
                 can't be allocated
    */
   EntryType* PutEntry(KeyType aKey)
@@ -244,7 +244,7 @@ public:
   {
     NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
 
-    PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nsnull);
+    PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nullptr);
   }
 
   /**
@@ -411,7 +411,7 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize, const fallible_t&)
     sOps.moveEntry = s_CopyEntry;
   }
   
-  if (!PL_DHashTableInit(&mTable, &sOps, nsnull, sizeof(EntryType), initSize))
+  if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), initSize))
   {
     // if failed, reset "flag"
     mTable.entrySize = 0;

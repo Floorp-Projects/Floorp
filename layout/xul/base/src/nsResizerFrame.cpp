@@ -62,9 +62,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   bool doDefault = true;
 
   switch (aEvent->message) {
+    case NS_TOUCH_START:
     case NS_MOUSE_BUTTON_DOWN: {
-      if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
+      if (aEvent->eventStructType == NS_TOUCH_EVENT ||
+          (aEvent->eventStructType == NS_MOUSE_EVENT &&
+        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
       {
         nsCOMPtr<nsIBaseWindow> window;
         nsIPresShell* presShell = aPresContext->GetPresShell();
@@ -112,32 +114,38 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
                                      &mMouseDownRect.width, &mMouseDownRect.height);
         }
 
+        // remember current mouse coordinates
+        nsIntPoint refPoint;
+        if (!GetEventPoint(aEvent, refPoint))
+          return NS_OK;
+        mMouseDownPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
+
         // we're tracking
         mTrackingMouseMove = true;
-
-        // remember current mouse coordinates
-        mMouseDownPoint = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
 
         nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
       }
     }
     break;
 
+  case NS_TOUCH_END:
   case NS_MOUSE_BUTTON_UP: {
 
-    if (mTrackingMouseMove && aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
+      if (aEvent->eventStructType == NS_TOUCH_EVENT ||
+          (aEvent->eventStructType == NS_MOUSE_EVENT &&
+        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
     {
       // we're done tracking.
       mTrackingMouseMove = false;
 
-      nsIPresShell::SetCapturingContent(nsnull, 0);
+      nsIPresShell::SetCapturingContent(nullptr, 0);
 
       doDefault = false;
     }
   }
   break;
 
+  case NS_TOUCH_MOVE:
   case NS_MOUSE_MOVE: {
     if (mTrackingMouseMove)
     {
@@ -147,7 +155,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         GetContentToResize(presShell, getter_AddRefs(window));
 
       // check if the returned content really is a menupopup
-      nsMenuPopupFrame* menuPopupFrame = nsnull;
+      nsMenuPopupFrame* menuPopupFrame = nullptr;
       if (contentToResize) {
         nsIFrame* frameToResize = contentToResize->GetPrimaryFrame();
         if (frameToResize && frameToResize->GetType() == nsGkAtoms::menuPopupFrame) {
@@ -160,7 +168,10 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
       // retrieve the offset of the mousemove event relative to the mousedown.
       // The difference is how much the resize needs to be
-      nsIntPoint screenPoint(aEvent->refPoint + aEvent->widget->WidgetToScreenOffset());
+      nsIntPoint refPoint;
+      if (!GetEventPoint(aEvent, refPoint))
+        return NS_OK;
+      nsIntPoint screenPoint(refPoint + aEvent->widget->WidgetToScreenOffset());
       nsIntPoint mouseMove(screenPoint - mMouseDownPoint);
 
       // Determine which direction to resize by checking the dir attribute.
@@ -296,7 +307,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 nsIContent*
 nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow)
 {
-  *aWindow = nsnull;
+  *aWindow = nullptr;
 
   nsAutoString elementid;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::element, elementid);
@@ -326,7 +337,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
       // scrollbar which doesn't have a parent
       nsIContent* nonNativeAnon = mContent->FindFirstNonNativeAnonymous();
       if (!nonNativeAnon || nonNativeAnon->GetParent()) {
-        return nsnull;
+        return nullptr;
       }
     }
 
@@ -344,13 +355,13 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
       }
     }
 
-    return nsnull;
+    return nullptr;
   }
 
   if (elementid.EqualsLiteral("_parent")) {
     // return the parent, but skip over native anonymous content
     nsIContent* parent = mContent->GetParent();
-    return parent ? parent->FindFirstNonNativeAnonymous() : nsnull;
+    return parent ? parent->FindFirstNonNativeAnonymous() : nullptr;
   }
 
   return aPresShell->GetDocument()->GetElementById(elementid);
@@ -469,7 +480,7 @@ nsResizerFrame::RestoreOriginalSize(nsIContent* aContent)
 
   NS_ASSERTION(sizeInfo, "We set a null sizeInfo!?");
   Direction direction = {1, 1};
-  ResizeContent(aContent, direction, *sizeInfo, nsnull);
+  ResizeContent(aContent, direction, *sizeInfo, nullptr);
   aContent->DeleteProperty(nsGkAtoms::_moz_original_size);
 }
 
@@ -483,7 +494,7 @@ nsResizerFrame::GetDirection()
      &nsGkAtoms::left,                           &nsGkAtoms::right,
      &nsGkAtoms::bottomleft, &nsGkAtoms::bottom, &nsGkAtoms::bottomright,
      &nsGkAtoms::bottomstart,                    &nsGkAtoms::bottomend,
-     nsnull};
+     nullptr};
 
   static const Direction directions[] =
     {{-1, -1}, {0, -1}, {1, -1},

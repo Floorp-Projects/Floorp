@@ -8,7 +8,9 @@
 
 #include "XULTreeAccessible.h"
 #include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "xpcAccessibleTable.h"
+#include "xpcAccessibleTableCell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -120,7 +122,9 @@ protected:
 }
 
 class XULTreeGridCellAccessible : public LeafAccessible,
-                                  public nsIAccessibleTableCell
+                                  public nsIAccessibleTableCell,
+                                  public TableCellAccessible,
+                                  public xpcAccessibleTableCell
 {
 public:
 
@@ -143,13 +147,14 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsIAccessibleTableCell
-  NS_DECL_NSIACCESSIBLETABLECELL
+  NS_DECL_OR_FORWARD_NSIACCESSIBLETABLECELL_WITH_XPCACCESSIBLETABLECELL
 
   // nsAccessNode
   virtual bool Init();
   virtual bool IsPrimaryForNode() const;
 
   // Accessible
+  virtual void Shutdown();
   virtual ENameValueFlag Name(nsString& aName);
   virtual Accessible* FocusedChild();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
@@ -179,7 +184,7 @@ public:
 protected:
   // Accessible
   virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                         nsresult* aError = nsnull) const;
+                                         nsresult* aError = nullptr) const;
   virtual void DispatchClickEvent(nsIContent* aContent, PRUint32 aActionIndex);
 
   // XULTreeGridCellAccessible

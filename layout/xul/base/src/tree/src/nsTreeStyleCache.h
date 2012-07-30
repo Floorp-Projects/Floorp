@@ -64,10 +64,10 @@ public:
 class nsTreeStyleCache 
 {
 public:
-  nsTreeStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {}
+  nsTreeStyleCache() :mTransitionTable(nullptr), mCache(nullptr), mNextState(0) {}
   ~nsTreeStyleCache() { Clear(); }
 
-  void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; }
+  void Clear() { delete mTransitionTable; mTransitionTable = nullptr; delete mCache; mCache = nullptr; mNextState = 0; }
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext, 

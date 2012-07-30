@@ -46,10 +46,10 @@ nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 nsPNGDecoder::nsPNGDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver),
-   mPNG(nsnull), mInfo(nsnull),
-   mCMSLine(nsnull), interlacebuf(nsnull),
-   mInProfile(nsnull), mTransform(nsnull),
-   mHeaderBuf(nsnull), mHeaderBytesRead(0),
+   mPNG(nullptr), mInfo(nullptr),
+   mCMSLine(nullptr), interlacebuf(nullptr),
+   mInProfile(nullptr), mTransform(nullptr),
+   mHeaderBuf(nullptr), mHeaderBytesRead(0),
    mChannels(0), mFrameIsHidden(false),
    mCMSMode(0), mDisablePremultipliedAlpha(false)
 {
@@ -361,7 +361,7 @@ static qcms_profile *
 PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
                    int color_type, qcms_data_type *inType, PRUint32 *intent)
 {
-  qcms_profile *profile = nsnull;
+  qcms_profile *profile = nullptr;
   *intent = QCMS_INTENT_PERCEPTUAL; // Our default
 
   // First try to see if iCCP chunk is present
@@ -401,7 +401,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 
       if (mismatch) {
         qcms_profile_release(profile);
-        profile = nsnull;
+        profile = nullptr;
       } else {
         *intent = qcms_profile_get_rendering_intent(profile);
       }

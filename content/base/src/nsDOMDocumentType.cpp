@@ -30,7 +30,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   NS_ENSURE_ARG_POINTER(aName);
 
   nsCOMPtr<nsINodeInfo> ni =
-    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
+    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
                                   kNameSpaceID_None,
                                   nsIDOMNode::DOCUMENT_TYPE_NODE,
                                   aName);
@@ -86,7 +86,7 @@ nsDOMDocumentType::IsNodeOfType(PRUint32 aFlags) const
 const nsTextFragment*
 nsDOMDocumentType::GetText()
 {
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP    

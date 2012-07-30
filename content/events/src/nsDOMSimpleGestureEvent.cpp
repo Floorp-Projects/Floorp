@@ -7,7 +7,7 @@
 #include "nsDOMSimpleGestureEvent.h"
 
 nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(nsPresContext* aPresContext, nsSimpleGestureEvent* aEvent)
-  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent : new nsSimpleGestureEvent(false, 0, nsnull, 0, 0.0))
+  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent : new nsSimpleGestureEvent(false, 0, nullptr, 0, 0.0))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT, "event type mismatch");
 
@@ -25,7 +25,7 @@ nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
 {
   if (mEventIsInternal) {
     delete static_cast<nsSimpleGestureEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 
@@ -116,7 +116,7 @@ nsresult NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult,
                                      nsSimpleGestureEvent *aEvent)
 {
   nsDOMSimpleGestureEvent *it = new nsDOMSimpleGestureEvent(aPresContext, aEvent);
-  if (nsnull == it) {
+  if (nullptr == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return CallQueryInterface(it, aInstancePtrResult);

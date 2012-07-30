@@ -64,7 +64,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
                 printf("Service failed!\n");
                 return NS_ERROR_FAILURE;
             }   
-            result = pService->NewURI(nsDependentCString(i_pURL), nsnull, nsnull, getter_AddRefs(pURL));
+            result = pService->NewURI(nsDependentCString(i_pURL), nullptr, nullptr, getter_AddRefs(pURL));
         }
     }
 
@@ -252,7 +252,7 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 {
     if (i_URL && i_relativePortion)
     {
-        return makeAbsTest(i_URL, i_relativePortion, nsnull);
+        return makeAbsTest(i_URL, i_relativePortion, nullptr);
     }
 
     // Run standard tests. These tests are based on the ones described in 
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
     }
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
         // end of all messages from register components...
         printf("------------------\n\n");
@@ -450,6 +450,6 @@ int main(int argc, char **argv)
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     return rv;
 }

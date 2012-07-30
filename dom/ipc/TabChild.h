@@ -320,7 +320,7 @@ GetTabChildFrom(nsIPresShell* aPresShell)
 {
     nsIDocument* doc = aPresShell->GetDocument();
     if (!doc) {
-        return nsnull;
+        return nullptr;
     }
     nsCOMPtr<nsISupports> container = doc->GetContainer();
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));

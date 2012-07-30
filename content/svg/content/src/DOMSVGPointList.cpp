@@ -117,7 +117,7 @@ DOMSVGPointList::GetItemAt(PRUint32 aIndex)
     EnsureItemAt(aIndex);
     return mItems[aIndex];
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -159,7 +159,7 @@ DOMSVGPointList::InternalListWillChangeTo(const SVGPointList& aNewValue)
 
   // If our length has increased, null out the new pointers:
   for (PRUint32 i = oldLength; i < newLength; ++i) {
-    mItems[i] = nsnull;
+    mItems[i] = nullptr;
   }
 }
 
@@ -233,7 +233,7 @@ NS_IMETHODIMP
 DOMSVGPointList::Initialize(nsIDOMSVGPoint *aNewItem,
                             nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -275,7 +275,7 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
                                   PRUint32 aIndex,
                                   nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -326,7 +326,7 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
                              PRUint32 aIndex,
                              nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -368,7 +368,7 @@ NS_IMETHODIMP
 DOMSVGPointList::RemoveItem(PRUint32 aIndex,
                             nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -445,7 +445,7 @@ DOMSVGPointList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
   NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
                     "animVal list not in sync!");
 
-  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGPoint*>(nsnull));
+  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGPoint*>(nullptr));
 
   UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
 }

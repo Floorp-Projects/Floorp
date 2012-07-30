@@ -80,8 +80,8 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsIURI> uri = nsBaseChannel::URI();
-  *aStream = nsnull;
-  *aChannel = nsnull;
+  *aStream = nullptr;
+  *aChannel = nullptr;
   NS_NAMED_LITERAL_CSTRING(width, "width=");
   NS_NAMED_LITERAL_CSTRING(height, "height=");
 

@@ -57,9 +57,9 @@ static gfxMatrix sRotationMatrix;
 
 static nsRefPtr<GLContext> sGLContext;
 static nsTArray<nsWindow *> sTopWindows;
-static nsWindow *gWindowToRedraw = nsnull;
-static nsWindow *gFocusedWindow = nsnull;
-static android::FramebufferNativeWindow *gNativeWindow = nsnull;
+static nsWindow *gWindowToRedraw = nullptr;
+static nsWindow *gFocusedWindow = nullptr;
+static android::FramebufferNativeWindow *gNativeWindow = nullptr;
 static bool sFramebufferOpen;
 static bool sUsingOMTC;
 static bool sScreenInitialized;
@@ -67,6 +67,17 @@ static nsRefPtr<gfxASurface> sOMTCSurface;
 static pthread_t sFramebufferWatchThread;
 
 namespace {
+
+android::FramebufferNativeWindow*
+NativeWindow()
+{
+    if (!gNativeWindow) {
+        // We (apparently) don't have a way to tell if allocating the
+        // fbs succeeded or failed.
+        gNativeWindow = new android::FramebufferNativeWindow();
+    }
+    return gNativeWindow;
+}
 
 static PRUint32
 EffectiveScreenRotation()
@@ -149,10 +160,6 @@ nsWindow::nsWindow()
         if (pthread_create(&sFramebufferWatchThread, NULL, frameBufferWatcher, NULL)) {
             NS_RUNTIMEABORT("Failed to create framebufferWatcherThread, aborting...");
         }
-
-        // We (apparently) don't have a way to tell if allocating the
-        // fbs succeeded or failed.
-        gNativeWindow = new android::FramebufferNativeWindow();
 
         nsIntSize screenSize;
         bool gotFB = Framebuffer::GetSize(&screenSize);
@@ -302,9 +309,9 @@ nsWindow::Destroy(void)
 {
     sTopWindows.RemoveElement(this);
     if (this == gWindowToRedraw)
-        gWindowToRedraw = nsnull;
+        gWindowToRedraw = nullptr;
     if (this == gFocusedWindow)
-        gFocusedWindow = nsnull;
+        gFocusedWindow = nullptr;
     return NS_OK;
 }
 
@@ -455,11 +462,11 @@ nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch (aDataType) {
     case NS_NATIVE_WINDOW:
-        return gNativeWindow;
+        return NativeWindow();
     case NS_NATIVE_WIDGET:
         return this;
     }
-    return nsnull;
+    return nullptr;
 }
 
 NS_IMETHODIMP
@@ -491,7 +498,7 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 float
 nsWindow::GetDPI()
 {
-    return gNativeWindow->xdpi;
+    return NativeWindow()->xdpi;
 }
 
 LayerManager *
@@ -512,7 +519,7 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
 
     if (!topWindow) {
         LOGW(" -- no topwindow\n");
-        return nsnull;
+        return nullptr;
     }
 
     if (sUsingOMTC) {
@@ -648,7 +655,7 @@ nsScreenGonk::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
 static uint32_t
 ColorDepth()
 {
-    switch (gNativeWindow->getDevice()->format) {
+    switch (NativeWindow()->getDevice()->format) {
     case GGL_PIXEL_FORMAT_RGB_565:
         return 16;
     case GGL_PIXEL_FORMAT_RGBA_8888:
@@ -760,7 +767,7 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerGonk, nsIScreenManager)
 
 nsScreenManagerGonk::nsScreenManagerGonk()
 {
-    mOneScreen = new nsScreenGonk(nsnull);
+    mOneScreen = new nsScreenGonk(nullptr);
 }
 
 nsScreenManagerGonk::~nsScreenManagerGonk()

@@ -79,7 +79,7 @@ private:
    */
   static void InitEvent(nsWindow* aWindow,
                         nsGUIEvent& aEvent,
-                        nsIntPoint* aPoint = nsnull);
+                        nsIntPoint* aPoint = nullptr);
 
   /**
    * GetModifierKeyState() returns current modifier key state.
@@ -238,7 +238,7 @@ private:
 
   protected:
     EventInfo() :
-      mIsVertical(false), mIsPage(false), mDelta(0), mWnd(nsnull)
+      mIsVertical(false), mIsPage(false), mDelta(0), mWnd(nullptr)
     {
     }
 

@@ -58,7 +58,7 @@ GetZeroValueForUnit(nsStyleAnimation::Unit aUnit)
     case nsStyleAnimation::eUnit_Color:
       return &sZeroColor;
     default:
-      return nsnull;
+      return nullptr;
   }
 }
 
@@ -143,7 +143,7 @@ nsSMILCSSValueType::Init(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected SMIL value type");
 
-  aValue.mU.mPtr = nsnull;
+  aValue.mU.mPtr = nullptr;
   aValue.mType = this;
 }
 
@@ -174,7 +174,7 @@ nsSMILCSSValueType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
   } else if (destWrapper) {
     // fully-initialized dest, barely-initialized src -- clear dest
     delete destWrapper;
-    aDest.mU.mPtr = destWrapper = nsnull;
+    aDest.mU.mPtr = destWrapper = nullptr;
   } // else, both are barely-initialized -- nothing to do.
 
   return NS_OK;
@@ -232,9 +232,9 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   }
 
   const nsStyleAnimation::Value* valueToAdd = valueToAddWrapper ?
-    &valueToAddWrapper->mCSSValue : nsnull;
+    &valueToAddWrapper->mCSSValue : nullptr;
   const nsStyleAnimation::Value* destValue = destWrapper ?
-    &destWrapper->mCSSValue : nsnull;
+    &destWrapper->mCSSValue : nullptr;
   if (!FinalizeStyleAnimationValues(valueToAdd, destValue)) {
     return NS_ERROR_FAILURE;
   }
@@ -269,7 +269,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
   NS_ABORT_IF_FALSE(toWrapper, "expecting non-null endpoint");
 
   const nsStyleAnimation::Value* fromCSSValue = fromWrapper ?
-    &fromWrapper->mCSSValue : nsnull;
+    &fromWrapper->mCSSValue : nullptr;
   const nsStyleAnimation::Value* toCSSValue = &toWrapper->mCSSValue;
   if (!FinalizeStyleAnimationValues(fromCSSValue, toCSSValue)) {
     return NS_ERROR_FAILURE;
@@ -301,7 +301,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   NS_ABORT_IF_FALSE(endWrapper, "expecting non-null endpoint");
 
   const nsStyleAnimation::Value* startCSSValue = startWrapper ?
-    &startWrapper->mCSSValue : nsnull;
+    &startWrapper->mCSSValue : nullptr;
   const nsStyleAnimation::Value* endCSSValue = &endWrapper->mCSSValue;
   if (!FinalizeStyleAnimationValues(startCSSValue, endCSSValue)) {
     return NS_ERROR_FAILURE;
@@ -327,10 +327,10 @@ GetPresContextForElement(Element* aElem)
     // This can happen if we process certain types of restyles mid-sample
     // and remove anonymous animated content from the document as a result.
     // See bug 534975.
-    return nsnull;
+    return nullptr;
   }
   nsIPresShell* shell = doc->GetShell();
-  return shell ? shell->GetPresContext() : nsnull;
+  return shell ? shell->GetPresContext() : nullptr;
 }
 
 // Helper function to parse a string into a nsStyleAnimation::Value

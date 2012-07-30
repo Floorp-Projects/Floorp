@@ -461,7 +461,7 @@ struct ParamTraits<NPString>
         return true;
       }
 
-      const char* messageBuffer = nsnull;
+      const char* messageBuffer = nullptr;
       nsAutoArrayPtr<char> newBuffer(new char[byteCount]);
       if (newBuffer && aMsg->ReadBytes(aIter, &messageBuffer, byteCount )) {
         memcpy((void*)messageBuffer, newBuffer.get(), byteCount);
@@ -529,7 +529,7 @@ struct ParamTraits<NPNSString*>
       return false;
     }
 
-    UniChar* buffer = nsnull;
+    UniChar* buffer = nullptr;
     if (length != 0) {
       if (!aMsg->ReadBytes(aIter, (const char**)&buffer, length * sizeof(UniChar)) ||
           !buffer) {

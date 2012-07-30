@@ -3180,10 +3180,10 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
      * access to the AutoCompartment definition here.  We statically assert in
      * jsapi.cpp that we have the right size here.
      *
-     * In practice, 32-bit Windows and Android get 16-word |bytes|, while
-     * other platforms get 13-word |bytes|.
+     * In practice, 32-bit Windows and Android get 16-word |bytes|, while other
+     * platforms get 12-word |bytes|.
      */
-    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 13];
+    void* bytes[sizeof(void*) == 4 && MOZ_ALIGNOF(uint64_t) == 8 ? 16 : 12];
 
   protected:
     js::AutoCompartment *getAutoCompartment() {
@@ -3286,6 +3286,12 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JSObject **objp);
+
+extern JS_PUBLIC_API(JSProtoKey)
+JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj);
 
 /*
  * Returns the original value of |Function.prototype| from the global object in

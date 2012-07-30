@@ -107,9 +107,10 @@ NS_IMETHODIMP nsSVGPatternElement::GetPatternContentUnits(nsIDOMSVGAnimatedEnume
 /* readonly attribute nsIDOMSVGAnimatedTransformList patternTransform; */
 NS_IMETHODIMP nsSVGPatternElement::GetPatternTransform(nsIDOMSVGAnimatedTransformList * *aPatternTransform)
 {
-  *aPatternTransform =
-    DOMSVGAnimatedTransformList::GetDOMWrapper(GetAnimatedTransformList(), this)
-    .get();
+  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
+  // to allocate the SVGAnimatedTransformList if it hasn't already done so:
+  *aPatternTransform = DOMSVGAnimatedTransformList::GetDOMWrapper(
+                         GetAnimatedTransformList(DO_ALLOCATE), this).get();
   return NS_OK;
 }
 
@@ -173,9 +174,9 @@ nsSVGPatternElement::IsAttributeMapped(const nsIAtom* name) const
 // nsSVGElement methods
 
 SVGAnimatedTransformList*
-nsSVGPatternElement::GetAnimatedTransformList()
+nsSVGPatternElement::GetAnimatedTransformList(PRUint32 aFlags)
 {
-  if (!mPatternTransform) {
+  if (!mPatternTransform && (aFlags & DO_ALLOCATE)) {
     mPatternTransform = new SVGAnimatedTransformList();
   }
   return mPatternTransform;

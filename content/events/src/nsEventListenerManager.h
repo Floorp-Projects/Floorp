@@ -48,7 +48,7 @@ struct nsListenerStruct
 
   nsIJSEventListener* GetJSListener() const {
     return (mListenerType == eJSEventListener) ?
-      static_cast<nsIJSEventListener *>(mListener.get()) : nsnull;
+      static_cast<nsIJSEventListener *>(mListener.get()) : nullptr;
   }
 
   ~nsListenerStruct()

@@ -120,12 +120,12 @@ nsDiskCacheBlockFile::Close(bool flush)
         PRStatus err = PR_Close(mFD);
         if (NS_SUCCEEDED(rv) && (err != PR_SUCCESS))
             rv = NS_ERROR_UNEXPECTED;
-        mFD = nsnull;
+        mFD = nullptr;
     }
 
      if (mBitMap) {
          delete [] mBitMap;
-         mBitMap = nsnull;
+         mBitMap = nullptr;
      }
         
     return rv;
@@ -210,7 +210,7 @@ nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
                                    PRInt32  numBlocks,
                                    PRInt32 * startBlock)
 {
-    // presume buffer != nsnull and startBlock != nsnull
+    // presume buffer != nullptr and startBlock != nullptr
     NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_AVAILABLE);
 
     // allocate some blocks in the cache block file
@@ -235,7 +235,7 @@ nsDiskCacheBlockFile::ReadBlocks( void *    buffer,
                                   PRInt32   numBlocks,
                                   PRInt32 * bytesRead)
 {
-    // presume buffer != nsnull and bytesRead != bytesRead
+    // presume buffer != nullptr and bytesRead != bytesRead
 
     if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
     nsresult rv = VerifyAllocation(startBlock, numBlocks);

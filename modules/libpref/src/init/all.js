@@ -166,7 +166,9 @@ pref("media.webm.enabled", true);
 #ifdef MOZ_GSTREAMER
 pref("media.h264.enabled", true);
 #endif
-
+#ifdef MOZ_WEBRTC
+pref("media.navigator.enabled", false);
+#endif
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
@@ -225,10 +227,17 @@ pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 
 #ifdef XP_WIN
 pref("gfx.canvas.azure.enabled", true);
+// comma separated list of backends to use in order of preference
+// e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
+pref("gfx.canvas.azure.backends", "direct2d");
 pref("gfx.content.azure.enabled", true);
 #else
 #ifdef XP_MACOSX
 pref("gfx.canvas.azure.enabled", true);
+pref("gfx.canvas.azure.backends", "cg");
+#else
+pref("gfx.canvas.azure.enabled", false);
+pref("gfx.canvas.azure.backends", "cairo,skia");
 #endif
 #endif
 

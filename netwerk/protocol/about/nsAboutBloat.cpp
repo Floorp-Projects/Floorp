@@ -133,7 +133,7 @@ nsresult
 nsAboutBloat::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutBloat* about = new nsAboutBloat();
-    if (about == nsnull)
+    if (about == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(about);
     nsresult rv = about->QueryInterface(aIID, aResult);

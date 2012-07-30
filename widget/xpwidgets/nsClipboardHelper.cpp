@@ -67,7 +67,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-  nsILoadContext* loadContext = doc ? doc->GetLoadContext() : nsnull;
+  nsILoadContext* loadContext = doc ? doc->GetLoadContext() : nullptr;
   trans->Init(loadContext);
 
   // Add the text data flavor to the transferable
@@ -96,7 +96,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard
-  rv = clipboard->SetData(trans, nsnull, aClipboardID);
+  rv = clipboard->SetData(trans, nullptr, aClipboardID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

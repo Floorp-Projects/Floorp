@@ -6,21 +6,19 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 660806 - history navigatio
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", tabLoaded, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
 }
 
-function tabLoaded()
+function consoleOpened(HUD)
 {
-  browser.removeEventListener("load", tabLoaded, true);
-  openConsole();
-
   content.wrappedJSObject.foobarBug660806 = {
     "location": "value0",
     "locationbar": "value1",
   };
 
-  let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
   let popup = jsterm.autocompletePopup;
   popup._panel.addEventListener("popupshown", function() {

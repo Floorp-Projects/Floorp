@@ -206,7 +206,7 @@ struct NS_STACK_CLASS TreeMatchContext {
     , mHaveRelevantLink(false)
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
-    , mScopedRoot(nsnull)
+    , mScopedRoot(nullptr)
     , mIsHTMLDocument(aDocument->IsHTML())
     , mCompatMode(aDocument->GetCompatibilityMode())
     , mUsingPrivateBrowsing(false)
@@ -331,7 +331,7 @@ struct NS_STACK_CLASS StateRuleProcessorData : public RuleProcessorData {
                          mozilla::dom::Element* aElement,
                          nsEventStates aStateMask,
                          TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aElement, nsnull, aTreeMatchContext),
+    : RuleProcessorData(aPresContext, aElement, nullptr, aTreeMatchContext),
       mStateMask(aStateMask)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
@@ -348,7 +348,7 @@ struct NS_STACK_CLASS AttributeRuleProcessorData : public RuleProcessorData {
                              PRInt32 aModType,
                              bool aAttrHasChanged,
                              TreeMatchContext& aTreeMatchContext)
-    : RuleProcessorData(aPresContext, aElement, nsnull, aTreeMatchContext),
+    : RuleProcessorData(aPresContext, aElement, nullptr, aTreeMatchContext),
       mAttribute(aAttribute),
       mModType(aModType),
       mAttrHasChanged(aAttrHasChanged)

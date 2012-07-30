@@ -98,14 +98,13 @@ abstract public class GeckoApp
     private Favicons mFavicons;
     private TextSelection mTextSelection;
 
-    public DoorHangerPopup mDoorHangerPopup;
-    public FormAssistPopup mFormAssistPopup;
-    public TabsPanel mTabsPanel;
+    protected DoorHangerPopup mDoorHangerPopup;
+    protected FormAssistPopup mFormAssistPopup;
+    protected TabsPanel mTabsPanel;
 
     private LayerController mLayerController;
     private GeckoLayerClient mLayerClient;
     private AbsoluteLayout mPluginContainer;
-    private FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -114,8 +113,6 @@ abstract public class GeckoApp
 
     protected int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     private boolean mInitialized = false;
-
-    static Vector<MenuItem> sAddonMenuItems = new Vector<MenuItem>();
 
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
@@ -194,12 +191,6 @@ abstract public class GeckoApp
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
         if (isTegra) {
-            // disable Flash on pre-HC Tegra (bug 703056)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
-                return null;
-            }
-
             // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
             File vfile = new File("/proc/version");
             FileReader vreader = null;
@@ -391,64 +382,6 @@ abstract public class GeckoApp
         return pluginCL.loadClass(className);
     }
 
-    private void addAddonMenuItem(final int id, final String label, final String icon) {
-        if (mMenu == null)
-            return;
-
-        final MenuItem item = mMenu.add(Menu.NONE, id, Menu.NONE, label);
-
-        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                Log.i(LOGTAG, "menu item clicked");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
-                ((Activity) GeckoApp.mAppContext).closeOptionsMenu();
-                return true;
-            }
-        });
-
-        if (icon != null) {
-            if (icon.startsWith("data")) {
-                byte[] raw = GeckoAppShell.decodeBase64(icon.substring(22), GeckoAppShell.BASE64_DEFAULT);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-                BitmapDrawable drawable = new BitmapDrawable(bitmap);
-                item.setIcon(drawable);
-            }
-            else if (icon.startsWith("jar:") || icon.startsWith("file://")) {
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        try {
-                            URL url = new URL(icon);
-                            InputStream is = (InputStream) url.getContent();
-                            Drawable drawable = Drawable.createFromStream(is, "src");
-                            item.setIcon(drawable);
-                        } catch (Exception e) {
-                            Log.w(LOGTAG, "Unable to set icon", e);
-                        }
-                    }
-                });
-            }
-        }
-        sAddonMenuItems.add(item);
-    }
-
-    private void removeAddonMenuItem(int id) {
-        for (MenuItem item : sAddonMenuItems) {
-            if (item.getItemId() == id) {
-                sAddonMenuItems.remove(item);
-
-                if (mMenu == null)
-                    break;
-
-                MenuItem menuItem = mMenu.findItem(id);
-                if (menuItem != null)
-                    mMenu.removeItem(id);
-
-                break;
-            }
-        }
-    }
-
     @Override
     public void invalidateOptionsMenu() {
         if (mMenu == null)
@@ -461,42 +394,11 @@ abstract public class GeckoApp
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         mMenu = menu;
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.gecko_menu, mMenu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu aMenu)
-    {
-        if (aMenu == null)
-            return false;
-
-        int ids[] = {
-            R.id.reload,
-            R.id.settings,
-            R.id.bookmark,
-            R.id.forward,
-            R.id.save_as_pdf,
-            R.id.share,
-            R.id.char_encoding,
-            R.id.find_in_page,
-            R.id.addons,
-            R.id.downloads,
-            R.id.apps,
-            R.id.site_settings
-        };
-
-        for (int id : ids) {
-            if (aMenu.findItem(id) == null)
-                continue;
-            aMenu.findItem(id).setVisible(false);
-        }
-
+        inflater.inflate(R.menu.gecko_app_menu, mMenu);
         return true;
     }
 
@@ -602,8 +504,6 @@ abstract public class GeckoApp
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Tab tab = null;
-        Intent intent = null;
         switch (item.getItemId()) {
             case R.id.quit:
                 synchronized(sLaunchState) {
@@ -614,84 +514,6 @@ abstract public class GeckoApp
                         System.exit(0);
                     sLaunchState = LaunchState.GeckoExiting;
                 }
-                return true;
-            case R.id.bookmark:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    if (item.isChecked()) {
-                        tab.removeBookmark();
-                        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
-                        item.setIcon(R.drawable.ic_menu_bookmark_add);
-                    } else {
-                        tab.addBookmark();
-                        Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                        item.setIcon(R.drawable.ic_menu_bookmark_remove);
-                    }
-                }
-                return true;
-            case R.id.share:
-                shareCurrentUrl();
-                return true;
-            case R.id.reading_list:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    if (item.isChecked()) {
-                        tab.removeFromReadingList();
-                        item.setIcon(R.drawable.ic_menu_reading_list_add);
-                        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
-                    } else {
-                        tab.addToReadingList();
-                        item.setIcon(R.drawable.ic_menu_reading_list_remove);
-                    }
-                }
-                return true;
-            case R.id.reload:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null)
-                    tab.doReload();
-                return true;
-            case R.id.forward:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null)
-                    tab.doForward();
-                return true;
-            case R.id.save_as_pdf:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
-                return true;
-            case R.id.settings:
-                intent = new Intent(this, GeckoPreferences.class);
-                startActivity(intent);
-                return true;
-            case R.id.site_settings:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
-                return true;
-            case R.id.addons:
-                loadUrlInTab("about:addons");
-                return true;
-            case R.id.downloads:
-                loadUrlInTab("about:downloads");
-                return true;
-            case R.id.apps:
-                loadUrlInTab("about:apps");
-                return true;
-            case R.id.char_encoding:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
-                return true;
-            case R.id.find_in_page:
-                mFindInPageBar.show();
-                return true;
-            case R.id.desktop_mode:
-                Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab == null)
-                    return true;
-                JSONObject args = new JSONObject();
-                try {
-                    args.put("desktopMode", !item.isChecked());
-                    args.put("tabId", selectedTab.getId());
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "error building json arguments");
-                }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -709,7 +531,7 @@ abstract public class GeckoApp
         return super.onKeyDown(keyCode, event);
     }
 
-    private void shareCurrentUrl() {
+    protected void shareCurrentUrl() {
       Tab tab = Tabs.getInstance().getSelectedTab();
       if (tab == null)
         return;
@@ -719,7 +541,7 @@ abstract public class GeckoApp
           return;
 
       GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                    Intent.ACTION_SEND, tab.getTitle());
+                                    Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -739,7 +561,7 @@ abstract public class GeckoApp
         return metrics;
     }
 
-    void getAndProcessThumbnailForTab(final Tab tab) {
+    public void getAndProcessThumbnailForTab(final Tab tab) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
         final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
         
@@ -795,6 +617,11 @@ abstract public class GeckoApp
     private boolean shouldUpdateThumbnail(Tab tab) {
         return (Tabs.getInstance().isSelectedTab(tab) || areTabsShown());
     }
+
+    public void hideFormAssistPopup() {
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.hide();
+    } 
 
     void updatePopups(final Tab tab) {
         mDoorHangerPopup.updatePopup();
@@ -855,6 +682,30 @@ abstract public class GeckoApp
             return;
 
         tab.setReaderEnabled(true);
+    }
+
+    void handleFaviconRequest(final String url) {
+        (new GeckoAsyncTask<Void, Void, String>() {
+            @Override
+            public String doInBackground(Void... params) {
+                return getFavicons().getFaviconUrlForPageUrl(url);
+            }
+
+            @Override
+            public void onPostExecute(String faviconUrl) {
+                if (faviconUrl != null) {
+                    JSONObject args = new JSONObject();
+                    try {
+                        args.put("url", url);
+                        args.put("faviconUrl", faviconUrl);
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "error building json arguments");
+                    }
+
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:FaviconReturn", args.toString()));
+                }
+            }
+        }).execute();
     }
 
     void handleLoadError(final int tabId, final String uri, final String title) {
@@ -961,27 +812,7 @@ abstract public class GeckoApp
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
-            if (event.equals("Menu:Add")) {
-                final String label = message.getString("name");
-                final int id = message.getInt("id");
-                String iconRes = null;
-                try { // icon is optional
-                    iconRes = message.getString("icon");
-                } catch (Exception ex) { }
-                final String icon = iconRes;
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        addAddonMenuItem(id, label, icon);
-                    }
-                });
-            } else if (event.equals("Menu:Remove")) {
-                final int id = message.getInt("id");
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        removeAddonMenuItem(id);
-                    }
-                });
-            } else if (event.equals("Toast:Show")) {
+            if (event.equals("Toast:Show")) {
                 final String msg = message.getString("message");
                 final String duration = message.getString("duration");
                 handleShowToast(msg, duration);
@@ -1037,6 +868,9 @@ abstract public class GeckoApp
             } else if (event.equals("Content:ReaderEnabled")) {
                 final int tabId = message.getInt("tabID");
                 handleReaderEnabled(tabId);
+            } else if (event.equals("Reader:FaviconRequest")) {
+                final String url = message.getString("url");
+                handleFaviconRequest(url);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
@@ -1424,6 +1258,14 @@ abstract public class GeckoApp
         }, 500);
     }
 
+    public void showToast(final int resId, final int duration) {
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                Toast.makeText(mAppContext, resId, duration);
+            }
+        });
+    }
+
     void handleShowToast(final String message, final String duration) {
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1674,6 +1516,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGlobalExceptionHandler();
 
         mAppContext = this;
+        Tabs.getInstance().attachToActivity(this);
 
         // Check to see if the activity is restarted after configuration change.
         if (getLastNonConfigurationInstance() != null) {
@@ -1849,7 +1692,6 @@ abstract public class GeckoApp
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
-        mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
@@ -1857,47 +1699,48 @@ abstract public class GeckoApp
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
 
         //register for events
-        GeckoAppShell.registerGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DOMWindowClose", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("log", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:ReaderEnabled", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Start", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:ViewportMetadata", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Share:Image", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMContentLoaded", this);
+        GeckoAppShell.registerGeckoEventListener("DOMTitleChanged", this);
+        GeckoAppShell.registerGeckoEventListener("DOMLinkAdded", this);
+        GeckoAppShell.registerGeckoEventListener("DOMWindowClose", this);
+        GeckoAppShell.registerGeckoEventListener("log", this);
+        GeckoAppShell.registerGeckoEventListener("Content:LocationChange", this);
+        GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", this);
+        GeckoAppShell.registerGeckoEventListener("Content:ReaderEnabled", this);
+        GeckoAppShell.registerGeckoEventListener("Content:StateChange", this);
+        GeckoAppShell.registerGeckoEventListener("Content:LoadError", this);
+        GeckoAppShell.registerGeckoEventListener("Content:PageShow", this);
+        GeckoAppShell.registerGeckoEventListener("Reader:FaviconRequest", this);
+        GeckoAppShell.registerGeckoEventListener("onCameraCapture", this);
+        GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", this);
+        GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", this);
+        GeckoAppShell.registerGeckoEventListener("Menu:Add", this);
+        GeckoAppShell.registerGeckoEventListener("Menu:Remove", this);
+        GeckoAppShell.registerGeckoEventListener("Gecko:Ready", this);
+        GeckoAppShell.registerGeckoEventListener("Toast:Show", this);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Start", this);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", this);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", this);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", this);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Focus", this);
+        GeckoAppShell.registerGeckoEventListener("Permissions:Data", this);
+        GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", this);
+        GeckoAppShell.registerGeckoEventListener("CharEncoding:State", this);
+        GeckoAppShell.registerGeckoEventListener("Update:Restart", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:ViewportMetadata", this);
+        GeckoAppShell.registerGeckoEventListener("Session:StatePurged", this);
+        GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", this);
+        GeckoAppShell.registerGeckoEventListener("Accessibility:Event", this);
+        GeckoAppShell.registerGeckoEventListener("Accessibility:Ready", this);
+        GeckoAppShell.registerGeckoEventListener("Shortcut:Remove", this);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Open", this);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Install", this);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", this);
+        GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", this);
+        GeckoAppShell.registerGeckoEventListener("Share:Text", this);
+        GeckoAppShell.registerGeckoEventListener("Share:Image", this);
+        GeckoAppShell.registerGeckoEventListener("Sanitize:ClearHistory", this);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2221,47 +2064,48 @@ abstract public class GeckoApp
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
         
-        GeckoAppShell.unregisterGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DOMWindowClose", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("log", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:ReaderEnabled", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Start", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:ViewportMetadata", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Share:Image", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("DOMContentLoaded", this);
+        GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", this);
+        GeckoAppShell.unregisterGeckoEventListener("DOMLinkAdded", this);
+        GeckoAppShell.unregisterGeckoEventListener("DOMWindowClose", this);
+        GeckoAppShell.unregisterGeckoEventListener("log", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:ReaderEnabled", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", this);
+        GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", this);
+        GeckoAppShell.unregisterGeckoEventListener("Reader:FaviconRequest", this);
+        GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", this);
+        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", this);
+        GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Remove", this);
+        GeckoAppShell.unregisterGeckoEventListener("Menu:Add", this);
+        GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", this);
+        GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", this);
+        GeckoAppShell.unregisterGeckoEventListener("Toast:Show", this);
+        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Start", this);
+        GeckoAppShell.unregisterGeckoEventListener("DOMFullScreen:Stop", this);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", this);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", this);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", this);
+        GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", this);
+        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", this);
+        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:State", this);
+        GeckoAppShell.unregisterGeckoEventListener("Update:Restart", this);
+        GeckoAppShell.unregisterGeckoEventListener("Tab:HasTouchListener", this);
+        GeckoAppShell.unregisterGeckoEventListener("Tab:ViewportMetadata", this);
+        GeckoAppShell.unregisterGeckoEventListener("Session:StatePurged", this);
+        GeckoAppShell.unregisterGeckoEventListener("Bookmark:Insert", this);
+        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", this);
+        GeckoAppShell.unregisterGeckoEventListener("Accessibility:Ready", this);
+        GeckoAppShell.unregisterGeckoEventListener("Shortcut:Remove", this);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Open", this);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Install", this);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", this);
+        GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", this);
+        GeckoAppShell.unregisterGeckoEventListener("Share:Text", this);
+        GeckoAppShell.unregisterGeckoEventListener("Share:Image", this);
+        GeckoAppShell.unregisterGeckoEventListener("Sanitize:ClearHistory", this);
 
         deleteTempFiles();
 
@@ -2933,7 +2777,7 @@ abstract public class GeckoApp
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null) {
                     String url = tab.getURL();
-                    String title = tab.getTitle();
+                    String title = tab.getDisplayTitle();
                     BitmapDrawable favicon = (BitmapDrawable)(tab.getFavicon());
                     if (url != null && title != null) {
                         GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon.getBitmap(), "");

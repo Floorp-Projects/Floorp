@@ -56,25 +56,25 @@ public:
 
   TISInputSourceWrapper()
   {
-    mInputSourceList = nsnull;
+    mInputSourceList = nullptr;
     Clear();
   }
 
   TISInputSourceWrapper(const char* aID)
   {
-    mInputSourceList = nsnull;
+    mInputSourceList = nullptr;
     InitByInputSourceID(aID);
   }
 
   TISInputSourceWrapper(SInt32 aLayoutID)
   {
-    mInputSourceList = nsnull;
+    mInputSourceList = nullptr;
     InitByLayoutID(aLayoutID);
   }
 
   TISInputSourceWrapper(TISInputSourceRef aInputSource)
   {
-    mInputSourceList = nsnull;
+    mInputSourceList = nullptr;
     InitByTISInputSourceRef(aInputSource);
   }
 
@@ -202,7 +202,7 @@ public:
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
-                    const nsAString *aInsertString = nsnull);
+                    const nsAString *aInsertString = nullptr);
 
   /**
    * ComputeGeckoKeyCode() returns Gecko keycode for aNativeKeyCode on current
@@ -333,7 +333,7 @@ public:
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
-                    const nsAString *aInsertString = nsnull);
+                    const nsAString *aInsertString = nullptr);
 
   /**
    * SynthesizeNativeKeyEvent() is an implementation of
@@ -405,18 +405,18 @@ protected:
     // Whether the key event causes other key events via IME or something.
     bool mCausedOtherKeyEvents;
 
-    KeyEventState() : mKeyEvent(nsnull)
+    KeyEventState() : mKeyEvent(nullptr)
     {
       Clear();
     }    
 
-    KeyEventState(NSEvent* aNativeKeyEvent) : mKeyEvent(nsnull)
+    KeyEventState(NSEvent* aNativeKeyEvent) : mKeyEvent(nullptr)
     {
       Clear();
       Set(aNativeKeyEvent);
     }
 
-    KeyEventState(const KeyEventState &aOther) : mKeyEvent(nsnull)
+    KeyEventState(const KeyEventState &aOther) : mKeyEvent(nullptr)
     {
       Clear();
       if (aOther.mKeyEvent) {
@@ -444,7 +444,7 @@ protected:
     {
       if (mKeyEvent) {
         [mKeyEvent release];
-        mKeyEvent = nsnull;
+        mKeyEvent = nullptr;
       }
       mKeyDownHandled = false;
       mKeyPressDispatched = false;
@@ -502,7 +502,7 @@ protected:
       mCurrentKeyEvents[i]->mCausedOtherKeyEvents = true;
     }
 
-    KeyEventState* keyEvent = nsnull;
+    KeyEventState* keyEvent = nullptr;
     if (nestCount == 0) {
       mFirstKeyEvent.Set(aNativeKeyEvent);
       keyEvent = &mFirstKeyEvent;
@@ -535,7 +535,7 @@ protected:
   KeyEventState* GetCurrentKeyEvent()
   {
     if (mCurrentKeyEvents.Length() == 0) {
-      return nsnull;
+      return nullptr;
     }
     return mCurrentKeyEvents[mCurrentKeyEvents.Length() - 1];
   }

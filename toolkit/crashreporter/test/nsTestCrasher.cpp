@@ -83,7 +83,7 @@ void Crash(PRInt16 how)
 extern "C" NS_EXPORT
 nsISupports* LockDir(nsIFile *directory)
 {
-  nsISupports* lockfile = nsnull;
+  nsISupports* lockfile = nullptr;
   XRE_LockProfileDirectory(directory, &lockfile);
   return lockfile;
 }

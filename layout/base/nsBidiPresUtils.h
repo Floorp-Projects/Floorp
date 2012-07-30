@@ -36,7 +36,7 @@ struct nsFrameContinuationState : public nsVoidPtrHashKey
 
   /**
    * The first visual frame in the continuation chain containing this frame, or
-   * nsnull if this frame is the first visual frame in the chain.
+   * nullptr if this frame is the first visual frame in the chain.
    */
   nsIFrame* mFirstVisualFrame;
 
@@ -185,7 +185,7 @@ public:
    * @param aTextRunConstructionContext the rendering context to be used to construct the textrun (affects font hinting)
    * @param aX the x-coordinate to render the string
    * @param aY the y-coordinate to render the string
-   * @param[in,out] aPosResolve array of logical positions to resolve into visual positions; can be nsnull if this functionality is not required
+   * @param[in,out] aPosResolve array of logical positions to resolve into visual positions; can be nullptr if this functionality is not required
    * @param aPosResolveCount number of items in the aPosResolve array
    */
   static nsresult RenderText(const PRUnichar*       aText,
@@ -196,11 +196,11 @@ public:
                              nsRenderingContext&    aTextRunConstructionContext,
                              nscoord                aX,
                              nscoord                aY,
-                             nsBidiPositionResolve* aPosResolve = nsnull,
+                             nsBidiPositionResolve* aPosResolve = nullptr,
                              PRInt32                aPosResolveCount = 0)
   {
     return ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
-                                          aTextRunConstructionContext, MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nsnull);
+                                          aTextRunConstructionContext, MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nullptr);
   }
   
   static nscoord MeasureTextWidth(const PRUnichar*     aText,
@@ -212,7 +212,7 @@ public:
     nscoord length;
     nsresult rv = ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext,
                                                  aRenderingContext, aRenderingContext,
-                                                 MODE_MEASURE, 0, 0, nsnull, 0, &length);
+                                                 MODE_MEASURE, 0, 0, nullptr, 0, &length);
     return NS_SUCCEEDED(rv) ? length : 0;
   }
 
@@ -286,7 +286,7 @@ public:
    *  MODE_MEASURE - does not invoke DrawText on the processor
    *  Note that the string is always measured, regardless of mode
    * @param[in,out] aPosResolve array of logical positions to resolve into
-   *  visual positions; can be nsnull if this functionality is not required
+   *  visual positions; can be nullptr if this functionality is not required
    * @param aPosResolveCount number of items in the aPosResolve array
    * @param[out] aWidth Pointer to where the width will be stored (may be null)
    */
@@ -367,7 +367,7 @@ private:
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
-   * (nsnull, 0) for aFrame and its descendants.
+   * (nullptr, 0) for aFrame and its descendants.
    *
    * @param aFrame               The frame which itself and its descendants will
    *                             be initialized

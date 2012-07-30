@@ -49,7 +49,7 @@ CompilerOutput::CompilerOutput(JSScript *script, bool isIonFlag)
 {
     out.mjit = NULL;
 #ifdef JS_METHODJIT
-    if (isJM() && script->hasJITInfo())
+    if (isJM() && script->hasMJITInfo())
         out.mjit = script->getJIT(constructing, barriers);
 #endif
     if (isIon() && script->hasIonScript())
@@ -343,7 +343,7 @@ struct AutoEnterCompilation
 #ifdef JS_METHODJIT
         if (mode == JM) {
             co->isIonFlag = false;
-            if (co->script->hasJITInfo())
+            if (co->script->hasMJITInfo())
                 co->out.mjit = co->script->getJIT(co->constructing, co->barriers);
         }
 #endif

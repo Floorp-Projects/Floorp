@@ -36,9 +36,7 @@ public:
                                                          gfxASurface::gfxContentType contentType);
 
     mozilla::RefPtr<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(gfxFont *aFont);
-
-    virtual bool SupportsAzure(mozilla::gfx::BackendType& aBackend);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,

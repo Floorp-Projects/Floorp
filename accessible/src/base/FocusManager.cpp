@@ -8,6 +8,7 @@
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsEventShell.h"
 #include "Role.h"
 #include "RootAccessible.h"
 
@@ -35,10 +36,10 @@ FocusManager::FocusedAccessible() const
   if (focusedNode) {
     DocAccessible* doc = 
       GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
-    return doc ? doc->GetAccessibleOrContainer(focusedNode) : nsnull;
+    return doc ? doc->GetAccessibleOrContainer(focusedNode) : nullptr;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -59,7 +60,7 @@ FocusManager::IsFocused(const Accessible* aAccessible) const
       DocAccessible* doc = 
         GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
       return aAccessible ==
-	(doc ? doc->GetAccessibleOrContainer(focusedNode) : nsnull);
+	(doc ? doc->GetAccessibleOrContainer(focusedNode) : nullptr);
     }
   }
   return false;
@@ -116,7 +117,7 @@ FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
   A11YDEBUG_FOCUS_NOTIFICATION_SUPPORTSTARGET("DOM focus", "DOM focus target",
                                               aTarget)
 
-  mActiveItem = nsnull;
+  mActiveItem = nullptr;
 
   nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTarget));
   if (targetNode) {
@@ -142,7 +143,7 @@ FocusManager::NotifyOfDOMBlur(nsISupports* aTarget)
   A11YDEBUG_FOCUS_NOTIFICATION_SUPPORTSTARGET("DOM blur", "DOM blur target",
                                               aTarget)
 
-  mActiveItem = nsnull;
+  mActiveItem = nullptr;
 
   // If DOM document stays focused then fire accessible focus event to process
   // the case when no element within this DOM document will be focused.
@@ -168,7 +169,7 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
   if (aItem && aItem == mActiveItem)
     return;
 
-  mActiveItem = nsnull;
+  mActiveItem = nullptr;
 
   if (aItem && aCheckIfActive) {
     Accessible* widget = aItem->ContainerWidget();
@@ -304,7 +305,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
                    fromUserInputFlag);
     nsEventShell::FireEvent(menuEndEvent);
 
-    mActiveARIAMenubar = nsnull;
+    mActiveARIAMenubar = nullptr;
   }
 
   A11YDEBUG_FOCUS_NOTIFICATION_ACCTARGET("FIRE FOCUS EVENT", "Focus target",
@@ -326,7 +327,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
                               anchorJump, fromUserInputFlag);
     }
-    targetDocument->SetAnchorJump(nsnull);
+    targetDocument->SetAnchorJump(nullptr);
   }
 }
 
@@ -341,18 +342,18 @@ FocusManager::FocusedDOMNode() const
   // keeps the focus.
   if (focusedElm) {
     if (nsEventStateManager::IsRemoteTarget(focusedElm))
-      return nsnull;
+      return nullptr;
     return focusedElm;
   }
 
   // Otherwise the focus can be on DOM document.
   nsPIDOMWindow* focusedWnd = DOMFocusManager->GetFocusedWindow();
-  return focusedWnd ? focusedWnd->GetExtantDoc() : nsnull;
+  return focusedWnd ? focusedWnd->GetExtantDoc() : nullptr;
 }
 
 nsIDocument*
 FocusManager::FocusedDOMDocument() const
 {
   nsINode* focusedNode = FocusedDOMNode();
-  return focusedNode ? focusedNode->OwnerDoc() : nsnull;
+  return focusedNode ? focusedNode->OwnerDoc() : nullptr;
 }

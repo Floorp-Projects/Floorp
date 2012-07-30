@@ -84,7 +84,7 @@ public:
    * proper loading of xml-stylesheet processing instructions in XUL overlays
    * and is only currently used by nsXMLStylesheetPI.
    *
-   * @param aNewBaseURI the new base URI, nsnull to use the default base URI.
+   * @param aNewBaseURI the new base URI, nullptr to use the default base URI.
    */
   virtual void OverrideBaseURI(nsIURI* aNewBaseURI) = 0;
 

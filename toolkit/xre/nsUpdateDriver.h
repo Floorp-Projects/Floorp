@@ -53,7 +53,7 @@ NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
                                     int argc, char **argv,
                                     const char *appVersion,
                                     bool restart = true,
-                                    ProcessType *pid = nsnull);
+                                    ProcessType *pid = nullptr);
 
 #ifdef MOZ_UPDATER
 // The implementation of the update processor handles the task of loading the
@@ -72,7 +72,7 @@ private:
   struct BackgroundUpdateInfo {
     BackgroundUpdateInfo()
       : mArgc(0),
-        mArgv(nsnull)
+        mArgv(nullptr)
     {}
     ~BackgroundUpdateInfo() {
       for (int i = 0; i < mArgc; ++i) {

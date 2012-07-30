@@ -106,7 +106,7 @@ main(int aArgc,
   }
 
   // And let any other events finish before we quit.
-  (void)NS_ProcessPendingEvents(nsnull);
+  (void)NS_ProcessPendingEvents(nullptr);
 
   // Check that we have passed all of our tests, and output accordingly.
   if (gPassedTests == gTotalTests) {

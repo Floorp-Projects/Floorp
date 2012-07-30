@@ -15,7 +15,7 @@
 /**********************************************************************
  * class gfxOS2Platform
  **********************************************************************/
-gfxFontconfigUtils *gfxOS2Platform::sFontconfigUtils = nsnull;
+gfxFontconfigUtils *gfxOS2Platform::sFontconfigUtils = nullptr;
 
 gfxOS2Platform::gfxOS2Platform()
 {
@@ -39,7 +39,7 @@ gfxOS2Platform::~gfxOS2Platform()
     printf("gfxOS2Platform::~gfxOS2Platform()\n");
 #endif
     gfxFontconfigUtils::Shutdown();
-    sFontconfigUtils = nsnull;
+    sFontconfigUtils = nullptr;
 
     // clean up OS/2 cairo stuff
     cairo_os2_fini();
@@ -56,7 +56,7 @@ gfxOS2Platform::CreateOffscreenSurface(const gfxIntSize& aSize,
     printf("gfxOS2Platform::CreateOffscreenSurface(%d/%d, %d)\n",
            aSize.width, aSize.height, aImageFormat);
 #endif
-    gfxASurface *newSurface = nsnull;
+    gfxASurface *newSurface = nullptr;
 
     // we only ever seem to get aImageFormat=0 or ImageFormatARGB32 but
     // I don't really know if we need to differ between ARGB32 and RGB24 here
@@ -67,7 +67,7 @@ gfxOS2Platform::CreateOffscreenSurface(const gfxIntSize& aSize,
     } else if (contentType == gfxASurface::CONTENT_ALPHA) {
         newSurface = new gfxImageSurface(aSize, OptimalFormatForContent(contentType));
     } else {
-        return nsnull;
+        return nullptr;
     }
 
     NS_IF_ADDREF(newSurface);
@@ -145,7 +145,7 @@ gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
 
     // is codepoint with no matching font? return null immediately
     if (mCodepointsWithNoFonts.test(aCh)) {
-        return nsnull;
+        return nullptr;
     }
 
     // the following is not very clever but it's a quick fix to search all fonts
@@ -184,5 +184,5 @@ gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
 
     // no match found, so add to the set of non-matching codepoints
     mCodepointsWithNoFonts.set(aCh);
-    return nsnull;
+    return nullptr;
 }

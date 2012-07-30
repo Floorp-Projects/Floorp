@@ -112,7 +112,7 @@ def main():
     exception = boolStr(etld.exception())
     wild = boolStr(etld.wild())
     print '  { "%s", %s, %s },' % (etld.domain(), exception, wild)
-  print "  { nsnull, PR_FALSE, PR_FALSE }"
+  print "  { nullptr, PR_FALSE, PR_FALSE }"
   print "}"
 
 if __name__ == '__main__':

@@ -45,7 +45,7 @@ nsresult
 txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                                      txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     if (!requireParams(2, 3, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
@@ -296,7 +296,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                   (intDigits-1)/groupSize); // group separators
 
     PRInt32 i = bufIntDigits + maxFractionSize - 1;
-    bool carry = (i+1 < buflen) && (buf[i+1] >= '5');
+    bool carry = (0 <= i+1) && (i+1 < buflen) && (buf[i+1] >= '5');
     bool hasFraction = false;
 
     PRUint32 resPos = res.Length()-1;

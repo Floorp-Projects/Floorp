@@ -93,7 +93,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
                                    long stride,
                                    gfxImageFormat format,
                                    bool aForPrinting)
-    : mCGContext(nsnull), mSize(desiredSize), mForPrinting(aForPrinting)
+    : mCGContext(nullptr), mSize(desiredSize), mForPrinting(aForPrinting)
 {
     gfxIntSize size((unsigned int) floor(desiredSize.width),
                     (unsigned int) floor(desiredSize.height));
@@ -122,7 +122,7 @@ gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
                                              aSize.width, aSize.height);
     if (cairo_surface_status(surface)) {
         cairo_surface_destroy(surface);
-        return nsnull;
+        return nullptr;
     }
 
     nsRefPtr<gfxASurface> result = Wrap(surface);
@@ -149,7 +149,7 @@ already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface()
 {
     cairo_surface_t *surface = cairo_quartz_surface_get_image(mSurface);
     if (!surface)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxASurface> img = Wrap(surface);
 

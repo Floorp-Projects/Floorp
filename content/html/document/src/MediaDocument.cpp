@@ -68,7 +68,7 @@ MediaDocumentStreamListener::OnStopRequest(nsIRequest* request,
   }
 
   // No more need for our document so clear our reference and prevent leaks
-  mDocument = nsnull;
+  mDocument = nullptr;
 
   return rv;
 }
@@ -194,6 +194,26 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   return NS_OK;
 }
 
+void
+MediaDocument::BecomeInteractive()
+{
+  // In principle, if we knew the readyState code to work, we could infer
+  // restoration from GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE.
+  bool restoring = false;
+  nsPIDOMWindow* window = GetWindow();
+  if (window) {
+    nsIDocShell* docShell = window->GetDocShell();
+    if (docShell) {
+      docShell->GetRestoringDocument(&restoring);
+    }
+  }
+  if (!restoring) {
+    MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING,
+               "Bad readyState");
+    SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+  }
+}
+
 nsresult
 MediaDocument::CreateSyntheticDocument()
 {
@@ -201,7 +221,7 @@ MediaDocument::CreateSyntheticDocument()
   nsresult rv;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -213,7 +233,7 @@ MediaDocument::CreateSyntheticDocument()
   rv = AppendChildTo(root, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -222,7 +242,7 @@ MediaDocument::CreateSyntheticDocument()
   nsRefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo.forget());
   NS_ENSURE_TRUE(head, NS_ERROR_OUT_OF_MEMORY);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::meta, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::meta, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -240,7 +260,7 @@ MediaDocument::CreateSyntheticDocument()
 
   root->AppendChildTo(head, false);
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -313,7 +333,7 @@ nsresult
 MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
 {
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);

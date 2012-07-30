@@ -263,7 +263,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
     nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
     if (video && video->mEndTime < aTime) {
       mVideoQueue.PopFront();
-      video = nsnull;
+      video = nullptr;
     } else {
       video.forget();
     }

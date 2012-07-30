@@ -38,7 +38,7 @@ public:
     /**
      * Mutex
      * @param name A name which can reference this lock
-     * @returns If failure, nsnull
+     * @returns If failure, nullptr
      *          If success, a valid Mutex* which must be destroyed
      *          by Mutex::DestroyMutex()
      **/

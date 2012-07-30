@@ -6,6 +6,8 @@ browser.jar:
     content/browser/inspector.html                (highlighter/inspector.html)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
     content/browser/devtools/HUDService-content.js (webconsole/HUDService-content.js)
+    content/browser/devtools/webconsole.js        (webconsole/webconsole.js)
+*   content/browser/devtools/webconsole.xul       (webconsole/webconsole.xul)
 *   content/browser/scratchpad.xul                (scratchpad/scratchpad.xul)
     content/browser/scratchpad.js                 (scratchpad/scratchpad.js)
     content/browser/splitview.css                 (shared/splitview.css)

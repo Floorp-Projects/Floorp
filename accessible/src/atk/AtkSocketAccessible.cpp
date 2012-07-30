@@ -68,7 +68,7 @@ mai_atk_socket_new(AccessibleWrap* aAccWrap)
 {
   NS_ENSURE_TRUE(aAccWrap, NULL);
 
-  MaiAtkSocket* acc = nsnull;
+  MaiAtkSocket* acc = nullptr;
   acc = static_cast<MaiAtkSocket*>(g_object_new(MAI_TYPE_ATK_SOCKET, NULL));
   NS_ENSURE_TRUE(acc, NULL);
 
@@ -81,7 +81,7 @@ static AtkObject*
 RefAccessibleAtPoint(AtkComponent* aComponent, gint aX, gint aY,
                      AtkCoordType aCoordType)
 {
-  NS_ENSURE_TRUE(MAI_IS_ATK_SOCKET(aComponent), nsnull);
+  NS_ENSURE_TRUE(MAI_IS_ATK_SOCKET(aComponent), nullptr);
 
   return refAccessibleAtPointHelper(MAI_ATK_SOCKET(aComponent)->accWrap,
                                     aX, aY, aCoordType);
@@ -145,9 +145,9 @@ AtkSocketAccessible::Shutdown()
 {
   if (mAtkObject) {
     if (MAI_IS_ATK_SOCKET(mAtkObject))
-      MAI_ATK_SOCKET(mAtkObject)->accWrap = nsnull;
+      MAI_ATK_SOCKET(mAtkObject)->accWrap = nullptr;
     g_object_unref(mAtkObject);
-    mAtkObject = nsnull;
+    mAtkObject = nullptr;
   }
   AccessibleWrap::Shutdown();
 }

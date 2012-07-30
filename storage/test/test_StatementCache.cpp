@@ -139,7 +139,7 @@ test_FinalizeAsyncStatements()
   do_check_eq(mozIStorageBaseStatement::MOZ_STORAGE_STATEMENT_INVALID, state);
 
   // Should be able to close the database now too.
-  do_check_success(db->AsyncClose(nsnull));
+  do_check_success(db->AsyncClose(nullptr));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

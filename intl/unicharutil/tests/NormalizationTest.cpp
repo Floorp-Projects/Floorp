@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     printf("NS_InitXPCOM2 failed\n");
     return 1;

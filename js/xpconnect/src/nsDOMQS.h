@@ -103,7 +103,7 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
 
     if (!failureFatal && (!ok || !content)) {
       ok = true;
-      *ppThis = nsnull;
+      *ppThis = nullptr;
     }
 
     return ok;

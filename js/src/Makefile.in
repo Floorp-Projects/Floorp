@@ -741,6 +741,9 @@ endif
 
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
 EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
+ifdef MOZ_LIB_LIBS
+DEFINES += -DUSE_ZLIB
+endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER

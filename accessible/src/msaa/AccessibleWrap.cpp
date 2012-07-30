@@ -465,7 +465,7 @@ __try {
   //   CHECKABLE -> MARQUEED
 
   PRUint32 msaaState = 0;
-  nsAccUtils::To32States(xpAccessible->State(), &msaaState, nsnull);
+  nsAccUtils::To32States(xpAccessible->State(), &msaaState, nullptr);
   pvarState->lVal = msaaState;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -871,7 +871,7 @@ __try {
 
   VariantInit(pvarEndUpAt);
 
-  Accessible* navAccessible = nsnull;
+  Accessible* navAccessible = nullptr;
   PRUint32 xpRelation = 0;
 
   switch(navDir) {
@@ -1620,7 +1620,7 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
   if (aAccessible) {
     DocAccessible* document = aAccessible->Document();
     if(!document)
-      return nsnull;
+      return nullptr;
 
     // Popup lives in own windows, use its HWND until the popup window is
     // hidden to make old JAWS versions work with collapsed comboboxes (see
@@ -1645,7 +1645,7 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
 
     return static_cast<HWND>(document->GetNativeWindow());
   }
-  return nsnull;
+  return nullptr;
 }
 
 HRESULT
@@ -1719,7 +1719,7 @@ AccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
    return NULL;
   }
 
-  IAccessible* msaaAccessible = nsnull;
+  IAccessible* msaaAccessible = nullptr;
   aAccessible->GetNativeInterface(reinterpret_cast<void**>(&msaaAccessible));
   return static_cast<IDispatch*>(msaaAccessible);
 }
@@ -1728,14 +1728,14 @@ Accessible*
 AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
   if (aVarChild.vt != VT_I4)
-    return nsnull;
+    return nullptr;
 
   // if its us real easy - this seems to always be the case
   if (aVarChild.lVal == CHILDID_SELF)
     return this;
 
   if (nsAccUtils::MustPrune(this))
-    return nsnull;
+    return nullptr;
 
   // If lVal negative then it is treated as child ID and we should look for
   // accessible through whole accessible subtree including subdocuments.
@@ -1757,7 +1757,7 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
       // Check whether the accessible for the given ID is a child of ARIA
       // document.
-      Accessible* parent = child ? child->Parent() : nsnull;
+      Accessible* parent = child ? child->Parent() : nullptr;
       while (parent && parent != document) {
         if (parent == this)
           return child;
@@ -1766,7 +1766,7 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
       }
     }
 
-    return nsnull;
+    return nullptr;
   }
 
   // Gecko child indices are 0-based in contrast to indices used in MSAA.

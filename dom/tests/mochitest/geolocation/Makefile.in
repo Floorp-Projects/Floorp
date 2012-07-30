@@ -25,6 +25,8 @@ MOCHITEST_FILES	= \
 		test_optional_api_params.html \
 		test_shutdown.html \
 		test_windowClose.html \
+		test_mozsettings.html \
+		test_mozsettingsWatch.html \
 		test_timerRestartWatch.html \
 		test_worseAccuracyDoesNotBlockCallback.html \
 		geolocation.html \

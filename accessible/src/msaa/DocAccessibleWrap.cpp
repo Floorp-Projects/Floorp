@@ -8,6 +8,7 @@
 #include "Compatibility.h"
 #include "DocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
+#include "nsCoreUtils.h"
 #include "nsIAccessibilityService.h"
 #include "nsWinUtils.h"
 #include "Role.h"
@@ -227,7 +228,7 @@ DocAccessibleWrap::Shutdown()
       ::DestroyWindow(static_cast<HWND>(mHWND));
     }
 
-    mHWND = nsnull;
+    mHWND = nullptr;
   }
 
   DocAccessible::Shutdown();

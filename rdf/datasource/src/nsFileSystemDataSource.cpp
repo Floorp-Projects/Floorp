@@ -56,7 +56,7 @@ bool
 FileSystemDataSource::isFileURI(nsIRDFResource *r)
 {
     bool        isFileURIFlag = false;
-    const char  *uri = nsnull;
+    const char  *uri = nullptr;
     
     r->GetValueConst(&uri);
     if ((uri) && (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1)))
@@ -76,7 +76,7 @@ bool
 FileSystemDataSource::isDirURI(nsIRDFResource* source)
 {
     nsresult    rv;
-    const char  *uri = nsnull;
+    const char  *uri = nullptr;
 
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv)) return(false);
@@ -190,11 +190,11 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 FileSystemDataSource::GetURI(char **uri)
 {
-    NS_PRECONDITION(uri != nsnull, "null ptr");
+    NS_PRECONDITION(uri != nullptr, "null ptr");
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    if ((*uri = NS_strdup("rdf:files")) == nsnull)
+    if ((*uri = NS_strdup("rdf:files")) == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
@@ -208,19 +208,19 @@ FileSystemDataSource::GetSource(nsIRDFResource* property,
                                 bool tv,
                                 nsIRDFResource** source /* out */)
 {
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
+    NS_PRECONDITION(target != nullptr, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    *source = nsnull;
+    *source = nullptr;
     return NS_RDF_NO_VALUE;
 }
 
@@ -244,19 +244,19 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
                                 bool tv,
                                 nsIRDFNode **target /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
+    NS_PRECONDITION(target != nullptr, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
-    *target = nsnull;
+    *target = nullptr;
 
     nsresult        rv = NS_RDF_NO_VALUE;
 
@@ -288,7 +288,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
         else if (property == mNC_URL)
         {
             nsCOMPtr<nsIRDFLiteral> url;
-            rv = GetURL(source, nsnull, getter_AddRefs(url));
+            rv = GetURL(source, nullptr, getter_AddRefs(url));
             if (NS_FAILED(rv)) return(rv);
             if (!url)   rv = NS_RDF_NO_VALUE;
             if (rv == NS_RDF_NO_VALUE)  return(rv);
@@ -304,7 +304,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
             if (isFavorite || !url) rv = NS_RDF_NO_VALUE;
             if (rv == NS_RDF_NO_VALUE)  return(rv);
             
-            const PRUnichar *uni = nsnull;
+            const PRUnichar *uni = nullptr;
             url->GetValueConst(&uni);
             if (!uni)   return(NS_RDF_NO_VALUE);
             nsAutoString    urlStr;
@@ -428,19 +428,19 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
                 bool tv,
                 nsISimpleEnumerator **targets /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(targets != nsnull, "null ptr");
+    NS_PRECONDITION(targets != nullptr, "null ptr");
     if (! targets)
         return NS_ERROR_NULL_POINTER;
 
-    *targets = nsnull;
+    *targets = nullptr;
 
     // we only have positive assertions in the file system data source.
     if (! tv)
@@ -479,7 +479,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
         else if (property == mNC_URL)
         {
             nsCOMPtr<nsIRDFLiteral> url;
-            rv = GetURL(source, nsnull, getter_AddRefs(url));
+            rv = GetURL(source, nullptr, getter_AddRefs(url));
             if (NS_FAILED(rv)) return rv;
 
             return NS_NewSingletonEnumerator(targets, url);
@@ -564,19 +564,19 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              bool tv,
                              bool *hasAssertion /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
+    NS_PRECONDITION(target != nullptr, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
+    NS_PRECONDITION(hasAssertion != nullptr, "null ptr");
     if (! hasAssertion)
         return NS_ERROR_NULL_POINTER;
 
@@ -697,11 +697,11 @@ NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
                    nsISimpleEnumerator **labels /* out */)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
     return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(labels != nsnull, "null ptr");
+    NS_PRECONDITION(labels != nullptr, "null ptr");
     if (! labels)
     return NS_ERROR_NULL_POINTER;
 
@@ -841,7 +841,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
         driveType = GetDriveTypeW(drive);
         if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
         {
-            if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
+            if (nullptr != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
             {
                 rv = mRDFService->GetResource(nsDependentCString(url),
                                               getter_AddRefs(vol));
@@ -872,7 +872,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
     {
         if (((ulDriveMap << (31 - volNum)) >> 31))
         {
-            if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
+            if (nullptr != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
             {
                 rv = mRDFService->GetResource(nsDependentCString(url), getter_AddRefs(vol));
                 PR_Free(url);
@@ -962,7 +962,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
     if (NS_FAILED(rv))
         return(rv);
 
-    const char      *parentURI = nsnull;
+    const char      *parentURI = nullptr;
     rv = source->GetValueConst(&parentURI);
     if (NS_FAILED(rv))
         return(rv);
@@ -1032,7 +1032,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
   
         nsCAutoString           leaf(escLeafStr);
         NS_Free(escLeafStr);
-        escLeafStr = nsnull;
+        escLeafStr = nullptr;
 
         // using nsEscape() [above] doesn't escape slashes, so do that by hand
         PRInt32         aOffset;
@@ -1067,10 +1067,10 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
 nsresult
 FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsresult        rv;
-    const char      *uri = nsnull;
+    const char      *uri = nullptr;
 
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv)) return(rv);
@@ -1113,10 +1113,10 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
 nsresult
 FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsresult        rv;
-    const char      *uri = nsnull;
+    const char      *uri = nullptr;
 
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv))
@@ -1167,7 +1167,7 @@ nsresult
 FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 {
     nsresult        rv;
-    const char      *uri = nsnull;
+    const char      *uri = nullptr;
 
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv))
@@ -1258,7 +1258,7 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
 {
     nsresult        rv = NS_OK;
     
-    *urlLiteral = nsnull;
+    *urlLiteral = nullptr;
 
     nsCOMPtr<nsIFile> f;
     NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(aFileURL), getter_AddRefs(f)); 

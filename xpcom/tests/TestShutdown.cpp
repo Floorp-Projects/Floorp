@@ -15,9 +15,9 @@ void main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
     // try loading a component and releasing it to see if it leaks
-    if (argc > 1 && argv[1] != nsnull) {
+    if (argc > 1 && argv[1] != nullptr) {
         char* cidStr = argv[1];
-        nsISupports* obj = nsnull;
+        nsISupports* obj = nullptr;
         if (cidStr[0] == '{') {
             nsCID cid;
             cid.Parse(cidStr);

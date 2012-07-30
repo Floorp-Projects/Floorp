@@ -20,7 +20,7 @@ nsDOMMediaQueryList::nsDOMMediaQueryList(nsPresContext *aPresContext,
   PR_INIT_CLIST(this);
 
   nsCSSParser parser;
-  parser.ParseMediaList(aMediaQueryList, nsnull, 0, mMediaList, false);
+  parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList, false);
 }
 
 nsDOMMediaQueryList::~nsDOMMediaQueryList()
@@ -140,7 +140,7 @@ nsDOMMediaQueryList::RecomputeMatches()
     return;
   }
 
-  mMatches = mMediaList->Matches(mPresContext, nsnull);
+  mMatches = mMediaList->Matches(mPresContext, nullptr);
   mMatchesValid = true;
 }
 

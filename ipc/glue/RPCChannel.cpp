@@ -479,7 +479,7 @@ RPCChannel::DispatchIncall(const Message& call)
     RPC_ASSERT(call.is_rpc() && !call.is_reply(),
                "wrong message type");
 
-    Message* reply = nsnull;
+    Message* reply = nullptr;
 
     ++mRemoteStackDepthGuess;
     Result rv = Listener()->OnCallReceived(call, reply);

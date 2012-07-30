@@ -41,7 +41,7 @@ SetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
         NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
     sBuffer = PR_sprintf_append(sBuffer, "    for host \"%s\": SET ", aSpec1);
-    nsresult rv = aCookieService->SetCookieStringFromHttp(uri1, uri2, nsnull, (char *)aCookieString, aServerTime, nsnull);
+    nsresult rv = aCookieService->SetCookieStringFromHttp(uri1, uri2, nullptr, (char *)aCookieString, aServerTime, nullptr);
     // the following code is useless. the cookieservice blindly returns NS_OK
     // from SetCookieString. we have to call GetCookie to see if the cookie was
     // set correctly...
@@ -60,7 +60,7 @@ SetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, const char
     NS_NewURI(getter_AddRefs(uri), aSpec);
 
     sBuffer = PR_sprintf_append(sBuffer, "    for host \"%s\": SET ", aSpec);
-    nsresult rv = aCookieService->SetCookieString(uri, nsnull, (char *)aCookieString, nsnull);
+    nsresult rv = aCookieService->SetCookieString(uri, nullptr, (char *)aCookieString, nullptr);
     // the following code is useless. the cookieservice blindly returns NS_OK
     // from SetCookieString. we have to call GetCookie to see if the cookie was
     // set correctly...
@@ -83,7 +83,7 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
         NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
     sBuffer = PR_sprintf_append(sBuffer, "             \"%s\": GOT ", aSpec1);
-    nsresult rv = aCookieService->GetCookieStringFromHttp(uri1, uri2, nsnull, aCookie);
+    nsresult rv = aCookieService->GetCookieStringFromHttp(uri1, uri2, nullptr, aCookie);
     if (NS_FAILED(rv)) {
       sBuffer = PR_sprintf_append(sBuffer, "XXX GetCookieString() failed!\n");
     }
@@ -92,7 +92,7 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
     } else {
         sBuffer = PR_sprintf_append(sBuffer, "\"%s\"\n", *aCookie);
     }
-    return *aCookie != nsnull;
+    return *aCookie != nullptr;
 }
 
 // returns true if cookie(s) for the given host were found; else false.
@@ -104,7 +104,7 @@ GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCo
     NS_NewURI(getter_AddRefs(uri), aSpec);
 
     sBuffer = PR_sprintf_append(sBuffer, "             \"%s\": GOT ", aSpec);
-    nsresult rv = aCookieService->GetCookieString(uri, nsnull, aCookie);
+    nsresult rv = aCookieService->GetCookieString(uri, nullptr, aCookie);
     if (NS_FAILED(rv)) {
       sBuffer = PR_sprintf_append(sBuffer, "XXX GetCookieString() failed!\n");
     }
@@ -113,7 +113,7 @@ GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCo
     } else {
         sBuffer = PR_sprintf_append(sBuffer, "\"%s\"\n", *aCookie);
     }
-    return *aCookie != nsnull;
+    return *aCookie != nullptr;
 }
 
 // some #defines for comparison rules
@@ -127,7 +127,7 @@ GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCo
 // takes one of the #defined rules above, and performs the appropriate test.
 // true means the test passed; false means the test failed.
 static inline bool
-CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
+CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nullptr)
 {
     switch (aRule) {
         case MUST_BE_NULL:
@@ -140,10 +140,10 @@ CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
             return PL_strcmp(aLhs, aRhs);
 
         case MUST_CONTAIN:
-            return PL_strstr(aLhs, aRhs) != nsnull;
+            return PL_strstr(aLhs, aRhs) != nullptr;
 
         case MUST_NOT_CONTAIN:
-            return PL_strstr(aLhs, aRhs) == nsnull;
+            return PL_strstr(aLhs, aRhs) == nullptr;
 
         default:
             return false; // failure
@@ -190,11 +190,11 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
 class ScopedXPCOM
 {
 public:
-  ScopedXPCOM() : rv(NS_InitXPCOM2(nsnull, nsnull, nsnull)) { }
+  ScopedXPCOM() : rv(NS_InitXPCOM2(nullptr, nullptr, nullptr)) { }
   ~ScopedXPCOM()
   {
     if (NS_SUCCEEDED(rv))
-      NS_ShutdownXPCOM(nsnull);
+      NS_ShutdownXPCOM(nullptr);
   }
 
   nsresult rv;
@@ -270,21 +270,21 @@ main(PRInt32 argc, char *argv[])
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning basic tests...\n");
 
       // test some basic variations of the domain & path
-      SetACookie(cookieService, "http://www.basic.com", nsnull, "test=basic", nsnull);
-      GetACookie(cookieService, "http://www.basic.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.basic.com", nullptr, "test=basic", nullptr);
+      GetACookie(cookieService, "http://www.basic.com", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
-      GetACookie(cookieService, "http://www.basic.com/testPath/testfile.txt", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.basic.com/testPath/testfile.txt", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
-      GetACookie(cookieService, "http://www.basic.com./", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.basic.com./", nullptr, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://www.basic.com.", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.basic.com.", nullptr, getter_Copies(cookie));
       rv[3] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://www.basic.com./testPath/testfile.txt", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.basic.com./testPath/testfile.txt", nullptr, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://www.basic2.com/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.basic2.com/", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://www.basic.com", nsnull, "test=basic; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://www.basic.com/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.basic.com", nullptr, "test=basic; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://www.basic.com/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
@@ -295,55 +295,55 @@ main(PRInt32 argc, char *argv[])
 
       // test some variations of the domain & path, for different domains of
       // a domain cookie
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=domain.com", nsnull);
-      GetACookie(cookieService, "http://domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=domain.com", nullptr);
+      GetACookie(cookieService, "http://domain.com", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      GetACookie(cookieService, "http://domain.com.", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://domain.com.", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://www.domain.com", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.domain.com", nullptr, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=domain.com; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=domain.com; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://domain.com", nullptr, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=.domain.com", nsnull);
-      GetACookie(cookieService, "http://domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=.domain.com", nullptr);
+      GetACookie(cookieService, "http://domain.com", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      GetACookie(cookieService, "http://www.domain.com", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://www.domain.com", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      GetACookie(cookieService, "http://bah.domain.com", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://bah.domain.com", nullptr, getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=.domain.com; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=.domain.com; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://domain.com", nullptr, getter_Copies(cookie));
       rv[8] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=.foo.domain.com", nsnull);
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=.foo.domain.com", nullptr);
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[9] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=moose.com", nsnull);
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=moose.com", nullptr);
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[10] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=domain.com.", nsnull);
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=domain.com.", nullptr);
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[11] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=..domain.com", nsnull);
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=..domain.com", nullptr);
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=..domain.com.", nsnull);
-      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://www.domain.com", nullptr, "test=domain; domain=..domain.com.", nullptr);
+      GetACookie(cookieService, "http://foo.domain.com", nullptr, getter_Copies(cookie));
       rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=taco; path=\"/bogus\"", nsnull);
-      GetACookie(cookieService, "http://path.net/path/file", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=taco; path=\"/bogus\"", nullptr);
+      GetACookie(cookieService, "http://path.net/path/file", nullptr, getter_Copies(cookie));
       rv[14] = CheckResult(cookie.get(), MUST_EQUAL, "test=taco");
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=taco; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://path.net/path/file", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=taco; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://path.net/path/file", nullptr, getter_Copies(cookie));
       rv[15] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
@@ -354,68 +354,68 @@ main(PRInt32 argc, char *argv[])
 
       // test some variations of the domain & path, for different paths of
       // a path cookie
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/path", nsnull);
-      GetACookie(cookieService, "http://path.net/path", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/path", nullptr);
+      GetACookie(cookieService, "http://path.net/path", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      GetACookie(cookieService, "http://path.net/path/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path/", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      GetACookie(cookieService, "http://path.net/path/hithere.foo", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path/hithere.foo", nullptr, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      GetACookie(cookieService, "http://path.net/path?hithere/foo", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path?hithere/foo", nullptr, getter_Copies(cookie));
       rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      GetACookie(cookieService, "http://path.net/path2", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path2", nullptr, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://path.net/path2/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path2/", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/path; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://path.net/path/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/path; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://path.net/path/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/path/", nsnull);
-      GetACookie(cookieService, "http://path.net/path", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/path/", nullptr);
+      GetACookie(cookieService, "http://path.net/path", nullptr, getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      GetACookie(cookieService, "http://path.net/path/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/path/", nullptr, getter_Copies(cookie));
       rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/path/; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://path.net/path/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/path/; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://path.net/path/", nullptr, getter_Copies(cookie));
       rv[9] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       // note that a site can set a cookie for a path it's not on.
       // this is an intentional deviation from spec (see comments in
       // nsCookieService::CheckPath()), so we test this functionality too
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/foo/", nsnull);
-      GetACookie(cookieService, "http://path.net/path", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/foo/", nullptr);
+      GetACookie(cookieService, "http://path.net/path", nullptr, getter_Copies(cookie));
       rv[10] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://path.net/foo", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://path.net/foo", nullptr, getter_Copies(cookie));
       rv[11] = CheckResult(cookie.get(), MUST_EQUAL, "test=path");
-      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=path; path=/foo/; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://path.net/foo/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/path/file", nullptr, "test=path; path=/foo/; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://path.net/foo/", nullptr, getter_Copies(cookie));
       rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       // bug 373228: make sure cookies with paths longer than 1024 bytes,
       // and cookies with paths or names containing tabs, are rejected.
       // the following cookie has a path > 1024 bytes explicitly specified in the cookie
-      SetACookie(cookieService, "http://path.net/", nsnull, "test=path; path=/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull);
-      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/", nullptr, "test=path; path=/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nullptr);
+      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", nullptr, getter_Copies(cookie));
       rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
       // the following cookie has a path > 1024 bytes implicitly specified by the uri path
-      SetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull, "test=path", nsnull);
-      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nullptr, "test=path", nullptr);
+      GetACookie(cookieService, "http://path.net/1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890/", nullptr, getter_Copies(cookie));
       rv[14] = CheckResult(cookie.get(), MUST_BE_NULL);
       // the following cookie includes a tab in the path
-      SetACookie(cookieService, "http://path.net/", nsnull, "test=path; path=/foo\tbar/", nsnull);
-      GetACookie(cookieService, "http://path.net/foo\tbar/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/", nullptr, "test=path; path=/foo\tbar/", nullptr);
+      GetACookie(cookieService, "http://path.net/foo\tbar/", nullptr, getter_Copies(cookie));
       rv[15] = CheckResult(cookie.get(), MUST_BE_NULL);
       // the following cookie includes a tab in the name
-      SetACookie(cookieService, "http://path.net/", nsnull, "test\ttabs=tab", nsnull);
-      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/", nullptr, "test\ttabs=tab", nullptr);
+      GetACookie(cookieService, "http://path.net/", nullptr, getter_Copies(cookie));
       rv[16] = CheckResult(cookie.get(), MUST_BE_NULL);
       // the following cookie includes a tab in the value - allowed
-      SetACookie(cookieService, "http://path.net/", nsnull, "test=tab\ttest", nsnull);
-      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/", nullptr, "test=tab\ttest", nullptr);
+      GetACookie(cookieService, "http://path.net/", nullptr, getter_Copies(cookie));
       rv[17] = CheckResult(cookie.get(), MUST_EQUAL, "test=tab\ttest");
-      SetACookie(cookieService, "http://path.net/", nsnull, "test=tab\ttest; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://path.net/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://path.net/", nullptr, "test=tab\ttest; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://path.net/", nullptr, getter_Copies(cookie));
       rv[18] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 19) && allTestsPassed;
@@ -427,54 +427,54 @@ main(PRInt32 argc, char *argv[])
 
       // test some variations of the expiry time,
       // and test deletion of previously set cookies
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=0", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=0", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=bad", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; expires=bad", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[3] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT\"", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT\"", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=60", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=-20", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=-20", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=60", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[9] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "newtest=expiry; max-age=60", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=expiry; max-age=60", nullptr);
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "newtest=expiry; max-age=60", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[10] = CheckResult(cookie.get(), MUST_CONTAIN, "test=expiry");
       rv[11] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=differentvalue; max-age=0", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "test=differentvalue; max-age=0", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[12] = CheckResult(cookie.get(), MUST_EQUAL, "newtest=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "newtest=evendifferentvalue; max-age=0", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://expireme.org/", nullptr, "newtest=evendifferentvalue; max-age=0", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      SetACookie(cookieService, "http://foo.expireme.org/", nsnull, "test=expiry; domain=.expireme.org; max-age=60", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://foo.expireme.org/", nullptr, "test=expiry; domain=.expireme.org; max-age=60", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[14] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://bar.expireme.org/", nsnull, "test=differentvalue; domain=.expireme.org; max-age=0", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://bar.expireme.org/", nullptr, "test=differentvalue; domain=.expireme.org; max-age=0", nullptr);
+      GetACookie(cookieService, "http://expireme.org/", nullptr, getter_Copies(cookie));
       rv[15] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
@@ -485,22 +485,22 @@ main(PRInt32 argc, char *argv[])
 
       // test the setting of multiple cookies, and test the order of precedence
       // (a later cookie overwriting an earlier one, in the same header string)
-      SetACookie(cookieService, "http://multiple.cookies/", nsnull, "test=multiple; domain=.multiple.cookies \n test=different \n test=same; domain=.multiple.cookies \n newtest=ciao \n newtest=foo; max-age=-6 \n newtest=reincarnated", nsnull);
-      GetACookie(cookieService, "http://multiple.cookies/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://multiple.cookies/", nullptr, "test=multiple; domain=.multiple.cookies \n test=different \n test=same; domain=.multiple.cookies \n newtest=ciao \n newtest=foo; max-age=-6 \n newtest=reincarnated", nullptr);
+      GetACookie(cookieService, "http://multiple.cookies/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test=multiple");
       rv[1] = CheckResult(cookie.get(), MUST_CONTAIN, "test=different");
       rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "test=same");
       rv[3] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "newtest=ciao");
       rv[4] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "newtest=foo");
       rv[5] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=reincarnated");
-      SetACookie(cookieService, "http://multiple.cookies/", nsnull, "test=expiry; domain=.multiple.cookies; max-age=0", nsnull);
-      GetACookie(cookieService, "http://multiple.cookies/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://multiple.cookies/", nullptr, "test=expiry; domain=.multiple.cookies; max-age=0", nullptr);
+      GetACookie(cookieService, "http://multiple.cookies/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test=same");
-      SetACookie(cookieService, "http://multiple.cookies/", nsnull,  "\n test=different; max-age=0 \n", nsnull);
-      GetACookie(cookieService, "http://multiple.cookies/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://multiple.cookies/", nullptr,  "\n test=different; max-age=0 \n", nullptr);
+      GetACookie(cookieService, "http://multiple.cookies/", nullptr, getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test=different");
-      SetACookie(cookieService, "http://multiple.cookies/", nsnull,  "newtest=dead; max-age=0", nsnull);
-      GetACookie(cookieService, "http://multiple.cookies/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://multiple.cookies/", nullptr,  "newtest=dead; max-age=0", nullptr);
+      GetACookie(cookieService, "http://multiple.cookies/", nullptr, getter_Copies(cookie));
       rv[8] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
@@ -510,34 +510,34 @@ main(PRInt32 argc, char *argv[])
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning parser tests...\n");
 
       // test the cookie header parser, under various circumstances.
-      SetACookie(cookieService, "http://parser.test/", nsnull, "test=parser; domain=.parser.test; ;; ;=; ,,, ===,abc,=; abracadabra! max-age=20;=;;", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "test=parser; domain=.parser.test; ;; ;=; ,,, ===,abc,=; abracadabra! max-age=20;=;;", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=parser");
-      SetACookie(cookieService, "http://parser.test/", nsnull, "test=parser; domain=.parser.test; max-age=0", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "test=parser; domain=.parser.test; max-age=0", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://parser.test/", nsnull, "test=\"fubar! = foo;bar\\\";\" parser; domain=.parser.test; max-age=6\nfive; max-age=2.63,", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "test=\"fubar! = foo;bar\\\";\" parser; domain=.parser.test; max-age=6\nfive; max-age=2.63,", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "test=\"fubar! = foo");
       rv[3] = CheckResult(cookie.get(), MUST_CONTAIN, "five");
-      SetACookie(cookieService, "http://parser.test/", nsnull, "test=kill; domain=.parser.test; max-age=0 \n five; max-age=0", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "test=kill; domain=.parser.test; max-age=0 \n five; max-age=0", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       // test the handling of VALUE-only cookies (see bug 169091),
       // i.e. "six" should assume an empty NAME, which allows other VALUE-only
       // cookies to overwrite it
-      SetACookie(cookieService, "http://parser.test/", nsnull, "six", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "six", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "six");
-      SetACookie(cookieService, "http://parser.test/", nsnull, "seven", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "seven", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "seven");
-      SetACookie(cookieService, "http://parser.test/", nsnull, " =eight", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, " =eight", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "eight");
-      SetACookie(cookieService, "http://parser.test/", nsnull, "test=six", nsnull);
-      GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://parser.test/", nullptr, "test=six", nullptr);
+      GetACookie(cookieService, "http://parser.test/", nullptr, getter_Copies(cookie));
       rv[9] = CheckResult(cookie.get(), MUST_CONTAIN, "test=six");
 
       allTestsPassed = PrintResult(rv, 10) && allTestsPassed;
@@ -548,12 +548,12 @@ main(PRInt32 argc, char *argv[])
 
       // test that cookies are returned in path order - longest to shortest.
       // if the header doesn't specify a path, it's taken from the host URI.
-      SetACookie(cookieService, "http://multi.path.tests/", nsnull, "test1=path; path=/one/two/three", nsnull);
-      SetACookie(cookieService, "http://multi.path.tests/", nsnull, "test2=path; path=/one \n test3=path; path=/one/two/three/four \n test4=path; path=/one/two \n test5=path; path=/one/two/", nsnull);
-      SetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/", nsnull, "test6=path", nsnull);
-      SetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, "test7=path; path=", nsnull);
-      SetACookie(cookieService, "http://multi.path.tests/", nsnull, "test8=path; path=/", nsnull);
-      GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://multi.path.tests/", nullptr, "test1=path; path=/one/two/three", nullptr);
+      SetACookie(cookieService, "http://multi.path.tests/", nullptr, "test2=path; path=/one \n test3=path; path=/one/two/three/four \n test4=path; path=/one/two \n test5=path; path=/one/two/", nullptr);
+      SetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/", nullptr, "test6=path", nullptr);
+      SetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nullptr, "test7=path; path=", nullptr);
+      SetACookie(cookieService, "http://multi.path.tests/", nullptr, "test8=path; path=/", nullptr);
+      GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test7=path; test6=path; test3=path; test1=path; test5=path; test4=path; test2=path; test8=path");
 
       allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
@@ -564,39 +564,39 @@ main(PRInt32 argc, char *argv[])
 
       // Since this cookie is NOT set via http, setting it fails
       SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
-      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://httponly.test/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
       // Since this cookie is set via http, it can be retrieved
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
-      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=httponly; httponly", nullptr);
+      GetACookie(cookieService, "http://httponly.test/", nullptr, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
       // ... but not by web content
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
       // Non-Http cookies should not replace HttpOnly cookies
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=httponly; httponly", nullptr);
       SetACookieNoHttp(cookieService, "http://httponly.test/", "test=not-httponly");
-      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://httponly.test/", nullptr, getter_Copies(cookie));
       rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
       // ... and, if an HttpOnly cookie already exists, should not be set at all
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
       // Non-Http cookies should not delete HttpOnly cookies
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=httponly; httponly", nullptr);
       SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; max-age=-1");
-      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://httponly.test/", nullptr, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
       // ... but HttpOnly cookies should
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly; max-age=-1", nsnull);
-      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=httponly; httponly; max-age=-1", nullptr);
+      GetACookie(cookieService, "http://httponly.test/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
       // Non-Httponly cookies can replace HttpOnly cookies when set over http
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=httponly; httponly", nullptr);
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=not-httponly", nullptr);
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
       // scripts should not be able to set httponly cookies by replacing an existing non-httponly cookie
-      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=not-httponly", nsnull);
+      SetACookie(cookieService, "http://httponly.test/", nullptr, "test=not-httponly", nullptr);
       SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
       GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
       rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=not-httponly");
@@ -661,7 +661,7 @@ main(PRInt32 argc, char *argv[])
       }
       rv[5] = i == 3;
       // check the httpOnly attribute of the second cookie is honored
-      GetACookie(cookieService, "http://cookiemgr.test/foo/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://cookiemgr.test/foo/", nullptr, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_CONTAIN, "test2=yes");
       GetACookieNoHttp(cookieService, "http://cookiemgr.test/foo/", getter_Copies(cookie));
       rv[7] = CheckResult(cookie.get(), MUST_NOT_CONTAIN, "test2=yes");
@@ -715,7 +715,7 @@ main(PRInt32 argc, char *argv[])
         name = NS_LITERAL_CSTRING("test");
         name.AppendInt(i);
         name += NS_LITERAL_CSTRING("=creation");
-        SetACookie(cookieService, "http://creation.ordering.tests/", nsnull, name.get(), nsnull);
+        SetACookie(cookieService, "http://creation.ordering.tests/", nullptr, name.get(), nullptr);
 
         if (i >= 10) {
           expected += name;
@@ -723,7 +723,7 @@ main(PRInt32 argc, char *argv[])
             expected += NS_LITERAL_CSTRING("; ");
         }
       }
-      GetACookie(cookieService, "http://creation.ordering.tests/", nsnull, getter_Copies(cookie));
+      GetACookie(cookieService, "http://creation.ordering.tests/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
 
       allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
@@ -745,7 +745,7 @@ main(PRInt32 argc, char *argv[])
     }
 
     PR_smprintf_free(sBuffer);
-    sBuffer = nsnull;
+    sBuffer = nullptr;
 
     return 0;
 }

@@ -99,12 +99,11 @@ function performTest() {
     successFn: function()
     {
       let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.sendMouseEvent({ type: "mousedown" }, jstermMessage);
-      EventUtils.sendMouseEvent({ type: "mouseup" }, jstermMessage);
-      EventUtils.sendMouseEvent({ type: "click" }, jstermMessage);
-      EventUtils.sendMouseEvent({ type: "mousedown" }, networkLink);
-      EventUtils.sendMouseEvent({ type: "mouseup" }, networkLink);
-      EventUtils.sendMouseEvent({ type: "click" }, networkLink);
+      EventUtils.sendMouseEvent({ type: "mousedown" }, jstermMessage, HUD.iframeWindow);
+      EventUtils.sendMouseEvent({ type: "click" }, jstermMessage, HUD.iframeWindow);
+      EventUtils.sendMouseEvent({ type: "mousedown" }, networkLink, HUD.iframeWindow);
+      EventUtils.sendMouseEvent({ type: "mouseup" }, networkLink, HUD.iframeWindow);
+      EventUtils.sendMouseEvent({ type: "click" }, networkLink, HUD.iframeWindow);
     },
     failureFn: finishTest,
   });
