@@ -47,7 +47,7 @@ function performTestsAfterOutput(hud) {
 
   // Test that the global Firefox "Select All" functionality (e.g. Edit >
   // Select All) works properly in the Web Console.
-  let commandController = window.webConsoleCommandController;
+  let commandController = hud.ui._commandController;
   ok(commandController != null, "the window has a command controller object");
 
   commandController.selectAll(outputNode);
@@ -60,17 +60,16 @@ function performTestsAfterOutput(hud) {
   // Test the context menu "Select All" (which has a different code path) works
   // properly as well.
   let contextMenuId = outputNode.getAttribute("context");
-  let contextMenu = document.getElementById(contextMenuId);
+  let contextMenu = hud.ui.document.getElementById(contextMenuId);
   ok(contextMenu != null, "the output node has a context menu");
 
-  let selectAllItem = contextMenu.querySelector("*[buttonType=\"selectAll\"]");
+  let selectAllItem = contextMenu.querySelector("*[command='cmd_selectAll']");
   ok(selectAllItem != null,
      "the context menu on the output node has a \"Select All\" item");
 
-  let commandEvent = document.createEvent("XULCommandEvent");
-  commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                false, false, null);
-  selectAllItem.dispatchEvent(commandEvent);
+  outputNode.focus();
+
+  selectAllItem.doCommand();
 
   is(outputNode.selectedCount, outputNode.childNodes.length, "all console " +
      "messages are selected after performing a select-all operation from " +

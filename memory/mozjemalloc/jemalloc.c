@@ -1533,8 +1533,6 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
 }
 
-#define _malloc_message malloc_message
-
 void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 	    const char *p4) = wrtmessage;
 

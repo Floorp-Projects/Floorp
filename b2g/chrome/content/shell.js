@@ -207,6 +207,7 @@ var shell = {
         type = 'home-button';
         break;
       case evt.DOM_VK_SLEEP:        // Sleep button
+      case evt.DOM_VK_END:          // On desktop we don't have a sleep button
         type = 'sleep-button';
         break;
       case evt.DOM_VK_PAGE_UP:      // Volume up button

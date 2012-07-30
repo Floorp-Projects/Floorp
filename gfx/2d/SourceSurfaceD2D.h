@@ -22,6 +22,8 @@ public:
   virtual SurfaceType GetType() const { return SURFACE_D2D1_BITMAP; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
+  virtual bool IsValid() const;
+
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
   ID2D1Bitmap *GetBitmap() { return mBitmap; }
@@ -41,6 +43,8 @@ private:
   uint32_t GetByteSize() const;
 
   RefPtr<ID2D1Bitmap> mBitmap;
+  // We need to keep this pointer here to check surface validity.
+  RefPtr<ID3D10Device> mDevice;
   SurfaceFormat mFormat;
   IntSize mSize;
 };
