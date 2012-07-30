@@ -646,8 +646,10 @@ signal.h
 SimpleGameSound.h
 SIOUX.h
 size_t.h
+sndio.h
 someincludefile.h
 Sound.h
+soundcard.h
 sqlite3.h
 ssdef.h
 sslerr.h
