@@ -57,7 +57,7 @@ nsAuthSASL::Init(const char *serviceName,
     // if we can't create the GSSAPI module, then bail
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mInnerModule->Init(serviceName, serviceFlags, nsnull, nsnull, nsnull);
+    mInnerModule->Init(serviceName, serviceFlags, nullptr, nullptr, nullptr);
 
     return NS_OK;
 }

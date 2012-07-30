@@ -149,7 +149,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
     mArray.Sort(compare, coll);
 #else
-    mArray.Sort(compare, nsnull);
+    mArray.Sort(compare, nullptr);
 #endif
 
     mBuf.AppendLiteral("300: ");
@@ -285,7 +285,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             mBuf.AppendLiteral("201: ");
 
             // The "filename" field
-            char* escaped = nsnull;
+            char* escaped = nullptr;
             if (!NS_IsNativeUTF8()) {
                 nsAutoString leafname;
                 rv = current->GetLeafName(leafname);

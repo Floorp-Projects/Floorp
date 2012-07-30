@@ -41,7 +41,7 @@ public:
 
     txKeyValueHashEntry(KeyTypePointer aKey)
         : mKey(*aKey),
-          mNodeSet(new txNodeSet(nsnull)) { }
+          mNodeSet(new txNodeSet(nullptr)) { }
 
     txKeyValueHashEntry(const txKeyValueHashEntry& entry)
         : mKey(entry.mKey),

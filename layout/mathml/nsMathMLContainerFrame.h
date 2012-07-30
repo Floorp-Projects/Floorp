@@ -286,7 +286,7 @@ protected:
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aReflowMetrics,
                                  nsBoundingMetrics&   aBoundingMetrics,
-                                 eMathMLFrameType*    aMathMLFrameType = nsnull);
+                                 eMathMLFrameType*    aMathMLFrameType = nullptr);
 
   // helper method to clear metrics saved with
   // SaveReflowAndBoundingMetricsFor() from all child frames.
@@ -350,10 +350,10 @@ protected:
   /**
    * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst and
    * all its next siblings up to, but not including, aStop.
-   * aStop == nsnull meaning all next siblings with the bit set.
-   * The method does nothing if aFirst == nsnull.
+   * aStop == nullptr meaning all next siblings with the bit set.
+   * The method does nothing if aFirst == nullptr.
    */
-  static void DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop = nsnull);
+  static void DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop = nullptr);
 
 private:
   class RowChildFrameIterator;

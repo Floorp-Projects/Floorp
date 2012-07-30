@@ -25,7 +25,7 @@ MaskLayerImageCache::SweepFunc(MaskLayerImageEntry* aEntry,
 void
 MaskLayerImageCache::Sweep() 
 {
-  mMaskImageContainers.EnumerateEntries(SweepFunc, nsnull);
+  mMaskImageContainers.EnumerateEntries(SweepFunc, nullptr);
 }
 
 ImageContainer*
@@ -36,7 +36,7 @@ MaskLayerImageCache::FindImageFor(const MaskLayerImageKey** aKey)
     return entry->mContainer;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 void

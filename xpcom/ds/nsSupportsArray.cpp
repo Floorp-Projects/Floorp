@@ -710,7 +710,7 @@ nsArrayEnumerator::GetNext(nsISupports** aResult)
         return NS_ERROR_NULL_POINTER;
 
     if (!mValueArray) {
-        *aResult = nsnull;
+        *aResult = nullptr;
         return NS_OK;
     }
 
@@ -729,7 +729,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array)
 {
     nsArrayEnumerator* enumer = new nsArrayEnumerator(array);
-    if (enumer == nsnull)
+    if (enumer == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     *result = enumer; 
     NS_ADDREF(*result);

@@ -52,7 +52,7 @@ nsExternalSharingAppService::GetSharingApps(const nsAString & aMIMEType,
   if (!AndroidBridge::Bridge())
     return NS_OK;
   AndroidBridge::Bridge()->GetHandlersForMimeType(nMimeType.get(), array,
-                                                  nsnull, sendAction);
+                                                  nullptr, sendAction);
   array->GetLength(aLen);
   *aHandlers =
     static_cast<nsISharingHandlerApp**>(NS_Alloc(sizeof(nsISharingHandlerApp*)

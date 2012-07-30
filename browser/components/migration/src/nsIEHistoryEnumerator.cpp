@@ -126,14 +126,14 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
 NS_IMETHODIMP
 nsIEHistoryEnumerator::GetNext(nsISupports** _retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   if (!mCachedNextEntry)
     return NS_ERROR_FAILURE;
 
   NS_ADDREF(*_retval = mCachedNextEntry);
   // Release the cached entry, so it can't be returned twice.
-  mCachedNextEntry = nsnull;
+  mCachedNextEntry = nullptr;
 
   return NS_OK;
 }

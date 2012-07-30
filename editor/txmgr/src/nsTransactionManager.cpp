@@ -405,7 +405,7 @@ nsTransactionManager::PeekUndoStack()
   nsRefPtr<nsTransactionItem> tx = mUndoStack.Peek();
 
   if (!tx) {
-    return nsnull;
+    return nullptr;
   }
 
   return tx->GetTransaction();
@@ -425,7 +425,7 @@ nsTransactionManager::PeekRedoStack()
   nsRefPtr<nsTransactionItem> tx = mRedoStack.Peek();
 
   if (!tx) {
-    return nsnull;
+    return nullptr;
   }
 
   return tx->GetTransaction();

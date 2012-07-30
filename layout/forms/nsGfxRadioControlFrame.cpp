@@ -43,7 +43,7 @@ nsGfxRadioControlFrame::CreateAccessible()
                                                        PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 

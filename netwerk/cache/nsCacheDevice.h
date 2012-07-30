@@ -54,7 +54,7 @@ public:
     virtual nsresult Visit(nsICacheVisitor * visitor) = 0;
 
     /**
-     * Device must evict entries associated with clientID.  If clientID == nsnull, all
+     * Device must evict entries associated with clientID.  If clientID == nullptr, all
      * entries must be evicted.  Active entries must be doomed, rather than evicted.
      */
     virtual nsresult EvictEntries(const char * clientID) = 0;

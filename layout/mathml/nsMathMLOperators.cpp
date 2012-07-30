@@ -33,10 +33,10 @@ struct OperatorData {
 
 static PRInt32         gTableRefCount = 0;
 static PRUint32        gOperatorCount = 0;
-static OperatorData*   gOperatorArray = nsnull;
-static nsHashtable*    gOperatorTable = nsnull;
+static OperatorData*   gOperatorArray = nullptr;
+static nsHashtable*    gOperatorTable = nullptr;
 static bool            gInitialized   = false;
-static nsTArray<nsString>*      gInvariantCharArray    = nsnull;
+static nsTArray<nsString>*      gInvariantCharArray    = nullptr;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
 static const PRUnichar kDashCh  = PRUnichar('#');
@@ -337,15 +337,15 @@ nsMathMLOperators::CleanUp()
 {
   if (gInvariantCharArray) {
     delete gInvariantCharArray;
-    gInvariantCharArray = nsnull;
+    gInvariantCharArray = nullptr;
   }
   if (gOperatorArray) {
     delete[] gOperatorArray;
-    gOperatorArray = nsnull;
+    gOperatorArray = nullptr;
   }
   if (gOperatorTable) {
     delete gOperatorTable;
-    gOperatorTable = nsnull;
+    gOperatorTable = nullptr;
   }
 }
 

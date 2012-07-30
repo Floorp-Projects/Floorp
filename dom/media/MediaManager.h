@@ -100,8 +100,8 @@ public:
 private:
   // Make private because we want only one instance of this class
   MediaManager()
-  : mBackend(nsnull)
-  , mMediaThread(nsnull) {
+  : mBackend(nullptr)
+  , mMediaThread(nullptr) {
     mActiveWindows.Init();
   };
   MediaManager(MediaManager const&) {};

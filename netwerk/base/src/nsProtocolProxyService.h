@@ -234,7 +234,7 @@ protected:
     inline void ApplyFilters(nsIURI *uri, const nsProtocolInfo &info,
                              nsCOMPtr<nsIProxyInfo> &proxyInfo)
     {
-      nsIProxyInfo *pi = nsnull;
+      nsIProxyInfo *pi = nullptr;
       proxyInfo.swap(pi);
       ApplyFilters(uri, info, &pi);
       proxyInfo.swap(pi);
@@ -315,7 +315,7 @@ protected:
       nsCOMPtr<nsIProtocolProxyFilter>  filter;
 
       FilterLink(PRUint32 p, nsIProtocolProxyFilter *f)
-        : next(nsnull), position(p), filter(f) {}
+        : next(nullptr), position(p), filter(f) {}
 
       // Chain deletion to simplify cleaning up the filter links
       ~FilterLink() { if (next) delete next; }

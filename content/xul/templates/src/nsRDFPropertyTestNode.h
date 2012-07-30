@@ -80,7 +80,7 @@ public:
                nsIRDFResource* aProperty,
                nsIRDFNode* aTarget) {
             void* place = MemoryElement::gPool.Alloc(sizeof(Element));
-            return place ? ::new (place) Element(aSource, aProperty, aTarget) : nsnull; }
+            return place ? ::new (place) Element(aSource, aProperty, aTarget) : nullptr; }
 
         void Destroy() {
             this->~Element();

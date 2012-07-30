@@ -48,7 +48,7 @@ public:
     */
 
    virtual nsresult        SetProfileDir(nsIFile* aProfileDir,
-                                         nsIFile* aLocalProfileDir = nsnull);
+                                         nsIFile* aLocalProfileDir = nullptr);
 
   /**
    * Register

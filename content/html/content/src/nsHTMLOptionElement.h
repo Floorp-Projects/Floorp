@@ -26,7 +26,7 @@ public:
   {
     if (aContent && aContent->IsHTML(nsGkAtoms::option))
       return static_cast<nsHTMLOptionElement*>(aContent);
-    return nsnull;
+    return nullptr;
   }
 
   // nsISupports

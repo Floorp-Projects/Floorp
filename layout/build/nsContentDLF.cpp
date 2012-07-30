@@ -316,7 +316,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
 {
   NS_TIME_FUNCTION;
 
-  *aDocument = nsnull;
+  *aDocument = nullptr;
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -405,7 +405,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
   if (NS_FAILED(rv)) return rv;
 
 #ifdef NOISY_CREATE_DOC
-  if (nsnull != aURL) {
+  if (nullptr != aURL) {
     nsAutoString tmp;
     aURL->ToString(tmp);
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);

@@ -25,7 +25,7 @@ using namespace mozilla;
 
 // NSPR_LOG_MODULES=UrlClassifierPrefixSet:5
 #if defined(PR_LOGGING)
-static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nsnull;
+static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 #define LOG(args) PR_LOG(gUrlClassifierPrefixSetLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierPrefixSetLog, 4)
 #else

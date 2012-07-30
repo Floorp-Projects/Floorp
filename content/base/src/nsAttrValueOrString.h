@@ -22,14 +22,14 @@ class NS_STACK_CLASS nsAttrValueOrString
 {
 public:
   nsAttrValueOrString(const nsAString& aValue)
-    : mAttrValue(nsnull)
+    : mAttrValue(nullptr)
     , mStringPtr(&aValue)
-    , mCheapString(nsnull)
+    , mCheapString(nullptr)
   { }
   nsAttrValueOrString(const nsAttrValue& aValue)
     : mAttrValue(&aValue)
-    , mStringPtr(nsnull)
-    , mCheapString(nsnull)
+    , mStringPtr(nullptr)
+    , mCheapString(nullptr)
   { }
 
   /**

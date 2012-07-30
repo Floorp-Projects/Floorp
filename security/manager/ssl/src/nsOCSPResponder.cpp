@@ -55,10 +55,10 @@ bool nsOCSPResponder::IncludeCert(CERTCertificate *aCert)
   trust = aCert->trust;
   nickname = aCert->nickname;
 
-  PR_ASSERT(trust != nsnull);
+  PR_ASSERT(trust != nullptr);
 
   // Check that trust is non-null //
-  if (trust == nsnull) {
+  if (trust == nullptr) {
     return false;
   }
 
@@ -86,10 +86,10 @@ PRInt32 nsOCSPResponder::CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b)
   nsXPIDLString aTok, bTok;
   a->GetResponseSigner(getter_Copies(aTok));
   b->GetResponseSigner(getter_Copies(bTok));
-  if (aTok != nsnull && bTok != nsnull) {
+  if (aTok != nullptr && bTok != nullptr) {
     cmp1 = Compare(aTok, bTok);
   } else {
-    cmp1 = (aTok == nsnull) ? 1 : -1;
+    cmp1 = (aTok == nullptr) ? 1 : -1;
   }
   return cmp1;
 }

@@ -21,7 +21,7 @@ nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
     mFixedEndpointRefCnt(0),
     mSerial(0),
     mCreator(aCreator),
-    mBaseInterval(nsnull) // This will get set to aBaseInterval in a call to
+    mBaseInterval(nullptr) // This will get set to aBaseInterval in a call to
                           // SetBaseInterval() at end of constructor
 {
   switch (aSource) {
@@ -60,9 +60,9 @@ nsSMILInstanceTime::Unlink()
   nsRefPtr<nsSMILInstanceTime> deathGrip(this);
   if (mBaseInterval) {
     mBaseInterval->RemoveDependentTime(*this);
-    mBaseInterval = nsnull;
+    mBaseInterval = nullptr;
   }
-  mCreator = nsnull;
+  mCreator = nullptr;
 }
 
 void
@@ -104,12 +104,12 @@ nsSMILInstanceTime::HandleDeletedInterval()
       "Got call to HandleDeletedInterval on an independent instance time");
   NS_ABORT_IF_FALSE(mCreator, "Base interval is set but creator is not");
 
-  mBaseInterval = nsnull;
+  mBaseInterval = nullptr;
   mFlags &= ~kMayUpdate; // Can't update without a base interval
 
   nsRefPtr<nsSMILInstanceTime> deathGrip(this);
   mCreator->HandleDeletedInstanceTime(*this);
-  mCreator = nsnull;
+  mCreator = nullptr;
 }
 
 void
@@ -118,9 +118,9 @@ nsSMILInstanceTime::HandleFilteredInterval()
   NS_ABORT_IF_FALSE(mBaseInterval,
       "Got call to HandleFilteredInterval on an independent instance time");
 
-  mBaseInterval = nsnull;
+  mBaseInterval = nullptr;
   mFlags &= ~kMayUpdate; // Can't update without a base interval
-  mCreator = nsnull;
+  mCreator = nullptr;
 }
 
 bool
@@ -177,12 +177,12 @@ const nsSMILInstanceTime*
 nsSMILInstanceTime::GetBaseTime() const
 {
   if (!mBaseInterval) {
-    return nsnull;
+    return nullptr;
   }
 
   NS_ABORT_IF_FALSE(mCreator, "Base interval is set but there is no creator.");
   if (!mCreator) {
-    return nsnull;
+    return nullptr;
   }
 
   return mCreator->DependsOnBegin() ? mBaseInterval->Begin() :

@@ -60,7 +60,7 @@ public:
    *   check if the caller is giving that special treatment.
    */
   bool PassesConditionalProcessingTests(
-         const nsString *aAcceptLangs = nsnull) const;
+         const nsString *aAcceptLangs = nullptr) const;
 
   /**
    * Returns true if the attribute is one of the conditional processing

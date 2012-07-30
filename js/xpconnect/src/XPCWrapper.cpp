@@ -80,7 +80,7 @@ AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
     return false;
   }
   return JS_DefineFunction(ccx, JS_GetFunctionObject(xpcnativewrapper), "unwrap", UnwrapNW, 1,
-                           JSPROP_READONLY | JSPROP_PERMANENT) != nsnull;
+                           JSPROP_READONLY | JSPROP_PERMANENT) != nullptr;
 }
 
 } // namespace XPCNativeWrapper
@@ -92,11 +92,11 @@ Unwrap(JSContext *cx, JSObject *wrapper, bool stopAtOuter)
 {
   if (js::IsWrapper(wrapper)) {
     if (xpc::AccessCheck::isScriptAccessOnly(cx, wrapper))
-      return nsnull;
+      return nullptr;
     return js::UnwrapObject(wrapper, stopAtOuter);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 } // namespace xpc

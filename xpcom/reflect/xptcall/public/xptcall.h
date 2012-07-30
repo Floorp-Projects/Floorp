@@ -108,12 +108,12 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
         if(f & PTR_IS_DATA)
         {
             ptr = mv.val.p;
-            val.p = nsnull;
+            val.p = nullptr;
         }
         else
         {
-            ptr = nsnull;
-            val.p = nsnull; // make sure 'val.p' is always initialized
+            ptr = nullptr;
+            val.p = nullptr; // make sure 'val.p' is always initialized
             switch(t.TagPart()) {
               case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
               case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;

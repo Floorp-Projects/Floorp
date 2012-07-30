@@ -146,7 +146,7 @@ FileRequest::FireProgressEvent(PRUint64 aLoaded, PRUint64 aTotal)
     return;
   }
 
-  nsRefPtr<nsDOMProgressEvent> event = new nsDOMProgressEvent(nsnull, nsnull);
+  nsRefPtr<nsDOMProgressEvent> event = new nsDOMProgressEvent(nullptr, nullptr);
   nsresult rv = event->InitProgressEvent(NS_LITERAL_STRING("progress"),
                                          false, false, false, aLoaded, aTotal);
   NS_ENSURE_SUCCESS(rv,);

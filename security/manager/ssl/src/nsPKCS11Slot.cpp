@@ -86,7 +86,7 @@ void nsPKCS11Slot::destructorSafeDestroyNSSReference()
 
   if (mSlot) {
     PK11_FreeSlot(mSlot);
-    mSlot = nsnull;
+    mSlot = nullptr;
   }
 }
 
@@ -192,7 +192,7 @@ nsPKCS11Slot::GetTokenName(PRUnichar **aName)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (!PK11_IsPresent(mSlot)) {
-    *aName = nsnull;
+    *aName = nullptr;
     return NS_OK;
   }
 
@@ -262,7 +262,7 @@ void nsPKCS11Module::destructorSafeDestroyNSSReference()
 
   if (mModule) {
     SECMOD_DestroyModule(mModule);
-    mModule = nsnull;
+    mModule = nullptr;
   }
 }
 
@@ -322,7 +322,7 @@ nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
   }
   if (!slotinfo) {
     // workaround - the builtin module has no name
-    if (asciiname == nsnull) {
+    if (asciiname == nullptr) {
       return NS_ERROR_FAILURE;
     } else if (nsCRT::strcmp(asciiname, "Root Certificates") == 0) {
       slotinfo = PK11_ReferenceSlot(mModule->slots[0]);

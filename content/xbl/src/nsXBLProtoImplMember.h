@@ -23,7 +23,7 @@ struct nsXBLTextWithLineNumber
   PRUint32 mLineNumber;
 
   nsXBLTextWithLineNumber() :
-    mText(nsnull),
+    mText(nullptr),
     mLineNumber(0)
   {
     MOZ_COUNT_CTOR(nsXBLTextWithLineNumber);
@@ -62,7 +62,7 @@ struct nsXBLTextWithLineNumber
 class nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMember(const PRUnichar* aName) :mNext(nsnull) { mName = ToNewUnicode(nsDependentString(aName)); }
+  nsXBLProtoImplMember(const PRUnichar* aName) :mNext(nullptr) { mName = ToNewUnicode(nsDependentString(aName)); }
   virtual ~nsXBLProtoImplMember() {
     nsMemory::Free(mName);
     NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplMember, this, mNext);

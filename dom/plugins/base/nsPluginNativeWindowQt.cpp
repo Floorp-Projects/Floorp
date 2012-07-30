@@ -34,7 +34,7 @@ nsPluginNativeWindowQt::nsPluginNativeWindowQt() : nsPluginNativeWindow()
 #ifdef DEBUG
   fprintf(stderr,"\n\n\nCreating plugin native window %p\n\n\n", (void *) this);
 #endif
-  window = nsnull;
+  window = nullptr;
   x = 0;
   y = 0;
   width = 0;
@@ -44,8 +44,8 @@ nsPluginNativeWindowQt::nsPluginNativeWindowQt() : nsPluginNativeWindow()
   type = NPWindowTypeWindow;
   mWsInfo.type = 0;
 #if defined(MOZ_X11)
-  mWsInfo.display = nsnull;
-  mWsInfo.visual = nsnull;
+  mWsInfo.display = nullptr;
+  mWsInfo.visual = nullptr;
   mWsInfo.colormap = 0;
   mWsInfo.depth = 0;
 #endif
@@ -82,7 +82,7 @@ nsresult nsPluginNativeWindowQt::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &
     aPluginInstance->SetWindow(this);
   }
   else if (mPluginInstance)
-    mPluginInstance->SetWindow(nsnull);
+    mPluginInstance->SetWindow(nullptr);
 
   SetPluginInstance(aPluginInstance);
   return NS_OK;

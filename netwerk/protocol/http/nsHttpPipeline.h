@@ -37,14 +37,14 @@ private:
     nsAHttpTransaction *Request(PRInt32 i)
     {
         if (mRequestQ.Length() == 0)
-            return nsnull;
+            return nullptr;
 
         return mRequestQ[i];
     }
     nsAHttpTransaction *Response(PRInt32 i)
     {
         if (mResponseQ.Length() == 0)
-            return nsnull;
+            return nullptr;
 
         return mResponseQ[i];
     }

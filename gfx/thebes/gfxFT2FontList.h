@@ -28,8 +28,8 @@ public:
     FT2FontEntry(const nsAString& aFaceName) :
         gfxFontEntry(aFaceName)
     {
-        mFTFace = nsnull;
-        mFontFace = nsnull;
+        mFTFace = nullptr;
+        mFontFace = nullptr;
         mFTFontIndex = 0;
     }
 
@@ -57,7 +57,7 @@ public:
     static FT2FontEntry* 
     CreateFontEntry(FT_Face aFace, const char *aFilename, PRUint8 aIndex,
                     const nsAString& aName,
-                    const PRUint8 *aFontData = nsnull);
+                    const PRUint8 *aFontData = nullptr);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                         bool aNeedsBold);
@@ -123,7 +123,7 @@ protected:
 
     void AppendFacesFromFontFile(nsCString& aFileName,
                                  bool isStdFile = false,
-                                 FontNameCache *aCache = nsnull);
+                                 FontNameCache *aCache = nullptr);
 
     void AppendFacesFromCachedFaceList(nsCString& aFileName,
                                        bool isStdFile,

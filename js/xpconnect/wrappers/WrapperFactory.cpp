@@ -43,7 +43,7 @@ GetCurrentOuter(JSContext *cx, JSObject *obj)
 {
     obj = JS_ObjectToOuterObject(cx, obj);
     if (!obj)
-        return nsnull;
+        return nullptr;
 
     if (IsWrapper(obj) && !js::GetObjectClass(obj)->ext.innerObject) {
         obj = UnwrapObject(obj);
@@ -79,17 +79,17 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
     // Get a waiver for the proto.
     JSObject *proto = js::GetObjectProto(obj);
     if (proto && !(proto = WaiveXray(cx, proto)))
-        return nsnull;
+        return nullptr;
 
     // Create the waiver.
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, obj) || !JS_WrapObject(cx, &proto))
-        return nsnull;
+        return nullptr;
     JSObject *waiver = Wrapper::New(cx, obj, proto,
                                     JS_GetGlobalForObject(cx, obj),
                                     &XrayWaiver);
     if (!waiver)
-        return nsnull;
+        return nullptr;
 
     // Add the new waiver to the map. It's important that we only ever have
     // one waiver for the lifetime of the target object.
@@ -99,7 +99,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
         MOZ_ASSERT(priv->waiverWrapperMap);
     }
     if (!priv->waiverWrapperMap->Add(obj, waiver))
-        return nsnull;
+        return nullptr;
     return waiver;
 }
 
@@ -128,7 +128,7 @@ WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, obj))
-            return nsnull;
+            return nullptr;
 
         return WaiveXray(cx, obj);
     }
@@ -149,12 +149,12 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // As soon as an object is wrapped in a security wrapper, it morphs to be
     // a fat wrapper. (see also: bug XXX).
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
-        return nsnull;
+        return nullptr;
 
     // We only hand out outer objects to script.
     obj = GetCurrentOuter(cx, obj);
     if (!obj)
-        return nsnull;
+        return nullptr;
 
     if (js::GetObjectClass(obj)->ext.innerObject)
         return DoubleWrap(cx, obj, flags);
@@ -171,7 +171,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, obj))
-        return nsnull;
+        return nullptr;
     XPCCallContext ccx(JS_CALLER, cx, obj);
 
     {
@@ -240,7 +240,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     // so we don't have to.
     jsval v;
     nsresult rv =
-        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nsnull,
+        nsXPConnect::FastGetXPConnect()->WrapNativeToJSVal(cx, scope, wn->Native(), nullptr,
                                                            &NS_GET_IID(nsISupports), false,
                                                            &v, getter_AddRefs(holder));
     if (NS_SUCCEEDED(rv)) {
@@ -260,7 +260,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(ccx, newwn->GetSet(),
                                                             wn->GetSet(), false);
         if (!unionSet)
-            return nsnull;
+            return nullptr;
         newwn->SetSet(unionSet);
     }
 
@@ -273,7 +273,7 @@ GetWrappedNative(JSContext *cx, JSObject *obj)
     obj = JS_ObjectToInnerObject(cx, obj);
     return IS_WN_WRAPPER(obj)
            ? static_cast<XPCWrappedNative *>(js::GetObjectPrivate(obj))
-           : nsnull;
+           : nullptr;
 }
 
 enum XrayType {
@@ -329,7 +329,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
             {
                 JSAutoEnterCompartment ac;
                 if (!ac.enter(cx, obj))
-                    return nsnull;
+                    return nullptr;
                 JSObject *globalObj = JS_GetGlobalForObject(cx, obj);
                 JS_ASSERT(globalObj);
                 isSystem = JS_IsSystemObject(cx, globalObj);
@@ -362,7 +362,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         if (fun) {
             if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
                 JS_ReportError(cx, "Not allowed to access chrome eval or Function from content");
-                return nsnull;
+                return nullptr;
             }
         }
 
@@ -487,7 +487,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
 
     JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, parent);
     if (!xrayHolder)
-        return nsnull;
+        return nullptr;
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
     return wrapperObj;
 }
@@ -525,11 +525,11 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
 {
     JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, js::GetObjectParent(obj));
     if (!xrayHolder)
-        return nsnull;
+        return nullptr;
     JSObject *wrapperObj = Wrapper::New(cx, obj, js::GetObjectProto(obj), js::GetObjectParent(obj),
                                         &LW::singleton);
     if (!wrapperObj)
-        return nsnull;
+        return nullptr;
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
     return wrapperObj;
 }
@@ -617,7 +617,7 @@ WrapperFactory::WrapForSameCompartmentXray(JSContext *cx, JSObject *obj)
     // Make the holder.
     JSObject *xrayHolder = XrayUtils::createHolder(cx, obj, parent);
     if (!xrayHolder)
-        return nsnull;
+        return nullptr;
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
     return wrapperObj;
 }

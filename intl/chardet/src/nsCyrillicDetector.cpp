@@ -75,7 +75,7 @@ nsCyrXPCOMDetector:: nsCyrXPCOMDetector(PRUint8 aItems,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
-    mObserver = nsnull;
+    mObserver = nullptr;
 }
 
 //---------------------------------------------------------------------
@@ -87,8 +87,8 @@ nsCyrXPCOMDetector::~nsCyrXPCOMDetector()
 NS_IMETHODIMP nsCyrXPCOMDetector::Init(
   nsICharsetDetectionObserver* aObserver)
 {
-  NS_ASSERTION(mObserver == nsnull , "Init twice");
-  if(nsnull == aObserver)
+  NS_ASSERTION(mObserver == nullptr , "Init twice");
+  if(nullptr == aObserver)
      return NS_ERROR_ILLEGAL_VALUE;
 
   mObserver = aObserver;
@@ -99,9 +99,9 @@ NS_IMETHODIMP nsCyrXPCOMDetector::Init(
 NS_IMETHODIMP nsCyrXPCOMDetector::DoIt(
   const char* aBuf, PRUint32 aLen, bool* oDontFeedMe)
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
 
-  if((nsnull == aBuf) || (nsnull == oDontFeedMe))
+  if((nullptr == aBuf) || (nullptr == oDontFeedMe))
      return NS_ERROR_ILLEGAL_VALUE;
 
   this->HandleData(aBuf, aLen);
@@ -112,7 +112,7 @@ NS_IMETHODIMP nsCyrXPCOMDetector::DoIt(
 //----------------------------------------------------------
 NS_IMETHODIMP nsCyrXPCOMDetector::Done()
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
   this->DataEnd();
   return NS_OK;
 }
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsCyrXPCOMDetector::Done()
 //----------------------------------------------------------
 void nsCyrXPCOMDetector::Report(const char* aCharset)
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
   mObserver->Notify(aCharset, eBestAnswer);
 }
 
@@ -147,7 +147,7 @@ void nsCyrXPCOMStringDetector::Report(const char *aCharset)
 NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aLen, 
                      const char** oCharset, nsDetectionConfident &oConf)
 {
-   mResult = nsnull;
+   mResult = nullptr;
    mDone = false;
    this->HandleData(aBuf, aLen); 
    this->DataEnd();

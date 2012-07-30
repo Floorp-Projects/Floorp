@@ -104,7 +104,7 @@ nsTextControlFrame::CreateAccessible()
                                                      PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 
@@ -998,7 +998,7 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
 {
   NS_ENSURE_ARG_POINTER(aResult && aPosition);
 
-  *aResult = nsnull;
+  *aResult = nullptr;
   *aPosition = 0;
 
   nsCOMPtr<nsIDOMElement> rootElement;
@@ -1416,7 +1416,7 @@ nsTextControlFrame::SaveState(nsIStatefulFrame::SpecialStateID aStateID, nsPresS
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  *aState = nsnull;
+  *aState = nullptr;
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");

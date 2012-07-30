@@ -33,7 +33,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMeterFrame)
 
 nsMeterFrame::nsMeterFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
-  , mBarDiv(nsnull)
+  , mBarDiv(nullptr)
 {
 }
 
@@ -59,7 +59,7 @@ nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nsnull,
+  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
                                                  kNameSpaceID_XHTML,
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);

@@ -33,7 +33,7 @@ public:
    *
    * @param aStatement
    *        The statement to bind our data to.
-   * @return nsnull on success, or a mozIStorageError object if an error
+   * @return nullptr on success, or a mozIStorageError object if an error
    *         occurred.
    */
   virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt *aStatement) = 0;

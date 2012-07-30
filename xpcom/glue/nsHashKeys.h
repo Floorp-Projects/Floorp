@@ -327,7 +327,7 @@ class nsClearingPtrHashKey : public nsPtrHashKey<T>
   nsClearingPtrHashKey(const T *key) : nsPtrHashKey<T>(key) {}
   nsClearingPtrHashKey(const nsClearingPtrHashKey<T> &toCopy) :
     nsPtrHashKey<T>(toCopy) {}
-  ~nsClearingPtrHashKey() { nsPtrHashKey<T>::mKey = nsnull; }
+  ~nsClearingPtrHashKey() { nsPtrHashKey<T>::mKey = nullptr; }
 };
 
 typedef nsPtrHashKey<const void> nsVoidPtrHashKey; 

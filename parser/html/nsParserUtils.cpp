@@ -81,11 +81,11 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
                                                EmptyString(),
-                                               nsnull,
+                                               nullptr,
                                                uri,
                                                uri,
                                                principal,
-                                               nsnull,
+                                               nullptr,
                                                DocumentFlavorHTML,
                                                getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -135,7 +135,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
                              nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIDOMDocument> domDocument;

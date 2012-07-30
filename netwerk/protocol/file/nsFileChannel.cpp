@@ -99,7 +99,7 @@ nsFileCopyEvent::DoCopy()
     // Dispatch progress notification
     if (mSink) {
       progress += num;
-      mSink->OnTransportStatus(nsnull, nsITransport::STATUS_WRITING, progress,
+      mSink->OnTransportStatus(nullptr, nsITransport::STATUS_WRITING, progress,
                                mLen);
     }
                                
@@ -119,7 +119,7 @@ nsFileCopyEvent::DoCopy()
 
     // Release the callback on the target thread to avoid destroying stuff on
     // the wrong thread.
-    nsIRunnable *doomed = nsnull;
+    nsIRunnable *doomed = nullptr;
     mCallback.swap(doomed);
     NS_ProxyRelease(mCallbackTarget, doomed);
   }
@@ -170,7 +170,7 @@ public:
   }
 
   bool IsInitialized() {
-    return mCopyEvent != nsnull;
+    return mCopyEvent != nullptr;
   }
 
   NS_IMETHODIMP ReadSegments(nsWriteSegmentFun fun, void *closure,
@@ -259,7 +259,7 @@ nsFileChannel::nsFileChannel(nsIURI *uri)
       NS_SUCCEEDED(NS_NewNativeLocalFile(fileTarget, PR_TRUE, 
                                          getter_AddRefs(resolvedFile))) &&
       NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(targetURI), 
-                   resolvedFile, nsnull))) {
+                   resolvedFile, nullptr))) {
     SetURI(targetURI);
     SetOriginalURI(uri);
     nsLoadFlags loadFlags = 0;
@@ -326,7 +326,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     if (NS_FAILED(rv))
       return rv;
 
-    *result = nsnull;
+    *result = nullptr;
     newChannel.forget(channel);
     return NS_OK;
   }
@@ -382,7 +382,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
       SetContentType(contentType);
   }
 
-  *result = nsnull;
+  *result = nullptr;
   stream.swap(*result);
   return NS_OK;
 }

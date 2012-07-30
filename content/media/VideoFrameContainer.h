@@ -52,7 +52,7 @@ public:
   // Call on main thread
   void Invalidate();
   ImageContainer* GetImageContainer() { return mImageContainer; }
-  void ForgetElement() { mElement = nsnull; }
+  void ForgetElement() { mElement = nullptr; }
 
 protected:
   // Non-addreffed pointer to the element. The element calls ForgetElement

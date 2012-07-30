@@ -117,7 +117,7 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
   bool isRTLKeyboardSet = false;
   
   // GetKeyboardLayoutList with 0 as first parameter returns the number of keyboard layouts available
-  keyboards = ::GetKeyboardLayoutList(0, nsnull);
+  keyboards = ::GetKeyboardLayoutList(0, nullptr);
   if (!keyboards)
     return NS_ERROR_FAILURE;
 

@@ -88,7 +88,7 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *jenv, jclass jc)
 {
     if (nsAppShell::gAppShell) {
-        nsAppShell::gAppShell->NotifyObservers(nsnull,
+        nsAppShell::gAppShell->NotifyObservers(nullptr,
                                                "memory-pressure",
                                                NS_LITERAL_STRING("low-memory").get());
     }
@@ -136,7 +136,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jcl
 
     nsJNIString sStatus(jStatus, jenv);
 
-    nsAppShell::gAppShell->NotifyObservers(nsnull,
+    nsAppShell::gAppShell->NotifyObservers(nullptr,
                                            NS_NETWORK_LINK_TOPIC,
                                            sStatus.get());
 }
@@ -213,7 +213,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
         }
 
         nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
-        obs->NotifyObservers(message, kSmsReceivedObserverTopic, nsnull);
+        obs->NotifyObservers(message, kSmsReceivedObserverTopic, nullptr);
         return NS_OK;
       }
 
@@ -278,7 +278,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
         }
 
         nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
-        obs->NotifyObservers(message, kSmsSentObserverTopic, nsnull);
+        obs->NotifyObservers(message, kSmsSentObserverTopic, nullptr);
 
         if (mProcessId == 0) { // Parent process.
           nsCOMPtr<nsISmsRequestManager> requestManager
@@ -334,7 +334,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass,
         }
 
         nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
-        obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nsnull);
+        obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nullptr);
 
         return NS_OK;
       }
@@ -905,30 +905,30 @@ static bool LockWindowWithRetry(void* window, unsigned char** bits, int* width, 
 NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv* jenv, jclass, jobject surface)
 {
-    static jclass jSurfaceBitsClass = nsnull;
+    static jclass jSurfaceBitsClass = nullptr;
     static jmethodID jSurfaceBitsCtor = 0;
     static jfieldID jSurfaceBitsWidth, jSurfaceBitsHeight, jSurfaceBitsFormat, jSurfaceBitsBuffer;
 
-    jobject surfaceBits = nsnull;
-    unsigned char* bitsCopy = nsnull;
+    jobject surfaceBits = nullptr;
+    unsigned char* bitsCopy = nullptr;
     int dstWidth, dstHeight, dstSize;
 
     void* window = AndroidBridge::Bridge()->AcquireNativeWindow(jenv, surface);
     if (!window)
-        return nsnull;
+        return nullptr;
 
     unsigned char* bits;
     int srcWidth, srcHeight, format, srcStride;
 
     // So we lock/unlock once here in order to get whatever is currently the front buffer. It sucks.
     if (!LockWindowWithRetry(window, &bits, &srcWidth, &srcHeight, &format, &srcStride))
-        return nsnull;
+        return nullptr;
 
     AndroidBridge::Bridge()->UnlockWindow(window);
 
     // This is lock will result in the front buffer, since the last unlock rotated it to the back. Probably.
     if (!LockWindowWithRetry(window, &bits, &srcWidth, &srcHeight, &format, &srcStride))
-        return nsnull;
+        return nullptr;
 
     // These are from android.graphics.PixelFormat
     int bpp;
@@ -1006,7 +1006,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jcla
 NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclass, jobject queue)
 {
-    static jclass jMessageQueueCls = nsnull;
+    static jclass jMessageQueueCls = nullptr;
     static jfieldID jMessagesField;
     static jmethodID jNextMethod;
     if (!jMessageQueueCls) {

@@ -51,7 +51,7 @@ NS_IMETHODIMP
 nsDOMMultipartFile::GetInternalStream(nsIInputStream** aStream)
 {
   nsresult rv;
-  *aStream = nsnull;
+  *aStream = nullptr;
 
   nsCOMPtr<nsIMultiplexInputStream> stream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -89,7 +89,7 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 
     PRUint64 l;
     nsresult rv = blob->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     if (skipStart < l) {
       PRUint64 upperBound = NS_MIN<PRUint64>(l - skipStart, length);
@@ -98,7 +98,7 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
       rv = blob->Slice(skipStart, skipStart + upperBound,
                        aContentType, 3,
                        getter_AddRefs(firstBlob));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       // Avoid wrapping a single blob inside an nsDOMMultipartFile
       if (length == upperBound) {
@@ -119,13 +119,13 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 
     PRUint64 l;
     nsresult rv = blob->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     if (length < l) {
       nsCOMPtr<nsIDOMBlob> lastBlob;
       rv = blob->Slice(0, length, aContentType, 3,
                        getter_AddRefs(lastBlob));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       blobs.AppendElement(lastBlob);
     } else {

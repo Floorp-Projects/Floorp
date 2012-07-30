@@ -27,7 +27,7 @@ public:
 
     static void Shutdown() {
       delete gToolkit;
-      gToolkit = nsnull;
+      gToolkit = nullptr;
     }
 
     void          CreateSharedGC(void);

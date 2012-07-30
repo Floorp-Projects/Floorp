@@ -80,7 +80,7 @@ nsImageBoxFrameEvent::Run()
   nsEvent event(true, mMessage);
 
   event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-  nsEventDispatcher::Dispatch(mContent, pres_context, &event, nsnull, &status);
+  nsEventDispatcher::Dispatch(mContent, pres_context, &event, nullptr, &status);
   return NS_OK;
 }
 
@@ -170,7 +170,7 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   if (mListener)
-    reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
+    reinterpret_cast<nsImageBoxListener*>(mListener.get())->SetFrame(nullptr); // set the frame to null so we don't send messages to a dead object.
 
   nsLeafBoxFrame::DestroyFrom(aDestructRoot);
 }
@@ -208,7 +208,7 @@ nsImageBoxFrame::UpdateImage()
     nsLayoutUtils::DeregisterImageRequest(presContext, mImageRequest,
                                           &mRequestRegistered);
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
-    mImageRequest = nsnull;
+    mImageRequest = nullptr;
   }
 
   // get the new image src
@@ -245,7 +245,7 @@ nsImageBoxFrame::UpdateImage()
     // by a native theme.
     PRUint8 appearance = GetStyleDisplay()->mAppearance;
     if (!(appearance && nsBox::gTheme &&
-          nsBox::gTheme->ThemeSupportsWidget(nsnull, this, appearance))) {
+          nsBox::gTheme->ThemeSupportsWidget(nullptr, this, appearance))) {
       // get the list-style-image
       imgIRequest *styleRequest = GetStyleList()->GetListStyleImage();
       if (styleRequest) {
@@ -268,7 +268,7 @@ void
 nsImageBoxFrame::UpdateLoadFlags()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::always, &nsGkAtoms::never, nsnull};
+    {&nsGkAtoms::always, &nsGkAtoms::never, nullptr};
   switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::validate,
                                     strings, eCaseMatters)) {
     case 0:
@@ -360,7 +360,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
     bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
-        rect, dirty, aFlags, hasSubRect ? &mSubRect : nsnull);
+        rect, dirty, aFlags, hasSubRect ? &mSubRect : nullptr);
   }
 }
 
@@ -385,7 +385,7 @@ nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   // If we're using a native theme implementation, we shouldn't draw anything.
   const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance && nsBox::gTheme &&
-      nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
+      nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->mAppearance))
     return;
 
   // If list-style-image changes, we have a new image.

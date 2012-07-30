@@ -188,7 +188,7 @@ public:
 
     ~VideoInfo()
     {
-      mSurfaceTexture = nsnull;
+      mSurfaceTexture = nullptr;
     }
 
     nsRefPtr<nsSurfaceTexture> mSurfaceTexture;

@@ -183,7 +183,7 @@ extern "C" {
 }
 
 // setContext: stores the searchfield nsIFrame so that it can be consulted
-// during painting. Please reset this by calling setContext:nsnull as soon as
+// during painting. Please reset this by calling setContext:nullptr as soon as
 // you're done with painting because we don't want to keep a dangling pointer.
 - (void)setContext:(nsIFrame*)aContext;
 @end
@@ -193,7 +193,7 @@ extern "C" {
 - (id)initTextCell:(NSString*)aString
 {
   if ((self = [super initTextCell:aString])) {
-    mContext = nsnull;
+    mContext = nullptr;
   }
   return self;
 }
@@ -871,7 +871,7 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
                        VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
 
-  [cell setContext:nsnull];
+  [cell setContext:nullptr];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1517,7 +1517,7 @@ nsNativeThemeCocoa::SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter)
   // Usually a separator is drawn by the segment to the right of the
   // separator, but pressed and selected segments have higher priority.
   if (!aBefore || !aAfter)
-    return nsnull;
+    return nullptr;
   if (IsSelectedButton(aAfter))
     return aAfter;
   if (IsSelectedButton(aBefore) || IsPressedButton(aBefore))
@@ -1629,7 +1629,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aBut
     &nsGkAtoms::scrollbarDownTop,
     &nsGkAtoms::scrollbarUpBottom,
     &nsGkAtoms::scrollbarDownBottom,
-    nsnull
+    nullptr
   };
 
   // Get the state of any scrollbar buttons in our child frames
@@ -1897,7 +1897,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
   gfxQuartzNativeDrawing nativeDrawing(thebesCtx, nativeDirtyRect);
 
   CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
-  if (cgContext == nsnull) {
+  if (cgContext == nullptr) {
     // The Quartz surface handles 0x0 surfaces by internally
     // making all operations no-ops; there's no cgcontext created for them.
     // Unfortunately, this means that callers that want to render

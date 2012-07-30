@@ -141,13 +141,13 @@ struct AtomTableKey
 {
   AtomTableKey(const PRUnichar* aUTF16String, PRUint32 aLength)
     : mUTF16String(aUTF16String),
-      mUTF8String(nsnull),
+      mUTF8String(nullptr),
       mLength(aLength)
   {
   }
 
   AtomTableKey(const char* aUTF8String, PRUint32 aLength)
-    : mUTF16String(nsnull),
+    : mUTF16String(nullptr),
       mUTF8String(aUTF8String),
       mLength(aLength)
   {
@@ -168,7 +168,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
     PRUint32 hash = HashUTF8AsUTF16(k->mUTF8String, k->mLength, &err);
     if (err) {
       AtomTableKey* mutableKey = const_cast<AtomTableKey*>(k);
-      mutableKey->mUTF8String = nsnull;
+      mutableKey->mUTF8String = nullptr;
       mutableKey->mLength = 0;
       hash = 0;
     }
@@ -223,7 +223,7 @@ static bool
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
-  static_cast<AtomTableEntry*>(entry)->mAtom = nsnull;
+  static_cast<AtomTableEntry*>(entry)->mAtom = nullptr;
 
   return true;
 }
@@ -292,7 +292,7 @@ NS_PurgeAtomTable()
 #endif
     PL_DHashTableFinish(&gAtomTable);
     gAtomTable.entryCount = 0;
-    gAtomTable.ops = nsnull;
+    gAtomTable.ops = nullptr;
   }
 }
 
@@ -489,7 +489,7 @@ EnsureTableExists()
     return true;
   }
   // Initialization failed.
-  gAtomTable.ops = nsnull;
+  gAtomTable.ops = nullptr;
   return false;
 }
 
@@ -498,7 +498,7 @@ GetAtomHashEntry(const char* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!EnsureTableExists()) {
-    return nsnull;
+    return nullptr;
   }
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
@@ -510,7 +510,7 @@ GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!EnsureTableExists()) {
-    return nsnull;
+    return nullptr;
   }
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
@@ -546,7 +546,7 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, PRUint32 aAtomCount)
     gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
     if (!gStaticAtomTable) {
       delete gStaticAtomTable;
-      gStaticAtomTable = nsnull;
+      gStaticAtomTable = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     gStaticAtomTable->Init();
@@ -699,7 +699,7 @@ NS_GetStaticAtom(const nsAString& aUTF16String)
   NS_PRECONDITION(gStaticAtomTableSealed, "Static atom table not sealed yet.");
   nsIAtom* atom;
   if (!gStaticAtomTable->Get(aUTF16String, &atom)) {
-    atom = nsnull;
+    atom = nullptr;
   }
   return atom;
 }

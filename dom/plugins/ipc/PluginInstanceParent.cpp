@@ -69,7 +69,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 #if defined(XP_MACOSX)
     , mShWidth(0)
     , mShHeight(0)
-    , mShColorSpace(nsnull)
+    , mShColorSpace(nullptr)
 #endif
 {
 #ifdef OS_WIN
@@ -98,8 +98,8 @@ PluginInstanceParent::~PluginInstanceParent()
             GetImageContainer();
 
         if (container) {
-            container->SetRemoteImageData(nsnull, nsnull);
-            container->SetCompositionNotifySink(nsnull);
+            container->SetRemoteImageData(nullptr, nullptr);
+            container->SetCompositionNotifySink(nullptr);
             DeallocShmem(mRemoteImageDataShmem);
         }
     }
@@ -259,7 +259,7 @@ PluginInstanceParent::InternalGetValueForNPObject(
         result = NPERR_GENERIC_ERROR;
     }
 
-    *aValue = nsnull;
+    *aValue = nullptr;
     *aResult = result;
     return true;
 }
@@ -319,7 +319,7 @@ bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
                                                             NPError* result)
 {
-    void *v = nsnull;
+    void *v = nullptr;
     *result = mNPNIface->getvalue(mNPP, NPNVdocumentOrigin, &v);
     if (*result == NPERR_NO_ERROR && v) {
         value->Adopt(static_cast<char*>(v));
@@ -452,8 +452,8 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
                                       (void*)drawingModel);
 
         if (mRemoteImageDataShmem.IsWritable()) {
-            container->SetRemoteImageData(nsnull, nsnull);
-            container->SetCompositionNotifySink(nsnull);
+            container->SetRemoteImageData(nullptr, nullptr);
+            container->SetCompositionNotifySink(nullptr);
             DeallocShmem(mRemoteImageDataShmem);
             mRemoteImageDataMutex = NULL;
         }
@@ -838,7 +838,7 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
         NS_ABORT_IF_FALSE(aRect.TopLeft() == nsIntPoint(0, 0),
                           "Expecting rect for whole frame");
         if (!CreateBackground(aRect.Size())) {
-            *aCtx = nsnull;
+            *aCtx = nullptr;
             return NS_OK;
         }
     }
@@ -905,7 +905,7 @@ PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
             gfxASurface::ImageFormatRGB24);
     return !!mBackground;
 #else
-    return nsnull;
+    return nullptr;
 #endif
 }
 
@@ -919,7 +919,7 @@ PluginInstanceParent::DestroyBackground()
     // Relinquish ownership of |mBackground| to its destroyer
     PPluginBackgroundDestroyerParent* pbd =
         new PluginBackgroundDestroyerParent(mBackground);
-    mBackground = nsnull;
+    mBackground = nullptr;
 
     // If this fails, there's no problem: |bd| will be destroyed along
     // with the old background surface.
@@ -966,7 +966,7 @@ PPluginBackgroundDestroyerParent*
 PluginInstanceParent::AllocPPluginBackgroundDestroyer()
 {
     NS_RUNTIMEABORT("'Power-user' ctor is used exclusively");
-    return nsnull;
+    return nullptr;
 }
 
 bool
@@ -1492,7 +1492,7 @@ PluginInstanceParent::DeallocPPluginScriptableObject(
 
     NPObject* object = actor->GetObject(false);
     if (object) {
-        NS_ASSERTION(mScriptableObjects.Get(object, nsnull),
+        NS_ASSERTION(mScriptableObjects.Get(object, nullptr),
                      "NPObject not in the hash!");
         mScriptableObjects.Remove(object);
     }
@@ -1544,7 +1544,7 @@ PluginInstanceParent::RegisterNPObjectForActor(
 {
     NS_ASSERTION(aObject && aActor, "Null pointers!");
     NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
-    NS_ASSERTION(!mScriptableObjects.Get(aObject, nsnull), "Duplicate entry!");
+    NS_ASSERTION(!mScriptableObjects.Get(aObject, nullptr), "Duplicate entry!");
     mScriptableObjects.Put(aObject, aActor);
     return true;
 }
@@ -1554,7 +1554,7 @@ PluginInstanceParent::UnregisterNPObject(NPObject* aObject)
 {
     NS_ASSERTION(aObject, "Null pointer!");
     NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
-    NS_ASSERTION(mScriptableObjects.Get(aObject, nsnull), "Unknown entry!");
+    NS_ASSERTION(mScriptableObjects.Get(aObject, nullptr), "Unknown entry!");
     mScriptableObjects.Remove(aObject);
 }
 
@@ -1578,12 +1578,12 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
     actor = new PluginScriptableObjectParent(LocalObject);
     if (!actor) {
         NS_ERROR("Out of memory!");
-        return nsnull;
+        return nullptr;
     }
 
     if (!SendPPluginScriptableObjectConstructor(actor)) {
         NS_WARNING("Failed to send constructor message!");
-        return nsnull;
+        return nullptr;
     }
 
     actor->InitializeLocal(aObject);
@@ -1695,8 +1695,8 @@ PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
                                              bool *result)
 {
     *result = mNPNIface->convertpoint(mNPP, sourceX, sourceY, sourceSpace,
-                                      ignoreDestX ? nsnull : destX,
-                                      ignoreDestY ? nsnull : destY,
+                                      ignoreDestX ? nullptr : destX,
+                                      ignoreDestY ? nullptr : destY,
                                       destSpace);
 
     return true;

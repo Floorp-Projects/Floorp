@@ -66,7 +66,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   : kSpace(NS_LITERAL_STRING(" ")) // Init of "constant"
 {
 
-  mOutputString = nsnull;
+  mOutputString = nullptr;
   mHeadLevel = 0;
   mAtFirstColumn = true;
   mIndent = 0;
@@ -305,7 +305,7 @@ nsPlainTextSerializer::AppendText(nsIContent* aText,
     }
   }
   
-  mOutputString = nsnull;
+  mOutputString = nullptr;
 
   return rv;
 }
@@ -342,8 +342,8 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
     rv = DoAddLeaf(id);
   }
 
-  mElement = nsnull;
-  mOutputString = nsnull;
+  mElement = nullptr;
+  mOutputString = nullptr;
 
   if (id == nsGkAtoms::head) {
     ++mHeadLevel;
@@ -372,8 +372,8 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
     rv = DoCloseContainer(id);
   }
 
-  mElement = nsnull;
-  mOutputString = nsnull;
+  mElement = nullptr;
+  mOutputString = nullptr;
 
   if (id == nsGkAtoms::head) {
     NS_ASSERTION(mHeadLevel != 0,
@@ -389,7 +389,7 @@ nsPlainTextSerializer::Flush(nsAString& aStr)
 {
   mOutputString = &aStr;
   FlushLine();
-  mOutputString = nsnull;
+  mOutputString = nullptr;
   return NS_OK;
 }
 
@@ -1597,7 +1597,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // If needed, strip out all "end of lines"
   // and multiple whitespace between words
   PRInt32 nextpos;
-  const PRUnichar * offsetIntoBuffer = nsnull;
+  const PRUnichar * offsetIntoBuffer = nullptr;
   
   while (bol < totLen) {    // Loop over lines
     // Find a place where we may have to do whitespace compression
@@ -1704,11 +1704,11 @@ nsIAtom*
 nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 {
   if (!aContent->IsHTML()) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIAtom* localName = aContent->Tag();
-  return localName->IsStaticAtom() ? localName : nsnull;
+  return localName->IsStaticAtom() ? localName : nullptr;
 }
 
 /**

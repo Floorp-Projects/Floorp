@@ -199,7 +199,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
   if (sortState->direction == nsSortState_natural && sortState->processor) {
     // sort in natural order
     sortState->processor->CompareResults(left->result, right->result,
-                                         nsnull, sortState->sortHints, &sortOrder);
+                                         nullptr, sortState->sortHints, &sortOrder);
   }
   else {
     PRInt32 length = sortState->sortKeys.Count();
@@ -498,7 +498,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* aNode,
   SetSortHints(sortNode, &sortState);
   rv = SortContainer(sortNode, &sortState);
   
-  sortState.processor = nsnull; // don't hang on to this reference
+  sortState.processor = nullptr; // don't hang on to this reference
   return rv;
 }
 

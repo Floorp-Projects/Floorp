@@ -221,8 +221,8 @@ void AndroidCameraInputStream::NotifyListeners() {
     NS_ASSERTION(callback, "Shouldn't fail to make the callback!");
 
     // Null the callback first because OnInputStreamReady may reenter AsyncWait
-    mCallback = nsnull;
-    mCallbackTarget = nsnull;
+    mCallback = nullptr;
+    mCallbackTarget = nullptr;
 
     callback->OnInputStreamReady(this);
   }

@@ -62,10 +62,10 @@ CanvasLayerOGL::Destroy()
 void
 CanvasLayerOGL::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mCanvasSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(mCanvasSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mGLContext != nsnull &&
-      aData.mSurface != nsnull)
+  if (aData.mGLContext != nullptr &&
+      aData.mSurface != nullptr)
   {
     NS_WARNING("CanvasLayerOGL can't have both surface and GLContext");
     return;
@@ -206,7 +206,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
-  ShaderProgramOGL *program = nsnull;
+  ShaderProgramOGL *program = nullptr;
 
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
@@ -284,7 +284,7 @@ IsValidSharedTexDescriptor(const SurfaceDescriptor& aDescriptor)
 }
 
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
-  : ShadowCanvasLayer(aManager, nsnull)
+  : ShadowCanvasLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mNeedsYFlip(false)
   , mTexture(0)
@@ -348,7 +348,7 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
 void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
-  mTexImage = nsnull;
+  mTexImage = nullptr;
   if (mTexture) {
     gl()->MakeCurrent();
     gl()->fDeleteTextures(1, &mTexture);

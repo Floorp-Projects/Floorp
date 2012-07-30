@@ -435,8 +435,8 @@ private:
   void SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                        const nsStyleCoord& aCoord,
                        bool aClampNegativeCalc,
-                       PercentageBaseGetter aPercentageBaseGetter = nsnull,
-                       const PRInt32 aTable[] = nsnull,
+                       PercentageBaseGetter aPercentageBaseGetter = nullptr,
+                       const PRInt32 aTable[] = nullptr,
                        nscoord aMinAppUnits = nscoord_MIN,
                        nscoord aMaxAppUnits = nscoord_MAX);
 

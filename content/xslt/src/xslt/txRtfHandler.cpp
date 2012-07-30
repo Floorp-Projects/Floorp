@@ -6,7 +6,7 @@
 #include "txRtfHandler.h"
 
 txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>& aBuffer)
-    : txAExprResult(nsnull),
+    : txAExprResult(nullptr),
       mBuffer(aBuffer)
 {
 }
@@ -29,7 +29,7 @@ txResultTreeFragment::stringValue(nsString& aResult)
 const nsString*
 txResultTreeFragment::stringValuePointer()
 {
-    return mBuffer ? &mBuffer->mStringValue : nsnull;
+    return mBuffer ? &mBuffer->mStringValue : nullptr;
 }
 
 bool txResultTreeFragment::booleanValue()

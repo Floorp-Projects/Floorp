@@ -138,7 +138,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void append(nsHtml5StackNode* node);
     inline void insertMarker()
     {
-      append(nsnull);
+      append(nullptr);
     }
 
     void clearTheListOfActiveFormattingElementsUpToTheLastMarker();

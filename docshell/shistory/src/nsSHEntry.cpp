@@ -32,7 +32,7 @@ nsSHEntry::nsSHEntry()
   , mID(gEntryID++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
-  , mParent(nsnull)
+  , mParent(nullptr)
   , mURIWasModified(false)
 {
   mShared = new nsSHEntryShared();
@@ -58,7 +58,7 @@ static bool
 ClearParentPtr(nsISHEntry* aEntry, void* /* aData */)
 {
   if (aEntry) {
-    aEntry->SetParent(nsnull);
+    aEntry->SetParent(nullptr);
   }
   return true;
 }
@@ -66,7 +66,7 @@ ClearParentPtr(nsISHEntry* aEntry, void* /* aData */)
 nsSHEntry::~nsSHEntry()
 {
   // Null out the mParent pointers on all our kids.
-  mChildren.EnumerateForwards(ClearParentPtr, nsnull);
+  mChildren.EnumerateForwards(ClearParentPtr, nullptr);
 }
 
 //*****************************************************************************
@@ -553,7 +553,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
     }
     if (!mChildren.InsertObjectAt(aChild, lastNonDyn + 1)) {
       NS_WARNING("Adding a child failed!");
-      aChild->SetParent(nsnull);
+      aChild->SetParent(nullptr);
       return NS_ERROR_FAILURE;
     }
   } else {
@@ -563,7 +563,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
     if (mChildren.Count() > 0) {
       PRInt32 start = NS_MIN(mChildren.Count() - 1, aOffset);
       PRInt32 dynEntryIndex = -1;
-      nsISHEntry* dynEntry = nsnull;
+      nsISHEntry* dynEntry = nullptr;
       for (PRInt32 i = start; i >= 0; --i) {
         nsISHEntry* entry = mChildren[i];
         if (entry) {
@@ -592,13 +592,13 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
       nsISHEntry* oldChild = mChildren[aOffset];
       if (oldChild && oldChild != aChild) {
         NS_ERROR("Adding a child where we already have a child? This may misbehave");
-        oldChild->SetParent(nsnull);
+        oldChild->SetParent(nullptr);
       }
     }
 
     if (!mChildren.ReplaceObjectAt(aChild, aOffset)) {
       NS_WARNING("Adding a child failed!");
-      aChild->SetParent(nsnull);
+      aChild->SetParent(nullptr);
       return NS_ERROR_FAILURE;
     }
   }
@@ -618,11 +618,11 @@ nsSHEntry::RemoveChild(nsISHEntry * aChild)
   } else {
     PRInt32 index = mChildren.IndexOfObject(aChild);
     if (index >= 0) {
-      childRemoved = mChildren.ReplaceObjectAt(nsnull, index);
+      childRemoved = mChildren.ReplaceObjectAt(nullptr, index);
     }
   }
   if (childRemoved) {
-    aChild->SetParent(nsnull);
+    aChild->SetParent(nullptr);
 
     // reduce the child count, i.e. remove empty children at the end
     for (PRInt32 i = mChildren.Count() - 1; i >= 0 && !mChildren[i]; --i) {
@@ -643,7 +643,7 @@ nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
     // that possible.
     NS_IF_ADDREF(*aResult);
   } else {
-    *aResult = nsnull;
+    *aResult = nullptr;
   }
   return NS_OK;
 }
@@ -722,7 +722,7 @@ nsSHEntry::SetEditorData(nsDocShellEditorData* aData)
 bool
 nsSHEntry::HasDetachedEditor()
 {
-  return mShared->mEditorData != nsnull;
+  return mShared->mEditorData != nullptr;
 }
 
 NS_IMETHODIMP

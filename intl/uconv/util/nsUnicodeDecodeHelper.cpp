@@ -231,7 +231,7 @@ nsresult nsUnicodeDecodeHelper::CreateFastTable(
   char * p = buff;
   for (PRInt32 i=0; i<aTableSize; i++) *(p++) = i;
   nsresult res = ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
-      u1ByteCharset, nsnull, aMappingTable);
+      u1ByteCharset, nullptr, aMappingTable);
 
   delete [] buff;
   return res;

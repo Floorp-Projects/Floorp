@@ -83,7 +83,7 @@ protected:
    *        the image load
    */
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
-                     nsIDocument* aDocument = nsnull,
+                     nsIDocument* aDocument = nullptr,
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
   /**
@@ -99,7 +99,7 @@ protected:
    * Helper function to get the frame associated with this content. Not named
    * GetPrimaryFrame to prevent ambiguous method names in subclasses.
    *
-   * @return The frame which we belong to, or nsnull if it doesn't exist.
+   * @return The frame which we belong to, or nullptr if it doesn't exist.
    */
   nsIFrame* GetOurPrimaryFrame();
 
@@ -108,7 +108,7 @@ protected:
    * frame. Not named GetPresContext to prevent ambiguous method names in
    * subclasses.
    *
-   * @return The nsPresContext associated with our frame, or nsnull if either
+   * @return The nsPresContext associated with our frame, or nullptr if either
    *         the frame doesn't exist, or the frame's prescontext doesn't exist.
    */
   nsPresContext* GetFramePresContext();
@@ -159,7 +159,7 @@ private:
   struct ImageObserver {
     ImageObserver(imgIDecoderObserver* aObserver) :
       mObserver(aObserver),
-      mNext(nsnull)
+      mNext(nullptr)
     {
       MOZ_COUNT_CTOR(ImageObserver);
     }
@@ -280,7 +280,7 @@ protected:
    * which a particular image request corresponds.
    *
    * @returns A pointer to the boolean flag for a given image request, or
-   *          |nsnull| if the request is not either |mPendingRequest| or
+   *          |nullptr| if the request is not either |mPendingRequest| or
    *          |mCurrentRequest|.
    */
   bool* GetRegisteredFlagForRequest(imgIRequest* aRequest);

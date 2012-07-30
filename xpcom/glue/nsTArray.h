@@ -125,11 +125,11 @@ struct nsTArray_SafeElementAtHelper<E*, Derived>
   typedef PRUint32 index_type;
 
   elem_type SafeElementAt(index_type i) {
-    return static_cast<Derived*> (this)->SafeElementAt(i, nsnull);
+    return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
   }
 
   const elem_type SafeElementAt(index_type i) const {
-    return static_cast<const Derived*> (this)->SafeElementAt(i, nsnull);
+    return static_cast<const Derived*> (this)->SafeElementAt(i, nullptr);
   }
 };
 
@@ -142,11 +142,11 @@ struct nsTArray_SafeElementAtSmartPtrHelper
   typedef PRUint32 index_type;
 
   elem_type SafeElementAt(index_type i) {
-    return static_cast<Derived*> (this)->SafeElementAt(i, nsnull);
+    return static_cast<Derived*> (this)->SafeElementAt(i, nullptr);
   }
 
   const elem_type SafeElementAt(index_type i) const {
-    return static_cast<const Derived*> (this)->SafeElementAt(i, nsnull);
+    return static_cast<const Derived*> (this)->SafeElementAt(i, nullptr);
   }
 };
 
@@ -718,7 +718,7 @@ public:
                                const Item* array, size_type arrayLen) {
     // Adjust memory allocation up-front to catch errors.
     if (!this->EnsureCapacity(Length() + arrayLen - count, sizeof(elem_type)))
-      return nsnull;
+      return nullptr;
     DestructRange(start, count);
     this->ShiftData(start, count, arrayLen, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     AssignRange(start, arrayLen, array);
@@ -769,7 +769,7 @@ public:
   // @return A pointer to the newly inserted element, or null on OOM.
   elem_type* InsertElementAt(index_type index) {
     if (!this->EnsureCapacity(Length() + 1, sizeof(elem_type)))
-      return nsnull;
+      return nullptr;
     this->ShiftData(index, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     elem_type *elem = Elements() + index;
     elem_traits::Construct(elem);
@@ -865,7 +865,7 @@ public:
   template<class Item>
   elem_type *AppendElements(const Item* array, size_type arrayLen) {
     if (!this->EnsureCapacity(Length() + arrayLen, sizeof(elem_type)))
-      return nsnull;
+      return nullptr;
     index_type len = Length();
     AssignRange(len, arrayLen, array);
     this->IncrementLength(arrayLen);
@@ -889,7 +889,7 @@ public:
   // @return A pointer to the newly appended elements, or null on OOM.
   elem_type *AppendElements(size_type count) {
     if (!this->EnsureCapacity(Length() + count, sizeof(elem_type)))
-      return nsnull;
+      return nullptr;
     elem_type *elems = Elements() + Length();
     size_type i;
     for (i = 0; i < count; ++i) {
@@ -915,7 +915,7 @@ public:
     index_type len = Length();
     index_type otherLen = array.Length();
     if (!this->EnsureCapacity(len + otherLen, sizeof(elem_type)))
-      return nsnull;
+      return nullptr;
     memcpy(Elements() + len, array.Elements(), otherLen * sizeof(elem_type));
     this->IncrementLength(otherLen);      
     array.ShiftData(0, otherLen, 0, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
@@ -1019,7 +1019,7 @@ public:
   bool SetLength(size_type newLen) {
     size_type oldLen = Length();
     if (newLen > oldLen) {
-      return InsertElementsAt(oldLen, newLen - oldLen) != nsnull;
+      return InsertElementsAt(oldLen, newLen - oldLen) != nullptr;
     }
       
     TruncateLength(newLen);
@@ -1048,7 +1048,7 @@ public:
   bool EnsureLengthAtLeast(size_type minLen) {
     size_type oldLen = Length();
     if (minLen > oldLen) {
-      return InsertElementsAt(oldLen, minLen - oldLen) != nsnull;
+      return InsertElementsAt(oldLen, minLen - oldLen) != nullptr;
     }
     return true;
   }
@@ -1060,7 +1060,7 @@ public:
   // @param count the number of elements to insert
   elem_type *InsertElementsAt(index_type index, size_type count) {
     if (!base_type::InsertSlotsAt(index, count, sizeof(elem_type), MOZ_ALIGNOF(elem_type))) {
-      return nsnull;
+      return nullptr;
     }
 
     // Initialize the extra array elements
@@ -1083,7 +1083,7 @@ public:
   elem_type *InsertElementsAt(index_type index, size_type count,
                               const Item& item) {
     if (!base_type::InsertSlotsAt(index, count, sizeof(elem_type), MOZ_ALIGNOF(elem_type))) {
-      return nsnull;
+      return nullptr;
     }
 
     // Initialize the extra array elements
@@ -1158,7 +1158,7 @@ public:
   template<class Item, class Comparator>
   elem_type *PushHeap(const Item& item, const Comparator& comp) {
     if (!base_type::InsertSlotsAt(Length(), 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type))) {
-      return nsnull;
+      return nullptr;
     }
     // Sift up the new node
     elem_type *elem = Elements();

@@ -77,16 +77,16 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 
     rv = NS_ERROR_NOT_AVAILABLE;
 
-    IUniformResourceLocatorW* urlLink = nsnull;
+    IUniformResourceLocatorW* urlLink = nullptr;
     result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
                                 IID_IUniformResourceLocatorW, (void**)&urlLink);
     if (SUCCEEDED(result) && urlLink) {
-        IPersistFile* urlFile = nsnull;
+        IPersistFile* urlFile = nullptr;
         result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
         if (SUCCEEDED(result) && urlFile) {
             result = urlFile->Load(path.get(), STGM_READ);
             if (SUCCEEDED(result) ) {
-                LPWSTR lpTemp = nsnull;
+                LPWSTR lpTemp = nullptr;
 
                 // The URL this method will give us back seems to be already
                 // escaped. Hence, do not do escaping of our own.

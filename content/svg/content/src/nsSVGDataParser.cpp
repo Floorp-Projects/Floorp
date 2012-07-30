@@ -42,7 +42,7 @@ nsSVGDataParser::Parse(const nsAString &aValue)
   if (mTokenType != END)
     rv = NS_ERROR_FAILURE; // not all tokens were consumed
 
-  mInputPos = nsnull;
+  mInputPos = nullptr;
   nsMemory::Free(str);
 
   return rv;

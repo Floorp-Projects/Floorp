@@ -43,7 +43,7 @@ FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
                                 txNodeSet** aResult)
 {
     NS_ASSERTION(aExpr, "Missing expression to evaluate");
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsRefPtr<txAExprResult> exprRes;
     nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));

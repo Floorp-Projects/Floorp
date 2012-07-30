@@ -92,15 +92,15 @@ public:
     }
 
     nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(mPresContext, nsnull,
+    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(mPresContext, nullptr,
                                                     NS_LITERAL_STRING("Events"),
                                                     getter_AddRefs(event)))) {
       event->InitEvent(domEventToFire, true, true);
 
       event->SetTrusted(true);
 
-      nsEventDispatcher::DispatchDOMEvent(mMenu, nsnull, event,
-                                          mPresContext, nsnull);
+      nsEventDispatcher::DispatchDOMEvent(mMenu, nullptr, event,
+                                          mPresContext, nullptr);
     }
 
     return NS_OK;
@@ -183,7 +183,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     mChecked(false),
     mIgnoreAccelTextChange(false),
     mType(eMenuType_Normal),
-    mMenuParent(nsnull),
+    mMenuParent(nullptr),
     mBlinkState(0)
 {
 }
@@ -288,14 +288,14 @@ nsMenuFrame::GetPopup()
 {
   nsFrameList* popupList = GetPopupList();
   return popupList ? static_cast<nsMenuPopupFrame*>(popupList->FirstChild()) :
-                     nsnull;
+                     nullptr;
 }
 
 nsFrameList*
 nsMenuFrame::GetPopupList() const
 {
   if (!HasPopup()) {
-    return nsnull;
+    return nullptr;
   }
   nsFrameList* prop =
     static_cast<nsFrameList*>(Properties().Get(PopupListProperty()));
@@ -484,7 +484,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // Kill our timer if one is active.
     if (mOpenTimer) {
       mOpenTimer->Cancel();
-      mOpenTimer = nsnull;
+      mOpenTimer = nullptr;
     }
 
     // Deactivate the menu.
@@ -495,7 +495,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
           // Submenus don't get closed up immediately.
         }
         else if (this == mMenuParent->GetCurrentMenuItem()) {
-          mMenuParent->ChangeMenuItem(nsnull, false);
+          mMenuParent->ChangeMenuItem(nullptr, false);
         }
       }
     }
@@ -790,7 +790,7 @@ nsMenuFrame::Enter(nsGUIEvent *aEvent)
     }
 #endif   // #ifdef XP_WIN
     // this menu item was disabled - exit
-    return nsnull;
+    return nullptr;
   }
 
   if (!IsOpen()) {
@@ -801,7 +801,7 @@ nsMenuFrame::Enter(nsGUIEvent *aEvent)
       return this;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -840,14 +840,14 @@ nsMenuFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired.
   if (aTimer == mOpenTimer.get()) {
-    mOpenTimer = nsnull;
+    mOpenTimer = nullptr;
 
     if (!IsOpen() && mMenuParent) {
       // make sure we didn't open a context menu in the meantime
       // (i.e. the user right-clicked while hovering over a submenu).
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
-        if ((!pm->HasContextMenu(nsnull) || mMenuParent->IsContextMenu()) &&
+        if ((!pm->HasContextMenu(nullptr) || mMenuParent->IsContextMenu()) &&
             mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
                                   nsGkAtoms::_true, eCaseMatters)) {
           OpenMenu(false);
@@ -895,7 +895,7 @@ void
 nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nsnull};
+    {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
   switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                     strings, eCaseMatters)) {
     case 0: mType = eMenuType_Checkbox; break;
@@ -1220,9 +1220,9 @@ nsMenuFrame::StopBlinking()
   mBlinkState = 0;
   if (mBlinkTimer) {
     mBlinkTimer->Cancel();
-    mBlinkTimer = nsnull;
+    mBlinkTimer = nullptr;
   }
-  mDelayedMenuCommandEvent = nsnull;
+  mDelayedMenuCommandEvent = nullptr;
 }
 
 void
@@ -1260,7 +1260,7 @@ nsMenuFrame::PassMenuCommandEventToPopupManager()
   if (pm && mMenuParent && mDelayedMenuCommandEvent) {
     pm->ExecuteMenu(mContent, mDelayedMenuCommandEvent);
   }
-  mDelayedMenuCommandEvent = nsnull;
+  mDelayedMenuCommandEvent = nullptr;
 }
 
 NS_IMETHODIMP
@@ -1301,7 +1301,7 @@ nsMenuFrame::InsertFrames(ChildListID     aListID,
     return NS_OK;
 
   if (NS_UNLIKELY(aPrevFrame && aPrevFrame == GetPopup())) {
-    aPrevFrame = nsnull;
+    aPrevFrame = nullptr;
   }
 
   return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
@@ -1400,7 +1400,7 @@ nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
 
   nsMenuFrame* menuFrame = popupFrame->GetCurrentMenuItem();
   if (!menuFrame) {
-    *aResult = nsnull;
+    *aResult = nullptr;
   }
   else {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(menuFrame->GetContent()));
@@ -1420,7 +1420,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   if (!aChild) {
     // Remove the current selection
-    popupFrame->ChangeMenuItem(nsnull, false);
+    popupFrame->ChangeMenuItem(nullptr, false);
     return NS_OK;
   }
 
@@ -1436,11 +1436,11 @@ nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame()
 {
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame)
-    return nsnull;
+    return nullptr;
   nsIFrame* childFrame = popupFrame->GetFirstPrincipalChild();
   if (childFrame)
     return popupFrame->GetScrollFrame(childFrame);
-  return nsnull;
+  return nullptr;
 }
 
 // nsMenuTimerMediator implementation.
@@ -1479,5 +1479,5 @@ NS_IMETHODIMP nsMenuTimerMediator::Notify(nsITimer* aTimer)
  */
 void nsMenuTimerMediator::ClearFrame()
 {
-  mFrame = nsnull;
+  mFrame = nullptr;
 }

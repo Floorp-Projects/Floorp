@@ -29,9 +29,9 @@ Declaration::Declaration()
 
 Declaration::Declaration(const Declaration& aCopy)
   : mOrder(aCopy.mOrder),
-    mData(aCopy.mData ? aCopy.mData->Clone() : nsnull),
+    mData(aCopy.mData ? aCopy.mData->Clone() : nullptr),
     mImportantData(aCopy.mImportantData
-                   ? aCopy.mImportantData->Clone() : nsnull),
+                   ? aCopy.mImportantData->Clone() : nullptr),
     mImmutable(false)
 {
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
@@ -839,7 +839,7 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
   // Calling ValueFor is inefficient, but we can assume '!important' is rare.
 
   if (!nsCSSProps::IsShorthand(aProperty)) {
-    return mImportantData->ValueFor(aProperty) != nsnull;
+    return mImportantData->ValueFor(aProperty) != nullptr;
   }
 
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {

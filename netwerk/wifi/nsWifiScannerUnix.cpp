@@ -140,7 +140,7 @@ nsWifiMonitor::DoScan()
   nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
-  char* args[] = {(char*) &accessPoints, (char*) iw_stats, nsnull };
+  char* args[] = {(char*) &accessPoints, (char*) iw_stats, nullptr };
 
   while (mKeepGoing) {
     accessPoints.Clear();

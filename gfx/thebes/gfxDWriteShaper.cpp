@@ -114,7 +114,7 @@ trymoreglyphs:
                                           font->GetFontFace(),
                                           font->GetAdjustedSize(),
                                           1.0,
-                                          nsnull,
+                                          nullptr,
                                           FALSE,
                                           FALSE,
                                           FALSE,
@@ -158,7 +158,7 @@ trymoreglyphs:
 
         if (c > 0 && k == clusters[c - 1]) {
             g.SetComplex(aShapedWord->IsClusterStart(absC), false, 0);
-            aShapedWord->SetGlyphs(absC, g, nsnull);
+            aShapedWord->SetGlyphs(absC, g, nullptr);
             // This is a cluster continuation. No glyph here.
             continue;
         }

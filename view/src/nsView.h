@@ -22,7 +22,7 @@ class nsViewManager;
 class nsView : public nsIView
 {
 public:
-  nsView(nsViewManager* aViewManager = nsnull,
+  nsView(nsViewManager* aViewManager = nullptr,
          nsViewVisibility aVisibility = nsViewVisibility_kShow);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW

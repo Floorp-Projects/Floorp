@@ -178,7 +178,7 @@ nsEventListenerManager::GetInnerWindowForTarget()
     return window;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -206,7 +206,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   }
 
   mNoListenerForEvent = NS_EVENT_TYPE_NULL;
-  mNoListenerForEventAtom = nsnull;
+  mNoListenerForEventAtom = nullptr;
 
   ls = mListeners.AppendElement();
   ls->mListener = aListener;
@@ -408,7 +408,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mListeners.RemoveElementAt(i);
         --count;
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
-        mNoListenerForEventAtom = nsnull;
+        mNoListenerForEventAtom = nullptr;
 
         if (!deviceType) {
           return;
@@ -470,7 +470,7 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
       return ls;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsresult
@@ -510,7 +510,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
 
     *aListenerStruct = ls;
   } else {
-    *aListenerStruct = nsnull;
+    *aListenerStruct = nullptr;
   }
 
   return rv;
@@ -621,7 +621,7 @@ nsEventListenerManager::AddScriptEventListener(nsIAtom *aName,
   JSObject* scope = global->GetGlobalJSObject();
 
   nsListenerStruct *ls;
-  rv = SetJSEventListener(context, scope, aName, nsnull,
+  rv = SetJSEventListener(context, scope, aName, nullptr,
                           aPermitUntrustedEvents, &ls);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -641,7 +641,7 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
   if (ls) {
     mListeners.RemoveElementAt(PRUint32(ls - &mListeners.ElementAt(0)));
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
-    mNoListenerForEventAtom = nsnull;
+    mNoListenerForEventAtom = nullptr;
   }
 }
 
@@ -785,7 +785,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
     result = CompileEventHandlerInternal(aListenerStruct,
                                          jslistener->GetEventContext() !=
                                            aPusher->GetCurrentScriptContext(),
-                                         nsnull);
+                                         nullptr);
   }
 
   if (NS_SUCCEEDED(result)) {
@@ -874,7 +874,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     }
   }
 
-  aEvent->currentTarget = nsnull;
+  aEvent->currentTarget = nullptr;
 
   if (!hasListener) {
     mNoListenerForEvent = aEvent->message;
@@ -889,7 +889,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 void
 nsEventListenerManager::Disconnect()
 {
-  mTarget = nsnull;
+  mTarget = nullptr;
   RemoveAllListeners();
 }
 
@@ -992,7 +992,7 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     // compiled the event handler itself go ahead and compile it
     if ((ls.mListenerType == eJSEventListener) && ls.mHandlerIsString) {
       CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls),
-                                  true, nsnull);
+                                  true, nullptr);
     }
     const nsDependentSubstring& eventType =
       Substring(nsDependentAtomString(ls.mTypeAtom), 2);
@@ -1073,7 +1073,7 @@ nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
   nsIJSEventListener *listener = ls->GetJSListener();
     
   if (ls->mHandlerIsString) {
-    CompileEventHandlerInternal(ls, true, nsnull);
+    CompileEventHandlerInternal(ls, true, nullptr);
   }
 
   *vp = OBJECT_TO_JSVAL(listener->GetHandler());

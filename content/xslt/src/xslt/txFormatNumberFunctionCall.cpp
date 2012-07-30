@@ -45,7 +45,7 @@ nsresult
 txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                                      txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     if (!requireParams(2, 3, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 

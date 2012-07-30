@@ -127,8 +127,8 @@ nsDirEnumeratorUnix MOZ_FINAL : public nsISimpleEnumerator,
 };
 
 nsDirEnumeratorUnix::nsDirEnumeratorUnix() :
-                         mDir(nsnull), 
-                         mEntry(nsnull)
+                         mDir(nullptr), 
+                         mEntry(nullptr)
 {
 }
 
@@ -201,7 +201,7 @@ nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
 {
     nsresult rv;
     if (!mDir || !mEntry) {
-        *_retval = nsnull;
+        *_retval = nullptr;
         return NS_OK;
     }
 
@@ -223,7 +223,7 @@ nsDirEnumeratorUnix::Close()
 {
     if (mDir) {
         closedir(mDir);
-        mDir = nsnull;
+        mDir = nullptr;
     }
     return NS_OK;
 }
@@ -258,7 +258,7 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
     NS_ENSURE_ARG_POINTER(aInstancePtr);
     NS_ENSURE_NO_AGGREGATION(outer);
 
-    *aInstancePtr = nsnull;
+    *aInstancePtr = nullptr;
 
     nsCOMPtr<nsIFile> inst = new nsLocalFile();
     if (!inst)
@@ -426,7 +426,7 @@ do_create(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
 static int
 do_mkdir(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
 {
-    *_retval = nsnull;
+    *_retval = nullptr;
     return mkdir(path, mode);
 }
 
@@ -479,7 +479,7 @@ nsLocalFile::CreateAndKeepOpen(PRUint32 type, PRIntn flags,
 NS_IMETHODIMP
 nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 {
-    PRFileDesc *junk = nsnull;
+    PRFileDesc *junk = nullptr;
     nsresult rv = CreateAndKeepOpen(type,
                                     PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE |
                                     PR_EXCL,
@@ -527,7 +527,7 @@ NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
     char    resolved_path[PATH_MAX] = "";
-    char *resolved_path_ptr = nsnull;
+    char *resolved_path_ptr = nullptr;
 
     resolved_path_ptr = realpath(mPath.get(), resolved_path);
 
@@ -994,7 +994,7 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModTime)
         ut.modtime = (time_t)(PRFloat64(aLastModTime) / PR_MSEC_PER_SEC);
         result = utime(mPath.get(), &ut);
     } else {
-        result = utime(mPath.get(), nsnull);
+        result = utime(mPath.get(), nullptr);
     }
     return NSRESULT_FOR_RETURN(result);
 }
@@ -1296,7 +1296,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
 {
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(aParent);
-    *aParent = nsnull;
+    *aParent = nullptr;
 
     // if '/' we are at the top of the volume, return null
     if (mPath.Equals("/"))
@@ -1670,7 +1670,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
     NS_ADDREF(dir);
     nsresult rv = dir->Init(this, false);
     if (NS_FAILED(rv)) {
-        *entries = nsnull;
+        *entries = nullptr;
         NS_RELEASE(dir);
     } else {
         *entries = dir; // transfer reference
@@ -1721,7 +1721,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
         return InitWithNativePath(aPersistentDescriptor);
 
     PRUint32 dataSize = aPersistentDescriptor.Length();    
-    char* decodedData = PL_Base64Decode(PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nsnull);
+    char* decodedData = PL_Base64Decode(PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nullptr);
     if (!decodedData) {
         NS_ERROR("SetPersistentDescriptor was given bad data");
         return NS_ERROR_FAILURE;
@@ -1739,7 +1739,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 
     // Move the now-decoded data into the Handle.
     // The size of the decoded data is 3/4 the size of the encoded data. See plbase64.h
-    Handle  newHandle = nsnull;
+    Handle  newHandle = nullptr;
     if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr)
         rv = NS_ERROR_OUT_OF_MEMORY;
     PR_Free(decodedData);
@@ -1748,7 +1748,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 
     Boolean changed;
     FSRef resolvedFSRef;
-    OSErr err = ::FSResolveAlias(nsnull, (AliasHandle)newHandle, &resolvedFSRef, &changed);
+    OSErr err = ::FSResolveAlias(nullptr, (AliasHandle)newHandle, &resolvedFSRef, &changed);
 
     rv = MacErrorMapper(err);
     DisposeHandle(newHandle);
@@ -1821,7 +1821,7 @@ nsLocalFile::Launch()
       return NS_ERROR_FAILURE;
     }
 
-    if (nsnull == connection)
+    if (nullptr == connection)
       return NS_ERROR_FAILURE;
 
     if (hildon_mime_open_file(connection, mPath.get()) != kHILDON_SUCCESS)
@@ -2168,7 +2168,7 @@ nsLocalFile::GetFSSpec(FSSpec *_retval)
   FSRef fsRef;
   nsresult rv = GetFSRef(&fsRef);
   if (NS_SUCCEEDED(rv)) {
-    OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nsnull, nsnull, _retval, nsnull);
+    OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nullptr, nullptr, _retval, nullptr);
     return MacErrorMapper(err);
   }
 
@@ -2187,7 +2187,7 @@ nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSizeWithResFork)
 
   FSCatalogInfo catalogInfo;
   OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoDataSizes + kFSCatInfoRsrcSizes,
-                                 &catalogInfo, nsnull, nsnull, nsnull);
+                                 &catalogInfo, nullptr, nullptr, nullptr);
   if (err != noErr)
     return MacErrorMapper(err);
 
@@ -2448,7 +2448,7 @@ nsresult
 NS_NewLocalFileWithFSRef(const FSRef* aFSRef, bool aFollowLinks, nsILocalFileMac** result)
 {
   nsLocalFile* file = new nsLocalFile();
-  if (file == nsnull)
+  if (file == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(file);
 

@@ -44,7 +44,7 @@ inline FILE *TS_tfopen (const char *path, const char *mode)
 
 class AutoFILE {
 public:
-  AutoFILE(FILE *fp = nsnull) : fp_(fp) {}
+  AutoFILE(FILE *fp = nullptr) : fp_(fp) {}
   ~AutoFILE() { if (fp_) fclose(fp_); }
   operator FILE *() { return fp_; }
   FILE** operator &() { return &fp_; }
@@ -174,7 +174,7 @@ nsINIParser::InitFromFILE(FILE *fd)
     }
 #endif
 
-    char *currSection = nsnull;
+    char *currSection = nullptr;
 
     // outer loop tokenizes into lines
     while (char *token = NS_strtok(kNL, &buffer)) {
@@ -195,7 +195,7 @@ nsINIParser::InitFromFILE(FILE *fd)
                 // we could frankly decide that this INI file is malformed right
                 // here and stop, but we won't... keep going, looking for
                 // a well-formed [section] to continue working with
-                currSection = nsnull;
+                currSection = nullptr;
             }
 
             continue;

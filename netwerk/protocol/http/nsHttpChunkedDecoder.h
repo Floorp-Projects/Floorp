@@ -14,7 +14,7 @@
 class nsHttpChunkedDecoder
 {
 public:
-    nsHttpChunkedDecoder() : mTrailers(nsnull)
+    nsHttpChunkedDecoder() : mTrailers(nullptr)
                            , mChunkRemaining(0)
                            , mReachedEOF(false)
                            , mWaitEOF(false) {}
@@ -31,7 +31,7 @@ public:
     nsHttpHeaderArray *Trailers() { return mTrailers; }
 
     nsHttpHeaderArray *TakeTrailers() { nsHttpHeaderArray *h = mTrailers;
-                                        mTrailers = nsnull;
+                                        mTrailers = nullptr;
                                         return h; }
 
     PRUint32 GetChunkRemaining() { return mChunkRemaining; }

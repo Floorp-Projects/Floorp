@@ -600,7 +600,7 @@ ReadTransforms(const nsCSSValueList* aList,
 {
   gfx3DMatrix result;
 
-  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
+  for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
     NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
                  "Stream should consist solely of functions!");

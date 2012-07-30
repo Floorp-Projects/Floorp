@@ -29,7 +29,7 @@ ReadCachedScript(StartupCache* cache, nsACString &uri, JSContext *cx,
     if (NS_FAILED(rv))
         return rv; // don't warn since NOT_AVAILABLE is an ok error
 
-    JSScript *script = JS_DecodeScript(cx, buf, len, nsJSPrincipals::get(systemPrincipal), nsnull);
+    JSScript *script = JS_DecodeScript(cx, buf, len, nsJSPrincipals::get(systemPrincipal), nullptr);
     if (!script)
         return NS_ERROR_OUT_OF_MEMORY;
     *scriptp = script;

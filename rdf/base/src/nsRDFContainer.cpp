@@ -120,11 +120,11 @@ RDFContainerImpl::GetResource(nsIRDFResource** _retval)
 NS_IMETHODIMP
 RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer)
 {
-    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    NS_PRECONDITION(aDataSource != nullptr, "null ptr");
     if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aContainer != nsnull, "null ptr");
+    NS_PRECONDITION(aContainer != nullptr, "null ptr");
     if (! aContainer)
         return NS_ERROR_NULL_POINTER;
 
@@ -210,7 +210,7 @@ RDFContainerImpl::AppendElement(nsIRDFNode *aElement)
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
 
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    NS_PRECONDITION(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
@@ -233,7 +233,7 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, bool aRenumber)
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
 
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    NS_PRECONDITION(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
@@ -273,7 +273,7 @@ RDFContainerImpl::InsertElementAt(nsIRDFNode *aElement, PRInt32 aIndex, bool aRe
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
 
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    NS_PRECONDITION(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
@@ -315,7 +315,7 @@ RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, bool aRenumber, nsIRDFNode** _
     if (!mDataSource || !mContainer)
         return NS_ERROR_NOT_INITIALIZED;
 
-    *_retval = nsnull;
+    *_retval = nullptr;
 
     if (aIndex< 1)
         return NS_ERROR_ILLEGAL_VALUE;
@@ -370,7 +370,7 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 
 
 RDFContainerImpl::RDFContainerImpl()
-    : mDataSource(nsnull), mContainer(nsnull)
+    : mDataSource(nullptr), mContainer(nullptr)
 {
 }
 
@@ -561,7 +561,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
             }
 
             nsCOMPtr<nsIRDFNode> element( do_QueryInterface(isupports) );
-            NS_ASSERTION(element != nsnull, "something funky in the enumerator");
+            NS_ASSERTION(element != nullptr, "something funky in the enumerator");
             if (! element)
             {
                 err = true;

@@ -167,7 +167,7 @@ protected:
   // non-null it's set to true if the id is a number and false if it's
   // not a number. If id is not a number this method returns -1
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsid id,
-                                     bool *aIsNumber = nsnull);
+                                     bool *aIsNumber = nullptr);
 
   static inline bool IsReadonlyReplaceable(jsid id)
   {
@@ -359,7 +359,7 @@ public:
   {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
 
-    NS_ASSERTION(!sgo || sgo->GetGlobalJSObject() == nsnull,
+    NS_ASSERTION(!sgo || sgo->GetGlobalJSObject() == nullptr,
                  "Multiple wrappers created for global object!");
 
     return NS_OK;
@@ -1483,7 +1483,7 @@ public:
     nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
     if (NS_SUCCEEDED(rv)) {
       if (!::JS_DefineProperty(cx, proto, "VIEWPORT", INT_TO_JSVAL(0x0BA2),
-                               nsnull, nsnull, JSPROP_ENUMERATE))
+                               nullptr, nullptr, JSPROP_ENUMERATE))
       {
         return NS_ERROR_UNEXPECTED;
       }

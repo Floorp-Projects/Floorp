@@ -61,7 +61,7 @@ public:
   void      FreeGlobalPrinters();
   nsresult  InitializeGlobalPrinters();
 
-  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nullptr; }
   PRUint32  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
@@ -336,7 +336,7 @@ void nsPrinterFeatures::SetCanChangeNumCopies( bool aCanSetNumCopies )
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nullptr;
 //---------------
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
@@ -368,7 +368,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 #include "gfxPSSurface.h"
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
 {
-  *aSurface = nsnull;
+  *aSurface = nullptr;
 
   const char *path;
   GetPath(&path);
@@ -386,7 +386,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   // Spool file. Use Glib's temporary file function since we're
   // already dependent on the gtk software stack.
   gchar *buf;
-  gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nsnull);
+  gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nullptr);
   if (-1 == fd)
     return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
   close(fd);
@@ -564,7 +564,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     if (!mPrintJob)
       return NS_OK; // The operation was aborted.
 
-    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), nsnull))
+    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), nullptr))
       return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
 
     NS_ADDREF(mSpoolFile.get());
@@ -670,7 +670,7 @@ NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
   NS_ENSURE_ARG_POINTER(aPrinterNameList);
-  *aPrinterNameList = nsnull;
+  *aPrinterNameList = nullptr;
   
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
@@ -749,7 +749,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   
   /* Set filename */
   nsCAutoString filename;
-  if (NS_FAILED(CopyPrinterCharPref(nsnull, printerName, "filename", filename))) {
+  if (NS_FAILED(CopyPrinterCharPref(nullptr, printerName, "filename", filename))) {
     const char *path;
   
     if (!(path = PR_GetEnv("PWD")))
@@ -952,14 +952,14 @@ void GlobalPrinters::FreeGlobalPrinters()
 {
   if (mGlobalPrinterList) {
     delete mGlobalPrinterList;
-    mGlobalPrinterList = nsnull;
+    mGlobalPrinterList = nullptr;
   }  
 }
 
 void 
 GlobalPrinters::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
 {
-  *aDefaultPrinterName = nsnull;
+  *aDefaultPrinterName = nullptr;
   
   bool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
   

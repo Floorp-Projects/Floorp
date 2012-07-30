@@ -36,7 +36,7 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerOS2, nsIScreenManager)
 nsIScreen* 
 nsScreenManagerOS2 :: CreateNewScreenObject (  )
 {
-  nsIScreen* retval = nsnull;
+  nsIScreen* retval = nullptr;
   if ( !mCachedMainScreen )
     mCachedMainScreen = new nsScreenOS2 ( );
   NS_IF_ADDREF(retval = mCachedMainScreen.get());

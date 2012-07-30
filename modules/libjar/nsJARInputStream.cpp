@@ -200,7 +200,7 @@ MOZ_WIN_MEM_TRY_BEGIN
         // note that sometimes, we will release  mFd before we've finished
         // deflating - this is because zlib buffers the input
         if (mZs.avail_in == 0) {
-            mFd = nsnull;
+            mFd = nullptr;
         }
         break;
 
@@ -216,7 +216,7 @@ MOZ_WIN_MEM_TRY_BEGIN
         // be aggressive about releasing the file!
         // note that sometimes, we will release mFd before we've finished copying.
         if (mZs.total_out >= mOutSize) {
-            mFd = nsnull;
+            mFd = nullptr;
         }
         break;
     }
@@ -246,7 +246,7 @@ nsJARInputStream::Close()
         inflateEnd(&mZs);
     }
     mMode = MODE_CLOSED;
-    mFd = nsnull;
+    mFd = nullptr;
     return NS_OK;
 }
 

@@ -84,7 +84,7 @@ class imgRequestNotifyRunnable : public nsRunnable
         statusTracker.SyncNotify(mProxies[i]);
       }
 
-      statusTracker.mRequestRunnable = nsnull;
+      statusTracker.mRequestRunnable = nullptr;
       return NS_OK;
     }
 
@@ -240,7 +240,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   }
 
   if (mState & stateRequestStopped) {
-    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
+    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     proxy->OnStopRequest(mHadLastPart);
   }
 }
@@ -258,7 +258,7 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStat
     }
 
     if (!(mState & stateRequestStopped)) {
-      aProxy->OnStopDecode(aStatus, nsnull);
+      aProxy->OnStopDecode(aStatus, nullptr);
     }
   }
 
@@ -511,7 +511,7 @@ imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsres
   // See bug 505385 and imgRequest::OnStopDecode for more information on why
   // OnStopDecode is called with OnStopRequest.
   if (!aProxy->NotificationsDeferred()) {
-    aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
+    aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     aProxy->OnStopRequest(aLastPart);
   }
 }

@@ -312,14 +312,14 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
 
   mFrontSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
   if (!mFrontSurface) {
-    mCARenderer = nsnull;
+    mCARenderer = nullptr;
     return false;
   }
 
   if (!mCARenderer) {
     mCARenderer = new nsCARenderer();
     if (!mCARenderer) {
-      mFrontSurface = nsnull;
+      mFrontSurface = nullptr;
       return false;
     }
 
@@ -331,8 +331,8 @@ bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
                         aAllowOfflineRenderer);
 
     if (result != NS_OK) {
-      mCARenderer = nsnull;
-      mFrontSurface = nsnull;
+      mCARenderer = nullptr;
+      mFrontSurface = nullptr;
       return false;
     }
   } else {
@@ -347,7 +347,7 @@ void nsDoubleBufferCARenderer::Render() {
     return;
   }
 
-  mCARenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), nsnull);
+  mCARenderer->Render(GetFrontSurfaceWidth(), GetFrontSurfaceHeight(), nullptr);
 }
 
 void nsDoubleBufferCARenderer::SwapSurfaces() {
@@ -361,16 +361,16 @@ void nsDoubleBufferCARenderer::SwapSurfaces() {
 }
 
 void nsDoubleBufferCARenderer::ClearFrontSurface() {
-  mFrontSurface = nsnull;
+  mFrontSurface = nullptr;
   if (!mFrontSurface && !mBackSurface) {
-    mCARenderer = nsnull;
+    mCARenderer = nullptr;
   }
 }
 
 void nsDoubleBufferCARenderer::ClearBackSurface() {
-  mBackSurface = nsnull;
+  mBackSurface = nullptr;
   if (!mFrontSurface && !mBackSurface) {
-    mCARenderer = nsnull;
+    mCARenderer = nullptr;
   }
 }
 

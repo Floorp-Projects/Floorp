@@ -29,10 +29,10 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
                         txIParseContext* aContext,
                         Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     nsresult rv = NS_OK;
     nsAutoPtr<Expr> expr;
-    FunctionCall* concat = nsnull;
+    FunctionCall* concat = nullptr;
 
     nsAutoString literalString;
     bool inExpr = false;
@@ -150,7 +150,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
                                  txIParseContext* aContext, Expr** aExpr)
 {
     NS_ENSURE_ARG_POINTER(aExpr);
-    *aExpr = nsnull;
+    *aExpr = nullptr;
     txExprLexer lexer;
     nsresult rv = lexer.parse(aExpression);
     if (NS_FAILED(rv)) {
@@ -173,7 +173,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
     }
 
     txXPathOptimizer optimizer;
-    Expr* newExpr = nsnull;
+    Expr* newExpr = nullptr;
     rv = optimizer.optimize(expr, &newExpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -194,9 +194,9 @@ txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left, nsAutoPtr<Expr>& right,
                                Token* op, Expr** aResult)
 {
     NS_ASSERTION(op, "internal error");
-    *aResult = nsnull;
+    *aResult = nullptr;
 
-    Expr* expr = nsnull;
+    Expr* expr = nullptr;
     switch (op->mType) {
         //-- math ops
         case Token::ADDITION_OP :
@@ -266,7 +266,7 @@ nsresult
 txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
                          Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsresult rv = NS_OK;
     bool done = false;
@@ -348,7 +348,7 @@ nsresult
 txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
                                  Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsresult rv = NS_OK;
     Token* tok = lexer.peek();
@@ -414,7 +414,7 @@ nsresult
 txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
                                  Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsAutoPtr<FunctionCall> fnCall;
 
@@ -468,7 +468,7 @@ nsresult
 txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
                                  Expr** aExpr)
 {
-    *aExpr = nsnull;
+    *aExpr = nullptr;
 
     //-- child axis is default
     LocationStep::LocationStepType axisIdentifier = LocationStep::CHILD_AXIS;
@@ -643,7 +643,7 @@ nsresult
 txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
                              Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsAutoPtr<Expr> expr;
 
@@ -725,7 +725,7 @@ nsresult
 txExprParser::createUnionExpr(txExprLexer& lexer, txIParseContext* aContext,
                               Expr** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsAutoPtr<Expr> expr;
     nsresult rv = createPathExpr(lexer, aContext, getter_Transfers(expr));

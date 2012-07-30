@@ -47,7 +47,7 @@ nsXULTemplateResultStorage::GetMayProcessChildren(bool* aMayProcessChildren)
 NS_IMETHODIMP
 nsXULTemplateResultStorage::GetId(nsAString& aId)
 {
-    const char* uri = nsnull;
+    const char* uri = nullptr;
     mNode->GetValueConst(&uri);
 
     aId.Assign(NS_ConvertUTF8toUTF16(uri));
@@ -106,7 +106,7 @@ nsXULTemplateResultStorage::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aVa
             return NS_OK;
         }
     }
-    *aValue = nsnull;
+    *aValue = nullptr;
     return NS_OK;
 }
 

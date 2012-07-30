@@ -10,7 +10,7 @@
 nsEscCharSetProber::nsEscCharSetProber(PRUint32 aLanguageFilter)
 {
   for (PRUint32 i = 0; i < NUM_OF_ESC_CHARSETS; i++)
-    mCodingSM[i] = nsnull;
+    mCodingSM[i] = nullptr;
   if (aLanguageFilter & NS_FILTER_CHINESE_SIMPLIFIED) 
   {
     mCodingSM[0] = new nsCodingStateMachine(&HZSMModel);
@@ -22,7 +22,7 @@ nsEscCharSetProber::nsEscCharSetProber(PRUint32 aLanguageFilter)
     mCodingSM[3] = new nsCodingStateMachine(&ISO2022KRSMModel);
   mActiveSM = NUM_OF_ESC_CHARSETS;
   mState = eDetecting;
-  mDetectedCharset = nsnull;
+  mDetectedCharset = nullptr;
 }
 
 nsEscCharSetProber::~nsEscCharSetProber(void)
@@ -38,7 +38,7 @@ void nsEscCharSetProber::Reset(void)
     if (mCodingSM[i])
       mCodingSM[i]->Reset();
   mActiveSM = NUM_OF_ESC_CHARSETS;
-  mDetectedCharset = nsnull;
+  mDetectedCharset = nullptr;
 }
 
 nsProbingState nsEscCharSetProber::HandleData(const char* aBuf, PRUint32 aLen)

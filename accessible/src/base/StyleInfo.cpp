@@ -17,7 +17,7 @@ StyleInfo::StyleInfo(dom::Element* aElement, nsIPresShell* aPresShell) :
 {
   mStyleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nsnull,
+                                                         nullptr,
                                                          aPresShell);
 }
 

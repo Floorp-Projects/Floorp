@@ -100,7 +100,7 @@ nsHTMLSharedListElement::GetClassInfoInternal()
   if (mNodeInfo->Equals(nsGkAtoms::ul)) {
     return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLUListElement_id);
   }
-  return nsnull;
+  return nullptr;
 }
 
 // QueryInterface implementation for nsHTMLSharedListElement
@@ -200,7 +200,7 @@ nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       mNodeInfo->Equals(nsGkAtoms::ul)) {
     static const MappedAttributeEntry attributes[] = {
       { &nsGkAtoms::type },
-      { nsnull }
+      { nullptr }
     };
 
     static const MappedAttributeEntry* const map[] = {

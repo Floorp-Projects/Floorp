@@ -74,7 +74,7 @@ public:
   void Forget()
   {
     mozilla::MutexAutoLock lock(mMutex);
-    mPrivate = nsnull;
+    mPrivate = nullptr;
   }
 
   /**

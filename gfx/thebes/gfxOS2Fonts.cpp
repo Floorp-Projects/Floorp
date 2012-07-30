@@ -23,8 +23,8 @@ using namespace mozilla;
 
 gfxOS2Font::gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontStyle)
     : gfxFont(aFontEntry, aFontStyle),
-      mFontFace(nsnull),
-      mMetrics(nsnull), mAdjustedSize(0),
+      mFontFace(nullptr),
+      mMetrics(nullptr), mAdjustedSize(0),
       mHinting(FC_HINT_MEDIUM), mAntialias(FcTrue)
 {
 #ifdef DEBUG_thebes_2
@@ -59,9 +59,9 @@ gfxOS2Font::~gfxOS2Font()
         cairo_scaled_font_destroy(mScaledFont);
     }
     delete mMetrics;
-    mFontFace = nsnull;
-    mScaledFont = nsnull;
-    mMetrics = nsnull;
+    mFontFace = nullptr;
+    mScaledFont = nullptr;
+    mMetrics = nullptr;
 }
 
 // fill font metrics structure with default values in case of error
@@ -428,7 +428,7 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
 
     cairo_font_face_t * face = CairoFontFace();
     if (!face)
-        return nsnull;
+        return nullptr;
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     mScaledFont = cairo_scaled_font_create(face, &fontMatrix,
@@ -473,10 +473,10 @@ already_AddRefed<gfxOS2Font> gfxOS2Font::GetOrMakeFont(const nsAString& aName,
     if (!font) {
         font = new gfxOS2Font(fe, aStyle);
         if (!font)
-            return nsnull;
+            return nullptr;
         gfxFontCache::GetCache()->AddNew(font);
     }
-    gfxFont *f = nsnull;
+    gfxFont *f = nullptr;
     font.swap(f);
     return static_cast<gfxOS2Font *>(f);
 }
@@ -561,7 +561,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
     NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
-        return nsnull;
+        return nullptr;
 
     mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
 
@@ -595,7 +595,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
-        return nsnull;
+        return nullptr;
 
     mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
 

@@ -22,8 +22,8 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsNetCID.h"
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-static nsICacheSession *session = nsnull;
-static nsICacheEntryDescriptor *desc = nsnull;
+static nsICacheSession *session = nullptr;
+static nsICacheEntryDescriptor *desc = nullptr;
 #endif
 
 /**
@@ -36,7 +36,7 @@ static nsICacheEntryDescriptor *desc = nsnull;
  */
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static nsIEventQueue *gEventQ = nsnull;
+static nsIEventQueue *gEventQ = nullptr;
 
 class TestListener : public nsIStreamListener
 {
@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS2(TestListener,
 
 TestListener::TestListener(char *filename)
     : mFilename(filename)
-    , mFile(nsnull)
+    , mFile(nullptr)
 {
 }
 
@@ -157,7 +157,7 @@ nsresult TestMCTransport(const char *filename)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIRequest> req;
-    rv = transport->AsyncRead(listener, nsnull, 0, (PRUint32) -1, 0, getter_AddRefs(req));
+    rv = transport->AsyncRead(listener, nullptr, 0, (PRUint32) -1, 0, getter_AddRefs(req));
     if (NS_FAILED(rv)) return rv;
 
     FILE *file = fopen(filename, "r");
@@ -174,7 +174,7 @@ nsresult TestMCTransport(const char *filename)
         if (NS_FAILED(rv)) return rv;
 
         // process an event
-        PLEvent *event = nsnull;
+        PLEvent *event = nullptr;
         gEventQ->GetEvent(&event);
         if (event) gEventQ->HandleEvent(event);
     }

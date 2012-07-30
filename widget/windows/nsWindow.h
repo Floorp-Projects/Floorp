@@ -86,7 +86,7 @@ public:
                                  const nsIntRect &aRect,
                                  EVENT_CALLBACK aHandleEventFunction,
                                  nsDeviceContext *aContext,
-                                 nsWidgetInitData *aInitData = nsnull);
+                                 nsWidgetInitData *aInitData = nullptr);
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget *aNewParent);
   virtual nsIWidget*      GetParent(void);
@@ -131,10 +131,10 @@ public:
                                               bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual bool            HasPendingInputEvent();
-  virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager = nsnull,
+  virtual LayerManager*   GetLayerManager(PLayersChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                          bool* aAllowRetaining = nsnull);
+                                          bool* aAllowRetaining = nullptr);
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, bool aIsHorizontal, PRInt32 &aOverriddenDelta);
@@ -183,7 +183,7 @@ public:
   /**
    * Event helpers
    */
-  void                    InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nsnull);
+  void                    InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nullptr);
   virtual bool            DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
                                              LPARAM lParam,
                                              bool aIsContextMenuKey = false,
@@ -337,7 +337,7 @@ protected:
   static void             RemoveNextCharMessage(HWND aWnd);
   void                    RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
                             UINT aLastMsg,
-                            nsFakeCharMessage* aFakeCharMessage = nsnull);
+                            nsFakeCharMessage* aFakeCharMessage = nullptr);
   virtual bool            ProcessMessage(UINT msg, WPARAM &wParam,
                                          LPARAM &lParam, LRESULT *aRetValue);
   bool                    ProcessMessageForPlugin(const MSG &aMsg,

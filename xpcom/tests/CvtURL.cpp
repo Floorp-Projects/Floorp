@@ -45,7 +45,7 @@ int main(int argc, char** argv)
   nsresult ec;
   nsIInputStream* in;
   ec = NS_OpenURI(&in, url);
-  if (nsnull == in) {
+  if (nullptr == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);
     return -1;
   }

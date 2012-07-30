@@ -47,12 +47,12 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, nsnull);
+    NS_ENSURE_TRUE(doc, nullptr);
 
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nsnull,
+    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                                    kNameSpaceID_XHTML,
                                                    nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(nodeInfo, nsnull);
+    NS_ENSURE_TRUE(nodeInfo, nullptr);
   }
 
   return new nsHTMLOptionElement(nodeInfo.forget());
@@ -98,7 +98,7 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
-  *aForm = nsnull;
+  *aForm = nullptr;
 
   nsHTMLSelectElement* selectControl = GetSelect();
 
@@ -142,7 +142,7 @@ nsHTMLOptionElement::SetSelected(bool aValue)
     // This should end up calling SetSelectedInternal
     return selectInt->SetOptionsSelectedByIndex(index, index, aValue,
                                                 false, true, true,
-                                                nsnull);
+                                                nullptr);
   } else {
     SetSelectedInternal(aValue, true);
     return NS_OK;
@@ -235,7 +235,7 @@ nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   // true it doesn't matter what value mIsSelected has.
   NS_ASSERTION(!mSelectedChanged, "Shouldn't be here");
   
-  bool newSelected = (aValue != nsnull);
+  bool newSelected = (aValue != nullptr);
   bool inSetDefaultSelected = mIsInSetDefaultSelected;
   mIsInSetDefaultSelected = true;
   
@@ -246,7 +246,7 @@ nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   // on it working don't get confused.
   rv = selectInt->SetOptionsSelectedByIndex(index, index, newSelected,
                                             false, true, aNotify,
-                                            nsnull);
+                                            nullptr);
 
   // Now reset our members; when we finish the attr set we'll end up with the
   // rigt selected state.
@@ -347,7 +347,7 @@ nsHTMLOptionElement::GetSelect()
     }
   }
   
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP    

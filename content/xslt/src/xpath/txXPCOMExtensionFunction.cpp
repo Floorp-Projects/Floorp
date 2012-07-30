@@ -30,7 +30,7 @@ public:
 
     void ClearContext()
     {
-        mContext = nsnull;
+        mContext = nullptr;
     }
 
 private:
@@ -170,7 +170,7 @@ LookupFunction(const char *aContractID, nsIAtom* aName, nsIID &aIID,
         do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID);
     NS_ENSURE_TRUE(iim, NS_ERROR_FAILURE);
 
-    nsIID** iidArray = nsnull;
+    nsIID** iidArray = nullptr;
     PRUint32 iidCount = 0;
     rv = classInfo->GetInterfaces(&iidCount, &iidArray);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -397,7 +397,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         paramStart = 1;
     }
     else {
-        context = nsnull;
+        context = nullptr;
     }
 
     // XXX varargs

@@ -227,7 +227,7 @@ FileOutputStreamWrapper::FileOutputStreamWrapper(nsISupports* aFileStream,
                                                  PRUint32 aFlags)
 : FileStreamWrapper(aFileStream, aFileHelper, aOffset, aLimit, aFlags)
 #ifdef DEBUG
-, mWriteThread(nsnull)
+, mWriteThread(nullptr)
 #endif
 {
   mOutputStream = do_QueryInterface(mFileStream);
@@ -366,7 +366,7 @@ ProgressRunnable::Run()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   mFileHelper->OnStreamProgress(mProgress, mProgressMax);
-  mFileHelper = nsnull;
+  mFileHelper = nullptr;
 
   return NS_OK;
 }
@@ -379,7 +379,7 @@ CloseRunnable::Run()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   mFileHelper->OnStreamClose();
-  mFileHelper = nsnull;
+  mFileHelper = nullptr;
 
   return NS_OK;
 }
@@ -392,7 +392,7 @@ DestroyRunnable::Run()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   mFileHelper->OnStreamDestroy();
-  mFileHelper = nsnull;
+  mFileHelper = nullptr;
 
   return NS_OK;
 }

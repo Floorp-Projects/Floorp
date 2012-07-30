@@ -103,7 +103,7 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       selectedRect = firstChild->GetRect();
       isSelected = true;
     }
-    rv = mMathMLChar.Display(aBuilder, this, aLists, 0, isSelected ? &selectedRect : nsnull);
+    rv = mMathMLChar.Display(aBuilder, this, aLists, 0, isSelected ? &selectedRect : nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
   
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -228,7 +228,7 @@ nsMathMLmoFrame::ProcessOperatorData()
     // reset everything so that we don't keep outdated values around
     // in case of dynamic changes
     mEmbellishData.flags = 0;
-    mEmbellishData.coreFrame = nsnull;
+    mEmbellishData.coreFrame = nullptr;
     mEmbellishData.leadingSpace = 0;
     mEmbellishData.trailingSpace = 0;
     if (mMathMLChar.Length() != 1)
@@ -927,7 +927,7 @@ nsMathMLmoFrame::TransmitAutomaticData()
   // this will cause us to re-sync our flags from scratch
   // but our returned 'form' is still not final (bug 133429), it will
   // be recomputed to its final value during the next call in Reflow()
-  mEmbellishData.coreFrame = nsnull;
+  mEmbellishData.coreFrame = nullptr;
   ProcessOperatorData();
   return NS_OK;
 }
@@ -1048,7 +1048,7 @@ nsMathMLmoFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
   case NS_MATHML_CHAR_STYLE_CONTEXT_INDEX:
     return mMathMLChar.GetStyleContext();
   default:
-    return nsnull;
+    return nullptr;
   }
 }
 

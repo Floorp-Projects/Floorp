@@ -31,7 +31,7 @@
 #define MAX_BUFFER_SIZE 512
 
 nsUnknownDecoder::nsUnknownDecoder()
-  : mBuffer(nsnull)
+  : mBuffer(nullptr)
   , mBufferLen(0)
   , mRequireHTMLsuffix(false)
 {
@@ -47,7 +47,7 @@ nsUnknownDecoder::~nsUnknownDecoder()
 {
   if (mBuffer) {
     delete [] mBuffer;
-    mBuffer = nsnull;
+    mBuffer = nullptr;
   }
 }
 
@@ -234,7 +234,7 @@ nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
   mBuffer = const_cast<char*>(reinterpret_cast<const char*>(aData));
   mBufferLen = aLength;
   DetermineContentType(aRequest);
-  mBuffer = nsnull;
+  mBuffer = nullptr;
   mBufferLen = 0;
   type.Assign(mContentType);
   mContentType.Truncate();
@@ -316,8 +316,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
       NS_ASSERTION(sSnifferEntries[i].mMimeType ||
                    sSnifferEntries[i].mContentTypeSniffer,
                    "Must have either a type string or a function to set the type");
-      NS_ASSERTION(sSnifferEntries[i].mMimeType == nsnull ||
-                   sSnifferEntries[i].mContentTypeSniffer == nsnull,
+      NS_ASSERTION(sSnifferEntries[i].mMimeType == nullptr ||
+                   sSnifferEntries[i].mContentTypeSniffer == nullptr,
                    "Both a type string and a type sniffing function set;"
                    " using type string");
       if (sSnifferEntries[i].mMimeType) {
@@ -628,7 +628,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   }
 
   delete [] mBuffer;
-  mBuffer = nsnull;
+  mBuffer = nullptr;
   mBufferLen = 0;
 
   return rv;

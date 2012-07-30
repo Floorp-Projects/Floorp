@@ -68,7 +68,7 @@ public:
    *
    * @param aScript a string representing the script to be executed
    * @param aScopeObject a script object for the scope to execute in, or
-   *                     nsnull to use a default scope
+   *                     nullptr to use a default scope
    * @param aPrincipal the principal the script should be evaluated with
    * @param aOriginPrincipal the principal the script originates from.  If null,
    *                         aPrincipal is used.
@@ -131,7 +131,7 @@ public:
    *
    * @param aScriptObject an object representing the script to be executed
    * @param aScopeObject an object telling the scope in which to execute,
-   *                     or nsnull to use a default scope
+   *                     or nullptr to use a default scope
    * @param aRetValue the result of executing the script, may be null in
    *                  which case no result string is computed
    * @param aIsUndefined true if the result of executing the script is the

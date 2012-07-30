@@ -321,7 +321,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
 
   void *storage = AllocateStorageForTextRun(sizeof(nsTransformedTextRun), aLength);
   if (!storage) {
-    return nsnull;
+    return nullptr;
   }
 
   return new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
@@ -497,7 +497,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
         ++offset;
 
         while (offset < aDest->GetLength() && aDeletedChars[offset]) {
-          aDest->SetGlyphs(offset++, gfxTextRun::CompressedGlyph(), nsnull);
+          aDest->SetGlyphs(offset++, gfxTextRun::CompressedGlyph(), nullptr);
         }
       }
 
@@ -519,8 +519,8 @@ GetParametersForInner(nsTransformedTextRun* aTextRun, PRUint32* aFlags,
     gfxContext* aRefContext)
 {
   gfxTextRunFactory::Parameters params =
-    { aRefContext, nsnull, nsnull,
-      nsnull, 0, aTextRun->GetAppUnitsPerDevUnit()
+    { aRefContext, nullptr, nullptr,
+      nullptr, 0, aTextRun->GetAppUnitsPerDevUnit()
     };
   *aFlags = aTextRun->GetFlags() & ~gfxFontGroup::TEXT_IS_PERSISTENT;
   return params;
@@ -549,7 +549,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (!inner.get())
     return;
 
-  nsCaseTransformTextRunFactory uppercaseFactory(nsnull, true);
+  nsCaseTransformTextRunFactory uppercaseFactory(nullptr, true);
 
   aTextRun->ResetGlyphRuns();
 
@@ -691,7 +691,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     eGreek    // strip accent when uppercasing Greek vowels
   } languageSpecificCasing = eNone;
 
-  const nsIAtom* lang = nsnull;
+  const nsIAtom* lang = nullptr;
   bool capitalizeDutchIJ = false;
   bool prevIsLetter = false;
   PRUint32 sigmaIndex = PRUint32(-1);

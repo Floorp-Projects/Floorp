@@ -45,7 +45,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
     }
   }
 
-  gInitiatorAcc = nsnull;
+  gInitiatorAcc = nullptr;
 
   return NS_OK;
 }
@@ -61,7 +61,7 @@ nsTextEquivUtils::GetTextEquivFromIDRefs(Accessible* aAccessible,
   if (!content)
     return NS_OK;
 
-  nsIContent* refContent = nsnull;
+  nsIContent* refContent = nullptr;
   IDRefsIterator iter(aAccessible->Document(), content, aIDRefsAttr);
   while ((refContent = iter.NextElem())) {
     if (!aTextEquiv.IsEmpty())
@@ -107,7 +107,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
   if (goThroughDOMSubtree)
     rv = AppendFromDOMNode(aContent, aString);
 
-  gInitiatorAcc = nsnull;
+  gInitiatorAcc = nullptr;
   return rv;
 }
 

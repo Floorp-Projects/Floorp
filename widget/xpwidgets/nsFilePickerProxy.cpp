@@ -90,7 +90,7 @@ nsFilePickerProxy::GetFile(nsIFile** aFile)
 {
     NS_ENSURE_ARG_POINTER(aFile);
 
-    *aFile = nsnull;
+    *aFile = nullptr;
     if (mFile.IsEmpty()) {
         return NS_OK;
     }

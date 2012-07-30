@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   }
 
   for (PRInt32 i = 0; i < 10; ++i) {
-	if (arr[i] == nsnull) {
+	if (arr[i] == nullptr) {
       fail("nsCOMArray elements should be non-null");
       rv = 1;
 	  break;
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
   }
 
   for (PRInt32 i = 10; i < 30; ++i) {
-	if (arr[i] != nsnull) {
+	if (arr[i] != nullptr) {
       fail("nsCOMArray elements should be null");
       rv = 1;
 	  break;

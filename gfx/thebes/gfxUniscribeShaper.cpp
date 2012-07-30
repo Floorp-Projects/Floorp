@@ -39,7 +39,7 @@ public:
         mContext(aContext), mDC(aDC),
         mShaper(aShaper),
         mItemString(aString), mItemLength(aLength), 
-        mAlternativeString(nsnull), mScriptItem(aItem),
+        mAlternativeString(nullptr), mScriptItem(aItem),
         mScript(aItem->a.eScript),
         mNumGlyphs(0), mMaxGlyphs(ESTIMATE_MAX_GLYPHS(aLength)),
         mFontSelected(false), mIVS(aIVS)
@@ -66,7 +66,7 @@ public:
 
     HRESULT Shape() {
         HRESULT rv;
-        HDC shapeDC = nsnull;
+        HDC shapeDC = nullptr;
 
         const PRUnichar *str = mAlternativeString ? mAlternativeString : mItemString;
 
@@ -160,7 +160,7 @@ public:
         mScriptItem->a.eScript = mScript;
         if (mAlternativeString) {
             free(mAlternativeString);
-            mAlternativeString = nsnull;
+            mAlternativeString = nullptr;
         }
     }
 
@@ -171,7 +171,7 @@ public:
 
     HRESULT Place() {
         HRESULT rv;
-        HDC placeDC = nsnull;
+        HDC placeDC = nullptr;
 
         if (!mOffsets.SetLength(mNumGlyphs) ||
             !mAdvances.SetLength(mNumGlyphs)) {
@@ -233,7 +233,7 @@ public:
             bool atClusterStart = aShapedWord->IsClusterStart(runOffset);
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
                 g.SetComplex(atClusterStart, false, 0);
-                aShapedWord->SetGlyphs(runOffset, g, nsnull);
+                aShapedWord->SetGlyphs(runOffset, g, nullptr);
             } else {
                 // Count glyphs for this character
                 PRUint32 k = mClusters[offset];

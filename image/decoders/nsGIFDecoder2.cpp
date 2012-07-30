@@ -77,7 +77,7 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage &aImage, imgIDecoderObserver* aObserver
   : Decoder(aImage, aObserver)
   , mCurrentRow(-1)
   , mLastFlushedRow(-1)
-  , mImageData(nsnull)
+  , mImageData(nullptr)
   , mOldColor(0)
   , mCurrentFrame(-1)
   , mCurrentPass(0)
@@ -593,7 +593,7 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
   // Or if we are filling the colormaps, first complete the colormap
   PRUint8* p = (mGIFStruct.state == gif_global_colormap) ? (PRUint8*)mGIFStruct.global_colormap :
                (mGIFStruct.state == gif_image_colormap) ? (PRUint8*)mColormap :
-               (mGIFStruct.bytes_in_hold) ? mGIFStruct.hold : nsnull;
+               (mGIFStruct.bytes_in_hold) ? mGIFStruct.hold : nullptr;
   if (p) {
     // Add what we have sofar to the block
     PRUint32 l = NS_MIN(len, mGIFStruct.bytes_to_consume);

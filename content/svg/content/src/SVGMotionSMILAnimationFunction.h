@@ -34,7 +34,7 @@ public:
   virtual bool SetAttr(nsIAtom* aAttribute,
                        const nsAString& aValue,
                        nsAttrValue& aResult,
-                       nsresult* aParseResult = nsnull) MOZ_OVERRIDE;
+                       nsresult* aParseResult = nullptr) MOZ_OVERRIDE;
   virtual bool UnsetAttr(nsIAtom* aAttribute) MOZ_OVERRIDE;
 
   // Method to allow our owner-element to signal us when our <mpath>

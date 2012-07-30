@@ -6,7 +6,7 @@
 #include "nsResourceSet.h"
 
 nsResourceSet::nsResourceSet(const nsResourceSet& aResourceSet)
-    : mResources(nsnull),
+    : mResources(nullptr),
       mCount(0),
       mCapacity(0)
 {
@@ -46,7 +46,7 @@ nsResourceSet::Clear()
 nsresult
 nsResourceSet::Add(nsIRDFResource* aResource)
 {
-    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    NS_PRECONDITION(aResource != nullptr, "null ptr");
     if (! aResource)
         return NS_ERROR_NULL_POINTER;
 

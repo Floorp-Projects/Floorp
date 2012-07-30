@@ -240,7 +240,7 @@ nsPropertyEnumeratorByURL::GetNext(nsISupports **aResult)
     NS_ADDREF(*aResult);
 
     // release it so we don't return it twice
-    mCurrent = nsnull;
+    mCurrent = nullptr;
     
     return NS_OK;
 }
@@ -269,7 +269,7 @@ nsPropertyEnumeratorByURL::HasMoreElements(bool * aResult)
     }
 
     if (!hasMore)
-        mCurrent = nsnull;
+        mCurrent = nullptr;
     
     *aResult = mCurrent ? true : false;
     

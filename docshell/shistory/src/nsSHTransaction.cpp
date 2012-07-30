@@ -11,7 +11,7 @@
 //***    nsSHTransaction: Object Management
 //*****************************************************************************
 
-nsSHTransaction::nsSHTransaction() : mPersist(true), mPrev(nsnull) 
+nsSHTransaction::nsSHTransaction() : mPersist(true), mPrev(nullptr) 
 {
 }
 

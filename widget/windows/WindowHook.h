@@ -37,7 +37,7 @@ private:
     Callback cb;
     void *context;
 
-    CallbackData() : cb(nsnull), context(nsnull) {}
+    CallbackData() : cb(nullptr), context(nullptr) {}
     CallbackData(Callback cb, void *ctx) : cb(cb), context(ctx) {}
     bool Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam,
                   LRESULT *aResult);

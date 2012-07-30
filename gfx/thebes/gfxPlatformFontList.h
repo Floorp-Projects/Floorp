@@ -101,7 +101,7 @@ public:
 
     static void Shutdown() {
         delete sPlatformFontList;
-        sPlatformFontList = nsnull;
+        sPlatformFontList = nullptr;
     }
 
     virtual ~gfxPlatformFontList();

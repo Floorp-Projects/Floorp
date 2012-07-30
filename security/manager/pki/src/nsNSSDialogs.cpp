@@ -150,7 +150,7 @@ nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  rv = nsNSSDialogHelper::openDialog(nullptr,
                              "chrome://pippki/content/crlImportDialog.xul",
                              block,
                              false);
@@ -269,7 +269,7 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   rv = block->SetInt(0, count);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  rv = nsNSSDialogHelper::openDialog(nullptr,
                                 "chrome://pippki/content/clientauthask.xul",
                                 block);
   if (NS_FAILED(rv)) return rv;
@@ -334,7 +334,7 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
   rv = block->SetInt(1, *selectedIndex);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  rv = nsNSSDialogHelper::openDialog(nullptr,
                                 "chrome://pippki/content/certpicker.xul",
                                 block);
   if (NS_FAILED(rv)) return rv;
@@ -484,7 +484,7 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
   rv = block->SetInt(0, aCount);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  rv = nsNSSDialogHelper::openDialog(nullptr,
                                 "chrome://pippki/content/choosetoken.xul",
                                 block);
   if (NS_FAILED(rv)) return rv;
@@ -520,7 +520,7 @@ nsNSSDialogs::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, bool *_retval)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  rv = nsNSSDialogHelper::openDialog(nullptr,
                                      "chrome://pippki/content/escrowWarn.xul",
                                      block);
 
@@ -603,7 +603,7 @@ nsNSSDialogs::ShowCertError(nsIInterfaceRequestor *ctx,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull, 
+  rv = nsNSSDialogHelper::openDialog(nullptr, 
                                      "chrome://pippki/content/certerror.xul",
                                      block);
   return rv;

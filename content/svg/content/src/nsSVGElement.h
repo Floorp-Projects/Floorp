@@ -116,7 +116,7 @@ public:
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
-  // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
+  // nullptr for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx() const;
 
   enum TransformTypes {
@@ -154,7 +154,7 @@ public:
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
   // subclass has the useful implementation.
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
-  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nsnull; }
+  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nullptr; }
 
   bool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
@@ -241,14 +241,14 @@ public:
   void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
   SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
   virtual SVGAnimatedPointList* GetAnimatedPointList() {
-    return nsnull;
+    return nullptr;
   }
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
     // DOM interface 'SVGAnimatedPathData' (*inherited* by nsSVGPathElement)
     // has a member called 'animatedPathSegList' member, so we have a shorter
     // name so we don't get hidden by the GetAnimatedPathSegList declared by
     // NS_DECL_NSIDOMSVGANIMATEDPATHDATA.
-    return nsnull;
+    return nullptr;
   }
   /**
    * Get the SVGAnimatedTransformList for this element.
@@ -264,7 +264,7 @@ public:
    */
   virtual SVGAnimatedTransformList* GetAnimatedTransformList(
                                                         PRUint32 aFlags = 0) {
-    return nsnull;
+    return nullptr;
   }
 
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName);
@@ -277,13 +277,13 @@ public:
   void SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue);
 
   virtual nsIAtom* GetPointListAttrName() const {
-    return nsnull;
+    return nullptr;
   }
   virtual nsIAtom* GetPathDataAttrName() const {
-    return nsnull;
+    return nullptr;
   }
   virtual nsIAtom* GetTransformListAttrName() const {
-    return nsnull;
+    return nullptr;
   }
 
 protected:

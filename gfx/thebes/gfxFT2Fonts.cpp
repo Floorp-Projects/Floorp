@@ -85,7 +85,7 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
 
     if (familyArray.Length() == 0) {
         nsAutoString prefFamilies;
-        gfxToolkitPlatform::GetPlatform()->GetPrefFonts(aStyle->language, prefFamilies, nsnull);
+        gfxToolkitPlatform::GetPlatform()->GetPrefFonts(aStyle->language, prefFamilies, nullptr);
         if (!prefFamilies.IsEmpty()) {
             ForEachFont(prefFamilies, aStyle->language, FontCallback, &familyArray);
         }
@@ -99,9 +99,9 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
         familyArray.AppendElement(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
 #elif defined(MOZ_WIDGET_GTK)
         FcResult result;
-        FcChar8 *family = nsnull;
+        FcChar8 *family = nullptr;
         FcPattern* pat = FcPatternCreate();
-        FcPattern *match = FcFontMatch(nsnull, pat, &result);
+        FcPattern *match = FcFontMatch(nullptr, pat, &result);
         if (match)
             FcPatternGetString(match, FC_FAMILY, 0, &family);
         if (family)
@@ -135,7 +135,7 @@ gfxFT2FontGroup::~gfxFT2FontGroup()
 gfxFontGroup *
 gfxFT2FontGroup::Copy(const gfxFontStyle *aStyle)
 {
-    return new gfxFT2FontGroup(mFamilies, aStyle, nsnull);
+    return new gfxFT2FontGroup(mFamilies, aStyle, nullptr);
 }
 
 // Helper function to return the leading UTF-8 character in a char pointer
@@ -317,14 +317,14 @@ gfxFT2FontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry> >& 
             return font.forget();
         }
     }
-    return nsnull;
+    return nullptr;
 }
 
 already_AddRefed<gfxFont>
 gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
 {
     if (aCh > 0xFFFF)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxFT2Font> selectedFont;
 
@@ -363,7 +363,7 @@ gfxFT2FontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
         return f.forget();
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 already_AddRefed<gfxFont>
@@ -386,7 +386,7 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh, PRInt32 aRunScript)
     if (selectedFont)
         return selectedFont.forget();
 #endif
-    return nsnull;
+    return nullptr;
 }
 
 #endif // !ANDROID
@@ -447,7 +447,7 @@ gfxFT2Font::AddRange(gfxShapedWord *aShapedWord, const PRUnichar *str)
 
     gfxShapedWord::CompressedGlyph g;
 
-    const gfxFT2Font::CachedGlyphData *cgd = nsnull, *cgdNext = nsnull;
+    const gfxFT2Font::CachedGlyphData *cgd = nullptr, *cgdNext = nullptr;
 
     FT_UInt spaceGlyph = GetSpaceGlyph();
 
@@ -465,7 +465,7 @@ gfxFT2Font::AddRange(gfxShapedWord *aShapedWord, const PRUnichar *str)
 
         if (cgdNext) {
             cgd = cgdNext;
-            cgdNext = nsnull;
+            cgdNext = nullptr;
         } else {
             cgd = GetGlyphDataForChar(ch);
         }
@@ -572,7 +572,7 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
 #endif
     if (!fe) {
         NS_WARNING("Failed to find font entry for font!");
-        return nsnull;
+        return nullptr;
     }
 
     nsRefPtr<gfxFT2Font> font = GetOrMakeFont(fe, aStyle, aNeedsBold);
@@ -589,10 +589,10 @@ gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
         cairo_scaled_font_destroy(scaledFont);
         if (!font)
-            return nsnull;
+            return nullptr;
         gfxFontCache::GetCache()->AddNew(font);
     }
-    gfxFont *f = nsnull;
+    gfxFont *f = nullptr;
     font.swap(f);
     return static_cast<gfxFT2Font *>(f);
 }
@@ -640,7 +640,7 @@ gfxFT2Font::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
 {
     gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
     aSizes->mFontInstances +=
-        mCharGlyphCache.SizeOfExcludingThis(nsnull, aMallocSizeOf);
+        mCharGlyphCache.SizeOfExcludingThis(nullptr, aMallocSizeOf);
 }
 
 void

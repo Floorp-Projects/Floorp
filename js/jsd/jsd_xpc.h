@@ -50,7 +50,7 @@ class jsdObject MOZ_FINAL : public jsdIObject
                                 JSDObject *aObject)
     {
         if (!aObject)
-            return nsnull;
+            return nullptr;
         
         jsdIObject *rv = new jsdObject (aCx, aObject);
         NS_IF_ADDREF(rv);
@@ -80,7 +80,7 @@ class jsdProperty : public jsdIProperty
                                   JSDProperty *aProperty)
     {
         if (!aProperty)
-            return nsnull;
+            return nullptr;
         
         jsdIProperty *rv = new jsdProperty (aCx, aProperty);
         NS_IF_ADDREF(rv);
@@ -113,7 +113,7 @@ class jsdScript : public jsdIScript
     static jsdIScript *FromPtr (JSDContext *aCx, JSDScript *aScript)
     {
         if (!aScript)
-            return nsnull;
+            return nullptr;
 
         void *data = JSD_GetScriptPrivate (aScript);
         jsdIScript *rv;
@@ -306,7 +306,7 @@ class jsdContext : public jsdIContext
     static jsdIContext *FromPtr (JSDContext *aCx)
     {
         if (!aCx)
-            return nsnull;
+            return nullptr;
         
         void *data = JSD_GetContextPrivate (aCx);
         jsdIContext *rv;
@@ -354,7 +354,7 @@ class jsdThreadState : public jsdIThreadState
                                      JSDThreadState *aThreadState)
     {
         if (!aThreadState)
-            return nsnull;
+            return nullptr;
         
         jsdIThreadState *rv = new jsdThreadState (aCx, aThreadState);
         NS_IF_ADDREF(rv);

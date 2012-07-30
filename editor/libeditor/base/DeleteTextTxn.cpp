@@ -20,11 +20,11 @@ using namespace mozilla;
 
 DeleteTextTxn::DeleteTextTxn() :
   EditTxn(),
-  mEditor(nsnull),
+  mEditor(nullptr),
   mCharData(),
   mOffset(0),
   mNumCharsToDelete(0),
-  mRangeUpdater(nsnull)
+  mRangeUpdater(nullptr)
 {
 }
 

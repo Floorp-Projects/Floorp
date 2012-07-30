@@ -197,7 +197,7 @@ public:
    *                             frame and its subtree is hidden
    */
   Accessible* GetOrCreateAccessible(nsINode* aNode, DocAccessible* aDoc,
-                                    bool* aIsSubtreeHidden = nsnull);
+                                    bool* aIsSubtreeHidden = nullptr);
 
 private:
   // nsAccessibilityService creation is controlled by friend

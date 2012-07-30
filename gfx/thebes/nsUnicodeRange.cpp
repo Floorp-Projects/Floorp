@@ -460,5 +460,5 @@ nsIAtom *LangGroupFromUnicodeRange(PRUint8 unicodeRange)
     nsIAtom **atom = gUnicodeRangeToLangGroupAtomTable[unicodeRange];
     return *atom;
   }
-  return nsnull;
+  return nullptr;
 }

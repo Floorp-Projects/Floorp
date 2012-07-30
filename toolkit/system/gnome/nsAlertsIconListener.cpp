@@ -135,7 +135,7 @@ nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
 
   if (mIconRequest) {
     mIconRequest->Cancel(NS_BINDING_ABORTED);
-    mIconRequest = nsnull;
+    mIconRequest = nullptr;
   }
   return NS_OK;
 }
@@ -227,7 +227,7 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
-    mIconRequest = nsnull;
+    mIconRequest = nullptr;
   }
 
   nsCOMPtr<nsIURI> imageUri;
@@ -239,9 +239,9 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
   if (!il)
     return ShowAlert(NULL);
 
-  return il->LoadImage(imageUri, nsnull, nsnull, nsnull, nsnull, this,
-                       nsnull, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
-                       nsnull, getter_AddRefs(mIconRequest));
+  return il->LoadImage(imageUri, nullptr, nullptr, nullptr, nullptr, this,
+                       nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
+                       nullptr, getter_AddRefs(mIconRequest));
 }
 
 void

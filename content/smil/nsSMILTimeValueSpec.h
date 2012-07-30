@@ -110,7 +110,7 @@ protected:
     EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
     void Disconnect()
     {
-      mSpec = nsnull;
+      mSpec = nullptr;
     }
 
     NS_DECL_ISUPPORTS

@@ -230,7 +230,7 @@ public:
   { mObservers.RemoveEntry(aObserver); }
 #ifdef DEBUG
   bool Contains(nsSVGRenderingObserver* aObserver)
-  { return (mObservers.GetEntry(aObserver) != nsnull); }
+  { return (mObservers.GetEntry(aObserver) != nullptr); }
 #endif
   bool IsEmpty()
   { return mObservers.Count() == 0; }
@@ -306,7 +306,7 @@ public:
      */
     nsSVGFilterFrame *GetFilterFrame(bool *aOK) {
       if (!mFilter)
-        return nsnull;
+        return nullptr;
       nsSVGFilterFrame *filter = mFilter->GetFilterFrame();
       if (!filter) {
         *aOK = false;
@@ -330,7 +330,7 @@ public:
   static nsSVGFilterProperty *GetFilterProperty(nsIFrame *aFrame);
   static nsSVGFilterFrame *GetFilterFrame(nsIFrame *aFrame) {
     nsSVGFilterProperty *prop = GetFilterProperty(aFrame);
-    return prop ? prop->GetFilterFrame() : nsnull;
+    return prop ? prop->GetFilterFrame() : nullptr;
   }
 
   /**

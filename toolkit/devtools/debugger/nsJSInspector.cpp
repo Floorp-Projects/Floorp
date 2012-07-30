@@ -45,7 +45,7 @@ nsJSInspector::EnterNestedEventLoop(PRUint32 *out)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 nestLevel = ++mNestedLoopLevel;
-  if (NS_SUCCEEDED(stack->Push(nsnull))) {
+  if (NS_SUCCEEDED(stack->Push(nullptr))) {
     while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
       if (!NS_ProcessNextEvent())
         rv = NS_ERROR_UNEXPECTED;
@@ -53,7 +53,7 @@ nsJSInspector::EnterNestedEventLoop(PRUint32 *out)
 
     JSContext *cx;
     stack->Pop(&cx);
-    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
   } else {
     rv = NS_ERROR_FAILURE;
   }

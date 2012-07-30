@@ -24,11 +24,11 @@ nsIRootBox*
 nsIRootBox::GetRootBox(nsIPresShell* aShell)
 {
   if (!aShell) {
-    return nsnull;
+    return nullptr;
   }
   nsIFrame* rootFrame = aShell->FrameManager()->GetRootFrame();
   if (!rootFrame) {
-    return nsnull;
+    return nullptr;
   }
 
   if (rootFrame) {
@@ -114,7 +114,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsBoxFrame(aShell, aContext, true)
 {
-  mPopupSetFrame = nsnull;
+  mPopupSetFrame = nullptr;
 
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(aShell, layout);
@@ -251,7 +251,7 @@ nsRootBoxFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet)
   // if something triggers ReconstructDocElementHierarchy, we will
   // destroy this frame's child (the nsDocElementBoxFrame), but not this
   // frame.  This will cause the popupset to remove itself by calling
-  // |SetPopupSetFrame(nsnull)|, and then we'll be able to accept a new
+  // |SetPopupSetFrame(nullptr)|, and then we'll be able to accept a new
   // popupset.  Since the anonymous content is associated with the
   // nsDocElementBoxFrame, we'll get a new popupset when the new doc
   // element box frame is created.

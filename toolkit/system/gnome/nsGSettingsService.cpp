@@ -75,7 +75,7 @@ GSETTINGS_FUNCTIONS
 #define g_variant_new_string _g_variant_new_string
 #define g_variant_unref _g_variant_unref
 
-static PRLibrary *gioLib = nsnull;
+static PRLibrary *gioLib = nullptr;
 
 class nsGSettingsCollection : public nsIGSettingsCollection
 {
@@ -326,7 +326,7 @@ nsGSettingsService::~nsGSettingsService()
 {
   if (gioLib) {
     PR_UnloadLibrary(gioLib);
-    gioLib = nsnull;
+    gioLib = nullptr;
   }
 }
 

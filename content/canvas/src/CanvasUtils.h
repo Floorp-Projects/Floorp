@@ -168,7 +168,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
     if (dashes.IsEmpty()) {
         *val = JSVAL_NULL;
     } else {
-        JSObject* obj = JS_NewArrayObject(cx, dashes.Length(), nsnull);
+        JSObject* obj = JS_NewArrayObject(cx, dashes.Length(), nullptr);
         if (!obj) {
             return NS_ERROR_OUT_OF_MEMORY;
         }

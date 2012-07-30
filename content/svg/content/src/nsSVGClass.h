@@ -21,7 +21,7 @@ class nsSVGClass
 
 public:
   void Init() {
-    mAnimVal = nsnull;
+    mAnimVal = nullptr;
   }
 
   void SetBaseValue(const nsAString& aValue,

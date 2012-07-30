@@ -60,7 +60,7 @@ class nsPresContext;
 using namespace mozilla;
 
 nsEditorEventListener::nsEditorEventListener() :
-  mEditor(nsnull), mCommitText(false),
+  mEditor(nullptr), mCommitText(false),
   mInTransaction(false)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   , mHaveBidiKeyboards(false)
@@ -188,7 +188,7 @@ nsEditorEventListener::Disconnect()
     return;
   }
   UninstallFromEditor();
-  mEditor = nsnull;
+  mEditor = nullptr;
 }
 
 void
@@ -498,10 +498,10 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
     nsIDocument* currentDoc = focusedContent->GetCurrentDoc();
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     nsPresContext* presContext =
-      presShell ? presShell->GetPresContext() : nsnull;
+      presShell ? presShell->GetPresContext() : nullptr;
     if (presContext && currentDoc) {
       nsIMEStateManager::OnClickInEditor(presContext,
-        currentDoc->HasFlag(NODE_IS_EDITABLE) ? nsnull : focusedContent,
+        currentDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent,
         mouseEvent);
     }
   }
@@ -697,7 +697,7 @@ nsEditorEventListener::CleanupDragDropCaret()
     }
 
     mCaret->Terminate();
-    mCaret = nsnull;
+    mCaret = nullptr;
   }
 }
 
@@ -936,7 +936,7 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
     nsCOMPtr<nsISelectionPrivate> selectionPrivate =
       do_QueryInterface(selection);
     if (selectionPrivate) {
-      selectionPrivate->SetAncestorLimiter(nsnull);
+      selectionPrivate->SetAncestorLimiter(nullptr);
     }
 
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();

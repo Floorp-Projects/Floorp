@@ -93,7 +93,7 @@ nsFaviconService::~nsFaviconService()
   NS_ASSERTION(gFaviconService == this,
                "Deleting a non-singleton instance of the service");
   if (gFaviconService == this)
-    gFaviconService = nsnull;
+    gFaviconService = nullptr;
 }
 
 
@@ -791,7 +791,7 @@ nsFaviconService::GetFaviconDataAsDataURL(nsIURI* aFaviconURI,
   }
 
   char* encoded = PL_Base64Encode(reinterpret_cast<const char*>(data),
-                                  dataLen, nsnull);
+                                  dataLen, nullptr);
   nsMemory::Free(data);
 
   if (!encoded)
@@ -1116,9 +1116,9 @@ ExpireFaviconsStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    (void)observerService->NotifyObservers(nsnull,
+    (void)observerService->NotifyObservers(nullptr,
                                            NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID,
-                                           nsnull);
+                                           nullptr);
   }
 
   return NS_OK;

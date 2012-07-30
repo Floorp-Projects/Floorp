@@ -19,7 +19,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGCONFSERVICE
 
-  nsGConfService() : mClient(nsnull) {}
+  nsGConfService() : mClient(nullptr) {}
   NS_HIDDEN_(nsresult) Init();
 
 private:

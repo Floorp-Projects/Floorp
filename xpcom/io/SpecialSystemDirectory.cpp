@@ -413,7 +413,7 @@ GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
             return rv;
     }
 
-    *aFile = nsnull;
+    *aFile = nullptr;
     file.swap(*aFile);
 
     return NS_OK;
@@ -519,7 +519,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
 #elif defined(XP_UNIX)
         {
-            static const char *tPath = nsnull;
+            static const char *tPath = nullptr;
             if (!tPath) {
                 tPath = PR_GetEnv("TMPDIR");
                 if (!tPath || !*tPath) {

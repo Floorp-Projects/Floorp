@@ -22,9 +22,9 @@ typedef XScreenSaverInfo* (*_XScreenSaverAllocInfo_fn)(void);
 typedef void (*_XScreenSaverQueryInfo_fn)(Display* dpy, Drawable drw,
                                           XScreenSaverInfo *info);
 
-static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nsnull;
-static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
-static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
+static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nullptr;
+static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nullptr;
+static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nullptr;
 #endif
 
 static bool sInitialized = false;
@@ -33,7 +33,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceQt, nsIdleService)
 
 nsIdleServiceQt::nsIdleServiceQt()
 #if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)
-    : mXssInfo(nsnull)
+    : mXssInfo(nullptr)
 #endif
 {
 }
@@ -70,7 +70,7 @@ nsIdleServiceQt::~nsIdleServiceQt()
 #if 0
     if (xsslib) {
         PR_UnloadLibrary(xsslib);
-        xsslib = nsnull;
+        xsslib = nullptr;
     }
 #endif
 #endif

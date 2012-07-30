@@ -48,10 +48,10 @@ nsXTFElementWrapper::nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo
 nsXTFElementWrapper::~nsXTFElementWrapper()
 {
   mXTFElement->OnDestroyed();
-  mXTFElement = nsnull;
+  mXTFElement = nullptr;
   if (mClassInfo) {
     mClassInfo->Disconnect();
-    mClassInfo = nsnull;
+    mClassInfo = nullptr;
   }
 }
 
@@ -60,7 +60,7 @@ nsXTFElementWrapper::Init()
 {
   // pass a weak wrapper (non base object ref-counted), so that
   // our mXTFElement can safely addref/release.
-  nsISupports* weakWrapper = nsnull;
+  nsISupports* weakWrapper = nullptr;
   nsresult rv = NS_NewXTFWeakTearoff(NS_GET_IID(nsIXTFElementWrapper),
                                      (nsIXTFElementWrapper*)this,
                                      &weakWrapper);
@@ -210,14 +210,14 @@ nsXTFElementWrapper::UnbindFromTree(bool aDeep, bool aNullParent)
   bool inDoc = IsInDoc();
   if (inDoc &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT)) {
-    GetXTFElement()->WillChangeDocument(nsnull);
+    GetXTFElement()->WillChangeDocument(nullptr);
   }
 
   bool parentChanged = aNullParent && GetParent();
 
   if (parentChanged &&
       (mNotificationMask & nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT)) {
-    GetXTFElement()->WillChangeParent(nsnull);
+    GetXTFElement()->WillChangeParent(nullptr);
   }
 
   if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY)
@@ -227,12 +227,12 @@ nsXTFElementWrapper::UnbindFromTree(bool aDeep, bool aNullParent)
 
   if (parentChanged &&
       (mNotificationMask & nsIXTFElement::NOTIFY_PARENT_CHANGED)) {
-    GetXTFElement()->ParentChanged(nsnull);
+    GetXTFElement()->ParentChanged(nullptr);
   }
 
   if (inDoc &&
       (mNotificationMask & nsIXTFElement::NOTIFY_DOCUMENT_CHANGED)) {
-    GetXTFElement()->DocumentChanged(nsnull);
+    GetXTFElement()->DocumentChanged(nullptr);
   }
 }
 
@@ -474,7 +474,7 @@ nsXTFElementWrapper::GetAttrNameAt(PRUint32 aIndex) const
   if (aIndex < innerCount) {
     nsCOMPtr<nsIAtom> localName;
     nsresult rv = mAttributeHandler->GetAttributeNameAt(aIndex, getter_AddRefs(localName));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     const_cast<nsXTFElementWrapper*>(this)->mTmpAttrName.SetTo(localName);
     return &mTmpAttrName;
@@ -519,7 +519,7 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aStr);
     if (HandledByInner(nameAtom)) 
       nodeInfo = mNodeInfo->NodeInfoManager()->
-        GetNodeInfo(nameAtom, nsnull, kNameSpaceID_None,
+        GetNodeInfo(nameAtom, nullptr, kNameSpaceID_None,
                     nsIDOMNode::ATTRIBUTE_NODE).get();
   }
   
@@ -556,7 +556,7 @@ nsXTFElementWrapper::PerformAccesskey(bool aKeyCausesActivation,
 nsresult
 nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsCOMPtr<nsIContent> it;
   nsContentUtils::GetXTFService()->CreateElement(getter_AddRefs(it),
                                                  aNodeInfo);
@@ -663,12 +663,12 @@ nsXTFElementWrapper::HasAttribute(const nsAString& aName, bool* aReturn)
 NS_IMETHODIMP 
 nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
 {
-  *aArray = nsnull;
+  *aArray = nullptr;
   *aCount = 0;
   PRUint32 baseCount = 0;
-  nsIID** baseArray = nsnull;
+  nsIID** baseArray = nullptr;
   PRUint32 xtfCount = 0;
-  nsIID** xtfArray = nsnull;
+  nsIID** xtfArray = nullptr;
 
   nsCOMPtr<nsIClassInfo> baseCi = GetBaseXPCClassInfo();
   if (baseCi) {
@@ -727,7 +727,7 @@ NS_IMETHODIMP
 nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language,
                                           nsISupports** aHelper)
 {
-  *aHelper = nsnull;
+  *aHelper = nullptr;
   nsCOMPtr<nsIClassInfo> ci = GetBaseXPCClassInfo();
   return
     ci ? ci->GetHelperForLanguage(language, aHelper) : NS_ERROR_NOT_AVAILABLE;
@@ -737,7 +737,7 @@ nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language,
 NS_IMETHODIMP 
 nsXTFElementWrapper::GetContractID(char * *aContractID)
 {
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
@@ -745,7 +745,7 @@ nsXTFElementWrapper::GetContractID(char * *aContractID)
 NS_IMETHODIMP 
 nsXTFElementWrapper::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 
@@ -753,7 +753,7 @@ nsXTFElementWrapper::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP 
 nsXTFElementWrapper::GetClassID(nsCID * *aClassID)
 {
-  *aClassID = nsnull;
+  *aClassID = nullptr;
   return NS_OK;
 }
 
@@ -796,7 +796,7 @@ nsXTFElementWrapper::GetElementNode(nsIDOMElement * *aElementNode)
 NS_IMETHODIMP
 nsXTFElementWrapper::GetDocumentFrameElement(nsIDOMElement * *aDocumentFrameElement)
 {
-  *aDocumentFrameElement = nsnull;
+  *aDocumentFrameElement = nullptr;
   
   nsIDocument *doc = GetCurrentDoc();
   if (!doc) {
@@ -842,7 +842,7 @@ nsXTFElementWrapper::QueryInterfaceInner(REFNSIID aIID, void** result)
   if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) return false;
 
   GetXTFElement()->QueryInterface(aIID, result);
-  return (*result!=nsnull);
+  return (*result!=nullptr);
 }
 
 bool
@@ -912,7 +912,7 @@ nsXTFElementWrapper::GetClassAttributeName() const
 const nsAttrValue*
 nsXTFElementWrapper::DoGetClasses() const
 {
-  const nsAttrValue* val = nsnull;
+  const nsAttrValue* val = nullptr;
   nsIAtom* clazzAttr = GetClassAttributeName();
   if (clazzAttr) {
     val = mAttrsAndChildren.GetAttr(clazzAttr);
@@ -980,7 +980,7 @@ NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement,
                         already_AddRefed<nsINodeInfo> aNodeInfo,
                         nsIContent** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
    NS_ENSURE_ARG(aXTFElement);
 
   nsXTFElementWrapper* result = new nsXTFElementWrapper(aNodeInfo, aXTFElement);

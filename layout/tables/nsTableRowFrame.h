@@ -106,8 +106,8 @@ public:
   void UpdateHeight(nscoord           aHeight,
                     nscoord           aAscent,
                     nscoord           aDescent,
-                    nsTableFrame*     aTableFrame = nsnull,
-                    nsTableCellFrame* aCellFrame  = nsnull);
+                    nsTableFrame*     aTableFrame = nullptr,
+                    nsTableCellFrame* aCellFrame  = nullptr);
 
   void ResetHeight(nscoord aRowStyleHeight);
 

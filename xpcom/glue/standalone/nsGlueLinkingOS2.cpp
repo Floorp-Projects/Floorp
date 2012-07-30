@@ -96,7 +96,7 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
     ulrc = DosLoadModule(pszError, _MAX_PATH, xpcomFile, &h);
 
     if (ulrc != NO_ERROR)
-        return nsnull;
+        return nullptr;
 
     AppendDependentLib(h);
 
@@ -128,7 +128,7 @@ XPCOMGlueUnload()
 
     if (sXULLibrary) {
         DosFreeModule(sXULLibrary);
-        sXULLibrary = nsnull;
+        sXULLibrary = nullptr;
     }
 }
 

@@ -19,8 +19,8 @@ namespace mozilla {
 namespace layers {
 
 // Singleton 
-static ImageBridgeChild *sImageBridgeChildSingleton = nsnull;
-static Thread *sImageBridgeChildThread = nsnull;
+static ImageBridgeChild *sImageBridgeChildSingleton = nullptr;
+static Thread *sImageBridgeChildThread = nullptr;
 
 // dispatched function
 static void StopImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
@@ -54,7 +54,7 @@ static void DeleteImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
   NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                     "Should be in ImageBridgeChild thread.");
   delete sImageBridgeChildSingleton;
-  sImageBridgeChildSingleton = nsnull;
+  sImageBridgeChildSingleton = nullptr;
   *aDone = true;
   aBarrier->NotifyAll();
 }
@@ -90,7 +90,7 @@ ImageBridgeChild* ImageBridgeChild::GetSingleton()
 
 bool ImageBridgeChild::IsCreated()
 {
-  return GetSingleton() != nsnull;
+  return GetSingleton() != nullptr;
 }
 
 void ImageBridgeChild::StartUp()
@@ -105,14 +105,14 @@ void ImageBridgeChild::ShutDown()
   if (ImageBridgeChild::IsCreated()) {
     ImageBridgeChild::DestroyBridge();
     delete sImageBridgeChildThread;
-    sImageBridgeChildThread = nsnull;
+    sImageBridgeChildThread = nullptr;
   }
 }
 
 bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
 {
   NS_ABORT_IF_FALSE(aThread, "ImageBridge needs a thread.");
-  if (sImageBridgeChildSingleton == nsnull) {
+  if (sImageBridgeChildSingleton == nullptr) {
     sImageBridgeChildThread = aThread;
     if (!aThread->IsRunning()) {
       aThread->Start();
@@ -161,7 +161,7 @@ void ImageBridgeChild::DestroyBridge()
 PImageContainerChild* ImageBridgeChild::AllocPImageContainer(PRUint64* id)
 {
   NS_ABORT();
-  return nsnull;
+  return nullptr;
 }
 
 bool ImageBridgeChild::DeallocPImageContainer(PImageContainerChild* aImgContainerChild)
@@ -195,7 +195,7 @@ already_AddRefed<ImageContainerChild> ImageBridgeChild::CreateImageContainerChil
   // ImageContainerChild can only be alocated on the ImageBridgeChild thread, so se
   // dispatch a task to the thread and block the current thread until the task has been
   // executed.
-  nsRefPtr<ImageContainerChild> result = nsnull;
+  nsRefPtr<ImageContainerChild> result = nullptr;
 
   ReentrantMonitor barrier("CreateImageContainerChild Lock");
   ReentrantMonitorAutoEnter autoMon(barrier);

@@ -100,7 +100,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
     dbus_error_free(&err); 
     return NS_ERROR_FAILURE;
   }
-  if (nsnull == connection) { 
+  if (nullptr == connection) { 
     return NS_ERROR_FAILURE; 
   }
   dbus_connection_set_exit_on_disconnect(connection,false);

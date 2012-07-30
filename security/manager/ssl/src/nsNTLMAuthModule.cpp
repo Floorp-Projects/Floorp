@@ -873,14 +873,14 @@ static void
 des_encrypt(const PRUint8 *key, const PRUint8 *src, PRUint8 *hash)
 {
   CK_MECHANISM_TYPE cipherMech = CKM_DES_ECB;
-  PK11SlotInfo *slot = nsnull;
-  PK11SymKey *symkey = nsnull;
-  PK11Context *ctxt = nsnull;
-  SECItem keyItem, *param = nsnull;
+  PK11SlotInfo *slot = nullptr;
+  PK11SymKey *symkey = nullptr;
+  PK11Context *ctxt = nullptr;
+  SECItem keyItem, *param = nullptr;
   SECStatus rv;
   unsigned int n;
   
-  slot = PK11_GetBestSlot(cipherMech, nsnull);
+  slot = PK11_GetBestSlot(cipherMech, nullptr);
   if (!slot)
   {
     NS_ERROR("no slot");
@@ -891,7 +891,7 @@ des_encrypt(const PRUint8 *key, const PRUint8 *src, PRUint8 *hash)
   keyItem.len = 8;
   symkey = PK11_ImportSymKey(slot, cipherMech,
                              PK11_OriginUnwrap, CKA_ENCRYPT,
-                             &keyItem, nsnull);
+                             &keyItem, nullptr);
   if (!symkey)
   {
     NS_ERROR("no symkey");
@@ -899,7 +899,7 @@ des_encrypt(const PRUint8 *key, const PRUint8 *src, PRUint8 *hash)
   }
 
   // no initialization vector required
-  param = PK11_ParamFromIV(cipherMech, nsnull);
+  param = PK11_ParamFromIV(cipherMech, nullptr);
   if (!param)
   {
     NS_ERROR("no param");

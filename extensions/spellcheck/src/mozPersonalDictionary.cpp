@@ -180,7 +180,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
 NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
 {
   NS_ENSURE_ARG_POINTER(aWords);
-  *aWords = nsnull;
+  *aWords = nullptr;
 
   nsTArray<nsString> *array = new nsTArray<nsString>(mDictionaryTable.Count());
   if (!array)

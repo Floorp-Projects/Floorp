@@ -70,7 +70,7 @@
 #include "rdfITripleVisitor.h"
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gLog = nsnull;
+static PRLogModuleInfo* gLog = nullptr;
 #endif
 
 
@@ -93,13 +93,13 @@ public:
         void* place = aAllocator.Alloc(sizeof(Assertion));
         return place
             ? ::new (place) Assertion(aSource, aProperty, aTarget, aTruthValue)
-            : nsnull; }
+            : nullptr; }
     static Assertion*
     Create(nsFixedSizeAllocator& aAllocator, nsIRDFResource* aSource) {
         void* place = aAllocator.Alloc(sizeof(Assertion));
         return place
             ? ::new (place) Assertion(aSource)
-            : nsnull; }
+            : nullptr; }
 
     static void
     Destroy(nsFixedSizeAllocator& aAllocator, Assertion* aAssertion) {
@@ -107,7 +107,7 @@ public:
             PL_DHashTableEnumerate(aAssertion->u.hash.mPropertyHash,
                 DeletePropertyHashEntry, &aAllocator);
             PL_DHashTableDestroy(aAssertion->u.hash.mPropertyHash);
-            aAssertion->u.hash.mPropertyHash = nsnull;
+            aAssertion->u.hash.mPropertyHash = nullptr;
         }
         aAssertion->~Assertion();
         aAllocator.Free(aAssertion, sizeof(*aAssertion)); }
@@ -192,7 +192,7 @@ struct Entry {
 
 Assertion::Assertion(nsIRDFResource* aSource)
     : mSource(aSource),
-      mNext(nsnull),
+      mNext(nullptr),
       mRefCnt(0),
       mHashEntry(true)
 {
@@ -201,7 +201,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash = PL_NewDHashTable(PL_DHashGetStubOps(),
-                      nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
+                      nullptr, sizeof(Entry), PL_DHASH_MIN_SIZE);
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -209,7 +209,7 @@ Assertion::Assertion(nsIRDFResource* aSource,
                      nsIRDFNode* aTarget,
                      bool aTruthValue)
     : mSource(aSource),
-      mNext(nsnull),
+      mNext(nullptr),
       mRefCnt(0),
       mHashEntry(false)
 {
@@ -222,7 +222,7 @@ Assertion::Assertion(nsIRDFResource* aSource,
     NS_ADDREF(u.as.mProperty);
     NS_ADDREF(u.as.mTarget);
 
-    u.as.mInvNext = nsnull;
+    u.as.mInvNext = nullptr;
     u.as.mTruthValue = aTruthValue;
     u.as.mMarked = false;
 }
@@ -256,7 +256,7 @@ Assertion::DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
         as = as->mNext;
 
         // Unlink, and release the datasource's reference.
-        doomed->mNext = doomed->u.as.mInvNext = nsnull;
+        doomed->mNext = doomed->u.as.mInvNext = nullptr;
         doomed->Release(*allocator);
     }
     return PL_DHASH_NEXT;
@@ -356,14 +356,14 @@ public:
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mForwardArcs, u, PL_DHASH_LOOKUP);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull; }
+            : nullptr; }
 
     Assertion*
     GetReverseArcs(nsIRDFNode* v) {
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mReverseArcs, v, PL_DHASH_LOOKUP);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull; }
+            : nullptr; }
 
     void
     SetForwardArcs(nsIRDFResource* u, Assertion* as) {
@@ -442,7 +442,7 @@ public:
             ? ::new (place) InMemoryAssertionEnumeratorImpl(aDataSource,
                                                             aSource, aProperty, aTarget,
                                                             aTruthValue)
-            : nsnull; }
+            : nullptr; }
 
     static void
     Destroy(InMemoryAssertionEnumeratorImpl* aEnumerator) {
@@ -476,9 +476,9 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mSource(aSource),
       mProperty(aProperty),
       mTarget(aTarget),
-      mValue(nsnull),
+      mValue(nullptr),
       mTruthValue(aTruthValue),
-      mNextAssertion(nsnull)
+      mNextAssertion(nullptr)
 {
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
@@ -494,7 +494,7 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
                 aProperty, PL_DHASH_LOOKUP);
             mNextAssertion = PL_DHASH_ENTRY_IS_BUSY(hdr)
                 ? reinterpret_cast<Entry*>(hdr)->mAssertions
-                : nsnull;
+                : nullptr;
         }
     }
     else {
@@ -588,7 +588,7 @@ InMemoryAssertionEnumeratorImpl::GetNext(nsISupports** aResult)
 
     // Don't AddRef: we "transfer" ownership to the caller
     *aResult = mValue;
-    mValue = nsnull;
+    mValue = nullptr;
 
     return NS_OK;
 }
@@ -644,7 +644,7 @@ public:
         void* place = aDataSource->mAllocator.Alloc(sizeof(InMemoryArcsEnumeratorImpl));
         return place
             ? ::new (place) InMemoryArcsEnumeratorImpl(aDataSource, aSource, aTarget)
-            : nsnull; }
+            : nullptr; }
 
     static void
     Destroy(InMemoryArcsEnumeratorImpl* aEnumerator) {
@@ -679,7 +679,7 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
     : mDataSource(aDataSource),
       mSource(aSource),
       mTarget(aTarget),
-      mCurrent(nsnull)
+      mCurrent(nullptr)
 {
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
@@ -696,7 +696,7 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
                 PL_DHashTableEnumerate(mAssertion->u.hash.mPropertyHash,
                     ArcEnumerator, mHashArcs.get());
             }
-            mAssertion = nsnull;
+            mAssertion = nullptr;
         }
     }
     else {
@@ -724,7 +724,7 @@ NS_IMPL_QUERY_INTERFACE1(InMemoryArcsEnumeratorImpl, nsISimpleEnumerator)
 NS_IMETHODIMP
 InMemoryArcsEnumeratorImpl::HasMoreElements(bool* aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
@@ -808,7 +808,7 @@ InMemoryArcsEnumeratorImpl::GetNext(nsISupports** aResult)
 
     // Don't AddRef: we "transfer" ownership to the caller
     *aResult = mCurrent;
-    mCurrent = nsnull;
+    mCurrent = nullptr;
 
     return NS_OK;
 }
@@ -820,10 +820,10 @@ InMemoryArcsEnumeratorImpl::GetNext(nsISupports** aResult)
 nsresult
 NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports))) {
         NS_ERROR("aggregation requires nsISupports");
@@ -865,8 +865,8 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 
     mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
-    mForwardArcs.ops = nsnull;
-    mReverseArcs.ops = nsnull;
+    mForwardArcs.ops = nullptr;
+    mReverseArcs.ops = nullptr;
     mPropagateChanges = true;
 }
 
@@ -876,18 +876,18 @@ InMemoryDataSource::Init()
 {
     if (!PL_DHashTableInit(&mForwardArcs,
                            PL_DHashGetStubOps(),
-                           nsnull,
+                           nullptr,
                            sizeof(Entry),
                            PL_DHASH_MIN_SIZE)) {
-        mForwardArcs.ops = nsnull;
+        mForwardArcs.ops = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
     if (!PL_DHashTableInit(&mReverseArcs,
                            PL_DHashGetStubOps(),
-                           nsnull,
+                           nullptr,
                            sizeof(Entry),
                            PL_DHASH_MIN_SIZE)) {
-        mReverseArcs.ops = nsnull;
+        mReverseArcs.ops = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -936,7 +936,7 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr
         as = as->mNext;
 
         // Unlink, and release the datasource's reference.
-        doomed->mNext = doomed->u.as.mInvNext = nsnull;
+        doomed->mNext = doomed->u.as.mInvNext = nullptr;
         doomed->Release(*allocator);
     }
     return PL_DHASH_NEXT;
@@ -994,12 +994,12 @@ InMemoryDataSource::LogOperation(const char* aOperation,
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
-    if ((resource = do_QueryInterface(aTarget)) != nsnull) {
+    if ((resource = do_QueryInterface(aTarget)) != nullptr) {
         resource->GetValue(getter_Copies(uri));
         PR_LogPrint
            ("  -->[(%p)%s]", aTarget, (const char*) uri);
     }
-    else if ((literal = do_QueryInterface(aTarget)) != nsnull) {
+    else if ((literal = do_QueryInterface(aTarget)) != nullptr) {
         nsXPIDLString value;
         literal->GetValue(getter_Copies(value));
         nsAutoString valueStr(value);
@@ -1021,11 +1021,11 @@ InMemoryDataSource::LogOperation(const char* aOperation,
 NS_IMETHODIMP
 InMemoryDataSource::GetURI(char* *uri)
 {
-    NS_PRECONDITION(uri != nsnull, "null ptr");
+    NS_PRECONDITION(uri != nullptr, "null ptr");
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    *uri = nsnull;
+    *uri = nullptr;
     return NS_OK;
 }
 
@@ -1035,15 +1035,15 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
                               bool tv,
                               nsIRDFResource** source)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
+    NS_PRECONDITION(target != nullptr, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
@@ -1054,7 +1054,7 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
             return NS_OK;
         }
     }
-    *source = nsnull;
+    *source = nullptr;
     return NS_RDF_NO_VALUE;
 }
 
@@ -1064,15 +1064,15 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
                               bool tv,
                               nsIRDFNode** target)
 {
-    NS_PRECONDITION(source != nsnull, "null ptr");
+    NS_PRECONDITION(source != nullptr, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(property != nsnull, "null ptr");
+    NS_PRECONDITION(property != nullptr, "null ptr");
     if (! property)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(target != nsnull, "null ptr");
+    NS_PRECONDITION(target != nullptr, "null ptr");
     if (! target)
         return NS_ERROR_NULL_POINTER;
 
@@ -1081,7 +1081,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash, property, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         while (val) {
             if (tv == val->u.as.mTruthValue) {
                 *target = val->u.as.mTarget;
@@ -1092,7 +1092,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
         }
     }
     else
-    for (; as != nsnull; as = as->mNext) {
+    for (; as != nullptr; as = as->mNext) {
         if ((property == as->u.as.mProperty) && (tv == (as->u.as.mTruthValue))) {
             *target = as->u.as.mTarget;
             NS_ADDREF(*target);
@@ -1102,7 +1102,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
     // If we get here, then there was no target with for the specified
     // property & truth value.
-    *target = nsnull;
+    *target = nullptr;
     return NS_RDF_NO_VALUE;
 }
 
@@ -1127,7 +1127,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash, property, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         while (val) {
             if ((val->u.as.mTarget == target) && (tv == (val->u.as.mTruthValue))) {
                 *hasAssertion = true;
@@ -1137,7 +1137,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
         }
     }
     else
-    for (; as != nsnull; as = as->mNext) {
+    for (; as != nullptr; as = as->mNext) {
         // check target first as its most unique
         if (target != as->u.as.mTarget)
             continue;
@@ -1164,20 +1164,20 @@ InMemoryDataSource::GetSources(nsIRDFResource* aProperty,
                                bool aTruthValue,
                                nsISimpleEnumerator** aResult)
 {
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     InMemoryAssertionEnumeratorImpl* result =
-        InMemoryAssertionEnumeratorImpl::Create(this, nsnull, aProperty,
+        InMemoryAssertionEnumeratorImpl::Create(this, nullptr, aProperty,
                                                   aTarget, aTruthValue);
 
     if (! result)
@@ -1195,21 +1195,21 @@ InMemoryDataSource::GetTargets(nsIRDFResource* aSource,
                                bool aTruthValue,
                                nsISimpleEnumerator** aResult)
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
     
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     InMemoryAssertionEnumeratorImpl* result =
         InMemoryAssertionEnumeratorImpl::Create(this, aSource, aProperty,
-                                                nsnull, aTruthValue);
+                                                nullptr, aTruthValue);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1233,14 +1233,14 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
-    Assertion* as = nsnull;
+    Assertion* as = nullptr;
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
         PLDHashEntryHdr* hdr = PL_DHashTableOperate(next->u.hash.mPropertyHash, aProperty, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         while (val) {
             if (val->u.as.mTarget == aTarget) {
                 // Wow, we already had the assertion. Make sure that the
@@ -1282,7 +1282,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
             aProperty, PL_DHASH_LOOKUP);
         Assertion *asRef = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         if (asRef)
         {
             as->mNext = asRef->mNext;
@@ -1326,15 +1326,15 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
                            nsIRDFNode* aTarget,
                            bool aTruthValue) 
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
@@ -1376,7 +1376,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
     Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
     Assertion* root = next;
-    Assertion* as = nsnull;
+    Assertion* as = nullptr;
     
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
@@ -1384,7 +1384,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
             aProperty, PL_DHASH_LOOKUP);
         prev = next = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         bool first = true;
         while (next) {
             if (aTarget == next->u.as.mTarget) {
@@ -1416,7 +1416,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
                 // If this second-level hash empties out, clean it up.
                 if (!root->u.hash.mPropertyHash->entryCount) {
                     Assertion::Destroy(mAllocator, root);
-                    SetForwardArcs(aSource, nsnull);
+                    SetForwardArcs(aSource, nullptr);
                 }
             }
         }
@@ -1474,7 +1474,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
 #endif
 
     // Unlink, and release the datasource's reference
-    as->mNext = as->u.as.mInvNext = nsnull;
+    as->mNext = as->u.as.mInvNext = nullptr;
     as->Release(mAllocator);
 
     return NS_OK;
@@ -1485,15 +1485,15 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget)
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
@@ -1530,19 +1530,19 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
                            nsIRDFNode* aOldTarget,
                            nsIRDFNode* aNewTarget)
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aOldTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aOldTarget != nullptr, "null ptr");
     if (! aOldTarget)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aNewTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aNewTarget != nullptr, "null ptr");
     if (! aNewTarget)
         return NS_ERROR_NULL_POINTER;
 
@@ -1585,19 +1585,19 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
                          nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget)
 {
-    NS_PRECONDITION(aOldSource != nsnull, "null ptr");
+    NS_PRECONDITION(aOldSource != nullptr, "null ptr");
     if (! aOldSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aNewSource != nsnull, "null ptr");
+    NS_PRECONDITION(aNewSource != nullptr, "null ptr");
     if (! aNewSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
@@ -1637,7 +1637,7 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
 NS_IMETHODIMP
 InMemoryDataSource::AddObserver(nsIRDFObserver* aObserver)
 {
-    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    NS_PRECONDITION(aObserver != nullptr, "null ptr");
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
@@ -1650,7 +1650,7 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* aObserver)
 NS_IMETHODIMP
 InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
 {
-    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    NS_PRECONDITION(aObserver != nullptr, "null ptr");
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
@@ -1687,7 +1687,7 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
             aArc, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         if (val) {
             *result = true;
             return NS_OK;
@@ -1709,12 +1709,12 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
 NS_IMETHODIMP
 InMemoryDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResult)
 {
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
     InMemoryArcsEnumeratorImpl* result =
-        InMemoryArcsEnumeratorImpl::Create(this, nsnull, aTarget);
+        InMemoryArcsEnumeratorImpl::Create(this, nullptr, aTarget);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1728,12 +1728,12 @@ InMemoryDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResu
 NS_IMETHODIMP
 InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** aResult)
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
     InMemoryArcsEnumeratorImpl* result =
-        InMemoryArcsEnumeratorImpl::Create(this, aSource, nsnull);
+        InMemoryArcsEnumeratorImpl::Create(this, aSource, nullptr);
 
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1853,7 +1853,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
             prop, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         if (val) {
             first->mNext = val->mNext;
             val->mNext = first;
@@ -1865,7 +1865,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
                 Entry* entry = reinterpret_cast<Entry*>(hdr);
                 entry->mNode = prop;
                 entry->mAssertions = first;
-                first->mNext = nsnull;
+                first->mNext = nullptr;
             }
         }
         first = nextRef;
@@ -1901,15 +1901,15 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
                          bool aTruthValue,
                          bool* aDidMark)
 {
-    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    NS_PRECONDITION(aSource != nullptr, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    NS_PRECONDITION(aProperty != nullptr, "null ptr");
     if (! aProperty)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    NS_PRECONDITION(aTarget != nullptr, "null ptr");
     if (! aTarget)
         return NS_ERROR_NULL_POINTER;
 
@@ -1919,7 +1919,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
             aProperty, PL_DHASH_LOOKUP);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nsnull;
+            : nullptr;
         while (val) {
             if ((val->u.as.mTarget == aTarget) &&
                 (aTruthValue == (val->u.as.mTruthValue))) {
@@ -1937,7 +1937,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
             val = val->mNext;
         }
     }
-    else for (; as != nsnull; as = as->mNext) {
+    else for (; as != nullptr; as = as->mNext) {
         // check target first as its most unique
         if (aTarget != as->u.as.mTarget)
             continue;
@@ -1974,7 +1974,7 @@ struct SweepInfo {
 NS_IMETHODIMP
 InMemoryDataSource::Sweep()
 {
-    SweepInfo info = { nsnull, &mReverseArcs, &mAllocator};
+    SweepInfo info = { nullptr, &mReverseArcs, &mAllocator};
 
     // Remove all the assertions, but don't notify anyone.
     PL_DHashTableEnumerate(&mForwardArcs, SweepForwardArcsEntries, &info);
@@ -1999,7 +1999,7 @@ InMemoryDataSource::Sweep()
         as = as->mNext;
 
         // Unlink, and release the datasource's reference
-        doomed->mNext = doomed->u.as.mInvNext = nsnull;
+        doomed->mNext = doomed->u.as.mInvNext = nullptr;
         doomed->Release(mAllocator);
     }
 
@@ -2032,7 +2032,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
         return result;
     }
 
-    Assertion* prev = nsnull;
+    Assertion* prev = nullptr;
     while (as) {
         if (as->IsMarked()) {
             prev = as;
@@ -2057,7 +2057,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
             Entry* rentry = reinterpret_cast<Entry*>(hdr);
             Assertion* ras = rentry->mAssertions;
-            Assertion* rprev = nsnull;
+            Assertion* rprev = nullptr;
             while (ras) {
                 if (ras == as) {
                     if (rprev) {
@@ -2067,7 +2067,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                         // it's the first one. update the hashtable entry.
                         rentry->mAssertions = ras->u.as.mInvNext;
                     }
-                    as->u.as.mInvNext = nsnull; // for my sanity.
+                    as->u.as.mInvNext = nullptr; // for my sanity.
                     break;
                 }
                 rprev = ras;
@@ -2120,7 +2120,7 @@ SubjectEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
     nsCOMPtr<nsIRDFNode> subject = do_QueryInterface(entry->mNode, &rv);
     NS_ENSURE_SUCCESS(rv, PL_DHASH_NEXT);
 
-    closure->mRv = closure->mVisitor->Visit(subject, nsnull, nsnull, true);
+    closure->mRv = closure->mVisitor->Visit(subject, nullptr, nullptr, true);
     if (NS_FAILED(closure->mRv) || closure->mRv == NS_RDF_STOP_VISIT)
         return PL_DHASH_STOP;
 

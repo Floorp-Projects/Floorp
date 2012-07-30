@@ -335,7 +335,7 @@ struct nsCSSRendering {
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
                               PRUint32 aFlags,
-                              nsRect* aBGClipRect = nsnull);
+                              nsRect* aBGClipRect = nullptr);
 
   /**
    * Same as |PaintBackground|, except using the provided style structs.
@@ -350,7 +350,7 @@ struct nsCSSRendering {
                                     nsStyleContext *aStyleContext,
                                     const nsStyleBorder& aBorder,
                                     PRUint32 aFlags,
-                                    nsRect* aBGClipRect = nsnull);
+                                    nsRect* aBGClipRect = nullptr);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking

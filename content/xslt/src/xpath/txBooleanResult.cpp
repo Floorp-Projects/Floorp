@@ -14,7 +14,7 @@
  * @param boolean the bool to use for initialization of this BooleanResult's value
 **/
 BooleanResult::BooleanResult(bool boolean)
-    : txAExprResult(nsnull)
+    : txAExprResult(nullptr)
 {
     this->value = boolean;
 } //-- BooleanResult
@@ -44,7 +44,7 @@ BooleanResult::stringValuePointer()
     // In theory we could set strings containing "true" and "false" somewhere,
     // but most stylesheets never get the stringvalue of a bool so that won't
     // really buy us anything.
-    return nsnull;
+    return nullptr;
 }
 
 bool BooleanResult::booleanValue() {

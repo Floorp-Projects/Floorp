@@ -295,7 +295,7 @@ nsHTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::size },
     { &nsGkAtoms::color },
     { &nsGkAtoms::noshade },
-    { nsnull },
+    { nullptr },
   };
   
   static const MappedAttributeEntry* const map[] = {

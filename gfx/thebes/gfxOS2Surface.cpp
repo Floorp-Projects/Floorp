@@ -65,7 +65,7 @@ gfxOS2Surface::gfxOS2Surface(const gfxIntSize& aSize,
 }
 
 gfxOS2Surface::gfxOS2Surface(HWND aWnd)
-    : mWnd(aWnd), mDC(nsnull), mPS(nsnull), mBitmap(nsnull)
+    : mWnd(aWnd), mDC(nullptr), mPS(nullptr), mBitmap(nullptr)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Surface[%#x]::gfxOS2Surface(HWND=%#x)\n", (unsigned int)this,
@@ -93,7 +93,7 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
 }
 
 gfxOS2Surface::gfxOS2Surface(HDC aDC, const gfxIntSize& aSize)
-    : mWnd(0), mDC(aDC), mBitmap(nsnull), mSize(aSize)
+    : mWnd(0), mDC(aDC), mBitmap(nullptr), mSize(aSize)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Surface[%#x]::gfxOS2Surface(HDC=%#x, Size=%dx%d)\n", (unsigned int)this,

@@ -129,9 +129,9 @@ nsSVGImageFrame::~nsSVGImageFrame()
 
       imageLoader->RemoveObserver(mListener);
     }
-    reinterpret_cast<nsSVGImageListener*>(mListener.get())->SetFrame(nsnull);
+    reinterpret_cast<nsSVGImageListener*>(mListener.get())->SetFrame(nullptr);
   }
-  mListener = nsnull;
+  mListener = nullptr;
 }
 
 NS_IMETHODIMP
@@ -228,7 +228,7 @@ nsSVGImageFrame::GetRasterImageTransform(PRInt32 aNativeWidth,
 {
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   gfxMatrix viewBoxTM =
     nsSVGUtils::GetViewBoxTransform(element,
@@ -244,7 +244,7 @@ nsSVGImageFrame::GetVectorImageTransform(PRUint32 aFor)
 {
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   // No viewBoxTM needed here -- our height/width overrides any concept of
   // "native size" that the SVG image has, and it will handle viewBox and
@@ -297,7 +297,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
 
   float x, y, width, height;
   nsSVGImageElement *imgElem = static_cast<nsSVGImageElement*>(mContent);
-  imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
   NS_ASSERTION(width > 0 && height > 0,
                "Should only be painting things with valid width/height");
 
@@ -400,7 +400,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
         mImageContainer,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
         nsPoint(0, 0),
-        aDirtyRect ? &dirtyRect : nsnull,
+        aDirtyRect ? &dirtyRect : nullptr,
         drawFlags);
     }
 
@@ -429,7 +429,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
       if (NS_FAILED(mImageContainer->GetWidth(&nativeWidth)) ||
           NS_FAILED(mImageContainer->GetHeight(&nativeHeight)) ||
           nativeWidth == 0 || nativeHeight == 0) {
-        return nsnull;
+        return nullptr;
       }
 
       if (!nsSVGUtils::HitTestRect(
@@ -438,7 +438,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
                0, 0, nativeWidth, nativeHeight,
                PresContext()->AppUnitsToDevPixels(aPoint.x),
                PresContext()->AppUnitsToDevPixels(aPoint.y))) {
-        return nsnull;
+        return nullptr;
       }
     }
     // The special case above doesn't apply to vector images, because they

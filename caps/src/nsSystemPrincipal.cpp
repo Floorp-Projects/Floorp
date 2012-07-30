@@ -77,11 +77,11 @@ nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
                                   bool* aIsTrusted)
 {
     // The system principal should never be streamed out
-    *aPrefName = nsnull;
-    *aID = nsnull;
-    *aSubjectName = nsnull;
-    *aGrantedList = nsnull;
-    *aDeniedList = nsnull;
+    *aPrefName = nullptr;
+    *aID = nullptr;
+    *aSubjectName = nullptr;
+    *aGrantedList = nullptr;
+    *aDeniedList = nullptr;
     *aIsTrusted = false;
 
     return NS_ERROR_FAILURE; 
@@ -148,14 +148,14 @@ nsSystemPrincipal::IsCapabilityEnabled(const char *capability,
 NS_IMETHODIMP 
 nsSystemPrincipal::EnableCapability(const char *capability, void **annotation)
 {
-    *annotation = nsnull;
+    *annotation = nullptr;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSystemPrincipal::GetURI(nsIURI** aURI)
 {
-    *aURI = nsnull;
+    *aURI = nullptr;
     return NS_OK;
 }
 
@@ -187,7 +187,7 @@ nsSystemPrincipal::GetSubjectName(nsACString& aName)
 NS_IMETHODIMP
 nsSystemPrincipal::GetCertificate(nsISupports** aCertificate)
 {
-    *aCertificate = nsnull;
+    *aCertificate = nullptr;
     return NS_OK;
 }
 
@@ -201,7 +201,7 @@ nsSystemPrincipal::GetHasCertificate(bool* aResult)
 NS_IMETHODIMP
 nsSystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
-  *aCsp = nsnull;
+  *aCsp = nullptr;
   return NS_OK;
 }
 
@@ -215,7 +215,7 @@ nsSystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 NS_IMETHODIMP
 nsSystemPrincipal::GetDomain(nsIURI** aDomain)
 {
-    *aDomain = nsnull;
+    *aDomain = nullptr;
     return NS_OK;
 }
 
@@ -228,7 +228,7 @@ nsSystemPrincipal::SetDomain(nsIURI* aDomain)
 NS_IMETHODIMP
 nsSystemPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 {
-    *aSecurityPolicy = nsnull;
+    *aSecurityPolicy = nullptr;
     return NS_OK;
 }
 

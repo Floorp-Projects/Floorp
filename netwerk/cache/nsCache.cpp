@@ -15,7 +15,7 @@
  */
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo * gCacheLog = nsnull;
+PRLogModuleInfo * gCacheLog = nullptr;
 
 
 void
@@ -72,7 +72,7 @@ nsresult
 ClientIDFromCacheKey(const nsACString&  key, char ** result)
 {
     nsresult  rv = NS_OK;
-    *result = nsnull;
+    *result = nullptr;
 
     nsReadingIterator<char> colon;
     key.BeginReading(colon);

@@ -128,7 +128,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     typedef sp<T> (*HAL_openCameraHardware_SGS2)(int);
     typedef sp<T> (*HAL_openCameraHardware_MAGURO)(int, int);
 
-    CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nsnull) {
+    CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nullptr) {
       void* cameraLib = GetCameraLibHandle();
       if (!cameraLib) {
         printf_stderr("CameraImpl: Failed to dlopen() camera library.");
@@ -154,7 +154,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
           break;
       }
 
-      mOk = mCamera != nsnull;
+      mOk = mCamera != nullptr;
       if (!mOk) {
         printf_stderr("CameraImpl: HAL_openCameraHardware() returned NULL (no camera interface).");
       }
@@ -222,7 +222,7 @@ CameraHardwareInterface* CameraHardwareInterface::openCamera(PRUint32 aCamera)  
   }
 
   if (!instance->ok()) {
-    return nsnull;
+    return nullptr;
   }
 
   return instance.forget();
@@ -268,7 +268,7 @@ GonkCameraInputStream::getNumberOfCameras() {
     return 0;
   
   void *hal = dlsym(cameraLib, "HAL_getNumberOfCameras");
-  if (nsnull == hal)
+  if (nullptr == hal)
     return 0;
 
   HAL_getNumberOfCamerasFunct funct = reinterpret_cast<HAL_getNumberOfCamerasFunct> (hal);       
@@ -513,8 +513,8 @@ void GonkCameraInputStream::NotifyListeners() {
     NS_ASSERTION(callback, "Shouldn't fail to make the callback!");
 
     // Null the callback first because OnInputStreamReady may reenter AsyncWait
-    mCallback = nsnull;
-    mCallbackTarget = nsnull;
+    mCallback = nullptr;
+    mCallbackTarget = nullptr;
 
     callback->OnInputStreamReady(this);
   }

@@ -118,7 +118,7 @@ WebGLMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
     return NS_OK;
 }
 
-WebGLMemoryMultiReporterWrapper* WebGLMemoryMultiReporterWrapper::sUniqueInstance = nsnull;
+WebGLMemoryMultiReporterWrapper* WebGLMemoryMultiReporterWrapper::sUniqueInstance = nullptr;
 
 WebGLMemoryMultiReporterWrapper* WebGLMemoryMultiReporterWrapper::UniqueInstance()
 {

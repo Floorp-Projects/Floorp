@@ -146,11 +146,11 @@ nsLocaleService::nsLocaleService(void)
         CopyASCIItoUTF16(LocaleList[i], category);
         category_platform = category;
         category_platform.AppendLiteral("##PLATFORM");
-        if (lc_temp != nsnull) {
+        if (lc_temp != nullptr) {
             result = nsPosixLocale::GetXPLocale(lc_temp, xpLocale);
             CopyASCIItoUTF16(lc_temp, platformLocale);
         } else {
-            if ( lang == nsnull ) {
+            if ( lang == nullptr ) {
                 platformLocale.AssignLiteral("en_US");
                 result = nsPosixLocale::GetXPLocale("en-US", xpLocale);
             } else {
@@ -189,18 +189,18 @@ nsLocaleService::nsLocaleService(void)
         }
         char* lc_temp;
         for( i = 0; i < LocaleListLength; i++ ) {
-            lc_temp = nsnull;
+            lc_temp = nullptr;
             UniQueryLocaleObject(locale_object,
                                  posix_locale_category[i],
                                  UNI_MBS_STRING_POINTER,
                                  (void **)&lc_temp);
             category.AssignASCII(LocaleList[i]);
             nsresult result;
-            if (lc_temp != nsnull)
+            if (lc_temp != nullptr)
                 result = os2Converter->GetXPLocale(lc_temp, xpLocale);
             else {
                 char* lang = getenv("LANG");
-                if ( lang == nsnull ) {
+                if ( lang == nullptr ) {
                     result = os2Converter->GetXPLocale("en-US", xpLocale);
                 }
                 else
@@ -262,7 +262,7 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 {
     nsresult result;
 
-    *_retval = nsnull;
+    *_retval = nullptr;
 
     nsRefPtr<nsLocale> resultLocale(new nsLocale());
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
@@ -291,7 +291,7 @@ nsLocaleService::GetSystemLocale(nsILocale **_retval)
 		return NS_OK;
 	}
 
-	*_retval = (nsILocale*)nsnull;
+	*_retval = (nsILocale*)nullptr;
 	return NS_ERROR_FAILURE;
 }
 
@@ -303,7 +303,7 @@ nsLocaleService::GetApplicationLocale(nsILocale **_retval)
 		return NS_OK;
 	}
 
-	*_retval=(nsILocale*)nsnull;
+	*_retval=(nsILocale*)nullptr;
 	return NS_ERROR_FAILURE;
 }
 
@@ -321,7 +321,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   nsresult	result;
 
   input = new char[strlen(acceptLanguage)+1];
-  NS_ASSERTION(input!=nsnull,"nsLocaleFactory::GetLocaleFromAcceptLanguage: memory allocation failed.");
+  NS_ASSERTION(input!=nullptr,"nsLocaleFactory::GetLocaleFromAcceptLanguage: memory allocation failed.");
   if (input == (char*)NULL){ return NS_ERROR_OUT_OF_MEMORY; }
 
   strcpy(input, acceptLanguage);
@@ -353,7 +353,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
     while (cPtr) {
       qvalue[countLang] = 1.0f;
       /* add extra parens to get rid of warning */
-      if ((cPtr1 = strchr(cPtr,';')) != nsnull) {
+      if ((cPtr1 = strchr(cPtr,';')) != nullptr) {
         PR_sscanf(cPtr1,";q=%f",&qvalue[countLang]);
         *cPtr1 = '\0';
       }

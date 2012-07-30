@@ -69,7 +69,7 @@ public:
   virtual nsIFrame* GetNextInFlowVirtual() const { return GetNextInFlow(); }
   nsIFrame* GetNextInFlow() const {
     return mNextContinuation && (mNextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? 
-      mNextContinuation : nsnull;
+      mNextContinuation : nullptr;
   }
   NS_IMETHOD SetNextInFlow(nsIFrame* aNextInFlow) {
     NS_ASSERTION (!aNextInFlow || GetType() == aNextInFlow->GetType(),
@@ -220,9 +220,9 @@ public:
     nscoord      mDeltaWidth;
   };
   TrimOutput TrimTrailingWhiteSpace(nsRenderingContext* aRC);
-  virtual nsresult GetRenderedText(nsAString* aString = nsnull,
-                                   gfxSkipChars* aSkipChars = nsnull,
-                                   gfxSkipCharsIterator* aSkipIter = nsnull,
+  virtual nsresult GetRenderedText(nsAString* aString = nullptr,
+                                   gfxSkipChars* aSkipChars = nullptr,
+                                   gfxSkipCharsIterator* aSkipIter = nullptr,
                                    PRUint32 aSkippedStartOffset = 0,
                                    PRUint32 aSkippedMaxLength = PR_UINT32_MAX);
 
@@ -345,7 +345,7 @@ public:
    * @param aReferenceContext the rendering context to use as a reference for
    * creating the textrun, if available (if not, we'll create one which will
    * just be slower)
-   * @param aLineContainer the block ancestor for this frame, or nsnull if
+   * @param aLineContainer the block ancestor for this frame, or nullptr if
    * unknown
    * @param aFlowEndInTextRun if non-null, this returns the textrun offset of
    * end of the text associated with this frame and its in-flow siblings
@@ -354,10 +354,10 @@ public:
    * content offset
    */
   gfxSkipCharsIterator EnsureTextRun(TextRunType aWhichTextRun,
-                                     gfxContext* aReferenceContext = nsnull,
-                                     nsIFrame* aLineContainer = nsnull,
-                                     const nsLineList::iterator* aLine = nsnull,
-                                     PRUint32* aFlowEndInTextRun = nsnull);
+                                     gfxContext* aReferenceContext = nullptr,
+                                     nsIFrame* aLineContainer = nullptr,
+                                     const nsLineList::iterator* aLine = nullptr,
+                                     PRUint32* aFlowEndInTextRun = nullptr);
 
   gfxTextRun* GetTextRun(TextRunType aWhichTextRun) {
     if (aWhichTextRun == eInflated || !HasFontSizeInflation())
@@ -378,16 +378,16 @@ public:
    * Clears out |mTextRun| (or the uninflated text run, when aInflated
    * is nsTextFrame::eNotInflated and there is inflation) from all frames that hold a
    * reference to it, starting at |aStartContinuation|, or if it's
-   * nsnull, starting at |this|.  Deletes the text run if all references
+   * nullptr, starting at |this|.  Deletes the text run if all references
    * were cleared and it's not cached.
    */
   void ClearTextRun(nsTextFrame* aStartContinuation,
                     TextRunType aWhichTextRun);
 
   void ClearTextRuns() {
-    ClearTextRun(nsnull, nsTextFrame::eInflated);
+    ClearTextRun(nullptr, nsTextFrame::eInflated);
     if (HasFontSizeInflation()) {
-      ClearTextRun(nsnull, nsTextFrame::eNotInflated);
+      ClearTextRun(nullptr, nsTextFrame::eNotInflated);
     }
   }
 
@@ -548,7 +548,7 @@ protected:
                 const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                 gfxFloat& aAdvanceWidth,
                 bool aDrawSoftHyphen,
-                const nscolor* const aDecorationOverrideColor = nsnull);
+                const nscolor* const aDecorationOverrideColor = nullptr);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
   // If the result rect is larger than the given rect, this returns true.

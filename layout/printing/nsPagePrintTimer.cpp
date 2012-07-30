@@ -11,10 +11,10 @@
 NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
 
 nsPagePrintTimer::nsPagePrintTimer() :
-  mPrintEngine(nsnull),
+  mPrintEngine(nullptr),
   mDelay(0),
   mFiringCount(0),
-  mPrintObj(nsnull)
+  mPrintObj(nullptr)
 {
 }
 
@@ -114,7 +114,7 @@ nsPagePrintTimer::Stop()
 {
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
 }
 
@@ -126,7 +126,7 @@ nsresult NS_NewPagePrintTimer(nsPagePrintTimer **aResult)
   nsPagePrintTimer* result = new nsPagePrintTimer;
 
   if (!result) {
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

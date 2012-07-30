@@ -223,11 +223,11 @@ LayerManager::CreateAsynchronousImageContainer()
 
 Layer::Layer(LayerManager* aManager, void* aImplData) :
   mManager(aManager),
-  mParent(nsnull),
-  mNextSibling(nsnull),
-  mPrevSibling(nsnull),
+  mParent(nullptr),
+  mNextSibling(nullptr),
+  mPrevSibling(nullptr),
   mImplData(aImplData),
-  mMaskLayer(nsnull),
+  mMaskLayer(nullptr),
   mXScale(1.0f),
   mYScale(1.0f),
   mOpacity(1.0),

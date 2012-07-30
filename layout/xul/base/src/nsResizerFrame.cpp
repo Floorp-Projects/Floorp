@@ -138,7 +138,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       // we're done tracking.
       mTrackingMouseMove = false;
 
-      nsIPresShell::SetCapturingContent(nsnull, 0);
+      nsIPresShell::SetCapturingContent(nullptr, 0);
 
       doDefault = false;
     }
@@ -155,7 +155,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         GetContentToResize(presShell, getter_AddRefs(window));
 
       // check if the returned content really is a menupopup
-      nsMenuPopupFrame* menuPopupFrame = nsnull;
+      nsMenuPopupFrame* menuPopupFrame = nullptr;
       if (contentToResize) {
         nsIFrame* frameToResize = contentToResize->GetPrimaryFrame();
         if (frameToResize && frameToResize->GetType() == nsGkAtoms::menuPopupFrame) {
@@ -307,7 +307,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 nsIContent*
 nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow)
 {
-  *aWindow = nsnull;
+  *aWindow = nullptr;
 
   nsAutoString elementid;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::element, elementid);
@@ -337,7 +337,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
       // scrollbar which doesn't have a parent
       nsIContent* nonNativeAnon = mContent->FindFirstNonNativeAnonymous();
       if (!nonNativeAnon || nonNativeAnon->GetParent()) {
-        return nsnull;
+        return nullptr;
       }
     }
 
@@ -355,13 +355,13 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
       }
     }
 
-    return nsnull;
+    return nullptr;
   }
 
   if (elementid.EqualsLiteral("_parent")) {
     // return the parent, but skip over native anonymous content
     nsIContent* parent = mContent->GetParent();
-    return parent ? parent->FindFirstNonNativeAnonymous() : nsnull;
+    return parent ? parent->FindFirstNonNativeAnonymous() : nullptr;
   }
 
   return aPresShell->GetDocument()->GetElementById(elementid);
@@ -480,7 +480,7 @@ nsResizerFrame::RestoreOriginalSize(nsIContent* aContent)
 
   NS_ASSERTION(sizeInfo, "We set a null sizeInfo!?");
   Direction direction = {1, 1};
-  ResizeContent(aContent, direction, *sizeInfo, nsnull);
+  ResizeContent(aContent, direction, *sizeInfo, nullptr);
   aContent->DeleteProperty(nsGkAtoms::_moz_original_size);
 }
 
@@ -494,7 +494,7 @@ nsResizerFrame::GetDirection()
      &nsGkAtoms::left,                           &nsGkAtoms::right,
      &nsGkAtoms::bottomleft, &nsGkAtoms::bottom, &nsGkAtoms::bottomright,
      &nsGkAtoms::bottomstart,                    &nsGkAtoms::bottomend,
-     nsnull};
+     nullptr};
 
   static const Direction directions[] =
     {{-1, -1}, {0, -1}, {1, -1},

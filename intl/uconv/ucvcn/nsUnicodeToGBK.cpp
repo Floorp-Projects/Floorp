@@ -111,8 +111,8 @@ bool nsUnicodeToGB18030::EncodeSurrogate(
 nsUnicodeToGBK::nsUnicodeToGBK(PRUint32 aMaxLength) :
   nsEncoderSupport(aMaxLength)
 {
-  mExtensionEncoder = nsnull;
-  m4BytesEncoder = nsnull;
+  mExtensionEncoder = nullptr;
+  m4BytesEncoder = nullptr;
   mUtil.InitToGBKTable();
   mSurrogateHigh = 0;
 }
@@ -122,7 +122,7 @@ void nsUnicodeToGBK::CreateExtensionEncoder()
 }
 void nsUnicodeToGBK::Create4BytesEncoder()
 {
-  m4BytesEncoder = nsnull;
+  m4BytesEncoder = nullptr;
 }
 bool nsUnicodeToGBK::TryExtensionEncoder(
   PRUnichar aChar,

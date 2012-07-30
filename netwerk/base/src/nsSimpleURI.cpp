@@ -545,14 +545,14 @@ NS_IMETHODIMP
 nsSimpleURI::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
     *count = 0;
-    *array = nsnull;
+    *array = nullptr;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSimpleURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
-    *_retval = nsnull;
+    *_retval = nullptr;
     return NS_OK;
 }
 
@@ -561,14 +561,14 @@ nsSimpleURI::GetContractID(char * *aContractID)
 {
     // Make sure to modify any subclasses as needed if this ever
     // changes.
-    *aContractID = nsnull;
+    *aContractID = nullptr;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSimpleURI::GetClassDescription(char * *aClassDescription)
 {
-    *aClassDescription = nsnull;
+    *aClassDescription = nullptr;
     return NS_OK;
 }
 

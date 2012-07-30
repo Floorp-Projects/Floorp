@@ -44,7 +44,7 @@ public:
   void GetDevMode(LPDEVMODEW &aDevMode);
 
   // helper functions
-  nsresult GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS = nsnull);
+  nsresult GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS = nullptr);
 
   static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
                                               LPDEVMODEW         aDevMode);

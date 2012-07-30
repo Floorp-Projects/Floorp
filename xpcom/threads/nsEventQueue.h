@@ -36,7 +36,7 @@ public:
 
   // This method returns true if there is a pending event.
   bool HasPendingEvent() {
-    return GetEvent(false, nsnull);
+    return GetEvent(false, nullptr);
   }
 
   // This method returns the next pending event or null.

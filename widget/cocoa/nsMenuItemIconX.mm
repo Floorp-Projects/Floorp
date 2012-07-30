@@ -69,9 +69,9 @@ void nsMenuItemIconX::Destroy()
 {
   if (mIconRequest) {
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
-    mIconRequest = nsnull;
+    mIconRequest = nullptr;
   }
-  mMenuObject = nsnull;
+  mMenuObject = nullptr;
   mNativeMenuItem = nil;
 }
 
@@ -266,7 +266,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
-    mIconRequest = nsnull;
+    mIconRequest = nullptr;
   }
 
   mLoadedIcon = false;
@@ -306,9 +306,9 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 
   // Passing in null for channelPolicy here since nsMenuItemIconX::LoadIcon is
   // not exposed to web content
-  rv = loader->LoadImage(aIconURI, nsnull, nsnull, nsnull, loadGroup, this,
-                         nsnull, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
-                         nsnull, getter_AddRefs(mIconRequest));
+  rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
+                         nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
+                         nullptr, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
   // We need to request the icon be decoded (bug 573583, bug 705516).
@@ -515,7 +515,7 @@ nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,
 {
   if (mIconRequest && mIconRequest == aRequest) {
     mIconRequest->Cancel(NS_BINDING_ABORTED);
-    mIconRequest = nsnull;
+    mIconRequest = nullptr;
   }
   return NS_OK;
 }

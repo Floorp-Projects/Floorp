@@ -29,14 +29,14 @@ class nsILanguageAtomService : public nsISupports
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILANGUAGEATOMSERVICE_IID)
 
   virtual nsIAtom* LookupLanguage(const nsACString &aLanguage,
-                                  nsresult *aError = nsnull) = 0;
+                                  nsresult *aError = nullptr) = 0;
   virtual already_AddRefed<nsIAtom>
-  LookupCharSet(const char *aCharSet, nsresult *aError = nsnull) = 0;
+  LookupCharSet(const char *aCharSet, nsresult *aError = nullptr) = 0;
 
-  virtual nsIAtom* GetLocaleLanguage(nsresult *aError = nsnull) = 0;
+  virtual nsIAtom* GetLocaleLanguage(nsresult *aError = nullptr) = 0;
 
   virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
-                                    nsresult *aError = nsnull) = 0;
+                                    nsresult *aError = nullptr) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILanguageAtomService,

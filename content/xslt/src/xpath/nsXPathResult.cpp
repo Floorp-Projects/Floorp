@@ -18,7 +18,7 @@
 
 using namespace mozilla::dom;
 
-nsXPathResult::nsXPathResult() : mDocument(nsnull),
+nsXPathResult::nsXPathResult() : mDocument(nullptr),
                                  mCurrentPos(0),
                                  mResultType(ANY_TYPE),
                                  mInvalidIteratorState(true),
@@ -134,7 +134,7 @@ nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
         NS_ADDREF(*aSingleNodeValue = mResultNodes[0]);
     }
     else {
-        *aSingleNodeValue = nsnull;
+        *aSingleNodeValue = nullptr;
     }
 
     return NS_OK;
@@ -179,7 +179,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         NS_ADDREF(*aResult = mResultNodes[mCurrentPos++]);
     }
     else {
-        *aResult = nsnull;
+        *aResult = nullptr;
     }
 
     return NS_OK;
@@ -202,9 +202,9 @@ nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 {
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     // Set to null to avoid unregistring unnecessarily
-    mDocument = nsnull;
+    mDocument = nullptr;
     Invalidate(aNode->IsNodeOfType(nsINode::eCONTENT) ?
-               static_cast<const nsIContent*>(aNode) : nsnull);
+               static_cast<const nsIContent*>(aNode) : nullptr);
 }
 
 void
@@ -271,7 +271,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
 
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
-        mDocument = nsnull;
+        mDocument = nullptr;
     }
  
     mResultNodes.Clear();
@@ -294,7 +294,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
         }
 
         if (count > 0) {
-            mResult = nsnull;
+            mResult = nullptr;
         }
     }
 
@@ -334,7 +334,7 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
         // non-anonymous content need to invalidate the XPathResult. If
         // the changes are happening in a different anonymous trees, no
         // invalidation should happen.
-        nsIContent* ctxBindingParent = nsnull;
+        nsIContent* ctxBindingParent = nullptr;
         if (contextNode->IsNodeOfType(nsINode::eCONTENT)) {
             ctxBindingParent =
                 static_cast<nsIContent*>(contextNode.get())
@@ -355,7 +355,7 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
     // Make sure nulling out mDocument is the last thing we do.
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
-        mDocument = nsnull;
+        mDocument = nullptr;
     }
 }
 
@@ -376,7 +376,7 @@ nsXPathResult::GetExprResult(txAExprResult** aExprResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
+    nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
     if (!nodeSet) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -399,7 +399,7 @@ nsXPathResult::GetExprResult(txAExprResult** aExprResult)
 nsresult
 nsXPathResult::Clone(nsIXPathResult **aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (isIterator() && mInvalidIteratorState) {
         return NS_ERROR_DOM_INVALID_STATE_ERR;

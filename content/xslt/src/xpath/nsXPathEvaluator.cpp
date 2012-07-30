@@ -93,8 +93,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    return CreateExpression(aExpression, aResolver, (nsTArray<PRInt32>*)nsnull,
-                            nsnull, nsnull, aResult);
+    return CreateExpression(aExpression, aResolver, (nsTArray<PRInt32>*)nullptr,
+                            nullptr, nullptr, aResult);
 }
 
 NS_IMETHODIMP
@@ -269,7 +269,7 @@ nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
     PRUint32 i, count = mNamespaceIDs ? mNamespaceIDs->Length() : 0;
     for (i = 0; i < count; ++i) {
         if (mNamespaceIDs->ElementAt(i) == aID) {
-            nsISupports *state = mState ? mState->SafeObjectAt(i) : nsnull;
+            nsISupports *state = mState ? mState->SafeObjectAt(i) : nullptr;
             rv = TX_ResolveFunctionCallXPCOM(mContractIDs->ElementAt(i), aID,
                                              aName, state, aFn);
             if (NS_SUCCEEDED(rv)) {

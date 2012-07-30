@@ -35,7 +35,7 @@ ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
 static void
 ClearCache(AccessibleHashtable& aCache)
 {
-  aCache.Enumerate(ClearCacheEntry<Accessible>, nsnull);
+  aCache.Enumerate(ClearCacheEntry<Accessible>, nullptr);
 }
 
 /**

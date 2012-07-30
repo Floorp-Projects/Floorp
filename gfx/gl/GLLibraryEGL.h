@@ -109,7 +109,7 @@ class GLLibraryEGL
 public:
     GLLibraryEGL() 
         : mInitialized(false),
-          mEGLLibrary(nsnull),
+          mEGLLibrary(nullptr),
           mIsANGLE(false)
     {
     }

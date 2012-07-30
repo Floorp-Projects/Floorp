@@ -52,17 +52,17 @@ typedef GnomeProgram* (*_GnomeProgramGet_fn)(void);
 typedef GnomeVFSResult (*_GnomeVFSGetFileInfo_fn)(const gchar *text_uri, GnomeVFSFileInfo *info, GnomeVFSFileInfoOptions options);
 typedef void (*_GnomeVFSFileInfoClear_fn)(GnomeVFSFileInfo *info);
 
-static PRLibrary* gLibGnomeUI = nsnull;
-static PRLibrary* gLibGnome = nsnull;
-static PRLibrary* gLibGnomeVFS = nsnull;
+static PRLibrary* gLibGnomeUI = nullptr;
+static PRLibrary* gLibGnome = nullptr;
+static PRLibrary* gLibGnomeVFS = nullptr;
 static bool gTriedToLoadGnomeLibs = false;
 
-static _GnomeIconLookup_fn _gnome_icon_lookup = nsnull;
-static _GnomeIconThemeNew_fn _gnome_icon_theme_new = nsnull;
-static _GnomeInit_fn _gnome_init = nsnull;
-static _GnomeProgramGet_fn _gnome_program_get = nsnull;
-static _GnomeVFSGetFileInfo_fn _gnome_vfs_get_file_info = nsnull;
-static _GnomeVFSFileInfoClear_fn _gnome_vfs_file_info_clear = nsnull;
+static _GnomeIconLookup_fn _gnome_icon_lookup = nullptr;
+static _GnomeIconThemeNew_fn _gnome_icon_theme_new = nullptr;
+static _GnomeInit_fn _gnome_init = nullptr;
+static _GnomeProgramGet_fn _gnome_program_get = nullptr;
+static _GnomeVFSGetFileInfo_fn _gnome_vfs_get_file_info = nullptr;
+static _GnomeVFSFileInfoClear_fn _gnome_vfs_file_info_clear = nullptr;
 #endif //MOZ_ENABLE_GNOMEUI
 
 static nsresult
@@ -129,10 +129,10 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
   return rv;
 }
 
-static GtkWidget *gProtoWindow = nsnull;
-static GtkWidget *gStockImageWidget = nsnull;
+static GtkWidget *gProtoWindow = nullptr;
+static GtkWidget *gStockImageWidget = nullptr;
 #ifdef MOZ_ENABLE_GNOMEUI
-static GnomeIconTheme *gIconTheme = nsnull;
+static GnomeIconTheme *gIconTheme = nullptr;
 #endif //MOZ_ENABLE_GNOMEUI
 
 static void
@@ -169,7 +169,7 @@ ensure_libgnomeui()
 
     if (!_gnome_init || !_gnome_icon_theme_new || !_gnome_icon_lookup) {
       PR_UnloadLibrary(gLibGnomeUI);
-      gLibGnomeUI = nsnull;
+      gLibGnomeUI = nullptr;
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -191,7 +191,7 @@ ensure_libgnome()
     _gnome_program_get = (_GnomeProgramGet_fn)PR_FindFunctionSymbol(gLibGnome, "gnome_program_get");
     if (!_gnome_program_get) {
       PR_UnloadLibrary(gLibGnome);
-      gLibGnome = nsnull;
+      gLibGnome = nullptr;
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -214,7 +214,7 @@ ensure_libgnomevfs()
     _gnome_vfs_file_info_clear = (_GnomeVFSFileInfoClear_fn)PR_FindFunctionSymbol(gLibGnomeVFS, "gnome_vfs_file_info_clear");
     if (!_gnome_vfs_get_file_info || !_gnome_vfs_file_info_clear) {
       PR_UnloadLibrary(gLibGnomeVFS);
-      gLibGnomeVFS = nsnull;
+      gLibGnomeVFS = nullptr;
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -400,7 +400,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     return NS_ERROR_UNEXPECTED;
   }
 
-  GError *err = nsnull;
+  GError *err = nullptr;
   GdkPixbuf* buf = gtk_icon_theme_load_icon(theme, name, iconSize, (GtkIconLookupFlags)0, &err);
   g_free(name);
 
@@ -640,26 +640,26 @@ void
 nsIconChannel::Shutdown() {
   if (gProtoWindow) {
     gtk_widget_destroy(gProtoWindow);
-    gProtoWindow = nsnull;
-    gStockImageWidget = nsnull;
+    gProtoWindow = nullptr;
+    gStockImageWidget = nullptr;
   }
 #ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));
-    gIconTheme = nsnull;
+    gIconTheme = nullptr;
   }
   gTriedToLoadGnomeLibs = false;
   if (gLibGnomeUI) {
     PR_UnloadLibrary(gLibGnomeUI);
-    gLibGnomeUI = nsnull;
+    gLibGnomeUI = nullptr;
   }
   if (gLibGnome) {
     PR_UnloadLibrary(gLibGnome);
-    gLibGnome = nsnull;
+    gLibGnome = nullptr;
   }
   if (gLibGnomeVFS) {
     PR_UnloadLibrary(gLibGnomeVFS);
-    gLibGnomeVFS = nsnull;
+    gLibGnomeVFS = nullptr;
   }
 #endif //MOZ_ENABLE_GNOMEUI
 }

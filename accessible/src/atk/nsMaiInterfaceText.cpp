@@ -32,22 +32,22 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsAutoString autoStr;
     nsresult rv = accText->GetText(aStartOffset, aEndOffset, autoStr);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
     NS_ConvertUTF16toUTF8 cautoStr(autoStr);
 
     //copy and return, libspi will free it.
-    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nsnull;
+    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gchar*
@@ -57,12 +57,12 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsAutoString autoStr;
     PRInt32 startOffset = 0, endOffset = 0;
@@ -72,11 +72,11 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
     NS_ConvertUTF16toUTF8 cautoStr(autoStr);
-    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nsnull;
+    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gchar*
@@ -86,12 +86,12 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsAutoString autoStr;
     PRInt32 startOffset = 0, endOffset = 0;
@@ -101,11 +101,11 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
     NS_ConvertUTF16toUTF8 cautoStr(autoStr);
-    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nsnull;
+    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gunichar
@@ -141,12 +141,12 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsAutoString autoStr;
     PRInt32 startOffset = 0, endOffset = 0;
@@ -156,11 +156,11 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     ConvertTexttoAsterisks(accWrap, autoStr);
     NS_ConvertUTF16toUTF8 cautoStr(autoStr);
-    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nsnull;
+    return (cautoStr.get()) ? g_strdup(cautoStr.get()) : nullptr;
 }
 
 static gint
@@ -190,19 +190,19 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
 
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsCOMPtr<nsIPersistentProperties> attributes;
     PRInt32 startOffset = 0, endOffset = 0;
     nsresult rv = accText->GetTextAttributes(false, aOffset,
                                              &startOffset, &endOffset,
                                              getter_AddRefs(attributes));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
@@ -215,17 +215,17 @@ getDefaultAttributesCB(AtkText *aText)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     nsCOMPtr<nsIPersistentProperties> attributes;
     nsresult rv = accText->GetDefaultTextAttributes(getter_AddRefs(attributes));
     if (NS_FAILED(rv))
-        return nsnull;
+        return nullptr;
 
     return ConvertToAtkAttributeSet(attributes);
 }
@@ -368,12 +368,12 @@ getTextSelectionCB(AtkText *aText, gint aSelectionNum,
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (!accWrap)
-    return nsnull;
+    return nullptr;
 
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    NS_ENSURE_TRUE(accText, nsnull);
+    NS_ENSURE_TRUE(accText, nullptr);
 
     PRInt32 startOffset = 0, endOffset = 0;
     nsresult rv = accText->GetSelectionBounds(aSelectionNum,
@@ -382,7 +382,7 @@ getTextSelectionCB(AtkText *aText, gint aSelectionNum,
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     return getTextCB(aText, *aStartOffset, *aEndOffset);
 }

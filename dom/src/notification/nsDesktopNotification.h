@@ -56,7 +56,7 @@ public:
   }
 
   void Shutdown() {
-    mOwner = nsnull;
+    mOwner = nullptr;
   }
 
 private:
@@ -165,7 +165,7 @@ class AlertServiceObserver: public nsIObserver
   
   virtual ~AlertServiceObserver() {}
 
-  void Disconnect() { mNotification = nsnull; }
+  void Disconnect() { mNotification = nullptr; }
 
   NS_IMETHODIMP
   Observe(nsISupports *aSubject,

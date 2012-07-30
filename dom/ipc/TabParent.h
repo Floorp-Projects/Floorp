@@ -173,7 +173,7 @@ protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
                         const nsString& aJSON,
-                        InfallibleTArray<nsString>* aJSONRetVal = nsnull);
+                        InfallibleTArray<nsString>* aJSONRetVal = nullptr);
 
     virtual bool Recv__delete__() MOZ_OVERRIDE;
 

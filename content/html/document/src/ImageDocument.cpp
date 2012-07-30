@@ -81,7 +81,7 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nsnull);
+                                     nsIContentSink*     aSink = nullptr);
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
   virtual void Destroy();
@@ -187,7 +187,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
                                              channelPrincipal,
                                              domWindow->GetFrameElementInternal(),
                                              mimeType,
-                                             nsnull,
+                                             nullptr,
                                              &decision,
                                              nsContentUtils::GetContentPolicy(),
                                              secMan);
@@ -306,7 +306,7 @@ ImageDocument::Destroy()
       }
     }
 
-    mImageContent = nsnull;
+    mImageContent = nullptr;
   }
 
   MediaDocument::Destroy();
@@ -397,7 +397,7 @@ ImageDocument::GetImageRequest(imgIRequest** aImageRequest)
                                    aImageRequest);
   }
 
-  *aImageRequest = nsnull;
+  *aImageRequest = nullptr;
   return NS_OK;
 }
 
@@ -603,7 +603,7 @@ ImageDocument::CreateSyntheticDocument()
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   if (nsContentUtils::IsChildOfSameType(this)) {
-    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nsnull,
+    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::style, nullptr,
                                              kNameSpaceID_XHTML,
                                              nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -621,7 +621,7 @@ ImageDocument::CreateSyntheticDocument()
     return NS_ERROR_FAILURE;
   }
 
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);

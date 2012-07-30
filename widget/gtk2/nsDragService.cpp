@@ -369,7 +369,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                              1,
                                              &event);
 
-    mSourceRegion = nsnull;
+    mSourceRegion = nullptr;
 
     if (context) {
         StartDragSession();
@@ -534,7 +534,7 @@ GetTextUriListItem(const char *data,
     const char *endPtr = p + datalen;
     unsigned int count = 0;
 
-    *convertedText = nsnull;
+    *convertedText = nullptr;
     while (p < endPtr) {
         // skip whitespace (if any)
         while (p < endPtr && *p != '\0' && isspace(*p))
@@ -713,7 +713,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                     GetTargetDragData(gdkFlavor);
                     if (mTargetDragData) {
                         const char* text = static_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nsnull;
+                        PRUnichar* convertedText = nullptr;
                         PRInt32 convertedTextLen = 0;
 
                         GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
@@ -723,7 +723,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
                             nsCOMPtr<nsIURI> fileURI;
                             nsresult rv = ioService->NewURI(NS_ConvertUTF16toUTF8(convertedText),
-                                                            nsnull, nsnull, getter_AddRefs(fileURI));
+                                                            nullptr, nullptr, getter_AddRefs(fileURI));
                             if (NS_SUCCEEDED(rv)) {
                                 nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
                                 if (NS_SUCCEEDED(rv)) {
@@ -761,7 +761,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                         PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
                         const char* castedText =
                                     reinterpret_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nsnull;
+                        PRUnichar* convertedText = nullptr;
                         NS_ConvertUTF8toUTF16 ucs2string(castedText,
                                                          mTargetDragDataLen);
                         convertedText = ToNewUnicode(ucs2string);
@@ -785,7 +785,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
                             const char* castedText =
                                         reinterpret_cast<char*>(mTargetDragData);
-                            PRUnichar* convertedText = nsnull;
+                            PRUnichar* convertedText = nullptr;
                             PRInt32 convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
                                                 castedText, mTargetDragDataLen,
@@ -818,7 +818,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                ("Got text/uri-list data\n"));
                         const char *data =
                                    reinterpret_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nsnull;
+                        PRUnichar* convertedText = nullptr;
                         PRInt32 convertedTextLen = 0;
 
                         GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
@@ -850,7 +850,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                    ("Got _NETSCAPE_URL data\n"));
                             const char* castedText =
                                   reinterpret_cast<char*>(mTargetDragData);
-                            PRUnichar* convertedText = nsnull;
+                            PRUnichar* convertedText = nullptr;
                             PRInt32 convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText, mTargetDragDataLen, &convertedText, &convertedTextLen);
                             if ( convertedText ) {
@@ -1334,7 +1334,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
                                     gint            aResult)
 {
     // this just releases the list of data items that we provide
-    mSourceDataItems = nsnull;
+    mSourceDataItems = nullptr;
 
     if (!mDoingDrag || mScheduledTask == eDragTaskSourceEnd)
         // EndDragSession() was already called on drop
@@ -1393,7 +1393,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
     }
 
     // Schedule the appropriate drag end dom events.
-    Schedule(eDragTaskSourceEnd, nsnull, NULL, nsIntPoint(), 0);
+    Schedule(eDragTaskSourceEnd, nullptr, NULL, nsIntPoint(), 0);
 }
 
 static void
@@ -1423,7 +1423,7 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
                                                             data,
                                                             &tmpData,
                                                             tmpDataLen);
-                char* plainTextData = nsnull;
+                char* plainTextData = nullptr;
                 PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
                                                            (tmpData);
                 PRInt32 plainTextLen = 0;
@@ -1530,7 +1530,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             // if required, do the extra work to convert unicode to plain
             // text and replace the output values with the plain text.
             if (needToDoConversionToPlainText) {
-                char* plainTextData = nsnull;
+                char* plainTextData = nullptr;
                 PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
                                                            (tmpData);
                 PRInt32 plainTextLen = 0;
@@ -1600,7 +1600,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
     // If a popup is set as the drag image, use its widget. Otherwise, use
     // the surface that DrawDrag created.
     if (mDragPopup) {
-        GtkWidget* gtkWidget = nsnull;
+        GtkWidget* gtkWidget = nullptr;
         nsIFrame* frame = mDragPopup->GetPrimaryFrame();
         if (frame) {
             // DrawDrag ensured that this is a popup frame.
@@ -1749,7 +1749,7 @@ nsDragService::ScheduleLeaveEvent()
     // We don't know at this stage whether a drop signal will immediately
     // follow.  If the drop signal gets sent it will happen before we return
     // to the main loop and the scheduled leave task will be replaced.
-    if (!Schedule(eDragTaskLeave, nsnull, NULL, nsIntPoint(), 0)) {
+    if (!Schedule(eDragTaskLeave, nullptr, NULL, nsIntPoint(), 0)) {
         NS_WARNING("Drag leave after drop");
     }        
 }
@@ -1915,7 +1915,7 @@ nsDragService::RunScheduledTask()
 
         // This drag is over, so clear out our reference to the previous
         // window.
-        mTargetWindow = nsnull;
+        mTargetWindow = nullptr;
         // Make sure to end the drag session. If this drag started in a
         // different app, we won't get a drag_end signal to end it from.
         EndDragSession(true);

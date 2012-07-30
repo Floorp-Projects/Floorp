@@ -10,7 +10,7 @@
 NS_IMPL_ISUPPORTS1(nsExternalSharingAppService, nsIExternalSharingAppService)
 
 nsExternalSharingAppService::nsExternalSharingAppService()
-  : mShareUi(nsnull)
+  : mShareUi(nullptr)
 {
 }
 

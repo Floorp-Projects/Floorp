@@ -164,7 +164,7 @@ public:
   GetStatement(const nsACString& aQuery) const
   {
     if (mShuttingDown) {
-      return nsnull;
+      return nullptr;
     }
     if (NS_IsMainThread()) {
       return mMainThreadStatements.GetCachedStatement(aQuery);
@@ -202,7 +202,7 @@ public:
   GetAsyncStatement(const nsACString& aQuery) const
   {
     if (mShuttingDown) {
-      return nsnull;
+      return nullptr;
     }
     MOZ_ASSERT(NS_IsMainThread());
     return mMainThreadAsyncStatements.GetCachedStatement(aQuery);

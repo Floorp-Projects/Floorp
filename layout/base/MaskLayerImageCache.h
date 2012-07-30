@@ -146,7 +146,7 @@ public:
   };
 
   
-  // Find an image container for aKey, returns nsnull if there is no suitable
+  // Find an image container for aKey, returns nullptr if there is no suitable
   // cached image. If there is an image, then aKey is set to point at the stored
   // key for the image.
   ImageContainer* FindImageFor(const MaskLayerImageKey** aKey);

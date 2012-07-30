@@ -78,7 +78,7 @@ CreateMultiTableEncoder(PRInt32 aTableCount,
                         void** aResult)
 {
   return CreateMultiTableEncoder(aTableCount, aScanClassArray,
-                                 nsnull,
+                                 nullptr,
                                  aMappingTable, aMaxLengthFactor,
                                  aOuter, aIID, aResult);
 }
@@ -113,7 +113,7 @@ CreateTableEncoder(uScanClassID aScanClass,
                    REFNSIID aIID,
                    void** aResult)
 {
-    return CreateTableEncoder(aScanClass, nsnull,
+    return CreateTableEncoder(aScanClass, nullptr,
                               aMappingTable, aMaxLengthFactor,
                               aOuter, aIID, aResult);
 }

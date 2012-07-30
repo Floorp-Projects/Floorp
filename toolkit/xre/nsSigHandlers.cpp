@@ -77,7 +77,7 @@ ah_crap_handler(int signum)
          signum);
 
   printf("Stack:\n");
-  NS_StackWalk(PrintStackFrame, 2, nsnull, 0);
+  NS_StackWalk(PrintStackFrame, 2, nullptr, 0);
 
   printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);
   printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
@@ -137,7 +137,7 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
   /* Integer divide by zero or integer overflow. */
   /* Note: FPE_INTOVF is ignored on Intel, PowerPC and SPARC systems. */
   if (si->si_code == FPE_INTDIV || si->si_code == FPE_INTOVF) {
-    NS_DebugBreak(NS_DEBUG_ABORT, "Divide by zero", nsnull, __FILE__, __LINE__);
+    NS_DebugBreak(NS_DEBUG_ABORT, "Divide by zero", nullptr, __FILE__, __LINE__);
   }
 
 #ifdef XP_MACOSX

@@ -157,7 +157,7 @@ NS_IMETHODIMP
 nsEntityConverter::ConvertUTF32ToEntity(PRUint32 character, PRUint32 entityVersion, char **_retval)
 {
   NS_ASSERTION(_retval, "null ptr- _retval");
-  if(nsnull == _retval)
+  if(nullptr == _retval)
     return NS_ERROR_NULL_POINTER;
   *_retval = NULL;
 
@@ -177,7 +177,7 @@ nsEntityConverter::ConvertUTF32ToEntity(PRUint32 character, PRUint32 entityVersi
     nsresult rv = entities->GetStringFromName(key.get(), getter_Copies(value));
     if (NS_SUCCEEDED(rv)) {
       *_retval = ToNewCString(value);
-      if(nsnull == *_retval)
+      if(nullptr == *_retval)
         return NS_ERROR_OUT_OF_MEMORY;
       else
         return NS_OK;
@@ -191,7 +191,7 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
 {
   NS_ASSERTION(inString, "null ptr- inString");
   NS_ASSERTION(_retval, "null ptr- _retval");
-  if((nsnull == inString) || (nsnull == _retval))
+  if((nullptr == inString) || (nullptr == _retval))
     return NS_ERROR_NULL_POINTER;
   *_retval = NULL;
 

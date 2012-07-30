@@ -171,7 +171,7 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _setcurrentasyncsurface
 };
 
-static Mutex *sPluginThreadAsyncCallLock = nsnull;
+static Mutex *sPluginThreadAsyncCallLock = nullptr;
 static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
 
 // POST/GET stream type
@@ -198,7 +198,7 @@ void NS_NotifyPluginCall(PRIntervalTime startTime)
   nsAutoString runTimeString;
   runTimeString.AppendFloat(runTimeInSeconds);
   const PRUnichar* runTime = runTimeString.get();
-  notifyUIService->NotifyObservers(nsnull, "experimental-notify-plugin-call",
+  notifyUIService->NotifyObservers(nullptr, "experimental-notify-plugin-call",
                                    runTime);
 }
 
@@ -225,13 +225,13 @@ nsNPAPIPlugin::nsNPAPIPlugin()
   mPluginFuncs.size = sizeof(mPluginFuncs);
   mPluginFuncs.version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
 
-  mLibrary = nsnull;
+  mLibrary = nullptr;
 }
 
 nsNPAPIPlugin::~nsNPAPIPlugin()
 {
   delete mLibrary;
-  mLibrary = nsnull;
+  mLibrary = nullptr;
 }
 
 void
@@ -423,7 +423,7 @@ inline PluginLibrary*
 GetNewPluginLibrary(nsPluginTag *aPluginTag)
 {
   if (!aPluginTag) {
-    return nsnull;
+    return nullptr;
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
@@ -436,7 +436,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
 nsresult
 nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   if (!aPluginTag) {
     return NS_ERROR_FAILURE;
@@ -560,8 +560,8 @@ NPError
 MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
                           eNPPStreamTypeInternal type,
                           bool bDoNotify = false,
-                          void *notifyData = nsnull, uint32_t len = 0,
-                          const char *buf = nsnull, NPBool file = false)
+                          void *notifyData = nullptr, uint32_t len = 0,
+                          const char *buf = nullptr, NPBool file = false)
 {
   if (!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -643,12 +643,12 @@ public:
 
   void Invalidate()
   {
-    mFunc = nsnull;
+    mFunc = nullptr;
   }
 
   bool IsValid()
   {
-    return (mFunc != nsnull);
+    return (mFunc != nullptr);
   }
 
 private:  
@@ -660,16 +660,16 @@ private:
 static nsIDocument *
 GetDocumentFromNPP(NPP npp)
 {
-  NS_ENSURE_TRUE(npp, nsnull);
+  NS_ENSURE_TRUE(npp, nullptr);
 
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-  NS_ENSURE_TRUE(inst, nsnull);
+  NS_ENSURE_TRUE(inst, nullptr);
 
   PluginDestructionGuard guard(inst);
 
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   inst->GetOwner(getter_AddRefs(owner));
-  NS_ENSURE_TRUE(owner, nsnull);
+  NS_ENSURE_TRUE(owner, nullptr);
 
   nsCOMPtr<nsIDocument> doc;
   owner->GetDocument(getter_AddRefs(doc));
@@ -681,10 +681,10 @@ static JSContext *
 GetJSContextFromDoc(nsIDocument *doc)
 {
   nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(sgo, nsnull);
+  NS_ENSURE_TRUE(sgo, nullptr);
 
   nsIScriptContext *scx = sgo->GetContext();
-  NS_ENSURE_TRUE(scx, nsnull);
+  NS_ENSURE_TRUE(scx, nullptr);
 
   return scx->GetNativeContext();
 }
@@ -693,7 +693,7 @@ static JSContext *
 GetJSContextFromNPP(NPP npp)
 {
   nsIDocument *doc = GetDocumentFromNPP(npp);
-  NS_ENSURE_TRUE(doc, nsnull);
+  NS_ENSURE_TRUE(doc, nullptr);
 
   return GetJSContextFromDoc(doc);
 }
@@ -735,7 +735,7 @@ InHeap(HANDLE hHeap, LPVOID lpMem)
 NPPExceptionAutoHolder::NPPExceptionAutoHolder()
   : mOldException(gNPPException)
 {
-  gNPPException = nsnull;
+  gNPPException = nullptr;
 }
 
 NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
@@ -752,7 +752,7 @@ nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
 {
   if (!sPluginThreadAsyncCallLock) {
     // Failed to create lock, not much we can do here then...
-    mFunc = nsnull;
+    mFunc = nullptr;
 
     return;
   }
@@ -765,7 +765,7 @@ nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
     if (!inst || !inst->IsRunning()) {
       // The plugin was stopped, ignore this async call.
-      mFunc = nsnull;
+      mFunc = nullptr;
 
       return;
     }
@@ -793,7 +793,7 @@ nsPluginThreadRunnable::Run()
   if (mFunc) {
     PluginDestructionGuard guard(mInstance);
 
-    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull);
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nullptr);
   }
 
   return NS_OK;
@@ -835,7 +835,7 @@ OnShutdown()
   if (sPluginThreadAsyncCallLock) {
     delete sPluginThreadAsyncCallLock;
 
-    sPluginThreadAsyncCallLock = nsnull;
+    sPluginThreadAsyncCallLock = nullptr;
   }
 }
 
@@ -854,7 +854,7 @@ AsyncCallbackAutoLock::~AsyncCallbackAutoLock()
 }
 
 
-NPP NPPStack::sCurrentNPP = nsnull;
+NPP NPPStack::sCurrentNPP = nullptr;
 
 const char *
 PeekException()
@@ -870,7 +870,7 @@ PopException()
   if (gNPPException) {
     free(gNPPException);
 
-    gNPPException = nsnull;
+    gNPPException = nullptr;
   }
 }
 
@@ -905,7 +905,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
     
-    const char *name = nsnull;
+    const char *name = nullptr;
     nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
     host->GetPluginName(inst, &name);
 
@@ -978,7 +978,7 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
   PluginDestructionGuard guard(npp);
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
-                                    eNPPStreamTypeInternal_Post, false, nsnull,
+                                    eNPPStreamTypeInternal_Post, false, nullptr,
                                     len, buf, file);
 }
 
@@ -1002,7 +1002,7 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
     nsCOMPtr<nsIOutputStream> stream;
     if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
                                                getter_AddRefs(stream)))) {
-      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream, nsnull);
+      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
       if (wrapper) {
         (*result) = &wrapper->mNPStream;
         err = NPERR_NO_ERROR;
@@ -1082,7 +1082,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
     //
     // Calling OnStopBinding on the listener may cause it to be deleted due to the
     // releasing of its last references.
-    listener->OnStopBinding(nsnull, NS_BINDING_ABORTED);
+    listener->OnStopBinding(nullptr, NS_BINDING_ABORTED);
   } else {
     // This type of stream (NPStream) was created via NPN_NewStream. The plugin holds
     // the reference until it is to be deleted here. Deleting the wrapper will
@@ -1223,10 +1223,10 @@ _getwindowobject(NPP npp)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getwindowobject called from the wrong thread\n"));
-    return nsnull;
+    return nullptr;
   }
   JSContext *cx = GetJSContextFromNPP(npp);
-  NS_ENSURE_TRUE(cx, nsnull);
+  NS_ENSURE_TRUE(cx, nullptr);
 
   // Using ::JS_GetGlobalObject(cx) is ok here since the window we
   // want to return here is the outer window, *not* the inner (since
@@ -1239,34 +1239,34 @@ _getpluginelement(NPP npp)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getpluginelement called from the wrong thread\n"));
-    return nsnull;
+    return nullptr;
   }
 
   nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(npp->ndata);
   if (!inst)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIDOMElement> element;
   inst->GetDOMElement(getter_AddRefs(element));
 
   if (!element)
-    return nsnull;
+    return nullptr;
 
   JSContext *cx = GetJSContextFromNPP(npp);
-  NS_ENSURE_TRUE(cx, nsnull);
+  NS_ENSURE_TRUE(cx, nullptr);
 
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  NS_ENSURE_TRUE(xpc, nsnull);
+  NS_ENSURE_TRUE(xpc, nullptr);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), element,
                   NS_GET_IID(nsIDOMElement),
                   getter_AddRefs(holder));
-  NS_ENSURE_TRUE(holder, nsnull);
+  NS_ENSURE_TRUE(holder, nullptr);
 
-  JSObject* obj = nsnull;
+  JSObject* obj = nullptr;
   holder->GetJSObject(&obj);
-  NS_ENSURE_TRUE(obj, nsnull);
+  NS_ENSURE_TRUE(obj, nullptr);
 
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
 }
@@ -1344,7 +1344,7 @@ _utf8fromidentifier(NPIdentifier id)
     return NULL;
 
   if (!NPIdentifierIsString(id)) {
-    return nsnull;
+    return nullptr;
   }
 
   JSString *str = NPIdentifierToString(id);
@@ -1383,12 +1383,12 @@ _createobject(NPP npp, NPClass* aClass)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_createobject called from the wrong thread\n"));
-    return nsnull;
+    return nullptr;
   }
   if (!npp) {
     NS_ERROR("Null npp passed to _createobject()!");
 
-    return nsnull;
+    return nullptr;
   }
 
   PluginDestructionGuard guard(npp);
@@ -1396,7 +1396,7 @@ _createobject(NPP npp, NPClass* aClass)
   if (!aClass) {
     NS_ERROR("Null class passed to _createobject()!");
 
-    return nsnull;
+    return nullptr;
   }
 
   NPPAutoPusher nppPusher(npp);
@@ -1588,7 +1588,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
       uri->GetSpec(specStr);
       spec = specStr.get();
     } else {
-      spec = nsnull;
+      spec = nullptr;
     }
   }
 
@@ -1597,7 +1597,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
                   npp, npobj, script->UTF8Characters));
 
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
-                                             spec, 0, 0, rval, nsnull);
+                                             spec, 0, 0, rval, nullptr);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, *rval, result));
@@ -1660,7 +1660,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
     return true;
 
   NPVariant doc_v;
-  NPObject* document_obj = nsnull;
+  NPObject* document_obj = nullptr;
   NPIdentifier doc_id = _getstringidentifier("document");
   bool ok = npobj->_class->getProperty(window_obj, doc_id, &doc_v);
   _releaseobject(window_obj);
@@ -2369,7 +2369,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVserviceManager:
     // old XPCOM objects, no longer supported, but null out the out
     // param to avoid crashing plugins that still try to use this.
-    *(nsISupports**)result = nsnull;
+    *(nsISupports**)result = nullptr;
     // fall through
   default:
     NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_getvalue unhandled get value: %d\n", variable));
@@ -2412,12 +2412,12 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       // (e.g. Safari and Opera).
       return NPERR_NO_ERROR;
 #else
-      NPBool bWindowless = (result == nsnull);
+      NPBool bWindowless = (result == nullptr);
       return inst->SetWindowless(bWindowless);
 #endif
     }
     case NPPVpluginTransparentBool: {
-      NPBool bTransparent = (result != nsnull);
+      NPBool bTransparent = (result != nullptr);
       return inst->SetTransparent(bTransparent);
     }
 
@@ -2427,26 +2427,26 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         nsCOMPtr<nsIJSContextStack> contextStack =
           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
         if (NS_SUCCEEDED(rv)) {
-          NPBool bPushCaller = (result != nsnull);
+          NPBool bPushCaller = (result != nullptr);
           if (bPushCaller) {
             JSContext *cx;
             rv = inst->GetJSContext(&cx);
             if (NS_SUCCEEDED(rv))
               rv = contextStack->Push(cx);
           } else {
-            rv = contextStack->Pop(nsnull);
+            rv = contextStack->Pop(nullptr);
           }
         }
         return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
       }
 
     case NPPVpluginKeepLibraryInMemory: {
-      NPBool bCached = (result != nsnull);
+      NPBool bCached = (result != nullptr);
       return inst->SetCached(bCached);
     }
 
     case NPPVpluginUsesDOMForCursorBool: {
-      bool useDOMForCursor = (result != nsnull);
+      bool useDOMForCursor = (result != nullptr);
       return inst->SetUsesDOMForCursor(useDOMForCursor);
     }
 
@@ -2498,7 +2498,7 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
                                      (void*)pstream));
 
 #ifdef PLUGIN_LOGGING
-  for(NPByteRange * range = rangeList; range != nsnull; range = range->next)
+  for(NPByteRange * range = rangeList; range != nullptr; range = range->next)
     PR_LOG(nsPluginLogging::gNPNLog,PLUGIN_LOG_NOISY,
     ("%i-%i", range->offset, range->offset + range->length - 1));
 
@@ -2545,20 +2545,20 @@ _useragent(NPP npp)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_useragent called from the wrong thread\n"));
-    return nsnull;
+    return nullptr;
   }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_UserAgent: npp=%p\n", (void*)npp));
 
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (!pluginHost) {
-    return nsnull;
+    return nullptr;
   }
 
   const char *retstr;
   nsresult rv = pluginHost->UserAgent(&retstr);
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   return retstr;
 }
@@ -2664,7 +2664,7 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
       }
 
-      if (NS_FAILED(cookieService->GetCookieString(uri, nsnull, value)) ||
+      if (NS_FAILED(cookieService->GetCookieString(uri, nullptr, value)) ||
           !*value) {
         return NPERR_GENERIC_ERROR;
       }
@@ -2710,17 +2710,17 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
 
       nsCOMPtr<nsIURI> uriIn;
-      rv = ioService->NewURI(nsDependentCString(url), nsnull, nsnull, getter_AddRefs(uriIn));
+      rv = ioService->NewURI(nsDependentCString(url), nullptr, nullptr, getter_AddRefs(uriIn));
       if (NS_FAILED(rv))
         return NPERR_GENERIC_ERROR;
 
       nsCOMPtr<nsIPrompt> prompt;
-      nsPluginHost::GetPrompt(nsnull, getter_AddRefs(prompt));
+      nsPluginHost::GetPrompt(nullptr, getter_AddRefs(prompt));
 
       char *cookie = (char*)value;
       char c = cookie[len];
       cookie[len] = '\0';
-      rv = cookieService->SetCookieString(uriIn, prompt, cookie, nsnull);
+      rv = cookieService->SetCookieString(uriIn, prompt, cookie, nullptr);
       cookie[len] = c;
       if (NS_SUCCEEDED(rv))
         return NPERR_NO_ERROR;
@@ -2747,8 +2747,8 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
       !ulen || !password || !plen)
     return NPERR_INVALID_PARAM;
 
-  *username = nsnull;
-  *password = nsnull;
+  *username = nullptr;
+  *password = nullptr;
   *ulen = 0;
   *plen = 0;
 

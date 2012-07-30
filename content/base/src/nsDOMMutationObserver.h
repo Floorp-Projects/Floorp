@@ -151,7 +151,7 @@ protected:
 
   nsMutationReceiverBase(nsINode* aRegisterTarget,
                          nsMutationReceiverBase* aParent)
-  : mTarget(nsnull), mObserver(nsnull), mParent(aParent),
+  : mTarget(nullptr), mObserver(nullptr), mParent(aParent),
     mRegisterTarget(aRegisterTarget), mKungFuDeathGrip(aParent->Target())
   {
     NS_ASSERTION(mParent->Subtree(), "Should clone a non-subtree observer!");
@@ -253,10 +253,10 @@ public:
   {
     if (mRegisterTarget) {
       mRegisterTarget->RemoveMutationObserver(this);
-      mRegisterTarget = nsnull;
+      mRegisterTarget = nullptr;
     }
 
-    mParent = nsnull;
+    mParent = nullptr;
     NS_ASSERTION(!mTarget, "Should not have mTarget");
     NS_ASSERTION(!mObserver, "Should not have mObserver");
   }
@@ -372,14 +372,14 @@ class nsAutoMutationBatch
 {
 public:
   nsAutoMutationBatch()
-  : mPreviousBatch(nsnull), mBatchTarget(nsnull), mRemovalDone(false),
+  : mPreviousBatch(nullptr), mBatchTarget(nullptr), mRemovalDone(false),
     mFromFirstToLast(false), mAllowNestedBatches(false)    
   {
   }
 
   nsAutoMutationBatch(nsINode* aTarget, bool aFromFirstToLast,
                       bool aAllowNestedBatches)
-  : mPreviousBatch(nsnull), mBatchTarget(nsnull), mRemovalDone(false),
+  : mPreviousBatch(nullptr), mBatchTarget(nullptr), mRemovalDone(false),
     mFromFirstToLast(false), mAllowNestedBatches(false)
   {
     Init(aTarget, aFromFirstToLast, aAllowNestedBatches);

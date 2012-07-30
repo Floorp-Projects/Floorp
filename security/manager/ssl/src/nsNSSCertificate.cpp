@@ -88,7 +88,7 @@ nsNSSCertificate::Create(CERTCertificate *cert)
 {
   if (GeckoProcessType_Default != XRE_GetProcessType()) {
     NS_ERROR("Trying to initialize nsNSSCertificate in a non-chrome process!");
-    return nsnull;
+    return nullptr;
   }
   if (cert)
     return new nsNSSCertificate(cert);
@@ -101,12 +101,12 @@ nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
 {
   // On non-chrome process prevent instantiation
   if (GeckoProcessType_Default != XRE_GetProcessType())
-    return nsnull;
+    return nullptr;
 
   nsNSSCertificate* newObject = nsNSSCertificate::Create();
   if (newObject && !newObject->InitFromDER(certDER, derLen)) {
     delete newObject;
-    newObject = nsnull;
+    newObject = nullptr;
   }
 
   return newObject;
@@ -127,7 +127,7 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
   if (!aCert)
     return false;
 
-  if(aCert->dbhandle == nsnull)
+  if(aCert->dbhandle == nullptr)
   {
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
@@ -137,7 +137,7 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
-                                           mCert(nsnull),
+                                           mCert(nullptr),
                                            mPermDelete(false),
                                            mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
                                            mCachedEVStatus(ev_status_unknown)
@@ -156,7 +156,7 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 }
 
 nsNSSCertificate::nsNSSCertificate() : 
-  mCert(nsnull),
+  mCert(nullptr),
   mPermDelete(false),
   mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
   mCachedEVStatus(ev_status_unknown)
@@ -199,7 +199,7 @@ void nsNSSCertificate::destructorSafeDestroyNSSReference()
 
   if (mCert) {
     CERT_DestroyCertificate(mCert);
-    mCert = nsnull;
+    mCert = nullptr;
   }
 }
 
@@ -507,7 +507,7 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
   SECItem key;
 
   NS_ENSURE_ARG(aDbKey);
-  *aDbKey = nsnull;
+  *aDbKey = nullptr;
   key.len = NS_NSS_LONG*4+mCert->serialNumber.len+mCert->derIssuer.len;
   key.data = (unsigned char *)nsMemory::Alloc(key.len);
   if (!key.data)
@@ -521,7 +521,7 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
   memcpy(&key.data[NS_NSS_LONG*4+mCert->serialNumber.len],
          mCert->derIssuer.data, mCert->derIssuer.len);
   
-  *aDbKey = NSSBase64_EncodeItem(nsnull, nsnull, 0, &key);
+  *aDbKey = NSSBase64_EncodeItem(nullptr, nullptr, 0, &key);
   nsMemory::Free(key.data); // SECItem is a 'c' type without a destrutor
   return (*aDbKey) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -551,8 +551,8 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
       }
     }
   } else {
-    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
-    *aWindowTitle = nsnull;
+    NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
+    *aWindowTitle = nullptr;
   }
   return NS_OK;
 }
@@ -646,7 +646,7 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, bool *res
   NS_ENSURE_ARG(result);
   *result = false;
 
-  const char *aAddr = nsnull;
+  const char *aAddr = nullptr;
   for (aAddr = CERT_GetFirstEmailAddress(mCert)
        ;
        aAddr
@@ -775,7 +775,7 @@ nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(aIssuer);
-  *aIssuer = nsnull;
+  *aIssuer = nullptr;
   CERTCertificate *issuer;
   issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
   if (issuer) {
@@ -1082,7 +1082,7 @@ nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NSSCMSMessage *cmsg = NSS_CMSMessage_Create(nsnull);
+  NSSCMSMessage *cmsg = NSS_CMSMessage_Create(nullptr);
   NSSCMSMessageCleaner cmsgCleaner(cmsg);
   if (!cmsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1157,10 +1157,10 @@ nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
     return NS_ERROR_FAILURE;
   }
 
-  SECItem certP7 = { siBuffer, nsnull, 0 };
-  NSSCMSEncoderContext *ecx = NSS_CMSEncoder_Start(cmsg, nsnull, nsnull, &certP7, arena,
-                                                   nsnull, nsnull, nsnull, nsnull, nsnull,
-                                                   nsnull);
+  SECItem certP7 = { siBuffer, nullptr, 0 };
+  NSSCMSEncoderContext *ecx = NSS_CMSEncoder_Start(cmsg, nullptr, nullptr, &certP7, arena,
+                                                   nullptr, nullptr, nullptr, nullptr, nullptr,
+                                                   nullptr);
   if (!ecx) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("nsNSSCertificate::ExportAsCMS - can't create encoder context\n"));
@@ -1187,9 +1187,9 @@ nsNSSCertificate::GetCert()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
-    return nsnull;
+    return nullptr;
 
-  return (mCert) ? CERT_DupCertificate(mCert) : nsnull;
+  return (mCert) ? CERT_DupCertificate(mCert) : nullptr;
 }
 
 NS_IMETHODIMP
@@ -1201,7 +1201,7 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
 
   NS_ENSURE_ARG(aValidity);
   nsX509CertValidity *validity = new nsX509CertValidity(mCert);
-  if (nsnull == validity)
+  if (nullptr == validity)
    return  NS_ERROR_OUT_OF_MEMORY; 
 
   NS_ADDREF(validity);
@@ -1481,7 +1481,7 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
   nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aASN1Structure);
-  if (mASN1Structure == nsnull) {
+  if (mASN1Structure == nullptr) {
     // First create the recursive structure os ASN1Objects
     // which tells us the layout of the cert.
     rv = CreateASN1Struct();
@@ -1526,7 +1526,7 @@ nsNSSCertificate::SaveSMimeProfile()
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (SECSuccess != CERT_SaveSMimeProfile(mCert, nsnull, nsnull))
+  if (SECSuccess != CERT_SaveSMimeProfile(mCert, nullptr, nullptr))
     return NS_ERROR_FAILURE;
   else
     return NS_OK;
@@ -1536,10 +1536,10 @@ nsNSSCertificate::SaveSMimeProfile()
 char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
 {
   nsNSSShutDownPreventionLock locker;
-  char* nickname = nsnull;
+  char* nickname = nullptr;
   int count;
   bool conflict;
-  char* servername = nsnull;
+  char* servername = nullptr;
   
   servername = CERT_GetCommonName(&cert->subject);
   if (!servername) {
@@ -1557,7 +1557,7 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
             if (!servername) {
               // We tried hard, there is nothing more we can do.
               // A cert without any names doesn't really make sense.
-              return nsnull;
+              return nullptr;
             }
           }
         }
@@ -1621,13 +1621,13 @@ nsNSSCertList::AddCert(nsIX509Cert *aCert)
   CERTCertificate *cert;
 
   cert = nssCert->GetCert();
-  if (cert == nsnull) {
-    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
+  if (cert == nullptr) {
+    NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
-  if (mCertList == nsnull) {
-    NS_ERROR("Somehow got nsnull for mCertList in nsNSSCertList.");
+  if (mCertList == nullptr) {
+    NS_ERROR("Somehow got nullptr for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
   CERT_AddCertToListTail(mCertList,cert);
@@ -1644,13 +1644,13 @@ nsNSSCertList::DeleteCert(nsIX509Cert *aCert)
   CERTCertificate *cert = nssCert->GetCert();
   CERTCertListNode *node;
 
-  if (cert == nsnull) {
-    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
+  if (cert == nullptr) {
+    NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
-  if (mCertList == nsnull) {
-    NS_ERROR("Somehow got nsnull for mCertList in nsNSSCertList.");
+  if (mCertList == nullptr) {
+    NS_ERROR("Somehow got nullptr for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
 
@@ -1668,12 +1668,12 @@ CERTCertList *
 nsNSSCertList::DupCertList(CERTCertList *aCertList)
 {
   if (!aCertList)
-    return nsnull;
+    return nullptr;
 
   CERTCertList *newList = CERT_NewCertList();
 
-  if (newList == nsnull) {
-    return nsnull;
+  if (newList == nullptr) {
+    return nullptr;
   }
 
   CERTCertListNode *node;
@@ -1793,28 +1793,28 @@ NS_IMETHODIMP
 nsNSSCertificate::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
-  *array = nsnull;
+  *array = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsNSSCertificate::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsNSSCertificate::GetContractID(char * *aContractID)
 {
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsNSSCertificate::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 

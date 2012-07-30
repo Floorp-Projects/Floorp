@@ -34,7 +34,7 @@ protected:
 
 public:
   ChildIterator()
-    : mContent(nsnull), mChild(0), mNodes(nsnull) {}
+    : mContent(nullptr), mChild(0), mNodes(nullptr) {}
 
   ChildIterator(const ChildIterator& aOther)
     : mContent(aOther.mContent),
@@ -136,11 +136,11 @@ public:
       // XXXbz I wish we could assert this doesn't happen, but I think that's
       // not necessarily the case when called from ContentInserted if
       // first-letter frames are about.
-      mChild = nsnull;
+      mChild = nullptr;
     }
   }
 
-  bool XBLInvolved() const { return mNodes != nsnull; }
+  bool XBLInvolved() const { return mNodes != nullptr; }
 
   /**
    * Create a pair of ChildIterators for a content node. aFirst will

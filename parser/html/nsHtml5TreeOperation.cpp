@@ -51,7 +51,7 @@ class NS_STACK_CLASS nsHtml5OtherDocUpdate {
       NS_PRECONDITION(aCurrentDoc, "Node has no doc?");
       NS_PRECONDITION(aExecutorDoc, "Executor has no doc?");
       if (NS_LIKELY(aCurrentDoc == aExecutorDoc)) {
-        mDocument = nsnull;
+        mDocument = nullptr;
       } else {
         mDocument = aCurrentDoc;
         aCurrentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);        
@@ -331,7 +331,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       
       nsCOMPtr<nsIContent> newContent;
       nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->
-        GetNodeInfo(name, nsnull, ns, nsIDOMNode::ELEMENT_NODE);
+        GetNodeInfo(name, nullptr, ns, nsIDOMNode::ELEMENT_NODE);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
                     nodeInfo.forget(),
@@ -365,13 +365,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
 
         newContent->SetAttr(kNameSpaceID_None, 
                             nsGkAtoms::moztype, 
-                            nsnull, 
+                            nullptr, 
                             theAttribute,
                             false);
 
         nsCOMPtr<nsINodeInfo> optionNodeInfo = 
           aBuilder->GetNodeInfoManager()->GetNodeInfo(nsHtml5Atoms::option, 
-                                                      nsnull, 
+                                                      nullptr, 
                                                       kNameSpaceID_XHTML,
                                                       nsIDOMNode::ELEMENT_NODE);
                                                       

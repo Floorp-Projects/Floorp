@@ -242,13 +242,13 @@ interface nsIDOMEventTarget : nsISupports
    * @param aEvent the event that is being dispatched.
    * @param aDOMEvent the event that is being dispatched, use if you want to
    *                  dispatch nsIDOMEvent, not only nsEvent.
-   * @param aPresContext the current presentation context, can be nsnull.
-   * @param aEventStatus the status returned from the function, can be nsnull.
+   * @param aPresContext the current presentation context, can be nullptr.
+   * @param aEventStatus the status returned from the function, can be nullptr.
    *
    * @note If both aEvent and aDOMEvent are used, aEvent must be the internal
    *       event of the aDOMEvent.
    *
-   * If aDOMEvent is not nsnull (in which case aEvent can be nsnull) it is used
+   * If aDOMEvent is not nullptr (in which case aEvent can be nullptr) it is used
    * for dispatching, otherwise aEvent is used.
    *
    * @deprecated This method is here just until all the callers outside Gecko
@@ -292,7 +292,7 @@ typedef nsIDOMEventTarget nsPIDOMEventTarget;
 nsPIDOMEventTarget* _class::GetTargetForDOMEvent() { return this; } \
 nsPIDOMEventTarget* _class::GetTargetForEventTargetChain() { return this; } \
 nsresult _class::WillHandleEvent(nsEventChainPostVisitor& aVisitor) { return NS_OK; } \
-JSContext* _class::GetJSContextForEventHandlers() { return nsnull; }
+JSContext* _class::GetJSContextForEventHandlers() { return nullptr; }
 
 #define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \
 NS_IMETHODIMP \

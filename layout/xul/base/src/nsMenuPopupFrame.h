@@ -215,11 +215,11 @@ public:
     if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
       return static_cast<nsMenuFrame *>(parent);
     }
-    return nsnull;
+    return nullptr;
   }
 
   static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
-  void ClearTriggerContent() { mTriggerContent = nsnull; }
+  void ClearTriggerContent() { mTriggerContent = nullptr; }
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell

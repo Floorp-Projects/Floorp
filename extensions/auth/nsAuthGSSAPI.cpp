@@ -75,7 +75,7 @@ static struct GSSFunction {
 };
 
 static bool      gssNativeImp = true;
-static PRLibrary* gssLibrary = nsnull;
+static PRLibrary* gssLibrary = nullptr;
 
 #define gss_display_status_ptr      ((gss_display_status_type)*gssFuncs[0].func)
 #define gss_init_sec_context_ptr    ((gss_init_sec_context_type)*gssFuncs[1].func)
@@ -326,7 +326,7 @@ nsAuthGSSAPI::Shutdown()
 {
     if (gssLibrary) {
         PR_UnloadLibrary(gssLibrary);
-        gssLibrary = nsnull;
+        gssLibrary = nullptr;
     }
 }
 
@@ -445,10 +445,10 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
                                             GSS_C_INDEFINITE,
                                             GSS_C_NO_CHANNEL_BINDINGS,
                                             in_token_ptr,
-                                            nsnull,
+                                            nullptr,
                                             &output_token,
-                                            nsnull,
-                                            nsnull);
+                                            nullptr,
+                                            nullptr);
 
     if (GSS_ERROR(major_status)) {
         LogGssError(major_status, minor_status, "gss_init_sec_context() failed");

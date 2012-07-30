@@ -24,7 +24,7 @@ NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowLeafLayout();
   if (!layout) {
-    return nsnull;
+    return nullptr;
   }
   
   return new (aPresShell) nsGridRowLeafFrame(aPresShell, aContext, false,
@@ -59,8 +59,8 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 
   PRInt32 firstIndex = 0;
   PRInt32 lastIndex = 0;
-  nsGridRow* firstRow = nsnull;
-  nsGridRow* lastRow = nsnull;
+  nsGridRow* firstRow = nullptr;
+  nsGridRow* lastRow = nullptr;
   grid->GetFirstAndLastRow(state, firstIndex, lastIndex, firstRow, lastRow, isHorizontal);
 
   // only the first and last rows can be affected.

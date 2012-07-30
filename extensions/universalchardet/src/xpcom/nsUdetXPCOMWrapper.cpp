@@ -37,8 +37,8 @@ NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector)
 NS_IMETHODIMP nsXPCOMDetector::Init(
               nsICharsetDetectionObserver* aObserver)
 {
-  NS_ASSERTION(mObserver == nsnull , "Init twice");
-  if(nsnull == aObserver)
+  NS_ASSERTION(mObserver == nullptr , "Init twice");
+  if(nullptr == aObserver)
     return NS_ERROR_ILLEGAL_VALUE;
 
   mObserver = aObserver;
@@ -48,9 +48,9 @@ NS_IMETHODIMP nsXPCOMDetector::Init(
 NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
               PRUint32 aLen, bool* oDontFeedMe)
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
 
-  if((nsnull == aBuf) || (nsnull == oDontFeedMe))
+  if((nullptr == aBuf) || (nullptr == oDontFeedMe))
     return NS_ERROR_ILLEGAL_VALUE;
 
   this->Reset();
@@ -71,7 +71,7 @@ NS_IMETHODIMP nsXPCOMDetector::DoIt(const char* aBuf,
 //----------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::Done()
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
 #ifdef DEBUG_chardet
   for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
   {
@@ -88,7 +88,7 @@ NS_IMETHODIMP nsXPCOMDetector::Done()
 //----------------------------------------------------------
 void nsXPCOMDetector::Report(const char* aCharset)
 {
-  NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  NS_ASSERTION(mObserver != nullptr , "have not init yet");
 #ifdef DEBUG_chardet
   printf("Universal Charset Detector report charset %s . \r\n", aCharset);
 #endif
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsXPCOMStringDetector::DoIt(const char* aBuf,
                      PRUint32 aLen, const char** oCharset,
                      nsDetectionConfident &oConf)
 {
-  mResult = nsnull;
+  mResult = nullptr;
   this->Reset();
   nsresult rv = this->HandleData(aBuf, aLen); 
   if (NS_FAILED(rv))

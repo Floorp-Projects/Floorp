@@ -74,7 +74,7 @@ static const txCoreFunctionDescriptor descriptTable[] =
 nsresult
 txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (!requireParams(descriptTable[mType].mMinParams,
                        descriptTable[mType].mMaxParams,
@@ -166,7 +166,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             switch (mType) {
                 case LOCAL_NAME:
                 {
-                    StringResult* strRes = nsnull;
+                    StringResult* strRes = nullptr;
                     rv = aContext->recycler()->getStringResult(&strRes);
                     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -177,7 +177,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
                 case NAMESPACE_URI:
                 {
-                    StringResult* strRes = nsnull;
+                    StringResult* strRes = nullptr;
                     rv = aContext->recycler()->getStringResult(&strRes);
                     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -192,7 +192,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     if (txXPathNodeUtils::isAttribute(node) ||
                         txXPathNodeUtils::isElement(node) ||
                         txXPathNodeUtils::isProcessingInstruction(node)) {
-                        StringResult* strRes = nsnull;
+                        StringResult* strRes = nullptr;
                         rv = aContext->recycler()->getStringResult(&strRes);
                         NS_ENSURE_SUCCESS(rv, rv);
 

@@ -51,7 +51,7 @@ using namespace mozilla::scache;
 extern void
 mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
 
-mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nsnull)
+mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nullptr)
 {
 }
 
@@ -83,7 +83,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     // Instead of calling NS_OpenURI, we create the channel ourselves and call
     // SetContentType, to avoid expensive MIME type lookups (bug 632490).
     rv = NS_NewChannel(getter_AddRefs(chan), uri, serv,
-                       nsnull, nsnull, nsIRequest::LOAD_NORMAL);
+                       nullptr, nullptr, nsIRequest::LOAD_NORMAL);
     if (NS_SUCCEEDED(rv)) {
         chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
         rv = chan->Open(getter_AddRefs(instream));
@@ -111,8 +111,8 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
 
     if (!charset.IsVoid()) {
         nsString script;
-        rv = nsScriptLoader::ConvertToUTF16(nsnull, reinterpret_cast<const PRUint8*>(buf.get()), len,
-                                            charset, nsnull, script);
+        rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const PRUint8*>(buf.get()), len,
+                                            charset, nullptr, script);
 
         if (NS_FAILED(rv)) {
             return ReportError(cx, LOAD_ERROR_BADCHARSET);
@@ -183,7 +183,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         NS_ENSURE_TRUE(xpc, NS_ERROR_FAILURE);
 
-        nsAXPCNativeCallContext *cc = nsnull;
+        nsAXPCNativeCallContext *cc = nullptr;
         rv = xpc->GetCurrentNativeCallContext(&cc);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -225,10 +225,10 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     nsCAutoString uriStr;
     nsCAutoString scheme;
 
-    JSScript* script = nsnull;
+    JSScript* script = nullptr;
 
     // Figure out who's calling us
-    if (!JS_DescribeScriptedCaller(cx, &script, nsnull)) {
+    if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
         // No scripted frame means we don't know who's calling, bail.
         return NS_ERROR_FAILURE;
     }
@@ -236,7 +236,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     // Suppress caching if we're compiling as content.
     StartupCache* cache = (principal == mSystemPrincipal)
                           ? StartupCache::GetSingleton()
-                          : nsnull;
+                          : nullptr;
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {
         return ReportError(cx, LOAD_ERROR_NOSERVICE);
@@ -244,7 +244,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     // Make sure to explicitly create the URI, since we'll need the
     // canonicalized spec.
-    rv = NS_NewURI(getter_AddRefs(uri), NS_LossyConvertUTF16toASCII(url).get(), nsnull, serv);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_LossyConvertUTF16toASCII(url).get(), nullptr, serv);
     if (NS_FAILED(rv)) {
         return ReportError(cx, LOAD_ERROR_NOURI);
     }
@@ -282,7 +282,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     cachePath.AppendPrintf("jssubloader/%d", version);
     PathifyURI(uri, cachePath);
 
-    script = nsnull;
+    script = nullptr;
     if (cache)
         rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     if (!script) {

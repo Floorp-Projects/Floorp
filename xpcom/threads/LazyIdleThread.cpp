@@ -36,7 +36,7 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
 : mMutex("LazyIdleThread::mMutex"),
   mOwningThread(NS_GetCurrentThread()),
   mIdleObserver(aIdleObserver),
-  mQueuedRunnables(nsnull),
+  mQueuedRunnables(nullptr),
   mIdleTimeoutMS(aIdleTimeoutMS),
   mPendingEventCount(0),
   mIdleNotificationCount(0),
@@ -186,7 +186,7 @@ LazyIdleThread::CleanupThread()
   nsCOMPtr<nsIThreadInternal> thread(do_QueryInterface(NS_GetCurrentThread()));
   NS_ASSERTION(thread, "This should always succeed!");
 
-  if (NS_FAILED(thread->SetObserver(nsnull))) {
+  if (NS_FAILED(thread->SetObserver(nullptr))) {
     NS_WARNING("Failed to set thread observer!");
   }
 
@@ -248,7 +248,7 @@ LazyIdleThread::ShutdownThread()
 
     if (mIdleObserver) {
       mIdleObserver->Observe(static_cast<nsIThread*>(this), IDLE_THREAD_TOPIC,
-                             nsnull);
+                             nullptr);
     }
 
 #ifdef DEBUG
@@ -275,9 +275,9 @@ LazyIdleThread::ShutdownThread()
     }
 
     // Now unset the queue.
-    mQueuedRunnables = nsnull;
+    mQueuedRunnables = nullptr;
 
-    mThread = nsnull;
+    mThread = nullptr;
 
     {
       MutexAutoLock lock(mMutex);
@@ -293,7 +293,7 @@ LazyIdleThread::ShutdownThread()
     rv = mIdleTimer->Cancel();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mIdleTimer = nsnull;
+    mIdleTimer = nullptr;
   }
 
   // If our temporary queue has any runnables then we need to dispatch them.
@@ -403,7 +403,7 @@ LazyIdleThread::GetPRThread(PRThread** aPRThread)
     return mThread->GetPRThread(aPRThread);
   }
 
-  *aPRThread = nsnull;
+  *aPRThread = nullptr;
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -417,7 +417,7 @@ LazyIdleThread::Shutdown()
   nsresult rv = ShutdownThread();
   NS_ASSERTION(!mThread, "Should have destroyed this by now!");
 
-  mIdleObserver = nsnull;
+  mIdleObserver = nullptr;
 
   NS_ENSURE_SUCCESS(rv, rv);
 

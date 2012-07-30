@@ -50,9 +50,9 @@ public:
   virtual nsIFrame* GetContentInsertionFrame() {
     nsIFrame* frame = GetFirstPrincipalChild();
 
-    // if no children return nsnull
+    // if no children return nullptr
     if (!frame)
-      return nsnull;
+      return nullptr;
 
     return frame->GetContentInsertionFrame();
   }
@@ -698,7 +698,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
     if (NS_FRAME_IS_FULLY_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus)) {
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
-      child = nsnull;
+      child = nullptr;
       break;
     } else {
       ++columnCount;
@@ -715,7 +715,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         
         if (NS_FAILED(rv)) {
           NS_NOTREACHED("Couldn't create continuation");
-          child = nsnull;
+          child = nullptr;
           break;
         }
       }
@@ -746,7 +746,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         if (continuationColumns.NotEmpty()) {
           SetOverflowFrames(PresContext(), continuationColumns);
         }
-        child = nsnull;
+        child = nullptr;
         break;
       }
     }
@@ -863,7 +863,7 @@ nsColumnSetFrame::DrainOverflowColumns()
       nsContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
                                               prev, this);
 
-      mFrames.InsertFrames(this, nsnull, *overflows);
+      mFrames.InsertFrames(this, nullptr, *overflows);
     }
   }
   
@@ -873,7 +873,7 @@ nsColumnSetFrame::DrainOverflowColumns()
   if (overflows) {
     // We're already the parent for these frames, so no need to set
     // their parent again.
-    mFrames.AppendFrames(nsnull, *overflows);
+    mFrames.AppendFrames(nullptr, *overflows);
   }
 }
 

@@ -42,7 +42,7 @@ public:
     }
     
     if (gInShutdown) {
-      gBluetoothService = nsnull;
+      gBluetoothService = nullptr;
     }
 
     nsCOMPtr<nsIThread> t;
@@ -208,14 +208,14 @@ BluetoothService::Get()
   // If we're in shutdown, don't create a new instance
   if (gInShutdown) {
     NS_WARNING("BluetoothService returns null during shutdown");
-    return nsnull;
+    return nullptr;
   }
 
   // Create new instance, register, return
   gBluetoothService = BluetoothService::Create();
   if (!gBluetoothService) {
     NS_WARNING("Cannot create bluetooth service!");
-    return nsnull;
+    return nullptr;
   }
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   MOZ_ASSERT(obs);
@@ -238,5 +238,5 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
     NS_WARNING("Can't unregister bluetooth service with xpcom shutdown!");
   }
 
-  return Stop(nsnull);
+  return Stop(nullptr);
 }

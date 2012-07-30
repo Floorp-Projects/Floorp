@@ -38,14 +38,14 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
-    mPushedFloats(nsnull),
-    mOverflowTracker(nsnull),
+    mPushedFloats(nullptr),
+    mOverflowTracker(nullptr),
     mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0),
     mFloatBreakType(NS_STYLE_CLEAR_NONE)
 {
-  SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nsnull);
+  SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
   SetFlag(BRS_ISOVERFLOWCONTAINER,
           IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
@@ -107,7 +107,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mContentArea.x = borderPadding.left;
   mY = mContentArea.y = borderPadding.top;
 
-  mPrevChild = nsnull;
+  mPrevChild = nullptr;
   mCurrentLine = aFrame->end_lines();
 
   mMinLineHeight = aReflowState.CalcLineHeight();
@@ -670,7 +670,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
       // see if the previous float is also a table and has "align"
       nsFloatCache* fc = mCurrentLineFloats.Head();
-      nsIFrame* prevFrame = nsnull;
+      nsIFrame* prevFrame = nullptr;
       while (fc) {
         if (fc->mFloat == aFloat) {
           break;

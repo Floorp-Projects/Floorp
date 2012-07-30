@@ -326,8 +326,8 @@ class nsAutoFloatManager {
 public:
   nsAutoFloatManager(nsHTMLReflowState& aReflowState)
     : mReflowState(aReflowState),
-      mNew(nsnull),
-      mOld(nsnull) {}
+      mNew(nullptr),
+      mOld(nullptr) {}
 
   ~nsAutoFloatManager();
 

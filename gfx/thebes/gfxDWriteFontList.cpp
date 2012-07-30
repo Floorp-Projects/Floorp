@@ -577,7 +577,7 @@ gfxDWriteFontList::GetDefaultFont(const gfxFontStyle *aStyle,
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 gfxFontEntry *
@@ -595,7 +595,7 @@ gfxDWriteFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     if (!(lookup = mPostscriptNames.GetWeak(aFullname)) &&
         !(lookup = mFullnames.GetWeak(aFullname))) 
     {
-        return nsnull;
+        return nullptr;
     }
     gfxDWriteFontEntry* dwriteLookup = static_cast<gfxDWriteFontEntry*>(lookup);
     gfxDWriteFontEntry *fe =
@@ -618,7 +618,7 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
     if (NS_FAILED(rv)) {
         NS_Free((void*)aFontData);
-        return nsnull;
+        return nullptr;
     }
 
     FallibleTArray<PRUint8> newFontData;
@@ -627,7 +627,7 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     NS_Free((void*)aFontData);
 
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
     
     nsRefPtr<IDWriteFontFile> fontFile;
@@ -645,13 +645,13 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1");
     if (!uuidgen) {
-        return nsnull;
+        return nullptr;
     }
 
     rv = uuidgen->GenerateUUIDInPlace(&key.mGUID);
 
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
@@ -662,7 +662,7 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
     if (FAILED(hr)) {
         NS_WARNING("Failed to create custom font file reference.");
-        return nsnull;
+        return nullptr;
     }
 
     BOOL isSupported;
@@ -680,7 +680,7 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     if (!isSupported || numFaces > 1) {
         // We don't know how to deal with 0 faces either.
         delete entry;
-        return nsnull;
+        return nullptr;
     }
 
     return entry;
@@ -1113,7 +1113,7 @@ gfxDWriteFontList::GetDirectWriteSubstitutes()
         const FontSubstitution& sub(sDirectWriteSubs[i]);
         nsAutoString substituteName((PRUnichar*)sub.aliasName);
         BuildKeyNameFromFontName(substituteName);
-        if (nsnull != mFontFamilies.GetWeak(substituteName)) {
+        if (nullptr != mFontFamilies.GetWeak(substituteName)) {
             // don't do the substitution if user actually has a usable font
             // with this name installed
             continue;
@@ -1121,7 +1121,7 @@ gfxDWriteFontList::GetDirectWriteSubstitutes()
         nsAutoString actualFontName((PRUnichar*)sub.actualName);
         BuildKeyNameFromFontName(actualFontName);
         gfxFontFamily *ff;
-        if (nsnull != (ff = mFontFamilies.GetWeak(actualFontName))) {
+        if (nullptr != (ff = mFontFamilies.GetWeak(actualFontName))) {
             mFontSubstitutes.Put(substituteName, ff);
         } else {
             mNonExistingFonts.AppendElement(substituteName);
@@ -1329,7 +1329,7 @@ gfxDWriteFontList::GlobalFontFallback(const PRUint32 aCh,
     nsRefPtr<IDWriteFactory> dwFactory =
         gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
     if (!dwFactory) {
-        return nsnull;
+        return nullptr;
     }
 
     // initialize fallback renderer
@@ -1346,7 +1346,7 @@ gfxDWriteFontList::GlobalFontFallback(const PRUint32 aCh,
                                          72.0f, L"en-us",
                                          getter_AddRefs(mFallbackFormat));
         if (FAILED(hr)) {
-            return nsnull;
+            return nullptr;
         }
     }
 
@@ -1372,22 +1372,22 @@ gfxDWriteFontList::GlobalFontFallback(const PRUint32 aCh,
                                      200.0f, 200.0f,
                                      getter_AddRefs(fallbackLayout));
     if (FAILED(hr)) {
-        return nsnull;
+        return nullptr;
     }
 
     // call the draw method to invoke the DirectWrite layout functions
     // which determine the fallback font
     hr = fallbackLayout->Draw(NULL, mFallbackRenderer, 50.0f, 50.0f);
     if (FAILED(hr)) {
-        return nsnull;
+        return nullptr;
     }
 
-    gfxFontEntry *fontEntry = nsnull;
+    gfxFontEntry *fontEntry = nullptr;
     bool needsBold;  // ignored in the system fallback case
     fontEntry = FindFontForFamily(mFallbackRenderer->FallbackFamilyName(),
                                   aMatchStyle, needsBold);
     if (fontEntry && !fontEntry->TestCharacterMap(aCh)) {
-        fontEntry = nsnull;
+        fontEntry = nullptr;
         Telemetry::Accumulate(Telemetry::BAD_FALLBACK_FONT, true);
     }
     return fontEntry;

@@ -230,7 +230,7 @@ InitNegotiateAuth()
   return NS_OK;
 }
 #else
-#define InitNegotiateAuth nsnull
+#define InitNegotiateAuth nullptr
 #endif
 
 static void

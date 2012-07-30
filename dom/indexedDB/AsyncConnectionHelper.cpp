@@ -26,7 +26,7 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-IDBTransaction* gCurrentTransaction = nsnull;
+IDBTransaction* gCurrentTransaction = nullptr;
 
 const PRUint32 kProgressHandlerGranularity = 1000;
 
@@ -52,7 +52,7 @@ ConvertCloneReadInfosToArrayInternal(
                                 nsTArray<StructuredCloneReadInfo>& aReadInfos,
                                 jsval* aResult)
 {
-  JSObject* array = JS_NewArrayObject(aCx, 0, nsnull);
+  JSObject* array = JS_NewArrayObject(aCx, 0, nullptr);
   if (!array) {
     NS_WARNING("Failed to make array!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -130,7 +130,7 @@ HelperBase::ReleaseMainThreadObjects()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  mRequest = nsnull;
+  mRequest = nullptr;
 }
 
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabase* aDatabase,
@@ -288,7 +288,7 @@ AsyncConnectionHelper::Run()
     mResultCode = DoDatabaseWork(connection);
 
     if (mDatabase) {
-      IndexedDatabaseManager::SetCurrentWindow(nsnull);
+      IndexedDatabaseManager::SetCurrentWindow(nullptr);
 
       // Release or roll back the savepoint depending on the error code.
       if (hasSavepoint) {
@@ -505,8 +505,8 @@ AsyncConnectionHelper::ReleaseMainThreadObjects()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  mDatabase = nsnull;
-  mTransaction = nsnull;
+  mDatabase = nullptr;
+  mTransaction = nullptr;
 
   HelperBase::ReleaseMainThreadObjects();
 }
@@ -600,7 +600,7 @@ TransactionPoolEventTarget::Dispatch(nsIRunnable* aRunnable,
   TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
   NS_ENSURE_TRUE(pool, NS_ERROR_UNEXPECTED);
 
-  nsresult rv = pool->Dispatch(mTransaction, aRunnable, false, nsnull);
+  nsresult rv = pool->Dispatch(mTransaction, aRunnable, false, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

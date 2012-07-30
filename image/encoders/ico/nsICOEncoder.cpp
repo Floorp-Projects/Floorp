@@ -17,7 +17,7 @@ using namespace mozilla::image;
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsICOEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
-nsICOEncoder::nsICOEncoder() : mImageBufferStart(nsnull),
+nsICOEncoder::nsICOEncoder() : mImageBufferStart(nullptr),
                                mImageBufferCurr(0),
                                mImageBufferSize(0), 
                                mImageBufferReadPoint(0), 
@@ -31,8 +31,8 @@ nsICOEncoder::~nsICOEncoder()
 {
   if (mImageBufferStart) {
     moz_free(mImageBufferStart);
-    mImageBufferStart = nsnull;
-    mImageBufferCurr = nsnull;
+    mImageBufferStart = nullptr;
+    mImageBufferCurr = nullptr;
   }
 }
 
@@ -324,10 +324,10 @@ NS_IMETHODIMP nsICOEncoder::Close()
 {
   if (mImageBufferStart) {
     moz_free(mImageBufferStart);
-    mImageBufferStart = nsnull;
+    mImageBufferStart = nullptr;
     mImageBufferSize = 0;
     mImageBufferReadPoint = 0;
-    mImageBufferCurr = nsnull;
+    mImageBufferCurr = nullptr;
   }
 
   return NS_OK;
@@ -440,8 +440,8 @@ nsICOEncoder::NotifyListener()
     NS_ASSERTION(callback, "Shouldn't fail to make the callback");
     // Null the callback first because OnInputStreamReady could reenter
     // AsyncWait
-    mCallback = nsnull;
-    mCallbackTarget = nsnull;
+    mCallback = nullptr;
+    mCallbackTarget = nullptr;
     mNotifyThreshold = 0;
 
     callback->OnInputStreamReady(this);

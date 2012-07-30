@@ -46,7 +46,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
                             nsIURI *aBaseURI,
                             nsIURI **aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     // Extract inner URL and normalize to ASCII.  This is done to properly
     // support IDN in cases like "view-source:http://www.szalagavató.hu/"

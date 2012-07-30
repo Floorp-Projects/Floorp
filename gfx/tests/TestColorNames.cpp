@@ -26,7 +26,7 @@ static const nscolor kColors[] = {
 #undef GFX_COLOR
 
 static const char* kJunkNames[] = {
-  nsnull,
+  nullptr,
   "",
   "123",
   "backgroundz",

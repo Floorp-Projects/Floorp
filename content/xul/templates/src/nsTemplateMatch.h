@@ -48,7 +48,7 @@ public:
           mQuerySetPriority(aQuerySetPriority),
           mContainer(aContainer),
           mResult(aResult),
-          mNext(nsnull)
+          mNext(nullptr)
     {
       MOZ_COUNT_CTOR(nsTemplateMatch);
     }
@@ -66,7 +66,7 @@ public:
         void* place = aPool.Alloc(sizeof(nsTemplateMatch));
         return place ? ::new (place) nsTemplateMatch(aQuerySetPriority,
                                                      aResult, aContainer)
-                     : nsnull; }
+                     : nullptr; }
 
     static void Destroy(nsFixedSizeAllocator& aPool,
                         nsTemplateMatch*& aMatch,

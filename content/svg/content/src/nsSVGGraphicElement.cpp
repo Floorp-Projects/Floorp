@@ -61,7 +61,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement *
 /* nsIDOMSVGRect getBBox (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
@@ -79,7 +79,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, false);
-  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
   NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
@@ -88,7 +88,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix * *aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, true);
-  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
   NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
@@ -100,7 +100,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *eleme
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
   nsresult rv;
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsCOMPtr<nsIDOMSVGMatrix> ourScreenCTM;
   nsCOMPtr<nsIDOMSVGMatrix> targetScreenCTM;
   nsCOMPtr<nsIDOMSVGMatrix> tmp;
@@ -233,7 +233,7 @@ nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
       (aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform)) {
     return;
   }
-  mAnimateMotionTransform = aMatrix ? new gfxMatrix(*aMatrix) : nsnull;
+  mAnimateMotionTransform = aMatrix ? new gfxMatrix(*aMatrix) : nullptr;
   DidAnimateTransformList();
 }
 

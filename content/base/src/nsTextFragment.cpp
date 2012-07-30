@@ -66,8 +66,8 @@ nsTextFragment::Shutdown()
   for (i = 0; i <= TEXTFRAG_MAX_NEWLINES; ++i) {
     delete [] sSpaceSharedString[i];
     delete [] sTabSharedString[i];
-    sSpaceSharedString[i] = nsnull;
-    sTabSharedString[i] = nsnull;
+    sSpaceSharedString[i] = nullptr;
+    sTabSharedString[i] = nullptr;
   }
 }
 
@@ -84,7 +84,7 @@ nsTextFragment::ReleaseText()
     nsMemory::Free(m2b); // m1b == m2b as far as nsMemory is concerned
   }
 
-  m1b = nsnull;
+  m1b = nullptr;
   mState.mIsBidi = false;
 
   // Set mState.mIs2b, mState.mInHeap, and mState.mLength = 0 with mAllBits;

@@ -52,14 +52,14 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
   if (!aHostNameWithPort.Length())
     return NS_ERROR_INVALID_ARG;
 
-  *aStatus = nsnull;
+  *aStatus = nullptr;
   nsRefPtr<nsSSLStatus> status = new nsSSLStatus();
   if (!status)
     return NS_ERROR_OUT_OF_MEMORY;
 
   SECItem foundDER;
   foundDER.len = 0;
-  foundDER.data = nsnull;
+  foundDER.data = nullptr;
 
   bool isDomainMismatch = false;
   bool isNotValidAtThisTime = false;
@@ -69,7 +69,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
     ReentrantMonitorAutoEnter lock(monitor);
     for (size_t i=0; i<const_recently_seen_list_size; ++i) {
       if (mCerts[i].mHostWithPort.Equals(aHostNameWithPort)) {
-        SECStatus srv = SECITEM_CopyItem(nsnull, &foundDER, &mCerts[i].mDERCert);
+        SECStatus srv = SECITEM_CopyItem(nullptr, &foundDER, &mCerts[i].mDERCert);
         if (srv != SECSuccess)
           return NS_ERROR_OUT_OF_MEMORY;
 
@@ -86,7 +86,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
     nssCert = CERT_FindCertByDERCert(certdb, &foundDER);
     if (!nssCert) 
       nssCert = CERT_NewTempCertificate(certdb, &foundDER,
-                                        nsnull, // no nickname
+                                        nullptr, // no nickname
                                         false, // not perm
                                         true); // copy der
 

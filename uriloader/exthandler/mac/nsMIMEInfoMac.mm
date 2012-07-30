@@ -69,7 +69,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
     tempFile->GetFSRef(&tempFileRef);
 
     FSRef appFSRef;
-    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nsnull) == noErr)
+    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nullptr) == noErr)
     {
       app = (do_CreateInstance("@mozilla.org/file/local;1"));
       if (!app) return NS_ERROR_FAILURE;

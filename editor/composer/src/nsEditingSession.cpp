@@ -460,8 +460,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = editor->Init(domDoc, nsnull /* root content */,
-                    nsnull, mEditorFlags);
+  rv = editor->Init(domDoc, nullptr /* root content */,
+                    nullptr, mEditorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;
@@ -537,7 +537,7 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   if (mLoadBlankDocTimer)
   {
     mLoadBlankDocTimer->Cancel();
-    mLoadBlankDocTimer = nsnull;
+    mLoadBlankDocTimer = nullptr;
   }
 
   mDoneSetup = false;
@@ -565,12 +565,12 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   {
     // Null out the editor on the controllers first to prevent their weak 
     // references from pointing to a destroyed editor.
-    SetEditorOnControllers(aWindow, nsnull);
+    SetEditorOnControllers(aWindow, nullptr);
   }
 
   // Null out the editor on the docShell to trigger PreDestroy which
   // needs to happen before document state listeners are removed below.
-  editorDocShell->SetEditor(nsnull);
+  editorDocShell->SetEditor(nullptr);
 
   RemoveListenersAndControllers(aWindow, editor);
 
@@ -1041,7 +1041,7 @@ nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure)
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     if (webNav)
       webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(),
-                      0, nsnull, nsnull, nsnull);
+                      0, nullptr, nullptr, nullptr);
   }
 }
 
@@ -1117,13 +1117,13 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
 
   GetDocShellFromWindow
 
-  Utility method. This will always return nsnull if no docShell is found.
+  Utility method. This will always return nullptr if no docShell is found.
 ----------------------------------------------------------------------------*/
 nsIDocShell *
 nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(window, nsnull);
+  NS_ENSURE_TRUE(window, nullptr);
 
   return window->GetDocShell();
 }
@@ -1356,7 +1356,7 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
   if (mLoadBlankDocTimer)
   {
     mLoadBlankDocTimer->Cancel();
-    mLoadBlankDocTimer = nsnull;
+    mLoadBlankDocTimer = nullptr;
   }
 
   // Remove controllers, webprogress listener, and otherwise
@@ -1368,7 +1368,7 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 
   // Kill our weak reference to our original window, in case
   // it changes on restore, or otherwise dies.
-  mDocShell = nsnull;
+  mDocShell = nullptr;
 
   return NS_OK;
 }

@@ -65,7 +65,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_COLLATE##PLATFORM");
 
   // get locale string, use app default if no locale specified
-  if (locale == nsnull) {
+  if (locale == nullptr) {
     nsCOMPtr<nsILocaleService> localeService = 
              do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
@@ -167,7 +167,7 @@ nsresult nsCollationUnix::AllocateRawSortKey(PRInt32 strength,
   if (NS_SUCCEEDED(res) && str != NULL) {
     DoSetLocale();
     // call strxfrm to generate a key 
-    size_t len = strxfrm(nsnull, str, 0) + 1;
+    size_t len = strxfrm(nullptr, str, 0) + 1;
     void *buffer = PR_Malloc(len);
     if (!buffer) {
       res = NS_ERROR_OUT_OF_MEMORY;

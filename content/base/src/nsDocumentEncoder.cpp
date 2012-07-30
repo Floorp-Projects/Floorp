@@ -78,7 +78,7 @@ protected:
   void Initialize(bool aClearCachedSerializer = true);
   nsresult SerializeNodeStart(nsINode* aNode, PRInt32 aStartOffset,
                               PRInt32 aEndOffset, nsAString& aStr,
-                              nsINode* aOriginalNode = nsnull);
+                              nsINode* aOriginalNode = nullptr);
   nsresult SerializeToStringRecursive(nsINode* aNode,
                                       nsAString& aStr,
                                       bool aDontSerializeRoot);
@@ -190,7 +190,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocumentEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCommonParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nsnull)
+nsDocumentEncoder::nsDocumentEncoder() : mCachedBuffer(nullptr)
 {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
@@ -209,7 +209,7 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer)
   mDisableContextSerialize = false;
   mNodeIsContainer = false;
   if (aClearCachedSerializer) {
-    mSerializer = nsnull;
+    mSerializer = nullptr;
   }
 }
 
@@ -374,7 +374,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   if (!IsVisibleNode(aNode))
     return NS_OK;
   
-  nsINode* node = nsnull;
+  nsINode* node = nullptr;
   nsCOMPtr<nsINode> fixedNodeKungfuDeathGrip;
 
   // Caller didn't do fixup, so we'll do it ourselves
@@ -403,7 +403,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     }
     Element* originalElement =
       aOriginalNode && aOriginalNode->IsElement() ?
-        aOriginalNode->AsElement() : nsnull;
+        aOriginalNode->AsElement() : nullptr;
     mSerializer->AppendElementStart(node->AsElement(),
                                     originalElement, aStr);
     return NS_OK;
@@ -467,7 +467,7 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
 
   nsresult rv = NS_OK;
   bool serializeClonedChildren = false;
-  nsINode* maybeFixedNode = nsnull;
+  nsINode* maybeFixedNode = nullptr;
 
   // Keep the node from FixupNode alive.
   nsCOMPtr<nsINode> fixedNodeKungfuDeathGrip;
@@ -487,7 +487,7 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
       nsIFrame* frame = static_cast<nsIContent*>(aNode)->GetPrimaryFrame();
       if (frame) {
         bool isSelectable;
-        frame->IsSelectable(&isSelectable, nsnull);
+        frame->IsSelectable(&isSelectable, nullptr);
         if (!isSelectable){
           aDontSerializeRoot = true;
         }
@@ -657,7 +657,7 @@ static nsresult ChildAt(nsIDOMNode* aNode, PRInt32 aIndex, nsIDOMNode*& aChild)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
-  aChild = nsnull;
+  aChild = nullptr;
 
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
@@ -697,7 +697,7 @@ static nsresult GetNextNode(nsIDOMNode* aNode, nsTArray<PRInt32>& aIndexArray,
 {
   bool hasChildren;
 
-  aNextNode = nsnull;
+  aNextNode = nullptr;
 
   aNode->HasChildNodes(&hasChildren);
 
@@ -835,7 +835,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
       
       // do some calculations that will tell us which children of this
       // node are in the range.
-      nsIContent* childAsNode = nsnull;
+      nsIContent* childAsNode = nullptr;
       PRInt32 startOffset = 0, endOffset = -1;
       if (startNode == content && mStartRootIndex >= aDepth)
         startOffset = mStartOffsets[mStartRootIndex - aDepth];
@@ -1034,7 +1034,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
   static_cast<PRUnichar*>(mCachedBuffer->Data())[0] = PRUnichar(0);
   mCachedBuffer->ToString(0, output, true);
   // output owns the buffer now!
-  mCachedBuffer = nsnull;
+  mCachedBuffer = nullptr;
   
 
   if (!mSerializer) {
@@ -1108,7 +1108,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
           mDisableContextSerialize = false;
           rv = SerializeRangeContextEnd(mCommonAncestors, output);
           NS_ENSURE_SUCCESS(rv, rv);
-          prevNode = nsnull;
+          prevNode = nullptr;
         }
       }
 
@@ -1131,11 +1131,11 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     // Just to be safe
     mDisableContextSerialize = false; 
 
-    mSelection = nsnull;
+    mSelection = nullptr;
   } else if (mRange) {
       rv = SerializeRangeToString(mRange, output);
 
-      mRange = nsnull;
+      mRange = nullptr;
   } else if (mNode) {
     if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mStream &&
         mNodeIsContainer) {
@@ -1143,7 +1143,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     } else {
       rv = SerializeToStringRecursive(mNode, output, mNodeIsContainer);
     }
-    mNode = nsnull;
+    mNode = nullptr;
   } else {
     rv = mSerializer->AppendDocumentStart(mDocument, output);
 
@@ -1169,7 +1169,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
         mCachedBuffer->ToString(output.Length(), aOutputString);
         setOutput = true;
       }
-      mCachedBuffer = nsnull;
+      mCachedBuffer = nullptr;
     }
   }
 
@@ -1198,7 +1198,7 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mMimeType.LowerCaseEqualsLiteral("text/plain")) {
-    rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+    rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, '?');
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1211,8 +1211,8 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
   // Force a flush of the last chunk of data.
   FlushText(buf, true);
 
-  mStream = nsnull;
-  mUnicodeEncoder = nsnull;
+  mStream = nullptr;
+  mUnicodeEncoder = nullptr;
 
   return rv;
 }

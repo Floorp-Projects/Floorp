@@ -98,7 +98,7 @@ DOMSVGPathSegList::GetItemAt(PRUint32 aIndex)
     EnsureItemAt(aIndex);
     return ItemAt(aIndex);
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -167,7 +167,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
     newSegType = SVGPathSegUtils::DecodeType(aNewValue.mData[dataIndex]);
     if (ItemAt(index) && ItemAt(index)->Type() != newSegType) {
       ItemAt(index)->RemovingFromList();
-      ItemAt(index) = nsnull;
+      ItemAt(index) = nullptr;
     }
     // Only after the RemovingFromList() can we touch mInternalDataIndex!
     mItems[index].mInternalDataIndex = dataIndex;
@@ -188,7 +188,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
     for (; index < length; ++index) {
       if (ItemAt(index)) {
         ItemAt(index)->RemovingFromList();
-        ItemAt(index) = nsnull;
+        ItemAt(index) = nullptr;
       }
     }
 
@@ -206,7 +206,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
         // have FEWER items than it does.
         return;
       }
-      if (!mItems.AppendElement(ItemProxy(nsnull, dataIndex))) {
+      if (!mItems.AppendElement(ItemProxy(nullptr, dataIndex))) {
         // OOM
         Clear();
         return;
@@ -289,7 +289,7 @@ NS_IMETHODIMP
 DOMSVGPathSegList::Initialize(nsIDOMSVGPathSeg *aNewItem,
                               nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -331,7 +331,7 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
                                     PRUint32 aIndex,
                                     nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -393,7 +393,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
                                PRUint32 aIndex,
                                nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -457,7 +457,7 @@ NS_IMETHODIMP
 DOMSVGPathSegList::RemoveItem(PRUint32 aIndex,
                               nsIDOMSVGPathSeg **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -540,7 +540,7 @@ DOMSVGPathSegList::
   NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
                     "animVal list not in sync!");
 
-  animVal->mItems.InsertElementAt(aIndex, ItemProxy(nsnull, aInternalIndex));
+  animVal->mItems.InsertElementAt(aIndex, ItemProxy(nullptr, aInternalIndex));
 
   animVal->UpdateListIndicesFromIndex(aIndex + 1, 1 + aArgCountForItem);
 }

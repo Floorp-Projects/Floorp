@@ -34,7 +34,7 @@ class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 protected:
   nsSVGMarkerFrame(nsStyleContext* aContext)
     : nsSVGMarkerFrameBase(aContext)
-    , mMarkedFrame(nsnull)
+    , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
   {

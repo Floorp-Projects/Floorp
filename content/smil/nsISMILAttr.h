@@ -79,9 +79,9 @@ public:
    * null.
    *
    * @return the targeted content node, if this nsISMILAttr implementation
-   * wishes to make it avaiable.  Otherwise, nsnull.
+   * wishes to make it avaiable.  Otherwise, nullptr.
    */
-  virtual const nsIContent* GetTargetNode() const { return nsnull; }
+  virtual const nsIContent* GetTargetNode() const { return nullptr; }
 
   /**
    * Virtual destructor, to make sure subclasses can clean themselves up.

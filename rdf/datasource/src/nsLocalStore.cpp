@@ -208,11 +208,11 @@ LocalStoreImpl::~LocalStoreImpl(void)
 nsresult
 NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+    NS_PRECONDITION(aOuter == nullptr, "no aggregation");
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    NS_PRECONDITION(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
@@ -254,7 +254,7 @@ NS_IMETHODIMP
 LocalStoreImpl::GetLoaded(bool* _result)
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
-    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+    NS_ASSERTION(remote != nullptr, "not an nsIRDFRemoteDataSource");
 	if (! remote)
         return NS_ERROR_UNEXPECTED;
 
@@ -276,7 +276,7 @@ LocalStoreImpl::Flush()
     // assertion until we sort out the ordering of how we write
     // everything to the localstore, flush it, and disconnect it when
     // we're getting profile-change notifications.
-    NS_WARN_IF_FALSE(remote != nsnull, "not an nsIRDFRemoteDataSource");
+    NS_WARN_IF_FALSE(remote != nullptr, "not an nsIRDFRemoteDataSource");
 	if (! remote)
         return NS_ERROR_UNEXPECTED;
 
@@ -294,7 +294,7 @@ NS_IMETHODIMP
 LocalStoreImpl::Refresh(bool sync)
 {
 	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
-    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+    NS_ASSERTION(remote != nullptr, "not an nsIRDFRemoteDataSource");
 	if (! remote)
         return NS_ERROR_UNEXPECTED;
 
@@ -420,7 +420,7 @@ LocalStoreImpl::LoadData()
 NS_IMETHODIMP
 LocalStoreImpl::GetURI(char* *aURI)
 {
-    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    NS_PRECONDITION(aURI != nullptr, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 

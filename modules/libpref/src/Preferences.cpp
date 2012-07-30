@@ -56,9 +56,9 @@ static nsresult pref_InitInitialObjects(void);
 static nsresult pref_LoadPrefsInDirList(const char *listId);
 static nsresult ReadExtensionPrefs(nsIFile *aFile);
 
-Preferences* Preferences::sPreferences = nsnull;
-nsIPrefBranch* Preferences::sRootBranch = nsnull;
-nsIPrefBranch* Preferences::sDefaultRootBranch = nsnull;
+Preferences* Preferences::sPreferences = nullptr;
+nsIPrefBranch* Preferences::sRootBranch = nullptr;
+nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
 bool Preferences::sShutdown = false;
 
 class ValueObserverHashKey : public PLDHashEntryHdr {
@@ -155,9 +155,9 @@ struct CacheData {
   };
 };
 
-static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nsnull;
+static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nullptr;
 static nsRefPtrHashtable<ValueObserverHashKey,
-                         ValueObserver>* gObserverTable = nsnull;
+                         ValueObserver>* gObserverTable = nullptr;
 
 // static
 Preferences*
@@ -168,7 +168,7 @@ Preferences::GetInstanceForService()
     return sPreferences;
   }
 
-  NS_ENSURE_TRUE(!sShutdown, nsnull);
+  NS_ENSURE_TRUE(!sShutdown, nullptr);
 
   sRootBranch = new nsPrefBranch("", false);
   NS_ADDREF(sRootBranch);
@@ -181,7 +181,7 @@ Preferences::GetInstanceForService()
   if (NS_FAILED(sPreferences->Init())) {
     // The singleton instance will delete sRootBranch and sDefaultRootBranch.
     NS_RELEASE(sPreferences);
-    return nsnull;
+    return nullptr;
   }
 
   gCacheData = new nsTArray<nsAutoPtr<CacheData> >();
@@ -202,7 +202,7 @@ Preferences::InitStaticMembers()
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   }
 
-  return sPreferences != nsnull;
+  return sPreferences != nullptr;
 }
 
 // static
@@ -236,15 +236,15 @@ Preferences::~Preferences()
   NS_ASSERTION(sPreferences == this, "Isn't this the singleton instance?");
 
   delete gObserverTable;
-  gObserverTable = nsnull;
+  gObserverTable = nullptr;
 
   delete gCacheData;
-  gCacheData = nsnull;
+  gCacheData = nullptr;
 
   NS_RELEASE(sRootBranch);
   NS_RELEASE(sDefaultRootBranch);
 
-  sPreferences = nsnull;
+  sPreferences = nullptr;
 
   PREF_Cleanup();
 }
@@ -328,7 +328,7 @@ nsresult
 Preferences::ResetAndReadUserPrefs()
 {
   sPreferences->ResetUserPrefs();
-  return sPreferences->ReadUserPrefs(nsnull);
+  return sPreferences->ReadUserPrefs(nullptr);
 }
 
 NS_IMETHODIMP
@@ -344,10 +344,10 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       if (mCurrentFile) {
         mCurrentFile->Remove(false);
-        mCurrentFile = nsnull;
+        mCurrentFile = nullptr;
       }
     } else {
-      rv = SavePrefFile(nsnull);
+      rv = SavePrefFile(nullptr);
     }
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
@@ -369,7 +369,7 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
 
   nsresult rv;
 
-  if (nsnull == aFile) {
+  if (nullptr == aFile) {
     rv = UseDefaultPrefFile();
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
@@ -508,7 +508,7 @@ Preferences::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
   nsresult rv;
 
-  if ((nsnull != aPrefRoot) && (*aPrefRoot != '\0')) {
+  if ((nullptr != aPrefRoot) && (*aPrefRoot != '\0')) {
     // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
     nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, false);
     if (!prefBranch)
@@ -547,7 +547,7 @@ Preferences::NotifyServiceObservers(const char *aTopic)
     return NS_ERROR_FAILURE;
 
   nsISupports *subject = (nsISupports *)((nsIPrefService *)this);
-  observerService->NotifyObservers(subject, aTopic, nsnull);
+  observerService->NotifyObservers(subject, aTopic, nullptr);
   
   return NS_OK;
 }
@@ -618,7 +618,7 @@ Preferences::MakeBackupPrefFile(nsIFile *aFile)
     rv = newFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = aFile->CopyTo(nsnull, newFilename);
+  rv = aFile->CopyTo(nullptr, newFilename);
   NS_ENSURE_SUCCESS(rv, rv);
   return rv;
 }
@@ -653,7 +653,7 @@ Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
 nsresult
 Preferences::SavePrefFileInternal(nsIFile *aFile)
 {
-  if (nsnull == aFile) {
+  if (nullptr == aFile) {
     // the gDirty flag tells us if we should write to mCurrentFile
     // we only check this flag when the caller wants to write to the default
     if (!gDirty)
@@ -769,7 +769,7 @@ static nsresult openPrefFile(nsIFile* aFile)
     return rv;
 
   nsAutoArrayPtr<char> fileBuffer(new char[fileSize]);
-  if (fileBuffer == nsnull)
+  if (fileBuffer == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PrefParseState ps;
@@ -877,7 +877,7 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aS
     return rv;
   }
 
-  prefFiles.Sort(pref_CompareFileNames, nsnull);
+  prefFiles.Sort(pref_CompareFileNames, nullptr);
   
   PRUint32 arrayCount = prefFiles.Count();
   PRUint32 i;
@@ -937,7 +937,7 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
     if (Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi")))
       ReadExtensionPrefs(path);
     else
-      pref_LoadPrefsInDir(path, nsnull, 0);
+      pref_LoadPrefsInDir(path, nullptr, 0);
   }
   return NS_OK;
 }
@@ -1084,14 +1084,14 @@ static nsresult pref_InitInitialObjects()
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
-                                nsnull, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);
+                                nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (!observerService)
     return NS_ERROR_FAILURE;
 
-  observerService->NotifyObservers(nsnull, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nsnull);
+  observerService->NotifyObservers(nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr);
 
   return pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
 }

@@ -20,7 +20,7 @@
 static char*    g_Spaces;
 static int      g_InitState = 0;
 static int      g_Indent = 0;
-static PRLogModuleInfo* g_LogMod = nsnull;
+static PRLogModuleInfo* g_LogMod = nullptr;
 
 static bool Init()
 {
@@ -43,7 +43,7 @@ XPC_Log_Finish()
     if (g_InitState == 1) {
         delete [] g_Spaces;
         // we'd like to properly cleanup the LogModule, but nspr owns that
-        g_LogMod = nsnull;
+        g_LogMod = nullptr;
     }
     g_InitState = -1;
 }
@@ -112,7 +112,7 @@ LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
 void
 LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
 {
-    char* className = nsnull;
+    char* className = nullptr;
     nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(obj);
     if (ci)
         ci->GetClassDescription(&className);

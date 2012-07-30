@@ -30,7 +30,7 @@ public:
   nsImageToClipboard ( imgIContainer* inImage );
   ~nsImageToClipboard();
 
-    // Call to get the actual bits that go on the clipboard. If |nsnull|, the
+    // Call to get the actual bits that go on the clipboard. If |nullptr|, the
     // setup operations have failed.
     //
     // NOTE: The caller owns the handle and must delete it with ::GlobalRelease()

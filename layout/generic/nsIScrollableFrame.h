@@ -128,7 +128,7 @@ public:
    * The choosen point will be as close as possible to aScrollPosition.
    */
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
-                        const nsRect* aRange = nsnull) = 0;
+                        const nsRect* aRange = nullptr) = 0;
   /**
    * Scrolls to a particular position in integer CSS pixels.
    * Keeps the exact current horizontal or vertical position if the current
@@ -152,7 +152,7 @@ public:
    * values are in device pixels.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow = nsnull, nsIAtom *aOrigin = nsnull) = 0;
+                        nsIntPoint* aOverflow = nullptr, nsIAtom *aOrigin = nullptr) = 0;
   /**
    * This tells the scroll frame to try scrolling to the scroll
    * position that was restored from the history. This must be called

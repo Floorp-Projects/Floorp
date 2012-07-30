@@ -31,7 +31,7 @@ GetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * co
 static nsresult
 CallRemoteGetIconForExtension(const nsACString& aFileExt, PRUint32 aIconSize, PRUint8 * const aBuf)
 {
-  NS_ENSURE_TRUE(aBuf != nsnull, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aBuf != nullptr, NS_ERROR_NULL_POINTER);
 
   // An array has to be used to get data from remote process
   InfallibleTArray<PRUint8> bits;

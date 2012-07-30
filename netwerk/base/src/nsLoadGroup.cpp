@@ -33,7 +33,7 @@ using namespace mozilla;
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-static PRLogModuleInfo* gLoadGroupLog = nsnull;
+static PRLogModuleInfo* gLoadGroupLog = nullptr;
 #endif
 
 #define LOG(args) PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, args)
@@ -118,7 +118,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
 
 #if defined(PR_LOGGING)
     // Initialize the global PRLogModule for nsILoadGroup logging
-    if (nsnull == gLoadGroupLog)
+    if (nullptr == gLoadGroupLog)
         gLoadGroupLog = PR_NewLogModule("LoadGroup");
 #endif
 
@@ -127,7 +127,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     // Initialize the ops in the hash to null to make sure we get
     // consistent errors if someone fails to call ::Init() on an
     // nsLoadGroup.
-    mRequests.ops = nsnull;
+    mRequests.ops = nullptr;
 }
 
 nsLoadGroup::~nsLoadGroup()
@@ -161,9 +161,9 @@ nsresult nsLoadGroup::Init()
         RequestHashInitEntry
     };
 
-    if (!PL_DHashTableInit(&mRequests, &hash_table_ops, nsnull,
+    if (!PL_DHashTableInit(&mRequests, &hash_table_ops, nullptr,
                            sizeof(RequestMapEntry), 16)) {
-        mRequests.ops = nsnull;
+        mRequests.ops = nullptr;
 
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -227,7 +227,7 @@ AppendRequestsToArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
     nsIRequest *request = e->mKey;
     NS_ASSERTION(request, "What? Null key in pldhash entry?");
 
-    bool ok = array->AppendElement(request) != nsnull;
+    bool ok = array->AppendElement(request) != nullptr;
 
     if (!ok) {
         return PL_DHASH_STOP;
@@ -301,7 +301,7 @@ nsLoadGroup::Cancel(nsresult status)
         //
         // XXX: What should the context be?
         //
-        (void)RemoveRequest(request, nsnull, status);
+        (void)RemoveRequest(request, nullptr, status);
 
         // Cancel the request...
         rv = request->Cancel(status);
@@ -482,7 +482,7 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
         mLoadFlags &= nsIRequest::LOAD_REQUESTMASK;
 
         nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(aRequest);
-        mDefaultLoadIsTimed = timedChannel != nsnull;
+        mDefaultLoadIsTimed = timedChannel != nullptr;
         if (mDefaultLoadIsTimed) {
             timedChannel->GetChannelCreation(&mDefaultRequestCreationTime);
             timedChannel->SetTimingEnabled(true);
@@ -595,7 +595,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 
         // Ensure that we're part of our loadgroup while pending
         if (mForegroundCount == 1 && mLoadGroup) {
-            mLoadGroup->AddRequest(this, nsnull);
+            mLoadGroup->AddRequest(this, nullptr);
         }
 
     }
@@ -707,7 +707,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
 
         // If that was the last request -> remove ourselves from loadgroup
         if (mForegroundCount == 0 && mLoadGroup) {
-            mLoadGroup->RemoveRequest(this, nsnull, aStatus);
+            mLoadGroup->RemoveRequest(this, nullptr, aStatus);
         }
     }
 

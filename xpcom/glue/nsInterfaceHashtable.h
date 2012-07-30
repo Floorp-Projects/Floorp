@@ -31,7 +31,7 @@ public:
   /**
    * @copydoc nsBaseHashtable::Get
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
-   *   If the key doesn't exist, pData will be set to nsnull.
+   *   If the key doesn't exist, pData will be set to nullptr.
    */
   bool Get(KeyType aKey, UserDataType* pData) const;
 
@@ -42,11 +42,11 @@ public:
 
   /**
    * Gets a weak reference to the hashtable entry.
-   * @param aFound If not nsnull, will be set to true if the entry is found,
+   * @param aFound If not nullptr, will be set to true if the entry is found,
    *               to false otherwise.
-   * @return The entry, or nsnull if not found. Do not release this pointer!
+   * @return The entry, or nullptr if not found. Do not release this pointer!
    */
-  Interface* GetWeak(KeyType aKey, bool* aFound = nsnull) const;
+  Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 };
 
 /**
@@ -68,7 +68,7 @@ public:
   /**
    * @copydoc nsBaseHashtable::Get
    * @param pData This is an XPCOM getter, so pData is already_addrefed.
-   *   If the key doesn't exist, pData will be set to nsnull.
+   *   If the key doesn't exist, pData will be set to nullptr.
    */
   bool Get(KeyType aKey, UserDataType* pData) const;
 
@@ -104,7 +104,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
   // if the key doesn't exist, set *pInterface to null
   // so that it is a valid XPCOM getter
   if (pInterface)
-    *pInterface = nsnull;
+    *pInterface = nullptr;
 
   return false;
 }
@@ -136,10 +136,10 @@ nsInterfaceHashtable<KeyClass,Interface>::GetWeak
     return ent->mData;
   }
 
-  // Key does not exist, return nsnull and set aFound to false
+  // Key does not exist, return nullptr and set aFound to false
   if (aFound)
     *aFound = false;
-  return nsnull;
+  return nullptr;
 }
 
 //
@@ -172,7 +172,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
   // if the key doesn't exist, set *pInterface to null
   // so that it is a valid XPCOM getter
   if (pInterface)
-    *pInterface = nsnull;
+    *pInterface = nullptr;
 
   PR_Unlock(this->mLock);
 

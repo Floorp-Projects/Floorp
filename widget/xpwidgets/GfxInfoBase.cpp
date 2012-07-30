@@ -51,7 +51,7 @@ public:
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
     delete GfxInfoBase::mDriverInfo;
-    GfxInfoBase::mDriverInfo = nsnull;
+    GfxInfoBase::mDriverInfo = nullptr;
 
     for (PRUint32 i = 0; i < DeviceFamilyMax; i++)
       delete GfxDriverInfo::mDeviceFamilies[i];
@@ -94,7 +94,7 @@ NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReferenc
 static const char*
 GetPrefNameForFeature(PRInt32 aFeature)
 {
-  const char* name = nsnull;
+  const char* name = nullptr;
   switch(aFeature) {
     case nsIGfxInfo::FEATURE_DIRECT2D:
       name = BLACKLIST_PREF_BRANCH "direct2d";
@@ -225,7 +225,7 @@ BlacklistDevicesToDeviceFamily(nsIDOMNodeList* aDevices)
 {
   PRUint32 length;
   if (NS_FAILED(aDevices->GetLength(&length)))
-    return nsnull;
+    return nullptr;
 
   // For each <device>, get its device ID, and return a freshly-allocated
   // GfxDeviceFamily with the contents of that array.
@@ -650,7 +650,7 @@ GfxInfoBase::GetFeatureStatusImpl(PRInt32 aFeature,
                                   PRInt32* aStatus,
                                   nsAString& aSuggestedVersion,
                                   const nsTArray<GfxDriverInfo>& aDriverInfo,
-                                  OperatingSystem* aOS /* = nsnull */)
+                                  OperatingSystem* aOS /* = nullptr */)
 {
   if (*aStatus != nsIGfxInfo::FEATURE_STATUS_UNKNOWN) {
     // Terminate now with the status determined by the derived type (OS-specific
@@ -799,7 +799,7 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount, char ***failures)
   NS_ENSURE_ARG_POINTER(failureCount);
   NS_ENSURE_ARG_POINTER(failures);
 
-  *failures = nsnull;
+  *failures = nullptr;
   *failureCount = mFailureCount;
 
   if (*failureCount != 0) {
@@ -873,7 +873,7 @@ GfxInfoBase::RemoveCollector(GfxInfoCollectorBase* collector)
   }
   if (sCollectors->IsEmpty()) {
     delete sCollectors;
-    sCollectors = nsnull;
+    sCollectors = nullptr;
   }
 }
 

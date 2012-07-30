@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS1(nsMacDockSupport, nsIMacDockSupport)
 NS_IMETHODIMP
 nsMacDockSupport::GetDockMenu(nsIStandaloneNativeMenu ** aDockMenu)
 {
-  *aDockMenu = nsnull;
+  *aDockMenu = nullptr;
 
   if (mDockMenu)
     return mDockMenu->QueryInterface(NS_GET_IID(nsIStandaloneNativeMenu),

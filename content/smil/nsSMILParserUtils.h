@@ -71,7 +71,7 @@ public:
    *
    * Because the value "media" cannot be represented as part of an
    * nsSMILTimeValue and has different meanings depending on where it is used,
-   * it is passed out as a separate parameter (which can be set to nsnull if the
+   * it is passed out as a separate parameter (which can be set to nullptr if the
    * media attribute is not allowed).
    *
    * @param aSpec    The string containing a clock value, e.g. "10s"
@@ -91,7 +91,7 @@ public:
   static nsresult ParseClockValue(const nsAString& aSpec,
                                   nsSMILTimeValue* aResult,
                                   PRUint32 aFlags = 0,
-                                  bool* aIsMedia = nsnull);
+                                  bool* aIsMedia = nullptr);
 
   /*
    * This method checks whether the given string looks like a negative number.

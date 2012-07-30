@@ -137,7 +137,7 @@ nsSVGCircleElement::ConstructPath(gfxContext *aCtx)
 {
   float x, y, r;
 
-  GetAnimatedLengthValues(&x, &y, &r, nsnull);
+  GetAnimatedLengthValues(&x, &y, &r, nullptr);
 
   if (r > 0.0f)
     aCtx->Arc(gfxPoint(x, y), r, 0, 2*M_PI);

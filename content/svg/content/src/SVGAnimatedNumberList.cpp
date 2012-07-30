@@ -114,7 +114,7 @@ SVGAnimatedNumberList::ClearAnimValue(nsSVGElement *aElement,
     //
     domWrapper->InternalAnimValListWillChangeTo(mBaseVal);
   }
-  mAnimVal = nsnull;
+  mAnimVal = nullptr;
   aElement->DidAnimateNumberList(aAttrEnum);
 }
 

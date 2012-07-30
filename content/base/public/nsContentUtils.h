@@ -324,10 +324,10 @@ public:
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
                                nsINode* aParent2, PRInt32 aOffset2,
-                               bool* aDisconnected = nsnull);
+                               bool* aDisconnected = nullptr);
   static PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                nsIDOMNode* aParent2, PRInt32 aOffset2,
-                               bool* aDisconnected = nsnull);
+                               bool* aDisconnected = nullptr);
 
   /**
    * Brute-force search of the element subtree rooted at aContent for
@@ -548,7 +548,7 @@ public:
    * @return boolean indicating whether a BOM was detected.
    */
   static bool CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
-                          nsACString& aCharset, bool *bigEndian = nsnull);
+                          nsACString& aCharset, bool *bigEndian = nullptr);
 
   static nsresult GuessCharset(const char *aData, PRUint32 aDataLen,
                                nsACString &aCharset);
@@ -566,7 +566,7 @@ public:
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
-                             const PRUnichar** aColon = nsnull);
+                             const PRUnichar** aColon = nullptr);
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
                              const nsAFlatString& aQName,
@@ -624,8 +624,8 @@ public:
    * Method that gets the primary presContext for the node.
    * 
    * @param aContent The content node.
-   * @return the presContext, or nsnull if the content is not in a document
-   *         (if GetCurrentDoc returns nsnull)
+   * @return the presContext, or nullptr if the content is not in a document
+   *         (if GetCurrentDoc returns nullptr)
    */
   static nsPresContext* GetContextForContent(const nsIContent* aContent);
 
@@ -649,7 +649,7 @@ public:
                              nsISupports* aContext,
                              nsIDocument* aLoadingDocument,
                              nsIPrincipal* aLoadingPrincipal,
-                             PRInt16* aImageBlockingStatus = nsnull);
+                             PRInt16* aImageBlockingStatus = nullptr);
   /**
    * Method to start an image load.  This does not do any security checks.
    * This method will attempt to make aURI immutable; a caller that wants to
@@ -683,7 +683,7 @@ public:
    * @param aRequest The image request [out]
    * @return the imgIContainer corresponding to the first frame of the image
    */
-  static already_AddRefed<imgIContainer> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nsnull);
+  static already_AddRefed<imgIContainer> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nullptr);
 
   /**
    * Helper method to call imgIRequest::GetStaticRequest.
@@ -770,10 +770,10 @@ public:
    *   @param aDocument Reference to the document which triggered the message.
    *   @param aFile Properties file containing localized message.
    *   @param aMessageName Name of localized message.
-   *   @param [aParams=nsnull] (Optional) Parameters to be substituted into
+   *   @param [aParams=nullptr] (Optional) Parameters to be substituted into
               localized message.
    *   @param [aParamsLength=0] (Optional) Length of aParams.
-   *   @param [aURI=nsnull] (Optional) URI of resource containing error.
+   *   @param [aURI=nullptr] (Optional) URI of resource containing error.
    *   @param [aSourceLine=EmptyString()] (Optional) The text of the line that
               contains the error (may be empty).
    *   @param [aLineNumber=0] (Optional) Line number within resource
@@ -801,9 +801,9 @@ public:
                                   nsIDocument* aDocument,
                                   PropertiesFile aFile,
                                   const char *aMessageName,
-                                  const PRUnichar **aParams = nsnull,
+                                  const PRUnichar **aParams = nullptr,
                                   PRUint32 aParamsLength = 0,
-                                  nsIURI* aURI = nsnull,
+                                  nsIURI* aURI = nullptr,
                                   const nsAFlatString& aSourceLine
                                     = EmptyString(),
                                   PRUint32 aLineNumber = 0,
@@ -936,7 +936,7 @@ public:
                                        const nsAString& aEventName,
                                        bool aCanBubble,
                                        bool aCancelable,
-                                       bool *aDefaultAction = nsnull);
+                                       bool *aDefaultAction = nullptr);
                                        
   /**
    * This method creates and dispatches a untrusted event.
@@ -956,7 +956,7 @@ public:
                                          const nsAString& aEventName,
                                          bool aCanBubble,
                                          bool aCancelable,
-                                         bool *aDefaultAction = nsnull);
+                                         bool *aDefaultAction = nullptr);
 
   /**
    * This method creates and dispatches a trusted event to the chrome
@@ -978,7 +978,7 @@ public:
                                       const nsAString& aEventName,
                                       bool aCanBubble,
                                       bool aCancelable,
-                                      bool *aDefaultAction = nsnull);
+                                      bool *aDefaultAction = nullptr);
 
   /**
    * Determines if an event attribute name (such as onclick) is valid for
@@ -1344,7 +1344,7 @@ public:
                                           PRUint32 aContentPolicyType,
                                           nsISupports* aContext,
                                           const nsACString& aMimeGuess = EmptyCString(),
-                                          nsISupports* aExtra = nsnull);
+                                          nsISupports* aExtra = nullptr);
 
   /**
    * Returns true if aPrincipal is the system principal.
@@ -1677,15 +1677,15 @@ public:
    */
   static nsresult DispatchXULCommand(nsIContent* aTarget,
                                      bool aTrusted,
-                                     nsIDOMEvent* aSourceEvent = nsnull,
-                                     nsIPresShell* aShell = nsnull,
+                                     nsIDOMEvent* aSourceEvent = nullptr,
+                                     nsIPresShell* aShell = nullptr,
                                      bool aCtrl = false,
                                      bool aAlt = false,
                                      bool aShift = false,
                                      bool aMeta = false);
 
   /**
-   * Gets the nsIDocument given the script context. Will return nsnull on failure.
+   * Gets the nsIDocument given the script context. Will return nullptr on failure.
    *
    * @param aScriptContext the script context to get the document for; can be null
    *
@@ -1707,10 +1707,10 @@ public:
                              nsISupports *native, const nsIID* aIID, jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, nsnull, aIID, vp, aHolder,
+    return WrapNative(cx, scope, native, nullptr, aIID, vp, aHolder,
                       aAllowWrapping);
   }
 
@@ -1719,10 +1719,10 @@ public:
                              nsISupports *native, jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, nsnull, nsnull, vp, aHolder,
+    return WrapNative(cx, scope, native, nullptr, nullptr, vp, aHolder,
                       aAllowWrapping);
   }
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
@@ -1730,10 +1730,10 @@ public:
                              jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, cache, nsnull, vp, aHolder,
+    return WrapNative(cx, scope, native, cache, nullptr, vp, aHolder,
                       aAllowWrapping);
   }
 
@@ -1793,7 +1793,7 @@ public:
    * layer manager should be used for retained layers
    */
   static already_AddRefed<mozilla::layers::LayerManager>
-  LayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nsnull);
+  LayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nullptr);
 
   /**
    * Returns a layer manager to use for the given document. Basically we
@@ -1810,7 +1810,7 @@ public:
    * layer manager should be used for retained layers
    */
   static already_AddRefed<mozilla::layers::LayerManager>
-  PersistentLayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nsnull);
+  PersistentLayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining = nullptr);
 
   /**
    * Determine whether a content node is focused or not,
@@ -1913,7 +1913,7 @@ public:
 
   static already_AddRefed<nsIDocumentLoaderFactory>
   FindInternalContentViewer(const char* aType,
-                            ContentViewerType* aLoaderType = nsnull);
+                            ContentViewerType* aLoaderType = nullptr);
 
   /**
    * This helper method returns true if the aPattern pattern matches aValue.
@@ -2091,7 +2091,7 @@ private:
                                 bool aCanBubble,
                                 bool aCancelable,
                                 bool aTrusted,
-                                bool *aDefaultAction = nsnull);
+                                bool *aDefaultAction = nullptr);
 
   static void InitializeModifierStrings();
 
@@ -2269,7 +2269,7 @@ public:
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
     foundInterface = static_cast<_interface *>(_allocator);                   \
     if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
+      *aInstancePtr = nullptr;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else
@@ -2313,10 +2313,10 @@ public:
 #define NS_CONTENT_DELETE_LIST_MEMBER(type_, ptr_, member_)                   \
   {                                                                           \
     type_ *cur = (ptr_)->member_;                                             \
-    (ptr_)->member_ = nsnull;                                                 \
+    (ptr_)->member_ = nullptr;                                                 \
     while (cur) {                                                             \
       type_ *next = cur->member_;                                             \
-      cur->member_ = nsnull;                                                  \
+      cur->member_ = nullptr;                                                  \
       delete cur;                                                             \
       cur = next;                                                             \
     }                                                                         \
@@ -2330,7 +2330,7 @@ public:
   nsresult GetParameter(const char* aParameterName, nsAString& aResult);
   nsresult GetType(nsAString& aResult)
   {
-    return GetParameter(nsnull, aResult);
+    return GetParameter(nullptr, aResult);
   }
 
 private:

@@ -48,17 +48,17 @@ public:
   {}
 
   /**
-   * The prescontext, possibly nsnull.
+   * The prescontext, possibly nullptr.
    */
   nsPresContext* const  mPresContext;
 
   /**
-   * The nsEvent which is being dispatched. Never nsnull.
+   * The nsEvent which is being dispatched. Never nullptr.
    */
   nsEvent* const        mEvent;
 
   /**
-   * The DOM Event assiciated with the mEvent. Possibly nsnull if a DOM Event
+   * The DOM Event assiciated with the mEvent. Possibly nullptr if a DOM Event
    * is not (yet) created.
    */
   nsIDOMEvent*          mDOMEvent;
@@ -103,17 +103,17 @@ public:
     mCanHandle(true), mForceContentDispatch(false),
     mRelatedTargetIsInAnon(false), mOriginalTargetIsInAnon(aIsInAnon),
     mWantsWillHandleEvent(false), mMayHaveListenerManager(true),
-    mParentTarget(nsnull), mEventTargetAtParent(nsnull) {}
+    mParentTarget(nullptr), mEventTargetAtParent(nullptr) {}
 
   void Reset() {
     mItemFlags = 0;
-    mItemData = nsnull;
+    mItemData = nullptr;
     mCanHandle = true;
     mForceContentDispatch = false;
     mWantsWillHandleEvent = false;
     mMayHaveListenerManager = true;
-    mParentTarget = nsnull;
-    mEventTargetAtParent = nsnull;
+    mParentTarget = nullptr;
+    mEventTargetAtParent = nullptr;
   }
 
   /**
@@ -202,7 +202,7 @@ public:
    * target chain, no matter what the value of aEvent->target is.
    * In other words, aEvent->target is only a property of the event and it has
    * nothing to do with the construction of the event target chain.
-   * Neither aTarget nor aEvent is allowed to be nsnull.
+   * Neither aTarget nor aEvent is allowed to be nullptr.
    *
    * If aTargets is non-null, event target chain will be created, but
    * event won't be handled. In this case aEvent->message should be
@@ -212,15 +212,15 @@ public:
   static nsresult Dispatch(nsISupports* aTarget,
                            nsPresContext* aPresContext,
                            nsEvent* aEvent,
-                           nsIDOMEvent* aDOMEvent = nsnull,
-                           nsEventStatus* aEventStatus = nsnull,
-                           nsDispatchingCallback* aCallback = nsnull,
-                           nsCOMArray<nsIDOMEventTarget>* aTargets = nsnull);
+                           nsIDOMEvent* aDOMEvent = nullptr,
+                           nsEventStatus* aEventStatus = nullptr,
+                           nsDispatchingCallback* aCallback = nullptr,
+                           nsCOMArray<nsIDOMEventTarget>* aTargets = nullptr);
 
   /**
    * Dispatches an event.
-   * If aDOMEvent is not nsnull, it is used for dispatching
-   * (aEvent can then be nsnull) and (if aDOMEvent is not |trusted| already),
+   * If aDOMEvent is not nullptr, it is used for dispatching
+   * (aEvent can then be nullptr) and (if aDOMEvent is not |trusted| already),
    * the |trusted| flag is set based on the UniversalXPConnect capability.
    * Otherwise this works like nsEventDispatcher::Dispatch.
    * @note Use this method when dispatching nsIDOMEvent.

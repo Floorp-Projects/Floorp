@@ -49,7 +49,7 @@
 static nsresult                                           \
 ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 {                                                         \
-  *aResult = nsnull;                                      \
+  *aResult = nullptr;                                      \
   if (aOuter)                                             \
     return NS_ERROR_NO_AGGREGATION;                       \
   iface_* inst;                                           \

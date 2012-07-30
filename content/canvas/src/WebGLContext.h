@@ -496,7 +496,7 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
-        { return nsnull; }
+        { return nullptr; }
 
     NS_IMETHOD SetIsOpaque(bool b) { return NS_OK; };
     NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
@@ -838,10 +838,10 @@ public:
                                -1, srcFormat, mPixelStorePremultiplyAlpha);
     }
     void TexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param) {
-        TexParameter_base(target, pname, nsnull, &param);
+        TexParameter_base(target, pname, nullptr, &param);
     }
     void TexParameteri(WebGLenum target, WebGLenum pname, WebGLint param) {
-        TexParameter_base(target, pname, &param, nsnull);
+        TexParameter_base(target, pname, &param, nullptr);
     }
     
     void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
@@ -1472,7 +1472,7 @@ public:
         , mHasEverBeenBound(false)
         , mByteLength(0)
         , mTarget(LOCAL_GL_NONE)
-        , mData(nsnull)
+        , mData(nullptr)
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenBuffers(1, &mGLName);
@@ -1487,7 +1487,7 @@ public:
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteBuffers(1, &mGLName);
         free(mData);
-        mData = nsnull;
+        mData = nullptr;
         mByteLength = 0;
         LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
     }
@@ -2617,12 +2617,12 @@ public:
 
     void SetTexture(WebGLTexture *tex, WebGLint level, WebGLenum face) {
         mTexturePtr = tex;
-        mRenderbufferPtr = nsnull;
+        mRenderbufferPtr = nullptr;
         mTextureLevel = level;
         mTextureCubeMapFace = face;
     }
     void SetRenderbuffer(WebGLRenderbuffer *rb) {
-        mTexturePtr = nsnull;
+        mTexturePtr = nullptr;
         mRenderbufferPtr = rb;
     }
     const WebGLTexture *Texture() const {
@@ -2649,8 +2649,8 @@ public:
     }
 
     void Reset() {
-        mTexturePtr = nsnull;
-        mRenderbufferPtr = nsnull;
+        mTexturePtr = nullptr;
+        mRenderbufferPtr = nullptr;
     }
 
     const WebGLRectangleObject* RectangleObject() const {
@@ -2659,7 +2659,7 @@ public:
         else if (Renderbuffer())
             return Renderbuffer();
         else
-            return nsnull;
+            return nullptr;
     }
     bool HasSameDimensionsAs(const WebGLFramebufferAttachment& other) const {
         const WebGLRectangleObject *thisRect = RectangleObject();
@@ -2891,24 +2891,24 @@ public:
 
     void DetachTexture(const WebGLTexture *tex) {
         if (mColorAttachment.Texture() == tex)
-            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D, nullptr, 0);
         if (mDepthAttachment.Texture() == tex)
-            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nullptr, 0);
         if (mStencilAttachment.Texture() == tex)
-            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nullptr, 0);
         if (mDepthStencilAttachment.Texture() == tex)
-            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nullptr, 0);
     }
 
     void DetachRenderbuffer(const WebGLRenderbuffer *rb) {
         if (mColorAttachment.Renderbuffer() == rb)
-            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_RENDERBUFFER, nsnull);
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_RENDERBUFFER, nullptr);
         if (mDepthAttachment.Renderbuffer() == rb)
-            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nullptr);
         if (mStencilAttachment.Renderbuffer() == rb)
-            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nullptr);
         if (mDepthStencilAttachment.Renderbuffer() == rb)
-            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nullptr);
     }
 
     const WebGLRectangleObject *RectangleObject() {
@@ -3196,7 +3196,7 @@ class WebGLMemoryMultiReporterWrapper
         contexts.RemoveElement(c);
         if (contexts.IsEmpty()) {
             delete sUniqueInstance; 
-            sUniqueInstance = nsnull;
+            sUniqueInstance = nullptr;
         }
     }
 

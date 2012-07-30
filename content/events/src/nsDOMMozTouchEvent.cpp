@@ -7,7 +7,7 @@
 #include "nsDOMMozTouchEvent.h"
 
 nsDOMMozTouchEvent::nsDOMMozTouchEvent(nsPresContext* aPresContext, nsMozTouchEvent* aEvent)
-  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent : new nsMozTouchEvent(false, 0, nsnull, 0))
+  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent : new nsMozTouchEvent(false, 0, nullptr, 0))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_MOZTOUCH_EVENT, "event type mismatch NS_MOZTOUCH_EVENT");
 
@@ -24,7 +24,7 @@ nsDOMMozTouchEvent::~nsDOMMozTouchEvent()
 {
   if (mEventIsInternal) {
     delete static_cast<nsMozTouchEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 

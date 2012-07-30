@@ -512,7 +512,7 @@ nsHTTPIndex::OnInformationAvailable(nsIRequest *aRequest,
 
 nsHTTPIndex::nsHTTPIndex()
   : mBindToGlobalObject(true),
-    mRequestor(nsnull)
+    mRequestor(nullptr)
 {
 }
 
@@ -534,11 +534,11 @@ nsHTTPIndex::~nsHTTPIndex()
         // be sure to cancel the timer, as it holds a
         // weak reference back to nsHTTPIndex
         mTimer->Cancel();
-        mTimer = nsnull;
+        mTimer = nullptr;
     }
 
-    mConnectionList = nsnull;
-    mNodeList = nsnull;
+    mConnectionList = nullptr;
+    mNodeList = nullptr;
     
     if (mDirRDF)
       {
@@ -625,7 +625,7 @@ nsHTTPIndex::Init()
 nsresult
 nsHTTPIndex::Init(nsIURI* aBaseURL)
 {
-  NS_PRECONDITION(aBaseURL != nsnull, "null ptr");
+  NS_PRECONDITION(aBaseURL != nullptr, "null ptr");
   if (! aBaseURL)
     return NS_ERROR_NULL_POINTER;
 
@@ -653,7 +653,7 @@ nsresult
 nsHTTPIndex::Create(nsIURI* aBaseURL, nsIInterfaceRequestor* aRequestor,
                     nsIHTTPIndex** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsHTTPIndex* result = new nsHTTPIndex(aRequestor);
   if (! result)
@@ -754,11 +754,11 @@ nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
 NS_IMETHODIMP
 nsHTTPIndex::GetURI(char * *uri)
 {
-	NS_PRECONDITION(uri != nsnull, "null ptr");
+	NS_PRECONDITION(uri != nullptr, "null ptr");
 	if (! uri)
 		return(NS_ERROR_NULL_POINTER);
 
-	if ((*uri = nsCRT::strdup("rdf:httpindex")) == nsnull)
+	if ((*uri = nsCRT::strdup("rdf:httpindex")) == nullptr)
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	return(NS_OK);
@@ -772,7 +772,7 @@ nsHTTPIndex::GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, bool aTru
 {
 	nsresult	rv = NS_ERROR_UNEXPECTED;
 
-	*_retval = nsnull;
+	*_retval = nullptr;
 
 	if (mInner)
 	{
@@ -804,7 +804,7 @@ nsHTTPIndex::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, bool 
 {
 	nsresult	rv = NS_ERROR_UNEXPECTED;
 
-	*_retval = nsnull;
+	*_retval = nullptr;
 
         if ((aTruthValue) && (aProperty == kNC_Child) && isWellknownContainerURI(aSource))
 	{
@@ -950,7 +950,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           rv = NS_NewURI(getter_AddRefs(url), uri.get());
           nsCOMPtr<nsIChannel>	channel;
           if (NS_SUCCEEDED(rv) && (url)) {
-            rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull);
+            rv = NS_NewChannel(getter_AddRefs(channel), url, nullptr, nullptr);
           }
           if (NS_SUCCEEDED(rv) && (channel)) {
             channel->SetNotificationCallbacks(httpIndex);
@@ -1030,7 +1030,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
     // be sure to cancel the timer, as it holds a
     // weak reference back to nsHTTPIndex
     httpIndex->mTimer->Cancel();
-    httpIndex->mTimer = nsnull;
+    httpIndex->mTimer = nullptr;
     
     // after firing off any/all of the connections be sure
     // to cancel the timer if we don't need to refire it
@@ -1170,7 +1170,7 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 {
 	nsresult	rv = NS_ERROR_UNEXPECTED;
 
-	*_retval = nsnull;
+	*_retval = nullptr;
 
 	nsCOMPtr<nsISupportsArray> array;
 	rv = NS_NewISupportsArray(getter_AddRefs(array));
@@ -1319,7 +1319,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, aLoadGroup);
+    rv = NS_NewChannel(getter_AddRefs(channel), uri, nullptr, aLoadGroup);
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIStreamListener> listener;
@@ -1328,7 +1328,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                  aDocViewerResult);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncOpen(listener, nsnull);
+    rv = channel->AsyncOpen(listener, nullptr);
     if (NS_FAILED(rv)) return rv;
     
     // Create an HTTPIndex object so that we can stuff it into the script context
@@ -1388,7 +1388,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   rv = scs->AsyncConvertData("application/http-index-format",
                              "text/html",
                              listener,
-                             nsnull,
+                             nullptr,
                              aDocListenerResult);
 
   if (NS_FAILED(rv)) return rv;

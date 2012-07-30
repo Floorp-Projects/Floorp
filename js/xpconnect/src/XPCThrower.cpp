@@ -19,7 +19,7 @@ XPCThrower::Throw(nsresult rv, JSContext* cx)
     const char* format;
     if (JS_IsExceptionPending(cx))
         return;
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
         format = "";
     BuildAndThrowException(cx, rv, format);
 }
@@ -48,7 +48,7 @@ XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
     XPCJSRuntime::Get()->GetPendingException(getter_AddRefs(e));
     if (!e)
         return false;
-    XPCJSRuntime::Get()->SetPendingException(nsnull);
+    XPCJSRuntime::Get()->SetPendingException(nullptr);
 
     nsresult e_result;
     if (NS_FAILED(e->GetResult(&e_result)) || e_result != result)
@@ -69,7 +69,7 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
     if (CheckForPendingException(rv, ccx))
         return;
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
         format = "";
 
     sz = (char*) format;
@@ -104,10 +104,10 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
 
     // else...
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format) || !format)
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format) || !format)
         format = "";
 
-    if (nsXPCException::NameAndFormatForNSResult(result, &name, nsnull) && name)
+    if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name)
         sz = JS_smprintf("%s 0x%x (%s)", format, result, name);
     else
         sz = JS_smprintf("%s 0x%x", format, result);
@@ -128,7 +128,7 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
     char* sz;
     const char* format;
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
         format = "";
 
     sz = JS_smprintf("%s arg %d", format, paramNum);
@@ -148,7 +148,7 @@ void
 XPCThrower::Verbosify(XPCCallContext& ccx,
                       char** psz, bool own)
 {
-    char* sz = nsnull;
+    char* sz = nullptr;
 
     if (ccx.HasInterfaceAndMember()) {
         XPCNativeInterface* iface = ccx.GetInterface();
@@ -179,7 +179,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
         return;
     nsCOMPtr<nsIException> finalException;
     nsCOMPtr<nsIException> defaultException;
-    nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(defaultException));
+    nsXPCException::NewException(sz, rv, nullptr, nullptr, getter_AddRefs(defaultException));
 
     nsIExceptionManager * exceptionManager = XPCJSRuntime::Get()->GetExceptionManager();
     if (exceptionManager) {
@@ -190,7 +190,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
                                                    getter_AddRefs(finalException));
         // We should get at least the defaultException back,
         // but just in case
-        if (finalException == nsnull) {
+        if (finalException == nullptr) {
             finalException = defaultException;
         }
     }

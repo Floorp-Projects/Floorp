@@ -61,7 +61,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
                                nsIURI *aBaseURI,
                                nsIURI **result)
 {
-    *result = nsnull;
+    *result = nullptr;
     nsresult rv;
 
     // Use a simple URI to parse out some stuff first
@@ -215,7 +215,7 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
 
     NS_TryToSetImmutable(url);
     
-    *result = nsnull;
+    *result = nullptr;
     url.swap(*result);
     return rv;
 }
@@ -223,7 +223,7 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsSafeAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
-    *result = nsnull;
+    *result = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -272,7 +272,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream* aStream)
     nsresult rv = nsSimpleNestedURI::Write(aStream);
     if (NS_FAILED(rv)) return rv;
 
-    rv = aStream->WriteBoolean(mBaseURI != nsnull);
+    rv = aStream->WriteBoolean(mBaseURI != nullptr);
     if (NS_FAILED(rv)) return rv;
 
     if (mBaseURI) {
@@ -324,7 +324,7 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode)
     // Sadly, we can't make use of nsSimpleNestedURI::StartClone here.
     // However, this function is expected to exactly match that function,
     // aside from the "new ns***URI()" call.
-    NS_ENSURE_TRUE(mInnerURI, nsnull);
+    NS_ENSURE_TRUE(mInnerURI, nullptr);
 
     nsCOMPtr<nsIURI> innerClone;
     nsresult rv = aRefHandlingMode == eHonorRef ?
@@ -332,7 +332,7 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode)
         mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
 
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);

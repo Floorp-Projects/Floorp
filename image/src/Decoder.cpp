@@ -45,7 +45,7 @@ Decoder::Init()
 
   // Fire OnStartDecode at init time to support bug 512435
   if (!IsSizeDecode() && mObserver)
-      mObserver->OnStartDecode(nsnull);
+      mObserver->OnStartDecode(nullptr);
 
   // Implementation-specific initialization
   InitInternal();
@@ -108,7 +108,7 @@ Decoder::Finish()
       if (NS_SUCCEEDED(errorObject->InitWithWindowID(
                          msg.get(),
                          NS_ConvertUTF8toUTF16(mImage.GetURIString()).get(),
-                         nsnull, 0, 0, nsIScriptError::errorFlag,
+                         nullptr, 0, 0, nsIScriptError::errorFlag,
                          "Image", mImage.InnerWindowID()
                        ))) {
         consoleService->LogMessage(errorObject);
@@ -124,8 +124,8 @@ Decoder::Finish()
 
     // Fire teardown notifications
     if (mObserver) {
-      mObserver->OnStopContainer(nsnull, &mImage);
-      mObserver->OnStopDecode(nsnull, salvage ? NS_OK : NS_ERROR_FAILURE, nsnull);
+      mObserver->OnStopContainer(nullptr, &mImage);
+      mObserver->OnStopDecode(nullptr, salvage ? NS_OK : NS_ERROR_FAILURE, nullptr);
     }
   }
 }
@@ -168,7 +168,7 @@ Decoder::FlushInvalidations()
     mInvalidRect = mInvalidRect.Intersect(mImageBound);
 #endif
     bool isCurrentFrame = mImage.GetCurrentFrameIndex() == (mFrameCount - 1);
-    mObserver->OnDataAvailable(nsnull, isCurrentFrame, &mInvalidRect);
+    mObserver->OnDataAvailable(nullptr, isCurrentFrame, &mInvalidRect);
   }
 
   // Clear the invalidation rectangle
@@ -199,7 +199,7 @@ Decoder::PostSize(PRInt32 aWidth, PRInt32 aHeight)
 
   // Notify the observer
   if (mObserver)
-    mObserver->OnStartContainer(nsnull, &mImage);
+    mObserver->OnStartContainer(nullptr, &mImage);
 }
 
 void
@@ -225,7 +225,7 @@ Decoder::PostFrameStart()
 
   // Fire notification
   if (mObserver)
-    mObserver->OnStartFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
+    mObserver->OnStartFrame(nullptr, mFrameCount - 1); // frame # is zero-indexed
 }
 
 void
@@ -242,10 +242,10 @@ Decoder::PostFrameStop()
 
   // Fire notifications
   if (mObserver) {
-    mObserver->OnStopFrame(nsnull, mFrameCount - 1); // frame # is zero-indexed
+    mObserver->OnStopFrame(nullptr, mFrameCount - 1); // frame # is zero-indexed
     if (mFrameCount > 1 && !mIsAnimated) {
       mIsAnimated = true;
-      mObserver->OnImageIsAnimated(nsnull);
+      mObserver->OnImageIsAnimated(nullptr);
     }
   }
 }
@@ -278,8 +278,8 @@ Decoder::PostDecodeDone()
   // Notify
   mImage.DecodingComplete();
   if (mObserver) {
-    mObserver->OnStopContainer(nsnull, &mImage);
-    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+    mObserver->OnStopContainer(nullptr, &mImage);
+    mObserver->OnStopDecode(nullptr, NS_OK, nullptr);
   }
 }
 

@@ -86,15 +86,15 @@ public:
     }
     if (mIsProcessManager) {
       if (this == sParentProcessManager) {
-        sParentProcessManager = nsnull;
+        sParentProcessManager = nullptr;
       }
       if (this == sChildProcessManager) {
-        sChildProcessManager = nsnull;
+        sChildProcessManager = nullptr;
         delete sPendingSameProcessAsyncMessages;
-        sPendingSameProcessAsyncMessages = nsnull;
+        sPendingSameProcessAsyncMessages = nullptr;
       }
       if (this == sSameProcessParentManager) {
-        sSameProcessParentManager = nsnull;
+        sSameProcessParentManager = nullptr;
       }
     }
   }
@@ -115,7 +115,7 @@ public:
                           bool aSync, const nsAString& aJSON,
                           JSObject* aObjectsArray,
                           InfallibleTArray<nsString>* aJSONRetVal,
-                          JSContext* aContext = nsnull);
+                          JSContext* aContext = nullptr);
   void AddChildManager(nsFrameMessageManager* aManager,
                        bool aLoadScripts = true);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -197,7 +197,7 @@ public:
   static void Shutdown();
 protected:
   friend class nsFrameScriptCx;
-  nsFrameScriptExecutor() : mCx(nsnull), mCxStackRefCnt(0),
+  nsFrameScriptExecutor() : mCx(nullptr), mCxStackRefCnt(0),
                             mDelayedCxDestroy(false)
   { MOZ_COUNT_CTOR(nsFrameScriptExecutor); }
   ~nsFrameScriptExecutor()

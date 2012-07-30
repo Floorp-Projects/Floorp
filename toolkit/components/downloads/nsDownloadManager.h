@@ -57,7 +57,7 @@ public:
       mDBType(DATABASE_DISK)
     , mInPrivateBrowsing(false)
 #ifdef DOWNLOAD_SCANNER
-    , mScanner(nsnull)
+    , mScanner(nullptr)
 #endif
   {
   }
@@ -351,7 +351,7 @@ protected:
 
   /**
    * Fail a download because of a failure status and prompt the provided
-   * message or use a generic download failure message if nsnull.
+   * message or use a generic download failure message if nullptr.
    */
   nsresult FailDownload(nsresult aStatus, const PRUnichar *aMessage);
 

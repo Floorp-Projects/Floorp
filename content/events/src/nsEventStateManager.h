@@ -292,7 +292,7 @@ protected:
    * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
    *        on the child the call originally came from, i.e. this is the child
    *        that recursively called us in its Up phase. The initial caller
-   *        passes |nsnull| here. This is to avoid an infinite loop.
+   *        passes |nullptr| here. This is to avoid an infinite loop.
    * @param aAccessKeyState Normal, Down or Up processing phase (see enums
    *        above). The initial event receiver uses 'normal', then 'down' when
    *        processing children and Up when recursively calling its ancestor.
@@ -337,8 +337,8 @@ protected:
                         nsMouseScrollEvent* aMouseEvent,
                         nsIScrollableFrame::ScrollUnit aScrollQuantity,
                         bool aAllowScrollSpeedOverride,
-                        nsQueryContentEvent* aQueryEvent = nsnull,
-                        nsIAtom *aOrigin = nsnull);
+                        nsQueryContentEvent* aQueryEvent = nullptr,
+                        nsIAtom *aOrigin = nullptr);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
@@ -427,7 +427,7 @@ protected:
                             nsIContent* aDragTarget,
                             nsISelection* aSelection);
 
-  bool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
+  bool IsTrackingDragGesture ( ) const { return mGestureDownContent != nullptr; }
   /**
    * Set the fields of aEvent to reflect the mouse position and modifier keys
    * that were set when the user first pressed the mouse button (stored by
@@ -570,7 +570,7 @@ public:
     if (aIsHandlingUserInput) {
       nsEventStateManager::StartHandlingUserInput();
       if (mIsMouseDown) {
-        nsIPresShell::SetCapturingContent(nsnull, 0);
+        nsIPresShell::SetCapturingContent(nullptr, 0);
         nsIPresShell::AllowMouseCapture(true);
         if (aDocument && NS_IS_TRUSTED_EVENT(aEvent)) {
           nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -592,7 +592,7 @@ public:
         if (mResetFMMouseDownState) {
           nsFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            fm->SetMouseButtonDownHandlingDocument(nsnull);
+            fm->SetMouseButtonDownHandlingDocument(nullptr);
           }
         }
       }
@@ -606,7 +606,7 @@ protected:
 
 private:
   // Hide so that this class can only be stack-allocated
-  static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nsnull; }
+  static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nullptr; }
   static void operator delete(void* /*memory*/) {}
 };
 

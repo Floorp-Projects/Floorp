@@ -172,7 +172,7 @@ private:
     bool     NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
-    PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nsnull, bool useEsc = false);
+    PRUint32 AppendSegmentToBuf(char *, PRUint32, const char *, URLSegment &, const nsCString *esc=nullptr, bool useEsc = false);
     PRUint32 AppendToBuf(char *, PRUint32, const char *, PRUint32);
 
     nsresult BuildNormalizedSpec(const char *spec);
