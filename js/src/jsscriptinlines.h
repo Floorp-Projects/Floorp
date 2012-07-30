@@ -28,7 +28,7 @@ Bindings::Bindings()
 {}
 
 inline void
-Bindings::transfer(Bindings *bindings)
+Bindings::transferFrom(Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
     JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());

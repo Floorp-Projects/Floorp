@@ -3713,10 +3713,13 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
             BindingVector names(cx);
             if (!GetOrderedBindings(cx, fun->script()->bindings, &names))
                 return false;
-
             for (size_t i = 0; i < fun->nargs; i++) {
-                PropertyName *name = names[i].maybeName;
-                result->setDenseArrayElement(i, name ? StringValue(name) : UndefinedValue());
+                Value v;
+                if (names[i].name->length() == 0)
+                    v = UndefinedValue();
+                else
+                    v = StringValue(names[i].name);
+                result->setDenseArrayElement(i, v);
             }
         }
     } else {
