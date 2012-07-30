@@ -375,7 +375,7 @@ GetURIAsUtf16StringBuffer(nsIURI* aUri)
 {
   nsCAutoString utf8String;
   nsresult rv = aUri->GetSpec(utf8String);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return nsCSSValue::BufferFromString(NS_ConvertUTF8toUTF16(utf8String));
 }
@@ -1122,9 +1122,9 @@ AddTransformScale(const nsCSSValue &aValue1, double aCoeff1,
   aResult.SetFloatValue(result + 1.0f, eCSSUnit_Number);
 }
 
-/* static */ already_AddRefed<nsCSSValue::Array>
-nsStyleAnimation::AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                                          nsCSSValueList**& aListTail)
+static already_AddRefed<nsCSSValue::Array>
+AppendTransformFunction(nsCSSKeyword aTransformFunction,
+                        nsCSSValueList**& aListTail)
 {
   nsRefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
   nsCSSValueList *item = new nsCSSValueList;
@@ -1284,7 +1284,7 @@ Decompose3DMatrix(const gfx3DMatrix &aMatrix, gfxPoint3D &aScale,
   /* Normalize the matrix */
   local.Normalize();
 
-  /**
+  /** 
    * perspective is used to solve for perspective, but it also provides
    * an easy way to test for singularity of the upper 3x3 component.
    */
@@ -1302,13 +1302,13 @@ Decompose3DMatrix(const gfx3DMatrix &aMatrix, gfxPoint3D &aScale,
     /* aPerspective is the right hand side of the equation. */
     aPerspective = local.TransposedVector(3);
 
-    /**
+    /** 
      * Solve the equation by inverting perspective and multiplying
      * aPerspective by the inverse.
      */
     perspective.Invert();
     aPerspective = perspective.TransposeTransform4D(aPerspective);
-
+    
     /* Clear the perspective partition */
     local.SetTransposedVector(3, empty);
   } else {
@@ -1326,11 +1326,11 @@ Decompose3DMatrix(const gfx3DMatrix &aMatrix, gfxPoint3D &aScale,
   /* Compute X scale factor and normalize first row. */
   aScale.x = local[0].Length();
   local[0] /= aScale.x;
-
+    
   /* Compute XY shear factor and make 2nd local orthogonal to 1st. */
   aShear[XYSHEAR] = local[0].DotProduct(local[1]);
   local[1] -= local[0] * aShear[XYSHEAR];
-
+  
   /* Now, compute Y scale and normalize 2nd local. */
   aScale.y = local[1].Length();
   local[1] /= aScale.y;
@@ -1407,11 +1407,11 @@ nsStyleAnimation::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
   // Interpolate each of the pieces
   gfx3DMatrix result;
 
-  gfxPointH3D perspective =
+  gfxPointH3D perspective = 
     InterpolateNumerically(perspective1, perspective2, aProgress);
   result.SetTransposedVector(3, perspective);
-
-  gfxPoint3D translate =
+ 
+  gfxPoint3D translate = 
     InterpolateNumerically(translate1, translate2, aProgress);
   result.Translate(translate);
 
@@ -1440,7 +1440,7 @@ nsStyleAnimation::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
     result.SkewXY(xyshear);
   }
 
-  gfxPoint3D scale =
+  gfxPoint3D scale = 
     InterpolateNumerically(scale1, scale2, aProgress);
   if (scale != gfxPoint3D(1.0, 1.0, 1.0)) {
     result.Scale(scale.x, scale.y, scale.z);
@@ -1457,8 +1457,8 @@ AddDifferentTransformLists(const nsCSSValueList* aList1, double aCoeff1,
   nsCSSValueList **resultTail = getter_Transfers(result);
 
   nsRefPtr<nsCSSValue::Array> arr;
-  arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_interpolatematrix, resultTail);
-
+  arr = AppendTransformFunction(eCSSKeyword_interpolatematrix, resultTail);
+  
   // FIXME: We should change the other transform code to also only
   // take a single progress value, as having values that don't
   // sum to 1 doesn't make sense for these.
@@ -1503,7 +1503,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
         tfunc != eCSSKeyword_interpolatematrix &&
         tfunc != eCSSKeyword_rotate3d &&
         tfunc != eCSSKeyword_perspective) {
-      arr = nsStyleAnimation::AppendTransformFunction(tfunc, resultTail);
+      arr = AppendTransformFunction(tfunc, resultTail);
     }
 
     switch (tfunc) {
@@ -2159,10 +2159,10 @@ BuildStyleRule(nsCSSProperty aProperty,
       // check whether property parsed without CSS parsing errors
       !declaration->HasNonImportantValueFor(propertyToCheck)) {
     NS_WARNING("failure in BuildStyleRule");
-    return nsnull;
+    return nullptr;
   }
 
-  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nsnull, declaration.forget());
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, declaration.forget());
   return rule.forget();
 }
 
@@ -2173,9 +2173,9 @@ LookupStyleContext(dom::Element* aElement)
   nsIDocument* doc = aElement->GetCurrentDoc();
   nsIPresShell* shell = doc->GetShell();
   if (!shell) {
-    return nsnull;
+    return nullptr;
   }
-  return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
+  return nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr, shell);
 }
 
 bool
@@ -2684,7 +2684,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
-          NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
+          NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nullptr) ==
                             (svg->mStrokeDasharrayLength != 0),
                             "pointer/length mismatch");
           nsAutoPtr<nsCSSValueList> result;
@@ -3070,7 +3070,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         *static_cast<const nsRefPtr<nsCSSShadowArray>*>(
           StyleDataAtOffset(styleStruct, ssOffset));
       if (!shadowArray) {
-        aComputedValue.SetAndAdoptCSSValueListValue(nsnull, eUnit_Shadow);
+        aComputedValue.SetAndAdoptCSSValueListValue(nullptr, eUnit_Shadow);
         return true;
       }
       nsAutoPtr<nsCSSValueList> result;
@@ -3212,7 +3212,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
           mUnit = eUnit_Null;
         }
       } else {
-        mValue.mCSSValueList = nsnull;
+        mValue.mCSSValueList = nullptr;
       }
       break;
     case eUnit_CSSValuePairList:
@@ -3314,7 +3314,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueValue(nsCSSValue *aValue,
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aValue != nsnull, "values may not be null");
+  NS_ABORT_IF_FALSE(aValue != nullptr, "values may not be null");
   mUnit = aUnit;
   mValue.mCSSValue = aValue; // take ownership
 }
@@ -3325,7 +3325,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValuePairUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aValuePair != nsnull, "value pairs may not be null");
+  NS_ABORT_IF_FALSE(aValuePair != nullptr, "value pairs may not be null");
   mUnit = aUnit;
   mValue.mCSSValuePair = aValuePair; // take ownership
 }
@@ -3336,7 +3336,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueTripletValue(
 {
     FreeValue();
     NS_ABORT_IF_FALSE(IsCSSValueTripletUnit(aUnit), "bad unit");
-    NS_ABORT_IF_FALSE(aValueTriplet != nsnull, "value pairs may not be null");
+    NS_ABORT_IF_FALSE(aValueTriplet != nullptr, "value pairs may not be null");
     mUnit = aUnit;
     mValue.mCSSValueTriplet = aValueTriplet; // take ownership
 }
@@ -3346,7 +3346,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSRectUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aRect != nsnull, "value pairs may not be null");
+  NS_ABORT_IF_FALSE(aRect != nullptr, "value pairs may not be null");
   mUnit = aUnit;
   mValue.mCSSRect = aRect; // take ownership
 }
@@ -3357,7 +3357,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueListUnit(aUnit), "bad unit");
-  NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aValueList != nsnull,
+  NS_ABORT_IF_FALSE(aUnit != eUnit_Dasharray || aValueList != nullptr,
                     "dasharrays may not be null");
   mUnit = aUnit;
   mValue.mCSSValueList = aValueList; // take ownership

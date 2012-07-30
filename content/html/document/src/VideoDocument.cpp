@@ -24,7 +24,7 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nsnull);
+                                     nsIContentSink*     aSink = nullptr);
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
 protected:
@@ -96,7 +96,7 @@ VideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
 
   // make content
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nsnull,
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::video, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);

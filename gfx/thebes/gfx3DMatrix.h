@@ -89,7 +89,7 @@ public:
    * Since drawing is to a 2d plane, any 3d transform without perspective
    * can be reduced by dropping the z row and column.
    */
-  bool CanDraw2D(gfxMatrix* aMatrix = nsnull) const;
+  bool CanDraw2D(gfxMatrix* aMatrix = nullptr) const;
 
   /**
    * Converts the matrix to one that doesn't modify the z coordinate of points,

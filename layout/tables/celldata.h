@@ -37,7 +37,7 @@ public:
   /** is the celldata valid
     * @return    is true if no cell originates and the cell is not spanned by
     *            a row- or colspan. mBits are 0 in this case and mOrigCell is
-    *            nsnull
+    *            nullptr
     */
   bool IsDead() const;
 
@@ -112,7 +112,7 @@ public:
   void SetOverlap(bool aOverlap);
 
   /** get the table cell frame for this entry
-    * @return    a pointer to the cellframe, this will be nsnull when the entry
+    * @return    a pointer to the cellframe, this will be nullptr when the entry
     *            is only a spanned entry
     */
   nsTableCellFrame* GetCellFrame() const;
@@ -277,7 +277,7 @@ inline nsTableCellFrame* CellData::GetCellFrame() const
   if (SPAN != (SPAN & mBits)) {
     return mOrigCell;
   }
-  return nsnull;
+  return nullptr;
 }
 
 inline void CellData::Init(nsTableCellFrame* aCellFrame)
@@ -287,7 +287,7 @@ inline void CellData::Init(nsTableCellFrame* aCellFrame)
 
 inline bool CellData::IsOrig() const
 {
-  return ((nsnull != mOrigCell) && (SPAN != (SPAN & mBits)));
+  return ((nullptr != mOrigCell) && (SPAN != (SPAN & mBits)));
 }
 
 inline bool CellData::IsDead() const

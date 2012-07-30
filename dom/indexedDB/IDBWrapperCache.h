@@ -37,7 +37,7 @@ public:
     nsCOMPtr<nsIScriptGlobalObject> parent;
     nsDOMEventTargetHelper::GetParentObject(getter_AddRefs(parent));
 
-    return parent ? parent->GetGlobalJSObject() : nsnull;
+    return parent ? parent->GetGlobalJSObject() : nullptr;
   }
 
   static IDBWrapperCache* FromSupports(nsISupports* aSupports)
@@ -56,7 +56,7 @@ public:
 
 protected:
   IDBWrapperCache()
-  : mScriptOwner(nsnull)
+  : mScriptOwner(nullptr)
   { }
 
   virtual ~IDBWrapperCache();

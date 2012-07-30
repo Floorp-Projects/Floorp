@@ -503,7 +503,7 @@ BluetoothDBusService::StopInternal()
     return NS_OK;
   }
   dbus_connection_remove_filter(mConnection, EventFilter, NULL);
-  mConnection = nsnull;
+  mConnection = nullptr;
   mBluetoothSignalObserverTable.Clear();
   StopDBus();
   return NS_OK;

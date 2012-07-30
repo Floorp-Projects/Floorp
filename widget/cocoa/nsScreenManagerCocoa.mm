@@ -109,7 +109,7 @@ nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **out
         return NS_OK;
     }
 
-    *outScreen = nsnull;
+    *outScreen = nullptr;
     return NS_OK;
 
     NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

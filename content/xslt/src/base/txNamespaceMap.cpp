@@ -20,7 +20,7 @@ txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
 nsresult
 txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
 {
-    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? nsnull : aPrefix;
+    nsIAtom* prefix = aPrefix == nsGkAtoms::_empty ? nullptr : aPrefix;
 
     PRInt32 nsId;
     if (prefix && aNamespaceURI.IsEmpty()) {
@@ -56,7 +56,7 @@ txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
-    if (mNamespaces.AppendElement(nsId) == nsnull) {
+    if (mNamespaces.AppendElement(nsId) == nullptr) {
         mPrefixes.RemoveObjectAt(mPrefixes.Count() - 1);
 
         return NS_ERROR_OUT_OF_MEMORY;
@@ -94,5 +94,5 @@ txNamespaceMap::lookupNamespaceWithDefault(const nsAString& aPrefix)
         return lookupNamespace(prefix);
     }
 
-    return lookupNamespace(nsnull);
+    return lookupNamespace(nullptr);
 }

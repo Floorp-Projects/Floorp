@@ -16,7 +16,7 @@
 nsresult
 UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsRefPtr<txAExprResult> exprRes;
     nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprRes));

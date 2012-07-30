@@ -333,7 +333,7 @@ public:
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
     mTexImage = CreateClampOrRepeatTextureImage(gl(), aSize, aType, aFlags);
-    return mTexImage ? mTexImage->GetBackingSurface() : nsnull;
+    return mTexImage ? mTexImage->GetBackingSurface() : nullptr;
   }
 
 protected:
@@ -479,13 +479,13 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
 
     if (mTexImage &&
         (mTexImage->GetContentType() != contentType ||
-         (mode == Layer::SURFACE_COMPONENT_ALPHA) != (mTexImageOnWhite != nsnull))) {
+         (mode == Layer::SURFACE_COMPONENT_ALPHA) != (mTexImageOnWhite != nullptr))) {
       // We're effectively clearing the valid region, so we need to draw
       // the entire needed region now.
       result.mRegionToInvalidate = mLayer->GetValidRegion();
       validRegion.SetEmpty();
-      mTexImage = nsnull;
-      mTexImageOnWhite = nsnull;
+      mTexImage = nullptr;
+      mTexImageOnWhite = nullptr;
       mBufferRect.SetRect(0, 0, 0, 0);
       mBufferRotation.MoveTo(0, 0);
       // Restart decision process with the cleared buffer. We can only go
@@ -732,9 +732,9 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
 }
 
 ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
-  : ThebesLayer(aManager, nsnull)
+  : ThebesLayer(aManager, nullptr)
   , LayerOGL(aManager)
-  , mBuffer(nsnull)
+  , mBuffer(nullptr)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -748,7 +748,7 @@ void
 ThebesLayerOGL::Destroy()
 {
   if (!mDestroyed) {
-    mBuffer = nsnull;
+    mBuffer = nullptr;
     mDestroyed = true;
   }
 }
@@ -860,7 +860,7 @@ ThebesLayerOGL::IsEmpty()
 void
 ThebesLayerOGL::CleanupResources()
 {
-  mBuffer = nsnull;
+  mBuffer = nullptr;
 }
 
 class ShadowBufferOGL : public ThebesLayerBufferOGL
@@ -968,7 +968,7 @@ ShadowBufferOGL::Swap(TextureImage* aNewBackBuffer,
 }
 
 ShadowThebesLayerOGL::ShadowThebesLayerOGL(LayerManagerOGL *aManager)
-  : ShadowThebesLayer(aManager, nsnull)
+  : ShadowThebesLayer(aManager, nullptr)
   , LayerOGL(aManager)
 {
 #ifdef FORCE_BASICTILEDTHEBESLAYER
@@ -1061,7 +1061,7 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
 void
 ShadowThebesLayerOGL::DestroyFrontBuffer()
 {
-  mBuffer = nsnull;
+  mBuffer = nullptr;
   mValidRegionForNextBackBuffer.SetEmpty();
   if (IsSurfaceDescriptorValid(mBufferDescriptor)) {
     mAllocator->DestroySharedSurface(&mBufferDescriptor);

@@ -57,7 +57,7 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
 {
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
-  *aInstancePtrResult = nsnull;
+  *aInstancePtrResult = nullptr;
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);

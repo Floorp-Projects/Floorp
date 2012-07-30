@@ -57,7 +57,7 @@ public:
     nsCOMPtr<StatementType> stmt;
     if (!mCachedStatements.Get(aQuery, getter_AddRefs(stmt))) {
       stmt = CreateStatement(aQuery);
-      NS_ENSURE_TRUE(stmt, nsnull);
+      NS_ENSURE_TRUE(stmt, nullptr);
 
       mCachedStatements.Put(aQuery, stmt);
     }
@@ -109,7 +109,7 @@ inline
 already_AddRefed<mozIStorageStatement>
 StatementCache<mozIStorageStatement>::CreateStatement(const nsACString& aQuery)
 {
-  NS_ENSURE_TRUE(mConnection, nsnull);
+  NS_ENSURE_TRUE(mConnection, nullptr);
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mConnection->CreateStatement(aQuery, getter_AddRefs(stmt));
@@ -124,7 +124,7 @@ StatementCache<mozIStorageStatement>::CreateStatement(const nsACString& aQuery)
     error.AppendLiteral("'.");
     NS_ERROR(error.get());
   }
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return stmt.forget();
 }
@@ -134,11 +134,11 @@ inline
 already_AddRefed<mozIStorageAsyncStatement>
 StatementCache<mozIStorageAsyncStatement>::CreateStatement(const nsACString& aQuery)
 {
-  NS_ENSURE_TRUE(mConnection, nsnull);
+  NS_ENSURE_TRUE(mConnection, nullptr);
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   nsresult rv = mConnection->CreateAsyncStatement(aQuery, getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return stmt.forget();
 }

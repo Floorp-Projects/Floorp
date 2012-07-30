@@ -62,7 +62,7 @@ nsComposerCommandsUpdater::NotifyDocumentWillBeDestroyed()
   if (mUpdateTimer)
   {
     mUpdateTimer->Cancel();
-    mUpdateTimer = nsnull;
+    mUpdateTimer = nullptr;
   }
   
   // We can't call this right now; it is too late in some cases and the window
@@ -359,10 +359,10 @@ already_AddRefed<nsPICommandUpdater>
 nsComposerCommandsUpdater::GetCommandUpdater()
 {
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  NS_ENSURE_TRUE(docShell, nsnull);
+  NS_ENSURE_TRUE(docShell, nullptr);
   nsCOMPtr<nsICommandManager> manager = do_GetInterface(docShell);
   nsCOMPtr<nsPICommandUpdater> updater = do_QueryInterface(manager);
-  nsPICommandUpdater* retVal = nsnull;
+  nsPICommandUpdater* retVal = nullptr;
   updater.swap(retVal);
   return retVal;
 }

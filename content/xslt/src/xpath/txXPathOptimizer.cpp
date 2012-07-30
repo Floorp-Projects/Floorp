@@ -34,7 +34,7 @@ public:
     void* getPrivateContext()
     {
         NS_NOTREACHED("shouldn't depend on this context");
-        return nsnull;
+        return nullptr;
     }
     txResultRecycler* recycler()
     {
@@ -50,7 +50,7 @@ public:
         // This will return an invalid node, but we should never
         // get here so that's fine.
 
-        return *static_cast<txXPathNode*>(nsnull);
+        return *static_cast<txXPathNode*>(nullptr);
     }
     PRUint32 size()
     {
@@ -71,7 +71,7 @@ private:
 nsresult
 txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
 {
-    *aOutExpr = nsnull;
+    *aOutExpr = nullptr;
     nsresult rv = NS_OK;
 
     // First check if the expression will produce the same result
@@ -102,7 +102,7 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
     PRUint32 i = 0;
     Expr* subExpr;
     while ((subExpr = aInExpr->getSubExprAt(i))) {
-        Expr* newExpr = nsnull;
+        Expr* newExpr = nullptr;
         rv = optimize(subExpr, &newExpr);
         NS_ENSURE_SUCCESS(rv, rv);
         if (newExpr) {
@@ -138,7 +138,7 @@ txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr)
 
     if (step->getAxisIdentifier() == LocationStep::ATTRIBUTE_AXIS) {
         // Test for @foo type steps.
-        txNameTest* nameTest = nsnull;
+        txNameTest* nameTest = nullptr;
         if (!step->getSubExprAt(0) &&
             step->getNodeTest()->getType() == txNameTest::NAME_TEST &&
             (nameTest = static_cast<txNameTest*>(step->getNodeTest()))->
@@ -213,7 +213,7 @@ txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr)
                 // as resulting expression.
                 if (!path->getSubExprAt(2)) {
                     *aOutExpr = path->getSubExprAt(1);
-                    path->setSubExprAt(1, nsnull);
+                    path->setSubExprAt(1, nullptr);
 
                     return NS_OK;
                 }
@@ -247,7 +247,7 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
         LocationStep* currentStep = static_cast<LocationStep*>(subExpr);
         LocationStep::LocationStepType axis = currentStep->getAxisIdentifier();
 
-        txUnionNodeTest* unionTest = nsnull;
+        txUnionNodeTest* unionTest = nullptr;
 
         // Check if there are any other steps with the same axis and merge
         // them with currentStep
@@ -279,7 +279,7 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
             rv = unionTest->addNodeTest(step->getNodeTest());
             NS_ENSURE_SUCCESS(rv, rv);
 
-            step->setNodeTest(nsnull);
+            step->setNodeTest(nullptr);
 
             // Remove the step from the UnionExpr
             uni->deleteExprAt(i);
@@ -290,7 +290,7 @@ txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr)
         // return the step as the new expression.
         if (unionTest && current == 0 && !uni->getSubExprAt(1)) {
             // Make sure the step doesn't get deleted when the UnionExpr is
-            uni->setSubExprAt(0, nsnull);
+            uni->setSubExprAt(0, nullptr);
             *aOutExpr = currentStep;
 
             // Return right away since we no longer have a union            

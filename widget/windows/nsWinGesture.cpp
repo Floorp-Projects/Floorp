@@ -25,20 +25,20 @@ extern PRLogModuleInfo* gWindowsLog;
 #endif
 
 const PRUnichar nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
-HMODULE nsWinGesture::sLibraryHandle = nsnull;
-nsWinGesture::GetGestureInfoPtr nsWinGesture::getGestureInfo = nsnull;
-nsWinGesture::CloseGestureInfoHandlePtr nsWinGesture::closeGestureInfoHandle = nsnull;
-nsWinGesture::GetGestureExtraArgsPtr nsWinGesture::getGestureExtraArgs = nsnull;
-nsWinGesture::SetGestureConfigPtr nsWinGesture::setGestureConfig = nsnull;
-nsWinGesture::GetGestureConfigPtr nsWinGesture::getGestureConfig = nsnull;
-nsWinGesture::BeginPanningFeedbackPtr nsWinGesture::beginPanningFeedback = nsnull;
-nsWinGesture::EndPanningFeedbackPtr nsWinGesture::endPanningFeedback = nsnull;
-nsWinGesture::UpdatePanningFeedbackPtr nsWinGesture::updatePanningFeedback = nsnull;
+HMODULE nsWinGesture::sLibraryHandle = nullptr;
+nsWinGesture::GetGestureInfoPtr nsWinGesture::getGestureInfo = nullptr;
+nsWinGesture::CloseGestureInfoHandlePtr nsWinGesture::closeGestureInfoHandle = nullptr;
+nsWinGesture::GetGestureExtraArgsPtr nsWinGesture::getGestureExtraArgs = nullptr;
+nsWinGesture::SetGestureConfigPtr nsWinGesture::setGestureConfig = nullptr;
+nsWinGesture::GetGestureConfigPtr nsWinGesture::getGestureConfig = nullptr;
+nsWinGesture::BeginPanningFeedbackPtr nsWinGesture::beginPanningFeedback = nullptr;
+nsWinGesture::EndPanningFeedbackPtr nsWinGesture::endPanningFeedback = nullptr;
+nsWinGesture::UpdatePanningFeedbackPtr nsWinGesture::updatePanningFeedback = nullptr;
 
-nsWinGesture::RegisterTouchWindowPtr nsWinGesture::registerTouchWindow = nsnull;
-nsWinGesture::UnregisterTouchWindowPtr nsWinGesture::unregisterTouchWindow = nsnull;
-nsWinGesture::GetTouchInputInfoPtr nsWinGesture::getTouchInputInfo = nsnull;
-nsWinGesture::CloseTouchInputHandlePtr nsWinGesture::closeTouchInputHandle = nsnull;
+nsWinGesture::RegisterTouchWindowPtr nsWinGesture::registerTouchWindow = nullptr;
+nsWinGesture::UnregisterTouchWindowPtr nsWinGesture::unregisterTouchWindow = nullptr;
+nsWinGesture::GetTouchInputInfoPtr nsWinGesture::getTouchInputInfo = nullptr;
+nsWinGesture::CloseTouchInputHandlePtr nsWinGesture::closeTouchInputHandle = nullptr;
 
 static bool gEnableSingleFingerPanEvents = false;
 
@@ -81,19 +81,19 @@ bool nsWinGesture::InitLibrary()
 
   if (!getGestureInfo || !closeGestureInfoHandle || !getGestureExtraArgs ||
     !setGestureConfig || !getGestureConfig) {
-    getGestureInfo         = nsnull;
-    closeGestureInfoHandle = nsnull;
-    getGestureExtraArgs    = nsnull;
-    setGestureConfig       = nsnull;
-    getGestureConfig       = nsnull;
+    getGestureInfo         = nullptr;
+    closeGestureInfoHandle = nullptr;
+    getGestureExtraArgs    = nullptr;
+    setGestureConfig       = nullptr;
+    getGestureConfig       = nullptr;
     return false;
   }
   
   if (!registerTouchWindow || !unregisterTouchWindow || !getTouchInputInfo || !closeTouchInputHandle) {
-    registerTouchWindow   = nsnull;
-    unregisterTouchWindow = nsnull;
-    getTouchInputInfo     = nsnull;
-    closeTouchInputHandle = nsnull;
+    registerTouchWindow   = nullptr;
+    unregisterTouchWindow = nullptr;
+    getTouchInputInfo     = nullptr;
+    closeTouchInputHandle = nullptr;
   }
 
   // panning feedback interfaces
@@ -104,9 +104,9 @@ bool nsWinGesture::InitLibrary()
   }
 
   if (!beginPanningFeedback || !endPanningFeedback || !updatePanningFeedback) {
-    beginPanningFeedback   = nsnull;
-    endPanningFeedback     = nsnull;
-    updatePanningFeedback  = nsnull;
+    beginPanningFeedback   = nullptr;
+    endPanningFeedback     = nullptr;
+    updatePanningFeedback  = nullptr;
   }
 
   // Check to see if we want single finger gesture input. Only do this once
@@ -175,7 +175,7 @@ bool nsWinGesture::SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDir
 
 bool nsWinGesture::IsAvailable()
 {
-  return getGestureInfo != nsnull;
+  return getGestureInfo != nullptr;
 }
 
 bool nsWinGesture::RegisterTouchWindow(HWND hWnd)

@@ -55,7 +55,7 @@ NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
     }
   }
   size = (size * 3) / 4;
-  char* buf = PL_Base64Decode(str.BeginReading(), str.Length(), nsnull);
+  char* buf = PL_Base64Decode(str.BeginReading(), str.Length(), nullptr);
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIInputStream> stream;

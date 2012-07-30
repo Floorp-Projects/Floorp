@@ -78,7 +78,7 @@ struct nsInheritedStyleData
     for (nsStyleStructID i = nsStyleStructID_Inherited_Start;
          i < nsStyleStructID_Inherited_Start + nsStyleStructID_Inherited_Count;
          i = nsStyleStructID(i + 1)) {
-      mStyleStructs[i] = nsnull;
+      mStyleStructs[i] = nullptr;
     }
   }
 };
@@ -93,7 +93,7 @@ struct nsResetStyleData
     for (nsStyleStructID i = nsStyleStructID_Reset_Start;
          i < nsStyleStructID_Reset_Start + nsStyleStructID_Reset_Count;
          i = nsStyleStructID(i + 1)) {
-      mStyleStructs[i] = nsnull;
+      mStyleStructs[i] = nullptr;
     }
   }
 
@@ -142,19 +142,19 @@ struct nsCachedStyleData
         return mInheritedData->mStyleStructs[aSID];
       }
     }
-    return nsnull;
+    return nullptr;
   }
 
   // Typesafe and faster versions of the above
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
       return mInheritedData ? static_cast<nsStyle##name_*>(              \
-        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nsnull;   \
+        mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;   \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_, ctor_args_)           \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
       return mResetData ? static_cast<nsStyle##name_*>(                  \
-        mResetData->mStyleStructs[eStyleStruct_##name_]) : nsnull;       \
+        mResetData->mStyleStructs[eStyleStruct_##name_]) : nullptr;       \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
@@ -165,11 +165,11 @@ struct nsCachedStyleData
       mResetData->Destroy(aBits, aContext);
     if (mInheritedData)
       mInheritedData->Destroy(aBits, aContext);
-    mResetData = nsnull;
-    mInheritedData = nsnull;
+    mResetData = nullptr;
+    mInheritedData = nullptr;
   }
 
-  nsCachedStyleData() :mInheritedData(nsnull), mResetData(nsnull) {}
+  nsCachedStyleData() :mInheritedData(nullptr), mResetData(nullptr) {}
   ~nsCachedStyleData() {}
 };
 
@@ -323,7 +323,7 @@ private:
   };
 
   bool HaveChildren() const {
-    return mChildren.asVoid != nsnull;
+    return mChildren.asVoid != nullptr;
   }
   bool ChildrenAreHashed() {
     return (intptr_t(mChildren.asVoid) & kTypeMask) == kHashType;
@@ -388,7 +388,7 @@ public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
-  void Destroy() { DestroyInternal(nsnull); }
+  void Destroy() { DestroyInternal(nullptr); }
 
   // Implemented in nsStyleSet.h, since it needs to know about nsStyleSet.
   inline void AddRef();
@@ -632,7 +632,7 @@ public:
   nsRuleNode* Transition(nsIStyleRule* aRule, PRUint8 aLevel,
                          bool aIsImportantRule);
   nsRuleNode* GetParent() const { return mParent; }
-  bool IsRoot() const { return mParent == nsnull; }
+  bool IsRoot() const { return mParent == nullptr; }
 
   // These PRUint8s are really nsStyleSet::sheetType values.
   PRUint8 GetLevel() const {

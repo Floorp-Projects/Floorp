@@ -250,7 +250,7 @@ ToNewCString( const nsAString& aSource )
   {
     char* result = AllocateStringCopy(aSource, (char*)0);
     if (!result)
-      return nsnull;
+      return nullptr;
 
     nsAString::const_iterator fromBegin, fromEnd;
     LossyConvertEncoding16to8 converter(result);
@@ -272,7 +272,7 @@ ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
     char *result = static_cast<char*>
                               (nsMemory::Alloc(calculator.Size() + 1));
     if (!result)
-      return nsnull;
+      return nullptr;
 
     ConvertUTF16toUTF8 converter(result);
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),
@@ -289,7 +289,7 @@ ToNewCString( const nsACString& aSource )
 
     char* result = AllocateStringCopy(aSource, (char*)0);
     if (!result)
-      return nsnull;
+      return nullptr;
 
     nsACString::const_iterator fromBegin, fromEnd;
     char* toBegin = result;
@@ -304,7 +304,7 @@ ToNewUnicode( const nsAString& aSource )
 
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
     if (!result)
-      return nsnull;
+      return nullptr;
 
     nsAString::const_iterator fromBegin, fromEnd;
     PRUnichar* toBegin = result;
@@ -317,7 +317,7 @@ ToNewUnicode( const nsACString& aSource )
   {
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
     if (!result)
-      return nsnull;
+      return nullptr;
 
     nsACString::const_iterator fromBegin, fromEnd;
     LossyConvertEncoding8to16 converter(result);
@@ -339,7 +339,7 @@ UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
     PRUnichar *result = static_cast<PRUnichar*>
                                    (nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
     if (!result)
-      return nsnull;
+      return nullptr;
 
     ConvertUTF8toUTF16 converter(result);
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),

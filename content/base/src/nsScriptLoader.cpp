@@ -85,7 +85,7 @@ public:
 
   bool IsPreload()
   {
-    return mElement == nsnull;
+    return mElement == nullptr;
   }
 
   nsCOMPtr<nsIScriptElement> mElement;
@@ -220,7 +220,7 @@ nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                           aDocument->NodePrincipal(),
                                           aContext,
                                           NS_LossyConvertUTF16toASCII(aType),
-                                          nsnull,    //extra
+                                          nullptr,    //extra
                                           &shouldLoad,
                                           nsContentUtils::GetContentPolicy(),
                                           nsContentUtils::GetSecurityManager());
@@ -292,7 +292,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     aRequest->mURI, nsnull, loadGroup, prompter,
+                     aRequest->mURI, nullptr, loadGroup, prompter,
                      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -418,7 +418,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       "application/javascript",
       "application/ecmascript",
       "application/x-javascript",
-      nsnull
+      nullptr
     };
 
     bool isJavaScript = false;
@@ -541,7 +541,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         NS_ENSURE_SUCCESS(rv, false);
       } else {
         // Drop the preload
-        request = nsnull;
+        request = nullptr;
       }
     }
 
@@ -870,13 +870,13 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
                                mDocument->NodePrincipal(),
                                aRequest->mOriginPrincipal,
                                url.get(), aRequest->mLineNo,
-                               JSVersion(aRequest->mJSVersion), nsnull,
+                               JSVersion(aRequest->mJSVersion), nullptr,
                                &isUndefined);
 
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
-  JSContext *cx = nsnull; // Initialize this to keep GCC happy.
+  JSContext *cx = nullptr; // Initialize this to keep GCC happy.
   cx = context->GetNativeContext();
   JSAutoRequest ar(cx);
   context->SetProcessingScriptTag(oldProcessingScriptTag);
@@ -1129,7 +1129,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         mXSLTRequests.RemoveElement(request)) {
       FireScriptAvailable(rv, request);
     } else if (mParserBlockingRequest == request) {
-      mParserBlockingRequest = nsnull;
+      mParserBlockingRequest = nullptr;
       UnblockParser(request);
       FireScriptAvailable(rv, request);
       ContinueParserAsync(request);
@@ -1281,7 +1281,7 @@ nsScriptLoader::ParsingComplete(bool aTerminated)
     mAsyncRequests.Clear();
     mNonAsyncExternalScriptInsertedRequests.Clear();
     mXSLTRequests.Clear();
-    mParserBlockingRequest = nsnull;
+    mParserBlockingRequest = nullptr;
   }
 
   // Have to call this even if aTerminated so we'll correctly unblock
@@ -1300,7 +1300,7 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
   }
 
   nsRefPtr<nsScriptLoadRequest> request =
-    new nsScriptLoadRequest(nsnull, 0,
+    new nsScriptLoadRequest(nullptr, 0,
                             nsGenericElement::StringToCORSMode(aCrossOrigin));
   request->mURI = aURI;
   request->mIsInline = false;

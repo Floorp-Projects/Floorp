@@ -50,10 +50,10 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 // constructor
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
-                             mTmpFile(nsnull),
-                             mTmpFilePath(nsnull),
-                             mDigest(nsnull),
-                             mDigestIterator(nsnull),
+                             mTmpFile(nullptr),
+                             mTmpFilePath(nullptr),
+                             mDigest(nullptr),
+                             mDigestIterator(nullptr),
                              mTokenSet(false)
 {
   mUIContext = new PipUIContext();
@@ -145,7 +145,7 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   SEC_PKCS12DecoderContext *dcx = NULL;
   SECItem unicodePw;
 
-  PK11SlotInfo *slot=nsnull;
+  PK11SlotInfo *slot=nullptr;
   nsXPIDLString tokenName;
   unicodePw.data = NULL;
   
@@ -652,11 +652,11 @@ nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
   NS_ENSURE_TRUE(cx, SECFailure);
 
   delete cx->mDigestIterator;
-  cx->mDigestIterator = nsnull;
+  cx->mDigestIterator = nullptr;
 
   if (remove_it) {  
     delete cx->mDigest;
-    cx->mDigest = nsnull;
+    cx->mDigest = nullptr;
   }
   
   return SECSuccess;
@@ -713,7 +713,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   *cancel = false;
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv)) return nsnull;
+  if (NS_FAILED(rv)) return nullptr;
   int count = 1;
   nsCString nickname;
   nsAutoString nickFromProp;
@@ -758,7 +758,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   }
   SECItem *newNick = new SECItem;
   if (!newNick)
-    return nsnull;
+    return nullptr;
 
   newNick->type = siAsciiString;
   newNick->data = (unsigned char*) nsCRT::strdup(nickname.get());
@@ -805,7 +805,7 @@ nsPKCS12Blob::handleError(int myerr)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: NSS/NSPR error(%d)", prerr));
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: I called(%d)", myerr));
 
-  const char * msgID = nsnull;
+  const char * msgID = nullptr;
 
   switch (myerr) {
   case PIP_PKCS12_RESTORE_OK:       msgID = "SuccessfulP12Restore"; break;

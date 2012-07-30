@@ -42,13 +42,13 @@ public:
 
   SharedMemorySysV() :
     mHandle(-1),
-    mData(nsnull)
+    mData(nullptr)
   {
   }
 
   SharedMemorySysV(Handle aHandle) :
     mHandle(aHandle),
-    mData(nsnull)
+    mData(nullptr)
   {
   }
 
@@ -56,7 +56,7 @@ public:
   {
     shmdt(mData);
     mHandle = -1;
-    mData = nsnull;
+    mData = nullptr;
   }
 
   virtual bool Create(size_t aNbytes) MOZ_OVERRIDE
@@ -81,7 +81,7 @@ public:
     if (!IsHandleValid(mHandle))
       return false;
 
-    void* mem = shmat(mHandle, nsnull, 0);
+    void* mem = shmat(mHandle, nullptr, 0);
     if (mem == (void*) -1) {
       char warning[256];
       snprintf(warning, sizeof(warning)-1,

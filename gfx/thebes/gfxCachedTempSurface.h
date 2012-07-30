@@ -42,7 +42,7 @@ public:
                                    const gfxRect& aRect,
                                    gfxASurface* aSimilarTo);
 
-  void Expire() { mSurface = nsnull; }
+  void Expire() { mSurface = nullptr; }
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   ~gfxCachedTempSurface();
 

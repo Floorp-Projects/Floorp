@@ -232,13 +232,13 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   mMimeType = 0;
 
     // reset nsBaseDragService's members
-  mSourceDocument = nsnull;
-  mSourceNode = nsnull;
-  mSelection = nsnull;
-  mDataTransfer = nsnull;
+  mSourceDocument = nullptr;
+  mSourceNode = nullptr;
+  mSelection = nullptr;
+  mDataTransfer = nullptr;
   mUserCancelled = false;
   mHasImage = false;
-  mImage = nsnull;
+  mImage = nullptr;
   mImageX = 0;
   mImageY = 0;
   mScreenX = -1;
@@ -506,7 +506,7 @@ nsresult nsDragService::SaveAsContents(PCSZ pszDest, nsIURL* aURL)
 
   fwrite("", 0, 1, fp);
   fclose(fp);
-  webPersist->SaveURI(linkURI, nsnull, nsnull, nsnull, nsnull, file);
+  webPersist->SaveURI(linkURI, nullptr, nullptr, nullptr, nullptr, file);
 
   return NS_OK;
 }
@@ -844,7 +844,7 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
     nsCOMPtr<nsITransferable> trans(
             do_CreateInstance("@mozilla.org/widget/transferable;1", &rv));
     if (trans) {
-      trans->Init(nsnull);
+      trans->Init(nullptr);
 
       bool isUrl = DrgVerifyType(pditem, "UniformResourceLocator");
       bool isAlt = (WinGetKeyState(HWND_DESKTOP, VK_ALT) & 0x8000);

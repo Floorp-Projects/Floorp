@@ -24,7 +24,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGNumber)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGNumber)
   // We may not belong to a list, so we must null check tmp->mList.
   if (tmp->mList) {
-    tmp->mList->mItems[tmp->mListIndex] = nsnull;
+    tmp->mList->mItems[tmp->mListIndex] = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -64,7 +64,7 @@ DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
 }
 
 DOMSVGNumber::DOMSVGNumber()
-  : mList(nsnull)
+  : mList(nullptr)
   , mListIndex(0)
   , mAttrEnum(0)
   , mIsAnimValItem(false)
@@ -127,7 +127,7 @@ void
 DOMSVGNumber::RemovingFromList()
 {
   mValue = InternalItem();
-  mList = nsnull;
+  mList = nullptr;
   mIsAnimValItem = false;
 }
 

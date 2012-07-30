@@ -97,7 +97,7 @@ public:
   ReleaseMembers()
   {
     BluetoothReplyRunnable::ReleaseMembers();
-    mManagerPtr = nsnull;
+    mManagerPtr = nullptr;
   }
   
 private:
@@ -135,7 +135,7 @@ public:
     BluetoothReplyRunnable::ReleaseMembers();
     // mManagerPtr must be null before returning to prevent the background
     // thread from racing to release it during the destruction of this runnable.
-    mManagerPtr = nsnull;
+    mManagerPtr = nullptr;
   }
   
 private:
@@ -243,7 +243,7 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow) {
   
   if (NS_FAILED(bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING("/"), manager))) {
     NS_ERROR("Failed to register object with observer!");
-    return nsnull;
+    return nullptr;
   }
   
   return manager.forget();
@@ -260,7 +260,7 @@ NS_NewBluetoothManager(nsPIDOMWindow* aWindow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!allowed) {
-    *aBluetoothManager = nsnull;
+    *aBluetoothManager = nullptr;
     return NS_OK;
   }
 

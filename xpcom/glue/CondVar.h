@@ -30,7 +30,7 @@ public:
      *
      * @param aLock A Mutex to associate with this condition variable.
      * @param aName A name which can reference this monitor
-     * @returns If failure, nsnull.
+     * @returns If failure, nullptr.
      *          If success, a valid Monitor* which must be destroyed
      *          by Monitor::DestroyMonitor()
      **/

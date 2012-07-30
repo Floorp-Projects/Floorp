@@ -91,7 +91,7 @@ class ContentCreationNotifier : public nsIObserver
                 obs->RemoveObserver(static_cast<nsIObserver*>(this),
                                     "ipc:content-created");
             }
-            gContentCreationNotifier = nsnull;
+            gContentCreationNotifier = nullptr;
         }
 
         return NS_OK;
@@ -113,7 +113,7 @@ static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 static bool sValidSurface;
 static bool sSurfaceExists = false;
-static void *sNativeWindow = nsnull;
+static void *sNativeWindow = nullptr;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -124,7 +124,7 @@ nsWindow::TopWindow()
 {
     if (!gTopLevelWindows.IsEmpty())
         return gTopLevelWindows[0];
-    return nsnull;
+    return nullptr;
 }
 
 void
@@ -157,8 +157,8 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 
 nsWindow::nsWindow() :
     mIsVisible(false),
-    mParent(nsnull),
-    mFocus(nsnull),
+    mParent(nullptr),
+    mFocus(nullptr),
     mIMEComposing(false)
 {
 }
@@ -168,7 +168,7 @@ nsWindow::~nsWindow()
     gTopLevelWindows.RemoveElement(this);
     nsWindow *top = FindTopLevel();
     if (top->mFocus == this)
-        top->mFocus = nsnull;
+        top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
 #ifdef MOZ_JAVA_COMPOSITOR
     SetCompositor(NULL, NULL);
@@ -195,7 +195,7 @@ nsWindow::Create(nsIWidget *aParent,
     nsWindow *parent = (nsWindow*) aParent;
 
     if (!AndroidBridge::Bridge()) {
-        aNativeParent = nsnull;
+        aNativeParent = nullptr;
     }
 
     if (aNativeParent) {
@@ -216,7 +216,7 @@ nsWindow::Create(nsIWidget *aParent,
         mBounds.height = gAndroidBounds.height;
     }
 
-    BaseCreate(nsnull, mBounds, aHandleEventFunction, aContext, aInitData);
+    BaseCreate(nullptr, mBounds, aHandleEventFunction, aContext, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 
@@ -244,13 +244,13 @@ nsWindow::Destroy(void)
     while (mChildren.Length()) {
         // why do we still have children?
         ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[0]);
-        mChildren[0]->SetParent(nsnull);
+        mChildren[0]->SetParent(nullptr);
     }
 
     if (IsTopLevel())
         gTopLevelWindows.RemoveElement(this);
 
-    SetParent(nsnull);
+    SetParent(nullptr);
 
     nsBaseWidget::OnDestroy();
 
@@ -560,7 +560,7 @@ nsWindow::BringToFront()
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-    nsWindow *oldTop = nsnull;
+    nsWindow *oldTop = nullptr;
     nsWindow *newTop = this;
     if (!gTopLevelWindows.IsEmpty())
         oldTop = gTopLevelWindows[0];
@@ -728,7 +728,7 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         }
 
         if (!sGLContext || !mLayerManager) {
-                sGLContext = nsnull;
+                sGLContext = nullptr;
                 sFailedToCreateGLContext = true;
 
                 mLayerManager = CreateBasicLayerManager();
@@ -895,7 +895,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
             if (sNativeWindow) {
                 AndroidBridge::Bridge()->ReleaseNativeWindow(sNativeWindow);
-                sNativeWindow = nsnull;
+                sNativeWindow = nullptr;
             }
             sSurfaceExists = false;
             sValidSurface = false;
@@ -986,7 +986,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
         nsPaintEvent event(true, NS_PAINT, this);
         event.region = invalidRect;
 
-        switch (GetLayerManager(nsnull)->GetBackendType()) {
+        switch (GetLayerManager(nullptr)->GetBackendType()) {
             case mozilla::layers::LAYERS_BASIC: {
 
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
@@ -1013,7 +1013,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 
             case mozilla::layers::LAYERS_OPENGL: {
 
-                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
+                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
                 status = DispatchEvent(&event);
@@ -1112,7 +1112,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
-    if (GetLayerManager(nsnull)->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
+    if (GetLayerManager(nullptr)->GetBackendType() == mozilla::layers::LAYERS_BASIC) {
         if (sNativeWindow) {
             unsigned char *bits;
             int width, height, format, stride;
@@ -1152,7 +1152,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                 return;
 
             void *buf = AndroidBridge::Bridge()->LockBitmap(bitmap);
-            if (buf == nsnull) {
+            if (buf == nullptr) {
                 ALOG("### Software drawing, but failed to lock bitmap.");
                 return;
             }
@@ -1217,7 +1217,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
-        DrawTo(nsnull);
+        DrawTo(nullptr);
 
         sview.EndDrawing();
     }
@@ -1281,7 +1281,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
             return (void *) this;
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 void
@@ -1480,7 +1480,7 @@ nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
         case AndroidMotionEvent::ACTION_POINTER_UP:
             msg = NS_SIMPLE_GESTURE_MAGNIFY;
             pinchDelta = pinchDist - mStartDist;
-            mStartPoint = nsnull;
+            mStartPoint = nullptr;
             break;
         default:
             return;
@@ -1495,7 +1495,7 @@ nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
         // If the cumulative pinch delta goes past the threshold, treat this
         // as a pinch only, and not a swipe.
         if (fabs(pinchDist - mStartDist) > mSwipeMaxPinchDelta)
-            mStartPoint = nsnull;
+            mStartPoint = nullptr;
 
         // If we have traveled more than SWIPE_MIN_DISTANCE from the start
         // point, stop the pinch gesture and fire a swipe event.
@@ -1892,7 +1892,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                        "IME_COMPOSITION_END when we are not composing?!");
 
             nsCompositionEvent event(true, NS_COMPOSITION_END, this);
-            InitEvent(event, nsnull);
+            InitEvent(event, nullptr);
             event.data = mIMELastDispatchedComposingText;
             mIMELastDispatchedComposingText.Truncate();
             DispatchEvent(&event);
@@ -1906,7 +1906,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 
             mIMELastDispatchedComposingText.Truncate();
             nsCompositionEvent event(true, NS_COMPOSITION_START, this);
-            InitEvent(event, nsnull);
+            InitEvent(event, nullptr);
             DispatchEvent(&event);
         }
         return;
@@ -1925,7 +1925,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             OnIMEAddRange(ae);
 
             nsTextEvent event(true, NS_TEXT_TEXT, this);
-            InitEvent(event, nsnull);
+            InitEvent(event, nullptr);
 
             event.theText.Assign(ae->Characters());
             event.rangeArray = mIMERanges.Elements();
@@ -1936,7 +1936,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 nsCompositionEvent compositionUpdate(true,
                                                      NS_COMPOSITION_UPDATE,
                                                      this);
-                InitEvent(compositionUpdate, nsnull);
+                InitEvent(compositionUpdate, nullptr);
                 compositionUpdate.data = event.theText;
                 mIMELastDispatchedComposingText = event.theText;
                 DispatchEvent(&compositionUpdate);
@@ -1960,7 +1960,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             ALOGIME("IME: IME_GET_TEXT: o=%u, l=%u", ae->Offset(), ae->Count());
 
             nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
-            InitEvent(event, nsnull);
+            InitEvent(event, nullptr);
 
             event.InitForQueryTextContent(ae->Offset(), ae->Count());
             
@@ -1969,7 +1969,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             if (!event.mSucceeded) {
                 ALOGIME("IME:     -> failed");
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    nsnull, 0, 0, 0);
+                    nullptr, 0, 0, 0);
                 return;
             } else if (!event.mWasAsync) {
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
@@ -1996,7 +1996,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             ALOGIME("IME: IME_SET_SELECTION: o=%u, l=%d", ae->Offset(), ae->Count());
 
             nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
-            InitEvent(selEvent, nsnull);
+            InitEvent(selEvent, nullptr);
 
             selEvent.mOffset = PRUint32(ae->Count() >= 0 ?
                                         ae->Offset() :
@@ -2012,13 +2012,13 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             ALOGIME("IME: IME_GET_SELECTION");
 
             nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
-            InitEvent(event, nsnull);
+            InitEvent(event, nullptr);
             DispatchEvent(&event);
 
             if (!event.mSucceeded) {
                 ALOGIME("IME:     -> failed");
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    nsnull, 0, 0, 0);
+                    nullptr, 0, 0, 0);
                 return;
             } else if (!event.mWasAsync) {
                 AndroidBridge::Bridge()->ReturnIMEQueryResult(
@@ -2037,7 +2037,7 @@ nsWindow *
 nsWindow::FindWindowForPoint(const nsIntPoint& pt)
 {
     if (!mBounds.Contains(pt))
-        return nsnull;
+        return nullptr;
 
     // children mBounds are relative to their parent
     nsIntPoint childPoint(pt.x - mBounds.x, pt.y - mBounds.y);
@@ -2072,13 +2072,13 @@ nsWindow::ResetInputState()
         nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
         nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
-        InitEvent(textEvent, nsnull);
+        InitEvent(textEvent, nullptr);
         textEvent.theText = mIMEComposingText;
         DispatchEvent(&textEvent);
         mIMEComposingText.Truncate(0);
 
         nsCompositionEvent event(true, NS_COMPOSITION_END, this);
-        InitEvent(event, nsnull);
+        InitEvent(event, nullptr);
         DispatchEvent(&event);
     }
 
@@ -2142,12 +2142,12 @@ nsWindow::CancelIMEComposition()
         nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
         nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
-        InitEvent(textEvent, nsnull);
+        InitEvent(textEvent, nullptr);
         DispatchEvent(&textEvent);
         mIMEComposingText.Truncate(0);
 
         nsCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
-        InitEvent(compEvent, nsnull);
+        InitEvent(compEvent, nullptr);
         DispatchEvent(&compEvent);
     }
 
@@ -2178,7 +2178,7 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
             aStart, aOldEnd, aNewEnd);
 
     if (!mInputContext.mIMEState.mEnabled) {
-        AndroidBridge::NotifyIMEChange(nsnull, 0, 0, 0, 0);
+        AndroidBridge::NotifyIMEChange(nullptr, 0, 0, 0, 0);
         return NS_OK;
     }
 
@@ -2188,7 +2188,7 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
-    InitEvent(event, nsnull);
+    InitEvent(event, nullptr);
     event.InitForQueryTextContent(0, PR_UINT32_MAX);
 
     DispatchEvent(&event);
@@ -2208,19 +2208,19 @@ nsWindow::OnIMESelectionChange(void)
     ALOGIME("IME: OnIMESelectionChange");
 
     if (!mInputContext.mIMEState.mEnabled) {
-        AndroidBridge::NotifyIMEChange(nsnull, 0, 0, 0, -1);
+        AndroidBridge::NotifyIMEChange(nullptr, 0, 0, 0, -1);
         return NS_OK;
     }
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
-    InitEvent(event, nsnull);
+    InitEvent(event, nullptr);
 
     DispatchEvent(&event);
     if (!event.mSucceeded)
         return NS_OK;
 
-    AndroidBridge::NotifyIMEChange(nsnull, 0, int(event.mReply.mOffset),
+    AndroidBridge::NotifyIMEChange(nullptr, 0, int(event.mReply.mOffset),
                                    int(event.mReply.mOffset + 
                                        event.mReply.mString.Length()), -1);
     return NS_OK;

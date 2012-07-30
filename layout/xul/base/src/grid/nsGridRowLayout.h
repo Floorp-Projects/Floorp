@@ -33,9 +33,9 @@ class nsGridRowLayout : public nsSprocketLayout,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nsnull; }
-  virtual nsGridLayout2* CastToGridLayout() { return nsnull; }
-  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nullptr; }
+  virtual nsGridLayout2* CastToGridLayout() { return nullptr; }
+  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr);
   virtual nsIGridPart* GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox);
   virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox,

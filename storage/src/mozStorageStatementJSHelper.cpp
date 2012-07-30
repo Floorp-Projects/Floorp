@@ -108,7 +108,7 @@ StatementJSHelper::getRow(Statement *aStatement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSObject *obj = nsnull;
+  JSObject *obj = nullptr;
   rv = aStatement->mStatementRowHolder->GetJSObject(&obj);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -147,7 +147,7 @@ StatementJSHelper::getParams(Statement *aStatement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSObject *obj = nsnull;
+  JSObject *obj = nullptr;
   rv = aStatement->mStatementParamsHolder->GetJSObject(&obj);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -220,7 +220,7 @@ StatementJSHelper::NewResolve(nsIXPConnectWrappedNative *aWrapper,
 
   if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), "step")) {
     *_retval = ::JS_DefineFunction(aCtx, aScopeObj, "step", stepFunc,
-                                   0, 0) != nsnull;
+                                   0, 0) != nullptr;
     *_objp = aScopeObj;
     return NS_OK;
   }

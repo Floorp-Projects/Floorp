@@ -15,7 +15,7 @@
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
 {
-  NS_PRECONDITION(aPropertiesArray != nsnull, "null ptr");
+  NS_PRECONDITION(aPropertiesArray != nullptr, "null ptr");
   if (! aPropertiesArray)
      return NS_ERROR_NULL_POINTER;
 
@@ -65,7 +65,7 @@ nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsIContent*
@@ -84,7 +84,7 @@ nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsresult

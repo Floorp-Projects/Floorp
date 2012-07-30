@@ -103,14 +103,14 @@ static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
     PL_DHashFinalizeStub,
-    nsnull,
+    nullptr,
 };
 
 nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
-  : mNameArray(nsnull), mNullStr("")
+  : mNameArray(nullptr), mNullStr("")
 {
     MOZ_COUNT_CTOR(nsStaticCaseInsensitiveNameTable);
-    mNameTable.ops = nsnull;
+    mNameTable.ops = nullptr;
 }
 
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
@@ -142,8 +142,8 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
 
     if (!PL_DHashTableInit(&mNameTable,
                            &nametable_CaseInsensitiveHashTableOps,
-                           nsnull, sizeof(NameTableEntry), Count)) {
-        mNameTable.ops = nsnull;
+                           nullptr, sizeof(NameTableEntry), Count)) {
+        mNameTable.ops = nullptr;
         return false;
     }
 

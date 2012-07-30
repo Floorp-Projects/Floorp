@@ -26,7 +26,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPathSeg)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPathSeg)
   // We may not belong to a list, so we must null check tmp->mList.
   if (tmp->mList) {
-    tmp->mList->ItemAt(tmp->mListIndex) = nsnull;
+    tmp->mList->ItemAt(tmp->mListIndex) = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -61,7 +61,7 @@ DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
 }
 
 DOMSVGPathSeg::DOMSVGPathSeg()
-  : mList(nsnull)
+  : mList(nullptr)
   , mListIndex(0)
   , mIsAnimValItem(false)
 {
@@ -101,7 +101,7 @@ DOMSVGPathSeg::RemovingFromList()
   PRUint32 argCount = SVGPathSegUtils::ArgCountForType(Type());
   // InternalItem() + 1, because the args come after the encoded seg type
   memcpy(PtrToMemberArgs(), InternalItem() + 1, argCount * sizeof(float));
-  mList = nsnull;
+  mList = nullptr;
   mIsAnimValItem = false;
 }
 
@@ -879,7 +879,7 @@ DOMSVGPathSeg::CreateFor(DOMSVGPathSegList *aList,
     return new DOMSVGPathSegCurvetoQuadraticSmoothRel(aList, aListIndex, aIsAnimValItem);
   default:
     NS_NOTREACHED("Invalid path segment type");
-    return nsnull;
+    return nullptr;
   }
 }
 

@@ -112,7 +112,7 @@ nsMemoryCacheDevice::FindEntry(nsCString * key, bool *collision)
 {
     mozilla::Telemetry::AutoTimer<mozilla::Telemetry::CACHE_MEMORY_SEARCH> timer;
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
-    if (!entry)  return nsnull;
+    if (!entry)  return nullptr;
 
     // move entry to the tail of an eviction list
     PR_REMOVE_AND_INIT_LINK(entry);

@@ -349,7 +349,7 @@ public:
   // Check whether storage may be used by the caller, and whether it
   // is session only.  Returns true if storage may be used.
   static bool
-  CanUseStorage(DOMStorageBase* aStorage = nsnull);
+  CanUseStorage(DOMStorageBase* aStorage = nullptr);
 
   // Check whether this URI can use chrome persist storage.  This kind of
   // storage can bypass cookies limits, private browsing and uses the offline
@@ -505,7 +505,7 @@ class nsDOMStorageEvent : public nsDOMEvent,
 {
 public:
   nsDOMStorageEvent()
-    : nsDOMEvent(nsnull, nsnull)
+    : nsDOMEvent(nullptr, nullptr)
   {
   }
 

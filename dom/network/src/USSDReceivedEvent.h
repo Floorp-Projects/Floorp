@@ -49,7 +49,7 @@ public:
 
 private:
   USSDReceivedEvent()
-  : nsDOMEvent(nsnull, nsnull)
+  : nsDOMEvent(nullptr, nullptr)
   { }
 
   ~USSDReceivedEvent()

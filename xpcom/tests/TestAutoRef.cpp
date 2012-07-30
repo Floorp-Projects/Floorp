@@ -50,11 +50,11 @@ int main()
     TEST(a->mRefCnt == 1, "nsCountedRef instantiation with valid RawRef");
 
     nsCountedRef<TestObjectA> b;
-    TEST(b.get() == nsnull, "nsCountedRef instantiation with invalid RawRef");
+    TEST(b.get() == nullptr, "nsCountedRef instantiation with invalid RawRef");
 
     a.swap(b);
     TEST(b->mRefCnt, "nsAutoRef::swap() t1");
-    TEST(a.get() == nsnull, "nsAutoRef::swap() t2");
+    TEST(a.get() == nullptr, "nsAutoRef::swap() t2");
   }
 
   TEST(true, "All tests pass");

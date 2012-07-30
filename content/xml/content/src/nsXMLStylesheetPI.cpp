@@ -114,7 +114,7 @@ nsXMLStylesheetPI::SetNodeValue(const nsAString& aNodeValue)
 {
   nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nsnull, true);
+    UpdateStyleSheetInternal(nullptr, true);
   }
   return rv;
 }
@@ -140,7 +140,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(bool* aIsInline)
 
   nsAutoString href;
   if (!GetAttrValue(nsGkAtoms::href, href)) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIURI *baseURL;
@@ -226,11 +226,11 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
 {
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
 
-  *aInstancePtrResult = nsnull;
+  *aInstancePtrResult = nullptr;
   
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
-                                     nsnull, kNameSpaceID_None,
+                                     nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
                                      nsGkAtoms::xml_stylesheet);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);

@@ -14,7 +14,7 @@
 nsDOMDragEvent::nsDOMDragEvent(nsPresContext* aPresContext,
                                nsInputEvent* aEvent)
   : nsDOMMouseEvent(aPresContext, aEvent ? aEvent :
-                    new nsDragEvent(false, 0, nsnull))
+                    new nsDragEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -32,7 +32,7 @@ nsDOMDragEvent::~nsDOMDragEvent()
   if (mEventIsInternal) {
     if (mEvent->eventStructType == NS_DRAG_EVENT)
       delete static_cast<nsDragEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 
@@ -78,7 +78,7 @@ nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
   // with the drag. It is initialized when an attempt is made to retrieve it
   // rather that when the event is created to avoid duplicating the data when
   // no listener ever uses it.
-  *aDataTransfer = nsnull;
+  *aDataTransfer = nullptr;
 
   if (!mEvent || mEvent->eventStructType != NS_DRAG_EVENT) {
     NS_WARNING("Tried to get dataTransfer from non-drag event!");

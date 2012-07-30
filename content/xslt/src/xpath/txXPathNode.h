@@ -64,7 +64,7 @@ private:
     }
     nsINode *GetRootToAddRef() const
     {
-        return mRefCountRoot ? Root() : nsnull;
+        return mRefCountRoot ? Root() : nullptr;
     }
 
     bool isDocument() const

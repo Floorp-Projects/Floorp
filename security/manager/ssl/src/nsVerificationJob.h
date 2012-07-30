@@ -51,7 +51,7 @@ friend class nsCertVerificationJob;
 class nsSMimeVerificationJob : public nsBaseVerificationJob
 {
 public:
-  nsSMimeVerificationJob() { digest_data = nsnull; digest_len = 0; }
+  nsSMimeVerificationJob() { digest_data = nullptr; digest_len = 0; }
   ~nsSMimeVerificationJob() { delete [] digest_data; }
 
   nsCOMPtr<nsICMSMessage> mMessage;

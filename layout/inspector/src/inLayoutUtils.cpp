@@ -61,12 +61,12 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 
   if (!doc) {
     NS_WARNING("Could not get an nsIDocument!");
-    return nsnull;
+    return nullptr;
   }
 
   nsIPresShell *shell = doc->GetShell();
   if (!shell)
-    return nsnull;
+    return nullptr;
 
   return shell->GetPresContext()->EventStateManager();
 }
@@ -81,7 +81,7 @@ inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
     return doc->BindingManager();
   }
   
-  return nsnull;
+  return nullptr;
 }
 
 nsIDOMDocument*
@@ -97,17 +97,17 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
     }
   }
   
-  return nsnull;
+  return nullptr;
 }
 
 nsIDOMNode*
 inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  if (!doc) return nsnull;
+  if (!doc) return nullptr;
 
   nsPIDOMWindow *pwin = doc->GetWindow();
-  if (!pwin) return nsnull;
+  if (!pwin) return nullptr;
 
   return pwin->GetFrameElementInternal();
 }

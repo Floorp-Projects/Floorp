@@ -183,7 +183,7 @@ public:
    * accessible table then return null.
    */
   virtual Accessible* GetCellAccessible(nsITreeColumn* aColumn)
-    { return nsnull; }
+    { return nullptr; }
 
   /**
    * Proccess row invalidation. Used to fires name change events.
@@ -196,7 +196,7 @@ protected:
   // Accessible
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
   virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                         nsresult *aError = nsnull) const;
+                                         nsresult *aError = nullptr) const;
 
   // XULTreeItemAccessibleBase
 
@@ -268,7 +268,7 @@ protected:
 
   // Accessible
   virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                         nsresult *aError = nsnull) const;
+                                         nsresult *aError = nullptr) const;
 };
 
 } // namespace a11y
@@ -281,7 +281,7 @@ inline mozilla::a11y::XULTreeAccessible*
 Accessible::AsXULTree()
 {
   return IsXULTree() ?
-    static_cast<mozilla::a11y::XULTreeAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::XULTreeAccessible*>(this) : nullptr;
 }
 
 #endif

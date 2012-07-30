@@ -26,7 +26,7 @@ using namespace mozilla;
 
 nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
     : mDocShell(aDocShell), 
-      mParentContentListener(nsnull)
+      mParentContentListener(nullptr)
 {
 }
 
@@ -182,7 +182,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
     *aCanHandleContent = false;
-    *aDesiredContentType = nsnull;
+    *aDesiredContentType = nullptr;
 
     nsresult rv = NS_OK;
     if (aContentType) {
@@ -241,7 +241,7 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
     {
         // Store the parent listener as a weak ref. Parents not supporting
         // nsISupportsWeakReference assert but may still be used.
-        mParentContentListener = nsnull;
+        mParentContentListener = nullptr;
         mWeakParentContentListener = do_GetWeakReference(aParentListener);
         if (!mWeakParentContentListener)
         {
@@ -250,8 +250,8 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
     }
     else
     {
-        mWeakParentContentListener = nsnull;
-        mParentContentListener = nsnull;
+        mWeakParentContentListener = nullptr;
+        mParentContentListener = nullptr;
     }
     return NS_OK;
 }
@@ -392,7 +392,7 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest *request)
                 nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(mDocShell));
                 if (webNav) {
                     webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(),
-                                    0, nsnull, nsnull, nsnull);
+                                    0, nullptr, nullptr, nullptr);
                 }
             }
             return false;

@@ -95,12 +95,12 @@ NS_IMETHODIMP nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aC
 {
   if (mListener) {
     mListener->OnStopRequest(this, aContext, aStatus);
-    mListener = nsnull;
+    mListener = nullptr;
   }
 
   // Remove from load group
   if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, aStatus);
+    mLoadGroup->RemoveRequest(this, nullptr, aStatus);
 
   return NS_OK;
 }
@@ -193,7 +193,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     mListener = aListener;
     // Add ourself to the load group, if available
     if (mLoadGroup)
-      mLoadGroup->AddRequest(this, nsnull);
+      mLoadGroup->AddRequest(this, nullptr);
   }
 
   return rv;
@@ -316,7 +316,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
   }
 
   // Drop notification callbacks to prevent cycles.
-  mCallbacks = nsnull;
+  mCallbacks = nullptr;
 
   return NS_OK;
 
@@ -432,7 +432,7 @@ NS_IMETHODIMP nsIconChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNo
 
 NS_IMETHODIMP nsIconChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-  *aSecurityInfo = nsnull;
+  *aSecurityInfo = nullptr;
   return NS_OK;
 }
 

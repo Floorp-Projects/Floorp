@@ -14,13 +14,13 @@ using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
-nsPNGEncoder::nsPNGEncoder() : mPNG(nsnull), mPNGinfo(nsnull),
+nsPNGEncoder::nsPNGEncoder() : mPNG(nullptr), mPNGinfo(nullptr),
                                mIsAnimation(false),
                                mFinished(false),
-                               mImageBuffer(nsnull), mImageBufferSize(0),
+                               mImageBuffer(nullptr), mImageBufferSize(0),
                                mImageBufferUsed(0), mImageBufferReadPoint(0),
-                               mCallback(nsnull),
-                               mCallbackTarget(nsnull), mNotifyThreshold(0),
+                               mCallback(nullptr),
+                               mCallbackTarget(nullptr), mNotifyThreshold(0),
                                mReentrantMonitor("nsPNGEncoder.mReentrantMonitor")
 {
 }
@@ -29,7 +29,7 @@ nsPNGEncoder::~nsPNGEncoder()
 {
   if (mImageBuffer) {
     PR_Free(mImageBuffer);
-    mImageBuffer = nsnull;
+    mImageBuffer = nullptr;
   }
   // don't leak if EndImageEncode wasn't called
   if (mPNG)
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
   PRUint32 numPlays = 0; // For animations, 0 == forever
 
   // can't initialize more than once
-  if (mImageBuffer != nsnull)
+  if (mImageBuffer != nullptr)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   // validate input format
@@ -96,8 +96,8 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
 
   // parse and check any provided output options
   nsresult rv = ParseOptions(aOutputOptions, &useTransparency, &skipFirstFrame,
-                             &numFrames, &numPlays, nsnull, nsnull,
-                             nsnull, nsnull, nsnull);
+                             &numFrames, &numPlays, nullptr, nullptr,
+                             nullptr, nullptr, nullptr);
   if (rv != NS_OK)
     return rv;
 
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
 
   // initialize
   mPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                 nsnull,
+                                 nullptr,
                                  ErrorCallback,
                                  WarningCallback);
   if (! mPNG)
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
 
   mPNGinfo = png_create_info_struct(mPNG);
   if (! mPNGinfo) {
-    png_destroy_write_struct(&mPNG, nsnull);
+    png_destroy_write_struct(&mPNG, nullptr);
     return NS_ERROR_FAILURE;
   }
 
@@ -141,7 +141,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
   mImageBufferUsed = 0;
 
   // set our callback for libpng to give us the data
-  png_set_write_fn(mPNG, this, WriteCallback, nsnull);
+  png_set_write_fn(mPNG, this, WriteCallback, nullptr);
 
   // include alpha?
   int colorType;
@@ -207,7 +207,7 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
   PRUint32 x_offset = 0, y_offset = 0;
 
   // must be initialized
-  if (mImageBuffer == nsnull)
+  if (mImageBuffer == nullptr)
     return NS_ERROR_NOT_INITIALIZED;
 
   // EndImageEncode was done, or some error occurred earlier
@@ -227,8 +227,8 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
   }
 
   // parse and check any provided output options
-  nsresult rv = ParseOptions(aFrameOptions, &useTransparency, nsnull,
-                             nsnull, nsnull, &dispose_op, &blend_op,
+  nsresult rv = ParseOptions(aFrameOptions, &useTransparency, nullptr,
+                             nullptr, nullptr, &dispose_op, &blend_op,
                              &delay_ms, &x_offset, &y_offset);
   if (rv != NS_OK)
     return rv;
@@ -236,7 +236,7 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
 #ifdef PNG_APNG_SUPPORTED
   if (mIsAnimation) {
     // XXX the row pointers arg (#3) is unused, can it be removed?
-    png_write_frame_head(mPNG, mPNGinfo, nsnull,
+    png_write_frame_head(mPNG, mPNGinfo, nullptr,
                          aWidth, aHeight, x_offset, y_offset,
                          delay_ms, 1000, dispose_op, blend_op);
   }
@@ -304,7 +304,7 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
 NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
 {
   // must be initialized
-  if (mImageBuffer == nsnull)
+  if (mImageBuffer == nullptr)
     return NS_ERROR_NOT_INITIALIZED;
 
   // EndImageEncode has already been called, or some error
@@ -352,7 +352,7 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
 
   while (char* token = nsCRT::strtok(options, ";", &options)) {
     // If there's an '=' character, split the token around it.
-    char* equals = token, *value = nsnull;
+    char* equals = token, *value = nullptr;
     while(*equals != '=' && *equals) {
       ++equals;
     }
@@ -481,9 +481,9 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
 /* void close (); */
 NS_IMETHODIMP nsPNGEncoder::Close()
 {
-  if (mImageBuffer != nsnull) {
+  if (mImageBuffer != nullptr) {
     PR_Free(mImageBuffer);
-    mImageBuffer = nsnull;
+    mImageBuffer = nullptr;
     mImageBufferSize = 0;
     mImageBufferUsed = 0;
     mImageBufferReadPoint = 0;
@@ -684,7 +684,7 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
     if (! newBuf) {
       // can't resize, just zero (this will keep us from writing more)
       PR_Free(that->mImageBuffer);
-      that->mImageBuffer = nsnull;
+      that->mImageBuffer = nullptr;
       that->mImageBufferSize = 0;
       that->mImageBufferUsed = 0;
       return;
@@ -720,8 +720,8 @@ nsPNGEncoder::NotifyListener()
     NS_ASSERTION(callback, "Shouldn't fail to make the callback");
     // Null the callback first because OnInputStreamReady could reenter
     // AsyncWait
-    mCallback = nsnull;
-    mCallbackTarget = nsnull;
+    mCallback = nullptr;
+    mCallbackTarget = nullptr;
     mNotifyThreshold = 0;
 
     callback->OnInputStreamReady(this);

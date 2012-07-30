@@ -44,7 +44,7 @@ using namespace mozilla;
 #endif
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gAudioStreamLog = nsnull;
+PRLogModuleInfo* gAudioStreamLog = nullptr;
 #endif
 
 static const PRUint32 FAKE_BUFFER_SIZE = 176400;
@@ -281,7 +281,7 @@ class AudioShutdownEvent : public nsRunnable
 #define PREF_USE_CUBEB "media.use_cubeb"
 #define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
 
-static mozilla::Mutex* gAudioPrefsLock = nsnull;
+static mozilla::Mutex* gAudioPrefsLock = nullptr;
 static double gVolumeScale;
 static bool gUseCubeb;
 static PRUint32 gCubebLatency;
@@ -295,7 +295,7 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = 1.0;
     } else {
       NS_ConvertUTF16toUTF8 utf8(value);
-      gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
+      gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nullptr));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
     bool value = Preferences::GetBool(aPref, true);
@@ -335,7 +335,7 @@ static cubeb* GetCubebContext()
     return gCubebContext;
   }
   NS_WARNING("cubeb_init failed");
-  return nsnull;
+  return nullptr;
 }
 
 static PRUint32 GetCubebLatency()
@@ -351,12 +351,12 @@ void nsAudioStream::InitLibrary()
   gAudioStreamLog = PR_NewLogModule("nsAudioStream");
 #endif
   gAudioPrefsLock = new mozilla::Mutex("nsAudioStream::gAudioPrefsLock");
-  PrefChanged(PREF_VOLUME_SCALE, nsnull);
+  PrefChanged(PREF_VOLUME_SCALE, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
 #if defined(MOZ_CUBEB)
-  PrefChanged(PREF_USE_CUBEB, nsnull);
+  PrefChanged(PREF_USE_CUBEB, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_USE_CUBEB);
-  PrefChanged(PREF_CUBEB_LATENCY, nsnull);
+  PrefChanged(PREF_CUBEB_LATENCY, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 #endif
 }
@@ -368,12 +368,12 @@ void nsAudioStream::ShutdownLibrary()
   Preferences::UnregisterCallback(PrefChanged, PREF_USE_CUBEB);
 #endif
   delete gAudioPrefsLock;
-  gAudioPrefsLock = nsnull;
+  gAudioPrefsLock = nullptr;
 
 #if defined(MOZ_CUBEB)
   if (gCubebContext) {
     cubeb_destroy(gCubebContext);
-    gCubebContext = nsnull;
+    gCubebContext = nullptr;
   }
 #endif
 }
@@ -384,7 +384,7 @@ nsAudioStream::GetThread()
   if (!mAudioPlaybackThread) {
     NS_NewNamedThread("Audio Stream",
                       getter_AddRefs(mAudioPlaybackThread),
-                      nsnull,
+                      nullptr,
                       MEDIA_THREAD_STACK_SIZE);
   }
   return mAudioPlaybackThread;
@@ -434,7 +434,7 @@ nsresult nsNativeAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFo
                            SA_PCM_FORMAT_S16_NE,
                            aRate,
                            aNumChannels) != SA_SUCCESS) {
-    mAudioHandle = nsnull;
+    mAudioHandle = nullptr;
     mInError = true;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_create_pcm error"));
     return NS_ERROR_FAILURE;
@@ -442,7 +442,7 @@ nsresult nsNativeAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFo
 
   if (sa_stream_open(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
     sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
-    mAudioHandle = nsnull;
+    mAudioHandle = nullptr;
     mInError = true;
     PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsNativeAudioStream: sa_stream_open error"));
     return NS_ERROR_FAILURE;
@@ -458,7 +458,7 @@ void nsNativeAudioStream::Shutdown()
     return;
 
   sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
-  mAudioHandle = nsnull;
+  mAudioHandle = nullptr;
   mInError = true;
 }
 
@@ -630,7 +630,7 @@ PRInt32 nsNativeAudioStream::GetMinWriteSize()
 
 #if defined(REMOTE_AUDIO)
 nsRemotedAudioStream::nsRemotedAudioStream()
- : mAudioChild(nsnull),
+ : mAudioChild(nullptr),
    mBytesPerFrame(0),
    mPaused(false)
 {}
@@ -677,7 +677,7 @@ nsRemotedAudioStream::Shutdown()
     return;
   nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(mAudioChild);
   NS_DispatchToMainThread(event);
-  mAudioChild = nsnull;
+  mAudioChild = nullptr;
 }
 
 nsresult
@@ -792,7 +792,7 @@ class nsCircularByteBuffer
 {
 public:
   nsCircularByteBuffer()
-    : mBuffer(nsnull), mCapacity(0), mStart(0), mCount(0)
+    : mBuffer(nullptr), mCapacity(0), mStart(0), mCount(0)
   {}
 
   // Set the capacity of the buffer in bytes.  Must be called before any

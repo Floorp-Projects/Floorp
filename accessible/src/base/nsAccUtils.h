@@ -126,7 +126,7 @@ public:
     * @param  aDescendant  [in] descendant to start search with
     * @param  aRole        [in] role to find matching ancestor for
     * @return               the ancestor accessible with the given role, or
-    *                       nsnull if no match is found
+    *                       nullptr if no match is found
     */
    static Accessible* GetAncestorWithRole(Accessible* aDescendant,
                                           PRUint32 aRole);

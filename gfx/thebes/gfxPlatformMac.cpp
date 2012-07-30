@@ -87,14 +87,14 @@ gfxPlatformMac::CreatePlatformFontList()
         return list;
     }
     gfxPlatformFontList::Shutdown();
-    return nsnull;
+    return nullptr;
 }
 
 already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxContentType contentType)
 {
-    gfxASurface *newSurface = nsnull;
+    gfxASurface *newSurface = nullptr;
 
     newSurface = new gfxQuartzSurface(size, OptimalFormatForContent(contentType));
 
@@ -399,7 +399,7 @@ gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 qcms_profile *
 gfxPlatformMac::GetPlatformCMSOutputProfile()
 {
-    qcms_profile *profile = nsnull;
+    qcms_profile *profile = nullptr;
     CMProfileRef cmProfile;
     CMProfileLocation *location;
     UInt32 locationSize;
@@ -421,12 +421,12 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
 
     CMError err = CMGetProfileByAVID(static_cast<CMDisplayIDType>(displayID), &cmProfile);
     if (err != noErr)
-        return nsnull;
+        return nullptr;
 
     // get the size of location
     err = NCMGetProfileLocation(cmProfile, NULL, &locationSize);
     if (err != noErr)
-        return nsnull;
+        return nullptr;
 
     // allocate enough room for location
     location = static_cast<CMProfileLocation*>(malloc(locationSize));

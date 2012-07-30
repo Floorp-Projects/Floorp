@@ -190,20 +190,20 @@ The GetValue method must be similarly <a href="#GetValueCase">modified</a>
     case eCSSProperty_cursor:
     case eCSSProperty_force_broken_image_icons: {
       CSS_VARONSTACK_GET(UserInterface);
-      if (nsnull != theUserInterface) {
+      if (nullptr != theUserInterface) {
         switch (aProperty) {
           case eCSSProperty_user_input:       aValue = theUserInterface-&gt;mUserInput;       break;
           case eCSSProperty_user_modify:      aValue = theUserInterface-&gt;mUserModify;      break;
           case eCSSProperty_user_select:      aValue = theUserInterface-&gt;mUserSelect;      break;
           case eCSSProperty_key_equivalent:
-            if (nsnull != theUserInterface-&gt;mKeyEquivalent) {
+            if (nullptr != theUserInterface-&gt;mKeyEquivalent) {
               aValue = theUserInterface-&gt;mKeyEquivalent-&gt;mValue;
             }
             break;
           case eCSSProperty_user_focus:       aValue = theUserInterface-&gt;mUserFocus;       break;
           case eCSSProperty_resizer:          aValue = theUserInterface-&gt;mResizer;         break;
           case eCSSProperty_cursor:
-            if (nsnull != theUserInterface-&gt;mCursor) {
+            if (nullptr != theUserInterface-&gt;mCursor) {
               aValue = theUserInterface-&gt;mCursor-&gt;mValue;
             }
             break;
@@ -231,7 +231,7 @@ the 'List' method to output the property value.<br>
   mUserModify.AppendToString(buffer, eCSSProperty_user_modify);
   mUserSelect.AppendToString(buffer, eCSSProperty_user_select);
   nsCSSValueList*  keyEquiv = mKeyEquivalent;
-  while (nsnull != keyEquiv) {
+  while (nullptr != keyEquiv) {
     keyEquiv-&gt;mValue.AppendToString(buffer, eCSSProperty_key_equivalent);
     keyEquiv= keyEquiv-&gt;mNext;
   }
@@ -239,7 +239,7 @@ the 'List' method to output the property value.<br>
   mResizer.AppendToString(buffer, eCSSProperty_resizer);
   
   nsCSSValueList*  cursor = mCursor;
-  while (nsnull != cursor) {
+  while (nullptr != cursor) {
     cursor-&gt;mValue.AppendToString(buffer, eCSSProperty_cursor);
     cursor = cursor-&gt;mNext;
   }
@@ -274,7 +274,7 @@ variant flag</a>
  that makes sense for your property. In our case<br>
   <br>
   <pre>  case eCSSProperty_force_broken_image_icons:</pre>
-  <pre>    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);</pre>
+  <pre>    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nullptr);</pre>
 This will parse the value as a positive integer value, which is what we want.<br>
   <br>
   <h3><a name="StyleContext">Style Context</a></h3>

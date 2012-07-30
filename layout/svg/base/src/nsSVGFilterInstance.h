@@ -265,7 +265,7 @@ private:
     // around in memory, which breaks nsAutoTArray.
     nsTArray<PrimitiveInfo*> mInputs;
 
-    PrimitiveInfo() : mFE(nsnull), mImageUsers(0) {}
+    PrimitiveInfo() : mFE(nullptr), mImageUsers(0) {}
   };
 
   class ImageAnalysisEntry : public nsStringHashKey {

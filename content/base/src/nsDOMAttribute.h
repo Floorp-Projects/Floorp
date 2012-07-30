@@ -82,7 +82,7 @@ private:
   already_AddRefed<nsIAtom> GetNameAtom(nsIContent* aContent);
   mozilla::dom::Element *GetContentInternal() const
   {
-    return mAttrMap ? mAttrMap->GetContent() : nsnull;
+    return mAttrMap ? mAttrMap->GetContent() : nullptr;
   }
 
   nsString mValue;

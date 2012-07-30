@@ -112,7 +112,7 @@ public:
             NS_ASSERTION(!aSkipCharsBuilder->mRunSkipped, "out of sync");
             // all characters kept
             mCharCount = aSkipCharsBuilder->mRunCharCount;
-            mList = nsnull;
+            mList = nullptr;
             mListLength = 0;
         } else {
             aSkipCharsBuilder->FlushRun();
@@ -134,7 +134,7 @@ public:
   
     void SetAllKeep(PRUint32 aLength) {
         mCharCount = aLength;
-        mList = nsnull;
+        mList = nullptr;
         mListLength = 0;
     }
   
@@ -217,12 +217,12 @@ public:
     /**
      * The empty constructor creates an object that is useless until it is assigned.
      */
-    gfxSkipCharsIterator() : mSkipChars(nsnull) {}
+    gfxSkipCharsIterator() : mSkipChars(nullptr) {}
 
     /**
      * Return true if this iterator is properly initialized and usable.
      */  
-    bool IsInitialized() { return mSkipChars != nsnull; }
+    bool IsInitialized() { return mSkipChars != nullptr; }
 
     /**
      * Set the iterator to aOriginalStringOffset in the original string.
@@ -258,7 +258,7 @@ public:
      * at this character. When the current position is at the end of the original
      * string, we return true and *aRunLength is set to zero.
      */
-    bool IsOriginalCharSkipped(PRInt32* aRunLength = nsnull) const;
+    bool IsOriginalCharSkipped(PRInt32* aRunLength = nullptr) const;
     
     void AdvanceOriginal(PRInt32 aDelta) {
         SetOffsets(mOriginalStringOffset + aDelta, true);

@@ -79,8 +79,8 @@ private:
 
     inline bool IsValidBinding(nsDiskCacheBinding *binding)
     {
-        NS_ASSERTION(binding, "  binding == nsnull");
-        NS_ASSERTION(binding->mDeactivateEvent == nsnull,
+        NS_ASSERTION(binding, "  binding == nullptr");
+        NS_ASSERTION(binding->mDeactivateEvent == nullptr,
                      "  entry in process of deactivation");
         return (binding && !binding->mDeactivateEvent);
     }

@@ -62,7 +62,7 @@
 #endif
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* nsURILoader::mLog = nsnull;
+PRLogModuleInfo* nsURILoader::mLog = nullptr;
 #endif
 
 #define LOG(args) PR_LOG(nsURILoader::mLog, PR_LOG_DEBUG, args)
@@ -475,7 +475,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     if (mContentType != anyType) {
       rv = ConvertData(request, m_contentListener, mContentType, anyType);
       if (NS_FAILED(rv)) {
-        m_targetStreamListener = nsnull;
+        m_targetStreamListener = nullptr;
       } else if (m_targetStreamListener) {
         // We found a converter for this MIME type.  We'll just pump data into it
         // and let the downstream nsDocumentOpenInfo handle things.
@@ -536,7 +536,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
                                      getter_AddRefs(m_targetStreamListener));
     if (NS_FAILED(rv)) {
       request->SetLoadFlags(loadFlags);
-      m_targetStreamListener = nsnull;
+      m_targetStreamListener = nullptr;
     }
   }
       
@@ -585,7 +585,7 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   // results of this decode.
   nextLink->m_contentListener = aListener;
   // Also make sure it has to look for a stream listener to pump data into.
-  nextLink->m_targetStreamListener = nsnull;
+  nextLink->m_targetStreamListener = nullptr;
 
   // Make sure that nextLink treats the data as aOutContentType when
   // dispatching; that way even if the stream converters don't change the type
@@ -641,7 +641,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
 
     if (NS_FAILED(rv)) {
       // No conversion path -- we don't want this listener, if we got one
-      m_targetStreamListener = nsnull;
+      m_targetStreamListener = nullptr;
     }
 
     LOG(("  Found conversion: %s", m_targetStreamListener ? "yes" : "no"));
@@ -649,7 +649,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     // m_targetStreamListener is now the input end of the converter, and we can
     // just pump the data in there, if it exists.  If it does not, we need to
     // try other nsIURIContentListeners.
-    return m_targetStreamListener != nsnull;
+    return m_targetStreamListener != nullptr;
   }
 
   // At this point, aListener wants data of type mContentType.  Let 'em have
@@ -682,7 +682,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     
     // Unset the RETARGETED_DOCUMENT_URI flag if we set it...
     aChannel->SetLoadFlags(loadFlags);
-    m_targetStreamListener = nsnull;
+    m_targetStreamListener = nullptr;
     return false;
   }
 
@@ -691,7 +691,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
     // sure m_targetStreamListener is null so we don't do anything
     // after this point.
     LOG(("  Listener has aborted the load"));
-    m_targetStreamListener = nsnull;
+    m_targetStreamListener = nullptr;
   }
 
   NS_ASSERTION(abort || m_targetStreamListener, "DoContent returned no listener?");
@@ -781,7 +781,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
     // the preferred protocol handler. 
 
     // But for now, I'm going to let necko do the work for us....
-    rv = channel->AsyncOpen(loader, nsnull);
+    rv = channel->AsyncOpen(loader, nullptr);
 
     // no content from this load - that's OK.
     if (rv == NS_ERROR_NO_CONTENT) {
@@ -876,10 +876,10 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
     // It is important to add the channel to the new group before
     // removing it from the old one, so that the load isn't considered
     // done as soon as the request is removed.
-    loadGroup->AddRequest(channel, nsnull);
+    loadGroup->AddRequest(channel, nullptr);
 
    if (oldGroup) {
-      oldGroup->RemoveRequest(channel, nsnull, NS_BINDING_RETARGETED);
+      oldGroup->RemoveRequest(channel, nullptr, NS_BINDING_RETARGETED);
     }
   }
 

@@ -9,9 +9,9 @@
 void
 nsContentSupportMap::Init()
 {
-    if (!PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), nsnull,
+    if (!PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), nullptr,
                            sizeof(Entry), PL_DHASH_MIN_SIZE))
-        mMap.ops = nsnull;
+        mMap.ops = nullptr;
 }
 
 void

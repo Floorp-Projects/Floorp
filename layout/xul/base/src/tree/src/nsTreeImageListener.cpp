@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS2(nsTreeImageListener, imgIDecoderObserver, imgIContainerObserv
 nsTreeImageListener::nsTreeImageListener(nsTreeBodyFrame* aTreeFrame)
   : mTreeFrame(aTreeFrame),
     mInvalidationSuppressed(true),
-    mInvalidationArea(nsnull)
+    mInvalidationArea(nullptr)
 {
 }
 
@@ -107,7 +107,7 @@ nsTreeImageListener::InvalidationArea::InvalidationArea(nsITreeColumn* aCol)
   : mCol(aCol),
     mMin(-1), // min should start out "undefined"
     mMax(0),
-    mNext(nsnull)
+    mNext(nullptr)
 {
 }
 
@@ -125,6 +125,6 @@ nsTreeImageListener::InvalidationArea::AddRow(PRInt32 aIndex)
 NS_IMETHODIMP
 nsTreeImageListener::ClearFrame()
 {
-  mTreeFrame = nsnull;
+  mTreeFrame = nullptr;
   return NS_OK;
 }

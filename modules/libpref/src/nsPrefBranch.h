@@ -48,7 +48,7 @@ class PrefCallback : public PLDHashEntryHdr {
                  nsPrefBranch *aBranch)
       : mDomain(aDomain),
         mBranch(aBranch),
-        mWeakRef(nsnull),
+        mWeakRef(nullptr),
         mStrongRef(aObserver)
     {
       MOZ_COUNT_CTOR(PrefCallback);
@@ -63,7 +63,7 @@ class PrefCallback : public PLDHashEntryHdr {
       : mDomain(aDomain),
         mBranch(aBranch),
         mWeakRef(do_GetWeakReference(aObserver)),
-        mStrongRef(nsnull)
+        mStrongRef(nullptr)
     {
       MOZ_COUNT_CTOR(PrefCallback);
       nsCOMPtr<nsISupports> canonical = do_QueryInterface(aObserver);

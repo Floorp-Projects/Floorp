@@ -1098,7 +1098,7 @@ nsresult testFromArgs(int argc, char **argv)
 
 nsresult init()
 {
-  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
   if (NS_FAILED(rv))
     return rv;
   return CallGetService(kCharsetConverterManagerCID, &ccMan);

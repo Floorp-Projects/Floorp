@@ -17,7 +17,7 @@ public:
   nsISomeInterface* mXPTCStub;
 
 protected:
-  nsAutoXPTCStub() : mXPTCStub(nsnull) { }
+  nsAutoXPTCStub() : mXPTCStub(nullptr) { }
 
   nsresult
   InitStub(const nsIID& aIID)

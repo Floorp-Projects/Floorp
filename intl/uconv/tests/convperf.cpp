@@ -30,8 +30,8 @@ FILE* infile = 0;
 char inbuffer[INBUFSIZE];
 char outbuffer[OUTBUFSIZE];
 PRUnichar  medbuffer[MEDBUFSIZE];
-nsIUnicodeEncoder* encoder = nsnull;
-nsIUnicodeDecoder* decoder = nsnull;
+nsIUnicodeEncoder* encoder = nullptr;
+nsIUnicodeDecoder* decoder = nullptr;
 UINT incp = 932;
 UINT outcp = 932;
 

@@ -119,9 +119,9 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
                                   NS_LITERAL_CSTRING("text/xml"));
     if (NS_FAILED(rv)) return rv;
 
-    listener->OnStartRequest(channel, nsnull);
-    listener->OnDataAvailable(channel, nsnull, stream, 0, aString.Length());
-    listener->OnStopRequest(channel, nsnull, NS_OK);
+    listener->OnStartRequest(channel, nullptr);
+    listener->OnDataAvailable(channel, nullptr, stream, 0, aString.Length());
+    listener->OnStopRequest(channel, nullptr, NS_OK);
 
     return NS_OK;
 }

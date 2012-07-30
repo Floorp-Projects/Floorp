@@ -105,7 +105,7 @@ test_asyncNULLFallback()
   ), getter_AddRefs(stmt));
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
-  do_check_true(NS_SUCCEEDED(stmt->ExecuteAsync(nsnull, getter_AddRefs(pendingStmt))));
+  do_check_true(NS_SUCCEEDED(stmt->ExecuteAsync(nullptr, getter_AddRefs(pendingStmt))));
   do_check_true(pendingStmt);
   stmt->Finalize();
   nsRefPtr<Spinner> asyncSpin(new Spinner());

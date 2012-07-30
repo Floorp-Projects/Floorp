@@ -14,13 +14,13 @@
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-nsIRDFService* nsRDFResource::gRDFService = nsnull;
+nsIRDFService* nsRDFResource::gRDFService = nullptr;
 nsrefcnt nsRDFResource::gRDFServiceRefCnt = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(void)
-    : mDelegates(nsnull)
+    : mDelegates(nullptr)
 {
 }
 
@@ -50,7 +50,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)
 NS_IMETHODIMP
 nsRDFResource::EqualsNode(nsIRDFNode* aNode, bool* aResult)
 {
-    NS_PRECONDITION(aNode != nsnull, "null ptr");
+    NS_PRECONDITION(aNode != nullptr, "null ptr");
     if (! aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -77,7 +77,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* aNode, bool* aResult)
 NS_IMETHODIMP
 nsRDFResource::Init(const char* aURI)
 {
-    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    NS_PRECONDITION(aURI != nullptr, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
@@ -122,7 +122,7 @@ nsRDFResource::GetValueConst(const char** aURI)
 NS_IMETHODIMP
 nsRDFResource::EqualsString(const char* aURI, bool* aResult)
 {
-    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    NS_PRECONDITION(aURI != nullptr, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
@@ -135,12 +135,12 @@ nsRDFResource::EqualsString(const char* aURI, bool* aResult)
 NS_IMETHODIMP
 nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
 {
-    NS_PRECONDITION(aKey != nsnull, "null ptr");
+    NS_PRECONDITION(aKey != nullptr, "null ptr");
     if (! aKey)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     DelegateEntry* entry = mDelegates;
     while (entry) {
@@ -194,7 +194,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
 NS_IMETHODIMP
 nsRDFResource::ReleaseDelegate(const char* aKey)
 {
-    NS_PRECONDITION(aKey != nsnull, "null ptr");
+    NS_PRECONDITION(aKey != nullptr, "null ptr");
     if (! aKey)
         return NS_ERROR_NULL_POINTER;
 

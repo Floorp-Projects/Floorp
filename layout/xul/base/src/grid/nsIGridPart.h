@@ -50,7 +50,7 @@ public:
    *                   grids.)
    * @return The grid of which aBox (a row, row group, or grid) is a part.
    */
-  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull)=0;
+  virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nullptr)=0;
 
   /**
    * @param aBox [IN] The other half of the |this| parameter, i.e., the box

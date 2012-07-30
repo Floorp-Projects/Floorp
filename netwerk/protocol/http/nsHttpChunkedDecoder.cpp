@@ -116,7 +116,7 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
         }
         else if (*buf) {
             // ignore any chunk-extensions
-            if ((p = PL_strchr(buf, ';')) != nsnull)
+            if ((p = PL_strchr(buf, ';')) != nullptr)
                 *p = 0;
 
             if (!sscanf(buf, "%x", &mChunkRemaining)) {

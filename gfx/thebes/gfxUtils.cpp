@@ -283,13 +283,13 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     // matter what we do here, but we should avoid trying to
     // create a zero-size surface.
     if (needed.IsEmpty())
-        return nsnull;
+        return nullptr;
 
     gfxIntSize size(PRInt32(needed.Width()), PRInt32(needed.Height()));
     nsRefPtr<gfxASurface> temp =
         gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
     if (!temp || temp->CairoStatus())
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
     tmpCtx->SetOperator(OptimalFillOperator());
@@ -298,7 +298,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
     nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
     if (!resultPattern)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxDrawable> drawable = 
         new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
@@ -551,7 +551,7 @@ PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
   aContext->NewPath();
   nsIntRegionRectIterator iter(aRegion);
   const nsIntRect* r;
-  while ((r = iter.Next()) != nsnull) {
+  while ((r = iter.Next()) != nullptr) {
     aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), aSnap);
   }
 }

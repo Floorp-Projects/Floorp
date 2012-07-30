@@ -42,14 +42,14 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   nsNSSShutDownPreventionLock locker;
   PRInt32 selectedIndex = -1;
   bool selectionFound = false;
-  PRUnichar **certNicknameList = nsnull;
-  PRUnichar **certDetailsList = nsnull;
-  CERTCertListNode* node = nsnull;
+  PRUnichar **certNicknameList = nullptr;
+  PRUnichar **certDetailsList = nullptr;
+  CERTCertListNode* node = nullptr;
   nsresult rv = NS_OK;
 
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
-    CERTCertList *allcerts = nsnull;
+    CERTCertList *allcerts = nullptr;
     nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
     allcerts = PK11_ListCerts(PK11CertListUnique, ctx);
     CERT_DestroyCertList(allcerts);
@@ -119,8 +119,8 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
         certDetailsList[CertsToUse] = ToNewUnicode(details);
       }
       else {
-        certNicknameList[CertsToUse] = nsnull;
-        certDetailsList[CertsToUse] = nsnull;
+        certNicknameList[CertsToUse] = nullptr;
+        certDetailsList[CertsToUse] = nullptr;
       }
 
       NS_RELEASE(tempCert);
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   }
 
   if (CertsToUse) {
-    nsICertPickDialogs *dialogs = nsnull;
+    nsICertPickDialogs *dialogs = nullptr;
     rv = getNSSDialogs((void**)&dialogs, 
       NS_GET_IID(nsICertPickDialogs), 
       NS_CERTPICKDIALOGS_CONTRACTID);

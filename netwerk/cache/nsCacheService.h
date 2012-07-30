@@ -129,7 +129,7 @@ public:
     // proxied to the specified target.  Otherwise, the object will be added to
     // the list of objects to be released when the cache service is unlocked.
     static void      ReleaseObject_Locked(nsISupports *    object,
-                                          nsIEventTarget * target = nsnull);
+                                          nsIEventTarget * target = nullptr);
 
     static nsresult DispatchToCacheIOThread(nsIRunnable* event);
 

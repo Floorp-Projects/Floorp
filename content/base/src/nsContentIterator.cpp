@@ -110,24 +110,24 @@ protected:
   // Recursively get the deepest first/last child of aRoot.  This will return
   // aRoot itself if it has no children.
   nsINode* GetDeepFirstChild(nsINode* aRoot,
-                             nsTArray<PRInt32>* aIndexes = nsnull);
+                             nsTArray<PRInt32>* aIndexes = nullptr);
   nsIContent* GetDeepFirstChild(nsIContent* aRoot,
-                                nsTArray<PRInt32>* aIndexes = nsnull);
+                                nsTArray<PRInt32>* aIndexes = nullptr);
   nsINode* GetDeepLastChild(nsINode* aRoot,
-                            nsTArray<PRInt32>* aIndexes = nsnull);
+                            nsTArray<PRInt32>* aIndexes = nullptr);
   nsIContent* GetDeepLastChild(nsIContent* aRoot,
-                               nsTArray<PRInt32>* aIndexes = nsnull);
+                               nsTArray<PRInt32>* aIndexes = nullptr);
 
   // Get the next/previous sibling of aNode, or its parent's, or grandparent's,
   // etc.  Returns null if aNode and all its ancestors have no next/previous
   // sibling.
   nsIContent* GetNextSibling(nsINode* aNode,
-                             nsTArray<PRInt32>* aIndexes = nsnull);
+                             nsTArray<PRInt32>* aIndexes = nullptr);
   nsIContent* GetPrevSibling(nsINode* aNode,
-                             nsTArray<PRInt32>* aIndexes = nsnull);
+                             nsTArray<PRInt32>* aIndexes = nullptr);
 
-  nsINode* NextNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nsnull);
-  nsINode* PrevNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nsnull);
+  nsINode* NextNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nullptr);
+  nsINode* PrevNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nullptr);
 
   // WARNING: This function is expensive
   nsresult RebuildIndexStack();
@@ -311,7 +311,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   // Find first node in range.
 
-  nsIContent* cChild = nsnull;
+  nsIContent* cChild = nullptr;
 
   if (!startIsData && startNode->HasChildren()) {
     cChild = startNode->GetChildAt(startIndx);
@@ -336,7 +336,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
         if (mFirst && !NodeIsInTraversalRange(mFirst, mPre, startNode,
                                               startIndx, endNode, endIndx)) {
-          mFirst = nsnull;
+          mFirst = nullptr;
         }
       } else {
         mFirst = startNode->AsContent();
@@ -347,7 +347,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         mFirst = startNode->AsContent();
       } else {
         // What else can we do?
-        mFirst = nsnull;
+        mFirst = nullptr;
       }
     }
   } else {
@@ -362,7 +362,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
       if (mFirst && !NodeIsInTraversalRange(mFirst, mPre, startNode, startIndx,
                                             endNode, endIndx)) {
-        mFirst = nsnull;
+        mFirst = nullptr;
       }
     }
   }
@@ -378,7 +378,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         mLast = endNode->AsContent();
       } else {
         // Not much else to do here...
-        mLast = nsnull;
+        mLast = nullptr;
       }
     } else {
       // post-order
@@ -391,7 +391,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
         if (!NodeIsInTraversalRange(mLast, mPre, startNode, startIndx,
                                     endNode, endIndx)) {
-          mLast = nsnull;
+          mLast = nullptr;
         }
       } else {
         mLast = endNode->AsContent();
@@ -413,7 +413,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
       if (!NodeIsInTraversalRange(mLast, mPre, startNode, startIndx,
                                   endNode, endIndx)) {
-        mLast = nsnull;
+        mLast = nullptr;
       }
     } else {
       // post-order
@@ -424,8 +424,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
   // If either first or last is null, they both have to be null!
 
   if (!mFirst || !mLast) {
-    mFirst = nsnull;
-    mLast  = nsnull;
+    mFirst = nullptr;
+    mLast  = nullptr;
   }
 
   mCurNode = mFirst;
@@ -478,10 +478,10 @@ nsContentIterator::RebuildIndexStack()
 void
 nsContentIterator::MakeEmpty()
 {
-  mCurNode      = nsnull;
-  mFirst        = nsnull;
-  mLast         = nsnull;
-  mCommonParent = nsnull;
+  mCurNode      = nullptr;
+  mFirst        = nullptr;
+  mLast         = nullptr;
+  mCommonParent = nullptr;
   mIsDone       = true;
   mIndexes.Clear();
 }
@@ -507,7 +507,7 @@ nsContentIterator::GetDeepFirstChild(nsIContent* aRoot,
                                      nsTArray<PRInt32>* aIndexes)
 {
   if (!aRoot) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIContent* node = aRoot;
@@ -546,7 +546,7 @@ nsContentIterator::GetDeepLastChild(nsIContent* aRoot,
                                     nsTArray<PRInt32>* aIndexes)
 {
   if (!aRoot) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIContent* node = aRoot;
@@ -572,12 +572,12 @@ nsContentIterator::GetNextSibling(nsINode* aNode,
                                   nsTArray<PRInt32>* aIndexes)
 {
   if (!aNode) {
-    return nsnull;
+    return nullptr;
   }
 
   nsINode* parent = aNode->GetNodeParent();
   if (!parent) {
-    return nsnull;
+    return nullptr;
   }
 
   PRInt32 indx = 0;
@@ -633,12 +633,12 @@ nsContentIterator::GetPrevSibling(nsINode* aNode,
                                   nsTArray<PRInt32>* aIndexes)
 {
   if (!aNode) {
-    return nsnull;
+    return nullptr;
   }
 
   nsINode* parent = aNode->GetNodeParent();
   if (!parent) {
-    return nsnull;
+    return nullptr;
   }
 
   PRInt32 indx = 0;
@@ -707,7 +707,7 @@ nsContentIterator::NextNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes)
 
   // post-order
   nsINode* parent = node->GetNodeParent();
-  nsIContent* sibling = nsnull;
+  nsIContent* sibling = nullptr;
   PRInt32 indx = 0;
 
   // get the cached index
@@ -770,7 +770,7 @@ nsContentIterator::PrevNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes)
   // if we are a Pre-order iterator, use pre-order
   if (mPre) {
     nsINode* parent = node->GetNodeParent();
-    nsIContent* sibling = nsnull;
+    nsIContent* sibling = nullptr;
     PRInt32 indx = 0;
 
     // get the cached index
@@ -859,7 +859,7 @@ nsContentIterator::First()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to position iterator!");
   }
 
-  mIsDone = mFirst == nsnull;
+  mIsDone = mFirst == nullptr;
 }
 
 
@@ -877,7 +877,7 @@ nsContentIterator::Last()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to position iterator!");
   }
 
-  mIsDone = mLast == nsnull;
+  mIsDone = mLast == nullptr;
 }
 
 
@@ -1065,7 +1065,7 @@ nsINode*
 nsContentIterator::GetCurrentNode()
 {
   if (mIsDone) {
-    return nsnull;
+    return nullptr;
   }
 
   NS_ASSERTION(mCurNode, "Null current node in an iterator that's not done!");
@@ -1217,8 +1217,8 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsContentUtils::GetAncestorsAndOffsets(endParent->AsDOMNode(), endOffset,
                                          &mEndNodes, &mEndOffsets);
 
-  nsIContent* firstCandidate = nsnull;
-  nsIContent* lastCandidate = nsnull;
+  nsIContent* firstCandidate = nullptr;
+  nsIContent* lastCandidate = nullptr;
 
   // find first node in range
   PRInt32 offset = mRange->StartOffset();
@@ -1323,7 +1323,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 void
 nsContentSubtreeIterator::First()
 {
-  mIsDone = mFirst == nsnull;
+  mIsDone = mFirst == nullptr;
 
   mCurNode = mFirst;
 }
@@ -1332,7 +1332,7 @@ nsContentSubtreeIterator::First()
 void
 nsContentSubtreeIterator::Last()
 {
-  mIsDone = mLast == nsnull;
+  mIsDone = mLast == nullptr;
 
   mCurNode = mLast;
 }
@@ -1372,7 +1372,7 @@ nsContentSubtreeIterator::Next()
   // This shouldn't be needed, but since our selection code can put us
   // in a situation where mLast is in generated content, we need this
   // to stop the iterator when we've walked past past the last node!
-  mIsDone = mCurNode == nsnull;
+  mIsDone = mCurNode == nullptr;
 }
 
 
@@ -1403,7 +1403,7 @@ nsContentSubtreeIterator::Prev()
   // This shouldn't be needed, but since our selection code can put us
   // in a situation where mFirst is in generated content, we need this
   // to stop the iterator when we've walked past past the first node!
-  mIsDone = mCurNode == nsnull;
+  mIsDone = mCurNode == nullptr;
 }
 
 
@@ -1423,7 +1423,7 @@ nsIContent*
 nsContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode)
 {
   if (!aNode || !aNode->GetNodeParent()) {
-    return nsnull;
+    return nullptr;
   }
 
   // aNode has a parent, so it must be content.
@@ -1436,7 +1436,7 @@ nsContentSubtreeIterator::GetTopAncestorInRange(nsINode* aNode)
   NS_ASSERTION(NS_SUCCEEDED(res) && !nodeBefore && !nodeAfter,
                "aNode isn't in mRange, or something else weird happened");
   if (NS_FAILED(res) || nodeBefore || nodeAfter) {
-    return nsnull;
+    return nullptr;
   }
 
   while (content) {

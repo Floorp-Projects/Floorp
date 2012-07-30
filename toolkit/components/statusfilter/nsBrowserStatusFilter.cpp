@@ -63,7 +63,7 @@ NS_IMETHODIMP
 nsBrowserStatusFilter::RemoveProgressListener(nsIWebProgressListener *aListener)
 {
     if (aListener == mListener)
-        mListener = nsnull;
+        mListener = nullptr;
     return NS_OK;
 }
 
@@ -115,14 +115,14 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
             // STATE_STOP can still be relayed to the listener if needed
             // (bug 209330)
             if (!mUseRealProgressFlag && mTotalRequests)
-                OnProgressChange(nsnull, nsnull, 0, 0,
+                OnProgressChange(nullptr, nullptr, 0, 0,
                                  mFinishedRequests, mTotalRequests);
         }
     }
     else if (aStateFlags & STATE_TRANSFERRING) {
         if (aStateFlags & STATE_IS_REQUEST) {
             if (!mUseRealProgressFlag && mTotalRequests)
-                return OnProgressChange(nsnull, nsnull, 0, 0,
+                return OnProgressChange(nullptr, nullptr, 0, 0,
                                         mFinishedRequests, mTotalRequests);
         }
 
@@ -307,7 +307,7 @@ nsBrowserStatusFilter::MaybeSendProgress()
     if (percentage > (mCurrentPercentage + 3)) {
         mCurrentPercentage = percentage;
         // XXX truncates 64-bit to 32-bit
-        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
+        mListener->OnProgressChange(nullptr, nullptr, 0, 0,
                                     (PRInt32)mCurProgress,
                                     (PRInt32)mMaxProgress);
     }
@@ -317,7 +317,7 @@ void
 nsBrowserStatusFilter::MaybeSendStatus()
 {
     if (mStatusIsDirty) {
-        mListener->OnStatusChange(nsnull, nsnull, 0, mStatusMsg.get());
+        mListener->OnStatusChange(nullptr, nullptr, 0, mStatusMsg.get());
         mCurrentStatusMsg = mStatusMsg;
         mStatusIsDirty = false;
     }
@@ -339,7 +339,7 @@ nsBrowserStatusFilter::StartDelayTimer()
 void
 nsBrowserStatusFilter::ProcessTimeout()
 {
-    mTimer = nsnull;
+    mTimer = nullptr;
 
     if (!mListener)
         return;

@@ -107,7 +107,7 @@ NS_IMETHODIMP nsDOMSVGZoomEvent::GetZoomRectScreen(nsIDOMSVGRect **aZoomRectScre
   // Be sure to use NS_NewSVGReadonlyRect and not NS_NewSVGRect if we
   // eventually do implement this!
 
-  *aZoomRectScreen = nsnull;
+  *aZoomRectScreen = nullptr;
   NS_NOTYETIMPLEMENTED("nsDOMSVGZoomEvent::GetZoomRectScreen");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

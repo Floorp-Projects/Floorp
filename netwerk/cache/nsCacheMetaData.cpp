@@ -25,7 +25,7 @@ nsCacheMetaData::GetElement(const char * key)
         data = value + strlen(value) + 1;
     }
     NS_ABORT_IF_FALSE(data == limit, "Metadata corrupted");
-    return nsnull;
+    return nullptr;
 }
 
 

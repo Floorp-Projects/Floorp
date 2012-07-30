@@ -122,7 +122,7 @@ nsRequestObserverProxy::~nsRequestObserverProxy()
         // order is crucial here... we must be careful to clear mObserver
         // before posting the proxy release event.  otherwise, we'd risk
         // releasing the object on this thread.
-        nsIRequestObserver *obs = nsnull;
+        nsIRequestObserver *obs = nullptr;
         mObserver.swap(obs);
         NS_ProxyRelease(mTarget, obs);
     }

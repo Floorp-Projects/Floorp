@@ -112,7 +112,7 @@ void nsWebMBufferedParser::Append(const unsigned char* aBuffer, PRUint32 aLength
         mState = READ_VINT;
         mNextState = READ_BLOCK;
       } else {
-        PRUint32 length = VIntLength(c, nsnull);
+        PRUint32 length = VIntLength(c, nullptr);
         if (length == 4) {
           p -= 1;
           mState = CLUSTER_SYNC;

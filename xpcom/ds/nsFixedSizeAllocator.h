@@ -27,7 +27,7 @@
       Create(nsFixedSizeAllocator &aAllocator)
       {
         void *place = aAllocator.Alloc(sizeof(Foo));
-        return place ? ::new (place) Foo() : nsnull;
+        return place ? ::new (place) Foo() : nullptr;
       }
 
       static void
@@ -128,7 +128,7 @@ protected:
     FindBucket(size_t aSize);
 
 public:
-    nsFixedSizeAllocator() : mBuckets(nsnull) {}
+    nsFixedSizeAllocator() : mBuckets(nullptr) {}
 
     ~nsFixedSizeAllocator() {
         if (mBuckets)

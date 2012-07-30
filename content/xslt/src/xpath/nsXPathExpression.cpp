@@ -100,7 +100,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     }
 
     NS_ENSURE_ARG(aResult);
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsAutoPtr<txXPathNode> contextNode(txXPathNativeNode::createXPathNode(aContextNode));
     if (!contextNode) {
@@ -170,7 +170,7 @@ bool nsXPathExpression::EvalContextImpl::isStripSpaceAllowed(const txXPathNode& 
 void* nsXPathExpression::EvalContextImpl::getPrivateContext()
 {
     // we don't have a private context here.
-    return nsnull;
+    return nullptr;
 }
 
 txResultRecycler* nsXPathExpression::EvalContextImpl::recycler()

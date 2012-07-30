@@ -167,7 +167,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_OK;
-  *aToData = nsnull;
+  *aToData = nullptr;
   *aDataToLen = 0;
 
   if ( !nsCRT::strcmp(aFromDataFlavor, kHTMLMime) ) {

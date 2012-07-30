@@ -15,10 +15,14 @@
 #include "nsCSSProperty.h"
 #include "nsCoord.h"
 #include "nsColor.h"
-#include "nsCSSValue.h"
 
 class nsPresContext;
 class nsStyleContext;
+class nsCSSValue;
+struct nsCSSValueList;
+struct nsCSSValuePair;
+struct nsCSSValueTriplet;
+struct nsCSSValuePairList;
 struct nsCSSRect;
 class gfx3DMatrix;
 
@@ -128,7 +132,7 @@ public:
    * (property ID + string).  A style context is needed in case the
    * specified value depends on inherited style or on the values of other
    * properties.
-   *
+   * 
    * @param aProperty       The property whose value we're computing.
    * @param aTargetElement  The content node to which our computed value is
    *                        applicable.
@@ -144,7 +148,7 @@ public:
    *                        false otherwise.
    *                        Note that the operation of this method is
    *                        significantly faster when |aIsContextSensitive| is
-   *                        nsnull.
+   *                        nullptr.
    * @return true on success, false on failure.
    */
   static bool ComputeValue(nsCSSProperty aProperty,
@@ -152,7 +156,7 @@ public:
                              const nsAString& aSpecifiedValue,
                              bool aUseSVGMode,
                              Value& aComputedValue,
-                             bool* aIsContextSensitive = nsnull);
+                             bool* aIsContextSensitive = nullptr);
 
   /**
    * Creates a specified value for the given computed value.
@@ -199,12 +203,8 @@ public:
     * @param aProgress  Interpolation value in the range [0.0, 1.0]
     */
    static gfx3DMatrix InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
-                                                 const gfx3DMatrix &aMatrix2,
+                                                 const gfx3DMatrix &aMatrix2, 
                                                  double aProgress);
-
-   static already_AddRefed<nsCSSValue::Array>
-     AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                             nsCSSValueList**& aListTail);
 
   /**
    * The types and values for the values that we extract and animate.

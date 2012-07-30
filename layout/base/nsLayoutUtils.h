@@ -89,7 +89,7 @@ public:
    * the first-in-flow.
    *
    * @param aFrame the frame whose :before is wanted
-   * @return the :before frame or nsnull if there isn't one
+   * @return the :before frame or nullptr if there isn't one
    */
   static nsIFrame* GetBeforeFrame(nsIFrame* aFrame);
 
@@ -100,7 +100,7 @@ public:
    * frames, following in-flows, etc.
    *
    * @param aFrame the frame whose :after is wanted
-   * @return the :after frame or nsnull if there isn't one
+   * @return the :after frame or nullptr if there isn't one
    */
   static nsIFrame* GetAfterFrame(nsIFrame* aFrame);
 
@@ -110,7 +110,7 @@ public:
    *
    * @param aFrame the frame to start at
    * @param aFrameType the frame type to look for
-   * @return a frame of the given type or nsnull if no
+   * @return a frame of the given type or nullptr if no
    *         such ancestor exists
    */
   static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType);
@@ -120,7 +120,7 @@ public:
    * ancestor that (or the frame itself) is a "Page" frame, if any.
    *
    * @param aFrame the frame to start at
-   * @return a frame of type nsGkAtoms::pageFrame or nsnull if no
+   * @return a frame of type nsGkAtoms::pageFrame or nullptr if no
    *         such ancestor exists
    */
   static nsIFrame* GetPageFrame(nsIFrame* aFrame)
@@ -175,7 +175,7 @@ public:
    */
   static PRInt32 CompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
-                                     const nsIContent* aCommonAncestor = nsnull)
+                                     const nsIContent* aCommonAncestor = nullptr)
   {
     return DoCompareTreePosition(aContent1, aContent2, -1, 1, aCommonAncestor);
   }
@@ -190,7 +190,7 @@ public:
                                        nsIContent* aContent2,
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
-                                       const nsIContent* aCommonAncestor = nsnull);
+                                       const nsIContent* aCommonAncestor = nullptr);
 
   /**
    * CompareTreePosition determines whether aFrame1 comes before or
@@ -213,7 +213,7 @@ public:
    */
   static PRInt32 CompareTreePosition(nsIFrame* aFrame1,
                                      nsIFrame* aFrame2,
-                                     nsIFrame* aCommonAncestor = nsnull)
+                                     nsIFrame* aCommonAncestor = nullptr)
   {
     return DoCompareTreePosition(aFrame1, aFrame2, -1, 1, aCommonAncestor);
   }
@@ -228,7 +228,7 @@ public:
                                        nsIFrame* aFrame2,
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
-                                       nsIFrame* aCommonAncestor = nsnull);
+                                       nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * GetLastContinuationWithChild gets the last continuation in aFrame's chain
@@ -237,7 +237,7 @@ public:
   static nsIFrame* GetLastContinuationWithChild(nsIFrame* aFrame);
 
   /**
-   * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if
+   * GetLastSibling simply finds the last sibling of aFrame, or returns nullptr if
    * aFrame is null.
    */
   static nsIFrame* GetLastSibling(nsIFrame* aFrame);
@@ -262,17 +262,17 @@ public:
    * than the child document.
    */
   static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
-                                          nsPoint* aCrossDocOffset = nsnull);
+                                          nsPoint* aCrossDocOffset = nullptr);
 
   /**
    * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor
    * of aFrame and not equal to aFrame.
-   * @param aCommonAncestor nsnull, or a common ancestor of aFrame and
+   * @param aCommonAncestor nullptr, or a common ancestor of aFrame and
    * aAncestorFrame. If non-null, this can bound the search and speed up
    * the function
    */
   static bool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
-                                      nsIFrame* aCommonAncestor = nsnull);
+                                      nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * Like IsProperAncestorFrame, but looks across document boundaries.
@@ -281,12 +281,12 @@ public:
    * aFrame == aAncestorFrame.
    */
   static bool IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
-                                              nsIFrame* aCommonAncestor = nsnull);
+                                              nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * IsAncestorFrameCrossDoc checks whether aAncestorFrame is an ancestor
    * of aFrame or equal to aFrame, looking across document boundaries.
-   * @param aCommonAncestor nsnull, or a common ancestor of aFrame and
+   * @param aCommonAncestor nullptr, or a common ancestor of aFrame and
    * aAncestorFrame. If non-null, this can bound the search and speed up
    * the function.
    *
@@ -294,7 +294,7 @@ public:
    * aFrame == aAncestorFrame.
    */
   static bool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
-                                        nsIFrame* aCommonAncestor = nsnull);
+                                        nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * Finds the nearest ancestor frame that is the root of an "actively
@@ -308,7 +308,7 @@ public:
 
   static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
                                             nsDisplayListBuilder* aBuilder,
-                                            bool* aShouldFixToViewport = nsnull);
+                                            bool* aShouldFixToViewport = nullptr);
 
   /**
    * Returns true if aActiveScrolledRoot is in a content document,
@@ -333,7 +333,7 @@ public:
    *
    * @param  aFrame the frame to start with
    * @param  aDirection Whether it's for horizontal or vertical scrolling.
-   * @return the nearest scrollable frame or nsnull if not found
+   * @return the nearest scrollable frame or nullptr if not found
    */
   enum Direction { eHorizontal, eVertical };
   static nsIScrollableFrame* GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
@@ -346,7 +346,7 @@ public:
    * The search extends across document boundaries.
    *
    * @param  aFrame the frame to start with
-   * @return the nearest scrollable frame or nsnull if not found
+   * @return the nearest scrollable frame or nullptr if not found
    */
   static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame);
 
@@ -368,7 +368,7 @@ public:
 
   /**
    * If this frame is a placeholder for a float, then return the float,
-   * otherwise return nsnull.  aPlaceholder must be a placeholder frame.
+   * otherwise return nullptr.  aPlaceholder must be a placeholder frame.
    */
   static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPlaceholder);
 
@@ -470,7 +470,7 @@ public:
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
-   * or nsnull if there is no such frame.
+   * or nullptr if there is no such frame.
    * @param aPt the point, relative to the frame origin
    * @param aShouldIgnoreSuppression a boolean to control if the display
    * list builder should ignore paint suppression or not
@@ -484,7 +484,7 @@ public:
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
    * frames under the area of a rectangle that receives a mouse event,
-   * or nsnull if there is no such frame.
+   * or nullptr if there is no such frame.
    * @param aRect the rect, relative to the frame origin
    * @param aOutFrames an array to add all the frames found
    * @param aShouldIgnoreSuppression a boolean to control if the display
@@ -1200,7 +1200,7 @@ public:
                                           const nsPoint&       aDest,
                                           const nsRect*        aDirty,
                                           PRUint32             aImageFlags,
-                                          const nsRect*        aSourceArea = nsnull);
+                                          const nsRect*        aSourceArea = nullptr);
 
   /**
    * Draw a whole image without tiling.
@@ -1223,7 +1223,7 @@ public:
                                   const nsRect&        aDest,
                                   const nsRect&        aDirty,
                                   PRUint32             aImageFlags,
-                                  const nsRect*        aSourceArea = nsnull);
+                                  const nsRect*        aSourceArea = nullptr);
 
   /**
    * Given an imgIContainer, this method attempts to obtain an intrinsic
@@ -1490,7 +1490,7 @@ public:
    * total, and sets the TEXT_RUN_MEMORY_ACCOUNTED flag to avoid double-
    * accounting. (Runs with this flag already set will be skipped.)
    * Expected usage pattern is therefore to call twice:
-   *    (void)SizeOfTextRunsForFrames(rootFrame, nsnull, true);
+   *    (void)SizeOfTextRunsForFrames(rootFrame, nullptr, true);
    *    total = SizeOfTextRunsForFrames(rootFrame, mallocSizeOf, false);
    */
   static size_t SizeOfTextRunsForFrames(nsIFrame* aFrame,
@@ -1498,22 +1498,9 @@ public:
                                         bool clear);
 
   /**
-   * Returns true if the content node has animations or transitions that can be
-   * performed on the compositor.
-   */
-  static bool HasAnimationsForCompositor(nsIContent* aContent,
-                                         nsCSSProperty aProperty);
-
-  /**
    * Checks if CSS 3D transforms are currently enabled.
    */
   static bool Are3DTransformsEnabled();
-
-  /**
-   * Checks if off-main-thread transform and opacity animations are enabled.
-   */
-  static bool AreOpacityAnimationsEnabled();
-  static bool AreTransformAnimationsEnabled();
 
   /**
    * Checks if we should forcibly use nearest pixel filtering for the
@@ -1718,7 +1705,7 @@ namespace mozilla {
           mPresContext->mInflationDisabledForShrinkWrap = true;
         } else {
           // indicate we have nothing to restore
-          mPresContext = nsnull;
+          mPresContext = nullptr;
         }
       }
 

@@ -22,11 +22,11 @@ CanvasLayerD3D10::~CanvasLayerD3D10()
 void
 CanvasLayerD3D10::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
   if (aData.mSurface) {
     mSurface = aData.mSurface;
-    NS_ASSERTION(aData.mGLContext == nsnull && !aData.mDrawTarget,
+    NS_ASSERTION(aData.mGLContext == nullptr && !aData.mDrawTarget,
                  "CanvasLayer can't have both surface and GLContext/DrawTarget");
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
@@ -48,7 +48,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
 
     mTexture = static_cast<ID3D10Texture2D*>(texture);
 
-    NS_ASSERTION(aData.mGLContext == nsnull && aData.mSurface == nsnull,
+    NS_ASSERTION(aData.mGLContext == nullptr && aData.mSurface == nullptr,
                  "CanvasLayer can't have both surface and GLContext/Surface");
 
     mNeedsYFlip = false;
@@ -78,7 +78,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   mIsD2DTexture = false;
   mUsingSharedTexture = false;
 
-  HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nsnull;
+  HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nullptr;
   if (shareHandle) {
     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
     if (SUCCEEDED(hr))
@@ -168,7 +168,7 @@ CanvasLayerD3D10::UpdateSurface()
     mGLContext->ReadPixelsIntoImageSurface(0, 0,
                                            mBounds.width, mBounds.height,
                                            tmpSurface);
-    tmpSurface = nsnull;
+    tmpSurface = nullptr;
 
     // Put back the previous framebuffer binding.
     if (currentFramebuffer != mCanvasFramebuffer)

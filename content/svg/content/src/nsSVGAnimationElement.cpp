@@ -125,7 +125,7 @@ nsSVGAnimationElement::GetTargetElementContent()
 
   // No "xlink:href" attribute --> I should target my parent.
   nsIContent* parent = GetFlattenedTreeParent();
-  return parent && parent->IsElement() ? parent->AsElement() : nsnull;
+  return parent && parent->IsElement() ? parent->AsElement() : nullptr;
 }
 
 bool
@@ -151,7 +151,7 @@ nsSVGAnimationElement::GetTargetAttributeType() const
 {
   nsIContent::AttrValuesArray typeValues[] = { &nsGkAtoms::css,
                                                &nsGkAtoms::XML,
-                                               nsnull};
+                                               nullptr};
   nsSMILTargetAttrType smilTypes[] = { eSMILTargetAttrType_CSS,
                                        eSMILTargetAttrType_XML };
   PRInt32 index = FindAttrValueIn(kNameSpaceID_None,
@@ -429,7 +429,7 @@ nsSVGAnimationElement::GetTimeContainer()
     return element->GetTimedDocumentRoot();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // nsIDOMElementTimeControl

@@ -74,7 +74,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
     if (e                                                 \
         && NS_SUCCEEDED((e)->GetMaxLength((s), (l), &(al)))\
         && ((al) > (PRInt32)(sbl))                        \
-        && (nsnull!=((p)=(char*)nsMemory::Alloc((al)+1))) \
+        && (nullptr!=((p)=(char*)nsMemory::Alloc((al)+1))) \
         ) {                                               \
     }                                                     \
     else {                                                \

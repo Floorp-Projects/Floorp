@@ -78,7 +78,7 @@ NS_IMETHODIMP
 nsUUIDGenerator::GenerateUUID(nsID** ret)
 {
     nsID *id = static_cast<nsID*>(NS_Alloc(sizeof(nsID)));
-    if (id == nsnull)
+    if (id == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = GenerateUUIDInPlace(id);
