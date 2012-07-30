@@ -334,8 +334,7 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
 
   nsHTMLOptionElement *optElement = nsHTMLOptionElement::FromContent(aOptions);
   if (optElement) {
-    nsresult rv = mOptions->InsertOptionAt(optElement, *aInsertIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mOptions->InsertOptionAt(optElement, *aInsertIndex);
     (*aInsertIndex)++;
     return NS_OK;
   }
@@ -1809,7 +1808,6 @@ AddOptionsRecurse(nsIContent* aRoot, nsHTMLOptionCollection* aArray)
        cur = cur->GetNextSibling()) {
     nsHTMLOptionElement* opt = nsHTMLOptionElement::FromContent(cur);
     if (opt) {
-      // If we fail here, then at least we've tried our best
       aArray->AppendOption(opt);
     } else if (cur->IsHTML(nsGkAtoms::optgroup)) {
       AddOptionsRecurse(cur, aArray);
