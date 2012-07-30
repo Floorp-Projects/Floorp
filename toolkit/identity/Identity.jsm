@@ -255,7 +255,7 @@ IDService.prototype = {
 
     // this appears to be a more successful way to get at xmlhttprequest (which supposedly will close with a window
     let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .getService(Ci.nsIXMLHttpRequest);
+                .createInstance(Ci.nsIXMLHttpRequest);
 
     // XXX bug 769865 gracefully handle being off-line
     // XXX bug 769866 decide on how to handle redirects
