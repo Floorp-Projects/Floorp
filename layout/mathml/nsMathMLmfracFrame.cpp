@@ -193,7 +193,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   nsBoundingMetrics bmNum, bmDen;
   nsHTMLReflowMetrics sizeNum;
   nsHTMLReflowMetrics sizeDen;
-  nsIFrame* frameDen = nsnull;
+  nsIFrame* frameDen = nullptr;
   nsIFrame* frameNum = mFrames.FirstChild();
   if (frameNum) 
     frameDen = frameNum->GetNextSibling();
@@ -369,10 +369,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       nscoord dy;
       // place numerator
       dy = 0;
-      FinishReflowChild(frameNum, presContext, nsnull, sizeNum, dxNum, dy, 0);
+      FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dxNum, dy, 0);
       // place denominator
       dy = aDesiredSize.height - sizeDen.height;
-      FinishReflowChild(frameDen, presContext, nsnull, sizeDen, dxDen, dy, 0);
+      FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dxDen, dy, 0);
       // place the fraction bar - dy is top of bar
       dy = aDesiredSize.ascent - (axisHeight + actualRuleThickness/2);
       mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace),
@@ -483,7 +483,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dx = MirrorIfRTL(aDesiredSize.width, sizeNum.width,
                        leadingSpace);
       dy = aDesiredSize.ascent - numShift - sizeNum.ascent;
-      FinishReflowChild(frameNum, presContext, nsnull, sizeNum, dx, dy, 0);
+      FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dx, dy, 0);
 
       // place the fraction bar
       dx = MirrorIfRTL(aDesiredSize.width, mLineRect.width,
@@ -496,7 +496,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dx = MirrorIfRTL(aDesiredSize.width, sizeDen.width,
                        leadingSpace + bmNum.width + mLineRect.width);
       dy = aDesiredSize.ascent + denShift - sizeDen.ascent;
-      FinishReflowChild(frameDen, presContext, nsnull, sizeDen, dx, dy, 0);
+      FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dx, dy, 0);
     }
 
   }

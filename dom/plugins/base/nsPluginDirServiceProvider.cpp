@@ -100,7 +100,7 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
   WCHAR* szNum4 = NULL;
   WCHAR* szJavaBuild = NULL;
 
-  WCHAR *strVer = nsnull;
+  WCHAR *strVer = nullptr;
   if (szVersion) {
     strVer = wcsdup(szVersion);
   }
@@ -194,7 +194,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
 
   NS_ENSURE_ARG(charProp);
 
-  *_retval = nsnull;
+  *_retval = nullptr;
   *persistant = false;
 
   nsCOMPtr<nsIWindowsRegKey> regKey =
@@ -449,7 +449,7 @@ nsresult
 nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator)
 {
   NS_ENSURE_ARG_POINTER(aEnumerator);
-  *aEnumerator = nsnull;
+  *aEnumerator = nullptr;
 
   nsCOMArray<nsIFile> dirs;
 

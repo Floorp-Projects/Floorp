@@ -226,7 +226,7 @@ struct nsEmbellishData {
 
   nsEmbellishData() {
     flags = 0;
-    coreFrame = nsnull;
+    coreFrame = nullptr;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     leadingSpace = 0;
     trailingSpace = 0;
@@ -255,8 +255,8 @@ struct nsPresentationData {
 
   nsPresentationData() {
     flags = 0;
-    baseFrame = nsnull;
-    mstyle = nsnull;
+    baseFrame = nullptr;
+    mstyle = nullptr;
   }
 };
 

@@ -233,7 +233,7 @@ protected:
             : DepFcStrEntry(toCopy), mFonts(toCopy.mFonts) { }
 
         bool AddFont(FcPattern *aFont) {
-            return mFonts.AppendElement(aFont) != nsnull;
+            return mFonts.AppendElement(aFont) != nullptr;
         }
         const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
             return mFonts;
@@ -264,7 +264,7 @@ protected:
         bool KeyEquals(KeyTypePointer aKey) const;
 
         bool AddFont(FcPattern *aFont) {
-            return mFonts.AppendElement(aFont) != nsnull;
+            return mFonts.AppendElement(aFont) != nullptr;
         }
         const nsTArray< nsCountedRef<FcPattern> >& GetFonts() {
             return mFonts;

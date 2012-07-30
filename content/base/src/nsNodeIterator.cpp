@@ -187,7 +187,7 @@ NS_IMETHODIMP nsNodeIterator::GetRoot(nsIDOMNode * *aRoot)
     if (mRoot)
         return CallQueryInterface(mRoot, aRoot);
 
-    *aRoot = nsnull;
+    *aRoot = nullptr;
 
     return NS_OK;
 }
@@ -235,7 +235,7 @@ nsNodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
     nsresult rv;
     PRInt16 filtered;
 
-    *_retval = nsnull;
+    *_retval = nullptr;
 
     if (mDetached || mInAcceptNode)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -285,7 +285,7 @@ NS_IMETHODIMP nsNodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
     if (mPointer.mNode)
         return CallQueryInterface(mPointer.mNode, aRefNode);
 
-    *aRefNode = nsnull;
+    *aRefNode = nullptr;
     return NS_OK;
 }
 

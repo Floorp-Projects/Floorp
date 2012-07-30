@@ -232,7 +232,7 @@ static nsresult
 SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
                             LPDEVMODEW         aDevMode)
 {
-  if (aPrintSettings == nsnull) {
+  if (aPrintSettings == nullptr) {
     return NS_ERROR_FAILURE;
   }
 
@@ -773,7 +773,7 @@ static bool ShouldExtendPrintDialog()
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, true);
   nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  rv = prefs->GetBranch(nullptr, getter_AddRefs(prefBranch));
   NS_ENSURE_SUCCESS(rv, true);
 
   bool result;
@@ -928,7 +928,7 @@ ShowNativePrintDialog(HWND              aHWnd,
     } else {
       // clear "print to file" info
       aPrintSettings->SetPrintToFile(false);
-      aPrintSettings->SetToFileName(nsnull);
+      aPrintSettings->SetToFileName(nullptr);
     }
 
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));

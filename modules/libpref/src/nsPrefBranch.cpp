@@ -49,7 +49,7 @@ GetContentChild()
     }
     return cpc;
   }
-  return nsnull;
+  return nullptr;
 }
 
 /*
@@ -486,7 +486,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aChildArray);
 
-  *aChildArray = nsnull;
+  *aChildArray = nullptr;
   *aCount = 0;
 
   if (!gHashTable.ops)
@@ -561,7 +561,7 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   mObservers.Put(pCallback, pCallback);
 
   // We must pass a fully qualified preference name to the callback
-  // aDomain == nsnull is the only possible failure, and we trapped it with
+  // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
   pref = getPrefName(aDomain);
   PREF_RegisterCallback(pref, NotifyObserver, pCallback);
@@ -592,7 +592,7 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   nsAutoPtr<PrefCallback> pCallback;
   mObservers.RemoveAndForget(&key, pCallback);
   if (pCallback) {
-    // aDomain == nsnull is the only possible failure, trapped above
+    // aDomain == nullptr is the only possible failure, trapped above
     const char *pref = getPrefName(aDomain);
     rv = PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
   }
@@ -657,7 +657,7 @@ void nsPrefBranch::freeObserverList(void)
   // RemoveObserver() when they're destructed; we need to keep those calls from
   // touching mObservers.
   mFreeingObserverList = true;
-  mObservers.Enumerate(&FreeObserverFunc, nsnull);
+  mObservers.Enumerate(&FreeObserverFunc, nullptr);
   mFreeingObserverList = false;
 }
 

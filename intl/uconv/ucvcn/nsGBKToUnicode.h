@@ -29,8 +29,8 @@ public:
    */
   nsGBKToUnicode() : nsBufferDecoderSupport(1)
   {
-    mExtensionDecoder = nsnull;
-    m4BytesDecoder = nsnull;
+    mExtensionDecoder = nullptr;
+    m4BytesDecoder = nullptr;
   }
 
 protected:

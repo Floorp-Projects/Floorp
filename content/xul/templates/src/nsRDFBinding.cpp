@@ -194,10 +194,10 @@ nsBindingValues::ClearBindingSet()
 {
     if (mBindings && mValues) {
         delete [] mValues;
-        mValues = nsnull;
+        mValues = nullptr;
     }
 
-    mBindings = nsnull;
+    mBindings = nullptr;
 }
 
 nsresult
@@ -214,7 +214,7 @@ nsBindingValues::SetBindingSet(RDFBindingSet* aBindings)
         mBindings = aBindings;
     }
     else {
-        mValues = nsnull;
+        mValues = nullptr;
     }
 
     return NS_OK;
@@ -225,7 +225,7 @@ nsBindingValues::GetAssignmentFor(nsXULTemplateResultRDF* aResult,
                                   nsIAtom* aVar,
                                   nsIRDFNode** aValue)
 {
-    *aValue = nsnull;
+    *aValue = nullptr;
 
     // assignments are calculated lazily when asked for. The only issue is
     // when a binding has no value in the RDF graph, it will be checked again

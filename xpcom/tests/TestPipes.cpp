@@ -51,7 +51,7 @@ nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     PRUint32 maxSize = 0,
                     bool nonBlockingInput = false,
                     bool nonBlockingOutput = false,
-                    nsIMemory *segmentAlloc = nsnull);
+                    nsIMemory *segmentAlloc = nullptr);
 nsresult TP_NewPipe(nsIInputStream **pipeIn,
                     nsIOutputStream **pipeOut,
                     PRUint32 segmentSize,
@@ -372,14 +372,14 @@ TestChainedPipes()
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsPump> pump = new nsPump(in1, out2);
-    if (pump == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    if (pump == nullptr) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIThread> thread;
     rv = NS_NewThread(getter_AddRefs(thread), pump);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsReceiver> receiver = new nsReceiver(in2);
-    if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    if (receiver == nullptr) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIThread> receiverThread;
     rv = NS_NewThread(getter_AddRefs(receiverThread), receiver);

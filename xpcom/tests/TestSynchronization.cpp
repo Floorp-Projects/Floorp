@@ -100,9 +100,9 @@ MutexContention()
     gLock1 = new Mutex("lock1");
     // PURPOSELY not checking for OOM.  YAY!
 
-    PRThread* t1 = spawn(MutexContention_thread, nsnull);
-    PRThread* t2 = spawn(MutexContention_thread, nsnull);
-    PRThread* t3 = spawn(MutexContention_thread, nsnull);
+    PRThread* t1 = spawn(MutexContention_thread, nullptr);
+    PRThread* t2 = spawn(MutexContention_thread, nullptr);
+    PRThread* t3 = spawn(MutexContention_thread, nullptr);
 
     PR_JoinThread(t1);
     PR_JoinThread(t2);
@@ -133,9 +133,9 @@ MonitorContention()
 {
     gMon1 = new Monitor("mon1");
 
-    PRThread* t1 = spawn(MonitorContention_thread, nsnull);
-    PRThread* t2 = spawn(MonitorContention_thread, nsnull);
-    PRThread* t3 = spawn(MonitorContention_thread, nsnull);
+    PRThread* t1 = spawn(MonitorContention_thread, nullptr);
+    PRThread* t2 = spawn(MonitorContention_thread, nullptr);
+    PRThread* t3 = spawn(MonitorContention_thread, nullptr);
 
     PR_JoinThread(t1);
     PR_JoinThread(t2);
@@ -170,9 +170,9 @@ MonitorContention2()
 {
     gMon2 = new Monitor("mon1");
 
-    PRThread* t1 = spawn(MonitorContention2_thread, nsnull);
-    PRThread* t2 = spawn(MonitorContention2_thread, nsnull);
-    PRThread* t3 = spawn(MonitorContention2_thread, nsnull);
+    PRThread* t1 = spawn(MonitorContention2_thread, nullptr);
+    PRThread* t2 = spawn(MonitorContention2_thread, nullptr);
+    PRThread* t3 = spawn(MonitorContention2_thread, nullptr);
 
     PR_JoinThread(t1);
     PR_JoinThread(t2);
@@ -213,8 +213,8 @@ MonitorSyncSanity()
    
     for (PRInt32 i = 0; i < 10000; ++i) {
         gMonFirst = 1;
-        PRThread* ping = spawn(MonitorSyncSanity_thread, nsnull);
-        PRThread* pong = spawn(MonitorSyncSanity_thread, nsnull);
+        PRThread* ping = spawn(MonitorSyncSanity_thread, nullptr);
+        PRThread* pong = spawn(MonitorSyncSanity_thread, nullptr);
         PR_JoinThread(ping);
         PR_JoinThread(pong);
     }
@@ -254,8 +254,8 @@ CondVarSanity()
 
     for (PRInt32 i = 0; i < 10000; ++i) {
         gCvFirst = 1;
-        PRThread* ping = spawn(CondVarSanity_thread, nsnull);
-        PRThread* pong = spawn(CondVarSanity_thread, nsnull);
+        PRThread* ping = spawn(CondVarSanity_thread, nullptr);
+        PRThread* pong = spawn(CondVarSanity_thread, nullptr);
         PR_JoinThread(ping);
         PR_JoinThread(pong);
     }

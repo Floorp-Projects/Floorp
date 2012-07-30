@@ -27,7 +27,7 @@ NS_INTERFACE_MAP_BEGIN(nsStructuredCloneContainer)
 NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer()
-  : mData(nsnull), mSize(0), mVersion(0)
+  : mData(nullptr), mSize(0), mVersion(0)
 {
 }
 
@@ -58,9 +58,9 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
   nsCxPusher cxPusher;
   cxPusher.Push(aCx);
 
-  uint64_t* jsBytes = nsnull;
+  uint64_t* jsBytes = nullptr;
   bool success = JS_WriteStructuredClone(aCx, jsData, &jsBytes, &mSize,
-                                           nsnull, nsnull);
+                                           nullptr, nullptr);
   NS_ENSURE_STATE(success);
   NS_ENSURE_STATE(jsBytes);
 
@@ -116,12 +116,12 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
 {
   NS_ENSURE_STATE(mData);
   NS_ENSURE_ARG_POINTER(aData);
-  *aData = nsnull;
+  *aData = nullptr;
 
   // Deserialize to a jsval.
   jsval jsStateObj;
   bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
-                                          &jsStateObj, nsnull, nsnull);
+                                          &jsStateObj, nullptr, nullptr);
   NS_ENSURE_STATE(success);
 
   // Now wrap the jsval as an nsIVariant.

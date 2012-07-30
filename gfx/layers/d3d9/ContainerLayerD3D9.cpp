@@ -21,7 +21,7 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
     Layer *oldFirstChild = aContainer->GetFirstChild();
     aContainer->mFirstChild = aChild;
     aChild->SetNextSibling(oldFirstChild);
-    aChild->SetPrevSibling(nsnull);
+    aChild->SetPrevSibling(nullptr);
     if (oldFirstChild) {
       oldFirstChild->SetPrevSibling(aChild);
     } else {
@@ -58,18 +58,18 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
   if (aContainer->GetFirstChild() == aChild) {
     aContainer->mFirstChild = aContainer->GetFirstChild()->GetNextSibling();
     if (aContainer->mFirstChild) {
-      aContainer->mFirstChild->SetPrevSibling(nsnull);
+      aContainer->mFirstChild->SetPrevSibling(nullptr);
     } else {
-      aContainer->mLastChild = nsnull;
+      aContainer->mLastChild = nullptr;
     }
-    aChild->SetNextSibling(nsnull);
-    aChild->SetPrevSibling(nsnull);
-    aChild->SetParent(nsnull);
+    aChild->SetNextSibling(nullptr);
+    aChild->SetPrevSibling(nullptr);
+    aChild->SetParent(nullptr);
     aContainer->DidRemoveChild(aChild);
     NS_RELEASE(aChild);
     return;
   }
-  Layer *lastChild = nsnull;
+  Layer *lastChild = nullptr;
   for (Layer *child = aContainer->GetFirstChild(); child; 
        child = child->GetNextSibling()) {
     if (child == aChild) {
@@ -80,9 +80,9 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
       } else {
         aContainer->mLastChild = lastChild;
       }
-      child->SetNextSibling(nsnull);
-      child->SetPrevSibling(nsnull);
-      child->SetParent(nsnull);
+      child->SetNextSibling(nullptr);
+      child->SetPrevSibling(nullptr);
+      child->SetParent(nullptr);
       aContainer->DidRemoveChild(aChild);
       NS_RELEASE(aChild);
       return;
@@ -97,7 +97,7 @@ GetNextSibling(LayerD3D9* aLayer)
    Layer* layer = aLayer->GetLayer()->GetNextSibling();
    return layer ? static_cast<LayerD3D9*>(layer->
                                          ImplData())
-                 : nsnull;
+                 : nullptr;
 }
 
 static bool
@@ -116,7 +116,7 @@ GetNextSiblingD3D9(LayerD3D9* aLayer)
    Layer* layer = aLayer->GetLayer()->GetNextSibling();
    return layer ? static_cast<LayerD3D9*>(layer->
                                           ImplData())
-                 : nsnull;
+                 : nullptr;
 }
 
 template<class Container>
@@ -235,7 +235,7 @@ ContainerRender(Container* aContainer,
     }
     
     nsIntRect scissorRect =
-      layerToRender->GetLayer()->CalculateScissorRect(oldScissor, nsnull);
+      layerToRender->GetLayer()->CalculateScissorRect(oldScissor, nullptr);
     if (scissorRect.IsEmpty()) {
       continue;
     }
@@ -316,7 +316,7 @@ LayerD3D9*
 ContainerLayerD3D9::GetFirstChildD3D9()
 {
   if (!mFirstChild) {
-    return nsnull;
+    return nullptr;
   }
   return static_cast<LayerD3D9*>(mFirstChild->ImplData());
 }
@@ -372,7 +372,7 @@ LayerD3D9*
 ShadowContainerLayerD3D9::GetFirstChildD3D9()
 {
   if (!mFirstChild) {
-    return nsnull;
+    return nullptr;
    }
   return static_cast<LayerD3D9*>(mFirstChild->ImplData());
 }

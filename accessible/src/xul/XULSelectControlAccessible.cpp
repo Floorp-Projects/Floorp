@@ -40,7 +40,7 @@ XULSelectControlAccessible::
 void
 XULSelectControlAccessible::Shutdown()
 {
-  mSelectControl = nsnull;
+  mSelectControl = nullptr;
   AccessibleWrap::Shutdown();
 }
 
@@ -60,7 +60,7 @@ XULSelectControlAccessible::SelectedItems()
   nsCOMPtr<nsIMutableArray> selectedItems =
     do_CreateInstance(NS_ARRAY_CONTRACTID);
   if (!selectedItems || !mDoc)
-    return nsnull;
+    return nullptr;
 
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect =
@@ -89,7 +89,7 @@ XULSelectControlAccessible::SelectedItems()
       }
   }
 
-  nsIMutableArray* items = nsnull;
+  nsIMutableArray* items = nullptr;
   selectedItems.forget(&items);
   return items;
 }
@@ -107,7 +107,7 @@ XULSelectControlAccessible::GetSelectedItem(PRUint32 aIndex)
     mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
 
   nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
-  return itemNode && mDoc ? mDoc->GetAccessible(itemNode) : nsnull;
+  return itemNode && mDoc ? mDoc->GetAccessible(itemNode) : nullptr;
 }
 
 PRUint32
@@ -179,7 +179,7 @@ XULSelectControlAccessible::RemoveItemFromSelection(PRUint32 aIndex)
   if (multiSelectControl)
     multiSelectControl->RemoveItemFromSelection(itemElm);
   else
-    mSelectControl->SetSelectedItem(nsnull);
+    mSelectControl->SetSelectedItem(nullptr);
 
   return true;
 }
@@ -233,7 +233,7 @@ Accessible*
 XULSelectControlAccessible::CurrentItem()
 {
   if (!mSelectControl)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> currentItemElm;
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
@@ -253,7 +253,7 @@ XULSelectControlAccessible::CurrentItem()
       return document->GetAccessible(DOMNode);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 void

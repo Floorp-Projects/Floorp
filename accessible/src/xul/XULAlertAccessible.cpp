@@ -58,5 +58,5 @@ XULAlertAccessible::ContainerWidget() const
   // If a part of colorpicker widget.
   if (mParent && mParent->IsMenuButton())
     return mParent;
-  return nsnull;
+  return nullptr;
 }

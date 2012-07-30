@@ -30,7 +30,7 @@ TelephonyCall::Create(Telephony* aTelephony, const nsAString& aNumber,
   call->mTelephony = aTelephony;
   call->mNumber = aNumber;
   call->mCallIndex = aCallIndex;
-  call->mError = nsnull;
+  call->mError = nullptr;
 
   call->ChangeStateInternal(aCallState, false);
 

@@ -77,7 +77,7 @@ NS_IMPL_ISUPPORTS2(nsMediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
 
 nsMediaCacheFlusher::~nsMediaCacheFlusher()
 {
-  gMediaCacheFlusher = nsnull;
+  gMediaCacheFlusher = nullptr;
 }
 
 void nsMediaCacheFlusher::Init()
@@ -119,7 +119,7 @@ public:
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
     if (mFileCache) {
       mFileCache->Close();
-      mFileCache = nsnull;
+      mFileCache = nullptr;
     }
     MOZ_COUNT_DTOR(nsMediaCache);
   }
@@ -222,7 +222,7 @@ public:
         if (stream->GetResourceID() == mResourceID && !stream->IsClosed())
           return stream;
       }
-      return nsnull;
+      return nullptr;
     }
   private:
     PRInt64  mResourceID;
@@ -270,7 +270,7 @@ protected:
   };
 
   struct BlockOwner {
-    BlockOwner() : mStream(nsnull), mClass(READAHEAD_BLOCK) {}
+    BlockOwner() : mStream(nullptr), mClass(READAHEAD_BLOCK) {}
 
     // The stream that owns this block, or null if the block is free.
     nsMediaCacheStream* mStream;
@@ -557,7 +557,7 @@ nsMediaCache::Init()
   rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  PRFileDesc* fileDesc = nsnull;
+  PRFileDesc* fileDesc = nullptr;
   rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsIFile::DELETE_ON_CLOSE,
                                  PR_IRWXU, &fileDesc);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -602,7 +602,7 @@ nsMediaCache::FlushInternal()
   NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
   if (mFileCache) {
     mFileCache->Close();
-    mFileCache = nsnull;
+    mFileCache = nullptr;
   }
   Init();
 }
@@ -621,7 +621,7 @@ nsMediaCache::MaybeShutdown()
   // while we shut down.
   // This function is static so we don't have to delete 'this'.
   delete gMediaCache;
-  gMediaCache = nsnull;
+  gMediaCache = nullptr;
   NS_IF_RELEASE(gMediaCacheFlusher);
 }
 
@@ -638,7 +638,7 @@ InitMediaCache()
   nsresult rv = gMediaCache->Init();
   if (NS_FAILED(rv)) {
     delete gMediaCache;
-    gMediaCache = nsnull;
+    gMediaCache = nullptr;
   }
 }
 
@@ -835,7 +835,7 @@ nsMediaCache::GetListForBlock(BlockOwner* aBlock)
     return &aBlock->mStream->mReadaheadBlocks;
   default:
     NS_ERROR("Invalid block class");
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -847,7 +847,7 @@ nsMediaCache::GetBlockOwner(PRInt32 aBlockIndex, nsMediaCacheStream* aStream)
     if (block->mOwners[i].mStream == aStream)
       return &block->mOwners[i];
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -1132,7 +1132,7 @@ nsMediaCache::Update()
     // the predicted next-uses for all blocks
     TimeDuration latestNextUse;
     if (freeBlockCount == 0) {
-      PRInt32 reusableBlock = FindReusableBlock(now, nsnull, 0, maxBlocks);
+      PRInt32 reusableBlock = FindReusableBlock(now, nullptr, 0, maxBlocks);
       if (reusableBlock >= 0) {
         latestNextUse = PredictNextUse(now, reusableBlock);
       }
@@ -1712,7 +1712,7 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
 
     // This gets set to something non-null if we have a whole block
     // of data to write to the cache
-    const char* blockDataToStore = nsnull;
+    const char* blockDataToStore = nullptr;
     ReadMode mode = MODE_PLAYBACK;
     if (blockOffset == 0 && chunkSize == BLOCK_SIZE) {
       // We received a whole block, so avoid a useless copy through
@@ -1848,7 +1848,7 @@ nsMediaCacheStream::AreAllStreamsForResourceSuspended(MediaResource** aActiveStr
     }
   }
   if (aActiveStream) {
-    *aActiveStream = nsnull;
+    *aActiveStream = nullptr;
   }
   return true;
 }
@@ -2116,7 +2116,7 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
       // stream reading this resource. We need to do this in case there is
       // another stream with this resource that has all the data to the end of
       // the stream but the data doesn't end on a block boundary.
-      nsMediaCacheStream* streamWithPartialBlock = nsnull;
+      nsMediaCacheStream* streamWithPartialBlock = nullptr;
       nsMediaCache::ResourceStreamIterator iter(mResourceID);
       while (nsMediaCacheStream* stream = iter.Next()) {
         if (PRUint32(stream->mChannelOffset/BLOCK_SIZE) == streamBlock &&

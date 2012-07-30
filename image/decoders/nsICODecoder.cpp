@@ -68,7 +68,7 @@ nsICODecoder::nsICODecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
 {
   mPos = mImageOffset = mCurrIcon = mNumIcons = mBPP = mRowBytes = 0;
   mIsPNG = false;
-  mRow = nsnull;
+  mRow = nullptr;
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
 }
 

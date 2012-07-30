@@ -80,28 +80,28 @@ nsMathMLmpaddedFrame::ProcessAttributes()
 
   // width
   mWidthSign = NS_MATHML_SIGN_INVALID;
-  GetAttribute(mContent, nsnull, nsGkAtoms::width, value);
+  GetAttribute(mContent, nullptr, nsGkAtoms::width, value);
   if (!value.IsEmpty()) {
     ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit);
   }
 
   // height
   mHeightSign = NS_MATHML_SIGN_INVALID;
-  GetAttribute(mContent, nsnull, nsGkAtoms::height, value);
+  GetAttribute(mContent, nullptr, nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
     ParseAttribute(value, mHeightSign, mHeight, mHeightPseudoUnit);
   }
 
   // depth
   mDepthSign = NS_MATHML_SIGN_INVALID;
-  GetAttribute(mContent, nsnull, nsGkAtoms::depth_, value);
+  GetAttribute(mContent, nullptr, nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
     ParseAttribute(value, mDepthSign, mDepth, mDepthPseudoUnit);
   }
 
   // lspace
   mLeadingSpaceSign = NS_MATHML_SIGN_INVALID;
-  GetAttribute(mContent, nsnull, nsGkAtoms::lspace_, value);
+  GetAttribute(mContent, nullptr, nsGkAtoms::lspace_, value);
   if (!value.IsEmpty()) {
     ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace,
                    mLeadingSpacePseudoUnit);
@@ -109,7 +109,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
 
   // voffset
   mVerticalOffsetSign = NS_MATHML_SIGN_INVALID;
-  GetAttribute(mContent, nsnull, nsGkAtoms::voffset_, value);
+  GetAttribute(mContent, nullptr, nsGkAtoms::voffset_, value);
   if (!value.IsEmpty()) {
     ParseAttribute(value, mVerticalOffsetSign, mVerticalOffset, 
                    mVerticalOffsetPseudoUnit);

@@ -44,7 +44,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         }
 
         if (surf && surf->CairoStatus())
-            return nsnull;
+            return nullptr;
 
         gfxMatrix m = mContext->CurrentMatrix();
         if (!m.HasNonTranslation())
@@ -175,7 +175,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         return mDC;
     } else {
         NS_ERROR("Bogus render state!");
-        return nsnull;
+        return nullptr;
     }
 }
 
@@ -237,12 +237,12 @@ gfxWindowsNativeDrawing::EndNativeDrawing()
         mRenderState = RENDER_STATE_NATIVE_DRAWING_DONE;
     } else if (mRenderState == RENDER_STATE_ALPHA_RECOVERY_BLACK) {
         mBlackSurface = mWinSurface;
-        mWinSurface = nsnull;
+        mWinSurface = nullptr;
 
         mRenderState = RENDER_STATE_ALPHA_RECOVERY_BLACK_DONE;
     } else if (mRenderState == RENDER_STATE_ALPHA_RECOVERY_WHITE) {
         mWhiteSurface = mWinSurface;
-        mWinSurface = nsnull;
+        mWinSurface = nullptr;
 
         mRenderState = RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE;
     } else {

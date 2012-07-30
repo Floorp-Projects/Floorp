@@ -98,8 +98,8 @@ NotificationController::Shutdown()
 
   mHangingChildDocuments.Clear();
 
-  mDocument = nsnull;
-  mPresShell = nsnull;
+  mDocument = nullptr;
+  mPresShell = nullptr;
 
   mTextHash.Clear();
   mContentInsertions.Clear();
@@ -590,7 +590,7 @@ NotificationController::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
       aThisEvent->mPackedEvent->mEventRule =
         AccEvent::eCoalesceSelectionChange;
 
-      aThisEvent->mPackedEvent = nsnull;
+      aThisEvent->mPackedEvent = nullptr;
     }
 
     aThisEvent->mEventType =
@@ -720,7 +720,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
   }
 
   nsIContent* containerElm = containerNode->IsElement() ?
-    containerNode->AsElement() : nsnull;
+    containerNode->AsElement() : nullptr;
 
   nsAutoString text;
   textFrame->GetRenderedText(&text);
@@ -837,8 +837,8 @@ NotificationController::ContentInsertion::Process()
 {
   mDocument->ProcessContentInserted(mContainer, &mInsertedContent);
 
-  mDocument = nsnull;
-  mContainer = nsnull;
+  mDocument = nullptr;
+  mContainer = nullptr;
   mInsertedContent.Clear();
 }
 

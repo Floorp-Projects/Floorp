@@ -62,14 +62,14 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aRenderingContext, "no rendering context");
   NS_PRECONDITION(aFrame, "no frame");
-  parentReflowState = nsnull;
+  parentReflowState = nullptr;
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;
-  mFloatManager = nsnull;
-  mLineLayout = nsnull;
+  mFloatManager = nullptr;
+  mLineLayout = nullptr;
   memset(&mFlags, 0, sizeof(mFlags));
-  mDiscoveredClearance = nsnull;
-  mPercentHeightObserver = nsnull;
+  mDiscoveredClearance = nullptr;
+  mPercentHeightObserver = nullptr;
 
   if (aFlags & DUMMY_PARENT_REFLOW_STATE) {
     mFlags.mDummyParentReflowState = true;
@@ -164,7 +164,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   if (frame->IsFrameOfType(nsIFrame::eLineParticipant))
     mLineLayout = aParentReflowState.mLineLayout;
   else
-    mLineLayout = nsnull;
+    mLineLayout = nullptr;
 
   // Note: mFlags was initialized as a copy of aParentReflowState.mFlags up in
   // this constructor's init list, so the only flags that we need to explicitly
@@ -176,10 +176,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   mFlags.mIsColumnBalancing = false;
   mFlags.mDummyParentReflowState = false;
 
-  mDiscoveredClearance = nsnull;
+  mDiscoveredClearance = nullptr;
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
-                           ? aParentReflowState.mPercentHeightObserver : nsnull;
+                           ? aParentReflowState.mPercentHeightObserver : nullptr;
 
   if (aInit) {
     Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
@@ -359,7 +359,7 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
 void nsHTMLReflowState::InitCBReflowState()
 {
   if (!parentReflowState) {
-    mCBReflowState = nsnull;
+    mCBReflowState = nullptr;
     return;
   }
 
@@ -837,7 +837,7 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
       /* do nothing */
     }
   } else {
-    state = nsnull;
+    state = nullptr;
   }
   
   if (state) {
@@ -1253,7 +1253,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   nsIFrame*     placeholderFrame;
 
   placeholderFrame = aPresContext->PresShell()->GetPlaceholderFrameFor(frame);
-  NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
+  NS_ASSERTION(nullptr != placeholderFrame, "no placeholder frame");
 
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
   // 'auto', then compute the hypothetical box of where the element would
@@ -1581,8 +1581,8 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
 static nscoord
 CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
 {
-  nsHTMLReflowState* firstAncestorRS = nsnull; // a candidate for html frame
-  nsHTMLReflowState* secondAncestorRS = nsnull; // a candidate for body frame
+  nsHTMLReflowState* firstAncestorRS = nullptr; // a candidate for html frame
+  nsHTMLReflowState* secondAncestorRS = nullptr; // a candidate for body frame
   
   // initialize the default to NS_AUTOHEIGHT as this is the containings block
   // computed height when this function is called. It is possible that we 
@@ -1751,7 +1751,7 @@ static bool BlinkIsAllowed(void)
   if (!sPrefIsLoaded) {
     // Set up a listener and check the initial value
     Preferences::RegisterCallback(PrefsChanged, "browser.blink_allowed");
-    PrefsChanged(nsnull, nsnull);
+    PrefsChanged(nullptr, nullptr);
     sPrefIsLoaded = true;
   }
   return sBlinkIsAllowed;
@@ -1797,7 +1797,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
 
   // If this is the root frame, then set the computed width and
   // height equal to the available space
-  if (nsnull == parentReflowState) {
+  if (nullptr == parentReflowState) {
     // XXXldb This doesn't mean what it used to!
     InitOffsets(aContainingBlockWidth, aFrameType, aBorder, aPadding);
     // Override mComputedMargin since reflow roots start from the
@@ -1821,7 +1821,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
   } else {
     // Get the containing block reflow state
     const nsHTMLReflowState* cbrs = mCBReflowState;
-    NS_ASSERTION(nsnull != cbrs, "no containing block");
+    NS_ASSERTION(nullptr != cbrs, "no containing block");
 
     // If we weren't given a containing block width and height, then
     // compute one
@@ -1864,7 +1864,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
             NS_FRAME_REPLACED_CONTAINS_BLOCK(
                 NS_CSS_FRAME_TYPE_INLINE) == mFrameType) {
           // Get the containing block reflow state
-          NS_ASSERTION(nsnull != cbrs, "no containing block");
+          NS_ASSERTION(nullptr != cbrs, "no containing block");
           // in quirks mode, get the cb height using the special quirk method
           if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
             if (!IS_TABLE_CELL(fType)) {
@@ -2254,7 +2254,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
 static nscoord
 GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 {
-  NS_PRECONDITION(nsnull != aFontMetrics, "no font metrics");
+  NS_PRECONDITION(nullptr != aFontMetrics, "no font metrics");
 
   nscoord normalLineHeight;
 

@@ -141,7 +141,7 @@ nsSVGSwitchFrame::GetFrameForPoint(const nsPoint &aPoint)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP_(nsRect)
@@ -267,5 +267,5 @@ nsSVGSwitchFrame::GetActiveChildFrame()
       }
     }
   }
-  return nsnull;
+  return nullptr;
 }

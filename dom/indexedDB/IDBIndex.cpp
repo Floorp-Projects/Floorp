@@ -43,7 +43,7 @@ public:
               IDBRequest* aRequest,
               IDBIndex* aIndex)
   : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
-    mActor(nsnull)
+    mActor(nullptr)
   {
     NS_ASSERTION(aTransaction, "Null transaction!");
     NS_ASSERTION(aRequest, "Null request!");
@@ -396,8 +396,8 @@ IDBIndex::IDBIndex()
 : mId(LL_MININT),
   mKeyPath(0),
   mCachedKeyPath(JSVAL_VOID),
-  mActorChild(nsnull),
-  mActorParent(nsnull),
+  mActorChild(nullptr),
+  mActorParent(nullptr),
   mUnique(false),
   mMultiEntry(false),
   mRooted(false)
@@ -1000,7 +1000,7 @@ IDBIndex::Count(const jsval& aKey,
 void
 IndexHelper::ReleaseMainThreadObjects()
 {
-  mIndex = nsnull;
+  mIndex = nullptr;
   AsyncConnectionHelper::ReleaseMainThreadObjects();
 }
 
@@ -1086,7 +1086,7 @@ GetKeyHelper::GetSuccessResult(JSContext* aCx,
 void
 GetKeyHelper::ReleaseMainThreadObjects()
 {
-  mKeyRange = nsnull;
+  mKeyRange = nullptr;
   IndexHelper::ReleaseMainThreadObjects();
 }
 
@@ -1827,8 +1827,8 @@ OpenKeyCursorHelper::GetSuccessResult(JSContext* aCx,
 void
 OpenKeyCursorHelper::ReleaseMainThreadObjects()
 {
-  mKeyRange = nsnull;
-  mCursor = nsnull;
+  mKeyRange = nullptr;
+  mCursor = nullptr;
   IndexHelper::ReleaseMainThreadObjects();
 }
 
@@ -2162,7 +2162,7 @@ OpenCursorHelper::ReleaseMainThreadObjects()
 
   // These don't need to be released on the main thread but they're only valid
   // as long as mCursor is set.
-  mSerializedCloneReadInfo.data = nsnull;
+  mSerializedCloneReadInfo.data = nullptr;
   mSerializedCloneReadInfo.dataLength = 0;
 
   OpenKeyCursorHelper::ReleaseMainThreadObjects();
@@ -2335,7 +2335,7 @@ CountHelper::GetSuccessResult(JSContext* aCx,
 void
 CountHelper::ReleaseMainThreadObjects()
 {
-  mKeyRange = nsnull;
+  mKeyRange = nullptr;
   IndexHelper::ReleaseMainThreadObjects();
 }
 

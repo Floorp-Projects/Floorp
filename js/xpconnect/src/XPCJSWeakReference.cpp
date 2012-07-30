@@ -44,7 +44,7 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(ccx,
                                                &obj,
                                                NS_GET_IID(nsISupports),
-                                               nsnull,
+                                               nullptr,
                                                getter_AddRefs(wrapped));
     if (!wrapped) {
         NS_ERROR("can't get nsISupportsWeakReference wrapper for obj");

@@ -84,7 +84,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
 
 static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, PRUint32 aNamespace)
 {
-  nsIContent *content = aFrame ? aFrame->GetContent() : nsnull;
+  nsIContent *content = aFrame ? aFrame->GetContent() : nullptr;
   if (!content)
     return false;
   return content->IsInNamespace(aNamespace);
@@ -173,7 +173,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                      aWidgetType == NS_THEME_CHECKBOX_LABEL ||
                      aWidgetType == NS_THEME_RADIO_LABEL)) {
 
-        nsIAtom* atom = nsnull;
+        nsIAtom* atom = nullptr;
         if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
           if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
               aWidgetType == NS_THEME_RADIO_LABEL) {
@@ -903,8 +903,8 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
-      if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
-                               nsnull)) {
+      if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+                               nullptr)) {
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
                                   &aResult->right, &aResult->bottom, direction,
                                   IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
@@ -948,8 +948,8 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
 
         aResult->SizeTo(0, 0, 0, 0);
         GtkThemeWidgetType gtkWidgetType;
-        if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
-                                 nsnull)) {
+        if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+                                 nullptr)) {
           moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
                                     &aResult->right, &aResult->bottom, GetTextDirection(aFrame),
                                     IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));

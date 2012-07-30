@@ -568,7 +568,7 @@ nsFilePicker::PanelDefaultDirectory()
 NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
-  *aFile = nsnull;
+  *aFile = nullptr;
   
   // just return the first file
   if (mFiles.Count() > 0) {
@@ -582,7 +582,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   NS_ENSURE_ARG_POINTER(aFileURL);
-  *aFileURL = nsnull;
+  *aFileURL = nullptr;
 
   if (mFiles.Count() == 0)
     return NS_OK;

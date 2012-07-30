@@ -192,7 +192,7 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
   if (!aParent || !aOffset)
     return;
 
-  *aParent = nsnull;
+  *aParent = nullptr;
   *aOffset  = 0;
 
   if (!aContent)
@@ -401,7 +401,7 @@ nsINode *
 nsFilteredContentIterator::GetCurrentNode()
 {
   if (mIsOutOfRange || !mCurrentIterator) {
-    return nsnull;
+    return nullptr;
   }
 
   return mCurrentIterator->GetCurrentNode();

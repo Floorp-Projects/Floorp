@@ -58,7 +58,7 @@ static nsChromeTreeOwnerLiterals *gLiterals;
 nsresult
 nsChromeTreeOwner::InitGlobals()
 {
-  NS_ASSERTION(gLiterals == nsnull, "already initialized");
+  NS_ASSERTION(gLiterals == nullptr, "already initialized");
   gLiterals = new nsChromeTreeOwnerLiterals();
   if (!gLiterals)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -69,14 +69,14 @@ void
 nsChromeTreeOwner::FreeGlobals()
 {
   delete gLiterals;
-  gLiterals = nsnull;
+  gLiterals = nullptr;
 }
 
 //*****************************************************************************
 //***    nsChromeTreeOwner: Object Management
 //*****************************************************************************
 
-nsChromeTreeOwner::nsChromeTreeOwner() : mXULWindow(nsnull)
+nsChromeTreeOwner::nsChromeTreeOwner() : mXULWindow(nullptr)
 {
 }
 
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
 {
    NS_ENSURE_ARG_POINTER(aFoundItem);
 
-   *aFoundItem = nsnull;
+   *aFoundItem = nullptr;
 
    bool fIs_Content = false;
 
@@ -170,7 +170,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-   NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, 
+   NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nullptr, 
       getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
    
    bool more;
@@ -178,7 +178,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    windowEnumerator->HasMoreElements(&more);
    while(more)
       {
-      nsCOMPtr<nsISupports> nextWindow = nsnull;
+      nsCOMPtr<nsISupports> nextWindow = nullptr;
       windowEnumerator->GetNext(getter_AddRefs(nextWindow));
       nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
       NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);

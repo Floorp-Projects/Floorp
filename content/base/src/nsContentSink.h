@@ -145,7 +145,7 @@ protected:
 
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
   nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
-                             nsIContent* aContent = nsnull);
+                             nsIContent* aContent = nullptr);
   nsresult ProcessLinkHeader(nsIContent* aElement,
                              const nsAString& aLinkData);
   nsresult ProcessLink(nsIContent* aElement, const nsSubstring& aAnchor,

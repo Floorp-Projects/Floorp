@@ -243,11 +243,11 @@ nsresult
 txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
                                         nsIContent** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsCOMPtr<nsINodeInfo> ni;
     ni = mDocument->NodeInfoManager()->
-        GetNodeInfo(aName, nsnull, kNameSpaceID_XHTML,
+        GetNodeInfo(aName, nullptr, kNameSpaceID_XHTML,
                     nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 

@@ -64,8 +64,8 @@ struct nsCounterNode : public nsGenConNode {
         : nsGenConNode(aContentIndex)
         , mType(aType)
         , mValueAfter(0)
-        , mScopeStart(nsnull)
-        , mScopePrev(nsnull)
+        , mScopeStart(nullptr)
+        , mScopePrev(nullptr)
     {
     }
 

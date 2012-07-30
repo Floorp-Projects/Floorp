@@ -111,7 +111,7 @@ nsHTMLScrollFrame::AppendFrames(ChildListID  aListID,
                                 nsFrameList& aFrameList)
 {
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
-  mFrames.AppendFrames(nsnull, aFrameList);
+  mFrames.AppendFrames(nullptr, aFrameList);
   mInner.ReloadChildFrames();
   return NS_OK;
 }
@@ -124,7 +124,7 @@ nsHTMLScrollFrame::InsertFrames(ChildListID aListID,
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
-  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
   mInner.ReloadChildFrames();
   return NS_OK;
 }
@@ -374,7 +374,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   if (mInner.mVScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mInner.mVScrollbarBox,
                         &vScrollbarMinSize,
-                        aAssumeVScroll ? &vScrollbarPrefSize : nsnull, true);
+                        aAssumeVScroll ? &vScrollbarPrefSize : nullptr, true);
   }
   nscoord vScrollbarDesiredWidth = aAssumeVScroll ? vScrollbarPrefSize.width : 0;
   nscoord vScrollbarMinHeight = aAssumeVScroll ? vScrollbarMinSize.height : 0;
@@ -384,7 +384,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   if (mInner.mHScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mInner.mHScrollbarBox,
                         &hScrollbarMinSize,
-                        aAssumeHScroll ? &hScrollbarPrefSize : nsnull, false);
+                        aAssumeHScroll ? &hScrollbarPrefSize : nullptr, false);
   }
   nscoord hScrollbarDesiredHeight = aAssumeHScroll ? hScrollbarPrefSize.height : 0;
   nscoord hScrollbarMinWidth = aAssumeHScroll ? hScrollbarMinSize.width : 0;
@@ -500,7 +500,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
                                    mInner.mScrolledFrame,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
                                    -1, -1, false);
-  kidReflowState.Init(presContext, -1, -1, nsnull,
+  kidReflowState.Init(presContext, -1, -1, nullptr,
                       &aState->mReflowState.mComputedPadding);
   kidReflowState.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowState.mFlags.mAssumingVScrollbar = aAssumeVScroll;
@@ -742,7 +742,7 @@ nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingCon
   nsBoxLayoutState bls(PresContext(), aRenderingContext, 0);
   nsSize vScrollbarPrefSize(0, 0);
   GetScrollbarMetrics(bls, mInner.mVScrollbarBox,
-                      nsnull, &vScrollbarPrefSize, true);
+                      nullptr, &vScrollbarPrefSize, true);
   return vScrollbarPrefSize.width;
 }
 
@@ -797,7 +797,7 @@ GetBrowserRoot(nsIContent* aContent)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -949,7 +949,7 @@ nsHTMLScrollFrame::CreateAccessible()
   if (mContent->IsRootOfNativeAnonymousSubtree() ||
       GetScrollbarStyles() == nsIScrollableFrame::
         ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN) ) {
-    return nsnull;
+    return nullptr;
   }
 
   nsAccessibilityService* accService = nsIPresShell::AccService();
@@ -958,7 +958,7 @@ nsHTMLScrollFrame::CreateAccessible()
                                                  PresContext()->PresShell());
   }
 
-  return nsnull;
+  return nullptr;
 }
 #endif
 
@@ -982,7 +982,7 @@ nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContex
   : nsBoxFrame(aShell, aContext, aIsRoot),
     mInner(this, aIsRoot)
 {
-    SetLayoutManager(nsnull);
+    SetLayoutManager(nullptr);
 }
 
 nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
@@ -1291,7 +1291,7 @@ public:
 
   AsyncScroll()
     : mIsFirstIteration(true)
-    , mCallee(nsnull)
+    , mCallee(nullptr)
   {}
 
   ~AsyncScroll() {
@@ -1573,17 +1573,17 @@ public:
   }
 };
 
-static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nsnull;
+static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nullptr;
 
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
                                              bool aIsRoot)
-  : mHScrollbarBox(nsnull)
-  , mVScrollbarBox(nsnull)
-  , mScrolledFrame(nsnull)
-  , mScrollCornerBox(nsnull)
-  , mResizerBox(nsnull)
+  : mHScrollbarBox(nullptr)
+  , mVScrollbarBox(nullptr)
+  , mScrolledFrame(nullptr)
+  , mScrollCornerBox(nullptr)
+  , mResizerBox(nullptr)
   , mOuter(aOuter)
-  , mAsyncScroll(nsnull)
+  , mAsyncScroll(nullptr)
   , mDestination(0, 0)
   , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
@@ -1617,12 +1617,12 @@ nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
   if (gScrollFrameActivityTracker &&
       gScrollFrameActivityTracker->IsEmpty()) {
     delete gScrollFrameActivityTracker;
-    gScrollFrameActivityTracker = nsnull;
+    gScrollFrameActivityTracker = nullptr;
   }
 
   if (mScrollActivityTimer) {
     mScrollActivityTimer->Cancel();
-    mScrollActivityTimer = nsnull;
+    mScrollActivityTimer = nullptr;
   }
 }
 
@@ -1664,7 +1664,7 @@ nsGfxScrollFrameInner::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp 
   }
 
   // Apply desired destination range since this is the last step of scrolling.
-  self->mAsyncScroll = nsnull;
+  self->mAsyncScroll = nullptr;
   self->ScrollToImpl(self->mDestination, range);
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
@@ -1714,7 +1714,7 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
-    mAsyncScroll = nsnull;
+    mAsyncScroll = nullptr;
     ScrollToImpl(mDestination, range);
     // We are done scrolling, set our destination to wherever we actually ended
     // up scrolling to.
@@ -1736,7 +1736,7 @@ nsGfxScrollFrameInner::ScrollToWithOrigin(nsPoint aScrollPosition,
   } else {
     mAsyncScroll = new AsyncScroll;
     if (!mAsyncScroll->SetRefreshObserver(this)) {
-      mAsyncScroll = nsnull;
+      mAsyncScroll = nullptr;
       // Observer setup failed. Scroll the normal way.
       ScrollToImpl(mDestination, range);
       // We are done scrolling, set our destination to wherever we actually
@@ -2031,7 +2031,7 @@ nsGfxScrollFrameInner::ScrollActivityCallback(nsITimer *aTimer, void* anInstance
 
   // Fire the synth mouse move.
   self->mScrollActivityTimer->Cancel();
-  self->mScrollActivityTimer = nsnull;
+  self->mScrollActivityTimer = nullptr;
   self->mOuter->PresContext()->PresShell()->SynthesizeMouseMove(true);
 }
 
@@ -2642,7 +2642,7 @@ nsGfxScrollFrameInner::FireScrollPortEvent()
                           (orient == nsScrollPortEvent::horizontal ?
                            mHorizontalOverflow : mVerticalOverflow) ?
                             NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
-                          nsnull);
+                          nullptr);
   event.orient = orient;
   return nsEventDispatcher::Dispatch(mOuter->GetContent(),
                                      mOuter->PresContext(), &event);
@@ -2651,11 +2651,11 @@ nsGfxScrollFrameInner::FireScrollPortEvent()
 void
 nsGfxScrollFrameInner::ReloadChildFrames()
 {
-  mScrolledFrame = nsnull;
-  mHScrollbarBox = nsnull;
-  mVScrollbarBox = nsnull;
-  mScrollCornerBox = nsnull;
-  mResizerBox = nsnull;
+  mScrolledFrame = nullptr;
+  mHScrollbarBox = nullptr;
+  mVScrollbarBox = nullptr;
+  mScrollCornerBox = nullptr;
+  mResizerBox = nullptr;
 
   nsIFrame* frame = mOuter->GetFirstPrincipalChild();
   while (frame) {
@@ -2748,7 +2748,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
+  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nullptr,
                                           kNameSpaceID_XUL,
                                           nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -2777,7 +2777,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
 
   if (isResizable) {
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::resizer, nsnull,
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::resizer, nullptr,
                                             kNameSpaceID_XUL,
                                             nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -2823,7 +2823,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
   }
 
   if (canHaveHorizontal && canHaveVertical) {
-    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nullptr,
                                             kNameSpaceID_XUL,
                                             nsIDOMNode::ELEMENT_NODE);
     NS_TrustedNewXULElement(getter_AddRefs(mScrollCornerContent), nodeInfo.forget());
@@ -2950,7 +2950,7 @@ nsGfxScrollFrameInner::FireScrollEvent()
 {
   mScrollEvent.Forget();
 
-  nsScrollbarEvent event(true, NS_SCROLL_EVENT, nsnull);
+  nsScrollbarEvent event(true, NS_SCROLL_EVENT, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
   nsIContent* content = mOuter->GetContent();
   nsPresContext* prescontext = mOuter->PresContext();
@@ -2959,13 +2959,13 @@ nsGfxScrollFrameInner::FireScrollEvent()
   if (mIsRoot) {
     nsIDocument* doc = content->GetCurrentDoc();
     if (doc) {
-      nsEventDispatcher::Dispatch(doc, prescontext, &event, nsnull,  &status);
+      nsEventDispatcher::Dispatch(doc, prescontext, &event, nullptr,  &status);
     }
   } else {
     // scroll events fired at elements don't bubble (although scroll events
     // fired at documents do, to the window)
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-    nsEventDispatcher::Dispatch(content, prescontext, &event, nsnull, &status);
+    nsEventDispatcher::Dispatch(content, prescontext, &event, nullptr, &status);
   }
 }
 
@@ -3396,11 +3396,11 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   // get the preferred size of the scrollbars
   nsSize hMinSize(0, 0);
   if (mInner.mHScrollbarBox && mInner.mHasHorizontalScrollbar) {
-    GetScrollbarMetrics(aState, mInner.mHScrollbarBox, &hMinSize, nsnull, false);
+    GetScrollbarMetrics(aState, mInner.mHScrollbarBox, &hMinSize, nullptr, false);
   }
   nsSize vMinSize(0, 0);
   if (mInner.mVScrollbarBox && mInner.mHasVerticalScrollbar) {
-    GetScrollbarMetrics(aState, mInner.mVScrollbarBox, &vMinSize, nsnull, true);
+    GetScrollbarMetrics(aState, mInner.mVScrollbarBox, &vMinSize, nullptr, true);
   }
 
   // Disable scrollbars that are too small
@@ -3523,9 +3523,9 @@ nsGfxScrollFrameInner::ReflowFinished()
   mFrameIsUpdatingScrollbar = true;
 
   nsCOMPtr<nsIContent> vScroll =
-    mVScrollbarBox ? mVScrollbarBox->GetContent() : nsnull;
+    mVScrollbarBox ? mVScrollbarBox->GetContent() : nullptr;
   nsCOMPtr<nsIContent> hScroll =
-    mHScrollbarBox ? mHScrollbarBox->GetContent() : nsnull;
+    mHScrollbarBox ? mHScrollbarBox->GetContent() : nullptr;
 
   // Note, in some cases mOuter may get deleted while finishing reflow
   // for scrollbars.
@@ -3979,19 +3979,19 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
   // Don't save "normal" state for the root scrollframe; that's
   // handled via the eDocumentScrollState state id
   if (mIsRoot && aStateID == nsIStatefulFrame::eNoID) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
   if (mediator) {
     // child handles its own scroll state, so don't bother saving state here
-    return nsnull;
+    return nullptr;
   }
 
   nsPoint scrollPos = GetLogicalScrollPosition();
   // Don't save scroll position if we are at (0,0)
   if (scrollPos == nsPoint(0,0)) {
-    return nsnull;
+    return nullptr;
   }
 
   nsPresState* state = new nsPresState();
@@ -4038,7 +4038,7 @@ nsGfxScrollFrameInner::FireScrolledAreaEvent()
 {
   mScrolledAreaEvent.Forget();
 
-  nsScrollAreaEvent event(true, NS_SCROLLEDAREACHANGED, nsnull);
+  nsScrollAreaEvent event(true, NS_SCROLLEDAREACHANGED, nullptr);
   nsPresContext *prescontext = mOuter->PresContext();
   nsIContent* content = mOuter->GetContent();
 
@@ -4046,6 +4046,6 @@ nsGfxScrollFrameInner::FireScrolledAreaEvent()
 
   nsIDocument *doc = content->GetCurrentDoc();
   if (doc) {
-    nsEventDispatcher::Dispatch(doc, prescontext, &event, nsnull);
+    nsEventDispatcher::Dispatch(doc, prescontext, &event, nullptr);
   }
 }

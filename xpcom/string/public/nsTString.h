@@ -549,10 +549,10 @@ class nsTXPIDLString_CharT : public nsTString_CharT
           Assign(str);
         }
 
-        // return nsnull if we are voided
+        // return nullptr if we are voided
       const char_type* get() const
         {
-          return (mFlags & F_VOIDED) ? nsnull : mData;
+          return (mFlags & F_VOIDED) ? nullptr : mData;
         }
 
         // this case operator is the reason why this class cannot just be a
@@ -595,7 +595,7 @@ class NS_STACK_CLASS nsTGetterCopies_CharT
       typedef CharT char_type;
 
       nsTGetterCopies_CharT(nsTSubstring_CharT& str)
-        : mString(str), mData(nsnull) {}
+        : mString(str), mData(nullptr) {}
 
       ~nsTGetterCopies_CharT()
         {

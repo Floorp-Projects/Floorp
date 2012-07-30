@@ -25,7 +25,7 @@
 nsresult
 UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -44,7 +44,7 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         nsRefPtr<txNodeSet> resultSet, ownedSet;
         resultSet = static_cast<txNodeSet*>
                                (static_cast<txAExprResult*>(exprResult));
-        exprResult = nsnull;
+        exprResult = nullptr;
         rv = aContext->recycler()->
             getNonSharedNodeSet(resultSet, getter_AddRefs(ownedSet));
         NS_ENSURE_SUCCESS(rv, rv);

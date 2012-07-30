@@ -18,7 +18,7 @@
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mContent(nsnull), mFrameType(eFrame), mParent(nsnull),
+  mContent(nullptr), mFrameType(eFrame), mParent(nullptr),
   mHasBeenPrinted(false), mDontPrint(true), mPrintAsIs(false),
   mSharedPresShell(false), mInvisible(false), mDidCreateDocShell(false),
   mShrinkRatio(1.0), mZoomRatio(1.0)
@@ -42,8 +42,8 @@ nsPrintObject::~nsPrintObject()
       baseWin->Destroy();
     }
   }                            
-  mDocShell = nsnull;
-  mTreeOwner = nsnull; // mTreeOwner must be released after mDocShell; 
+  mDocShell = nullptr;
+  mTreeOwner = nullptr; // mTreeOwner must be released after mDocShell; 
 }
 
 //------------------------------------------------------------------
@@ -100,13 +100,13 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
 void 
 nsPrintObject::DestroyPresentation()
 {
-  mPresContext = nsnull;
+  mPresContext = nullptr;
   if (mPresShell) {
     mPresShell->EndObservingDocument();
     nsAutoScriptBlocker scriptBlocker;
     mPresShell->Destroy();
   }
-  mPresShell   = nsnull;
-  mViewManager = nsnull;
+  mPresShell   = nullptr;
+  mViewManager = nullptr;
 }
 

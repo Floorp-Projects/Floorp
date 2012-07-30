@@ -21,7 +21,7 @@ RedirectChannelRegistrar::nsCOMPtrHashtable<KeyClass,T>::Get(KeyType aKey, T** r
   }
 
   if (retVal)
-    *retVal = nsnull;
+    *retVal = nullptr;
 
   return false;
 }

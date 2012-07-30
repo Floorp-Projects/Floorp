@@ -25,7 +25,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSCertificateFakeTransport, nsIX509Cert,
                                                 nsIClassInfo)
 
 nsNSSCertificateFakeTransport::nsNSSCertificateFakeTransport() :
-  mCertSerialization(nsnull)
+  mCertSerialization(nullptr)
 {
 }
 
@@ -270,7 +270,7 @@ nsNSSCertificateFakeTransport::Read(nsIObjectInputStream* aStream)
   // nsNSSComponent.  nsNSSCertificateFakeTransport object is used only to carry the
   // certificate serialization.
 
-  mCertSerialization = SECITEM_AllocItem(nsnull, nsnull, len);
+  mCertSerialization = SECITEM_AllocItem(nullptr, nullptr, len);
   if (!mCertSerialization)
       return NS_ERROR_OUT_OF_MEMORY;
   PORT_Memcpy(mCertSerialization->data, str.Data(), len);
@@ -282,28 +282,28 @@ NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
-  *array = nsnull;
+  *array = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetContractID(char * *aContractID)
 {
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 

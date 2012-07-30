@@ -137,7 +137,7 @@ private:
 
 nsSOCKSSocketInfo::nsSOCKSSocketInfo()
     : mState(SOCKS_INITIAL)
-    , mDataIoPtr(nsnull)
+    , mDataIoPtr(nullptr)
     , mDataLength(0)
     , mReadOffset(0)
     , mAmountToRead(0)
@@ -227,14 +227,14 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
 
     // We don't need the buffer any longer, so free it.
     delete [] mData;
-    mData = nsnull;
-    mDataIoPtr = nsnull;
+    mData = nullptr;
+    mDataIoPtr = nullptr;
     mDataLength = 0;
     mReadOffset = 0;
     mAmountToRead = 0;
     if (mLookup) {
         mLookup->Cancel(NS_ERROR_FAILURE);
-        mLookup = nsnull;
+        mLookup = nullptr;
     }
 }
 
@@ -269,12 +269,12 @@ nsSOCKSSocketInfo::OnLookupComplete(nsICancelable *aRequest,
                                     nsresult aStatus)
 {
     NS_ABORT_IF_FALSE(aRequest == mLookup, "wrong DNS query");
-    mLookup = nsnull;
+    mLookup = nullptr;
     mLookupStatus = aStatus;
     mDnsRec = aRecord;
     mState = SOCKS_DNS_COMPLETE;
     ConnectToProxy(mFD);
-    mFD = nsnull;
+    mFD = nullptr;
     return NS_OK;
 }
 
@@ -1006,7 +1006,7 @@ nsSOCKSSocketInfo::ReadFromSocket(PRFileDesc *fd)
     LOGDEBUG(("socks: ReadFromSocket(), have %u bytes total",
              unsigned(mDataIoPtr - mData)));
     if (mDataIoPtr == end) {
-        mDataIoPtr = nsnull;
+        mDataIoPtr = nullptr;
         mAmountToRead = 0;
         mReadOffset = 0;
         return PR_SUCCESS;
@@ -1044,7 +1044,7 @@ nsSOCKSSocketInfo::WriteToSocket(PRFileDesc *fd)
     }
 
     if (mDataIoPtr == end) {
-        mDataIoPtr = nsnull;
+        mDataIoPtr = nullptr;
         mDataLength = 0;
         mReadOffset = 0;
         return PR_SUCCESS;

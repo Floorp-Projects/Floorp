@@ -77,7 +77,7 @@ public:
    */
   static bool ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                                           nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,
-                                          bool* aMayNeedRetry, bool* aIsEmpty = nsnull);
+                                          bool* aMayNeedRetry, bool* aIsEmpty = nullptr);
 
 protected:
   nsPresContext* mPresContext;

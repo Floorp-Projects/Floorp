@@ -196,7 +196,7 @@ NS_OBJC_TRY(_e, )
 #define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL   } @catch(NSException *_exn) {      \
                                                nsObjCExceptionLog(_exn);        \
                                              }                                  \
-                                             return nsnull;
+                                             return nullptr;
 
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT @try {
 #define NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT   } @catch(NSException *_exn) {    \

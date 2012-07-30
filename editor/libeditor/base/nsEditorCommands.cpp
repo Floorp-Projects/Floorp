@@ -442,7 +442,7 @@ nsPasteTransferableCommand::IsCommandEnabled(const char *aCommandName,
     nsresult rv = editor->GetIsSelectionEditable(&isEditable);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isEditable)
-      return editor->CanPasteTransferable(nsnull, outCmdEnabled);
+      return editor->CanPasteTransferable(nullptr, outCmdEnabled);
   }
 
   *outCmdEnabled = false;

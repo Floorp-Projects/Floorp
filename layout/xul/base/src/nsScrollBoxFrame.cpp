@@ -151,7 +151,7 @@ nsAutoRepeatBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 void
 nsAutoRepeatBoxFrame::Notify()
 {
-  DoMouseClick(nsnull, mTrustedEvent);
+  DoMouseClick(nullptr, mTrustedEvent);
 }
 
 void

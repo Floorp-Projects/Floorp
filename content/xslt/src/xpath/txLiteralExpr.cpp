@@ -34,7 +34,7 @@ txLiteralExpr::getReturnType()
 Expr*
 txLiteralExpr::getSubExprAt(PRUint32 aPos)
 {
-    return nsnull;
+    return nullptr;
 }
 void
 txLiteralExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)

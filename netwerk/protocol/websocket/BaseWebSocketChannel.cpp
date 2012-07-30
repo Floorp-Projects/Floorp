@@ -13,7 +13,7 @@
 #include "nsStandardURL.h"
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo *webSocketLog = nsnull;
+PRLogModuleInfo *webSocketLog = nullptr;
 #endif
 
 namespace mozilla {

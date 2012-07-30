@@ -365,7 +365,7 @@ OfflineCacheUpdateChild::Schedule()
 
     nsCOMPtr<nsPIDOMWindow> piWindow = 
         do_QueryInterface(mWindow);
-    mWindow = nsnull;
+    mWindow = nullptr;
 
     nsIDocShell *docshell = piWindow->GetDocShell();
 
@@ -394,7 +394,7 @@ OfflineCacheUpdateChild::Schedule()
       LOG(("Calling offline-cache-update-added"));
       observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(this),
                                        "offline-cache-update-added",
-                                       nsnull);
+                                       nullptr);
       LOG(("Done offline-cache-update-added"));
     }
 
@@ -404,7 +404,7 @@ OfflineCacheUpdateChild::Schedule()
     // This tells the update to cache this document even in case the manifest
     // has not been changed since the last fetch.
     // See also nsOfflineCacheUpdate::ScheduleImplicit.
-    bool stickDocument = mDocument != nsnull; 
+    bool stickDocument = mDocument != nullptr; 
 
     // Need to addref ourself here, because the IPC stack doesn't hold
     // a reference to us. Will be released in RecvFinish() that identifies 
@@ -500,7 +500,7 @@ OfflineCacheUpdateChild::RecvFinish(const bool &succeeded,
         LOG(("Calling offline-cache-update-completed"));
         observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(this),
                                          "offline-cache-update-completed",
-                                         nsnull);
+                                         nullptr);
         LOG(("Done offline-cache-update-completed"));
     }
 

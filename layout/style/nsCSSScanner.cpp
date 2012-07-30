@@ -250,14 +250,14 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 }
 
 nsCSSScanner::nsCSSScanner()
-  : mReadPointer(nsnull)
+  : mReadPointer(nullptr)
   , mSVGMode(false)
 #ifdef CSS_REPORT_PARSE_ERRORS
   , mError(mErrorBuf, ArrayLength(mErrorBuf), 0)
   , mInnerWindowID(0)
   , mWindowIDCached(false)
-  , mSheet(nsnull)
-  , mLoader(nsnull)
+  , mSheet(nullptr)
+  , mLoader(nullptr)
 #endif
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
@@ -304,7 +304,7 @@ nsCSSScanner::InitGlobals()
                "unexpected null pointer without failure");
 
   Preferences::RegisterCallback(CSSErrorsPrefChanged, CSS_ERRORS_PREF);
-  CSSErrorsPrefChanged(CSS_ERRORS_PREF, nsnull);
+  CSSErrorsPrefChanged(CSS_ERRORS_PREF, nullptr);
 #endif
   return true;
 }
@@ -435,7 +435,7 @@ InitStringBundle()
   nsresult rv = 
     sbs->CreateBundle("chrome://global/locale/css.properties", &gStringBundle);
   if (NS_FAILED(rv)) {
-    gStringBundle = nsnull;
+    gStringBundle = nullptr;
     return false;
   }
 
@@ -534,7 +534,7 @@ nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
                                           PRUint32 aParamsLength)
 {
   NS_PRECONDITION(aParamsLength > 1, "use the non-params version");
-  NS_PRECONDITION(aParams[0] == nsnull, "first param should be empty");
+  NS_PRECONDITION(aParams[0] == nullptr, "first param should be empty");
 
   ENSURE_STRINGBUNDLE;
   
@@ -554,17 +554,17 @@ nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
 void
 nsCSSScanner::Close()
 {
-  mReadPointer = nsnull;
+  mReadPointer = nullptr;
 
   // Clean things up so we don't hold on to memory if our parser gets recycled.
 #ifdef CSS_REPORT_PARSE_ERRORS
   mFileName.Truncate();
-  mURI = nsnull;
+  mURI = nullptr;
   mError.Truncate();
   mInnerWindowID = 0;
   mWindowIDCached = false;
-  mSheet = nsnull;
-  mLoader = nsnull;
+  mSheet = nullptr;
+  mLoader = nullptr;
 #endif
   if (mPushback != mLocalPushback) {
     delete [] mPushback;
@@ -628,7 +628,7 @@ nsCSSScanner::Pushback(PRUnichar aChar)
 {
   if (mPushbackCount == mPushbackSize) { // grow buffer
     PRUnichar*  newPushback = new PRUnichar[mPushbackSize + 4];
-    if (nsnull == newPushback) {
+    if (nullptr == newPushback) {
       return;
     }
     mPushbackSize += 4;

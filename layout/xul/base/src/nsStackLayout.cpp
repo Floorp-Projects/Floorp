@@ -21,7 +21,7 @@
 
 using namespace mozilla;
 
-nsBoxLayout* nsStackLayout::gInstance = nsnull;
+nsBoxLayout* nsStackLayout::gInstance = nullptr;
 
 #define SPECIFIED_LEFT (1 << NS_SIDE_LEFT)
 #define SPECIFIED_RIGHT (1 << NS_SIDE_RIGHT)

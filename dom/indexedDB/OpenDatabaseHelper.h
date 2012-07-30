@@ -26,7 +26,7 @@ public:
                      bool aForDeletion)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
-      mForDeletion(aForDeletion), mDatabaseId(nsnull), mCurrentVersion(0),
+      mForDeletion(aForDeletion), mDatabaseId(nullptr), mCurrentVersion(0),
       mLastObjectStoreId(0), mLastIndexId(0), mState(eCreated),
       mResultCode(NS_OK), mLoadDBMetadata(false)
   {

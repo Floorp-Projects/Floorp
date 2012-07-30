@@ -77,7 +77,7 @@ HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
        this, aStatusCode));
   nsresult rv = mActiveChannel->OnStopRequest(aRequest, aContext, aStatusCode);
 
-  mActiveChannel = nsnull;
+  mActiveChannel = nullptr;
   return rv;
 }
 

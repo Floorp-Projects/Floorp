@@ -37,18 +37,18 @@ nsShmImage::Create(const gfxIntSize& aSize,
 
     nsRefPtr<nsShmImage> shm = new nsShmImage();
     shm->mImage = XShmCreateImage(dpy, aVisual, aDepth,
-                                  ZPixmap, nsnull,
+                                  ZPixmap, nullptr,
                                   &(shm->mInfo),
                                   aSize.width, aSize.height);
     if (!shm->mImage) {
-        return nsnull;
+        return nullptr;
     }
 
     size_t size = SharedMemory::PageAlignedSize(
         shm->mImage->bytes_per_line * shm->mImage->height);
     shm->mSegment = new SharedMemorySysV();
     if (!shm->mSegment->Create(size) || !shm->mSegment->Map(size)) {
-        return nsnull;
+        return nullptr;
     }
 
     shm->mInfo.shmid = shm->mSegment->GetHandle();
@@ -70,7 +70,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
         // Assume XShm isn't available, and don't attempt to use it
         // again.
         gShmAvailable = false;
-        return nsnull;
+        return nullptr;
     }
 
     shm->mXAttached = true;
@@ -91,7 +91,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
     default:
         NS_WARNING("Unsupported XShm Image format!");
         gShmAvailable = false;
-        return nsnull;
+        return nullptr;
     }
     return shm.forget();
 }
@@ -118,7 +118,7 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
     Display* dpy = gdk_x11_get_default_xdisplay();
     Drawable d = GDK_DRAWABLE_XID(gd);
 
-    GC gc = XCreateGC(dpy, d, 0, nsnull);
+    GC gc = XCreateGC(dpy, d, 0, nullptr);
     for (GdkRectangle* r = aRects; r < aEnd; r++) {
         XShmPutImage(dpy, d, gc, mImage,
                      r->x, r->y,
@@ -145,7 +145,7 @@ nsShmImage::Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects)
     Drawable d = GDK_WINDOW_XID(aWindow);
     int dx = 0, dy = 0;
 
-    GC gc = XCreateGC(dpy, d, 0, nsnull);
+    GC gc = XCreateGC(dpy, d, 0, nullptr);
     cairo_rectangle_t r;
     for (int i = 0; i < aRects->num_rectangles; i++) {
         r = aRects->rectangles[i];
@@ -174,7 +174,7 @@ nsShmImage::Put(QWidget* aWindow, QRect& aRect)
     Display* dpy = gfxQtPlatform::GetXDisplay(aWindow);
     Drawable d = aWindow->winId();
 
-    GC gc = XCreateGC(dpy, d, 0, nsnull);
+    GC gc = XCreateGC(dpy, d, 0, nullptr);
     // Avoid out of bounds painting
     QRect inter = aRect.intersected(aWindow->rect());
     XShmPutImage(dpy, d, gc, mImage,
@@ -198,7 +198,7 @@ nsShmImage::EnsureShmImage(const gfxIntSize& aSize, Visual* aVisual, unsigned in
         // ordered after the Puts.
         aImage = nsShmImage::Create(aSize, aVisual, aDepth);
     }
-    return !aImage ? nsnull : aImage->AsSurface();
+    return !aImage ? nullptr : aImage->AsSurface();
 }
 
 #endif  // defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)

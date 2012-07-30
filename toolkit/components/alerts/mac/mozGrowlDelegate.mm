@@ -31,38 +31,38 @@ GetWindowOfObserver(nsIObserver* aObserver)
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(aObserver));
   if (!wrappedJS) {
     // We can't do anything with objects that aren't implemented in JS...
-    return nsnull;
+    return nullptr;
   }
 
   JSObject* obj;
   nsresult rv = wrappedJS->GetJSObject(&obj);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIThreadJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   JSContext* cx = stack->GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, nsnull);
+  NS_ENSURE_TRUE(cx, nullptr);
 
   JSAutoRequest ar(cx);
   JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj)) {
-    return nsnull;
+    return nullptr;
   }
 
   JSObject* global = JS_GetGlobalForObject(cx, obj);
-  NS_ENSURE_TRUE(global, nsnull);
+  NS_ENSURE_TRUE(global, nullptr);
 
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  NS_ENSURE_TRUE(xpc, nsnull);
+  NS_ENSURE_TRUE(xpc, nullptr);
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   rv = xpc->GetWrappedNativeOfJSObject(cx, global, getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryWrappedNative(wrapper);
-  NS_ENSURE_TRUE(window, nsnull);
+  NS_ENSURE_TRUE(window, nullptr);
 
   return window.forget();
 }
@@ -92,8 +92,8 @@ GetWindowOfObserver(nsIObserver* aObserver)
   }
 
   // Safeguard against calling NS_RELEASE on uninitialized memory.
-  observer = nsnull;
-  window = nsnull;
+  observer = nullptr;
+  window = nullptr;
 
   return nil;
 
@@ -292,7 +292,7 @@ GetWindowOfObserver(nsIObserver* aObserver)
 
   ObserverPair* pair =
     [mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]];
-  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nsnull;
+  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nullptr;
 
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];
@@ -302,7 +302,7 @@ GetWindowOfObserver(nsIObserver* aObserver)
     tmp.SetLength([cookie length]);
     [cookie getCharacters:tmp.BeginWriting()];
 
-    observer->Observe(nsnull, "alertfinished", tmp.get());
+    observer->Observe(nullptr, "alertfinished", tmp.get());
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -319,7 +319,7 @@ GetWindowOfObserver(nsIObserver* aObserver)
 
   ObserverPair* pair =
     [mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]];
-  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nsnull;
+  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nullptr;
 
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];
@@ -329,8 +329,8 @@ GetWindowOfObserver(nsIObserver* aObserver)
     tmp.SetLength([cookie length]);
     [cookie getCharacters:tmp.BeginWriting()];
 
-    observer->Observe(nsnull, "alertclickcallback", tmp.get());
-    observer->Observe(nsnull, "alertfinished", tmp.get());
+    observer->Observe(nullptr, "alertclickcallback", tmp.get());
+    observer->Observe(nullptr, "alertfinished", tmp.get());
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

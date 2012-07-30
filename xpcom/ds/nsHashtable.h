@@ -175,9 +175,9 @@ class nsSupportsHashtable
     }
     bool Put(nsHashKey *aKey,
                nsISupports *aData,
-               nsISupports **value = nsnull);
+               nsISupports **value = nullptr);
     nsISupports* Get(nsHashKey *aKey);
-    bool Remove(nsHashKey *aKey, nsISupports **value = nsnull);
+    bool Remove(nsHashKey *aKey, nsISupports **value = nullptr);
     nsHashtable *Clone();
     void Enumerate(nsHashtableEnumFunc aEnumFunc, void* aClosure = NULL) {
         nsHashtable::Enumerate(aEnumFunc, aClosure);

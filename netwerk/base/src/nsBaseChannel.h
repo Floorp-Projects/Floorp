@@ -198,7 +198,7 @@ public:
   // This function optionally returns a reference to the new converter.
   nsresult PushStreamConverter(const char *fromType, const char *toType,
                                bool invalidatesContentLength = true,
-                               nsIStreamListener **converter = nsnull);
+                               nsIStreamListener **converter = nullptr);
 
 private:
   NS_DECL_NSISTREAMLISTENER
@@ -209,7 +209,7 @@ private:
 
   // Called when the callbacks available to this channel may have changed.
   void CallbacksChanged() {
-    mProgressSink = nsnull;
+    mProgressSink = nullptr;
     mQueriedProgressSink = false;
     OnCallbacksChanged();
   }

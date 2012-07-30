@@ -59,7 +59,7 @@ nsSMILTimeValueSpec::~nsSMILTimeValueSpec()
   UnregisterFromReferencedElement(mReferencedElement.get());
   if (mEventListener) {
     mEventListener->Disconnect();
-    mEventListener = nsnull;
+    mEventListener = nullptr;
   }
 }
 
@@ -280,11 +280,11 @@ nsSMILTimedElement*
 nsSMILTimeValueSpec::GetTimedElement(Element* aElement)
 {
   if (!aElement)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsISMILAnimationElement> animElement = do_QueryInterface(aElement);
   if (!animElement)
-    return nsnull;
+    return nullptr;
 
   return &animElement->TimedElement();
 }
@@ -371,16 +371,16 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
   if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
     nsIDocument* doc = aTarget->GetCurrentDoc();
     if (!doc)
-      return nsnull;
+      return nullptr;
     nsPIDOMWindow* win = doc->GetWindow();
     if (!win)
-      return nsnull;
+      return nullptr;
     target = do_QueryInterface(win);
   } else {
     target = aTarget;
   }
   if (!target)
-    return nsnull;
+    return nullptr;
 
   return target->GetListenerManager(true);
 }

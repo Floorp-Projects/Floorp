@@ -119,7 +119,7 @@ nsCanvasFrame::AppendFrames(ChildListID     aListID,
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
 #endif
-  mFrames.AppendFrames(nsnull, aFrameList);
+  mFrames.AppendFrames(nullptr, aFrameList);
 
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -415,7 +415,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       // Prepend overflow to the our child list. There may already be
       // children placeholders for fixed-pos elements, which don't get
       // reflowed but must not be lost until the canvas frame is destroyed.
-      mFrames.InsertFrames(this, nsnull, *overflow);
+      mFrames.InsertFrames(this, nullptr, *overflow);
     }
   }
 

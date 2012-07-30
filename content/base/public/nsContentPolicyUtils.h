@@ -183,8 +183,8 @@ NS_CheckContentLoadPolicy(PRUint32          contentType,
                           const nsACString &mimeType,
                           nsISupports      *extra,
                           PRInt16          *decision,
-                          nsIContentPolicy *policyService = nsnull,
-                          nsIScriptSecurityManager* aSecMan = nsnull)
+                          nsIContentPolicy *policyService = nullptr,
+                          nsIScriptSecurityManager* aSecMan = nullptr)
 {
     CHECK_PRINCIPAL;
     if (policyService) {
@@ -210,8 +210,8 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
                              const nsACString &mimeType,
                              nsISupports      *extra,
                              PRInt16          *decision,
-                             nsIContentPolicy *policyService = nsnull,
-                             nsIScriptSecurityManager* aSecMan = nsnull)
+                             nsIContentPolicy *policyService = nullptr,
+                             nsIScriptSecurityManager* aSecMan = nullptr)
 {
     CHECK_PRINCIPAL;
     if (policyService) {
@@ -232,7 +232,7 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
  *
  * @param aContext the context to find a docshell for (can be null)
  *
- * @return a WEAK pointer to the docshell, or nsnull if it could
+ * @return a WEAK pointer to the docshell, or nullptr if it could
  *     not be obtained
  *     
  * @note  As of this writing, calls to nsIContentPolicy::Should{Load,Process}
@@ -250,7 +250,7 @@ inline nsIDocShell*
 NS_CP_GetDocShellFromContext(nsISupports *aContext)
 {
     if (!aContext) {
-        return nsnull;
+        return nullptr;
     }
 
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
@@ -278,7 +278,7 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
     }
 
     if (!window) {
-        return nsnull;
+        return nullptr;
     }
 
     return window->GetDocShell();

@@ -188,7 +188,7 @@ Vacuumer::execute()
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     DebugOnly<nsresult> rv =
-      os->NotifyObservers(nsnull, OBSERVER_TOPIC_HEAVY_IO,
+      os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
                           OBSERVER_DATA_VACUUM_BEGIN.get());
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
   }
@@ -288,7 +288,7 @@ Vacuumer::notifyCompletion(bool aSucceeded)
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    os->NotifyObservers(nsnull, OBSERVER_TOPIC_HEAVY_IO,
+    os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
                         OBSERVER_DATA_VACUUM_END.get());
   }
 
@@ -309,7 +309,7 @@ NS_IMPL_ISUPPORTS1(
 )
 
 VacuumManager *
-VacuumManager::gVacuumManager = nsnull;
+VacuumManager::gVacuumManager = nullptr;
 
 VacuumManager *
 VacuumManager::getSingleton()
@@ -340,7 +340,7 @@ VacuumManager::~VacuumManager()
   MOZ_ASSERT(gVacuumManager == this,
              "Deleting a non-singleton instance of the service");
   if (gVacuumManager == this) {
-    gVacuumManager = nsnull;
+    gVacuumManager = nullptr;
   }
 }
 

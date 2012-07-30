@@ -50,7 +50,7 @@ TiledLayerBufferOGL::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
   mMainMemoryTiledBuffer = aMainMemoryTiledBuffer;
   mContext->MakeCurrent();
   Update(aNewValidRegion, aInvalidateRegion);
-  mMainMemoryTiledBuffer = nsnull;
+  mMainMemoryTiledBuffer = nullptr;
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (PR_IntervalNow() - start > 10) {
     printf_stderr("Time to upload %i\n", PR_IntervalNow() - start);
@@ -112,7 +112,7 @@ TiledLayerBufferOGL::ValidateTile(TiledTexture aTile,
 }
 
 TiledThebesLayerOGL::TiledThebesLayerOGL(LayerManagerOGL *aManager)
-  : ShadowThebesLayer(aManager, nsnull)
+  : ShadowThebesLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mVideoMemoryTiledBuffer(aManager->gl())
 {
@@ -210,7 +210,7 @@ TiledThebesLayerOGL::RenderTile(TiledTexture aTile,
     program->LoadMask(GetMaskLayer());
 
     nsIntRegionRectIterator it(aScreenRegion);
-    for (const nsIntRect* rect = it.Next(); rect != nsnull; rect = it.Next()) {
+    for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
       nsIntRect textureRect(rect->x - aTextureOffset.x, rect->y - aTextureOffset.y,
                             rect->width, rect->height);
       program->SetLayerQuadRect(*rect);

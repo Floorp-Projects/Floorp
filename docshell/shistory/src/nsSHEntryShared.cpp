@@ -44,7 +44,7 @@ protected:
   }
 };
 
-static HistoryTracker *gHistoryTracker = nsnull;
+static HistoryTracker *gHistoryTracker = nullptr;
 
 void
 nsSHEntryShared::Startup()
@@ -56,7 +56,7 @@ void
 nsSHEntryShared::Shutdown()
 {
   delete gHistoryTracker;
-  gHistoryTracker = nsnull;
+  gHistoryTracker = nullptr;
 }
 
 nsSHEntryShared::nsSHEntryShared()
@@ -83,7 +83,7 @@ nsSHEntryShared::~nsSHEntryShared()
     iterator(gHistoryTracker);
 
   nsSHEntryShared *elem;
-  while ((elem = iterator.Next()) != nsnull) {
+  while ((elem = iterator.Next()) != nullptr) {
     NS_ASSERTION(elem != this, "Found dead entry still in the tracker!");
   }
 #endif
@@ -140,22 +140,22 @@ nsSHEntryShared::DropPresentationState()
   nsRefPtr<nsSHEntryShared> kungFuDeathGrip = this;
 
   if (mDocument) {
-    mDocument->SetBFCacheEntry(nsnull);
+    mDocument->SetBFCacheEntry(nullptr);
     mDocument->RemoveMutationObserver(this);
-    mDocument = nsnull;
+    mDocument = nullptr;
   }
   if (mContentViewer) {
     mContentViewer->ClearHistoryEntry();
   }
 
   RemoveFromExpirationTracker();
-  mContentViewer = nsnull;
+  mContentViewer = nullptr;
   mSticky = true;
-  mWindowState = nsnull;
+  mWindowState = nullptr;
   mViewerBounds.SetRect(0, 0, 0, 0);
   mChildShells.Clear();
-  mRefreshURIList = nsnull;
-  mEditorData = nsnull;
+  mRefreshURIList = nullptr;
+  mEditorData = nullptr;
 }
 
 void

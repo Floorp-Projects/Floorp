@@ -31,9 +31,9 @@ PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 nsBMPDecoder::nsBMPDecoder(RasterImage &aImage, imgIDecoderObserver* aObserver)
  : Decoder(aImage, aObserver)
 {
-  mColors = nsnull;
-  mRow = nsnull;
-  mImageData = nsnull;
+  mColors = nullptr;
+  mRow = nullptr;
+  mImageData = nullptr;
   mCurPos = mPos = mNumColors = mRowBytes = 0;
   mOldLine = mCurLine = 1; // Otherwise decoder will never start
   mState = eRLEStateInitial;

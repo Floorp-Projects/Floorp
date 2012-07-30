@@ -60,7 +60,7 @@ NS_IMETHODIMP nsCacheSession::GetProfileDirectory(nsIFile **profileDir)
     if (mProfileDir)
         NS_ADDREF(*profileDir = mProfileDir);
     else
-        *profileDir = nsnull;
+        *profileDir = nullptr;
 
     return NS_OK;
 }
@@ -85,7 +85,7 @@ nsCacheSession::OpenCacheEntry(const nsACString &         key,
                                          key,
                                          accessRequested,
                                          blockingMode,
-                                         nsnull, // no listener
+                                         nullptr, // no listener
                                          result);
     return rv;
 }
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const nsACString & key,
                                         accessRequested,
                                         !noWait,
                                         listener,
-                                        nsnull); // no result
+                                        nullptr); // no result
 
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) rv = NS_OK;
     return rv;

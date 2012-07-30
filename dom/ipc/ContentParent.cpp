@@ -237,7 +237,7 @@ ContentParent::Init()
         threadInt->AddObserver(this);
     }
     if (obs) {
-        obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", nsnull);
+        obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", nullptr);
     }
 
 #ifdef ACCESSIBILITY
@@ -410,7 +410,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
 #endif
 
-            obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nsnull);
+            obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
         }
     }
 
@@ -464,7 +464,7 @@ TestShellParent*
 ContentParent::GetTestShellSingleton()
 {
     if (!ManagedPTestShellParent().Length())
-        return nsnull;
+        return nullptr;
     return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
 }
 
@@ -634,7 +634,7 @@ ContentParent::RecvSetClipboardText(const nsString& text, const PRInt32& whichCl
     
     nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
     NS_ENSURE_SUCCESS(rv, true);
-    trans->Init(nsnull);
+    trans->Init(nullptr);
     
     // If our data flavor has already been added, this will fail. But we don't care
     trans->AddDataFlavor(kUnicodeMime);
@@ -659,7 +659,7 @@ ContentParent::RecvGetClipboardText(const PRInt32& whichClipboard, nsString* tex
 
     nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
     NS_ENSURE_SUCCESS(rv, true);
-    trans->Init(nsnull);
+    trans->Init(nullptr);
     
     clipboard->GetData(trans, whichClipboard);
     nsCOMPtr<nsISupports> tmp;
@@ -704,8 +704,8 @@ bool
 ContentParent::RecvGetSystemColors(const PRUint32& colorsCount, InfallibleTArray<PRUint32>* colors)
 {
 #ifdef MOZ_WIDGET_ANDROID
-    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
-    if (AndroidBridge::Bridge() == nsnull) {
+    NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() == nullptr) {
         // Do not fail - the colors won't be right, but it's not critical
         return true;
     }
@@ -723,8 +723,8 @@ bool
 ContentParent::RecvGetIconForExtension(const nsCString& aFileExt, const PRUint32& aIconSize, InfallibleTArray<PRUint8>* bits)
 {
 #ifdef MOZ_WIDGET_ANDROID
-    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
-    if (AndroidBridge::Bridge() == nsnull) {
+    NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() == nullptr) {
         // Do not fail - just no icon will be shown
         return true;
     }
@@ -742,8 +742,8 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
     // default behavior is to show the last password character
     *showPassword = true;
 #ifdef MOZ_WIDGET_ANDROID
-    NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available");
-    if (AndroidBridge::Bridge() != nsnull)
+    NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
+    if (AndroidBridge::Bridge() != nullptr)
         *showPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
 #endif
     return true;
@@ -873,7 +873,7 @@ ContentParent::AllocPCrashReporter(const NativeThreadId& tid,
 #ifdef MOZ_CRASHREPORTER
   return new CrashReporterParent();
 #else
-  return nsnull;
+  return nullptr;
 #endif
 }
 
@@ -982,7 +982,7 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
     nsCOMPtr<nsIObserverService> obs =
         do_GetService("@mozilla.org/observer-service;1");
     if (obs)
-        obs->NotifyObservers(nsnull, "child-memory-reporter-update", nsnull);
+        obs->NotifyObservers(nullptr, "child-memory-reporter-update", nullptr);
 }
 
 PTestShellParent*
@@ -1008,7 +1008,7 @@ ContentParent::AllocPAudio(const PRInt32& numChannels,
     NS_ADDREF(parent);
     return parent;
 #else
-    return nsnull;
+    return nullptr;
 #endif
 }
 
@@ -1116,7 +1116,7 @@ ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
     nsCOMPtr<IHistory> history = services::GetHistoryService();
     NS_ABORT_IF_FALSE(history, "History must exist at this point.");
     if (history) {
-      history->RegisterVisitedCallback(newURI, nsnull);
+      history->RegisterVisitedCallback(newURI, nullptr);
     }
     return true;
 }
@@ -1233,7 +1233,7 @@ ContentParent::RecvLoadURIExternal(const IPC::URI& uri)
     if (!extProtService)
         return true;
     nsCOMPtr<nsIURI> ourURI(uri);
-    extProtService->LoadURI(ourURI, nsnull);
+    extProtService->LoadURI(ourURI, nullptr);
     return true;
 }
 
@@ -1297,7 +1297,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg,true, aJSON, nsnull, aRetvals);
+                        aMsg,true, aJSON, nullptr, aRetvals);
   }
   return true;
 }
@@ -1308,7 +1308,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                        aMsg, false, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nullptr, nullptr);
   }
   return true;
 }
@@ -1322,7 +1322,7 @@ ContentParent::RecvAddGeolocationListener()
       return true;
     }
     jsval dummy = JSVAL_VOID;
-    geo->WatchPosition(this, nsnull, dummy, nsnull, &mGeolocationWatchID);
+    geo->WatchPosition(this, nullptr, dummy, nullptr, &mGeolocationWatchID);
   }
   return true;
 }
@@ -1394,7 +1394,7 @@ ContentParent::RecvPrivateDocShellsExist(const bool& aExist)
     gPrivateContent->RemoveElement(this);
     if (!gPrivateContent->Length()) {
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      obs->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+      obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
       delete gPrivateContent;
       gPrivateContent = NULL;
     }

@@ -279,7 +279,7 @@ DOMSVGTests::GetOrCreateStringListAttribute(PRUint8 aAttrEnum) const
   }
   // property-insertion failed (e.g. OOM in property-table code)
   delete stringListPtr;
-  return nsnull;
+  return nullptr;
 }
 
 nsIAtom*
@@ -293,7 +293,7 @@ DOMSVGTests::GetAttrValue(PRUint8 aAttrEnum, nsAttrValue& aValue) const
 {
   MOZ_ASSERT(aAttrEnum < ArrayLength(sStringListNames),
              "aAttrEnum out of range");
-  aValue.SetTo(*GetOrCreateStringListAttribute(aAttrEnum), nsnull);
+  aValue.SetTo(*GetOrCreateStringListAttribute(aAttrEnum), nullptr);
 }
 
 void

@@ -88,7 +88,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       PRUint32 length;
       const PRUint8 *blob = static_cast<mozIStorageStatement *>(mStatement)->
         AsSharedBlob(idx, &length);
-      JSObject *obj = ::JS_NewArrayObject(aCtx, length, nsnull);
+      JSObject *obj = ::JS_NewArrayObject(aCtx, length, nullptr);
       if (!obj) {
         *_retval = false;
         return NS_OK;
@@ -144,7 +144,7 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
     }
 
     *_retval = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID,
-                                     nsnull, nsnull, 0);
+                                     nullptr, nullptr, 0);
     *_objp = aScopeObj;
     return NS_OK;
   }

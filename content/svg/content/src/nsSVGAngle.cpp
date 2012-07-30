@@ -42,7 +42,7 @@ public:
   NS_IMETHOD SetValue(float aValue)
     {
       NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
-      mVal.SetBaseValue(aValue, nsnull, false);
+      mVal.SetBaseValue(aValue, nullptr, false);
       return NS_OK;
     }
 
@@ -56,18 +56,18 @@ public:
     }
 
   NS_IMETHOD SetValueAsString(const nsAString& aValue)
-    { return mVal.SetBaseValueString(aValue, nsnull, false); }
+    { return mVal.SetBaseValueString(aValue, nullptr, false); }
   NS_IMETHOD GetValueAsString(nsAString& aValue)
     { mVal.GetBaseValueString(aValue); return NS_OK; }
 
   NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
                                     float valueInSpecifiedUnits)
     {
-      return mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
+      return mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nullptr);
     }
 
   NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
-    { return mVal.ConvertToSpecifiedUnits(unitType, nsnull); }
+    { return mVal.ConvertToSpecifiedUnits(unitType, nullptr); }
 
 private:
   nsSVGAngle mVal;
@@ -120,8 +120,8 @@ NS_INTERFACE_MAP_END
 
 static nsIAtom** const unitMap[] =
 {
-  nsnull, /* SVG_ANGLETYPE_UNKNOWN */
-  nsnull, /* SVG_ANGLETYPE_UNSPECIFIED */
+  nullptr, /* SVG_ANGLETYPE_UNKNOWN */
+  nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
   &nsGkAtoms::deg,
   &nsGkAtoms::rad,
   &nsGkAtoms::grad
@@ -444,7 +444,7 @@ nsSVGAngle::ToSMILAttr(nsSVGElement *aSVGElement)
   // SMILOrient would not be useful for general angle attributes (also,
   // "orient" is the only animatable <angle>-valued attribute in SVG 1.1).
   NS_NOTREACHED("Trying to animate unknown angle attribute.");
-  return nsnull;
+  return nullptr;
 }
 
 nsresult

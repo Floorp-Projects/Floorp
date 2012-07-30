@@ -165,7 +165,7 @@ nsTableColFrame::GetNextCol() const
     }
     childFrame = childFrame->GetNextSibling();
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsIAtom*

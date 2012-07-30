@@ -46,7 +46,7 @@ public:
 
     /**
      * Functions to return results that will be fully used by the caller.
-     * Returns nsnull on out-of-memory and an inited result otherwise.
+     * Returns nullptr on out-of-memory and an inited result otherwise.
      */
     nsresult getStringResult(StringResult** aResult);
     nsresult getStringResult(const nsAString& aValue, txAExprResult** aResult);
@@ -57,7 +57,7 @@ public:
 
     /**
      * Functions to return a txAExprResult that is shared across several
-     * clients and must not be modified. Never returns nsnull.
+     * clients and must not be modified. Never returns nullptr.
      */
     void getEmptyStringResult(txAExprResult** aResult);
     void getBoolResult(bool aValue, txAExprResult** aResult);

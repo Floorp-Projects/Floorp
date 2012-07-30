@@ -63,13 +63,13 @@ hnjFopen(const char* aURISpec, const char* aMode)
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aURISpec);
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     nsCOMPtr<nsIInputStream> instream;
     rv = NS_OpenURI(getter_AddRefs(instream), uri);
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     hnjFile *f = new hnjFile;
@@ -91,7 +91,7 @@ hnjFclose(hnjFile* f)
     if (NS_FAILED(rv)) {
         result = EOF;
     }
-    f->mStream = nsnull;
+    f->mStream = nullptr;
 
     delete f;
     return result;
@@ -120,7 +120,7 @@ hnjFgets(char* s, int n, hnjFile* f)
         nsresult rv = f->mStream->Read(f->mBuffer, BUFSIZE, &f->mLimit);
         if (NS_FAILED(rv)) {
             f->mLimit = 0;
-            return nsnull;
+            return nullptr;
         }
 
         if (f->mLimit == 0) {
@@ -129,7 +129,7 @@ hnjFgets(char* s, int n, hnjFile* f)
     }
 
     if (i == 0) {
-        return nsnull; // end of file
+        return nullptr; // end of file
     }
 
     s[i] = '\0'; // null-terminate the returned string

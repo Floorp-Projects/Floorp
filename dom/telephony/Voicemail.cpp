@@ -66,7 +66,7 @@ Voicemail::~Voicemail()
 NS_IMETHODIMP
 Voicemail::GetStatus(nsIDOMMozVoicemailStatus** aStatus)
 {
-  *aStatus = nsnull;
+  *aStatus = nullptr;
 
   NS_ENSURE_STATE(mRIL);
   return mRIL->GetVoicemailStatus(aStatus);
@@ -97,7 +97,7 @@ NS_IMPL_EVENT_HANDLER(Voicemail, statuschanged)
 NS_IMETHODIMP
 Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
 {
-  nsRefPtr<VoicemailEvent> event = new VoicemailEvent(nsnull, nsnull);
+  nsRefPtr<VoicemailEvent> event = new VoicemailEvent(nullptr, nullptr);
   nsresult rv = event->InitVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
                                           false, false, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);

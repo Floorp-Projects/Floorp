@@ -158,7 +158,7 @@ addURI(nsIURI* aURI)
   nsCOMPtr<nsINavHistoryService> hist =
     do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
   PRInt64 id;
-  nsresult rv = hist->AddVisit(aURI, PR_Now(), nsnull,
+  nsresult rv = hist->AddVisit(aURI, PR_Now(), nullptr,
                                nsINavHistoryService::TRANSITION_LINK, false,
                                0, &id);
   do_check_success(rv);

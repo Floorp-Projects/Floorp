@@ -8,7 +8,7 @@
 #include "nsReadableUtils.h"
 
 nsNameSpaceMap::nsNameSpaceMap()
-    : mEntries(nsnull)
+    : mEntries(nullptr)
 {
     MOZ_COUNT_CTOR(nsNameSpaceMap);
 }
@@ -38,7 +38,7 @@ nsNameSpaceMap::Put(const nsCSubstring& aURI, nsIAtom* aPrefix)
     Entry* entry;
 
     // Make sure we're not adding a duplicate
-    for (entry = mEntries; entry != nsnull; entry = entry->mNext) {
+    for (entry = mEntries; entry != nullptr; entry = entry->mNext) {
         if (entry->mURI == aURI || entry->mPrefix == aPrefix)
             return NS_ERROR_FAILURE;
     }
@@ -55,7 +55,7 @@ nsNameSpaceMap::Put(const nsCSubstring& aURI, nsIAtom* aPrefix)
 nsNameSpaceMap::const_iterator
 nsNameSpaceMap::GetNameSpaceOf(const nsCSubstring& aURI) const
 {
-    for (Entry* entry = mEntries; entry != nsnull; entry = entry->mNext) {
+    for (Entry* entry = mEntries; entry != nullptr; entry = entry->mNext) {
         if (StringBeginsWith(aURI, entry->mURI))
             return const_iterator(entry);
     }

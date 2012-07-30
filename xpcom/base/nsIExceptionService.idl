@@ -22,7 +22,7 @@ interface nsIExceptionProvider : nsISupports
 [scriptable, uuid(efc9d00b-231c-4feb-852c-ac017266a415)]
 interface nsIExceptionManager : nsISupports
 {
-    /** Sets (or clears with nsnull) the current error on the this thread. */
+    /** Sets (or clears with nullptr) the current error on the this thread. */
     void setCurrentException( in nsIException error);
 
     /** Gets the current error for the current thread, or NULL if no error */

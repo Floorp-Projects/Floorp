@@ -102,7 +102,7 @@ private:
   nsTArray< nsAutoPtr<nsString> > mURIArray;
 };
 
-static NameSpaceManagerImpl* sNameSpaceManager = nsnull;
+static NameSpaceManagerImpl* sNameSpaceManager = nullptr;
 
 NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
 

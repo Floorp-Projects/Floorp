@@ -13,7 +13,7 @@
 
 nsCategoryObserver::nsCategoryObserver(const char* aCategory,
                                        nsCategoryListener* aListener)
-  : mListener(nsnull), mCategory(aCategory), mObserversRemoved(false)
+  : mListener(nullptr), mCategory(aCategory), mObserversRemoved(false)
 {
   mHash.Init();
   mListener = aListener;
@@ -72,7 +72,7 @@ NS_IMPL_ISUPPORTS1(nsCategoryObserver, nsIObserver)
 
 void
 nsCategoryObserver::ListenerDied() {
-  mListener = nsnull;
+  mListener = nullptr;
   RemoveObservers();
 }
 
@@ -121,7 +121,7 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     // added and an nsCategoryObserver gets instantiated before events get
     // processed, we'd get the notification for an existing entry.
     // Do nothing in that case.
-    if (mHash.Get(str, nsnull))
+    if (mHash.Get(str, nullptr))
       return NS_OK;
 
     nsCOMPtr<nsICategoryManager> catMan =

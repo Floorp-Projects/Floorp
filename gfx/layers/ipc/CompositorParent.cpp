@@ -42,13 +42,13 @@ namespace layers {
 // CompositorParent, but that's not always true.  This assumption only
 // affects CrossProcessCompositorParent below.
 static CompositorParent* sCurrentCompositor;
-static Thread* sCompositorThread = nsnull;
+static Thread* sCompositorThread = nullptr;
 // When ContentParent::StartUp() is called, we use the Thread global.
 // When StartUpWithExistingThread() is used, we have to use the two
 // duplicated globals, because there's no API to make a Thread from an
 // existing thread.
 static PlatformThreadId sCompositorThreadID = 0;
-static MessageLoop* sCompositorLoop = nsnull;
+static MessageLoop* sCompositorLoop = nullptr;
 
 struct LayerTreeState {
   nsRefPtr<Layer> mRoot;
@@ -106,7 +106,7 @@ bool CompositorParent::CreateThread()
   sCompositorThread = new Thread("Compositor");
   if (!sCompositorThread->Start()) {
     delete sCompositorThread;
-    sCompositorThread = nsnull;
+    sCompositorThread = nullptr;
     return false;
   }
   return true;
@@ -117,9 +117,9 @@ void CompositorParent::DestroyThread()
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
   if (sCompositorThread) {
     delete sCompositorThread;
-    sCompositorThread = nsnull;
+    sCompositorThread = nullptr;
   }
-  sCompositorLoop = nsnull;
+  sCompositorLoop = nullptr;
   sCompositorThreadID = 0;
 }
 
@@ -143,7 +143,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
 {
-  NS_ABORT_IF_FALSE(sCompositorThread != nsnull || sCompositorThreadID,
+  NS_ABORT_IF_FALSE(sCompositorThread != nullptr || sCompositorThreadID,
                     "The compositor thread must be Initialized before instanciating a COmpositorParent.");
   MOZ_COUNT_CTOR(CompositorParent);
   mCompositorID = 0;
@@ -373,10 +373,10 @@ public:
    * phase.
    */
   AutoResolveRefLayers(Layer* aRoot) : mRoot(aRoot)
-  { WalkTheTree<Resolve>(mRoot, nsnull); }
+  { WalkTheTree<Resolve>(mRoot, nullptr); }
 
   ~AutoResolveRefLayers()
-  { WalkTheTree<Detach>(mRoot, nsnull); }
+  { WalkTheTree<Detach>(mRoot, nullptr); }
 
 private:
   enum Op { Resolve, Detach };
@@ -576,7 +576,7 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
 
     TransformData& data = aAnimation.data().get_TransformData();
     gfx3DMatrix transform =
-      nsDisplayTransform::GetResultingTransformMatrix(nsnull, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
+      nsDisplayTransform::GetResultingTransformMatrix(nullptr, data.origin(), nsDeviceContext::AppUnitsPerCSSPixel(),
                                                       &data.bounds(), interpolatedList, &data.mozOrigin(),
                                                       &data.perspectiveOrigin(), &data.perspective());
 
@@ -923,25 +923,25 @@ static CompositorMap* sCompositorMap;
 
 void CompositorParent::CreateCompositorMap()
 {
-  if (sCompositorMap == nsnull) {
+  if (sCompositorMap == nullptr) {
     sCompositorMap = new CompositorMap;
   }
 }
 
 void CompositorParent::DestroyCompositorMap()
 {
-  if (sCompositorMap != nsnull) {
+  if (sCompositorMap != nullptr) {
     NS_ASSERTION(sCompositorMap->empty(), 
                  "The Compositor map should be empty when destroyed>");
     delete sCompositorMap;
-    sCompositorMap = nsnull;
+    sCompositorMap = nullptr;
   }
 }
 
 CompositorParent* CompositorParent::GetCompositor(PRUint64 id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
-  return it != sCompositorMap->end() ? it->second : nsnull;
+  return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
 void CompositorParent::AddCompositor(CompositorParent* compositor, PRUint64* outID)
@@ -957,7 +957,7 @@ CompositorParent* CompositorParent::RemoveCompositor(PRUint64 id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {
-    return nsnull;
+    return nullptr;
   }
   sCompositorMap->erase(it);
   return it->second;
@@ -1076,7 +1076,7 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
   ProcessHandle handle;
   if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
     // XXX need to kill |aOtherProcess|, it's boned
-    return nsnull;
+    return nullptr;
   }
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
@@ -1104,7 +1104,7 @@ GetIndirectShadowTree(uint64_t aId)
 {
   LayerTreeMap::const_iterator cit = sIndirectLayerTrees.find(aId);
   if (sIndirectLayerTrees.end() == cit) {
-    return nsnull;
+    return nullptr;
   }
   return &cit->second;
 }

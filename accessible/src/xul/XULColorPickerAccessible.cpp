@@ -77,7 +77,7 @@ XULColorPickerTileAccessible::ContainerWidget() const
     if (grandParent && grandParent->IsMenuButton())
       return grandParent;
   }
-  return nsnull;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +125,7 @@ XULColorPickerAccessible::IsActiveWidget() const
 bool
 XULColorPickerAccessible::AreItemsOperable() const
 {
-  Accessible* menuPopup = mChildren.SafeElementAt(0, nsnull);
+  Accessible* menuPopup = mChildren.SafeElementAt(0, nullptr);
   if (menuPopup) {
     nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(menuPopup->GetFrame());
     return menuPopupFrame && menuPopupFrame->IsOpen();
@@ -143,7 +143,7 @@ XULColorPickerAccessible::CacheChildren()
 
   nsAccTreeWalker walker(mDoc, mContent, true);
 
-  Accessible* child = nsnull;
+  Accessible* child = nullptr;
   while ((child = walker.NextChild())) {
     PRUint32 role = child->Role();
 

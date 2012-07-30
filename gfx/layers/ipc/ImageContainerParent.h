@@ -98,7 +98,7 @@ protected:
   virtual PGrallocBufferParent*
   AllocPGrallocBuffer(const gfxIntSize&, const gfxContentType&,
                       MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE
-  { return nsnull; }
+  { return nullptr; }
 
   virtual bool
   DeallocPGrallocBuffer(PGrallocBufferParent* actor) MOZ_OVERRIDE
@@ -109,14 +109,14 @@ protected:
    * returns the previous image that was associated with aID.
    *
    * If the global SharedImage table does not yet have an entry for aID, it 
-   * creates one and returns nsnull since there was no previous image for aID.
+   * creates one and returns nullptr since there was no previous image for aID.
    * Must be called from the Compositor thread.
    */
   static SharedImage* SwapSharedImage(PRUint64 aID, SharedImage* aImage);
 
   /**
    * Removes an entry from the global SharedImage table and returns the 
-   * SharedImage that was stored in the table for aID or nsnull if there
+   * SharedImage that was stored in the table for aID or nullptr if there
    * was no entry for aID.
    * 
    * It is safe to call this function on an ID that does not exist in the table.

@@ -28,7 +28,7 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gGtkIMLog = nsnull;
+PRLogModuleInfo* gGtkIMLog = nullptr;
 
 static const char*
 GetRangeTypeName(PRUint32 aRangeType)
@@ -67,20 +67,20 @@ GetEnabledStateName(PRUint32 aState)
 }
 #endif
 
-nsGtkIMModule* nsGtkIMModule::sLastFocusedModule = nsnull;
+nsGtkIMModule* nsGtkIMModule::sLastFocusedModule = nullptr;
 
 #ifdef MOZ_PLATFORM_MAEMO
 static bool gIsVirtualKeyboardOpened = false;
 #endif
 
 nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow) :
-    mOwnerWindow(aOwnerWindow), mLastFocusedWindow(nsnull),
-    mContext(nsnull),
+    mOwnerWindow(aOwnerWindow), mLastFocusedWindow(nullptr),
+    mContext(nullptr),
 #ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
-    mSimpleContext(nsnull),
+    mSimpleContext(nullptr),
 #endif
-    mDummyContext(nsnull),
-    mCompositionStart(PR_UINT32_MAX), mProcessingKeyEvent(nsnull),
+    mDummyContext(nullptr),
+    mCompositionStart(PR_UINT32_MAX), mProcessingKeyEvent(nullptr),
     mCompositionState(eCompositionState_NotComposing),
     mIsIMFocused(false), mIgnoreNativeCompositionEvent(false)
 {
@@ -160,7 +160,7 @@ nsGtkIMModule::Init()
 nsGtkIMModule::~nsGtkIMModule()
 {
     if (this == sLastFocusedModule) {
-        sLastFocusedModule = nsnull;
+        sLastFocusedModule = nullptr;
     }
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p) was gone", this));
@@ -180,7 +180,7 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
         if (mIsIMFocused) {
             Blur();
         }
-        mLastFocusedWindow = nsnull;
+        mLastFocusedWindow = nullptr;
     }
 
     if (mOwnerWindow != aWindow) {
@@ -188,7 +188,7 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
     }
 
     if (sLastFocusedModule == this) {
-        sLastFocusedModule = nsnull;
+        sLastFocusedModule = nullptr;
     }
 
     /**
@@ -201,29 +201,29 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
      */
     if (mContext) {
         PrepareToDestroyContext(mContext);
-        gtk_im_context_set_client_window(mContext, nsnull);
+        gtk_im_context_set_client_window(mContext, nullptr);
         g_object_unref(mContext);
-        mContext = nsnull;
+        mContext = nullptr;
     }
 
 #ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
     if (mSimpleContext) {
-        gtk_im_context_set_client_window(mSimpleContext, nsnull);
+        gtk_im_context_set_client_window(mSimpleContext, nullptr);
         g_object_unref(mSimpleContext);
-        mSimpleContext = nsnull;
+        mSimpleContext = nullptr;
     }
 #endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
 
     if (mDummyContext) {
         // mContext and mDummyContext have the same slaveType and signal_data
         // so no need for another workaround_gtk_im_display_closed.
-        gtk_im_context_set_client_window(mDummyContext, nsnull);
+        gtk_im_context_set_client_window(mDummyContext, nullptr);
         g_object_unref(mDummyContext);
-        mDummyContext = nsnull;
+        mDummyContext = nullptr;
     }
 
-    mOwnerWindow = nsnull;
-    mLastFocusedWindow = nsnull;
+    mOwnerWindow = nullptr;
+    mLastFocusedWindow = nullptr;
     mInputContext.mIMEState.mEnabled = IMEState::DISABLED;
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -370,7 +370,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
     mFilterKeyEvent = true;
     mProcessingKeyEvent = aEvent;
     gboolean isFiltered = gtk_im_context_filter_keypress(im, aEvent);
-    mProcessingKeyEvent = nsnull;
+    mProcessingKeyEvent = nullptr;
 
     // We filter the key event if the event was not committed (because
     // it's probably part of a composition) or if the key event was
@@ -627,7 +627,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
         rectBuf.Append(NS_LITERAL_STRING(", \"bottom\": "));
         rectBuf.AppendInt(h);
         rectBuf.Append(NS_LITERAL_STRING("}"));
-        observerService->NotifyObservers(nsnull, "softkb-change",
+        observerService->NotifyObservers(nullptr, "softkb-change",
                                          rectBuf.get());
     }
 #endif
@@ -1312,7 +1312,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
             range.mRangeType = NS_TEXTRANGE_RAWINPUT;
         }
 
-        gunichar2* uniStr = nsnull;
+        gunichar2* uniStr = nullptr;
         if (start == 0) {
             range.mStartOffset = 0;
         } else {
@@ -1322,7 +1322,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
             if (uniStr) {
                 range.mStartOffset = uniStrLen;
                 g_free(uniStr);
-                uniStr = nsnull;
+                uniStr = nullptr;
             }
         }
 
@@ -1334,7 +1334,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
         } else {
             range.mEndOffset = range.mStartOffset + uniStrLen;
             g_free(uniStr);
-            uniStr = nsnull;
+            uniStr = nullptr;
         }
 
         aTextRangeList.AppendElement(range);

@@ -501,7 +501,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedWord *aShapedWord,
         while (++baseCharIndex != endCharIndex && baseCharIndex < wordLength) {
             g.SetComplex(inOrder && aShapedWord->IsClusterStart(baseCharIndex),
                          false, 0);
-            aShapedWord->SetGlyphs(baseCharIndex, g, nsnull);
+            aShapedWord->SetGlyphs(baseCharIndex, g, nullptr);
         }
 
         glyphStart = glyphEnd;

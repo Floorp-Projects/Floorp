@@ -25,7 +25,7 @@ inline NS_HIDDEN_(nsresult)
 NS_ProxyRelease
     (nsIEventTarget *target, nsCOMPtr<T> &doomed, bool alwaysProxy=false)
 {
-   T* raw = nsnull;
+   T* raw = nullptr;
    doomed.swap(raw);
    return NS_ProxyRelease(target, raw, alwaysProxy);
 }
@@ -40,7 +40,7 @@ inline NS_HIDDEN_(nsresult)
 NS_ProxyRelease
     (nsIEventTarget *target, nsRefPtr<T> &doomed, bool alwaysProxy=false)
 {
-   T* raw = nsnull;
+   T* raw = nullptr;
    doomed.swap(raw);
    return NS_ProxyRelease(target, raw, alwaysProxy);
 }

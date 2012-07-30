@@ -30,7 +30,7 @@ ShadowLayersChild::AllocPGrallocBuffer(const gfxIntSize&,
   return GrallocBufferActor::Create();
 #else
   NS_RUNTIMEABORT("No gralloc buffers for you");
-  return nsnull;
+  return nullptr;
 #endif
 }
 

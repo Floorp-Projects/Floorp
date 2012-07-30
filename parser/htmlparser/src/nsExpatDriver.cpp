@@ -252,16 +252,16 @@ struct nsCatalogData {
 
 // The order of this table is guestimated to be in the optimum order
 static const nsCatalogData kCatalogTable[] = {
-  { "-//W3C//DTD XHTML 1.0 Transitional//EN",    "htmlmathml-f.ent", nsnull },
-  { "-//W3C//DTD XHTML 1.1//EN",                 "htmlmathml-f.ent", nsnull },
-  { "-//W3C//DTD XHTML 1.0 Strict//EN",          "htmlmathml-f.ent", nsnull },
-  { "-//W3C//DTD XHTML 1.0 Frameset//EN",        "htmlmathml-f.ent", nsnull },
-  { "-//W3C//DTD XHTML Basic 1.0//EN",           "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML 1.0 Transitional//EN",    "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD XHTML 1.1//EN",                 "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD XHTML 1.0 Strict//EN",          "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD XHTML 1.0 Frameset//EN",        "htmlmathml-f.ent", nullptr },
+  { "-//W3C//DTD XHTML Basic 1.0//EN",           "htmlmathml-f.ent", nullptr },
   { "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
   { "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
   { "-//W3C//DTD MathML 2.0//EN",                "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
-  { "-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "htmlmathml-f.ent", nsnull },
-  { nsnull, nsnull, nsnull }
+  { "-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "htmlmathml-f.ent", nullptr },
+  { nullptr, nullptr, nullptr }
 };
 
 static const nsCatalogData*
@@ -280,7 +280,7 @@ LookupCatalogData(const PRUnichar* aPublicID)
     ++data;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // This function provides a resource URI to a local DTD 
@@ -334,7 +334,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsExpatDriver)
 NS_IMPL_CYCLE_COLLECTION_2(nsExpatDriver, mSink, mExtendedSink)
 
 nsExpatDriver::nsExpatDriver()
-  : mExpatParser(nsnull),
+  : mExpatParser(nullptr),
     mInCData(false),
     mInInternalSubset(false),
     mInExternalDTD(false),
@@ -342,7 +342,7 @@ nsExpatDriver::nsExpatDriver()
     mIsFinalChunk(false),
     mInternalState(NS_OK),
     mExpatBuffered(0),
-    mCatalogData(nsnull),
+    mCatalogData(nullptr),
     mInnerWindowID(0)
 {
 }
@@ -711,7 +711,7 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
                                  PRUint32(-1), &totalRead);
       } while (NS_SUCCEEDED(rv) && totalRead > 0);
 
-      result = XML_Parse(entParser, nsnull, 0, 1);
+      result = XML_Parse(entParser, nullptr, 0, 1);
 
       mInExternalDTD = false;
 
@@ -735,7 +735,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURLStr), nsnull,
+  rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURLStr), nullptr,
                  baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -769,10 +769,10 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
                                 uri,
-                                (doc ? doc->NodePrincipal() : nsnull),
+                                (doc ? doc->NodePrincipal() : nullptr),
                                 doc,
                                 EmptyCString(), //mime guess
-                                nsnull,         //extra
+                                nullptr,         //extra
                                 &shouldLoad);
   if (NS_FAILED(rv)) return rv;
   if (NS_CP_REJECTED(shouldLoad)) {
@@ -873,8 +873,8 @@ nsExpatDriver::HandleError()
      *
      */
     const PRUnichar *mismatch = MOZ_XML_GetMismatchedTag(mExpatParser);
-    const PRUnichar *uriEnd = nsnull;
-    const PRUnichar *nameEnd = nsnull;
+    const PRUnichar *uriEnd = nullptr;
+    const PRUnichar *nameEnd = nullptr;
     const PRUnichar *pos;
     for (pos = mismatch; *pos; ++pos) {
       if (*pos == kExpatSeparatorChar) {
@@ -1048,7 +1048,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
     if (blocked || noMoreBuffers) {
       // If we're blocked we just resume Expat so we don't need a buffer, if
       // there aren't any more buffers we pass a null buffer to Expat.
-      buffer = nsnull;
+      buffer = nullptr;
       length = 0;
 
 #if defined(PR_LOGGING) || defined (DEBUG)
@@ -1292,9 +1292,9 @@ nsExpatDriver::BuildModel(nsITokenizer* aTokenizer,
 NS_IMETHODIMP
 nsExpatDriver::DidBuildModel(nsresult anErrorCode)
 {
-  mOriginalSink = nsnull;
-  mSink = nsnull;
-  mExtendedSink = nsnull;
+  mOriginalSink = nullptr;
+  mSink = nullptr;
+  mExtendedSink = nullptr;
   return NS_OK;
 }
 

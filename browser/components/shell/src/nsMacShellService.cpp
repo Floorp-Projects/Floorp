@@ -190,7 +190,7 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   wbp->SetPersistFlags(flags);
   wbp->SetProgressListener(this);
 
-  return wbp->SaveURI(imageURI, nsnull, docURI, nsnull, nsnull,
+  return wbp->SaveURI(imageURI, nullptr, docURI, nullptr, nullptr,
                       mBackgroundFile);
 }
 
@@ -240,7 +240,7 @@ nsMacShellService::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_STOP) {
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
     if (os)
-      os->NotifyObservers(nsnull, "shell:desktop-background-changed", nsnull);
+      os->NotifyObservers(nullptr, "shell:desktop-background-changed", nullptr);
 
     bool exists = false;
     mBackgroundFile->Exists(&exists);
@@ -422,7 +422,7 @@ NS_IMETHODIMP
 nsMacShellService::GetDefaultFeedReader(nsIFile** _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   CFStringRef defaultHandlerID = ::LSCopyDefaultHandlerForURLScheme(CFSTR("feed"));
   if (!defaultHandlerID) {

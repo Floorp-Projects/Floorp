@@ -30,9 +30,9 @@ txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
     }
 
     txPatternOptimizer optimizer;
-    txPattern* newPattern = nsnull;
+    txPattern* newPattern = nullptr;
     rv = optimizer.optimize(pattern, &newPattern);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     return newPattern ? newPattern : pattern.forget();
 }

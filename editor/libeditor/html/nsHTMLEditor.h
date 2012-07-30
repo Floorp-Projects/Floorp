@@ -235,13 +235,13 @@ public:
                                   PRInt32 aOffset,
                                   bool* outIsSpace,
                                   bool* outIsNBSP,
-                                  nsIContent** outNode = nsnull,
+                                  nsIContent** outNode = nullptr,
                                   PRInt32* outOffset = 0);
   void IsPrevCharInNodeWhitespace(nsIContent* aContent,
                                   PRInt32 aOffset,
                                   bool* outIsSpace,
                                   bool* outIsNBSP,
-                                  nsIContent** outNode = nsnull,
+                                  nsIContent** outNode = nullptr,
                                   PRInt32* outOffset = 0);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
@@ -510,14 +510,14 @@ protected:
                                   nsIAtom*         aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,
-                                  nsAString*       outValue = nsnull);
+                                  nsAString*       outValue = nullptr);
 
   void IsTextPropertySetByContent(nsIDOMNode*      aNode,
                                   nsIAtom*         aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,
                                   bool&            aIsSet,
-                                  nsAString*       outValue = nsnull);
+                                  nsAString*       outValue = nullptr);
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
@@ -576,7 +576,7 @@ protected:
                                      bool *aDoContinue);
   nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
 
-  bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
+  bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nullptr);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, bool aOnlyList = false);
   nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,
                                         const nsAString & aContextStr,
@@ -667,8 +667,8 @@ protected:
                                 PRInt32 *aOffset,
                                 nsIAtom *aProperty, 
                                 const nsAString *aAttribute,
-                                nsCOMPtr<nsIDOMNode> *outLeftNode = nsnull,
-                                nsCOMPtr<nsIDOMNode> *outRightNode = nsnull);
+                                nsCOMPtr<nsIDOMNode> *outLeftNode = nullptr,
+                                nsCOMPtr<nsIDOMNode> *outRightNode = nullptr);
   nsresult ApplyDefaultProperties();
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 

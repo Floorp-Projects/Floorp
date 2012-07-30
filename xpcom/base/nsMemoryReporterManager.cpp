@@ -498,7 +498,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
 static nsresult GetExplicit(PRInt64 *n)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
+    if (mgr == nullptr)
         return NS_ERROR_FAILURE;
 
     return mgr->GetExplicit(n);
@@ -900,7 +900,7 @@ nsresult
 NS_RegisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
+    if (mgr == nullptr)
         return NS_ERROR_FAILURE;
     return mgr->RegisterReporter(reporter);
 }
@@ -909,7 +909,7 @@ nsresult
 NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
+    if (mgr == nullptr)
         return NS_ERROR_FAILURE;
     return mgr->RegisterMultiReporter(reporter);
 }
@@ -918,7 +918,7 @@ nsresult
 NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
+    if (mgr == nullptr)
         return NS_ERROR_FAILURE;
     return mgr->UnregisterReporter(reporter);
 }
@@ -927,7 +927,7 @@ nsresult
 NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (mgr == nsnull)
+    if (mgr == nullptr)
         return NS_ERROR_FAILURE;
     return mgr->UnregisterMultiReporter(reporter);
 }
@@ -981,7 +981,7 @@ DMDCheckAndDump()
     while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryMultiReporter> r;
       e2->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, nsnull);
+      r->CollectReports(cb, nullptr);
     }
 
     VALGRIND_DMD_CHECK_REPORTING;

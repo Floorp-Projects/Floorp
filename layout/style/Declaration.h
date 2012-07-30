@@ -63,7 +63,7 @@ public:
 
   void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
-  bool HasImportantData() const { return mImportantData != nsnull; }
+  bool HasImportantData() const { return mImportantData != nullptr; }
   bool GetValueIsImportant(nsCSSProperty aProperty) const;
   bool GetValueIsImportant(const nsAString& aProperty) const;
 
@@ -199,8 +199,8 @@ public:
    */
   void ClearData() {
     AssertMutable();
-    mData = nsnull;
-    mImportantData = nsnull;
+    mData = nullptr;
+    mImportantData = nullptr;
     mOrder.Clear();
   }
 

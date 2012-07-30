@@ -56,7 +56,7 @@ nsSVGGFrame::NotifySVGChanged(PRUint32 aFlags)
 
   if (aFlags & TRANSFORM_CHANGED) {
     // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nsnull;
+    mCanvasTM = nullptr;
   }
 
   nsSVGGFrameBase::NotifySVGChanged(aFlags);

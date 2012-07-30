@@ -9,7 +9,7 @@
 nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
                                        nsKeyEvent* aEvent)
   : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                 new nsKeyEvent(false, 0, nsnull))
+                 new nsKeyEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
 
@@ -26,7 +26,7 @@ nsDOMKeyboardEvent::~nsDOMKeyboardEvent()
 {
   if (mEventIsInternal) {
     delete static_cast<nsKeyEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 

@@ -78,7 +78,7 @@ using namespace mozilla;
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 #if defined(PR_LOGGING)
-static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
+static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 #define LOG(args) PR_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, 4)
 #else
@@ -148,7 +148,7 @@ class nsUrlClassifierDBServiceWorker;
 // Singleton instance.
 static nsUrlClassifierDBService* sUrlClassifierDBService;
 
-nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nsnull;
+nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 
 // Once we've committed to shutting down, don't do work in the background
 // thread.
@@ -556,23 +556,23 @@ nsUrlClassifierStore::Init(nsUrlClassifierDBServiceWorker *worker,
 void
 nsUrlClassifierStore::Close()
 {
-  mLookupWithIDStatement = nsnull;
+  mLookupWithIDStatement = nullptr;
 
-  mInsertStatement = nsnull;
-  mUpdateStatement = nsnull;
-  mDeleteStatement = nsnull;
-  mExpireStatement = nsnull;
+  mInsertStatement = nullptr;
+  mUpdateStatement = nullptr;
+  mDeleteStatement = nullptr;
+  mExpireStatement = nullptr;
 
-  mPartialEntriesStatement = nsnull;
-  mPartialEntriesAfterStatement = nsnull;
-  mPartialEntriesBeforeStatement = nsnull;
-  mLastPartialEntriesStatement = nsnull;
-  mRandomStatement = nsnull;
+  mPartialEntriesStatement = nullptr;
+  mPartialEntriesAfterStatement = nullptr;
+  mPartialEntriesBeforeStatement = nullptr;
+  mLastPartialEntriesStatement = nullptr;
+  mRandomStatement = nullptr;
 
-  mAllPrefixGetStatement = nsnull;
-  mAllPrefixCountStatement = nsnull;
+  mAllPrefixGetStatement = nullptr;
+  mAllPrefixCountStatement = nullptr;
 
-  mConnection = nsnull;
+  mConnection = nullptr;
 }
 
 
@@ -842,8 +842,8 @@ nsUrlClassifierAddStore::Close()
 {
   nsUrlClassifierStore::Close();
 
-  mLookupStatement = nsnull;
-  mLookupWithChunkStatement = nsnull;
+  mLookupStatement = nullptr;
+  mLookupWithChunkStatement = nullptr;
 }
 
 nsresult
@@ -1005,8 +1005,8 @@ void
 nsUrlClassifierSubStore::Close()
 {
   nsUrlClassifierStore::Close();
-  mLookupWithAddChunkStatement = nsnull;
-  mExpireAddChunkStatement = nsnull;
+  mLookupWithAddChunkStatement = nullptr;
+  mExpireAddChunkStatement = nullptr;
 }
 
 // Similar to GetKey(), but if the domain contains three or more components,
@@ -1723,13 +1723,13 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
                                          nsIUrlClassifierLookupCallback* c)
 {
   if (gShuttingDownThread) {
-    c->LookupComplete(nsnull);
+    c->LookupComplete(nullptr);
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    c->LookupComplete(nsnull);
+    c->LookupComplete(nullptr);
     return NS_ERROR_FAILURE;
   }
 
@@ -1743,7 +1743,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   nsAutoPtr<nsTArray<nsUrlClassifierLookupResult> > results;
   results = new nsTArray<nsUrlClassifierLookupResult>();
   if (!results) {
-    c->LookupComplete(nsnull);
+    c->LookupComplete(nullptr);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2507,7 +2507,7 @@ nsUrlClassifierDBServiceWorker::InsertChunkId(nsTArray<PRUint32> &chunks,
   }
 
   PRUint32 *item = chunks.InsertElementAt(low, chunkNum);
-  return (item != nsnull);
+  return (item != nullptr);
 }
 
 nsresult
@@ -2857,7 +2857,7 @@ nsUrlClassifierDBServiceWorker::ResetStream()
   mUpdateTable.Truncate();
   mPendingStreamUpdate.Truncate();
   mServerMAC.Truncate();
-  mHMAC = nsnull;
+  mHMAC = nullptr;
 }
 
 void
@@ -2865,7 +2865,7 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
 {
   mUpdateWait = 0;
   mUpdateStatus = NS_OK;
-  mUpdateObserver = nsnull;
+  mUpdateObserver = nullptr;
   mUpdateClientKey.Truncate();
   mResetRequested = false;
   mUpdateTables.Clear();
@@ -3276,7 +3276,7 @@ nsUrlClassifierDBServiceWorker::ResetDatabase()
   nsresult rv = CloseDb();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPrefixSet->SetPrefixes(nsnull, 0);
+  rv = mPrefixSet->SetPrefixes(nullptr, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDBFile->Remove(false);
@@ -3320,20 +3320,20 @@ nsUrlClassifierDBServiceWorker::CloseDb()
     mMainStore.Close();
     mPendingSubStore.Close();
 
-    mGetChunkListsStatement = nsnull;
-    mSetChunkListsStatement = nsnull;
+    mGetChunkListsStatement = nullptr;
+    mSetChunkListsStatement = nullptr;
 
-    mGetTablesStatement = nsnull;
-    mGetTableIdStatement = nsnull;
-    mGetTableNameStatement = nsnull;
-    mInsertTableIdStatement = nsnull;
-    mGetPageSizeStatement = nsnull;
+    mGetTablesStatement = nullptr;
+    mGetTableIdStatement = nullptr;
+    mGetTableNameStatement = nullptr;
+    mInsertTableIdStatement = nullptr;
+    mGetPageSizeStatement = nullptr;
 
-    mConnection = nsnull;
+    mConnection = nullptr;
     LOG(("urlclassifier db closed\n"));
   }
 
-  mCryptoHash = nsnull;
+  mCryptoHash = nullptr;
 
   return NS_OK;
 }
@@ -3613,7 +3613,7 @@ nsresult nsUrlClassifierStore::ReadPrefixes(FallibleTArray<PRUint32>& array,
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 *res = array.AppendElement(keyedVal);
-    MOZ_ASSERT(res != nsnull);
+    MOZ_ASSERT(res != nullptr);
     pcnt++;
     // Normal DB size is about 500k entries. If we are getting 10x
     // as much, the database must be corrupted.
@@ -3839,7 +3839,7 @@ public:
   nsUrlClassifierLookupCallback(nsUrlClassifierDBService *dbservice,
                                 nsIUrlClassifierCallback *c)
     : mDBService(dbservice)
-    , mResults(nsnull)
+    , mResults(nullptr)
     , mPendingCompletions(0)
     , mCallback(c)
     {}
@@ -3864,7 +3864,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierLookupCallback,
 NS_IMETHODIMP
 nsUrlClassifierLookupCallback::LookupComplete(nsTArray<nsUrlClassifierLookupResult>* results)
 {
-  NS_ASSERTION(mResults == nsnull,
+  NS_ASSERTION(mResults == nullptr,
                "Should only get one set of results per nsUrlClassifierLookupCallback!");
 
   if (!results) {
@@ -4107,7 +4107,7 @@ nsUrlClassifierDBService::GetInstance(nsresult *result)
     sUrlClassifierDBService = new nsUrlClassifierDBService();
     if (!sUrlClassifierDBService) {
       *result = NS_ERROR_OUT_OF_MEMORY;
-      return nsnull;
+      return nullptr;
     }
 
     NS_ADDREF(sUrlClassifierDBService);   // addref the global
@@ -4115,7 +4115,7 @@ nsUrlClassifierDBService::GetInstance(nsresult *result)
     *result = sUrlClassifierDBService->Init();
     if (NS_FAILED(*result)) {
       NS_RELEASE(sUrlClassifierDBService);
-      return nsnull;
+      return nullptr;
     }
   } else {
     // Already exists, just add a ref
@@ -4134,7 +4134,7 @@ nsUrlClassifierDBService::nsUrlClassifierDBService()
 
 nsUrlClassifierDBService::~nsUrlClassifierDBService()
 {
-  sUrlClassifierDBService = nsnull;
+  sUrlClassifierDBService = nullptr;
 }
 
 nsresult
@@ -4217,7 +4217,7 @@ nsUrlClassifierDBService::Init()
 
   rv = mWorker->Init(gethashNoise, mPrefixSet);
   if (NS_FAILED(rv)) {
-    mWorker = nsnull;
+    mWorker = nullptr;
     return rv;
   }
 
@@ -4345,7 +4345,7 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
   rv = mWorker->QueueLookup(key, proxyCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mWorkerProxy->Lookup(nsnull, nsnull);
+  return mWorkerProxy->Lookup(nullptr, nullptr);
 }
 
 NS_IMETHODIMP
@@ -4554,14 +4554,14 @@ nsUrlClassifierDBService::Shutdown()
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
   }
 
-  mWorkerProxy = nsnull;
+  mWorkerProxy = nullptr;
 
   LOG(("joining background thread"));
 
   gShuttingDownThread = true;
 
   nsIThread *backgroundThread = gDbBackgroundThread;
-  gDbBackgroundThread = nsnull;
+  gDbBackgroundThread = nullptr;
   backgroundThread->Shutdown();
   NS_RELEASE(backgroundThread);
 

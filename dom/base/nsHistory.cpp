@@ -313,7 +313,7 @@ nsHistory::ReplaceState(nsIVariant *aData, const nsAString& aTitle,
 NS_IMETHODIMP
 nsHistory::GetState(nsIVariant **aState)
 {
-  *aState = nsnull;
+  *aState = nullptr;
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
   if (!win)

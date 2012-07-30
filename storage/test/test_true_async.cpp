@@ -220,9 +220,9 @@ test_TrueAsyncStatement()
   paramsArray->NewBindingParams(getter_AddRefs(params));
   params->BindInt32ByName(NS_LITERAL_CSTRING("id"), 2);
   paramsArray->AddParams(params);
-  params = nsnull;
+  params = nullptr;
   stmt->BindParameters(paramsArray);
-  paramsArray = nsnull;
+  paramsArray = nullptr;
   blocking_async_execute(stmt);
   stmt->Finalize();
   do_check_false(mutex_used_on_watched_thread);
@@ -332,7 +332,7 @@ void test_AsyncDestructorFinalizesOnAsyncThread()
   do_check_false(mutex_used_on_watched_thread);
 
   // -- forget our reference
-  stmt = nsnull;
+  stmt = nullptr;
 
   // -- verify the mutex was not touched
   do_check_false(mutex_used_on_watched_thread);

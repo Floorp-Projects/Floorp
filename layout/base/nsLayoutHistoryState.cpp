@@ -43,7 +43,7 @@ NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 {
   nsLayoutHistoryState *state;
 
-  *aState = nsnull;
+  *aState = nullptr;
   state = new nsLayoutHistoryState();
 
   NS_ADDREF(state);

@@ -34,7 +34,7 @@ public:
     }
 
 protected:
-    txXPathObjectAdaptor() : mValue(nsnull)
+    txXPathObjectAdaptor() : mValue(nullptr)
     {
     }
 

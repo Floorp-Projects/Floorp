@@ -56,7 +56,7 @@ using namespace mozilla;
  ********************************************************/
 
 nsTextEditRules::nsTextEditRules()
-: mEditor(nsnull)
+: mEditor(nullptr)
 , mPasswordText()
 , mPasswordIMEText()
 , mPasswordIMEIndex(0)
@@ -140,7 +140,7 @@ nsTextEditRules::DetachEditor()
   if (mTimer)
     mTimer->Cancel();
 
-  mEditor = nsnull;
+  mEditor = nullptr;
   return NS_OK;
 }
 
@@ -189,7 +189,7 @@ nsTextEditRules::AfterEdit(nsEditor::OperationID action,
   
     res = mEditor->HandleInlineSpellCheck(action, selection,
                                           mCachedSelectionNode, mCachedSelectionOffset,
-                                          nsnull, 0, nsnull, 0);
+                                          nullptr, 0, nullptr, 0);
     NS_ENSURE_SUCCESS(res, res);
 
     // if only trailing <br> remaining remove it
@@ -301,7 +301,7 @@ nsTextEditRules::DocumentIsEmpty(bool *aDocumentIsEmpty)
 {
   NS_ENSURE_TRUE(aDocumentIsEmpty, NS_ERROR_NULL_POINTER);
   
-  *aDocumentIsEmpty = (mBogusNode != nsnull);
+  *aDocumentIsEmpty = (mBogusNode != nullptr);
   return NS_OK;
 }
 
@@ -324,7 +324,7 @@ nsTextEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
   if (mBogusNode)
   {
     mEditor->DeleteNode(mBogusNode);
-    mBogusNode = nsnull;
+    mBogusNode = nullptr;
   }
 
   return NS_OK;
@@ -442,17 +442,17 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult res = editor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, nsnull);
+  NS_ENSURE_SUCCESS(res, nullptr);
   if (!editor->IsTextNode(selNode)) {
     // Get an nsINode from the nsIDOMNode
     nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
     // if node is null, return it to indicate there's no text
-    NS_ENSURE_TRUE(node, nsnull);
+    NS_ENSURE_TRUE(node, nullptr);
     // This should be the root node, walk the tree looking for text nodes
-    nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nsnull);
+    nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nullptr);
     while (!editor->IsTextNode(selNode)) {
       if (NS_FAILED(res = iter.NextNode(getter_AddRefs(selNode))) || !selNode) {
-        return nsnull;
+        return nullptr;
       }
     }
   }
@@ -905,7 +905,7 @@ nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
   if (node && mEditor->IsMozEditorBogusNode(node)) {
     mBogusNode = do_QueryInterface(node);
   } else {
-    mBogusNode = nsnull;
+    mBogusNode = nullptr;
   }
   return aResult;
 }
@@ -942,7 +942,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
       
       if (len != 1) {
         // only in the case of one br could there be the bogus node
-        mBogusNode = nsnull;
+        mBogusNode = nullptr;
         return NS_OK;  
       }
 
@@ -951,7 +951,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
       if (mEditor->IsMozEditorBogusNode(content)) {
         mBogusNode = do_QueryInterface(content);
       } else {
-        mBogusNode = nsnull;
+        mBogusNode = nullptr;
       }
     }
   }

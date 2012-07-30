@@ -26,7 +26,7 @@
 
 
 nsCommandManager::nsCommandManager()
-: mWindow(nsnull)
+: mWindow(nullptr)
 {
   /* member initializers and constructor code */
 }
@@ -171,7 +171,7 @@ nsCommandManager::IsCommandSupported(const char *aCommandName,
 
   nsCOMPtr<nsIController> controller;
   GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
-  *outCommandSupported = (controller.get() != nsnull);
+  *outCommandSupported = (controller.get() != nullptr);
   return NS_OK;
 }
 
@@ -261,7 +261,7 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
                                           nsIController** outController)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  *outController = nsnull;
+  *outController = nullptr;
 
   // check if we're in content or chrome
   // if we're not chrome we must have a target window or we bail

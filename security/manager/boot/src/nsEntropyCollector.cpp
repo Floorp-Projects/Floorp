@@ -98,6 +98,6 @@ nsEntropyCollector::ForwardTo(nsIEntropyCollector *aCollector)
 NS_IMETHODIMP
 nsEntropyCollector::DontForward()
 {
-  mForwardTarget = nsnull;
+  mForwardTarget = nullptr;
   return NS_OK;
 }

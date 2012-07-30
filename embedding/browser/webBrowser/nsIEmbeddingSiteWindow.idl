@@ -74,13 +74,13 @@ interface nsIEmbeddingSiteWindow : nsISupports
 
     /**
      * Gets the dimensions of the window. The caller may pass
-     * <CODE>nsnull</CODE> for any value it is uninterested in receiving.
+     * <CODE>nullptr</CODE> for any value it is uninterested in receiving.
      *
      * @param flags  Combination of position, inner and outer size flag .
-     * @param x      Left hand corner of the outer area; or <CODE>nsnull</CODE>.
-     * @param y      Top corner of the outer area; or <CODE>nsnull</CODE>.
-     * @param cx     Width of the inner or outer area; or <CODE>nsnull</CODE>.
-     * @param cy     Height of the inner or outer area; or <CODE>nsnull</CODE>.
+     * @param x      Left hand corner of the outer area; or <CODE>nullptr</CODE>.
+     * @param y      Top corner of the outer area; or <CODE>nullptr</CODE>.
+     * @param cx     Width of the inner or outer area; or <CODE>nullptr</CODE>.
+     * @param cy     Height of the inner or outer area; or <CODE>nullptr</CODE>.
      *
      * @see setDimensions
      * @see DIM_FLAGS_POSITION

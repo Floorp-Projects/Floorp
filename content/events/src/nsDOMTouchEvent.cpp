@@ -174,7 +174,7 @@ nsDOMTouchList::Item(PRUint32 aIndex, nsIDOMTouch** aRetVal)
 NS_IMETHODIMP
 nsDOMTouchList::IdentifiedTouch(PRInt32 aIdentifier, nsIDOMTouch** aRetVal)
 {
-  *aRetVal = nsnull;
+  *aRetVal = nullptr;
   for (PRUint32 i = 0; i < mPoints.Length(); ++i) {
     nsCOMPtr<nsIDOMTouch> point = mPoints[i];
     PRInt32 identifier;
@@ -190,7 +190,7 @@ nsDOMTouchList::IdentifiedTouch(PRInt32 aIdentifier, nsIDOMTouch** aRetVal)
 nsIDOMTouch*
 nsDOMTouchList::GetItemAt(PRUint32 aIndex)
 {
-  return mPoints.SafeElementAt(aIndex, nsnull);
+  return mPoints.SafeElementAt(aIndex, nullptr);
 }
 
 // TouchEvent
@@ -198,7 +198,7 @@ nsDOMTouchList::GetItemAt(PRUint32 aIndex)
 nsDOMTouchEvent::nsDOMTouchEvent(nsPresContext* aPresContext,
                                  nsTouchEvent* aEvent)
   : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                                        new nsTouchEvent(false, 0, nsnull))
+                                        new nsTouchEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -218,7 +218,7 @@ nsDOMTouchEvent::~nsDOMTouchEvent()
 {
   if (mEventIsInternal && mEvent) {
     delete static_cast<nsTouchEvent*>(mEvent);
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 

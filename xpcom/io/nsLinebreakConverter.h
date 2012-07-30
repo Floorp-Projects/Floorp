@@ -37,7 +37,7 @@ public:
   
   /* ConvertLineBreaks
    * Convert line breaks in the supplied string, allocating and returning
-   * a new buffer. Returns nsnull on failure.
+   * a new buffer. Returns nullptr on failure.
    * @param aSrc: the source string. if aSrcLen == kIgnoreLen this string is assumed
    *              to be null terminated, otherwise it must be at least aSrcLen long.
    * @param aSrcBreaks: the line breaks in the source. If unknown, pass eLinebreakAny.
@@ -49,12 +49,12 @@ public:
    */
   static char* ConvertLineBreaks(const char* aSrc,
                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nsnull);
+                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
   
 
   /* ConvertUnicharLineBreaks
    * Convert line breaks in the supplied string, allocating and returning
-   * a new buffer. Returns nsnull on failure.
+   * a new buffer. Returns nullptr on failure.
    * @param aSrc: the source string. if aSrcLen == kIgnoreLen this string is assumed
    *              to be null terminated, otherwise it must be at least aSrcLen long.
    * @param aSrcBreaks: the line breaks in the source. If unknown, pass eLinebreakAny.
@@ -66,7 +66,7 @@ public:
    */
   static PRUnichar* ConvertUnicharLineBreaks(const PRUnichar* aSrc,
                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nsnull);
+                PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
   
 
   /* ConvertStringLineBreaks
@@ -97,7 +97,7 @@ public:
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
   static nsresult ConvertLineBreaksInSitu(char **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nsnull);
+                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
 
 
   /* ConvertUnicharLineBreaksInSitu
@@ -115,7 +115,7 @@ public:
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
   static nsresult ConvertUnicharLineBreaksInSitu(PRUnichar **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
-                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nsnull);
+                        PRInt32 aSrcLen = kIgnoreLen, PRInt32* aOutLen = nullptr);
     
 };
 

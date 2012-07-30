@@ -25,7 +25,7 @@ class nsWaveDecoder : public nsBuiltinDecoder
 public:
   virtual nsMediaDecoder* Clone() {
     if (!nsHTMLMediaElement::IsWaveEnabled()) {
-      return nsnull;
+      return nullptr;
     }
     return new nsWaveDecoder();
   }

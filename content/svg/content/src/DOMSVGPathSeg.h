@@ -142,7 +142,7 @@ protected:
     // unlinked us using the cycle collector code, then that has already
     // happened, and mList is null.
     if (mList) {
-      mList->ItemAt(mListIndex) = nsnull;
+      mList->ItemAt(mListIndex) = nullptr;
     }
   }
 

@@ -179,12 +179,12 @@ public:
 
 #define LOG_STATIC_FUNC(l, s)           \
   LogFunc(l,                            \
-          nsnull,                       \
+          nullptr,                       \
           NS_LITERAL_CSTRING(s))
 
 #define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) \
   LogFunc(l,                             \
-          nsnull,                        \
+          nullptr,                        \
           NS_LITERAL_CSTRING(s),         \
           NS_LITERAL_CSTRING(pn), pv)
 

@@ -83,7 +83,7 @@ inline mozilla::a11y::HTMLImageMapAccessible*
 Accessible::AsImageMap()
 {
   return IsImageMapAccessible() ?
-    static_cast<mozilla::a11y::HTMLImageMapAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::HTMLImageMapAccessible*>(this) : nullptr;
 }
 
 #endif

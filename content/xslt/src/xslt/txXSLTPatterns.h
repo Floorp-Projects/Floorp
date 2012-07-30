@@ -105,7 +105,7 @@ public:
 Expr*                                                         \
 _class::getSubExprAt(PRUint32 aPos)                           \
 {                                                             \
-    return nsnull;                                            \
+    return nullptr;                                            \
 }                                                             \
 void                                                          \
 _class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
@@ -117,7 +117,7 @@ _class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
 txPattern*                                                    \
 _class::getSubPatternAt(PRUint32 aPos)                        \
 {                                                             \
-    return nsnull;                                            \
+    return nullptr;                                            \
 }                                                             \
 void                                                          \
 _class::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)   \

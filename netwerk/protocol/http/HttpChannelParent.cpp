@@ -146,7 +146,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nsnull, nsnull, loadFlags);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nullptr, nullptr, loadFlags);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
@@ -224,7 +224,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
         do_GetService("@mozilla.org/offlinecacheupdate-service;1", &rv);
       if (NS_SUCCEEDED(rv)) {
         rv = offlineUpdateService->OfflineAppAllowedForURI(uri,
-                                                           nsnull,
+                                                           nullptr,
                                                            &setChooseApplicationCache);
 
         if (setChooseApplicationCache && NS_SUCCEEDED(rv))
@@ -233,7 +233,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     }
   }
 
-  rv = httpChan->AsyncOpen(channelListener, nsnull);
+  rv = httpChan->AsyncOpen(channelListener, nullptr);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
@@ -359,7 +359,7 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
 
   if (mRedirectCallback) {
     mRedirectCallback->OnRedirectVerifyCallback(result);
-    mRedirectCallback = nsnull;
+    mRedirectCallback = nullptr;
   }
 
   return true;
@@ -604,7 +604,7 @@ HttpChannelParent::CompleteRedirect(bool succeeded)
     unused << SendRedirect3Complete();
   }
 
-  mRedirectChannel = nsnull;
+  mRedirectChannel = nullptr;
   return NS_OK;
 }
 

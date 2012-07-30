@@ -33,15 +33,15 @@ NS_INTERFACE_MAP_BEGIN(imgRequestProxy)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
   NS_INTERFACE_MAP_ENTRY(nsISecurityInfoProvider)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITimedChannel, TimedChannel() != nsnull)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITimedChannel, TimedChannel() != nullptr)
 NS_INTERFACE_MAP_END
 
 imgRequestProxy::imgRequestProxy() :
-  mOwner(nsnull),
-  mURI(nsnull),
-  mImage(nsnull),
-  mPrincipal(nsnull),
-  mListener(nsnull),
+  mOwner(nullptr),
+  mURI(nullptr),
+  mImage(nullptr),
+  mPrincipal(nullptr),
+  mListener(nullptr),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mLockCount(0),
   mAnimationConsumers(0),
@@ -186,7 +186,7 @@ void imgRequestProxy::AddToLoadGroup()
   NS_ASSERTION(!mIsInLoadGroup, "Whaa, we're already in the loadgroup!");
 
   if (!mIsInLoadGroup && mLoadGroup) {
-    mLoadGroup->AddRequest(this, nsnull);
+    mLoadGroup->AddRequest(this, nullptr);
     mIsInLoadGroup = true;
   }
 }
@@ -203,12 +203,12 @@ void imgRequestProxy::RemoveFromLoadGroup(bool releaseLoadGroup)
   */
   nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
-  mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
+  mLoadGroup->RemoveRequest(this, nullptr, NS_OK);
   mIsInLoadGroup = false;
 
   if (releaseLoadGroup) {
     // We're done with the loadgroup, release it.
-    mLoadGroup = nsnull;
+    mLoadGroup = nullptr;
   }
 }
 
@@ -484,7 +484,7 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::Clone");
 
-  *aClone = nsnull;
+  *aClone = nullptr;
   nsRefPtr<imgRequestProxy> clone = new imgRequestProxy();
 
   // It is important to call |SetLoadFlags()| before calling |Init()| because
@@ -577,7 +577,7 @@ NS_IMETHODIMP imgRequestProxy::GetSecurityInfo(nsISupports** _retval)
   if (mOwner)
     return mOwner->GetSecurityInfo(_retval);
 
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
@@ -783,14 +783,14 @@ void imgRequestProxy::NullOutListener()
     obs.swap(mListener);
     mListenerIsStrongRef = false;
   } else {
-    mListener = nsnull;
+    mListener = nullptr;
   }
 }
 
 NS_IMETHODIMP
 imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
 {
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   bool animated;
   if (!mImage || (NS_SUCCEEDED(mImage->GetAnimated(&animated)) && !animated)) {
@@ -816,7 +816,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
 
   // Create a static imgRequestProxy with our new extracted frame.
   nsRefPtr<imgRequestProxy> req = new imgRequestProxy();
-  req->Init(nsnull, nsnull, frame, mURI, nsnull);
+  req->Init(nullptr, nullptr, frame, mURI, nullptr);
   req->SetPrincipal(mPrincipal);
 
   NS_ADDREF(*aReturn = req);

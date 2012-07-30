@@ -41,7 +41,7 @@ public:
         role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
         role != mozilla::a11y::roles::RADIOBUTTON &&
         role != mozilla::a11y::roles::PAGETAB)
-      return nsnull;
+      return nullptr;
 
     AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
     return info;

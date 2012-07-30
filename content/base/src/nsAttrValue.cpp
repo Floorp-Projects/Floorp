@@ -23,7 +23,7 @@ using namespace mozilla;
 #define MISC_STR_PTR(_cont) \
   reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
 
-nsTArray<const nsAttrValue::EnumTable*>* nsAttrValue::sEnumTableArray = nsnull;
+nsTArray<const nsAttrValue::EnumTable*>* nsAttrValue::sEnumTableArray = nullptr;
 
 nsAttrValue::nsAttrValue()
     : mBits(0)
@@ -82,7 +82,7 @@ void
 nsAttrValue::Shutdown()
 {
   delete sEnumTableArray;
-  sEnumTableArray = nsnull;
+  sEnumTableArray = nullptr;
 }
 
 nsAttrValue::ValueType
@@ -282,7 +282,7 @@ void
 nsAttrValue::SetTo(PRInt16 aInt)
 {
   ResetIfSet();
-  SetIntValueAndType(aInt, eInteger, nsnull);
+  SetIntValueAndType(aInt, eInteger, nullptr);
 }
 
 void
@@ -362,7 +362,7 @@ nsAttrValue::SetTo(const SVGLengthList& aValue,
   // While an empty string will parse as a length list, there's no need to store
   // it (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGLengthList, &aValue, aSerialized);
 }
@@ -374,7 +374,7 @@ nsAttrValue::SetTo(const SVGNumberList& aValue,
   // While an empty string will parse as a number list, there's no need to store
   // it (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGNumberList, &aValue, aSerialized);
 }
@@ -392,7 +392,7 @@ nsAttrValue::SetTo(const SVGPathData& aValue,
   // While an empty string will parse as path data, there's no need to store it
   // (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGPathData, &aValue, aSerialized);
 }
@@ -404,7 +404,7 @@ nsAttrValue::SetTo(const SVGPointList& aValue,
   // While an empty string will parse as a point list, there's no need to store
   // it (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGPointList, &aValue, aSerialized);
 }
@@ -423,7 +423,7 @@ nsAttrValue::SetTo(const SVGStringList& aValue,
   // While an empty string will parse as a string list, there's no need to store
   // it (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGStringList, &aValue, aSerialized);
 }
@@ -435,7 +435,7 @@ nsAttrValue::SetTo(const SVGTransformList& aValue,
   // While an empty string will parse as a transform list, there's no need to
   // store it (and SetMiscAtomOrString will assert if we try)
   if (aSerialized && aSerialized->IsEmpty()) {
-    aSerialized = nsnull;
+    aSerialized = nullptr;
   }
   SetSVGType(eSVGTransformList, &aValue, aSerialized);
 }
@@ -457,7 +457,7 @@ nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 void
 nsAttrValue::ToString(nsAString& aResult) const
 {
-  MiscContainer* cont = nsnull;
+  MiscContainer* cont = nullptr;
   if (BaseType() == eOtherBase) {
     cont = GetMiscContainer();
     void* ptr = MISC_STR_PTR(cont);
@@ -1143,7 +1143,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     // we only found one classname and there was no whitespace so
     // don't bother storing a list
     ResetIfSet();
-    nsIAtom* atom = nsnull;
+    nsIAtom* atom = nullptr;
     classAtom.swap(atom);
     SetPtrValueAndType(atom, eAtomBase);
     return;
@@ -1285,7 +1285,7 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
           value |= NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER;
         }
       }
-      SetIntValueAndType(value, eEnum, equals ? nsnull : &aValue);
+      SetIntValueAndType(value, eEnum, equals ? nullptr : &aValue);
       NS_ASSERTION(GetEnumValue() == tableEntry->value,
                    "failed to store enum properly");
 
@@ -1331,7 +1331,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
 
   SetIntValueAndType(val,
                      isPercent ? ePercent : eInteger,
-                     strict ? nsnull : &aString);
+                     strict ? nullptr : &aString);
   return true;
 }
 
@@ -1353,7 +1353,7 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
   PRInt32 val = NS_MAX(originalVal, aMin);
   val = NS_MIN(val, aMax);
   strict = strict && (originalVal == val);
-  SetIntValueAndType(val, eInteger, strict ? nsnull : &aString);
+  SetIntValueAndType(val, eInteger, strict ? nullptr : &aString);
 
   return true;
 }
@@ -1370,7 +1370,7 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
     return false;
   }
 
-  SetIntValueAndType(originalVal, eInteger, strict ? nsnull : &aString);
+  SetIntValueAndType(originalVal, eInteger, strict ? nullptr : &aString);
 
   return true;
 }
@@ -1387,7 +1387,7 @@ nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
     return false;
   }
 
-  SetIntValueAndType(originalVal, eInteger, strict ? nsnull : &aString);
+  SetIntValueAndType(originalVal, eInteger, strict ? nullptr : &aString);
 
   return true;
 }
@@ -1473,7 +1473,7 @@ bool nsAttrValue::ParseDoubleValue(const nsAString& aString)
     cont->mType = eDoubleValue;
     nsAutoString serializedFloat;
     serializedFloat.AppendFloat(val);
-    SetMiscAtomOrString(serializedFloat.Equals(aString) ? nsnull : &aString);
+    SetMiscAtomOrString(serializedFloat.Equals(aString) ? nullptr : &aString);
     return true;
   }
 
@@ -1640,7 +1640,7 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
 {
   PRUint32 len = aValue.Length();
   if (!len) {
-    return nsnull;
+    return nullptr;
   }
 
   nsStringBuffer* buf = nsStringBuffer::FromString(aValue);
@@ -1651,7 +1651,7 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
 
   buf = nsStringBuffer::Alloc((len + 1) * sizeof(PRUnichar));
   if (!buf) {
-    return nsnull;
+    return nullptr;
   }
   PRUnichar *data = static_cast<PRUnichar*>(buf->Data());
   CopyUnicodeTo(aValue, 0, data, len);

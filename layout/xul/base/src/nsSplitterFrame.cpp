@@ -63,7 +63,7 @@ public:
   }
   virtual ~nsSplitterFrameInner();
 
-  void Disconnect() { mOuter = nsnull; }
+  void Disconnect() { mOuter = nullptr; }
 
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   nsresult MouseUp(nsIDOMEvent* aMouseEvent);
@@ -129,7 +129,7 @@ nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, nsnull};
+    {&nsGkAtoms::farthest, &nsGkAtoms::flex, nullptr};
   switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::resizebefore,
                                                 strings, eCaseMatters)) {
@@ -149,7 +149,7 @@ nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, &nsGkAtoms::grow, nsnull};
+    {&nsGkAtoms::farthest, &nsGkAtoms::flex, &nsGkAtoms::grow, nullptr};
   switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::resizeafter,
                                                 strings, eCaseMatters)) {
@@ -164,9 +164,9 @@ nsSplitterFrameInner::State
 nsSplitterFrameInner::GetState()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::dragging, &nsGkAtoms::collapsed, nsnull};
+    {&nsGkAtoms::dragging, &nsGkAtoms::collapsed, nullptr};
   static nsIContent::AttrValuesArray strings_substate[] =
-    {&nsGkAtoms::before, &nsGkAtoms::after, nsnull};
+    {&nsGkAtoms::before, &nsGkAtoms::after, nullptr};
   switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::state,
                                                 strings, eCaseMatters)) {
@@ -213,7 +213,7 @@ nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot)
     mInner->RemoveListener();
     mInner->Disconnect();
     mInner->Release();
-    mInner = nsnull;
+    mInner = nullptr;
   }
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }
@@ -246,7 +246,7 @@ nsSplitterFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (aAttribute == nsGkAtoms::align) {
     // tell the slider its attribute changed so it can 
     // update itself
-    nsIFrame* grippy = nsnull;
+    nsIFrame* grippy = nullptr;
     nsScrollbarButtonFrame::GetChildWithTag(PresContext(), nsGkAtoms::grippy, this, grippy);
     if (grippy)
       grippy->AttributeChanged(aNameSpaceID, aAttribute, aModType);
@@ -271,8 +271,8 @@ nsSplitterFrame::Init(nsIContent*      aContent,
     return NS_ERROR_OUT_OF_MEMORY;
 
   mInner->AddRef();
-  mInner->mChildInfosAfter = nsnull;
-  mInner->mChildInfosBefore = nsnull;
+  mInner->mChildInfosAfter = nullptr;
+  mInner->mChildInfosBefore = nullptr;
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->mDragging = false;
 
@@ -299,7 +299,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
 
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->AddListener(PresContext());
-  mInner->mParentBox = nsnull;
+  mInner->mParentBox = nullptr;
   return rv;
 }
 
@@ -415,7 +415,7 @@ nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   if (mDragging && mOuter) {
     AdjustChildren(aPresContext);
     AddListener(aPresContext);
-    nsIPresShell::SetCapturingContent(nsnull, 0); // XXXndeakin is this needed?
+    nsIPresShell::SetCapturingContent(nullptr, 0); // XXXndeakin is this needed?
     mDragging = false;
     State newState = GetState(); 
     // if the state is dragging then make it Open.
@@ -435,8 +435,8 @@ nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
   delete[] mChildInfosBefore;
   delete[] mChildInfosAfter;
-  mChildInfosBefore = nsnull;
-  mChildInfosAfter = nsnull;
+  mChildInfosBefore = nullptr;
+  mChildInfosAfter = nullptr;
   mChildInfosBeforeCount = 0;
   mChildInfosAfterCount = 0;
 }
@@ -594,7 +594,7 @@ nsSplitterFrameInner::MouseUp(nsIDOMEvent* aMouseEvent)
   NS_ENSURE_TRUE(mOuter, NS_OK);
   mPressed = false;
 
-  nsIPresShell::SetCapturingContent(nsnull, 0);
+  nsIPresShell::SetCapturingContent(nullptr, 0);
 
   return NS_OK;
 }
@@ -664,7 +664,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsIBox* childBox = mParentBox->GetChildBox();
 
-  while (nsnull != childBox) 
+  while (nullptr != childBox) 
   { 
     nsIContent* content = childBox->GetContent();
     nsIDocument* doc = content->OwnerDoc();
@@ -810,7 +810,7 @@ nsSplitterFrameInner::SupportsCollapseDirection
 )
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::before, &nsGkAtoms::after, &nsGkAtoms::both, nsnull};
+    {&nsGkAtoms::before, &nsGkAtoms::after, &nsGkAtoms::both, nullptr};
 
   switch (mOuter->mContent->FindAttrValueIn(kNameSpaceID_None,
                                             nsGkAtoms::collapse,
@@ -911,13 +911,13 @@ static nsIBox* GetChildBoxForContent(nsIBox* aParentBox, nsIContent* aContent)
 {
   nsIBox* childBox = aParentBox->GetChildBox();
 
-  while (nsnull != childBox) {
+  while (nullptr != childBox) {
     if (childBox->GetContent() == aContent) {
       return childBox;
     }
     childBox = childBox->GetNextBox();
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -933,7 +933,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   nsIBox* child =  mOuter->GetChildBox();
   while(child)
   {
-    SetPreferredSize(state, child, onePixel, aIsHorizontal, nsnull);
+    SetPreferredSize(state, child, onePixel, aIsHorizontal, nullptr);
     child = child->GetNextBox();
   }
 

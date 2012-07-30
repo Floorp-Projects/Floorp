@@ -41,7 +41,7 @@ bool SetProcessName(const char* aProcessName);
  */
 class THEBES_API nsDoubleBufferCARenderer {
 public:
-  nsDoubleBufferCARenderer() : mCALayer(nsnull) {}
+  nsDoubleBufferCARenderer() : mCALayer(nullptr) {}
   size_t GetFrontSurfaceWidth();
   size_t GetFrontSurfaceHeight();
   size_t GetBackSurfaceWidth();

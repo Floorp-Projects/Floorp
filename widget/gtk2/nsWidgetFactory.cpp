@@ -130,8 +130,8 @@ static nsresult
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
                         void **aResult)
 {
-  *aResult = nsnull;
-  if (aOuter != nsnull) {
+  *aResult = nullptr;
+  if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
   }
 

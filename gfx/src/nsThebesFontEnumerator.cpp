@@ -21,7 +21,7 @@ NS_IMETHODIMP
 nsThebesFontEnumerator::EnumerateAllFonts(PRUint32 *aCount,
                                           PRUnichar ***aResult)
 {
-    return EnumerateFonts (nsnull, nsnull, aCount, aResult);
+    return EnumerateFonts (nullptr, nullptr, aCount, aResult);
 }
 
 NS_IMETHODIMP
@@ -53,7 +53,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
 
     if (NS_FAILED(rv)) {
         *aCount = 0;
-        *aResult = nsnull;
+        *aResult = nullptr;
         /* XXX in this case, do we want to return the CSS generics? */
         return NS_OK;
     }
@@ -86,7 +86,7 @@ nsThebesFontEnumerator::GetDefaultFont(const char *aLangGroup,
                                        PRUnichar **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_OK;
 }
 
@@ -107,7 +107,7 @@ nsThebesFontEnumerator::GetStandardFamilyName(const PRUnichar *aName,
 
     nsAutoString name(aName);
     if (name.IsEmpty()) {
-        *aResult = nsnull;
+        *aResult = nullptr;
         return NS_OK;
     }
 
@@ -115,7 +115,7 @@ nsThebesFontEnumerator::GetStandardFamilyName(const PRUnichar *aName,
     nsresult rv = gfxPlatform::GetPlatform()->
         GetStandardFamilyName(nsDependentString(aName), family);
     if (NS_FAILED(rv) || family.IsEmpty()) {
-        *aResult = nsnull;
+        *aResult = nullptr;
         return NS_OK;
     }
     *aResult = ToNewUnicode(family);

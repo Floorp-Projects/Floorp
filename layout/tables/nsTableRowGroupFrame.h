@@ -207,7 +207,7 @@ public:
   /** Return structural information about a line. 
     * @param aLineNumber       - the index of the row relative to the row group
     *                            If the line-number is invalid then
-    *                            aFirstFrameOnLine will be nsnull and 
+    *                            aFirstFrameOnLine will be nullptr and 
     *                            aNumFramesOnLine will be zero.
     * @param aFirstFrameOnLine - the first cell frame that originates in row
     *                            with a rowindex that matches a line number
@@ -301,7 +301,7 @@ public:
   void ClearRowCursor();
 
   /**
-   * Get the first row that might contain y-coord 'aY', or nsnull if you must search
+   * Get the first row that might contain y-coord 'aY', or nullptr if you must search
    * all rows.
    * The actual row returned might not contain 'aY', but if not, it is guaranteed
    * to be before any row which does contain 'aY'.
@@ -317,7 +317,7 @@ public:
    * Set up the row cursor. After this, call AppendFrame for every
    * child frame in sibling order. Ensure that the child frame y and YMost values
    * form non-decreasing sequences (should always be true for table rows);
-   * if this is violated, call ClearRowCursor(). If we return nsnull, then we
+   * if this is violated, call ClearRowCursor(). If we return nullptr, then we
    * decided not to use a cursor or we already have one set up.
    */
   FrameCursorData* SetupRowCursor();
@@ -362,7 +362,7 @@ protected:
                           nsHTMLReflowMetrics&   aDesiredSize,
                           nsRowGroupReflowState& aReflowState,
                           nsReflowStatus&        aStatus,
-                          bool*                aPageBreakBeforeEnd = nsnull);
+                          bool*                aPageBreakBeforeEnd = nullptr);
 
   nsresult SplitRowGroup(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,

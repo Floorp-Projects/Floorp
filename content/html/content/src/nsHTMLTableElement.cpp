@@ -151,7 +151,7 @@ NS_INTERFACE_MAP_END
       } while (0);                                                   \
       /* TFoot */                                                    \
       rowGroup = mParent->GetTFoot();                                \
-      rows = nsnull;                                                 \
+      rows = nullptr;                                                 \
       if (rowGroup) {                                                \
         rowGroup->GetRows(getter_AddRefs(rows));                     \
         do { /* gives scoping */                                     \
@@ -205,7 +205,7 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
     }
   }
   
-  return nsnull;
+  return nullptr;
 }
 
 nsIContent*
@@ -222,7 +222,7 @@ TableRowsCollection::GetNodeAt(PRUint32 aIndex)
     aIndex -= count;
   );
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP 
@@ -230,7 +230,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsISupports* node = GetNodeAt(aIndex);
   if (!node) {
-    *aReturn = nsnull;
+    *aReturn = nullptr;
 
     return NS_OK;
   }
@@ -247,7 +247,7 @@ GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows, const nsAString& aName,
     return rows->GetNamedItem(aName, aCache);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsISupports* 
@@ -260,8 +260,8 @@ TableRowsCollection::GetNamedItem(const nsAString& aName,
       return item;
     }
   );
-  *aCache = nsnull;
-  return nsnull;
+  *aCache = nullptr;
+  return nullptr;
 }
 
 NS_IMETHODIMP 
@@ -271,7 +271,7 @@ TableRowsCollection::NamedItem(const nsAString& aName,
   nsWrapperCache *cache;
   nsISupports* item = GetNamedItem(aName, &cache);
   if (!item) {
-    *aReturn = nsnull;
+    *aReturn = nullptr;
 
     return NS_OK;
   }
@@ -283,7 +283,7 @@ NS_IMETHODIMP
 TableRowsCollection::ParentDestroyed()
 {
   // see comment in destructor, do NOT release mParent!
-  mParent = nsnull;
+  mParent = nullptr;
 
   return NS_OK;
 }
@@ -366,7 +366,7 @@ nsHTMLTableElement::GetCaption()
       return caption.forget();
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -403,7 +403,7 @@ nsHTMLTableElement::GetSection(nsIAtom *aTag)
       return section.forget();
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -510,7 +510,7 @@ nsHTMLTableElement::TBodies()
 NS_IMETHODIMP
 nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
 {
-  *aValue = nsnull;
+  *aValue = nullptr;
 
   nsRefPtr<nsIDOMHTMLTableSectionElement> head = GetTHead();
   if (head) {
@@ -560,7 +560,7 @@ nsHTMLTableElement::DeleteTHead()
 NS_IMETHODIMP
 nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
 {
-  *aValue = nsnull;
+  *aValue = nullptr;
 
   nsRefPtr<nsIDOMHTMLTableSectionElement> foot = GetTFoot();
   if (foot) {
@@ -602,7 +602,7 @@ nsHTMLTableElement::DeleteTFoot()
 NS_IMETHODIMP
 nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 {
-  *aValue = nsnull;
+  *aValue = nullptr;
 
   if (nsRefPtr<nsIDOMHTMLTableCaptionElement> caption = GetCaption()) {
     // return the existing caption
@@ -653,7 +653,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
        get the first row group
        insert the new row as its first child
   */
-  *aValue = nsnull;
+  *aValue = nullptr;
 
   if (aIndex < -1) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1092,7 +1092,7 @@ nsHTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::bordercolor },
     
     { &nsGkAtoms::align },
-    { nsnull }
+    { nullptr }
   };
 
   static const MappedAttributeEntry* const map[] = {
@@ -1153,7 +1153,7 @@ nsHTMLTableElement::GetAttributesMappedForCell()
     if (mTableInheritedAttributes != TABLE_ATTRS_DIRTY)
       return mTableInheritedAttributes;
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -1163,7 +1163,7 @@ nsHTMLTableElement::BuildInheritedAttributes()
                "potential leak, plus waste of work");
   nsIDocument *document = GetCurrentDoc();
   nsHTMLStyleSheet* sheet = document ?
-                              document->GetAttributeStyleSheet() : nsnull;
+                              document->GetAttributeStyleSheet() : nullptr;
   nsRefPtr<nsMappedAttributes> newAttrs;
   if (sheet) {
     const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsGkAtoms::cellpadding);

@@ -113,13 +113,13 @@ public:
   }
 
   /**
-   * For pointer types, get the value, returning nsnull if the entry is not
+   * For pointer types, get the value, returning nullptr if the entry is not
    * present in the table.
    *
    * @param aKey the key to retrieve
-   * @return The found value, or nsnull if no entry was found with the given key.
-   * @note If nsnull values are stored in the table, it is not possible to
-   *       distinguish between a nsnull value and a missing entry.
+   * @return The found value, or nullptr if no entry was found with the given key.
+   * @note If nullptr values are stored in the table, it is not possible to
+   *       distinguish between a nullptr value and a missing entry.
    */
   UserDataType Get(KeyType aKey) const
   {
@@ -245,7 +245,7 @@ public:
 
   /**
    * Measure the size of the table's entry storage and the table itself.
-   * If |sizeOfEntryExcludingThis| is non-nsnull, measure the size of things
+   * If |sizeOfEntryExcludingThis| is non-nullptr, measure the size of things
    * pointed to by entries.
    *
    * @param    sizeOfEntryExcludingThis
@@ -256,7 +256,7 @@ public:
    * @return   the summed size of the entries, the table, and the table's storage
    */
   size_t SizeOfIncludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull)
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nullptr)
   {
     return mallocSizeOf(this) + this->SizeOfExcludingThis(sizeOfEntryExcludingThis,
                                                           mallocSizeOf, userArg);
@@ -264,7 +264,7 @@ public:
 
   /**
    * Measure the size of the table's entry storage, and if
-   * |sizeOfEntryExcludingThis| is non-nsnull, measure the size of things pointed
+   * |sizeOfEntryExcludingThis| is non-nullptr, measure the size of things pointed
    * to by entries.
    * 
    * @param     sizeOfEntryExcludingThis the
@@ -275,7 +275,7 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull) const
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nullptr) const
   {
     if (!IsInitialized()) {
       return 0;
@@ -345,11 +345,11 @@ public:
   typedef typename
     nsBaseHashtable<KeyClass,DataType,UserDataType>::EnumReadFunction EnumReadFunction;
 
-  nsBaseHashtableMT() : mLock(nsnull) { }
+  nsBaseHashtableMT() : mLock(nullptr) { }
   ~nsBaseHashtableMT();
 
   void Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
-  bool IsInitialized() const { return mLock != nsnull; }
+  bool IsInitialized() const { return mLock != nullptr; }
   PRUint32 Count() const;
   bool Get(KeyType aKey, UserDataType* pData) const;
   void Put(KeyType aKey, UserDataType aData);

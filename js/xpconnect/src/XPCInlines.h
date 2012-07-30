@@ -127,14 +127,14 @@ XPCCallContext::GetIdentityObject() const
         return mWrapper->GetIdentityObject();
     return mFlattenedJSObject ?
            static_cast<nsISupports*>(xpc_GetJSPrivate(mFlattenedJSObject)) :
-           nsnull;
+           nullptr;
 }
 
 inline XPCWrappedNative*
 XPCCallContext::GetWrapper() const
 {
     if (mState == INIT_FAILED)
-        return nsnull;
+        return nullptr;
 
     CHECK_STATE(HAVE_OBJECT);
     return mWrapper;
@@ -146,7 +146,7 @@ XPCCallContext::GetProto() const
     CHECK_STATE(HAVE_OBJECT);
     if (mWrapper)
         return mWrapper->GetProto();
-    return mFlattenedJSObject ? GetSlimWrapperProto(mFlattenedJSObject) : nsnull;
+    return mFlattenedJSObject ? GetSlimWrapperProto(mFlattenedJSObject) : nullptr;
 }
 
 inline JSBool
@@ -313,14 +313,14 @@ inline const nsIID*
 XPCNativeInterface::GetIID() const
 {
     const nsIID* iid;
-    return NS_SUCCEEDED(mInfo->GetIIDShared(&iid)) ? iid : nsnull;
+    return NS_SUCCEEDED(mInfo->GetIIDShared(&iid)) ? iid : nullptr;
 }
 
 inline const char*
 XPCNativeInterface::GetNameString() const
 {
     const char* name;
-    return NS_SUCCEEDED(mInfo->GetNameShared(&name)) ? name : nsnull;
+    return NS_SUCCEEDED(mInfo->GetNameShared(&name)) ? name : nullptr;
 }
 
 inline XPCNativeMember*
@@ -330,7 +330,7 @@ XPCNativeInterface::FindMember(jsid name) const
     for (int i = (int) mMemberCount; i > 0; i--, member++)
         if (member->GetName() == name)
             return const_cast<XPCNativeMember*>(member);
-    return nsnull;
+    return nullptr;
 }
 
 inline JSBool
@@ -356,7 +356,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
     for (i = 0, iface = mInterfaces; i < count; i++, iface++) {
         if (name == (*iface)->GetName()) {
             if (pMember)
-                *pMember = nsnull;
+                *pMember = nullptr;
             if (pInterfaceIndex)
                 *pInterfaceIndex = (PRUint16) i;
             return true;
@@ -410,7 +410,7 @@ XPCNativeSet::FindMember(jsid name,
         !protoSet ||
         (protoSet != this &&
          !protoSet->MatchesSetUpToInterface(this, Interface) &&
-         (!protoSet->FindMember(name, &protoMember, (PRUint16*)nsnull) ||
+         (!protoSet->FindMember(name, &protoMember, (PRUint16*)nullptr) ||
           protoMember != Member));
 
     return true;
@@ -427,7 +427,7 @@ XPCNativeSet::FindNamedInterface(jsid name) const
         if (name == iface->GetName())
             return iface;
     }
-    return nsnull;
+    return nullptr;
 }
 
 inline XPCNativeInterface*
@@ -441,7 +441,7 @@ XPCNativeSet::FindInterfaceWithIID(const nsIID& iid) const
         if (iface->GetIID()->Equals(iid))
             return iface;
     }
-    return nsnull;
+    return nullptr;
 }
 
 inline JSBool
@@ -557,7 +557,7 @@ XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 inline JSBool
 XPCWrappedNative::HasInterfaceNoQI(const nsIID& iid)
 {
-    return nsnull != GetSet()->FindInterfaceWithIID(iid);
+    return nullptr != GetSet()->FindInterfaceWithIID(iid);
 }
 
 inline void
@@ -578,9 +578,9 @@ XPCWrappedNative::SweepTearOffs()
                 nsISupports* obj = to->GetNative();
                 if (obj) {
                     obj->Release();
-                    to->SetNative(nsnull);
+                    to->SetNative(nullptr);
                 }
-                to->SetInterface(nsnull);
+                to->SetInterface(nullptr);
             }
         }
     }
@@ -653,8 +653,8 @@ XPCLazyCallContext::SetWrapper(JSObject* flattenedJSObject)
 {
     NS_ASSERTION(IS_SLIM_WRAPPER_OBJECT(flattenedJSObject),
                  "What kind of object is this?");
-    mWrapper = nsnull;
-    mTearOff = nsnull;
+    mWrapper = nullptr;
+    mTearOff = nullptr;
     mFlattenedJSObject = flattenedJSObject;
 }
 

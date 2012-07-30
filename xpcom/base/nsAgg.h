@@ -285,7 +285,7 @@ static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
-    *aResult = nsnull;                                                      \
+    *aResult = nullptr;                                                      \
                                                                             \
     NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);                             \
                                                                             \
@@ -308,7 +308,7 @@ static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
-    *aResult = nsnull;                                                      \
+    *aResult = nullptr;                                                      \
                                                                             \
     NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);                             \
                                                                             \

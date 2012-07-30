@@ -62,7 +62,7 @@ nsXPCException::IterateNSResults(nsresult* rv,
     else
         p++;
     if (!p->name)
-        p = nsnull;
+        p = nullptr;
     else {
         if (rv)
             *rv = p->rv;
@@ -99,14 +99,14 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCException)
 NS_IMPL_CI_INTERFACE_GETTER1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
-    : mMessage(nsnull),
+    : mMessage(nullptr),
       mResult(0),
-      mName(nsnull),
-      mLocation(nsnull),
-      mData(nsnull),
-      mFilename(nsnull),
+      mName(nullptr),
+      mLocation(nullptr),
+      mData(nullptr),
+      mFilename(nullptr),
       mLineNumber(0),
-      mInner(nsnull),
+      mInner(nullptr),
       mInitialized(false)
 {
     MOZ_COUNT_CTOR(nsXPCException);
@@ -145,15 +145,15 @@ nsXPCException::Reset()
 {
     if (mMessage) {
         nsMemory::Free(mMessage);
-        mMessage = nsnull;
+        mMessage = nullptr;
     }
     if (mName) {
         nsMemory::Free(mName);
-        mName = nsnull;
+        mName = nullptr;
     }
     if (mFilename) {
         nsMemory::Free(mFilename);
-        mFilename = nsnull;
+        mFilename = nullptr;
     }
     mLineNumber = (PRUint32)-1;
     NS_IF_RELEASE(mLocation);
@@ -191,7 +191,7 @@ nsXPCException::GetName(char * *aName)
 
     const char* name = mName;
     if (!name)
-        NameAndFormatForNSResult(mResult, &name, nsnull);
+        NameAndFormatForNSResult(mResult, &name, nullptr);
 
     XPC_STRING_GETTER_BODY(aName, name);
 }
@@ -334,7 +334,7 @@ nsXPCException::ToString(char **_retval)
     static const char format[] =
  "[Exception... \"%s\"  nsresult: \"0x%x (%s)\"  location: \"%s\"  data: %s]";
 
-    char* indicatedLocation = nsnull;
+    char* indicatedLocation = nullptr;
 
     if (mLocation) {
         // we need to free this if it does not fail
@@ -343,12 +343,12 @@ nsXPCException::ToString(char **_retval)
             return rv;
     }
 
-    const char* msg = mMessage ? mMessage : nsnull;
+    const char* msg = mMessage ? mMessage : nullptr;
     const char* location = indicatedLocation ?
                                 indicatedLocation : defaultLocation;
     const char* resultName = mName;
     if (!resultName && !NameAndFormatForNSResult(mResult, &resultName,
-                                                 (!msg) ? &msg : nsnull)) {
+                                                 (!msg) ? &msg : nullptr)) {
         if (!msg)
             msg = defaultMsg;
         resultName = "<unknown>";
@@ -359,7 +359,7 @@ nsXPCException::ToString(char **_retval)
     if (indicatedLocation)
         nsMemory::Free(indicatedLocation);
 
-    char* final = nsnull;
+    char* final = nullptr;
     if (temp) {
         final = (char*) nsMemory::Clone(temp, sizeof(char)*(strlen(temp)+1));
         JS_smprintf_free(temp);
@@ -437,7 +437,7 @@ nsXPCException::NewException(const char *aMessage,
             }
         // at this point we have non-null location with one extra addref,
         // or no location at all
-        rv = e->Initialize(aMessage, aResult, nsnull, location, aData, nsnull);
+        rv = e->Initialize(aMessage, aResult, nullptr, location, aData, nullptr);
         NS_IF_RELEASE(location);
         if (NS_FAILED(rv))
             NS_RELEASE(e);

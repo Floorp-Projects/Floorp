@@ -228,12 +228,12 @@ nsresult
 NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext,
                           nsEvent* aEvent,
                           PRUint32 aEventType = 0,
-                          nsInvalidateRequestList* aInvalidateRequests = nsnull);
+                          nsInvalidateRequestList* aInvalidateRequests = nullptr);
 nsresult
 NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext,
                              nsEvent* aEvent,
                              PRUint32 aEventType = 0,
-                             float* aFrameBuffer = nsnull,
+                             float* aFrameBuffer = nullptr,
                              PRUint32 aFrameBufferLength = 0,
                              float aTime = 0);
 nsresult

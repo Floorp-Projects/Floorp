@@ -29,7 +29,7 @@ Row::initialize(sqlite3_stmt *aStatement)
   // Start copying over values
   for (PRUint32 i = 0; i < mNumCols; i++) {
     // Store the value
-    nsIVariant *variant = nsnull;
+    nsIVariant *variant = nullptr;
     int type = ::sqlite3_column_type(aStatement, i);
     switch (type) {
       case SQLITE_INTEGER:

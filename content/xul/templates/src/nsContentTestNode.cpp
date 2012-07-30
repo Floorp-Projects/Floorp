@@ -19,11 +19,11 @@ extern PRLogModuleInfo* gXULTemplateLog;
 
 nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
                                      nsIAtom* aRefVariable)
-    : TestNode(nsnull),
+    : TestNode(nullptr),
       mProcessor(aProcessor),
-      mDocument(nsnull),
+      mDocument(nullptr),
       mRefVariable(aRefVariable),
-      mTag(nsnull)
+      mTag(nullptr)
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {

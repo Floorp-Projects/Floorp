@@ -446,8 +446,8 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
           desc->value.setObject(*funobj);
           desc->attrs = methodSpecs[i].flags;
           desc->obj = wrapper;
-          desc->setter = nsnull;
-          desc->getter = nsnull;
+          desc->setter = nullptr;
+          desc->getter = nullptr;
           return true;
         }
       }

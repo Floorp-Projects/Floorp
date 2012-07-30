@@ -119,7 +119,7 @@ nsMappedAttributes::GetAttr(nsIAtom* aAttrName) const
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 const nsAttrValue*
@@ -131,7 +131,7 @@ nsMappedAttributes::GetAttr(const nsAString& aAttrName) const
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -237,7 +237,7 @@ nsMappedAttributes::GetExistingAttrNameFromQName(const nsAString& aName) const
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 PRInt32

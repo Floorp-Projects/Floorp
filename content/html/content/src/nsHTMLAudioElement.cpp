@@ -26,12 +26,12 @@ NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, nsnull);
+    NS_ENSURE_TRUE(doc, nullptr);
 
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nsnull,
+    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nullptr,
                                                    kNameSpaceID_XHTML,
                                                    nsIDOMNode::ELEMENT_NODE);
-    NS_ENSURE_TRUE(nodeInfo, nsnull);
+    NS_ENSURE_TRUE(nodeInfo, nullptr);
   }
 
   return new nsHTMLAudioElement(nodeInfo.forget());
@@ -65,7 +65,7 @@ void
 nsHTMLAudioElement::GetItemValueText(nsAString& aValue)
 {
   // Can't call GetSrc because we don't have a JSContext
-  GetURIAttr(nsGkAtoms::src, nsnull, aValue);
+  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
 }
 
 void
@@ -119,7 +119,7 @@ nsHTMLAudioElement::MozSetup(PRUint32 aChannels, PRUint32 aRate)
                                    nsAudioStream::FORMAT_FLOAT32);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
-    mAudioStream = nsnull;
+    mAudioStream = nullptr;
     return rv;
   }
 

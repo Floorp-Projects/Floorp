@@ -30,7 +30,7 @@ static bool test_consume_stream() {
   output->Write(kData, sizeof(kData) - 1, &n);
   if (n != (sizeof(kData) - 1))
     return false;
-  output = nsnull;  // close output
+  output = nullptr;  // close output
 
   nsCString buf;
   if (NS_FAILED(NS_ConsumeStream(input, PR_UINT32_MAX, buf)))
@@ -52,7 +52,7 @@ static const struct Test {
   TestFunc    func;
 } tests[] = {
   DECL_TEST(test_consume_stream),
-  { nsnull, nsnull }
+  { nullptr, nullptr }
 };
 
 int main(int argc, char **argv) {
@@ -60,15 +60,15 @@ int main(int argc, char **argv) {
   if (argc > 1)
     count = atoi(argv[1]);
 
-  if (NS_FAILED(NS_InitXPCOM2(nsnull, nsnull, nsnull)))
+  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
     return -1;
 
   while (count--) {
-    for (const Test* t = tests; t->name != nsnull; ++t) {
+    for (const Test* t = tests; t->name != nullptr; ++t) {
       printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
     }
   }
   
-  NS_ShutdownXPCOM(nsnull);
+  NS_ShutdownXPCOM(nullptr);
   return 0;
 }

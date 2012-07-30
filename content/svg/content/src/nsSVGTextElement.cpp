@@ -249,7 +249,7 @@ nsSVGTextElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_
 NS_IMETHODIMP
 nsSVGTextElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
 
   if (!metrics) return NS_ERROR_FAILURE;
@@ -261,7 +261,7 @@ nsSVGTextElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_ret
 NS_IMETHODIMP
 nsSVGTextElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
 
   if (!metrics) return NS_ERROR_FAILURE;
@@ -273,7 +273,7 @@ nsSVGTextElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retva
 NS_IMETHODIMP
 nsSVGTextElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
 
   if (!metrics) return NS_ERROR_FAILURE;

@@ -235,9 +235,9 @@ ProxiedAuthCallback(gconstpointer in,
   // Prompt the user...
   nsresult rv;
   bool retval = false;
-  PRUnichar *user = nsnull, *pass = nsnull;
+  PRUnichar *user = nullptr, *pass = nullptr;
 
-  rv = prompt->PromptUsernameAndPassword(nsnull, message.get(),
+  rv = prompt->PromptUsernameAndPassword(nullptr, message.get(),
                                          key.get(),
                                          nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                          &user, &pass, &retval);
@@ -317,12 +317,12 @@ class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
 
     nsGnomeVFSInputStream(const nsCString &uriSpec)
       : mSpec(uriSpec)
-      , mChannel(nsnull)
-      , mHandle(nsnull)
+      , mChannel(nullptr)
+      , mHandle(nullptr)
       , mBytesRemaining(PR_UINT32_MAX)
       , mStatus(NS_OK)
-      , mDirList(nsnull)
-      , mDirListPtr(nsnull)
+      , mDirList(nullptr)
+      , mDirListPtr(nullptr)
       , mDirBufCursor(0)
       , mDirOpen(false) {}
 
@@ -369,7 +369,7 @@ nsGnomeVFSInputStream::DoOpen()
 {
   GnomeVFSResult rv;
 
-  NS_ASSERTION(mHandle == nsnull, "already open");
+  NS_ASSERTION(mHandle == nullptr, "already open");
 
   // Push a callback handler on the stack for this thread, so we can intercept
   // authentication requests from GnomeVFS.  We'll use the channel to get a
@@ -634,16 +634,16 @@ nsGnomeVFSInputStream::Close()
   if (mHandle)
   {
     gnome_vfs_close(mHandle);
-    mHandle = nsnull;
+    mHandle = nullptr;
   }
 
   if (mDirList)
   {
     // Destroy the list of GnomeVFSFileInfo objects...
-    g_list_foreach(mDirList, (GFunc) gnome_vfs_file_info_unref, nsnull);
+    g_list_foreach(mDirList, (GFunc) gnome_vfs_file_info_unref, nullptr);
     g_list_free(mDirList);
-    mDirList = nsnull;
-    mDirListPtr = nsnull;
+    mDirList = nullptr;
+    mDirListPtr = nullptr;
   }
 
   if (mChannel)
@@ -655,7 +655,7 @@ nsGnomeVFSInputStream::Close()
       rv = NS_ProxyRelease(thread, mChannel);
 
     NS_ASSERTION(thread && NS_SUCCEEDED(rv), "leaking channel reference");
-    mChannel = nsnull;
+    mChannel = nullptr;
   }
 
   mSpec.Truncate(); // free memory

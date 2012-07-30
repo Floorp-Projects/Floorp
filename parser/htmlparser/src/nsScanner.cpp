@@ -62,7 +62,7 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset,
 {
   MOZ_COUNT_CTOR(nsScanner);
 
-  mSlidingBuffer = nsnull;
+  mSlidingBuffer = nullptr;
   mCountRemaining = 0;
   mFirstNonWhitespacePosition = -1;
   if (AppendToBuffer(anHTMLString)) {
@@ -96,7 +96,7 @@ nsScanner::nsScanner(nsString& aFilename,bool aCreateStream,
   MOZ_COUNT_CTOR(nsScanner);
   NS_ASSERTION(!aCreateStream, "This is always true.");
 
-  mSlidingBuffer = nsnull;
+  mSlidingBuffer = nullptr;
 
   // XXX This is a big hack.  We need to initialize the iterators to something.
   // What matters is that mCurrentPosition == mEndPosition, so that our methods

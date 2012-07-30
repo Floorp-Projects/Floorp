@@ -9,8 +9,8 @@ NS_IMPL_THREADSAFE_RELEASE(nsCERTValInParamWrapper)
 
 nsCERTValInParamWrapper::nsCERTValInParamWrapper()
 :mAlreadyConstructed(false)
-,mCVIN(nsnull)
-,mRev(nsnull)
+,mCVIN(nullptr)
+,mRev(nullptr)
 {
   MOZ_COUNT_CTOR(nsCERTValInParamWrapper);
 }
@@ -100,7 +100,7 @@ nsresult nsCERTValInParamWrapper::Construct(missing_cert_download_config mcdc,
     | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO
     ;
 
-  bool wantsCrlFirst = (firstNetworkRevocationMethod != nsnull)
+  bool wantsCrlFirst = (firstNetworkRevocationMethod != nullptr)
                           && (strcmp("crl", firstNetworkRevocationMethod) == 0);
     
   rev->leafTests.preferred_methods[0] =

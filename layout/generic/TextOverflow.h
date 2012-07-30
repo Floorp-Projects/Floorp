@@ -26,7 +26,7 @@ class TextOverflow {
  public:
   /**
    * Allocate an object for text-overflow processing.
-   * @return nsnull if no processing is necessary.  The caller owns the object.
+   * @return nullptr if no processing is necessary.  The caller owns the object.
    */
   static TextOverflow* WillProcessLines(nsDisplayListBuilder*   aBuilder,
                                         nsIFrame*               aBlockFrame);

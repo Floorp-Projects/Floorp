@@ -54,7 +54,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
             lc->localeToUpperCase == LocaleToUpperCase &&
             lc->localeToLowerCase == LocaleToLowerCase &&
             lc->localeCompare == LocaleCompare &&
-            lc->localeToUnicode == LocaleToUnicode) ? This(cx) : nsnull;
+            lc->localeToUnicode == LocaleToUnicode) ? This(cx) : nullptr;
   }
 
   static JSBool
@@ -124,7 +124,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
 
   XPCLocaleCallbacks()
 #ifdef DEBUG
-    : mThread(nsnull)
+    : mThread(nullptr)
 #endif
   {
     MOZ_COUNT_CTOR(XPCLocaleCallbacks);
@@ -133,7 +133,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     localeToLowerCase = LocaleToLowerCase;
     localeCompare = LocaleCompare;
     localeToUnicode = LocaleToUnicode;
-    localeGetErrorMessage = nsnull;
+    localeGetErrorMessage = nullptr;
   }
 
   ~XPCLocaleCallbacks()
@@ -178,7 +178,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
       }
     }
 
-    JSString *str = nsnull;
+    JSString *str = nullptr;
     PRInt32 srcLength = PL_strlen(src);
 
     if (mDecoder) {
@@ -321,7 +321,7 @@ DelocalizeContextCallback(JSContext *cx, unsigned contextOp)
   if (contextOp == JSCONTEXT_DESTROY) {
     if (XPCLocaleCallbacks* lc = XPCLocaleCallbacks::MaybeThis(cx)) {
       // This is a JSContext for which xpc_LocalizeContext() was called.
-      JS_SetLocaleCallbacks(cx, nsnull);
+      JS_SetLocaleCallbacks(cx, nullptr);
       delete lc;
     }
   }

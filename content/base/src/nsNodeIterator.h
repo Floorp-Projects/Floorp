@@ -39,7 +39,7 @@ public:
 
 private:
     struct NodePointer {
-        NodePointer() : mNode(nsnull) {}
+        NodePointer() : mNode(nullptr) {}
         NodePointer(nsINode *aNode, bool aBeforeNode);
 
         typedef bool (NodePointer::*MoveToMethodType)(nsINode*);
@@ -51,7 +51,7 @@ private:
 
         void AdjustAfterRemoval(nsINode *aRoot, nsINode *aContainer, nsIContent *aChild, nsIContent *aPreviousSibling);
 
-        void Clear() { mNode = nsnull; }
+        void Clear() { mNode = nullptr; }
 
         nsINode *mNode;
         bool mBeforeNode;

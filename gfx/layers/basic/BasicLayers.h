@@ -85,9 +85,9 @@ public:
   gfxContext* GetDefaultTarget() { return mDefaultTarget; }
 
   nsIWidget* GetRetainerWidget() { return mWidget; }
-  void ClearRetainerWidget() { mWidget = nsnull; }
+  void ClearRetainerWidget() { mWidget = nullptr; }
 
-  virtual bool IsWidgetLayerManager() { return mWidget != nsnull; }
+  virtual bool IsWidgetLayerManager() { return mWidget != nullptr; }
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
@@ -110,17 +110,17 @@ public:
   virtual ImageFactory *GetImageFactory();
 
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer()
-  { return nsnull; }
+  { return nullptr; }
   virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer()
-  { return nsnull; }
+  { return nullptr; }
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
-  { return nsnull; }
+  { return nullptr; }
   virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer()
-  { return nsnull; }
+  { return nullptr; }
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
-  { return nsnull; }
+  { return nullptr; }
   virtual already_AddRefed<ShadowRefLayer> CreateShadowRefLayer()
-  { return nsnull; }
+  { return nullptr; }
 
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Basic"); }
@@ -134,7 +134,7 @@ public:
 
   gfxContext* GetTarget() { return mTarget; }
   void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
-  bool IsRetained() { return mWidget != nsnull; }
+  bool IsRetained() { return mWidget != nullptr; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "Basic"; }
@@ -316,10 +316,10 @@ public:
     // automatically managed by IPDL, so we don't need to explicitly
     // free them here (it's hard to get that right on emergency
     // shutdown anyway).
-    mShadow = nsnull;
+    mShadow = nullptr;
   }
 
-  virtual BasicShadowableThebesLayer* AsThebes() { return nsnull; }
+  virtual BasicShadowableThebesLayer* AsThebes() { return nullptr; }
 };
 
 

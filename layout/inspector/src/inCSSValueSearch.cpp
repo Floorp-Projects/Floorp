@@ -22,8 +22,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 inCSSValueSearch::inCSSValueSearch()
-  : mResults(nsnull),
-    mProperties(nsnull),
+  : mResults(nullptr),
+    mProperties(nullptr),
     mResultCount(0),
     mPropertyCount(0),
     mIsActive(false),
@@ -280,7 +280,7 @@ inCSSValueSearch::SearchStyleSheet(nsIDOMCSSStyleSheet* aStyleSheet, nsIURI* aBa
   if (href.IsEmpty())
     baseURL = aBaseURL;
   else
-    NS_NewURI(getter_AddRefs(baseURL), href, nsnull, aBaseURL);
+    NS_NewURI(getter_AddRefs(baseURL), href, nullptr, aBaseURL);
 
   nsCOMPtr<nsIDOMCSSRuleList> rules;
   nsresult rv = aStyleSheet->GetCssRules(getter_AddRefs(rules));
@@ -354,7 +354,7 @@ inCSSValueSearch::SearchStyleValue(const nsAFlatString& aValue, nsIURI* aBaseURL
       Substring(aValue, 4, aValue.Length() - 5);
     // XXXldb Need to do more with |mReturnRelativeURLs|, perhaps?
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, aBaseURL);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, aBaseURL);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString spec;
     uri->GetSpec(spec);

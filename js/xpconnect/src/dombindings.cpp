@@ -665,7 +665,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
     NS_ASSERTION(instanceIsProxy(obj), "expected a DOM proxy object");
     JSObject *expando = getExpandoObject(obj);
     if (!expando) {
-        expando = JS_NewObjectWithGivenProto(cx, &ExpandoClass, nsnull,
+        expando = JS_NewObjectWithGivenProto(cx, &ExpandoClass, nullptr,
                                              js::GetObjectParent(obj));
         if (!expando)
             return NULL;
@@ -912,8 +912,8 @@ ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPrope
             desc->value.setObject(*funobj);
             desc->attrs = JSPROP_ENUMERATE;
             desc->obj = proxy;
-            desc->setter = nsnull;
-            desc->getter = nsnull;
+            desc->setter = nullptr;
+            desc->getter = nullptr;
             return true;
         }
     }

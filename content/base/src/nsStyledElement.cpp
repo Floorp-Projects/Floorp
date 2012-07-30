@@ -49,7 +49,7 @@ nsStyledElementNotElementCSSInlineStyle::DoGetID() const
 
   const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::id);
 
-  return attr ? attr->GetAtomValue() : nsnull;
+  return attr ? attr->GetAtomValue() : nullptr;
 }
 
 const nsAttrValue*
@@ -167,7 +167,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
     static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
     static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
 
-  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
+  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nullptr,
                           oldValue, attrValue, modType, hasListeners,
                           aNotify, kDontCallAfterSetAttr);
 }
@@ -176,7 +176,7 @@ css::StyleRule*
 nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
 {
   if (!MayHaveStyle()) {
-    return nsnull;
+    return nullptr;
   }
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
 
@@ -184,7 +184,7 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
     return attrVal->GetCSSStyleRuleValue();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // ---------------------------------------------------------------

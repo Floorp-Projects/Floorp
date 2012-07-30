@@ -42,7 +42,7 @@ public:
    */
   void DropDocumentReference()
   {
-    mDocument = nsnull;
+    mDocument = nullptr;
   }
 
   /**
@@ -263,7 +263,7 @@ private:
   }
 
   bool AddPendingChildLoader(nsScriptLoader* aChild) {
-    return mPendingChildLoaders.AppendElement(aChild) != nsnull;
+    return mPendingChildLoaders.AppendElement(aChild) != nullptr;
   }
   
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);

@@ -76,7 +76,7 @@
 
 using namespace mozilla;
 
-PRLogModuleInfo* nsComponentManagerLog = nsnull;
+PRLogModuleInfo* nsComponentManagerLog = nullptr;
 
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN
@@ -213,7 +213,7 @@ static already_AddRefed<nsIFile>
 GetLocationFromDirectoryService(const char* prop)
 {
     nsCOMPtr<nsIProperties> directoryService;
-    nsDirectoryService::Create(nsnull,
+    nsDirectoryService::Create(nullptr,
                                NS_GET_IID(nsIProperties),
                                getter_AddRefs(directoryService));
 
@@ -298,7 +298,7 @@ nsresult nsComponentManagerImpl::Init()
 
     PR_ASSERT(NOT_INITIALIZED == mStatus);
 
-    if (nsComponentManagerLog == nsnull)
+    if (nsComponentManagerLog == nullptr)
     {
         nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
     }
@@ -840,7 +840,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
     }
 #endif
 
-    PR_ASSERT(aResult != nsnull);
+    PR_ASSERT(aResult != nullptr);
 
     nsCOMPtr<nsIFactory> factory = FindFactory(aClass);
     if (!factory)
@@ -915,11 +915,11 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (aResult == nsnull)
+    if (aResult == nullptr)
     {
         return NS_ERROR_NULL_POINTER;
     }
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsFactoryEntry *entry = GetFactoryEntry(aClass);
 
@@ -1000,11 +1000,11 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (aResult == nsnull)
+    if (aResult == nullptr)
     {
         return NS_ERROR_NULL_POINTER;
     }
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsFactoryEntry *entry = GetFactoryEntry(aContractID, strlen(aContractID));
 
@@ -1106,7 +1106,7 @@ nsComponentManagerImpl::GetPendingServiceThread(const nsCID& aServiceCID) const
       return info.thread;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 // GetService() wants to manually Exit()/Enter() a monitor which is
@@ -1189,7 +1189,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     NS_ASSERTION(currentPRThread, "This should never be null!");
 
     // Needed to optimize the event loop below.
-    nsIThread* currentThread = nsnull;
+    nsIThread* currentThread = nullptr;
 
     PRThread* pendingPRThread;
     while ((pendingPRThread = GetPendingServiceThread(aClass))) {
@@ -1234,7 +1234,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     // the service manager:
     mon.Exit();
 
-    nsresult rv = CreateInstance(aClass, nsnull, aIID, getter_AddRefs(service));
+    nsresult rv = CreateInstance(aClass, nullptr, aIID, getter_AddRefs(service));
 
     mon.Enter();
 
@@ -1296,7 +1296,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     if (entry && entry->mServiceObject) {
         nsCOMPtr<nsISupports> service;
         rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
-        *result = (service!=nsnull);
+        *result = (service!=nullptr);
     }
 
     return rv;
@@ -1335,7 +1335,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     if (entry && entry->mServiceObject) {
         nsCOMPtr<nsISupports> service;
         rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
-        *result = (service!=nsnull);
+        *result = (service!=nullptr);
     }
     return rv;
 }
@@ -1384,7 +1384,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     NS_ASSERTION(currentPRThread, "This should never be null!");
 
     // Needed to optimize the event loop below.
-    nsIThread* currentThread = nsnull;
+    nsIThread* currentThread = nullptr;
 
     PRThread* pendingPRThread;
     while ((pendingPRThread = GetPendingServiceThread(*entry->mCIDEntry->cid))) {
@@ -1429,7 +1429,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     // the service manager:
     mon.Exit();
 
-    nsresult rv = CreateInstanceByContractID(aContractID, nsnull, aIID,
+    nsresult rv = CreateInstanceByContractID(aContractID, nullptr, aIID,
                                              getter_AddRefs(service));
 
     mon.Enter();
@@ -1569,7 +1569,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::IsCIDRegistered(const nsCID & aClass,
                                         bool *_retval)
 {
-    *_retval = (nsnull != GetFactoryEntry(aClass));
+    *_retval = (nullptr != GetFactoryEntry(aClass));
     return NS_OK;
 }
 

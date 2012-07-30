@@ -54,7 +54,7 @@ public:
 
 private:
   BluetoothDeviceEvent()
-  : nsDOMEvent(nsnull, nsnull)
+  : nsDOMEvent(nullptr, nullptr)
   { }
 
   ~BluetoothDeviceEvent()

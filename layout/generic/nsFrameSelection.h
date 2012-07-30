@@ -77,7 +77,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
     , mIsKeyboardSelect(aIsKeyboardSelect)
     , mVisual(aVisual)
     , mResultContent()
-    , mResultFrame(nsnull)
+    , mResultFrame(nullptr)
     , mContentOffset(0)
     , mAttachForward(false)
   {
@@ -548,7 +548,7 @@ public:
    *  At the beginning and end of each line there is assumed to be a frame with
    *   Bidi level equal to the paragraph embedding level.
    *  In these cases the before frame and after frame respectively will be 
-   *   nsnull.
+   *   nullptr.
    *
    *  This method is virtual since it gets called from outside of layout. 
    */

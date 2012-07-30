@@ -156,7 +156,7 @@ nsContentAreaDragDropDataProvider::SaveURIToFile(nsAString& inSourceURIString,
 
   persist->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
 
-  return persist->SaveURI(sourceURI, nsnull, nsnull, nsnull, nsnull, inDestFile);
+  return persist->SaveURI(sourceURI, nullptr, nullptr, nullptr, nullptr, inDestFile);
 }
 
 // This is our nsIFlavorDataProvider callback. There are several
@@ -179,7 +179,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
                                                  PRUint32 *aDataLen)
 {
   NS_ENSURE_ARG_POINTER(aData && aDataLen);
-  *aData = nsnull;
+  *aData = nullptr;
   *aDataLen = 0;
 
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -265,7 +265,7 @@ DragDataProducer::FindParentLinkNode(nsIContent* inNode)
   nsIContent* content = inNode;
   if (!content) {
     // That must have been the document node; nothing else to do here;
-    return nsnull;
+    return nullptr;
   }
 
   for (; content; content = content->GetParent()) {
@@ -275,7 +275,7 @@ DragDataProducer::FindParentLinkNode(nsIContent* inNode)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -359,18 +359,18 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
   NS_ASSERTION(mWindow, "window not set");
   NS_ASSERTION(mSelectionTargetNode, "selection target node should have been set");
 
-  *aDragNode = nsnull;
+  *aDragNode = nullptr;
 
   nsresult rv;
-  nsIContent* dragNode = nsnull;
-  *aSelection = nsnull;
+  nsIContent* dragNode = nullptr;
+  *aSelection = nullptr;
 
   // Find the selection to see what we could be dragging and if what we're
   // dragging is in what is selected. If this is an editable textbox, use
   // the textbox's selection, otherwise use the window's selection.
   nsCOMPtr<nsISelection> selection;
   nsIContent* editingElement = mSelectionTargetNode->IsEditable() ?
-                               mSelectionTargetNode->GetEditingHost() : nsnull;
+                               mSelectionTargetNode->GetEditingHost() : nullptr;
   nsCOMPtr<nsITextControlElement> textControl =
     nsITextControlElement::GetTextControlElementFromEditingHost(editingElement);
   if (textControl) {
@@ -811,7 +811,7 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
   NS_ENSURE_ARG(inRealTargetNode);
   NS_ENSURE_ARG_POINTER(outImageOrLinkNode);
 
-  *outImageOrLinkNode = nsnull;
+  *outImageOrLinkNode = nullptr;
   *outDragSelectedText = false;
 
   bool selectionContainsTarget = false;
@@ -878,7 +878,7 @@ void
 DragDataProducer::GetSelectedLink(nsISelection* inSelection,
                                   nsIContent **outLinkNode)
 {
-  *outLinkNode = nsnull;
+  *outLinkNode = nullptr;
 
   nsCOMPtr<nsIDOMNode> selectionStartNode;
   inSelection->GetAnchorNode(getter_AddRefs(selectionStartNode));

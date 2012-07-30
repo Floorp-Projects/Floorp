@@ -72,7 +72,7 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont) 
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mForceGDIClassic(false)
     {
         mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
@@ -103,7 +103,7 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               bool aItalic)
-      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nsnull),
+      : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mForceGDIClassic(false)
     {
         mWeight = aWeight;
@@ -128,7 +128,7 @@ public:
                               PRUint16 aWeight,
                               PRInt16 aStretch,
                               bool aItalic)
-      : gfxFontEntry(aFaceName), mFont(nsnull), mFontFile(aFontFile),
+      : gfxFontEntry(aFaceName), mFont(nullptr), mFontFile(aFontFile),
         mForceGDIClassic(false)
     {
         mWeight = aWeight;

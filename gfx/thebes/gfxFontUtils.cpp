@@ -844,7 +844,7 @@ gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
     PRUint32 offset;
     bool     symbol;
     PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset,
-                                            nsnull, &symbol);
+                                            nullptr, &symbol);
 
     switch (format) {
     case 4:
@@ -1629,7 +1629,7 @@ const gfxFontUtils::MacFontNameCharsetMapping gfxFontUtils::gMacFontNameCharsets
 const char* gfxFontUtils::gISOFontNameCharsets[] = 
 {
     /* 0 */ "us-ascii"   ,
-    /* 1 */ nsnull       , /* spec says "ISO 10646" but does not specify encoding form! */
+    /* 1 */ nullptr       , /* spec says "ISO 10646" but does not specify encoding form! */
     /* 2 */ "ISO-8859-1"
 };
 
@@ -1638,13 +1638,13 @@ const char* gfxFontUtils::gMSFontNameCharsets[] =
     /* [0] ENCODING_ID_MICROSOFT_SYMBOL */      ""          ,
     /* [1] ENCODING_ID_MICROSOFT_UNICODEBMP */  ""          ,
     /* [2] ENCODING_ID_MICROSOFT_SHIFTJIS */    "Shift_JIS" ,
-    /* [3] ENCODING_ID_MICROSOFT_PRC */         nsnull      ,
+    /* [3] ENCODING_ID_MICROSOFT_PRC */         nullptr      ,
     /* [4] ENCODING_ID_MICROSOFT_BIG5 */        "Big5"      ,
-    /* [5] ENCODING_ID_MICROSOFT_WANSUNG */     nsnull      ,
+    /* [5] ENCODING_ID_MICROSOFT_WANSUNG */     nullptr      ,
     /* [6] ENCODING_ID_MICROSOFT_JOHAB */       "x-johab"   ,
-    /* [7] reserved */                          nsnull      ,
-    /* [8] reserved */                          nsnull      ,
-    /* [9] reserved */                          nsnull      ,
+    /* [7] reserved */                          nullptr      ,
+    /* [8] reserved */                          nullptr      ,
+    /* [9] reserved */                          nullptr      ,
     /*[10] ENCODING_ID_MICROSOFT_UNICODEFULL */ ""
 };
 
@@ -1654,7 +1654,7 @@ const char* gfxFontUtils::gMSFontNameCharsets[] =
 // given the name table attributes.
 // Special return values:
 //    ""       charset is UTF16BE, no need for a converter
-//    nsnull   unknown charset, do not attempt conversion
+//    nullptr   unknown charset, do not attempt conversion
 const char*
 gfxFontUtils::GetCharsetForFontName(PRUint16 aPlatform, PRUint16 aScript, PRUint16 aLanguage)
 {
@@ -1666,7 +1666,7 @@ gfxFontUtils::GetCharsetForFontName(PRUint16 aPlatform, PRUint16 aScript, PRUint
     case PLATFORM_ID_MAC:
         {
             PRUint32 lo = 0, hi = ARRAY_SIZE(gMacFontNameCharsets);
-            MacFontNameCharsetMapping searchValue = { aScript, aLanguage, nsnull };
+            MacFontNameCharsetMapping searchValue = { aScript, aLanguage, nullptr };
             for (PRUint32 i = 0; i < 2; ++i) {
                 // binary search; if not found, set language to ANY and try again
                 while (lo < hi) {
@@ -1704,7 +1704,7 @@ gfxFontUtils::GetCharsetForFontName(PRUint16 aPlatform, PRUint16 aScript, PRUint
         break;
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 // convert a raw name from the name table to an nsString, if possible;
@@ -1719,7 +1719,7 @@ gfxFontUtils::DecodeFontName(const PRUint8 *aNameData, PRInt32 aByteLen,
     const char *csName = GetCharsetForFontName(aPlatformCode, aScriptCode, aLangCode);
 
     if (!csName) {
-        // nsnull -> unknown charset
+        // nullptr -> unknown charset
 #ifdef DEBUG
         char warnBuf[128];
         if (aByteLen > 64)

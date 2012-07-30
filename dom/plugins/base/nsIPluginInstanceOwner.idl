@@ -54,7 +54,7 @@ interface nsIPluginInstanceOwner : nsISupports
   /**
    * Called when there is a valid target so that the proper
    * frame can be updated with new content. will not be called
-   * with nsnull aTarget.
+   * with nullptr aTarget.
    */
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, 

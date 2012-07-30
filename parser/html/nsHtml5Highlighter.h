@@ -219,7 +219,7 @@ class nsHtml5Highlighter
      *
      * @param aName the name of the element
      * @param aAttributes the attribute holder (ownership will be taken) or
-     *        nsnull for no attributes
+     *        nullptr for no attributes
      * @return the handle for the element that will be created
      */
     nsIContent** CreateElement(nsIAtom* aName,
@@ -238,7 +238,7 @@ class nsHtml5Highlighter
      *
      * @param aName the name of the element
      * @param aAttributes the attribute holder (ownership will be taken) or
-     *        nsnull for no attributes
+     *        nullptr for no attributes
      */
     void Push(nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes);
 

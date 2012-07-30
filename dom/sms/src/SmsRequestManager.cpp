@@ -78,7 +78,7 @@ nsresult
 SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
                                                  nsIDOMMozSmsRequest* aRequest)
 {
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
   nsresult rv = event->InitEvent(aEventName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -109,7 +109,7 @@ SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
 
   nsresult rv = DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
 
-  mRequests.ReplaceObjectAt(nsnull, aRequestId);
+  mRequests.ReplaceObjectAt(nullptr, aRequestId);
   return rv;
 }
 
@@ -121,7 +121,7 @@ SmsRequestManager::NotifyError(PRInt32 aRequestId, PRInt32 aError)
 
   nsresult rv = DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
 
-  mRequests.ReplaceObjectAt(nsnull, aRequestId);
+  mRequests.ReplaceObjectAt(nullptr, aRequestId);
   return rv;
 }
 

@@ -35,10 +35,10 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 //
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsIClipboard(),
-                             mSelectionOwner(nsnull),
-                             mGlobalOwner(nsnull),
-                             mSelectionTransferable(nsnull),
-                             mGlobalTransferable(nsnull)
+                             mSelectionOwner(nullptr),
+                             mGlobalOwner(nullptr),
+                             mSelectionTransferable(nullptr),
+                             mGlobalTransferable(nullptr)
 {
     // No implementation needed
 }
@@ -73,7 +73,7 @@ NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                                      QClipboard::Mode clipboardMode )
 {
-    if (nsnull == aTransferable)
+    if (nullptr == aTransferable)
     {
         NS_WARNING("nsClipboard::SetNativeClipboardData(): no transferable!");
         return NS_ERROR_FAILURE;
@@ -200,7 +200,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                 if (!clip || NS_FAILED(rv))
                     continue;
 
-                void *primitive_data = nsnull;
+                void *primitive_data = nullptr;
                 nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr.get(), clip,
                                                             &primitive_data, len);
 
@@ -230,7 +230,7 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
                                     QClipboard::Mode clipboardMode)
 {
-    if (nsnull == aTransferable)
+    if (nullptr == aTransferable)
     {
         NS_WARNING("GetNativeClipboardData: Transferable is null!");
         return NS_ERROR_FAILURE;
@@ -489,7 +489,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 NS_IMETHODIMP
 nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
 {
-    if (nsnull != aTransferable)
+    if (nullptr != aTransferable)
     {
         QClipboard::Mode mode;
         if (kGlobalClipboard == aWhichClipboard)
@@ -517,18 +517,18 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
         if (mSelectionOwner)
         {
             mSelectionOwner->LosingOwnership(mSelectionTransferable);
-            mSelectionOwner = nsnull;
+            mSelectionOwner = nullptr;
         }
-        mSelectionTransferable = nsnull;
+        mSelectionTransferable = nullptr;
     }
     else
     {
         if (mGlobalOwner)
         {
             mGlobalOwner->LosingOwnership(mGlobalTransferable);
-            mGlobalOwner = nsnull;
+            mGlobalOwner = nullptr;
         }
-        mGlobalTransferable = nsnull;
+        mGlobalTransferable = nullptr;
     }
 
     return NS_OK;

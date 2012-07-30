@@ -59,7 +59,7 @@ TestNewSurface () {
 
     gfxASurface *savedWrapper = s.get();
 
-    s = nsnull;
+    s = nullptr;
 
     failures += CheckInt (cairo_surface_get_reference_count(cs), 1);
     failures += CheckInt (destroyed, 0);
@@ -77,7 +77,7 @@ TestNewSurface () {
     failures += CheckInt (cairo_surface_get_reference_count(cs), 1);
     failures += CheckInt (destroyed, 0);
 
-    s = nsnull;
+    s = nullptr;
 
     failures += CheckInt (destroyed, 1);
 
@@ -108,7 +108,7 @@ TestExistingSurface () {
 
     gfxASurface *savedWrapper = s.get();
 
-    s = nsnull;
+    s = nullptr;
 
     failures += CheckInt (cairo_surface_get_reference_count(cs), 2);
     failures += CheckInt (destroyed, 0);
@@ -126,7 +126,7 @@ TestExistingSurface () {
     failures += CheckInt (cairo_surface_get_reference_count(cs), 2);
     failures += CheckInt (destroyed, 0);
 
-    s = nsnull;
+    s = nullptr;
 
     failures += CheckInt (cairo_surface_get_reference_count(cs), 1);
     failures += CheckInt (destroyed, 0);

@@ -39,7 +39,7 @@ static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString,
                                 JSAutoByteString *bytes)
 {
     JSAutoRequest ar(cx);
-    const char* value = nsnull;
+    const char* value = nullptr;
     JSString* value_str = JS_ValueToString(cx, val);
     if (value_str)
         value = bytes->encode(cx, value_str);
@@ -58,16 +58,16 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
                            char* buf, int num,
                            JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
-    JSPropertyDescArray callProps = {0, nsnull};
-    JSPropertyDescArray thisProps = {0, nsnull};
+    JSPropertyDescArray callProps = {0, nullptr};
+    JSPropertyDescArray thisProps = {0, nullptr};
     JSBool gotThisVal = false;
     jsval thisVal;
-    JSObject* callObj = nsnull;
-    JSString* funname = nsnull;
+    JSObject* callObj = nullptr;
+    JSString* funname = nullptr;
     JSAutoByteString funbytes;
-    const char* filename = nsnull;
+    const char* filename = nullptr;
     PRInt32 lineno = 0;
-    JSFunction* fun = nsnull;
+    JSFunction* fun = nullptr;
     uint32_t namedArgCount = 0;
     JSBool isString;
 
@@ -92,7 +92,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             callObj = JS_GetFrameCallObject(cx, fp);
             if (callObj)
                 if (!JS_GetPropertyDescArray(cx, callObj, &callProps))
-                    callProps.array = nsnull;  // just to be sure
+                    callProps.array = nullptr;  // just to be sure
         }
 
         gotThisVal = JS_GetFrameThis(cx, fp, &thisVal);
@@ -101,7 +101,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSVAL_IS_PRIMITIVE(thisVal) ||
             !JS_GetPropertyDescArray(cx, JSVAL_TO_OBJECT(thisVal),
                                      &thisProps)) {
-            thisProps.array = nsnull;  // just to be sure
+            thisProps.array = nullptr;  // just to be sure
         }
     }
 
@@ -123,7 +123,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSAutoByteString nameBytes;
             const char* name = JSVAL2String(cx, desc->id, &isString, &nameBytes);
             if (!isString)
-                name = nsnull;
+                name = nullptr;
             JSAutoByteString valueBytes;
             const char* value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
 
@@ -181,7 +181,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSPropertyDesc* desc = &callProps.array[i];
             JSAutoByteString nameBytes;
             JSAutoByteString valueBytes;
-            const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
+            const char *name = JSVAL2String(cx, desc->id, nullptr, &nameBytes);
             const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
 
             if (name && value) {
@@ -202,7 +202,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSString* thisValStr;
             JSAutoByteString thisValBytes;
 
-            if (nsnull != (thisValStr = JS_ValueToString(cx, thisVal)) &&
+            if (nullptr != (thisValStr = JS_ValueToString(cx, thisVal)) &&
                 thisValBytes.encode(cx, thisValStr)) {
                 buf = JS_sprintf_append(buf, TAB "this = %s\n", thisValBytes.ptr());
                 if (!buf) goto out;
@@ -220,7 +220,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             if (desc->flags & JSPD_ENUMERATE) {
                 JSAutoByteString nameBytes;
                 JSAutoByteString valueBytes;
-                const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
+                const char *name = JSVAL2String(cx, desc->id, nullptr, &nameBytes);
                 const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
                 if (name && value) {
                     buf = JS_sprintf_append(buf, TAB "this.%s = %s%s%s\n",
@@ -247,10 +247,10 @@ static char* FormatJSStackDump(JSContext* cx, char* buf,
                                JSBool showThisProps)
 {
     JSStackFrame* fp;
-    JSStackFrame* iter = nsnull;
+    JSStackFrame* iter = nullptr;
     int num = 0;
 
-    while (nsnull != (fp = JS_FrameIterator(cx, &iter))) {
+    while (nullptr != (fp = JS_FrameIterator(cx, &iter))) {
         buf = FormatJSFrame(cx, fp, buf, num, showArgs, showLocals, showThisProps);
         num++;
     }
@@ -282,7 +282,7 @@ xpc_PrintJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals,
 
     JS_ClearPendingException(cx);
 
-    buf = FormatJSStackDump(cx, nsnull, showArgs, showLocals, showThisProps);
+    buf = FormatJSStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf)
         DebugDump("%s", "Failed to format JavaScript stack for dump\n");
 
@@ -303,7 +303,7 @@ JSBool
 xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
 {
     JSStackFrame* fp;
-    JSStackFrame* iter = nsnull;
+    JSStackFrame* iter = nullptr;
     uint32_t num = 0;
 
     if (!cx || !text) {
@@ -313,7 +313,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
 
     DebugDump("js[%d]> %s\n", frameno, text);
 
-    while (nsnull != (fp = JS_FrameIterator(cx, &iter))) {
+    while (nullptr != (fp = JS_FrameIterator(cx, &iter))) {
         if (num == frameno)
             break;
         num++;
@@ -333,7 +333,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     JSString* str;
     JSAutoByteString bytes;
     if (JS_EvaluateInStackFrame(cx, fp, text, strlen(text), "eval", 1, &rval) &&
-        nsnull != (str = JS_ValueToString(cx, rval)) &&
+        nullptr != (str = JS_ValueToString(cx, rval)) &&
         bytes.encode(cx, str)) {
         DebugDump("%s\n", bytes.ptr());
     } else
@@ -360,7 +360,7 @@ xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 JSBool xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt)
 {
-    return JS_SetDebuggerHandler(rt, xpc_DebuggerKeywordHandler, nsnull);
+    return JS_SetDebuggerHandler(rt, xpc_DebuggerKeywordHandler, nullptr);
 }
 
 /***************************************************************************/
@@ -467,6 +467,6 @@ xpc_PrintAllReferencesTo(void *p)
 {
     /* p must be a JS object */
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    JS_DumpHeap(rt->GetJSRuntime(), stdout, nsnull, JSTRACE_OBJECT, p, 0x7fffffff, nsnull);
+    JS_DumpHeap(rt->GetJSRuntime(), stdout, nullptr, JSTRACE_OBJECT, p, 0x7fffffff, nullptr);
 }
 #endif

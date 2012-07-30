@@ -57,9 +57,9 @@ IsInitialized()
  * APP. Each of the paths given can be:
  * - a file path, pointing to the omnijar file,
  * - a directory path, pointing to a directory containing an "omni.jar" file,
- * - nsnull for autodetection of an "omni.jar" file.
+ * - nullptr for autodetection of an "omni.jar" file.
  */
-static void Init(nsIFile *aGrePath = nsnull, nsIFile *aAppPath = nsnull);
+static void Init(nsIFile *aGrePath = nullptr, nsIFile *aAppPath = nullptr);
 
 /**
  * Cleans up the Omnijar API
@@ -68,8 +68,8 @@ static void CleanUp();
 
 /**
  * Returns an nsIFile pointing to the omni.jar file for GRE or APP.
- * Returns nsnull when there is no corresponding omni.jar.
- * Also returns nsnull for APP in the unified case.
+ * Returns nullptr when there is no corresponding omni.jar.
+ * Also returns nullptr for APP in the unified case.
  */
 static inline already_AddRefed<nsIFile>
 GetPath(Type aType)
@@ -92,7 +92,7 @@ HasOmnijar(Type aType)
 
 /**
  * Returns a nsZipArchive pointer for the omni.jar file for GRE or
- * APP. Returns nsnull in the same cases GetPath() would.
+ * APP. Returns nullptr in the same cases GetPath() would.
  */
 static inline already_AddRefed<nsZipArchive>
 GetReader(Type aType)

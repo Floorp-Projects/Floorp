@@ -46,7 +46,7 @@ NS_ReadOptionalObject(nsIObjectInputStream* aStream, bool aIsStrongRef,
         if (nonnull)
             rv = aStream->ReadObject(aIsStrongRef, aResult);
         else
-            *aResult = nsnull;
+            *aResult = nullptr;
     }
     return rv;
 }

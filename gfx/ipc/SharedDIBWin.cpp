@@ -17,9 +17,9 @@ static const PRUint32 kHeaderBytes =
   (sizeof(BITMAPV4HEADER) + kByteAlign - 1) & ~(kByteAlign - 1);
 
 SharedDIBWin::SharedDIBWin() :
-    mSharedHdc(nsnull)
-  , mSharedBmp(nsnull)
-  , mOldObj(nsnull)
+    mSharedHdc(nullptr)
+  , mSharedBmp(nullptr)
+  , mOldObj(nullptr)
 {
 }
 

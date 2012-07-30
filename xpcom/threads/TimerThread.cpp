@@ -33,7 +33,7 @@ TimerThread::TimerThread() :
 
 TimerThread::~TimerThread()
 {
-  mThread = nsnull;
+  mThread = nullptr;
 
   NS_ASSERTION(mTimers.IsEmpty(), "Timers remain in TimerThread::~TimerThread");
 }
@@ -88,7 +88,7 @@ nsresult TimerThread::Init()
     // We hold on to mThread to keep the thread alive.
     nsresult rv = NS_NewThread(getter_AddRefs(mThread), this);
     if (NS_FAILED(rv)) {
-      mThread = nsnull;
+      mThread = nullptr;
     }
     else {
       nsRefPtr<TimerObserverRunnable> r = new TimerObserverRunnable(this);
@@ -252,7 +252,7 @@ NS_IMETHODIMP TimerThread::Run()
     } else {
       waitFor = PR_INTERVAL_NO_TIMEOUT;
       TimeStamp now = TimeStamp::Now();
-      nsTimerImpl *timer = nsnull;
+      nsTimerImpl *timer = nullptr;
 
       if (!mTimers.IsEmpty()) {
         timer = mTimers[0];
@@ -300,7 +300,7 @@ NS_IMETHODIMP TimerThread::Run()
               // preventing this situation from occurring.
               NS_ASSERTION(rc != 0, "destroyed timer off its target thread!");
             }
-            timer = nsnull;
+            timer = nullptr;
           }
 
           if (mShutdown)

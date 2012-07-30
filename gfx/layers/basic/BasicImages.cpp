@@ -63,7 +63,7 @@ public:
                                               BufferRecycleBin *aRecycleBin)
   {
     if (!aNumFormats) {
-      return nsnull;
+      return nullptr;
     }
 
     nsRefPtr<Image> image;
@@ -137,7 +137,7 @@ BasicPlanarYCbCrImage::GetAsSurface()
   nsRefPtr<gfxImageSurface> imgSurface =
       new gfxImageSurface(mDecodedBuffer, mSize, mStride, format);
   if (!imgSurface || imgSurface->CairoStatus() != 0) {
-    return nsnull;
+    return nullptr;
   }
 
   // Pass ownership of the buffer to the surface

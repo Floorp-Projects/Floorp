@@ -44,7 +44,7 @@ typedef void* PrivateOSMesaContext;
 class OSMesaLibrary
 {
 public:
-    OSMesaLibrary() : mInitialized(false), mOSMesaLibrary(nsnull) {}
+    OSMesaLibrary() : mInitialized(false), mOSMesaLibrary(nullptr) {}
 
     typedef PrivateOSMesaContext (GLAPIENTRY * PFNOSMESACREATECONTEXTEXT) (GLenum, GLint, GLint, GLint, PrivateOSMesaContext);
     typedef void (GLAPIENTRY * PFNOSMESADESTROYCONTEXT) (PrivateOSMesaContext);
@@ -111,9 +111,9 @@ class GLContextOSMesa : public GLContext
 {
 public:
     GLContextOSMesa(const ContextFormat& aFormat)
-        : GLContext(aFormat, true, nsnull),
-          mThebesSurface(nsnull),
-          mContext(nsnull)
+        : GLContext(aFormat, true, nullptr),
+          mThebesSurface(nullptr),
+          mContext(nullptr)
     {
     }
 
@@ -205,7 +205,7 @@ public:
         case NativeImageSurface:
             return mThebesSurface.get();
         default:
-            return nsnull;
+            return nullptr;
         }
     }
 
@@ -222,7 +222,7 @@ private:
 already_AddRefed<GLContext>
 GLContextProviderOSMesa::CreateForWindow(nsIWidget *aWidget)
 {
-    return nsnull;
+    return nullptr;
 }
 
 already_AddRefed<GLContext>
@@ -231,7 +231,7 @@ GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
                                          const ContextFlags)
 {
     if (!sOSMesaLibrary.EnsureInitialized()) {
-        return nsnull;
+        return nullptr;
     }
 
     ContextFormat actualFormat(aFormat);
@@ -241,7 +241,7 @@ GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
 
     if (!glContext->Init(aSize))
     {
-        return nsnull;
+        return nullptr;
     }
 
     return glContext.forget();
@@ -250,7 +250,7 @@ GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
 GLContext *
 GLContextProviderOSMesa::GetGlobalContext(const ContextFlags)
 {
-    return nsnull;
+    return nullptr;
 }
 
 void

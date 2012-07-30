@@ -119,12 +119,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateQueryProcessorRDF)
 NS_INTERFACE_MAP_END
 
 nsXULTemplateQueryProcessorRDF::nsXULTemplateQueryProcessorRDF(void)
-    : mDB(nsnull),
-      mBuilder(nsnull),
+    : mDB(nullptr),
+      mBuilder(nullptr),
       mQueryProcessorRDFInited(false),
       mGenerationStarted(false),
       mUpdateBatchNest(0),
-      mSimpleRuleMemberTest(nsnull)
+      mSimpleRuleMemberTest(nullptr)
 {
     gRefCnt++;
 }
@@ -190,7 +190,7 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
     nsCOMPtr<nsIContent> root = do_QueryInterface(aRootNode);
     nsresult rv;
 
-    *aResult = nsnull;
+    *aResult = nullptr;
     *aShouldDelayBuilding = false;
 
     NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
@@ -337,10 +337,10 @@ nsXULTemplateQueryProcessorRDF::Done()
     if (mDB)
         mDB->RemoveObserver(this);
 
-    mDB = nsnull;
-    mBuilder = nsnull;
-    mRefVariable = nsnull;
-    mLastRef = nsnull;
+    mDB = nullptr;
+    mBuilder = nullptr;
+    mRefVariable = nullptr;
+    mLastRef = nullptr;
 
     mGenerationStarted = false;
     mUpdateBatchNest = 0;
@@ -355,7 +355,7 @@ nsXULTemplateQueryProcessorRDF::Done()
     mRDFTests.Clear();
     mQueries.Clear();
 
-    mSimpleRuleMemberTest = nsnull;
+    mSimpleRuleMemberTest = nullptr;
 
     mBindingDependencies.Clear();
 
@@ -387,7 +387,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         query->mMemberVariable = aMemberVariable;
 
     nsresult rv;
-    TestNode *lastnode = nsnull;
+    TestNode *lastnode = nullptr;
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(aQueryNode);
 
@@ -459,7 +459,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
     // non-scriptable nsITemplateRDFQuery
     nsRDFQuery* query = static_cast<nsRDFQuery *>(aQuery);
 
-    *aResults = nsnull;
+    *aResults = nullptr;
 
     nsCOMPtr<nsISimpleEnumerator> results;
 
@@ -545,7 +545,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
 
     if (! results) {
         // no results were found so create an empty set
-        results = new nsXULTemplateResultSetRDF(this, query, nsnull);
+        results = new nsXULTemplateResultSetRDF(this, query, nullptr);
         if (! results)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -771,7 +771,7 @@ nsXULTemplateQueryProcessorRDF::OnAssert(nsIRDFDataSource* aDataSource,
     LOG("onassert", aSource, aProperty, aTarget);
 
     Propagate(aSource, aProperty, aTarget);
-    SynchronizeAll(aSource, aProperty, nsnull, aTarget);
+    SynchronizeAll(aSource, aProperty, nullptr, aTarget);
     return NS_OK;
 }
 
@@ -793,7 +793,7 @@ nsXULTemplateQueryProcessorRDF::OnUnassert(nsIRDFDataSource* aDataSource,
     LOG("onunassert", aSource, aProperty, aTarget);
 
     Retract(aSource, aProperty, aTarget);
-    SynchronizeAll(aSource, aProperty, aTarget, nsnull);
+    SynchronizeAll(aSource, aProperty, aTarget, nullptr);
     return NS_OK;
 }
 
@@ -1258,7 +1258,7 @@ nsXULTemplateQueryProcessorRDF::CompileExtendedQuery(nsRDFQuery* aQuery,
             continue;
         }
 
-        TestNode* testnode = nsnull;
+        TestNode* testnode = nullptr;
         nsresult rv = CompileQueryChild(condition->Tag(), aQuery, condition,
                                         prevnode, &testnode);
         if (NS_FAILED(rv))
@@ -1317,7 +1317,7 @@ nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType,
                                              nsIRDFNode** aResult)
 {
     nsresult rv = NS_OK;
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     if (aParseType.EqualsLiteral(PARSE_TYPE_INTEGER)) {
         nsCOMPtr<nsIRDFInt> intLiteral;
@@ -1409,7 +1409,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
             return rv;
     }
 
-    nsRDFPropertyTestNode* testnode = nsnull;
+    nsRDFPropertyTestNode* testnode = nullptr;
 
     if (svar && ovar) {
         testnode = new nsRDFPropertyTestNode(aParentNode, this, svar, pres, ovar);
@@ -1595,7 +1595,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
         nsAutoString value;
         aQueryElement->GetAttr(attrNameSpaceID, attr, value);
 
-        TestNode* testnode = nsnull;
+        TestNode* testnode = nullptr;
 
         if (name->Equals(nsGkAtoms::iscontainer, kNameSpaceID_None) ||
             name->Equals(nsGkAtoms::isempty, kNameSpaceID_None)) {
@@ -1609,7 +1609,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
                 nsRDFConInstanceTestNode::eDontCare;
 
             static nsIContent::AttrValuesArray strings[] =
-              {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
+              {&nsGkAtoms::_true, &nsGkAtoms::_false, nullptr};
             switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
                                                    nsGkAtoms::iscontainer,
                                                    strings, eCaseMatters)) {
@@ -1832,7 +1832,7 @@ nsXULTemplateQueryProcessorRDF::RetractElement(const MemoryElement& aMemoryEleme
                     }
 
                     // a call to RemoveMemoryElements may have removed it
-                    if (!mMemoryElementToResultMap.Get(hash, nsnull))
+                    if (!mMemoryElementToResultMap.Get(hash, nullptr))
                         return;
 
                     // the array should have been reduced by one, but check

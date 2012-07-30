@@ -183,7 +183,7 @@ nsresult nsUnicodeToISO2022JP::ConvertHankaku(const PRUnichar * aSrc,
     bcw = destEnd - dest;
     res = nsUnicodeEncodeHelper::ConvertByTable(
              &tempChar, &bcr, dest, &bcw, g_ufScanClassIDs[JIS_X_208_INDEX],
-             nsnull, (uMappingTable *) g_ufMappingTables[JIS_X_208_INDEX]);
+             nullptr, (uMappingTable *) g_ufMappingTables[JIS_X_208_INDEX]);
     dest += bcw;
     if (res != NS_OK)
       break;
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
       bcr = 1;
       bcw = destEnd - dest;
       res = nsUnicodeEncodeHelper::ConvertByTable(src, &bcr, dest, &bcw, 
-                                      g_ufScanClassIDs[i], nsnull,
+                                      g_ufScanClassIDs[i], nullptr,
                                       (uMappingTable *) g_ufMappingTables[i]);
       if (res != NS_ERROR_UENC_NOMAPPING) break;
     }
@@ -244,7 +244,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
     bcr = srcEnd - src;
     bcw = destEnd - dest;
     res = nsUnicodeEncodeHelper::ConvertByTable(src, &bcr, dest, &bcw, 
-                                      g_ufScanClassIDs[i], nsnull,
+                                      g_ufScanClassIDs[i], nullptr,
                                       (uMappingTable *) g_ufMappingTables[i]);
     src += bcr;
     dest += bcw;

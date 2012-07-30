@@ -13,8 +13,8 @@
 #include <dbus/dbus-glib.h>
 
 nsDBusService::nsDBusService() {
-  mConnection = nsnull;
-  mSingleClient = nsnull;
+  mConnection = nullptr;
+  mSingleClient = nullptr;
 }
 
 nsDBusService::~nsDBusService() {
@@ -23,13 +23,13 @@ nsDBusService::~nsDBusService() {
   if (mReconnectTimer) {
     mReconnectTimer->Cancel();
   }
-  gSingleton = nsnull;
+  gSingleton = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(nsDBusService, nsDBusService)
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDBusService, NS_DBUS_IID)
 
-nsDBusService* nsDBusService::gSingleton = nsnull;
+nsDBusService* nsDBusService::gSingleton = nullptr;
 
 already_AddRefed<nsDBusService>
 nsDBusService::Get() {
@@ -46,7 +46,7 @@ nsDBusService::AddClient(DBusClient* client) {
   mSingleClient = client;
   nsresult rv = CreateConnection();
   if (NS_FAILED(rv)) {
-    mSingleClient = nsnull;
+    mSingleClient = nullptr;
   }
   return rv;
 }
@@ -54,15 +54,15 @@ nsDBusService::AddClient(DBusClient* client) {
 void
 nsDBusService::RemoveClient(DBusClient* client) {
   NS_ASSERTION(mSingleClient == client, "Removing wrong client");
-  mSingleClient = nsnull;
+  mSingleClient = nullptr;
 }
   
 DBusPendingCall*
 nsDBusService::SendWithReply(DBusClient* client, DBusMessage* message) {
-  DBusPendingCall* reply = nsnull;
+  DBusPendingCall* reply = nullptr;
   if (mConnection) {
     if (!dbus_connection_send_with_reply(mConnection, message, &reply, -1)) {
-      reply = nsnull;
+      reply = nullptr;
     }
   }
   dbus_message_unref(message);
@@ -91,7 +91,7 @@ void nsDBusService::DoTimerCallback(nsITimer *aTimer) {
     nsresult rv = CreateConnection();
     if (NS_SUCCEEDED(rv)) {
       mReconnectTimer->Cancel();
-      mReconnectTimer = nsnull;
+      mReconnectTimer = nullptr;
     }
   }
 }
@@ -107,7 +107,7 @@ void nsDBusService::DropConnection() {
       mSingleClient->UnregisterWithConnection(mConnection);
     }
     dbus_connection_unref(mConnection);
-    mConnection = nsnull;
+    mConnection = nullptr;
   }
 }
 
@@ -121,7 +121,7 @@ void nsDBusService::HandleDBusDisconnect() {
   rv = mReconnectTimer->InitWithFuncCallback(TimerCallback, this,
                                              5000, nsITimer::TYPE_REPEATING_SLACK);
   if (NS_FAILED(rv)) {
-    mReconnectTimer = nsnull;
+    mReconnectTimer = nullptr;
     return;
   }
 }

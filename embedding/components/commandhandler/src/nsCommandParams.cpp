@@ -148,7 +148,7 @@ NS_IMETHODIMP nsCommandParams::GetCStringValue(const char * name, char **_retval
 NS_IMETHODIMP nsCommandParams::GetISupportsValue(const char * name, nsISupports **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   HashEntry*  foundEntry = GetNamedEntry(name);
   if (foundEntry && foundEntry->mEntryType == eISupportsType)
@@ -256,7 +256,7 @@ nsCommandParams::GetNamedEntry(const char * name)
   if (PL_DHASH_ENTRY_IS_BUSY(foundEntry))
     return foundEntry;
    
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -278,7 +278,7 @@ nsCommandParams::GetIndexedEntry(PRInt32 index)
     entryCount ++;
   } while (++entry < limit);
 
-  return nsnull;
+  return nullptr;
 }
 
 

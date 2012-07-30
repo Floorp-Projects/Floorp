@@ -291,7 +291,7 @@ nsBinaryOutputStream::GetBuffer(PRUint32 aLength, PRUint32 aAlignMask)
 {
     if (mBufferAccess)
         return mBufferAccess->GetBuffer(aLength, aAlignMask);
-    return nsnull;
+    return nullptr;
 }
 
 NS_IMETHODIMP_(void)
@@ -789,7 +789,7 @@ nsBinaryInputStream::GetBuffer(PRUint32 aLength, PRUint32 aAlignMask)
 {
     if (mBufferAccess)
         return mBufferAccess->GetBuffer(aLength, aAlignMask);
-    return nsnull;
+    return nullptr;
 }
 
 NS_IMETHODIMP_(void)

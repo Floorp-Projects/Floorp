@@ -162,7 +162,7 @@ public:
 
   bool PaintedByGecko();
 
-  nsIWidget* GetWidget() { return mInnerView ? mWidget : nsnull; }
+  nsIWidget* GetWidget() { return mInnerView ? mWidget : nullptr; }
 
   /**
    * Adjust the plugin's idea of its size, using aSize as its new size.
@@ -187,7 +187,7 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
+  bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false);
 
   // check attributes and optionally CSS to see if we should display anything
   bool IsHidden(bool aCheckVisibilityStyle = true) const;

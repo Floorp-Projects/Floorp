@@ -37,12 +37,12 @@ LogError(const char* what)
 
 SharedMemoryBasic::SharedMemoryBasic()
   : mShmFd(-1)
-  , mMemory(nsnull)
+  , mMemory(nullptr)
 { }
 
 SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
   : mShmFd(aHandle.fd)
-  , mMemory(nsnull)
+  , mMemory(nullptr)
 { }
 
 SharedMemoryBasic::~SharedMemoryBasic()
@@ -77,16 +77,16 @@ SharedMemoryBasic::Create(size_t aNbytes)
 bool
 SharedMemoryBasic::Map(size_t nBytes)
 {
-  NS_ABORT_IF_FALSE(nsnull == mMemory, "Already Map()d");
+  NS_ABORT_IF_FALSE(nullptr == mMemory, "Already Map()d");
 
-  mMemory = mmap(nsnull, nBytes,
+  mMemory = mmap(nullptr, nBytes,
                  PROT_READ | PROT_WRITE,
                  MAP_SHARED,
                  mShmFd,
                  0);
   if (MAP_FAILED == mMemory) {
     LogError("ShmemAndroid::Map()");
-    mMemory = nsnull;
+    mMemory = nullptr;
     return false;
   }
 
@@ -121,7 +121,7 @@ SharedMemoryBasic::Unmap()
   if (munmap(mMemory, Size())) {
     LogError("ShmemAndroid::Unmap()");
   }
-  mMemory = nsnull;
+  mMemory = nullptr;
 }
 
 void

@@ -23,10 +23,10 @@
 #endif
 
 #ifdef PR_LOGGING
-PRLogModuleInfo *gWidgetLog = nsnull;
-PRLogModuleInfo *gWidgetFocusLog = nsnull;
-PRLogModuleInfo *gWidgetIMLog = nsnull;
-PRLogModuleInfo *gWidgetDrawLog = nsnull;
+PRLogModuleInfo *gWidgetLog = nullptr;
+PRLogModuleInfo *gWidgetFocusLog = nullptr;
+PRLogModuleInfo *gWidgetIMLog = nullptr;
+PRLogModuleInfo *gWidgetDrawLog = nullptr;
 #endif
 
 static int sPokeEvent;

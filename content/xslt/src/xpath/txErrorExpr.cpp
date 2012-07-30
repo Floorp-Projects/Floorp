@@ -11,7 +11,7 @@
 nsresult
 txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
 #ifdef TX_TO_STRING

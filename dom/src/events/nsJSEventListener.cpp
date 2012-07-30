@@ -66,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   if (tmp->mContext) {
     NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
-    tmp->mScopeObject = nsnull;
+    tmp->mScopeObject = nullptr;
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -166,7 +166,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   if (!handledScriptError) {
     iargv = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    NS_ENSURE_TRUE(iargv != nsnull, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(iargv != nullptr, NS_ERROR_OUT_OF_MEMORY);
     rv = iargv->AppendElement(aEvent, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -174,7 +174,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   // mContext is the same context which event listener manager pushes
   // to JS context stack.
 #ifdef DEBUG
-  JSContext* cx = nsnull;
+  JSContext* cx = nullptr;
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   NS_ASSERTION(stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx &&

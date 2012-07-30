@@ -367,7 +367,7 @@ public:
   VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
   mozilla::layers::ImageContainer* GetImageContainer()
   {
-    return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nsnull;
+    return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nullptr;
   }
 
 protected:
@@ -456,7 +456,7 @@ public:
     decoders.RemoveElement(aDecoder);
     if (decoders.IsEmpty()) {
       delete sUniqueInstance;
-      sUniqueInstance = nsnull;
+      sUniqueInstance = nullptr;
     }
   }
 

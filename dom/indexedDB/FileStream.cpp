@@ -105,7 +105,7 @@ FileStream::Close()
     NS_ASSERTION(!NS_IsMainThread(), "Performing sync IO on the main thread!");
 
     int rc = sqlite3_quota_fclose(mQuotaFile);
-    mQuotaFile = nsnull;
+    mQuotaFile = nullptr;
 
     NS_ENSURE_TRUE(rc == 0, NS_BASE_STREAM_OSERROR);
   }

@@ -26,14 +26,14 @@ struct EnumTypeData
                nsIAtom** aValue3 = 0, PRUint64 aState3 = 0) :
     mState1(aState1), mState2(aState2), mState3(aState3), mDefaultState(0),
     mAttrName(aAttrName), mValue1(aValue1), mValue2(aValue2), mValue3(aValue3),
-    mNullValue(nsnull)
+    mNullValue(nullptr)
   { }
 
   EnumTypeData(nsIAtom* aAttrName, PRUint64 aDefaultState,
                nsIAtom** aValue1, PRUint64 aState1) :
     mState1(aState1), mState2(0), mState3(0), mDefaultState(aDefaultState),
-    mAttrName(aAttrName), mValue1(aValue1), mValue2(nsnull), mValue3(nsnull),
-    mNullValue(nsnull)
+    mAttrName(aAttrName), mValue1(aValue1), mValue2(nullptr), mValue3(nullptr),
+    mNullValue(nullptr)
   { }
 
   // States applied if corresponding enum values are matched.

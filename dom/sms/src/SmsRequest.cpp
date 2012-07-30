@@ -188,7 +188,7 @@ SmsRequest::SetError(PRInt32 aError)
                   "Can't call SetError() with SUCCESS_NO_ERROR!");
 
   mDone = true;
-  mCursor = nsnull;
+  mCursor = nullptr;
 
   switch (aError) {
     case nsISmsRequestManager::NO_SIGNAL_ERROR:

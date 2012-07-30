@@ -146,7 +146,7 @@ public:
     void GetConnectionInfo(nsHttpConnectionInfo **result) \
     {                                                     \
       if (!(fwdObject)) {                                 \
-          *result = nsnull;                               \
+          *result = nullptr;                               \
           return;                                         \
       }                                                   \
         return (fwdObject)->GetConnectionInfo(result);    \
@@ -154,7 +154,7 @@ public:
     void GetSecurityInfo(nsISupports **result)            \
     {                                                     \
       if (!(fwdObject)) {                                 \
-          *result = nsnull;                               \
+          *result = nullptr;                               \
           return;                                         \
       }                                                   \
       return (fwdObject)->GetSecurityInfo(result);        \
@@ -174,7 +174,7 @@ public:
     nsISocketTransport *Transport()        \
     {                                      \
         if (!(fwdObject))                  \
-            return nsnull;                 \
+            return nullptr;                 \
         return (fwdObject)->Transport();   \
     }                                      \
     bool IsProxyConnectInProgress()                         \

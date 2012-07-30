@@ -71,7 +71,7 @@ protected:
   // are hidden and therefore aren't accessible.
   //
   // @param aContainerNode - node that contains item elements
-  void CacheSelectChildren(nsIDOMNode *aContainerNode = nsnull);
+  void CacheSelectChildren(nsIDOMNode *aContainerNode = nullptr);
 };
 
 
@@ -140,7 +140,7 @@ public:
 
 protected:
   nsIContent* GetItemByIndex(PRUint32* aIndex,
-                             Accessible* aAccessible = nsnull);
+                             Accessible* aAccessible = nullptr);
 
   bool mIsSelect1Element;
 };

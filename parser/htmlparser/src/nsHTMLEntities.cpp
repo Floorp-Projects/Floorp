@@ -60,7 +60,7 @@ static const PLDHashTableOps EntityToUnicodeOps = {
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
   PL_DHashFinalizeStub,
-  nsnull,
+  nullptr,
 }; 
 
 static const PLDHashTableOps UnicodeToEntityOps = {
@@ -71,7 +71,7 @@ static const PLDHashTableOps UnicodeToEntityOps = {
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
   PL_DHashFinalizeStub,
-  nsnull,
+  nullptr,
 };
 
 static PLDHashTable gEntityToUnicode = { 0 };
@@ -91,16 +91,16 @@ nsHTMLEntities::AddRefTable(void)
 {
   if (!gTableRefCnt) {
     if (!PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
-                           nsnull, sizeof(EntityNodeEntry),
+                           nullptr, sizeof(EntityNodeEntry),
                            PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
-      gEntityToUnicode.ops = nsnull;
+      gEntityToUnicode.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (!PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
-                           nsnull, sizeof(EntityNodeEntry),
+                           nullptr, sizeof(EntityNodeEntry),
                            PRUint32(NS_HTML_ENTITY_COUNT / 0.75))) {
       PL_DHashTableFinish(&gEntityToUnicode);
-      gEntityToUnicode.ops = gUnicodeToEntity.ops = nsnull;
+      gEntityToUnicode.ops = gUnicodeToEntity.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     for (const EntityNode *node = gEntityArray,
@@ -145,11 +145,11 @@ nsHTMLEntities::ReleaseTable(void)
 
   if (gEntityToUnicode.ops) {
     PL_DHashTableFinish(&gEntityToUnicode);
-    gEntityToUnicode.ops = nsnull;
+    gEntityToUnicode.ops = nullptr;
   }
   if (gUnicodeToEntity.ops) {
     PL_DHashTableFinish(&gUnicodeToEntity);
-    gUnicodeToEntity.ops = nsnull;
+    gUnicodeToEntity.ops = nullptr;
   }
 
 }
@@ -201,7 +201,7 @@ nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
                (PL_DHashTableOperate(&gUnicodeToEntity, NS_INT32_TO_PTR(aUnicode), PL_DHASH_LOOKUP));
                    
   if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
-  return nsnull;
+  return nullptr;
     
   return entry->node->mStr;
 }

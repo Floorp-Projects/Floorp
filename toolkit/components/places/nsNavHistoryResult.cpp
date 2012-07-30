@@ -92,7 +92,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNavHistoryResultNode)
 nsNavHistoryResultNode::nsNavHistoryResultNode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
     PRTime aTime, const nsACString& aIconURI) :
-  mParent(nsnull),
+  mParent(nullptr),
   mURI(aURI),
   mTitle(aTitle),
   mAreTagsSorted(false),
@@ -137,7 +137,7 @@ nsNavHistoryResultNode::GetParent(nsINavHistoryContainerResultNode** aParent)
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetParentResult(nsINavHistoryResult** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   if (IsContainer())
     NS_IF_ADDREF(*aResult = GetAsContainer()->mResult);
   else if (mParent)
@@ -230,7 +230,7 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
 void
 nsNavHistoryResultNode::OnRemoving()
 {
-  mParent = nsnull;
+  mParent = nullptr;
 }
 
 
@@ -252,7 +252,7 @@ nsNavHistoryResultNode::GetResult()
     node = node->mParent;
   } while (node);
   NS_NOTREACHED("No container node found in hierarchy!");
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -277,7 +277,7 @@ nsNavHistoryResultNode::GetGeneratingOptions()
       return GetAsContainer()->mOptions;
 
     NS_NOTREACHED("Can't find a generating node for this container, perhaps FillStats has not been called on this tree yet?");
-    return nsnull;
+    return nullptr;
   }
 
   // Look up the tree.  We want the options that were used to create this node,
@@ -292,7 +292,7 @@ nsNavHistoryResultNode::GetGeneratingOptions()
 
   // We should always find a container node as an ancestor.
   NS_NOTREACHED("Can't find a generating node for this container, the tree seemes corrupted.");
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -351,7 +351,7 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aIconURI, PRUint32 aContainerType, bool aReadOnly,
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryResultNode(aURI, aTitle, 0, 0, aIconURI),
-  mResult(nsnull),
+  mResult(nullptr),
   mContainerType(aContainerType),
   mExpanded(false),
   mChildrenReadOnly(aReadOnly),
@@ -366,7 +366,7 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aIconURI, PRUint32 aContainerType, bool aReadOnly,
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryResultNode(aURI, aTitle, 0, aTime, aIconURI),
-  mResult(nsnull),
+  mResult(nullptr),
   mContainerType(aContainerType),
   mExpanded(false),
   mChildrenReadOnly(aReadOnly),
@@ -541,7 +541,7 @@ nsNavHistoryContainerResultNode::CloseContainer(bool aSuppressNotifications)
 
   // Be sure to set this to null before notifying observers.  It signifies that
   // the container is no longer loading (if it was in the first place).
-  mAsyncPendingStmt = nsnull;
+  mAsyncPendingStmt = nullptr;
 
   if (!aSuppressNotifications) {
     rv = NotifyOnStateChange(oldState);
@@ -791,7 +791,7 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_FrecencyGreater;
     default:
       NS_NOTREACHED("Bad sorting type");
-      return nsnull;
+      return nullptr;
   }
 }
 
@@ -1222,7 +1222,7 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
   // have the annotation set or if both had it set but in a different storage
   // type
   if (value == 0)
-    return SortComparison_TitleLess(a, b, nsnull);
+    return SortComparison_TitleLess(a, b, nullptr);
 
   return value;
 }
@@ -1323,7 +1323,7 @@ nsNavHistoryContainerResultNode::FindChildURI(const nsACString& aSpec,
       }
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -1348,7 +1348,7 @@ nsNavHistoryContainerResultNode::FindChildContainerByName(
       }
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -1476,7 +1476,7 @@ nsNavHistoryContainerResultNode::EnsureItemPosition(PRUint32 aIndex) {
   mChildren.RemoveObjectAt(aIndex);
 
   PRUint32 newIndex = FindInsertionPoint(
-                          node, comparator,sortAnno.get(), nsnull);
+                          node, comparator,sortAnno.get(), nullptr);
   mChildren.InsertObjectAt(node.get(), newIndex);
 
   if (AreChildrenVisible()) {
@@ -1870,7 +1870,7 @@ nsNavHistoryContainerResultNode::FindNodeByDetails(const nsACString& aURIString,
   if (!mExpanded)
     return NS_ERROR_NOT_AVAILABLE;
 
-  *_retval = nsnull;
+  *_retval = nullptr;
   for (PRInt32 i = 0; i < mChildren.Count(); ++i) {
     if (mChildren[i]->mURI.Equals(aURIString) &&
         mChildren[i]->mTime == aTime &&
@@ -1934,7 +1934,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aQueryURI) :
   nsNavHistoryContainerResultNode(aQueryURI, aTitle, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  true, nsnull),
+                                  true, nullptr),
   mLiveUpdate(QUERYUPDATE_COMPLEX_WITH_BOOKMARKS),
   mHasSearchTerms(false),
   mContentsValid(false),
@@ -2207,7 +2207,7 @@ nsNavHistoryQueryResultNode::Options()
 {
   nsresult rv = VerifyQueriesParsed();
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
   NS_ASSERTION(mOptions, "Options invalid, cannot generate from URI");
   return mOptions;
 }
@@ -3479,7 +3479,7 @@ nsNavHistoryFolderResultNode::HandleCompletion(PRUint16 aReason)
     NS_ENSURE_SUCCESS(rv, rv);
 
     mExpanded = true;
-    mAsyncPendingStmt = nsnull;
+    mAsyncPendingStmt = nullptr;
 
     // Notify observers only after mExpanded and mAsyncPendingStmt are set.
     rv = NotifyOnStateChange(STATE_LOADING);
@@ -3623,7 +3623,7 @@ nsNavHistoryFolderResultNode::FindChildById(PRInt64 aItemId,
       return mChildren[i];
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -4083,7 +4083,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mObservers)
-  tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
+  tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nullptr);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mAllBookmarksObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mHistoryObservers)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -4152,7 +4152,7 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot)
 nsNavHistoryResult::~nsNavHistoryResult()
 {
   // delete all bookmark folder observer arrays which are allocated on the heap
-  mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
+  mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nullptr);
 }
 
 void
@@ -4234,7 +4234,7 @@ nsNavHistoryResult::NewHistoryResult(nsINavHistoryQuery** aQueries,
   nsresult rv = (*result)->Init(aQueries, aQueryCount, aOptions);
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
-    *result = nsnull;
+    *result = nullptr;
     return rv;
   }
 
@@ -4336,7 +4336,7 @@ nsNavHistoryResult::BookmarkFolderObserversForId(PRInt64 aFolderId, bool aCreate
   if (mBookmarkFolderObservers.Get(aFolderId, &list))
     return list;
   if (!aCreate)
-    return nsnull;
+    return nullptr;
 
   // need to create a new list
   list = new FolderObserverList;
@@ -4451,7 +4451,7 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
 {
   if (!mRootNode) {
     NS_NOTREACHED("Root is null");
-    *aRoot = nsnull;
+    *aRoot = nullptr;
     return NS_ERROR_FAILURE;
   }
   return mRootNode->QueryInterface(NS_GET_IID(nsINavHistoryContainerResultNode),

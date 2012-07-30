@@ -137,9 +137,9 @@ extern nsIParserService *sParserService;
 //---------------------------------------------------------------------------
 
 nsEditor::nsEditor()
-:  mPlaceHolderName(nsnull)
-,  mSelState(nsnull)
-,  mPhonetic(nsnull)
+:  mPlaceHolderName(nullptr)
+,  mSelState(nullptr)
+,  mPhonetic(nullptr)
 ,  mModCount(0)
 ,  mFlags(0)
 ,  mUpdateCount(0)
@@ -165,7 +165,7 @@ nsEditor::~nsEditor()
 {
   NS_ASSERTION(!mDocWeak || mDidPreDestroy, "Why PreDestroy hasn't been called?");
 
-  mTxnMgr = nsnull;
+  mTxnMgr = nullptr;
 
   delete mPhonetic;
 }
@@ -187,7 +187,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEditor)
  nsIDocument* currentDoc =
-   tmp->mRootElement ? tmp->mRootElement->GetCurrentDoc() : nsnull;
+   tmp->mRootElement ? tmp->mRootElement->GetCurrentDoc() : nullptr;
  if (currentDoc &&
      nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
@@ -255,7 +255,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *
   mUpdateCount=0;
 
   /* initialize IME stuff */
-  mIMETextNode = nsnull;
+  mIMETextNode = nullptr;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
   
@@ -320,7 +320,7 @@ nsEditor::PostCreate()
     NS_ENSURE_TRUE(ps, NS_ERROR_UNEXPECTED);
     nsPresContext* pc = ps->GetPresContext(); 
 
-    nsIMEStateManager::OnTextStateBlur(pc, nsnull);
+    nsIMEStateManager::OnTextStateBlur(pc, nullptr);
     nsIMEStateManager::OnTextStateFocus(pc, focusedContent);
 
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
@@ -372,7 +372,7 @@ nsEditor::RemoveEventListeners()
     return;
   }
   reinterpret_cast<nsEditorEventListener*>(mEventListener.get())->Disconnect();
-  mEventTarget = nsnull;
+  mEventTarget = nullptr;
 }
 
 bool
@@ -452,9 +452,9 @@ nsEditor::PreDestroy(bool aDestroyingFrames)
   mActionListeners.Clear();
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
-  mInlineSpellChecker = nsnull;
+  mInlineSpellChecker = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
-  mRootElement = nsnull;
+  mRootElement = nullptr;
 
   mDidPreDestroy = true;
   return NS_OK;
@@ -591,7 +591,7 @@ NS_IMETHODIMP
 nsEditor::GetSelectionController(nsISelectionController **aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
-  *aSel = nsnull; // init out param
+  *aSel = nullptr; // init out param
   nsCOMPtr<nsISelectionController> selCon;
   if (mSelConWeak) {
     selCon = do_QueryReferent(mSelConWeak);
@@ -618,7 +618,7 @@ NS_IMETHODIMP
 nsEditor::GetSelection(nsISelection **aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
-  *aSelection = nsnull;
+  *aSelection = nullptr;
   nsCOMPtr<nsISelectionController> selcon;
   GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
@@ -630,14 +630,14 @@ nsEditor::GetSelection()
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(getter_AddRefs(sel));
-  NS_ENSURE_SUCCESS(res, nsnull);
+  NS_ENSURE_SUCCESS(res, nullptr);
 
   nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(sel);
-  NS_ENSURE_TRUE(selPrivate, nsnull);
+  NS_ENSURE_TRUE(selPrivate, nullptr);
 
   nsRefPtr<nsFrameSelection> frameSel;
   res = selPrivate->GetFrameSelection(getter_AddRefs(frameSel));
-  NS_ENSURE_SUCCESS(res, nsnull);
+  NS_ENSURE_SUCCESS(res, nullptr);
 
   return frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
 }
@@ -652,7 +652,7 @@ nsEditor::DoTransaction(nsITransaction* aTxn)
     mPlaceHolderTxn = do_GetWeakReference(plcTxn);
     plcTxn->Init(mPlaceHolderName, mSelState, this);
     // placeholder txn took ownership of this pointer
-    mSelState = nsnull;
+    mSelState = nullptr;
 
     // QI to an nsITransaction since that's what DoTransaction() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
@@ -902,7 +902,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
   {
     // time to turn on the batch
     BeginUpdateViewBatch();
-    mPlaceHolderTxn = nsnull;
+    mPlaceHolderTxn = nullptr;
     mPlaceHolderName = aName;
     nsRefPtr<Selection> selection = GetSelection();
     if (selection) {
@@ -966,7 +966,7 @@ nsEditor::EndPlaceHolderTransaction()
       // we saved the selection state, but never got to hand it to placeholder 
       // (else we ould have nulled out this pointer), so destroy it to prevent leaks.
       delete mSelState;
-      mSelState = nsnull;
+      mSelState = nullptr;
     }
     if (mPlaceHolderTxn)  // we might have never made a placeholder if no action took place
     {
@@ -1257,14 +1257,14 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(bool autoCreate,
   if (mDidPreDestroy) {
     // Don't allow people to get or create the spell checker once the editor
     // is going away.
-    *aInlineSpellChecker = nsnull;
+    *aInlineSpellChecker = nullptr;
     return autoCreate ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
 
   // We don't want to show the spell checking UI if there are no spell check dictionaries available.
   bool canSpell = mozInlineSpellChecker::CanEnableInlineSpellChecking();
   if (!canSpell) {
-    *aInlineSpellChecker = nsnull;
+    *aInlineSpellChecker = nullptr;
     return NS_ERROR_FAILURE;
   }
 
@@ -1277,7 +1277,7 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(bool autoCreate,
   if (mInlineSpellChecker) {
     rv = mInlineSpellChecker->Init(this);
     if (NS_FAILED(rv))
-      mInlineSpellChecker = nsnull;
+      mInlineSpellChecker = nullptr;
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1308,7 +1308,7 @@ NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
     }
 
     // update the inline spell checker to reflect the new current dictionary
-    mInlineSpellChecker->SpellCheckRange(nsnull); // causes recheck
+    mInlineSpellChecker->SpellCheckRange(nullptr); // causes recheck
   }
 
   return NS_OK;
@@ -1537,7 +1537,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   nsCOMPtr<dom::Element> element;
   nsresult rv = ReplaceContainer(node, getter_AddRefs(element), aNodeType,
                                  aAttribute, aValue, aCloneAttributes);
-  *outNode = element ? element->AsDOMNode() : nsnull;
+  *outNode = element ? element->AsDOMNode() : nullptr;
   return rv;
 }
 
@@ -1552,7 +1552,7 @@ nsEditor::ReplaceContainer(nsINode* aNode,
   MOZ_ASSERT(aNode);
   MOZ_ASSERT(outNode);
 
-  *outNode = nsnull;
+  *outNode = nullptr;
 
   nsCOMPtr<nsIContent> parent = aNode->GetParent();
   NS_ENSURE_STATE(parent);
@@ -1665,7 +1665,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   nsCOMPtr<dom::Element> element;
   nsresult rv = InsertContainerAbove(node, getter_AddRefs(element), aNodeType,
                                      aAttribute, aValue);
-  *outNode = element ? element->AsDOMNode() : nsnull;
+  *outNode = element ? element->AsDOMNode() : nullptr;
   return rv;
 }
 
@@ -1826,7 +1826,7 @@ public:
     inputEvent.time = static_cast<PRUint64>(PR_Now() / 1000);
     nsEventStatus status = nsEventStatus_eIgnore;
     nsresult rv =
-      ps->HandleEventWithTarget(&inputEvent, nsnull, mTarget, &status);
+      ps->HandleEventWithTarget(&inputEvent, nullptr, mTarget, &status);
     NS_ENSURE_SUCCESS(rv, NS_OK); // print the warning if error
     return NS_OK;
   }
@@ -2029,7 +2029,7 @@ nsEditor::EndIMEComposition()
   }
 
   /* reset the data we need to construct a transaction */
-  mIMETextNode = nsnull;
+  mIMETextNode = nullptr;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
   mInIMEMode = false;
@@ -2075,7 +2075,7 @@ nsresult
 nsEditor::GetWidget(nsIWidget **aWidget)
 {
   NS_ENSURE_TRUE(aWidget, NS_ERROR_NULL_POINTER);
-  *aWidget = nsnull;
+  *aWidget = nullptr;
 
   nsCOMPtr<nsIWidget> widget;
   nsresult res = GetEditorContentWindow(GetRoot(), getter_AddRefs(widget));
@@ -2587,7 +2587,7 @@ nsresult nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     if (!len)
     {
       DeleteNode(mIMETextNode);
-      mIMETextNode = nsnull;
+      mIMETextNode = nullptr;
       static_cast<IMETextTxn*>(txn.get())->MarkFixed();  // mark the ime txn "fixed"
     }
   }
@@ -2617,7 +2617,7 @@ nsEditor::GetFirstEditableNode(nsINode* aRoot)
     node = GetNextNode(node, /* aEditableNode = */ true);
   }
 
-  return (node != aRoot) ? node : nsnull;
+  return (node != aRoot) ? node : nullptr;
 }
 
 
@@ -2794,14 +2794,14 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
   if (gNoisy) { printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", (void*)aNewLeftNode, (void*)aExistingRightNode, aOffset); }
 #endif
 
-  NS_ASSERTION(((nsnull!=aExistingRightNode) &&
-                (nsnull!=aNewLeftNode) &&
-                (nsnull!=aParent)),
+  NS_ASSERTION(((nullptr!=aExistingRightNode) &&
+                (nullptr!=aNewLeftNode) &&
+                (nullptr!=aParent)),
                 "null arg");
   nsresult result;
-  if ((nsnull!=aExistingRightNode) &&
-      (nsnull!=aNewLeftNode) &&
-      (nsnull!=aParent))
+  if ((nullptr!=aExistingRightNode) &&
+      (nullptr!=aNewLeftNode) &&
+      (nullptr!=aParent))
   {
     // get selection
     nsCOMPtr<nsISelection> selection;
@@ -2813,9 +2813,9 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
     nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
     PRInt32 selStartOffset, selEndOffset;
     result = GetStartNodeAndOffset(selection, getter_AddRefs(selStartNode), &selStartOffset);
-    if (NS_FAILED(result)) selStartNode = nsnull;  // if selection is cleared, remember that
+    if (NS_FAILED(result)) selStartNode = nullptr;  // if selection is cleared, remember that
     result = GetEndNodeAndOffset(selection, getter_AddRefs(selEndNode), &selEndOffset);
-    if (NS_FAILED(result)) selStartNode = nsnull;  // if selection is cleared, remember that
+    if (NS_FAILED(result)) selStartNode = nullptr;  // if selection is cleared, remember that
 
     nsCOMPtr<nsIDOMNode> resultNode;
     result = aParent->InsertBefore(aNewLeftNode, aExistingRightNode, getter_AddRefs(resultNode));
@@ -2934,10 +2934,10 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
     PRInt32 selStartOffset, selEndOffset, joinOffset, keepOffset;
     result = GetStartNodeAndOffset(selection, getter_AddRefs(selStartNode), &selStartOffset);
-    if (NS_FAILED(result)) selStartNode = nsnull;
+    if (NS_FAILED(result)) selStartNode = nullptr;
     result = GetEndNodeAndOffset(selection, getter_AddRefs(selEndNode), &selEndOffset);
     // Joe or Kin should comment here on why the following line is not a copy/paste error
-    if (NS_FAILED(result)) selStartNode = nsnull;
+    if (NS_FAILED(result)) selStartNode = nullptr;
 
     nsCOMPtr<nsIDOMNode> leftNode;
     if (aNodeToKeepIsFirst)
@@ -3029,7 +3029,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
         if (!aNodeToKeepIsFirst)
         { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
           result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
-          // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
+          // GetFirstChild returns nullptr firstNode if aNodeToKeep has no children, that's ok.
         }
         nsCOMPtr<nsIDOMNode> resultNode;
         // have to go through the list backwards to keep deletes from interfering with iteration
@@ -3141,7 +3141,7 @@ already_AddRefed<nsIDOMNode>
 nsEditor::GetNodeLocation(nsIDOMNode* aChild, PRInt32* outOffset)
 {
   MOZ_ASSERT(aChild && outOffset);
-  NS_ENSURE_TRUE(aChild && outOffset, nsnull);
+  NS_ENSURE_TRUE(aChild && outOffset, nullptr);
   *outOffset = -1;
 
   nsCOMPtr<nsIDOMNode> parent;
@@ -3176,7 +3176,7 @@ nsEditor::GetPriorNode(nsIDOMNode  *aParentNode,
                        bool         bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-  *aResultNode = nsnull;
+  *aResultNode = nullptr;
 
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
@@ -3200,7 +3200,7 @@ nsEditor::GetPriorNode(nsINode* aParentNode,
   if (!aOffset || aParentNode->NodeType() == nsIDOMNode::TEXT_NODE) {
     if (aNoBlockCrossing && IsBlockNode(aParentNode)) {
       // If we aren't allowed to cross blocks, don't look before this block.
-      return nsnull;
+      return nullptr;
     }
     return GetPriorNode(aParentNode, aEditableNode, aNoBlockCrossing);
   }
@@ -3230,7 +3230,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
                       bool         bNoBlockCrossing)
 {
   NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-  *aResultNode = nsnull;
+  *aResultNode = nullptr;
 
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
@@ -3252,7 +3252,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
   // if aParentNode is a text node, use its location instead
   if (aParentNode->NodeType() == nsIDOMNode::TEXT_NODE) {
     nsINode* parent = aParentNode->GetNodeParent();
-    NS_ENSURE_TRUE(parent, nsnull);
+    NS_ENSURE_TRUE(parent, nullptr);
     aOffset = parent->IndexOf(aParentNode) + 1; // _after_ the text node
     aParentNode = parent;
   }
@@ -3270,7 +3270,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
     }
 
     if (!IsDescendantOfEditorRoot(resultNode)) {
-      return nsnull;
+      return nullptr;
     }
 
     if (!aEditableNode || IsEditable(resultNode)) {
@@ -3315,7 +3315,7 @@ nsEditor::GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
   MOZ_ASSERT(aCurrentNode);
 
   if (!IsDescendantOfEditorRoot(aCurrentNode)) {
-    return nsnull;
+    return nullptr;
   }
 
   return FindNode(aCurrentNode, false, aEditableNode, aNoBlockCrossing);
@@ -3354,7 +3354,7 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
 
     nsINode *parent = cur->GetNodeParent();
     if (!parent) {
-      return nsnull;
+      return nullptr;
     }
 
     NS_ASSERTION(IsDescendantOfEditorRoot(parent),
@@ -3363,14 +3363,14 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
                  "root now!");
     if (IsEditorRoot(parent) ||
         (bNoBlockCrossing && IsBlockNode(parent))) {
-      return nsnull;
+      return nullptr;
     }
 
     cur = parent;
   }
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
-  return nsnull;
+  return nullptr;
 }
 
 nsresult
@@ -3397,7 +3397,7 @@ nsEditor::GetNextNode(nsINode* aCurrentNode,
   MOZ_ASSERT(aCurrentNode);
 
   if (!IsDescendantOfEditorRoot(aCurrentNode)) {
-    return nsnull;
+    return nullptr;
   }
 
   return FindNode(aCurrentNode, true, aEditableNode, bNoBlockCrossing);
@@ -3414,14 +3414,14 @@ nsEditor::FindNode(nsINode *aCurrentNode,
     // prevent us from accidentally editing browser content
     // when the editor is in a text widget.
 
-    return nsnull;
+    return nullptr;
   }
 
   nsIContent* candidate =
     FindNextLeafNode(aCurrentNode, aGoForward, bNoBlockCrossing);
   
   if (!candidate) {
-    return nsnull;
+    return nullptr;
   }
 
   if (!aEditableNode || IsEditable(candidate)) {
@@ -3435,7 +3435,7 @@ already_AddRefed<nsIDOMNode>
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, 
                             bool bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nsnull);
+  NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
   bool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);
@@ -3459,10 +3459,10 @@ nsIContent*
 nsEditor::GetRightmostChild(nsINode *aCurrentNode,
                             bool     bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nsnull);
+  NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsIContent *cur = aCurrentNode->GetLastChild();
   if (!cur) {
-    return nsnull;
+    return nullptr;
   }
   for (;;) {
     if (bNoBlockCrossing && IsBlockNode(cur)) {
@@ -3476,17 +3476,17 @@ nsEditor::GetRightmostChild(nsINode *aCurrentNode,
   }
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
-  return nsnull;
+  return nullptr;
 }
 
 nsIContent*
 nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
                            bool     bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nsnull);
+  NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsIContent *cur = aCurrentNode->GetFirstChild();
   if (!cur) {
-    return nsnull;
+    return nullptr;
   }
   for (;;) {
     if (bNoBlockCrossing && IsBlockNode(cur)) {
@@ -3500,14 +3500,14 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
   }
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<nsIDOMNode>
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode,
                            bool bNoBlockCrossing)
 {
-  NS_ENSURE_TRUE(aCurrentNode, nsnull);
+  NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsCOMPtr<nsIDOMNode> resultNode, temp = aCurrentNode;
   bool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);
@@ -3726,7 +3726,7 @@ IsElementVisible(dom::Element* aElement)
   // one it is.
   nsRefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nsnull, nsnull);
+                                                         nullptr, nullptr);
   if (styleContext) {
     return styleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_NONE;
   }
@@ -3839,7 +3839,7 @@ nsEditor::GetTag(nsIDOMNode *aNode)
   {
     NS_ASSERTION(aNode, "null node passed to nsEditor::Tag()");
 
-    return nsnull;
+    return nullptr;
   }
   
   return content->Tag();
@@ -3964,7 +3964,7 @@ nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
 {
   NS_ENSURE_TRUE(outStartNode && outStartOffset && aSelection, NS_ERROR_NULL_POINTER);
 
-  *outStartNode = nsnull;
+  *outStartNode = nullptr;
   *outStartOffset = 0;
 
   nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
@@ -4001,7 +4001,7 @@ nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
 {
   NS_ENSURE_TRUE(outEndNode && outEndOffset, NS_ERROR_NULL_POINTER);
 
-  *outEndNode = nsnull;
+  *outEndNode = nullptr;
     
   nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
   nsCOMPtr<nsIEnumerator> enumerator;
@@ -4047,7 +4047,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, bool *aResult)
   }
   if (content && content->IsElement()) {
     elementStyle = nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
-                                                                 nsnull,
+                                                                 nullptr,
                                                                  ps);
   }
 
@@ -4090,8 +4090,8 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
   NS_ENSURE_TRUE(node && aSplitPointParent && outOffset, NS_ERROR_NULL_POINTER);
   PRInt32 offset = aSplitPointOffset;
 
-  if (outLeftNode)  *outLeftNode  = nsnull;
-  if (outRightNode) *outRightNode = nsnull;
+  if (outLeftNode)  *outLeftNode  = nullptr;
+  if (outRightNode) *outRightNode = nullptr;
 
   nsCOMPtr<nsINode> nodeToSplit = do_QueryInterface(aSplitPointParent);
   while (nodeToSplit) {
@@ -4657,7 +4657,7 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
                                       PRInt32* aLength)
 {
   MOZ_ASSERT(aTxn);
-  *aTxn = nsnull;
+  *aTxn = nullptr;
 
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -4956,7 +4956,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, dom::Element** aContent)
     return NS_ERROR_FAILURE;
   }
 
-  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML,
+  return doc->CreateElem(aTag, nullptr, kNameSpaceID_XHTML,
                          reinterpret_cast<nsIContent**>(aContent));
 }
 
@@ -5110,7 +5110,7 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   if (selectionRootContent->GetParent()) {
     selectionPrivate->SetAncestorLimiter(selectionRootContent);
   } else {
-    selectionPrivate->SetAncestorLimiter(nsnull);
+    selectionPrivate->SetAncestorLimiter(nullptr);
   }
 
   // XXX What case needs this?
@@ -5288,10 +5288,10 @@ nsEditor::IsModifiableNode(nsINode *aNode)
 nsKeyEvent*
 nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
 {
-  NS_ENSURE_TRUE(aDOMKeyEvent, nsnull);
+  NS_ENSURE_TRUE(aDOMKeyEvent, nullptr);
   nsEvent* nativeEvent = aDOMKeyEvent->GetInternalNSEvent();
-  NS_ENSURE_TRUE(nativeEvent, nsnull);
-  NS_ENSURE_TRUE(nativeEvent->eventStructType == NS_KEY_EVENT, nsnull);
+  NS_ENSURE_TRUE(nativeEvent, nullptr);
+  NS_ENSURE_TRUE(nativeEvent->eventStructType == NS_KEY_EVENT, nullptr);
   return static_cast<nsKeyEvent*>(nativeEvent);
 }
 
@@ -5300,14 +5300,14 @@ nsEditor::GetFocusedContent()
 {
   nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
   if (!piTarget) {
-    return nsnull;
+    return nullptr;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, nsnull);
+  NS_ENSURE_TRUE(fm, nullptr);
 
   nsCOMPtr<nsIContent> content = fm->GetFocusedContent();
-  return SameCOMIdentity(content, piTarget) ? content.forget() : nsnull;
+  return SameCOMIdentity(content, piTarget) ? content.forget() : nullptr;
 }
 
 bool

@@ -35,7 +35,7 @@ SVGPathSegListSMILType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<SVGPathDataAndOwner*>(aValue.mU.mPtr);
-  aValue.mU.mPtr = nsnull;
+  aValue.mU.mPtr = nullptr;
   aValue.mType = &nsSMILNullType::sSingleton;
 }
 
@@ -160,7 +160,7 @@ AdjustSegmentForRelativeness(RelativenessAdjustmentType aAdjustmentType,
  * Helper function for AddWeightedPathSegLists, to add multiples of two
  * path-segments of the same type.
  *
- * NOTE: |aSeg1| is allowed to be nsnull, so we use |aSeg2| as the
+ * NOTE: |aSeg1| is allowed to be nullptr, so we use |aSeg2| as the
  * authoritative source of things like segment-type and boolean arc flags.
  *
  * @param aCoeff1    The coefficient to use on the first segment.
@@ -252,7 +252,7 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
 
   SVGPathDataAndOwner::const_iterator iter1, end1;
   if (aList1.IsIdentity()) {
-    iter1 = end1 = nsnull; // indicate that this is an identity list
+    iter1 = end1 = nullptr; // indicate that this is an identity list
   } else {
     iter1 = aList1.begin();
     end1 = aList1.end();
@@ -262,7 +262,7 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
 
   // Grow |aResult| if necessary. (NOTE: It's possible that aResult and aList1
   // are the same list, so this may implicitly resize aList1. That's fine,
-  // because in that case, we will have already set iter1 to nsnull above, to
+  // because in that case, we will have already set iter1 to nullptr above, to
   // record that our first operand is an identity value.)
   if (aResult.IsIdentity()) {
     DebugOnly<bool> success = aResult.SetLength(aList2.Length());

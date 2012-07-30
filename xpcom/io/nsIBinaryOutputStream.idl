@@ -71,7 +71,7 @@ interface nsIBinaryOutputStream : nsIOutputStream {
 inline nsresult
 NS_WriteOptionalStringZ(nsIBinaryOutputStream* aStream, const char* aString)
 {
-    bool nonnull = (aString != nsnull);
+    bool nonnull = (aString != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteStringZ(aString);
@@ -81,7 +81,7 @@ NS_WriteOptionalStringZ(nsIBinaryOutputStream* aStream, const char* aString)
 inline nsresult
 NS_WriteOptionalWStringZ(nsIBinaryOutputStream* aStream, const PRUnichar* aString)
 {
-    bool nonnull = (aString != nsnull);
+    bool nonnull = (aString != nullptr);
     nsresult rv = aStream->WriteBoolean(nonnull);
     if (NS_SUCCEEDED(rv) && nonnull)
         rv = aStream->WriteWStringZ(aString);

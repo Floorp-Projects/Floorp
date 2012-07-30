@@ -176,7 +176,7 @@ ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext* aGL,
                                                      GLenum aWrapMode)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
-    return nsnull;
+    return nullptr;
   }
   sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aDescriptor);
   return aGL->CreateDirectTextureImage(buffer.get(), aWrapMode);
@@ -239,7 +239,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nsnull, gc);
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc);
   return true;
 }
 
@@ -249,7 +249,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
 /*static*/ sp<GraphicBuffer>
 GrallocBufferActor::GetFrom(const SurfaceDescriptorGralloc& aDescriptor)
 {
-  GrallocBufferActor* gba = nsnull;
+  GrallocBufferActor* gba = nullptr;
   if (PGrallocBufferChild* child = aDescriptor.bufferChild()) {
     gba = static_cast<GrallocBufferActor*>(child);
   } else if (PGrallocBufferParent* parent = aDescriptor.bufferParent()) {
@@ -264,7 +264,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
                                              const SurfaceDescriptor& aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aSurface.type()) {
-    return nsnull;
+    return nullptr;
   }
 
   sp<GraphicBuffer> buffer =
@@ -285,7 +285,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
 
   nsRefPtr<gfxASurface> surf =
     new gfxImageSurface((unsigned char*)vaddr, size, byteStride, format);
-  return surf->CairoStatus() ? nsnull : surf.forget();
+  return surf->CairoStatus() ? nullptr : surf.forget();
 }
 
 /*static*/ bool

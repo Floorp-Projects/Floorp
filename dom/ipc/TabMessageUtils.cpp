@@ -20,12 +20,12 @@ bool
 ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
                 RemoteDOMEvent* aResult)
 {
-  aResult->mEvent = nsnull;
+  aResult->mEvent = nullptr;
   nsString type;
   NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &type), false);
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsEventDispatcher::CreateEvent(nsnull, nsnull, type, getter_AddRefs(event));
+  nsEventDispatcher::CreateEvent(nullptr, nullptr, type, getter_AddRefs(event));
   aResult->mEvent = do_QueryInterface(event);
   NS_ENSURE_TRUE(aResult->mEvent, false);
 

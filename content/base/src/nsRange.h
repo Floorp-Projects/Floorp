@@ -23,7 +23,7 @@ class nsRange : public nsIDOMRange,
 {
 public:
   nsRange()
-    : mRoot(nsnull)
+    : mRoot(nullptr)
     , mStartOffset(0)
     , mEndOffset(0)
     , mIsPositioned(false)

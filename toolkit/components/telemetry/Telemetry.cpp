@@ -326,7 +326,7 @@ ReflectHistogramAndSamples(JSContext *cx, JSObject *obj, Histogram *h,
   }
 
   const size_t count = h->bucket_count();
-  JSObject *rarray = JS_NewArrayObject(cx, count, nsnull);
+  JSObject *rarray = JS_NewArrayObject(cx, count, nullptr);
   if (!rarray) {
     return REFLECT_FAILURE;
   }
@@ -417,7 +417,7 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
-  JSObject *snapshot = JS_NewObject(cx, nsnull, nsnull, nsnull);
+  JSObject *snapshot = JS_NewObject(cx, nullptr, nullptr, nullptr);
   if (!snapshot)
     return JS_FALSE;
   JS::AutoObjectRooter sroot(cx, snapshot);
@@ -520,7 +520,7 @@ TelemetryImpl::ReflectSql(SlowSQLEntryType *entry, JSContext *cx, JSObject *obj)
   jsval hitCount = UINT_TO_JSVAL(entry->mData.hitCount);
   jsval totalTime = UINT_TO_JSVAL(entry->mData.totalTime);
 
-  JSObject *arrayObj = JS_NewArrayObject(cx, 0, nsnull);
+  JSObject *arrayObj = JS_NewArrayObject(cx, 0, nullptr);
   if (!arrayObj) {
     return false;
   }
@@ -1006,7 +1006,7 @@ NS_IMETHODIMP
 TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 {
   MutexAutoLock hangReportMutex(mHangReportsMutex);
-  JSObject *reportArray = JS_NewArrayObject(cx, 0, nsnull);
+  JSObject *reportArray = JS_NewArrayObject(cx, 0, nullptr);
   if (!reportArray) {
     return NS_ERROR_FAILURE;
   }
@@ -1033,7 +1033,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 
     // Represent call stack PCs as strings
     // (JS can't represent all 64-bit integer values)
-    JSObject *pcArray = JS_NewArrayObject(cx, 0, nsnull);
+    JSObject *pcArray = JS_NewArrayObject(cx, 0, nullptr);
     if (!pcArray) {
       return NS_ERROR_FAILURE;
     }
@@ -1058,7 +1058,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
     }
 
     // Record memory map info
-    JSObject *moduleArray = JS_NewArrayObject(cx, 0, nsnull);
+    JSObject *moduleArray = JS_NewArrayObject(cx, 0, nullptr);
     if (!moduleArray) {
       return NS_ERROR_FAILURE;
     }
@@ -1076,7 +1076,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       const SharedLibrary &module =
         mHangReports[i].moduleMap.GetEntry(moduleIndex);
 
-      JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nsnull);
+      JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
       if (!moduleInfoArray) {
         return NS_ERROR_FAILURE;
       }

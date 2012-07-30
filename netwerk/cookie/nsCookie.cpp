@@ -85,7 +85,7 @@ nsCookie::Create(const nsACString &aName,
   // we store the strings in-line with the nsCookie to save allocations
   void *place = ::operator new(sizeof(nsCookie) + stringLength);
   if (!place)
-    return nsnull;
+    return nullptr;
 
   // assign string members
   char *name, *value, *host, *path, *end;

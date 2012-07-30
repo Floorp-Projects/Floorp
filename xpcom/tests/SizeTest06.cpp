@@ -110,7 +110,7 @@ Test06_nsCOMPtr_optimized(nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIBaseWindow>* aBa
   nsIDocShell* temp0 = 0;
   if (window)
     window->GetDocShell(&temp0);
-  (*aBaseWindow) = do_QueryInterface(nsnull, &status);
+  (*aBaseWindow) = do_QueryInterface(nullptr, &status);
 //    return status;
 }
 

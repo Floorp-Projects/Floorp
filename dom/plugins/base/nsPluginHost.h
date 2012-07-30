@@ -130,8 +130,8 @@ public:
   NewPluginURLStream(const nsString& aURL, 
                      nsNPAPIPluginInstance *aInstance, 
                      nsNPAPIPluginStreamListener *aListener,
-                     nsIInputStream *aPostStream = nsnull,
-                     const char *aHeadersData = nsnull, 
+                     nsIInputStream *aPostStream = nullptr,
+                     const char *aHeadersData = nullptr, 
                      PRUint32 aHeadersDataLen = 0);
 
   nsresult
@@ -183,7 +183,7 @@ public:
 
   void DestroyRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag* aPluginTag);
 
-  // Return the tag for |aLibrary| if found, nsnull if not.
+  // Return the tag for |aLibrary| if found, nullptr if not.
   nsPluginTag* FindTagForLibrary(PRLibrary* aLibrary);
 
   // The last argument should be false if we already have an in-flight stream
@@ -337,7 +337,7 @@ public:
   }
 
   PluginDestructionGuard(NPP npp)
-    : mInstance(npp ? static_cast<nsNPAPIPluginInstance*>(npp->ndata) : nsnull)
+    : mInstance(npp ? static_cast<nsNPAPIPluginInstance*>(npp->ndata) : nullptr)
   {
     Init();
   }

@@ -12,7 +12,7 @@ class nsParserBase : public nsISupports
   public:
     NS_IMETHOD_(bool) IsParserEnabled() { return true; }
     NS_IMETHOD GetChannel(nsIChannel** aChannel) {
-      *aChannel = nsnull;
+      *aChannel = nullptr;
       return NS_OK;
     }
 };

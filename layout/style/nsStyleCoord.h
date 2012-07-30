@@ -309,7 +309,7 @@ inline nsStyleCoord::Calc* nsStyleCoord::GetCalcValue() const
   if (IsCalcUnit()) {
     return static_cast<Calc*>(mValue.mPointer);
   }
-  return nsnull;
+  return nullptr;
 }
 
 

@@ -146,7 +146,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
 nsresult
 RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
     nsRefPtr<txAExprResult> lResult;
     nsresult rv = mLeftExpr->evaluate(aContext, getter_AddRefs(lResult));
     NS_ENSURE_SUCCESS(rv, rv);

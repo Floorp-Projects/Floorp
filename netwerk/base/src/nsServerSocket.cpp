@@ -41,7 +41,7 @@ PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 
 nsServerSocket::nsServerSocket()
   : mLock("nsServerSocket.mLock")
-  , mFD(nsnull)
+  , mFD(nullptr)
   , mAttached(false)
 {
   // we want to be able to access the STS directly, and it may not have been
@@ -202,7 +202,7 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
   {
     NS_ASSERTION(mFD == fd, "wrong file descriptor");
     PR_Close(mFD);
-    mFD = nsnull;
+    mFD = nullptr;
   }
 
   if (mListener)
@@ -210,7 +210,7 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
     mListener->OnStopListening(this, mCondition);
 
     // need to atomically clear mListener.  see our Close() method.
-    nsIServerSocketListener *listener = nsnull;
+    nsIServerSocketListener *listener = nullptr;
     {
       MutexAutoLock lock(mLock);
       mListener.swap(listener);
@@ -254,7 +254,7 @@ nsServerSocket::Init(PRInt32 aPort, bool aLoopbackOnly, PRInt32 aBackLog)
 NS_IMETHODIMP
 nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, PRInt32 aBackLog)
 {
-  NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+  NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
 
   //
   // configure listening socket...
@@ -321,7 +321,7 @@ nsServerSocket::Close()
       if (mFD)
       {
         PR_Close(mFD);
-        mFD = nsnull;
+        mFD = nullptr;
       }
       return NS_OK;
     }
@@ -427,7 +427,7 @@ nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
 {
   // ensuring mFD implies ensuring mLock
   NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_TRUE(mListener == nsnull, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(mListener == nullptr, NS_ERROR_IN_PROGRESS);
   {
     MutexAutoLock lock(mLock);
     mListener = new ServerSocketListenerProxy(aListener);

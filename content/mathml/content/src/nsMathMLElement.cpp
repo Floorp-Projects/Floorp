@@ -113,7 +113,7 @@ nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
 
 static nsGenericElement::MappedAttributeEntry sMtableStyles[] = {
   { &nsGkAtoms::width },
-  { nsnull }
+  { nullptr }
 };
 
 static nsGenericElement::MappedAttributeEntry sTokenStyles[] = {
@@ -121,7 +121,7 @@ static nsGenericElement::MappedAttributeEntry sTokenStyles[] = {
   { &nsGkAtoms::fontsize_ },
   { &nsGkAtoms::color },
   { &nsGkAtoms::fontfamily_ },
-  { nsnull }
+  { nullptr }
 };
 
 static nsGenericElement::MappedAttributeEntry sEnvironmentStyles[] = {
@@ -129,13 +129,13 @@ static nsGenericElement::MappedAttributeEntry sEnvironmentStyles[] = {
   { &nsGkAtoms::scriptminsize_ },
   { &nsGkAtoms::scriptsizemultiplier_ },
   { &nsGkAtoms::background },
-  { nsnull }
+  { nullptr }
 };
 
 static nsGenericElement::MappedAttributeEntry sCommonPresStyles[] = {
   { &nsGkAtoms::mathcolor_ },
   { &nsGkAtoms::mathbackground_ },
-  { nsnull }
+  { nullptr }
 };
 
 bool
@@ -673,7 +673,7 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
       tag == nsGkAtoms::none         ||
       tag == nsGkAtoms::malignmark_  ||
       tag == nsGkAtoms::maligngroup_) {
-    *aURI = nsnull;
+    *aURI = nullptr;
     return false;
   }
 
@@ -697,13 +697,13 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     // result is poorly specified. Either way, we return false.
     
     static nsIContent::AttrValuesArray sTypeVals[] =
-      { &nsGkAtoms::_empty, &nsGkAtoms::simple, nsnull };
+      { &nsGkAtoms::_empty, &nsGkAtoms::simple, nullptr };
     
     static nsIContent::AttrValuesArray sShowVals[] =
-      { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+      { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
     
     static nsIContent::AttrValuesArray sActuateVals[] =
-      { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nsnull };
+      { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
     
     // Optimization: check for href first for early return
     href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
@@ -733,7 +733,7 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     return !!*aURI;
   }
 
-  *aURI = nsnull;
+  *aURI = nullptr;
   return false;
 }
 
@@ -749,7 +749,7 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
   if (aTarget.IsEmpty()) {
 
     static nsIContent::AttrValuesArray sShowVals[] =
-      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
     
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                             sShowVals, eCaseMatters)) {
@@ -773,7 +773,7 @@ already_AddRefed<nsIURI>
 nsMathMLElement::GetHrefURI() const
 {
   nsCOMPtr<nsIURI> hrefURI;
-  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nsnull;
+  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
 }
 
 nsresult

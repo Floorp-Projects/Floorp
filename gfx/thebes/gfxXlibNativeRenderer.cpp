@@ -573,7 +573,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         whiteImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
         gfxAlphaRecovery::Analysis analysis;
         if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage,
-                                            result ? &analysis : nsnull))
+                                            result ? &analysis : nullptr))
             return;
 
         ctx->SetSource(blackImage, offset);

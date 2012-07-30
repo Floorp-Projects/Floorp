@@ -105,7 +105,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
   if (mListeners.Length() == 0) {
     mKeepGoing = false;
     mon.Notify();
-    mThread = nsnull;
+    mThread = nullptr;
   }
 
   return NS_OK;

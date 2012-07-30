@@ -32,7 +32,7 @@ nsRuleData::nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
     mCanStoreInRuleTree(true),
     mPresContext(aContext),
     mStyleContext(aStyleContext),
-    mPostResolveCallback(nsnull),
+    mPostResolveCallback(nullptr),
     mValueStorage(aValueStorage)
 {
 #ifndef MOZ_VALGRIND

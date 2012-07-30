@@ -171,7 +171,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
                        txExecutionState& aEs,
                        txNodeSet** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     PRInt32 identifier = txXPathNodeUtils::getUniqueIdentifier(aRoot);
 
@@ -241,7 +241,7 @@ txKeyHash::init()
 {
     mKeyValues.Init(8);
     mIndexedKeys.Init(1);
-    mEmptyNodeSet = new txNodeSet(nsnull);
+    mEmptyNodeSet = new txNodeSet(nullptr);
 
     return NS_OK;
 }

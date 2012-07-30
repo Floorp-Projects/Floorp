@@ -100,7 +100,7 @@ NS_IMETHODIMP
 nsHTMLDataListElement::GetOptions(nsIDOMHTMLCollection** aOptions)
 {
   if (!mOptions) {
-    mOptions = new nsContentList(this, MatchOptions, nsnull, nsnull, true);
+    mOptions = new nsContentList(this, MatchOptions, nullptr, nullptr, true);
   }
 
   NS_ADDREF(*aOptions = mOptions);
