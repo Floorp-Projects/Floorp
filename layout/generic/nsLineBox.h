@@ -48,16 +48,16 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   nsFloatCacheList();
 #else
-  nsFloatCacheList() : mHead(nsnull) { }
+  nsFloatCacheList() : mHead(nullptr) { }
 #endif
   ~nsFloatCacheList();
 
   bool IsEmpty() const {
-    return nsnull == mHead;
+    return nullptr == mHead;
   }
 
   bool NotEmpty() const {
-    return nsnull != mHead;
+    return nullptr != mHead;
   }
 
   nsFloatCache* Head() const {
@@ -83,7 +83,7 @@ protected:
 
   // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
   // becomes the caller's responsibility. Returns the nsFloatCache that was
-  // before aElement, or nsnull if aElement was the first.
+  // before aElement, or nullptr if aElement was the first.
   nsFloatCache* RemoveAndReturnPrev(nsFloatCache* aElement);
   
   friend class nsFloatCacheFreeList;
@@ -98,13 +98,13 @@ public:
   nsFloatCacheFreeList();
   ~nsFloatCacheFreeList();
 #else
-  nsFloatCacheFreeList() : mTail(nsnull) { }
+  nsFloatCacheFreeList() : mTail(nullptr) { }
   ~nsFloatCacheFreeList() { }
 #endif
 
   // Reimplement trivial functions
   bool IsEmpty() const {
-    return nsnull == mHead;
+    return nullptr == mHead;
   }
 
   nsFloatCache* Head() const {
@@ -116,7 +116,7 @@ public:
   }
   
   bool NotEmpty() const {
-    return nsnull != mHead;
+    return nullptr != mHead;
   }
 
   void DeleteAll();
@@ -1357,8 +1357,8 @@ class nsLineList {
       NS_ASSERTION(!empty(), "no element to pop");
       link_type *newFirst = mLink._mNext->_mNext;
       newFirst->_mPrev = &mLink;
-      // mLink._mNext->_mNext = nsnull;
-      // mLink._mNext->_mPrev = nsnull;
+      // mLink._mNext->_mNext = nullptr;
+      // mLink._mNext->_mPrev = nullptr;
       mLink._mNext = newFirst;
     }
 
@@ -1376,8 +1376,8 @@ class nsLineList {
       NS_ASSERTION(!empty(), "no element to pop");
       link_type *newLast = mLink._mPrev->_mPrev;
       newLast->_mNext = &mLink;
-      // mLink._mPrev->_mPrev = nsnull;
-      // mLink._mPrev->_mNext = nsnull;
+      // mLink._mPrev->_mPrev = nullptr;
+      // mLink._mPrev->_mNext = nullptr;
       mLink._mPrev = newLast;
     }
 
@@ -1638,21 +1638,21 @@ public:
 private:
   nsLineBox* PrevLine() {
     if (0 == mIndex) {
-      return nsnull;
+      return nullptr;
     }
     return mLines[--mIndex];
   }
 
   nsLineBox* NextLine() {
     if (mIndex >= mNumLines - 1) {
-      return nsnull;
+      return nullptr;
     }
     return mLines[++mIndex];
   }
 
   nsLineBox* LineAt(PRInt32 aIndex) {
     if ((aIndex < 0) || (aIndex >= mNumLines)) {
-      return nsnull;
+      return nullptr;
     }
     return mLines[aIndex];
   }

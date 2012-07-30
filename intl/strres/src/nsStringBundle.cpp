@@ -211,7 +211,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
   
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsAutoString tmpstr;
 
   rv = GetStringFromID(aID, tmpstr);
@@ -235,7 +235,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   if (NS_FAILED(rv)) return rv;
 
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);
   if (NS_FAILED(rv))
@@ -352,19 +352,19 @@ nsStringBundle::FormatString(const PRUnichar *aFormatStr,
   // -alecf
   PRUnichar *text = 
     nsTextFormatter::smprintf(aFormatStr,
-                              aLength >= 1 ? aParams[0] : nsnull,
-                              aLength >= 2 ? aParams[1] : nsnull,
-                              aLength >= 3 ? aParams[2] : nsnull,
-                              aLength >= 4 ? aParams[3] : nsnull,
-                              aLength >= 5 ? aParams[4] : nsnull,
-                              aLength >= 6 ? aParams[5] : nsnull,
-                              aLength >= 7 ? aParams[6] : nsnull,
-                              aLength >= 8 ? aParams[7] : nsnull,
-                              aLength >= 9 ? aParams[8] : nsnull,
-                              aLength >= 10 ? aParams[9] : nsnull);
+                              aLength >= 1 ? aParams[0] : nullptr,
+                              aLength >= 2 ? aParams[1] : nullptr,
+                              aLength >= 3 ? aParams[2] : nullptr,
+                              aLength >= 4 ? aParams[3] : nullptr,
+                              aLength >= 5 ? aParams[4] : nullptr,
+                              aLength >= 6 ? aParams[5] : nullptr,
+                              aLength >= 7 ? aParams[6] : nullptr,
+                              aLength >= 8 ? aParams[7] : nullptr,
+                              aLength >= 9 ? aParams[8] : nullptr,
+                              aLength >= 10 ? aParams[9] : nullptr);
 
   if (!text) {
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -809,7 +809,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
       if (pos == -1) 
         pos = args.Length();
       argArray[i] = ToNewUnicode(Substring(args, offset, pos - offset));
-      if (argArray[i] == nsnull) {
+      if (argArray[i] == nullptr) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         argCount = i - 1; // don't try to free uninitialized memory
         goto done;

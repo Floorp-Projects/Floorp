@@ -133,7 +133,7 @@ nsWebSocket::PrintErrorOnConsole(const char *aBundleURI,
 
   rv = errorObject->InitWithWindowID(message.get(),
                                      NS_ConvertUTF8toUTF16(mScriptFile).get(),
-                                     nsnull, mScriptLine, 0,
+                                     nullptr, mScriptLine, 0,
                                      nsIScriptError::errorFlag, "Web Socket",
                                      mInnerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -175,7 +175,7 @@ nsWebSocket::CloseConnection(PRUint16 aReasonCode,
   // Can be called from Cancel() or Init() codepaths, so need to dispatch
   // onerror/onclose asynchronously
   ScheduleConnectionCloseEvents(
-                    nsnull,
+                    nullptr,
                     (aReasonCode == nsIWebSocketChannel::CLOSE_NORMAL ||
                      aReasonCode == nsIWebSocketChannel::CLOSE_GOING_AWAY) ?
                      NS_OK : NS_ERROR_FAILURE,
@@ -237,7 +237,7 @@ nsWebSocket::Disconnect()
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-    loadGroup->RemoveRequest(this, nsnull, NS_OK);
+    loadGroup->RemoveRequest(this, nullptr, NS_OK);
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
@@ -250,7 +250,7 @@ nsWebSocket::Disconnect()
   nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
 
   DontKeepAliveAnyMore();
-  mChannel = nsnull;
+  mChannel = nullptr;
   mDisconnected = true;
 
   return NS_OK;
@@ -746,7 +746,7 @@ nsWebSocket::EstablishConnection()
   if (loadGroup) {
     rv = wsChannel->SetLoadGroup(loadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = loadGroup->AddRequest(this, nsnull);
+    rv = loadGroup->AddRequest(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -761,7 +761,7 @@ nsWebSocket::EstablishConnection()
 
   ToLowerCase(asciiOrigin);
 
-  rv = wsChannel->AsyncOpen(mURI, asciiOrigin, this, nsnull);
+  rv = wsChannel->AsyncOpen(mURI, asciiOrigin, this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mChannel = wsChannel;
@@ -806,7 +806,7 @@ nsWebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMEvent(getter_AddRefs(event), nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // it doesn't bubble, and it isn't cancelable
@@ -816,7 +816,7 @@ nsWebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
   rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 nsresult
@@ -872,7 +872,7 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   // which does not bubble, is not cancelable, and has no default action
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
@@ -880,13 +880,13 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
                                       false, false,
                                       jsData,
                                       mUTF16Origin,
-                                      EmptyString(), nsnull);
+                                      EmptyString(), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 // Initial implementation: only stores to RAM, not file
@@ -905,7 +905,7 @@ nsWebSocket::CreateResponseBlob(const nsACString& aData, JSContext *aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   JSObject* scope = JS_GetGlobalForScopeChain(aCx);
-  return nsContentUtils::WrapNative(aCx, scope, blob, &jsData, nsnull, true);
+  return nsContentUtils::WrapNative(aCx, scope, blob, &jsData, nullptr, true);
 }
 
 nsresult
@@ -925,7 +925,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   // which does not bubble, is not cancelable, and has no default action
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMCloseEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMCloseEvent(getter_AddRefs(event), nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMCloseEvent> closeEvent = do_QueryInterface(event);
@@ -937,7 +937,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 bool
@@ -1346,7 +1346,7 @@ nsWebSocket::GetSendParams(nsIVariant *aData, nsCString &aStringOut,
   // Text message: if not already a string, turn it into one.
   // TODO: bug 704444: Correctly coerce any JS type to string
   //
-  PRUnichar* data = nsnull;
+  PRUnichar* data = nullptr;
   PRUint32 len = 0;
   rv = aData->GetAsWStringWithSize(&len, &data);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1443,7 +1443,7 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  JSContext* cx = nsnull;
+  JSContext* cx = nullptr;
   if (stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
     unsigned lineno;
     JSScript *script;
@@ -1495,7 +1495,7 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
                                  mPrincipal,
                                  originDoc,
                                  EmptyCString(),
-                                 nsnull,
+                                 nullptr,
                                  &shouldLoad,
                                  nsContentUtils::GetContentPolicy(),
                                  nsContentUtils::GetSecurityManager());
@@ -1599,7 +1599,7 @@ nsWebSocket::Resume()
 NS_IMETHODIMP
 nsWebSocket::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
-  *aLoadGroup = nsnull;
+  *aLoadGroup = nullptr;
 
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);

@@ -88,7 +88,7 @@ TransportSecurityInfo::SetHostName(const char* host)
 nsresult
 TransportSecurityInfo::GetHostName(char **host)
 {
-  *host = (mHostName) ? NS_strdup(mHostName) : nsnull;
+  *host = (mHostName) ? NS_strdup(mHostName) : nullptr;
   return NS_OK;
 }
 
@@ -217,7 +217,7 @@ NS_IMETHODIMP
 TransportSecurityInfo::GetShortSecurityDescription(PRUnichar** aText)
 {
   if (mShortDesc.IsEmpty())
-    *aText = nsnull;
+    *aText = nullptr;
   else {
     *aText = ToNewUnicode(mShortDesc);
     NS_ENSURE_TRUE(*aText, NS_ERROR_OUT_OF_MEMORY);
@@ -236,7 +236,7 @@ NS_IMETHODIMP
 TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
 {
   NS_ENSURE_ARG_POINTER(aText);
-  *aText = nsnull;
+  *aText = nullptr;
 
   if (!NS_IsMainThread()) {
     NS_ERROR("nsNSSSocketInfo::GetErrorMessage called off the main thread");
@@ -249,7 +249,7 @@ TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aText = ToNewUnicode(mErrorMessageCached);
-  return *aText != nsnull ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return *aText != nullptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 static nsresult
@@ -500,7 +500,7 @@ NS_IMETHODIMP
 TransportSecurityInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
-  *array = nsnull;
+  *array = nullptr;
   return NS_OK;
 }
 
@@ -508,21 +508,21 @@ NS_IMETHODIMP
 TransportSecurityInfo::GetHelperForLanguage(PRUint32 language,
                                             nsISupports **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TransportSecurityInfo::GetContractID(char * *aContractID)
 {
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TransportSecurityInfo::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 
@@ -637,7 +637,7 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
                          nsINSSComponent *component,
                          nsString &returnedMessage)
 {
-  const char *errorID = nsnull;
+  const char *errorID = nullptr;
   nsCOMPtr<nsIX509Cert3> cert3 = do_QueryInterface(ix509);
   if (cert3) {
     bool isSelfSigned;
@@ -707,9 +707,9 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   allNames.Truncate();
   nameCount = 0;
 
-  PRArenaPool *san_arena = nsnull;
+  PRArenaPool *san_arena = nullptr;
   SECItem altNameExtension = {siBuffer, NULL, 0 };
-  CERTGeneralName *sanNameList = nsnull;
+  CERTGeneralName *sanNameList = nullptr;
 
   nsresult rv;
   rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
@@ -815,7 +815,7 @@ AppendErrorTextMismatch(const nsString &host,
     useSAN = GetSubjectAltNames(nssCert, component, allNames, nameCount);
 
   if (!useSAN) {
-    char *certName = nsnull;
+    char *certName = nullptr;
     // currently CERT_FindNSStringExtension is not being exported by NSS.
     // If it gets exported, enable the following line.
     //   certName = CERT_FindNSStringExtension(nssCert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
@@ -901,10 +901,10 @@ GetDateBoundary(nsIX509Cert* ix509,
   if (NS_FAILED(rv))
     return;
 
-  dateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatShort, 
                                kTimeFormatNoSeconds, timeToUse, 
                                formattedDate);
-  dateTimeFormat->FormatPRTime(nsnull, kDateFormatShort,
+  dateTimeFormat->FormatPRTime(nullptr, kDateFormatShort,
                                kTimeFormatNoSeconds, now,
                                nowDate);
 }
@@ -1047,7 +1047,7 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
 // RememberCertErrorsTable
 
 /*static*/ RememberCertErrorsTable*
-RememberCertErrorsTable::sInstance = nsnull;
+RememberCertErrorsTable::sInstance = nullptr;
 
 RememberCertErrorsTable::RememberCertErrorsTable()
   : mMutex("RememberCertErrorsTable::mMutex")

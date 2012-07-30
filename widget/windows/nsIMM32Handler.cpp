@@ -16,10 +16,10 @@
 
 using namespace mozilla::widget;
 
-static nsIMM32Handler* gIMM32Handler = nsnull;
+static nsIMM32Handler* gIMM32Handler = nullptr;
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gIMM32Log = nsnull;
+PRLogModuleInfo* gIMM32Log = nullptr;
 #endif
 
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
@@ -75,7 +75,7 @@ nsIMM32Handler::Terminate()
   if (!gIMM32Handler)
     return;
   delete gIMM32Handler;
-  gIMM32Handler = nsnull;
+  gIMM32Handler = nullptr;
 }
 
 /* static */ bool
@@ -192,7 +192,7 @@ nsIMM32Handler::CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage)
 #define NO_IME_CARET -1
 
 nsIMM32Handler::nsIMM32Handler() :
-  mComposingWindow(nsnull), mCursorPosition(NO_IME_CARET), mCompositionStart(0),
+  mComposingWindow(nullptr), mCursorPosition(NO_IME_CARET), mCompositionStart(0),
   mIsComposing(false), mIsComposingOnPlugin(false),
   mNativeCaretIsCreated(false)
 {
@@ -241,7 +241,7 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, bool aForce)
     ("IMM32: CommitComposition, aForce=%s, aWindow=%p, hWnd=%08x, mComposingWindow=%p%s\n",
      aForce ? "TRUE" : "FALSE",
      aWindow, aWindow->GetWindowHandle(),
-     gIMM32Handler ? gIMM32Handler->mComposingWindow : nsnull,
+     gIMM32Handler ? gIMM32Handler->mComposingWindow : nullptr,
      gIMM32Handler && gIMM32Handler->mComposingWindow ?
        IsComposingOnOurEditor() ? " (composing on editor)" :
                                   " (composing on plug-in)" : ""));
@@ -272,7 +272,7 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
     ("IMM32: CancelComposition, aForce=%s, aWindow=%p, hWnd=%08x, mComposingWindow=%p%s\n",
      aForce ? "TRUE" : "FALSE",
      aWindow, aWindow->GetWindowHandle(),
-     gIMM32Handler ? gIMM32Handler->mComposingWindow : nsnull,
+     gIMM32Handler ? gIMM32Handler->mComposingWindow : nullptr,
      gIMM32Handler && gIMM32Handler->mComposingWindow ?
        IsComposingOnOurEditor() ? " (composing on editor)" :
                                   " (composing on plug-in)" : ""));
@@ -720,7 +720,7 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
   nsKeyEvent keyEvent(true, NS_KEY_PRESS, aWindow);
   keyEvent.keyCode = 192;
   aWindow->InitKeyEvent(keyEvent, nativeKey, modKeyState);
-  aWindow->DispatchKeyEvent(keyEvent, nsnull);
+  aWindow->DispatchKeyEvent(keyEvent, nullptr);
   sIsStatusChanged = sIsStatusChanged || (wParam == IMN_SETOPENSTATUS);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnIMENotify, sIsStatusChanged=%s\n",
@@ -894,7 +894,7 @@ nsIMM32Handler::OnIMECompositionOnPlugin(nsWindow* aWindow,
   // We should end composition if there is a committed string.
   if (IS_COMMITTING_LPARAM(lParam)) {
     mIsComposingOnPlugin = false;
-    mComposingWindow = nsnull;
+    mComposingWindow = nullptr;
   }
   // Continue composition if there is still a string being composed.
   if (IS_COMPOSING_LPARAM(lParam)) {
@@ -916,7 +916,7 @@ nsIMM32Handler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
      aWindow->GetWindowHandle(), mIsComposingOnPlugin ? "TRUE" : "FALSE"));
 
   mIsComposingOnPlugin = false;
-  mComposingWindow = nsnull;
+  mComposingWindow = nullptr;
   bool handled =
     aWindow->DispatchPluginEvent(WM_IME_ENDCOMPOSITION, wParam, lParam,
                                  false);
@@ -1307,7 +1307,7 @@ nsIMM32Handler::HandleEndComposition(nsWindow* aWindow)
   event.data = mLastDispatchedCompositionString;
   aWindow->DispatchWindowEvent(&event);
   mIsComposing = false;
-  mComposingWindow = nsnull;
+  mComposingWindow = nullptr;
   mLastDispatchedCompositionString.Truncate();
 }
 
@@ -1434,7 +1434,7 @@ nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
   // We always need top level window that is owner window of the popup window
   // even if the content of the popup window has focus.
   ResolveIMECaretPos(aWindow->GetTopLevelWindow(false),
-                     r, nsnull, screenRect);
+                     r, nullptr, screenRect);
   pCharPosition->pt.x = screenRect.x;
   pCharPosition->pt.y = screenRect.y;
 
@@ -1967,7 +1967,7 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     caretRect.width = 1;
   }
   if (!mNativeCaretIsCreated) {
-    mNativeCaretIsCreated = ::CreateCaret(aWindow->GetWindowHandle(), nsnull,
+    mNativeCaretIsCreated = ::CreateCaret(aWindow->GetWindowHandle(), nullptr,
                                           caretRect.width, caretRect.height);
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: SetIMERelatedWindowsPos, mNativeCaretIsCreated=%s, width=%ld height=%ld\n",

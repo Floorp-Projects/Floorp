@@ -29,7 +29,7 @@ nsHapticFeedback::PerformSimpleAction(PRInt32 aType)
         dbus_error_free(&err);
         return NS_ERROR_FAILURE;
     }
-    if (nsnull == connection) {
+    if (nullptr == connection) {
         return NS_ERROR_FAILURE;
     }
 

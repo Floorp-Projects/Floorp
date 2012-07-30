@@ -230,7 +230,7 @@ public:
      */
     virtual gfxPlatformFontList *CreatePlatformFontList() {
         NS_NOTREACHED("oops, this platform doesn't have a gfxPlatformFontList implementation");
-        return nsnull;
+        return nullptr;
     }
 
     /**
@@ -268,7 +268,7 @@ public:
      */
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName)
-    { return nsnull; }
+    { return nullptr; }
 
     /**
      * Activate a platform font.  (Needed to support @font-face src url().)

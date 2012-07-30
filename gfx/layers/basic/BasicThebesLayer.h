@@ -115,7 +115,7 @@ class BasicShadowableThebesLayer : public BasicThebesLayer,
 public:
   BasicShadowableThebesLayer(BasicShadowLayerManager* aManager)
     : BasicThebesLayer(aManager)
-    , mBufferTracker(nsnull)
+    , mBufferTracker(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
   {

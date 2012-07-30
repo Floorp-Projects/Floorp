@@ -102,7 +102,7 @@ static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
 static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
 
 /* Memory reporter stuff */
-static nsIMemoryReporter *gCanvasMemoryReporter = nsnull;
+static nsIMemoryReporter *gCanvasMemoryReporter = nullptr;
 static PRInt64 gCanvasMemoryUsed = 0;
 
 static PRInt64 GetCanvasMemoryUsed() {
@@ -175,12 +175,12 @@ public:
 
         nsCSSValue value;
         nsCSSParser parser;
-        if (!parser.ParseColorString(colorstr, nsnull, 0, value)) {
+        if (!parser.ParseColorString(colorstr, nullptr, 0, value)) {
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
         nscolor color;
-        if (!nsRuleNode::ComputeColor(value, nsnull, nsnull, color)) {
+        if (!nsRuleNode::ComputeColor(value, nullptr, nullptr, color)) {
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
@@ -329,7 +329,7 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot()
-        { return nsnull; }
+        { return nullptr; }
 
     NS_IMETHOD SetIsOpaque(bool isOpaque);
     NS_IMETHOD Reset();
@@ -586,7 +586,7 @@ protected:
      * If dirtyRect is given, it will contain the user-space dirty
      * rectangle of the draw operation.
      */
-    nsresult DrawPath(Style style, gfxRect *dirtyRect = nsnull);
+    nsresult DrawPath(Style style, gfxRect *dirtyRect = nullptr);
 
     /**
      * Draws a rectangle in the given style; used by FillRect and StrokeRect.
@@ -605,7 +605,7 @@ protected:
         mDocShell->GetPresShell(getter_AddRefs(shell));
         return shell.get();
       }
-      return nsnull;
+      return nullptr;
     }
 
     // text
@@ -687,18 +687,18 @@ protected:
 
         inline void SetColorStyle(Style whichStyle, nscolor color) {
             colorStyles[whichStyle] = color;
-            gradientStyles[whichStyle] = nsnull;
-            patternStyles[whichStyle] = nsnull;
+            gradientStyles[whichStyle] = nullptr;
+            patternStyles[whichStyle] = nullptr;
         }
 
         inline void SetPatternStyle(Style whichStyle, nsCanvasPattern* pat) {
-            gradientStyles[whichStyle] = nsnull;
+            gradientStyles[whichStyle] = nullptr;
             patternStyles[whichStyle] = pat;
         }
 
         inline void SetGradientStyle(Style whichStyle, nsCanvasGradient* grad) {
             gradientStyles[whichStyle] = grad;
-            patternStyles[whichStyle] = nsnull;
+            patternStyles[whichStyle] = nullptr;
         }
 
         /**
@@ -784,7 +784,7 @@ public:
     }
     void Forget()
     {
-        mContext = nsnull;
+        mContext = nullptr;
     }
 
 private:
@@ -819,8 +819,8 @@ NS_INTERFACE_MAP_END
 
 // Initialize our static variables.
 PRUint32 nsCanvasRenderingContext2D::sNumLivingContexts = 0;
-PRUint8 (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nsnull;
-PRUint8 (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nsnull;
+PRUint8 (*nsCanvasRenderingContext2D::sUnpremultiplyTable)[256] = nullptr;
+PRUint8 (*nsCanvasRenderingContext2D::sPremultiplyTable)[256] = nullptr;
 
 nsresult
 NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult)
@@ -854,8 +854,8 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     if (!sNumLivingContexts) {
         delete[] sUnpremultiplyTable;
         delete[] sPremultiplyTable;
-        sUnpremultiplyTable = nsnull;
-        sPremultiplyTable = nsnull;
+        sUnpremultiplyTable = nullptr;
+        sPremultiplyTable = nullptr;
     }
 }
 
@@ -865,13 +865,13 @@ nsCanvasRenderingContext2D::ParseColor(const nsAString& aString,
 {
     nsIDocument* document = mCanvasElement
                             ? mCanvasElement->OwnerDoc()
-                            : nsnull;
+                            : nullptr;
 
     // Pass the CSS Loader object to the parser, to allow parser error
     // reports to include the outer window ID.
-    nsCSSParser parser(document ? document->CSSLoader() : nsnull);
+    nsCSSParser parser(document ? document->CSSLoader() : nullptr);
     nsCSSValue value;
-    if (!parser.ParseColorString(aString, nsnull, 0, value)) {
+    if (!parser.ParseColorString(aString, nullptr, 0, value)) {
         return false;
     }
 
@@ -880,11 +880,11 @@ nsCanvasRenderingContext2D::ParseColor(const nsAString& aString,
     if (mCanvasElement && mCanvasElement->IsInDoc()) {
         // Inherit from the canvas element.
         parentContext = nsComputedDOMStyle::GetStyleContextForElement(
-            mCanvasElement, nsnull, presShell);
+            mCanvasElement, nullptr, presShell);
     }
 
     unused << nsRuleNode::ComputeColor(
-        value, presShell ? presShell->GetPresContext() : nsnull, parentContext,
+        value, presShell ? presShell->GetPresContext() : nullptr, parentContext,
         *aColor);
     return true;
 }
@@ -901,8 +901,8 @@ nsCanvasRenderingContext2D::Reset()
     if (mValid && !mDocShell && mSurface)
         gCanvasMemoryUsed -= mWidth * mHeight * 4;
 
-    mSurface = nsnull;
-    mThebes = nsnull;
+    mSurface = nullptr;
+    mThebes = nullptr;
     mValid = false;
     mIsEntireFrameInvalid = false;
     mPredictManyRedrawCalls = false;
@@ -945,7 +945,7 @@ nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag,
         "Canvas",
-        mCanvasElement ? mCanvasElement->OwnerDoc() : nsnull,
+        mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr,
         nsContentUtils::eDOM_PROPERTIES,
         "UnexpectedCanvasVariantStyle");
 
@@ -968,7 +968,7 @@ nsCanvasRenderingContext2D::GetStyleAsStringOrInterface(nsAString& aStr,
         *aType = CMG_STYLE_GRADIENT;
     } else {
         StyleColorToString(CurrentState().colorStyles[aWhichStyle], aStr);
-        *aInterface = nsnull;
+        *aInterface = nullptr;
         *aType = CMG_STYLE_STRING;
     }
 
@@ -1072,7 +1072,7 @@ nsCanvasRenderingContext2D::Redraw()
 
     nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
-    mCanvasElement->InvalidateCanvasContent(nsnull);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
 
     return NS_OK;
 }
@@ -1217,10 +1217,10 @@ nsCanvasRenderingContext2D::EnsureSurface()
         gfxASurface::gfxImageFormat format = GetImageFormat();
 
         if (!PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
-            nsIDocument* ownerDoc = nsnull;
+            nsIDocument* ownerDoc = nullptr;
             if (mCanvasElement)
                 ownerDoc = mCanvasElement->OwnerDoc();
-            nsRefPtr<LayerManager> layerManager = nsnull;
+            nsRefPtr<LayerManager> layerManager = nullptr;
 
             if (ownerDoc)
               layerManager =
@@ -1240,12 +1240,12 @@ nsCanvasRenderingContext2D::EnsureSurface()
             // the underlying cairo backend might not handle.
             surface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
             if (!surface || surface->CairoStatus()) {
-                surface = nsnull;
+                surface = nullptr;
             }
         }
     }
     if (surface) {
-        if (gCanvasMemoryReporter == nsnull) {
+        if (gCanvasMemoryReporter == nullptr) {
             gCanvasMemoryReporter = new NS_MEMORY_REPORTER_NAME(CanvasMemory);
             NS_RegisterMemoryReporter(gCanvasMemoryReporter);
         }
@@ -1648,7 +1648,7 @@ nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant *aValue)
     rv = aValue->GetAsAString(str);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return SetStrokeStyle_multi(str, nsnull);
+    return SetStrokeStyle_multi(str, nullptr);
 }
 
 NS_IMETHODIMP
@@ -1707,7 +1707,7 @@ nsCanvasRenderingContext2D::SetFillStyle(nsIVariant *aValue)
     rv = aValue->GetAsAString(str);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return SetFillStyle_multi(str, nsnull);
+    return SetFillStyle_multi(str, nullptr);
 }
 
 NS_IMETHODIMP
@@ -1999,10 +1999,10 @@ nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBox
     clipExtents.Inflate(blurRadius.width, blurRadius.height);
     drawExtents = drawExtents.Intersect(clipExtents - CurrentState().shadowOffset);
 
-    gfxContext* ctx = blur.Init(drawExtents, gfxIntSize(0,0), blurRadius, nsnull, nsnull);
+    gfxContext* ctx = blur.Init(drawExtents, gfxIntSize(0,0), blurRadius, nullptr, nullptr);
 
     if (!ctx)
-        return nsnull;
+        return nullptr;
 
     return ctx;
 }
@@ -2543,7 +2543,7 @@ nsCanvasRenderingContext2D::SetMozFont(const nsAString& font)
         // inherit from the canvas element
         parentContext = nsComputedDOMStyle::GetStyleContextForElement(
                 mCanvasElement,
-                nsnull,
+                nullptr,
                 presShell);
     } else {
         // otherwise inherit from default
@@ -2555,7 +2555,7 @@ nsCanvasRenderingContext2D::SetMozFont(const nsAString& font)
             return rv;
         nsCOMArray<nsIStyleRule> parentRules;
         parentRules.AppendObject(parentRule);
-        parentContext = styleSet->ResolveStyleForRules(nsnull, parentRules);
+        parentContext = styleSet->ResolveStyleForRules(nullptr, parentRules);
     }
 
     if (!parentContext)
@@ -2729,13 +2729,13 @@ TextReplaceWhitespaceCharacters(nsAutoString& str)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::FillText(const nsAString& text, float x, float y, float maxWidth)
 {
-    return DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_FILL, nsnull);
+    return DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_FILL, nullptr);
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeText(const nsAString& text, float x, float y, float maxWidth)
 {
-    return DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_STROKE, nsnull);
+    return DrawOrMeasureText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_STROKE, nullptr);
 }
 
 NS_IMETHODIMP
@@ -2781,7 +2781,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
                                                                        gfxFont::TIGHT_INK_EXTENTS :
                                                                        gfxFont::LOOSE_INK_EXTENTS,
                                                                    mThebes,
-                                                                   nsnull);
+                                                                   nullptr);
 
         // this only measures the height; the total width is gotten from the
         // the return value of ProcessText.
@@ -2812,7 +2812,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
                                           gfxFont::TIGHT_INK_EXTENTS :
                                           gfxFont::LOOSE_INK_EXTENTS,
                                       mThebes,
-                                      nsnull);
+                                      nullptr);
             point.x += textRunMetrics.mAdvanceWidth;
             // old code was:
             //   point.x += width * mAppUnitsPerDevPixel;
@@ -2826,9 +2826,9 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
                                     gfxFont::GLYPH_STROKE : gfxFont::GLYPH_FILL,
                        0,
                        mTextRun->GetLength(),
-                       nsnull,
-                       nsnull,
-                       nsnull);
+                       nullptr,
+                       nullptr,
+                       nullptr);
     }
 
     // current text run
@@ -2899,7 +2899,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         // try to find the closest context
         nsRefPtr<nsStyleContext> canvasStyle =
             nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
-                                                          nsnull,
+                                                          nullptr,
                                                           presShell);
         if (!canvasStyle)
             return NS_ERROR_FAILURE;
@@ -2947,7 +2947,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
                                       presShell->GetPresContext(),
                                       processor,
                                       nsBidiPresUtils::MODE_MEASURE,
-                                      nsnull,
+                                      nullptr,
                                       0,
                                       &totalWidthCoord,
                                       &bidiEngine);
@@ -3059,9 +3059,9 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
                                               presShell->GetPresContext(),
                                               processor,
                                               nsBidiPresUtils::MODE_DRAW,
-                                              nsnull,
+                                              nullptr,
                                               0,
-                                              nsnull,
+                                              nullptr,
                                               &bidiEngine);
             if (NS_FAILED(rv))
                 return rv;
@@ -3089,9 +3089,9 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
                                       presShell->GetPresContext(),
                                       processor,
                                       nsBidiPresUtils::MODE_DRAW,
-                                      nsnull,
+                                      nullptr,
                                       0,
-                                      nsnull,
+                                      nullptr,
                                       &bidiEngine);
 
     // this needs to be restored before function can return
@@ -3138,7 +3138,7 @@ nsCanvasRenderingContext2D::GetCurrentFontStyle()
             CurrentState().fontGroup =
                 gfxPlatform::GetPlatform()->CreateFontGroup(kDefaultFontName,
                                                             &style,
-                                                            nsnull);
+                                                            nullptr);
             if (CurrentState().fontGroup) {
                 CurrentState().font = kDefaultFontStyle;
                 rv = NS_OK;
@@ -3161,7 +3161,7 @@ nsCanvasRenderingContext2D::MakeTextRun(const PRUnichar* aText,
 {
     gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
     if (!currentFontStyle)
-        return nsnull;
+        return nullptr;
     currentFontStyle->UpdateFontList(); // ensure user font generation is current
     return currentFontStyle->MakeTextRun(aText, aLength,
                                          mThebes, aAppUnitsPerDevUnit, aFlags);
@@ -3325,7 +3325,7 @@ nsCanvasRenderingContext2D::GetMozDash(JSContext* cx, jsval* dashArray)
         return NS_ERROR_FAILURE;
 
     AutoFallibleTArray<gfxFloat, 10> dashes;
-    if (!mThebes->CurrentDash(dashes, nsnull)) {
+    if (!mThebes->CurrentDash(dashes, nullptr)) {
         dashes.SetLength(0);
     }
     return DashArrayToJSVal(dashes, cx, dashArray);
@@ -3342,7 +3342,7 @@ nsCanvasRenderingContext2D::SetMozDashOffset(float offset)
     }
 
     AutoFallibleTArray<gfxFloat, 10> dashes;
-    if (!mThebes->CurrentDash(dashes, nsnull)) {
+    if (!mThebes->CurrentDash(dashes, nullptr)) {
         // Either no dash is set or the cairo call failed.  Either
         // way, eat the error.
 
@@ -3659,7 +3659,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
 
-    NS_ENSURE_ARG(aWindow != nsnull);
+    NS_ENSURE_ARG(aWindow != nullptr);
 
     // protect against too-large surfaces that will cause allocation
     // or overflow issues
@@ -3743,7 +3743,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
 
-    NS_ENSURE_ARG(aElem != nsnull);
+    NS_ENSURE_ARG(aElem != nullptr);
 
     // We can't allow web apps to call this until we fix at least the
     // following potential security issues:
@@ -4157,7 +4157,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
 {
     if (!EnsureSurface()) {
-        *surface = nsnull;
+        *surface = nullptr;
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -4200,7 +4200,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                            LayerManager *aManager)
 {
     if (!EnsureSurface()) 
-        return nsnull;
+        return nullptr;
 
     if (!mResetLayer && aOldLayer) {
         CanvasRenderingContext2DUserData* userData =
@@ -4215,9 +4215,9 @@ nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     nsRefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
     if (!canvasLayer) {
         NS_WARNING("CreateCanvasLayer returned null!");
-        return nsnull;
+        return nullptr;
     }
-    CanvasRenderingContext2DUserData *userData = nsnull;
+    CanvasRenderingContext2DUserData *userData = nullptr;
     if (aBuilder->IsPaintingToWindow()) {
       // Make the layer tell us whenever a transaction finishes (including
       // the current transaction), so we can clear our invalidation state and

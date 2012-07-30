@@ -107,7 +107,7 @@ private:
   // Checks if the children of aContainer in the range [aStartChild, aEndChild)
   // can be inserted/appended to one insertion point together. If so, returns
   // that insertion point. If not, returns null and issues single
-  // ContentInserted calls for each child.  aEndChild = nsnull indicates that we
+  // ContentInserted calls for each child.  aEndChild = nullptr indicates that we
   // are dealing with an append.
   nsIFrame* GetRangeInsertionPoint(nsIContent* aContainer,
                                    nsIFrame* aParentFrame,
@@ -344,7 +344,7 @@ public:
   nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
                              nsIContent*   aChildContent,
                              nsIFrame**    aInsertionPoint,
-                             bool*       aMultiple = nsnull);
+                             bool*       aMultiple = nullptr);
 
   nsresult CreateListBoxContent(nsPresContext* aPresContext,
                                 nsIFrame*       aParentFrame,
@@ -1434,7 +1434,7 @@ private:
                            nsFrameItems&            aFrameItems,
                            const bool               aAllowBlockStyles,
                            PendingBinding*          aPendingBinding,
-                           nsIFrame*                aPossiblyLeafFrame = nsnull);
+                           nsIFrame*                aPossiblyLeafFrame = nullptr);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
@@ -1799,8 +1799,8 @@ private:
                                     nsIContent* aChild,
                                     bool* aIsAppend,
                                     bool* aIsRangeInsertSafe,
-                                    nsIContent* aStartSkipChild = nsnull,
-                                    nsIContent *aEndSkipChild = nsnull);
+                                    nsIContent* aStartSkipChild = nullptr,
+                                    nsIContent *aEndSkipChild = nullptr);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns

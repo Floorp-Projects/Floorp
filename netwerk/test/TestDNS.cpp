@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
         nsCOMPtr<nsPIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
         if (!dns)
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
                 nsCOMPtr<nsICancelable> req;
                 nsresult rv = dns->AsyncResolve(hostBuf,
                                                 nsIDNSService::RESOLVE_CANONICAL_NAME,
-                                                listener, nsnull, getter_AddRefs(req));
+                                                listener, nullptr, getter_AddRefs(req));
                 if (NS_FAILED(rv))
                     printf("### AsyncResolve failed [rv=%x]\n", rv);
             }
@@ -122,6 +122,6 @@ int main(int argc, char **argv)
         dns->Shutdown();
     }
 
-    NS_ShutdownXPCOM(nsnull);
+    NS_ShutdownXPCOM(nullptr);
     return 0;
 }

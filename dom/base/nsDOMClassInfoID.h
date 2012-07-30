@@ -140,7 +140,7 @@ NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
       aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {                              \
     foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
     if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
+      *aInstancePtr = nullptr;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else
@@ -151,7 +151,7 @@ NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
        aIID.Equals(NS_GET_IID(nsXPCClassInfo)))) {                            \
     foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
     if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
+      *aInstancePtr = nullptr;                                                 \
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else

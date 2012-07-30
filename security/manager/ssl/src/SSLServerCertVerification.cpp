@@ -129,7 +129,7 @@ NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass_WithParam(PRArenaPool, PORT_FreeArena, FalseParam, false)
 
 // do not use a nsCOMPtr to avoid static initializer/destructor
-nsIThreadPool * gCertVerificationThreadPool = nsnull;
+nsIThreadPool * gCertVerificationThreadPool = nullptr;
 } // unnamed namespace
 
 // Called when the socket transport thread starts, to initialize the SSL cert
@@ -384,13 +384,13 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   // cert was revoked, don't do anything else
   if (defaultErrorCodeToReport == SEC_ERROR_REVOKED_CERTIFICATE) {
     PR_SetError(SEC_ERROR_REVOKED_CERTIFICATE, 0);
-    return nsnull;
+    return nullptr;
   }
 
   if (defaultErrorCodeToReport == 0) {
     NS_ERROR("No error code set during certificate validation failure.");
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return nsnull;
+    return nullptr;
   }
 
   nsRefPtr<nsNSSCertificate> nssCert;
@@ -398,7 +398,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   if (!nssCert) {
     NS_ERROR("nsNSSCertificate::Create failed");
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
-    return nsnull;
+    return nullptr;
   }
 
   SECStatus srv;
@@ -408,7 +408,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   if (!inss) {
     NS_ERROR("do_GetService(kNSSComponentCID) failed");
     PR_SetError(defaultErrorCodeToReport, 0);
-    return nsnull;
+    return nullptr;
   }
 
   nsRefPtr<nsCERTValInParamWrapper> survivingParams;
@@ -416,20 +416,20 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
   if (NS_FAILED(nsrv)) {
     NS_ERROR("GetDefaultCERTValInParam failed");
     PR_SetError(defaultErrorCodeToReport, 0);
-    return nsnull;
+    return nullptr;
   }
   
   PRArenaPool *log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   PRArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
   if (!log_arena) {
     NS_ERROR("PORT_NewArena failed");
-    return nsnull; // PORT_NewArena set error code
+    return nullptr; // PORT_NewArena set error code
   }
 
   CERTVerifyLog *verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
   if (!verify_log) {
     NS_ERROR("PORT_ArenaZNew failed");
-    return nsnull; // PORT_ArenaZNew set error code
+    return nullptr; // PORT_ArenaZNew set error code
   }
   CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
   verify_log->arena = log_arena;
@@ -506,7 +506,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
         break;
       default:
         PR_SetError(i_node->error, 0);
-        return nsnull;
+        return nullptr;
     }
   }
 
@@ -517,7 +517,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] !collected_errors: %d\n",
            fdForLogging, static_cast<int>(defaultErrorCodeToReport)));
     PR_SetError(defaultErrorCodeToReport, 0);
-    return nsnull;
+    return nullptr;
   }
 
   infoObject->SetStatusErrorBits(*nssCert, collected_errors);
@@ -846,7 +846,7 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
     nsc = nsNSSCertificate::Create(cert);
   }
 
-  CERTCertList *certList = nsnull;
+  CERTCertList *certList = nullptr;
   certList = CERT_GetCertChainFromCert(cert, PR_Now(), certUsageSSLCA);
   if (!certList) {
     rv = SECFailure;
@@ -928,7 +928,7 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
       // Certificate verification succeeded delete any potential record
       // of certificate error bits.
       RememberCertErrorsTable::GetInstance().RememberCertHasError(infoObject,
-                                                                  nsnull, rv);
+                                                                  nullptr, rv);
     }
     else {
       // Certificate verification failed, update the status' bits.

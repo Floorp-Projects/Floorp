@@ -178,7 +178,7 @@ TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txLocPathPattern)
 txPattern*
 txLocPathPattern::getSubPatternAt(PRUint32 aPos)
 {
-    return aPos < mSteps.Length() ? mSteps[aPos].pattern.get() : nsnull;
+    return aPos < mSteps.Length() ? mSteps[aPos].pattern.get() : nullptr;
 }
 
 void

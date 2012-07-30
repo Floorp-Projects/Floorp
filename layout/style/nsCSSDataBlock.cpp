@@ -149,7 +149,7 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
     // the rest of the function.
     if (!(nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]) &
           mStyleBits))
-        return nsnull;
+        return nullptr;
 
     for (PRUint32 i = 0; i < mNumProps; i++) {
         if (PropertyAtIndex(i) == aProperty) {
@@ -157,7 +157,7 @@ nsCSSCompressedDataBlock::ValueFor(nsCSSProperty aProperty) const
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 bool
@@ -361,7 +361,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
         result_important =
             new(numPropsImportant) nsCSSCompressedDataBlock(numPropsImportant);
     } else {
-        result_important = nsnull;
+        result_important = nullptr;
     }
 
     /*

@@ -31,7 +31,7 @@ JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               PRUint32* aLineno)
 {
-  JSScript* script = nsnull;
+  JSScript* script = nullptr;
   unsigned lineno = 0;
 
   if (!JS_DescribeScriptedCaller(aContext, &script, &lineno)) {
@@ -51,7 +51,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
-    return nsnull;
+    return nullptr;
 
   glob = JS_GetGlobalForObject(aContext, glob);
   NS_ABORT_IF_FALSE(glob, "Infallible returns null");
@@ -66,7 +66,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   if (!(clazz->flags & JSCLASS_HAS_PRIVATE) ||
       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
       !(supports = (nsISupports*)::JS_GetPrivate(glob))) {
-    return nsnull;
+    return nullptr;
   }
 
   // We might either have a window directly (e.g. if the global is a
@@ -78,7 +78,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(supports));
   if (!sgo) {
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
-    NS_ENSURE_TRUE(wrapper, nsnull);
+    NS_ENSURE_TRUE(wrapper, nullptr);
     sgo = do_QueryWrappedNative(wrapper);
   }
 
@@ -92,7 +92,7 @@ nsJSUtils::GetStaticScriptContext(JSContext* aContext, JSObject* aObj)
 {
   nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aContext, aObj);
   if (!nativeGlobal)
-    return nsnull;
+    return nullptr;
 
   return nativeGlobal->GetScriptContext();
 }
@@ -102,7 +102,7 @@ nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext)
 {
   nsIScriptContext *scriptCX = GetDynamicScriptContext(aContext);
   if (!scriptCX)
-    return nsnull;
+    return nullptr;
   return scriptCX->GetGlobalObject();
 }
 

@@ -97,8 +97,8 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
         char *state;
 
         for (char *name = PL_strtok_r(list.BeginWriting(), " ", &state);
-                nsnull != name;
-                name = PL_strtok_r(nsnull, " ", &state)
+                nullptr != name;
+                name = PL_strtok_r(nullptr, " ", &state)
         ) {
             if (0 != strcmp(name, "default")) {
                 nsCAutoString fullName(NS_POSTSCRIPT_DRIVER_NAME);

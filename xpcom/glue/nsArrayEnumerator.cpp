@@ -64,7 +64,7 @@ nsSimpleArrayEnumerator::GetNext(nsISupports** aResult)
         return NS_ERROR_NULL_POINTER;
 
     if (!mValueArray) {
-        *aResult = nsnull;
+        *aResult = nullptr;
         return NS_OK;
     }
 
@@ -82,7 +82,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsIArray* array)
 {
     nsSimpleArrayEnumerator* enumer = new nsSimpleArrayEnumerator(array);
-    if (enumer == nsnull)
+    if (enumer == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*result = enumer);
@@ -163,7 +163,7 @@ nsCOMArrayEnumerator::GetNext(nsISupports** aResult)
 
     // this really isn't necessary. just pretend this happens, since
     // we'll never visit this value again!
-    // mValueArray[(mIndex-1)] = nsnull;
+    // mValueArray[(mIndex-1)] = nullptr;
     
     return NS_OK;
 }
@@ -180,7 +180,7 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray)
     // do the actual allocation
     nsCOMArrayEnumerator * result =
         static_cast<nsCOMArrayEnumerator*>(::operator new(size));
-    NS_ENSURE_TRUE(result, nsnull);
+    NS_ENSURE_TRUE(result, nullptr);
 
     // now need to copy over the values, and addref each one
     // now this might seem like a lot of work, but we're actually just

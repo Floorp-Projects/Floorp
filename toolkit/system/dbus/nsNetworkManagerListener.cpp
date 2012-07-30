@@ -69,7 +69,7 @@ nsNetworkManagerListener::Init() {
     return NS_ERROR_OUT_OF_MEMORY;
   nsresult rv = mDBUS->AddClient(this);
   if (NS_FAILED(rv)) {
-    mDBUS = nsnull;
+    mDBUS = nullptr;
     return rv;
   }
   if (!mOK)

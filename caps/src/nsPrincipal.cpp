@@ -73,8 +73,8 @@ nsBasePrincipal::Release()
 }
 
 nsBasePrincipal::nsBasePrincipal()
-  : mCapabilities(nsnull),
-    mSecurityPolicy(nsnull),
+  : mCapabilities(nullptr),
+    mSecurityPolicy(nullptr),
     mTrusted(false)
 {
   if (!gIsObservingCodeBasePrincipalSupport) {
@@ -90,7 +90,7 @@ nsBasePrincipal::nsBasePrincipal()
 
 nsBasePrincipal::~nsBasePrincipal(void)
 {
-  SetSecurityPolicy(nsnull); 
+  SetSecurityPolicy(nullptr); 
   delete mCapabilities;
 }
 
@@ -98,7 +98,7 @@ NS_IMETHODIMP
 nsBasePrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 {
   if (mSecurityPolicy && mSecurityPolicy->IsInvalid()) 
-    SetSecurityPolicy(nsnull);
+    SetSecurityPolicy(nullptr);
   
   *aSecurityPolicy = (void *) mSecurityPolicy;
   return NS_OK;
@@ -123,7 +123,7 @@ nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
 {
   bool otherHasCert;
   aOther->GetHasCertificate(&otherHasCert);
-  if (otherHasCert != (mCert != nsnull)) {
+  if (otherHasCert != (mCert != nullptr)) {
     // One has a cert while the other doesn't.  Not equal.
     return false;
   }
@@ -288,7 +288,7 @@ nsresult
 nsBasePrincipal::SetCapability(const char *capability, void **annotation,
                                AnnotationValue value)
 {
-  if (*annotation == nsnull) {
+  if (*annotation == nullptr) {
     nsHashtable* ht = new nsHashtable(5);
 
     if (!ht) {
@@ -326,7 +326,7 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
 NS_IMETHODIMP
 nsBasePrincipal::GetHasCertificate(bool* aResult)
 {
-  *aResult = (mCert != nsnull);
+  *aResult = (mCert != nullptr);
 
   return NS_OK;
 }
@@ -388,7 +388,7 @@ nsBasePrincipal::GetCertificate(nsISupports** aCertificate)
     NS_IF_ADDREF(*aCertificate = mCert->cert);
   }
   else {
-    *aCertificate = nsnull;
+    *aCertificate = nullptr;
   }
   return NS_OK;
 }
@@ -472,18 +472,18 @@ nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
     mPrefName.Append(".id");
   }
 
-  *aPrefName = nsnull;
-  *aID = nsnull;
-  *aSubjectName = nsnull;
-  *aGrantedList = nsnull;
-  *aDeniedList = nsnull;
+  *aPrefName = nullptr;
+  *aID = nullptr;
+  *aSubjectName = nullptr;
+  *aGrantedList = nullptr;
+  *aDeniedList = nullptr;
   *aIsTrusted = mTrusted;
 
-  char *prefName = nsnull;
-  char *id = nsnull;
-  char *subjectName = nsnull;
-  char *granted = nsnull;
-  char *denied = nsnull;
+  char *prefName = nullptr;
+  char *id = nullptr;
+  char *subjectName = nullptr;
+  char *granted = nullptr;
+  char *denied = nullptr;
 
   //-- Preference name
   prefName = ToNewCString(mPrefName);
@@ -670,7 +670,7 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
     return NS_ERROR_FAILURE;
   }
 
-  *aOrigin = nsnull;
+  *aOrigin = nullptr;
 
   nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
   if (!origin) {
@@ -826,7 +826,7 @@ nsPrincipal::GetURI(nsIURI** aURI)
   }
 
   if (!mCodebase) {
-    *aURI = nsnull;
+    *aURI = nullptr;
     return NS_OK;
   }
 
@@ -862,7 +862,7 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
 
         if (aReport) {
           nsScriptSecurityManager::ReportError(
-            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+            nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
         }
 
         return NS_ERROR_DOM_BAD_URI;
@@ -889,7 +889,7 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
           targetIsDir) {
         if (aReport) {
           nsScriptSecurityManager::ReportError(
-            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+            nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
         }
 
         return NS_ERROR_DOM_BAD_URI;
@@ -921,7 +921,7 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport)
 
     if (aReport) {
       nsScriptSecurityManager::ReportError(
-        nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+        nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
     }
     
     return NS_ERROR_DOM_BAD_URI;
@@ -957,7 +957,7 @@ NS_IMETHODIMP
 nsPrincipal::GetDomain(nsIURI** aDomain)
 {
   if (!mDomain) {
-    *aDomain = nsnull;
+    *aDomain = nullptr;
     return NS_OK;
   }
 
@@ -976,7 +976,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   mDomainImmutable = URIIsImmutable(mDomain);
   
   // Domain has changed, forget cached security policy
-  SetSecurityPolicy(nsnull);
+  SetSecurityPolicy(nullptr);
 
   // Recompute all wrappers between compartments using this principal and other
   // non-chrome compartments.
@@ -1026,7 +1026,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     }
   }
   else {
-    rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nsnull);
+    rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nullptr);
     if (NS_FAILED(rv)) {
       NS_ERROR("Malformed URI in capability.principal preference.");
       return rv;
@@ -1217,7 +1217,7 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     return rv;
   }
 
-  rv = aStream->WriteBoolean(mCert != nsnull);
+  rv = aStream->WriteBoolean(mCert != nullptr);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1316,7 +1316,7 @@ nsExpandedPrincipal::~nsExpandedPrincipal()
 NS_IMETHODIMP 
 nsExpandedPrincipal::GetDomain(nsIURI** aDomain)
 {
-  *aDomain = nsnull;
+  *aDomain = nullptr;
   return NS_OK;
 }
 
@@ -1447,7 +1447,7 @@ nsExpandedPrincipal::GetHashValue(PRUint32* result)
 NS_IMETHODIMP
 nsExpandedPrincipal::GetURI(nsIURI** aURI)
 {
-  *aURI = nsnull;
+  *aURI = nullptr;
   return NS_OK;
 }
 

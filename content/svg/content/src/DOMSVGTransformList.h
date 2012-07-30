@@ -60,7 +60,7 @@ public:
     // unlinked us using the cycle collector code, then that has already
     // happened, and mAList is null.
     if (mAList) {
-      ( IsAnimValList() ? mAList->mAnimVal : mAList->mBaseVal ) = nsnull;
+      ( IsAnimValList() ? mAList->mAnimVal : mAList->mBaseVal ) = nullptr;
     }
   }
 

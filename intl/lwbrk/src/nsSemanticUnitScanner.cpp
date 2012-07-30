@@ -30,7 +30,7 @@ NS_IMETHODIMP nsSemanticUnitScanner::Start(const char *characterSet)
 NS_IMETHODIMP nsSemanticUnitScanner::Next(const PRUnichar *text, PRInt32 length, PRInt32 pos, bool isLastBuffer, PRInt32 *begin, PRInt32 *end, bool *_retval)
 {
     // xxx need to bullet proff and check input pointer 
-    //  make sure begin, end and _retval is not nsnull here
+    //  make sure begin, end and _retval is not nullptr here
 
     // if we reach the end, just return
     if (pos >= length) {

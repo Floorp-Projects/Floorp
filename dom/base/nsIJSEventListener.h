@@ -49,7 +49,7 @@ public:
 
   void Disconnect()
   {
-    mTarget = nsnull;
+    mTarget = nullptr;
   }
 
   JSObject* GetEventScope() const

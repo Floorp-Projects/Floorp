@@ -119,7 +119,7 @@ public:
     if (!gBookmarksService) {
       nsCOMPtr<nsINavBookmarksService> serv =
         do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
-      NS_ENSURE_TRUE(serv, nsnull);
+      NS_ENSURE_TRUE(serv, nullptr);
       NS_ASSERTION(gBookmarksService,
                    "Should have static instance pointer now");
     }
@@ -307,7 +307,7 @@ private:
    *  @param aItemId
    *         The itemId to insert, pass -1 to generate a new one.
    *  @param aPlaceId
-   *         The placeId to which this bookmark refers to, pass nsnull for
+   *         The placeId to which this bookmark refers to, pass nullptr for
    *         items that don't refer to an URI (eg. folders, separators, ...).
    *  @param aItemType
    *         The type of the new bookmark, see TYPE_* constants.

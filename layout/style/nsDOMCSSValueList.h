@@ -36,7 +36,7 @@ public:
 
   nsIDOMCSSValue* GetItemAt(PRUint32 aIndex)
   {
-    return mCSSValues.SafeElementAt(aIndex, nsnull);
+    return mCSSValues.SafeElementAt(aIndex, nullptr);
   }
 
   static nsDOMCSSValueList* FromSupports(nsISupports* aSupports)

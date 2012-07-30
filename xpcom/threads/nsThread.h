@@ -55,7 +55,7 @@ private:
 
   ~nsThread();
 
-  bool ShuttingDown() { return mShutdownContext != nsnull; }
+  bool ShuttingDown() { return mShutdownContext != nullptr; }
 
   static void ThreadFunc(void *arg);
 
@@ -108,7 +108,7 @@ public:
   }
 
   bool IsPending() {
-    return mSyncTask != nsnull;
+    return mSyncTask != nullptr;
   }
 
   nsresult Result() {

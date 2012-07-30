@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGLength)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGLength)
   // We may not belong to a list, so we must null check tmp->mList.
   if (tmp->mList) {
-    tmp->mList->mItems[tmp->mListIndex] = nsnull;
+    tmp->mList->mItems[tmp->mListIndex] = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -68,7 +68,7 @@ DOMSVGLength::DOMSVGLength(DOMSVGLengthList *aList,
 }
 
 DOMSVGLength::DOMSVGLength()
-  : mList(nsnull)
+  : mList(nullptr)
   , mListIndex(0)
   , mAttrEnum(0)
   , mIsAnimValItem(false)
@@ -280,7 +280,7 @@ DOMSVGLength::ConvertToSpecifiedUnits(PRUint16 aUnit)
     }
   } else {
     SVGLength len(mValue, mUnit);
-    if (len.ConvertToUnit(PRUint8(aUnit), nsnull, 0)) {
+    if (len.ConvertToUnit(PRUint8(aUnit), nullptr, 0)) {
       mValue = len.GetValueInCurrentUnits();
       mUnit = aUnit;
       return NS_OK;
@@ -312,7 +312,7 @@ DOMSVGLength::RemovingFromList()
 {
   mValue = InternalItem().GetValueInCurrentUnits();
   mUnit  = InternalItem().GetUnit();
-  mList = nsnull;
+  mList = nullptr;
   mIsAnimValItem = false;
 }
 

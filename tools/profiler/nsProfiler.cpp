@@ -127,7 +127,7 @@ nsProfiler::GetResponsivenessTimes(PRUint32 *aCount, double **aResult)
   const double* times = SAMPLER_GET_RESPONSIVENESS();
   if (!times) {
     *aCount = 0;
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_OK;
   }
 
@@ -148,7 +148,7 @@ nsProfiler::GetFeatures(PRUint32 *aCount, char ***aFeatures)
   const char **features = SAMPLER_GET_FEATURES();
   if (!features) {
     *aCount = 0;
-    *aFeatures = nsnull;
+    *aFeatures = nullptr;
     return NS_OK;
   }
 

@@ -48,7 +48,7 @@ public:
         : mProcessor(aProcessor),
           mQuery(aQuery),
           mInstantiations(aInstantiations),
-          mCurrent(nsnull),
+          mCurrent(nullptr),
           mCheckedNext(false)
     { }
 

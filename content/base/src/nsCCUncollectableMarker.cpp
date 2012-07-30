@@ -306,7 +306,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
   nsCOMPtr<nsIWindowMediator> med =
     do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
   if (med) {
-    rv = med->GetEnumerator(nsnull, getter_AddRefs(windowList));
+    rv = med->GetEnumerator(nullptr, getter_AddRefs(windowList));
     NS_ENSURE_SUCCESS(rv, rv);
 
     MarkWindowList(windowList, cleanupJS, prepareForCC);

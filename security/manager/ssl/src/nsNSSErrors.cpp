@@ -17,7 +17,7 @@ nsNSSErrors::getDefaultErrorStringName(PRErrorCode err)
 const char *
 nsNSSErrors::getOverrideErrorStringName(PRErrorCode aErrorCode)
 {
-  const char *id_str = nsnull;
+  const char *id_str = nullptr;
 
   switch (aErrorCode) {
     case SSL_ERROR_SSL_DISABLED:

@@ -97,7 +97,7 @@ NS_StringGetMutableData(nsAString &aStr, PRUint32 aDataLength,
   if (aDataLength != PR_UINT32_MAX) {
     aStr.SetLength(aDataLength);
     if (aStr.Length() != aDataLength) {
-      *aData = nsnull;
+      *aData = nullptr;
       return 0;
     }
   }
@@ -256,7 +256,7 @@ NS_CStringGetMutableData(nsACString &aStr, PRUint32 aDataLength, char **aData)
   if (aDataLength != PR_UINT32_MAX) {
     aStr.SetLength(aDataLength);
     if (aStr.Length() != aDataLength) {
-      *aData = nsnull;
+      *aData = nullptr;
       return 0;
     }
   }

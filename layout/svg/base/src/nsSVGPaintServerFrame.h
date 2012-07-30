@@ -47,7 +47,7 @@ public:
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
-                          const gfxRect *aOverrideBounds = nsnull) = 0;
+                          const gfxRect *aOverrideBounds = nullptr) = 0;
 
   /**
    * Configure paint server prior to rendering

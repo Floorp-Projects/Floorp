@@ -57,7 +57,7 @@ DoWorkRunnable::Notify(nsITimer* aTimer)
 }
 
 MessagePump::MessagePump()
-: mThread(nsnull)
+: mThread(nullptr)
 {
   mDoWorkEvent = new DoWorkRunnable(this);
 }
@@ -181,7 +181,7 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
 
 #ifdef DEBUG
 namespace {
-MessagePump::Delegate* gFirstDelegate = nsnull;
+MessagePump::Delegate* gFirstDelegate = nullptr;
 }
 #endif
 
@@ -190,7 +190,7 @@ MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
 {
   if (mFirstRun) {
 #ifdef DEBUG
-    NS_ASSERTION(aDelegate && gFirstDelegate == nsnull, "Huh?!");
+    NS_ASSERTION(aDelegate && gFirstDelegate == nullptr, "Huh?!");
     gFirstDelegate = aDelegate;
 #endif
     mFirstRun = false;
@@ -199,7 +199,7 @@ MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
     }
 #ifdef DEBUG
     NS_ASSERTION(aDelegate && aDelegate == gFirstDelegate, "Huh?!");
-    gFirstDelegate = nsnull;
+    gFirstDelegate = nullptr;
 #endif
     return;
   }

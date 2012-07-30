@@ -54,7 +54,7 @@ public:
   // Return structural information about a line. aFirstFrameOnLine is
   // the first frame on the line and aNumFramesOnLine is the number of
   // frames that are on the line. If the line-number is invalid then
-  // aFirstFrameOnLine will be nsnull and aNumFramesOnLine will be
+  // aFirstFrameOnLine will be nullptr and aNumFramesOnLine will be
   // zero.
   //
   // For valid line numbers, aLineBounds is set to the bounding box of
@@ -106,7 +106,7 @@ public:
 class nsAutoLineIterator
 {
 public:
-  nsAutoLineIterator() : mRawPtr(nsnull) { }
+  nsAutoLineIterator() : mRawPtr(nullptr) { }
   nsAutoLineIterator(nsILineIterator *i) : mRawPtr(i) { }
 
   ~nsAutoLineIterator() {

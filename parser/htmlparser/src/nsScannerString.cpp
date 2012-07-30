@@ -21,7 +21,7 @@ nsScannerBufferList::AllocBufferFromString( const nsAString& aString )
     PRUint32 len = aString.Length();
 
     if (len > MAX_CAPACITY)
-      return nsnull;
+      return nullptr;
 
     Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (len + 1) * sizeof(PRUnichar));
     if (buf)
@@ -46,7 +46,7 @@ nsScannerBufferList::Buffer*
 nsScannerBufferList::AllocBuffer( PRUint32 capacity )
   {
     if (capacity > MAX_CAPACITY)
-      return nsnull;
+      return nullptr;
 
     Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (capacity + 1) * sizeof(PRUnichar));
     if (buf)
@@ -139,16 +139,16 @@ nsScannerBufferList::Position::Distance( const Position& aStart, const Position&
  */
 
 nsScannerSubstring::nsScannerSubstring()
-  : mStart(nsnull, nsnull)
-  , mEnd(nsnull, nsnull)
-  , mBufferList(nsnull)
+  : mStart(nullptr, nullptr)
+  , mEnd(nullptr, nullptr)
+  , mBufferList(nullptr)
   , mLength(0)
   , mIsDirty(true)
   {
   }
 
 nsScannerSubstring::nsScannerSubstring( const nsAString& s )
-  : mBufferList(nsnull)
+  : mBufferList(nullptr)
   , mIsDirty(true)
   {
     Rebind(s);
@@ -429,8 +429,8 @@ nsScannerSharedSubstring::Rebind(const nsScannerIterator &aStart,
     mBufferList = bufferList;
     mString.Rebind(aStart.mPosition, aEnd.mPosition);
   } else {
-    mBuffer = nsnull;
-    mBufferList = nsnull;
+    mBuffer = nullptr;
+    mBufferList = nullptr;
     CopyUnicodeTo(aStart, aEnd, mString);
   }
 }
@@ -452,8 +452,8 @@ nsScannerSharedSubstring::MakeMutable()
 
   ReleaseBuffer();
 
-  mBuffer = nsnull;
-  mBufferList = nsnull;
+  mBuffer = nullptr;
+  mBufferList = nullptr;
 }
 
   /**

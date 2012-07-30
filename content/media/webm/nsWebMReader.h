@@ -53,7 +53,7 @@ private:
 class PacketQueueDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* anObject) {
     delete static_cast<NesteggPacketHolder*>(anObject);
-    return nsnull;
+    return nullptr;
   }
 };
 

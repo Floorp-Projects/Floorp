@@ -110,7 +110,7 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 nsresult
 nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap )
 {
-    *outBitmap = nsnull;
+    *outBitmap = nullptr;
 
     nsRefPtr<gfxImageSurface> frame;
     nsresult rv = inImage->CopyFrame(imgIContainer::FRAME_CURRENT,
@@ -180,7 +180,7 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
   NS_ENSURE_ARG_POINTER (aInputStream);
   NS_ENSURE_ARG_POINTER (aMIMEFormat);
   nsresult rv;
-  *aInputStream = nsnull;
+  *aInputStream = nullptr;
 
   // pull the size information out of the BITMAPINFO header and
   // initialize the image

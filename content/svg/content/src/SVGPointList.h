@@ -159,7 +159,7 @@ class SVGPointListAndInfo : public SVGPointList
 {
 public:
 
-  SVGPointListAndInfo(nsSVGElement *aElement = nsnull)
+  SVGPointListAndInfo(nsSVGElement *aElement = nullptr)
     : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
   {}
 

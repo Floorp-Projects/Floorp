@@ -67,7 +67,7 @@ struct SCTableData {
     } data;
 
     SCTableData(nsCStringKey* aKey) : key(aKey) {
-        data.state = nsnull;
+        data.state = nullptr;
     }
 };
 #endif // __nsstreamconverterservice__h___

@@ -69,7 +69,7 @@ public:
      * @param resultSurface if non-null, we will try to capture a copy of the
      * rendered image into a surface similar to the surface of ctx; if
      * successful, a pointer to the new gfxASurface is stored in *resultSurface,
-     * otherwise *resultSurface is set to nsnull.
+     * otherwise *resultSurface is set to nullptr.
      */
     nsresult Draw(gfxContext* ctx, nsIntSize size,
                   PRUint32 flags, Screen* screen, Visual* visual,

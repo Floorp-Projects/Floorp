@@ -164,7 +164,7 @@ NS_IMETHODIMP DOMSVGMatrix::SetF(float aF)
 NS_IMETHODIMP DOMSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix,
                                      nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsCOMPtr<DOMSVGMatrix> domMatrix = do_QueryInterface(secondMatrix);
   if (!domMatrix)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
@@ -176,7 +176,7 @@ NS_IMETHODIMP DOMSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix,
 /* nsIDOMSVGMatrix inverse (); */
 NS_IMETHODIMP DOMSVGMatrix::Inverse(nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (Matrix().IsSingular())
     return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
 
@@ -188,7 +188,7 @@ NS_IMETHODIMP DOMSVGMatrix::Inverse(nsIDOMSVGMatrix **_retval)
 NS_IMETHODIMP DOMSVGMatrix::Translate(float x, float y,
                                       nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE2(x, y, NS_ERROR_ILLEGAL_VALUE);
 
   NS_ADDREF(*_retval =
@@ -208,7 +208,7 @@ NS_IMETHODIMP DOMSVGMatrix::ScaleNonUniform(float scaleFactorX,
                                             float scaleFactorY,
                                             nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE2(scaleFactorX, scaleFactorY, NS_ERROR_ILLEGAL_VALUE);
 
   NS_ADDREF(*_retval =
@@ -219,7 +219,7 @@ NS_IMETHODIMP DOMSVGMatrix::ScaleNonUniform(float scaleFactorX,
 /* nsIDOMSVGMatrix rotate (in float angle); */
 NS_IMETHODIMP DOMSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   NS_ADDREF(*_retval =
@@ -231,7 +231,7 @@ NS_IMETHODIMP DOMSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 NS_IMETHODIMP DOMSVGMatrix::RotateFromVector(float x, float y,
                                              nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE2(x, y, NS_ERROR_ILLEGAL_VALUE);
 
   if (x == 0.0 || y == 0.0)
@@ -265,7 +265,7 @@ NS_IMETHODIMP DOMSVGMatrix::FlipY(nsIDOMSVGMatrix **_retval)
 /* nsIDOMSVGMatrix skewX (in float angle); */
 NS_IMETHODIMP DOMSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   double ta = tan( angle*radPerDegree );
@@ -282,7 +282,7 @@ NS_IMETHODIMP DOMSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
 /* nsIDOMSVGMatrix skewY (in float angle); */
 NS_IMETHODIMP DOMSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   double ta = tan( angle*radPerDegree );

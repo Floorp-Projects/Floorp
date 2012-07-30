@@ -187,12 +187,12 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  * options that permit more efficient memory usage.  When aContainer is
  * no longer needed, NS_StringContainerFinish should be called.
  *
- * NOTE: NS_StringContainerInit2(container, nsnull, 0, 0) is equivalent to
+ * NOTE: NS_StringContainerInit2(container, nullptr, 0, 0) is equivalent to
  * NS_StringContainerInit(container).
  */
 XPCOM_API(nsresult)
 NS_StringContainerInit2
-  (nsStringContainer &aContainer, const PRUnichar *aData = nsnull,
+  (nsStringContainer &aContainer, const PRUnichar *aData = nullptr,
    PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
 
 /**
@@ -225,7 +225,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
 XPCOM_API(PRUint32)
 NS_StringGetData
   (const nsAString &aStr, const PRUnichar **aData,
-   bool *aTerminated = nsnull);
+   bool *aTerminated = nullptr);
 
 /**
  * NS_StringGetMutableData
@@ -406,7 +406,7 @@ NS_StringInsertData(nsAString &aStr, PRUint32 aOffset, const PRUnichar *aData,
 inline NS_HIDDEN_(nsresult)
 NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 {
-  return NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
+  return NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nullptr, 0);
 }
 
 /**
@@ -492,12 +492,12 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
  * options that permit more efficient memory usage.  When aContainer is
  * no longer needed, NS_CStringContainerFinish should be called.
  *
- * NOTE: NS_CStringContainerInit2(container, nsnull, 0, 0) is equivalent to
+ * NOTE: NS_CStringContainerInit2(container, nullptr, 0, 0) is equivalent to
  * NS_CStringContainerInit(container).
  */
 XPCOM_API(nsresult)
 NS_CStringContainerInit2
-  (nsCStringContainer &aContainer, const char *aData = nsnull,
+  (nsCStringContainer &aContainer, const char *aData = nullptr,
    PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
 
 /**
@@ -530,7 +530,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
 XPCOM_API(PRUint32)
 NS_CStringGetData
   (const nsACString &aStr, const char **aData,
-   bool *aTerminated = nsnull);
+   bool *aTerminated = nullptr);
 
 /**
  * NS_CStringGetMutableData
@@ -711,7 +711,7 @@ NS_CStringInsertData(nsACString &aStr, PRUint32 aOffset, const char *aData,
 inline NS_HIDDEN_(nsresult)
 NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 {
-  return NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
+  return NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nullptr, 0);
 }
 
 /**

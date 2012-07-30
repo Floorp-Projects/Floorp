@@ -36,7 +36,7 @@ struct ImageCacheEntryData {
   {}
   ImageCacheEntryData(const ImageCacheKey& aKey)
     : mImage(aKey.mImage)
-    , mILC(nsnull)
+    , mILC(nullptr)
     , mCanvas(aKey.mCanvas)
   {}
 
@@ -102,7 +102,7 @@ public:
   nsTHashtable<ImageCacheEntry> mCache;
 };
 
-static ImageCache* gImageCache = nsnull;
+static ImageCache* gImageCache = nullptr;
 
 class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
 {
@@ -148,16 +148,16 @@ CanvasImageCache::Lookup(Element* aImage,
                          gfxIntSize* aSize)
 {
   if (!gImageCache)
-    return nsnull;
+    return nullptr;
 
   ImageCacheEntry* entry = gImageCache->mCache.GetEntry(ImageCacheKey(aImage, aCanvas));
   if (!entry || !entry->mData->mILC)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<imgIRequest> request;
   entry->mData->mILC->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST, getter_AddRefs(request));
   if (request != entry->mData->mRequest)
-    return nsnull;
+    return nullptr;
 
   gImageCache->MarkUsed(entry->mData);
 
@@ -174,7 +174,7 @@ CanvasImageCacheShutdownObserver::Observe(nsISupports *aSubject,
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     delete gImageCache;
-    gImageCache = nsnull;
+    gImageCache = nullptr;
 
     nsContentUtils::UnregisterShutdownObserver(this);
   }

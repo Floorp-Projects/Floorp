@@ -91,15 +91,15 @@ staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = { NOFRAMES_ARR_
 
 nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource)
   : tokenHandler(tokenHandler),
-    encodingDeclarationHandler(nsnull),
+    encodingDeclarationHandler(nullptr),
     bmpChar(jArray<PRUnichar,PRInt32>::newJArray(1)),
     astralChar(jArray<PRUnichar,PRInt32>::newJArray(2)),
-    tagName(nsnull),
-    attributeName(nsnull),
-    doctypeName(nsnull),
-    publicIdentifier(nsnull),
-    systemIdentifier(nsnull),
-    attributes(nsnull),
+    tagName(nullptr),
+    attributeName(nullptr),
+    doctypeName(nullptr),
+    publicIdentifier(nullptr),
+    systemIdentifier(nullptr),
+    attributes(nullptr),
     viewingXmlSource(viewingXmlSource)
 {
   MOZ_COUNT_CTOR(nsHtml5Tokenizer);
@@ -287,7 +287,7 @@ nsHtml5Tokenizer::flushChars(PRUnichar* buf, PRInt32 pos)
 void 
 nsHtml5Tokenizer::resetAttributes()
 {
-  attributes = nsnull;
+  attributes = nullptr;
 }
 
 void 
@@ -317,7 +317,7 @@ nsHtml5Tokenizer::emitCurrentTagToken(bool selfClosing, PRInt32 pos)
     }
   }
   tagName->release();
-  tagName = nsnull;
+  tagName = nullptr;
   resetAttributes();
   return stateSave;
 }
@@ -332,7 +332,7 @@ nsHtml5Tokenizer::attributeNameComplete()
   if (attributes->contains(attributeName)) {
     errDuplicateAttribute();
     attributeName->release();
-    attributeName = nsnull;
+    attributeName = nullptr;
   }
 }
 
@@ -342,7 +342,7 @@ nsHtml5Tokenizer::addAttributeWithoutValue()
 
   if (attributeName) {
     attributes->addAttribute(attributeName, nsHtml5Portability::newEmptyString());
-    attributeName = nsnull;
+    attributeName = nullptr;
   }
 }
 
@@ -355,7 +355,7 @@ nsHtml5Tokenizer::addAttributeWithValue()
       mViewSource->MaybeLinkifyAttributeValue(attributeName, val);
     }
     attributes->addAttribute(attributeName, val);
-    attributeName = nsnull;
+    attributeName = nullptr;
   }
 }
 
@@ -3456,11 +3456,11 @@ nsHtml5Tokenizer::initDoctypeFields()
   doctypeName = nsHtml5Atoms::emptystring;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
-    systemIdentifier = nsnull;
+    systemIdentifier = nullptr;
   }
   if (publicIdentifier) {
     nsHtml5Portability::releaseString(publicIdentifier);
-    publicIdentifier = nsnull;
+    publicIdentifier = nullptr;
   }
   forceQuirks = false;
 }
@@ -3633,11 +3633,11 @@ nsHtml5Tokenizer::eof()
           doctypeName = nsHtml5Atoms::emptystring;
           if (systemIdentifier) {
             nsHtml5Portability::releaseString(systemIdentifier);
-            systemIdentifier = nsnull;
+            systemIdentifier = nullptr;
           }
           if (publicIdentifier) {
             nsHtml5Portability::releaseString(publicIdentifier);
-            publicIdentifier = nsnull;
+            publicIdentifier = nullptr;
           }
           forceQuirks = true;
           emitDoctypeToken(0);
@@ -3866,11 +3866,11 @@ nsHtml5Tokenizer::emitDoctypeToken(PRInt32 pos)
 {
   cstart = pos + 1;
   tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
-  doctypeName = nsnull;
+  doctypeName = nullptr;
   nsHtml5Portability::releaseString(publicIdentifier);
-  publicIdentifier = nsnull;
+  publicIdentifier = nullptr;
   nsHtml5Portability::releaseString(systemIdentifier);
-  systemIdentifier = nsnull;
+  systemIdentifier = nullptr;
 }
 
 bool 
@@ -3908,28 +3908,28 @@ nsHtml5Tokenizer::end()
 {
   strBuf = 0;
   longStrBuf = 0;
-  doctypeName = nsnull;
+  doctypeName = nullptr;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
-    systemIdentifier = nsnull;
+    systemIdentifier = nullptr;
   }
   if (publicIdentifier) {
     nsHtml5Portability::releaseString(publicIdentifier);
-    publicIdentifier = nsnull;
+    publicIdentifier = nullptr;
   }
   if (tagName) {
     tagName->release();
-    tagName = nsnull;
+    tagName = nullptr;
   }
   if (attributeName) {
     attributeName->release();
-    attributeName = nsnull;
+    attributeName = nullptr;
   }
   tokenHandler->endTokenization();
   if (attributes) {
     attributes->clear(0);
     delete attributes;
-    attributes = nsnull;
+    attributes = nullptr;
   }
 }
 
@@ -3969,15 +3969,15 @@ nsHtml5Tokenizer::resetToDataState()
   initDoctypeFields();
   if (tagName) {
     tagName->release();
-    tagName = nsnull;
+    tagName = nullptr;
   }
   if (attributeName) {
     attributeName->release();
-    attributeName = nsnull;
+    attributeName = nullptr;
   }
   if (attributes) {
     delete attributes;
-    attributes = nsnull;
+    attributes = nullptr;
   }
 }
 
@@ -4014,19 +4014,19 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   endTag = other->endTag;
   shouldSuspend = false;
   if (!other->doctypeName) {
-    doctypeName = nsnull;
+    doctypeName = nullptr;
   } else {
     doctypeName = nsHtml5Portability::newLocalFromLocal(other->doctypeName, interner);
   }
   nsHtml5Portability::releaseString(systemIdentifier);
   if (!other->systemIdentifier) {
-    systemIdentifier = nsnull;
+    systemIdentifier = nullptr;
   } else {
     systemIdentifier = nsHtml5Portability::newStringFromString(other->systemIdentifier);
   }
   nsHtml5Portability::releaseString(publicIdentifier);
   if (!other->publicIdentifier) {
-    publicIdentifier = nsnull;
+    publicIdentifier = nullptr;
   } else {
     publicIdentifier = nsHtml5Portability::newStringFromString(other->publicIdentifier);
   }
@@ -4034,7 +4034,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
     tagName->release();
   }
   if (!other->tagName) {
-    tagName = nsnull;
+    tagName = nullptr;
   } else {
     tagName = other->tagName->cloneElementName(interner);
   }
@@ -4042,13 +4042,13 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
     attributeName->release();
   }
   if (!other->attributeName) {
-    attributeName = nsnull;
+    attributeName = nullptr;
   } else {
     attributeName = other->attributeName->cloneAttributeName(interner);
   }
   delete attributes;
   if (!other->attributes) {
-    attributes = nsnull;
+    attributes = nullptr;
   } else {
     attributes = other->attributes->cloneAttributes(interner);
   }

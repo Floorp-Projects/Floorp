@@ -32,7 +32,7 @@ public:
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
                                      bool aReset = true,
-                                     nsIContentSink* aSink = nsnull);
+                                     nsIContentSink* aSink = nullptr);
 
   virtual void EndLoad();
 

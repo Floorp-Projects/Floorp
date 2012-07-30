@@ -290,11 +290,11 @@ nsPipe::nsPipe()
     : mInput(this)
     , mOutput(this)
     , mReentrantMonitor("nsPipe.mReentrantMonitor")
-    , mReadCursor(nsnull)
-    , mReadLimit(nsnull)
+    , mReadCursor(nullptr)
+    , mReadLimit(nullptr)
     , mWriteSegment(-1)
-    , mWriteCursor(nsnull)
-    , mWriteLimit(nsnull)
+    , mWriteCursor(nullptr)
+    , mWriteLimit(nullptr)
     , mStatus(NS_OK)
     , mInited(false)
 {
@@ -360,7 +360,7 @@ nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
     else {
         PRUint32 numSegments = mBuffer.GetSegmentCount();
         if (index >= numSegments)
-            cursor = limit = nsnull;
+            cursor = limit = nullptr;
         else {
             cursor = mBuffer.GetSegment(index);
             if (mWriteSegment == (PRInt32) index)
@@ -421,10 +421,10 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 
             if (mWriteSegment == -1) {
                 // buffer is completely empty
-                mReadCursor = nsnull;
-                mReadLimit = nsnull;
-                mWriteCursor = nsnull;
-                mWriteLimit = nsnull;
+                mReadCursor = nullptr;
+                mReadLimit = nullptr;
+                mWriteCursor = nullptr;
+                mWriteLimit = nullptr;
             }
             else {
                 // advance read cursor and limit to next buffer segment
@@ -455,7 +455,7 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
     if (mWriteCursor == mWriteLimit) {
         char *seg = mBuffer.AppendNewSegment();
         // pipe is full
-        if (seg == nsnull)
+        if (seg == nullptr)
             return NS_BASE_STREAM_WOULD_BLOCK;
         LOG(("OOO appended new segment\n"));
         mWriteCursor = seg;
@@ -464,7 +464,7 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
     }
 
     // make sure read cursor is initialized
-    if (mReadCursor == nsnull) {
+    if (mReadCursor == nullptr) {
         NS_ASSERTION(mWriteSegment == 0, "unexpected null read cursor");
         mReadCursor = mReadLimit = mWriteCursor;
     }

@@ -99,10 +99,10 @@ char*
 nsEscapeHTML(const char* string)
 {
   /* XXX Hardcoded max entity len. The +1 is for the trailing null. */
-  char* escaped = nsnull;
+  char* escaped = nullptr;
   PRUint32 len = strlen(string);
   if (len >= (PR_UINT32_MAX / 6))
-    return nsnull;
+    return nullptr;
 
   escaped = (char*)NS_Alloc((len * 6) + 1);
   if (escaped) {
@@ -168,7 +168,7 @@ nsPlacesExportService::~nsPlacesExportService()
   NS_ASSERTION(gExportService == this,
                "Deleting a non-singleton instance of the service");
   if (gExportService == this)
-    gExportService = nsnull;
+    gExportService = nullptr;
 }
 
 nsresult
@@ -559,7 +559,7 @@ nsPlacesExportService::WriteItem(nsINavHistoryResultNode* aItem,
   nsresult rv = aItem->GetUri(uri);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIURI> pageURI;
-  rv = NS_NewURI(getter_AddRefs(pageURI), uri, nsnull);
+  rv = NS_NewURI(getter_AddRefs(pageURI), uri, nullptr);
   if (NS_FAILED(rv)) {
     nsCAutoString warnMsg;
     warnMsg.Append("Bookmarks Export: Found invalid item uri '");

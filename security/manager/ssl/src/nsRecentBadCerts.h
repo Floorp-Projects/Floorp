@@ -22,7 +22,7 @@ public:
   RecentBadCert()
   {
     mDERCert.len = 0;
-    mDERCert.data = nsnull;
+    mDERCert.data = nullptr;
     isDomainMismatch = false;
     isNotValidAtThisTime = false;
     isUntrusted = false;
@@ -39,7 +39,7 @@ public:
     if (mDERCert.len)
       nsMemory::Free(mDERCert.data);
     mDERCert.len = 0;
-    mDERCert.data = nsnull;
+    mDERCert.data = nullptr;
   }
 
   nsString mHostWithPort;

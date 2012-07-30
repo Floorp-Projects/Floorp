@@ -22,8 +22,8 @@ using namespace mozilla;
 
 // static
 bool nsHtml5Module::sOffMainThread = true;
-nsIThread* nsHtml5Module::sStreamParserThread = nsnull;
-nsIThread* nsHtml5Module::sMainThread = nsnull;
+nsIThread* nsHtml5Module::sStreamParserThread = nullptr;
+nsIThread* nsHtml5Module::sMainThread = nullptr;
 
 // static
 void
@@ -99,7 +99,7 @@ class nsHtml5ParserThreadTerminator MOZ_FINAL : public nsIObserver
                    "Unexpected topic");
       if (mThread) {
         mThread->Shutdown();
-        mThread = nsnull;
+        mThread = nullptr;
       }
       return NS_OK;
     }

@@ -314,7 +314,7 @@ NS_IMPL_EVENT_HANDLER(SmsManager, delivered)
 nsresult
 SmsManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName, nsIDOMMozSmsMessage* aMessage)
 {
-  nsRefPtr<nsDOMEvent> event = new SmsEvent(nsnull, nsnull);
+  nsRefPtr<nsDOMEvent> event = new SmsEvent(nullptr, nullptr);
   nsresult rv = static_cast<SmsEvent*>(event.get())->Init(aEventName, false,
                                                           false, aMessage);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -12,7 +12,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree,
                                                  nsITreeView)
 
 nsNSSASN1Tree::nsNSSASN1Tree() 
-:mTopNode(nsnull)
+:mTopNode(nullptr)
 {
 }
 
@@ -39,7 +39,7 @@ void nsNSSASN1Tree::ClearNodesRecursively(myNode *n)
 void nsNSSASN1Tree::ClearNodes()
 {
   ClearNodesRecursively(mTopNode);
-  mTopNode = nsnull;
+  mTopNode = nullptr;
 }
 
 void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
@@ -62,7 +62,7 @@ void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
   bool isContainer;
   n->seq->GetIsValidContainer(&isContainer);
   if (!isContainer) {
-    n->seq = nsnull;
+    n->seq = nullptr;
     return;
   }
 
@@ -72,12 +72,12 @@ void nsNSSASN1Tree::InitChildsRecursively(myNode *n)
   asn1Objects->GetLength(&numObjects);
   
   if (!numObjects) {
-    n->seq = nsnull;
+    n->seq = nullptr;
     return;
   }
   
-  myNode *walk = nsnull;
-  myNode *prev = nsnull;
+  myNode *walk = nullptr;
+  myNode *prev = nullptr;
   
   PRUint32 i;
   nsCOMPtr<nsISupports> isupports;
@@ -209,7 +209,7 @@ nsNSSASN1Tree::IsContainer(PRInt32 index, bool *_retval)
   if (!n)
     return NS_ERROR_FAILURE;
 
-  *_retval = (n->seq != nsnull);
+  *_retval = (n->seq != nullptr);
   return NS_OK; 
 }
 
@@ -541,7 +541,7 @@ nsNSSASN1Tree::FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
                                  PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel)
 {
   if (!n)
-    return nsnull;
+    return nullptr;
 
   myNode *walk = n;
   PRInt32 parentIndex = index_counter-1;
@@ -579,6 +579,6 @@ nsNSSASN1Tree::FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 

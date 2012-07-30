@@ -73,7 +73,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
         // XXX PL_Base64Decode will return a null pointer for decoding
         // errors.  Since those are more likely than out-of-memory,
         // should we return NS_ERROR_MALFORMED_URI instead?
-        char * decodedData = PL_Base64Decode(dataBuffer.get(), dataLen, nsnull);
+        char * decodedData = PL_Base64Decode(dataBuffer.get(), dataLen, nullptr);
         if (!decodedData) {
             return NS_ERROR_OUT_OF_MEMORY;
         }

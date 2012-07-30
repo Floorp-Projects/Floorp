@@ -344,9 +344,9 @@ enum CheckboxValue {
     return nil;
 
   nsDeckFrame* deckFrame = do_QueryFrame(mGeckoAccessible->GetFrame());
-  nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nsnull;
+  nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
 
-  Accessible* selectedAcc = nsnull;
+  Accessible* selectedAcc = nullptr;
   if (selectedFrame) {
     nsINode* node = selectedFrame->GetContent();
     selectedAcc = mGeckoAccessible->Document()->GetAccessible(node);

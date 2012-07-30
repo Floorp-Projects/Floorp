@@ -50,7 +50,7 @@ nsCUPSShim::Init()
             NS_WARNING(msg.get());
 #endif
             PR_UnloadLibrary(mCupsLib);
-            mCupsLib = nsnull;
+            mCupsLib = nullptr;
             return false;
         }
     }

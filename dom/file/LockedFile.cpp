@@ -174,7 +174,7 @@ public:
                    bool aWholeFile,
                    PRUint64 aStart,
                    PRUint64 aLength)
-  : FileHelper(aLockedFile, nsnull),
+  : FileHelper(aLockedFile, nullptr),
     mWholeFile(aWholeFile), mStart(aStart), mLength(aLength)
   { }
 
@@ -198,12 +198,12 @@ private:
 already_AddRefed<nsDOMEvent>
 CreateGenericEvent(const nsAString& aType, bool aBubbles, bool aCancelable)
 {
-  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nsnull, nsnull));
+  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nullptr, nullptr));
   nsresult rv = event->InitEvent(aType, aBubbles, aCancelable);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return event.forget();
 }
@@ -288,18 +288,18 @@ LockedFile::Create(FileHandle* aFileHandle,
   lockedFile->mRequestMode = aRequestMode;
 
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  NS_ENSURE_TRUE(appShell, nsnull);
+  NS_ENSURE_TRUE(appShell, nullptr);
 
   nsresult rv = appShell->RunBeforeNextEvent(lockedFile);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   lockedFile->mCreating = true;
 
   FileService* service = FileService::GetOrCreate();
-  NS_ENSURE_TRUE(service, nsnull);
+  NS_ENSURE_TRUE(service, nullptr);
 
-  rv = service->Enqueue(lockedFile, nsnull);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  rv = service->Enqueue(lockedFile, nullptr);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return lockedFile.forget();
 }
@@ -957,7 +957,7 @@ FinishHelper::Run()
       NS_WARNING("Dispatch failed!");
     }
 
-    mLockedFile = nsnull;
+    mLockedFile = nullptr;
 
     return NS_OK;
   }
@@ -975,7 +975,7 @@ FinishHelper::Run()
       NS_WARNING("Failed to close stream!");
     }
 
-    mParallelStreams[index] = nsnull;
+    mParallelStreams[index] = nullptr;
   }
 
   if (mStream) {
@@ -985,7 +985,7 @@ FinishHelper::Run()
       NS_WARNING("Failed to close stream!");
     }
 
-    mStream = nsnull;
+    mStream = nullptr;
   }
 
   return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
@@ -1021,7 +1021,7 @@ ReadHelper::DoAsyncRun(nsISupports* aStream)
                             false, true, STREAM_COPY_BLOCK_SIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = copier->AsyncCopy(this, nsnull);
+  rv = copier->AsyncCopy(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRequest = do_QueryInterface(copier);
@@ -1098,7 +1098,7 @@ WriteHelper::DoAsyncRun(nsISupports* aStream)
                             true, false, STREAM_COPY_BLOCK_SIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = copier->AsyncCopy(this, nsnull);
+  rv = copier->AsyncCopy(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRequest = do_QueryInterface(copier);
@@ -1113,7 +1113,7 @@ TruncateHelper::DoAsyncRun(nsISupports* aStream)
 
   nsRefPtr<AsyncTruncator> truncator = new AsyncTruncator(aStream, mOffset);
 
-  nsresult rv = truncator->AsyncWork(this, nsnull);
+  nsresult rv = truncator->AsyncWork(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
   
   return NS_OK;
@@ -1140,7 +1140,7 @@ FlushHelper::DoAsyncRun(nsISupports* aStream)
 
   nsRefPtr<AsyncFlusher> flusher = new AsyncFlusher(aStream);
 
-  nsresult rv = flusher->AsyncWork(this, nsnull);
+  nsresult rv = flusher->AsyncWork(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

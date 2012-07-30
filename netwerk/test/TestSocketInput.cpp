@@ -120,11 +120,11 @@ main(int argc, char* argv[])
   port = 13;
   {
     nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
     if (registrar)
-      registrar->AutoRegister(nsnull);
+      registrar->AutoRegister(nullptr);
 
     // Create the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> eventQService =
@@ -141,10 +141,10 @@ main(int argc, char* argv[])
 
     nsITransport* transport;
 
-    rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, &transport);
+    rv = sts->CreateTransport(hostName, port, nullptr, 0, 0, &transport);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIRequest> request;
-      transport->AsyncRead(new InputTestConsumer, nsnull, 0, -1, 0, getter_AddRefs(request));
+      transport->AsyncRead(new InputTestConsumer, nullptr, 0, -1, 0, getter_AddRefs(request));
 
       NS_RELEASE(transport);
     }
@@ -158,7 +158,7 @@ main(int argc, char* argv[])
 
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  rv = NS_ShutdownXPCOM(nsnull);
+  rv = NS_ShutdownXPCOM(nullptr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return 0;
 }

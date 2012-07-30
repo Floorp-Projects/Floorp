@@ -44,7 +44,7 @@ public:
    *    provide existing data from the persistent database.
    */
   nsresult
-  Init(nsDOMStoragePersistentDB* aPreloadDB = nsnull);
+  Init(nsDOMStoragePersistentDB* aPreloadDB = nullptr);
 
   /**
    *

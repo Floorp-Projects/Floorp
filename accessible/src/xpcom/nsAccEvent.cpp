@@ -31,7 +31,7 @@ NS_IMETHODIMP
 nsAccEvent::GetAccessible(nsIAccessible** aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
+  *aAccessible = nullptr;
 
   NS_IF_ADDREF(*aAccessible = mEvent->GetAccessible());
   return NS_OK;
@@ -41,7 +41,7 @@ NS_IMETHODIMP
 nsAccEvent::GetDOMNode(nsIDOMNode** aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aDOMNode);
-  *aDOMNode = nsnull;
+  *aDOMNode = nullptr;
 
   nsINode* node = mEvent->GetNode();
   if (node)

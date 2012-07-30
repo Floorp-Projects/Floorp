@@ -32,7 +32,7 @@ struct Test {
 static Chunk kTest1Chunks[] =
 {
    Chunk(9, "Hello sir"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest2Chunks[] =
@@ -40,33 +40,33 @@ static Chunk kTest2Chunks[] =
    Chunk(3, "Hel"),
    Chunk(3, "lo "),
    Chunk(3, "sir"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest3Chunks[] =
 {
    Chunk(1, "I"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest4Chunks[] =
 {
    Chunk(2, "Hi"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest5Chunks[] =
 {
    Chunk(1, "B"),
    Chunk(2, "ob"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest6Chunks[] =
 {
    Chunk(2, "Bo"),
    Chunk(1, "b"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest7Chunks[] =
@@ -78,7 +78,7 @@ static Chunk kTest7Chunks[] =
    Chunk(2, "aw"),   //            1
    Chunk(4, "esom"), //            2
    Chunk(2, "e!"),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Chunk kTest8Chunks[] =
@@ -90,7 +90,7 @@ static Chunk kTest8Chunks[] =
    Chunk(21, "RLDS ARE YOURS EXCEPT"),
    Chunk(9, " EUROPA. "),
    Chunk(25, "ATTEMPT NO LANDING THERE."),
-   Chunk(0, nsnull)
+   Chunk(0, nullptr)
 };
 
 static Test kTests[] =
@@ -137,8 +137,8 @@ static Test kTests[] =
     ),
     // Terminator
     Test(
-      nsnull,
-      nsnull
+      nullptr,
+      nullptr
     )
   };
 

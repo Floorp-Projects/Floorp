@@ -46,7 +46,7 @@ private:
         mPredicate(aPredicate),
         mTargetVariable(aTargetVariable),
         mHasDependency(false),
-        mNext(nsnull)
+        mNext(nullptr)
     {
         MOZ_COUNT_CTOR(RDFBinding);
     }
@@ -75,7 +75,7 @@ public:
 
     RDFBindingSet()
         : mCount(0),
-          mFirst(nsnull)
+          mFirst(nullptr)
     {
         MOZ_COUNT_CTOR(RDFBindingSet);
     }
@@ -173,8 +173,8 @@ protected:
 public:
 
     nsBindingValues()
-      : mBindings(nsnull),
-        mValues(nsnull)
+      : mBindings(nullptr),
+        mValues(nullptr)
     {
         MOZ_COUNT_CTOR(nsBindingValues);
     }

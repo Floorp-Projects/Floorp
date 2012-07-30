@@ -47,7 +47,7 @@ public:
   void      FreeGlobalPrinters();
   nsresult  InitializeGlobalPrinters();
 
-  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  bool      PrintersAreAllocated()       { return mGlobalPrinterList != nullptr; }
   PRUint32  GetNumPrinters()             { return mGlobalNumPrinters; }
   nsString* GetStringAt(PRInt32 aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName);
@@ -63,12 +63,12 @@ protected:
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
-nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nsnull;
+nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nullptr;
 ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
 nsDeviceContextSpecOS2::nsDeviceContextSpecOS2()
-  : mQueue(nsnull), mPrintDC(nsnull), mPrintingStarted(false)
+  : mQueue(nullptr), mPrintDC(nullptr), mPrintingStarted(false)
 {
 }
 
@@ -131,7 +131,7 @@ void SetupDevModeFromSettings(ULONG printer, nsIPrintSettings* aPrintSettings)
 
 nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, ULONG printer)
 {
-  if (aPrintSettings == nsnull)
+  if (aPrintSettings == nullptr)
     return NS_ERROR_FAILURE;
 
   int bufferSize = 3 * sizeof(DJP_ITEM);
@@ -205,8 +205,8 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
   if (aPS) {
     bool       tofile         = false;
     PRInt32    copies         = 1;
-    PRUnichar *printer        = nsnull;
-    PRUnichar *printfile      = nsnull;
+    PRUnichar *printer        = nullptr;
+    PRUnichar *printfile      = nullptr;
 
     mPrintSettings->GetPrinterName(&printer);
     mPrintSettings->GetToFileName(&printfile);
@@ -218,11 +218,11 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
        return NS_ERROR_FAILURE;
     }
 
-    if (printfile != nsnull) {
+    if (printfile != nullptr) {
       // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
       strcpy(mPrData.path,    NS_ConvertUTF16toUTF8(printfile).get());
     }
-    if (printer != nsnull) 
+    if (printer != nullptr) 
       strcpy(mPrData.printer, NS_ConvertUTF16toUTF8(printer).get());  
 
     if (aIsPrintPreview) 
@@ -248,10 +248,10 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
        }
     }
 
-    if (printfile != nsnull) 
+    if (printfile != nullptr) 
       nsMemory::Free(printfile);
   
-    if (printer != nsnull) 
+    if (printer != nullptr) 
       nsMemory::Free(printer);
   }
 
@@ -372,7 +372,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
   } else {
     int numCopies = 0;
     GetCopies(numCopies);
-    char *filename = nsnull;
+    char *filename = nullptr;
     if (printerDest == printToFile) {
       GetPath(&filename);
     }
@@ -422,7 +422,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
       gfxOS2Surface(mPrintDC, gfxIntSize(int(ceil(width)), int(ceil(height))));
   }
   if (!newSurface) {
-    *surface = nsnull;
+    *surface = nullptr;
     return NS_ERROR_FAILURE;
   }
   *surface = newSurface;
@@ -436,7 +436,7 @@ char *GetACPString(const PRUnichar* aStr)
 {
    nsString str(aStr);
    if (str.Length() == 0) {
-      return nsnull;
+      return nullptr;
    }
 
    nsAutoCharBuffer buffer;
@@ -531,7 +531,7 @@ NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorOS2, nsIPrinterEnumerator)
 NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
   NS_ENSURE_ARG_POINTER(aPrinterNameList);
-  *aPrinterNameList = nsnull;
+  *aPrinterNameList = nullptr;
 
   nsDeviceContextSpecOS2::PrnDlg.RefreshPrintQueue();
   
@@ -625,7 +625,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
      return NS_ERROR_OUT_OF_MEMORY;
 
   // don't return on failure, optional feature
-  BOOL prefFailed = (Preferences::GetRootBranch() == nsnull);
+  BOOL prefFailed = (Preferences::GetRootBranch() == nullptr);
 
   for (ULONG i = 0; i < mGlobalNumPrinters; i++) {
     nsXPIDLCString printer;
@@ -655,7 +655,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
 void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
 {
-  aDefaultPrinterName = nsnull;
+  aDefaultPrinterName = nullptr;
 
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) 
@@ -680,7 +680,7 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
 void GlobalPrinters::FreeGlobalPrinters()
 {
   delete mGlobalPrinterList;
-  mGlobalPrinterList = nsnull;
+  mGlobalPrinterList = nullptr;
   mGlobalNumPrinters = 0;
 }
 

@@ -72,7 +72,7 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx, JSAutoEnterCompartment& aAc, jsval
   *aJSVal = JSVAL_NULL;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(mListener);
   if (wrappedJS) {
-    JSObject* object = nsnull;
+    JSObject* object = nullptr;
     if (NS_FAILED(wrappedJS->GetJSObject(&object)) || !aAc.enter(aCx, object)) {
       return false;
     }
@@ -129,7 +129,7 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
 NS_IMETHODIMP
 nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
 {
-  *aRetVal = nsnull;
+  *aRetVal = nullptr;
 
 #ifdef MOZ_JSDEBUGGER
   nsresult rv = NS_OK;
@@ -173,7 +173,7 @@ nsEventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
 {
   NS_ENSURE_ARG_POINTER(aEventTarget);
   *aCount = 0;
-  *aOutArray = nsnull;
+  *aOutArray = nullptr;
   nsCOMArray<nsIEventListenerInfo> listenerInfos;
   nsEventListenerManager* elm =
     aEventTarget->GetListenerManager(false);
@@ -204,12 +204,12 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
                                                nsIDOMEventTarget*** aOutArray)
 {
   *aCount = 0;
-  *aOutArray = nsnull;
+  *aOutArray = nullptr;
   NS_ENSURE_ARG(aEventTarget);
   nsEvent event(true, NS_EVENT_TYPE_NULL);
   nsCOMArray<nsIDOMEventTarget> targets;
-  nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nsnull, &event,
-                                            nsnull, nsnull, nsnull, &targets);
+  nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nullptr, &event,
+                                            nullptr, nullptr, nullptr, &targets);
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt32 count = targets.Count();
   if (count == 0) {

@@ -116,7 +116,7 @@ BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray,
 BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray)
 : mLocked(false)
 , mOwningArray(aOwningArray)
-, mOwningStatement(nsnull)
+, mOwningStatement(nullptr)
 , mParamCount(0)
 {
 }
@@ -138,8 +138,8 @@ BindingParams::lock()
   // We no longer need to hold a reference to our statement or our owning array.
   // The array owns us at this point, and it will own a reference to the
   // statement.
-  mOwningStatement = nsnull;
-  mOwningArray = nsnull;
+  mOwningStatement = nullptr;
+  mOwningArray = nullptr;
 }
 
 void
@@ -231,7 +231,7 @@ BindingParams::bind(sqlite3_stmt *aStatement)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<mozIStorageError>
@@ -244,7 +244,7 @@ AsyncBindingParams::bind(sqlite3_stmt * aStatement)
 
   // Enumerate over everyone in the map, propagating them into mParameters if
   // we can and creating an error immediately when we cannot.
-  NamedParameterIterationClosureThunk closureThunk = {this, aStatement, nsnull};
+  NamedParameterIterationClosureThunk closureThunk = {this, aStatement, nullptr};
   (void)mNamedParameters.EnumerateRead(iterateOverNamedParameters,
                                        (void *)&closureThunk);
 

@@ -41,7 +41,7 @@ TestFailedCtorSubParent::AllocPTestFailedCtorSubsub()
         return mThree = a;
     } else {
         fail("unexpected Alloc()");
-        return nsnull;
+        return nullptr;
     }
 }
 bool

@@ -281,7 +281,7 @@ nsLayoutUtils::FindContentFor(ViewID aId)
   if (exists) {
     return content;
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -374,7 +374,7 @@ GetLastChildFrame(nsIFrame*       aFrame,
     return lastChildFrame;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 //static
@@ -432,7 +432,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
       nsIFrame* parent = aChildFrame->GetParent();
       nsIFrame* firstPopup = (parent)
                              ? parent->GetFirstChild(nsIFrame::kPopupList)
-                             : nsnull;
+                             : nullptr;
       NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
                    "We assume popupList only has one child, but it has more.");
       id = firstPopup == aChildFrame
@@ -479,12 +479,12 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 
   nsIFrame* firstFrame = GetFirstChildFrame(aFrame, aFrame->GetContent());
 
-  if (firstFrame && IsGeneratedContentFor(nsnull, firstFrame,
+  if (firstFrame && IsGeneratedContentFor(nullptr, firstFrame,
                                           nsCSSPseudoElements::before)) {
     return firstFrame;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // static
@@ -495,12 +495,12 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 
   nsIFrame* lastFrame = GetLastChildFrame(aFrame, aFrame->GetContent());
 
-  if (lastFrame && IsGeneratedContentFor(nsnull, lastFrame,
+  if (lastFrame && IsGeneratedContentFor(nullptr, lastFrame,
                                          nsCSSPseudoElements::after)) {
     return lastFrame;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // static
@@ -512,7 +512,7 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
       return frame;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 // static
@@ -540,7 +540,7 @@ nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
     return outOfFlowFrame;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 // static
@@ -581,15 +581,15 @@ nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
 
   nsIView* v = aFrame->GetView();
   if (!v)
-    return nsnull;
+    return nullptr;
   v = v->GetParent(); // anonymous inner view
   if (!v)
-    return nsnull;
+    return nullptr;
   if (aExtraOffset) {
     *aExtraOffset += v->GetPosition();
   }
   v = v->GetParent(); // subdocumentframe's view
-  return v ? v->GetFrame() : nsnull;
+  return v ? v->GetFrame() : nullptr;
 }
 
 // static
@@ -663,7 +663,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   if (!c1 && aCommonAncestor) {
     // So, it turns out aCommonAncestor was not an ancestor of c1. Oops.
     // Never mind. We can continue as if aCommonAncestor was null.
-    aCommonAncestor = nsnull;
+    aCommonAncestor = nullptr;
   }
 
   nsAutoTArray<nsINode*, 32> content2Ancestors;
@@ -675,13 +675,13 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
     // So, it turns out aCommonAncestor was not an ancestor of c2.
     // We need to retry with no common ancestor hint.
     return DoCompareTreePosition(aContent1, aContent2,
-                                 aIf1Ancestor, aIf2Ancestor, nsnull);
+                                 aIf1Ancestor, aIf2Ancestor, nullptr);
   }
 
   int last1 = content1Ancestors.Length() - 1;
   int last2 = content2Ancestors.Length() - 1;
-  nsINode* content1Ancestor = nsnull;
-  nsINode* content2Ancestor = nsnull;
+  nsINode* content1Ancestor = nullptr;
+  nsINode* content2Ancestor = nullptr;
   while (last1 >= 0 && last2 >= 0
          && ((content1Ancestor = content1Ancestors.ElementAt(last1)) ==
              (content2Ancestor = content2Ancestors.ElementAt(last2)))) {
@@ -768,7 +768,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   if (!FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
     // it is wrong
-    aCommonAncestor = nsnull;
+    aCommonAncestor = nullptr;
   }
 
   nsAutoTArray<nsIFrame*,20> frame2Ancestors;
@@ -777,7 +777,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
     // We reached the root of the frame tree ... aCommonAncestor was wrong.
     // Try again with no hint.
     return DoCompareTreePosition(aFrame1, aFrame2,
-                                 aIf1Ancestor, aIf2Ancestor, nsnull);
+                                 aIf1Ancestor, aIf2Ancestor, nullptr);
   }
 
   PRInt32 last1 = PRInt32(frame1Ancestors.Length()) - 1;
@@ -816,11 +816,11 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
 // static
 nsIFrame* nsLayoutUtils::GetLastSibling(nsIFrame* aFrame) {
   if (!aFrame) {
-    return nsnull;
+    return nullptr;
   }
 
   nsIFrame* next;
-  while ((next = aFrame->GetNextSibling()) != nsnull) {
+  while ((next = aFrame->GetNextSibling()) != nullptr) {
     aFrame = next;
   }
   return aFrame;
@@ -830,7 +830,7 @@ nsIFrame* nsLayoutUtils::GetLastSibling(nsIFrame* aFrame) {
 nsIView*
 nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
   nsIFrame* parentViewFrame = aParentView->GetFrame();
-  nsIContent* parentViewContent = parentViewFrame ? parentViewFrame->GetContent() : nsnull;
+  nsIContent* parentViewContent = parentViewFrame ? parentViewFrame->GetContent() : nullptr;
   for (nsIView* insertBefore = aParentView->GetFirstChild(); insertBefore;
        insertBefore = insertBefore->GetNextSibling()) {
     nsIFrame* f = insertBefore->GetFrame();
@@ -852,7 +852,7 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
       return insertBefore;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 //static
@@ -861,7 +861,7 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
 {
   nsIFrame *frame = aScrolledFrame->GetParent();
   if (!frame) {
-    return nsnull;
+    return nullptr;
   }
   nsIScrollableFrame *sf = do_QueryFrame(frame);
   return sf;
@@ -896,7 +896,7 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
     *aShouldFixToViewport = false;
   }
   if (!f) {
-    return nsnull;
+    return nullptr;
   }
   if (aItem->ShouldFixToViewport(aBuilder)) {
     if (aShouldFixToViewport) {
@@ -925,7 +925,7 @@ nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(nsIFrame* aAc
     return false;
 
   nsIFrame* rootScrollFrame = presContext->GetPresShell()->GetRootScrollFrame();
-  if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nsnull))
+  if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nullptr))
     return false;
   return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aActiveScrolledRoot);
 }
@@ -954,7 +954,7 @@ nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
         return scrollableFrame;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 // static
@@ -971,7 +971,7 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
         return scrollableFrame;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 //static
@@ -989,7 +989,7 @@ nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
       ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
                               aStyleContext);
   }
-  return pseudoContext != nsnull;
+  return pseudoContext != nullptr;
 }
 
 nsPoint
@@ -1104,7 +1104,7 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
 #ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
-    return nsnull;
+    return nullptr;
   }
   nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
   PRUint32 i;
@@ -1118,7 +1118,7 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
     }
   }
 #endif
-  return nsnull;
+  return nullptr;
 }
 
 gfx3DMatrix
@@ -1280,7 +1280,7 @@ nsLayoutUtils::TransformRootPointToFrame(nsIFrame *aFrame,
     gfxPoint result(NSAppUnitsToFloatPixels(aPoint.x, factor),
                     NSAppUnitsToFloatPixels(aPoint.y, factor));
     
-    result = TransformGfxPointFromAncestor(aFrame, result, nsnull);
+    result = TransformGfxPointFromAncestor(aFrame, result, nullptr);
    
     return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
                    NSFloatPixelsToAppUnits(float(result.y), factor));
@@ -1448,8 +1448,8 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
   nsAutoTArray<nsIFrame*,8> outFrames;
   rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames,
                         aShouldIgnoreSuppression, aIgnoreRootScrollFrame);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-  return outFrames.Length() ? outFrames.ElementAt(0) : nsnull;
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
 }
 
 nsresult
@@ -1584,7 +1584,7 @@ GetNextPage(nsIFrame* aPageContentFrame)
                "pageContentFrame has unexpected parent");
   nsIFrame* nextPageFrame = pageFrame->GetNextSibling();
   if (!nextPageFrame)
-    return nsnull;
+    return nullptr;
   NS_ASSERTION(nextPageFrame->GetType() == nsGkAtoms::pageFrame,
                "pageFrame's sibling is not a page frame...");
   nsIFrame* f = nextPageFrame->GetFirstPrincipalChild();
@@ -1668,7 +1668,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef DEBUG
   if (ignoreViewportScrolling) {
     nsIDocument* doc = aFrame->GetContent() ?
-      aFrame->GetContent()->GetCurrentDoc() : nsnull;
+      aFrame->GetContent()->GetCurrentDoc() : nullptr;
     NS_ASSERTION(!aFrame->GetParent() ||
                  (doc && doc->IsBeingUsedAsImage()),
                  "Only expecting ignoreViewportScrolling for root frames and "
@@ -1729,7 +1729,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     // following placeholders to their out-of-flows) end up on the list.
     nsIFrame* page = aFrame;
     nscoord y = aFrame->GetSize().height;
-    while ((page = GetNextPage(page)) != nsnull) {
+    while ((page = GetNextPage(page)) != nullptr) {
       SAMPLE_LABEL("nsLayoutUtils","PaintFrame::BuildDisplayListForExtraPage");
       rv = BuildDisplayListForExtraPage(&builder, page, y, &list);
       if (NS_FAILED(rv))
@@ -1741,7 +1741,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (paintAllContinuations) {
     nsIFrame* currentFrame = aFrame;
     while (NS_SUCCEEDED(rv) &&
-           (currentFrame = currentFrame->GetNextContinuation()) != nsnull) {
+           (currentFrame = currentFrame->GetNextContinuation()) != nullptr) {
       SAMPLE_LABEL("nsLayoutUtils","PaintFrame::ContinuationsBuildDisplayList");
       nsRect frameDirty = dirtyRect - builder.ToReferenceFrame(currentFrame);
       rv = currentFrame->BuildDisplayListForStackingContext(&builder,
@@ -2184,7 +2184,7 @@ nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame)
     if (block)
       return block;
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsIFrame*
@@ -2236,7 +2236,7 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
     return static_cast<nsIFrame*>(value);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsIFrame*
@@ -3223,7 +3223,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     nsContextBoxBlur contextBoxBlur;
     gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
                                                     presCtx->AppUnitsPerDevPixel(),
-                                                    aDestCtx, aDirtyRect, nsnull);
+                                                    aDestCtx, aDirtyRect, nullptr);
     if (!shadowContext)
       continue;
 
@@ -4108,7 +4108,7 @@ nsDeviceContext*
 nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
 {
   if (!aWindow) {
-    return nsnull;
+    return nullptr;
   }
 
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
@@ -4120,7 +4120,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
     nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(docShell);
     if (!win) {
       // No reason to go on
-      return nsnull;
+      return nullptr;
     }
 
     win->EnsureSizeUpToDate();
@@ -4140,7 +4140,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
     docShell = do_QueryInterface(parentItem);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 /* static */ bool
@@ -4294,11 +4294,11 @@ nsLayoutUtils::SurfaceFromElement(nsHTMLCanvasElement* aElement,
     rv = srcCanvas->GetThebesSurface(getter_AddRefs(surf));
 
     if (NS_FAILED(rv))
-      surf = nsnull;
+      surf = nullptr;
   }
 
   if (surf && wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage)
-    surf = nsnull;
+    surf = nullptr;
 
   if (!surf) {
     if (wantImageSurface) {
@@ -4413,7 +4413,7 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
 {
   // If the document is in designMode we should return NULL.
   if (!aDocument || aDocument->HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
+    return nullptr;
   }
 
   // contenteditable only works with HTML document.
@@ -4422,7 +4422,7 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
   //       additional work for some cases and nsEditor uses them.
   nsCOMPtr<nsIDOMHTMLDocument> domHTMLDoc = do_QueryInterface(aDocument);
   if (!domHTMLDoc) {
-    return nsnull;
+    return nullptr;
   }
 
   Element* rootElement = aDocument->GetRootElement();
@@ -4438,7 +4438,7 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
   if (NS_SUCCEEDED(rv) && content && content->IsEditable()) {
     return content;
   }
-  return nsnull;
+  return nullptr;
 }
 
 #ifdef DEBUG

@@ -65,7 +65,7 @@ static PRUnichar const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't'
 staticJArray<PRUnichar,PRInt32> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, NS_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
 
 nsHtml5MetaScanner::nsHtml5MetaScanner()
-  : readable(nsnull),
+  : readable(nullptr),
     metaState(NS_HTML5META_SCANNER_NO),
     contentIndex(PR_INT32_MAX),
     charsetIndex(PR_INT32_MAX),
@@ -74,8 +74,8 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
     stateSave(NS_HTML5META_SCANNER_DATA),
     strBufLen(0),
     strBuf(jArray<PRUnichar,PRInt32>::newJArray(36)),
-    content(nsnull),
-    charset(nsnull),
+    content(nullptr),
+    charset(nullptr),
     httpEquivState(NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN)
 {
   MOZ_COUNT_CTOR(nsHtml5MetaScanner);
@@ -771,9 +771,9 @@ nsHtml5MetaScanner::handleTag()
 {
   bool stop = handleTagInner();
   nsHtml5Portability::releaseString(content);
-  content = nsnull;
+  content = nullptr;
   nsHtml5Portability::releaseString(charset);
-  charset = nsnull;
+  charset = nullptr;
   httpEquivState = NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN;
   return stop;
 }

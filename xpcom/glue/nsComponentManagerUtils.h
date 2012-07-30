@@ -213,7 +213,7 @@ CallCreateInstance( const nsCID &aClass,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return CallCreateInstance(aClass, nsnull,
+    return CallCreateInstance(aClass, nullptr,
                               NS_GET_TEMPLATE_IID(DestinationType),
                               reinterpret_cast<void**>(aDestination));
 }
@@ -243,7 +243,7 @@ CallCreateInstance( const char *aContractID,
     NS_PRECONDITION(aContractID, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return CallCreateInstance(aContractID, nsnull,
+    return CallCreateInstance(aContractID, nullptr,
                               NS_GET_TEMPLATE_IID(DestinationType),
                               reinterpret_cast<void**>(aDestination));
 }
@@ -272,7 +272,7 @@ CallCreateInstance( nsIFactory *aFactory,
     NS_PRECONDITION(aFactory, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
     
-    return aFactory->CreateInstance(nsnull,
+    return aFactory->CreateInstance(nullptr,
                                     NS_GET_TEMPLATE_IID(DestinationType),
                                     reinterpret_cast<void**>(aDestination));
 }

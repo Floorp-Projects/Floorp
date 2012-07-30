@@ -386,8 +386,8 @@ class nsIWidget : public nsISupports {
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
 
     nsIWidget()
-      : mLastChild(nsnull)
-      , mPrevSibling(nsnull)
+      : mLastChild(nullptr)
+      , mPrevSibling(nullptr)
     {}
 
         
@@ -423,7 +423,7 @@ class nsIWidget : public nsISupports {
                       const nsIntRect  &aRect,
                       EVENT_CALLBACK   aHandleEventFunction,
                       nsDeviceContext *aContext,
-                      nsWidgetInitData *aInitData = nsnull) = 0;
+                      nsWidgetInitData *aInitData = nullptr) = 0;
 
     /**
      * Allocate, initialize, and return a widget that is a child of
@@ -445,7 +445,7 @@ class nsIWidget : public nsISupports {
     CreateChild(const nsIntRect  &aRect,
                 EVENT_CALLBACK   aHandleEventFunction,
                 nsDeviceContext  *aContext,
-                nsWidgetInitData *aInitData = nsnull,
+                nsWidgetInitData *aInitData = nullptr,
                 bool             aForceUseIWidgetParent = false) = 0;
 
     /**
@@ -508,10 +508,10 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD UnregisterTouchWindow() = 0;
 
     /**
-     * Return the parent Widget of this Widget or nsnull if this is a 
+     * Return the parent Widget of this Widget or nullptr if this is a 
      * top level window
      *
-     * @return the parent widget or nsnull if it does not have a parent
+     * @return the parent widget or nullptr if it does not have a parent
      *
      */
     virtual nsIWidget* GetParent(void) = 0;
@@ -525,10 +525,10 @@ class nsIWidget : public nsISupports {
 
     /**
      * Return the top (non-sheet) parent of this Widget if it's a sheet,
-     * or nsnull if this isn't a sheet (or some other error occurred).
+     * or nullptr if this isn't a sheet (or some other error occurred).
      * Sheets are only supported on some platforms (currently only OS X).
      *
-     * @return the top (non-sheet) parent widget or nsnull
+     * @return the top (non-sheet) parent widget or nullptr
      *
      */
     virtual nsIWidget* GetSheetWindowParent(void) = 0;
@@ -1038,16 +1038,16 @@ class nsIWidget : public nsISupports {
      * @param aAllowRetaining an outparam that states whether the returned
      * layer manager should be used for retained layers
      */
-    inline LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull)
+    inline LayerManager* GetLayerManager(bool* aAllowRetaining = nullptr)
     {
-        return GetLayerManager(nsnull, mozilla::layers::LAYERS_NONE,
+        return GetLayerManager(nullptr, mozilla::layers::LAYERS_NONE,
                                LAYER_MANAGER_CURRENT, aAllowRetaining);
     }
 
     inline LayerManager* GetLayerManager(LayerManagerPersistence aPersistence,
-                                         bool* aAllowRetaining = nsnull)
+                                         bool* aAllowRetaining = nullptr)
     {
-        return GetLayerManager(nsnull, mozilla::layers::LAYERS_NONE,
+        return GetLayerManager(nullptr, mozilla::layers::LAYERS_NONE,
                                aPersistence, aAllowRetaining);
     }
 
@@ -1059,7 +1059,7 @@ class nsIWidget : public nsISupports {
     virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager,
                                           LayersBackend aBackendHint,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                          bool* aAllowRetaining = nsnull) = 0;
+                                          bool* aAllowRetaining = nullptr) = 0;
 
     /**
      * Called before the LayerManager draws the layer tree.

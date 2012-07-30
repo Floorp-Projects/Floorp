@@ -28,7 +28,7 @@ protected:
    */
   inline void Disconnect()
   {
-    mConstraintValidation = nsnull;
+    mConstraintValidation = nullptr;
   }
 
   /**

@@ -25,7 +25,7 @@ static const char* GetLinebreakString(nsLinebreakConverter::ELinebreakType aBrea
     LFSTR,          // Unix
     CRLF,           // Windows
     " ",            // space
-    nsnull  
+    nullptr  
   };
   
   return sLinebreaks[aBreakType];
@@ -97,13 +97,13 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
 {
   NS_ASSERTION(inSrc && srcBreak && destBreak, "Got a null string");
   
-  T* resultString = nsnull;
+  T* resultString = nullptr;
    
   // handle the no conversion case
   if (nsCRT::strcmp(srcBreak, destBreak) == 0)
   {
     resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
-    if (!resultString) return nsnull;
+    if (!resultString) return nullptr;
     memcpy(resultString, inSrc, sizeof(T) * ioLen); // includes the null, if any
     return resultString;
   }
@@ -116,7 +116,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
   if (srcBreakLen == destBreakLen && srcBreakLen == 1)
   {
     resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
-    if (!resultString) return nsnull;
+    if (!resultString) return nullptr;
     
     const T* src = inSrc;
     const T* srcEnd = inSrc + ioLen;		// includes null, if any
@@ -149,7 +149,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
     
     PRInt32 newBufLen = ioLen - (numLinebreaks * srcBreakLen) + (numLinebreaks * destBreakLen);
     resultString = (T *)nsMemory::Alloc(sizeof(T) * newBufLen);
-    if (!resultString) return nsnull;
+    if (!resultString) return nullptr;
     
     const T* src = inSrc;
     const T* srcEnd = inSrc + ioLen;		// includes null, if any
@@ -247,7 +247,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
   }
   
   T* resultString = (T *)nsMemory::Alloc(sizeof(T) * finalLen);
-  if (!resultString) return nsnull;
+  if (!resultString) return nullptr;
 
   src = inSrc;
   srcEnd = inSrc + ioLen;		// includes null, if any
@@ -296,7 +296,7 @@ char* nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
 {
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
-  if (!aSrc) return nsnull;
+  if (!aSrc) return nullptr;
   
   PRInt32 sourceLen = (aSrcLen == kIgnoreLen) ? strlen(aSrc) + 1 : aSrcLen;
 
@@ -367,7 +367,7 @@ PRUnichar* nsLinebreakConverter::ConvertUnicharLineBreaks(const PRUnichar* aSrc,
 {
   NS_ASSERTION(aDestBreaks != eLinebreakAny &&
                aSrcBreaks != eLinebreakSpace, "Invalid parameter");
-  if (!aSrc) return nsnull;
+  if (!aSrc) return nullptr;
   
   PRInt32 bufLen = (aSrcLen == kIgnoreLen) ? NS_strlen(aSrc) + 1 : aSrcLen;
 

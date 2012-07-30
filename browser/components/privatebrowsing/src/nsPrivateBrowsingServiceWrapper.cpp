@@ -28,15 +28,15 @@ nsPrivateBrowsingServiceWrapper::Init()
 }
 
 JSStackGuard::JSStackGuard()
-  : mJSStack(nsnull)
+  : mJSStack(nullptr)
 {
   nsresult rv;
   mJSStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
 
   if (NS_SUCCEEDED(rv) && mJSStack) {
-    rv = mJSStack->Push(nsnull);
+    rv = mJSStack->Push(nullptr);
     if (NS_FAILED(rv))
-      mJSStack = nsnull;
+      mJSStack = nullptr;
   }
 }
 
@@ -45,7 +45,7 @@ JSStackGuard::~JSStackGuard()
   if (mJSStack) {
     JSContext *cx;
     mJSStack->Pop(&cx);
-    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+    NS_ASSERTION(cx == nullptr, "JSContextStack mismatch");
   }
 }
 

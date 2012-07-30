@@ -394,7 +394,7 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
     resolveShortcutURL(lf, url);
     if (!url.IsEmpty()) {
       return io->NewURI(url,
-                        nsnull,
+                        nullptr,
                         workingDirURI,
                         aResult);
     }
@@ -403,7 +403,7 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
   }
 
   return io->NewURI(NS_ConvertUTF16toUTF8(aArgument),
-                    nsnull,
+                    nullptr,
                     workingDirURI,
                     aResult);
 }
@@ -627,11 +627,11 @@ nsCommandLine::Run()
 {
   nsresult rv;
 
-  rv = EnumerateValidators(EnumValidate, nsnull);
+  rv = EnumerateValidators(EnumValidate, nullptr);
   if (rv == NS_ERROR_ABORT)
     return rv;
 
-  rv = EnumerateHandlers(EnumRun, nsnull);
+  rv = EnumerateHandlers(EnumRun, nullptr);
   if (rv == NS_ERROR_ABORT)
     return rv;
 

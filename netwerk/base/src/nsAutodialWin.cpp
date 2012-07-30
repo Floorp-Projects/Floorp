@@ -30,7 +30,7 @@
 //
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gLog = nsnull;
+static PRLogModuleInfo* gLog = nullptr;
 #endif
 
 #define LOGD(args) PR_LOG(gLog, PR_LOG_DEBUG, args)
@@ -158,7 +158,7 @@ int nsAutodial::QueryAutodialBehavior()
     DWORD onDemand = 0;
     DWORD paramSize = sizeof(DWORD);
 
-    result = ::RegQueryValueExW(hKey, L"EnableAutodial", nsnull, &entryType, (LPBYTE)&autodial, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"EnableAutodial", nullptr, &entryType, (LPBYTE)&autodial, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
@@ -166,7 +166,7 @@ int nsAutodial::QueryAutodialBehavior()
         return AUTODIAL_NEVER;
     }
 
-    result = ::RegQueryValueExW(hKey, L"NoNetAutodial", nsnull, &entryType, (LPBYTE)&onDemand, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"NoNetAutodial", nullptr, &entryType, (LPBYTE)&onDemand, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
@@ -256,7 +256,7 @@ nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
             rasDialDlg.dwSize = sizeof(rasDialDlg);
 
             BOOL dialed = 
-             RasDialDlgW(nsnull, mDefaultEntryName, nsnull, &rasDialDlg);
+             RasDialDlgW(nullptr, mDefaultEntryName, nullptr, &rasDialDlg);
 
             if (!dialed)
             {
@@ -286,7 +286,7 @@ nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
             memset(&rasPBDlg, 0, sizeof(rasPBDlg));
             rasPBDlg.dwSize = sizeof(rasPBDlg);
  
-            BOOL dialed = RasPhonebookDlgW(nsnull, nsnull, &rasPBDlg);
+            BOOL dialed = RasPhonebookDlgW(nullptr, nullptr, &rasPBDlg);
 
             if (!dialed)
             {
@@ -342,7 +342,7 @@ nsresult nsAutodial::GetFirstEntryName(PRUnichar* entryName, int bufferSize)
     DWORD cEntries = 0;
 
     DWORD result = 
-     RasEnumEntriesW(nsnull, nsnull, &rasEntryName, &cb, &cEntries);
+     RasEnumEntriesW(nullptr, nullptr, &rasEntryName, &cb, &cEntries);
 
     // ERROR_BUFFER_TOO_SMALL is OK because we only need one struct.
     if (result == ERROR_SUCCESS || result == ERROR_BUFFER_TOO_SMALL)
@@ -365,7 +365,7 @@ int nsAutodial::NumRASEntries()
 
 
     DWORD result = 
-     RasEnumEntriesW(nsnull, nsnull, &rasEntryName, &cb, &cEntries);
+     RasEnumEntriesW(nullptr, nullptr, &rasEntryName, &cb, &cEntries);
 
     // ERROR_BUFFER_TOO_SMALL is OK because we only need one struct.
     if (result == ERROR_SUCCESS || result == ERROR_BUFFER_TOO_SMALL)
@@ -434,7 +434,7 @@ nsresult nsAutodial::GetDefaultEntryName(PRUnichar* entryName, int bufferSize)
 
     result = ::RegQueryValueExW(hKey, 
                                 val, 
-                                nsnull, 
+                                nullptr, 
                                 &entryType, 
                                 (LPBYTE)entryName, 
                                 &buffSize);
@@ -455,11 +455,11 @@ nsresult nsAutodial::GetDefaultEntryName(PRUnichar* entryName, int bufferSize)
 // Determine if the autodial service is running on this PC.
 bool nsAutodial::IsAutodialServiceRunning()
 {
-    nsAutoServiceHandle hSCManager(OpenSCManager(nsnull, 
+    nsAutoServiceHandle hSCManager(OpenSCManager(nullptr, 
                                                  SERVICES_ACTIVE_DATABASE, 
                                                  SERVICE_QUERY_STATUS));
 
-    if (hSCManager == nsnull)
+    if (hSCManager == nullptr)
     {
         LOGE(("Autodial: failed to open service control manager. Error %d.", 
           ::GetLastError()));
@@ -471,7 +471,7 @@ bool nsAutodial::IsAutodialServiceRunning()
                                               L"RasAuto", 
                                               SERVICE_QUERY_STATUS));
 
-    if (hSCManager == nsnull)
+    if (hSCManager == nullptr)
     {
         LOGE(("Autodial: failed to open RasAuto service."));
         return false;
@@ -499,7 +499,7 @@ bool nsAutodial::AddAddressToAutodialDirectory(const PRUnichar* hostName)
     DWORD entries = 0;
 
     DWORD result = RasGetAutodialAddressW(hostName, 
-                                          nsnull, 
+                                          nullptr, 
                                           &autodialEntry, 
                                           &size, 
                                           &entries);
@@ -555,7 +555,7 @@ int nsAutodial::GetCurrentLocation()
     DWORD location = 0;
     DWORD paramSize = sizeof(DWORD);
 
-    result = ::RegQueryValueExW(hKey, L"CurrentID", nsnull, &entryType, (LPBYTE)&location, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"CurrentID", nullptr, &entryType, (LPBYTE)&location, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);

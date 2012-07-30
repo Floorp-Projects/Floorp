@@ -182,7 +182,7 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
         }
     }
 
-    *aResult = nsnull;
+    *aResult = nullptr;
     return NS_RDF_NO_VALUE; // not found
 }
 
@@ -249,7 +249,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString str;
-        rv = gFormat->FormatPRTime(nsnull /* nsILocale* locale */,
+        rv = gFormat->FormatPRTime(nullptr /* nsILocale* locale */,
                                   kDateFormatShort,
                                   kTimeFormatSeconds,
                                   PRTime(value),
@@ -364,7 +364,7 @@ nsresult
 nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
-    NS_PRECONDITION(aAttribute != nsnull, "null ptr");
+    NS_PRECONDITION(aAttribute != nullptr, "null ptr");
     if (! aAttribute)
         return NS_ERROR_NULL_POINTER;
 
@@ -412,18 +412,18 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     // Deal with setting up a 'commandupdater'. Pulls the 'events' and
     // 'targets' attributes off of aElement, and adds it to the
     // document's command dispatcher.
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
+    NS_PRECONDITION(aDocument != nullptr, "null ptr");
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    NS_PRECONDITION(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
 
     nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(aDocument);
-    NS_ASSERTION(xuldoc != nsnull, "not a xul document");
+    NS_ASSERTION(xuldoc != nullptr, "not a xul document");
     if (! xuldoc)
         return NS_ERROR_UNEXPECTED;
 
@@ -432,7 +432,7 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get dispatcher");
     if (NS_FAILED(rv)) return rv;
 
-    NS_ASSERTION(dispatcher != nsnull, "no dispatcher");
+    NS_ASSERTION(dispatcher != nullptr, "no dispatcher");
     if (! dispatcher)
         return NS_ERROR_UNEXPECTED;
 
@@ -448,7 +448,7 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
         targets.AssignLiteral("*");
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-    NS_ASSERTION(domelement != nsnull, "not a DOM element");
+    NS_ASSERTION(domelement != nullptr, "not a DOM element");
     if (! domelement)
         return NS_ERROR_UNEXPECTED;
 

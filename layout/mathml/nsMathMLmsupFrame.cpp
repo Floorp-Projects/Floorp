@@ -105,7 +105,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   nsHTMLReflowMetrics baseSize;
   nsHTMLReflowMetrics supScriptSize;
   nsBoundingMetrics bmBase, bmSupScript;
-  nsIFrame* supScriptFrame = nsnull;
+  nsIFrame* supScriptFrame = nullptr;
   nsIFrame* baseFrame = aFrame->GetFirstPrincipalChild();
   if (baseFrame)
     supScriptFrame = baseFrame->GetNextSibling();
@@ -217,12 +217,12 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
     // now place the base ...
     dx = aFrame->MirrorIfRTL(aDesiredSize.width, baseSize.width, 0);
     dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
+    FinishReflowChild (baseFrame, aPresContext, nullptr, baseSize, dx, dy, 0);
     // ... and supscript
     dx = aFrame->MirrorIfRTL(aDesiredSize.width, supScriptSize.width,
                              bmBase.width + italicCorrection);
     dy = aDesiredSize.ascent - (supScriptSize.ascent + actualSupScriptShift);
-    FinishReflowChild (supScriptFrame, aPresContext, nsnull, supScriptSize, dx, dy, 0);
+    FinishReflowChild (supScriptFrame, aPresContext, nullptr, supScriptSize, dx, dy, 0);
   }
 
   return NS_OK;

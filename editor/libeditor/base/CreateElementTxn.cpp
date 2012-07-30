@@ -114,7 +114,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 
   // note, it's ok for mRefNode to be null.  that means append
   nsIContent* refNode = parent->GetChildAt(mOffsetInParent);
-  mRefNode = refNode ? refNode->AsDOMNode() : nsnull;
+  mRefNode = refNode ? refNode->AsDOMNode() : nullptr;
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));

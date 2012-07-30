@@ -24,7 +24,7 @@ static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 
 //-----------------------------------------------------------------------------
 
-nsJARProtocolHandler *gJarHandler = nsnull;
+nsJARProtocolHandler *gJarHandler = nullptr;
 
 nsJARProtocolHandler::nsJARProtocolHandler()
 {
@@ -66,13 +66,13 @@ nsJARProtocolHandler::GetSingleton()
     if (!gJarHandler) {
         gJarHandler = new nsJARProtocolHandler();
         if (!gJarHandler)
-            return nsnull;
+            return nullptr;
 
         NS_ADDREF(gJarHandler);
         nsresult rv = gJarHandler->Init();
         if (NS_FAILED(rv)) {
             NS_RELEASE(gJarHandler);
-            return nsnull;
+            return nullptr;
         }
     }
     NS_ADDREF(gJarHandler);

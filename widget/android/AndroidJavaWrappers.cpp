@@ -619,7 +619,7 @@ AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 void
 AndroidGeckoLayerClient::Init(jobject jobj)
 {
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    NS_ASSERTION(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;
 }
 
@@ -647,14 +647,14 @@ AndroidLayerRendererFrame::Dispose(JNIEnv *env)
 void
 AndroidViewTransform::Init(jobject jobj)
 {
-    NS_ABORT_IF_FALSE(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    NS_ABORT_IF_FALSE(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;
 }
 
 void
 AndroidGeckoSurfaceView::Init(jobject jobj)
 {
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    NS_ASSERTION(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
 
     wrapped_obj = jobj;
 }
@@ -768,11 +768,11 @@ jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBitmap(AutoLocalJNIFrame *jniFrame)
 {
     if (!jniFrame || !jniFrame->GetEnv())
-        return nsnull;
+        return nullptr;
 
     jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
     if (jniFrame->CheckForException())
-        return nsnull;
+        return nullptr;
 
     return ret;
 }
@@ -781,11 +781,11 @@ jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBuffer(AutoLocalJNIFrame *jniFrame)
 {
     if (!jniFrame || !jniFrame->GetEnv())
-        return nsnull;
+        return nullptr;
 
     jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
     if (jniFrame->CheckForException())
-        return nsnull;
+        return nullptr;
 
     return ret;
 }
@@ -794,11 +794,11 @@ jobject
 AndroidGeckoSurfaceView::GetSurface(AutoLocalJNIFrame *jniFrame)
 {
     if (!jniFrame || !jniFrame->GetEnv())
-        return nsnull;
+        return nullptr;
 
     jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
     if (jniFrame->CheckForException())
-        return nsnull;
+        return nullptr;
 
     return ret;
 }
@@ -807,11 +807,11 @@ jobject
 AndroidGeckoSurfaceView::GetSurfaceHolder(AutoLocalJNIFrame *jniFrame)
 {
     if (!jniFrame || !jniFrame->GetEnv())
-        return nsnull;
+        return nullptr;
 
     jobject ret = jniFrame->GetEnv()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
     if (jniFrame->CheckForException())
-        return nsnull;
+        return nullptr;
 
     return ret;
 }
@@ -936,7 +936,7 @@ AndroidViewTransform::GetScale(JNIEnv *env)
 void
 AndroidRect::Init(JNIEnv *jenv, jobject jobj)
 {
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    NS_ASSERTION(wrapped_obj == nullptr, "Init called on non-null wrapped_obj!");
 
     wrapped_obj = jobj;
 

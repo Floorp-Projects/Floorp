@@ -478,7 +478,7 @@ NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver)
 
 // -----------------------------------------------------------------------------------
 // Here is the global list of applicable glyph tables that we will be using
-static nsGlyphTableList* gGlyphTableList = nsnull;
+static nsGlyphTableList* gGlyphTableList = nullptr;
 
 static bool gInitialized = false;
 
@@ -550,7 +550,7 @@ nsGlyphTableList::GetGlyphTableFor(nsPresContext* aPresContext,
       return glyphTable;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsGlyphTable*
@@ -654,7 +654,7 @@ InitGlobals(nsPresContext* aPresContext)
   }
   if (NS_FAILED(rv)) {
     delete gGlyphTableList;
-    gGlyphTableList = nsnull;
+    gGlyphTableList = nullptr;
     return rv;
   }
   /*
@@ -688,7 +688,7 @@ InitGlobals(nsPresContext* aPresContext)
   // Parse the font list and append an entry for each family to gGlyphTableList
   nsAutoString missingFamilyList;
 
-  font.EnumerateFamilies(MathFontEnumCallback, nsnull);
+  font.EnumerateFamilies(MathFontEnumCallback, nullptr);
   return rv;
 }
 
@@ -739,7 +739,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   // note that mGlyph is not initialized
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mBoundingMetrics = nsBoundingMetrics();
-  mGlyphTable = nsnull;
+  mGlyphTable = nullptr;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
     mDirection = nsMathMLOperators::GetStretchyDirection(mData);
@@ -951,7 +951,7 @@ AddFallbackFonts(nsAString& aFontName, const nsAString& aFallbackFamilies)
   aFontName.EndReading(p_end);
 
   const PRUnichar *p = p_begin;
-  const PRUnichar *p_name = nsnull;
+  const PRUnichar *p_name = nullptr;
   while (p < p_end) {
     while (nsCRT::IsAsciiSpace(*p))
       if (++p == p_end)
@@ -1743,7 +1743,7 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   }
   if (last->mSibling) {
     delete last->mSibling;
-    last->mSibling = nsnull;
+    last->mSibling = nullptr;
   }
   // let children stretch in an equal space
   nsBoundingMetrics splitSize;
@@ -1768,7 +1768,7 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
     // check if something went wrong or the child couldn't fit in the alloted space
     if (NS_FAILED(rv) || (NS_STRETCH_DIRECTION_UNSUPPORTED == child->mDirection)) {
       delete mSibling; // don't leave a dangling list behind ...
-      mSibling = nsnull;
+      mSibling = nullptr;
       return NS_ERROR_FAILURE;
     }
     child->SetRect(nsRect(dx, dy, childSize.width, childSize.ascent+childSize.descent));

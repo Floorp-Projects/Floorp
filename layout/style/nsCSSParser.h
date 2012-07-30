@@ -38,8 +38,8 @@ class StyleRule;
 
 class NS_STACK_CLASS nsCSSParser {
 public:
-  nsCSSParser(mozilla::css::Loader* aLoader = nsnull,
-              nsCSSStyleSheet* aSheet = nsnull);
+  nsCSSParser(mozilla::css::Loader* aLoader = nullptr,
+              nsCSSStyleSheet* aSheet = nullptr);
   ~nsCSSParser();
 
   static void Shutdown();

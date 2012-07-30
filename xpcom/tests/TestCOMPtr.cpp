@@ -380,7 +380,7 @@ main()
       else
         printf("foo1p == foo2p\n");
 
-      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nsnull [!=]?\n");
+      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nullptr [!=]?\n");
       if ( foo1p != 0 )
       	printf("foo1p != 0\n");
       if ( 0 != foo1p )

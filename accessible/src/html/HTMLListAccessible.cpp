@@ -44,15 +44,15 @@ HTMLListAccessible::NativeState()
 
 HTMLLIAccessible::
   HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
+  HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr)
 {
   mFlags |= eHTMLListItemAccessible;
 
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
   if (blockFrame && blockFrame->HasBullet()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-    if (!Document()->BindToDocument(mBullet, nsnull))
-      mBullet = nsnull;
+    if (!Document()->BindToDocument(mBullet, nullptr))
+      mBullet = nullptr;
   }
 }
 
@@ -61,7 +61,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIAccessible, HyperTextAccessible)
 void
 HTMLLIAccessible::Shutdown()
 {
-  mBullet = nsnull;
+  mBullet = nullptr;
 
   HyperTextAccessibleWrap::Shutdown();
 }
@@ -112,13 +112,13 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
   DocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-    if (document->BindToDocument(mBullet, nsnull)) {
+    if (document->BindToDocument(mBullet, nullptr)) {
       InsertChildAt(0, mBullet);
     }
   } else {
     RemoveChild(mBullet);
     document->UnbindFromDocument(mBullet);
-    mBullet = nsnull;
+    mBullet = nullptr;
   }
 
   // XXXtodo: fire show/hide and reorder events. That's hard to make it
@@ -149,7 +149,7 @@ nsIFrame*
 HTMLListBulletAccessible::GetFrame() const
 {
   nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  return blockFrame ? blockFrame->GetBullet() : nsnull;
+  return blockFrame ? blockFrame->GetBullet() : nullptr;
 }
 
 bool

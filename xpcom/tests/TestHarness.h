@@ -175,16 +175,16 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
         MOZ_ASSERT(os);
         if (os) {
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nsnull, "profile-change-net-teardown", nsnull)));
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nsnull, "profile-change-teardown", nsnull)));
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nsnull, "profile-before-change", nsnull)));
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr)));
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-change-teardown", nullptr)));
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->NotifyObservers(nullptr, "profile-before-change", nullptr)));
         }
 
         if (NS_FAILED(mProfD->Remove(true))) {
           NS_WARNING("Problem removing profile directory");
         }
 
-        mProfD = nsnull;
+        mProfD = nullptr;
       }
 
       if (mServMgr)
@@ -217,13 +217,13 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       nsCOMPtr<nsIFile> profD;
       nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
                                            getter_AddRefs(profD));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       rv = profD->Append(NS_LITERAL_STRING("cpp-unit-profd"));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       rv = profD->CreateUnique(nsIFile::DIRECTORY_TYPE, 0755);
-      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       mProfD = profD;
       return profD.forget();

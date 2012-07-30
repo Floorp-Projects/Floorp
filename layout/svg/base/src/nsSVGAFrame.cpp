@@ -65,7 +65,7 @@ public:
   virtual void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
   virtual void GetDxDy(mozilla::SVGUserUnitList *aDx, mozilla::SVGUserUnitList *aDy);
   virtual const SVGNumberList* GetRotate() {
-    return nsnull;
+    return nullptr;
   }
 
 private:
@@ -131,7 +131,7 @@ nsSVGAFrame::NotifySVGChanged(PRUint32 aFlags)
 
   if (aFlags & TRANSFORM_CHANGED) {
     // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nsnull;
+    mCanvasTM = nullptr;
   }
 
   nsSVGAFrameBase::NotifySVGChanged(aFlags);

@@ -18,11 +18,11 @@ nsFixedSizeAllocator::AddBucket(size_t aSize)
     void* p;
     PL_ARENA_ALLOCATE(p, &mPool, sizeof(Bucket));
     if (! p)
-        return nsnull;
+        return nullptr;
 
     Bucket* bucket = static_cast<Bucket*>(p);
     bucket->mSize  = aSize;
-    bucket->mFirst = nsnull;
+    bucket->mFirst = nullptr;
     bucket->mNext  = mBuckets;
 
     mBuckets = bucket;
@@ -47,7 +47,7 @@ nsFixedSizeAllocator::Init(const char* aName,
     PRInt32 bucketspace = aNumBuckets * sizeof(Bucket);
     PL_InitArenaPool(&mPool, aName, bucketspace + aInitialSize, aAlign);
 
-    mBuckets = nsnull;
+    mBuckets = nullptr;
     for (PRInt32 i = 0; i < aNumBuckets; ++i)
         AddBucket(aBucketSizes[i]);
 
@@ -60,7 +60,7 @@ nsFixedSizeAllocator::FindBucket(size_t aSize)
     Bucket** link = &mBuckets;
     Bucket* bucket;
 
-    while ((bucket = *link) != nsnull) {
+    while ((bucket = *link) != nullptr) {
         if (aSize == bucket->mSize) {
             // Promote to the head of the list, under the assumption
             // that we'll allocate same-sized object contemporaneously.
@@ -72,7 +72,7 @@ nsFixedSizeAllocator::FindBucket(size_t aSize)
 
         link = &bucket->mNext;
     }
-    return nsnull;
+    return nullptr;
 }
 
 void*
@@ -83,7 +83,7 @@ nsFixedSizeAllocator::Alloc(size_t aSize)
         // Oops, we don't carry that size. Let's fix that.
         bucket = AddBucket(aSize);
         if (! bucket)
-            return nsnull;
+            return nullptr;
     }
 
     void* next;
@@ -94,7 +94,7 @@ nsFixedSizeAllocator::Alloc(size_t aSize)
     else {
         PL_ARENA_ALLOCATE(next, &mPool, aSize);
         if (!next)
-            return nsnull;
+            return nullptr;
     }
 
 #ifdef DEBUG

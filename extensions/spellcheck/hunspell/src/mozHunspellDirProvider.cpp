@@ -75,7 +75,7 @@ mozHunspellDirProvider::GetFiles(const char *aKey,
   if (!e)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  *aResult = nsnull;
+  *aResult = nullptr;
   e.swap(*aResult);
   return NS_SUCCESS_AGGREGATE_RESULT;
 }
@@ -96,7 +96,7 @@ mozHunspellDirProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
   if (aResult)
     NS_ADDREF(*aResult = mNext);
 
-  mNext = nsnull;
+  mNext = nullptr;
 
   nsresult rv;
 
@@ -122,7 +122,7 @@ mozHunspellDirProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
     if (NS_SUCCEEDED(rv) && exists)
       break;
 
-    mNext = nsnull;
+    mNext = nullptr;
   }
 
   return NS_OK;
@@ -133,7 +133,7 @@ mozHunspellDirProvider::AppendingEnumerator::AppendingEnumerator
   mBase(aBase)
 {
   // Initialize mNext to begin
-  GetNext(nsnull);
+  GetNext(nullptr);
 }
 
 char const *const

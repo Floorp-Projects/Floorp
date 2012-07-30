@@ -58,7 +58,7 @@ public:
    * Default constructor. Initialize the fragment to be empty.
    */
   nsTextFragment()
-    : m1b(nsnull), mAllBits(0)
+    : m1b(nullptr), mAllBits(0)
   {
     MOZ_COUNT_CTOR(nsTextFragment);
     NS_ASSERTION(sizeof(FragmentBits) == 4, "Bad field packing!");
