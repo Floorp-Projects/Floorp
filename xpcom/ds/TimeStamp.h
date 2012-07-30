@@ -13,10 +13,6 @@
 #include "nsDebug.h"
 #include "prlong.h"
 
-namespace IPC {
-template <typename T> struct ParamTraits;
-}
-
 namespace mozilla {
 
 class TimeStamp;
@@ -99,9 +95,6 @@ public:
   bool operator>(const TimeDuration& aOther) const {
     return mValue > aOther.mValue;
   }
-  bool operator==(const TimeDuration& aOther) const {
-    return mValue == aOther.mValue;
-  }
 
   // Return a best guess at the system's current timing resolution,
   // which might be variable.  TimeDurations below this order of
@@ -118,7 +111,6 @@ public:
 
 private:
   friend class TimeStamp;
-  friend struct IPC::ParamTraits<mozilla::TimeDuration>;
 
   static TimeDuration FromTicks(PRInt64 aTicks) {
     TimeDuration t;
@@ -273,8 +265,6 @@ public:
   static NS_HIDDEN_(void) Shutdown();
 
 private:
-  friend struct IPC::ParamTraits<mozilla::TimeStamp>;
-
   TimeStamp(PRUint64 aValue) : mValue(aValue) {}
 
   /**

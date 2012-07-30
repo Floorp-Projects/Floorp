@@ -26,11 +26,6 @@ public:
     Init(aX1, aY1, aX2, aY2);
   }
 
-  double X1() const { return mX1; }
-  double Y1() const { return mY1; }
-  double X2() const { return mX2; }
-  double Y2() const { return mY2; }
-
   void Init(double aX1, double aY1,
             double aX2, double aY2);
 
