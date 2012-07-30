@@ -364,7 +364,7 @@ nsSVGPatternFrame::GetPatternTransformList(nsIContent* aDefault)
   SVGAnimatedTransformList *thisTransformList =
     static_cast<nsSVGPatternElement *>(mContent)->GetAnimatedTransformList();
 
-  if (thisTransformList->IsExplicitlySet())
+  if (thisTransformList && thisTransformList->IsExplicitlySet())
     return thisTransformList;
 
   AutoPatternReferencer patternRef(this);
