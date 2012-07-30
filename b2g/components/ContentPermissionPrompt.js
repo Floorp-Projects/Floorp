@@ -15,7 +15,7 @@ function ContentPermissionPrompt() {}
 ContentPermissionPrompt.prototype = {
 
   handleExistingPermission: function handleExistingPermission(request) {
-    let result = Services.perms.testExactPermission(request.uri, request.type);
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return true;
@@ -56,7 +56,7 @@ ContentPermissionPrompt.prototype = {
       "type": "permission-prompt",
       "permission": request.type,
       "id": requestId,
-      "url": request.uri.spec
+      "url": request.principal.URI.spec
     };
     let event = content.document.createEvent("CustomEvent");
     event.initCustomEvent("mozChromeEvent", true, true, details);

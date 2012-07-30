@@ -17,12 +17,14 @@ include protocol PIndexedDB;
 include "gfxMatrix.h";
 include "IPC/nsGUIEventIPC.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 
 include DOMTypes;
 
 using IPC::URI;
+using IPC::Principal;
 using gfxMatrix;
 using gfxSize;
 using mozilla::layers::LayersBackend;
@@ -174,7 +176,20 @@ parent:
     SetCursor(PRUint32 value);
     SetBackgroundColor(nscolor color);
 
-    PContentPermissionRequest(nsCString aType, URI uri);
+    /**
+     * Initiates an asynchronous request for permission for the
+     * provided principal.
+     *
+     * @param aType
+     *   The type of permission to request.
+     * @param aPrincipal
+     *   The principal of the request.
+     *
+     * NOTE: The principal is untrusted in the parent process. Only
+     *       principals that can live in the content process should
+     *       provided.
+     */
+    PContentPermissionRequest(nsCString aType, Principal principal);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
                    PRInt32[] aIntParams, nsString[] aStringParams);

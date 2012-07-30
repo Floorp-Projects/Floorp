@@ -1560,13 +1560,14 @@ ContentPermissionPrompt.prototype = {
         return;
     }
 
-    var requestingURI = request.uri;
+    var requestingPrincipal = request.principal;
+    var requestingURI = requestingPrincipal.URI;
 
     // Ignore requests from non-nsIStandardURLs
     if (!(requestingURI instanceof Ci.nsIStandardURL))
       return;
 
-    var result = Services.perms.testExactPermission(requestingURI, "geo");
+    var result = Services.perms.testExactPermissionFromPrincipal(requestingPrincipal, "geo");
 
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
@@ -1619,7 +1620,7 @@ ContentPermissionPrompt.prototype = {
           label: browserBundle.GetStringFromName("geolocation.alwaysShareLocation"),
           accessKey: browserBundle.GetStringFromName("geolocation.alwaysShareLocation.accesskey"),
           callback: function () {
-            Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
+            Services.perms.addFromPrincipal(requestingPrincipal, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
             request.allow();
           }
         });
@@ -1627,7 +1628,7 @@ ContentPermissionPrompt.prototype = {
           label: browserBundle.GetStringFromName("geolocation.neverShareLocation"),
           accessKey: browserBundle.GetStringFromName("geolocation.neverShareLocation.accesskey"),
           callback: function () {
-            Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.DENY_ACTION);
+            Services.perms.addFromPrincipal(requestingPrincipal, "geo", Ci.nsIPermissionManager.DENY_ACTION);
             request.cancel();
           }
         });

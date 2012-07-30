@@ -21,7 +21,7 @@ ContentPermissionPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
   handleExistingPermission: function handleExistingPermission(request) {
-    let result = Services.perms.testExactPermission(request.uri, request.type);
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return true;
@@ -70,7 +70,7 @@ ContentPermissionPrompt.prototype = {
       callback: function(aChecked) {
         // If the user checked "Don't ask again", make a permanent exception
         if (aChecked)
-          Services.perms.add(request.uri, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+          Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
 
         request.allow();
       }
@@ -80,18 +80,18 @@ ContentPermissionPrompt.prototype = {
       callback: function(aChecked) {
         // If the user checked "Don't ask again", make a permanent exception
         if (aChecked)
-          Services.perms.add(request.uri, request.type, Ci.nsIPermissionManager.DENY_ACTION);
+          Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.DENY_ACTION);
 
         request.cancel();
       }
     }];
 
     let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
-                                                     [request.uri.host], 1);
+                                                     [request.principal.URI.host], 1);
     let options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
 
     chromeWin.NativeWindow.doorhanger.show(message,
-                                           entityName + request.uri.host,
+                                           entityName + request.principal.URI.host,
                                            buttons, tab.id, options);
   }
 };

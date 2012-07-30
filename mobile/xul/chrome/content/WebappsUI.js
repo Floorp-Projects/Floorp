@@ -64,8 +64,9 @@ var WebappsUI = {
   },
 
   askPermission: function(aMessage, aType, aCallbacks) {
-    let uri = Services.io.newURI(aMessage.json.from, null, null);
-    let perm = Services.perms.testExactPermission(uri, aType);
+    let browser = aMessage.target;
+    let principal = browser.contentPrincipal;
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal, aType);
     switch(perm) {
       case Ci.nsIPermissionManager.ALLOW_ACTION:
         aCallbacks.allow();
@@ -79,7 +80,7 @@ var WebappsUI = {
 
     prompt.prompt({
       type: aType,
-      uri: uri,
+      principal: principal,
       window: null,
       element: getBrowser(),
 
@@ -88,7 +89,7 @@ var WebappsUI = {
       },
 
       allow: function() {
-        Services.perms.add(uri, aType, Ci.nsIPermissionManager.ALLOW_ACTION);
+        Services.perms.addFromPrincipal(principal, aType, Ci.nsIPermissionManager.ALLOW_ACTION);
         aCallbacks.allow();
       }
     });
