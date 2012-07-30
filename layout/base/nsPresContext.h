@@ -1074,11 +1074,11 @@ protected:
   nsPresContextType     mType;
   nsIPresShell*         mShell;         // [WEAK]
   nsCOMPtr<nsIDocument> mDocument;
-  nsDeviceContext*     mDeviceContext; // [STRONG] could be weak, but
-                                        // better safe than sorry.
-                                        // Cannot reintroduce cycles
-                                        // since there is no dependency
-                                        // from gfx back to layout.
+  nsRefPtr<nsDeviceContext> mDeviceContext; // [STRONG] could be weak, but
+                                            // better safe than sorry.
+                                            // Cannot reintroduce cycles
+                                            // since there is no dependency
+                                            // from gfx back to layout.
   nsRefPtr<nsEventStateManager> mEventManager;
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
@@ -1132,7 +1132,7 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   nsUserFontSet*        mUserFontSet;
-  
+
   nsRect                mVisibleArea;
   nsSize                mPageSize;
   float                 mPageScale;
