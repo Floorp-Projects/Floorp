@@ -11,15 +11,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
+		HUDService.jsm \
 		PropertyPanel.jsm \
 		NetworkHelper.jsm \
 		NetworkPanel.jsm \
 		AutocompletePopup.jsm \
 		WebConsoleUtils.jsm \
-		$(NULL)
-
-EXTRA_PP_JS_MODULES = \
-		HUDService.jsm \
 		$(NULL)
 
 TEST_DIRS = test

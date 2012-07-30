@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % webConsoleDTD SYSTEM "chrome://browser/locale/devtools/webConsole.dtd">
+%webConsoleDTD;
+]>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/webconsole.css"
+                 type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        windowtype="devtools:webconsole"
+        persist="screenX screenY width height sizemode">
+  <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="text/javascript" src="webconsole.js"/>
+
+  <commandset id="editMenuCommands"/>
+  <keyset id="editMenuKeys"/>
+
+  <popupset id="mainPopupSet">
+    <menupopup id="output-contextmenu">
+      <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
+                accesskey="&saveBodies.accesskey;"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_selectAll"/>
+    </menupopup>
+  </popupset>
+
+  <vbox class="hud-outer-wrapper" flex="1">
+    <vbox class="hud-console-wrapper" flex="1">
+      <toolbar class="hud-console-filter-toolbar" mode="full">
+#ifdef XP_MACOSX
+        <toolbarbutton class="webconsole-close-button"
+                       tooltiptext="&btnClose.tooltip;"/>
+#endif
+
+        <toolbarbutton label="&btnPageNet.label;" type="menu-button"
+                       category="net" class="webconsole-filter-button"
+                       tooltiptext="&btnPageNet.tooltip;">
+          <menupopup>
+            <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                      prefKey="network"/>
+            <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                      prefKey="networkinfo"/>
+          </menupopup>
+        </toolbarbutton>
+        <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
+                       category="css" class="webconsole-filter-button"
+                       tooltiptext="&btnPageCSS.tooltip;">
+          <menupopup>
+            <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                      prefKey="csserror"/>
+            <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                      autocheck="false" prefKey="cssparser"/>
+          </menupopup>
+        </toolbarbutton>
+        <toolbarbutton label="&btnPageJS.label;" type="menu-button"
+                       category="js" class="webconsole-filter-button"
+                       tooltiptext="&btnPageJS.tooltip;">
+          <menupopup>
+            <menuitem label="&btnConsoleErrors;" type="checkbox"
+                      autocheck="false" prefKey="exception"/>
+            <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                      autocheck="false" prefKey="jswarn"/>
+          </menupopup>
+        </toolbarbutton>
+        <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
+                       category="logging" class="webconsole-filter-button"
+                       tooltiptext="&btnPageLogging.tooltip;">
+          <menupopup>
+            <menuitem label="&btnConsoleErrors;" type="checkbox"
+                      autocheck="false" prefKey="error"/>
+            <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                      autocheck="false" prefKey="warn"/>
+            <menuitem label="&btnConsoleInfo;" type="checkbox" autocheck="false"
+                      prefKey="info"/>
+            <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                      prefKey="log"/>
+          </menupopup>
+        </toolbarbutton>
+
+        <spacer flex="1"/>
+
+        <toolbarbutton label="&btnPosition.label;" type="menu"
+                       tooltiptext="&btnPosition.tooltip;">
+          <menupopup>
+            <menuitem label="&positionMenu.above;" type="checkbox"
+                      autocheck="false" consolePosition="above"/>
+            <menuitem label="&positionMenu.below;" type="checkbox"
+                      autocheck="false" consolePosition="below"/>
+            <menuitem label="&positionMenu.window;" type="checkbox"
+                      autocheck="false" consolePosition="window"/>
+          </menupopup>
+        </toolbarbutton>
+
+        <textbox class="compact hud-filter-box" type="search"
+                 placeholder="&filterBox.placeholder;"/>
+        <toolbarbutton class="webconsole-clear-console-button"
+                       label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"/>
+
+#ifndef XP_MACOSX
+        <toolbarbutton class="webconsole-close-button"
+                       tooltiptext="&btnClose.tooltip;"/>
+#endif
+      </toolbar>
+      <richlistbox class="hud-output-node" orient="vertical" flex="1"
+                   seltype="multiple" context="output-contextmenu"
+                   style="direction:ltr;"/>
+      <hbox class="jsterm-input-container" style="direction:ltr">
+        <stack class="jsterm-stack-node" flex="1">
+          <textbox class="jsterm-complete-node" multiline="true" rows="1"
+                   tabindex="-1"/>
+          <textbox class="jsterm-input-node" multiline="true" rows="1"/>
+        </stack>
+      </hbox>
+    </vbox>
+  </vbox>
+</window>

@@ -7,21 +7,19 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popu
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", tabLoaded, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, consoleOpened);
+  }, true);
 }
 
-function tabLoaded() {
-  browser.removeEventListener("load", tabLoaded, true);
-  openConsole();
-
+function consoleOpened(HUD) {
   let items = [
     {label: "item0", value: "value0"},
     {label: "item1", value: "value1"},
     {label: "item2", value: "value2"},
   ];
 
-  let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudReferences[hudId];
   let popup = HUD.jsterm.autocompletePopup;
 
   ok(!popup.isOpen, "popup is not open");
