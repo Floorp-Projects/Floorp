@@ -268,11 +268,9 @@ SettingsManager.prototype = {
           }
           if (this._callbacks && this._callbacks[msg.key]) {
             debug("observe callback called! " + msg.key + " " + this._callbacks[msg.key].length);
-            for (let cb in this._callbacks[msg.key]) {
-              this._callbacks[msg.key].forEach(function(cb) {
-                cb({settingName: msg.key, settingValue: msg.value});
-              });
-            }
+            this._callbacks[msg.key].forEach(function(cb) {
+              cb({settingName: msg.key, settingValue: msg.value});
+            });
           }
         } else {
           debug("no observers stored!");
