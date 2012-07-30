@@ -1105,7 +1105,7 @@ protected:
   // This may in fact hold a langGroup such as x-western rather than
   // a specific language, however (e.g, if it is inferred from the
   // charset rather than explicitly specified as a lang attribute).
-  nsIAtom*              mLanguage;      // [STRONG]
+  nsCOMPtr<nsIAtom>     mLanguage;
 
 public:
   // The following are public member variables so that we can use them
