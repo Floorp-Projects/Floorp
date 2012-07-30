@@ -5782,24 +5782,21 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
                 goto release_pcstack;
             pc = pcstack[pcdepth];
         } else {
-            // If this is an ion frame, the fp frame doesn't correspond to the
-            // script and pc we retreived.  Do fallback instead.
-            if (frameIter.isIon())
-                goto release_pcstack;
+            size_t index = frameIter.numFrameSlots();
+            Value s;
 
             /*
              * We search from fp->sp to base to find the most recently
-             * calculated value matching v under assumption that it is
-             * it that caused exception, see bug 328664.
+             * calculated value matching v under assumption that it is it
+             * that caused exception, see bug 328664.
              */
-            Value *stackBase = cx->regs().spForStackDepth(0);
-            Value *sp = cx->regs().sp;
             do {
-                if (sp == stackBase) {
+                if (!index) {
                     pcdepth = -1;
                     goto release_pcstack;
                 }
-            } while (*--sp != v);
+                s = frameIter.frameSlotValue(--index);
+            } while(s != v);
 
             /*
              * The value may have come from beyond stackBase + pcdepth, meaning
@@ -5815,8 +5812,8 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
              * are needed during decompilation will be associated with the
              * outer opcode.
              */
-            if (sp < stackBase + pcdepth) {
-                pc = pcstack[sp - stackBase];
+            if (index < size_t(pcdepth)) {
+                pc = pcstack[index];
                 if (lastDecomposedPC) {
                     size_t len = GetDecomposeLength(lastDecomposedPC,
                                                     js_CodeSpec[*lastDecomposedPC].length);
@@ -6041,6 +6038,15 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             if (lastDecomposedPC)
                 *lastDecomposedPC = pc;
             continue;
+        }
+
+        if (op == JSOP_GOTO) {
+            ptrdiff_t jmpoff = GET_JUMP_OFFSET(pc);
+            if (0 < jmpoff && pc + jmpoff < target) {
+                pc += jmpoff;
+                oplen = 0;
+                continue;
+            }
         }
 
         /*

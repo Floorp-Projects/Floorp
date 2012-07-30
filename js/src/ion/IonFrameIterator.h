@@ -219,17 +219,32 @@ class SnapshotIterator : public SnapshotReader
     Value read() {
         return slotValue(readSlot());
     }
-    Value maybeRead() {
+    Value maybeRead(bool silentFailure = false) {
         Slot s = readSlot();
         if (slotReadable(s))
             return slotValue(s);
-        warnUnreadableSlot();
+        if (!silentFailure)
+            warnUnreadableSlot();
         return UndefinedValue();
     }
 
     template <class Op>
     inline bool readFrameArgs(Op op, const Value *argv, Value *scopeChain, Value *thisv,
                               unsigned start, unsigned formalEnd, unsigned iterEnd);
+
+    Value maybeReadSlotByIndex(size_t index) {
+        while (index--) {
+            JS_ASSERT(moreSlots());
+            skip();
+        }
+
+        Value s = maybeRead(true);
+
+        while (moreSlots())
+            skip();
+
+        return s;
+    }
 };
 
 // Reads frame information in callstack order (that is, innermost frame to

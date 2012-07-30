@@ -1684,10 +1684,56 @@ StackIter::thisv() const
         return ObjectValue(*ionInlineFrames_.thisObject());
 #else
         break;
-#endif        
+#endif
       case SCRIPTED:
       case NATIVE:
         return fp()->thisValue();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return NullValue();
+}
+
+size_t
+StackIter::numFrameSlots() const
+{
+    switch (state_) {
+      case DONE:
+      case NATIVE:
+        break;
+      case ION:
+#ifdef JS_ION
+        return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
+#else
+        break;
+#endif
+      case SCRIPTED:
+        JS_ASSERT(maybecx_);
+        JS_ASSERT(maybecx_->regs().spForStackDepth(0) == fp()->base());
+        return maybecx_->regs().sp - fp()->base();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return 0;
+}
+
+Value
+StackIter::frameSlotValue(size_t index) const
+{
+    switch (state_) {
+      case DONE:
+      case NATIVE:
+        break;
+      case ION:
+#ifdef JS_ION
+      {
+        ion::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
+        index += ionInlineFrames_.script()->nfixed;
+        return si.maybeReadSlotByIndex(index);
+      }
+#else
+        break;
+#endif
+      case SCRIPTED:
+          return fp()->base()[index];
     }
     JS_NOT_REACHED("Unexpected state");
     return NullValue();

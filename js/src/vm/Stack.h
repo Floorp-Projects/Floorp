@@ -1821,6 +1821,10 @@ class StackIter
     unsigned    numActualArgs() const;
     Value       thisv() const;
 
+    // These are only valid for the top frame.
+    size_t      numFrameSlots() const;
+    Value       frameSlotValue(size_t index) const;
+
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 
     template <class Op>
