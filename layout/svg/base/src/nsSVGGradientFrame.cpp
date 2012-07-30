@@ -157,7 +157,7 @@ nsSVGGradientFrame::GetGradientTransformList(nsIContent* aDefault)
   SVGAnimatedTransformList *thisTransformList =
     static_cast<nsSVGGradientElement *>(mContent)->GetAnimatedTransformList();
 
-  if (thisTransformList->IsExplicitlySet())
+  if (thisTransformList && thisTransformList->IsExplicitlySet())
     return thisTransformList;
 
   AutoGradientReferencer gradientRef(this);
