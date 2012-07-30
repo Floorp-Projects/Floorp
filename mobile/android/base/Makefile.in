@@ -17,6 +17,7 @@ DIST_FILES = package-name.txt
 include $(topsrcdir)/mobile/android/base/android-sync-files.mk
 
 UTIL_JAVA_FILES := \
+  util/ConfigurationUtils.java \
   util/FloatUtils.java \
   $(NULL)
 
