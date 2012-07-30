@@ -7,10 +7,11 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
-
+#include "nsIPrincipal.h"
 #include "mozilla/unused.h"
 
 using mozilla::unused;          // <snicker>
+using namespace mozilla::dom;
 
 nsContentPermissionRequestProxy::nsContentPermissionRequestProxy()
 {
@@ -24,7 +25,7 @@ nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy()
 
 nsresult
 nsContentPermissionRequestProxy::Init(const nsACString & type,
-				                      mozilla::dom::ContentPermissionRequestParent* parent)
+                                      ContentPermissionRequestParent* parent)
 {
   NS_ASSERTION(parent, "null parent");
   mParent = parent;
@@ -63,13 +64,14 @@ nsContentPermissionRequestProxy::GetWindow(nsIDOMWindow * *aRequestingWindow)
 }
 
 NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetUri(nsIURI * *aRequestingURI)
+nsContentPermissionRequestProxy::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 {
-  NS_ENSURE_ARG_POINTER(aRequestingURI);
-  if (mParent == nullptr)
+  NS_ENSURE_ARG_POINTER(aRequestingPrincipal);
+  if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
+  }
 
-  NS_ADDREF(*aRequestingURI = mParent->mURI);
+  NS_ADDREF(*aRequestingPrincipal = mParent->mPrincipal);
   return NS_OK;
 }
 
@@ -77,8 +79,10 @@ NS_IMETHODIMP
 nsContentPermissionRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
-  if (mParent == nullptr)
+  if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
+  }
+
   NS_ADDREF(*aRequestingElement = mParent->mElement);
   return NS_OK;
 }
@@ -86,9 +90,11 @@ nsContentPermissionRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
 NS_IMETHODIMP
 nsContentPermissionRequestProxy::Cancel()
 {
-  if (mParent == nullptr)
+  if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
-  unused << mozilla::dom::ContentPermissionRequestParent::Send__delete__(mParent, false);
+  }
+
+  unused << ContentPermissionRequestParent::Send__delete__(mParent, false);
   mParent = nullptr;
   return NS_OK;
 }
@@ -96,9 +102,10 @@ nsContentPermissionRequestProxy::Cancel()
 NS_IMETHODIMP
 nsContentPermissionRequestProxy::Allow()
 {
-  if (mParent == nullptr)
+  if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
-  unused << mozilla::dom::ContentPermissionRequestParent::Send__delete__(mParent, true);
+  }
+  unused << ContentPermissionRequestParent::Send__delete__(mParent, true);
   mParent = nullptr;
   return NS_OK;
 }
@@ -108,11 +115,11 @@ namespace dom {
 
 ContentPermissionRequestParent::ContentPermissionRequestParent(const nsACString& aType,
                                                                nsIDOMElement *aElement,
-                                                               const IPC::URI& aUri)
+                                                               const IPC::Principal& aPrincipal)
 {
   MOZ_COUNT_CTOR(ContentPermissionRequestParent);
-  
-  mURI       = aUri;
+
+  mPrincipal = aPrincipal;
   mElement   = aElement;
   mType      = aType;
 }
@@ -127,8 +134,9 @@ ContentPermissionRequestParent::Recvprompt()
 {
   mProxy = new nsContentPermissionRequestProxy();
   NS_ASSERTION(mProxy, "Alloc of request proxy failed");
-  if (NS_FAILED(mProxy->Init(mType, this)))
+  if (NS_FAILED(mProxy->Init(mType, this))) {
     mProxy->Cancel();
+  }
   return true;
 }
 

@@ -61,7 +61,7 @@ let IndexedDB = {
 
     prompt.prompt({
       type: type,
-      uri: Services.io.newURI(payload.location, null, null),
+      principal: browser.contentPrincipal,
       window: null,
       element: aMessage.target,
 
