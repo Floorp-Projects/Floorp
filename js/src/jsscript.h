@@ -437,9 +437,8 @@ struct JSScript : public js::gc::Cell
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
-    js::ScriptSource *source; /* source code */
-
   private:
+    js::ScriptSource *scriptSource_; /* source code */
 #ifdef JS_METHODJIT
     JITScriptSet *mJITInfo;
 #endif
@@ -620,6 +619,14 @@ struct JSScript : public js::gc::Cell
     JSFixedString *sourceData(JSContext *cx);
 
     bool loadSource(JSContext *cx, bool *worked);
+
+    js::ScriptSource *scriptSource() {
+        return scriptSource_;
+    }
+
+    void setScriptSource(JSContext *cx, js::ScriptSource *ss);
+
+  public:
 
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval || isActiveEval; }
@@ -997,7 +1004,7 @@ struct ScriptSource
                                           SourceCompressionToken *tok = NULL,
                                           bool ownSource = false);
     void attachToRuntime(JSRuntime *rt);
-    void mark() { JS_ASSERT(ready_); JS_ASSERT(onRuntime_); marked = true; }
+    void mark() { marked = true; }
     void destroy(JSRuntime *rt);
     uint32_t length() const { return length_; }
     bool onRuntime() const { return onRuntime_; }

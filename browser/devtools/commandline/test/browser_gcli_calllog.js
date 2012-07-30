@@ -42,33 +42,41 @@ function testCallLogExec() {
     outputMatch: /No call logging/,
   });
 
+  let hud = null;
+  function onWebConsoleOpen(aSubject) {
+    Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
+
+    aSubject.QueryInterface(Ci.nsISupportsString);
+    hud = imported.HUDService.getHudReferenceById(aSubject.data);
+    ok(hud.hudId in imported.HUDService.hudReferences, "console open");
+
+    DeveloperToolbarTest.exec({
+      typed: "calllog stop",
+      args: { },
+      outputMatch: /Stopped call logging/,
+    });
+
+    DeveloperToolbarTest.exec({
+      typed: "console clear",
+      args: {},
+      blankOutput: true,
+    });
+
+    let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
+    is(labels.length, 0, "no output in console");
+
+    DeveloperToolbarTest.exec({
+      typed: "console close",
+      args: {},
+      blankOutput: true,
+    });
+  }
+
+  Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
+
   DeveloperToolbarTest.exec({
     typed: "calllog start",
     args: { },
     outputMatch: /Call logging started/,
-  });
-
-  let hud = imported.HUDService.getHudByWindow(content);
-  ok(hud.hudId in imported.HUDService.hudReferences, "console open");
-
-  DeveloperToolbarTest.exec({
-    typed: "calllog stop",
-    args: { },
-    outputMatch: /Stopped call logging/,
-  });
-
-  DeveloperToolbarTest.exec({
-    typed: "console clear",
-    args: {},
-    blankOutput: true,
-  });
-
-  let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-  is(labels.length, 0, "no output in console");
-
-  DeveloperToolbarTest.exec({
-    typed: "console close",
-    args: {},
-    blankOutput: true,
   });
 }
