@@ -106,7 +106,7 @@ public:
 
     /*** this DOES NOT addref the surface */
     cairo_surface_t *CairoSurface() {
-        NS_ASSERTION(mSurface != nsnull, "gfxASurface::CairoSurface called with mSurface == nsnull!");
+        NS_ASSERTION(mSurface != nullptr, "gfxASurface::CairoSurface called with mSurface == nullptr!");
         return mSurface;
     }
 
@@ -146,13 +146,13 @@ public:
                                                                const gfxIntSize& aSize);
 
     /**
-     * Returns an image surface for this surface, or nsnull if not supported.
+     * Returns an image surface for this surface, or nullptr if not supported.
      * This will not copy image data, just wraps an image surface around
      * pixel data already available in memory.
      */
     virtual already_AddRefed<gfxImageSurface> GetAsImageSurface()
     {
-      return nsnull;
+      return nullptr;
     }
 
     int CairoStatus();
@@ -248,7 +248,7 @@ public:
 
     void SetOpaqueRect(const gfxRect& aRect) {
         if (aRect.IsEmpty()) {
-            mOpaqueRect = nsnull;
+            mOpaqueRect = nullptr;
         } else if (mOpaqueRect) {
             *mOpaqueRect = aRect;
         } else {
@@ -282,7 +282,7 @@ public:
     bool GetAllowUseAsSource() { return mAllowUseAsSource; }
 
 protected:
-    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0),
+    gfxASurface() : mSurface(nullptr), mFloatingRefs(0), mBytesRecorded(0),
                     mSurfaceValid(false), mAllowUseAsSource(true)
     {
         MOZ_COUNT_CTOR(gfxASurface);
@@ -370,7 +370,7 @@ public:
     RawRef mRef;
   };
 
-  static RawRef Void() { return nsnull; }
+  static RawRef Void() { return nullptr; }
   static void Release(RawRef aRawRef)
   {
     if (NS_IsMainThread()) {

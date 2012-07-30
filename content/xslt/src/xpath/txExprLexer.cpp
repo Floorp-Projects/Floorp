@@ -17,9 +17,9 @@
  * Creates a new ExprLexer
  */
 txExprLexer::txExprLexer()
-  : mCurrentItem(nsnull),
-    mFirstItem(nsnull),
-    mLastItem(nsnull),
+  : mCurrentItem(nullptr),
+    mFirstItem(nullptr),
+    mLastItem(nullptr),
     mTokenCount(0)
 {
 }
@@ -36,7 +36,7 @@ txExprLexer::~txExprLexer()
     delete tok;
     tok = temp;
   }
-  mCurrentItem = nsnull;
+  mCurrentItem = nullptr;
 }
 
 Token*
@@ -44,7 +44,7 @@ txExprLexer::nextToken()
 {
   if (!mCurrentItem) {
     NS_NOTREACHED("nextToken called on uninitialized lexer");
-    return nsnull;
+    return nullptr;
   }
 
   if (mCurrentItem->mType == Token::END) {
@@ -100,10 +100,10 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
 
   //-- initialize previous token, this will automatically get
   //-- deleted when it goes out of scope
-  Token nullToken(nsnull, nsnull, Token::NULL_TOKEN);
+  Token nullToken(nullptr, nullptr, Token::NULL_TOKEN);
 
   Token::Type defType;
-  Token* newToken = nsnull;
+  Token* newToken = nullptr;
   Token* prevToken = &nullToken;
   bool isToken;
 

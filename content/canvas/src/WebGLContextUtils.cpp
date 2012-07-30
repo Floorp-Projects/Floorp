@@ -48,7 +48,7 @@ WebGLContext::GenerateWarning(const char *fmt, va_list ap)
     // no need to print to stderr, as JS_ReportWarning takes care of this for us.
 
     nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    JSContext* ccx = nsnull;
+    JSContext* ccx = nullptr;
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
         JS_ReportWarning(ccx, "WebGL: %s", buf);
         if (!ShouldGenerateWarnings()) {

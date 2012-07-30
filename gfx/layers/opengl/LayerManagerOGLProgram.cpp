@@ -377,7 +377,8 @@ ShaderProgramOGL::LoadMask(Layer* aMaskLayer)
               (GLint)(mProfile.mTextureCount - 1));
 
   gfxMatrix maskTransform;
-  bool isMask2D = aMaskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
+  mozilla::DebugOnly<bool> isMask2D =
+    aMaskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
   NS_ASSERTION(isMask2D, "How did we end up with a 3D transform here?!");
   gfxRect bounds = gfxRect(gfxPoint(), size);
   bounds = maskTransform.TransformBounds(bounds);

@@ -179,7 +179,7 @@ def init_value(attribute):
     realtype = attribute.realtype.nativeType('in')
     realtype = realtype.strip(' ')
     if realtype.endswith('*'):
-        return "nsnull"
+        return "nullptr"
     if realtype == "bool":
         return "false"
     if realtype.count("nsAString"):

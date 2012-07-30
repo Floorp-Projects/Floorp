@@ -43,13 +43,13 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
                    keyFormat, language, codepage, key) < 0)
   {
     NS_NOTREACHED("plugin info key too long for buffer!");
-    return nsnull;
+    return nullptr;
   }
 
   if (::VerQueryValueW(verbuf, keybuf, (void **)&buf, &blen) == 0 ||
-      buf == nsnull || blen == 0)
+      buf == nullptr || blen == 0)
   {
-    return nsnull;
+    return nullptr;
   }
 
   return PL_strdup(NS_ConvertUTF16toUTF8(buf, blen).get());
@@ -70,7 +70,7 @@ static char* GetVersion(void* verbuf)
                        LOWORD(fileInfo->dwFileVersionLS));
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 static PRUint32 CalculateVariantCount(char* mimeTypes)
@@ -292,11 +292,11 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 {
-  *outLibrary = nsnull;
+  *outLibrary = nullptr;
 
   nsresult rv = NS_OK;
   DWORD zerome, versionsize;
-  void* verbuf = nsnull;
+  void* verbuf = nullptr;
 
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;

@@ -23,6 +23,8 @@ nestegg_track_seek
 nestegg_track_type
 nestegg_track_video_params
 nestegg_tstamp_scale
+#endif
+#ifdef MOZ_VP8
 #ifndef MOZ_NATIVE_LIBVPX
 vpx_codec_control_
 vpx_codec_dec_init_ver

@@ -113,18 +113,18 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   if (aBuffer.mPlanes[1].mWidth != aBuffer.mPlanes[2].mWidth ||
       aBuffer.mPlanes[1].mHeight != aBuffer.mPlanes[2].mHeight) {
     NS_ERROR("C planes with different sizes");
-    return nsnull;
+    return nullptr;
   }
 
   // The following situations could be triggered by invalid input
   if (aPicture.width <= 0 || aPicture.height <= 0) {
     NS_WARNING("Empty picture rect");
-    return nsnull;
+    return nullptr;
   }
   if (!ValidatePlane(aBuffer.mPlanes[0]) || !ValidatePlane(aBuffer.mPlanes[1]) ||
       !ValidatePlane(aBuffer.mPlanes[2])) {
     NS_WARNING("Invalid plane size");
-    return nsnull;
+    return nullptr;
   }
 
   // Ensure the picture size specified in the headers can be extracted out of
@@ -137,7 +137,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
     // The specified picture dimensions can't be contained inside the video
     // frame, we'll stomp memory if we try to copy it. Fail.
     NS_WARNING("Overflowing picture rect");
-    return nsnull;
+    return nullptr;
   }
 
   nsAutoPtr<VideoData> v(new VideoData(aOffset,
@@ -151,7 +151,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   Image::Format format = Image::PLANAR_YCBCR;
   v->mImage = aContainer->CreateImage(&format, 1);
   if (!v->mImage) {
-    return nsnull;
+    return nullptr;
   }
   NS_ASSERTION(v->mImage->GetFormat() == Image::PLANAR_YCBCR,
                "Wrong format?");
@@ -212,7 +212,7 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64& aOutStartTime)
   // the duration.
   PRInt64 videoStartTime = INT64_MAX;
   PRInt64 audioStartTime = INT64_MAX;
-  VideoData* videoData = nsnull;
+  VideoData* videoData = nullptr;
 
   if (HasVideo()) {
     videoData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeVideoFrame,
@@ -246,13 +246,13 @@ Data* nsBuiltinDecoderReader::DecodeToFirstData(DecodeFn aDecodeFn,
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
       if (mDecoder->GetDecodeState() == nsDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-        return nsnull;
+        return nullptr;
       }
     }
     eof = !(this->*aDecodeFn)();
   }
-  Data* d = nsnull;
-  return (d = aQueue.PeekFront()) ? d : nsnull;
+  Data* d = nullptr;
+  return (d = aQueue.PeekFront()) ? d : nullptr;
 }
 
 nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
@@ -327,7 +327,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
         // Our seek target lies after the frames in this AudioData. Pop it
         // off the queue, and keep decoding forwards.
         delete mAudioQueue.PopFront();
-        audio = nsnull;
+        audio = nullptr;
         continue;
       }
       if (startFrame.value() > targetFrame.value()) {

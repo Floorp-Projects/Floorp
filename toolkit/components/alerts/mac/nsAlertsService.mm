@@ -124,7 +124,7 @@ nsAlertsService::Init()
   nsRefPtr<nsNotificationsList> notifications = new nsNotificationsList();
 
   if (notifications)
-    (void)os->NotifyObservers(notifications, "before-growl-registration", nsnull);
+    (void)os->NotifyObservers(notifications, "before-growl-registration", nullptr);
 
   mDelegate = new GrowlDelegateWrapper();
 
@@ -142,7 +142,7 @@ nsAlertsService::Init()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsAlertsService::nsAlertsService() : mDelegate(nsnull) {}
+nsAlertsService::nsAlertsService() : mDelegate(nullptr) {}
 
 nsAlertsService::~nsAlertsService()
 {

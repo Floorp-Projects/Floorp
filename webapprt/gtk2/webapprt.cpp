@@ -41,7 +41,7 @@ const nsDynamicFunctionLoad kXULFuncs[] = {
   { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
   { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
   { "XRE_main", (NSFuncPtr*) &XRE_main },
-  { nsnull, nsnull }
+  { nullptr, nullptr }
 };
 
 class ScopedLogging
@@ -59,7 +59,7 @@ void SetAllocatedString(const char *&str, const char *newvalue)
     str = NS_strdup(newvalue);
   }
   else {
-    str = nsnull;
+    str = nullptr;
   }
 }
 

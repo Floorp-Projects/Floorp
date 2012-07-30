@@ -61,7 +61,7 @@ SmsCursor::Disconnect()
 {
   NS_ASSERTION(!mMessage, "mMessage shouldn't be set!");
 
-  mRequest = nsnull;
+  mRequest = nullptr;
   mListId = -1;
 }
 
@@ -80,7 +80,7 @@ SmsCursor::Continue()
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  mMessage = nsnull;
+  mMessage = nullptr;
   static_cast<SmsRequest*>(mRequest.get())->Reset();
 
   nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);

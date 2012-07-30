@@ -91,17 +91,17 @@ In this case 5 extra columns will be added to the column list to handle the situ
 These are called extraColumns/Rows.
 */
 
-nsGrid::nsGrid():mBox(nsnull),
-                 mRows(nsnull),
-                 mColumns(nsnull), 
-                 mRowsBox(nsnull),
-                 mColumnsBox(nsnull),
+nsGrid::nsGrid():mBox(nullptr),
+                 mRows(nullptr),
+                 mColumns(nullptr), 
+                 mRowsBox(nullptr),
+                 mColumnsBox(nullptr),
                  mNeedsRebuild(true),
                  mRowCount(0),
                  mColumnCount(0),
                  mExtraRowCount(0),
                  mExtraColumnCount(0),
-                 mCellMap(nsnull),
+                 mCellMap(nullptr),
                  mMarkingDirty(false)
 {
     MOZ_COUNT_CTOR(nsGrid);
@@ -129,8 +129,8 @@ nsGrid::NeedsRebuild(nsBoxLayoutState& aState)
 
   // find the new row and column box. They could have 
   // been changed.
-  mRowsBox = nsnull;
-  mColumnsBox = nsnull;
+  mRowsBox = nullptr;
+  mColumnsBox = nullptr;
   FindRowsAndColumns(&mRowsBox, &mColumnsBox);
 
   // tell all the rows and columns they are dirty
@@ -230,15 +230,15 @@ nsGrid::FreeMap()
   if (mCellMap)
     delete[] mCellMap;
 
-  mRows = nsnull;
-  mColumns = nsnull;
-  mCellMap = nsnull;
+  mRows = nullptr;
+  mColumns = nullptr;
+  mCellMap = nullptr;
   mColumnCount = 0;
   mRowCount = 0;
   mExtraColumnCount = 0;
   mExtraRowCount = 0;
-  mRowsBox = nsnull;
-  mColumnsBox = nsnull;
+  mRowsBox = nullptr;
+  mColumnsBox = nullptr;
 }
 
 /**
@@ -247,11 +247,11 @@ nsGrid::FreeMap()
 void
 nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
 {
-  *aRows = nsnull;
-  *aColumns = nsnull;
+  *aRows = nullptr;
+  *aColumns = nullptr;
 
   // find the boxes that contain our rows and columns
-  nsIBox* child = nsnull;
+  nsIBox* child = nullptr;
   // if we have <grid></grid> then mBox will be null (bug 125689)
   if (mBox)
     child = mBox->GetChildBox();
@@ -322,7 +322,7 @@ nsGrid::BuildRows(nsIBox* aBox, PRInt32 aRowCount, nsGridRow** aRows, bool aIsHo
     if (*aRows)
       delete[] (*aRows);
 
-    *aRows = nsnull;
+    *aRows = nullptr;
     return;
   }
 
@@ -337,7 +337,7 @@ nsGrid::BuildRows(nsIBox* aBox, PRInt32 aRowCount, nsGridRow** aRows, bool aIsHo
        row = new nsGridRow[aRowCount];
     } else {
       for (PRInt32 i=0; i < mRowCount; i++)
-        mRows[i].Init(nsnull, false);
+        mRows[i].Init(nullptr, false);
 
       row = mRows;
     }
@@ -347,7 +347,7 @@ nsGrid::BuildRows(nsIBox* aBox, PRInt32 aRowCount, nsGridRow** aRows, bool aIsHo
        row = new nsGridRow[aRowCount];
     } else {
        for (PRInt32 i=0; i < mColumnCount; i++)
-         mColumns[i].Init(nsnull, false);
+         mColumns[i].Init(nullptr, false);
 
        row = mColumns;
     }
@@ -385,13 +385,13 @@ nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns)
       // clear out cellmap
       for (PRInt32 i=0; i < oldsize; i++)
       {
-        mCellMap[i].SetBoxInRow(nsnull);
-        mCellMap[i].SetBoxInColumn(nsnull);
+        mCellMap[i].SetBoxInRow(nullptr);
+        mCellMap[i].SetBoxInColumn(nullptr);
       }
       return mCellMap;
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 /** 
@@ -409,7 +409,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
 
   for(PRInt32 i=0; i < aRowCount; i++) 
   {
-     nsIBox* child = nsnull;
+     nsIBox* child = nullptr;
      nsGridRow* row = &aRows[i];
 
      // skip bogus rows. They have no cells
@@ -562,10 +562,10 @@ nsIGridPart*
 nsGrid::GetPartFromBox(nsIBox* aBox)
 {
   if (!aBox)
-    return nsnull;
+    return nullptr;
 
   nsBoxLayout* layout = aBox->GetLayoutManager();
-  return layout ? layout->AsGridPart() : nsnull;
+  return layout ? layout->AsGridPart() : nullptr;
 }
 
 nsMargin
@@ -586,8 +586,8 @@ nsGrid::GetBoxTotalMargin(nsIBox* aBox, bool aIsHorizontal)
  * The first and last rows can be affected by <rows> tags with borders or margin
  * gets first and last rows and their indexes.
  * If it fails because there are no rows then:
- * FirstRow is nsnull
- * LastRow is nsnull
+ * FirstRow is nullptr
+ * LastRow is nullptr
  * aFirstIndex = -1
  * aLastIndex = -1
  */
@@ -599,8 +599,8 @@ nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState,
                           nsGridRow*& aLastRow,
                           bool aIsHorizontal)
 {
-  aFirstRow = nsnull;
-  aLastRow = nsnull;
+  aFirstRow = nullptr;
+  aLastRow = nullptr;
   aFirstIndex = -1;
   aLastIndex = -1;
 
@@ -717,8 +717,8 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   // our columns. If that's larger than the rows bottom border/padding use it.
   PRInt32 firstIndex = 0;
   PRInt32 lastIndex = 0;
-  nsGridRow* firstRow = nsnull;
-  nsGridRow* lastRow = nsnull;
+  nsGridRow* firstRow = nullptr;
+  nsGridRow* lastRow = nullptr;
   GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, aIsHorizontal);
 
   if (aIndex == firstIndex || aIndex == lastIndex) {
@@ -1115,7 +1115,7 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHorizontal)
 
     box = GetScrollBox(box);
     nsIBox* parent = box->GetParentBox();
-    nsIBox* parentsParent=nsnull;
+    nsIBox* parentsParent=nullptr;
 
     while(parent)
     {
@@ -1244,7 +1244,7 @@ nsIBox*
 nsGrid::GetScrollBox(nsIBox* aChild)
 {
   if (!aChild)
-    return nsnull;
+    return nullptr;
 
   // get parent
   nsIBox* parent = aChild->GetParentBox();

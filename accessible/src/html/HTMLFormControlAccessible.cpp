@@ -8,6 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
+#include "nsEventShell.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
@@ -512,14 +513,14 @@ HTMLTextFieldAccessible::GetEditor() const
 {
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mContent));
   if (!editableElt)
-    return nsnull;
+    return nullptr;
 
   // nsGenericHTMLElement::GetEditor has a security check.
   // Make sure we're not restricted by the permissions of
   // whatever script is currently running.
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  bool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+  bool pushed = stack && NS_SUCCEEDED(stack->Push(nullptr));
 
   nsCOMPtr<nsIEditor> editor;
   editableElt->GetEditor(getter_AddRefs(editor));
@@ -545,7 +546,7 @@ HTMLTextFieldAccessible::IsWidget() const
 Accessible*
 HTMLTextFieldAccessible::ContainerWidget() const
 {
-  return mParent && mParent->Role() == roles::AUTOCOMPLETE ? mParent : nsnull;
+  return mParent && mParent->Role() == roles::AUTOCOMPLETE ? mParent : nullptr;
 }
 
 
@@ -632,7 +633,7 @@ HTMLGroupboxAccessible::GetLegend()
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsresult
@@ -761,7 +762,7 @@ HTMLFigureAccessible::Caption() const
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

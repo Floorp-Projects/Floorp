@@ -16,18 +16,11 @@ const MINIMUM_CONSOLE_HEIGHT = 150;
 const MINIMUM_PAGE_HEIGHT = 50;
 const HEIGHT_PREF = "devtools.hud.height";
 
-let hud, newHeight, height;
+let hud, newHeight, height, innerHeight;
 
-function performTests(aEvent)
+function performTests(aWebConsole)
 {
-  browser.removeEventListener(aEvent, arguments.callee, true);
-
-  let innerHeight = content.innerHeight;
-
-  openConsole();
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  hud = HUDService.hudReferences[hudId].HUDBox;
+  hud = aWebConsole.iframe;
   height = parseInt(hud.style.height);
 
   toggleConsole();
@@ -78,7 +71,7 @@ function toggleConsole()
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(content);
-  hud = HUDService.hudReferences[hudId].HUDBox;
+  hud = HUDService.hudReferences[hudId].iframe;
   newHeight = parseInt(hud.style.height);
 }
 
@@ -91,6 +84,10 @@ function setHeight(aHeight)
 function test()
 {
   addTab("data:text/html;charset=utf-8,Web Console test for bug 601909");
-  browser.addEventListener("load", performTests, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    innerHeight = content.innerHeight;
+    openConsole(null, performTests);
+  }, true);
 }
 

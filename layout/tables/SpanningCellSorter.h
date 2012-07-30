@@ -90,6 +90,6 @@ private:
      * memory, which much be pushed and popped at points matching a
      * push/pop on the C++ stack.
      */
-    void* operator new(size_t sz) CPP_THROW_NEW { return nsnull; }
+    void* operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
 };
 

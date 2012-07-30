@@ -62,10 +62,10 @@ CanvasLayerOGL::Destroy()
 void
 CanvasLayerOGL::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mCanvasSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(mCanvasSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
-  if (aData.mGLContext != nsnull &&
-      aData.mSurface != nsnull)
+  if (aData.mGLContext != nullptr &&
+      aData.mSurface != nullptr)
   {
     NS_WARNING("CanvasLayerOGL can't have both surface and GLContext");
     return;
@@ -75,6 +75,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
 
   if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
+    mCanvasSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
     mNeedsYFlip = false;
   } else if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
@@ -162,11 +163,7 @@ CanvasLayerOGL::UpdateSurface()
   } else {
     nsRefPtr<gfxASurface> updatedAreaSurface;
 
-    if (mDrawTarget) {
-      // TODO: This is suboptimal - We should have direct handling for the surface types instead of
-      // going via a gfxASurface.
-      updatedAreaSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
-    } else if (mCanvasSurface) {
+    if (mCanvasSurface) {
       updatedAreaSurface = mCanvasSurface;
     } else if (mCanvasGLContext) {
       gfxIntSize size(mBounds.width, mBounds.height);
@@ -209,7 +206,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
-  ShaderProgramOGL *program = nsnull;
+  ShaderProgramOGL *program = nullptr;
 
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
@@ -226,13 +223,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     
     drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
 
-    nsRefPtr<gfxASurface> surf = mCanvasSurface;
-    if (mDrawTarget) {
-      surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
-    }
-
     mLayerProgram =
-      gl()->UploadSurfaceToTexture(surf,
+      gl()->UploadSurfaceToTexture(mCanvasSurface,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mTexture,
                                    true,
@@ -292,7 +284,7 @@ IsValidSharedTexDescriptor(const SurfaceDescriptor& aDescriptor)
 }
 
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
-  : ShadowCanvasLayer(aManager, nsnull)
+  : ShadowCanvasLayer(aManager, nullptr)
   , LayerOGL(aManager)
   , mNeedsYFlip(false)
   , mTexture(0)
@@ -356,7 +348,7 @@ ShadowCanvasLayerOGL::Swap(const CanvasSurface& aNewFront,
 void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
-  mTexImage = nsnull;
+  mTexImage = nullptr;
   if (mTexture) {
     gl()->MakeCurrent();
     gl()->fDeleteTextures(1, &mTexture);

@@ -1744,6 +1744,8 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
 void
 ArenaLists::queueObjectsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_OBJECT);
+
     finalizeNow(fop, FINALIZE_OBJECT0);
     finalizeNow(fop, FINALIZE_OBJECT2);
     finalizeNow(fop, FINALIZE_OBJECT4);
@@ -1766,6 +1768,8 @@ ArenaLists::queueObjectsForSweep(FreeOp *fop)
 void
 ArenaLists::queueStringsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_STRING);
+
     queueForBackgroundSweep(fop, FINALIZE_SHORT_STRING);
     queueForBackgroundSweep(fop, FINALIZE_STRING);
 
@@ -1775,12 +1779,15 @@ ArenaLists::queueStringsForSweep(FreeOp *fop)
 void
 ArenaLists::queueScriptsForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SCRIPT);
     finalizeNow(fop, FINALIZE_SCRIPT);
 }
 
 void
 ArenaLists::queueShapesForSweep(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_SHAPE);
+
     queueForForegroundSweep(fop, FINALIZE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_BASE_SHAPE);
     queueForForegroundSweep(fop, FINALIZE_TYPE_OBJECT);
@@ -3128,6 +3135,8 @@ GCHelperThread::doSweep()
             freeElementsAndArray(array, array + FREE_ARRAY_LENGTH);
         }
         freeVector.resize(0);
+
+        rt->freeLifoAlloc.freeAll();
     }
 
     bool shrinking = shrinkFlag;
@@ -3198,17 +3207,12 @@ SweepCompartments(FreeOp *fop, gcreason::Reason gcReason)
 }
 
 static void
-PurgeRuntime(JSTracer *trc)
+PurgeRuntime(JSRuntime *rt)
 {
-    JSRuntime *rt = trc->runtime;
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->purge();
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        /* We can be called from StartVerifyBarriers with a non-GC marker. */
-        if (c->isCollecting() || !IS_GC_MARKING_TRACER(trc))
-            c->purge();
-    }
-
-    rt->tempLifoAlloc.freeUnused();
+    rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
 
     rt->gsnCache.purge();
     rt->propertyCache.purge(rt);
@@ -3299,7 +3303,7 @@ BeginMarkPhase(JSRuntime *rt, bool isIncremental)
      */
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_PURGE);
-        PurgeRuntime(gcmarker);
+        PurgeRuntime(rt);
     }
 
     /*
@@ -3666,6 +3670,9 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason gcReaso
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DESTROY);
+
+        if (!rt->gcSweepOnBackgroundThread)
+            rt->freeLifoAlloc.freeAll();
 
         /*
          * Sweep script filenames after sweeping functions in the generic loop
@@ -4207,6 +4214,10 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JS_AbortIfWrongThread(rt);
+
+    ContextIter cx(rt);
+    if (!cx.done())
+        MaybeCheckStackRoots(cx);
 
 #ifdef JS_GC_ZEAL
     if (rt->gcDeterministicOnly && !IsDeterministicGCReason(reason))
@@ -4894,8 +4905,6 @@ StartVerifyPreBarriers(JSRuntime *rt)
     trc->count = 0;
 
     JS_TracerInit(trc, rt, AccumulateEdge);
-
-    PurgeRuntime(trc);
 
     const size_t size = 64 * 1024 * 1024;
     trc->root = (VerifyNode *)js_malloc(size);

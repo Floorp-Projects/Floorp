@@ -78,7 +78,7 @@ public:
     gStackArena->Pop();
     if (mOwnsStackArena) {
       delete gStackArena;
-      gStackArena = nsnull;
+      gStackArena = nullptr;
     }
   }
 

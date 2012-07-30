@@ -58,7 +58,7 @@ NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowLeafLayout();
   if (!layout) {
-    return nsnull;
+    return nullptr;
   }
   
   return new (aPresShell) nsListItemFrame(aPresShell, aContext, false, layout);

@@ -642,6 +642,28 @@ var WebConsoleUtils = {
 
     return false;
   },
+
+  /**
+   * Determine if the given request mixes HTTP with HTTPS content.
+   *
+   * @param string aRequest
+   *        Location of the requested content.
+   * @param string aLocation
+   *        Location of the current page.
+   * @return boolean
+   *         True if the content is mixed, false if not.
+   */
+  isMixedHTTPSRequest: function WCU_isMixedHTTPSRequest(aRequest, aLocation)
+  {
+    try {
+      let requestURI = Services.io.newURI(aRequest, null, null);
+      let contentURI = Services.io.newURI(aLocation, null, null);
+      return (contentURI.scheme == "https" && requestURI.scheme != "https");
+    }
+    catch (ex) {
+      return false;
+    }
+  },
 };
 
 //////////////////////////////////////////////////////////////////////////

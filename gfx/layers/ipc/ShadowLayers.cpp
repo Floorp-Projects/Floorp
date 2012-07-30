@@ -377,7 +377,7 @@ ShadowLayerForwarder::ShadowDrawToTarget(gfxContext* aTarget) {
   aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   aTarget->DrawSurface(surface, surface->GetSize());
 
-  surface = nsnull;
+  surface = nullptr;
   DestroySharedSurface(&descriptorOut);
 
   return true;
@@ -414,7 +414,7 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
   if (!back)
     return false;
 
-  *aBuffer = nsnull;
+  *aBuffer = nullptr;
   back.swap(*aBuffer);
   return true;
 }
@@ -467,7 +467,7 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
   }
   default:
     NS_RUNTIMEABORT("unexpected SurfaceDescriptor type!");
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -583,7 +583,7 @@ ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
 ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode,
                                              const SurfaceDescriptor&)
 {
-  return nsnull;
+  return nullptr;
 }
 
 /*static*/ bool
@@ -634,7 +634,7 @@ ShadowLayerManager::OpenDescriptorForDirectTexturing(GLContext*,
                                                      const SurfaceDescriptor&,
                                                      GLenum)
 {
-  return nsnull;
+  return nullptr;
 }
 
 /*static*/ void
@@ -661,7 +661,7 @@ AutoOpenSurface::AutoOpenSurface(OpenMode aMode,
 AutoOpenSurface::~AutoOpenSurface()
 {
   if (mSurface) {
-    mSurface = nsnull;
+    mSurface = nullptr;
     ShadowLayerForwarder::CloseDescriptor(mDescriptor);
   }
 }

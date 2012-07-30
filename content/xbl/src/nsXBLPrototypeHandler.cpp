@@ -86,23 +86,23 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
                                              const PRUnichar* aAllowUntrusted,
                                              nsXBLPrototypeBinding* aBinding,
                                              PRUint32 aLineNumber)
-  : mHandlerText(nsnull),
+  : mHandlerText(nullptr),
     mLineNumber(aLineNumber),
-    mNextHandler(nsnull),
+    mNextHandler(nullptr),
     mPrototypeBinding(aBinding)
 {
   Init();
 
-  ConstructPrototype(nsnull, aEvent, aPhase, aAction, aCommand, aKeyCode,
+  ConstructPrototype(nullptr, aEvent, aPhase, aAction, aCommand, aKeyCode,
                      aCharCode, aModifiers, aButton, aClickCount,
                      aGroup, aPreventDefault, aAllowUntrusted);
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
-  : mHandlerElement(nsnull),
+  : mHandlerElement(nullptr),
     mLineNumber(0),
-    mNextHandler(nsnull),
-    mPrototypeBinding(nsnull)
+    mNextHandler(nullptr),
+    mPrototypeBinding(nullptr)
 {
   Init();
 
@@ -111,9 +111,9 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding)
-  : mHandlerText(nsnull),
+  : mHandlerText(nullptr),
     mLineNumber(0),
-    mNextHandler(nsnull),
+    mNextHandler(nullptr),
     mPrototypeBinding(aBinding)
 {
   Init();
@@ -137,12 +137,12 @@ nsXBLPrototypeHandler::GetHandlerElement()
 {
   if (mType & NS_HANDLER_TYPE_XUL) {
     nsCOMPtr<nsIContent> element = do_QueryReferent(mHandlerElement);
-    nsIContent* el = nsnull;
+    nsIContent* el = nullptr;
     element.swap(el);
     return el;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -511,7 +511,7 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
   keyEvent->GetMetaKey(&isMeta);
 
   nsContentUtils::DispatchXULCommand(handlerElement, true,
-                                     nsnull, nsnull,
+                                     nullptr, nullptr,
                                      isControl, isAlt, isShift, isMeta);
   return NS_OK;
 }
@@ -560,7 +560,7 @@ nsXBLPrototypeHandler::GetController(nsIDOMEventTarget* aTarget)
   if (controllers) {
     controllers->GetControllerAt(0, &controller);  // return reference
   }
-  else controller = nsnull;
+  else controller = nullptr;
 
   return controller;
 }
@@ -707,7 +707,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   }
   else {
     mType |= aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
-    mHandlerText = nsnull;
+    mHandlerText = nullptr;
   }
 
   mDetail = -1;
@@ -854,7 +854,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
                                   nsContentUtils::eXBL_PROPERTIES,
                                   aMessageName,
                                   params, ArrayLength(params),
-                                  nsnull, EmptyString(), mLineNumber);
+                                  nullptr, EmptyString(), mLineNumber);
 }
 
 bool

@@ -118,7 +118,7 @@ static void LoadExtraSharedLibs()
     // check out if user's prefs.js has libs name
     nsresult res;
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
-    if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
+    if (NS_SUCCEEDED(res) && (prefs != nullptr)) {
         char *sonameList = NULL;
         bool prefSonameListIsSet = true;
         res = prefs->GetCharPref(PREF_PLUGINS_SONAME, &sonameList);
@@ -313,9 +313,9 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 {
-    *outLibrary = nsnull;
+    *outLibrary = nullptr;
 
-    info.fVersion = nsnull;
+    info.fVersion = nullptr;
 
     // Sadly we have to load the library for this to work.
     nsresult rv = LoadPlugin(outLibrary);
@@ -382,20 +382,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
-    if (info.fName != nsnull)
+    if (info.fName != nullptr)
         PL_strfree(info.fName);
 
-    if (info.fDescription != nsnull)
+    if (info.fDescription != nullptr)
         PL_strfree(info.fDescription);
 
     for (PRUint32 i = 0; i < info.fVariantCount; i++) {
-        if (info.fMimeTypeArray[i] != nsnull)
+        if (info.fMimeTypeArray[i] != nullptr)
             PL_strfree(info.fMimeTypeArray[i]);
 
-        if (info.fMimeDescriptionArray[i] != nsnull)
+        if (info.fMimeDescriptionArray[i] != nullptr)
             PL_strfree(info.fMimeDescriptionArray[i]);
 
-        if (info.fExtensionArray[i] != nsnull)
+        if (info.fExtensionArray[i] != nullptr)
             PL_strfree(info.fExtensionArray[i]);
     }
 
@@ -403,13 +403,13 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PR_FREEIF(info.fMimeDescriptionArray);
     PR_FREEIF(info.fExtensionArray);
 
-    if (info.fFullPath != nsnull)
+    if (info.fFullPath != nullptr)
         PL_strfree(info.fFullPath);
 
-    if (info.fFileName != nsnull)
+    if (info.fFileName != nullptr)
         PL_strfree(info.fFileName);
 
-    if (info.fVersion != nsnull)
+    if (info.fVersion != nullptr)
         PL_strfree(info.fVersion);
 
     return NS_OK;

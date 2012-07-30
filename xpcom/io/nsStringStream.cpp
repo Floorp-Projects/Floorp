@@ -384,7 +384,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 nsresult
 nsStringInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
-    *result = nsnull;
+    *result = nullptr;
 
     NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
 

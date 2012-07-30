@@ -49,7 +49,7 @@
     nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,     \
                                                           &rv));           \
     if (NS_FAILED(rv)) {                                                   \
-      *aInstancePtr = nsnull;                                              \
+      *aInstancePtr = nullptr;                                              \
       return rv;                                                           \
     }                                                                      \
                                                                            \
@@ -75,7 +75,7 @@
       nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,   \
                                                             &rv));         \
       if (NS_FAILED(rv)) {                                                 \
-        *aInstancePtr = nsnull;                                            \
+        *aInstancePtr = nullptr;                                            \
         return rv;                                                         \
       }                                                                    \
                                                                            \
@@ -91,7 +91,7 @@
 
 
 #define NS_DECL_DOM_CLASSINFO(_class) \
-  nsISupports *NS_CLASSINFO_NAME(_class) = nsnull;
+  nsISupports *NS_CLASSINFO_NAME(_class) = nullptr;
 
 // {891a7b01-1b61-11d6-a7f2-f690b638899c}
 #define NS_IDOMCI_EXTENSION_IID  \
@@ -158,9 +158,9 @@ NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \
 // won't work (except if the interface name starts with nsIDOM).
 #define NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, _proto, _hasclassif,  \
                                             _constructorcid)              \
-      nsnull                                                              \
+      nullptr                                                              \
     };                                                                    \
-    aDOMSOFactory->RegisterDOMClassInfo(#_class, nsnull, _proto,          \
+    aDOMSOFactory->RegisterDOMClassInfo(#_class, nullptr, _proto,          \
                                         interfaces,                       \
                                         DOM_DEFAULT_SCRIPTABLE_FLAGS,     \
                                         _hasclassif, _constructorcid);    \
@@ -174,7 +174,7 @@ NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \
 
 #define NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(_class, _hasclassif,   \
                                                    _constructorcid)       \
-  NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, nsnull, _hasclassif,        \
+  NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, nullptr, _hasclassif,        \
                                       _constructorcid)
 
 #define NS_DOMCI_EXTENSION_END                                            \

@@ -181,7 +181,7 @@ nsFilePicker::~nsFilePicker()
 {
   if (mLastUsedUnicodeDirectory) {
     NS_Free(mLastUsedUnicodeDirectory);
-    mLastUsedUnicodeDirectory = nsnull;
+    mLastUsedUnicodeDirectory = nullptr;
   }
   CoUninitialize();
 }
@@ -534,7 +534,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
     mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : NULL));
 
   BROWSEINFOW browserInfo = {0};
-  browserInfo.pidlRoot       = nsnull;
+  browserInfo.pidlRoot       = nullptr;
   browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
   browserInfo.lpszTitle      = mTitle.get();
   browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
@@ -1093,7 +1093,7 @@ NS_IMETHODIMP
 nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
-  *aFile = nsnull;
+  *aFile = nullptr;
 
   if (mUnicodeFile.IsEmpty())
       return NS_OK;
@@ -1112,7 +1112,7 @@ nsFilePicker::GetFile(nsIFile **aFile)
 NS_IMETHODIMP
 nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
-  *aFileURL = nsnull;
+  *aFileURL = nullptr;
   nsCOMPtr<nsIFile> file;
   nsresult rv = GetFile(getter_AddRefs(file));
   if (!file)
@@ -1277,7 +1277,7 @@ nsFilePicker::RememberLastUsedDirectory()
 
   if (mLastUsedUnicodeDirectory) {
     NS_Free(mLastUsedUnicodeDirectory);
-    mLastUsedUnicodeDirectory = nsnull;
+    mLastUsedUnicodeDirectory = nullptr;
   }
   mLastUsedUnicodeDirectory = ToNewUnicode(newDir);
 }

@@ -141,7 +141,7 @@ public:
 
     bool Notify(const nsCString& aType) const
     {
-        mObserver->Observe(nsnull, aType.get(), mData.get());
+        mObserver->Observe(nullptr, aType.get(), mData.get());
         return true;
     }
 
@@ -420,7 +420,7 @@ ContentChild::AllocPCrashReporter(const mozilla::dom::NativeThreadId& id,
 #ifdef MOZ_CRASHREPORTER
     return new CrashReporterChild();
 #else
-    return nsnull;
+    return nullptr;
 #endif
 }
 
@@ -488,7 +488,7 @@ ContentChild::AllocPAudio(const PRInt32& numChannels,
     NS_ADDREF(child);
     return child;
 #else
-    return nsnull;
+    return nullptr;
 #endif
 }
 
@@ -566,7 +566,7 @@ PStorageChild*
 ContentChild::AllocPStorage(const StorageConstructData& aData)
 {
     NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
-    return nsnull;
+    return nullptr;
 }
 
 bool
@@ -621,7 +621,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (svc) {
         svc->UnregisterListener(mConsoleListener);
-        mConsoleListener->mChild = nsnull;
+        mConsoleListener->mChild = nullptr;
     }
 
     XRE_ShutdownChildProcess();
@@ -711,7 +711,7 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
   nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;
   if (cpm) {
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
-                        aMsg, false, aJSON, nsnull, nsnull);
+                        aMsg, false, aJSON, nullptr, nullptr);
   }
   return true;
 }
@@ -769,7 +769,7 @@ ContentChild::RecvFlushMemory(const nsString& reason)
     nsCOMPtr<nsIObserverService> os =
         mozilla::services::GetObserverService();
     if (os)
-        os->NotifyObservers(nsnull, "memory-pressure", reason.get());
+        os->NotifyObservers(nullptr, "memory-pressure", reason.get());
   return true;
 }
 
@@ -822,7 +822,7 @@ bool
 ContentChild::RecvLastPrivateDocShellDestroyed()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
+    obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
     return true;
 }
 

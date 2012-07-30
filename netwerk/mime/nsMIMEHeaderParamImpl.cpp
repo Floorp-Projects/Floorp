@@ -87,7 +87,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // if necessary.
     
     nsCAutoString str1;
-    rv = DecodeParameter(med, charset.get(), nsnull, false, str1);
+    rv = DecodeParameter(med, charset.get(), nullptr, false, str1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aFallbackCharset.IsEmpty())
@@ -335,10 +335,10 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   if (!aHeaderValue ||  !*aHeaderValue || !aResult)
     return NS_ERROR_INVALID_ARG;
 
-  *aResult = nsnull;
+  *aResult = nullptr;
 
-  if (aCharset) *aCharset = nsnull;
-  if (aLang) *aLang = nsnull;
+  if (aCharset) *aCharset = nullptr;
+  if (aLang) *aLang = nullptr;
 
   nsCAutoString charset;
 
@@ -522,7 +522,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       if (caseB || (caseCStart && acceptContinuations)) {
         // look for single quotation mark(')
         const char *sQuote1 = PL_strchr(valueStart, 0x27);
-        const char *sQuote2 = sQuote1 ? PL_strchr(sQuote1 + 1, 0x27) : nsnull;
+        const char *sQuote2 = sQuote1 ? PL_strchr(sQuote1 + 1, 0x27) : nullptr;
 
         // Two single quotation marks must be present even in
         // absence of charset and lang. 
@@ -923,8 +923,8 @@ char *DecodeQ(const char *in, PRUint32 length)
   char *out, *dest = 0;
 
   out = dest = (char *)PR_Calloc(length + 1, sizeof(char));
-  if (dest == nsnull)
-    return nsnull;
+  if (dest == nullptr)
+    return nullptr;
   while (length > 0) {
     PRUintn c = 0;
     switch (*in) {
@@ -961,7 +961,7 @@ char *DecodeQ(const char *in, PRUint32 length)
 
  badsyntax:
   PR_Free(dest);
-  return nsnull;
+  return nullptr;
 }
 
 // check if input is HZ (a 7bit encoding for simplified Chinese : RFC 1842)) 
@@ -1079,7 +1079,7 @@ static const char especials[] = "()<>@,;:\\\"/[]?.=";
 nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset, 
                           bool aOverrideCharset, nsACString &aResult)
 {
-  const char *p, *q = nsnull, *r;
+  const char *p, *q = nullptr, *r;
   char *decodedText;
   const char *begin; // tracking pointer for where we are in the input buffer
   PRInt32 isLastEncodedWord = 0;
@@ -1166,10 +1166,10 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
       // (# of characters in B-encoded part has to be a multiple of 4)
       PRInt32 n = r - (q + 2);
       n -= (n % 4 == 1 && !PL_strncmp(r - 3, "===", 3)) ? 1 : 0;
-      decodedText = PL_Base64Decode(q + 2, n, nsnull);
+      decodedText = PL_Base64Decode(q + 2, n, nullptr);
     }
 
-    if (decodedText == nsnull)
+    if (decodedText == nullptr)
       goto badsyntax;
 
     // Override charset if requested.  Never override labeled UTF-8.

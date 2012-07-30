@@ -20,7 +20,7 @@ class NS_STACK_CLASS nsScriptObjectHolder {
 public:
   // A constructor that will cause a reference to |ctx| to be stored in
   // the object.  Only use for short-lived object holders.
-  nsScriptObjectHolder<T>(nsIScriptContext *ctx, T* aObject = nsnull) :
+  nsScriptObjectHolder<T>(nsIScriptContext *ctx, T* aObject = nullptr) :
       mObject(aObject), mContext(ctx) {
     NS_ASSERTION(ctx, "Must provide a valid context");
   }
@@ -60,7 +60,7 @@ public:
     nsresult rv = NS_OK;
     if (mObject) {
       rv = mContext->DropScriptObject(mObject);
-      mObject = nsnull;
+      mObject = nullptr;
     }
     return rv;
   }

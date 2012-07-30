@@ -41,7 +41,7 @@ public:
    * Returns the length, beginning, and end of a string in one operation.
    */
   NS_HIDDEN_(PRUint32) BeginReading(const char_type **begin,
-                                    const char_type **end = nsnull) const;
+                                    const char_type **end = nullptr) const;
 
   NS_HIDDEN_(const char_type*) BeginReading() const;
   NS_HIDDEN_(const char_type*) EndReading() const;
@@ -75,7 +75,7 @@ public:
    * @return  The new length of the string, or 0 if resizing failed.
    */
   NS_HIDDEN_(PRUint32) BeginWriting(char_type **begin,
-                                    char_type **end = nsnull,
+                                    char_type **end = nullptr,
                                     PRUint32 newSize = PR_UINT32_MAX);
 
   NS_HIDDEN_(char_type*) BeginWriting(PRUint32 = PR_UINT32_MAX);
@@ -154,7 +154,7 @@ public:
   NS_HIDDEN_(void) Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
   NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
-  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nullptr, 0); }
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
@@ -379,7 +379,7 @@ public:
    * Returns the length, beginning, and end of a string in one operation.
    */
   NS_HIDDEN_(PRUint32) BeginReading(const char_type **begin,
-                                    const char_type **end = nsnull) const;
+                                    const char_type **end = nullptr) const;
 
   NS_HIDDEN_(const char_type*) BeginReading() const;
   NS_HIDDEN_(const char_type*) EndReading() const;
@@ -413,7 +413,7 @@ public:
    * @return  The new length of the string, or 0 if resizing failed.
    */
   NS_HIDDEN_(PRUint32) BeginWriting(char_type **begin,
-                                    char_type **end = nsnull,
+                                    char_type **end = nullptr,
                                     PRUint32 newSize = PR_UINT32_MAX);
 
   NS_HIDDEN_(char_type*) BeginWriting(PRUint32 aLen = PR_UINT32_MAX);
@@ -497,7 +497,7 @@ public:
   NS_HIDDEN_(void) Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
   NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
-  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nullptr, 0); }
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
@@ -1127,7 +1127,7 @@ public:
   typedef PRUnichar char_type;
 
   nsGetterCopies(nsString& aStr)
-    : mString(aStr), mData(nsnull)
+    : mString(aStr), mData(nullptr)
   {}
 
   ~nsGetterCopies()
@@ -1157,7 +1157,7 @@ public:
   typedef char char_type;
 
   nsCGetterCopies(nsCString& aStr)
-    : mString(aStr), mData(nsnull)
+    : mString(aStr), mData(nullptr)
   {}
 
   ~nsCGetterCopies()

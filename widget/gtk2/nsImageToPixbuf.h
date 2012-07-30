@@ -7,12 +7,13 @@
 #define NSIMAGETOPIXBUF_H_
 
 #include "nsIImageToPixbuf.h"
+#include "mozilla/Attributes.h"
 
 class gfxASurface;
 class gfxPattern;
 class gfxImageSurface;
 
-class nsImageToPixbuf : public nsIImageToPixbuf {
+class nsImageToPixbuf MOZ_FINAL : public nsIImageToPixbuf {
     public:
         NS_DECL_ISUPPORTS
         NS_IMETHOD_(GdkPixbuf*) ConvertImageToPixbuf(imgIContainer* aImage);

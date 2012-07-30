@@ -90,7 +90,7 @@ inline mozilla::a11y::RootAccessible*
 Accessible::AsRoot()
 {
   return mFlags & eRootAccessible ?
-    static_cast<mozilla::a11y::RootAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::RootAccessible*>(this) : nullptr;
 }
 
 #endif

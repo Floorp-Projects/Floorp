@@ -57,7 +57,7 @@ class nsDequeIterator;
 class NS_COM_GLUE nsDeque {
   friend class nsDequeIterator;
   public:
-   nsDeque(nsDequeFunctor* aDeallocator = nsnull);
+   nsDeque(nsDequeFunctor* aDeallocator = nullptr);
   ~nsDeque();
 
   /**

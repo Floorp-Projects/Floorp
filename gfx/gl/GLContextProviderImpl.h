@@ -64,17 +64,6 @@ public:
                     const ContextFlags aFlags = GLContext::ContextFlagsNone);
 
     /**
-     * Try to create a GL context from native surface for arbitrary gfxASurface
-     * If surface not compatible this will return NULL
-     *
-     * @param aSurface surface to create a context for
-     *
-     * @return Context to use for this surface
-     */
-    static already_AddRefed<GLContext>
-    CreateForNativePixmapSurface(gfxASurface *aSurface);
-
-    /**
      * Get a pointer to the global context, creating it if it doesn't exist.
      */
     static GLContext *

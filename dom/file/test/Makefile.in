@@ -27,6 +27,7 @@ MOCHITEST_FILES = \
   test_success_events_after_abort.html \
   test_truncate.html \
   test_write_read_data.html \
+  test_archivereader.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

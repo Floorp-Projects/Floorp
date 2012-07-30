@@ -46,7 +46,7 @@ refAccessibleAtPointHelper(AccessibleWrap* aAccWrap, gint aX, gint aY,
                            AtkCoordType aCoordType)
 {
   if (!aAccWrap || aAccWrap->IsDefunct() || nsAccUtils::MustPrune(aAccWrap))
-    return nsnull;
+    return nullptr;
 
   // Accessible::ChildAtPoint(x,y) is in screen pixels.
   if (aCoordType == ATK_XY_WINDOW) {
@@ -59,7 +59,7 @@ refAccessibleAtPointHelper(AccessibleWrap* aAccWrap, gint aX, gint aY,
   Accessible* accAtPoint = aAccWrap->ChildAtPoint(aX, aY,
                                                   Accessible::eDirectChild);
   if (!accAtPoint)
-    return nsnull;
+    return nullptr;
 
   AtkObject* atkObj = AccessibleWrap::GetAtkObject(accAtPoint);
   if (atkObj)

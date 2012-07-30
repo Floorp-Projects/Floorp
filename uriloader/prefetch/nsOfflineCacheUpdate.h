@@ -225,7 +225,7 @@ private:
     // If namespaceFilter is non-null, only items matching the
     // specified namespaces will be added.
     nsresult AddExistingItems(PRUint32 aType,
-                              nsTArray<nsCString>* namespaceFilter = nsnull);
+                              nsTArray<nsCString>* namespaceFilter = nullptr);
     nsresult ScheduleImplicit();
     nsresult AssociateDocuments(nsIApplicationCache* cache);
 
@@ -322,7 +322,7 @@ public:
 
     /**
      * Returns the singleton nsOfflineCacheUpdateService without an addref, or
-     * nsnull if the service couldn't be created.
+     * nullptr if the service couldn't be created.
      */
     static nsOfflineCacheUpdateService *EnsureService();
 

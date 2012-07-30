@@ -44,7 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(voicechange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(datachange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ussdreceived)
-  tmp->mProvider = nsnull;
+  tmp->mProvider = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
@@ -154,7 +154,7 @@ NS_IMETHODIMP
 MobileConnection::GetVoice(nsIDOMMozMobileConnectionInfo** voice)
 {
   if (!mProvider) {
-    *voice = nsnull;
+    *voice = nullptr;
     return NS_OK;
   }
   return mProvider->GetVoiceConnectionInfo(voice);
@@ -164,7 +164,7 @@ NS_IMETHODIMP
 MobileConnection::GetData(nsIDOMMozMobileConnectionInfo** data)
 {
   if (!mProvider) {
-    *data = nsnull;
+    *data = nullptr;
     return NS_OK;
   }
   return mProvider->GetDataConnectionInfo(data);
@@ -183,7 +183,7 @@ MobileConnection::GetNetworkSelectionMode(nsAString& networkSelectionMode)
 NS_IMETHODIMP
 MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
 {
-  *request = nsnull;
+  *request = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -195,7 +195,7 @@ MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
 NS_IMETHODIMP
 MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* network, nsIDOMDOMRequest** request)
 {
-  *request = nsnull;
+  *request = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -207,7 +207,7 @@ MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* network, nsIDOMDOMRe
 NS_IMETHODIMP
 MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
 {
-  *request = nsnull;
+  *request = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -219,7 +219,7 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
 NS_IMETHODIMP
 MobileConnection::GetCardLock(const nsAString& aLockType, nsIDOMDOMRequest** aDomRequest)
 {
-  *aDomRequest = nsnull;
+  *aDomRequest = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -231,7 +231,7 @@ MobileConnection::GetCardLock(const nsAString& aLockType, nsIDOMDOMRequest** aDo
 NS_IMETHODIMP
 MobileConnection::UnlockCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest)
 {
-  *aDomRequest = nsnull;
+  *aDomRequest = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -243,7 +243,7 @@ MobileConnection::UnlockCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequ
 NS_IMETHODIMP
 MobileConnection::SetCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest)
 {
-  *aDomRequest = nsnull;
+  *aDomRequest = nullptr;
 
   if (!mProvider) {
     return NS_ERROR_FAILURE;
@@ -276,7 +276,7 @@ MobileConnection::CancelUSSD(nsIDOMDOMRequest** request)
 nsresult
 MobileConnection::InternalDispatchEvent(const nsAString& aType)
 {
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
   nsresult rv = event->InitEvent(aType, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 

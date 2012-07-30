@@ -31,7 +31,7 @@ DOMError::CreateForNSResult(nsresult aRv)
   const char* message;
   aRv = NS_GetNameAndMessageForDOMNSResult(aRv, &name, &message);
   if (NS_FAILED(aRv) || !name) {
-    return nsnull;
+    return nullptr;
   }
   return CreateWithName(NS_ConvertASCIItoUTF16(name));
 }
@@ -74,7 +74,7 @@ DOMError::CreateForDOMExceptionCode(PRUint16 aDOMExceptionCode)
   }
 
   NS_NOTREACHED("Unknown DOMException code!");
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMPL_ADDREF(DOMError)

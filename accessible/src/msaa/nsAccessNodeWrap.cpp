@@ -11,6 +11,7 @@
 
 #include "Compatibility.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
 #include "RootAccessible.h"
@@ -27,7 +28,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
+AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNodeWrap
@@ -65,7 +66,7 @@ nsAccessNodeWrap::QueryNativeInterface(REFIID aIID, void** aInstancePtr)
 
 STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = nsnull;
+  *ppv = nullptr;
 
   if (IID_IUnknown == iid) {
     *ppv = static_cast<ISimpleDOMNode*>(this);
@@ -83,7 +84,7 @@ STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 {
-  *ppv = nsnull;
+  *ppv = nullptr;
 
   // Provide a special service ID for getting the accessible for the browser tab
   // document that contains this accessible object. If this accessible object
@@ -174,8 +175,8 @@ STDMETHODIMP nsAccessNodeWrap::get_nodeInfo(
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
 __try{
-  *aNodeName = nsnull;
-  *aNodeValue = nsnull;
+  *aNodeName = nullptr;
+  *aNodeValue = nullptr;
 
   nsINode* node = GetNode();
   if (!node)
@@ -234,7 +235,7 @@ __try{
   *aNumAttribs = static_cast<unsigned short>(numAttribs);
 
   for (PRUint32 index = 0; index < numAttribs; index++) {
-    aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
+    aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nullptr;
     nsAutoString attributeValue;
 
     const nsAttrName* name = mContent->GetAttrNameAt(index);
@@ -266,7 +267,7 @@ __try {
   PRInt32 index;
 
   for (index = 0; index < aNumAttribs; index++) {
-    aAttribValues[index] = nsnull;
+    aAttribValues[index] = nullptr;
     if (aAttribNames[index]) {
       nsAutoString attributeValue, nameSpaceURI;
       nsAutoString attributeName(nsDependentString(static_cast<PRUnichar*>(aAttribNames[index])));
@@ -377,7 +378,7 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
   ISimpleDOMNode *iNode = NULL;
   Accessible* acc = mDoc->GetAccessible(aNode);
   if (acc) {
-    IAccessible *msaaAccessible = nsnull;
+    IAccessible *msaaAccessible = nullptr;
     acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
     msaaAccessible->QueryInterface(IID_ISimpleDOMNode, (void**)&iNode); // addrefs
     msaaAccessible->Release(); // Release IAccessible
@@ -476,7 +477,7 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
                               ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  *aNode = nsnull;
+  *aNode = nullptr;
 
   nsINode* node = GetNode();
   if (!node)
@@ -493,7 +494,7 @@ STDMETHODIMP
 nsAccessNodeWrap::get_innerHTML(BSTR __RPC_FAR *aInnerHTML)
 {
 __try {
-  *aInnerHTML = nsnull;
+  *aInnerHTML = nullptr;
 
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(GetNode());
   if (!htmlElement)

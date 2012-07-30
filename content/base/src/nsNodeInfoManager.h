@@ -55,7 +55,7 @@ public:
   already_AddRefed<nsINodeInfo> GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                             PRInt32 aNamespaceID,
                                             PRUint16 aNodeType,
-                                            nsIAtom* aExtraName = nsnull);
+                                            nsIAtom* aExtraName = nullptr);
   nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                        PRInt32 aNamespaceID, PRUint16 aNodeType,
                        nsINodeInfo** aNodeInfo);

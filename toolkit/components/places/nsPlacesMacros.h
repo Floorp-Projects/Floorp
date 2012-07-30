@@ -18,7 +18,7 @@
   PR_END_MACRO;
 
 #define PLACES_FACTORY_SINGLETON_IMPLEMENTATION(_className, _sInstance)        \
-  _className * _className::_sInstance = nsnull;                                \
+  _className * _className::_sInstance = nullptr;                                \
                                                                                \
   _className *                                                                 \
   _className::GetSingleton()                                                   \
@@ -32,7 +32,7 @@
       NS_ADDREF(_sInstance);                                                   \
       if (NS_FAILED(_sInstance->Init())) {                                     \
         NS_RELEASE(_sInstance);                                                \
-        _sInstance = nsnull;                                                   \
+        _sInstance = nullptr;                                                   \
       }                                                                        \
     }                                                                          \
     return _sInstance;                                                         \

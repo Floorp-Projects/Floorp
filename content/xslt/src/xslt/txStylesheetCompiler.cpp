@@ -28,7 +28,7 @@ txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
                                            txACompileObserver* aObserver)
     : txStylesheetCompilerState(aObserver)
 {
-    mStatus = init(aStylesheetURI, nsnull, nsnull);
+    mStatus = init(aStylesheetURI, nullptr, nullptr);
 }
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
@@ -86,7 +86,7 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
             }
 
             if (attr->mLocalName == nsGkAtoms::xmlns) {
-                mElementContext->mMappings->mapNamespace(nsnull, attr->mValue);
+                mElementContext->mMappings->mapNamespace(nullptr, attr->mValue);
             }
             else {
                 mElementContext->mMappings->
@@ -242,7 +242,7 @@ txStylesheetCompiler::startElementInternal(PRInt32 aNamespaceID,
                 }
             }
 
-            attr->mLocalName = nsnull;
+            attr->mLocalName = nullptr;
         }
 
         // version
@@ -404,7 +404,7 @@ txStylesheetCompiler::cancel(nsresult aError, const PRUnichar *aErrorText,
         mObserver->onDoneCompiling(this, mStatus, aErrorText, aParam);
         // This will ensure that we don't call onDoneCompiling twice. Also
         // ensures that we don't keep the observer alive longer then necessary.
-        mObserver = nsnull;
+        mObserver = nullptr;
     }
 }
 
@@ -508,7 +508,7 @@ txStylesheetCompiler::maybeDoneCompiling()
         mObserver->onDoneCompiling(this, mStatus);
         // This will ensure that we don't call onDoneCompiling twice. Also
         // ensures that we don't keep the observer alive longer then necessary.
-        mObserver = nsnull;
+        mObserver = nullptr;
     }
 
     return NS_OK;
@@ -520,15 +520,15 @@ txStylesheetCompiler::maybeDoneCompiling()
 
 
 txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserver)
-    : mHandlerTable(nsnull),
-      mSorter(nsnull),
+    : mHandlerTable(nullptr),
+      mSorter(nullptr),
       mDOE(false),
       mSearchingForFallback(false),
       mObserver(aObserver),
       mEmbedStatus(eNoEmbed),
       mDoneWithThisStylesheet(false),
-      mNextInstrPtr(nsnull),
-      mToplevelIterator(nsnull)
+      mNextInstrPtr(nullptr),
+      mToplevelIterator(nullptr)
 {
     // Embedded stylesheets have another handler, which is set in
     // txStylesheetCompiler::init if the baseURI has a fragment identifier.
@@ -773,7 +773,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
     // step forward before calling the observer in case of syncronous loading
     mToplevelIterator.next();
 
-    if (mChildCompilerList.AppendElement(compiler) == nsnull) {
+    if (mChildCompilerList.AppendElement(compiler) == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -806,7 +806,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
         new txStylesheetCompiler(aURI, mStylesheet, &iter, observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    if (mChildCompilerList.AppendElement(compiler) == nsnull) {
+    if (mChildCompilerList.AppendElement(compiler) == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -821,7 +821,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
 nsresult
 txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer)
 {
-    if (mGotoTargetPointers.AppendElement(aTargetPointer) == nsnull) {
+    if (mGotoTargetPointers.AppendElement(aTargetPointer) == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
@@ -876,7 +876,7 @@ nsresult
 txErrorFunctionCall::evaluate(txIEvalContext* aContext,
                               txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
 }
@@ -998,7 +998,7 @@ struct txXPCOMFunctionMapping
     nsCString mContractID;
 };
 
-static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nsnull;
+static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nullptr;
 
 static nsresult
 findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
@@ -1029,7 +1029,7 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
         }
     }
 
-    txXPCOMFunctionMapping *map = nsnull;
+    txXPCOMFunctionMapping *map = nullptr;
     PRUint32 count = sXPCOMFunctionMappings->Length();
     for (i = 0; i < count; ++i) {
         map = &sXPCOMFunctionMappings->ElementAt(i);
@@ -1067,14 +1067,14 @@ findFunction(nsIAtom* aName, PRInt32 aNamespaceID,
     }
 
     return TX_ResolveFunctionCallXPCOM(map->mContractID, aNamespaceID, aName,
-                                       nsnull, aResult);
+                                       nullptr, aResult);
 }
 
 extern bool
 TX_XSLTFunctionAvailable(nsIAtom* aName, PRInt32 aNameSpaceID)
 {
     nsRefPtr<txStylesheetCompiler> compiler =
-        new txStylesheetCompiler(EmptyString(), nsnull);
+        new txStylesheetCompiler(EmptyString(), nullptr);
     NS_ENSURE_TRUE(compiler, false);
 
     nsAutoPtr<FunctionCall> fnCall;
@@ -1087,7 +1087,7 @@ nsresult
 txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                                FunctionCall **aFunction)
 {
-    *aFunction = nsnull;
+    *aFunction = nullptr;
 
     nsresult rv = findFunction(aName, aID, this, aFunction);
     if (rv == NS_ERROR_XPATH_UNKNOWN_FUNCTION &&
@@ -1116,7 +1116,7 @@ void
 txStylesheetCompilerState::shutdown()
 {
     delete sXPCOMFunctionMappings;
-    sXPCOMFunctionMappings = nsnull;
+    sXPCOMFunctionMappings = nullptr;
 }
 
 txElementContext::txElementContext(const nsAString& aBaseURI)

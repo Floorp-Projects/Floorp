@@ -43,10 +43,6 @@ EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)
 
 EXTRA_JS_MODULES = CrashTestUtils.jsm
 
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY) -DNOMINMAX
-
 ifneq (mobile,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
   browser/head.js \
@@ -55,7 +51,13 @@ MOCHITEST_BROWSER_FILES = \
   browser/browser_bug471404.js \
   browser/browser_aboutCrashesResubmit.js \
   $(NULL)
+endif
 
+include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY) -DNOMINMAX
+
+ifneq (mobile,$(MOZ_BUILD_APP))
 libs::  $(MOCHITEST_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
 endif

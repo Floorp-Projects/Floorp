@@ -47,7 +47,7 @@ PathExpr::addExpr(Expr* aExpr, PathOperator aPathOp)
 nsresult
 PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     // We need to evaluate the first step with the current context since it
     // can depend on the context size and position. For example:
@@ -67,7 +67,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
         return NS_OK;
     }
-    res = nsnull; // To allow recycling
+    res = nullptr; // To allow recycling
 
     // Evaluate remaining steps
     PRUint32 i, len = mItems.Length();
@@ -190,7 +190,7 @@ TX_IMPL_EXPR_STUBS_BASE(PathExpr, NODESET_RESULT)
 Expr*
 PathExpr::getSubExprAt(PRUint32 aPos)
 {
-    return aPos < mItems.Length() ? mItems[aPos].expr.get() : nsnull;
+    return aPos < mItems.Length() ? mItems[aPos].expr.get() : nullptr;
 }
 void
 PathExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)

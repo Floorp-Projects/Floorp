@@ -92,10 +92,10 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *aRequest,
     mObserver->OnStreamComplete(this, mContext, aStatus, mBuffer);
   }
 
-  mObserver = nsnull;
-  mDecoder = nsnull;
-  mContext = nsnull;
-  mChannel = nsnull;
+  mObserver = nullptr;
+  mDecoder = nullptr;
+  mContext = nullptr;
+  mChannel = nullptr;
   mCharset.Truncate();
   mBuffer.Truncate();
   return rv;
@@ -150,8 +150,8 @@ nsUnicharStreamLoader::OnDataAvailable(nsIRequest *aRequest,
     }
   }
 
-  mContext = nsnull;
-  mChannel = nsnull;
+  mContext = nullptr;
+  mChannel = nullptr;
   return rv;
 }
 
@@ -179,7 +179,7 @@ nsUnicharStreamLoader::DetermineCharset()
 
   // Process the data into mBuffer
   PRUint32 dummy;
-  rv = WriteSegmentFun(nsnull, this,
+  rv = WriteSegmentFun(nullptr, this,
                        mRawData.BeginReading(),
                        0, mRawData.Length(),
                        &dummy);

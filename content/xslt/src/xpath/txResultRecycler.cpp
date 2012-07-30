@@ -8,9 +8,9 @@
 #include "txNodeSet.h"
 
 txResultRecycler::txResultRecycler()
-    : mEmptyStringResult(nsnull),
-      mTrueResult(nsnull),
-      mFalseResult(nsnull)
+    : mEmptyStringResult(nullptr),
+      mTrueResult(nullptr),
+      mFalseResult(nullptr)
 {
 }
 
@@ -40,7 +40,7 @@ txResultRecycler::init()
 {
     NS_ASSERTION(!mEmptyStringResult && !mTrueResult && !mFalseResult,
                  "Already inited");
-    mEmptyStringResult = new StringResult(nsnull);
+    mEmptyStringResult = new StringResult(nullptr);
     NS_ENSURE_TRUE(mEmptyStringResult, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(mEmptyStringResult);

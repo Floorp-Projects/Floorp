@@ -319,7 +319,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   NS_ABORT_IF_FALSE(aURI && aListener && !mListener, 
                     "Invalid state for WebSocketChannelChild::AsyncOpen");
 
-  mozilla::dom::TabChild* tabChild = nsnull;
+  mozilla::dom::TabChild* tabChild = nullptr;
   nsCOMPtr<nsITabChild> iTabChild;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
                                 NS_GET_IID(nsITabChild),

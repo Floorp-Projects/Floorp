@@ -108,11 +108,11 @@ nsDOMWindowUtils::GetPresShell()
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   if (!window)
-    return nsnull;
+    return nullptr;
 
   nsIDocShell *docShell = window->GetDocShell();
   if (!docShell)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
@@ -124,10 +124,10 @@ nsDOMWindowUtils::GetPresContext()
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   if (!window)
-    return nsnull;
+    return nullptr;
   nsIDocShell *docShell = window->GetDocShell();
   if (!docShell)
-    return nsnull;
+    return nullptr;
   nsRefPtr<nsPresContext> presContext;
   docShell->GetPresContext(getter_AddRefs(presContext));
   return presContext;
@@ -358,7 +358,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
   if (rootFrame) {
     nsIContent* rootContent =
-      rootScrollFrame ? rootScrollFrame->GetContent() : nsnull;
+      rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
     nsRect rootDisplayport;
     bool usingDisplayport = rootContent &&
       nsLayoutUtils::GetDisplayPort(rootContent, &rootDisplayport);
@@ -377,7 +377,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
         LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
         if (isRetainingManager) {
           manager->BeginTransaction();
-          nsLayoutUtils::PaintFrame(nsnull, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
+          nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
                                     nsLayoutUtils::PAINT_WIDGET_LAYERS |
                                     nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
         }
@@ -921,7 +921,7 @@ nsDOMWindowUtils::GetWidget(nsPoint* aOffset)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsIWidget*
@@ -932,7 +932,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsIDocument* doc = content->GetCurrentDoc();
-  nsIPresShell* presShell = doc ? doc->GetShell() : nsnull;
+  nsIPresShell* presShell = doc ? doc->GetShell() : nullptr;
 
   if (presShell) {
     nsIFrame* frame = content->GetPrimaryFrame();
@@ -943,7 +943,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
       return frame->GetNearestWidget();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -1102,7 +1102,7 @@ CanvasToImageSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);
   if (!node) {
-    return nsnull;
+    return nullptr;
   }
 
   NS_ABORT_IF_FALSE(node->IsElement(),
@@ -1124,15 +1124,15 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (aCanvas1 == nsnull ||
-      aCanvas2 == nsnull ||
-      retVal == nsnull)
+  if (aCanvas1 == nullptr ||
+      aCanvas2 == nullptr ||
+      retVal == nullptr)
     return NS_ERROR_FAILURE;
 
   nsRefPtr<gfxImageSurface> img1 = CanvasToImageSurface(aCanvas1);
   nsRefPtr<gfxImageSurface> img2 = CanvasToImageSurface(aCanvas2);
 
-  if (img1 == nsnull || img2 == nsnull ||
+  if (img1 == nullptr || img2 == nullptr ||
       img1->GetSize() != img2->GetSize() ||
       img1->Stride() != img2->Stride())
     return NS_ERROR_FAILURE;
@@ -1420,14 +1420,14 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
   NS_ENSURE_STATE(content);
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  shell->HandleEventWithTarget(internalEvent, nsnull, content,
+  shell->HandleEventWithTarget(internalEvent, nullptr, content,
                                &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }
 
 static void
-InitEvent(nsGUIEvent &aEvent, nsIntPoint *aPt = nsnull)
+InitEvent(nsGUIEvent &aEvent, nsIntPoint *aPt = nullptr)
 {
   if (aPt) {
     aEvent.refPoint = *aPt;
@@ -1557,7 +1557,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
                                         PRInt32 aX, PRInt32 aY,
                                         nsIQueryContentEventResult **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1777,7 +1777,7 @@ nsDOMWindowUtils::LeaveModalState()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  window->LeaveModalState(nsnull);
+  window->LeaveModalState(nullptr);
   return NS_OK;
 }
 
@@ -1945,7 +1945,7 @@ nsDOMWindowUtils::StopFrameTimeRecording(PRUint32 *frameCount, float **frames)
 
   nsTArray<float> frameTimes = mgr->StopFrameTimeRecording();
 
-  *frames = nsnull;
+  *frames = nullptr;
   *frameCount = frameTimes.Length();
 
   if (*frameCount != 0) {
@@ -2305,7 +2305,7 @@ GetFileOrBlob(const nsAString& aName, const jsval& aBlobParts,
 
   jsval args[2] = { aBlobParts, aParameters };
 
-  rv = initializer->Initialize(nsnull, aCx, nsnull, aOptionalArgCount, args);
+  rv = initializer->Initialize(nullptr, aCx, nullptr, aOptionalArgCount, args);
   NS_ENSURE_SUCCESS(rv, rv);
 
   file.forget(aResult);
@@ -2522,7 +2522,7 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, jsval* aPlugins)
   nsTArray<nsIObjectLoadingContent*> plugins;
   doc->GetPlugins(plugins);
 
-  JSObject* jsPlugins = nsnull;
+  JSObject* jsPlugins = nullptr;
   rv = nsTArrayToJSArray(cx, plugins, &jsPlugins);
   NS_ENSURE_SUCCESS(rv, rv);
 

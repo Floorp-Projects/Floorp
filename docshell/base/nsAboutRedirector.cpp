@@ -91,7 +91,7 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
         {
             nsCOMPtr<nsIChannel> tempChannel;
             rv = ioService->NewChannel(nsDependentCString(kRedirMap[i].url),
-                                       nsnull, nsnull, getter_AddRefs(tempChannel));
+                                       nullptr, nullptr, getter_AddRefs(tempChannel));
             if (NS_FAILED(rv))
                 return rv;
 
@@ -104,7 +104,7 @@ nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
                 // Setting the owner to null means that we'll go through the normal
                 // path in GetChannelPrincipal and create a codebase principal based
                 // on the channel's originalURI
-                rv = tempChannel->SetOwner(nsnull);
+                rv = tempChannel->SetOwner(nullptr);
                 if (NS_FAILED(rv))
                     return rv;
             }
@@ -144,7 +144,7 @@ nsresult
 nsAboutRedirector::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutRedirector* about = new nsAboutRedirector();
-    if (about == nsnull)
+    if (about == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(about);
     nsresult rv = about->QueryInterface(aIID, aResult);

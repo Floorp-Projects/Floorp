@@ -168,7 +168,7 @@ PathifyURI(nsIURI *in, nsACString &out)
         rv = irph->ResolveURI(in, spec);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = ioService->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
+        rv = ioService->NewURI(spec, nullptr, nullptr, getter_AddRefs(uri));
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         if (NS_SUCCEEDED(in->SchemeIs("chrome", &equals)) && equals) {

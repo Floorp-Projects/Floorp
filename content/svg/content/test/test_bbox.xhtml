@@ -33,15 +33,24 @@ function run()
     is(bbox.width, width, id + ".getBBox().width");
     is(bbox.height, height, id + ".getBBox().height");
   }
-  function checkBBoxHeight(id1, id2) {
+  function compareBBox(id1, id2) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.x, bbox2.x, id1 + ".getBBox().x");
+    is(bbox1.y, bbox2.y, id1 + ".getBBox().y");
+    is(bbox1.width, bbox2.width, id1 + ".getBBox().width");
+    is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
+  }
+  function compareBBoxHeight(id1, id2) {
     var bbox1 = getBBox(id1);
     var bbox2 = getBBox(id2);
     is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
   }
 
   checkBBox("fO", 10, 10, 100, 100);
-  checkBBoxHeight("a", "b");
-  checkBBoxHeight("a", "y");
+  compareBBoxHeight("a", "b");
+  compareBBoxHeight("a", "y");
+  compareBBox("b", "tspan");
   checkBBox("v", 95, 45, 10, 155);
   checkBBox("h", 195, 45, 105, 55);
   checkBBox("e", 95, 95, 10, 10);

@@ -42,6 +42,17 @@ bool LaunchApp(const std::vector<std::string>& argv,
                const environment_map& env_vars_to_set,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
+  return LaunchApp(argv, fds_to_remap, env_vars_to_set,
+                   SAME_PRIVILEGES_AS_PARENT,
+                   wait, process_handle);
+}
+
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+               const environment_map& env_vars_to_set,
+               ChildPrivileges privs,
+               bool wait, ProcessHandle* process_handle,
+               ProcessArchitecture arch) {
   bool retval = true;
 
   char* argv_copy[argv.size() + 1];

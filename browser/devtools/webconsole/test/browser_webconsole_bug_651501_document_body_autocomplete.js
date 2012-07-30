@@ -97,7 +97,7 @@ function testPropertyPanel()
       }, false);
 
       let node = gHUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(node, 2, 2, {});
+      EventUtils.synthesizeMouse(node, 2, 2, {}, gHUD.iframeWindow);
     },
     failureFn: finishTest,
   });

@@ -122,7 +122,7 @@ nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 nsresult
 nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsSVGScriptElement* it = new nsSVGScriptElement(ni.forget(), NOT_FROM_PARSER);
@@ -195,7 +195,7 @@ nsSVGScriptElement::FreezeUriAsyncDefer()
     mStringAttributes[HREF].GetAnimValue(src, this);
 
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-    NS_NewURI(getter_AddRefs(mUri), src, nsnull, baseURI);
+    NS_NewURI(getter_AddRefs(mUri), src, nullptr, baseURI);
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
   }

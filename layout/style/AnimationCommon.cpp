@@ -28,7 +28,7 @@ CommonAnimationManager::Disconnect()
   // Content nodes might outlive the transition or animation manager.
   RemoveAllElementData();
 
-  mPresContext = nsnull;
+  mPresContext = nullptr;
 }
 
 void

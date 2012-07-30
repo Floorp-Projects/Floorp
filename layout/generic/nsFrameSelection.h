@@ -77,7 +77,7 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
     , mIsKeyboardSelect(aIsKeyboardSelect)
     , mVisual(aVisual)
     , mResultContent()
-    , mResultFrame(nsnull)
+    , mResultFrame(nullptr)
     , mContentOffset(0)
     , mAttachForward(false)
   {
@@ -548,7 +548,7 @@ public:
    *  At the beginning and end of each line there is assumed to be a frame with
    *   Bidi level equal to the paragraph embedding level.
    *  In these cases the before frame and after frame respectively will be 
-   *   nsnull.
+   *   nullptr.
    *
    *  This method is virtual since it gets called from outside of layout. 
    */
@@ -694,9 +694,11 @@ private:
   //batching
   PRInt32 mBatching;
     
-  nsIContent *mLimiter;     //limit selection navigation to a child of this node.
-  nsIContent *mAncestorLimiter; // Limit selection navigation to a descendant of
-                                // this node.
+  // Limit selection navigation to a child of this node.
+  nsCOMPtr<nsIContent> mLimiter;
+  // Limit selection navigation to a descendant of this node.
+  nsCOMPtr<nsIContent> mAncestorLimiter;
+
   nsIPresShell *mShell;
 
   PRInt16 mSelectionChangeReason; // reason for notifications of selection changing

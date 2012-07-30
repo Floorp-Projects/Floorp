@@ -157,7 +157,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                     rv = ds->GetTarget(valueres, *property, true, getter_AddRefs(target));
                     if (NS_FAILED(rv)) return rv;
 
-                    if (target != nsnull) {
+                    if (target != nullptr) {
                         // bingo. we found one.
                         empty = eFalse;
                         container = eTrue;
@@ -186,7 +186,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                         if (NS_FAILED(rv)) return rv;
 
                         nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-                        NS_ASSERTION(property != nsnull, "not a property");
+                        NS_ASSERTION(property != nullptr, "not a property");
                         if (! property)
                             return NS_ERROR_UNEXPECTED;
 

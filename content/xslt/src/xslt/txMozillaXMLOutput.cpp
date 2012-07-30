@@ -139,7 +139,7 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
     // Check that it's a valid name
     if (!nsContentUtils::IsValidNodeName(lname, aPrefix, aNsID)) {
         // Try without prefix
-        aPrefix = nsnull;
+        aPrefix = nullptr;
         if (!nsContentUtils::IsValidNodeName(lname, aPrefix, aNsID)) {
             // Don't return error here since the callers don't deal
             return NS_OK;
@@ -356,7 +356,7 @@ txMozillaXMLOutput::endElement()
         if (!mCurrentNode->GetNodeParent()) {
             parent->AppendChildTo(mNonAddedNode, true);
         }
-        mNonAddedNode = nsnull;
+        mNonAddedNode = nullptr;
     }
 
     mCurrentNode = parent;
@@ -449,7 +449,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
             aLowercaseLocalName = owner;
         }
-        return startElementInternal(nsnull, 
+        return startElementInternal(nullptr, 
                                     aLowercaseLocalName, 
                                     kNameSpaceID_XHTML);
     }
@@ -482,7 +482,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
     // Check that it's a valid name
     if (!nsContentUtils::IsValidNodeName(lname, aPrefix, nsId)) {
         // Try without prefix
-        aPrefix = nsnull;
+        aPrefix = nullptr;
         if (!nsContentUtils::IsValidNodeName(lname, aPrefix, nsId)) {
             return NS_ERROR_XSLT_BAD_NODE_NAME;
         }
@@ -589,7 +589,7 @@ txMozillaXMLOutput::closePrevious(bool aFlushText)
         }
 
         mCurrentNode = mOpenedElement;
-        mOpenedElement = nsnull;
+        mOpenedElement = nullptr;
     }
     else if (aFlushText && !mText.IsEmpty()) {
         // Text can't appear in the root of a document
@@ -931,10 +931,10 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
     NS_ASSERTION(mOutputFormat.mMethod == eHTMLOutput,
                  "need to adjust createHTMLElement");
 
-    *aResult = nsnull;
+    *aResult = nullptr;
 
     nsCOMPtr<nsINodeInfo> ni;
-    ni = mNodeInfoManager->GetNodeInfo(aName, nsnull,
+    ni = mNodeInfoManager->GetNodeInfo(aName, nullptr,
                                        kNameSpaceID_XHTML,
                                        nsIDOMNode::ELEMENT_NODE);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);

@@ -6,7 +6,6 @@
 let tempScope = {};
 Cu.import("resource:///modules/HUDService.jsm", tempScope);
 let HUDService = tempScope.HUDService;
-let ConsoleUtils = tempScope.ConsoleUtils;
 Cu.import("resource:///modules/WebConsoleUtils.jsm", tempScope);
 let WebConsoleUtils = tempScope.WebConsoleUtils;
 

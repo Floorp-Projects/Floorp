@@ -33,17 +33,17 @@ nsTreeBoxObject::Clear()
     nsCOMPtr<nsITreeSelection> sel;
     mView->GetSelection(getter_AddRefs(sel));
     if (sel)
-      sel->SetTree(nsnull);
-    mView->SetTree(nsnull); // Break the circular ref between the view and us.
+      sel->SetTree(nullptr);
+    mView->SetTree(nullptr); // Break the circular ref between the view and us.
   }
-  mView = nsnull;
+  mView = nullptr;
 
   nsBoxObject::Clear();
 }
 
 
 nsTreeBoxObject::nsTreeBoxObject()
-  : mTreeBody(nsnull)
+  : mTreeBody(nullptr)
 {
 }
 
@@ -55,7 +55,7 @@ nsTreeBoxObject::~nsTreeBoxObject()
 
 static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   ChildIterator iter, last;
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
@@ -91,7 +91,7 @@ nsTreeBoxObject::GetTreeBody(bool aFlushLayout)
   if (aFlushLayout) {
     frame = GetFrame(aFlushLayout);
     if (!frame)
-      return nsnull;
+      return nullptr;
   }
 
   if (mTreeBody) {
@@ -102,22 +102,22 @@ nsTreeBoxObject::GetTreeBody(bool aFlushLayout)
   if (!aFlushLayout) {
     frame = GetFrame(aFlushLayout);
     if (!frame)
-      return nsnull;
+      return nullptr;
   }
 
   // Iterate over our content model children looking for the body.
   nsCOMPtr<nsIContent> content;
   FindBodyElement(frame->GetContent(), getter_AddRefs(content));
   if (!content)
-    return nsnull;
+    return nullptr;
 
   frame = content->GetPrimaryFrame();
   if (!frame)
-     return nsnull;
+     return nullptr;
 
   // Make sure that the treebodyframe has a pointer to |this|.
   nsTreeBodyFrame *treeBody = do_QueryFrame(frame);
-  NS_ENSURE_TRUE(treeBody && treeBody->GetTreeBoxObject() == this, nsnull);
+  NS_ENSURE_TRUE(treeBody && treeBody->GetTreeBoxObject() == this, nullptr);
 
   mTreeBody = treeBody;
   return mTreeBody;
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
   if (!mTreeBody) {
     if (!GetTreeBody()) {
       // Don't return an uninitialised view
-      *aView = nsnull;
+      *aView = nullptr;
       return NS_OK;
     }
 
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsTreeBoxObject::SetFocused(bool aFocused)
 
 NS_IMETHODIMP nsTreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 {
-  *aElement = nsnull;
+  *aElement = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetTreeBody(aElement);
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 
 NS_IMETHODIMP nsTreeBoxObject::GetColumns(nsITreeColumns** aColumns)
 {
-  *aColumns = nsnull;
+  *aColumns = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
     return body->GetColumns(aColumns);
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetPageLength(PRInt32 *aPageLength)
 
 NS_IMETHODIMP nsTreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
 {
- *aRegion = nsnull;
+ *aRegion = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetSelectionRegion(aRegion);
@@ -417,7 +417,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32 *aRow, 
                                          nsACString& aChildElt)
 {
   *aRow = 0;
-  *aCol = nsnull;
+  *aCol = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body)
     return body->GetCellAt(aX, aY, aRow, aCol, aChildElt);
@@ -480,7 +480,7 @@ NS_IMETHODIMP nsTreeBoxObject::ClearStyleAndImageCaches()
 void
 nsTreeBoxObject::ClearCachedValues()
 {
-  mTreeBody = nsnull;
+  mTreeBody = nullptr;
 }    
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
