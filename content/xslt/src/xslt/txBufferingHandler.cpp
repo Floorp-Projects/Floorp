@@ -368,7 +368,7 @@ txResultBuffer::~txResultBuffer()
 nsresult
 txResultBuffer::addTransaction(txOutputTransaction* aTransaction)
 {
-    if (mTransactions.AppendElement(aTransaction) == nsnull) {
+    if (mTransactions.AppendElement(aTransaction) == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     return NS_OK;
@@ -478,7 +478,7 @@ txResultBuffer::getLastTransaction()
 {
     PRInt32 last = mTransactions.Length() - 1;
     if (last < 0) {
-        return nsnull;
+        return nullptr;
     }
     return mTransactions[last];
 }

@@ -20,7 +20,7 @@ public:
     if (aContent->IsHTML(nsGkAtoms::legend)) {
       return static_cast<nsHTMLLegendElement*>(aContent);
     }
-    return nsnull;
+    return nullptr;
   }
 
   // nsISupports
@@ -75,7 +75,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -89,7 +89,7 @@ public:
   {
     nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
 
-    return fieldsetControl ? fieldsetControl->GetFormElement() : nsnull;
+    return fieldsetControl ? fieldsetControl->GetFormElement() : nullptr;
   }
 
   virtual nsXPCClassInfo* GetClassInfo();

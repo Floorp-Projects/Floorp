@@ -29,7 +29,7 @@
 //
 // set NSPR_LOG_MODULES=Test:5
 //
-static PRLogModuleInfo *gTestLog = nsnull;
+static PRLogModuleInfo *gTestLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
@@ -48,7 +48,7 @@ public:
     NS_DECL_ISUPPORTS
 
     MyCopier()
-        : mLock(nsnull)
+        : mLock(nullptr)
         , mInputCondition(NS_OK)
     {
     }
@@ -105,9 +105,9 @@ public:
             nsresult rv = mOutput->WriteSegments(FillOutputBuffer, this, CHUNK_SIZE, &n);
             if (NS_FAILED(rv) || (n == 0)) {
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                    mOutput->AsyncWait(this, 0, 0, nsnull);
+                    mOutput->AsyncWait(this, 0, 0, nullptr);
                 else if (mInputCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                    mInput->AsyncWait(this, 0, 0, nsnull);
+                    mInput->AsyncWait(this, 0, 0, nullptr);
                 else
                     Close_Locked();
                 break;
@@ -134,7 +134,7 @@ public:
         mInput = do_QueryInterface(inStr);
         mOutput = do_QueryInterface(outStr);
 
-        return mInput->AsyncWait(this, 0, 0, nsnull);
+        return mInput->AsyncWait(this, 0, 0, nullptr);
     }
 
     static NS_METHOD FillOutputBuffer(nsIOutputStream *outStr,
@@ -201,7 +201,7 @@ RunTest(nsIFile *srcFile, nsIFile *destFile)
     if (NS_FAILED(rv)) return rv;
 
     MyCopier *copier = new MyCopier();
-    if (copier == nsnull)
+    if (copier == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(copier);
 
@@ -274,11 +274,11 @@ main(int argc, char* argv[])
     char* fileName = argv[1];
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
         nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
         NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
         if (registrar)
-            registrar->AutoRegister(nsnull);
+            registrar->AutoRegister(nullptr);
 
 #if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
@@ -317,7 +317,7 @@ main(int argc, char* argv[])
         PR_Sleep(PR_SecondsToInterval(1));
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return NS_OK;
 }

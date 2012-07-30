@@ -87,7 +87,7 @@ protected:
     virtual ~MouseListener() {}
 
     void ForgetFrame() {
-      mFrame = nsnull;
+      mFrame = nullptr;
     }
 
   protected:

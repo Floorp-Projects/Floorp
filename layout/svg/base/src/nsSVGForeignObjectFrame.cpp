@@ -104,7 +104,7 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
                aAttribute == nsGkAtoms::y ||
                aAttribute == nsGkAtoms::transform) {
       // make sure our cached transform matrix gets (lazily) updated
-      mCanvasTM = nsnull;
+      mCanvasTM = nullptr;
       nsSVGUtils::InvalidateAndScheduleReflowSVG(this);
     } else if (aAttribute == nsGkAtoms::viewBox ||
                aAttribute == nsGkAtoms::preserveAspectRatio) {
@@ -309,7 +309,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
     static_cast<nsSVGElement*>(mContent)->
-      GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+      GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, 0.0f, 0.0f, width, height);
@@ -347,19 +347,19 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
                "clipPath's contents should take this code path");
 
   if (IsDisabled() || (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
-    return nsnull;
+    return nullptr;
 
   nsIFrame* kid = GetFirstPrincipalChild();
   if (!kid)
-    return nsnull;
+    return nullptr;
 
   float x, y, width, height;
   static_cast<nsSVGElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+    GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   gfxMatrix tm = GetCanvasTM(FOR_HIT_TESTING).Invert();
   if (tm.IsSingular())
-    return nsnull;
+    return nullptr;
   
   // Convert aPoint from app units in canvas space to user space:
 
@@ -367,7 +367,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   pt = tm.Transform(pt);
 
   if (!gfxRect(0.0f, 0.0f, width, height).Contains(pt))
-    return nsnull;
+    return nullptr;
 
   // Convert pt to app units in *local* space:
 
@@ -378,7 +378,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (frame && nsSVGUtils::HitTestClip(this, aPoint))
     return frame;
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP_(nsRect)
@@ -386,7 +386,7 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
 {
   float x, y, w, h;
   static_cast<nsSVGForeignObjectElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+    GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
   // GetCanvasTM includes the x,y translation
@@ -412,7 +412,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
 
   float x, y, w, h;
   static_cast<nsSVGForeignObjectElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+    GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
 
   // If mRect's width or height are negative, reflow blows up! We must clamp!
   if (w < 0.0f) w = 0.0f;
@@ -536,7 +536,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
   if (needNewCanvasTM) {
     // Do this after calling InvalidateAndScheduleBoundsUpdate in case we
     // change the code and it needs to use it.
-    mCanvasTM = nsnull;
+    mCanvasTM = nullptr;
   }
 }
 
@@ -548,7 +548,7 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     static_cast<nsSVGForeignObjectElement*>(mContent);
 
   float x, y, w, h;
-  content->GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+  content->GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
 
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;

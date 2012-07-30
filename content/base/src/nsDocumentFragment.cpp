@@ -41,7 +41,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -61,7 +61,7 @@ public:
   }
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const
   {
-    return nsnull;
+    return nullptr;
   }
 
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
@@ -85,7 +85,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
-                                           nsnull, kNameSpaceID_None,
+                                           nullptr, kNameSpaceID_None,
                                            nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
@@ -114,13 +114,13 @@ nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 nsIAtom*
 nsDocumentFragment::DoGetID() const
 {
-  return nsnull;  
+  return nullptr;  
 }
 
 nsIAtom*
 nsDocumentFragment::GetIDAttributeName() const
 {
-  return nsnull;
+  return nullptr;
 }
 
 DOMCI_NODE_DATA(DocumentFragment, nsDocumentFragment)

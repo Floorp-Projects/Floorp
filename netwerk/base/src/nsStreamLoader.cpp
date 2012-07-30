@@ -10,7 +10,7 @@
 #include "sampler.h"
 
 nsStreamLoader::nsStreamLoader()
-  : mData(nsnull),
+  : mData(nullptr),
     mAllocated(0),
     mLength(0)
 {
@@ -37,7 +37,7 @@ nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
   nsStreamLoader* it = new nsStreamLoader();
-  if (it == nsnull)
+  if (it == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(it);
   nsresult rv = it->QueryInterface(aIID, aResult);
@@ -96,7 +96,7 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     if (rv == NS_SUCCESS_ADOPTED_DATA) {
       // the observer now owns the data buffer, and the loader must
       // not deallocate it
-      mData = nsnull;
+      mData = nullptr;
       mLength = 0;
       mAllocated = 0;
     }

@@ -183,7 +183,7 @@ public:
 
   /**
    * Return the presentation context for the root of the view manager
-   * hierarchy that contains this presentation context, or nsnull if it can't
+   * hierarchy that contains this presentation context, or nullptr if it can't
    * be found (e.g. it's detached).
    */
   nsRootPresContext* GetRootPresContext();
@@ -272,7 +272,7 @@ public:
   {
     if (mShell)
       return mShell->AllocateMisc(aSize);
-    return nsnull;
+    return nullptr;
   }
 
   void FreeToShell(size_t aSize, void* aFreeChunk)
@@ -284,7 +284,7 @@ public:
 
   /**
    * Get the default font for the given language and generic font ID.
-   * If aLanguage is nsnull, the document's language is used.
+   * If aLanguage is nullptr, the document's language is used.
    *
    * This object is read-only, you must copy the font to modify it.
    * 
@@ -517,7 +517,7 @@ public:
 
   /**
    * Get the minimum font size for the specified language. If aLanguage
-   * is nsnull, then the document's language is used.
+   * is nullptr, then the document's language is used.
    */
   PRInt32 MinFontSize(nsIAtom *aLanguage) const {
     const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage);
@@ -553,7 +553,7 @@ public:
    *  a. the last time the function was called with non-null aChanged, or
    *  b. the first time the function was called.
    */
-  float ScreenWidthInchesForFontInflation(bool* aChanged = nsnull);
+  float ScreenWidthInchesForFontInflation(bool* aChanged = nullptr);
 
   static PRInt32 AppUnitsPerCSSPixel() { return nsDeviceContext::AppUnitsPerCSSPixel(); }
   PRUint32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
@@ -935,7 +935,7 @@ public:
         GetPresShell()->GetDocument() == aContent->GetCurrentDoc()) {
       return aContent->GetPrimaryFrame();
     }
-    return nsnull;
+    return nullptr;
   }
 
   void NotifyDestroyingFrame(nsIFrame* aFrame)
@@ -991,7 +991,7 @@ protected:
   struct LangGroupFontPrefs {
     // Font sizes default to zero; they will be set in GetFontPreferences
     LangGroupFontPrefs()
-      : mLangGroup(nsnull)
+      : mLangGroup(nullptr)
       , mMinimumFontSize(0)
       , mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                              NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0, 0)
@@ -1050,10 +1050,10 @@ protected:
 
   void ResetCachedFontPrefs() {
     // Throw away any other LangGroupFontPrefs objects:
-    mLangGroupFontPrefs.mNext = nsnull;
+    mLangGroupFontPrefs.mNext = nullptr;
 
     // Make GetFontPreferences reinitialize mLangGroupFontPrefs:
-    mLangGroupFontPrefs.mLangGroup = nsnull;
+    mLangGroupFontPrefs.mLangGroup = nullptr;
   }
 
   NS_HIDDEN_(void) UpdateCharSet(const nsCString& aCharSet);
@@ -1277,7 +1277,7 @@ public:
   {
     if (mNotifyDidPaintTimer) {
       mNotifyDidPaintTimer->Cancel();
-      mNotifyDidPaintTimer = nsnull;
+      mNotifyDidPaintTimer = nullptr;
     }
   }
 
@@ -1375,7 +1375,7 @@ protected:
   class RunWillPaintObservers : public nsRunnable {
   public:
     RunWillPaintObservers(nsRootPresContext* aPresContext) : mPresContext(aPresContext) {}
-    void Revoke() { mPresContext = nsnull; }
+    void Revoke() { mPresContext = nullptr; }
     NS_IMETHOD Run()
     {
       if (mPresContext) {
@@ -1391,7 +1391,7 @@ protected:
   {
     if (mUpdatePluginGeometryTimer) {
       mUpdatePluginGeometryTimer->Cancel();
-      mUpdatePluginGeometryTimer = nsnull;
+      mUpdatePluginGeometryTimer = nullptr;
     }
   }
 

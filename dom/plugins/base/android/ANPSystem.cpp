@@ -41,7 +41,7 @@ jclass anp_system_loadJavaClass(NPP instance, const char* className)
 
   JNIEnv* env = GetJNIForThread();
   if (!env)
-    return nsnull;
+    return nullptr;
 
   jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
   jmethodID method = env->GetStaticMethodID(cls,

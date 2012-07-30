@@ -20,7 +20,7 @@ SetAllocatedString(const char *&str, const char *newvalue)
     str = NS_strdup(newvalue);
   }
   else {
-    str = nsnull;
+    str = nullptr;
   }
 }
 
@@ -29,7 +29,7 @@ SetAllocatedString(const char *&str, const nsACString &newvalue)
 {
   NS_Free(const_cast<char*>(str));
   if (newvalue.IsEmpty()) {
-    str = nsnull;
+    str = nullptr;
   }
   else {
     str = ToNewCString(newvalue);
@@ -69,22 +69,22 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
 
 ScopedAppData::~ScopedAppData()
 {
-  SetAllocatedString(this->vendor, nsnull);
-  SetAllocatedString(this->name, nsnull);
-  SetAllocatedString(this->version, nsnull);
-  SetAllocatedString(this->buildID, nsnull);
-  SetAllocatedString(this->ID, nsnull);
-  SetAllocatedString(this->copyright, nsnull);
-  SetAllocatedString(this->profile, nsnull);
+  SetAllocatedString(this->vendor, nullptr);
+  SetAllocatedString(this->name, nullptr);
+  SetAllocatedString(this->version, nullptr);
+  SetAllocatedString(this->buildID, nullptr);
+  SetAllocatedString(this->ID, nullptr);
+  SetAllocatedString(this->copyright, nullptr);
+  SetAllocatedString(this->profile, nullptr);
 
   NS_IF_RELEASE(this->directory);
 
-  SetStrongPtr(this->xreDirectory, (nsIFile*) nsnull);
-  SetAllocatedString(this->minVersion, nsnull);
-  SetAllocatedString(this->maxVersion, nsnull);
+  SetStrongPtr(this->xreDirectory, (nsIFile*) nullptr);
+  SetAllocatedString(this->minVersion, nullptr);
+  SetAllocatedString(this->maxVersion, nullptr);
 
-  SetAllocatedString(this->crashReporterURL, nsnull);
-  SetAllocatedString(this->UAName, nsnull);
+  SetAllocatedString(this->crashReporterURL, nullptr);
+  SetAllocatedString(this->UAName, nullptr);
 }
 
 } // namespace mozilla

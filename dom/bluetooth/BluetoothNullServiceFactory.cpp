@@ -12,5 +12,5 @@ BluetoothService*
 BluetoothService::Create()
 {
   NS_WARNING("Bluetooth not implemented for this platform!");
-  return nsnull;
+  return nullptr;
 }

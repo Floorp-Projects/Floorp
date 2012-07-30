@@ -131,7 +131,7 @@ nsSimpleNestedURI::EqualsInternal(nsIURI* other,
 /* virtual */ nsSimpleURI*
 nsSimpleNestedURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode)
 {
-    NS_ENSURE_TRUE(mInnerURI, nsnull);
+    NS_ENSURE_TRUE(mInnerURI, nullptr);
     
     nsCOMPtr<nsIURI> innerClone;
     nsresult rv = refHandlingMode == eHonorRef ?
@@ -139,7 +139,7 @@ nsSimpleNestedURI::StartClone(nsSimpleURI::RefHandlingEnum refHandlingMode)
         mInnerURI->CloneIgnoringRef(getter_AddRefs(innerClone));
 
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     nsSimpleNestedURI* url = new nsSimpleNestedURI(innerClone);

@@ -134,7 +134,7 @@ nsBaseDragService::GetNumDropItems(PRUint32 * aNumItems)
 // GetSourceDocument
 //
 // Returns the DOM document where the drag was initiated. This will be
-// nsnull if the drag began outside of our application.
+// nullptr if the drag began outside of our application.
 //
 NS_IMETHODIMP
 nsBaseDragService::GetSourceDocument(nsIDOMDocument** aSourceDocument)
@@ -149,7 +149,7 @@ nsBaseDragService::GetSourceDocument(nsIDOMDocument** aSourceDocument)
 // GetSourceNode
 //
 // Returns the DOM node where the drag was initiated. This will be
-// nsnull if the drag began outside of our application.
+// nullptr if the drag began outside of our application.
 //
 NS_IMETHODIMP
 nsBaseDragService::GetSourceNode(nsIDOMNode** aSourceNode)
@@ -212,7 +212,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // capture. However, this gets in the way of determining drag
   // feedback for things like trees because the event coordinates
   // are in the wrong coord system, so turn off mouse capture.
-  nsIPresShell::ClearMouseCapture(nsnull);
+  nsIPresShell::ClearMouseCapture(nullptr);
 
   return NS_OK;
 }
@@ -232,9 +232,9 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   mDataTransfer = aDataTransfer;
-  mSelection = nsnull;
+  mSelection = nullptr;
   mHasImage = true;
-  mDragPopup = nsnull;
+  mDragPopup = nullptr;
   mImage = aImage;
   mImageX = aImageX;
   mImageY = aImageY;
@@ -260,8 +260,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   mDataTransfer = aDataTransfer;
   mSelection = aSelection;
   mHasImage = true;
-  mDragPopup = nsnull;
-  mImage = nsnull;
+  mDragPopup = nullptr;
+  mImage = nullptr;
   mImageX = 0;
   mImageY = 0;
 
@@ -275,7 +275,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   nsCOMPtr<nsIDOMNode> node;
   aSelection->GetFocusNode(getter_AddRefs(node));
 
-  return InvokeDragSession(node, aTransferableArray, nsnull, aActionType);
+  return InvokeDragSession(node, aTransferableArray, nullptr, aActionType);
 }
 
 //-------------------------------------------------------------------------
@@ -292,7 +292,7 @@ nsBaseDragService::GetCurrentSession(nsIDragSession ** aSession)
     NS_ADDREF(*aSession);      // addRef because we're a "getter"
   }
   else
-    *aSession = nsnull;
+    *aSession = nullptr;
 
   return NS_OK;
 }
@@ -317,7 +317,7 @@ nsBaseDragService::OpenDragPopup()
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageX, mScreenY - mImageY, false, nsnull);
+      pm->ShowPopupAtScreen(mDragPopup, mScreenX - mImageX, mScreenY - mImageY, false, nullptr);
     }
   }
 }
@@ -343,14 +343,14 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   mDoingDrag = false;
 
   // release the source we've been holding on to.
-  mSourceDocument = nsnull;
-  mSourceNode = nsnull;
-  mSelection = nsnull;
-  mDataTransfer = nsnull;
+  mSourceDocument = nullptr;
+  mSourceNode = nullptr;
+  mSelection = nullptr;
+  mDataTransfer = nullptr;
   mHasImage = false;
   mUserCancelled = false;
-  mDragPopup = nsnull;
-  mImage = nsnull;
+  mDragPopup = nullptr;
+  mImage = nullptr;
   mImageX = 0;
   mImageY = 0;
   mScreenX = -1;
@@ -369,7 +369,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsDragEvent event(true, aMsg, nsnull);
+        nsDragEvent event(true, aMsg, nullptr);
         event.inputSource = mInputSource;
         if (aMsg == NS_DRAGDROP_END) {
           event.refPoint.x = mEndDragPoint.x;
@@ -408,7 +408,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
   if (!content)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
   if (document) {
@@ -417,7 +417,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
     return document->GetShell();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 nsresult
@@ -428,8 +428,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             gfxASurface** aSurface,
                             nsPresContext** aPresContext)
 {
-  *aSurface = nsnull;
-  *aPresContext = nsnull;
+  *aSurface = nullptr;
+  *aPresContext = nullptr;
 
   // use a default size, in case of an error.
   aScreenDragRect->x = aScreenX - mImageX;
@@ -501,14 +501,14 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (mImage) {
     nsCOMPtr<nsICanvasElementExternal> canvas = do_QueryInterface(dragNode);
     if (canvas) {
-      return DrawDragForImage(*aPresContext, nsnull, canvas, aScreenX,
+      return DrawDragForImage(*aPresContext, nullptr, canvas, aScreenX,
                               aScreenY, aScreenDragRect, aSurface);
     }
 
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      return DrawDragForImage(*aPresContext, imageLoader, nsnull, aScreenX,
+      return DrawDragForImage(*aPresContext, imageLoader, nullptr, aScreenX,
                               aScreenY, aScreenDragRect, aSurface);
     }
 
@@ -533,7 +533,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     }
 
     nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-    surface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nsnull,
+    surface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
                                     pnt, aScreenDragRect);
   }
 

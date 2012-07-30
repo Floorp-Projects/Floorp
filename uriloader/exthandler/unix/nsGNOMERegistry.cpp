@@ -119,17 +119,17 @@ nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
     // fill in the MIMEInfo.
     if (NS_FAILED(giovfs->GetMimeTypeFromExtension(aFileExt, mimeType)) ||
         mimeType.EqualsLiteral("application/octet-stream")) {
-      return nsnull;
+      return nullptr;
     }
   } else {
     /* Fallback to GnomeVFS */
     nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
     if (!gnomevfs)
-      return nsnull;
+      return nullptr;
 
     if (NS_FAILED(gnomevfs->GetMimeTypeFromExtension(aFileExt, mimeType)) ||
         mimeType.EqualsLiteral("application/octet-stream"))
-      return nsnull;
+      return nullptr;
   }
 
   return GetFromType(mimeType);
@@ -139,7 +139,7 @@ nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
 nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
 {
   nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
-  NS_ENSURE_TRUE(mimeInfo, nsnull);
+  NS_ENSURE_TRUE(mimeInfo, nullptr);
 
   nsCAutoString name;
   nsCAutoString description;
@@ -149,7 +149,7 @@ nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
     nsCOMPtr<nsIGIOMimeApp> gioHandlerApp;
     if (NS_FAILED(giovfs->GetAppForMimeType(aMIMEType, getter_AddRefs(gioHandlerApp))) ||
         !gioHandlerApp) {
-      return nsnull;
+      return nullptr;
     }
     gioHandlerApp->GetName(name);
     giovfs->GetDescriptionForMimeType(aMIMEType, description);
@@ -157,12 +157,12 @@ nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
     /* Fallback to GnomeVFS*/
     nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
     if (!gnomevfs)
-      return nsnull;
+      return nullptr;
 
     nsCOMPtr<nsIGnomeVFSMimeApp> gnomeHandlerApp;
     if (NS_FAILED(gnomevfs->GetAppForMimeType(aMIMEType, getter_AddRefs(gnomeHandlerApp))) ||
         !gnomeHandlerApp) {
-      return nsnull;
+      return nullptr;
     }
     gnomeHandlerApp->GetName(name);
     gnomevfs->GetDescriptionForMimeType(aMIMEType, description);

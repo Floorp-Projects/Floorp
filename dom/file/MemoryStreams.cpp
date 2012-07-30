@@ -16,13 +16,13 @@ MemoryOutputStream::Create(PRUint64 aSize)
 {
   NS_ASSERTION(aSize, "Passed zero size!");
 
-  NS_ENSURE_TRUE(aSize <= PR_UINT32_MAX, nsnull);
+  NS_ENSURE_TRUE(aSize <= PR_UINT32_MAX, nullptr);
 
   nsRefPtr<MemoryOutputStream> stream = new MemoryOutputStream();
 
   char* dummy;
   PRUint32 length = stream->mData.GetMutableData(&dummy, aSize, fallible_t());
-  NS_ENSURE_TRUE(length == aSize, nsnull);
+  NS_ENSURE_TRUE(length == aSize, nullptr);
 
   return stream.forget();
 }

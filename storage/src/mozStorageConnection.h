@@ -67,7 +67,7 @@ public:
    *
    * @param aDatabaseFile
    *        The nsIFile of the location of the database to open, or create if it
-   *        does not exist.  Passing in nsnull here creates an in-memory
+   *        does not exist.  Passing in nullptr here creates an in-memory
    *        database.
    * @param aVFSName
    *        The VFS that SQLite will use when opening this database. NULL means
@@ -143,7 +143,7 @@ public:
   int stepStatement(sqlite3_stmt* aStatement);
 
   bool ConnectionReady() {
-    return mDBConn != nsnull;
+    return mDBConn != nullptr;
   }
 
   /**

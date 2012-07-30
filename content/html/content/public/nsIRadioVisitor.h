@@ -32,7 +32,7 @@ public:
    * document.  Radio group implementors should honor the return value of the
    * method and stop iterating if the return value is false.
    *
-   * @param aRadio the radio button in question (must be nsnull and QI'able to
+   * @param aRadio the radio button in question (must be nullptr and QI'able to
    *               nsIRadioControlElement)
    */
   virtual bool Visit(nsIFormControl* aRadio) = 0;

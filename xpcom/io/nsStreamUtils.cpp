@@ -50,7 +50,7 @@ private:
                                         mTarget);
             mCallback = 0;
             if (event) {
-                rv = event->OnInputStreamReady(nsnull);
+                rv = event->OnInputStreamReady(nullptr);
                 if (NS_FAILED(rv)) {
                     NS_NOTREACHED("leaking stream event");
                     nsISupports *sup = event;
@@ -80,7 +80,7 @@ public:
         if (mCallback) {
             if (mStream)
                 mCallback->OnInputStreamReady(mStream);
-            mCallback = nsnull;
+            mCallback = nullptr;
         }
         return NS_OK;
     }
@@ -129,7 +129,7 @@ private:
                                          mTarget);
             mCallback = 0;
             if (event) {
-                rv = event->OnOutputStreamReady(nsnull);
+                rv = event->OnOutputStreamReady(nullptr);
                 if (NS_FAILED(rv)) {
                     NS_NOTREACHED("leaking stream event");
                     nsISupports *sup = event;
@@ -159,7 +159,7 @@ public:
         if (mCallback) {
             if (mStream)
                 mCallback->OnOutputStreamReady(mStream);
-            mCallback = nsnull;
+            mCallback = nullptr;
         }
         return NS_OK;
     }
@@ -216,8 +216,8 @@ public:
 
     nsAStreamCopier()
         : mLock("nsAStreamCopier.mLock")
-        , mCallback(nsnull)
-        , mClosure(nsnull)
+        , mCallback(nullptr)
+        , mClosure(nullptr)
         , mChunkSize(0)
         , mEventInProcess(false)
         , mEventIsPending(false)
@@ -296,24 +296,24 @@ public:
                 if (sourceCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSource) {
                     // need to wait for more data from source.  while waiting for
                     // more source data, be sure to observe failures on output end.
-                    mAsyncSource->AsyncWait(this, 0, 0, nsnull);
+                    mAsyncSource->AsyncWait(this, 0, 0, nullptr);
 
                     if (mAsyncSink)
                         mAsyncSink->AsyncWait(this,
                                               nsIAsyncOutputStream::WAIT_CLOSURE_ONLY,
-                                              0, nsnull);
+                                              0, nullptr);
                     break;
                 }
                 else if (sinkCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSink) {
                     // need to wait for more room in the sink.  while waiting for
                     // more room in the sink, be sure to observer failures on the
                     // input end.
-                    mAsyncSink->AsyncWait(this, 0, 0, nsnull);
+                    mAsyncSink->AsyncWait(this, 0, 0, nullptr);
 
                     if (mAsyncSource)
                         mAsyncSource->AsyncWait(this,
                                                 nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
-                                                0, nsnull);
+                                                0, nullptr);
                     break;
                 }
             }
@@ -326,8 +326,8 @@ public:
                     else
                         mSource->Close();
                 }
-                mAsyncSource = nsnull;
-                mSource = nsnull;
+                mAsyncSource = nullptr;
+                mSource = nullptr;
 
                 if (mCloseSink) {
                     // close sink
@@ -347,8 +347,8 @@ public:
                             mSink->Close();
                     }
                 }
-                mAsyncSink = nsnull;
-                mSink = nsnull;
+                mAsyncSink = nullptr;
+                mSink = nullptr;
 
                 // notify state complete...
                 if (mCallback) {

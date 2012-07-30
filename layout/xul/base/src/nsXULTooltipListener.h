@@ -36,7 +36,7 @@ public:
       mInstance = new nsXULTooltipListener();
     return mInstance;
   }
-  static void ClearTooltipCache() { mInstance = nsnull; }
+  static void ClearTooltipCache() { mInstance = nullptr; }
 
 protected:
 

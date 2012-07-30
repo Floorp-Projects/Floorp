@@ -126,9 +126,9 @@ private:
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   already_AddRefed<nsIX509Cert> 
-    GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nsnull);
+    GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nullptr);
   already_AddRefed<nsCertTreeDispInfo> 
-    GetDispInfoAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset = nsnull);
+    GetDispInfoAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset = nullptr);
   void FreeCertArray();
   nsresult UpdateUIContents();
 

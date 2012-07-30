@@ -37,7 +37,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     xpcomFunctions.version = XPCOM_GLUE_VERSION;
     xpcomFunctions.size    = sizeof(XPCOMFunctions);
 
-    GetFrozenFunctionsFunc func = nsnull;
+    GetFrozenFunctionsFunc func = nullptr;
 
     if (!xpcomFile)
         xpcomFile = XPCOM_DLL;
@@ -46,7 +46,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = (*func)(&xpcomFunctions, nsnull);
+    rv = (*func)(&xpcomFunctions, nullptr);
     if (NS_FAILED(rv)) {
         XPCOMGlueUnload();
         return rv;
@@ -232,7 +232,7 @@ XPCOM_API(PRUint32)
 NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, bool *aTerm)
 {
     if (!xpcomFunctions.stringGetData) {
-        *aBuf = nsnull;
+        *aBuf = nullptr;
         return 0;
     }
     return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
@@ -242,7 +242,7 @@ XPCOM_API(PRUint32)
 NS_StringGetMutableData(nsAString &aStr, PRUint32 aLen, PRUnichar **aBuf)
 {
     if (!xpcomFunctions.stringGetMutableData) {
-        *aBuf = nsnull;
+        *aBuf = nullptr;
         return 0;
     }
     return xpcomFunctions.stringGetMutableData(aStr, aLen, aBuf);
@@ -252,7 +252,7 @@ XPCOM_API(PRUnichar*)
 NS_StringCloneData(const nsAString &aStr)
 {
     if (!xpcomFunctions.stringCloneData)
-        return nsnull;
+        return nullptr;
     return xpcomFunctions.stringCloneData(aStr);
 }
 
@@ -327,7 +327,7 @@ XPCOM_API(PRUint32)
 NS_CStringGetData(const nsACString &aStr, const char **aBuf, bool *aTerm)
 {
     if (!xpcomFunctions.cstringGetData) {
-        *aBuf = nsnull;
+        *aBuf = nullptr;
         return 0;
     }
     return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
@@ -337,7 +337,7 @@ XPCOM_API(PRUint32)
 NS_CStringGetMutableData(nsACString &aStr, PRUint32 aLen, char **aBuf)
 {
     if (!xpcomFunctions.cstringGetMutableData) {
-        *aBuf = nsnull;
+        *aBuf = nullptr;
         return 0;
     }
     return xpcomFunctions.cstringGetMutableData(aStr, aLen, aBuf);
@@ -347,7 +347,7 @@ XPCOM_API(char*)
 NS_CStringCloneData(const nsACString &aStr)
 {
     if (!xpcomFunctions.cstringCloneData)
-        return nsnull;
+        return nullptr;
     return xpcomFunctions.cstringCloneData(aStr);
 }
 
@@ -411,7 +411,7 @@ XPCOM_API(void*)
 NS_Alloc(PRSize size)
 {
     if (!xpcomFunctions.allocFunc)
-        return nsnull;
+        return nullptr;
     return xpcomFunctions.allocFunc(size);
 }
 
@@ -419,7 +419,7 @@ XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size)
 {
     if (!xpcomFunctions.reallocFunc)
-        return nsnull;
+        return nullptr;
     return xpcomFunctions.reallocFunc(ptr, size);
 }
 
@@ -546,7 +546,7 @@ XPCOM_API(nsPurpleBufferEntry*)
 NS_CycleCollectorSuspect2(nsISupports* obj)
 {
     if (!xpcomFunctions.cycleSuspect2Func)
-        return nsnull;
+        return nullptr;
 
     return xpcomFunctions.cycleSuspect2Func(obj);
 }

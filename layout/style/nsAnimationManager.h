@@ -134,9 +134,9 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
                                        double aIterationCount,
                                        PRUint32 aDirection,
                                        bool IsForElement = true,
-                                       ElementAnimation* aAnimation = nsnull,
-                                       ElementAnimations* aEa = nsnull,
-                                       EventArray* aEventsToDispatch = nsnull);
+                                       ElementAnimation* aAnimation = nullptr,
+                                       ElementAnimations* aEa = nullptr,
+                                       EventArray* aEventsToDispatch = nullptr);
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime,
                           EventArray &aEventsToDispatch);
@@ -186,14 +186,14 @@ public:
                                                        nsCSSProperty aProperty)
   {
     if (!aContent->MayHaveAnimations())
-      return nsnull;
+      return nullptr;
     ElementAnimations* animations = static_cast<ElementAnimations*>(
       aContent->GetProperty(nsGkAtoms::animationsProperty));
     if (!animations)
-      return nsnull;
+      return nullptr;
     bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
     return (propertyMatches && animations->CanPerformOnCompositorThread()) ?
-      animations : nsnull;
+      animations : nullptr;
   }
 
   // nsIStyleRuleProcessor (parts)

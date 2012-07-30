@@ -155,28 +155,28 @@ NS_IMETHODIMP
 nsSSLStatus::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
-  *array = nsnull;
+  *array = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSSLStatus::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSSLStatus::GetContractID(char * *aContractID)
 {
-  *aContractID = nsnull;
+  *aContractID = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSSLStatus::GetClassDescription(char * *aClassDescription)
 {
-  *aClassDescription = nsnull;
+  *aClassDescription = nullptr;
   return NS_OK;
 }
 

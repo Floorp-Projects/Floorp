@@ -30,7 +30,7 @@
 //
 // set NSPR_LOG_MODULES=Test:5
 //
-static PRLogModuleInfo *gTestLog = nsnull;
+static PRLogModuleInfo *gTestLog = nullptr;
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
@@ -112,7 +112,7 @@ RunTest(nsIFile *file, PRInt64 offset, PRInt64 length)
     rv = NS_NewInputStreamPump(getter_AddRefs(pump), stream, offset, length);
     if (NS_FAILED(rv)) return rv;
 
-    rv = pump->AsyncRead(new MyListener(), nsnull);
+    rv = pump->AsyncRead(new MyListener(), nullptr);
     if (NS_FAILED(rv)) return rv;
 
     PumpEvents();
@@ -148,11 +148,11 @@ main(int argc, char* argv[])
 
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
         nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
         NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
         if (registrar)
-            registrar->AutoRegister(nsnull);
+            registrar->AutoRegister(nullptr);
 
 #if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
@@ -170,7 +170,7 @@ main(int argc, char* argv[])
         PR_Sleep(PR_SecondsToInterval(1));
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return NS_OK;
 }

@@ -110,7 +110,7 @@ interface mozIStorageValueArray : nsISupports {
   }
 
   inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
-    const char *str = nsnull;
+    const char *str = nullptr;
     *len = 0;
 #ifdef DEBUG
     nsresult rv =
@@ -122,7 +122,7 @@ interface mozIStorageValueArray : nsISupports {
   }
 
   inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
-    const PRUnichar *str = nsnull;
+    const PRUnichar *str = nullptr;
     *len = 0;
 #ifdef DEBUG
     nsresult rv =
@@ -134,7 +134,7 @@ interface mozIStorageValueArray : nsISupports {
   }
 
   inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
-    const PRUint8 *blob = nsnull;
+    const PRUint8 *blob = nullptr;
     *len = 0;
 #ifdef DEBUG
     nsresult rv =

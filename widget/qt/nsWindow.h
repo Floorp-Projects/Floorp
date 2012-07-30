@@ -103,7 +103,7 @@ public:
     CreateChild(const nsIntRect&  aRect,
                 EVENT_CALLBACK    aHandleEventFunction,
                 nsDeviceContext* aContext,
-                nsWidgetInitData* aInitData = nsnull,
+                nsWidgetInitData* aInitData = nullptr,
                 bool              aForceUseIWidgetParent = true);
 
     NS_IMETHOD         Destroy(void);

@@ -55,8 +55,8 @@ NS_INTERFACE_MAP_END
 
 static nsIAtom** const unitMap[] =
 {
-  nsnull, /* SVG_LENGTHTYPE_UNKNOWN */
-  nsnull, /* SVG_LENGTHTYPE_NUMBER */
+  nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
+  nullptr, /* SVG_LENGTHTYPE_NUMBER */
   &nsGkAtoms::percentage,
   &nsGkAtoms::em,
   &nsGkAtoms::ex,

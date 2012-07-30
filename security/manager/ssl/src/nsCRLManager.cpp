@@ -98,7 +98,7 @@ nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint
       goto loser;
     }
     sec_rv = CERT_VerifySignedData(&sd, caCert, PR_Now(),
-                               nsnull);
+                               nullptr);
     if (sec_rv != SECSuccess) {
       goto loser;
     }
@@ -182,7 +182,7 @@ done:
       }
     }
   } else {
-    if(crlKey == nsnull){
+    if(crlKey == nullptr){
       return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsIPrefService> prefSvc = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
@@ -262,7 +262,7 @@ done:
       pref->SetIntPref(updateErrCntPrefStr.get(),errCnt+1);
       pref->SetCharPref(updateErrDetailPrefStr.get(),errMsg.get());
     }
-    prefSvc->SavePrefFile(nsnull);
+    prefSvc->SavePrefFile(nullptr);
   }
 
   return rv;
@@ -312,8 +312,8 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
 {
   nsNSSShutDownPreventionLock locker;
   SECStatus sec_rv;
-  CERTCrlHeadNode *head = nsnull;
-  CERTCrlNode *node = nsnull;
+  CERTCrlHeadNode *head = nullptr;
+  CERTCrlNode *node = nullptr;
   nsresult rv;
   nsCOMPtr<nsIMutableArray> crlsArray =
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
@@ -328,7 +328,7 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
   }
 
   if (head) {
-    for (node=head->first; node != nsnull; node = node->next) {
+    for (node=head->first; node != nullptr; node = node->next) {
 
       nsCOMPtr<nsICRLInfo> entry = new nsCRLInfo((node->crl));
       crlsArray->AppendElement(entry, false);
@@ -350,9 +350,9 @@ NS_IMETHODIMP
 nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
 {
   nsNSSShutDownPreventionLock locker;
-  CERTSignedCrl *realCrl = nsnull;
-  CERTCrlHeadNode *head = nsnull;
-  CERTCrlNode *node = nsnull;
+  CERTSignedCrl *realCrl = nullptr;
+  CERTCrlHeadNode *head = nullptr;
+  CERTCrlNode *node = nullptr;
   SECStatus sec_rv;
   PRUint32 i;
 
@@ -363,7 +363,7 @@ nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
   }
 
   if (head) {
-    for (i = 0, node=head->first; node != nsnull; i++, node = node->next) {
+    for (i = 0, node=head->first; node != nullptr; i++, node = node->next) {
       if (i != aCrlIndex) {
         continue;
       }

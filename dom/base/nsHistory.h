@@ -32,7 +32,7 @@ public:
   nsIDocShell *GetDocShell() {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
     if (!win)
-      return nsnull;
+      return nullptr;
     return win->GetDocShell();
   }
 

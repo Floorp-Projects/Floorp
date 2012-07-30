@@ -21,9 +21,9 @@ nsNativeAppSupportQt::activityChanged(MeeGo::QmActivity::Activity activity)
         return;
 
     if (MeeGo::QmActivity::Inactive == activity) {
-        os->NotifyObservers(nsnull, "system-idle", nsnull);
+        os->NotifyObservers(nullptr, "system-idle", nullptr);
     } else {
-        os->NotifyObservers(nsnull, "system-active", nsnull);
+        os->NotifyObservers(nullptr, "system-active", nullptr);
     }
 }
 
@@ -36,13 +36,13 @@ nsNativeAppSupportQt::displayStateChanged(MeeGo::QmDisplayState::DisplayState st
 
     switch (state) {
     case MeeGo::QmDisplayState::On:
-        os->NotifyObservers(nsnull, "system-display-on", nsnull);
+        os->NotifyObservers(nullptr, "system-display-on", nullptr);
         break;
     case MeeGo::QmDisplayState::Off:
-        os->NotifyObservers(nsnull, "system-display-off", nsnull);
+        os->NotifyObservers(nullptr, "system-display-off", nullptr);
         break;
     case MeeGo::QmDisplayState::Dimmed:
-        os->NotifyObservers(nsnull, "system-display-dimmed", nsnull);
+        os->NotifyObservers(nullptr, "system-display-dimmed", nullptr);
         break;
     default:
         NS_WARNING("Unknown display state");
@@ -58,10 +58,10 @@ void nsNativeAppSupportQt::deviceModeChanged(MeeGo::QmDeviceMode::DeviceMode mod
 
     switch (mode) {
     case MeeGo::QmDeviceMode::DeviceMode::Normal:
-        os->NotifyObservers(nsnull, "profile-change-net-restore", nsnull);
+        os->NotifyObservers(nullptr, "profile-change-net-restore", nullptr);
         break;
     case MeeGo::QmDeviceMode::DeviceMode::Flight:
-        os->NotifyObservers(nsnull, "profile-change-net-teardown", nsnull);
+        os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr);
         break;
     case MeeGo::QmDeviceMode::DeviceMode::Error:
     default:
@@ -117,10 +117,10 @@ nsNativeAppSupportQt::Start(bool* aRetVal)
   m_osso_context = osso_initialize(applicationName.get(),
                                    gAppData->version ? gAppData->version : "1.0",
                                    true,
-                                   nsnull);
+                                   nullptr);
 
   /* Check that initilialization was ok */
-  if (m_osso_context == nsnull) {
+  if (m_osso_context == nullptr) {
       return NS_ERROR_FAILURE;
   }
 #endif
@@ -137,7 +137,7 @@ nsNativeAppSupportQt::Stop(bool* aResult)
 #if (MOZ_PLATFORM_MAEMO == 5)
   if (m_osso_context) {
     osso_deinitialize(m_osso_context);
-    m_osso_context = nsnull;
+    m_osso_context = nullptr;
   }
 #endif
 

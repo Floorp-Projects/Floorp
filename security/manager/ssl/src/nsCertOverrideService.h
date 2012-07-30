@@ -108,8 +108,8 @@ class nsCertOverrideEntry MOZ_FINAL : public PLDHashEntryHdr
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
       // PL_DHashStringKey doesn't use the table parameter, so we can safely
-      // pass nsnull
-      return PL_DHashStringKey(nsnull, aKey);
+      // pass nullptr
+      return PL_DHashStringKey(nullptr, aKey);
     }
 
     enum { ALLOW_MEMMOVE = false };

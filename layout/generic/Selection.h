@@ -85,7 +85,7 @@ public:
                                PRInt32 aFlags = 0);
   nsresult      SubtractRange(RangeData* aRange, nsRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
-  nsresult      AddItem(nsRange *aRange, PRInt32* aOutIndex = nsnull);
+  nsresult      AddItem(nsRange *aRange, PRInt32* aOutIndex = nullptr);
   nsresult      RemoveItem(nsRange *aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);
@@ -161,7 +161,7 @@ private:
         mFirstAncestorOnly(aFirstAncestorOnly) {
       NS_ASSERTION(aSelection, "null parameter");
     }
-    void Revoke() { mSelection = nsnull; }
+    void Revoke() { mSelection = nullptr; }
   private:
     Selection *mSelection;
     SelectionRegion mRegion;

@@ -68,28 +68,28 @@ public:
       return NS_OK;
     }
 
-    *_helper = nsnull;
+    *_helper = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
   GetContractID(char **_contractID)
   {
-    *_contractID = nsnull;
+    *_contractID = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
   GetClassDescription(char **_desc)
   {
-    *_desc = nsnull;
+    *_desc = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
   GetClassID(nsCID **_id)
   {
-    *_id = nsnull;
+    *_id = nullptr;
     return NS_OK;
   }
 
@@ -217,7 +217,7 @@ Statement::getParams()
   if (!mParamsArray) {
     nsCOMPtr<mozIStorageBindingParamsArray> array;
     rv = NewBindingParamsArray(getter_AddRefs(array));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     mParamsArray = static_cast<BindingParamsArray *>(array.get());
   }
@@ -225,10 +225,10 @@ Statement::getParams()
   // If there isn't already any rows added, we'll have to add one to use.
   if (mParamsArray->length() == 0) {
     nsRefPtr<BindingParams> params(new BindingParams(mParamsArray, this));
-    NS_ENSURE_TRUE(params, nsnull);
+    NS_ENSURE_TRUE(params, nullptr);
 
     rv = mParamsArray->AddParams(params);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     // We have to unlock our params because AddParams locks them.  This is safe
     // because no reference to the params object was, or ever will be given out.
@@ -288,7 +288,7 @@ Statement::getAsyncStatement(sqlite3_stmt **_stmt)
     nsDependentCString sql(::sqlite3_sql(mDBStatement));
     int rc = mDBConnection->prepareStatement(sql, &mAsyncStatement);
     if (rc != SQLITE_OK) {
-      *_stmt = nsnull;
+      *_stmt = nullptr;
       return rc;
     }
 
@@ -383,8 +383,8 @@ Statement::internalFinalize(bool aDestructing)
     nsCOMPtr<mozIStorageStatementParams> iParams =
         do_QueryWrappedNative(wrapper);
     StatementParams *params = static_cast<StatementParams *>(iParams.get());
-    params->mStatement = nsnull;
-    mStatementParamsHolder = nsnull;
+    params->mStatement = nullptr;
+    mStatementParamsHolder = nullptr;
   }
 
   if (mStatementRowHolder) {
@@ -393,8 +393,8 @@ Statement::internalFinalize(bool aDestructing)
     nsCOMPtr<mozIStorageStatementRow> iRow =
         do_QueryWrappedNative(wrapper);
     StatementRow *row = static_cast<StatementRow *>(iRow.get());
-    row->mStatement = nsnull;
-    mStatementRowHolder = nsnull;
+    row->mStatement = nullptr;
+    mStatementRowHolder = nullptr;
   }
 
   return convertResultCode(srv);
@@ -509,7 +509,7 @@ Statement::Reset()
   checkAndLogStatementPerformance(mDBStatement);
 #endif
 
-  mParamsArray = nsnull;
+  mParamsArray = nullptr;
   (void)sqlite3_reset(mDBStatement);
   (void)sqlite3_clear_bindings(mDBStatement);
 
@@ -578,7 +578,7 @@ Statement::ExecuteStep(bool *_moreResults)
     }
 
     // We have bound, so now we can clear our array.
-    mParamsArray = nsnull;
+    mParamsArray = nullptr;
   }
   int srv = mDBConnection->stepStatement(mDBStatement);
 
@@ -799,7 +799,7 @@ Statement::GetBlob(PRUint32 aIndex,
      return NS_ERROR_UNEXPECTED;
 
   int size = ::sqlite3_column_bytes(mDBStatement, aIndex);
-  void *blob = nsnull;
+  void *blob = nullptr;
   if (size) {
     blob = nsMemory::Clone(::sqlite3_column_blob(mDBStatement, aIndex), size);
     NS_ENSURE_TRUE(blob, NS_ERROR_OUT_OF_MEMORY);

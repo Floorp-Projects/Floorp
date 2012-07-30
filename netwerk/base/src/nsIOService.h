@@ -56,7 +56,7 @@ public:
     NS_DECL_NSISPECULATIVECONNECT
 
     // Gets the singleton instance of the IO Service, creating it as needed
-    // Returns nsnull on out of memory or failure to initialize.
+    // Returns nullptr on out of memory or failure to initialize.
     // Returns an addrefed pointer.
     static nsIOService* GetInstance();
 
@@ -100,7 +100,7 @@ private:
                                               nsIProtocolHandler* hdlr);
 
     // Prefs wrangling
-    NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
+    NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nullptr);
     NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranch **);
     NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove);
 

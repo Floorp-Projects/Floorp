@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace layers {
 
-DeviceManagerD3D9 *LayerManagerD3D9::mDefaultDeviceManager = nsnull;
+DeviceManagerD3D9 *LayerManagerD3D9::mDefaultDeviceManager = nullptr;
 
 LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
   : mWidget(aWidget)
@@ -62,7 +62,7 @@ LayerManagerD3D9::Initialize(bool force)
     mDeviceManager = new DeviceManagerD3D9;
 
     if (!mDeviceManager->Init()) {
-      mDeviceManager = nsnull;
+      mDeviceManager = nullptr;
       return false;
     }
 
@@ -98,8 +98,8 @@ LayerManagerD3D9::Destroy()
     /* Important to release this first since it also holds a reference to the
      * device manager
      */
-    mSwapChain = nsnull;
-    mDeviceManager = nsnull;
+    mSwapChain = nullptr;
+    mDeviceManager = nullptr;
   }
   LayerManager::Destroy();
 }
@@ -130,7 +130,7 @@ LayerManagerD3D9::EndEmptyTransaction()
   if (!mRoot || mDeviceResetCount != mDeviceManager->GetDeviceResetCount())
     return false;
 
-  EndTransaction(nsnull, nsnull);
+  EndTransaction(nullptr, nullptr);
   return true;
 }
 
@@ -212,7 +212,7 @@ LayerManagerD3D9::CreateShadowThebesLayer()
 {
   if (LayerManagerD3D9::mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
+    return nullptr;
   }
   return nsRefPtr<ShadowThebesLayerD3D9>(new ShadowThebesLayerD3D9(this)).forget();
 }
@@ -222,7 +222,7 @@ LayerManagerD3D9::CreateShadowContainerLayer()
 {
   if (LayerManagerD3D9::mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
+    return nullptr;
   }
   return nsRefPtr<ShadowContainerLayerD3D9>(new ShadowContainerLayerD3D9(this)).forget();
 }
@@ -232,7 +232,7 @@ LayerManagerD3D9::CreateShadowImageLayer()
 {
   if (LayerManagerD3D9::mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
+    return nullptr;
   }
   return nsRefPtr<ShadowImageLayerD3D9>(new ShadowImageLayerD3D9(this)).forget();
 }
@@ -242,7 +242,7 @@ LayerManagerD3D9::CreateShadowColorLayer()
 {
   if (LayerManagerD3D9::mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
+    return nullptr;
   }
   return nsRefPtr<ShadowColorLayerD3D9>(new ShadowColorLayerD3D9(this)).forget();
 }
@@ -252,7 +252,7 @@ LayerManagerD3D9::CreateShadowCanvasLayer()
 {
   if (LayerManagerD3D9::mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
+    return nullptr;
   }
   return nsRefPtr<ShadowCanvasLayerD3D9>(new ShadowCanvasLayerD3D9(this)).forget();
 }
@@ -312,7 +312,7 @@ LayerManagerD3D9::Render()
   if (!mTarget) {
     const nsIntRect *r;
     for (nsIntRegionRectIterator iter(mClippingRegion);
-         (r = iter.Next()) != nsnull;) {
+         (r = iter.Next()) != nullptr;) {
       mSwapChain->Present(*r);
     }
     LayerManager::PostPresent();

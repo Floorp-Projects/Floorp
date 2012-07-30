@@ -442,7 +442,7 @@ Link::ResetLinkState(bool aNotify)
   mLinkState = defaultState;
 
   // Get rid of our cached URI.
-  mCachedURI = nsnull;
+  mCachedURI = nullptr;
 
   // We have to be very careful here: if aNotify is false we do NOT
   // want to call UpdateState, because that will call into LinkState()
@@ -480,7 +480,7 @@ Link::GetURIToMutate()
 {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
-    return nsnull;
+    return nullptr;
   }
   nsCOMPtr<nsIURI> clone;
   (void)uri->Clone(getter_AddRefs(clone));

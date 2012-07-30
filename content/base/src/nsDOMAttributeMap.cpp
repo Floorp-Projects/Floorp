@@ -36,21 +36,21 @@ PLDHashOperator
 RemoveMapRef(nsAttrHashKey::KeyType aKey, nsRefPtr<nsDOMAttribute>& aData,
              void* aUserArg)
 {
-  aData->SetMap(nsnull);
+  aData->SetMap(nullptr);
 
   return PL_DHASH_REMOVE;
 }
 
 nsDOMAttributeMap::~nsDOMAttributeMap()
 {
-  mAttributeCache.Enumerate(RemoveMapRef, nsnull);
+  mAttributeCache.Enumerate(RemoveMapRef, nullptr);
 }
 
 void
 nsDOMAttributeMap::DropReference()
 {
-  mAttributeCache.Enumerate(RemoveMapRef, nsnull);
-  mContent = nsnull;
+  mAttributeCache.Enumerate(RemoveMapRef, nullptr);
+  mContent = nullptr;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
@@ -117,7 +117,7 @@ nsDOMAttributeMap::DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName)
   nsDOMAttribute *node = mAttributeCache.GetWeak(attr);
   if (node) {
     // Break link to map
-    node->SetMap(nsnull);
+    node->SetMap(nullptr);
 
     // Remove from cache
     mAttributeCache.Remove(attr);
@@ -127,10 +127,10 @@ nsDOMAttributeMap::DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName)
 nsresult
 nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
 {
-  NS_ASSERTION(aNodeInfo, "RemoveAttribute() called with aNodeInfo == nsnull!");
-  NS_ASSERTION(aReturn, "RemoveAttribute() called with aReturn == nsnull");
+  NS_ASSERTION(aNodeInfo, "RemoveAttribute() called with aNodeInfo == nullptr!");
+  NS_ASSERTION(aReturn, "RemoveAttribute() called with aReturn == nullptr");
 
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
@@ -142,7 +142,7 @@ nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
     mContent->GetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), value);
     nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsCOMPtr<nsIDOMNode> newAttr =
-      new nsDOMAttribute(nsnull, ni.forget(), value, true);
+      new nsDOMAttribute(nullptr, ni.forget(), value, true);
     if (!newAttr) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -150,7 +150,7 @@ nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
   }
   else {
     // Break link to map
-    node->SetMap(nsnull);
+    node->SetMap(nullptr);
 
     // Remove from cache
     mAttributeCache.Remove(attr);
@@ -164,7 +164,7 @@ nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
 nsDOMAttribute*
 nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware)
 {
-  NS_ASSERTION(aNodeInfo, "GetAttribute() called with aNodeInfo == nsnull!");
+  NS_ASSERTION(aNodeInfo, "GetAttribute() called with aNodeInfo == nullptr!");
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
@@ -193,7 +193,7 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName, nsresult *aResult)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -229,7 +229,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
   NS_ENSURE_ARG_POINTER(aReturn);
 
   nsresult rv = NS_OK;
-  *aReturn = nsnull;
+  *aReturn = nullptr;
   nsCOMPtr<nsIDOMNode> tmpReturn;
 
   if (mContent) {
@@ -299,7 +299,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
         }
 
         rv = mContent->NodeInfo()->NodeInfoManager()->
-          GetNodeInfo(name, nsnull, kNameSpaceID_None,
+          GetNodeInfo(name, nullptr, kNameSpaceID_None,
                       nsIDOMNode::ATTRIBUTE_NODE, getter_AddRefs(ni));
         NS_ENSURE_SUCCESS(rv, rv);
         // value is already empty
@@ -332,7 +332,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
                                    nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsresult rv = NS_OK;
 
@@ -357,7 +357,7 @@ nsDOMAttributeMap::GetItemAt(PRUint32 aIndex, nsresult *aResult)
 {
   *aResult = NS_OK;
 
-  nsDOMAttribute* node = nsnull;
+  nsDOMAttribute* node = nullptr;
 
   const nsAttrName* name;
   if (mContent && (name = mContent->GetAttrNameAt(aIndex))) {
@@ -416,7 +416,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
                                           bool aRemove)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   if (!mContent) {
     return NS_OK;
@@ -466,7 +466,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                                      nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsresult rv = GetNamedItemNSInternal(aNamespaceURI,
                                        aLocalName,

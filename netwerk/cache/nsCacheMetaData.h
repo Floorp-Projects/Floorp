@@ -14,7 +14,7 @@ class nsICacheMetaDataVisitor;
 
 class nsCacheMetaData {
 public:
-    nsCacheMetaData() : mBuffer(nsnull), mBufferSize(0), mMetaSize(0) { }
+    nsCacheMetaData() : mBuffer(nullptr), mBufferSize(0), mMetaSize(0) { }
 
     ~nsCacheMetaData() {
         mBufferSize = mMetaSize = 0;  

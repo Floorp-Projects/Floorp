@@ -25,7 +25,7 @@ SmsChild::RecvNotifyReceivedMessage(const SmsMessageData& aMessageData)
   }
 
   nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsReceivedObserverTopic, nsnull);
+  obs->NotifyObservers(message, kSmsReceivedObserverTopic, nullptr);
 
   return true;
 }
@@ -39,7 +39,7 @@ SmsChild::RecvNotifySentMessage(const SmsMessageData& aMessageData)
   }
 
   nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsSentObserverTopic, nsnull);
+  obs->NotifyObservers(message, kSmsSentObserverTopic, nullptr);
 
   return true;
 }
@@ -53,7 +53,7 @@ SmsChild::RecvNotifyDeliveredMessage(const SmsMessageData& aMessageData)
   }
 
   nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nsnull);
+  obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nullptr);
 
   return true;
 }

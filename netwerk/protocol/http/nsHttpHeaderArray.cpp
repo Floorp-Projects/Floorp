@@ -15,7 +15,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
                              const nsACString &value,
                              bool merge)
 {
-    nsEntry *entry = nsnull;
+    nsEntry *entry = nullptr;
     PRInt32 index;
 
     index = LookupEntry(header, &entry);
@@ -47,7 +47,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
 nsresult
 nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header, const nsACString &value)
 {
-    nsEntry *entry = nsnull;
+    nsEntry *entry = nullptr;
     PRInt32 index;
 
     index = LookupEntry(header, &entry);
@@ -91,15 +91,15 @@ nsHttpHeaderArray::ClearHeader(nsHttpAtom header)
 const char *
 nsHttpHeaderArray::PeekHeader(nsHttpAtom header) const
 {
-    const nsEntry *entry = nsnull;
+    const nsEntry *entry = nullptr;
     LookupEntry(header, &entry);
-    return entry ? entry->value.get() : nsnull;
+    return entry ? entry->value.get() : nullptr;
 }
 
 nsresult
 nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result) const
 {
-    const nsEntry *entry = nsnull;
+    const nsEntry *entry = nullptr;
     LookupEntry(header, &entry);
     if (!entry)
         return NS_ERROR_NOT_AVAILABLE;

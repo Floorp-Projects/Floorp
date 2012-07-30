@@ -42,7 +42,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
         XPCWrappedNative* wn =
             XPCWrappedNative::GetWrappedNativeOfJSObject(ccx,
                                                          JSVAL_TO_OBJECT(mJSVal),
-                                                         nsnull,
+                                                         nullptr,
                                                          &proto);
         mReturnRawObject = !wn && !proto;
     } else
@@ -96,7 +96,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
     // We're sharing val's buffer, clear the pointer to it so Cleanup() won't
     // try to delete it
     if (val.isString())
-        tmp->mData.u.wstr.mWStringValue = nsnull;
+        tmp->mData.u.wstr.mWStringValue = nullptr;
     nsVariant::Cleanup(&tmp->mData);
 
     if (val.isMarkable()) {
@@ -117,11 +117,11 @@ XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
         variant = new XPCTraceableVariant(ccx, aJSVal);
 
     if (!variant)
-        return nsnull;
+        return nullptr;
     NS_ADDREF(variant);
 
     if (!variant->InitializeData(ccx))
-        NS_RELEASE(variant);     // Also sets variant to nsnull.
+        NS_RELEASE(variant);     // Also sets variant to nullptr.
 
     return variant;
 }
@@ -340,7 +340,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
             return false;
 
         if (!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue,
-                                        val, len, type, &id, nsnull))
+                                        val, len, type, &id, nullptr))
             return false;
 
         mData.mType = nsIDataType::VTYPE_ARRAY;
@@ -358,7 +358,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
     nsCOMPtr<nsISupports> wrapper;
     const nsIID& iid = NS_GET_IID(nsISupports);
 
-    return nsnull != (xpc = nsXPConnect::GetXPConnect()) &&
+    return nullptr != (xpc = nsXPConnect::GetXPConnect()) &&
            NS_SUCCEEDED(xpc->WrapJS(ccx, jsobj,
                                     iid, getter_AddRefs(wrapper))) &&
            NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
@@ -559,7 +559,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
             nsXPTType conversionType;
             PRUint16 elementType = du.u.array.mArrayType;
-            const nsID* pid = nsnull;
+            const nsID* pid = nullptr;
 
             switch (elementType) {
                 case nsIDataType::VTYPE_INT8:
@@ -622,7 +622,7 @@ VARIANT_DONE:
         }
         case nsIDataType::VTYPE_EMPTY_ARRAY:
         {
-            JSObject* array = JS_NewArrayObject(cx, 0, nsnull);
+            JSObject* array = JS_NewArrayObject(cx, 0, nullptr);
             if (!array)
                 return false;
             *pJSVal = OBJECT_TO_JSVAL(array);

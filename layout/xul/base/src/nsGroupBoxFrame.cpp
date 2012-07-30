@@ -215,14 +215,14 @@ nsGroupBoxFrame::GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect
 
     // no area fail.
     if (!box)
-      return nsnull;
+      return nullptr;
 
     // get the first child in the grouped area, that is the caption
     box = box->GetChildBox();
 
     // nothing in the area? fail
     if (!box)
-      return nsnull;
+      return nullptr;
 
     // now get the caption itself. It is in the caption frame.
     nsIBox* child = box->GetChildBox();

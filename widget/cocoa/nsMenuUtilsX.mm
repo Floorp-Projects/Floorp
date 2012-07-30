@@ -38,7 +38,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
                                                true, true,
                                                doc->GetWindow(), 0,
                                                false, false, false,
-                                               false, nsnull))) {
+                                               false, nullptr))) {
       event->SetTrusted(true);
       bool dummy;
       target->DispatchEvent(event, &dummy);
@@ -105,7 +105,7 @@ nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar()
   if (hiddenWindowWidgetNoCOMPtr)
     return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();
   else
-    return nsnull;
+    return nullptr;
 }
 
 // It would be nice if we could localize these edit menu names.

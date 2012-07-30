@@ -24,7 +24,7 @@ static bool test_basic_1()
     char *clone;
 
     NS_CStringGetData(s, &ptr);
-    if (ptr == nsnull || *ptr != '\0')
+    if (ptr == nullptr || *ptr != '\0')
       {
         NS_ERROR("unexpected result");
         return false;
@@ -32,7 +32,7 @@ static bool test_basic_1()
 
     NS_CStringSetData(s, kAsciiData, PR_UINT32_MAX);
     len = NS_CStringGetData(s, &ptr);
-    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+    if (ptr == nullptr || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
@@ -44,7 +44,7 @@ static bool test_basic_1()
       }
 
     clone = NS_CStringCloneData(s);
-    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+    if (ptr == nullptr || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
@@ -56,7 +56,7 @@ static bool test_basic_1()
     NS_CStringCopy(temp, s);
 
     len = NS_CStringGetData(temp, &ptr);
-    if (ptr == nsnull || strcmp(ptr, kAsciiData) != 0)
+    if (ptr == nullptr || strcmp(ptr, kAsciiData) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
@@ -83,7 +83,7 @@ static bool test_basic_2()
     PRUnichar *clone;
 
     NS_StringGetData(s, &ptr);
-    if (ptr == nsnull || *ptr != '\0')
+    if (ptr == nullptr || *ptr != '\0')
       {
         NS_ERROR("unexpected result");
         return false;
@@ -96,14 +96,14 @@ static bool test_basic_2()
         NS_ERROR("unexpected result");
         return false;
       }
-    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
+    if (ptr == nullptr || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
       }
 
     clone = NS_StringCloneData(s);
-    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
+    if (ptr == nullptr || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
@@ -120,7 +120,7 @@ static bool test_basic_2()
         NS_ERROR("unexpected result");
         return false;
       }
-    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
+    if (ptr == nullptr || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return false;
@@ -930,12 +930,12 @@ static bool test_parse_string_helper(const char* str, char separator, int len,
 
 static bool test_parse_string_helper0(const char* str, char separator)
 {
-  return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
+  return test_parse_string_helper(str, separator, 0, nullptr, nullptr);
 }
 
 static bool test_parse_string_helper1(const char* str, char separator, const char* s1)
 {
-  return test_parse_string_helper(str, separator, 1, s1, nsnull);
+  return test_parse_string_helper(str, separator, 1, s1, nullptr);
 }
 
 static bool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
@@ -985,7 +985,7 @@ tests[] =
     { "test_compressws", test_compressws },
     { "test_comparisons", test_comparisons },
     { "test_parse_string", test_parse_string },
-    { nsnull, nsnull }
+    { nullptr, nullptr }
   };
 
 //----
@@ -998,7 +998,7 @@ int main(int argc, char **argv)
 
     while (count--)
       {
-        for (const Test* t = tests; t->name != nsnull; ++t)
+        for (const Test* t = tests; t->name != nullptr; ++t)
           {
             printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
           }

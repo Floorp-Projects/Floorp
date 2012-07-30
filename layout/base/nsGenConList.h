@@ -33,7 +33,7 @@ struct nsGenConNode : public PRCList {
   nsCOMPtr<nsIDOMCharacterData> mText;
 
   nsGenConNode(PRInt32 aContentIndex)
-    : mPseudoFrame(nsnull)
+    : mPseudoFrame(nullptr)
     , mContentIndex(aContentIndex)
   {
   }
@@ -85,7 +85,7 @@ protected:
   nsGenConNode* mFirstNode;
   PRUint32 mSize;
 public:
-  nsGenConList() : mFirstNode(nsnull), mSize(0) {}
+  nsGenConList() : mFirstNode(nullptr), mSize(0) {}
   ~nsGenConList() { Clear(); }
   void Clear();
   static nsGenConNode* Next(nsGenConNode* aNode) {

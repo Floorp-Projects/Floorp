@@ -37,7 +37,7 @@ ImageFactory::CreateImage(const Image::Format *aFormats,
                           BufferRecycleBin *aRecycleBin)
 {
   if (!aNumFormats) {
-    return nsnull;
+    return nullptr;
   }
   nsRefPtr<Image> img;
   if (FormatInList(aFormats, aNumFormats, Image::PLANAR_YCBCR)) {
@@ -95,10 +95,10 @@ ImageContainer::ImageContainer(int flag)
   mPreviousImagePainted(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
-  mRemoteData(nsnull),
-  mRemoteDataMutex(nsnull),
-  mCompositionNotifySink(nsnull),
-  mImageContainerChild(nsnull)
+  mRemoteData(nullptr),
+  mRemoteDataMutex(nullptr),
+  mCompositionNotifySink(nullptr),
+  mImageContainerChild(nullptr)
 {
   if (flag == ENABLE_ASYNC && ImageBridgeChild::IsCreated()) {
     mImageContainerChild = 
@@ -167,7 +167,7 @@ ImageContainer::SetCurrentImageInTransaction(Image *aImage)
 }
 
 bool ImageContainer::IsAsync() const {
-  return mImageContainerChild != nsnull;
+  return mImageContainerChild != nullptr;
 }
 
 PRUint64 ImageContainer::GetAsyncContainerID() const
@@ -229,7 +229,7 @@ ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
     }
 
     if (!mActiveImage) {
-      return nsnull;
+      return nullptr;
     } 
 
     if (mActiveImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
@@ -254,7 +254,7 @@ ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
   }
 
   if (!mActiveImage) {
-    return nsnull;
+    return nullptr;
   }
 
   *aSize = mActiveImage->GetSize();
@@ -280,11 +280,11 @@ ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
     EnsureActiveImage();
 
     if (!mActiveImage)
-      return nsnull;
+      return nullptr;
     *aSize = mRemoteData->mSize;
   } else {
     if (!mActiveImage)
-      return nsnull;
+      return nullptr;
     *aSize = mActiveImage->GetSize();
   }
   return mActiveImage->GetAsSurface();
@@ -323,7 +323,7 @@ ImageContainer::SetRemoteImageData(RemoteImageData *aData, CrossProcessMutex *aM
   if (aData) {
     memset(aData, 0, sizeof(RemoteImageData));
   } else {
-    mActiveImage = nsnull;
+    mActiveImage = nullptr;
   }
 
   mRemoteDataMutex = aMutex;
@@ -334,7 +334,7 @@ ImageContainer::EnsureActiveImage()
 {
   if (mRemoteData) {
     if (mRemoteData->mWasUpdated) {
-      mActiveImage = nsnull;
+      mActiveImage = nullptr;
     }
 
     if (mRemoteData->mType == RemoteImageData::RAW_BITMAP &&
@@ -365,7 +365,7 @@ ImageContainer::EnsureActiveImage()
 }
 
 PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
-  : Image(nsnull, PLANAR_YCBCR)
+  : Image(nullptr, PLANAR_YCBCR)
   , mBufferSize(0)
   , mRecycleBin(aRecycleBin)
 {

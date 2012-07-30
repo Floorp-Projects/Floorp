@@ -47,7 +47,7 @@ extern bool gUserCancelledDrag;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
-nsISupportsArray *gDraggedTransferables = nsnull;
+nsISupportsArray *gDraggedTransferables = nullptr;
 
 NSString* const kWildcardPboardType = @"MozillaWildcard";
 NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
@@ -555,7 +555,7 @@ nsDragService::EndDragSession(bool aDoneDrag)
   mUserCancelled = gUserCancelledDrag;
 
   nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag);
-  mDataItems = nsnull;
+  mDataItems = nullptr;
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

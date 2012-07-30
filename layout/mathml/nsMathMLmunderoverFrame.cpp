@@ -154,8 +154,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
   of accentunder depending on underscript.
   */
 
-  nsIFrame* overscriptFrame = nsnull;
-  nsIFrame* underscriptFrame = nsnull;
+  nsIFrame* overscriptFrame = nullptr;
+  nsIFrame* underscriptFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();
   nsIAtom* tag = mContent->Tag();
 
@@ -341,8 +341,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nsHTMLReflowMetrics baseSize;
   nsHTMLReflowMetrics underSize;
   nsHTMLReflowMetrics overSize;
-  nsIFrame* overFrame = nsnull;
-  nsIFrame* underFrame = nsnull;
+  nsIFrame* overFrame = nullptr;
+  nsIFrame* underFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();
   underSize.ascent = 0; 
   overSize.ascent = 0;
@@ -621,16 +621,16 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     if (overFrame) {
       dy = aDesiredSize.ascent - mBoundingMetrics.ascent + bmOver.ascent 
         - overSize.ascent;
-      FinishReflowChild (overFrame, PresContext(), nsnull, overSize, dxOver, dy, 0);
+      FinishReflowChild (overFrame, PresContext(), nullptr, overSize, dxOver, dy, 0);
     }
     // place base
     dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize, dxBase, dy, 0);
+    FinishReflowChild (baseFrame, PresContext(), nullptr, baseSize, dxBase, dy, 0);
     // place underscript
     if (underFrame) {
       dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent 
         - underSize.ascent;
-      FinishReflowChild (underFrame, PresContext(), nsnull, underSize,
+      FinishReflowChild (underFrame, PresContext(), nullptr, underSize,
                          dxUnder, dy, 0);
     }
   }

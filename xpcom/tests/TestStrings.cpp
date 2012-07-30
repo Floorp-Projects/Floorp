@@ -432,7 +432,7 @@ bool test_replace_substr()
 
 bool test_replace_substr_2()
   {
-    const char *oldName = nsnull;
+    const char *oldName = nullptr;
     const char *newName = "user";
     nsString acctName; acctName.AssignLiteral("forums.foo.com");
     nsAutoString newAcctName, oldVal, newVal;
@@ -945,7 +945,7 @@ static const ToIntegerTest kToIntegerTests[] = {
   { "123", 10, 123, NS_OK },
   { "7b", 16, 123, NS_OK },
   { "90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE },
-  { nsnull, 0, 0, 0 }
+  { nullptr, 0, 0, 0 }
 };
 
 bool test_string_tointeger()
@@ -982,12 +982,12 @@ static bool test_parse_string_helper(const char* str, char separator, int len,
 
 static bool test_parse_string_helper0(const char* str, char separator)
 {
-  return test_parse_string_helper(str, separator, 0, nsnull, nsnull);
+  return test_parse_string_helper(str, separator, 0, nullptr, nullptr);
 }
 
 static bool test_parse_string_helper1(const char* str, char separator, const char* s1)
 {
-  return test_parse_string_helper(str, separator, 1, s1, nsnull);
+  return test_parse_string_helper(str, separator, 1, s1, nullptr);
 }
 
 static bool test_parse_string_helper2(const char* str, char separator, const char* s1, const char* s2)
@@ -1227,7 +1227,7 @@ tests[] =
     { "test_huge_capacity", test_huge_capacity },
     { "test_tofloat", test_tofloat },
     { "test_todouble", test_todouble },
-    { nsnull, nsnull }
+    { nullptr, nullptr }
   };
 
 }
@@ -1244,7 +1244,7 @@ int main(int argc, char **argv)
 
     while (count--)
       {
-        for (const Test* t = tests; t->name != nsnull; ++t)
+        for (const Test* t = tests; t->name != nullptr; ++t)
           {
             printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE <--");
           }

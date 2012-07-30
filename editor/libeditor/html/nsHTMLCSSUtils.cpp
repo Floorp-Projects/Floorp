@@ -223,110 +223,110 @@ void ProcessFontSizeValue(const nsAString* aInputString, nsAString& aOutputStrin
 }
 
 const nsHTMLCSSUtils::CSSEquivTable boldEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_weight, ProcessBValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_weight, ProcessBValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable italicEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessDefaultValue, "italic", nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessDefaultValue, "italic", nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable underlineEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "underline", nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "underline", nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable strikeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "line-through", nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "line-through", nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable ttEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessDefaultValue, "monospace", nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessDefaultValue, "monospace", nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable fontColorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable fontFaceEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable fontSizeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_size, ProcessFontSizeValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_size, ProcessFontSizeValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable bgcolorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_background_color, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_background_color, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable backgroundImageEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_background_image, ProcessExtendedValue, nsnull, "url(", ")", true, true },
+  { nsHTMLCSSUtils::eCSSEditableProperty_background_image, ProcessExtendedValue, nullptr, "url(", ")", true, true },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable textColorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable borderEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_border, ProcessExtendedValue, nsnull, nsnull, "px solid", true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_border, ProcessExtendedValue, nullptr, nullptr, "px solid", true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable textAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable captionAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_caption_side, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_caption_side, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable verticalAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_vertical_align, ProcessSameValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_vertical_align, ProcessSameValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable nowrapEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_whitespace, ProcessDefaultValue, "nowrap", nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_whitespace, ProcessDefaultValue, "nowrap", nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable widthEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_width, ProcessLengthValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_width, ProcessLengthValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable heightEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_height, ProcessLengthValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_height, ProcessLengthValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable listStyleTypeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_list_style_type, ProcessListStyleTypeValue, nsnull, nsnull, nsnull, true, true },
+  { nsHTMLCSSUtils::eCSSEditableProperty_list_style_type, ProcessListStyleTypeValue, nullptr, nullptr, nullptr, true, true },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable tableAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessDefaultValue, "left", nsnull, nsnull, false, false },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, true, false },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessDefaultValue, "left", nullptr, nullptr, false, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nullptr, nullptr, nullptr, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable hrAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, true, false },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nullptr, nullptr, nullptr, true, false },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nullptr, nullptr, nullptr, true, false },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
@@ -643,11 +643,11 @@ nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
 
   nsIDocument* doc = aElement->GetCurrentDoc();
   NS_ASSERTION(doc, "Trying to compute style of detached element");
-  NS_ENSURE_TRUE(doc, nsnull);
+  NS_ENSURE_TRUE(doc, nullptr);
 
   nsIPresShell* presShell = doc->GetShell();
   NS_ASSERTION(presShell, "Trying to compute style without PresShell");
-  NS_ENSURE_TRUE(presShell, nsnull);
+  NS_ENSURE_TRUE(presShell, nullptr);
 
   nsRefPtr<nsComputedDOMStyle> style =
     NS_NewComputedDOMStyle(aElement, EmptyString(), presShell);
@@ -769,7 +769,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
 void
 nsHTMLCSSUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty, nsIAtom ** aAtom)
 {
-  *aAtom = nsnull;
+  *aAtom = nullptr;
   switch (aProperty) {
     case eCSSEditableProperty_background_color:
       *aAtom = nsEditProperty::cssBackgroundColor;
@@ -890,7 +890,7 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(dom::Element* aElement,
 {
   MOZ_ASSERT(aElement);
   nsIAtom* tagName = aElement->Tag();
-  const nsHTMLCSSUtils::CSSEquivTable* equivTable = nsnull;
+  const nsHTMLCSSUtils::CSSEquivTable* equivTable = nullptr;
 
   if (nsEditProperty::b == aHTMLProperty) {
     equivTable = boldEquivTable;
@@ -1077,7 +1077,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
   nsTArray<nsString> cssValueArray;
   // get the CSS equivalence with last param true indicating we want only the
   // "gettable" properties
-  GenerateCSSDeclarationsFromHTMLStyle(theElement, aHTMLProperty, aAttribute, nsnull,
+  GenerateCSSDeclarationsFromHTMLStyle(theElement, aHTMLProperty, aAttribute, nullptr,
                                        cssPropertyArray, cssValueArray, true);
   PRInt32 count = cssPropertyArray.Length();
   for (PRInt32 index = 0; index < count; index++) {
@@ -1406,7 +1406,7 @@ already_AddRefed<nsIDOMElement>
 nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, nsnull);
+  NS_ENSURE_TRUE(node, nullptr);
   nsCOMPtr<nsIDOMElement> element =
     do_QueryInterface(GetElementContainerOrSelf(node));
   return element.forget();
@@ -1417,7 +1417,7 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   if (nsIDOMNode::DOCUMENT_NODE == aNode->NodeType()) {
-    return nsnull;
+    return nullptr;
   }
 
   nsINode* node = aNode;
@@ -1426,7 +1426,7 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsINode* aNode)
     node = node->GetNodeParent();
   }
 
-  NS_ENSURE_TRUE(node, nsnull);
+  NS_ENSURE_TRUE(node, nullptr);
   return node->AsElement();
 }
 

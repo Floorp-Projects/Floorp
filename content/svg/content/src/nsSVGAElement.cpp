@@ -147,7 +147,7 @@ already_AddRefed<nsIURI>
 nsSVGAElement::GetHrefURI() const
 {
   nsCOMPtr<nsIURI> hrefURI;
-  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nsnull;
+  return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
 }
 
 
@@ -201,13 +201,13 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
   // result is poorly specified. Either way, we return false.
 
   static nsIContent::AttrValuesArray sTypeVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::simple, nsnull };
+    { &nsGkAtoms::_empty, &nsGkAtoms::simple, nullptr };
 
   static nsIContent::AttrValuesArray sShowVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+    { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
 
   static nsIContent::AttrValuesArray sActuateVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nsnull };
+    { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
 
   // Optimization: check for href first for early return
   const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
@@ -232,7 +232,7 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
     return !!*aURI;
   }
 
-  *aURI = nsnull;
+  *aURI = nullptr;
   return false;
 }
 
@@ -243,7 +243,7 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
   if (aTarget.IsEmpty()) {
 
     static nsIContent::AttrValuesArray sShowVals[] =
-      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
 
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                             sShowVals, eCaseMatters)) {

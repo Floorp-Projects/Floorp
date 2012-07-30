@@ -192,7 +192,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 // nsTXTToHTMLConv methods
 nsTXTToHTMLConv::nsTXTToHTMLConv()
 {
-    mToken = nsnull;
+    mToken = nullptr;
     mPreFormatHTML = false;
 }
 
@@ -303,6 +303,6 @@ nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back)
         mBuffer.Insert(NS_LITERAL_STRING("</a>"), cursor);
         cursor += 4;
     }
-    mToken = nsnull; // indicates completeness
+    mToken = nullptr; // indicates completeness
     return cursor;
 }

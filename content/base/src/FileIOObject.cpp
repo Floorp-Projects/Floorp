@@ -106,7 +106,7 @@ nsresult
 FileIOObject::DispatchProgressEvent(const nsAString& aType)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
+  nsresult rv = nsEventDispatcher::CreateEvent(nullptr, nullptr,
                                                NS_LITERAL_STRING("ProgressEvent"),
                                                getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -128,7 +128,7 @@ FileIOObject::DispatchProgressEvent(const nsAString& aType)
                                    mTransferred, size);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
 // nsITimerCallback

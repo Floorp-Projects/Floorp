@@ -24,7 +24,7 @@ GLLibraryLoader::OpenLibrary(const char *library)
 bool
 GLLibraryLoader::LoadSymbols(SymLoadStruct *firstStruct, bool tryplatform, const char *prefix)
 {
-    return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nsnull, prefix);
+    return LoadSymbols(mLibrary, firstStruct, tryplatform ? mLookupFunc : nullptr, prefix);
 }
 
 PRFuncPtr
@@ -67,7 +67,7 @@ GLLibraryLoader::LoadSymbols(PRLibrary *lib,
         *ss->symPointer = 0;
 
         for (int i = 0; i < MAX_SYMBOL_NAMES; i++) {
-            if (ss->symNames[i] == nsnull)
+            if (ss->symNames[i] == nullptr)
                 break;
 
             const char *s = ss->symNames[i];

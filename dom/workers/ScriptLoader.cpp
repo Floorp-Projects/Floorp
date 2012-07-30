@@ -207,7 +207,7 @@ public:
       if (loadInfo.mChannel &&
           NS_FAILED(loadInfo.mChannel->Cancel(NS_BINDING_ABORTED))) {
         NS_WARNING("Failed to cancel channel!");
-        loadInfo.mChannel = nsnull;
+        loadInfo.mChannel = nullptr;
         loadInfo.mLoadResult = NS_BINDING_ABORTED;
       }
     }
@@ -282,7 +282,7 @@ public:
         rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT, uri,
                                        principal, parentDoc,
                                        NS_LITERAL_CSTRING("text/javascript"),
-                                       nsnull, &shouldLoad,
+                                       nullptr, &shouldLoad,
                                        nsContentUtils::GetContentPolicy(),
                                        secMan);
         if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
@@ -347,7 +347,7 @@ public:
       PRUint32 flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
 
       nsCOMPtr<nsIChannel> channel;
-      rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, loadGroup, nsnull,
+      rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, loadGroup, nullptr,
                          flags, channelPolicy);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -371,7 +371,7 @@ public:
       return NS_BINDING_ABORTED;
     }
 
-    aLoadInfo.mChannel = nsnull;
+    aLoadInfo.mChannel = nullptr;
 
     if (NS_FAILED(aStatus)) {
       return aStatus;
@@ -536,7 +536,7 @@ public:
     if (firstIndex != PR_UINT32_MAX && lastIndex != PR_UINT32_MAX) {
       nsRefPtr<ScriptExecutorRunnable> runnable =
         new ScriptExecutorRunnable(*this, mSyncQueueKey, firstIndex, lastIndex);
-      if (!runnable->Dispatch(nsnull)) {
+      if (!runnable->Dispatch(nullptr)) {
         NS_ERROR("This should never fail!");
       }
     }
@@ -618,7 +618,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     if (!JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
                                           loadInfo.mScriptText.get(),
                                           loadInfo.mScriptText.Length(),
-                                          filename.get(), 1, nsnull)) {
+                                          filename.get(), 1, nullptr)) {
       return true;
     }
 

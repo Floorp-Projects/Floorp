@@ -67,12 +67,12 @@ public:
   static const PRUnichar *GetStringValue(nsHTMLTag aEnum)
   {
     return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
-      nsnull : sTagUnicodeTable[aEnum - 1];
+      nullptr : sTagUnicodeTable[aEnum - 1];
   }
   static nsIAtom *GetAtom(nsHTMLTag aEnum)
   {
     return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
-      nsnull : sTagAtomTable[aEnum - 1];
+      nullptr : sTagAtomTable[aEnum - 1];
   }
 
 #ifdef DEBUG

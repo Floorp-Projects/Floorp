@@ -683,7 +683,7 @@ nsMathMLmencloseFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
   if (aIndex >= 0 && aIndex < len)
     return mMathMLChar[aIndex].GetStyleContext();
   else
-    return nsnull;
+    return nullptr;
 }
 
 void

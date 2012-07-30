@@ -295,7 +295,7 @@ class nsScanner {
         nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
         if (!buf)
           return false;
-        AppendToBuffer(buf, nsnull);
+        AppendToBuffer(buf, nullptr);
         return true;
       }
 

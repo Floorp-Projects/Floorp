@@ -15,13 +15,13 @@ using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsBMPEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
-nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nsnull), 
+nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nullptr), 
                                mImageBufferCurr(0),
                                mImageBufferSize(0), 
                                mImageBufferReadPoint(0), 
                                mFinished(false),
-                               mCallback(nsnull), 
-                               mCallbackTarget(nsnull), 
+                               mCallback(nullptr), 
+                               mCallbackTarget(nullptr), 
                                mNotifyThreshold(0)
 {
 }
@@ -30,8 +30,8 @@ nsBMPEncoder::~nsBMPEncoder()
 {
   if (mImageBufferStart) {
     moz_free(mImageBufferStart);
-    mImageBufferStart = nsnull;
-    mImageBufferCurr = nsnull;
+    mImageBufferStart = nullptr;
+    mImageBufferCurr = nullptr;
   }
 }
 
@@ -311,10 +311,10 @@ NS_IMETHODIMP nsBMPEncoder::Close()
 {
   if (mImageBufferStart) {
     moz_free(mImageBufferStart);
-    mImageBufferStart = nsnull;
+    mImageBufferStart = nullptr;
     mImageBufferSize = 0;
     mImageBufferReadPoint = 0;
-    mImageBufferCurr = nsnull;
+    mImageBufferCurr = nullptr;
   }
 
   return NS_OK;
@@ -459,8 +459,8 @@ nsBMPEncoder::NotifyListener()
     NS_ASSERTION(callback, "Shouldn't fail to make the callback");
     // Null the callback first because OnInputStreamReady could
     // reenter AsyncWait
-    mCallback = nsnull;
-    mCallbackTarget = nsnull;
+    mCallback = nullptr;
+    mCallbackTarget = nullptr;
     mNotifyThreshold = 0;
 
     callback->OnInputStreamReady(this);

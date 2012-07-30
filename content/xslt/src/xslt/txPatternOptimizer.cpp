@@ -9,14 +9,14 @@
 nsresult
 txPatternOptimizer::optimize(txPattern* aInPattern, txPattern** aOutPattern)
 {
-    *aOutPattern = nsnull;
+    *aOutPattern = nullptr;
     nsresult rv = NS_OK;
 
     // First optimize sub expressions
     PRUint32 i = 0;
     Expr* subExpr;
     while ((subExpr = aInPattern->getSubExprAt(i))) {
-        Expr* newExpr = nsnull;
+        Expr* newExpr = nullptr;
         rv = mXPathOptimizer.optimize(subExpr, &newExpr);
         NS_ENSURE_SUCCESS(rv, rv);
         if (newExpr) {
@@ -31,7 +31,7 @@ txPatternOptimizer::optimize(txPattern* aInPattern, txPattern** aOutPattern)
     txPattern* subPattern;
     i = 0;
     while ((subPattern = aInPattern->getSubPatternAt(i))) {
-        txPattern* newPattern = nsnull;
+        txPattern* newPattern = nullptr;
         rv = optimize(subPattern, &newPattern);
         NS_ENSURE_SUCCESS(rv, rv);
         if (newPattern) {

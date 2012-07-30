@@ -28,7 +28,7 @@ typedef size_t (* nsVoidArraySizeOfElementIncludingThisFunc)(const void* aElemen
 class NS_COM_GLUE nsVoidArray {
 public:
   nsVoidArray();
-  nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
+  nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nullptr
   ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
@@ -63,7 +63,7 @@ public:
   {
     if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
     {
-      return nsnull;
+      return nullptr;
     }
     // The bounds check ensures mImpl is non-null.
     return mImpl->mArray[aIndex];
@@ -238,7 +238,7 @@ public:
     // let compiler inline; it may be able to remove these checks
     if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
     {
-      return nsnull;
+      return nullptr;
     }
     return FastElementAt(aIndex);
   }

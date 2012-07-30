@@ -1504,7 +1504,7 @@ CNewlineToken::FreeNewline()
 {
   if (gNewlineStr) {
     delete gNewlineStr;
-    gNewlineStr = nsnull;
+    gNewlineStr = nullptr;
   }
 }
 

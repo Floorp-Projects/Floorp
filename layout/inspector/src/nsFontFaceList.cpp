@@ -53,9 +53,9 @@ nsFontFaceList::Item(PRUint32 index, nsIDOMFontFace **_retval)
   FindByIndexData userData;
   userData.mTarget = index;
   userData.mCurrent = 0;
-  userData.mResult = nsnull;
+  userData.mResult = nullptr;
   mFontFaces.EnumerateRead(FindByIndex, &userData);
-  NS_ASSERTION(userData.mResult != nsnull, "null entry in nsFontFaceList?");
+  NS_ASSERTION(userData.mResult != nullptr, "null entry in nsFontFaceList?");
   NS_IF_ADDREF(*_retval = userData.mResult);
   return NS_OK;
 }

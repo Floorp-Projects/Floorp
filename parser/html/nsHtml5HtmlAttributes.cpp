@@ -55,7 +55,7 @@
 
 #include "nsHtml5HtmlAttributes.h"
 
-nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nsnull;
+nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nullptr;
 
 nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(PRInt32 mode)
   : mode(mode),
@@ -96,7 +96,7 @@ nsHtml5HtmlAttributes::getLocalName(PRInt32 index)
   if (index < length && index >= 0) {
     return names[index]->getLocal(mode);
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -106,7 +106,7 @@ nsHtml5HtmlAttributes::getAttributeName(PRInt32 index)
   if (index < length && index >= 0) {
     return names[index];
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -126,7 +126,7 @@ nsHtml5HtmlAttributes::getPrefix(PRInt32 index)
   if (index < length && index >= 0) {
     return names[index]->getPrefix(mode);
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -136,7 +136,7 @@ nsHtml5HtmlAttributes::getValue(PRInt32 index)
   if (index < length && index >= 0) {
     return values[index];
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -145,7 +145,7 @@ nsHtml5HtmlAttributes::getValue(nsHtml5AttributeName* name)
 {
   PRInt32 index = getIndex(name);
   if (index == -1) {
-    return nsnull;
+    return nullptr;
   } else {
     return getValue(index);
   }
@@ -173,9 +173,9 @@ nsHtml5HtmlAttributes::clear(PRInt32 m)
 {
   for (PRInt32 i = 0; i < length; i++) {
     names[i]->release();
-    names[i] = nsnull;
+    names[i] = nullptr;
     nsHtml5Portability::releaseString(values[i]);
-    values[i] = nsnull;
+    values[i] = nullptr;
   }
   length = 0;
   mode = m;
@@ -191,8 +191,8 @@ void
 nsHtml5HtmlAttributes::clearWithoutReleasingContents()
 {
   for (PRInt32 i = 0; i < length; i++) {
-    names[i] = nsnull;
-    values[i] = nsnull;
+    names[i] = nullptr;
+    values[i] = nullptr;
   }
   length = 0;
 }

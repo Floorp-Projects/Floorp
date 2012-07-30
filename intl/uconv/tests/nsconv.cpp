@@ -36,15 +36,15 @@ PRUnichar  medbuffer[MEDBUFSIZE];
 
 int main(int argc, const char** argv)
 {
-  nsIUnicodeEncoder* encoder = nsnull;
-  nsIUnicodeDecoder* decoder = nsnull;
+  nsIUnicodeEncoder* encoder = nullptr;
+  nsIUnicodeDecoder* decoder = nullptr;
   FILE* fin = 0;
   FILE* fout = 0;
   FILE* infile = 0;
   FILE* outfile = 0;
   nsresult res= NS_OK;
 
-  NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  NS_InitXPCOM2(nullptr, nullptr, nullptr);
 
   // get ccMain;
   nsCOMPtr<nsICharsetConverterManager> ccMain =

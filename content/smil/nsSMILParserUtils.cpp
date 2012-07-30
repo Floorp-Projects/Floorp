@@ -148,7 +148,7 @@ ParseClockComponent(const char*& aStart,
 
   // Check that it's not expressed in exponential form
   size_t len = aStart - begin;
-  bool isExp = (PL_strnpbrk(begin, "eE", len) != nsnull);
+  bool isExp = (PL_strnpbrk(begin, "eE", len) != nullptr);
   if (isExp)
     return false;
 
@@ -161,7 +161,7 @@ ParseClockComponent(const char*& aStart,
 
   // Set some flags so we can check this number is valid once we know
   // whether it's an hour, minute string etc.
-  aIsReal = (PL_strnchr(begin, '.', len) != nsnull);
+  aIsReal = (PL_strnchr(begin, '.', len) != nullptr);
   aCouldBeMin = (value < 60.0 && (len == 2));
   aCouldBeSec = (value < 60.0 ||
       (value == 60.0 && begin[0] == '5')); // Take care of rounding error
@@ -686,7 +686,7 @@ nsresult
 nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
                                    nsSMILTimeValue* aResult,
                                    PRUint32 aFlags,   // = 0
-                                   bool* aIsMedia)  // = nsnull
+                                   bool* aIsMedia)  // = nullptr
 {
   nsSMILTime offset = 0L;
   double component = 0.0;

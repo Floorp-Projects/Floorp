@@ -71,7 +71,7 @@ nsOggCodecState::Create(ogg_page* aPage)
   } else {
     codecState = new nsOggCodecState(aPage, false);
   }
-  return codecState->nsOggCodecState::Init() ? codecState.forget() : nsnull;
+  return codecState->nsOggCodecState::Init() ? codecState.forget() : nullptr;
 }
 
 nsOggCodecState::nsOggCodecState(ogg_page* aBosPage, bool aActive) :
@@ -162,7 +162,7 @@ void nsPacketQueue::Append(ogg_packet* aPacket) {
 
 ogg_packet* nsOggCodecState::PacketOut() {
   if (mPackets.IsEmpty()) {
-    return nsnull;
+    return nullptr;
   }
   return mPackets.PopFront();
 }
@@ -1299,7 +1299,7 @@ nsresult nsSkeletonState::IndexedSeekTargetForTrack(PRUint32 aSerialno,
                                                     PRInt64 aTarget,
                                                     nsKeyPoint& aResult)
 {
-  nsKeyFrameIndex* index = nsnull;
+  nsKeyFrameIndex* index = nullptr;
   mIndex.Get(aSerialno, &index);
 
   if (!index ||
@@ -1373,7 +1373,7 @@ nsresult nsSkeletonState::GetDuration(const nsTArray<PRUint32>& aTracks,
   PRInt64 endTime = INT64_MIN;
   PRInt64 startTime = INT64_MAX;
   for (PRUint32 i=0; i<aTracks.Length(); i++) {
-    nsKeyFrameIndex* index = nsnull;
+    nsKeyFrameIndex* index = nullptr;
     mIndex.Get(aTracks[i], &index);
     if (!index) {
       // Can't get the timestamps for one of the required tracks, fail.

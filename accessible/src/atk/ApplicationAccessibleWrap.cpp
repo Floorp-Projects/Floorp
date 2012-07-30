@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static bool sATKChecked = false;
-static PRLibrary *sATKLib = nsnull;
+static PRLibrary *sATKLib = nullptr;
 static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] =
   "atk_hyperlink_impl_get_type";
@@ -441,7 +441,7 @@ mai_util_get_root(void)
     if (gail_get_root)
       return gail_get_root();
 
-    return nsnull;
+    return nullptr;
   }
 
   return nsAccessNode::GetApplicationAccessible()->GetAtkObject();
@@ -652,7 +652,7 @@ ApplicationAccessibleWrap::Unload()
     }
     // if (sATKLib) {
     //     PR_UnloadLibrary(sATKLib);
-    //     sATKLib = nsnull;
+    //     sATKLib = nullptr;
     // }
 }
 
@@ -670,7 +670,7 @@ ApplicationAccessibleWrap::Name(nsString& aName)
 NS_IMETHODIMP
 ApplicationAccessibleWrap::GetNativeInterface(void** aOutAccessible)
 {
-    *aOutAccessible = nsnull;
+    *aOutAccessible = nullptr;
 
     if (!mAtkObject) {
         mAtkObject =
@@ -841,7 +841,7 @@ namespace a11y {
 
   static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
 #ifdef MOZ_ENABLE_DBUS
-static DBusPendingCall *sPendingCall = nsnull;
+static DBusPendingCall *sPendingCall = nullptr;
 #endif
 
 void
@@ -861,7 +861,7 @@ PreInit()
   if (PR_GetEnv(sAccEnv) || !PR_GetEnv("DBUS_SESSION_BUS_ADDRESS"))
     return;
 
-  DBusConnection* bus = dbus_bus_get(DBUS_BUS_SESSION, nsnull);
+  DBusConnection* bus = dbus_bus_get(DBUS_BUS_SESSION, nullptr);
   if (!bus)
     return;
 
@@ -907,14 +907,14 @@ ShouldA11yBeEnabled()
 #ifdef MOZ_ENABLE_DBUS
   PreInit();
   bool dbusSuccess = false;
-  DBusMessage *reply = nsnull;
+  DBusMessage *reply = nullptr;
   if (!sPendingCall)
     goto dbus_done;
 
   dbus_pending_call_block(sPendingCall);
   reply = dbus_pending_call_steal_reply(sPendingCall);
   dbus_pending_call_unref(sPendingCall);
-  sPendingCall = nsnull;
+  sPendingCall = nullptr;
   if (!reply ||
       dbus_message_get_type(reply) != DBUS_MESSAGE_TYPE_METHOD_RETURN ||
       strcmp(dbus_message_get_signature (reply), DBUS_TYPE_VARIANT_AS_STRING))

@@ -75,8 +75,8 @@ private:
   // Whether bringing up UI is currently forbidden
   bool mIsUIForbidden;
 
-  // nsnull means "no restriction"
-  // if != nsnull, activity is only allowed on that thread
+  // nullptr means "no restriction"
+  // if != nullptr, activity is only allowed on that thread
   PRThread* mNSSRestrictedThread;
 };
 
@@ -142,7 +142,7 @@ public:
   
   static nsNSSActivityState *getActivityState()
   {
-    return singleton ? &singleton->mActivityState : nsnull;
+    return singleton ? &singleton->mActivityState : nullptr;
   }
   
 private:

@@ -209,7 +209,7 @@ NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 
   if (NS_FAILED(rv)) {
     delete it;
-    return nsnull;
+    return nullptr;
   }
 
   return it;
@@ -225,11 +225,11 @@ nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mNotifiedObserversResult(false),
     mSubmitPopupState(openAbused),
     mSubmitInitiatedFromUserInput(false),
-    mPendingSubmission(nsnull),
-    mSubmittingRequest(nsnull),
-    mDefaultSubmitElement(nsnull),
-    mFirstSubmitInElements(nsnull),
-    mFirstSubmitNotInElements(nsnull),
+    mPendingSubmission(nullptr),
+    mSubmittingRequest(nullptr),
+    mDefaultSubmitElement(nullptr),
+    mFirstSubmitInElements(nullptr),
+    mFirstSubmitNotInElements(nullptr),
     mInvalidElementsCount(0),
     mEverTriedInvalidSubmit(false)
 {
@@ -254,7 +254,7 @@ nsHTMLFormElement::Init()
   
   if (NS_FAILED(rv))
   {
-    mControls = nsnull;
+    mControls = nullptr;
     return rv;
   }
   
@@ -385,10 +385,10 @@ nsHTMLFormElement::Submit()
     // (this happens when form.submit() is called twice)
     // we have to delete it and build a new one since values
     // might have changed inbetween (we emulate IE here, that's all)
-    mPendingSubmission = nsnull;
+    mPendingSubmission = nullptr;
   }
 
-  rv = DoSubmitOrReset(nsnull, NS_FORM_SUBMIT);
+  rv = DoSubmitOrReset(nullptr, NS_FORM_SUBMIT);
   return rv;
 }
 
@@ -396,7 +396,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
   nsFormEvent event(true, NS_FORM_RESET);
-  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nsnull,
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr,
                               &event);
   return NS_OK;
 }
@@ -404,7 +404,7 @@ nsHTMLFormElement::Reset()
 NS_IMETHODIMP
 nsHTMLFormElement::CheckValidity(bool* retVal)
 {
-  *retVal = CheckFormValidity(nsnull);
+  *retVal = CheckFormValidity(nullptr);
   return NS_OK;
 }
 
@@ -606,7 +606,7 @@ nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             // ignored) so if there is a stored submission, it will miss
             // the name/value of the submitting element, thus we need
             // to forget it and the form element will build a new one
-            mPendingSubmission = nsnull;
+            mPendingSubmission = nullptr;
           }
           DoSubmitOrReset(aVisitor.mEvent, msg);
         }
@@ -744,7 +744,7 @@ nsHTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
   // Get the originating frame (failure is non-fatal)
-  nsGenericHTMLElement* originatingElement = nsnull;
+  nsGenericHTMLElement* originatingElement = nullptr;
   if (aEvent) {
     if (NS_FORM_EVENT == aEvent->eventStructType) {
       nsIContent* originator = ((nsFormEvent *)aEvent)->originator;
@@ -795,7 +795,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 
   // If there is no link handler, then we won't actually be able to submit.
   nsIDocument* doc = GetCurrentDoc();
-  nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nsnull;
+  nsCOMPtr<nsISupports> container = doc ? doc->GetContainer() : nullptr;
   nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
   if (!linkHandler || IsEditable()) {
     mIsSubmitting = false;
@@ -869,7 +869,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(
                                          mSubmitInitiatedFromUserInput,
-                                         nsnull, doc);
+                                         nullptr, doc);
 
     nsCOMPtr<nsIInputStream> postDataStream;
     rv = aFormSubmission->GetEncodedSubmission(actionURI,
@@ -878,7 +878,7 @@ nsHTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 
     rv = linkHandler->OnLinkClickSync(this, actionURI,
                                       target.get(),
-                                      postDataStream, nsnull,
+                                      postDataStream, nullptr,
                                       getter_AddRefs(docShell),
                                       getter_AddRefs(mSubmittingRequest));
     NS_ENSURE_SUBMIT_SUCCESS(rv);
@@ -918,7 +918,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   if (!gFirstFormSubmitted) {
     gFirstFormSubmitted = true;
     NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
-                                  nsnull,
+                                  nullptr,
                                   NS_FIRST_FORMSUBMIT_CATEGORY);
   }
 
@@ -999,7 +999,7 @@ nsHTMLFormElement::GetElementCount() const
 NS_IMETHODIMP_(nsIFormControl*)
 nsHTMLFormElement::GetElementAt(PRInt32 aIndex) const
 {
-  return mControls->mElements.SafeElementAt(aIndex, nsnull);
+  return mControls->mElements.SafeElementAt(aIndex, nullptr);
 }
 
 /**
@@ -1141,7 +1141,7 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     // Initialize the password manager category
     gPasswordManagerInitialized = true;
     NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
-                                  nsnull,
+                                  nullptr,
                                   NS_PASSWORDMANAGER_CATEGORY);
   }
  
@@ -1251,7 +1251,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   nsGenericHTMLFormElement** firstSubmitSlot =
     childInElements ? &mFirstSubmitInElements : &mFirstSubmitNotInElements;
   if (aChild == *firstSubmitSlot) {
-    *firstSubmitSlot = nsnull;
+    *firstSubmitSlot = nullptr;
 
     // We are removing the first submit in this list, find the new first submit
     PRUint32 length = controls.Length();
@@ -1267,7 +1267,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   if (aChild == mDefaultSubmitElement) {
     // Need to reset mDefaultSubmitElement.  Do this asynchronously so
     // that we're not doing it while the DOM is in flux.
-    mDefaultSubmitElement = nsnull;
+    mDefaultSubmitElement = nullptr;
     nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this));
 
     // Note that we don't need to notify on the old default submit (which is
@@ -1395,7 +1395,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL,
 {
   nsresult rv = NS_OK;
 
-  *aActionURL = nsnull;
+  *aActionURL = nullptr;
 
   //
   // Grab the URL string
@@ -1470,7 +1470,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL,
     if (!baseURL) {
       return NS_OK; // No base URL -> exit early, see Bug 30721
     }
-    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, baseURL);
+    rv = NS_NewURI(getter_AddRefs(actionURL), action, nullptr, baseURL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1580,12 +1580,12 @@ nsHTMLFormElement::ForgetCurrentSubmission()
 {
   mNotifiedObservers = false;
   mIsSubmitting = false;
-  mSubmittingRequest = nsnull;
+  mSubmittingRequest = nullptr;
   nsCOMPtr<nsIWebProgress> webProgress = do_QueryReferent(mWebProgress);
   if (webProgress) {
     webProgress->RemoveProgressListener(this);
   }
-  mWebProgress = nsnull;
+  mWebProgress = nullptr;
 }
 
 bool
@@ -1655,7 +1655,7 @@ nsHTMLFormElement::CheckValidFormSubmission()
   NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate),
                "We shouldn't be there if novalidate is set!");
 
-  // When .submit() is called aEvent = nsnull so we can rely on that to know if
+  // When .submit() is called aEvent = nullptr so we can rely on that to know if
   // we have to check the validity of the form.
   nsCOMPtr<nsIObserverService> service =
     mozilla::services::GetObserverService();
@@ -1882,7 +1882,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
 {
   // Return the radio button relative to the focused radio button.
   // If no radio is focused, get the radio relative to the selected one.
-  *aRadioOut = nsnull;
+  *aRadioOut = nullptr;
 
   nsCOMPtr<nsIDOMHTMLInputElement> currentRadio;
   if (aFocusedRadio) {
@@ -2103,7 +2103,7 @@ nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
 
 nsFormControlList::~nsFormControlList()
 {
-  mForm = nsnull;
+  mForm = nullptr;
   Clear();
 }
 
@@ -2116,7 +2116,7 @@ nsresult nsFormControlList::Init()
 void
 nsFormControlList::DropFormReference()
 {
-  mForm = nsnull;
+  mForm = nullptr;
   Clear();
 }
 
@@ -2203,7 +2203,7 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsISupports* item = GetNodeAt(aIndex);
   if (!item) {
-    *aReturn = nsnull;
+    *aReturn = nullptr;
 
     return NS_OK;
   }
@@ -2217,7 +2217,7 @@ nsFormControlList::NamedItem(const nsAString& aName,
 {
   FlushPendingNotifications();
 
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsCOMPtr<nsISupports> supports;
   
@@ -2503,13 +2503,13 @@ nsFormControlList::GetNodeAt(PRUint32 aIndex)
 {
   FlushPendingNotifications();
 
-  return mElements.SafeElementAt(aIndex, nsnull);
+  return mElements.SafeElementAt(aIndex, nullptr);
 }
 
 nsISupports*
 nsFormControlList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache)
 {
   nsISupports *item = NamedItemInternal(aName, true);
-  *aCache = nsnull;
+  *aCache = nullptr;
   return item;
 }

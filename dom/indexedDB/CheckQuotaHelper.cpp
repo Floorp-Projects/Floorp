@@ -108,7 +108,7 @@ CheckQuotaHelper::Cancel()
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     NS_WARN_IF_FALSE(obs, "Failed to get observer service!");
     if (obs && NS_FAILED(obs->NotifyObservers(static_cast<nsIRunnable*>(this),
-                                              TOPIC_QUOTA_CANCEL, nsnull))) {
+                                              TOPIC_QUOTA_CANCEL, nullptr))) {
       NS_WARNING("Failed to notify observers!");
     }
 
@@ -118,7 +118,7 @@ CheckQuotaHelper::Cancel()
       nsAutoString response;
       response.AppendInt(nsIPermissionManager::UNKNOWN_ACTION);
 
-      if (NS_SUCCEEDED(Observe(nsnull, TOPIC_QUOTA_RESPONSE, response.get()))) {
+      if (NS_SUCCEEDED(Observe(nullptr, TOPIC_QUOTA_RESPONSE, response.get()))) {
         NS_ASSERTION(mHasPrompted, "Should have set this in Observe!");
       }
       else {
@@ -192,7 +192,7 @@ CheckQuotaHelper::Run()
   NS_ASSERTION(mWaiting, "Huh?!");
 
     // This should never be used again.
-  mWindow = nsnull;
+  mWindow = nullptr;
 
   mWaiting = false;
   mCondVar.NotifyAll();
@@ -214,7 +214,7 @@ CheckQuotaHelper::GetInterface(const nsIID& aIID,
     return mWindow->QueryInterface(aIID, aResult);
   }
 
-  *aResult = nsnull;
+  *aResult = nullptr;
   return NS_ERROR_NOT_AVAILABLE;
 }
 

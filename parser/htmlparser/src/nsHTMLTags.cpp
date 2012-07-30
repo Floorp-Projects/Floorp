@@ -350,12 +350,12 @@ nsHTMLTags::AddRefTable(void)
 
     gTagTable = PL_NewHashTable(64, HTMLTagsHashCodeUCPtr,
                                 HTMLTagsKeyCompareUCPtr, PL_CompareValues,
-                                nsnull, nsnull);
+                                nullptr, nullptr);
     NS_ENSURE_TRUE(gTagTable, NS_ERROR_OUT_OF_MEMORY);
 
     gTagAtomTable = PL_NewHashTable(64, HTMLTagsHashCodeAtom,
                                     PL_CompareValues, PL_CompareValues,
-                                    nsnull, nsnull);
+                                    nullptr, nullptr);
     NS_ENSURE_TRUE(gTagAtomTable, NS_ERROR_OUT_OF_MEMORY);
 
     // Fill in gTagTable with the above static PRUnichar strings as
@@ -416,8 +416,8 @@ nsHTMLTags::ReleaseTable(void)
 
       PL_HashTableDestroy(gTagTable);
       PL_HashTableDestroy(gTagAtomTable);
-      gTagTable = nsnull;
-      gTagAtomTable = nsnull;
+      gTagTable = nullptr;
+      gTagAtomTable = nullptr;
     }
   }
 }

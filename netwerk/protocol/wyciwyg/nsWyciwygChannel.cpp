@@ -381,7 +381,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   mListenerContext = ctx;
 
   if (mLoadGroup)
-    mLoadGroup->AddRequest(this, nsnull);
+    mLoadGroup->AddRequest(this, nullptr);
 
   return NS_OK;
 }
@@ -605,7 +605,7 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
 
   // XXX handle 64-bit stuff for real
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-    mProgressSink->OnProgress(this, nsnull, PRUint64(offset + count),
+    mProgressSink->OnProgress(this, nullptr, PRUint64(offset + count),
                               PRUint64(mContentLength));
 
   return rv; // let the pump cancel on failure
@@ -639,7 +639,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
   mListenerContext = 0;
 
   if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   CloseCacheEntry(mStatus);
   mPump = 0;
@@ -719,7 +719,7 @@ nsWyciwygChannel::ReadFromCache()
   if (NS_FAILED(rv)) return rv;
 
   // Pump the cache data downstream
-  return mPump->AsyncRead(this, nsnull);
+  return mPump->AsyncRead(this, nullptr);
 }
 
 void
@@ -750,7 +750,7 @@ nsWyciwygChannel::NotifyListener()
 
   // Remove ourselves from the load group.
   if (mLoadGroup) {
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    mLoadGroup->RemoveRequest(this, nullptr, mStatus);
   }
 }
 

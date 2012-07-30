@@ -396,7 +396,7 @@ public:
   static
   already_AddRefed<nsTreeColumn> GetColumnImpl(nsITreeColumn* aUnknownCol) {
     if (!aUnknownCol)
-      return nsnull;
+      return nullptr;
 
     nsTreeColumn* col;
     aUnknownCol->QueryInterface(NS_GET_IID(nsTreeColumn), (void**)&col);
@@ -434,7 +434,7 @@ protected:
   public:
     NS_DECL_NSIRUNNABLE
     ScrollEvent(nsTreeBodyFrame *aInner) : mInner(aInner) {}
-    void Revoke() { mInner = nsnull; }
+    void Revoke() { mInner = nullptr; }
   private:
     nsTreeBodyFrame* mInner;
   };
@@ -469,9 +469,9 @@ protected:
    *                   columns have been invalidated only
    * @param aEndRow    the end index of invalidated rows, -1 means that columns
    *                   have been invalidated only
-   * @param aStartCol  the start invalidated column, nsnull means that only rows
+   * @param aStartCol  the start invalidated column, nullptr means that only rows
    *                   have been invalidated
-   * @param aEndCol    the end invalidated column, nsnull means that rows have
+   * @param aEndCol    the end invalidated column, nullptr means that rows have
    *                   been invalidated only
    */
   void FireInvalidateEvent(PRInt32 aStartRow, PRInt32 aEndRow,
