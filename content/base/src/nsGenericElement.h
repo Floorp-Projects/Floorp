@@ -1051,8 +1051,8 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
   NS_IMETHODIMP                                                         \
   _class::Get##_method(nsAString& aValue)                               \
   {                                                                     \
-    /* XXX Invalid cast of bool to nsresult (bug 778104) */             \
-    return (nsresult)GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue); \
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);               \
+    return NS_OK;                                                       \
   }                                                                     \
   NS_IMETHODIMP                                                         \
   _class::Set##_method(const nsAString& aValue)                         \
