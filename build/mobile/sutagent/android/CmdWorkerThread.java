@@ -8,13 +8,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
 
 import android.util.Log;
 
@@ -100,6 +98,8 @@ public class CmdWorkerThread extends Thread
             String inputLine, outputLine;
             DoCommand dc = new DoCommand(theParent.svc);
 
+            SUTAgentAndroid.logToFile(dc.GetTestRoot(), dc.GetSystemTime(), "CmdWorkerThread starts: "+getId());
+
             int nAvail = cmdIn.available();
             cmdIn.skip(nAvail);
 
@@ -134,30 +134,9 @@ public class CmdWorkerThread extends Thread
 
                 if ((inputLine += readLine(in)) != null)
                     {
-                    String datestamp = dc.GetSystemTime();
-                    String message = String.format("%s : %s : %s",
-                                     datestamp, socket.getInetAddress().getHostAddress(), inputLine);
-                    Log.i("SUTAgentAndroid", message);
-
-                    String fileDateStr = "00";
-                    try {
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSS");
-                        Date dateStr = sdf.parse(datestamp);
-                        SimpleDateFormat sdf_file = new SimpleDateFormat("yyyy-MM-dd");
-                        fileDateStr = sdf_file.format(dateStr);
-                    } catch (ParseException pe) {}
-                    String logFile = dc.GetTestRoot() + "/" + fileDateStr + "-sutcommands.txt";
-                    PrintWriter pw = null;
-                    try {
-                        pw = new PrintWriter(new FileWriter(logFile, true));
-                        if (message != null) {
-                            pw.println(message);
-                        }
-                    } catch (IOException ioe) {
-                        Log.e("SUTAgentAndroid", "exception with file writer on: " + logFile);
-                    } finally {
-                        pw.close();
-                    }
+                    String message = String.format("%s : %s",
+                                     socket.getInetAddress().getHostAddress(), inputLine);
+                    SUTAgentAndroid.logToFile(dc.GetTestRoot(), dc.GetSystemTime(), message);
 
                     outputLine = dc.processCommand(inputLine, out, in, cmdOut);
                     if (outputLine.length() > 0)
@@ -187,6 +166,7 @@ public class CmdWorkerThread extends Thread
             in.close();
             in = null;
             socket.close();
+            SUTAgentAndroid.logToFile(dc.GetTestRoot(), dc.GetSystemTime(), "CmdWorkerThread ends: "+getId());
         }
     catch (IOException e)
         {
