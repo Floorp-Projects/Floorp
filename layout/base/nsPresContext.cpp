@@ -295,8 +295,6 @@ nsPresContext::~nsPresContext()
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "layout.css.devPixelsPerPx",
                                   this);
-
-  NS_IF_RELEASE(mDeviceContext);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -351,7 +349,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument);
-  NS_RELEASE(tmp->mDeviceContext); // worth bothering?
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDeviceContext); // worth bothering?
   if (tmp->mEventManager) {
     // unclear if these are needed, but can't hurt
     tmp->mEventManager->NotifyDestroyPresContext(tmp);
@@ -912,7 +910,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   NS_ENSURE_ARG(aDeviceContext);
 
   mDeviceContext = aDeviceContext;
-  NS_ADDREF(mDeviceContext);
 
   if (mDeviceContext->SetPixelScale(mFullZoom))
     mDeviceContext->FlushFontCache();
