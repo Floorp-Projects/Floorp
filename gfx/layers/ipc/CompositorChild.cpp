@@ -45,17 +45,17 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
   // There's only one compositor per child process.
   MOZ_ASSERT(!sCompositor);
 
-  nsRefPtr<CompositorChild> child(new CompositorChild(nsnull));
+  nsRefPtr<CompositorChild> child(new CompositorChild(nullptr));
   ProcessHandle handle;
   if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
     // We can't go on without a compositor.
     NS_RUNTIMEABORT("Couldn't OpenProcessHandle() to parent process.");
-    return nsnull;
+    return nullptr;
   }
   if (!child->Open(aTransport, handle, XRE_GetIOMessageLoop(),
                 AsyncChannel::Child)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return nsnull;
+    return nullptr;
   }
   // We release this ref in ActorDestroy().
   return sCompositor = child.forget().get();

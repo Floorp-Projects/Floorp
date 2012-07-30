@@ -116,14 +116,14 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
 NS_IMETHODIMP nsPrintProgress::CloseProgressDialog(bool forceClose)
 {
   m_closeProgress = true;
-  return OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, forceClose);
+  return OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, forceClose);
 }
 
 /* nsIPrompt GetPrompter (); */
 NS_IMETHODIMP nsPrintProgress::GetPrompter(nsIPrompt **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   if (! m_closeProgress && m_dialog)
     return m_dialog->GetPrompter(_retval);
@@ -141,7 +141,7 @@ NS_IMETHODIMP nsPrintProgress::GetProcessCanceledByUser(bool *aProcessCanceledBy
 NS_IMETHODIMP nsPrintProgress::SetProcessCanceledByUser(bool aProcessCanceledByUser)
 {
   m_processCanceled = aProcessCanceledByUser;
-  OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, false);
+  OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, false);
   return NS_OK;
 }
 
@@ -160,12 +160,12 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
   {
     m_listenerList->AppendElement(listener);
     if (m_closeProgress || m_processCanceled)
-      listener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
+      listener->OnStateChange(nullptr, nullptr, nsIWebProgressListener::STATE_STOP, 0);
     else
     {
-      listener->OnStatusChange(nsnull, nsnull, 0, m_pendingStatus.get());
+      listener->OnStatusChange(nullptr, nullptr, 0, m_pendingStatus.get());
       if (m_pendingStateFlags != -1)
-        listener->OnStateChange(nsnull, nsnull, m_pendingStateFlags, m_pendingStateValue);
+        listener->OnStateChange(nullptr, nullptr, m_pendingStateFlags, m_pendingStateValue);
     }
   }
     
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsPrintProgress::UnregisterListener(nsIWebProgressListener *listen
 NS_IMETHODIMP nsPrintProgress::DoneIniting()
 {
   if (m_observer) {
-    m_observer->Observe(nsnull, nsnull, nsnull);
+    m_observer->Observe(nullptr, nullptr, nullptr);
   }
   return NS_OK;
 }
@@ -315,7 +315,7 @@ nsresult nsPrintProgress::ReleaseListeners()
 
 NS_IMETHODIMP nsPrintProgress::ShowStatusString(const PRUnichar *status)
 {
-  return OnStatusChange(nsnull, nsnull, NS_OK, status);
+  return OnStatusChange(nullptr, nullptr, NS_OK, status);
 }
 
 /* void startMeteors (); */

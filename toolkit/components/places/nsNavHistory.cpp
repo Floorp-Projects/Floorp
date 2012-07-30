@@ -156,7 +156,7 @@ static const char* kObservedPrefs[] = {
 , PREF_FREC_DEFAULT_VISIT_BONUS
 , PREF_FREC_UNVISITED_BOOKMARK_BONUS
 , PREF_FREC_UNVISITED_TYPED_BONUS
-, nsnull
+, nullptr
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
@@ -258,9 +258,9 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
 nsNavHistory::nsNavHistory()
 : mBatchLevel(0)
-, mBatchDBTransaction(nsnull)
+, mBatchDBTransaction(nullptr)
 , mCachedNow(0)
-, mExpireNowTimer(nsnull)
+, mExpireNowTimer(nullptr)
 , mLastSessionID(0)
 , mHistoryEnabled(true)
 , mNumVisitsForFrecency(10)
@@ -283,7 +283,7 @@ nsNavHistory::~nsNavHistory()
   NS_ASSERTION(gHistoryService == this,
                "Deleting a non-singleton instance of the service");
   if (gHistoryService == this)
-    gHistoryService = nsnull;
+    gHistoryService = nullptr;
 }
 
 
@@ -916,7 +916,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
     // are expected to be added. Put detection of these items here.
     if (!query->SearchTerms().IsEmpty() ||
         !query->Domain().IsVoid() ||
-        query->Uri() != nsnull)
+        query->Uri() != nullptr)
       nonTimeBasedItems = true;
 
     if (! query->Domain().IsVoid())
@@ -998,7 +998,7 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
       nsCOMArray<nsNavHistoryQuery> queries;
       queries.AppendObject(query);
       nsCOMArray<nsNavHistoryResultNode> filteredSet;
-      nsresult rv = FilterResultSet(nsnull, inputSet, &filteredSet, queries, aOptions);
+      nsresult rv = FilterResultSet(nullptr, inputSet, &filteredSet, queries, aOptions);
       if (NS_FAILED(rv))
         continue;
       if (! filteredSet.Count())
@@ -1172,7 +1172,7 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
   NS_ENSURE_STATE(stmt);
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  nsresult rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
+  nsresult rv = stmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1422,7 +1422,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
       !FindLastVisit(aReferringURI, &referringVisitID, &referringTime, &referringSessionID)) {
     // The referrer is not in the database and is not the same as aURI, so it
     // must be added.
-    rv = AddVisit(aReferringURI, aTime - 1, nsnull, TRANSITION_LINK, false,
+    rv = AddVisit(aReferringURI, aTime - 1, nullptr, TRANSITION_LINK, false,
                   aSessionID, &referringVisitID);
     if (NS_FAILED(rv))
       referringVisitID = 0;
@@ -1452,7 +1452,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   if (newItem && (aIsRedirect || aTransitionType == TRANSITION_DOWNLOAD)) {
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (obsService)
-      obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+      obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
   }
 
   // Because we implement IHistory, we always have to notify about the visit.
@@ -2607,7 +2607,7 @@ nsNavHistory::EndUpdateBatch()
       DebugOnly<nsresult> rv = mBatchDBTransaction->Commit();
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Batch failed to commit transaction");
       delete mBatchDBTransaction;
-      mBatchDBTransaction = nsnull;
+      mBatchDBTransaction = nullptr;
     }
 
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -4401,7 +4401,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
                           nsNavHistoryResultNode** aResult)
 {
   NS_ASSERTION(aRow && aOptions && aResult, "Null pointer in RowToResult");
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   // URL
   nsCAutoString url;
@@ -5140,16 +5140,16 @@ nsNavHistory::GetCollation()
   // locale
   nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsILocaleService> ls(do_GetService(NS_LOCALESERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(ls, nsnull);
+  NS_ENSURE_TRUE(ls, nullptr);
   nsresult rv = ls->GetApplicationLocale(getter_AddRefs(locale));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   // collation
   nsCOMPtr<nsICollationFactory> cfact =
     do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
-  NS_ENSURE_TRUE(cfact, nsnull);
+  NS_ENSURE_TRUE(cfact, nullptr);
   rv = cfact->CreateCollation(locale, getter_AddRefs(mCollation));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return mCollation;
 }
@@ -5160,11 +5160,11 @@ nsNavHistory::GetBundle()
   if (!mBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
       services::GetStringBundleService();
-    NS_ENSURE_TRUE(bundleService, nsnull);
+    NS_ENSURE_TRUE(bundleService, nullptr);
     nsresult rv = bundleService->CreateBundle(
         "chrome://places/locale/places.properties",
         getter_AddRefs(mBundle));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
   }
   return mBundle;
 }
@@ -5175,11 +5175,11 @@ nsNavHistory::GetDateFormatBundle()
   if (!mDateFormatBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
       services::GetStringBundleService();
-    NS_ENSURE_TRUE(bundleService, nsnull);
+    NS_ENSURE_TRUE(bundleService, nullptr);
     nsresult rv = bundleService->CreateBundle(
         "chrome://global/locale/dateFormat.properties",
         getter_AddRefs(mDateFormatBundle));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
   }
   return mDateFormatBundle;
 }

@@ -267,7 +267,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   NS_ENSURE_ARG_POINTER(aResultCount);
   NS_ENSURE_ARG_POINTER(aOptions);
 
-  *aQueries = nsnull;
+  *aQueries = nullptr;
   *aResultCount = 0;
   nsCOMPtr<nsNavHistoryQueryOptions> options;
   nsCOMArray<nsNavHistoryQuery> queries;
@@ -303,7 +303,7 @@ nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
 {
   nsresult rv;
   aQueries->Clear();
-  *aOptions = nsnull;
+  *aOptions = nullptr;
 
   nsRefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
   if (! options)
@@ -466,7 +466,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     }
 
     // folders
-    PRInt64 *folders = nsnull;
+    PRInt64 *folders = nullptr;
     PRUint32 folderCount = 0;
     query->GetFolders(&folderCount, &folders);
     for (PRUint32 i = 0; i < folderCount; ++i) {
@@ -1100,7 +1100,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetUri(nsIURI* aUri)
 }
 NS_IMETHODIMP nsNavHistoryQuery::GetHasUri(bool* aHasUri)
 {
-  *aHasUri = (mUri != nsnull);
+  *aHasUri = (mUri != nullptr);
   return NS_OK;
 }
 
@@ -1158,7 +1158,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant **aTags)
     }
 
     rv = out->SetAsArray(nsIDataType::VTYPE_WCHAR_STR,
-                         nsnull,
+                         nullptr,
                          arrayLen,
                          reinterpret_cast<void *>(array));
     NS_Free(array);
@@ -1273,7 +1273,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetFolders(PRUint32 *aCount,
                                             PRInt64 **aFolders)
 {
   PRUint32 count = mFolders.Length();
-  PRInt64 *folders = nsnull;
+  PRInt64 *folders = nullptr;
   if (count > 0) {
     folders = static_cast<PRInt64*>
                          (nsMemory::Alloc(count * sizeof(PRInt64)));
@@ -1309,7 +1309,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(PRUint32* aCount,
                                                 PRUint32** aTransitions)
 {
   PRUint32 count = mTransitions.Length();
-  PRUint32* transitions = nsnull;
+  PRUint32* transitions = nullptr;
   if (count > 0) {
     transitions = reinterpret_cast<PRUint32*>
                   (NS_Alloc(count * sizeof(PRUint32)));
@@ -1341,7 +1341,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTransitions(const PRUint32* aTransitions,
 
 NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsNavHistoryQuery *clone = new nsNavHistoryQuery(*this);
   NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
@@ -1525,7 +1525,7 @@ nsNavHistoryQueryOptions::SetAsyncEnabled(bool aAsyncEnabled)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
 {
-  nsNavHistoryQueryOptions *clone = nsnull;
+  nsNavHistoryQueryOptions *clone = nullptr;
   nsresult rv = Clone(&clone);
   *aResult = clone;
   return rv;
@@ -1534,7 +1534,7 @@ nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
 nsresult
 nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsNavHistoryQueryOptions *result = new nsNavHistoryQueryOptions();
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;

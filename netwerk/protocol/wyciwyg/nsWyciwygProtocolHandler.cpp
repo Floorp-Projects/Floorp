@@ -94,7 +94,7 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 
   nsCOMPtr<nsIWyciwygChannel> channel;
   if (IsNeckoChild()) {
-    NS_ENSURE_TRUE(gNeckoChild != nsnull, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
 
     WyciwygChannelChild *wcc = static_cast<WyciwygChannelChild *>(
                                  gNeckoChild->SendPWyciwygChannelConstructor());

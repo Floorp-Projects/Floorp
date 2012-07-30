@@ -56,7 +56,7 @@ static const char *const sDeleteCommands[][2] = {
   // This deletes from the end of the previous word to the beginning of the
   // next word, but only if the caret is not in a word.
   // XXX need to implement in editor
-  { nsnull, nsnull } // WHITESPACE
+  { nullptr, nullptr } // WHITESPACE
 };
 
 static void
@@ -146,8 +146,8 @@ static const char *const sMoveCommands[][2][2] = {
     { "cmd_selectTop", "cmd_selectBottom" }
   },
   { // HORIZONTAL_PAGES (unsupported)
-    { nsnull, nsnull },
-    { nsnull, nsnull }
+    { nullptr, nullptr },
+    { nullptr, nullptr }
   }
 };
 
@@ -312,8 +312,8 @@ nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
   gtk_bindings_activate(GTK_OBJECT(mNativeTarget),
                         aKeyCode, GdkModifierType(modifiers));
 
-  gCurrentCallback = nsnull;
-  gCurrentCallbackData = nsnull;
+  gCurrentCallback = nullptr;
+  gCurrentCallbackData = nullptr;
 
   return gHandled;
 }

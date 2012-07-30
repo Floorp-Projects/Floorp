@@ -350,7 +350,7 @@ ShortcutResolver::Init()
                                 getter_AddRefs(mShellLink))) ||
         FAILED(mShellLink->QueryInterface(IID_IPersistFile,
                                           getter_AddRefs(mPersistFile)))) {
-        mShellLink = nsnull;
+        mShellLink = nullptr;
         return NS_ERROR_FAILURE;
     }
     return NS_OK;
@@ -366,7 +366,7 @@ ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
     MutexAutoLock lock(mLock);
 
     if (FAILED(mPersistFile->Load(in, STGM_READ)) ||
-        FAILED(mShellLink->Resolve(nsnull, SLR_NO_UI)) ||
+        FAILED(mShellLink->Resolve(nullptr, SLR_NO_UI)) ||
         FAILED(mShellLink->GetPath(out, MAX_PATH, NULL, SLGP_UNCPRIORITY)))
         return NS_ERROR_FAILURE;
     return NS_OK;
@@ -442,7 +442,7 @@ ShortcutResolver::SetShortcut(bool updateExisting,
     return NS_OK;
 }
 
-static ShortcutResolver * gResolver = nsnull;
+static ShortcutResolver * gResolver = nullptr;
 
 static nsresult NS_CreateShortcutResolver()
 {
@@ -456,7 +456,7 @@ static nsresult NS_CreateShortcutResolver()
 static void NS_DestroyShortcutResolver()
 {
     delete gResolver;
-    gResolver = nsnull;
+    gResolver = nullptr;
 }
 
 
@@ -636,7 +636,7 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
                                 NULL, flags, flag6, NULL);
 
     if (file == INVALID_HANDLE_VALUE) { 
-        *fd = nsnull;
+        *fd = nullptr;
         return ConvertWinError(GetLastError());
     }
 
@@ -721,7 +721,7 @@ OpenDir(const nsAFlatString &name, nsDir * *dir)
 {
     NS_ENSURE_ARG_POINTER(dir);
 
-    *dir = nsnull;
+    *dir = nullptr;
     if (name.Length() + 3 >= MAX_PATH)
         return NS_ERROR_FILE_NAME_TOO_LONG;
 
@@ -822,7 +822,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
 
         NS_DECL_ISUPPORTS
 
-        nsDirEnumerator() : mDir(nsnull)
+        nsDirEnumerator() : mDir(nullptr)
         {
         }
 
@@ -854,7 +854,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
         NS_IMETHOD HasMoreElements(bool *result)
         {
             nsresult rv;
-            if (mNext == nsnull && mDir)
+            if (mNext == nullptr && mDir)
             {
                 nsString name;
                 rv = ReadDir(mDir, PR_SKIP_BOTH, name);
@@ -881,7 +881,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
 
                 mNext = do_QueryInterface(file);
             }
-            *result = mNext != nsnull;
+            *result = mNext != nullptr;
             if (!*result) 
                 Close();
             return NS_OK;
@@ -894,23 +894,23 @@ class nsDirEnumerator : public nsISimpleEnumerator,
             rv = HasMoreElements(&hasMore);
             if (NS_FAILED(rv)) return rv;
 
-            *result = mNext;        // might return nsnull
+            *result = mNext;        // might return nullptr
             NS_IF_ADDREF(*result);
 
-            mNext = nsnull;
+            mNext = nullptr;
             return NS_OK;
         }
 
         NS_IMETHOD GetNextFile(nsIFile **result)
         {
-            *result = nsnull;
+            *result = nullptr;
             bool hasMore = false;
             nsresult rv = HasMoreElements(&hasMore);
             if (NS_FAILED(rv) || !hasMore)
                 return rv;
             *result = mNext;
             NS_IF_ADDREF(*result);
-            mNext = nsnull;
+            mNext = nullptr;
             return NS_OK;
         }
 
@@ -1638,7 +1638,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
 
     if (::GetFileVersionInfoW(path, 0, size, ver)) 
     {
-        LANGANDCODEPAGE* translate = nsnull;
+        LANGANDCODEPAGE* translate = nullptr;
         UINT pageCount;
         BOOL queryResult = ::VerQueryValueW(ver, L"\\VarFileInfo\\Translation", 
                                             (void**)&translate, &pageCount);
@@ -1655,7 +1655,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
                            NS_ConvertASCIItoUTF16(
                                nsDependentCString(aField)).get());
                 subBlock[MAX_PATH - 1] = 0;
-                LPVOID value = nsnull;
+                LPVOID value = nullptr;
                 UINT size;
                 queryResult = ::VerQueryValueW(ver, subBlock, &value, &size);
                 if (queryResult && value)
@@ -1938,7 +1938,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
                     newParentDir->GetTarget(target);
 
                     nsCOMPtr<nsIFile> realDest = new nsLocalFile();
-                    if (realDest == nsnull)
+                    if (realDest == nullptr)
                         return NS_ERROR_OUT_OF_MEMORY;
 
                     rv = realDest->InitWithPath(target);
@@ -2591,7 +2591,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 
     // A two-character path must be a drive such as C:, so it has no parent
     if (mWorkingPath.Length() == 2) {
-        *aParent = nsnull;
+        *aParent = nullptr;
         return NS_OK;
     }
 
@@ -2605,7 +2605,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 
     // A path of the form \\NAME is a top-level path and has no parent
     if (offset == 1 && mWorkingPath[0] == L'\\') {
-        *aParent = nsnull;
+        *aParent = nullptr;
         return NS_OK;
     }
 
@@ -3024,7 +3024,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 {
     nsresult rv;
 
-    *entries = nsnull;
+    *entries = nullptr;
     if (mWorkingPath.EqualsLiteral("\\\\.")) {
         nsDriveEnumerator *drives = new nsDriveEnumerator;
         if (!drives)
@@ -3040,7 +3040,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     }
 
     nsDirEnumerator* dirEnum = new nsDirEnumerator();
-    if (dirEnum == nsnull)
+    if (dirEnum == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(dirEnum);
     rv = dirEnum->Init(this);
@@ -3175,7 +3175,7 @@ nsresult
 NS_NewLocalFile(const nsAString &path, bool followLinks, nsIFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
-    if (file == nsnull)
+    if (file == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(file);
     
@@ -3346,7 +3346,7 @@ NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsIFile* *result
     nsAutoString buf;
     nsresult rv = NS_CopyNativeToUnicode(path, buf);
     if (NS_FAILED(rv)) {
-        *result = nsnull;
+        *result = nullptr;
         return rv;
     }
     return NS_NewLocalFile(buf, followLinks, result);
@@ -3451,7 +3451,7 @@ NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
      * mStartOfCurrentDrive is an iterator pointing at the first
      * character of the current drive. */
     if (*mStartOfCurrentDrive == L'\0') {
-        *aNext = nsnull;
+        *aNext = nullptr;
         return NS_OK;
     }
 

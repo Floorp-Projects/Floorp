@@ -15,7 +15,7 @@
 #include "nsBoxLayoutState.h"
 
 nsGridRow::nsGridRow():mIsBogus(false),
-                       mBox(nsnull), 
+                       mBox(nullptr), 
                        mFlex(-1),
                        mPref(-1),
                        mMin(-1),

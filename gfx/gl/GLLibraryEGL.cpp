@@ -24,7 +24,7 @@ static const char *sExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
-    nsnull
+    nullptr
 };
 
 #if defined(ANDROID)
@@ -69,10 +69,10 @@ LoadLibraryForEGLOnWindows(const nsAString& filename)
     nsCOMPtr<nsIFile> file;
 	nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
     if (NS_FAILED(rv))
-        return nsnull;
+        return nullptr;
 
     file->Append(filename);
-    PRLibrary* lib = nsnull;
+    PRLibrary* lib = nullptr;
     rv = file->Load(&lib);
     if (NS_FAILED(rv)) {
         nsPrintfCString msg("Failed to load %s - Expect EGL initialization to fail",
@@ -206,9 +206,9 @@ GLLibraryEGL::EnsureInitialized()
 
     if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nsnull } },
-            { (PRFuncPtr*) &mSymbols.fUnlockSurface, { "eglUnlockSurfaceKHR", nsnull } },
-            { nsnull, { nsnull } }
+            { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUnlockSurface, { "eglUnlockSurfaceKHR", nullptr } },
+            { nullptr, { nullptr } }
         };
 
         bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
@@ -219,15 +219,15 @@ GLLibraryEGL::EnsureInitialized()
 
             MarkExtensionUnsupported(KHR_lock_surface);
 
-            mSymbols.fLockSurface = nsnull;
-            mSymbols.fUnlockSurface = nsnull;
+            mSymbols.fLockSurface = nullptr;
+            mSymbols.fUnlockSurface = nullptr;
         }
     }
 
     if (IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle)) {
         GLLibraryLoader::SymLoadStruct d3dSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fQuerySurfacePointerANGLE, { "eglQuerySurfacePointerANGLE", nsnull } },
-            { nsnull, { nsnull } }
+            { (PRFuncPtr*) &mSymbols.fQuerySurfacePointerANGLE, { "eglQuerySurfacePointerANGLE", nullptr } },
+            { nullptr, { nullptr } }
         };
 
         bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
@@ -238,17 +238,17 @@ GLLibraryEGL::EnsureInitialized()
 
             MarkExtensionUnsupported(ANGLE_surface_d3d_texture_2d_share_handle);
 
-            mSymbols.fQuerySurfacePointerANGLE = nsnull;
+            mSymbols.fQuerySurfacePointerANGLE = nullptr;
         }
     }
 
     if (IsExtensionSupported(KHR_fence_sync)) {
         GLLibraryLoader::SymLoadStruct syncSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateSync,     { "eglCreateSyncKHR",     nsnull } },
-            { (PRFuncPtr*) &mSymbols.fDestroySync,    { "eglDestroySyncKHR",    nsnull } },
-            { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "eglClientWaitSyncKHR", nsnull } },
-            { (PRFuncPtr*) &mSymbols.fGetSyncAttrib,  { "eglGetSyncAttribKHR",  nsnull } },
-            { nsnull, { nsnull } }
+            { (PRFuncPtr*) &mSymbols.fCreateSync,     { "eglCreateSyncKHR",     nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDestroySync,    { "eglDestroySyncKHR",    nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "eglClientWaitSyncKHR", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSyncAttrib,  { "eglGetSyncAttribKHR",  nullptr } },
+            { nullptr, { nullptr } }
         };
 
         bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
@@ -259,10 +259,10 @@ GLLibraryEGL::EnsureInitialized()
 
             MarkExtensionUnsupported(KHR_fence_sync);
 
-            mSymbols.fCreateSync = nsnull;
-            mSymbols.fDestroySync = nsnull;
-            mSymbols.fClientWaitSync = nsnull;
-            mSymbols.fGetSyncAttrib = nsnull;
+            mSymbols.fCreateSync = nullptr;
+            mSymbols.fDestroySync = nullptr;
+            mSymbols.fClientWaitSync = nullptr;
+            mSymbols.fGetSyncAttrib = nullptr;
         }
     }
 
@@ -307,9 +307,9 @@ GLLibraryEGL::LoadConfigSensitiveSymbols()
 
     if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
         GLLibraryLoader::SymLoadStruct imageSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nsnull } },
-            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nsnull } },
-            { nsnull, { nsnull } }
+            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nullptr } },
+            { nullptr, { nullptr } }
         };
 
         bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
@@ -322,8 +322,8 @@ GLLibraryEGL::LoadConfigSensitiveSymbols()
             MarkExtensionUnsupported(KHR_image_base);
             MarkExtensionUnsupported(KHR_image_pixmap);
 
-            mSymbols.fCreateImage = nsnull;
-            mSymbols.fDestroyImage = nsnull;
+            mSymbols.fCreateImage = nullptr;
+            mSymbols.fDestroyImage = nullptr;
         }
     } else {
         MarkExtensionUnsupported(KHR_image_pixmap);

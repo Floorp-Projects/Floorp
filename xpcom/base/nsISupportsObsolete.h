@@ -71,7 +71,7 @@ _method(const char *aString)                   \
 {                                              \
     if (_member) PR_Free(_member);             \
     if (!aString)                              \
-      _member = nsnull;                        \
+      _member = nullptr;                        \
     else if (!(_member = PL_strdup(aString)))  \
       return NS_ERROR_OUT_OF_MEMORY;           \
     return NS_OK;                              \

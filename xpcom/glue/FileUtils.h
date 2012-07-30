@@ -6,7 +6,7 @@
 #ifndef mozilla_FileUtils_h
 #define mozilla_FileUtils_h
 
-#include "nscore.h" // nsnull
+#include "nscore.h" // nullptr
 
 #if defined(XP_UNIX) || defined(XP_OS2)
 # include <unistd.h>

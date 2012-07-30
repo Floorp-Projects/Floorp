@@ -62,7 +62,7 @@ CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
        (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
     return aFrame;
   if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
-    return nsnull;
+    return nullptr;
 
   for (nsIFrame* f = aFrame->GetFirstPrincipalChild(); f; f = f->GetNextSibling())
   {
@@ -70,7 +70,7 @@ CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
     if (r)
       return r;
   }
-  return nsnull;
+  return nullptr;
 }
 
 static nsLineBox*
@@ -84,11 +84,11 @@ FindContainingLine(nsIFrame* aFrame)
     {
       bool isValid;
       nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
-      return isValid ? iter.GetLine().get() : nsnull;
+      return isValid ? iter.GetLine().get() : nullptr;
     }
     aFrame = parent;
   }
-  return nsnull;
+  return nullptr;
 }
 
 static void
@@ -116,7 +116,7 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()
-: mPresShell(nsnull)
+: mPresShell(nullptr)
 , mBlinkRate(500)
 , mVisible(false)
 , mDrawn(false)
@@ -232,17 +232,17 @@ void nsCaret::Terminate()
   // a good drawing environment during teardown.
   
   KillTimer();
-  mBlinkTimer = nsnull;
+  mBlinkTimer = nullptr;
 
   // unregiser ourselves as a selection listener
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
   if (privateSelection)
     privateSelection->RemoveSelectionListener(this);
-  mDomSelectionWeak = nsnull;
-  mPresShell = nsnull;
+  mDomSelectionWeak = nullptr;
+  mPresShell = nullptr;
 
-  mLastContent = nsnull;
+  mLastContent = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -358,20 +358,20 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
   nsCOMPtr<nsIDOMNode> focusNode;
   nsresult rv = aSelection->GetFocusNode(getter_AddRefs(focusNode));
   if (NS_FAILED(rv) || !focusNode)
-    return nsnull;
+    return nullptr;
 
   PRInt32 focusOffset;
   rv = aSelection->GetFocusOffset(&focusOffset);
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
     
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(focusNode);
   if (!contentNode)
-    return nsnull;
+    return nullptr;
 
   nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
-    return nsnull;
+    return nullptr;
   PRUint8 bidiLevel = frameSelection->GetCaretBidiLevel();
   nsIFrame* frame;
   PRInt32 frameOffset;
@@ -379,7 +379,7 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
                                   frameSelection->GetHint(), bidiLevel,
                                   &frame, &frameOffset);
   if (NS_FAILED(rv) || !frame)
-    return nsnull;
+    return nullptr;
 
   GetGeometryForFrame(frame, frameOffset, aRect, aBidiIndicatorSize);
   return frame;
@@ -460,17 +460,17 @@ nsIFrame * nsCaret::GetCaretFrame(PRInt32 *aOffset)
 {
   // Return null if we're not drawn to prevent anybody from trying to draw us.
   if (!mDrawn)
-    return nsnull;
+    return nullptr;
 
   // Recompute the frame that we're supposed to draw in to guarantee that
   // we're not going to try to draw into a stale (dead) frame.
   PRInt32 offset;
-  nsIFrame *frame = nsnull;
+  nsIFrame *frame = nullptr;
   nsresult rv = GetCaretFrameForNodeOffset(mLastContent, mLastContentOffset,
                                            mLastHint, mLastBidiLevel, &frame,
                                            &offset);
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   if (aOffset) {
     *aOffset = offset;
@@ -681,7 +681,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   if (!contentNode)
     return false;
 
-  nsIFrame* theFrame = nsnull;
+  nsIFrame* theFrame = nullptr;
   PRInt32   theFrameOffset = 0;
 
   nsresult rv = GetCaretFrameForNodeOffset(contentNode, aOffset, aFrameHint, aBidiLevel,
@@ -748,7 +748,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!frameSelection)
     return NS_ERROR_FAILURE;
 
-  nsIFrame* theFrame = nsnull;
+  nsIFrame* theFrame = nullptr;
   PRInt32   theFrameOffset = 0;
 
   theFrame = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset,
@@ -1066,7 +1066,7 @@ void nsCaret::DrawCaret(bool aInvalidate)
     if (!mLastContent->IsInDoc() ||
         presShell->GetDocument() != mLastContent->GetCurrentDoc())
     {
-      mLastContent = nsnull;
+      mLastContent = nullptr;
       mDrawn = false;
       return;
     }
@@ -1164,8 +1164,8 @@ nsCaret::GetFrameSelection()
 {
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryReferent(mDomSelectionWeak));
   if (!privateSelection)
-    return nsnull;
-  nsFrameSelection* frameSelection = nsnull;
+    return nullptr;
+  nsFrameSelection* frameSelection = nullptr;
   privateSelection->GetFrameSelection(&frameSelection);
   return frameSelection;
 }

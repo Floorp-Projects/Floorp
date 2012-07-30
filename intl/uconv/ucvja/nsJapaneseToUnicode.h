@@ -81,9 +81,9 @@ public:
         mData = 0;
         mRunLength = 0;
         G2charset = G2_unknown;
-        mGB2312Decoder = nsnull;
-        mEUCKRDecoder = nsnull;
-        mISO88597Decoder = nsnull;
+        mGB2312Decoder = nullptr;
+        mEUCKRDecoder = nullptr;
+        mISO88597Decoder = nullptr;
      }
  virtual ~nsISO2022JPToUnicodeV2()
      {

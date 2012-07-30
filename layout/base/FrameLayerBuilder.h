@@ -66,7 +66,7 @@ extern PRUint8 gContainerLayerPresContext;
 static inline FrameLayerBuilder *GetLayerBuilderForManager(layers::LayerManager* aManager)
 {
   LayerManagerLayerBuilder *data = static_cast<LayerManagerLayerBuilder*>(aManager->GetUserData(&gLayerManagerLayerBuilder));
-  return data ? data->mLayerBuilder : nsnull;
+  return data ? data->mLayerBuilder : nullptr;
 }
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
@@ -121,7 +121,7 @@ public:
   typedef layers::LayerManager LayerManager;
 
   FrameLayerBuilder() :
-    mRetainingManager(nsnull),
+    mRetainingManager(nullptr),
     mDetectedDOMModification(false),
     mInvalidateAllLayers(false),
     mContainerLayerGeneration(0),
@@ -539,7 +539,7 @@ protected:
   static PLDHashOperator RemoveDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
                                                        void* aClosure)
   {
-    return UpdateDisplayItemDataForFrame(aEntry, nsnull);
+    return UpdateDisplayItemDataForFrame(aEntry, nullptr);
   }
 
   /**
@@ -572,7 +572,7 @@ public:
   class ThebesLayerItemsEntry : public nsPtrHashKey<ThebesLayer> {
   public:
     ThebesLayerItemsEntry(const ThebesLayer *key) :
-        nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nsnull),
+        nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nullptr),
         mHasExplicitLastPaintOffset(false), mCommonClipCount(0) {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)

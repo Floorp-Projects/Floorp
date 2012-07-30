@@ -39,7 +39,7 @@ bool AllocateSharedBuffer(Allocator* protocol,
   if (!back)
     return false;
 
-  *aBuffer = nsnull;
+  *aBuffer = nullptr;
   back.swap(*aBuffer);
   return true;
 }

@@ -19,7 +19,7 @@ nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
       mTargetVariable(aTargetVariable),
       mIgnoreCase(aIgnoreCase),
       mNegate(aNegate),
-      mNext(nsnull)
+      mNext(nullptr)
 {
     SetRelation(aRelation);
 
@@ -35,7 +35,7 @@ nsTemplateCondition::nsTemplateCondition(nsIAtom* aSourceVariable,
     : mSourceVariable(aSourceVariable),
       mIgnoreCase(aIgnoreCase),
       mNegate(aNegate),
-      mNext(nsnull)
+      mNext(nullptr)
 {
     SetRelation(aRelation);
 
@@ -67,7 +67,7 @@ nsTemplateCondition::nsTemplateCondition(const nsAString& aSource,
       mTargetVariable(aTargetVariable),
       mIgnoreCase(aIgnoreCase),
       mNegate(aNegate),
-      mNext(nsnull)
+      mNext(nullptr)
 {
     SetRelation(aRelation);
 
@@ -257,8 +257,8 @@ nsTemplateRule::nsTemplateRule(nsIContent* aRuleNode,
                                nsTemplateQuerySet* aQuerySet)
         : mQuerySet(aQuerySet),
           mAction(aAction),
-          mBindings(nsnull),
-          mConditions(nsnull)
+          mBindings(nullptr),
+          mConditions(nullptr)
 {
     MOZ_COUNT_CTOR(nsTemplateRule);
     mRuleNode = do_QueryInterface(aRuleNode);
@@ -268,8 +268,8 @@ nsTemplateRule::nsTemplateRule(const nsTemplateRule& aOtherRule)
         : mQuerySet(aOtherRule.mQuerySet),
           mRuleNode(aOtherRule.mRuleNode),
           mAction(aOtherRule.mAction),
-          mBindings(nsnull),
-          mConditions(nsnull)
+          mBindings(nullptr),
+          mConditions(nullptr)
 {
     MOZ_COUNT_CTOR(nsTemplateRule);
 }
@@ -338,7 +338,7 @@ nsTemplateRule::HasBinding(nsIAtom* aSourceVariable,
                            nsAString& aExpr,
                            nsIAtom* aTargetVariable) const
 {
-    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
+    for (Binding* binding = mBindings; binding != nullptr; binding = binding->mNext) {
         if ((binding->mSourceVariable == aSourceVariable) &&
             (binding->mExpr.Equals(aExpr)) &&
             (binding->mTargetVariable == aTargetVariable))
@@ -370,7 +370,7 @@ nsTemplateRule::AddBinding(nsIAtom* aSourceVariable,
 
     newbinding->mSourceVariable = aSourceVariable;
     newbinding->mTargetVariable = aTargetVariable;
-    newbinding->mParent         = nsnull;
+    newbinding->mParent         = nullptr;
 
     newbinding->mExpr.Assign(aExpr);
 

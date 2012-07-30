@@ -464,7 +464,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         return NS_ERROR_FAILURE;
 
     nsresult rv = NS_OK;
-    AutoFree buffer = nsnull;
+    AutoFree buffer = nullptr;
     PRUint32 bufLen = 0, read = 0;
 
     NS_ASSERTION(request, "multimixed converter needs a request");
@@ -530,7 +530,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         }
     }
 
-    char *token = nsnull;
+    char *token = nullptr;
 
     if (mProcessingHeaders) {
         // we were not able to process all the headers
@@ -646,7 +646,7 @@ NS_IMETHODIMP
 nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // we're assuming the content-type is available at this stage
     NS_ASSERTION(mToken.IsEmpty(), "a second on start???");
-    const char *bndry = nsnull;
+    const char *bndry = nullptr;
     nsCAutoString delimiter;
     nsresult rv = NS_OK;
     mContext = ctxt;
@@ -710,7 +710,7 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             // don't bother checking the return value here, if the send failed
             // we're done anyway as we're in the OnStop() callback.
             free(mBuffer);
-            mBuffer = nsnull;
+            mBuffer = nullptr;
             mBufLen = 0;
         }
         (void) SendStop(aStatus);
@@ -738,7 +738,7 @@ nsMultiMixedConv::nsMultiMixedConv() :
     mTokenLen           = 0;
     mNewPart            = true;
     mContentLength      = LL_MAXUINT;
-    mBuffer             = nsnull;
+    mBuffer             = nullptr;
     mBufLen             = 0;
     mProcessingHeaders  = false;
     mByteRangeStart     = 0;
@@ -751,7 +751,7 @@ nsMultiMixedConv::~nsMultiMixedConv() {
     NS_ASSERTION(!mBuffer, "all buffered data should be gone");
     if (mBuffer) {
         free(mBuffer);
-        mBuffer = nsnull;
+        mBuffer = nullptr;
     }
 }
 
@@ -827,7 +827,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     // Add the new channel to the load group (if any)
     if (loadGroup) {
-        rv = loadGroup->AddRequest(mPartChannel, nsnull);
+        rv = loadGroup->AddRequest(mPartChannel, nullptr);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -911,7 +911,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     // NOTE: this data must be ascii.
     // NOTE: aPtr is NOT null terminated!
     nsresult rv = NS_OK;
-    char *cursor = aPtr, *newLine = nsnull;
+    char *cursor = aPtr, *newLine = nullptr;
     PRUint32 cursorLen = aLen;
     bool done = false;
     PRUint32 lineFeedIncrement = 1;
@@ -1018,7 +1018,7 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
 
     if (!(token && aCursor && *token)) {
         NS_WARNING("bad data");
-        return nsnull;
+        return nullptr;
     }
 
     for (; aLen >= mTokenLen; aCursor++, aLen--) {
@@ -1038,13 +1038,13 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
         }
     }
 
-    return nsnull;
+    return nullptr;
 }
 
 nsresult
 NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
 {
-    NS_PRECONDITION(aMultiMixedConv != nsnull, "null ptr");
+    NS_PRECONDITION(aMultiMixedConv != nullptr, "null ptr");
     if (! aMultiMixedConv)
         return NS_ERROR_NULL_POINTER;
 

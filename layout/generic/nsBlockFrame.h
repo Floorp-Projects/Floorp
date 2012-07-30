@@ -193,7 +193,7 @@ public:
 
   // Clear out line cursor because we're disturbing the lines (i.e., Reflow)
   void ClearLineCursor();
-  // Get the first line that might contain y-coord 'y', or nsnull if you must search
+  // Get the first line that might contain y-coord 'y', or nullptr if you must search
   // all lines. If nonnull is returned then we guarantee that the lines'
   // combinedArea.ys and combinedArea.yMosts are non-decreasing.
   // The actual line returned might not contain 'y', but if not, it is guaranteed
@@ -243,7 +243,7 @@ public:
   }
 
   /**
-   * @return the bullet frame or nsnull if we don't have one.
+   * @return the bullet frame or nullptr if we don't have one.
    */
   nsBulletFrame* GetBullet() const {
     nsBulletFrame* outside = GetOutsideBullet();
@@ -361,10 +361,10 @@ protected:
 #endif
 #endif
 
-  NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nullptr)
   nsLineBox* GetLineCursor() {
     return (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR) ?
-      static_cast<nsLineBox*>(Properties().Get(LineCursorProperty())) : nsnull;
+      static_cast<nsLineBox*>(Properties().Get(LineCursorProperty())) : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
@@ -643,7 +643,7 @@ protected:
   /**
    * Pull a frame from the next available location (one of our lines or
    * one of our next-in-flows lines).
-   * @return the pulled frame or nsnull
+   * @return the pulled frame or nullptr
    */
   nsIFrame* PullFrame(nsBlockReflowState& aState,
                       line_iterator       aLine);
@@ -658,7 +658,7 @@ protected:
    * it dirty) and the code at the top of ReflowLine empties the
    * array. So eventually, it will be removed, just not right away.
    *
-   * @return the pulled frame or nsnull
+   * @return the pulled frame or nullptr
    */
   nsIFrame* PullFrameFrom(nsBlockReflowState&  aState,
                           nsLineBox*           aLine,
@@ -754,12 +754,12 @@ protected:
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
 
   /**
-   * @return the inside bullet frame or nsnull if we don't have one.
+   * @return the inside bullet frame or nullptr if we don't have one.
    */
   nsBulletFrame* GetInsideBullet() const;
 
   /**
-   * @return the outside bullet frame or nsnull if we don't have one.
+   * @return the outside bullet frame or nullptr if we don't have one.
    */
   nsBulletFrame* GetOutsideBullet() const;
 

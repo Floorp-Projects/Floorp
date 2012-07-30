@@ -337,28 +337,28 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::width,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        { nsnull },
+        { nullptr },
         GetWidth
     },
     {
         &nsGkAtoms::height,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        { nsnull },
+        { nullptr },
         GetHeight
     },
     {
         &nsGkAtoms::deviceWidth,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        { nsnull },
+        { nullptr },
         GetDeviceWidth
     },
     {
         &nsGkAtoms::deviceHeight,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eLength,
-        { nsnull },
+        { nullptr },
         GetDeviceHeight
     },
     {
@@ -372,42 +372,42 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::aspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        { nsnull },
+        { nullptr },
         GetAspectRatio
     },
     {
         &nsGkAtoms::deviceAspectRatio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eIntRatio,
-        { nsnull },
+        { nullptr },
         GetDeviceAspectRatio
     },
     {
         &nsGkAtoms::color,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        { nsnull },
+        { nullptr },
         GetColor
     },
     {
         &nsGkAtoms::colorIndex,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        { nsnull },
+        { nullptr },
         GetColorIndex
     },
     {
         &nsGkAtoms::monochrome,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        { nsnull },
+        { nullptr },
         GetMonochrome
     },
     {
         &nsGkAtoms::resolution,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eResolution,
-        { nsnull },
+        { nullptr },
         GetResolution
     },
     {
@@ -421,7 +421,7 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::grid,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,
-        { nsnull },
+        { nullptr },
         GetGrid
     },
 
@@ -430,7 +430,7 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::_moz_device_pixel_ratio,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eFloat,
-        { nsnull },
+        { nullptr },
         GetDevicePixelRatio
     },
     {
@@ -444,7 +444,7 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::_moz_is_resource_document,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eBoolInteger,
-        { nsnull },
+        { nullptr },
         GetIsResourceDocument
     },
     {
@@ -556,15 +556,15 @@ nsMediaFeatures::features[] = {
         &nsGkAtoms::_moz_windows_theme,
         nsMediaFeature::eMinMaxNotAllowed,
         nsMediaFeature::eIdent,
-        { nsnull },
+        { nullptr },
         GetWindowsTheme
     },
     // Null-mName terminator:
     {
-        nsnull,
+        nullptr,
         nsMediaFeature::eMinMaxAllowed,
         nsMediaFeature::eInteger,
-        { nsnull },
-        nsnull
+        { nullptr },
+        nullptr
     },
 };

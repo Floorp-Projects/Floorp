@@ -470,7 +470,7 @@ public:
   virtual ~LayerOGL() { }
 
   virtual LayerOGL *GetFirstChildOGL() {
-    return nsnull;
+    return nullptr;
   }
 
   /* Do NOT call this from the generic LayerOGL destructor.  Only from the

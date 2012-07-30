@@ -159,8 +159,8 @@ nsIncrementalDownload::nsIncrementalDownload()
   , mIsPending(false)
   , mDidOnStartRequest(false)
   , mLastProgressUpdate(0)
-  , mRedirectCallback(nsnull)
-  , mNewRedirectChannel(nsnull)
+  , mRedirectCallback(nullptr)
+  , mNewRedirectChannel(nullptr)
 {
 }
 
@@ -217,8 +217,8 @@ nsIncrementalDownload::CallOnStopRequest()
   mIsPending = false;
 
   mObserver->OnStopRequest(this, mObserverContext, mStatus);
-  mObserver = nsnull;
-  mObserverContext = nsnull;
+  mObserver = nullptr;
+  mObserverContext = nullptr;
 }
 
 nsresult
@@ -246,8 +246,8 @@ nsIncrementalDownload::ProcessTimeout()
   // Fetch next chunk
   
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI, nsnull,
-                              nsnull, this, mLoadFlags);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI, nullptr,
+                              nullptr, this, mLoadFlags);
   if (NS_FAILED(rv))
     return rv;
 
@@ -273,7 +273,7 @@ nsIncrementalDownload::ProcessTimeout()
       return rv;
   }
 
-  rv = channel->AsyncOpen(this, nsnull);
+  rv = channel->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))
     return rv;
 
@@ -448,7 +448,7 @@ NS_IMETHODIMP
 nsIncrementalDownload::GetDestination(nsIFile **result)
 {
   if (!mDest) {
-    *result = nsnull;
+    *result = nullptr;
     return NS_OK;
   }
   // Return a clone of mDest so that callers may modify the resulting nsIFile
@@ -534,7 +534,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     // we'll eventually give up.
     if (code == 200) {
       if (mInterval) {
-        mChannel = nsnull;
+        mChannel = nullptr;
         if (++mNonPartialCount > MAX_RETRY_COUNT) {
           NS_WARNING("unable to fetch a byte range; giving up");
           return NS_ERROR_FAILURE;
@@ -592,7 +592,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
       }
       // Need to truncate (or create, if it doesn't exist) the file since we
       // are downloading the whole thing.
-      WriteToFile(mDest, nsnull, 0, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+      WriteToFile(mDest, nullptr, 0, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
       mCurrentSize = 0;
     }
 
@@ -640,12 +640,12 @@ nsIncrementalDownload::OnStopRequest(nsIRequest *request,
     if (NS_SUCCEEDED(mStatus))
       mStatus = FlushChunk();
 
-    mChunk = nsnull;  // deletes memory
+    mChunk = nullptr;  // deletes memory
     mChunkLen = 0;
     UpdateProgress();
   }
 
-  mChannel = nsnull;
+  mChannel = nullptr;
 
   // Notify listener if we hit an error or finished
   if (NS_FAILED(mStatus) || mCurrentSize == mTotalSize) {
@@ -703,7 +703,7 @@ nsIncrementalDownload::Observe(nsISupports *subject, const char *topic,
     CallOnStopRequest();
   }
   else if (strcmp(topic, NS_TIMER_CALLBACK_TOPIC) == 0) {
-    mTimer = nsnull;
+    mTimer = nullptr;
     nsresult rv = ProcessTimeout();
     if (NS_FAILED(rv))
       Cancel(rv);
@@ -780,8 +780,8 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   if (sink) {
     rv = sink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, this);
     if (NS_FAILED(rv)) {
-        mRedirectCallback = nsnull;
-        mNewRedirectChannel = nsnull;
+        mRedirectCallback = nullptr;
+        mNewRedirectChannel = nullptr;
     }
     return rv;
   }
@@ -800,8 +800,8 @@ nsIncrementalDownload::OnRedirectVerifyCallback(nsresult result)
     mChannel = mNewRedirectChannel;
 
   mRedirectCallback->OnRedirectVerifyCallback(result);
-  mRedirectCallback = nsnull;
-  mNewRedirectChannel = nsnull;
+  mRedirectCallback = nullptr;
+  mNewRedirectChannel = nullptr;
   return NS_OK;
 }
 

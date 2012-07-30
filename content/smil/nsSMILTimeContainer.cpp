@@ -9,7 +9,7 @@
 
 nsSMILTimeContainer::nsSMILTimeContainer()
 :
-  mParent(nsnull),
+  mParent(nullptr),
   mCurrentTime(0L),
   mParentOffset(0L),
   mPauseStart(0L),

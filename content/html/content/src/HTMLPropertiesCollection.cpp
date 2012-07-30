@@ -29,8 +29,8 @@ TraverseNamedProperties(const nsAString& aKey, PropertyNodeList* aEntry, void* a
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLPropertiesCollection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLPropertiesCollection)
-  // SetDocument(nsnull) ensures that we remove ourselves as a mutation observer
-  tmp->SetDocument(nsnull);
+  // SetDocument(nullptr) ensures that we remove ourselves as a mutation observer
+  tmp->SetDocument(nullptr);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNames)
   tmp->mNamedItemEntries.Clear();
@@ -432,8 +432,8 @@ PropertyNodeList::WrapObject(JSContext *cx, JSObject *scope,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PropertyNodeList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PropertyNodeList)
-  // SetDocument(nsnull) ensures that we remove ourselves as a mutation observer
-  tmp->SetDocument(nsnull);
+  // SetDocument(nullptr) ensures that we remove ourselves as a mutation observer
+  tmp->SetDocument(nullptr);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCollection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)

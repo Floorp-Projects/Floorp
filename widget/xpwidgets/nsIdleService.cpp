@@ -82,14 +82,14 @@ nsIdleServiceDaily::Observe(nsISupports *,
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   NS_ENSURE_STATE(observerService);
-  (void)observerService->NotifyObservers(nsnull,
+  (void)observerService->NotifyObservers(nullptr,
                                          OBSERVER_TOPIC_IDLE_DAILY,
-                                         nsnull);
+                                         nullptr);
 
   // Notify the category observers.
   const nsCOMArray<nsIObserver> &entries = mCategoryObservers.GetEntries();
   for (PRInt32 i = 0; i < entries.Count(); ++i) {
-    (void)entries[i]->Observe(nsnull, OBSERVER_TOPIC_IDLE_DAILY, nsnull);
+    (void)entries[i]->Observe(nullptr, OBSERVER_TOPIC_IDLE_DAILY, nullptr);
   }
 
   // Stop observing idle for today.
@@ -104,7 +104,7 @@ nsIdleServiceDaily::Observe(nsISupports *,
   // any circumstances.
   nsIPrefService* prefs = Preferences::GetService();
   if (prefs) {
-    prefs->SavePrefFile(nsnull);
+    prefs->SavePrefFile(nullptr);
   }
 
 #ifdef ANDROID
@@ -150,7 +150,7 @@ nsIdleServiceDaily::Init()
     __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback started");
 #endif
     // Wait for the user to become idle, so we can do todays idle tasks.
-    DailyCallback(nsnull, this);
+    DailyCallback(nullptr, this);
   }
   else {
 #ifdef ANDROID
@@ -180,7 +180,7 @@ nsIdleServiceDaily::~nsIdleServiceDaily()
 {
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
 }
 
@@ -337,7 +337,7 @@ nsIdleService::~nsIdleService()
 
 
   MOZ_ASSERT(gIdleService == this);
-  gIdleService = nsnull;
+  gIdleService = nullptr;
 }
 
 NS_IMPL_ISUPPORTS2(nsIdleService, nsIIdleService, nsIIdleServiceInternal)

@@ -43,14 +43,14 @@ mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
                                             Bubbles aBubbles,
                                             Cancelable aCancelable)
 {
-  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nsnull, nsnull));
+  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nullptr, nullptr));
   nsresult rv = event->InitEvent(aType,
                                  aBubbles == eDoesBubble ? true : false,
                                  aCancelable == eCancelable ? true : false);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return event.forget();
 }
@@ -64,10 +64,10 @@ IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
   nsRefPtr<IDBVersionChangeEvent> event(new IDBVersionChangeEvent());
 
   nsresult rv = event->InitEvent(aType, false, false);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   rv = event->SetTrusted(true);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   event->mOldVersion = aOldVersion;
   event->mNewVersion = aNewVersion;
@@ -86,7 +86,7 @@ IDBVersionChangeEvent::CreateRunnableInternal(const nsAString& aType,
 {
   nsRefPtr<nsDOMEvent> event =
     CreateInternal(aType, aOldVersion, aNewVersion);
-  NS_ENSURE_TRUE(event, nsnull);
+  NS_ENSURE_TRUE(event, nullptr);
 
   nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
   return runnable.forget();

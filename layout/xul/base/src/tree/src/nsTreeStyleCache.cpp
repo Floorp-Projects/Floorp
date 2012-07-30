@@ -26,7 +26,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   if (!mTransitionTable) {
     // Automatic miss. Build the table
     mTransitionTable =
-      new nsObjectHashtable(nsnull, nsnull, DeleteDFAState, nsnull);
+      new nsObjectHashtable(nullptr, nullptr, DeleteDFAState, nullptr);
   }
 
   // The first transition is always made off the supplied pseudo-element.
@@ -55,7 +55,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
   // We're in a final state.
   // Look up our style context for this state.
-  nsStyleContext* result = nsnull;
+  nsStyleContext* result = nullptr;
   if (mCache)
     result = static_cast<nsStyleContext*>(mCache->Get(currState));
   if (!result) {
@@ -66,7 +66,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {
-      mCache = new nsObjectHashtable(nsnull, nsnull, ReleaseStyleContext, nsnull);
+      mCache = new nsObjectHashtable(nullptr, nullptr, ReleaseStyleContext, nullptr);
     }
     mCache->Put(currState, result);
   }

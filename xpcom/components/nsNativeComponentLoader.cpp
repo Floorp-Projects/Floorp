@@ -196,7 +196,7 @@ PLDHashOperator
 nsNativeModuleLoader::ReleaserFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-    aLoadData.module = nsnull;
+    aLoadData.module = nullptr;
     return PL_DHASH_NEXT;
 }
 
@@ -237,6 +237,6 @@ nsNativeModuleLoader::UnloadLibraries()
 {
     NS_ASSERTION(NS_IsMainThread(), "Shutdown not on main thread?");
 
-    mLibraries.Enumerate(ReleaserFunc, nsnull);
-    mLibraries.Enumerate(UnloaderFunc, nsnull);
+    mLibraries.Enumerate(ReleaserFunc, nullptr);
+    mLibraries.Enumerate(UnloaderFunc, nullptr);
 }

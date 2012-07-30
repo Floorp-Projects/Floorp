@@ -78,7 +78,7 @@ struct retrieval_context
     retrieval_context()
       : completed(false),
         timed_out(false),
-        data(nsnull)
+        data(nullptr)
     { }
 };
 
@@ -347,7 +347,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                 length = selectionData->length;
                 // Special case text/html since we can convert into UCS2
                 if (!strcmp(flavorStr, kHTMLMime)) {
-                    PRUnichar* htmlBody= nsnull;
+                    PRUnichar* htmlBody= nullptr;
                     PRInt32 htmlBodyLen = 0;
                     // Convert text/html into our unicode format
                     ConvertHTMLtoUCS2((guchar *)selectionData->data, length,
@@ -391,16 +391,16 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
     if (aWhichClipboard == kSelectionClipboard) {
         if (mSelectionOwner) {
             mSelectionOwner->LosingOwnership(mSelectionTransferable);
-            mSelectionOwner = nsnull;
+            mSelectionOwner = nullptr;
         }
-        mSelectionTransferable = nsnull;
+        mSelectionTransferable = nullptr;
     }
     else {
         if (mGlobalOwner) {
             mGlobalOwner->LosingOwnership(mGlobalTransferable);
-            mGlobalOwner = nsnull;
+            mGlobalOwner = nullptr;
         }
-        mGlobalTransferable = nsnull;
+        mGlobalTransferable = nullptr;
     }
 
     return NS_OK;
@@ -609,7 +609,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         return;
     }
 
-    void *primitive_data = nsnull;
+    void *primitive_data = nullptr;
     nsPrimitiveHelpers::CreateDataFromPrimitive(target_name, item,
                                                 &primitive_data, len);
 
@@ -951,7 +951,7 @@ wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
                                    &context);
 
     if (!wait_for_retrieval(clipboard, &context)) {
-        return nsnull;
+        return nullptr;
     }
 
     return static_cast<GtkSelectionData *>(context.data);
@@ -978,7 +978,7 @@ wait_for_text(GtkClipboard *clipboard)
     gtk_clipboard_request_text(clipboard, clipboard_text_received, &context);
 
     if (!wait_for_retrieval(clipboard, &context)) {
-        return nsnull;
+        return nullptr;
     }
 
     return static_cast<gchar *>(context.data);

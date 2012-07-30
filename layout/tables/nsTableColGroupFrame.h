@@ -180,7 +180,7 @@ public:
     */
   static void ResetColIndices(nsIFrame*       aFirstColGroup,
                               PRInt32         aFirstColIndex,
-                              nsIFrame*       aStartColFrame = nsnull);
+                              nsIFrame*       aStartColFrame = nullptr);
 
   /**
    * Gets inner border widths before collapsing with cell borders

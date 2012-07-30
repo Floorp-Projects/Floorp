@@ -61,7 +61,7 @@ public:
     if (mCanceled)
       return NS_OK;
 
-    mInstance->HandleEvent(&mEvent, nsnull);
+    mInstance->HandleEvent(&mEvent, nullptr);
     mInstance->PopPostedEvent(this);
     return NS_OK;
   }
@@ -73,7 +73,7 @@ private:
   bool mCanceled;
 };
 
-static nsRefPtr<GLContext> sPluginContext = nsnull;
+static nsRefPtr<GLContext> sPluginContext = nullptr;
 
 static bool EnsureGLContext()
 {
@@ -81,7 +81,7 @@ static bool EnsureGLContext()
     sPluginContext = GLContextProvider::CreateOffscreen(gfxIntSize(16, 16));
   }
 
-  return sPluginContext != nsnull;
+  return sPluginContext != nullptr;
 }
 
 class SharedPluginTexture {
@@ -96,7 +96,7 @@ public:
   ~SharedPluginTexture()
   {
     // This will be destroyed in the compositor (as it normally is)
-    mCurrentHandle = nsnull;
+    mCurrentHandle = nullptr;
   }
 
   TextureInfo Lock()
@@ -130,12 +130,12 @@ public:
       return mCurrentHandle;
 
     if (!EnsureGLContext())
-      return nsnull;
+      return nullptr;
 
     mNeedNewImage = false;
 
     if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
-      return nsnull;
+      return nullptr;
 
     mCurrentHandle = sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, (void*)mTextureInfo.mTexture, GLContext::TextureID);
 
@@ -182,10 +182,10 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
     mCached(false),
     mUsesDOMForCursor(false),
     mInPluginInitCall(false),
-    mPlugin(nsnull),
-    mMIMEType(nsnull),
-    mOwner(nsnull),
-    mCurrentPluginEvent(nsnull),
+    mPlugin(nullptr),
+    mMIMEType(nullptr),
+    mOwner(nullptr),
+    mCurrentPluginEvent(nullptr),
 #if defined(MOZ_X11) || defined(XP_WIN) || defined(XP_MACOSX)
     mUsePluginLayersPref(true)
 #else
@@ -207,7 +207,7 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
 
   if (mMIMEType) {
     PR_Free((void *)mMIMEType);
-    mMIMEType = nsnull;
+    mMIMEType = nullptr;
   }
 }
 
@@ -215,18 +215,18 @@ void
 nsNPAPIPluginInstance::Destroy()
 {
   Stop();
-  mPlugin = nsnull;
+  mPlugin = nullptr;
 
 #if MOZ_WIDGET_ANDROID
   if (mContentSurface)
-    mContentSurface->SetFrameAvailableCallback(nsnull);
+    mContentSurface->SetFrameAvailableCallback(nullptr);
   
-  mContentTexture = nsnull;
-  mContentSurface = nsnull;
+  mContentTexture = nullptr;
+  mContentSurface = nullptr;
 
   std::map<void*, VideoInfo*>::iterator it;
   for (it = mVideos.begin(); it != mVideos.end(); it++) {
-    it->second->mSurfaceTexture->SetFrameAvailableCallback(nsnull);
+    it->second->mSurfaceTexture->SetFrameAvailableCallback(nullptr);
     delete it->second;
   }
   mVideos.clear();
@@ -342,12 +342,12 @@ nsNPAPIPluginInstance::GetDOMWindow()
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));
   if (!owner)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIDocument> doc;
   owner->GetDocument(getter_AddRefs(doc));
   if (!doc)
-    return nsnull;
+    return nullptr;
 
   nsPIDOMWindow *window = doc->GetWindow();
   NS_IF_ADDREF(window);
@@ -424,8 +424,8 @@ nsNPAPIPluginInstance::Start()
   PluginDestructionGuard guard(this);
 
   PRUint16 count = 0;
-  const char* const* names = nsnull;
-  const char* const* values = nsnull;
+  const char* const* names = nullptr;
+  const char* const* values = nullptr;
   nsPluginTagType tagtype;
   nsresult rv = GetTagType(&tagtype);
   if (NS_SUCCEEDED(rv)) {
@@ -440,8 +440,8 @@ nsNPAPIPluginInstance::Start()
     // see bug 111008 for details
     if (tagtype != nsPluginTagType_Embed) {
       PRUint16 pcount = 0;
-      const char* const* pnames = nsnull;
-      const char* const* pvalues = nsnull;    
+      const char* const* pnames = nullptr;
+      const char* const* pvalues = nullptr;    
       if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
         // Android expects an empty string as the separator instead of null
 #ifdef MOZ_WIDGET_ANDROID
@@ -711,7 +711,7 @@ nsresult nsNPAPIPluginInstance::HandleEvent(void* event, PRInt16* result)
 
     if (result)
       *result = tmpResult;
-    mCurrentPluginEvent = nsnull;
+    mCurrentPluginEvent = nullptr;
   }
 
   return NS_OK;
@@ -829,7 +829,7 @@ static void SendLifecycleEvent(nsNPAPIPluginInstance* aInstance, PRUint32 aActio
   event.inSize = sizeof(ANPEvent);
   event.eventType = kLifecycle_ANPEventType;
   event.data.lifecycle.action = aAction;
-  aInstance->HandleEvent(&event, nsnull);
+  aInstance->HandleEvent(&event, nullptr);
 }
 
 void nsNPAPIPluginInstance::NotifyForeground(bool aForeground)
@@ -890,7 +890,7 @@ void nsNPAPIPluginInstance::NotifySize(nsIntSize size)
   event.data.draw.data.surfaceSize.width = size.width;
   event.data.draw.data.surfaceSize.height = size.height;
 
-  HandleEvent(&event, nsnull);
+  HandleEvent(&event, nullptr);
 }
 
 void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
@@ -900,10 +900,10 @@ void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
 
 void* nsNPAPIPluginInstance::GetJavaSurface()
 {
-  void* surface = nsnull; 
+  void* surface = nullptr; 
   nsresult rv = GetValueFromPlugin(kJavaSurface_ANPGetValue, &surface);
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   return surface;
 }
@@ -962,7 +962,7 @@ void nsNPAPIPluginInstance::EnsureSharedTexture()
 GLContext* nsNPAPIPluginInstance::GLContext()
 {
   if (!EnsureGLContext())
-    return nsnull;
+    return nullptr;
 
   return sPluginContext;
 }
@@ -982,15 +982,15 @@ void nsNPAPIPluginInstance::ReleaseContentTexture(TextureInfo& aTextureInfo)
 nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
 {
   if (!EnsureGLContext())
-    return nsnull;
+    return nullptr;
 
   GLuint texture = TexturePoolOGL::AcquireTexture();
   if (!texture)
-    return nsnull;
+    return nullptr;
 
   nsSurfaceTexture* surface = nsSurfaceTexture::Create(texture);
   if (!surface)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIRunnable> frameCallback = NS_NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
   surface->SetFrameAvailableCallback(frameCallback);
@@ -1009,7 +1009,7 @@ void* nsNPAPIPluginInstance::AcquireContentWindow()
     mContentSurface = CreateSurfaceTexture();
 
     if (!mContentSurface)
-      return nsnull;
+      return nullptr;
   }
 
   return mContentSurface->GetNativeWindow();
@@ -1022,14 +1022,14 @@ SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
   } else if (mContentSurface) {
     EnsureGLContext();
     return sPluginContext->CreateSharedHandle(TextureImage::ThreadShared, mContentSurface, GLContext::SurfaceTexture);
-  } else return nsnull;
+  } else return nullptr;
 }
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
   nsSurfaceTexture* surface = CreateSurfaceTexture();
   if (!surface)
-    return nsnull;
+    return nullptr;
 
   VideoInfo* info = new VideoInfo(surface);
 
@@ -1106,7 +1106,7 @@ nsresult nsNPAPIPluginInstance::IsRemoteDrawingCoreAnimation(bool* aDrawing)
 nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
-  NPObject *npobj = nsnull;
+  NPObject *npobj = nullptr;
   nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &npobj);
   if (NS_FAILED(rv) || !npobj)
     return NS_ERROR_FAILURE;
@@ -1147,7 +1147,7 @@ class NS_STACK_CLASS AutoPluginLibraryCall
 {
 public:
   AutoPluginLibraryCall(nsNPAPIPluginInstance* aThis)
-    : mThis(aThis), mGuard(aThis), mLibrary(nsnull)
+    : mThis(aThis), mGuard(aThis), mLibrary(nullptr)
   {
     nsNPAPIPlugin* plugin = mThis->GetPlugin();
     if (plugin)
@@ -1195,7 +1195,7 @@ nsNPAPIPluginInstance::HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled)
 nsresult
 nsNPAPIPluginInstance::GetImageContainer(ImageContainer**aContainer)
 {
-  *aContainer = nsnull;
+  *aContainer = nullptr;
 
   if (RUNNING != mRunning)
     return NS_OK;
@@ -1292,7 +1292,7 @@ nsNPAPIPluginInstance::GetFormValue(nsAString& aValue)
 {
   aValue.Truncate();
 
-  char *value = nsnull;
+  char *value = nullptr;
   nsresult rv = GetValueFromPlugin(NPPVformValue, &value);
   if (NS_FAILED(rv) || !value)
     return NS_ERROR_FAILURE;
@@ -1450,7 +1450,7 @@ nsNPAPIPluginInstance::TimerWithID(uint32_t id, PRUint32* index)
       return mTimers[i];
     }
   }
-  return nsnull;
+  return nullptr;
 }
 
 uint32_t
@@ -1537,7 +1537,7 @@ nsresult
 nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
 {
   if (!mOwner) {
-    *result = nsnull;
+    *result = nullptr;
     return NS_ERROR_FAILURE;
   }
 
@@ -1643,7 +1643,7 @@ nsNPAPIPluginInstance::ShowStatus(const char* message)
 nsresult
 nsNPAPIPluginInstance::InvalidateOwner()
 {
-  mOwner = nsnull;
+  mOwner = nullptr;
 
   return NS_OK;
 }

@@ -107,7 +107,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   nsIFrame* scrollbar;
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
-  if (scrollbar == nsnull)
+  if (scrollbar == nullptr)
     return false;
 
   // get the scrollbars content node
@@ -115,7 +115,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 
   static nsIContent::AttrValuesArray strings[] = { &nsGkAtoms::increment,
                                                    &nsGkAtoms::decrement,
-                                                   nsnull };
+                                                   nullptr };
   PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
                                             nsGkAtoms::type,
                                             strings, eCaseMatters);
@@ -173,7 +173,7 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
-  nsIPresShell::SetCapturingContent(nsnull, 0);
+  nsIPresShell::SetCapturingContent(nullptr, 0);
   // we're not active anymore
   mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();
@@ -205,7 +205,7 @@ nsScrollbarButtonFrame::DoButtonAction(bool aSmoothScroll)
   nsIFrame* scrollbar;
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
 
-  if (scrollbar == nsnull)
+  if (scrollbar == nullptr)
     return;
 
   // get the scrollbars content node
@@ -255,7 +255,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsPresContext* aPresContext,
 {
   // recursively search our children
   nsIFrame* childFrame = start->GetFirstPrincipalChild();
-  while (nsnull != childFrame) 
+  while (nullptr != childFrame) 
   {    
     // get the content node
     nsIContent* child = childFrame->GetContent();
@@ -272,13 +272,13 @@ nsScrollbarButtonFrame::GetChildWithTag(nsPresContext* aPresContext,
 
      // recursive search the child
      GetChildWithTag(aPresContext, atom, childFrame, result);
-     if (result != nsnull) 
+     if (result != nullptr) 
        return NS_OK;
 
     childFrame = childFrame->GetNextSibling();
   }
 
-  result = nsnull;
+  result = nullptr;
   return NS_OK;
 }
 
@@ -301,7 +301,7 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start,
       }
    }
 
-   result = nsnull;
+   result = nullptr;
    return NS_OK;
 }
 

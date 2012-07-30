@@ -20,7 +20,7 @@ public:
   {
     if (aContent && aContent->IsHTML(nsGkAtoms::menu))
       return static_cast<nsHTMLMenuElement*>(aContent);
-    return nsnull;
+    return nullptr;
   }
 
   // nsISupports

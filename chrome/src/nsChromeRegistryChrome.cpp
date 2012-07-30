@@ -106,7 +106,7 @@ LanguagesMatch(const nsACString& a, const nsACString& b)
 nsChromeRegistryChrome::nsChromeRegistryChrome()
   : mProfileLoaded(false)
 {
-  mPackagesHash.ops = nsnull;
+  mPackagesHash.ops = nullptr;
 }
 
 nsChromeRegistryChrome::~nsChromeRegistryChrome()
@@ -129,7 +129,7 @@ nsChromeRegistryChrome::Init()
   mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
 
   if (!PL_DHashTableInit(&mPackagesHash, &kTableOps,
-                         nsnull, sizeof(PackageEntry), 16))
+                         nullptr, sizeof(PackageEntry), 16))
     return NS_ERROR_FAILURE;
 
   bool safeMode = false;
@@ -141,7 +141,7 @@ nsChromeRegistryChrome::Init()
   nsCOMPtr<nsIPrefBranch> prefs;
 
   if (safeMode)
-    prefserv->GetDefaultBranch(nsnull, getter_AddRefs(prefs));
+    prefserv->GetDefaultBranch(nullptr, getter_AddRefs(prefs));
   else
     prefs = do_QueryInterface(prefserv);
 
@@ -370,7 +370,7 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForNewChrome()
 {
-  PL_DHashTableEnumerate(&mPackagesHash, RemoveAll, nsnull);
+  PL_DHashTableEnumerate(&mPackagesHash, RemoveAll, nullptr);
   mOverlayHash.Clear();
   mStyleHash.Clear();
   mOverrideTable.Clear();
@@ -390,7 +390,7 @@ nsresult nsChromeRegistryChrome::UpdateSelectedLocale()
         mozilla::services::GetObserverService();
       NS_ASSERTION(obsSvc, "Couldn't get observer service.");
       obsSvc->NotifyObservers((nsIChromeRegistry*) this,
-                              "selected-locale-has-changed", nsnull);
+                              "selected-locale-has-changed", nullptr);
     }
   }
 
@@ -517,12 +517,12 @@ nsChromeRegistryChrome::GetBaseURIFromPackage(const nsCString& aPackage,
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     if (!mInitialized)
-      return nsnull;
+      return nullptr;
 
     LogMessage("No chrome package registered for chrome://%s/%s/%s",
                aPackage.get(), aProvider.get(), aPath.get());
 
-    return nsnull;
+    return nullptr;
   }
 
   if (aProvider.EqualsLiteral("locale")) {
@@ -534,7 +534,7 @@ nsChromeRegistryChrome::GetBaseURIFromPackage(const nsCString& aPackage,
   else if (aProvider.EqualsLiteral("content")) {
     return entry->baseURI;
   }
-  return nsnull;
+  return nullptr;
 }
 
 nsresult
@@ -602,9 +602,9 @@ nsChromeRegistryChrome::nsProviderArray::GetProvider(const nsACString& aPreferre
 {
   PRInt32 i = mArray.Count();
   if (!i)
-    return nsnull;
+    return nullptr;
 
-  ProviderEntry* found = nsnull;  // Only set if we find a partial-match locale
+  ProviderEntry* found = nullptr;  // Only set if we find a partial-match locale
   ProviderEntry* entry;
 
   while (i--) {
@@ -636,7 +636,7 @@ nsChromeRegistryChrome::nsProviderArray::GetBase(const nsACString& aPreferred, M
   ProviderEntry* provider = GetProvider(aPreferred, aType);
 
   if (!provider)
-    return nsnull;
+    return nullptr;
 
   return provider->baseURI;
 }
@@ -718,7 +718,7 @@ nsChromeRegistryChrome::OverlayListHash::GetArray(nsIURI* aBase)
 {
   OverlayListEntry* entry = mTable.GetEntry(aBase);
   if (!entry)
-    return nsnull;
+    return nullptr;
 
   return &entry->mArray;
 }

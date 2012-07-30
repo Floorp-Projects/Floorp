@@ -244,7 +244,7 @@
 <a name=181 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#181">181</a> <a href="/seamonkey/ident?i=nsVoidBTree">nsVoidBTree</a>::<a href="/seamonkey/ident?i=ElementAt">ElementAt</a>(<a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=aIndex">aIndex</a>) const
 <a name=182 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#182">182</a> {
 <a name=183 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#183">183</a>     if (<a href="/seamonkey/ident?i=aIndex">aIndex</a> &lt; 0 || <a href="/seamonkey/ident?i=aIndex">aIndex</a> &gt;= <a href="/seamonkey/ident?i=Count">Count</a>())
-<a name=184 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#184">184</a>         return <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=184 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#184">184</a>         return <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=185 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#185">185</a> 
 <a name=186 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#186">186</a>     if (IsSingleElement())
 <a name=187 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#187">187</a>         return <a href="/seamonkey/ident?i=NS_REINTERPRET_CAST">NS_REINTERPRET_CAST</a>(void*, mRoot &amp; kRoot_PointerMask);
@@ -252,7 +252,7 @@
 <a name=189 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#189">189</a>     <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=current">current</a> = <a href="/seamonkey/ident?i=NS_REINTERPRET_CAST">NS_REINTERPRET_CAST</a>(<a href="/seamonkey/ident?i=Node">Node</a>*, mRoot &amp; kRoot_PointerMask);
 <a name=190 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#190">190</a>     while (<a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetType">GetType</a>() != <a href="/seamonkey/ident?i=Node">Node</a>::eType_Data) {
 <a name=191 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#191">191</a>         <b><i>// We're still in the index. Find the right leaf.</i></b>
-<a name=192 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#192">192</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=192 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#192">192</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=193 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#193">193</a> 
 <a name=194 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#194">194</a>         <a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=count">count</a> = <a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetCount">GetCount</a>();
 <a name=195 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#195">195</a>         for (<a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=i">i</a> = 0; <a href="/seamonkey/ident?i=i">i</a> &lt; <a href="/seamonkey/ident?i=count">count</a>; ++<a href="/seamonkey/ident?i=i">i</a>) {
@@ -269,7 +269,7 @@
 <a name=206 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#206">206</a> 
 <a name=207 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#207">207</a>         if (! <a href="/seamonkey/ident?i=next">next</a>) {
 <a name=208 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#208">208</a>             <a href="/seamonkey/ident?i=NS_ERROR">NS_ERROR</a>(<i>"corrupted"</i>);
-<a name=209 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#209">209</a>             return <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=209 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#209">209</a>             return <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=210 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#210">210</a>         }
 <a name=211 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#211">211</a> 
 <a name=212 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#212">212</a>         <a href="/seamonkey/ident?i=current">current</a> = <a href="/seamonkey/ident?i=next">next</a>;
@@ -285,8 +285,8 @@
 <a name=222 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#222">222</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>((<a href="/seamonkey/ident?i=PRWord">PRWord</a>(aPossibleElement) &amp; ~kRoot_PointerMask) == 0,
 <a name=223 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#223">223</a>                     <i>"uh oh, someone wants to use the pointer bits"</i>);
 <a name=224 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#224">224</a> 
-<a name=225 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#225">225</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(aPossibleElement != <a href="/seamonkey/ident?i=nsnull">nsnull</a>, <i>"nsVoidBTree can't handle null elements"</i>);
-<a name=226 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#226">226</a>     if (aPossibleElement == <a href="/seamonkey/ident?i=nsnull">nsnull</a>)
+<a name=225 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#225">225</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(aPossibleElement != <a href="/seamonkey/ident?i=nullptr">nullptr</a>, <i>"nsVoidBTree can't handle null elements"</i>);
+<a name=226 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#226">226</a>     if (aPossibleElement == <a href="/seamonkey/ident?i=nullptr">nullptr</a>)
 <a name=227 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#227">227</a>         return -1;
 <a name=228 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#228">228</a> 
 <a name=229 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#229">229</a>     <a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=result">result</a> = 0;
@@ -309,8 +309,8 @@
 <a name=246 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#246">246</a>     if ((<a href="/seamonkey/ident?i=PRWord">PRWord</a>(<a href="/seamonkey/ident?i=aElement">aElement</a>) &amp; ~kRoot_PointerMask) != 0)
 <a name=247 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#247">247</a>         return <a href="/seamonkey/ident?i=PR_FALSE">PR_FALSE</a>;
 <a name=248 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#248">248</a> 
-<a name=249 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#249">249</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(<a href="/seamonkey/ident?i=aElement">aElement</a> != <a href="/seamonkey/ident?i=nsnull">nsnull</a>, <i>"nsVoidBTree can't handle null elements"</i>);
-<a name=250 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#250">250</a>     if (<a href="/seamonkey/ident?i=aElement">aElement</a> == <a href="/seamonkey/ident?i=nsnull">nsnull</a>)
+<a name=249 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#249">249</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(<a href="/seamonkey/ident?i=aElement">aElement</a> != <a href="/seamonkey/ident?i=nullptr">nullptr</a>, <i>"nsVoidBTree can't handle null elements"</i>);
+<a name=250 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#250">250</a>     if (<a href="/seamonkey/ident?i=aElement">aElement</a> == <a href="/seamonkey/ident?i=nullptr">nullptr</a>)
 <a name=251 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#251">251</a>         return <a href="/seamonkey/ident?i=PR_FALSE">PR_FALSE</a>;
 <a name=252 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#252">252</a> 
 <a name=253 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#253">253</a>     <a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=count">count</a> = <a href="/seamonkey/ident?i=Count">Count</a>();
@@ -349,7 +349,7 @@
 <a name=286 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#286">286</a>     <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=current">current</a> = <a href="/seamonkey/ident?i=NS_REINTERPRET_CAST">NS_REINTERPRET_CAST</a>(<a href="/seamonkey/ident?i=Node">Node</a>*, mRoot &amp; kRoot_PointerMask);
 <a name=287 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#287">287</a>     while (<a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetType">GetType</a>() != <a href="/seamonkey/ident?i=Node">Node</a>::eType_Data) {
 <a name=288 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#288">288</a>         <b><i>// We're still in the index. Find the right leaf.</i></b>
-<a name=289 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#289">289</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=289 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#289">289</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=290 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#290">290</a> 
 <a name=291 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#291">291</a>         <a href="/seamonkey/ident?i=count">count</a> = <a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetCount">GetCount</a>();
 <a name=292 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#292">292</a>         for (<a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=i">i</a> = 0; <a href="/seamonkey/ident?i=i">i</a> &lt; <a href="/seamonkey/ident?i=count">count</a>; ++<a href="/seamonkey/ident?i=i">i</a>) {
@@ -408,8 +408,8 @@
 <a name=345 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#345">345</a>     if ((<a href="/seamonkey/ident?i=PRWord">PRWord</a>(<a href="/seamonkey/ident?i=aElement">aElement</a>) &amp; ~kRoot_PointerMask) != 0)
 <a name=346 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#346">346</a>         return <a href="/seamonkey/ident?i=PR_FALSE">PR_FALSE</a>;
 <a name=347 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#347">347</a> 
-<a name=348 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#348">348</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(<a href="/seamonkey/ident?i=aElement">aElement</a> != <a href="/seamonkey/ident?i=nsnull">nsnull</a>, <i>"nsVoidBTree can't handle null elements"</i>);
-<a name=349 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#349">349</a>     if (<a href="/seamonkey/ident?i=aElement">aElement</a> == <a href="/seamonkey/ident?i=nsnull">nsnull</a>)
+<a name=348 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#348">348</a>     <a href="/seamonkey/ident?i=NS_PRECONDITION">NS_PRECONDITION</a>(<a href="/seamonkey/ident?i=aElement">aElement</a> != <a href="/seamonkey/ident?i=nullptr">nullptr</a>, <i>"nsVoidBTree can't handle null elements"</i>);
+<a name=349 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#349">349</a>     if (<a href="/seamonkey/ident?i=aElement">aElement</a> == <a href="/seamonkey/ident?i=nullptr">nullptr</a>)
 <a name=350 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#350">350</a>         return <a href="/seamonkey/ident?i=PR_FALSE">PR_FALSE</a>;
 <a name=351 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#351">351</a> 
 <a name=352 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#352">352</a>     if (<a href="/seamonkey/ident?i=aIndex">aIndex</a> &lt; 0 || <a href="/seamonkey/ident?i=aIndex">aIndex</a> &gt;= <a href="/seamonkey/ident?i=Count">Count</a>())
@@ -423,7 +423,7 @@
 <a name=360 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#360">360</a>     <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=current">current</a> = <a href="/seamonkey/ident?i=NS_REINTERPRET_CAST">NS_REINTERPRET_CAST</a>(<a href="/seamonkey/ident?i=Node">Node</a>*, mRoot &amp; kRoot_PointerMask);
 <a name=361 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#361">361</a>     while (<a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetType">GetType</a>() != <a href="/seamonkey/ident?i=Node">Node</a>::eType_Data) {
 <a name=362 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#362">362</a>         <b><i>// We're still in the index. Find the right leaf.</i></b>
-<a name=363 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#363">363</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=363 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#363">363</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=364 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#364">364</a> 
 <a name=365 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#365">365</a>         <a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=count">count</a> = <a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetCount">GetCount</a>();
 <a name=366 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#366">366</a>         for (<a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=i">i</a> = 0; <a href="/seamonkey/ident?i=i">i</a> &lt; <a href="/seamonkey/ident?i=count">count</a>; ++<a href="/seamonkey/ident?i=i">i</a>) {
@@ -480,7 +480,7 @@
 <a name=417 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#417">417</a>     <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=current">current</a> = root;
 <a name=418 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#418">418</a>     while (<a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetType">GetType</a>() != <a href="/seamonkey/ident?i=Node">Node</a>::eType_Data) {
 <a name=419 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#419">419</a>         <b><i>// We're still in the index. Find the right leaf.</i></b>
-<a name=420 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#420">420</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nsnull">nsnull</a>;
+<a name=420 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#420">420</a> <b><i></i></b>        <a href="/seamonkey/ident?i=Node">Node</a>* <a href="/seamonkey/ident?i=next">next</a> = <a href="/seamonkey/ident?i=nullptr">nullptr</a>;
 <a name=421 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#421">421</a> 
 <a name=422 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#422">422</a>         <a href="/seamonkey/ident?i=count">count</a> = <a href="/seamonkey/ident?i=current">current</a>-&gt;<a href="/seamonkey/ident?i=GetCount">GetCount</a>();
 <a name=423 href="/seamonkey/source/xpcom/ds/nsVoidBTree.cpp#423">423</a>         for (<a href="/seamonkey/ident?i=PRInt32">PRInt32</a> <a href="/seamonkey/ident?i=i">i</a> = 0; <a href="/seamonkey/ident?i=i">i</a> &lt; <a href="/seamonkey/ident?i=count">count</a>; ++<a href="/seamonkey/ident?i=i">i</a>) {

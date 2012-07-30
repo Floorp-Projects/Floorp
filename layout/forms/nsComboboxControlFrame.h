@@ -220,7 +220,7 @@ protected:
   public:
     NS_DECL_NSIRUNNABLE
     RedisplayTextEvent(nsComboboxControlFrame *c) : mControlFrame(c) {}
-    void Revoke() { mControlFrame = nsnull; }
+    void Revoke() { mControlFrame = nullptr; }
   private:
     nsComboboxControlFrame *mControlFrame;
   };

@@ -88,7 +88,7 @@ nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUi
 
   rv = error->Init(NS_ConvertUTF8toUTF16(formatted).get(),
                    NS_ConvertUTF8toUTF16(spec).get(),
-                   nsnull,
+                   nullptr,
                    aLineNumber, 0, flags, "chrome registration");
   PR_smprintf_free(formatted);
 
@@ -100,7 +100,7 @@ nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUi
 
 nsChromeRegistry::~nsChromeRegistry()
 {
-  gChromeRegistry = nsnull;
+  gChromeRegistry = nullptr;
 }
 
 NS_INTERFACE_MAP_BEGIN(nsChromeRegistry)
@@ -307,7 +307,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
     return NS_ERROR_FAILURE;
   }
 
-  return NS_NewURI(aResult, path, nsnull, baseURI);
+  return NS_NewURI(aResult, path, nullptr, baseURI);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -340,7 +340,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     return NS_OK;
 
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-  windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+  windowMediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
   bool more;
   windowEnumerator->HasMoreElements(&more);
   while (more) {
@@ -356,7 +356,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
   FlushSkinCaches();
 
-  windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+  windowMediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
   windowEnumerator->HasMoreElements(&more);
   while (more) {
     nsCOMPtr<nsISupports> protoWindow;
@@ -380,7 +380,7 @@ nsChromeRegistry::FlushSkinCaches()
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
   obsSvc->NotifyObservers(static_cast<nsIChromeRegistry*>(this),
-                          NS_CHROME_FLUSH_SKINS_TOPIC, nsnull);
+                          NS_CHROME_FLUSH_SKINS_TOPIC, nullptr);
 }
 
 static bool IsChromeURI(nsIURI* aURI)
@@ -473,7 +473,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
   // sheet if and only if it's a chrome URL.
   for (i = 0; i < count; i++) {
     nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(oldSheets[i]);
-    nsIURI* uri = sheet ? sheet->GetOriginalURI() : nsnull;
+    nsIURI* uri = sheet ? sheet->GetOriginalURI() : nullptr;
 
     if (uri && IsChromeURI(uri)) {
       // Reload the sheet.
@@ -503,7 +503,7 @@ nsChromeRegistry::FlushAllCaches()
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
   obsSvc->NotifyObservers((nsIChromeRegistry*) this,
-                          NS_CHROME_FLUSH_TOPIC, nsnull);
+                          NS_CHROME_FLUSH_TOPIC, nullptr);
 }  
 
 // xxxbsmedberg Move me to nsIWindowMediator
@@ -521,7 +521,7 @@ nsChromeRegistry::ReloadChrome()
   if (windowMediator) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
-    rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+    rv = windowMediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
     if (NS_SUCCEEDED(rv)) {
       // Get each dom window
       bool more;

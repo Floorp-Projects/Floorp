@@ -11,7 +11,7 @@ namespace gl {
 already_AddRefed<GLContext>
 GLContextProviderNull::CreateForWindow(nsIWidget*)
 {
-    return nsnull;
+    return nullptr;
 }
 
 already_AddRefed<GLContext>
@@ -19,13 +19,13 @@ GLContextProviderNull::CreateOffscreen(const gfxIntSize&,
                                        const ContextFormat&,
                                        const ContextFlags)
 {
-    return nsnull;
+    return nullptr;
 }
 
 GLContext *
 GLContextProviderNull::GetGlobalContext()
 {
-    return nsnull;
+    return nullptr;
 }
 
 void

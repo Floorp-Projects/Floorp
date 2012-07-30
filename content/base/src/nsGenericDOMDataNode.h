@@ -67,7 +67,7 @@ public:
   nsresult GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   {
     NS_ENSURE_ARG_POINTER(aAttributes);
-    *aAttributes = nsnull;
+    *aAttributes = nullptr;
     return NS_OK;
   }
   nsresult HasChildNodes(bool* aHasChildNodes)
@@ -98,7 +98,7 @@ public:
   }
   nsresult AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
-    return InsertBefore(aNewChild, nsnull, aReturn);
+    return InsertBefore(aNewChild, nullptr, aReturn);
   }
   nsresult GetNamespaceURI(nsAString& aNamespaceURI);
   nsresult GetLocalName(nsAString& aLocalName)
@@ -148,7 +148,7 @@ public:
   NS_IMETHOD SetTextContent(const nsAString& aTextContent)
   {
     // Batch possible DOMSubtreeModified events.
-    mozAutoSubtreeModified subtree(OwnerDoc(), nsnull);
+    mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
     return SetNodeValue(aTextContent);
   }
 
@@ -166,7 +166,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -239,7 +239,7 @@ protected:
   {
     nsINode *parent = GetNodeParent();
 
-    return parent && parent->IsElement() ? parent->AsElement() : nsnull;
+    return parent && parent->IsElement() ? parent->AsElement() : nullptr;
   }
 
   /**
@@ -255,7 +255,7 @@ protected:
   public:
     nsDataSlots()
       : nsINode::nsSlots(),
-        mBindingParent(nsnull)
+        mBindingParent(nullptr)
     {
     }
 
@@ -293,7 +293,7 @@ protected:
   nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
                            const PRUnichar* aBuffer, PRUint32 aLength,
                            bool aNotify,
-                           CharacterDataChangeInfo::Details* aDetails = nsnull);
+                           CharacterDataChangeInfo::Details* aDetails = nullptr);
 
   /**
    * Method to clone this node. This needs to be overriden by all derived

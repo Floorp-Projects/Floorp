@@ -379,7 +379,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         variable = mMemberVariable;
 
                         value = do_QueryInterface(isupports);
-                        NS_ASSERTION(value != nsnull, "member is not an nsIRDFNode");
+                        NS_ASSERTION(value != nullptr, "member is not an nsIRDFNode");
                         if (! value) continue;
 
 #ifdef PR_LOGGING
@@ -396,7 +396,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         variable = mContainerVariable;
 
                         valueRes = do_QueryInterface(isupports);
-                        NS_ASSERTION(valueRes != nsnull, "container is not an nsIRDFResource");
+                        NS_ASSERTION(valueRes != nullptr, "container is not an nsIRDFResource");
                         if (! valueRes) continue;
 
                         value = valueRes;

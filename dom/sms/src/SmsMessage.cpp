@@ -47,7 +47,7 @@ SmsMessage::Create(PRInt32 aId,
                    JSContext* aCx,
                    nsIDOMMozSmsMessage** aMessage)
 {
-  *aMessage = nsnull;
+  *aMessage = nullptr;
 
   // SmsMessageData exposes these as references, so we can simply assign
   // to them.

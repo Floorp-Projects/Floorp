@@ -35,7 +35,7 @@ struct TestEntry {
 
 TestEntry testList[] = {
 #include "per-word-runs.h"
-{ nsnull, nsnull } // terminator
+{ nullptr, nullptr } // terminator
 };
 
 already_AddRefed<gfxContext>
@@ -54,7 +54,7 @@ MakeContext ()
 }
 
 nsRefPtr<gfxFontGroup> fontGroup;
-const char* lastFamilies = nsnull;
+const char* lastFamilies = nullptr;
 
 void
 RunTest (TestEntry *test, gfxContext *ctx) {
@@ -69,7 +69,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               NS_LITERAL_STRING(""),
                                               NS_LITERAL_STRING(""));
 
-        fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nsnull);
+        fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nullptr);
     }
 
     nsAutoPtr<gfxTextRun> textRun;
@@ -81,7 +81,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         }
     }
     gfxTextRunFactory::Parameters params = {
-      ctx, nsnull, nsnull, nsnull, 0, 60
+      ctx, nullptr, nullptr, nullptr, 0, 60
     };
     PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
     PRUint32 length;
@@ -97,9 +97,9 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     }
 
     // Should we test drawing?
-    // textRun->Draw(ctx, gfxPoint(0,0), 0, length, nsnull, nsnull, nsnull);
+    // textRun->Draw(ctx, gfxPoint(0,0), 0, length, nullptr, nullptr, nullptr);
     
-    textRun->GetAdvanceWidth(0, length, nsnull);
+    textRun->GetAdvanceWidth(0, length, nullptr);
 }
 
 PRUint32 iterations = 20;
@@ -114,7 +114,7 @@ main (int argc, char **argv) {
 #endif
 
     // Initialize XPCOM
-    nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
     if (NS_FAILED(rv))
         return -1; 
 

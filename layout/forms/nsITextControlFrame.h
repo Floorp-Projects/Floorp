@@ -36,7 +36,7 @@ public:
                                   SelectionDirection aDirection = eNone) = 0;
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart,
                                   PRInt32* aSelectionEnd,
-                                  SelectionDirection* aDirection = nsnull) = 0;
+                                  SelectionDirection* aDirection = nullptr) = 0;
 
   NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) = 0;
   virtual nsFrameSelection* GetOwnedFrameSelection() = 0;

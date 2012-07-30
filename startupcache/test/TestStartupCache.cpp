@@ -63,7 +63,7 @@ WaitForStartupTimer() {
   bool complete;
   while (true) {
     
-    NS_ProcessPendingEvents(nsnull);
+    NS_ProcessPendingEvents(nullptr);
     rv = sc->StartupWriteComplete(&complete);
     if (NS_FAILED(rv) || complete)
       break;
@@ -168,7 +168,7 @@ TestWriteObject() {
     = do_CreateInstance("@mozilla.org/storagestream;1");
   NS_ENSURE_ARG_POINTER(storageStream);
   
-  rv = storageStream->Init(256, (PRUint32) -1, nsnull);
+  rv = storageStream->Init(256, (PRUint32) -1, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIObjectOutputStream> objectOutput
@@ -265,7 +265,7 @@ TestEarlyShutdown() {
 
   nsCOMPtr<nsIObserver> obs;
   sc->GetObserver(getter_AddRefs(obs));
-  obs->Observe(nsnull, "xpcom-shutdown", nsnull);
+  obs->Observe(nullptr, "xpcom-shutdown", nullptr);
   rv = WaitForStartupTimer();
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -387,12 +387,12 @@ int main(int argc, char** argv)
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub
   };
-  JSObject *glob = nsnull;
+  JSObject *glob = nullptr;
   if (use_js)
     glob = JS_NewGlobalObject(cx, &global_class, NULL);
   if (!glob)
     use_js = false;
-  JSCrossCompartmentCall *compartment = nsnull;
+  JSCrossCompartmentCall *compartment = nullptr;
   if (use_js)
     compartment = JS_EnterCrossCompartmentCall(cx, glob);
   if (!compartment)

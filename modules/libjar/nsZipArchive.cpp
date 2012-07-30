@@ -87,9 +87,9 @@ nsresult gZlibInit(z_stream *zs)
 }
 
 nsZipHandle::nsZipHandle()
-  : mFileData(nsnull)
+  : mFileData(nullptr)
   , mLen(0)
-  , mMap(nsnull)
+  , mMap(nullptr)
   , mRefCnt(0)
 {
   MOZ_COUNT_CTOR(nsZipHandle);
@@ -149,7 +149,7 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
   if (!handle->mBuf->Buffer())
     return NS_ERROR_UNEXPECTED;
 
-  handle->mMap = nsnull;
+  handle->mMap = nullptr;
   handle->mFile.Init(zip, entry);
   handle->mLen = handle->mBuf->Length();
   handle->mFileData = handle->mBuf->Buffer();
@@ -168,9 +168,9 @@ nsZipHandle::~nsZipHandle()
     PR_MemUnmap((void *)mFileData, mLen);
     PR_CloseFileMap(mMap);
   }
-  mFileData = nsnull;
-  mMap = nsnull;
-  mBuf = nsnull;
+  mFileData = nullptr;
+  mMap = nullptr;
+  mBuf = nullptr;
   MOZ_COUNT_DTOR(nsZipHandle);
 }
 
@@ -312,9 +312,9 @@ MOZ_WIN_MEM_TRY_BEGIN
       }
       item = item->next;
     }
-MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+MOZ_WIN_MEM_TRY_CATCH(return nullptr)
   }
-  return nsnull;
+  return nullptr;
 }
 
 //---------------------------------------------
@@ -690,12 +690,12 @@ MOZ_WIN_MEM_TRY_BEGIN
   const PRUint8* data = mFd->mFileData;
   PRUint32 offset = aItem->LocalOffset();
   if (offset + ZIPLOCAL_SIZE > len)
-    return nsnull;
+    return nullptr;
 
   // -- check signature before using the structure, in case the zip file is corrupt
   ZipLocal* Local = (ZipLocal*)(data + offset);
   if ((xtolong(Local->signature) != LOCALSIG))
-    return nsnull;
+    return nullptr;
 
   //-- NOTE: extralen is different in central header and local header
   //--       for archives created using the Unix "zip" utility. To set
@@ -706,10 +706,10 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   // -- check if there is enough source data in the file
   if (offset + aItem->Size() > len)
-    return nsnull;
+    return nullptr;
 
   return data + offset;
-MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+MOZ_WIN_MEM_TRY_CATCH(return nullptr)
 }
 
 // nsZipArchive::GetComment
@@ -903,7 +903,7 @@ PRUint16 nsZipItem::Mode()
 
 const PRUint8 * nsZipItem::GetExtraField(PRUint16 aTag, PRUint16 *aBlockSize)
 {
-  if (isSynthetic) return nsnull;
+  if (isSynthetic) return nullptr;
 MOZ_WIN_MEM_TRY_BEGIN
   const unsigned char *buf = ((const unsigned char*)central) + ZIPCENTRAL_SIZE +
                              nameLength;
@@ -923,8 +923,8 @@ MOZ_WIN_MEM_TRY_BEGIN
     pos += blocksize + 4;
   }
 
-MOZ_WIN_MEM_TRY_CATCH(return nsnull)
-  return nsnull;
+MOZ_WIN_MEM_TRY_CATCH(return nullptr)
+  return nullptr;
 }
 
 
@@ -981,11 +981,11 @@ nsZipCursor::~nsZipCursor()
 
 PRUint8* nsZipCursor::ReadOrCopy(PRUint32 *aBytesRead, bool aCopy) {
   int zerr;
-  PRUint8 *buf = nsnull;
+  PRUint8 *buf = nullptr;
   bool verifyCRC = true;
 
   if (!mZs.next_in)
-    return nsnull;
+    return nullptr;
 MOZ_WIN_MEM_TRY_BEGIN
   switch (mItem->Compression()) {
   case STORED:
@@ -1008,26 +1008,26 @@ MOZ_WIN_MEM_TRY_BEGIN
     
     zerr = inflate(&mZs, Z_PARTIAL_FLUSH);
     if (zerr != Z_OK && zerr != Z_STREAM_END)
-      return nsnull;
+      return nullptr;
     
     *aBytesRead = mZs.next_out - buf;
     verifyCRC = (zerr == Z_STREAM_END);
     break;
   default:
-    return nsnull;
+    return nullptr;
   }
 
   if (mDoCRC) {
     mCRC = crc32(mCRC, (const unsigned char*)buf, *aBytesRead);
     if (verifyCRC && mCRC != mItem->CRC32())
-      return nsnull;
+      return nullptr;
   }
-MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+MOZ_WIN_MEM_TRY_CATCH(return nullptr)
   return buf;
 }
 
 nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName, bool doCRC) :
-  mReturnBuf(nsnull)
+  mReturnBuf(nullptr)
 {
   // make sure the ziparchive hangs around
   mZipHandle = aZip->GetFD();
@@ -1050,7 +1050,7 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
 
   if (mReadlen != item->RealSize()) {
     NS_ASSERTION(mReadlen == item->RealSize(), "nsZipCursor underflow");
-    mReturnBuf = nsnull;
+    mReturnBuf = nullptr;
     return;
   }
 }

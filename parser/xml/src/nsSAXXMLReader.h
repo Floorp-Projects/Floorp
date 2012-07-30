@@ -71,7 +71,7 @@ public:
   
   virtual nsISupports *GetTarget()
   {
-    return nsnull;
+    return nullptr;
   }
 
 private:

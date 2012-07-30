@@ -29,7 +29,7 @@ nsDOMTransitionEvent::~nsDOMTransitionEvent()
 {
   if (mEventIsInternal) {
     delete TransitionEvent();
-    mEvent = nsnull;
+    mEvent = nullptr;
   }
 }
 

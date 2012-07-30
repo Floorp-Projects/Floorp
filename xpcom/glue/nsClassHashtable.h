@@ -29,7 +29,7 @@ public:
 
   /**
    * @copydoc nsBaseHashtable::Get
-   * @param pData if the key doesn't exist, pData will be set to nsnull.
+   * @param pData if the key doesn't exist, pData will be set to nullptr.
    */
   bool Get(KeyType aKey, UserDataType* pData) const;
 
@@ -71,7 +71,7 @@ public:
 
   /**
    * @copydoc nsBaseHashtable::Get
-   * @param pData if the key doesn't exist, pData will be set to nsnull.
+   * @param pData if the key doesn't exist, pData will be set to nullptr.
    */
   bool Get(KeyType aKey, UserDataType* pData) const;
 };
@@ -96,7 +96,7 @@ nsClassHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
   }
 
   if (retVal)
-    *retVal = nsnull;
+    *retVal = nullptr;
 
   return false;
 }
@@ -117,7 +117,7 @@ template<class KeyClass,class T>
 void
 nsClassHashtable<KeyClass,T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut)
 {
-  aOut = nsnull;
+  aOut = nullptr;
   nsAutoPtr<T> ptr;
 
   typename base_type::EntryType *ent = this->GetEntry(aKey);
@@ -154,7 +154,7 @@ nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
   }
 
   if (retVal)
-    *retVal = nsnull;
+    *retVal = nullptr;
 
   PR_Unlock(this->mLock);
 

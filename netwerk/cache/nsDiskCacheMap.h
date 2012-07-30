@@ -376,11 +376,11 @@ class nsDiskCacheMap {
 public:
 
      nsDiskCacheMap() : 
-        mCacheDirectory(nsnull),
-        mMapFD(nsnull),
-        mRecordArray(nsnull),
+        mCacheDirectory(nullptr),
+        mMapFD(nullptr),
+        mRecordArray(nullptr),
         mBufferSize(0),
-        mBuffer(nsnull),
+        mBuffer(nullptr),
         mMaxRecordCount(16384) // this default value won't matter
     { }
 

@@ -50,7 +50,7 @@ static void
 ClearEntry(PLDHashTable *      /* table */,
            PLDHashEntryHdr *      header)
 {
-    ((HashTableEntry *)header)->mBinding = nsnull;
+    ((HashTableEntry *)header)->mBinding = nullptr;
 }
 
 
@@ -72,8 +72,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheBinding)
 
 nsDiskCacheBinding::nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record)
     :   mCacheEntry(entry)
-    ,   mStreamIO(nsnull)
-    ,   mDeactivateEvent(nsnull)
+    ,   mStreamIO(nullptr)
+    ,   mDeactivateEvent(nullptr)
 {
     NS_ASSERTION(record->ValidRecord(), "bad record");
     PR_INIT_CLIST(this);
@@ -148,7 +148,7 @@ nsresult
 nsDiskCacheBindery::Init()
 {
     nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nsnull, sizeof(HashTableEntry), 0);
+    initialized = PL_DHashTableInit(&table, &ops, nullptr, sizeof(HashTableEntry), 0);
 
     if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
     
@@ -173,11 +173,11 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
     nsCOMPtr<nsISupports> data = entry->Data();
     if (data) {
         NS_ERROR("cache entry already has bind data");
-        return nsnull;
+        return nullptr;
     }
     
     nsDiskCacheBinding * binding = new nsDiskCacheBinding(entry, record);
-    if (!binding)  return nsnull;
+    if (!binding)  return nullptr;
         
     // give ownership of the binding to the entry
     entry->SetData(binding);
@@ -185,8 +185,8 @@ nsDiskCacheBindery::CreateBinding(nsCacheEntry *       entry,
     // add binding to collision detection system
     nsresult rv = AddBinding(binding);
     if (NS_FAILED(rv)) {
-        entry->SetData(nsnull);
-        return nsnull;
+        entry->SetData(nullptr);
+        return nullptr;
     }
 
     return binding;
@@ -203,14 +203,14 @@ nsDiskCacheBindery::FindActiveBinding(PRUint32  hashNumber)
     // find hash entry for key
     HashTableEntry * hashEntry;
     hashEntry = (HashTableEntry *) PL_DHashTableOperate(&table, (void*) hashNumber, PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_FREE(hashEntry)) return nsnull;
+    if (PL_DHASH_ENTRY_IS_FREE(hashEntry)) return nullptr;
     
     // walk list looking for active entry
     NS_ASSERTION(hashEntry->mBinding, "hash entry left with no binding");
     nsDiskCacheBinding * binding = hashEntry->mBinding;    
     while (binding->mCacheEntry->IsDoomed()) {
         binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
-        if (binding == hashEntry->mBinding)  return nsnull;
+        if (binding == hashEntry->mBinding)  return nullptr;
     }
     return binding;
 }
@@ -239,7 +239,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
                                                         PL_DHASH_ADD);
     if (!hashEntry) return NS_ERROR_OUT_OF_MEMORY;
     
-    if (hashEntry->mBinding == nsnull) {
+    if (hashEntry->mBinding == nullptr) {
         hashEntry->mBinding = binding;
         if (binding->mGeneration == 0)
             binding->mGeneration = 1;   // if generation uninitialized, set it to 1
@@ -334,7 +334,7 @@ ActiveBinding(PLDHashTable *    table,
               void *            arg)
 {
     nsDiskCacheBinding * binding = ((HashTableEntry *)hdr)->mBinding;
-    NS_ASSERTION(binding, "### disk cache binding = nsnull!");
+    NS_ASSERTION(binding, "### disk cache binding = nullptr!");
     
     nsDiskCacheBinding * head = binding;
     do {   

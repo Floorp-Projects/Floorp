@@ -433,7 +433,7 @@ nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult
 static nsresult                                           \
 ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 {                                                         \
-  *aResult = nsnull;                                      \
+  *aResult = nullptr;                                      \
   if (aOuter)                                             \
     return NS_ERROR_NO_AGGREGATION;                       \
   iface_* inst;                                           \
@@ -453,7 +453,7 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 static nsresult                                           \
 ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 {                                                         \
-  *aResult = nsnull;                                      \
+  *aResult = nullptr;                                      \
   if (aOuter) {                                           \
     return NS_ERROR_NO_AGGREGATION;                       \
   }                                                       \
@@ -570,7 +570,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 static nsresult
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
@@ -588,7 +588,7 @@ CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 static nsresult
 CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
@@ -607,7 +607,7 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 static nsresult
 CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLAudioElement is special cased to handle a null nodeinfo
@@ -646,7 +646,7 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 {
     if (!aResult)
         return NS_ERROR_NULL_POINTER;
-    *aResult = nsnull;
+    *aResult = nullptr;
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
     nsScriptSecurityManager *obj = nsScriptSecurityManager::GetScriptSecurityManager();

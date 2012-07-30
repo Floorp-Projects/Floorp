@@ -30,12 +30,12 @@ public:
      * aDestSurface is given, the data is copied over.
      */
     static void PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
-                                        gfxImageSurface *aDestSurface = nsnull);
+                                        gfxImageSurface *aDestSurface = nullptr);
     static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
-                                          gfxImageSurface *aDestSurface = nsnull);
+                                          gfxImageSurface *aDestSurface = nullptr);
 
     static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
-                                  gfxImageSurface *aDestSurface = nsnull);
+                                  gfxImageSurface *aDestSurface = nullptr);
 
     /**
      * Draw something drawable while working around limitations like bad support

@@ -87,7 +87,7 @@ ProcessVersion(SECItem         *versionItem,
   nsresult rv;
   nsAutoString text;
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
  
   nssComponent->GetPIPNSSBundleString("CertDumpVersion", text);
@@ -144,7 +144,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
   nsAutoString text;
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
 
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", text); 
@@ -157,7 +157,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
 
   nsXPIDLCString serialNumber;
   serialNumber.Adopt(CERT_Hexify(serialItem, 1));
-  if (serialNumber == nsnull)
+  if (serialNumber == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUTF16(serialNumber));
@@ -683,9 +683,9 @@ ProcessNSCertTypeExtensions(SECItem  *extData,
 {
   nsAutoString local;
   SECItem decoded;
-  decoded.data = nsnull;
+  decoded.data = nullptr;
   decoded.len  = 0;
-  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
 		SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
     nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
     text.Append(local.get());
@@ -737,9 +737,9 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
 {
   nsAutoString local;
   SECItem decoded;
-  decoded.data = nsnull;
+  decoded.data = nullptr;
   decoded.len  = 0;
-  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
 				SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
     nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
     text.Append(local.get());
@@ -881,7 +881,7 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
   nsresult rv;
   CERTAVA** avas;
   CERTAVA* ava;
-  SECItem *decodeItem = nsnull;
+  SECItem *decodeItem = nullptr;
   nsString avavalue;
   nsString type;
   nsAutoString temp;
@@ -980,7 +980,7 @@ ProcessIA5String(SECItem  *extData,
 {
   SECItem item;
   nsAutoString local;
-  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &item, 
+  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &item, 
 				       SEC_ASN1_GET(SEC_IA5StringTemplate),
 				       extData))
     return NS_ERROR_FAILURE;
@@ -1591,7 +1591,7 @@ ProcessMSCAVersion(SECItem  *extData,
   char buf[50];
   SECItem decoded;
 
-  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
 				       SEC_ASN1_GET(SEC_IntegerTemplate), 
 				       extData))
     /* This extension used to be an Integer when this code
@@ -1686,13 +1686,13 @@ ProcessSingleExtension(CERTCertExtension *extension,
   nsAutoString text, extvalue;
   GetOIDText(&extension->id, nssComponent, text);
   nsCOMPtr<nsIASN1PrintableItem>extensionItem = new nsNSSASN1PrintableItem();
-  if (extensionItem == nsnull)
+  if (extensionItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   extensionItem->SetDisplayName(text);
   SECOidTag oidTag = SECOID_FindOIDTag(&extension->id);
   text.Truncate();
-  if (extension->critical.data != nsnull) {
+  if (extension->critical.data != nullptr) {
     if (extension->critical.data[0]) {
       nssComponent->GetPIPNSSBundleString("CertDumpCritical", text);
     } else {
@@ -1724,10 +1724,10 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
   SECOidTag algOIDTag = SECOID_FindOIDTag(&algID->algorithm);
   SECItem paramsOID = { siBuffer, NULL, 0 };
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
-  if (sequence == nsnull)
+  if (sequence == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  *retSequence = nsnull;
+  *retSequence = nullptr;
   nsString text;
   GetOIDText(&algID->algorithm, nssComponent, text);
   if (!algID->parameters.len || algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
@@ -1735,7 +1735,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
     sequence->SetIsValidContainer(false);
   } else {
     nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-    if (printableItem == nsnull)
+    if (printableItem == nullptr)
       return NS_ERROR_OUT_OF_MEMORY;
 
     printableItem->SetDisplayValue(text);
@@ -1746,7 +1746,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
     printableItem->SetDisplayName(text);
 
     printableItem = new nsNSSASN1PrintableItem();
-    if (printableItem == nsnull)
+    if (printableItem == nullptr)
       return NS_ERROR_OUT_OF_MEMORY;
 
     asn1Objects->AppendElement(printableItem, false);
@@ -1784,7 +1784,7 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
   PRExplodedTime explodedTime;
   PR_ExplodeTime(dispTime, PR_LocalTimeParameters, &explodedTime);
 
-  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                               &explodedTime, tempString);
 
   text.Append(tempString);
@@ -1793,14 +1793,14 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
   PRExplodedTime explodedTimeGMT;
   PR_ExplodeTime(dispTime, PR_GMTParameters, &explodedTimeGMT);
 
-  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
+  dateFormatter->FormatPRExplodedTime(nullptr, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                               &explodedTimeGMT, tempString);
 
   text.Append(tempString);
   text.Append(NS_LITERAL_STRING(" GMT)"));
 
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   printableItem->SetDisplayValue(text);
@@ -1818,7 +1818,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
 {
   nsCOMPtr<nsIASN1Sequence> spkiSequence = new nsNSSASN1Sequence();
 
-  if (spkiSequence == nsnull)
+  if (spkiSequence == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsString text;
@@ -1837,7 +1837,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   asn1Objects->AppendElement(sequenceItem, false);
 
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   text.Truncate();
@@ -1918,7 +1918,7 @@ ProcessExtensions(CERTCertExtension **extensions,
                   nsINSSComponent *nssComponent)
 {
   nsCOMPtr<nsIASN1Sequence> extensionSequence = new nsNSSASN1Sequence;
-  if (extensionSequence == nsnull)
+  if (extensionSequence == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsString text;
@@ -1929,7 +1929,7 @@ ProcessExtensions(CERTCertExtension **extensions,
   nsCOMPtr<nsIASN1PrintableItem> newExtension;
   nsCOMPtr<nsIMutableArray> asn1Objects;
   extensionSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  for (i=0; extensions[i] != nsnull; i++) {
+  for (i=0; extensions[i] != nullptr; i++) {
     rv = ProcessSingleExtension(extensions[i], 
                                 ev_oid_tag,
                                 nssComponent,
@@ -1997,7 +1997,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   // The code in this method will assert this is the structure we're dealing
   // and then add more user friendly text for that field.
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
-  if (sequence == nsnull)
+  if (sequence == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsString text;
@@ -2036,7 +2036,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   ProcessName(&mCert->issuer, nssComponent, getter_Copies(value));
 
   printableItem = new nsNSSASN1PrintableItem();
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   printableItem->SetDisplayValue(value);
@@ -2068,7 +2068,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   nssComponent->GetPIPNSSBundleString("CertDumpSubject", text);
 
   printableItem = new nsNSSASN1PrintableItem();
-  if (printableItem == nsnull)
+  if (printableItem == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   printableItem->SetDisplayName(text);
@@ -2083,7 +2083,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
  
   SECItem data; 
   // Is there an issuerUniqueID?
-  if (mCert->issuerID.data != nsnull) {
+  if (mCert->issuerID.data != nullptr) {
     // The issuerID is encoded as a bit string.
     // The function ProcessRawBytes expects the
     // length to be in bytes, so let's convert the
@@ -2093,7 +2093,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
     ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();
-    if (printableItem == nsnull)
+    if (printableItem == nullptr)
       return NS_ERROR_OUT_OF_MEMORY;
 
     printableItem->SetDisplayValue(text);
@@ -2112,7 +2112,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
     ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();
-    if (printableItem == nsnull)
+    if (printableItem == nullptr)
       return NS_ERROR_OUT_OF_MEMORY;
 
     printableItem->SetDisplayValue(text);
@@ -2150,7 +2150,7 @@ nsNSSCertificate::CreateASN1Struct()
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
 
   mASN1Structure = sequence; 
-  if (mASN1Structure == nsnull) {
+  if (mASN1Structure == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2226,7 +2226,7 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   nsAutoString expiredString, notYetValidString;
   nsAutoString expiredStringLeadingSpace, notYetValidStringLeadingSpace;

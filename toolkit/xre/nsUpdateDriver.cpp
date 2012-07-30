@@ -176,7 +176,7 @@ GetStatusFileContents(nsIFile *statusFile, char (&buf)[Size])
   // The buffer needs to be large enough to hold the known status codes
   PR_STATIC_ASSERT(Size > 16);
 
-  PRFileDesc *fd = nsnull;
+  PRFileDesc *fd = nullptr;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv))
     return false;
@@ -241,7 +241,7 @@ GetVersionFile(nsIFile *dir, nsCOMPtr<nsIFile> &result)
 static bool
 IsOlderVersion(nsIFile *versionFile, const char *appVersion)
 {
-  PRFileDesc *fd = nsnull;
+  PRFileDesc *fd = nullptr;
   nsresult rv = versionFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv))
     return true;
@@ -998,8 +998,8 @@ nsUpdateProcessor::ShutdownWatcherThread()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
   mProcessWatcher->Shutdown();
-  mProcessWatcher = nsnull;
-  mUpdate = nsnull;
+  mProcessWatcher = nullptr;
+  mUpdate = nullptr;
 }
 
 void

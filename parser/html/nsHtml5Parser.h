@@ -138,7 +138,7 @@ class nsHtml5Parser : public nsIParser,
      * @param   aMode ignored (for interface compat only)
      */
     NS_IMETHOD Parse(nsIURI* aURL,
-                     nsIRequestObserver* aListener = nsnull,
+                     nsIRequestObserver* aListener = nullptr,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
@@ -241,7 +241,7 @@ class nsHtml5Parser : public nsIParser,
     void DropStreamParser() {
       if (mStreamParser) {
         mStreamParser->DropTimer();
-        mStreamParser = nsnull;
+        mStreamParser = nullptr;
       }
     }
     
@@ -303,7 +303,7 @@ class nsHtml5Parser : public nsIParser,
 
     /**
      * The last buffer in the pending UTF-16 buffer queue. Always points
-     * to a sentinel object with nsnull as its parser key.
+     * to a sentinel object with nullptr as its parser key.
      */
     nsHtml5OwningUTF16Buffer* mLastBuffer; // weak ref;
 

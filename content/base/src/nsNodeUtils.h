@@ -142,8 +142,8 @@ public:
                         nsCOMArray<nsINode> &aNodesWithProperties,
                         nsIDOMNode **aResult)
   {
-    return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager, nsnull,
-                         nsnull, aNodesWithProperties, aResult);
+    return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager, nullptr,
+                         nullptr, aNodesWithProperties, aResult);
   }
 
   /**
@@ -171,7 +171,7 @@ public:
   {
     nsresult rv = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
                                 aCx, aNewScope, aNodesWithProperties,
-                                nsnull);
+                                nullptr);
 
     nsMutationGuard::DidMutate();
 
@@ -269,7 +269,7 @@ private:
     nsCOMPtr<nsINode> clone;
     nsresult rv = CloneAndAdopt(aNode, aClone, aDeep, aNewNodeInfoManager,
                                 aCx, aNewScope, aNodesWithProperties,
-                                nsnull, getter_AddRefs(clone));
+                                nullptr, getter_AddRefs(clone));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return clone ? CallQueryInterface(clone, aResult) : NS_OK;

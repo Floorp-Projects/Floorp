@@ -23,7 +23,7 @@ class nsDataObj;
 struct DataStruct
 {
   DataStruct ( const char* aFlavor )
-    : mDataLen(0), mFlavor(aFlavor), mCacheFileName(nsnull) { }
+    : mDataLen(0), mFlavor(aFlavor), mCacheFileName(nullptr) { }
   ~DataStruct();
   
   const nsCString& GetFlavor() const { return mFlavor; }

@@ -16,7 +16,7 @@ using namespace mozilla;
 //
 // NSPR_LOG_MODULES=nsStreamCopier:5
 //
-static PRLogModuleInfo *gStreamCopierLog = nsnull;
+static PRLogModuleInfo *gStreamCopierLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gStreamCopierLog, PR_LOG_DEBUG, args)
 
@@ -59,7 +59,7 @@ nsAsyncStreamCopier::Complete(nsresult status)
     nsCOMPtr<nsISupports> ctx;
     {
         MutexAutoLock lock(mLock);
-        mCopierCtx = nsnull;
+        mCopierCtx = nullptr;
 
         if (mIsPending) {
             mIsPending = false;
@@ -68,8 +68,8 @@ nsAsyncStreamCopier::Complete(nsresult status)
             // setup OnStopRequest callback and release references...
             observer = mObserver;
             ctx = mObserverContext;
-            mObserver = nsnull;
-            mObserverContext = nsnull;
+            mObserver = nullptr;
+            mObserverContext = nullptr;
         }
     }
 
@@ -170,7 +170,7 @@ nsAsyncStreamCopier::SetLoadFlags(nsLoadFlags aLoadFlags)
 NS_IMETHODIMP
 nsAsyncStreamCopier::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
-    *aLoadGroup = nsnull;
+    *aLoadGroup = nullptr;
     return NS_OK;
 }
 

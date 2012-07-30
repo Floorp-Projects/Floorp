@@ -40,7 +40,7 @@ namespace widget {
   const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
 
 // SHCreateItemFromParsingName is only available on vista and up.
-WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = nsnull;
+WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = nullptr;
 
 /* static */ 
 WinUtils::WinVersion
@@ -368,7 +368,7 @@ WinUtils::VistaCreateItemFromParsingNameInit()
   if (sCreateItemFromParsingName) {
     return true;
   }
-  static HMODULE sShellDll = nsnull;
+  static HMODULE sShellDll = nullptr;
   if (sShellDll) {
     return false;
   }
@@ -379,7 +379,7 @@ WinUtils::VistaCreateItemFromParsingNameInit()
   }
   sCreateItemFromParsingName = (SHCreateItemFromParsingNamePtr)
     GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
-  return sCreateItemFromParsingName != nsnull;
+  return sCreateItemFromParsingName != nullptr;
 }
 
 /* static */

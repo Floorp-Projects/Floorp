@@ -65,7 +65,7 @@ public:
         Create(nsIRDFResource* aContainer,
                Test aContainerTest, Test aEmptyTest) {
             void* place = MemoryElement::gPool.Alloc(sizeof(Element));
-            return place ? ::new (place) Element(aContainer, aContainerTest, aEmptyTest) : nsnull; }
+            return place ? ::new (place) Element(aContainer, aContainerTest, aEmptyTest) : nullptr; }
 
         void Destroy() {
             this->~Element();

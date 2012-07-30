@@ -464,7 +464,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
             if (AndroidBridge::Bridge())
                 mShowPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
             else
-                NS_ASSERTION(AndroidBridge::Bridge() != nsnull, "AndroidBridge is not available!");
+                NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available!");
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }

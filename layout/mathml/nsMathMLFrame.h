@@ -140,7 +140,7 @@ public:
   FindAttrDirectionality(nsIContent*         aContent,
                          nsPresentationData& aPresentationData);
 
-  // helper to check if a content has an attribute. If content is nsnull or if
+  // helper to check if a content has an attribute. If content is nullptr or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
   // @return true     --if attribute exists
   //         false --if attribute doesn't exist

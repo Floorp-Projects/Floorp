@@ -43,7 +43,7 @@ TextLeafAccessibleWrap::Release()
 STDMETHODIMP
 TextLeafAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv = nsnull;
+  *ppv = nullptr;
 
   if (IID_IUnknown == iid) {
     *ppv = static_cast<ISimpleDOMText*>(this);
@@ -177,11 +177,11 @@ TextLeafAccessibleWrap::GetPointFromOffset(nsIFrame* aContainingFrame,
                                            bool aPreferNext, 
                                            nsPoint& aOutPoint)
 {
-  nsIFrame *textFrame = nsnull;
+  nsIFrame *textFrame = nullptr;
   PRInt32 outOffset;
   aContainingFrame->GetChildFrameContainingOffset(aOffset, aPreferNext, &outOffset, &textFrame);
   if (!textFrame) {
-    return nsnull;
+    return nullptr;
   }
 
   textFrame->GetPointFromOffset(aOffset, &aOutPoint);

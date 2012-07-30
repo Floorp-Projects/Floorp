@@ -195,11 +195,11 @@ main(void)
     {
         // Start up XPCOM
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
         nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
         NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
         if (registrar)
-            registrar->AutoRegister(nsnull);
+            registrar->AutoRegister(nullptr);
 
         // Get default directory
         rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -864,7 +864,7 @@ exit:
     if (NS_FAILED(rv))
         printf("Test failed: 0x%.8x\n", rv);
 
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
     printf("XPCOM shut down.\n\n");

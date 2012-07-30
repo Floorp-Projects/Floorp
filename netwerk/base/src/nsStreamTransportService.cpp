@@ -538,7 +538,7 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
 
   if (mPool) {
     mPool->Shutdown();
-    mPool = nsnull;
+    mPool = nullptr;
   }
   return NS_OK;
 }

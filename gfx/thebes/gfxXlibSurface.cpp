@@ -140,14 +140,14 @@ gfxXlibSurface::Create(Screen *screen, Visual *visual,
         CreatePixmap(screen, size, DepthOfVisual(screen, visual),
                      relatedDrawable);
     if (!drawable)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxXlibSurface> result =
         new gfxXlibSurface(DisplayOfScreen(screen), drawable, visual, size);
     result->TakePixmap();
 
     if (result->CairoStatus() != 0)
-        return nsnull;
+        return nullptr;
 
     return result.forget();
 }
@@ -160,14 +160,14 @@ gfxXlibSurface::Create(Screen *screen, XRenderPictFormat *format,
     Drawable drawable =
         CreatePixmap(screen, size, format->depth, relatedDrawable);
     if (!drawable)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxXlibSurface> result =
         new gfxXlibSurface(screen, drawable, format, size);
     result->TakePixmap();
 
     if (result->CairoStatus() != 0)
-        return nsnull;
+        return nullptr;
 
     return result.forget();
 }
@@ -182,7 +182,7 @@ gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
                                      const gfxIntSize& aSize)
 {
     if (!mSurface || !mSurfaceValid) {
-      return nsnull;
+      return nullptr;
     }
 
     if (aContent == CONTENT_COLOR) {
@@ -380,7 +380,7 @@ DisplayTable::DisplayClosing(Display *display, XExtCodes* codes)
     sDisplayTable->mDisplays.RemoveElement(display, FindDisplay());
     if (sDisplayTable->mDisplays.Length() == 0) {
         delete sDisplayTable;
-        sDisplayTable = nsnull;
+        sDisplayTable = nullptr;
     }
     return 0;
 }

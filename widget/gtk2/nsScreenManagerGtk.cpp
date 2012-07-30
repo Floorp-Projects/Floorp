@@ -51,8 +51,8 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
 }
 
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
-  : mXineramalib(nsnull)
-  , mRootWindow(nsnull)
+  : mXineramalib(nullptr)
+  , mRootWindow(nullptr)
 {
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -65,7 +65,7 @@ nsScreenManagerGtk :: ~nsScreenManagerGtk()
   if (mRootWindow) {
     gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
     g_object_unref(mRootWindow);
-    mRootWindow = nsnull;
+    mRootWindow = nullptr;
   }
 
   /* XineramaIsActive() registers a callback function close_display()

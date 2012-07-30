@@ -189,7 +189,7 @@ private:
 
   static bool GetStrictFileOriginPolicy();
 
-  bool     Initialized() { return mDB != nsnull; }
+  bool     Initialized() { return mDB != nullptr; }
 
   nsresult InitActiveCaches();
   nsresult UpdateEntry(nsCacheEntry *entry);

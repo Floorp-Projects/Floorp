@@ -12,7 +12,7 @@ namespace mozilla {
 namespace hal {
 
 WindowIdentifier::WindowIdentifier()
-  : mWindow(nsnull)
+  : mWindow(nullptr)
   , mIsEmpty(true)
 {
 }

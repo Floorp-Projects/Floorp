@@ -19,7 +19,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
  */
 nsNativeDragSource::nsNativeDragSource(nsIDOMDataTransfer* aDataTransfer) :
   m_cRef(0),
-  m_hCursor(nsnull),
+  m_hCursor(nullptr),
   mUserCancelled(false)
 {
   mDataTransfer = do_QueryInterface(aDataTransfer);
@@ -95,7 +95,7 @@ nsNativeDragSource::GiveFeedback(DWORD dwEffect)
     if (cursor.EqualsLiteral("default")) {
       m_hCursor = ::LoadCursor(0, IDC_ARROW);
     } else {
-      m_hCursor =  nsnull;
+      m_hCursor =  nullptr;
     }
   }
 

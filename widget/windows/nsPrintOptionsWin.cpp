@@ -30,7 +30,7 @@ nsPrintOptionsWin::~nsPrintOptionsWin()
 /* nsIPrintSettings CreatePrintSettings (); */
 nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
 

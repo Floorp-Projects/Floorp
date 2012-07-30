@@ -26,7 +26,7 @@ struct nsXBLResource {
 
   nsXBLResource(nsIAtom* aType, const nsAString& aSrc) {
     MOZ_COUNT_CTOR(nsXBLResource);
-    mNext = nsnull;
+    mNext = nullptr;
     mType = aType;
     mSrc = aSrc;
   }

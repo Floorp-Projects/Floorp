@@ -45,7 +45,7 @@ public:
 
   /**
    * Creates "native" anonymous content and adds the created content to
-   * the aElements array. None of the returned elements can be nsnull.
+   * the aElements array. None of the returned elements can be nullptr.
    *
    * If the anonymous content creator sets the editable flag on some
    * of the elements that it creates, the flag will be applied to the node
@@ -70,10 +70,10 @@ public:
   /**
    * Implementations can override this method to create special frames for the
    * anonymous content returned from CreateAnonymousContent.
-   * By default this method returns nsnull, which means the default frame
+   * By default this method returns nullptr, which means the default frame
    * is created.
    */
-  virtual nsIFrame* CreateFrameFor(nsIContent* aContent) { return nsnull; }
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent) { return nullptr; }
 };
 
 #endif

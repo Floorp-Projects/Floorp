@@ -68,7 +68,7 @@ NS_IMETHODIMP nsAutoConfig::GetConfigURL(char **aConfigURL)
         return NS_ERROR_NULL_POINTER;
 
     if (mConfigURL.IsEmpty()) {
-        *aConfigURL = nsnull;
+        *aConfigURL = nullptr;
         return NS_OK;
     }
     
@@ -142,7 +142,7 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsISupports *context,
     // Send the autoconfig.jsc to javascript engine.
     
     rv = EvaluateAdminConfigScript(mBuf.get(), mBuf.Length(),
-                              nsnull, false,true, false);
+                              nullptr, false,true, false);
     if (NS_SUCCEEDED(rv)) {
 
         // Write the autoconfig.jsc to failover.jsc (cached copy) 
@@ -238,7 +238,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
         if (NS_FAILED(rv)) 
             return rv;
     
-        rv = prefs->GetBranch(nsnull,getter_AddRefs(mPrefBranch));
+        rv = prefs->GetBranch(nullptr,getter_AddRefs(mPrefBranch));
         if (NS_FAILED(rv))
             return rv;
     }
@@ -285,7 +285,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIChannel> channel;
     
-    rv = NS_NewURI(getter_AddRefs(url), mConfigURL.get(), nsnull, nsnull);
+    rv = NS_NewURI(getter_AddRefs(url), mConfigURL.get(), nullptr, nullptr);
     if (NS_FAILED(rv))
     {
         PR_LOG(MCD, PR_LOG_DEBUG, ("failed to create URL - is autoadmin.global_config_url valid? - %s\n", mConfigURL.get()));
@@ -294,11 +294,11 @@ nsresult nsAutoConfig::downloadAutoConfig()
 
     PR_LOG(MCD, PR_LOG_DEBUG, ("running MCD url %s\n", mConfigURL.get()));
     // open a channel for the url
-    rv = NS_NewChannel(getter_AddRefs(channel),url, nsnull, nsnull, nsnull, nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE);
+    rv = NS_NewChannel(getter_AddRefs(channel),url, nullptr, nullptr, nullptr, nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE);
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = channel->AsyncOpen(this, nsnull); 
+    rv = channel->AsyncOpen(this, nullptr); 
     if (NS_FAILED(rv)) {
         readOfflineFile();
         return rv;
@@ -427,7 +427,7 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file)
     
     rv = inStr->Read(buf, fs, &amt);
     if (NS_SUCCEEDED(rv)) {
-      EvaluateAdminConfigScript(buf, fs, nsnull, false, 
+      EvaluateAdminConfigScript(buf, fs, nullptr, false, 
                                 true, false);
     }
     inStr->Close();
@@ -526,7 +526,7 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     bool check = false;
     nsXPIDLString emailResult;
     bool success;
-    rv = promptService->Prompt(nsnull, title.get(), err.get(), getter_Copies(emailResult), nsnull, &check, &success);
+    rv = promptService->Prompt(nullptr, title.get(), err.get(), getter_Copies(emailResult), nullptr, &check, &success);
     if (!success)
       return NS_ERROR_FAILURE;
     NS_ENSURE_SUCCESS(rv, rv);

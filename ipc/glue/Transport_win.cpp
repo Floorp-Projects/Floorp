@@ -24,7 +24,7 @@ CreateTransport(ProcessHandle aProcOne, ProcessHandle /*unused*/,
   // function isn't significant.
   wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
   // Use MODE_SERVER to force creation of the pipe
-  Transport t(id, Transport::MODE_SERVER, nsnull);
+  Transport t(id, Transport::MODE_SERVER, nullptr);
   HANDLE serverPipe = t.GetServerPipeHandle();
   if (!serverPipe) {
     return false;
@@ -55,7 +55,7 @@ CreateTransport(ProcessHandle aProcOne, ProcessHandle /*unused*/,
 Transport*
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
-  return new Transport(aTd.mPipeName, aTd.mServerPipe, aMode, nsnull);
+  return new Transport(aTd.mPipeName, aTd.mServerPipe, aMode, nullptr);
 }
 
 void

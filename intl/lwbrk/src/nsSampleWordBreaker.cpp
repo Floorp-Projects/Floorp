@@ -21,8 +21,8 @@ bool nsSampleWordBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,
   const PRUnichar* aText2 , PRUint32 aTextLen2)
 {
-  NS_PRECONDITION( nsnull != aText1, "null ptr");
-  NS_PRECONDITION( nsnull != aText2, "null ptr");
+  NS_PRECONDITION( nullptr != aText1, "null ptr");
+  NS_PRECONDITION( nullptr != aText2, "null ptr");
 
   if(!aText1 || !aText2 || (0 == aTextLen1) || (0 == aTextLen2))
     return false;
@@ -85,7 +85,7 @@ nsWordRange nsSampleWordBreaker::FindWord(
   PRUint32 aOffset)
 {
   nsWordRange range;
-  NS_PRECONDITION( nsnull != aText, "null ptr");
+  NS_PRECONDITION( nullptr != aText, "null ptr");
   NS_PRECONDITION( 0 != aTextLen, "len = 0");
   NS_PRECONDITION( aOffset <= aTextLen, "aOffset > aTextLen");
 

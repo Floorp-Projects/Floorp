@@ -35,8 +35,8 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
                          nsISocketTransport *aSocketTransport,
                          PRInt32 firstPriority)
   : mSocketTransport(aSocketTransport),
-    mSegmentReader(nsnull),
-    mSegmentWriter(nsnull),
+    mSegmentReader(nullptr),
+    mSegmentWriter(nullptr),
     mSendingChunkSize(ASpdySession::kSendingChunkSize),
     mNextStreamID(1),
     mConcurrentHighWater(0),
@@ -44,8 +44,8 @@ SpdySession3::SpdySession3(nsAHttpTransaction *aHttpTransaction,
     mInputFrameBufferSize(kDefaultBufferSize),
     mInputFrameBufferUsed(0),
     mInputFrameDataLast(false),
-    mInputFrameDataStream(nsnull),
-    mNeedsCleanup(nsnull),
+    mInputFrameDataStream(nullptr),
+    mNeedsCleanup(nullptr),
     mShouldGoAway(false),
     mClosed(false),
     mCleanShutdown(false),
@@ -192,7 +192,7 @@ SpdySession3::LogIO(SpdySession3 *self, SpdyStream3 *stream, const char *label,
 typedef nsresult  (*Control_FX) (SpdySession3 *self);
 static Control_FX sControlFunctions[] = 
 {
-  nsnull,
+  nullptr,
   SpdySession3::HandleSynStream,
   SpdySession3::HandleSynReply,
   SpdySession3::HandleRstStream,
@@ -395,7 +395,7 @@ SpdySession3::ActivateStream(SpdyStream3 *stream)
   // yet.
   if (mSegmentReader) {
     PRUint32 countRead;
-    ReadSegments(nsnull, kDefaultBufferSize, &countRead);
+    ReadSegments(nullptr, kDefaultBufferSize, &countRead);
   }
 }
 
@@ -517,7 +517,7 @@ SpdySession3::ResetDownstreamState()
     }
   }
   mInputFrameBufferUsed = 0;
-  mInputFrameDataStream = nsnull;
+  mInputFrameDataStream = nullptr;
 }
 
 void
@@ -609,7 +609,7 @@ SpdySession3::GeneratePing(PRUint32 aID)
   aID = PR_htonl(aID);
   memcpy(packet + 8, &aID, 4);
 
-  LogIO(this, nsnull, "Generate Ping", packet, 12);
+  LogIO(this, nullptr, "Generate Ping", packet, 12);
   FlushOutputQueue();
 }
 
@@ -638,7 +638,7 @@ SpdySession3::GenerateRstStream(PRUint32 aStatusCode, PRUint32 aID)
   aStatusCode = PR_htonl(aStatusCode);
   memcpy(packet + 12, &aStatusCode, 4);
 
-  LogIO(this, nsnull, "Generate Reset", packet, 16);
+  LogIO(this, nullptr, "Generate Reset", packet, 16);
   FlushOutputQueue();
 }
 
@@ -662,7 +662,7 @@ SpdySession3::GenerateGoAway()
   // last-good-stream-id are bytes 8-11, when we accept server push this will
   // need to be set non zero
 
-  LogIO(this, nsnull, "Generate GoAway", packet, 12);
+  LogIO(this, nullptr, "Generate GoAway", packet, 12);
   FlushOutputQueue();
 }
 
@@ -689,7 +689,7 @@ SpdySession3::GenerateSettings()
   PRUint32 rwin = PR_htonl(kInitialRwin);
   memcpy(packet + 16, &rwin, 4);
 
-  LogIO(this, nsnull, "Generate Settings", packet, 8 + dataLen);
+  LogIO(this, nullptr, "Generate Settings", packet, 8 + dataLen);
   FlushOutputQueue();
 }
 
@@ -798,7 +798,7 @@ SpdySession3::CloseStream(SpdyStream3 *aStream, nsresult aResult)
   if (aStream == mInputFrameDataStream) {
     LOG3(("Stream had active partial read frame on close"));
     ChangeDownstreamState(DISCARDING_DATA_FRAME);
-    mInputFrameDataStream = nsnull;
+    mInputFrameDataStream = nullptr;
   }
 
   // check the streams blocked on write, this is linear but the list
@@ -881,7 +881,7 @@ SpdySession3::SetInputFrameDataStream(PRUint32 streamID)
 
   LOG(("SpdySession3::SetInputFrameDataStream failed to verify 0x%X\n",
        streamID));
-  mInputFrameDataStream = nsnull;
+  mInputFrameDataStream = nullptr;
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -1581,7 +1581,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
       return rv;
     }
 
-    LogIO(this, nsnull, "Reading Frame Header",
+    LogIO(this, nullptr, "Reading Frame Header",
           mInputFrameBuffer + mInputFrameBufferUsed, *countWritten);
 
     mInputFrameBufferUsed += *countWritten;
@@ -1714,11 +1714,11 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
     // The cleanup stream should only be set while stream->WriteSegments is
     // on the stack and then cleaned up in this code block afterwards.
     NS_ABORT_IF_FALSE(!mNeedsCleanup, "cleanup stream set unexpectedly");
-    mNeedsCleanup = nsnull;                     /* just in case */
+    mNeedsCleanup = nullptr;                     /* just in case */
 
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
-    mSegmentWriter = nsnull;
+    mSegmentWriter = nullptr;
 
     mLastDataReadEpoch = mLastReadEpoch;
 
@@ -1740,7 +1740,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
             mNeedsCleanup));
       CleanupStream(stream, NS_OK, RST_CANCEL);
       NS_ABORT_IF_FALSE(!mNeedsCleanup, "double cleanup out of data frame");
-      mNeedsCleanup = nsnull;                     /* just in case */
+      mNeedsCleanup = nullptr;                     /* just in case */
       return NS_OK;
     }
     
@@ -1749,7 +1749,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
             "cleanup stream based on mNeedsCleanup.\n",
             this, mNeedsCleanup, mNeedsCleanup ? mNeedsCleanup->StreamID() : 0));
       CleanupStream(mNeedsCleanup, NS_OK, RST_CANCEL);
-      mNeedsCleanup = nsnull;
+      mNeedsCleanup = nullptr;
     }
 
     return rv;
@@ -1775,7 +1775,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
       return rv;
     }
 
-    LogIO(this, nsnull, "Discarding Frame", trash, *countWritten);
+    LogIO(this, nullptr, "Discarding Frame", trash, *countWritten);
 
     mInputFrameDataRead += *countWritten;
 
@@ -1805,7 +1805,7 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
     return rv;
   }
 
-  LogIO(this, nsnull, "Reading Control Frame",
+  LogIO(this, nullptr, "Reading Control Frame",
         mInputFrameBuffer + 8 + mInputFrameDataRead, *countWritten);
 
   mInputFrameDataRead += *countWritten;
@@ -1908,9 +1908,9 @@ SpdySession3::Close(nsresult aReason)
 
   if (NS_SUCCEEDED(aReason))
     GenerateGoAway();
-  mConnection = nsnull;
-  mSegmentReader = nsnull;
-  mSegmentWriter = nsnull;
+  mConnection = nullptr;
+  mSegmentReader = nullptr;
+  mSegmentWriter = nullptr;
 }
 
 void
@@ -2183,7 +2183,7 @@ nsHttpConnection *
 SpdySession3::TakeHttpConnection()
 {
   NS_ABORT_IF_FALSE(false, "TakeHttpConnection of SpdySession3");
-  return nsnull;
+  return nullptr;
 }
 
 PRUint32

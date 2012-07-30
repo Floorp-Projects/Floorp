@@ -112,7 +112,7 @@ private:
   class Notification : public nsISupports {
   public:
     virtual void SetTo(Element* aTo) = 0;
-    virtual void Clear() { mTarget = nsnull; }
+    virtual void Clear() { mTarget = nullptr; }
     virtual ~Notification() {}
   protected:
     Notification(nsReferencedElement* aTarget)
@@ -136,7 +136,7 @@ private:
     NS_DECL_ISUPPORTS_INHERITED
     NS_IMETHOD Run() {
       if (mTarget) {
-        mTarget->mPendingNotification = nsnull;
+        mTarget->mPendingNotification = nullptr;
         mTarget->ElementChanged(mFrom, mTo);
       }
       return NS_OK;
@@ -144,7 +144,7 @@ private:
     virtual void SetTo(Element* aTo) { mTo = aTo; }
     virtual void Clear()
     {
-      Notification::Clear(); mFrom = nsnull; mTo = nsnull;
+      Notification::Clear(); mFrom = nullptr; mTo = nullptr;
     }
   protected:
     nsRefPtr<Element> mFrom;

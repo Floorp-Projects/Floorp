@@ -89,7 +89,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
           requestingPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv) && principalURI) {
           nsScriptSecurityManager::ReportError(
-            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), principalURI,
+            nullptr, NS_LITERAL_STRING("CheckSameOriginError"), principalURI,
             aContentLocation);
         }
       }

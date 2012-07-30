@@ -1159,7 +1159,7 @@ nsCookieService::HandleDBClosed(DBState* aDBState)
   switch (aDBState->corruptFlag) {
   case DBState::OK: {
     // Database is healthy. Notify of closure.
-    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     break;
   }
   case DBState::CLOSING_FOR_REBUILD: {
@@ -1180,7 +1180,7 @@ nsCookieService::HandleDBClosed(DBState* aDBState)
     COOKIE_LOGSTRING(PR_LOG_WARNING,
       ("HandleDBClosed(): DBState %x encountered error rebuilding db; move to "
        "'cookies.sqlite.bak-rebuild' gave rv 0x%x", aDBState, rv));
-    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     break;
   }
   }
@@ -1215,7 +1215,7 @@ nsCookieService::HandleCorruptDB(DBState* aDBState)
     mDefaultDBState->readSet.Clear();
     if (mDefaultDBState->pendingRead) {
       CancelAsyncRead(true);
-      mDefaultDBState->syncConn = nsnull;
+      mDefaultDBState->syncConn = nullptr;
     }
 
     mDefaultDBState->dbConn->AsyncClose(mDefaultDBState->closeListener);
@@ -1274,7 +1274,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
     // do so now.
     COOKIE_LOGSTRING(PR_LOG_WARNING,
       ("RebuildCorruptDB(): DBState %x is stale, aborting", aDBState));
-    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     return;
   }
 
@@ -1291,12 +1291,12 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
       ("RebuildCorruptDB(): TryInitDB() failed with result %u", result));
     CloseDefaultDBConnection();
     mDefaultDBState->corruptFlag = DBState::OK;
-    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    mObserverService->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
     return;
   }
 
   // Notify observers that we're beginning the rebuild.
-  mObserverService->NotifyObservers(nsnull, "cookie-db-rebuilding", nsnull);
+  mObserverService->NotifyObservers(nullptr, "cookie-db-rebuilding", nullptr);
 
   // Enumerate the hash, and add cookies to the params array.
   mozIStorageAsyncStatement* stmt = aDBState->stmtInsert;
@@ -1326,7 +1326,7 @@ nsCookieService::~nsCookieService()
 {
   CloseDBStates();
 
-  gCookieService = nsnull;
+  gCookieService = nullptr;
 }
 
 NS_IMETHODIMP
@@ -1383,7 +1383,7 @@ nsCookieService::Observe(nsISupports     *aSubject,
       mDBState = mDefaultDBState;
     }
 
-    NotifyChanged(nsnull, NS_LITERAL_STRING("reload").get());
+    NotifyChanged(nullptr, NS_LITERAL_STRING("reload").get());
   }
 
   return NS_OK;
@@ -1422,7 +1422,7 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
 
   nsCAutoString result;
   GetCookieStringInternal(aHostURI, isForeign, aHttpBound, result);
-  *aCookie = result.IsEmpty() ? nsnull : ToNewCString(result);
+  *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
 }
 
@@ -1540,7 +1540,7 @@ void
 nsCookieService::NotifyRejected(nsIURI *aHostURI)
 {
   if (mObserverService)
-    mObserverService->NotifyObservers(aHostURI, "cookie-rejected", nsnull);
+    mObserverService->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
 }
 
 // notify observers that the cookie list changed. there are five possible
@@ -1643,7 +1643,7 @@ nsCookieService::RemoveAll()
     }
   }
 
-  NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
+  NotifyChanged(nullptr, NS_LITERAL_STRING("cleared").get());
   return NS_OK;
 }
 
@@ -1717,7 +1717,7 @@ nsCookieService::Add(const nsACString &aHost,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  AddInternal(baseDomain, cookie, currentTimeInUsec, nsnull, nsnull, true);
+  AddInternal(baseDomain, cookie, currentTimeInUsec, nullptr, nullptr, true);
   return NS_OK;
 }
 
@@ -1897,17 +1897,17 @@ nsCookieService::AsyncReadComplete()
       false);
   }
 
-  mDefaultDBState->stmtReadDomain = nsnull;
-  mDefaultDBState->pendingRead = nsnull;
-  mDefaultDBState->readListener = nsnull;
-  mDefaultDBState->syncConn = nsnull;
+  mDefaultDBState->stmtReadDomain = nullptr;
+  mDefaultDBState->pendingRead = nullptr;
+  mDefaultDBState->readListener = nullptr;
+  mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->hostArray.Clear();
   mDefaultDBState->readSet.Clear();
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read(): %ld cookies read",
                                   mDefaultDBState->cookieCount));
 
-  mObserverService->NotifyObservers(nsnull, "cookie-db-read", nsnull);
+  mObserverService->NotifyObservers(nullptr, "cookie-db-read", nullptr);
 }
 
 void
@@ -1926,9 +1926,9 @@ nsCookieService::CancelAsyncRead(bool aPurgeReadSet)
   mozilla::DebugOnly<nsresult> rv = mDefaultDBState->pendingRead->Cancel();
   NS_ASSERT_SUCCESS(rv);
 
-  mDefaultDBState->stmtReadDomain = nsnull;
-  mDefaultDBState->pendingRead = nsnull;
-  mDefaultDBState->readListener = nsnull;
+  mDefaultDBState->stmtReadDomain = nullptr;
+  mDefaultDBState->pendingRead = nullptr;
+  mDefaultDBState->readListener = nullptr;
   mDefaultDBState->hostArray.Clear();
 
   // Only clear the 'readSet' table if we no longer need to know what set of
@@ -2096,7 +2096,7 @@ nsCookieService::EnsureReadComplete()
       false);
   }
 
-  mDefaultDBState->syncConn = nsnull;
+  mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->readSet.Clear();
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
@@ -2332,13 +2332,13 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetPath(pathFromURI);
   if (NS_FAILED(rv)) {
-    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "invalid host/path from URI");
+    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nullptr, "invalid host/path from URI");
     return;
   }
 
   // check default prefs
   CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, baseDomain,
-                                         requireHostMatch, nsnull);
+                                         requireHostMatch, nullptr);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case STATUS_REJECTED:
@@ -2487,7 +2487,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   }
 
   if (!aCookieString.IsEmpty())
-    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, aCookieString, nsnull, nsnull);
+    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, aCookieString, nullptr, nullptr);
 }
 
 // processes a single cookie, and returns true if there are more cookies
@@ -2573,7 +2573,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
     // active window to display the prompt. This isn't exactly ideal, but this
     // code is going away. See bug 546746.
     mPermissionService->CanSetCookie(aHostURI,
-                                     nsnull,
+                                     nullptr,
                                      static_cast<nsICookie2*>(static_cast<nsCookie*>(cookie)),
                                      &cookieAttributes.isSession,
                                      &cookieAttributes.expiryTime,
@@ -3081,7 +3081,7 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     nsCookieAccess access;
     // Not passing an nsIChannel here is probably OK; our implementation
     // doesn't do anything with it anyway.
-    rv = mPermissionService->CanAccess(aHostURI, nsnull, &access);
+    rv = mPermissionService->CanAccess(aHostURI, nullptr, &access);
 
     // if we found an entry, use it
     if (NS_SUCCEEDED(rv)) {

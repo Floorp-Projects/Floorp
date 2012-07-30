@@ -57,7 +57,7 @@ NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transfera
   // Get the nsITransferable interface for getting the data from the clipboard
   if (transferable) {
     nsCOMPtr<nsIDocument> destdoc = GetDocument();
-    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
     (*transferable)->Init(loadContext);
 
     (*transferable)->AddDataFlavor(kUnicodeMime);
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
   HandlingTrustedAction trusted(this);
 
   nsresult rv = NS_OK;
-  char* bestFlavor = nsnull;
+  char* bestFlavor = nullptr;
   nsCOMPtr<nsISupports> genericDataObj;
   PRUint32 len = 0;
   if (NS_SUCCEEDED(aTransferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len))
@@ -338,10 +338,10 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
     {
       // handle transferable hooks
       nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-      if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
+      if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
         return NS_OK;
 
-      rv = InsertTextFromTransferable(trans, nsnull, 0, true);
+      rv = InsertTextFromTransferable(trans, nullptr, 0, true);
     }
   }
 
@@ -358,10 +358,10 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
 
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
     return NS_OK;
 
-  return InsertTextFromTransferable(aTransferable, nsnull, 0, true);
+  return InsertTextFromTransferable(aTransferable, nullptr, 0, true);
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPaste)

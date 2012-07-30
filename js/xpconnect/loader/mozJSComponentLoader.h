@@ -84,8 +84,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             loadProc = NULL;
             unloadProc = NULL;
 
-            global = nsnull;
-            location = nsnull;
+            global = nullptr;
+            location = nullptr;
         }
 
         ~ModuleEntry() {

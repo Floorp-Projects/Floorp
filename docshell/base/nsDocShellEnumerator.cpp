@@ -11,7 +11,7 @@
 #include "nsIDocShellTreeNode.h"
 
 nsDocShellEnumerator::nsDocShellEnumerator(PRInt32 inEnumerationDirection)
-: mRootItem(nsnull)
+: mRootItem(nullptr)
 , mCurIndex(0)
 , mDocShellType(nsIDocShellTreeItem::typeAll)
 , mArrayValid(false)
@@ -30,7 +30,7 @@ NS_IMPL_ISUPPORTS1(nsDocShellEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP nsDocShellEnumerator::GetNext(nsISupports **outCurItem)
 {
   NS_ENSURE_ARG_POINTER(outCurItem);
-  *outCurItem = nsnull;
+  *outCurItem = nullptr;
   
   nsresult rv = EnsureDocShellArray();
   if (NS_FAILED(rv)) return rv;

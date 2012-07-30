@@ -73,7 +73,7 @@ struct CacheEntry
   nsAutoArrayPtr<char> data;
   PRUint32 size;
 
-  CacheEntry() : data(nsnull), size(0) { }
+  CacheEntry() : data(nullptr), size(0) { }
 
   // Takes possession of buf
   CacheEntry(char* buf, PRUint32 len) : data(buf), size(len) { }

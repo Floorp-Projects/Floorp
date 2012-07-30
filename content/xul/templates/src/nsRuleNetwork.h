@@ -111,7 +111,7 @@ protected:
     List* mElements;
 
 public:
-    MemoryElementSet() : mElements(nsnull) {
+    MemoryElementSet() : mElements(nullptr) {
         MOZ_COUNT_CTOR(MemoryElementSet); }
 
     MemoryElementSet(const MemoryElementSet& aSet) : mElements(aSet.mElements) {
@@ -178,7 +178,7 @@ public:
     };
 
     ConstIterator First() const { return ConstIterator(mElements); }
-    ConstIterator Last() const { return ConstIterator(nsnull); }
+    ConstIterator Last() const { return ConstIterator(nullptr); }
 
     // N.B. that the set assumes ownership of the element
     nsresult Add(MemoryElement* aElement);
@@ -256,7 +256,7 @@ protected:
 
 public:
     nsAssignmentSet()
-        : mAssignments(nsnull)
+        : mAssignments(nullptr)
         { MOZ_COUNT_CTOR(nsAssignmentSet); }
 
     nsAssignmentSet(const nsAssignmentSet& aSet)
@@ -324,7 +324,7 @@ public:
     };
 
     ConstIterator First() const { return ConstIterator(mAssignments); }
-    ConstIterator Last() const { return ConstIterator(nsnull); }
+    ConstIterator Last() const { return ConstIterator(nullptr); }
 
 public:
     /**
@@ -381,7 +381,7 @@ public:
      * Determine if the set is empty
      * @return true if the assignment set is empty, false otherwise.
      */
-    bool IsEmpty() const { return mAssignments == nsnull; }
+    bool IsEmpty() const { return mAssignments == nullptr; }
 
     bool Equals(const nsAssignmentSet& aSet) const;
     bool operator==(const nsAssignmentSet& aSet) const { return Equals(aSet); }

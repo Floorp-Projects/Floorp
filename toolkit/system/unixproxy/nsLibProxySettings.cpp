@@ -22,7 +22,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
-  nsUnixSystemProxySettings() { mProxyFactory = nsnull; }
+  nsUnixSystemProxySettings() { mProxyFactory = nullptr; }
   nsresult Init();
 
 private:
@@ -67,7 +67,7 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char **proxyArray = nsnull;
+  char **proxyArray = nullptr;
   proxyArray = px_proxy_factory_get_proxies(mProxyFactory, (char*)(spec.get()));
   NS_ENSURE_TRUE(proxyArray, NS_ERROR_NOT_AVAILABLE);
 
@@ -90,8 +90,8 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
     nsCOMPtr<nsIURI> proxyURI;
 
     rv = ios->NewURI(nsDependentCString(proxyArray[c]),
-                                        nsnull,
-                                        nsnull,
+                                        nullptr,
+                                        nullptr,
                                         getter_AddRefs(proxyURI));
     if (NS_FAILED(rv)) {
       c++;

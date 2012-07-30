@@ -78,7 +78,7 @@ NS_NewXTFInterfaceAggregator(const nsIID& iid,
                              nsISupports* inner,
                              nsISupports* outer,
                              void** aResult){
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  NS_PRECONDITION(aResult != nullptr, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
@@ -130,7 +130,7 @@ nsXTFInterfaceAggregator::CallMethod(PRUint16 methodIndex,
   int paramCount = info->num_args;
   nsXPTCVariant* fullPars;
   if (!paramCount) {
-    fullPars = nsnull;
+    fullPars = nullptr;
   }
   else {
     fullPars = new nsXPTCVariant[paramCount];

@@ -19,7 +19,7 @@ nsAndroidHistory::GetSingleton()
 {
   if (!sHistory) {
     sHistory = new nsAndroidHistory();
-    NS_ENSURE_TRUE(sHistory, nsnull);
+    NS_ENSURE_TRUE(sHistory, nullptr);
   }
 
   NS_ADDREF(sHistory);

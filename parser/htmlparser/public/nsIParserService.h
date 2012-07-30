@@ -66,7 +66,7 @@ class nsIParserService : public nsISupports {
    * @param aId The nsHTMLTag enum value to get the tag for.
    *
    * @return const PRUnichar* The tag corresponding to the nsHTMLTag enum
-   *                          value, or nsnull if the enum value doesn't
+   *                          value, or nullptr if the enum value doesn't
    *                          correspond to a tag (eHTMLTag_unknown,
    *                          eHTMLTag_userdefined, eHTMLTag_text, ...).
    */
@@ -79,7 +79,7 @@ class nsIParserService : public nsISupports {
    * @param aId The nsHTMLTag enum value to get the tag for.
    *
    * @return nsIAtom* The tag corresponding to the nsHTMLTag enum value, or
-   *                  nsnull if the enum value doesn't correspond to a tag
+   *                  nullptr if the enum value doesn't correspond to a tag
    *                  (eHTMLTag_unknown, eHTMLTag_userdefined, eHTMLTag_text,
    *                  ...).
    */

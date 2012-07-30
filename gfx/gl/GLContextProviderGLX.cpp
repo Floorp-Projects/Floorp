@@ -654,7 +654,7 @@ public:
                     XVisualInfo *vinfo,
                     GLContextGLX *shareContext,
                     bool deleteDrawable,
-                    gfxXlibSurface *pixmap = nsnull)
+                    gfxXlibSurface *pixmap = nullptr)
     {
         int db = 0, err;
         err = sGLXLibrary.xGetFBConfigAttrib(display, cfg,
@@ -716,12 +716,12 @@ TRY_AGAIN_NO_SHARING:
 
         if (error) {
             if (shareContext) {
-                shareContext = nsnull;
+                shareContext = nullptr;
                 goto TRY_AGAIN_NO_SHARING;
             }
 
             NS_WARNING("Failed to create GLXContext!");
-            glContext = nsnull; // note: this must be done while the graceful X error handler is set,
+            glContext = nullptr; // note: this must be done while the graceful X error handler is set,
                                 // because glxMakeCurrent can give a GLXBadDrawable error
         }
 
@@ -736,7 +736,7 @@ TRY_AGAIN_NO_SHARING:
 #ifdef DEBUG
         bool success =
 #endif
-        sGLXLibrary.xMakeCurrent(mDisplay, None, nsnull);
+        sGLXLibrary.xMakeCurrent(mDisplay, None, nullptr);
         NS_ABORT_IF_FALSE(success,
             "glXMakeCurrent failed to release GL context before we call glXDestroyContext!");
 
@@ -801,7 +801,7 @@ TRY_AGAIN_NO_SHARING:
             return mPixmap;
 
         default:
-            return nsnull;
+            return nullptr;
         }
     }
 
@@ -1052,7 +1052,7 @@ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
-        return nsnull;
+        return nullptr;
     }
 
     // Currently, we take whatever Visual the window already has, and
@@ -1085,7 +1085,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 
     if (!cfgs) {
         NS_WARNING("[GLX] glXGetFBConfigs() failed");
-        return nsnull;
+        return nullptr;
     }
     NS_ASSERTION(numConfigs > 0, "No FBConfigs found!");
 
@@ -1095,7 +1095,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     XWindowAttributes widgetAttrs;
     if (!XGetWindowAttributes(display, window, &widgetAttrs)) {
         NS_WARNING("[GLX] XGetWindowAttributes() failed");
-        return nsnull;
+        return nullptr;
     }
     const VisualID widgetVisualID = XVisualIDFromVisual(widgetAttrs.visual);
 #ifdef DEBUG
@@ -1138,7 +1138,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 
     if (matchIndex == -1) {
         NS_WARNING("[GLX] Couldn't find a FBConfig matching widget visual");
-        return nsnull;
+        return nullptr;
     }
 
     GLContextGLX *shareContext = GetGlobalContextGLX();
@@ -1160,7 +1160,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
                              bool aShare)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
-        return nsnull;
+        return nullptr;
     }
 
     Display *display = DefaultXDisplay();
@@ -1185,7 +1185,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
                                        attribs,
                                        &numConfigs);
     if (!cfgs) {
-        return nsnull;
+        return nullptr;
     }
 
     NS_ASSERTION(numConfigs > 0,
@@ -1218,7 +1218,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
 
     if (!vinfo) {
         NS_WARNING("glXChooseFBConfig() didn't give us any configs with visuals!");
-        return nsnull;
+        return nullptr;
     }
 
     ScopedXErrorHandler xErrorHandler;
@@ -1265,7 +1265,7 @@ DONE_CREATING_PIXMAP:
                         glxpixmap,
                         cfgs[chosenIndex],
                         vinfo,
-                        aShare ? GetGlobalContextGLX() : nsnull,
+                        aShare ? GetGlobalContextGLX() : nullptr,
                         true,
                         xsurface);
     }
@@ -1282,19 +1282,19 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& aSize,
         CreateOffscreenPixmapContext(aSize, aFormat, true);
 
     if (!glContext) {
-        return nsnull;
+        return nullptr;
     }
 
     if (!glContext->GetSharedContext()) {
         // no point in returning anything if sharing failed, we can't
         // render from this
-        return nsnull;
+        return nullptr;
     }
 
     if (!glContext->ResizeOffscreenFBOs(aSize, true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
-        return nsnull;
+        return nullptr;
     }
 
     return glContext.forget();
@@ -1321,7 +1321,7 @@ GLContextProviderGLX::GetGlobalContext(const ContextFlags)
 void
 GLContextProviderGLX::Shutdown()
 {
-    gGlobalContext = nsnull;
+    gGlobalContext = nullptr;
 }
 
 } /* namespace gl */

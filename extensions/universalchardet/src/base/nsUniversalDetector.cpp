@@ -17,10 +17,10 @@ nsUniversalDetector::nsUniversalDetector(PRUint32 aLanguageFilter)
   mDone = false;
   mBestGuess = -1;   //illegal value as signal
   mInTag = false;
-  mEscCharSetProber = nsnull;
+  mEscCharSetProber = nullptr;
 
   mStart = true;
-  mDetectedCharset = nsnull;
+  mDetectedCharset = nullptr;
   mGotData = false;
   mInputState = ePureAscii;
   mLastChar = '\0';
@@ -28,7 +28,7 @@ nsUniversalDetector::nsUniversalDetector(PRUint32 aLanguageFilter)
 
   PRUint32 i;
   for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
-    mCharSetProbers[i] = nsnull;
+    mCharSetProbers[i] = nullptr;
 }
 
 nsUniversalDetector::~nsUniversalDetector() 
@@ -47,7 +47,7 @@ nsUniversalDetector::Reset()
   mInTag = false;
 
   mStart = true;
-  mDetectedCharset = nsnull;
+  mDetectedCharset = nullptr;
   mGotData = false;
   mInputState = ePureAscii;
   mLastChar = '\0';
@@ -119,27 +119,27 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
         //kill mEscCharSetProber if it is active
         if (mEscCharSetProber) {
           delete mEscCharSetProber;
-          mEscCharSetProber = nsnull;
+          mEscCharSetProber = nullptr;
         }
 
         //start multibyte and singlebyte charset prober
-        if (nsnull == mCharSetProbers[0])
+        if (nullptr == mCharSetProbers[0])
         {
           mCharSetProbers[0] = new nsMBCSGroupProber(mLanguageFilter);
-          if (nsnull == mCharSetProbers[0])
+          if (nullptr == mCharSetProbers[0])
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (nsnull == mCharSetProbers[1] &&
+        if (nullptr == mCharSetProbers[1] &&
             (mLanguageFilter & NS_FILTER_NON_CJK))
         {
           mCharSetProbers[1] = new nsSBCSGroupProber;
-          if (nsnull == mCharSetProbers[1])
+          if (nullptr == mCharSetProbers[1])
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (nsnull == mCharSetProbers[2])
+        if (nullptr == mCharSetProbers[2])
         {
           mCharSetProbers[2] = new nsLatin1Prober; 
-          if (nsnull == mCharSetProbers[2])
+          if (nullptr == mCharSetProbers[2])
             return NS_ERROR_OUT_OF_MEMORY;
         }
       }
@@ -161,9 +161,9 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   switch (mInputState)
   {
   case eEscAscii:
-    if (nsnull == mEscCharSetProber) {
+    if (nullptr == mEscCharSetProber) {
       mEscCharSetProber = new nsEscCharSetProber(mLanguageFilter);
-      if (nsnull == mEscCharSetProber)
+      if (nullptr == mEscCharSetProber)
         return NS_ERROR_OUT_OF_MEMORY;
     }
     st = mEscCharSetProber->HandleData(aBuf, aLen);

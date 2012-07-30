@@ -161,7 +161,7 @@ nsTreeColFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState,
 nsITreeBoxObject*
 nsTreeColFrame::GetTreeBoxObject()
 {
-  nsITreeBoxObject* result = nsnull;
+  nsITreeBoxObject* result = nullptr;
 
   nsIContent* parent = mContent->GetParent();
   if (parent) {

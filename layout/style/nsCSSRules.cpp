@@ -72,7 +72,7 @@ Rule::GetParentRule(nsIDOMCSSRule** aParentRule)
   if (mParentRule) {
     NS_IF_ADDREF(*aParentRule = mParentRule->GetDOMRule());
   } else {
-    *aParentRule = nsnull;
+    *aParentRule = nullptr;
   }
   return NS_OK;
 }
@@ -109,7 +109,7 @@ public:
 
   virtual nsIDOMCSSRule* GetItemAt(PRUint32 aIndex, nsresult* aResult);
 
-  void DropReference() { mGroupRule = nsnull; }
+  void DropReference() { mGroupRule = nullptr; }
 
 private:
   ~GroupRuleRuleList();
@@ -165,7 +165,7 @@ GroupRuleRuleList::GetItemAt(PRUint32 aIndex, nsresult* aResult)
     }
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -174,7 +174,7 @@ GroupRuleRuleList::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   nsresult rv;
   nsIDOMCSSRule* rule = GetItemAt(aIndex, &rv);
   if (!rule) {
-    *aReturn = nsnull;
+    *aReturn = nullptr;
     return rv;
   }
 
@@ -331,7 +331,7 @@ ImportRule::ImportRule(const ImportRule& aCopy)
   // sheet failed security checks.
   if (aCopy.mChildSheet) {
     nsRefPtr<nsCSSStyleSheet> sheet =
-      aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull);
+      aCopy.mChildSheet->Clone(nullptr, this, nullptr, nullptr);
     SetSheet(sheet);
     // SetSheet sets mMedia appropriately
   }
@@ -340,7 +340,7 @@ ImportRule::ImportRule(const ImportRule& aCopy)
 ImportRule::~ImportRule()
 {
   if (mChildSheet) {
-    mChildSheet->SetOwnerRule(nsnull);
+    mChildSheet->SetOwnerRule(nullptr);
   }
 }
 
@@ -528,7 +528,7 @@ GroupRule::GroupRule(const GroupRule& aCopy)
 GroupRule::~GroupRule()
 {
   NS_ABORT_IF_FALSE(!mSheet, "SetStyleSheet should have been called");
-  mRules.EnumerateForwards(SetParentRuleReference, nsnull);
+  mRules.EnumerateForwards(SetParentRuleReference, nullptr);
   if (mRuleCollection) {
     mRuleCollection->DropReference();
   }
@@ -599,8 +599,8 @@ GroupRule::DeleteStyleRuleAt(PRUint32 aIndex)
 {
   Rule* rule = mRules.SafeObjectAt(aIndex);
   if (rule) {
-    rule->SetStyleSheet(nsnull);
-    rule->SetParentRule(nsnull);
+    rule->SetStyleSheet(nullptr);
+    rule->SetParentRule(nullptr);
   }
   return mRules.RemoveObjectAt(aIndex) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
 }
@@ -625,8 +625,8 @@ GroupRule::ReplaceStyleRule(Rule* aOld, Rule* aNew)
   mRules.ReplaceObjectAt(aNew, index);
   aNew->SetStyleSheet(mSheet);
   aNew->SetParentRule(this);
-  aOld->SetStyleSheet(nsnull);
-  aOld->SetParentRule(nsnull);
+  aOld->SetStyleSheet(nullptr);
+  aOld->SetParentRule(nullptr);
   return NS_OK;
 }
 
@@ -727,7 +727,7 @@ MediaRule::MediaRule(const MediaRule& aCopy)
 MediaRule::~MediaRule()
 {
   if (mMedia) {
-    mMedia->SetStyleSheet(nsnull);
+    mMedia->SetStyleSheet(nullptr);
   }
 }
 
@@ -748,7 +748,7 @@ MediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (mMedia) {
     // Set to null so it knows it's leaving one sheet and joining another.
-    mMedia->SetStyleSheet(nsnull);
+    mMedia->SetStyleSheet(nullptr);
     mMedia->SetStyleSheet(aSheet);
   }
 
@@ -1740,7 +1740,7 @@ nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(bool aAllocate)
   if (mRule) {
     return mRule->Declaration();
   } else {
-    return nsnull;
+    return nullptr;
   }
 }
 
@@ -1770,7 +1770,7 @@ nsCSSKeyframeStyleDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 nsIDocument*
 nsCSSKeyframeStyleDeclaration::DocToUpdate()
 {
-  return nsnull;
+  return nullptr;
 }
 
 // -------------------------------------------
@@ -1906,7 +1906,7 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
 
   InfallibleTArray<float> newSelectors;
   // FIXME: pass filename and line number
-  if (parser.ParseKeyframeSelectorString(aKeyText, nsnull, 0, newSelectors)) {
+  if (parser.ParseKeyframeSelectorString(aKeyText, nullptr, 0, newSelectors)) {
     newSelectors.SwapElements(mKeys);
   } else {
     // for now, we don't do anything if the parse fails
@@ -2085,7 +2085,7 @@ nsCSSKeyframesRule::InsertRule(const nsAString& aRule)
 
   // FIXME: pass filename and line number
   nsRefPtr<nsCSSKeyframeRule> rule =
-    parser.ParseKeyframeRule(aRule, nsnull, 0);
+    parser.ParseKeyframeRule(aRule, nullptr, 0);
   if (rule) {
     AppendStyleRule(rule);
   }
@@ -2102,7 +2102,7 @@ nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
 
   InfallibleTArray<float> keys;
   // FIXME: pass filename and line number
-  if (parser.ParseKeyframeSelectorString(aKey, nsnull, 0, keys)) {
+  if (parser.ParseKeyframeSelectorString(aKey, nullptr, 0, keys)) {
     // The spec isn't clear, but we'll match on the key list, which
     // mostly matches what WebKit does, except we'll do last-match
     // instead of first-match, and handling parsing differences better.
@@ -2137,7 +2137,7 @@ nsCSSKeyframesRule::FindRule(const nsAString& aKey,
 {
   PRUint32 index = FindRuleIndexForKey(aKey);
   if (index == RULE_NOT_FOUND) {
-    *aResult = nsnull;
+    *aResult = nullptr;
   } else {
     NS_ADDREF(*aResult = static_cast<nsCSSKeyframeRule*>(mRules[index]));
   }

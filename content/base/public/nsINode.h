@@ -304,14 +304,14 @@ public:
 #endif
   nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
-    mParent(nsnull),
+    mParent(nullptr),
     mFlags(0),
     mBoolFlags(0),
-    mNextSibling(nsnull),
-    mPreviousSibling(nsnull),
-    mFirstChild(nsnull),
+    mNextSibling(nullptr),
+    mPreviousSibling(nullptr),
+    mFirstChild(nullptr),
     mSubtreeRoot(this),
-    mSlots(nsnull)
+    mSlots(nullptr)
   {
   }
 
@@ -457,7 +457,7 @@ public:
    */
   nsIDocument *GetCurrentDoc() const
   {
-    return IsInDoc() ? OwnerDoc() : nsnull;
+    return IsInDoc() ? OwnerDoc() : nullptr;
   }
 
   /**
@@ -501,7 +501,7 @@ public:
   nsINode*
   AppendChild(nsINode *aNewChild, nsresult *aReturn)
   {
-    return InsertBefore(aNewChild, nsnull, aReturn);
+    return InsertBefore(aNewChild, nullptr, aReturn);
   }
   nsresult RemoveChild(nsINode *aOldChild);
 
@@ -576,7 +576,7 @@ public:
    *                       property was not set, i.e. it can be set to null).
    */
   void* GetProperty(nsIAtom *aPropertyName,
-                    nsresult *aStatus = nsnull) const
+                    nsresult *aStatus = nullptr) const
   {
     return GetProperty(0, aPropertyName, aStatus);
   }
@@ -595,7 +595,7 @@ public:
    */
   virtual void* GetProperty(PRUint16 aCategory,
                             nsIAtom *aPropertyName,
-                            nsresult *aStatus = nsnull) const;
+                            nsresult *aStatus = nullptr) const;
 
   /**
    * Set a property to be associated with this node. This will overwrite an
@@ -616,7 +616,7 @@ public:
    */
   nsresult SetProperty(nsIAtom *aPropertyName,
                        void *aValue,
-                       NSPropertyDtorFunc aDtor = nsnull,
+                       NSPropertyDtorFunc aDtor = nullptr,
                        bool aTransfer = false)
   {
     return SetProperty(0, aPropertyName, aValue, aDtor, aTransfer);
@@ -644,9 +644,9 @@ public:
   virtual nsresult SetProperty(PRUint16 aCategory,
                                nsIAtom *aPropertyName,
                                void *aValue,
-                               NSPropertyDtorFunc aDtor = nsnull,
+                               NSPropertyDtorFunc aDtor = nullptr,
                                bool aTransfer = false,
-                               void **aOldValue = nsnull);
+                               void **aOldValue = nullptr);
 
   /**
    * Destroys a property associated with this node. The value is destroyed
@@ -682,7 +682,7 @@ public:
    *                       property was not set, i.e. it can be set to null).
    */
   void* UnsetProperty(nsIAtom  *aPropertyName,
-                      nsresult *aStatus = nsnull)
+                      nsresult *aStatus = nullptr)
   {
     return UnsetProperty(0, aPropertyName, aStatus);
   }
@@ -703,7 +703,7 @@ public:
    */
   virtual void* UnsetProperty(PRUint16 aCategory,
                               nsIAtom *aPropertyName,
-                              nsresult *aStatus = nsnull);
+                              nsresult *aStatus = nullptr);
   
   bool HasProperties() const
   {
@@ -724,7 +724,7 @@ public:
    */
   nsIContent* GetParent() const {
     return NS_LIKELY(GetBoolFlag(ParentIsContent)) ?
-      reinterpret_cast<nsIContent*>(mParent) : nsnull;
+      reinterpret_cast<nsIContent*>(mParent) : nullptr;
   }
 
   /**
@@ -743,7 +743,7 @@ public:
    */
   mozilla::dom::Element* GetElementParent() const
   {
-    return mParent && mParent->IsElement() ? mParent->AsElement() : nsnull;
+    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
   }
 
   /**
@@ -860,8 +860,8 @@ public:
   {
   public:
     nsSlots()
-      : mChildNodes(nsnull),
-        mWeakReference(nsnull)
+      : mChildNodes(nullptr),
+        mWeakReference(nullptr)
     {
     }
 
@@ -987,7 +987,7 @@ public:
    * an editor. Note that this should be only used for getting input or textarea
    * editor's root content. This method doesn't support HTML editors.
    */
-  nsIContent* GetTextEditorRootContent(nsIEditor** aEditor = nsnull);
+  nsIContent* GetTextEditorRootContent(nsIEditor** aEditor = nullptr);
 
   /**
    * Get the nearest selection root, ie. the node that will be selected if the
@@ -1006,7 +1006,7 @@ public:
     PRUint32 count;
     nsIContent* const* children = GetChildArray(&count);
 
-    return count > 0 ? children[count - 1] : nsnull;
+    return count > 0 ? children[count - 1] : nullptr;
   }
 
   /**
@@ -1039,7 +1039,7 @@ protected:
     if (HasExplicitBaseURI()) {
       return static_cast<nsIURI*>(GetProperty(nsGkAtoms::baseURIProperty));
     }
-    return nsnull;
+    return nullptr;
   }
   
 public:
@@ -1086,7 +1086,7 @@ public:
   {
     nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
     if (!key) {
-      return nsnull;
+      return nullptr;
     }
 
     return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
@@ -1145,7 +1145,7 @@ public:
    * aRoot, not including aRoot itself, will be returned.  Returns
    * null if there are no more nodes to traverse.
    */
-  nsIContent* GetNextNode(const nsINode* aRoot = nsnull) const
+  nsIContent* GetNextNode(const nsINode* aRoot = nullptr) const
   {
     return GetNextNodeImpl(aRoot, false);
   }
@@ -1157,7 +1157,7 @@ public:
    * descendants of aRoot, not including aRoot itself, will be returned.
    * Returns null if there are no more nodes to traverse.
    */
-  nsIContent* GetNextNonChildNode(const nsINode* aRoot = nsnull) const
+  nsIContent* GetNextNonChildNode(const nsINode* aRoot = nullptr) const
   {
     return GetNextNodeImpl(aRoot, true);
   }
@@ -1194,7 +1194,7 @@ private:
       }
     }
     if (this == aRoot) {
-      return nsnull;
+      return nullptr;
     }
     const nsINode* cur = this;
     while (1) {
@@ -1204,7 +1204,7 @@ private:
       }
       nsINode* parent = cur->GetNodeParent();
       if (parent == aRoot) {
-        return nsnull;
+        return nullptr;
       }
       cur = parent;
     }
@@ -1220,7 +1220,7 @@ public:
    * aRoot, including aRoot itself, will be returned.  Returns
    * null if there are no more nsIContents to traverse.
    */
-  nsIContent* GetPreviousContent(const nsINode* aRoot = nsnull) const
+  nsIContent* GetPreviousContent(const nsINode* aRoot = nullptr) const
   {
       // Can't use nsContentUtils::ContentIsDescendantOf here, since we
       // can't include it here.
@@ -1234,7 +1234,7 @@ public:
 #endif
 
     if (this == aRoot) {
-      return nsnull;
+      return nullptr;
     }
     nsIContent* cur = this->GetParent();
     nsIContent* iter = this->GetPreviousSibling();
@@ -1390,7 +1390,7 @@ protected:
 
   void ClearSubtreeRootPointer()
   {
-    mSubtreeRoot = nsnull;
+    mSubtreeRoot = nullptr;
   }
 
 public:
@@ -1416,7 +1416,7 @@ protected:
 
   bool HasSlots() const
   {
-    return mSlots != nsnull;
+    return mSlots != nullptr;
   }
 
   nsSlots* GetExistingSlots() const
@@ -1434,7 +1434,7 @@ protected:
 
   nsTObserverArray<nsIMutationObserver*> *GetMutationObservers()
   {
-    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nsnull;
+    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
   }
 
   bool IsEditableInternal() const;
@@ -1465,7 +1465,7 @@ protected:
   {
     *aReturn = ReplaceOrInsertBefore(aReplace, aNewChild, aRefChild);
     if (NS_FAILED(*aReturn)) {
-      return nsnull;
+      return nullptr;
     }
 
     return aReplace ? aRefChild : aNewChild;
@@ -1572,7 +1572,7 @@ extern const nsIID kThisPtrOffsetsSID;
   NS_OFFSET_AND_INTERFACE_TABLE_BEGIN_AMBIGUOUS(_class, _class)
 
 #define NS_OFFSET_AND_INTERFACE_TABLE_END                                     \
-  { nsnull, 0 } };                                                            \
+  { nullptr, 0 } };                                                            \
   if (aIID.Equals(kThisPtrOffsetsSID)) {                                      \
     *aInstancePtr =                                                           \
       const_cast<void*>(static_cast<const void*>(&offsetAndQITable));         \

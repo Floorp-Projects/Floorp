@@ -128,7 +128,7 @@ nsHTMLTableCaptionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },
-    { nsnull }
+    { nullptr }
   };
 
   static const MappedAttributeEntry* const map[] = {

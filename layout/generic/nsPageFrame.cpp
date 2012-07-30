@@ -153,7 +153,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   // then subst in the current date/time
   NS_NAMED_LITERAL_STRING(kDate, "&D");
   if (aStr.Find(kDate) != kNotFound) {
-    if (mPD->mDateTimeStr != nsnull) {
+    if (mPD->mDateTimeStr != nullptr) {
       aNewStr.ReplaceSubstring(kDate.get(), mPD->mDateTimeStr);
     } else {
       aNewStr.ReplaceSubstring(kDate.get(), EmptyString().get());
@@ -183,7 +183,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
   if (aStr.Find(kTitle) != kNotFound) {
-    if (mPD->mDocTitle != nsnull) {
+    if (mPD->mDocTitle != nullptr) {
       aNewStr.ReplaceSubstring(kTitle.get(), mPD->mDocTitle);
     } else {
       aNewStr.ReplaceSubstring(kTitle.get(), EmptyString().get());
@@ -192,7 +192,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kDocURL, "&U");
   if (aStr.Find(kDocURL) != kNotFound) {
-    if (mPD->mDocURL != nsnull) {
+    if (mPD->mDocURL != nullptr) {
       aNewStr.ReplaceSubstring(kDocURL.get(), mPD->mDocURL);
     } else {
       aNewStr.ReplaceSubstring(kDocURL.get(), EmptyString().get());
@@ -430,7 +430,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
 
   // Get the FontMetrics to determine width.height of strings
   nsRefPtr<nsFontMetrics> fontMet;
-  pc->DeviceContext()->GetMetricsFor(*mPD->mHeadFootFont, nsnull,
+  pc->DeviceContext()->GetMetricsFor(*mPD->mHeadFootFont, nullptr,
                                      pc->GetUserFontSet(),
                                      *getter_AddRefs(fontMet));
 

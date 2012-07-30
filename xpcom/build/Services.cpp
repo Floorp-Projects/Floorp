@@ -29,7 +29,7 @@ using namespace mozilla::services;
  * eg. gIOService and GetIOService()
  */
 #define MOZ_SERVICE(NAME, TYPE, CONTRACT_ID)                            \
-  static TYPE* g##NAME = nsnull;                                        \
+  static TYPE* g##NAME = nullptr;                                        \
                                                                         \
   already_AddRefed<TYPE>                                                \
   mozilla::services::Get##NAME()                                        \

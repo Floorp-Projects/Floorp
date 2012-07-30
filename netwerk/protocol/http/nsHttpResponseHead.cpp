@@ -592,7 +592,7 @@ nsHttpResponseHead::ParseVersion(const char *str)
     }
 
     char *p = PL_strchr(str, '.');
-    if (p == nsnull) {
+    if (p == nullptr) {
         LOG(("mal-formed server version; assuming HTTP/1.0\n"));
         mVersion = NS_HTTP_VERSION_1_0;
         return;

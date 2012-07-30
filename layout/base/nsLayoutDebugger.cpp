@@ -125,7 +125,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
 {
   fprintf(aOutput, "<ul>");
 
-  for (nsDisplayItem* i = aList.GetBottom(); i != nsnull; i = i->GetAbove()) {
+  for (nsDisplayItem* i = aList.GetBottom(); i != nullptr; i = i->GetAbove()) {
 #ifdef DEBUG
     if (aList.DidComputeVisibility() && i->GetVisibleRect().IsEmpty())
       continue;

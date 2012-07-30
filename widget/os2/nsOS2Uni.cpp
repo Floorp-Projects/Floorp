@@ -11,7 +11,7 @@
 /**********************************************************
     OS2Uni
  **********************************************************/
-nsICharsetConverterManager* OS2Uni::gCharsetManager = nsnull;
+nsICharsetConverterManager* OS2Uni::gCharsetManager = nullptr;
 
 struct ConverterInfo
 {
@@ -24,37 +24,37 @@ struct ConverterInfo
 #define eCONVERTER_COUNT  17
 ConverterInfo gConverterInfo[eCONVERTER_COUNT] =
 {
-  { 0,    "",              nsnull,  nsnull },
-  { 1252, "windows-1252",  nsnull,  nsnull },
-  { 1208, "UTF-8",         nsnull,  nsnull },
-  { 1250, "windows-1250",  nsnull,  nsnull },
-  { 1251, "windows-1251",  nsnull,  nsnull },
-  { 813,  "ISO-8859-7",    nsnull,  nsnull },
-  { 1254, "windows-1254",  nsnull,  nsnull },
-  { 864,  "IBM864",        nsnull,  nsnull },
-  { 1257, "windows-1257",  nsnull,  nsnull },
-  { 874,  "windows-874",   nsnull,  nsnull },
-  { 932,  "Shift_JIS",     nsnull,  nsnull },
-  { 943,  "Shift_JIS",     nsnull,  nsnull },
-  { 1381, "GB2312",        nsnull,  nsnull },
-  { 1386, "GB2312",        nsnull,  nsnull },
-  { 949,  "x-windows-949", nsnull,  nsnull },
-  { 950,  "Big5",          nsnull,  nsnull },
-  { 1361, "x-johab",       nsnull,  nsnull }
+  { 0,    "",              nullptr,  nullptr },
+  { 1252, "windows-1252",  nullptr,  nullptr },
+  { 1208, "UTF-8",         nullptr,  nullptr },
+  { 1250, "windows-1250",  nullptr,  nullptr },
+  { 1251, "windows-1251",  nullptr,  nullptr },
+  { 813,  "ISO-8859-7",    nullptr,  nullptr },
+  { 1254, "windows-1254",  nullptr,  nullptr },
+  { 864,  "IBM864",        nullptr,  nullptr },
+  { 1257, "windows-1257",  nullptr,  nullptr },
+  { 874,  "windows-874",   nullptr,  nullptr },
+  { 932,  "Shift_JIS",     nullptr,  nullptr },
+  { 943,  "Shift_JIS",     nullptr,  nullptr },
+  { 1381, "GB2312",        nullptr,  nullptr },
+  { 1386, "GB2312",        nullptr,  nullptr },
+  { 949,  "x-windows-949", nullptr,  nullptr },
+  { 950,  "Big5",          nullptr,  nullptr },
+  { 1361, "x-johab",       nullptr,  nullptr }
 };
 
 nsISupports*
 OS2Uni::GetUconvObject(int aCodePage, ConverterRequest aReq)
 {
-  if (gCharsetManager == nsnull) {
+  if (gCharsetManager == nullptr) {
     CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &gCharsetManager);
   }
 
   nsresult rv;
-  nsISupports* uco = nsnull;
+  nsISupports* uco = nullptr;
   for (int i = 0; i < eCONVERTER_COUNT; i++) {
     if (aCodePage == gConverterInfo[i].mCodePage) {
-      if (gConverterInfo[i].mEncoder == nsnull) {
+      if (gConverterInfo[i].mEncoder == nullptr) {
         const char* convname;
         nsCAutoString charset;
         if (aCodePage == 0) {
@@ -74,7 +74,7 @@ OS2Uni::GetUconvObject(int aCodePage, ConverterRequest aReq)
                                                    &gConverterInfo[i].mEncoder);
         gConverterInfo[i].mEncoder->
                     SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace,
-                                           nsnull, '?');
+                                           nullptr, '?');
         gCharsetManager->GetUnicodeDecoderRaw(convname,
                                               &gConverterInfo[i].mDecoder);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get converter");

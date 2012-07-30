@@ -40,7 +40,7 @@ SyncRunnableBase::Run()
 nsresult
 NotifyObserverRunnable::Run()
 {
-  mObserver->Observe(nsnull, mTopic, nsnull);
+  mObserver->Observe(nullptr, mTopic, nullptr);
   return NS_OK;
 }
 

@@ -11,7 +11,7 @@
 #include "nsHyphenator.h"
 
 nsLineBreaker::nsLineBreaker()
-  : mCurrentWordLangGroup(nsnull),
+  : mCurrentWordLangGroup(nullptr),
     mCurrentWordContainsMixedLang(false),
     mCurrentWordContainsComplexChar(false),
     mAfterBreakableSpace(false), mBreakHere(false),
@@ -140,7 +140,7 @@ nsLineBreaker::FlushCurrentWord()
   mTextItems.Clear();
   mCurrentWordContainsComplexChar = false;
   mCurrentWordContainsMixedLang = false;
-  mCurrentWordLangGroup = nsnull;
+  mCurrentWordLangGroup = nullptr;
   return NS_OK;
 }
 

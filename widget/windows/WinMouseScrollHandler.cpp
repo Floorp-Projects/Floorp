@@ -24,7 +24,7 @@ namespace mozilla {
 namespace widget {
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gMouseScrollLog = nsnull;
+PRLogModuleInfo* gMouseScrollLog = nullptr;
 
 static const char* GetBoolName(bool aBool)
 {
@@ -60,7 +60,7 @@ static void LogKeyStateImpl()
 #define LOG_KEYSTATE()
 #endif
 
-MouseScrollHandler* MouseScrollHandler::sInstance = nsnull;
+MouseScrollHandler* MouseScrollHandler::sInstance = nullptr;
 
 bool MouseScrollHandler::Device::sFakeScrollableWindowNeeded = false;
 
@@ -112,7 +112,7 @@ void
 MouseScrollHandler::Shutdown()
 {
   delete sInstance;
-  sInstance = nsnull;
+  sInstance = nullptr;
 }
 
 /* static */
@@ -127,7 +127,7 @@ MouseScrollHandler::GetInstance()
 
 MouseScrollHandler::MouseScrollHandler() :
   mIsWaitingInternalMessage(false),
-  mSynthesizingEvent(nsnull)
+  mSynthesizingEvent(nullptr)
 {
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScroll: Creating an instance, this=%p, sInstance=%p",
@@ -891,7 +891,7 @@ MouseScrollHandler::LastEventInfo::ResetTransaction()
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScroll::LastEventInfo::ResetTransaction()"));
 
-  mWnd = nsnull;
+  mWnd = nullptr;
   mRemainingDeltaForScroll = 0;
   mRemainingDeltaForPixel = 0;
 }

@@ -24,10 +24,10 @@ using namespace mozilla;
 // One hour... because test boxes can be slow!
 #define IDLE_THREAD_TIMEOUT 3600000
 
-static nsIThread** gCreatedThreadList = nsnull;
-static nsIThread** gShutDownThreadList = nsnull;
+static nsIThread** gCreatedThreadList = nullptr;
+static nsIThread** gShutDownThreadList = nullptr;
 
-static ReentrantMonitor* gReentrantMonitor = nsnull;
+static ReentrantMonitor* gReentrantMonitor = nullptr;
 
 static bool gAllRunnablesPosted = false;
 static bool gAllThreadsCreated = false;
@@ -122,7 +122,7 @@ public:
   ~AutoCreateAndDestroyReentrantMonitor() {
     if (*mReentrantMonitorPtr) {
       delete *mReentrantMonitorPtr;
-      *mReentrantMonitorPtr = nsnull;
+      *mReentrantMonitorPtr = nullptr;
     }
   }
 
@@ -135,10 +135,10 @@ int main(int argc, char** argv)
   ScopedXPCOM xpcom("ThreadPoolListener");
   NS_ENSURE_FALSE(xpcom.failed(), 1);
 
-  nsIThread* createdThreadList[NUMBER_OF_THREADS] = { nsnull };
+  nsIThread* createdThreadList[NUMBER_OF_THREADS] = { nullptr };
   gCreatedThreadList = createdThreadList;
 
-  nsIThread* shutDownThreadList[NUMBER_OF_THREADS] = { nsnull };
+  nsIThread* shutDownThreadList[NUMBER_OF_THREADS] = { nullptr };
   gShutDownThreadList = shutDownThreadList;
 
   AutoCreateAndDestroyReentrantMonitor newMon(&gReentrantMonitor);

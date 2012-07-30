@@ -116,7 +116,7 @@ public:
       if (mSegment->GetType() == T::StaticType()) {
         return static_cast<T*>(mSegment.get());
       }
-      return nsnull;
+      return nullptr;
     }
     MediaSegment* GetSegment() const { return mSegment; }
     TrackRate GetRate() const { return mRate; }

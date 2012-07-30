@@ -30,7 +30,7 @@ ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
     // forget its IPDL resources; IPDL-generated code will clean up
     // automatically in this case.
     mLayer->AsLayer()->Disconnect();
-    mLayer = nsnull;
+    mLayer = nullptr;
   }
 }
 

@@ -49,8 +49,8 @@ public:
 private:
   nsThreadManager()
     : mCurThreadIndex(0)
-    , mMainPRThread(nsnull)
-    , mLock(nsnull)
+    , mMainPRThread(nullptr)
+    , mLock(nullptr)
     , mInitialized(false) {
   }
   

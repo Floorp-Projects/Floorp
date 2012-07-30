@@ -102,7 +102,7 @@ CSPService::ShouldLoad(PRUint32 aContentType,
                             aRequestOrigin,
                             aRequestContext,
                             aMimeTypeGuess,
-                            nsnull,
+                            nullptr,
                             aDecision);
         }
     }
@@ -226,8 +226,8 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   PRInt16 aDecision = nsIContentPolicy::ACCEPT;
   csp->ShouldLoad(loadType,        // load type per nsIContentPolicy (PRUint32)
                   newUri,          // nsIURI
-                  nsnull,          // nsIURI
-                  nsnull,          // nsISupports
+                  nullptr,          // nsIURI
+                  nullptr,          // nsISupports
                   EmptyCString(),  // ACString - MIME guess
                   originalUri,     // nsISupports - extra
                   &aDecision);
@@ -273,7 +273,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   const PRUnichar *formatParams[] = { NS_ConvertUTF8toUTF16(newUriSpec).get() };
   if (NS_SUCCEEDED(rv)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "Redirect Error", nsnull,
+                                    "Redirect Error", nullptr,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "InvalidRedirectChannelWarning",
                                     formatParams, 1);

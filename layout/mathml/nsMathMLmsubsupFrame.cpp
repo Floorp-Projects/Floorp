@@ -133,8 +133,8 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   nsHTMLReflowMetrics subScriptSize;
   nsHTMLReflowMetrics supScriptSize;
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
-  nsIFrame* subScriptFrame = nsnull;
-  nsIFrame* supScriptFrame = nsnull;
+  nsIFrame* subScriptFrame = nullptr;
+  nsIFrame* supScriptFrame = nullptr;
   nsIFrame* baseFrame = aFrame->GetFirstPrincipalChild();
   if (baseFrame)
     subScriptFrame = baseFrame->GetNextSibling();
@@ -321,19 +321,19 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
     // now place the base ...
     dx = aFrame->MirrorIfRTL(aDesiredSize.width, baseSize.width, 0);
     dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild(baseFrame, aPresContext, nsnull,
+    FinishReflowChild(baseFrame, aPresContext, nullptr,
                       baseSize, dx, dy, 0);
     // ... and subscript
     dx = aFrame->MirrorIfRTL(aDesiredSize.width, subScriptSize.width,
                              bmBase.width);
     dy = aDesiredSize.ascent - (subScriptSize.ascent - subScriptShift);
-    FinishReflowChild(subScriptFrame, aPresContext, nsnull,
+    FinishReflowChild(subScriptFrame, aPresContext, nullptr,
                       subScriptSize, dx, dy, 0);
     // ... and the superscript
     dx = aFrame->MirrorIfRTL(aDesiredSize.width, supScriptSize.width,
                              bmBase.width + italicCorrection);
     dy = aDesiredSize.ascent - (supScriptSize.ascent + supScriptShift);
-    FinishReflowChild(supScriptFrame, aPresContext, nsnull,
+    FinishReflowChild(supScriptFrame, aPresContext, nullptr,
                       supScriptSize, dx, dy, 0);
   }
 

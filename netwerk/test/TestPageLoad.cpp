@@ -168,7 +168,7 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
     PRUint32 bytesRead=0;
     char buf[1024];
 
-    if(ctxt == nsnull) {
+    if(ctxt == nullptr) {
       bytesRead=0;
       rv = stream->ReadSegments(streamParse, &offset, count, &bytesRead);
     } else {
@@ -295,7 +295,7 @@ nsresult auxLoad(char *uriBuf)
     }
     printf("\n");
     uriList.AppendObject(uri);
-    rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
+    rv = NS_NewChannel(getter_AddRefs(chan), uri, nullptr, nullptr, callbacks);
     RETURN_IF_FAILED(rv, "NS_NewChannel");
 
     gKeepRunning++;
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
     }
     {
         nsCOMPtr<nsIServiceManager> servMan;
-        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
         PRTime start, finish;
 
@@ -339,14 +339,14 @@ int main(int argc, char **argv)
         rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
         RETURN_IF_FAILED(rv, "NS_NewURI");
 
-        rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nsnull, nsnull, callbacks);
+        rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nullptr, nullptr, callbacks);
         RETURN_IF_FAILED(rv, "NS_OpenURI");
         gKeepRunning++;
 
         //TIMER STARTED-----------------------
         printf("Starting clock ... \n");
         start = PR_Now();
-        rv = chan->AsyncOpen(listener, nsnull);
+        rv = chan->AsyncOpen(listener, nullptr);
         RETURN_IF_FAILED(rv, "AsyncOpen");
 
         PumpEvents();
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
         printf("\n\n>>PageLoadTime>>%u>>\n\n", totalTime32);
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }

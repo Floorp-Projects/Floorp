@@ -248,7 +248,7 @@ public:
   
   nsNodeAllocator();
   ~nsNodeAllocator();
-  nsCParserNode* CreateNode(CToken* aToken=nsnull, nsTokenAllocator* aTokenAllocator=0);
+  nsCParserNode* CreateNode(CToken* aToken=nullptr, nsTokenAllocator* aTokenAllocator=0);
 
   nsFixedSizeAllocator&  GetArenaPool() { return mNodePool; }
 

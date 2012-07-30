@@ -49,7 +49,7 @@ public:
     void reset()
     {
         mNamespaceID = kNameSpaceID_None;
-        mLocalName = nsnull;
+        mLocalName = nullptr;
     }
 
     bool isNull()

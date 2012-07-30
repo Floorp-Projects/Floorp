@@ -50,7 +50,7 @@ static struct fb_var_screeninfo sVi;
 static size_t sActiveBuffer;
 typedef vector<nsRefPtr<gfxImageSurface> > BufferVector;
 BufferVector* sBuffers;
-static gfxIntSize *sScreenSize = nsnull;
+static gfxIntSize *sScreenSize = nullptr;
 
 BufferVector& Buffers() { return *sBuffers; }
 

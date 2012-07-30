@@ -11,7 +11,7 @@ class nsResourceSet
 {
 public:
     nsResourceSet()
-        : mResources(nsnull),
+        : mResources(nullptr),
           mCount(0),
           mCapacity(0) {
         MOZ_COUNT_CTOR(nsResourceSet); }
@@ -39,7 +39,7 @@ public:
         nsIRDFResource** mCurrent;
 
     public:
-        ConstIterator() : mCurrent(nsnull) {}
+        ConstIterator() : mCurrent(nullptr) {}
 
         ConstIterator(const ConstIterator& aConstIterator)
             : mCurrent(aConstIterator.mCurrent) {}

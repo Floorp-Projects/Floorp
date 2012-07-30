@@ -100,7 +100,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
 
   mChildCount = -1; // these will be updated in GetSelectedFrame()
   mSelection = 0;
-  mSelectedFrame = nsnull;
+  mSelectedFrame = nullptr;
   mActionType = GetActionType(aContent);
 
   // Let the base class do the rest
@@ -134,7 +134,7 @@ nsMathMLmactionFrame::ChildListChanged(PRInt32 aModType)
   // update cached values
   mChildCount = -1;
   mSelection = 0;
-  mSelectedFrame = nsnull;
+  mSelectedFrame = nullptr;
   GetSelectedFrame();
 
   return nsMathMLContainerFrame::ChildListChanged(aModType);
@@ -151,7 +151,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
        NS_MATHML_ACTION_TYPE_CLASS_ERROR) {
     // Mark mSelection as an error.
     mSelection = -1;
-    mSelectedFrame = nsnull;
+    mSelectedFrame = nullptr;
     return mSelectedFrame;
   }
 
@@ -348,7 +348,7 @@ nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, PresContext(), nsnull, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(childFrame, PresContext(), nullptr, aDesiredSize, 0, 0, 0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.ascent;

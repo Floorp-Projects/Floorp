@@ -339,7 +339,7 @@ ForceWALCheckpoint()
     );
     if (stmt) {
       nsCOMPtr<mozIStoragePendingStatement> handle;
-      (void)stmt->ExecuteAsync(nsnull, getter_AddRefs(handle));
+      (void)stmt->ExecuteAsync(nullptr, getter_AddRefs(handle));
     }
   }
 }
@@ -374,7 +374,7 @@ PlacesEvent::Notify()
   NS_ASSERTION(NS_IsMainThread(), "Must only be used on the main thread!");
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+    (void)obs->NotifyObservers(nullptr, mTopic, nullptr);
   }
 }
 
@@ -394,7 +394,7 @@ AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
-    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+    (void)obs->NotifyObservers(nullptr, mTopic, nullptr);
   }
 
   return NS_OK;

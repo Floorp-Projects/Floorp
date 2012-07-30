@@ -30,15 +30,15 @@ class nsHttpAuthIdentity
 {
 public:
     nsHttpAuthIdentity()
-        : mUser(nsnull)
-        , mPass(nsnull)
-        , mDomain(nsnull)
+        : mUser(nullptr)
+        , mPass(nullptr)
+        , mDomain(nullptr)
     {
     }
     nsHttpAuthIdentity(const PRUnichar *domain,
                        const PRUnichar *user,
                        const PRUnichar *password)
-        : mUser(nsnull)
+        : mUser(nullptr)
     {
         Set(domain, user, password);
     }
@@ -95,9 +95,9 @@ private:
                     const char *challenge,
                     const nsHttpAuthIdentity *ident,
                     nsISupports *metadata)
-        : mRoot(nsnull)
-        , mTail(nsnull)
-        , mRealm(nsnull)
+        : mRoot(nullptr)
+        , mTail(nullptr)
+        , mRealm(nullptr)
     {
         Set(path, realm, creds, challenge, ident, metadata);
     }

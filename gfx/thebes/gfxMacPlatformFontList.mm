@@ -254,7 +254,7 @@ static bool
 SupportsScriptInGSUB(gfxFontEntry* aFontEntry, const hb_tag_t* aScriptTags)
 {
     hb_face_t *face = hb_face_create_for_tables(GetTableForHarfBuzz,
-                                                aFontEntry, nsnull);
+                                                aFontEntry, nullptr);
     unsigned int index;
     hb_tag_t     chosenScript;
     bool found =
@@ -393,7 +393,7 @@ ATSFontEntry::ATSFontEntry(const nsAString& aPostscriptName,
                            PRUint32 aItalicStyle,
                            gfxUserFontData *aUserFontData,
                            bool aIsLocal)
-    : MacOSFontEntry(aPostscriptName, aWeight, nsnull, false)
+    : MacOSFontEntry(aPostscriptName, aWeight, nullptr, false)
 {
     mATSFontRef = aFontRef;
     mATSFontRefInitialized = true;
@@ -403,7 +403,7 @@ ATSFontEntry::ATSFontEntry(const nsAString& aPostscriptName,
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
     mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mUserFontData = aUserFontData;
-    mIsUserFont = (aUserFontData != nsnull) || aIsLocal;
+    mIsUserFont = (aUserFontData != nullptr) || aIsLocal;
     mIsLocalUserFont = aIsLocal;
 }
 
@@ -428,7 +428,7 @@ ATSFontEntry::GetFontRef()
 
     // GetATSFontRef will initialize mATSFontRef
     if (GetATSFontRef() == kInvalidFont) {
-        return nsnull;
+        return nullptr;
     }
     
     mFontRef = ::CGFontCreateWithPlatformFont(&mATSFontRef);
@@ -497,7 +497,7 @@ CGFontEntry::CGFontEntry(const nsAString& aPostscriptName,
                          PRUint16 aWeight, PRUint16 aStretch,
                          PRUint32 aItalicStyle,
                          bool aIsUserFont, bool aIsLocal)
-    : MacOSFontEntry(aPostscriptName, aWeight, nsnull, false)
+    : MacOSFontEntry(aPostscriptName, aWeight, nullptr, false)
 {
     mFontRef = aFontRef;
     mFontRefInitialized = true;
@@ -797,11 +797,11 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
 
 gfxMacPlatformFontList::gfxMacPlatformFontList() :
     gfxPlatformFontList(false), mATSGeneration(PRUint32(kATSGenerationInitial)),
-    mDefaultFont(nsnull)
+    mDefaultFont(nullptr)
 {
     ::ATSFontNotificationSubscribe(ATSNotification,
                                    kATSFontNotifyOptionDefault,
-                                   (void*)this, nsnull);
+                                   (void*)this, nullptr);
 
     // this should always be available (though we won't actually fail if it's missing,
     // we'll just end up doing a search and then caching the new result instead)
@@ -890,7 +890,7 @@ gfxMacPlatformFontList::InitSingleFaceList()
         LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
                       NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
 #endif
-        gfxFontEntry *fontEntry = LookupLocalFont(nsnull, singleFaceFonts[i]);
+        gfxFontEntry *fontEntry = LookupLocalFont(nullptr, singleFaceFonts[i]);
         if (fontEntry) {
             nsAutoString familyName, key;
             familyName = singleFaceFonts[i];
@@ -1003,14 +1003,14 @@ gfxMacPlatformFontList::GlobalFontFallback(const PRUint32 aCh,
         str = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, ch, 2,
                                                    kCFAllocatorNull);
         if (!str) {
-            return nsnull;
+            return nullptr;
         }
         len = 2;
     }
 
     // use CoreText to find the fallback family
 
-    gfxFontEntry *fontEntry = nsnull;
+    gfxFontEntry *fontEntry = nullptr;
     CTFontRef fallback;
     bool cantUseFallbackFont = false;
 
@@ -1042,7 +1042,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const PRUint32 aCh,
 
             fontEntry = FindFontForFamily(family, aMatchStyle, needsBold);
             if (fontEntry && !fontEntry->TestCharacterMap(aCh)) {
-                fontEntry = nsnull;
+                fontEntry = nullptr;
                 cantUseFallbackFont = true;
             }
         }
@@ -1102,7 +1102,7 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
             fontRef = ::ATSFontFindFromName(CFStringRef(faceName),
                                             kATSOptionFlagsDefault);
             if (fontRef == kInvalidFont) {
-                return nsnull;
+                return nullptr;
             }
         }
 
@@ -1115,17 +1115,17 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                  w, aProxyEntry->mStretch,
                                  aProxyEntry->mItalic ?
                                      NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
-                                 nsnull, true);
+                                 nullptr, true);
         } else {
             newFontEntry =
                 new ATSFontEntry(aFontName, fontRef,
-                                 400, 0, NS_FONT_STYLE_NORMAL, nsnull, false);
+                                 400, 0, NS_FONT_STYLE_NORMAL, nullptr, false);
         }
     } else {
         // lookup face based on postscript or full name
         CGFontRef fontRef = ::CGFontCreateWithFontName(CFStringRef(faceName));
         if (!fontRef) {
-            return nsnull;
+            return nullptr;
         }
 
         if (aProxyEntry) {
@@ -1180,17 +1180,17 @@ gfxMacPlatformFontList::MakePlatformFontCG(const gfxProxyFontEntry *aProxyEntry,
 
     nsresult rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
     if (NS_FAILED(rv)) {
-        return nsnull;
+        return nullptr;
     }
 
     CGDataProviderRef provider =
-        ::CGDataProviderCreateWithData(nsnull, aFontData, aLength,
+        ::CGDataProviderCreateWithData(nullptr, aFontData, aLength,
                                        &ReleaseData);
     CGFontRef fontRef = ::CGFontCreateWithDataProvider(provider);
     ::CGDataProviderRelease(provider);
 
     if (!fontRef) {
-        return nsnull;
+        return nullptr;
     }
 
     nsAutoPtr<CGFontEntry>
@@ -1214,7 +1214,7 @@ gfxMacPlatformFontList::MakePlatformFontCG(const gfxProxyFontEntry *aProxyEntry,
     NS_WARNING(warnBuf);
 #endif
 
-    return nsnull;
+    return nullptr;
 }
 
 // grumble, another non-publised Apple API dependency (found in Webkit code)
@@ -1287,7 +1287,7 @@ gfxMacPlatformFontList::MakePlatformFontATS(const gfxProxyFontEntry *aProxyEntry
                     NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get());
             NS_WARNING(warnBuf);
 #endif
-            return nsnull;
+            return nullptr;
         }
 
         // ignoring containers with multiple fonts, use the first face only for now
@@ -1302,7 +1302,7 @@ gfxMacPlatformFontList::MakePlatformFontATS(const gfxProxyFontEntry *aProxyEntry
             NS_WARNING(warnBuf);
 #endif
             ::ATSFontDeactivate(containerRef, NULL, kATSOptionFlagsDefault);
-            return nsnull;
+            return nullptr;
         }
 
         // now lookup the Postscript name; this may fail if the font cache is bad
@@ -1330,7 +1330,7 @@ gfxMacPlatformFontList::MakePlatformFontATS(const gfxProxyFontEntry *aProxyEntry
         nsAutoString uniqueName;
         nsresult rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
         if (NS_FAILED(rv)) {
-            return nsnull;
+            return nullptr;
         }
 
         // font entry will own this
@@ -1367,5 +1367,5 @@ gfxMacPlatformFontList::MakePlatformFontATS(const gfxProxyFontEntry *aProxyEntry
     }
 
     // if we get here, the activation failed (even with possible retries); can't use this font
-    return nsnull;
+    return nullptr;
 }

@@ -43,9 +43,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGLengthList)
   if (tmp->mAList) {
     if (tmp->IsAnimValList()) {
-      tmp->mAList->mAnimVal = nsnull;
+      tmp->mAList->mAnimVal = nullptr;
     } else {
-      tmp->mAList->mBaseVal = nsnull;
+      tmp->mAList->mBaseVal = nullptr;
     }
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
   }
@@ -90,7 +90,7 @@ DOMSVGLengthList::GetItemAt(PRUint32 aIndex)
     EnsureItemAt(aIndex);
     return mItems[aIndex];
   }
-  return nsnull;
+  return nullptr;
 }
 
 void
@@ -127,7 +127,7 @@ DOMSVGLengthList::InternalListLengthWillChange(PRUint32 aNewLength)
 
   // If our length has increased, null out the new pointers:
   for (PRUint32 i = oldLength; i < aNewLength; ++i) {
-    mItems[i] = nsnull;
+    mItems[i] = nullptr;
   }
 }
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP
 DOMSVGLengthList::Initialize(nsIDOMSVGLength *newItem,
                              nsIDOMSVGLength **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -221,7 +221,7 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
                                    PRUint32 index,
                                    nsIDOMSVGLength **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -272,7 +272,7 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
                               PRUint32 index,
                               nsIDOMSVGLength **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -314,7 +314,7 @@ NS_IMETHODIMP
 DOMSVGLengthList::RemoveItem(PRUint32 index,
                              nsIDOMSVGLength **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
   if (IsAnimValList()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
@@ -385,7 +385,7 @@ DOMSVGLengthList::MaybeInsertNullInAnimValListAt(PRUint32 aIndex)
   NS_ABORT_IF_FALSE(animVal->mItems.Length() == mItems.Length(),
                     "animVal list not in sync!");
 
-  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGLength*>(nsnull));
+  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGLength*>(nullptr));
 
   UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
 }

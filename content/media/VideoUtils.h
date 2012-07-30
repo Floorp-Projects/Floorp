@@ -78,7 +78,7 @@ public:
   ~ShutdownThreadEvent() {}
   NS_IMETHOD Run() {
     mThread->Shutdown();
-    mThread = nsnull;
+    mThread = nullptr;
     return NS_OK;
   }
 private:

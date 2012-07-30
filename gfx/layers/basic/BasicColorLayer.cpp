@@ -99,7 +99,7 @@ BasicShadowableColorLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   if (aMaskLayer) {
     static_cast<BasicImplData*>(aMaskLayer->ImplData())
-      ->Paint(aContext, nsnull);
+      ->Paint(aContext, nullptr);
   }
 }
 

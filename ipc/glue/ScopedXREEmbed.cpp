@@ -80,7 +80,7 @@ ScopedXREEmbed::Start()
   }
 #endif
 
-  rv = XRE_InitEmbedding2(localFile, localFile, nsnull);
+  rv = XRE_InitEmbedding2(localFile, localFile, nullptr);
   if (NS_FAILED(rv))
     return;
 

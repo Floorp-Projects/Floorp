@@ -158,7 +158,7 @@ gfxFT2FontBase::GetFontTable(PRUint32 aTag)
     // Cache even when there is no table to save having to open the FT_Face
     // again.
     return mFontEntry->ShareFontTableAndGetBlob(aTag,
-                                                haveTable ? &buffer : nsnull);
+                                                haveTable ? &buffer : nullptr);
 }
 
 PRUint32

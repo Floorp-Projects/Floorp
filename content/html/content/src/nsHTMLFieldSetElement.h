@@ -25,7 +25,7 @@ public:
   static nsHTMLFieldSetElement* FromContent(nsIContent* aContent)
   {
     if (!aContent || !aContent->IsHTML(nsGkAtoms::fieldset)) {
-      return nsnull;
+      return nullptr;
     }
     return static_cast<nsHTMLFieldSetElement*>(aContent);
   }

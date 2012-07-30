@@ -25,7 +25,7 @@ nsDOMScrollAreaEvent::~nsDOMScrollAreaEvent()
   if (mEventIsInternal && mEvent) {
     if (mEvent->eventStructType == NS_SCROLLAREA_EVENT) {
       delete static_cast<nsScrollAreaEvent *>(mEvent);
-      mEvent = nsnull;
+      mEvent = nullptr;
     }
   }
 }

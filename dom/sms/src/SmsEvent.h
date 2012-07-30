@@ -21,7 +21,7 @@ class SmsEvent : public nsIDOMMozSmsEvent
 public:
   SmsEvent(nsPresContext* aPresContext, nsEvent* aEvent)
     : nsDOMEvent(aPresContext, aEvent)
-    , mMessage(nsnull)
+    , mMessage(nullptr)
   {}
 
   NS_DECL_ISUPPORTS_INHERITED

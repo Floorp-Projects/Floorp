@@ -405,7 +405,7 @@ nsAppStartup::Quit(uint32_t aMode)
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
     nsCOMPtr<nsIWindowMediator> mediator (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
     if (mediator) {
-      mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+      mediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
       if (windowEnumerator) {
         bool more;
         while (windowEnumerator->HasMoreElements(&more), more) {
@@ -440,7 +440,7 @@ nsAppStartup::Quit(uint32_t aMode)
       ExitLastWindowClosingSurvivalArea();
 #endif
       if (obsService)
-        obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+        obsService->NotifyObservers(nullptr, "quit-application-granted", nullptr);
     }
 
     /* Enumerate through each open window and close it. It's important to do
@@ -459,7 +459,7 @@ nsAppStartup::Quit(uint32_t aMode)
            method hasn't had a chance to wrap itself up yet. So give up.
            We'll return (with eConsiderQuit) as the remaining windows are
            closed. */
-        mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+        mediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
         if (windowEnumerator) {
           bool more;
           while (windowEnumerator->HasMoreElements(&more), more) {
@@ -491,7 +491,7 @@ nsAppStartup::Quit(uint32_t aMode)
     if (obsService) {
       NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
       NS_NAMED_LITERAL_STRING(restartStr, "restart");
-      obsService->NotifyObservers(nsnull, "quit-application",
+      obsService->NotifyObservers(nullptr, "quit-application",
         mRestart ? restartStr.get() : shutdownStr.get());
     }
 
@@ -529,7 +529,7 @@ nsAppStartup::CloseAllWindows()
 
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
-  mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+  mediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
 
   if (!windowEnumerator)
     return;
@@ -1018,7 +1018,7 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
 
   nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
-  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+  rv = prefs->SavePrefFile(nullptr); // flush prefs to disk since we are tracking crashes
   NS_ENSURE_SUCCESS(rv, rv);
 
   GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
@@ -1071,7 +1071,7 @@ nsAppStartup::TrackStartupCrashEnd()
     if (NS_FAILED(rv)) NS_WARNING("Could not clear startup crash count.");
   }
   nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
-  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+  rv = prefs->SavePrefFile(nullptr); // flush prefs to disk since we are tracking crashes
 
   return rv;
 }

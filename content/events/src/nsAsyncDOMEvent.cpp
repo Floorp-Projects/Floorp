@@ -14,7 +14,7 @@ nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
   : mEventNode(aEventNode), mDispatchChromeOnly(false)
 {
   bool trusted = NS_IS_TRUSTED_EVENT(&aEvent);
-  nsEventDispatcher::CreateEvent(nsnull, &aEvent, EmptyString(),
+  nsEventDispatcher::CreateEvent(nullptr, &aEvent, EmptyString(),
                                  getter_AddRefs(mEvent));
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();

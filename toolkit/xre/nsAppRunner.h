@@ -99,7 +99,7 @@ WriteConsoleLog();
 BOOL
 WinLaunchChild(const PRUnichar *exePath, int argc, 
                char **argv, HANDLE userToken = NULL,
-               HANDLE *hProcess = nsnull);
+               HANDLE *hProcess = nullptr);
 BOOL
 WriteStatusPending(LPCWSTR updateDirPath);
 BOOL

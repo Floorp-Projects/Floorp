@@ -155,7 +155,7 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
   nsresult rv = OwnerDoc()->PropertyTable(aCategory)->SetProperty(this,
                                                                   aPropertyName,
                                                                   aValue, aDtor,
-                                                                  nsnull,
+                                                                  nullptr,
                                                                   aTransfer,
                                                                   aOldValue);
   if (NS_SUCCEEDED(rv)) {
@@ -212,7 +212,7 @@ nsIContent*
 nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
 {
   if (aEditor)
-    *aEditor = nsnull;
+    *aEditor = nullptr;
   for (nsINode* node = this; node; node = node->GetNodeParent()) {
     if (!node->IsElement() ||
         !node->AsElement()->IsHTML())
@@ -229,12 +229,12 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
       editor.swap(*aEditor);
     return rootContent;
   }
-  return nsnull;
+  return nullptr;
 }
 
 static nsIContent* GetRootForContentSubtree(nsIContent* aContent)
 {
-  NS_ENSURE_TRUE(aContent, nsnull);
+  NS_ENSURE_TRUE(aContent, nullptr);
   nsIContent* stop = aContent->GetBindingParent();
   while (aContent) {
     nsIContent* parent = aContent->GetParent();
@@ -249,15 +249,15 @@ static nsIContent* GetRootForContentSubtree(nsIContent* aContent)
 nsIContent*
 nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 {
-  NS_ENSURE_TRUE(aPresShell, nsnull);
+  NS_ENSURE_TRUE(aPresShell, nullptr);
 
   if (IsNodeOfType(eDOCUMENT))
     return static_cast<nsIDocument*>(this)->GetRootElement();
   if (!IsNodeOfType(eCONTENT))
-    return nsnull;
+    return nullptr;
 
   if (GetCurrentDoc() != aPresShell->GetDocument()) {
-    return nsnull;
+    return nullptr;
   }
 
   if (static_cast<nsIContent*>(this)->HasIndependentSelection()) {
@@ -276,7 +276,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
       if (!doc || doc->HasFlag(NODE_IS_EDITABLE) ||
           !HasFlag(NODE_IS_EDITABLE)) {
         nsIContent* editorRoot = GetEditorRootContent(editor);
-        NS_ENSURE_TRUE(editorRoot, nsnull);
+        NS_ENSURE_TRUE(editorRoot, nullptr);
         return nsContentUtils::IsInSameAnonymousTree(this, editorRoot) ?
                  editorRoot :
                  GetRootForContentSubtree(static_cast<nsIContent*>(this));
@@ -293,16 +293,16 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     content = fs->GetAncestorLimiter();
     if (!content) {
       nsIDocument* doc = aPresShell->GetDocument();
-      NS_ENSURE_TRUE(doc, nsnull);
+      NS_ENSURE_TRUE(doc, nullptr);
       content = doc->GetRootElement();
       if (!content)
-        return nsnull;
+        return nullptr;
     }
   }
 
   // This node might be in another subtree, if so, we should find this subtree's
   // root.  Otherwise, we can return the content simply.
-  NS_ENSURE_TRUE(content, nsnull);
+  NS_ENSURE_TRUE(content, nullptr);
   return nsContentUtils::IsInSameAnonymousTree(this, content) ?
            content : GetRootForContentSubtree(static_cast<nsIContent*>(this));
 }
@@ -312,7 +312,7 @@ nsINode::GetChildNodesList()
 {
   nsSlots *slots = GetSlots();
   if (!slots) {
-    return nsnull;
+    return nullptr;
   }
 
   if (!slots->mChildNodes) {
@@ -345,7 +345,7 @@ nsINode::CheckNotNativeAnonymous() const
 nsresult
 nsINode::GetParentNode(nsIDOMNode** aParentNode)
 {
-  *aParentNode = nsnull;
+  *aParentNode = nullptr;
 
   nsINode *parent = GetNodeParent();
 
@@ -355,7 +355,7 @@ nsINode::GetParentNode(nsIDOMNode** aParentNode)
 nsresult
 nsINode::GetParentElement(nsIDOMElement** aParentElement)
 {
-  *aParentElement = nsnull;
+  *aParentElement = nullptr;
   nsINode* parent = GetElementParent();
   return parent ? CallQueryInterface(parent, aParentElement) : NS_OK;
 }
@@ -381,7 +381,7 @@ nsINode::GetFirstChild(nsIDOMNode** aNode)
     return CallQueryInterface(child, aNode);
   }
 
-  *aNode = nsnull;
+  *aNode = nullptr;
 
   return NS_OK;
 }
@@ -394,7 +394,7 @@ nsINode::GetLastChild(nsIDOMNode** aNode)
     return CallQueryInterface(child, aNode);
   }
 
-  *aNode = nsnull;
+  *aNode = nullptr;
 
   return NS_OK;
 }
@@ -402,7 +402,7 @@ nsINode::GetLastChild(nsIDOMNode** aNode)
 nsresult
 nsINode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
-  *aPrevSibling = nsnull;
+  *aPrevSibling = nullptr;
 
   nsIContent *sibling = GetPreviousSibling();
 
@@ -412,7 +412,7 @@ nsINode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 nsresult
 nsINode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-  *aNextSibling = nsnull;
+  *aNextSibling = nullptr;
 
   nsIContent *sibling = GetNextSibling();
 
@@ -422,7 +422,7 @@ nsINode::GetNextSibling(nsIDOMNode** aNextSibling)
 nsresult
 nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  *aOwnerDocument = nsnull;
+  *aOwnerDocument = nullptr;
 
   nsIDocument *ownerDoc = GetOwnerDocument();
 
@@ -523,7 +523,7 @@ nsINode::Normalize()
   nsIDocument* doc = OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nsnull);
+  mozAutoSubtreeModified subtree(doc, nullptr);
 
   // Fire all DOMNodeRemoved events. Optimize the common case of there being
   // no listeners
@@ -652,7 +652,7 @@ nsresult
 nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
                      nsIDOMUserDataHandler *aHandler, nsIVariant **aResult)
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
 
   nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
   if (!key) {
@@ -706,7 +706,7 @@ nsINode::CompareDocPosition(nsINode* aOtherNode)
   nsINode *node1 = aOtherNode, *node2 = this;
 
   // Check if either node is an attribute
-  nsIAttribute* attr1 = nsnull;
+  nsIAttribute* attr1 = nullptr;
   if (node1->IsNodeOfType(nsINode::eATTRIBUTE)) {
     attr1 = static_cast<nsIAttribute*>(node1);
     nsIContent* elem = attr1->GetContent();
@@ -1076,7 +1076,7 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(this, nsnull, aEvent, context,
+    nsEventDispatcher::DispatchDOMEvent(this, nullptr, aEvent, context,
                                         &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
@@ -1297,10 +1297,10 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   }
 
   nsIContent* parent =
-    IsNodeOfType(eDOCUMENT) ? nsnull : static_cast<nsIContent*>(this);
+    IsNodeOfType(eDOCUMENT) ? nullptr : static_cast<nsIContent*>(this);
 
   rv = aKid->BindToTree(doc, parent,
-                        parent ? parent->GetBindingParent() : nsnull,
+                        parent ? parent->GetBindingParent() : nullptr,
                         true);
   if (NS_FAILED(rv)) {
     if (GetFirstChild() == aKid) {
@@ -1684,7 +1684,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     for (nsIContent* child = newContent->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      NS_ASSERTION(child->GetCurrentDoc() == nsnull,
+      NS_ASSERTION(child->GetCurrentDoc() == nullptr,
                    "How did we get a child with a current doc?");
       fragChildren.ref().AppendElement(child);
     }

@@ -93,7 +93,7 @@ public:
     // unlinked us using the cycle collector code, then that has already
     // happened, and mList is null.
     if (mList) {
-      mList->mItems[mListIndex] = nsnull;
+      mList->mItems[mListIndex] = nullptr;
     }
   };
 

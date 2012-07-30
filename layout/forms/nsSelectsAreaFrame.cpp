@@ -84,7 +84,7 @@ public:
                                   nsIFrame* aFrame, nsDisplayList* aList) {
     // We can't specify the underlying frame here. We need this list to be
     // exploded if sorted.
-    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, nsnull, aList);
+    return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, nullptr, aList);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem) {
@@ -100,7 +100,7 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
       return static_cast<nsListControlFrame*>(frame);
     frame = frame->GetParent();
   }
-  return nsnull;
+  return nullptr;
 }
 
 class nsDisplayListFocus : public nsDisplayItem {

@@ -48,7 +48,7 @@ public:
   void CloseAndRelease()
   {
     Close();
-    mPtr = nsnull;
+    mPtr = nullptr;
   }
 
   T* operator->() const

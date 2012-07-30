@@ -483,10 +483,10 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   if (aCharset)
     parserChannel->SetContentCharset(nsDependentCString(aCharset));
 
-  rv = InitParser(nsnull, parserChannel);
+  rv = InitParser(nullptr, parserChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mListener->OnStartRequest(parserChannel, nsnull);
+  rv = mListener->OnStartRequest(parserChannel, nullptr);
   if (NS_FAILED(rv))
     parserChannel->Cancel(rv);
 
@@ -516,7 +516,7 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
     if (! available)
       break; // blocking input stream has none available when done
 
-    rv = mListener->OnDataAvailable(parserChannel, nsnull,
+    rv = mListener->OnDataAvailable(parserChannel, nullptr,
                                     aStream, offset, available);
     if (NS_SUCCEEDED(rv))
       offset += available;
@@ -524,8 +524,8 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
       parserChannel->Cancel(rv);
     parserChannel->GetStatus(&status);
   }
-  rv = mListener->OnStopRequest(parserChannel, nsnull, status);
-  mListener = nsnull;
+  rv = mListener->OnStopRequest(parserChannel, nullptr, status);
+  mListener = nullptr;
 
   return rv;
 }
@@ -551,7 +551,7 @@ nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   rv = InitParser(mParserObserver, channel);
   NS_ENSURE_SUCCESS(rv, rv);
   // we don't need or want this anymore
-  mParserObserver = nsnull;
+  mParserObserver = nullptr;
   return mListener->OnStartRequest(aRequest, aContext);
 }
 
@@ -562,7 +562,7 @@ nsSAXXMLReader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
   NS_ENSURE_STATE(mListener);
   nsresult rv = mListener->OnStopRequest(aRequest, aContext, status);
-  mListener = nsnull;
+  mListener = nullptr;
   mIsAsyncParse = false;
   return rv;
 }

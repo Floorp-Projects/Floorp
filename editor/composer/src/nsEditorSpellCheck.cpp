@@ -130,7 +130,7 @@ LastDictionary::FetchLastDictionary(nsIEditor* aEditor, nsAString& aDictionary)
   bool hasPref;
   if (NS_SUCCEEDED(contentPrefService->HasPref(uri, CPS_PREF_NAME, &hasPref)) && hasPref) {
     nsCOMPtr<nsIVariant> pref;
-    contentPrefService->GetPref(uri, CPS_PREF_NAME, nsnull, getter_AddRefs(pref));
+    contentPrefService->GetPref(uri, CPS_PREF_NAME, nullptr, getter_AddRefs(pref));
     pref->GetAsAString(aDictionary);
   } else {
     aDictionary.Truncate();
@@ -187,7 +187,7 @@ LastDictionary::ClearCurrentDictionary(nsIEditor* aEditor)
   return contentPrefService->RemovePref(uri, CPS_PREF_NAME);
 }
 
-LastDictionary* nsEditorSpellCheck::gDictionaryStore = nsnull;
+LastDictionary* nsEditorSpellCheck::gDictionaryStore = nullptr;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEditorSpellCheck)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEditorSpellCheck)
@@ -206,7 +206,7 @@ NS_IMPL_CYCLE_COLLECTION_3(nsEditorSpellCheck,
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
   , mDictionaryIndex(0)
-  , mEditor(nsnull)
+  , mEditor(nullptr)
   , mUpdateDictionaryRunning(false)
 {
 }
@@ -215,7 +215,7 @@ nsEditorSpellCheck::~nsEditorSpellCheck()
 {
   // Make sure we blow the spellchecker away, just in
   // case it hasn't been destroyed already.
-  mSpellChecker = nsnull;
+  mSpellChecker = nullptr;
 }
 
 // The problem is that if the spell checker does not exist, we can not tell
@@ -380,7 +380,7 @@ nsEditorSpellCheck::CheckCurrentWordNoSuggest(const PRUnichar *aSuggestedWord,
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
   return mSpellChecker->CheckWord(nsDependentString(aSuggestedWord),
-                                  aIsMisspelled, nsnull);
+                                  aIsMisspelled, nullptr);
 }
 
 NS_IMETHODIMP    
@@ -731,7 +731,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary()
     if (NS_FAILED(rv) || currentDictionary.IsEmpty()) {
       // Try to get current dictionary from environment variable LANG
       char* env_lang = getenv("LANG");
-      if (env_lang != nsnull) {
+      if (env_lang != nullptr) {
         nsString lang = NS_ConvertUTF8toUTF16(env_lang);
         // Strip trailing charset if there is any
         PRInt32 dot_pos = lang.FindChar('.');

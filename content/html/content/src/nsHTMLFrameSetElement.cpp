@@ -88,7 +88,7 @@ nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,
   NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
   NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
   *aNumValues = 0;
-  *aSpecs = nsnull;
+  *aSpecs = nullptr;
   
   if (!mRowSpecs) {
     const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows);
@@ -122,7 +122,7 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
   NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
   NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
   *aNumValues = 0;
-  *aSpecs = nsnull;
+  *aSpecs = nullptr;
 
   if (!mColSpecs) {
     const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols);
@@ -195,7 +195,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 {
   if (aValue.IsEmpty()) {
     aNumSpecs = 0;
-    *aSpecs = nsnull;
+    *aSpecs = nullptr;
     return NS_OK;
   }
 
@@ -220,7 +220,7 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 
   nsFramesetSpec* specs = new nsFramesetSpec[count];
   if (!specs) {
-    *aSpecs = nsnull;
+    *aSpecs = nullptr;
     aNumSpecs = 0;
     return NS_ERROR_OUT_OF_MEMORY;
   }

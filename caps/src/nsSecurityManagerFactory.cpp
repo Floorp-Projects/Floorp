@@ -45,7 +45,7 @@ getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, 
 {
     if (argc <= argNum || !JSVAL_IS_STRING(argv[argNum])) {
         JS_ReportError(cx, "String argument expected");
-        return nsnull;
+        return nullptr;
     }
 
     /*
@@ -108,7 +108,7 @@ netscape_security_enablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 
 static JSFunctionSpec PrivilegeManager_static_methods[] = {
     { "enablePrivilege",    netscape_security_enablePrivilege,      1,0},
-    {nsnull,nsnull,0,0}
+    {nullptr,nullptr,0,0}
 };
 
 /*
@@ -128,7 +128,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JSObject *obj = global;
     JSObject *proto;
     JSAutoRequest ar(cx);
-    while ((proto = JS_GetPrototype(obj)) != nsnull)
+    while ((proto = JS_GetPrototype(obj)) != nullptr)
         obj = proto;
     JSClass *objectClass = JS_GetClass(obj);
 
@@ -148,19 +148,19 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
         securityObj = &v.toObject();
     } else {
         /* define netscape.security object */
-        obj = JS_DefineObject(cx, global, "netscape", objectClass, nsnull, 0);
-        if (obj == nsnull)
+        obj = JS_DefineObject(cx, global, "netscape", objectClass, nullptr, 0);
+        if (obj == nullptr)
             return NS_ERROR_FAILURE;
         securityObj = JS_DefineObject(cx, obj, "security", objectClass,
-                                      nsnull, 0);
-        if (securityObj == nsnull)
+                                      nullptr, 0);
+        if (securityObj == nullptr)
             return NS_ERROR_FAILURE;
     }
 
     /* Define PrivilegeManager object with the necessary "static" methods. */
     obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass,
-                          nsnull, 0);
-    if (obj == nsnull)
+                          nullptr, 0);
+    if (obj == nullptr)
         return NS_ERROR_FAILURE;
 
     return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods)

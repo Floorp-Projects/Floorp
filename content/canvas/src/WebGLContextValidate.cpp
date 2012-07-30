@@ -28,9 +28,9 @@ using namespace mozilla;
 bool
 WebGLProgram::UpdateInfo()
 {
-    mIdentifierMap = nsnull;
-    mIdentifierReverseMap = nsnull;
-    mUniformInfoMap = nsnull;
+    mIdentifierMap = nullptr;
+    mIdentifierReverseMap = nullptr;
+    mUniformInfoMap = nullptr;
 
     mAttribMaxNameLength = 0;
 
@@ -94,7 +94,7 @@ WebGLContext::ValidateBuffers(int32_t *maxAllowedCount, const char *info)
         if (!vd.enabled)
             continue;
 
-        if (vd.buf == nsnull) {
+        if (vd.buf == nullptr) {
             ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
             return false;
         }
@@ -618,12 +618,12 @@ WebGLContext::InitAndValidateGL()
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
 
-    mBoundArrayBuffer = nsnull;
-    mBoundElementArrayBuffer = nsnull;
-    mCurrentProgram = nsnull;
+    mBoundArrayBuffer = nullptr;
+    mBoundElementArrayBuffer = nullptr;
+    mCurrentProgram = nullptr;
 
-    mBoundFramebuffer = nsnull;
-    mBoundRenderbuffer = nsnull;
+    mBoundFramebuffer = nullptr;
+    mBoundRenderbuffer = nullptr;
 
     MakeContextCurrent();
 

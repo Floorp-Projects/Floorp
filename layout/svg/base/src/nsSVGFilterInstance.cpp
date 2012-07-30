@@ -71,11 +71,11 @@ nsSVGFilterInstance::CreateImage()
                         gfxASurface::ImageFormatARGB32);
 
   if (!surface || surface->CairoStatus())
-    return nsnull;
+    return nullptr;
 
   surface->SetDeviceOffset(gfxPoint(-mSurfaceRect.x, -mSurfaceRect.y));
 
-  gfxImageSurface *retval = nsnull;
+  gfxImageSurface *retval = nullptr;
   surface.swap(retval);
   return retval;
 }
@@ -430,7 +430,7 @@ nsSVGFilterInstance::EnsureColorModel(PrimitiveInfo* aPrimitive,
 nsresult
 nsSVGFilterInstance::Render(gfxASurface** aOutput)
 {
-  *aOutput = nsnull;
+  *aOutput = nullptr;
 
   nsresult rv = BuildSources();
   if (NS_FAILED(rv))
@@ -507,7 +507,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
       NS_ASSERTION(input->mImageUsers >= 0, "Bad mImageUsers tracking");
       if (input->mImageUsers == 0) {
         // Release the image, it's no longer needed
-        input->mImage.mImage = nsnull;
+        input->mImage.mImage = nullptr;
       }
     }
   }
@@ -515,7 +515,7 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
   PrimitiveInfo* result = &mPrimitives[mPrimitives.Length() - 1];
   ColorModel premulSRGB; // default
   EnsureColorModel(result, premulSRGB);
-  gfxImageSurface* surf = nsnull;
+  gfxImageSurface* surf = nullptr;
   result->mImage.mImage.swap(surf);
   *aOutput = surf;
   return NS_OK;

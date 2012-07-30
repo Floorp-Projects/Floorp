@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   // send the command - it doesn't get any easier than this
   bool success = false;
   char *error = 0;
-  rv = client.SendCommand(browser, username, profile, command, nsnull,
+  rv = client.SendCommand(browser, username, profile, command, nullptr,
                           &error, &success);
 
   // failed to send command

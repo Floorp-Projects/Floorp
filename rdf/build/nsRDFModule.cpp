@@ -38,18 +38,18 @@ CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
         return NS_ERROR_INVALID_POINTER;                             \
     }                                                                \
     if (aOuter) {                                                    \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
         return NS_ERROR_NO_AGGREGATION;                              \
     }                                                                \
     nsI##_ifname* inst;                                              \
     nsresult rv = NS_New##_new(&inst);                               \
     if (NS_FAILED(rv)) {                                             \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
         return rv;                                                   \
     }                                                                \
     rv = inst->QueryInterface(aIID, aResult);                        \
     if (NS_FAILED(rv)) {                                             \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
     }                                                                \
     NS_RELEASE(inst);             /* get rid of extra refcnt */      \
     return rv;                                                       \
@@ -75,18 +75,18 @@ CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
         return NS_ERROR_INVALID_POINTER;                             \
     }                                                                \
     if (aOuter) {                                                    \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
         return NS_ERROR_NO_AGGREGATION;                              \
     }                                                                \
     rdfI##_ifname* inst;                                             \
     nsresult rv = NS_New##_new(&inst);                               \
     if (NS_FAILED(rv)) {                                             \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
         return rv;                                                   \
     }                                                                \
     rv = inst->QueryInterface(aIID, aResult);                        \
     if (NS_FAILED(rv)) {                                             \
-        *aResult = nsnull;                                           \
+        *aResult = nullptr;                                           \
     }                                                                \
     NS_RELEASE(inst);             /* get rid of extra refcnt */      \
     return rv;                                                       \
@@ -151,7 +151,7 @@ StartupRDFModule()
 {
     if (RDFServiceImpl::gRDFService) {
         NS_ERROR("Leaked the RDF service from a previous startup.");
-        RDFServiceImpl::gRDFService = nsnull;
+        RDFServiceImpl::gRDFService = nullptr;
     }
 
     return NS_OK;

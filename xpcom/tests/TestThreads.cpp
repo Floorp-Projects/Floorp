@@ -185,7 +185,7 @@ main(int argc, char** argv)
     int retval = 0;
     nsresult rv;
     
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
     if (NS_FAILED(rv)) return -1;
 
     if (argc > 1 && !strcmp(argv[1], "-stress")) {
@@ -217,7 +217,7 @@ main(int argc, char** argv)
         if (NS_FAILED(rv)) return -1;
     }
 
-    rv = NS_ShutdownXPCOM(nsnull);
+    rv = NS_ShutdownXPCOM(nullptr);
     if (NS_FAILED(rv)) return -1;
     return retval;
 }

@@ -84,7 +84,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
   char  extra[MAX_EXTRA_LEN];
   char  os2_locale[MAX_LOCALE_LEN];
 
-  if (os2Locale!=nsnull) {
+  if (os2Locale!=nullptr) {
     if (strcmp(os2Locale,"C")==0 || strcmp(os2Locale,"OS2")==0) {
       locale.AssignLiteral("en-US");
       return NS_OK;

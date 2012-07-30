@@ -6,6 +6,6 @@
 #include "nscore.h"
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo *gWyciwygLog = nsnull;
+PRLogModuleInfo *gWyciwygLog = nullptr;
 #endif
 

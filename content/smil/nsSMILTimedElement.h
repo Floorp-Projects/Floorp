@@ -43,7 +43,7 @@ public:
 
   /*
    * Returns the time container with which this timed element is associated or
-   * nsnull if it is not associated with a time container.
+   * nullptr if it is not associated with a time container.
    */
   nsSMILTimeContainer* GetTimeContainer();
 
@@ -55,7 +55,7 @@ public:
   {
     return mAnimationElement ?
         mAnimationElement->GetTargetElementContent() :
-        nsnull;
+        nullptr;
   }
 
   /**
@@ -192,7 +192,7 @@ public:
    *
    * @param aClient   The time client to associate. Any previous time client
    *                  will be disassociated and no longer sampled. Setting this
-   *                  to nsnull will simply disassociate the previous client, if
+   *                  to nullptr will simply disassociate the previous client, if
    *                  any.
    */
   void SetTimeClient(nsSMILAnimationFunction* aClient);
@@ -259,7 +259,7 @@ public:
    */
   bool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
                  nsAttrValue& aResult, Element* aContextNode,
-                 nsresult* aParseResult = nsnull);
+                 nsresult* aParseResult = nullptr);
 
   /**
    * Attempts to unset an attribute on this timed element.
@@ -458,14 +458,14 @@ protected:
    *
    * @param aPrevInterval   The previous interval used. If supplied, the first
    *                        interval that begins after aPrevInterval will be
-   *                        returned. May be nsnull.
+   *                        returned. May be nullptr.
    * @param aReplacedInterval The interval that is being updated (if any). This
    *                        used to ensure we don't return interval endpoints
-   *                        that are dependent on themselves. May be nsnull.
+   *                        that are dependent on themselves. May be nullptr.
    * @param aFixedBeginTime The time to use for the start of the interval. This
    *                        is used when only the endpoint of the interval
    *                        should be updated such as when the animation is in
-   *                        the ACTIVE state. May be nsnull.
+   *                        the ACTIVE state. May be nullptr.
    * @param[out] aResult    The next interval. Will be unchanged if no suitable
    *                        interval was found (in which case false will be
    *                        returned).
@@ -518,7 +518,7 @@ protected:
 
   // Reset the current interval by first passing ownership to a temporary
   // variable so that if Unlink() results in us receiving a callback,
-  // mCurrentInterval will be nsnull and we will be in a consistent state.
+  // mCurrentInterval will be nullptr and we will be in a consistent state.
   void ResetCurrentInterval()
   {
     if (mCurrentInterval) {

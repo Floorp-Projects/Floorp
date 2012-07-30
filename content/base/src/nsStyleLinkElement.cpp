@@ -35,7 +35,7 @@ nsStyleLinkElement::nsStyleLinkElement()
 
 nsStyleLinkElement::~nsStyleLinkElement()
 {
-  nsStyleLinkElement::SetStyleSheet(nsnull);
+  nsStyleLinkElement::SetStyleSheet(nullptr);
 }
 
 NS_IMETHODIMP 
@@ -43,7 +43,7 @@ nsStyleLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
 {
   nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(mStyleSheet);
   if (cssSheet) {
-    cssSheet->SetOwningNode(nsnull);
+    cssSheet->SetOwningNode(nullptr);
   }
 
   mStyleSheet = aStyleSheet;
@@ -81,7 +81,7 @@ NS_IMETHODIMP
 nsStyleLinkElement::GetSheet(nsIDOMStyleSheet** aSheet)
 {
   NS_ENSURE_ARG_POINTER(aSheet);
-  *aSheet = nsnull;
+  *aSheet = nullptr;
 
   if (mStyleSheet) {
     CallQueryInterface(mStyleSheet, aSheet);
@@ -177,7 +177,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                                      bool* aWillNotify,
                                      bool* aIsAlternate)
 {
-  return DoUpdateStyleSheet(nsnull, aObserver, aWillNotify, aIsAlternate,
+  return DoUpdateStyleSheet(nullptr, aObserver, aWillNotify, aIsAlternate,
                             false);
 }
 
@@ -186,7 +186,7 @@ nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
                                              bool aForceUpdate)
 {
   bool notify, alternate;
-  return DoUpdateStyleSheet(aOldDocument, nsnull, &notify, &alternate,
+  return DoUpdateStyleSheet(aOldDocument, nullptr, &notify, &alternate,
                             aForceUpdate);
 }
 
@@ -207,7 +207,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     aOldDocument->BeginUpdate(UPDATE_STYLE);
     aOldDocument->RemoveStyleSheet(mStyleSheet);
     aOldDocument->EndUpdate(UPDATE_STYLE);
-    nsStyleLinkElement::SetStyleSheet(nsnull);
+    nsStyleLinkElement::SetStyleSheet(nullptr);
   }
 
   if (mDontLoadStyle || !mUpdatesEnabled) {
@@ -243,7 +243,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     doc->BeginUpdate(UPDATE_STYLE);
     doc->RemoveStyleSheet(mStyleSheet);
     doc->EndUpdate(UPDATE_STYLE);
-    nsStyleLinkElement::SetStyleSheet(nsnull);
+    nsStyleLinkElement::SetStyleSheet(nullptr);
   }
 
   if (!uri && !isInline) {

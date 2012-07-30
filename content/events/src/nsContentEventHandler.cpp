@@ -34,8 +34,8 @@
 nsContentEventHandler::nsContentEventHandler(
                               nsPresContext* aPresContext) :
   mPresContext(aPresContext),
-  mPresShell(aPresContext->GetPresShell()), mSelection(nsnull),
-  mFirstSelectedRange(nsnull), mRootContent(nsnull)
+  mPresShell(aPresContext->GetPresShell()), mSelection(nullptr),
+  mFirstSelectedRange(nullptr), mRootContent(nullptr)
 {
 }
 
@@ -580,7 +580,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   if (!node) {
     node = AdjustTextRectNode(range->GetStartParent(), offset);
   }
-  nsIFrame* firstFrame = nsnull;
+  nsIFrame* firstFrame = nullptr;
   rv = GetFrameForTextRect(node, offset, true, &firstFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -598,7 +598,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   // get the ending frame
   offset = range->EndOffset();
   node = AdjustTextRectNode(range->GetEndParent(), offset);
-  nsIFrame* lastFrame = nsnull;
+  nsIFrame* lastFrame = nullptr;
   rv = GetFrameForTextRect(node, offset, range->Collapsed(), &lastFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -661,7 +661,7 @@ nsContentEventHandler::OnQueryEditorRect(nsQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // account for any additional frames
-  while ((frame = frame->GetNextContinuation()) != nsnull) {
+  while ((frame = frame->GetNextContinuation()) != nullptr) {
     nsRect frameRect(nsPoint(0, 0), frame->GetRect().Size());
     rv = ConvertToRootViewRelativeOffset(frame, frameRect);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -758,7 +758,7 @@ nsContentEventHandler::OnQuerySelectionAsTransferable(nsQueryContentEvent* aEven
 
   if (!aEvent->mReply.mHasSelection) {
     aEvent->mSucceeded = true;
-    aEvent->mReply.mTransferable = nsnull;
+    aEvent->mReply.mTransferable = nullptr;
     return NS_OK;
   }
 
@@ -872,7 +872,7 @@ nsContentEventHandler::OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent)
                               getter_AddRefs(elementUnderMouse));
   nsCOMPtr<nsIContent> contentUnderMouse = do_QueryInterface(elementUnderMouse);
   if (contentUnderMouse) {
-    nsIWidget* targetWidget = nsnull;
+    nsIWidget* targetWidget = nullptr;
     nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
     nsIObjectFrame* pluginFrame = do_QueryFrame(targetFrame);
     if (pluginFrame) {
@@ -957,7 +957,7 @@ nsContentEventHandler::GetStartFrameAndOffset(nsRange* aRange,
 {
   NS_ASSERTION(aRange && aFrame && aOffsetInFrame, "params are invalid");
 
-  nsIContent* content = nsnull;
+  nsIContent* content = nullptr;
   nsINode* node = aRange->GetStartParent();
   if (node && node->IsNodeOfType(nsINode::eCONTENT))
     content = static_cast<nsIContent*>(node);
@@ -978,12 +978,12 @@ nsContentEventHandler::ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
 {
   NS_ASSERTION(aFrame, "aFrame must not be null");
 
-  nsIView* view = nsnull;
+  nsIView* view = nullptr;
   nsPoint posInView;
   aFrame->GetOffsetFromView(posInView, &view);
   if (!view)
     return NS_ERROR_FAILURE;
-  aRect += posInView + view->GetOffsetTo(nsnull);
+  aRect += posInView + view->GetOffsetTo(nullptr);
   return NS_OK;
 }
 

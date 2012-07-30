@@ -22,8 +22,8 @@ class NS_STACK_CLASS nsHtml5DependentUTF16Buffer : public nsHtml5UTF16Buffer
     /**
      * Copies the currently unconsumed part of this buffer into a new
      * heap-allocated nsHtml5OwningUTF16Buffer. The new object is allocated
-     * with a fallible allocator. If the allocation fails, nsnull is returned.
-     * @return heap-allocated copy or nsnull if memory allocation failed
+     * with a fallible allocator. If the allocation fails, nullptr is returned.
+     * @return heap-allocated copy or nullptr if memory allocation failed
      */
     already_AddRefed<nsHtml5OwningUTF16Buffer> FalliblyCopyAsOwningBuffer();
 };

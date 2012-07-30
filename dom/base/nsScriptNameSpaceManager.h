@@ -99,7 +99,7 @@ public:
   // It also returns a pointer to the string buffer of the classname
   // in the nsGlobalNameStruct.
   const nsGlobalNameStruct* LookupName(const nsAString& aName,
-                                       const PRUnichar **aClassName = nsnull)
+                                       const PRUnichar **aClassName = nullptr)
   {
     return LookupNameInternal(aName, aClassName);
   }
@@ -147,9 +147,9 @@ private:
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
   nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const nsAString *aKey,
-                                const PRUnichar **aClassName = nsnull);
+                                const PRUnichar **aClassName = nullptr);
   nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const char *aKey,
-                                const PRUnichar **aClassName = nsnull)
+                                const PRUnichar **aClassName = nullptr)
   {
     NS_ConvertASCIItoUTF16 key(aKey);
     return AddToHash(aTable, &key, aClassName);
@@ -176,7 +176,7 @@ private:
                                   nsISupports* aEntry);
 
   nsGlobalNameStruct* LookupNameInternal(const nsAString& aName,
-                                         const PRUnichar **aClassName = nsnull);
+                                         const PRUnichar **aClassName = nullptr);
 
   PLDHashTable mGlobalNames;
   PLDHashTable mNavigatorNames;

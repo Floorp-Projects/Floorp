@@ -91,9 +91,9 @@ nsMathMLmfencedFrame::RemoveFencesAndSeparators()
   delete mCloseChar;
   if (mSeparatorsChar) delete[] mSeparatorsChar;
 
-  mOpenChar = nsnull;
-  mCloseChar = nsnull;
-  mSeparatorsChar = nsnull;
+  mOpenChar = nullptr;
+  mCloseChar = nullptr;
+  mSeparatorsChar = nullptr;
   mSeparatorsCount = 0;
 }
 
@@ -379,7 +379,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     else  
       aDesiredSize.mBoundingMetrics += bm;
 
-    FinishReflowChild(childFrame, aPresContext, nsnull, childSize, 
+    FinishReflowChild(childFrame, aPresContext, nullptr, childSize, 
                       dx, ascent - childSize.ascent, 0);
     dx += childSize.width;
 
@@ -662,7 +662,7 @@ nsMathMLmfencedFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
     closeIndex = lastIndex;
   }
   if (aIndex < 0 || aIndex > lastIndex) {
-    return nsnull;
+    return nullptr;
   }
 
   if (aIndex < mSeparatorsCount) {
@@ -674,7 +674,7 @@ nsMathMLmfencedFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
   else if (aIndex == closeIndex) {
     return mCloseChar->GetStyleContext();
   }
-  return nsnull;
+  return nullptr;
 }
 
 void

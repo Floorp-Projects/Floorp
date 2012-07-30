@@ -77,24 +77,24 @@ private:
            SharedMemory::SharedMemoryType aShmType)
     {
         if (!CheckSurfaceSize(aSize))
-            return nsnull;
+            return nullptr;
 
         Shmem shmem;
         long stride = ComputeStride(aSize, aFormat);
         size_t size = GetAlignedSize(aSize, stride);
         if (!Unsafe) {
             if (!aAllocator->AllocShmem(size, aShmType, &shmem))
-                return nsnull;
+                return nullptr;
         } else {
             if (!aAllocator->AllocUnsafeShmem(size, aShmType, &shmem))
-                return nsnull;
+                return nullptr;
         }
 
         nsRefPtr<gfxSharedImageSurface> s =
             new gfxSharedImageSurface(aSize, aFormat, shmem);
         if (s->CairoStatus() != 0) {
             aAllocator->DeallocShmem(shmem);
-            return nsnull;
+            return nullptr;
         }
         s->WriteShmemInfo();
         return s.forget();

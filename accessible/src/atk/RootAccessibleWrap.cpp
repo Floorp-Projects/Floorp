@@ -11,7 +11,7 @@
 using namespace mozilla::a11y;
 
 NativeRootAccessibleWrap::NativeRootAccessibleWrap(AtkObject* aAccessible):
-  RootAccessible(nsnull, nsnull, nsnull)
+  RootAccessible(nullptr, nullptr, nullptr)
 {
   // XXX: mark the object as defunct to ensure no single internal method is
   // running on it.
@@ -24,5 +24,5 @@ NativeRootAccessibleWrap::NativeRootAccessibleWrap(AtkObject* aAccessible):
 NativeRootAccessibleWrap::~NativeRootAccessibleWrap()
 {
   g_object_unref(mAtkObject);
-  mAtkObject = nsnull;
+  mAtkObject = nullptr;
 }

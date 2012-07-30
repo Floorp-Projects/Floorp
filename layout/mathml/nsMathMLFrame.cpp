@@ -39,7 +39,7 @@ nsMathMLFrame::FindAttrDisplaystyle(nsIContent*         aContent,
                aContent->Tag() == nsGkAtoms::mtable_ ||
                aContent->Tag() == nsGkAtoms::math, "bad caller");
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::_false, &nsGkAtoms::_true, nsnull};
+    {&nsGkAtoms::_false, &nsGkAtoms::_true, nullptr};
   // see if the explicit displaystyle attribute is there
   switch (aContent->FindAttrValueIn(kNameSpaceID_None,
     nsGkAtoms::displaystyle_, strings, eCaseMatters)) {
@@ -70,7 +70,7 @@ nsMathMLFrame::FindAttrDirectionality(nsIContent*         aContent,
                aContent->Tag() == nsGkAtoms::ms_, "bad caller");
 
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
+    {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nullptr};
 
   // see if the explicit dir attribute is there
   switch (aContent->FindAttrValueIn(kNameSpaceID_None,
@@ -90,14 +90,14 @@ NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
   mEmbellishData.flags = 0;
-  mEmbellishData.coreFrame = nsnull;
+  mEmbellishData.coreFrame = nullptr;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mEmbellishData.leadingSpace = 0;
   mEmbellishData.trailingSpace = 0;
 
   mPresentationData.flags = 0;
-  mPresentationData.baseFrame = nsnull;
-  mPresentationData.mstyle = nsnull;
+  mPresentationData.baseFrame = nullptr;
+  mPresentationData.mstyle = nullptr;
 
   // by default, just inherit the display of our parent
   nsPresentationData parentData;
@@ -175,7 +175,7 @@ nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
 {
   // initialize OUT params
   aEmbellishData.flags = 0;
-  aEmbellishData.coreFrame = nsnull;
+  aEmbellishData.coreFrame = nullptr;
   aEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   aEmbellishData.leadingSpace = 0;
   aEmbellishData.trailingSpace = 0;
@@ -197,8 +197,8 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
 {
   // initialize OUT params
   aPresentationData.flags = 0;
-  aPresentationData.baseFrame = nsnull;
-  aPresentationData.mstyle = nsnull;
+  aPresentationData.baseFrame = nullptr;
+  aPresentationData.mstyle = nullptr;
 
   nsIFrame* frame = aFrame;
   while (frame) {
@@ -257,7 +257,7 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
   nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
 
   nsPresentationData mstyleParentData;
-  mstyleParentData.mstyle = nsnull;
+  mstyleParentData.mstyle = nullptr;
 
   if (mstyleParent) {
     nsIMathMLFrame* mathMLFrame = do_QueryFrame(mstyleParent);

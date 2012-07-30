@@ -102,7 +102,7 @@ NS_IMPL_EVENT_HANDLER(Connection, change)
 nsresult
 Connection::DispatchTrustedEventToSelf(const nsAString& aEventName)
 {
-  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
   nsresult rv = event->InitEvent(aEventName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 

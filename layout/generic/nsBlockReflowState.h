@@ -52,7 +52,7 @@ public:
   nsFlowAreaRect GetFloatAvailableSpace() const
     { return GetFloatAvailableSpace(mY); }
   nsFlowAreaRect GetFloatAvailableSpace(nscoord aY) const
-    { return GetFloatAvailableSpaceWithState(aY, nsnull); }
+    { return GetFloatAvailableSpaceWithState(aY, nullptr); }
   nsFlowAreaRect
     GetFloatAvailableSpaceWithState(nscoord aY,
                                     nsFloatManager::SavedState *aState) const;
@@ -85,7 +85,7 @@ public:
   // floats indicated by aBreakType and has enough width between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
   nscoord ClearFloats(nscoord aY, PRUint8 aBreakType,
-                      nsIFrame *aReplacedBlock = nsnull,
+                      nsIFrame *aReplacedBlock = nullptr,
                       PRUint32 aFlags = 0);
 
   bool IsAdjacentWithTop() const {

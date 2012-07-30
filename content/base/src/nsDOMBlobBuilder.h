@@ -84,7 +84,7 @@ protected:
 class BlobSet {
 public:
   BlobSet()
-    : mData(nsnull), mDataLen(0), mDataBufferLen(0)
+    : mData(nullptr), mDataLen(0), mDataBufferLen(0)
   {}
 
   nsresult AppendVoidPtr(const void* aData, PRUint32 aLength);
@@ -130,7 +130,7 @@ protected:
       nsCOMPtr<nsIDOMBlob> blob =
         new nsDOMMemoryFile(mData, mDataLen, EmptyString(), EmptyString());
       mBlobs.AppendElement(blob);
-      mData = nsnull; // The nsDOMMemoryFile takes ownership of the buffer
+      mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
       mDataLen = 0;
       mDataBufferLen = 0;
     }

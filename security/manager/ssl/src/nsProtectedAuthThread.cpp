@@ -28,7 +28,7 @@ nsProtectedAuthThread::nsProtectedAuthThread()
 : mMutex("nsProtectedAuthThread.mMutex")
 , mIAmRunning(false)
 , mLoginReady(false)
-, mThreadHandle(nsnull)
+, mThreadHandle(nullptr)
 , mSlot(0)
 , mLoginResult(SECFailure)
 {
@@ -65,7 +65,7 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
     mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsProtectedAuthThreadRunner, static_cast<void*>(this), 
         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
     
-    // bool thread_started_ok = (threadHandle != nsnull);
+    // bool thread_started_ok = (threadHandle != nullptr);
     // we might want to return "thread started ok" to caller in the future
     NS_ASSERTION(mThreadHandle, "Could not create nsProtectedAuthThreadRunner thread\n");
     
@@ -143,5 +143,5 @@ void nsProtectedAuthThread::Join()
         return;
     
     PR_JoinThread(mThreadHandle);
-    mThreadHandle = nsnull;
+    mThreadHandle = nullptr;
 }

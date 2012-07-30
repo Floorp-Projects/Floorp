@@ -37,10 +37,10 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
     if (NS_FAILED(rv)) return rv;
  
     // set up our buffers
-    rv = NS_NewByteBuffer(getter_AddRefs(mByteData), nsnull, aBufferSize);
+    rv = NS_NewByteBuffer(getter_AddRefs(mByteData), nullptr, aBufferSize);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nsnull, aBufferSize);
+    rv = NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nullptr, aBufferSize);
     if (NS_FAILED(rv)) return rv;
 
     mInput = aStream;
@@ -54,10 +54,10 @@ nsConverterInputStream::Close()
 {
     nsresult rv = mInput ? mInput->Close() : NS_OK;
     PR_FREEIF(mLineBuffer);
-    mInput = nsnull;
-    mConverter = nsnull;
-    mByteData = nsnull;
-    mUnicharData = nsnull;
+    mInput = nullptr;
+    mConverter = nullptr;
+    mByteData = nullptr;
+    mUnicharData = nullptr;
     return rv;
 }
 
@@ -157,7 +157,7 @@ nsConverterInputStream::ReadString(PRUint32 aCount, nsAString& aString,
 PRUint32
 nsConverterInputStream::Fill(nsresult * aErrorCode)
 {
-  if (nsnull == mInput) {
+  if (nullptr == mInput) {
     // We already closed the stream!
     *aErrorCode = NS_BASE_STREAM_CLOSED;
     return 0;

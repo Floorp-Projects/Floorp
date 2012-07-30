@@ -34,7 +34,7 @@ public:
   NS_IMETHOD QueryElementAt(PRUint32 aIndex, const nsIID & aIID, void * *aResult) {
     if (aIndex < mCount) {
       nsISupports* element = mArray[aIndex];
-      if (nsnull != element)
+      if (nullptr != element)
         return element->QueryInterface(aIID, aResult);
     }
     return NS_ERROR_FAILURE;

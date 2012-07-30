@@ -172,7 +172,7 @@ class nsXTFClassInfo MOZ_FINAL : public nsXPCClassInfo
 public:
   nsXTFClassInfo(nsXTFElementWrapper* aWrapper) : mWrapper(aWrapper) {}
 
-  void Disconnect() { mWrapper = nsnull; }
+  void Disconnect() { mWrapper = nullptr; }
 
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSICLASSINFO(mWrapper);

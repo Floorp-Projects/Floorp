@@ -255,11 +255,11 @@ bool
 RunTest (TestEntry *test, gfxContext *ctx) {
     nsRefPtr<gfxFontGroup> fontGroup;
 
-    fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nsnull);
+    fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nullptr);
 
     nsAutoPtr<gfxTextRun> textRun;
     gfxTextRunFactory::Parameters params = {
-      ctx, nsnull, nsnull, nsnull, 0, 60
+      ctx, nullptr, nullptr, nullptr, 0, 60
     };
     PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
     if (test->isRTL) {
@@ -277,7 +277,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     }
 
     gfxFontTestStore::NewStore();
-    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nsnull, nsnull);
+    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nullptr, nullptr);
     gfxFontTestStore *s = gfxFontTestStore::CurrentStore();
 
     gTextRunCache->RemoveTextRun(textRun);
@@ -305,7 +305,7 @@ main (int argc, char **argv) {
 #endif
 
     // Initialize XPCOM
-    nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
     if (NS_FAILED(rv))
         return -1;
 

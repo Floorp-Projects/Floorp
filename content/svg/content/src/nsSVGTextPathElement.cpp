@@ -24,13 +24,13 @@ nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
 nsSVGEnumMapping nsSVGTextPathElement::sMethodMap[] = {
   {&nsGkAtoms::align, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_ALIGN},
   {&nsGkAtoms::stretch, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_STRETCH},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGEnumMapping nsSVGTextPathElement::sSpacingMap[] = {
   {&nsGkAtoms::_auto, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_AUTO},
   {&nsGkAtoms::exact, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_EXACT},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGTextPathElement::sEnumInfo[2] =

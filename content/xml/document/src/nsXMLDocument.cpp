@@ -77,7 +77,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   
   nsresult rv;
 
-  *aInstancePtrResult = nsnull;
+  *aInstancePtrResult = nullptr;
 
   nsCOMPtr<nsIDocument> d;
   bool isHTML = false;
@@ -194,9 +194,9 @@ NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
 {
   nsresult rv = NS_NewDOMDocument(aInstancePtrResult,
                                   NS_LITERAL_STRING("http://www.mozilla.org/xbl"),
-                                  NS_LITERAL_STRING("bindings"), nsnull,
+                                  NS_LITERAL_STRING("bindings"), nullptr,
                                   aDocumentURI, aBaseURI, aPrincipal, false,
-                                  nsnull, DocumentFlavorLegacyGuess);
+                                  nullptr, DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> idoc = do_QueryInterface(*aInstancePtrResult);
@@ -263,7 +263,7 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   if (mChannelIsPending) {
     StopDocumentLoad();
     mChannel->Cancel(NS_BINDING_ABORTED);
-    mChannelIsPending = nsnull;
+    mChannelIsPending = nullptr;
   }
 
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
@@ -344,7 +344,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
                                    callingDoc ? callingDoc.get() :
                                      static_cast<nsIDocument*>(this),
                                    NS_LITERAL_CSTRING("application/xml"),
-                                   nsnull,
+                                   nullptr,
                                    &shouldLoad,
                                    nsContentUtils::GetContentPolicy(),
                                    nsContentUtils::GetSecurityManager());
@@ -370,7 +370,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = errorObject->InitWithWindowID(error.get(), NS_ConvertUTF8toUTF16(spec).get(),
-                                         nsnull, 0, 0, nsIScriptError::warningFlag,
+                                         nullptr, 0, 0, nsIScriptError::warningFlag,
                                          "DOM",
                                          callingDoc ?
                                            callingDoc->InnerWindowID() :
@@ -396,7 +396,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   // here, because ResetToURI will null out our node principal before
   // setting the new one.
   nsRefPtr<nsEventListenerManager> elm(mListenerManager);
-  mListenerManager = nsnull;
+  mListenerManager = nullptr;
 
   // When we are called from JS we can find the load group for the page,
   // and add ourselves to it. This way any pending requests
@@ -418,7 +418,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active  
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, loadGroup, req, 
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, nullptr, loadGroup, req, 
                      nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) {
     return rv;
@@ -435,7 +435,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
   if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 
-                                       loadGroup, nsnull, 
+                                       loadGroup, nullptr, 
                                        getter_AddRefs(listener),
                                        false))) {
     NS_ERROR("nsXMLDocument::Load: Failed to start the document load.");
@@ -446,7 +446,7 @@ nsXMLDocument::Load(const nsAString& aUrl, bool *aReturn)
   // mChannelIsPending.
 
   // Start an asynchronous read of the XML document
-  rv = channel->AsyncOpen(listener, nsnull);
+  rv = channel->AsyncOpen(listener, nullptr);
   if (NS_FAILED(rv)) {
     mChannelIsPending = false;
     return rv;
@@ -505,7 +505,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
-  TryChannelCharset(aChannel, charsetSource, charset, nsnull);
+  TryChannelCharset(aChannel, charsetSource, charset, nullptr);
 
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));
@@ -543,7 +543,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->SetDocumentCharset(charset, charsetSource);
   mParser->SetCommand(aCommand);
   mParser->SetContentSink(sink);
-  mParser->Parse(aUrl, nsnull, (void *)this);
+  mParser->Parse(aUrl, nullptr, (void *)this);
 
   return NS_OK;
 }
@@ -563,7 +563,7 @@ nsXMLDocument::EndLoad()
     // document was loaded as pure data without any presentation
     // attached to it.
     nsEvent event(true, NS_LOAD);
-    nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nsnull,
+    nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nullptr,
                                 &event);
   }    
 }

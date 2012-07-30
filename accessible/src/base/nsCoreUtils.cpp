@@ -66,7 +66,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   if (!document)
     return;
 
-  nsIPresShell *presShell = nsnull;
+  nsIPresShell *presShell = nullptr;
   presShell = document->GetShell();
   if (!presShell)
     return;
@@ -195,7 +195,7 @@ nsCoreUtils::GetDOMElementFor(nsIContent *aContent)
   if (aContent->IsNodeOfType(nsINode::eTEXT))
     return aContent->GetParent();
 
-  return nsnull;
+  return nullptr;
 }
 
 nsINode *
@@ -405,10 +405,10 @@ already_AddRefed<nsIDocShellTreeItem>
 nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
 {
   if (!aNode)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsISupports> container = aNode->OwnerDoc()->GetContainer();
-  nsIDocShellTreeItem *docShellTreeItem = nsnull;
+  nsIDocShellTreeItem *docShellTreeItem = nullptr;
   if (container)
     CallQueryInterface(container, &docShellTreeItem);
 
@@ -489,13 +489,13 @@ nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
   shell->GetContentViewer(getter_AddRefs(cv));
 
   if (!cv)
-    return nsnull;
+    return nullptr;
 
   nsIDocument* doc = cv->GetDocument();
   if (!doc)
-    return nsnull;
+    return nullptr;
 
-  nsIDOMNode* node = nsnull;
+  nsIDOMNode* node = nullptr;
   CallQueryInterface(doc, &node);
   return node;
 }
@@ -554,9 +554,9 @@ nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
   aTreeBoxObj->GetTreeBody(getter_AddRefs(tcElm));
   nsCOMPtr<nsIDOMXULElement> tcXULElm(do_QueryInterface(tcElm));
   if (!tcXULElm)
-    return nsnull;
+    return nullptr;
 
-  nsIBoxObject *boxObj = nsnull;
+  nsIBoxObject *boxObj = nullptr;
   tcXULElm->GetBoxObject(&boxObj);
   return boxObj;
 }
@@ -582,7 +582,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
     currentContent = currentContent->GetParent();
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<nsITreeColumn>
@@ -591,7 +591,7 @@ nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
   nsCOMPtr<nsITreeColumns> cols;
   aTree->GetColumns(getter_AddRefs(cols));
   if (!cols)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsITreeColumn> column;
   cols->GetFirstColumn(getter_AddRefs(column));
@@ -640,7 +640,7 @@ nsCoreUtils::GetSensibleColumnAt(nsITreeBoxObject *aTree, PRUint32 aIndex)
     column = GetNextSensibleColumn(column);
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 already_AddRefed<nsITreeColumn>

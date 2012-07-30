@@ -19,7 +19,7 @@ class txUint32Array : public nsTArray<PRUint32>
 public:
     bool AppendValue(PRUint32 aValue)
     {
-        return AppendElement(aValue) != nsnull;
+        return AppendElement(aValue) != nullptr;
     }
     bool RemoveValueAt(PRUint32 aIndex)
     {
@@ -170,14 +170,14 @@ txXPathTreeWalker::getNodeName(nsAString& aName) const
 inline void
 txXPathTreeWalker::moveTo(const txXPathTreeWalker& aWalker)
 {
-    nsINode *root = nsnull;
+    nsINode *root = nullptr;
     if (mPosition.mRefCountRoot) {
         root = mPosition.Root();
     }
     mPosition.mIndex = aWalker.mPosition.mIndex;
     mPosition.mRefCountRoot = aWalker.mPosition.mRefCountRoot;
     mPosition.mNode = aWalker.mPosition.mNode;
-    nsINode *newRoot = nsnull;
+    nsINode *newRoot = nullptr;
     if (mPosition.mRefCountRoot) {
         newRoot = mPosition.Root();
     }

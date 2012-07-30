@@ -117,7 +117,7 @@ static nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult
 
 static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, nsnull);
+  NS_ENSURE_TRUE(aNode, nullptr);
   nsCOMPtr<nsIDOMNode> parent, tmp;
   aNode->GetParentNode(getter_AddRefs(parent));
   while (parent)
@@ -128,12 +128,12 @@ static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
     parent->GetParentNode(getter_AddRefs(tmp));
     parent = tmp;
   }
-  return nsnull;
+  return nullptr;
 }
 
 static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, nsnull);
+  NS_ENSURE_TRUE(aNode, nullptr);
   nsCOMPtr<nsIDOMNode> parent, tmp;
   aNode->GetParentNode(getter_AddRefs(parent));
   while (parent)
@@ -144,7 +144,7 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
     parent->GetParentNode(getter_AddRefs(tmp));
     parent = tmp;
   }
-  return nsnull;
+  return nullptr;
 }
 
 
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAString & aInString)
   const nsAFlatString& empty = EmptyString();
 
   return InsertHTMLWithContext(aInString, empty, empty, empty,
-                               nsnull,  nsnull, 0, true);
+                               nullptr,  nullptr, 0, true);
 }
 
 
@@ -347,7 +347,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   // check for table cell selection mode
   bool cellSelectionMode = false;
   nsCOMPtr<nsIDOMElement> cell;
-  rv = GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
+  rv = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
   if (NS_SUCCEEDED(rv) && cell)
   {
     cellSelectionMode = true;
@@ -374,7 +374,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     nsCOMPtr<nsIDOMNode> tmpNode =
       do_QueryInterface(selection->GetAnchorNode());
     PRInt32 tmpOffset = selection->GetAnchorOffset();
-    rv = ClearStyle(address_of(tmpNode), &tmpOffset, nsnull, nsnull);
+    rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else
@@ -899,7 +899,7 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
   {
     listener = (nsIContentFilter *)mContentFilters[i];
     if (listener)
-      listener->NotifyOfInsertion(aFlavor, nsnull, sourceDoc,
+      listener->NotifyOfInsertion(aFlavor, nullptr, sourceDoc,
                                   aWillDeleteSelection, aFragmentAsNode,
                                   aFragStartNode, aFragStartOffset, 
                                   aFragEndNode, aFragEndOffset,
@@ -914,7 +914,7 @@ nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
 {
   NS_ENSURE_TRUE(aNode, false);
   if (outLink)
-    *outLink = nsnull;
+    *outLink = nullptr;
   nsCOMPtr<nsIDOMNode> tmp, node = aNode;
   while (node)
   {
@@ -983,7 +983,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
   if (aTransferable)
   {
     nsCOMPtr<nsIDocument> destdoc = GetDocument();
-    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
     (*aTransferable)->Init(loadContext);
 
     // Create the desired DataFlavor for the type of data
@@ -1260,7 +1260,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     rv = imageStream->Close();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    char * base64 = PL_Base64Encode(imageData.get(), imageData.Length(), nsnull);
+    char * base64 = PL_Base64Encode(imageData.get(), imageData.Length(), nullptr);
     NS_ENSURE_TRUE(base64, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoString stuffToPaste;
@@ -1553,7 +1553,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
     nsCOMPtr<nsITransferable> contextTrans =
                   do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
-    contextTrans->Init(nsnull);
+    contextTrans->Init(nullptr);
     contextTrans->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTrans, aSelectionType);
     contextTrans->GetTransferData(kHTMLContext, getter_AddRefs(contextDataObj), &contextLen);
@@ -1561,7 +1561,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
     nsCOMPtr<nsITransferable> infoTrans =
                   do_CreateInstance("@mozilla.org/widget/transferable;1");
     NS_ENSURE_TRUE(infoTrans, NS_ERROR_NULL_POINTER);
-    infoTrans->Init(nsnull);
+    infoTrans->Init(nullptr);
     infoTrans->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTrans, aSelectionType);
     infoTrans->GetTransferData(kHTMLInfo, getter_AddRefs(infoDataObj), &infoLen);
@@ -1588,11 +1588,11 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
     return NS_OK;
 
-  return InsertFromTransferable(trans, nsnull, contextStr, infoStr,
-                                nsnull, 0, true);
+  return InsertFromTransferable(trans, nullptr, contextStr, infoStr,
+                                nullptr, 0, true);
 }
 
 NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
@@ -1602,12 +1602,12 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
 
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
     return NS_OK;
 
   nsAutoString contextStr, infoStr;
-  return InsertFromTransferable(aTransferable, nsnull, contextStr, infoStr,
-                                nsnull, 0, true);
+  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
+                                nullptr, 0, true);
 }
 
 // 
@@ -1635,7 +1635,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       const nsAFlatString& empty = EmptyString();
-      rv = InsertFromTransferable(trans, nsnull, empty, empty, nsnull, 0,
+      rv = InsertFromTransferable(trans, nullptr, empty, empty, nullptr, 0,
                                   true);
     }
   }
@@ -1796,7 +1796,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> destdoc = GetDocument();
-  nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+  nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
   trans->Init(loadContext);
 
   // We only handle plaintext pastes here
@@ -2227,7 +2227,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
   if (!aContextStr.IsEmpty())
   {
-    rv = ParseFragment(aContextStr, nsnull, doc, address_of(contextAsNode),
+    rv = ParseFragment(aContextStr, nullptr, doc, address_of(contextAsNode),
                        aTrustedInput);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
@@ -2553,7 +2553,7 @@ nsIDOMNode* nsHTMLEditor::GetArrayEndpoint(bool aEnd,
 {
   PRInt32 listCount = aNodeArray.Count();
   if (listCount <= 0) {
-    return nsnull;
+    return nullptr;
   }
 
   if (aEnd) {

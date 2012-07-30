@@ -102,7 +102,7 @@ BasicShadowableContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
     }
     ShadowManager()->InsertAfter(ShadowManager()->Hold(this),
                                  ShadowManager()->Hold(aChild),
-                                 aAfter ? ShadowManager()->Hold(aAfter) : nsnull);
+                                 aAfter ? ShadowManager()->Hold(aAfter) : nullptr);
   }
   BasicContainerLayer::InsertAfter(aChild, aAfter);
 }
@@ -229,7 +229,7 @@ BasicShadowLayerManager::CreateShadowRefLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   // FIXME/IMPL
-  return nsnull;
+  return nullptr;
 }
 
 }

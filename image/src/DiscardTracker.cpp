@@ -218,7 +218,7 @@ DiscardTracker::EnableTimer()
   // ms, so that an image is discarded between sMinDiscardTimeoutMs and
   // (3/2 * sMinDiscardTimeoutMs) ms after it's unlocked.
   return sTimer->InitWithFuncCallback(TimerCallback,
-                                      nsnull,
+                                      nullptr,
                                       sMinDiscardTimeoutMs / 2,
                                       nsITimer::TYPE_REPEATING_SLACK);
 }

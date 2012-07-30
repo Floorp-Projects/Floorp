@@ -80,7 +80,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_EGL_image",
     "GL_OES_EGL_sync",
     "GL_OES_EGL_image_external",
-    nsnull
+    nullptr
 };
 
 /*
@@ -362,15 +362,15 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (SupportsRobustness()) {
             if (IsExtensionSupported(ARB_robustness)) {
                 SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nsnull } },
-                    { nsnull, { nsnull } },
+                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
+                    { nullptr, { nullptr } },
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
                     NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
 
                     MarkExtensionUnsupported(ARB_robustness);
-                    mSymbols.fGetGraphicsResetStatus = nsnull;
+                    mSymbols.fGetGraphicsResetStatus = nullptr;
                 } else {
                     mHasRobustness = true;
                 }
@@ -378,15 +378,15 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!IsExtensionSupported(ARB_robustness) &&
                 IsExtensionSupported(EXT_robustness)) {
                 SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nsnull } },
-                    { nsnull, { nsnull } },
+                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nullptr } },
+                    { nullptr, { nullptr } },
                 };
 
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
                     NS_ERROR("GL supports EXT_robustness without supplying GetGraphicsResetStatusEXT.");
 
                     MarkExtensionUnsupported(EXT_robustness);
-                    mSymbols.fGetGraphicsResetStatus = nsnull;
+                    mSymbols.fGetGraphicsResetStatus = nullptr;
                 } else {
                     mHasRobustness = true;
                 }
@@ -404,17 +404,17 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                         "BlitFramebuffer",
                         "BlitFramebufferEXT",
                         "BlitFramebufferANGLE",
-                        nsnull
+                        nullptr
                     }
                 },
-                { nsnull, { nsnull } },
+                { nullptr, { nullptr } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
 
                 MarkExtensionUnsupported(ANGLE_framebuffer_blit);
                 MarkExtensionUnsupported(EXT_framebuffer_blit);
-                mSymbols.fBlitFramebuffer = nsnull;
+                mSymbols.fBlitFramebuffer = nullptr;
             }
         }
 
@@ -429,65 +429,65 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                         "RenderbufferStorageMultisample",
                         "RenderbufferStorageMultisampleEXT",
                         "RenderbufferStorageMultisampleANGLE",
-                        nsnull
+                        nullptr
                     }
                 },
-                { nsnull, { nsnull } },
+                { nullptr, { nullptr } },
             };
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
 
                 MarkExtensionUnsupported(ANGLE_framebuffer_multisample);
                 MarkExtensionUnsupported(EXT_framebuffer_multisample);
-                mSymbols.fRenderbufferStorageMultisample = nsnull;
+                mSymbols.fRenderbufferStorageMultisample = nullptr;
             }
         }
 
         if (IsExtensionSupported(ARB_sync)) {
             SymLoadStruct syncSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nsnull } },
-                { (PRFuncPtr*) &mSymbols.fIsSync,         { "IsSync",         nsnull } },
-                { (PRFuncPtr*) &mSymbols.fDeleteSync,     { "DeleteSync",     nsnull } },
-                { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "ClientWaitSync", nsnull } },
-                { (PRFuncPtr*) &mSymbols.fWaitSync,       { "WaitSync",       nsnull } },
-                { (PRFuncPtr*) &mSymbols.fGetInteger64v,  { "GetInteger64v",  nsnull } },
-                { (PRFuncPtr*) &mSymbols.fGetSynciv,      { "GetSynciv",      nsnull } },
-                { nsnull, { nsnull } },
+                { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsSync,         { "IsSync",         nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteSync,     { "DeleteSync",     nullptr } },
+                { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "ClientWaitSync", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fWaitSync,       { "WaitSync",       nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetInteger64v,  { "GetInteger64v",  nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetSynciv,      { "GetSynciv",      nullptr } },
+                { nullptr, { nullptr } },
             };
 
             if (!LoadSymbols(&syncSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports ARB_sync without supplying its functions.");
 
                 MarkExtensionUnsupported(ARB_sync);
-                mSymbols.fFenceSync = nsnull;
-                mSymbols.fIsSync = nsnull;
-                mSymbols.fDeleteSync = nsnull;
-                mSymbols.fClientWaitSync = nsnull;
-                mSymbols.fWaitSync = nsnull;
-                mSymbols.fGetInteger64v = nsnull;
-                mSymbols.fGetSynciv = nsnull;
+                mSymbols.fFenceSync = nullptr;
+                mSymbols.fIsSync = nullptr;
+                mSymbols.fDeleteSync = nullptr;
+                mSymbols.fClientWaitSync = nullptr;
+                mSymbols.fWaitSync = nullptr;
+                mSymbols.fGetInteger64v = nullptr;
+                mSymbols.fGetSynciv = nullptr;
             }
         }
 
         if (IsExtensionSupported(OES_EGL_image)) {
             SymLoadStruct imageSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fEGLImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nsnull } },
-                { nsnull, { nsnull } },
+                { (PRFuncPtr*) &mSymbols.fEGLImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nullptr } },
+                { nullptr, { nullptr } },
             };
 
             if (!LoadSymbols(&imageSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports OES_EGL_image without supplying its functions.");
 
                 MarkExtensionUnsupported(OES_EGL_image);
-                mSymbols.fEGLImageTargetTexture2D = nsnull;
+                mSymbols.fEGLImageTargetTexture2D = nullptr;
             }
         }
        
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nsnull } },
-                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nsnull } },
-                { nsnull, { nsnull } },
+                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nullptr } },
+                { nullptr, { nullptr } },
         };
         LoadSymbols(&auxSymbols[0], trygl, prefix);
     }
@@ -664,7 +664,7 @@ bool
 GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
 {
     // fix bug 612572 - we were crashing as we were calling this function with extensions==null
-    if (extensions == nsnull || extension == nsnull)
+    if (extensions == nullptr || extension == nullptr)
         return false;
 
     const GLubyte *start;
@@ -817,7 +817,7 @@ BasicTextureImage::EndUpdate()
                                            relative);
     FinishedSurfaceUpload();
 
-    mUpdateSurface = nsnull;
+    mUpdateSurface = nullptr;
     mTextureState = Valid;
 }
 
@@ -904,7 +904,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      TextureImage::Flags aFlags)
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
     , mCurrentImage(0)
-    , mIterationCallback(nsnull)
+    , mIterationCallback(nullptr)
     , mInUpdate(false)
     , mRows(0)
     , mColumns(0)
@@ -1051,7 +1051,7 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
             surface->SetDeviceOffset(gfxPoint(offset.x - xPos,
                                               offset.y - yPos));
             // we don't have a temp surface
-            mUpdateSurface = nsnull;
+            mUpdateSurface = nullptr;
             // remember which image to EndUpdate
             mCurrentImage = i;
             return surface.get();
@@ -1108,7 +1108,7 @@ TiledTextureImage::EndUpdate()
         mImages[i]->EndUpdate();
     }
 
-    mUpdateSurface = nsnull;
+    mUpdateSurface = nullptr;
     mInUpdate = false;
     mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
@@ -1395,7 +1395,7 @@ GLContext::CreateTextureForOffscreen(const GLFormats& aFormats, const gfxIntSize
                 0,
                 aFormats.texColor,
                 aFormats.texColorType,
-                nsnull);
+                nullptr);
 
     fBindTexture(LOCAL_GL_TEXTURE_2D, boundTexture);
 }
@@ -1924,7 +1924,7 @@ GLContext::ReadTextureImage(GLuint aTexture,
 
     isurf = new gfxImageSurface(aSize, gfxASurface::ImageFormatARGB32);
     if (!isurf || isurf->CairoStatus()) {
-        isurf = nsnull;
+        isurf = nullptr;
         goto cleanup;
     }
 

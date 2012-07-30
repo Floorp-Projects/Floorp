@@ -57,7 +57,7 @@ nsTransactionStack::PopBottom()
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::Peek()
 {
-  nsTransactionItem* transaction = nsnull;
+  nsTransactionItem* transaction = nullptr;
   if (mQue.GetSize()) {
     NS_IF_ADDREF(transaction = static_cast<nsTransactionItem*>(mQue.Last()));
   }
@@ -68,7 +68,7 @@ nsTransactionStack::Peek()
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::GetItem(PRInt32 aIndex)
 {
-  nsTransactionItem* transaction = nsnull;
+  nsTransactionItem* transaction = nullptr;
   if (aIndex >= 0 && aIndex < mQue.GetSize()) {
     NS_IF_ADDREF(transaction =
                  static_cast<nsTransactionItem*>(mQue.ObjectAt(aIndex)));

@@ -60,7 +60,7 @@ PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 - (id) initWithMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner
 {
   if ((self = [super init]) != nil) {
-    mMenuGroupOwner = nsnull;
+    mMenuGroupOwner = nullptr;
     [self setMenuGroupOwner:aMenuGroupOwner];
   }
   return self;
@@ -68,7 +68,7 @@ PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 
 - (void) dealloc
 {
-  [self setMenuGroupOwner:nsnull];
+  [self setMenuGroupOwner:nullptr];
   [super dealloc];
 }
 
@@ -91,7 +91,7 @@ PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 //
 
 nsMenuX::nsMenuX()
-: mVisibleItemsCount(0), mParent(nsnull), mMenuGroupOwner(nsnull),
+: mVisibleItemsCount(0), mParent(nullptr), mMenuGroupOwner(nullptr),
   mNativeMenu(nil), mNativeMenuItem(nil), mIsEnabled(true),
   mDestroyHandlerCalled(false), mNeedsRebuild(true),
   mConstructed(false), mVisible(true), mXBLAttached(false)
@@ -352,12 +352,12 @@ nsEventStatus nsMenuX::MenuOpened()
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(true, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
+  nsMouseEvent event(true, NS_XUL_POPUP_SHOWN, nullptr, nsMouseEvent::eReal);
 
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
   
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -375,12 +375,12 @@ void nsMenuX::MenuClosed()
     mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
+    nsMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr, nsMouseEvent::eReal);
 
     nsCOMPtr<nsIContent> popupContent;
     GetMenuPopupContent(getter_AddRefs(popupContent));
     nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-    dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+    dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
 
     mDestroyHandlerCalled = true;
     mConstructed = false;
@@ -510,7 +510,7 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
   }
   else {
     static nsIContent::AttrValuesArray strings[] =
-  {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nsnull};
+  {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
     switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                                strings, eCaseMatters)) {
       case 0: itemType = eCheckboxMenuItemType; break;
@@ -560,7 +560,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 bool nsMenuX::OnOpen()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(true, NS_XUL_POPUP_SHOWING, nsnull,
+  nsMouseEvent event(true, NS_XUL_POPUP_SHOWING, nullptr,
                      nsMouseEvent::eReal);
   
   nsCOMPtr<nsIContent> popupContent;
@@ -568,7 +568,7 @@ bool nsMenuX::OnOpen()
   
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
     return false;
 
@@ -645,7 +645,7 @@ bool nsMenuX::OnClose()
     return true;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(true, NS_XUL_POPUP_HIDING, nsnull,
+  nsMouseEvent event(true, NS_XUL_POPUP_HIDING, nullptr,
                      nsMouseEvent::eReal);
 
   nsCOMPtr<nsIContent> popupContent;
@@ -653,7 +653,7 @@ bool nsMenuX::OnClose()
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
   
   mDestroyHandlerCalled = true;
   
@@ -670,7 +670,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 {
   if (!aResult)
     return;
-  *aResult = nsnull;
+  *aResult = nullptr;
   
   // Check to see if we are a "menupopup" node (if we are a native menu).
   {

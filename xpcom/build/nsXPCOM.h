@@ -83,13 +83,13 @@ struct Module;
  *
  * @param binDirectory     The directory containing the component
  *                         registry and runtime libraries;
- *                         or use <CODE>nsnull</CODE> to use the working
+ *                         or use <CODE>nullptr</CODE> to use the working
  *                         directory.
  *
  * @param appFileLocationProvider The object to be used by Gecko that specifies
  *                         to Gecko where to find profiles, the component
  *                         registry preferences and so on; or use
- *                         <CODE>nsnull</CODE> for the default behaviour.
+ *                         <CODE>nullptr</CODE> for the default behaviour.
  *
  * @see NS_NewLocalFile
  * @see nsIFile

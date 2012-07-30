@@ -118,7 +118,7 @@ class nsStyleSet
                             nsStyleContext* aParentContext);
 
   // This functions just like ResolvePseudoElementStyle except that it will
-  // return nsnull if there are no explicit style rules for that
+  // return nullptr if there are no explicit style rules for that
   // pseudo element.
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(mozilla::dom::Element* aParentElement,

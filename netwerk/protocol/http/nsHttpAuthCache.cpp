@@ -40,7 +40,7 @@ StrEquivalent(const PRUnichar *a, const PRUnichar *b)
 //-----------------------------------------------------------------------------
 
 nsHttpAuthCache::nsHttpAuthCache()
-    : mDB(nsnull)
+    : mDB(nullptr)
 {
 }
 
@@ -182,7 +182,7 @@ nsHttpAuthCache::LookupAuthNode(const char *scheme,
                                 nsCString  &key)
 {
     if (!mDB)
-        return nsnull;
+        return nullptr;
 
     GetAuthKey(scheme, host, port, key);
 
@@ -281,9 +281,9 @@ nsHttpAuthIdentity::Clear()
 {
     if (mUser) {
         free(mUser);
-        mUser = nsnull;
-        mPass = nsnull;
-        mDomain = nsnull;
+        mUser = nullptr;
+        mPass = nullptr;
+        mDomain = nullptr;
     }
 }
 
@@ -337,7 +337,7 @@ nsHttpAuthEntry::AddPath(const char *aPath)
         return NS_ERROR_OUT_OF_MEMORY;
 
     memcpy(newAuthPath->mPath, aPath, newpathLen+1);
-    newAuthPath->mNext = nsnull;
+    newAuthPath->mNext = nullptr;
 
     if (!mRoot)
         mRoot = newAuthPath; //first entry
@@ -391,7 +391,7 @@ nsHttpAuthEntry::Set(const char *path,
         // initialized yet (so is currently empty), initialize it now by
         // filling it with nulls.  We need to do that because consumers expect
         // that mIdent is initialized after this function returns.
-        rv = mIdent.Set(nsnull, nsnull, nsnull);
+        rv = mIdent.Set(nullptr, nullptr, nullptr);
     }
     if (NS_FAILED(rv)) {
         free(newRealm);
@@ -462,7 +462,7 @@ nsHttpAuthNode::LookupEntryByPath(const char *path)
             authPath = authPath->mNext;
         }
     }
-    return nsnull;
+    return nullptr;
 }
 
 nsHttpAuthEntry *
@@ -481,7 +481,7 @@ nsHttpAuthNode::LookupEntryByRealm(const char *realm)
         if (strcmp(realm, entry->Realm()) == 0)
             return entry;
     }
-    return nsnull;
+    return nullptr;
 }
 
 nsresult

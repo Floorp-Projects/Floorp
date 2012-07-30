@@ -28,7 +28,7 @@ nsTreeRows::GetSubtreeFor(const Subtree* aParent,
     NS_PRECONDITION(aParent, "no parent");
     NS_PRECONDITION(aChildIndex >= 0, "bad child index");
 
-    Subtree* result = nsnull;
+    Subtree* result = nullptr;
 
     if (aChildIndex < aParent->mCount)
         result = aParent->mRows[aChildIndex].mSubtree;
@@ -51,9 +51,9 @@ nsTreeRows::RemoveSubtreeFor(Subtree* aParent, PRInt32 aChildIndex)
         PRInt32 subtreeSize = row.mSubtree->GetSubtreeSize();
 
         delete row.mSubtree;
-        row.mSubtree = nsnull;
+        row.mSubtree = nullptr;
 
-        for (Subtree* subtree = aParent; subtree != nsnull; subtree = subtree->mParent)
+        for (Subtree* subtree = aParent; subtree != nullptr; subtree = subtree->mParent)
             subtree->mSubtreeSize -= subtreeSize;
     }
 
@@ -80,7 +80,7 @@ nsTreeRows::Last()
     do  {
         PRInt32 last = count - 1;
         result.Append(current, last);
-        current = count ? GetSubtreeFor(current, last) : nsnull;
+        current = count ? GetSubtreeFor(current, last) : nullptr;
     } while (current && ((count = current->Count()) != 0));
 
     // Now, at the bottom rightmost leaf, advance us one off the end.
@@ -223,7 +223,7 @@ nsTreeRows::Subtree::Clear()
 
     delete[] mRows;
 
-    mRows = nsnull;
+    mRows = nullptr;
     mCount = mCapacity = mSubtreeSize = 0;
 }
 
@@ -252,7 +252,7 @@ nsTreeRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
     mRows[aIndex].mContainerType = eContainerType_Unknown;
     mRows[aIndex].mContainerState = eContainerState_Unknown;
     mRows[aIndex].mContainerFill = eContainerFill_Unknown;
-    mRows[aIndex].mSubtree = nsnull;
+    mRows[aIndex].mSubtree = nullptr;
     ++mCount;
 
     // Now build an iterator that points to the newly inserted element.
@@ -319,7 +319,7 @@ nsTreeRows::Subtree::RemoveRowAt(PRInt32 aIndex)
 
     --mCount;
 
-    for (Subtree* subtree = this; subtree != nsnull; subtree = subtree->mParent)
+    for (Subtree* subtree = this; subtree != nullptr; subtree = subtree->mParent)
         subtree->mSubtreeSize -= subtreeSize;
 }
 

@@ -683,7 +683,7 @@ public:
 
   /**
    * Get the frame that should be the parent for the frames of child elements
-   * May return nsnull during reflow
+   * May return nullptr during reflow
    */
   virtual nsIFrame* GetContentInsertionFrame() { return this; }
 
@@ -694,7 +694,7 @@ public:
    * like nsTextControlFrame that contain a scrollframe, will return
    * that scrollframe.
    */
-  virtual nsIScrollableFrame* GetScrollTargetFrame() { return nsnull; }
+  virtual nsIScrollableFrame* GetScrollTargetFrame() { return nullptr; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
@@ -842,7 +842,7 @@ public:
   /**
    * Return frame's computed offset due to relative positioning
    */
-  nsPoint GetRelativeOffset(const nsStyleDisplay* aDisplay = nsnull) const;
+  nsPoint GetRelativeOffset(const nsStyleDisplay* aDisplay = nullptr) const;
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
@@ -892,18 +892,18 @@ public:
 
 #define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                                  \
   static const FramePropertyDescriptor* prop() {                                               \
-    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { dtor, nsnull }; \
+    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { dtor, nullptr }; \
     return &descriptor;                                                                        \
   }
 // Don't use this unless you really know what you're doing!
 #define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)                               \
   static const FramePropertyDescriptor* prop() {                                               \
-    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { nsnull, dtor }; \
+    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { nullptr, dtor }; \
     return &descriptor;                                                                        \
   }
 
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nsnull)
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyPoint)
 
@@ -921,9 +921,9 @@ public:
   NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DestroyMargin)
   NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DestroyMargin)
 
-  NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nullptr)
 
-  NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
 
@@ -1093,7 +1093,7 @@ public:
   void SetNextSibling(nsIFrame* aNextSibling) {
     NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad.");
     if (mNextSibling && mNextSibling->GetPrevSibling() == this) {
-      mNextSibling->mPrevSibling = nsnull;
+      mNextSibling->mPrevSibling = nullptr;
     }
     mNextSibling = aNextSibling;
     if (mNextSibling) {
@@ -1138,11 +1138,11 @@ public:
   virtual nscolor GetCaretColorAt(PRInt32 aOffset);
 
  
-  bool IsThemed(nsITheme::Transparency* aTransparencyState = nsnull) const {
+  bool IsThemed(nsITheme::Transparency* aTransparencyState = nullptr) const {
     return IsThemed(GetStyleDisplay(), aTransparencyState);
   }
   bool IsThemed(const nsStyleDisplay* aDisp,
-                  nsITheme::Transparency* aTransparencyState = nsnull) const {
+                  nsITheme::Transparency* aTransparencyState = nullptr) const {
     nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
     if (!aDisp->mAppearance)
       return false;
@@ -1239,8 +1239,8 @@ public:
    * is non-null and the frame has an SVG parent with children-only transforms,
    * then aFromParentTransforms will be set to these transforms.
    */
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransforms = nsnull,
-                                gfxMatrix *aFromParentTransforms = nsnull) const;
+  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransforms = nullptr,
+                                gfxMatrix *aFromParentTransforms = nullptr) const;
 
   /**
    * Returns whether this frame will attempt to preserve the 3d transforms of its
@@ -1356,7 +1356,7 @@ public:
   
   /**
    * Get the child frame of this frame which contains the given
-   * content offset. outChildFrame may be this frame, or nsnull on return.
+   * content offset. outChildFrame may be this frame, or nullptr on return.
    * outContentOffset returns the content offset relative to the start
    * of the returned node. You can also pass a hint which tells the method
    * to stick to the end of the first found frame or the beginning of the 
@@ -1507,8 +1507,8 @@ public:
    */
   struct InlineIntrinsicWidthData {
     InlineIntrinsicWidthData()
-      : line(nsnull)
-      , lineContainer(nsnull)
+      : line(nullptr)
+      , lineContainer(nullptr)
       , prevLines(0)
       , currentLine(0)
       , skipWhitespace(true)
@@ -1545,7 +1545,7 @@ public:
 
   struct InlineMinWidthData : public InlineIntrinsicWidthData {
     InlineMinWidthData()
-      : trailingTextFrame(nsnull)
+      : trailingTextFrame(nullptr)
       , atStartOfLine(true)
     {}
 
@@ -1846,9 +1846,9 @@ public:
    * @param aSkippedMaxLength  Maximum number of characters to return
    * The iterator can be used to map content offsets to offsets in the returned string, or vice versa.
    */
-  virtual nsresult GetRenderedText(nsAString* aAppendToString = nsnull,
-                                   gfxSkipChars* aSkipChars = nsnull,
-                                   gfxSkipCharsIterator* aSkipIter = nsnull,
+  virtual nsresult GetRenderedText(nsAString* aAppendToString = nullptr,
+                                   gfxSkipChars* aSkipChars = nullptr,
+                                   gfxSkipCharsIterator* aSkipIter = nullptr,
                                    PRUint32 aSkippedStartOffset = 0,
                                    PRUint32 aSkippedMaxLength = PR_UINT32_MAX)
   { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -1876,7 +1876,7 @@ public:
    * If aOffset is non-null, it will be set to the offset of |this|
    * from the returned view.
    */
-  nsIView* GetClosestView(nsPoint* aOffset = nsnull) const;
+  nsIView* GetClosestView(nsPoint* aOffset = nullptr) const;
 
   /**
    * Find the closest ancestor (excluding |this| !) that has a view
@@ -2551,9 +2551,9 @@ public:
     return FrameProperties(PresContext()->PropertyTable(), this);
   }
 
-  NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
-  NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
-  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nullptr)
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
@@ -2603,7 +2603,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * @param  [in, optional] aWithMouse, is this focus query for mouse clicking
    * @return whether the frame is focusable via mouse, kbd or script.
    */
-  virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
+  virtual bool IsFocusable(PRInt32 *aTabIndex = nullptr, bool aWithMouse = false);
 
   void ClearDisplayItemCache();
 
@@ -2675,15 +2675,15 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   {
     // box layout ends at box-wrapped frames, so don't allow these frames
     // to report child boxes.
-    return IsBoxFrame() ? GetFirstPrincipalChild() : nsnull;
+    return IsBoxFrame() ? GetFirstPrincipalChild() : nullptr;
   }
   nsIBox* GetNextBox() const
   {
-    return (mParent && mParent->IsBoxFrame()) ? mNextSibling : nsnull;
+    return (mParent && mParent->IsBoxFrame()) ? mNextSibling : nullptr;
   }
   nsIBox* GetParentBox() const
   {
-    return (mParent && mParent->IsBoxFrame()) ? mParent : nsnull;
+    return (mParent && mParent->IsBoxFrame()) ? mParent : nullptr;
   }
   // Box methods.  Note that these do NOT just get the CSS border, padding,
   // etc.  They also talk to nsITheme.
@@ -2692,7 +2692,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
   NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
   virtual void SetLayoutManager(nsBoxLayout* aLayout) { }
-  virtual nsBoxLayout* GetLayoutManager() { return nsnull; }
+  virtual nsBoxLayout* GetLayoutManager() { return nullptr; }
   NS_HIDDEN_(nsresult) GetClientRect(nsRect& aContentRect);
 
   // For nsSprocketLayout
@@ -2702,7 +2702,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull);
+  NS_HIDDEN_(nsresult) Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nullptr);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   // XXX take this out after we've branched
   virtual bool GetMouseThrough() const { return false; }
@@ -2765,7 +2765,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   /**
    * Get a line iterator for this frame, if supported.
    *
-   * @return nsnull if no line iterator is supported.
+   * @return nullptr if no line iterator is supported.
    * @note dispose the line iterator using nsILineIterator::DisposeLineIterator
    */
   virtual nsILineIterator* GetLineIterator() = 0;
@@ -3048,14 +3048,14 @@ public:
 
 class nsWeakFrame {
 public:
-  nsWeakFrame() : mPrev(nsnull), mFrame(nsnull) { }
+  nsWeakFrame() : mPrev(nullptr), mFrame(nullptr) { }
 
-  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nsnull), mFrame(nsnull)
+  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aOther.GetFrame());
   }
 
-  nsWeakFrame(nsIFrame* aFrame) : mPrev(nsnull), mFrame(nsnull)
+  nsWeakFrame(nsIFrame* aFrame) : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aFrame);
   }
@@ -3084,8 +3084,8 @@ public:
     if (aShell) {
       aShell->RemoveWeakFrame(this);
     }
-    mFrame = nsnull;
-    mPrev = nsnull;
+    mFrame = nullptr;
+    mPrev = nullptr;
   }
 
   bool IsAlive() { return !!mFrame; }
@@ -3098,13 +3098,13 @@ public:
 
   ~nsWeakFrame()
   {
-    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nsnull);
+    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   }
 private:
   void InitInternal(nsIFrame* aFrame);
 
   void InitExternal(nsIFrame* aFrame) {
-    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nsnull);
+    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
     mFrame = aFrame;
     if (mFrame) {
       nsIPresShell* shell = mFrame->PresContext()->GetPresShell();
@@ -3112,7 +3112,7 @@ private:
       if (shell) {
         shell->AddWeakFrame(this);
       } else {
-        mFrame = nsnull;
+        mFrame = nullptr;
       }
     }
   }

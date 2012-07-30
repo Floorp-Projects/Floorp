@@ -26,7 +26,7 @@ public:
   /**
    * Return the caption accessible if any for this table.
    */
-  virtual Accessible* Caption() { return nsnull; }
+  virtual Accessible* Caption() { return nullptr; }
 
   /**
    * Get the summary for this table.
@@ -46,7 +46,7 @@ public:
   /**
    * Return the accessible for the cell at the given row and column indices.
    */
-  virtual Accessible* CellAt(PRUint32 aRowIdx, PRUint32 aColIdx) { return nsnull; }
+  virtual Accessible* CellAt(PRUint32 aRowIdx, PRUint32 aColIdx) { return nullptr; }
 
   /**
    * Return the index of the cell at the given row and column.

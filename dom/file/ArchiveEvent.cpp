@@ -48,7 +48,7 @@ ArchiveReaderEvent::GetType(nsCString& aExt,
 {
   nsresult rv;
   
-  if (mMimeService.get() == nsnull) {
+  if (mMimeService.get() == nullptr) {
     mMimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }

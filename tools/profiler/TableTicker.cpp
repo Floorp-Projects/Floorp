@@ -513,7 +513,7 @@ public:
         if (autoComp.enter(cx, obj)) {
           JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
           jsval val = OBJECT_TO_JSVAL(profileObj);
-          JS_Stringify(cx, &val, nsnull, JSVAL_NULL, WriteCallback, &stream);
+          JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
         } else {
           LOG("Failed to enter compartment");
         }

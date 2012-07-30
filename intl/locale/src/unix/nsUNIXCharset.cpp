@@ -123,7 +123,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
 nsresult
 nsPlatformCharset::InitGetCharset(nsACString &oString)
 {
-  char* nl_langinfo_codeset = nsnull;
+  char* nl_langinfo_codeset = nullptr;
   nsCString aCharset;
   nsresult res;
 
@@ -149,7 +149,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
   //
   // try falling back on a deprecated (locale based) name
   //
-  char* locale = setlocale(LC_CTYPE, nsnull);
+  char* locale = setlocale(LC_CTYPE, nullptr);
   nsCAutoString localeStr;
   localeStr.Assign(locale);
   return ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oString);
@@ -162,7 +162,7 @@ nsPlatformCharset::Init()
   // remember default locale so we can use the
   // same charset when asked for the same locale
   //
-  char* locale = setlocale(LC_CTYPE, nsnull);
+  char* locale = setlocale(LC_CTYPE, nullptr);
   NS_ASSERTION(locale, "cannot setlocale");
   if (locale) {
     CopyASCIItoUTF16(locale, mLocale); 

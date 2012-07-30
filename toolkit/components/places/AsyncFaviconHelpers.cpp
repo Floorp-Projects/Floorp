@@ -596,7 +596,7 @@ AsyncFetchAndSetIconFromNetwork::Run()
   NS_ENSURE_STATE(listenerRequestor);
   rv = mChannel->SetNotificationCallbacks(listenerRequestor);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mChannel->AsyncOpen(this, nsnull);
+  rv = mChannel->AsyncOpen(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -62,7 +62,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   // Initialize the Image. If we're using the one from the caller, we
   // require that it not be initialized.
   nsCString mimeType(aMimeType);
-  rv = image->Init(nsnull, mimeType.get(), "<unknown>", Image::INIT_FLAG_NONE);
+  rv = image->Init(nullptr, mimeType.get(), "<unknown>", Image::INIT_FLAG_NONE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> inStream = aInStr;

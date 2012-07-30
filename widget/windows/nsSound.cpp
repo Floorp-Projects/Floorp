@@ -26,7 +26,7 @@
 #include "nsNativeCharsetUtils.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gWin32SoundLog = nsnull;
+PRLogModuleInfo* gWin32SoundLog = nullptr;
 #endif
 
 class nsSoundPlayer: public nsRunnable {
@@ -111,7 +111,7 @@ nsSound::nsSound()
     }
 #endif
 
-    mLastSound = nsnull;
+    mLastSound = nullptr;
 }
 
 nsSound::~nsSound()
@@ -124,7 +124,7 @@ void nsSound::ShutdownOldPlayerThread()
 {
   if (mPlayerThread) {
     mPlayerThread->Shutdown();
-    mPlayerThread = nsnull;
+    mPlayerThread = nullptr;
   }
 }
 
@@ -132,11 +132,11 @@ void nsSound::PurgeLastSound()
 {
   if (mLastSound) {
     // Halt any currently playing sound.
-    ::PlaySound(nsnull, nsnull, SND_PURGE);
+    ::PlaySound(nullptr, nullptr, SND_PURGE);
 
     // Now delete the buffer.
     free(mLastSound);
-    mLastSound = nsnull;
+    mLastSound = nullptr;
   }
 }
 
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsSound::Init()
   // it is initialized.
   // If we wait until the first sound is played, there will
   // be a time lag as the library gets loaded.
-  ::PlaySound(nsnull, nsnull, SND_PURGE);
+  ::PlaySound(nullptr, nullptr, SND_PURGE);
 
   return NS_OK;
 }
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
   ShutdownOldPlayerThread();
   PurgeLastSound();
 
-  const wchar_t *sound = nsnull;
+  const wchar_t *sound = nullptr;
   switch (aEventId) {
     case EVENT_NEW_MAIL_RECEIVED:
       sound = L"MailBeep";

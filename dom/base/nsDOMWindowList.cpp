@@ -85,7 +85,7 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
 
@@ -122,7 +122,7 @@ nsDOMWindowList::NamedItem(const nsAString& aName, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 
-  *aReturn = nsnull;
+  *aReturn = nullptr;
 
   nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(mDocShellNode));
 
@@ -142,8 +142,8 @@ nsDOMWindowList::NamedItem(const nsAString& aName, nsIDOMWindow** aReturn)
 
   if (mDocShellNode) {
     mDocShellNode->FindChildWithName(PromiseFlatString(aName).get(),
-                                     false, false, nsnull,
-                                     nsnull, getter_AddRefs(item));
+                                     false, false, nullptr,
+                                     nullptr, getter_AddRefs(item));
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
     if (globalObject) {

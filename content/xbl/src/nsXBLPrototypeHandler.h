@@ -145,13 +145,13 @@ protected:
   
   inline PRInt32 GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 
-                          const PRUnichar* aEvent=nsnull, const PRUnichar* aPhase=nsnull,
-                          const PRUnichar* aAction=nsnull, const PRUnichar* aCommand=nsnull,
-                          const PRUnichar* aKeyCode=nsnull, const PRUnichar* aCharCode=nsnull,
-                          const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
-                          const PRUnichar* aClickCount=nsnull, const PRUnichar* aGroup=nsnull,
-                          const PRUnichar* aPreventDefault=nsnull,
-                          const PRUnichar* aAllowUntrusted=nsnull);
+                          const PRUnichar* aEvent=nullptr, const PRUnichar* aPhase=nullptr,
+                          const PRUnichar* aAction=nullptr, const PRUnichar* aCommand=nullptr,
+                          const PRUnichar* aKeyCode=nullptr, const PRUnichar* aCharCode=nullptr,
+                          const PRUnichar* aModifiers=nullptr, const PRUnichar* aButton=nullptr,
+                          const PRUnichar* aClickCount=nullptr, const PRUnichar* aGroup=nullptr,
+                          const PRUnichar* aPreventDefault=nullptr,
+                          const PRUnichar* aAllowUntrusted=nullptr);
 
   void ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);

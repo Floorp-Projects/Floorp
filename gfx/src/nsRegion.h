@@ -256,13 +256,13 @@ public:
   const nsRect* Next ()
   {
     mCurPtr = mCurPtr->next;
-    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
+    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nullptr;
   }
 
   const nsRect* Prev ()
   {
     mCurPtr = mCurPtr->prev;
-    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
+    return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nullptr;
   }
 
   void Reset ()
@@ -487,7 +487,7 @@ public:
   {
     const nsRect* r = mImpl.Next();
     if (!r)
-      return nsnull;
+      return nullptr;
     mTmp = nsIntRegion::FromRect (*r);
     return &mTmp;
   }
@@ -496,7 +496,7 @@ public:
   {
     const nsRect* r = mImpl.Prev();
     if (!r)
-      return nsnull;
+      return nullptr;
     mTmp = nsIntRegion::FromRect (*r);
     return &mTmp;
   }

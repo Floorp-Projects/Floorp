@@ -14,7 +14,7 @@ nsHtml5AtomEntry::nsHtml5AtomEntry(KeyTypePointer aStr)
 
 nsHtml5AtomEntry::nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther)
   : nsStringHashKey(aOther)
-  , mAtom(nsnull)
+  , mAtom(nullptr)
 {
   NS_NOTREACHED("nsHtml5AtomTable is broken and tried to copy an entry");
 }
@@ -50,7 +50,7 @@ nsHtml5AtomTable::GetAtom(const nsAString& aKey)
   }
   nsHtml5AtomEntry* entry = mTable.PutEntry(aKey);
   if (!entry) {
-    return nsnull;
+    return nullptr;
   }
   return entry->GetAtom();
 }

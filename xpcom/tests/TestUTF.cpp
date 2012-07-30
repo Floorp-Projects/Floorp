@@ -164,7 +164,7 @@ tests[] =
     { "test_invalid8", test_invalid8 },
     { "test_malformed8", test_malformed8 },
     { "test_hashas16", test_hashas16 },
-    { nsnull, nsnull }
+    { nullptr, nullptr }
   };
 
 }
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 
     while (count--)
       {
-        for (const Test* t = tests; t->name != nsnull; ++t)
+        for (const Test* t = tests; t->name != nullptr; ++t)
           {
             printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE <--");
           }

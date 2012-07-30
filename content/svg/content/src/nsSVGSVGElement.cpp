@@ -110,7 +110,7 @@ nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
 nsSVGEnumMapping nsSVGSVGElement::sZoomAndPanMap[] = {
   {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
   {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
-  {nsnull, 0}
+  {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo nsSVGSVGElement::sEnumInfo[1] =
@@ -160,7 +160,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                  FromParser aFromParser)
   : nsSVGSVGElementBase(aNodeInfo),
-    mCoordCtx(nsnull),
+    mCoordCtx(nullptr),
     mViewportWidth(0),
     mViewportHeight(0),
     mCurrentTranslate(0.0f, 0.0f),
@@ -182,7 +182,7 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 nsresult
 nsSVGSVGElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
-  *aResult = nsnull;
+  *aResult = nullptr;
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   nsSVGSVGElement *it = new nsSVGSVGElement(ni.forget(), NOT_FROM_PARSER);
 
@@ -600,7 +600,7 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsresult rv = NS_OK;
   nsAutoString selector(NS_LITERAL_STRING("#"));
@@ -653,7 +653,7 @@ nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewpor
 NS_IMETHODIMP
 nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
@@ -672,7 +672,7 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, false);
-  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
   NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
@@ -682,7 +682,7 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **aCTM)
 {
   gfxMatrix m = nsSVGUtils::GetCTM(this, true);
-  *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
+  *aCTM = m.IsSingular() ? nullptr : new DOMSVGMatrix(m);
   NS_IF_ADDREF(*aCTM);
   return NS_OK;
 }
@@ -696,7 +696,7 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
   nsresult rv;
-  *_retval = nsnull;
+  *_retval = nullptr;
   nsCOMPtr<nsIDOMSVGMatrix> ourScreenCTM;
   nsCOMPtr<nsIDOMSVGMatrix> targetScreenCTM;
   nsCOMPtr<nsIDOMSVGMatrix> tmp;
@@ -806,7 +806,7 @@ nsSVGSVGElement::GetTimedDocumentRoot()
     return outerSVGElement->GetTimedDocumentRoot();
   }
   // invalid structure
-  return nsnull;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------
@@ -969,7 +969,7 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
                             nsIContent* aBindingParent,
                             bool aCompileEventHandlers)
 {
-  nsSMILAnimationController* smilController = nsnull;
+  nsSMILAnimationController* smilController = nullptr;
 
   if (aDocument) {
     smilController = aDocument->GetAnimationController();
@@ -985,7 +985,7 @@ nsSVGSVGElement::BindToTree(nsIDocument* aDocument,
         // We're a child of some other <svg> element, so we don't need our own
         // time container. However, we need to make sure that we'll get a
         // kick-start if we get promoted to be outermost later on.
-        mTimedDocumentRoot = nsnull;
+        mTimedDocumentRoot = nullptr;
         mStartAnimationOnBindToTree = true;
       }
     }
@@ -1011,7 +1011,7 @@ void
 nsSVGSVGElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (mTimedDocumentRoot) {
-    mTimedDocumentRoot->SetParent(nsnull);
+    mTimedDocumentRoot->SetParent(nullptr);
   }
 
   nsSVGSVGElementBase::UnbindFromTree(aDeep, aNullParent);
@@ -1159,7 +1159,7 @@ nsSVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
 
   if (IsInner()) {
     float x, y;
-    const_cast<nsSVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nsnull);
+    const_cast<nsSVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nullptr);
     if (aWhich == eAllTransforms) {
       // the common case
       return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y)) * aMatrix;
@@ -1276,7 +1276,7 @@ nsSVGSVGElement::GetPreserveAspectRatioProperty() const
   if (valPtr) {
     return static_cast<SVGPreserveAspectRatio*>(valPtr);
   }
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -1389,7 +1389,7 @@ nsSVGSVGElement::GetViewBoxProperty() const
   if (valPtr) {
     return static_cast<nsSVGViewBoxRect*>(valPtr);
   }
-  return nsnull;
+  return nullptr;
 }
 
 bool
@@ -1405,7 +1405,7 @@ nsSVGSVGElement::SetZoomAndPanProperty(PRUint16 aValue)
 {
   nsresult rv = SetProperty(nsGkAtoms::zoomAndPan,
                             reinterpret_cast<void*>(aValue),
-                            nsnull, true);
+                            nullptr, true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
 

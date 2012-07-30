@@ -38,7 +38,7 @@ SVGMotionSMILAttr::GetBaseValue() const
 void
 SVGMotionSMILAttr::ClearAnimValue()
 {
-  mSVGElement->SetAnimateMotionTransform(nsnull);
+  mSVGElement->SetAnimateMotionTransform(nullptr);
 }
 
 nsresult

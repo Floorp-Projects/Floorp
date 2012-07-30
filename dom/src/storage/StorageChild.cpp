@@ -147,10 +147,10 @@ StorageChild::GetValue(bool aCallerSecure, const nsAString& aKey, nsresult* rv)
   StorageItem storageItem;
   SendGetValue(aCallerSecure, mSessionOnly, nsString(aKey), &storageItem, &rv2);
   if (rv2 == NS_ERROR_DOM_SECURITY_ERR || rv2 == NS_ERROR_DOM_NOT_FOUND_ERR)
-    return nsnull;
+    return nullptr;
   *rv = rv2;
   if (NS_FAILED(*rv) || storageItem.type() == StorageItem::Tnull_t)
-    return nsnull;
+    return nullptr;
   const ItemData& data = storageItem.get_ItemData();
   nsIDOMStorageItem* item = new nsDOMStorageItem(this, aKey, data.value(),
                                                  data.secure());
@@ -236,7 +236,7 @@ StorageChild::CloneFrom(bool aCallerSecure, DOMStorageBase* aThat)
 {
   StorageChild* other = static_cast<StorageChild*>(aThat);
   ContentChild* child = ContentChild::GetSingleton();
-  StorageClone clone(nsnull, other, aCallerSecure);
+  StorageClone clone(nullptr, other, aCallerSecure);
   AddIPDLReference();
   child->SendPStorageConstructor(this, clone);
   SendInit(mUseDB, mCanUseChromePersist, mSessionOnly, mInPrivateBrowsing, mDomain,

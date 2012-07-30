@@ -51,7 +51,7 @@ public:
     if (!gAnnotationService) {
       nsCOMPtr<nsIAnnotationService> serv =
         do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID);
-      NS_ENSURE_TRUE(serv, nsnull);
+      NS_ENSURE_TRUE(serv, nullptr);
       NS_ASSERTION(gAnnotationService,
                    "Should have static instance pointer now");
     }

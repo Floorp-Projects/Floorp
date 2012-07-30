@@ -466,7 +466,7 @@ ShadowLayersParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
   return GrallocBufferActor::Create(aSize, aContent, aOutHandle);
 #else
   NS_RUNTIMEABORT("No gralloc buffers for you");
-  return nsnull;
+  return nullptr;
 #endif
 }
 

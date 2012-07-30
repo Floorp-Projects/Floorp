@@ -961,7 +961,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", NS_ConvertUTF16toUTF8(url).get() );
 #endif
                     // Now handle it.
-                    HandleCommandLine(NS_ConvertUTF16toUTF8(url).get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+                    HandleCommandLine(NS_ConvertUTF16toUTF8(url).get(), nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
 
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
@@ -1130,7 +1130,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             printf( "Handling dde XTYP_REQUEST request: [%s]...\n", NS_ConvertUTF16toUTF8(url).get() );
 #endif
             // Now handle it.
-            HandleCommandLine(NS_ConvertUTF16toUTF8(url).get(), nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+            HandleCommandLine(NS_ConvertUTF16toUTF8(url).get(), nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
 
             // Release the data.
             DdeUnaccessData( hdata );
@@ -1465,7 +1465,7 @@ protected:
   JSContext                         *mContext;
 };
 
-SafeJSContext::SafeJSContext() : mContext(nsnull) {
+SafeJSContext::SafeJSContext() : mContext(nullptr) {
 }
 
 SafeJSContext::~SafeJSContext() {
@@ -1554,7 +1554,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
         (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
     NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
 
-    rv = cmdLine->Init(0, argv, nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
+    rv = cmdLine->Init(0, argv, nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return cmdLine->Run();

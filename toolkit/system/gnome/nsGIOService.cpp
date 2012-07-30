@@ -154,7 +154,7 @@ GIOUTF8StringEnumerator::GetNext(nsACString& aResult)
 NS_IMETHODIMP
 nsGIOMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
 {
-  *aSchemes = nsnull;
+  *aSchemes = nullptr;
 
   nsRefPtr<GIOUTF8StringEnumerator> array = new GIOUTF8StringEnumerator();
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
@@ -302,7 +302,7 @@ NS_IMETHODIMP
 nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
                                  nsIGIOMimeApp** aApp)
 {
-  *aApp = nsnull;
+  *aApp = nullptr;
 
   GAppInfo *app_info = g_app_info_get_default_for_uri_scheme(
                           PromiseFlatCString(aURIScheme).get());
@@ -319,7 +319,7 @@ NS_IMETHODIMP
 nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
                                 nsIGIOMimeApp**   aApp)
 {
-  *aApp = nsnull;
+  *aApp = nullptr;
   char *content_type =
     get_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
   if (!content_type)
@@ -408,7 +408,7 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
                                    nsIGIOMimeApp**   appInfo)
 {
   GError *error = NULL;
-  *appInfo = nsnull;
+  *appInfo = nullptr;
 
   GAppInfo *app_info = NULL, *app_info_from_list = NULL;
   GList *apps = g_app_info_get_all();

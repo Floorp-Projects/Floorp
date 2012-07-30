@@ -5,4 +5,4 @@
 
 #include "gfxFontTest.h"
 
-gfxFontTestStore* gfxFontTestStore::sCurrentStore = nsnull;
+gfxFontTestStore* gfxFontTestStore::sCurrentStore = nullptr;

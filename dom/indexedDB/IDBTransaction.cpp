@@ -104,7 +104,7 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
 
   transaction->BindToOwner(aDatabase);
   if (!transaction->SetScriptOwner(aDatabase->GetScriptOwner())) {
-    return nsnull;
+    return nullptr;
   }
 
   transaction->mDatabase = aDatabase;
@@ -113,7 +113,7 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   transaction->mObjectStoreNames.AppendElements(aObjectStoreNames);
   transaction->mObjectStoreNames.Sort();
 
-  IndexedDBTransactionChild* actor = nsnull;
+  IndexedDBTransactionChild* actor = nullptr;
 
   transaction->mCreatedFileInfos.Init();
 
@@ -122,9 +122,9 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
 
     if (aMode != IDBTransaction::VERSION_CHANGE) {
       TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
-      NS_ENSURE_TRUE(pool, nsnull);
+      NS_ENSURE_TRUE(pool, nullptr);
 
-      pool->Dispatch(transaction, &gStartTransactionRunnable, false, nsnull);
+      pool->Dispatch(transaction, &gStartTransactionRunnable, false, nullptr);
     }
   }
   else if (!aIsVersionChangeTransactionChild) {
@@ -142,10 +142,10 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
 
   if (!aDispatchDelayed) {
     nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-    NS_ENSURE_TRUE(appShell, nsnull);
+    NS_ENSURE_TRUE(appShell, nullptr);
 
     nsresult rv = appShell->RunBeforeNextEvent(transaction);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     transaction->mCreating = true;
   }
@@ -163,8 +163,8 @@ IDBTransaction::IDBTransaction()
   mMode(IDBTransaction::READ_ONLY),
   mPendingRequests(0),
   mSavepointCount(0),
-  mActorChild(nsnull),
-  mActorParent(nsnull),
+  mActorChild(nullptr),
+  mActorParent(nullptr),
   mAbortCode(NS_OK),
   mCreating(false)
 #ifdef DEBUG
@@ -413,7 +413,7 @@ IDBTransaction::GetCachedStatement(const nsACString& aQuery)
       NS_ERROR(error.get());
     }
 #endif
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
     mCachedStatements.Put(aQuery, stmt);
   }
@@ -736,7 +736,7 @@ IDBTransaction::ObjectStoreInternal(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  ObjectStoreInfo* info = nsnull;
+  ObjectStoreInfo* info = nullptr;
 
   if (mMode == IDBTransaction::VERSION_CHANGE ||
       mObjectStoreNames.Contains(aName)) {
@@ -760,7 +760,7 @@ NS_IMETHODIMP
 IDBTransaction::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nsnull);
+  return AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nullptr);
 }
 
 nsresult
@@ -839,7 +839,7 @@ CommitHelper::Run()
     mTransaction->ClearCreatedFileInfos();
     if (mUpdateFileRefcountFunction) {
       mUpdateFileRefcountFunction->ClearFileInfoEntries();
-      mUpdateFileRefcountFunction = nsnull;
+      mUpdateFileRefcountFunction = nullptr;
     }
 
     nsCOMPtr<nsIDOMEvent> event;
@@ -885,7 +885,7 @@ CommitHelper::Run()
       mListener->NotifyTransactionPostComplete(mTransaction);
     }
 
-    mTransaction = nsnull;
+    mTransaction = nullptr;
 
     return NS_OK;
   }
@@ -947,9 +947,9 @@ CommitHelper::Run()
     }
 
     mConnection->Close();
-    mConnection = nsnull;
+    mConnection = nullptr;
 
-    IndexedDatabaseManager::SetCurrentWindow(nsnull);
+    IndexedDatabaseManager::SetCurrentWindow(nullptr);
   }
 
   return NS_OK;
@@ -1018,7 +1018,7 @@ NS_IMETHODIMP
 UpdateRefcountFunction::OnFunctionCall(mozIStorageValueArray* aValues,
                                        nsIVariant** _retval)
 {
-  *_retval = nsnull;
+  *_retval = nullptr;
 
   PRUint32 numEntries;
   nsresult rv = aValues->GetNumEntries(&numEntries);

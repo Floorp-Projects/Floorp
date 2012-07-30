@@ -20,7 +20,7 @@
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
-nsToolkit* nsToolkit::gToolkit = nsnull;
+nsToolkit* nsToolkit::gToolkit = nullptr;
 HINSTANCE nsToolkit::mDllInstance = 0;
 static const unsigned long kD3DUsageDelay = 5000;
 
@@ -63,7 +63,7 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
     MOZ_COUNT_DTOR(nsToolkit);
-    gMouseTrailer = nsnull;
+    gMouseTrailer = nullptr;
 }
 
 void
@@ -77,7 +77,7 @@ void
 nsToolkit::Shutdown()
 {
     delete gToolkit;
-    gToolkit = nsnull;
+    gToolkit = nullptr;
 }
 
 void
@@ -108,7 +108,7 @@ nsToolkit* nsToolkit::GetToolkit()
 //
 //
 //-------------------------------------------------------------------------
-MouseTrailer::MouseTrailer() : mMouseTrailerWindow(nsnull), mCaptureWindow(nsnull),
+MouseTrailer::MouseTrailer() : mMouseTrailerWindow(nullptr), mCaptureWindow(nullptr),
   mIsInCaptureMode(false), mEnabled(true)
 {
 }
@@ -128,7 +128,7 @@ void MouseTrailer::SetMouseTrailerWindow(HWND aWnd)
 {
   if (mMouseTrailerWindow != aWnd && mTimer) {
     // Make sure TimerProc is fired at least once for the old window
-    TimerProc(nsnull, nsnull);
+    TimerProc(nullptr, nullptr);
   }
   mMouseTrailerWindow = aWnd;
   CreateTimer();
@@ -160,7 +160,7 @@ nsresult MouseTrailer::CreateTimer()
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mTimer->InitWithFuncCallback(TimerProc, nsnull, 200,
+  return mTimer->InitWithFuncCallback(TimerProc, nullptr, 200,
                                       nsITimer::TYPE_REPEATING_SLACK);
 }
 
@@ -172,7 +172,7 @@ void MouseTrailer::DestroyTimer()
 {
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
 }
 
@@ -199,7 +199,7 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
       // mMouseTrailerWindow could be bad from rolling over the frame, so clear 
       // it if we were capturing and now this is the first timer callback 
       // since we canceled the capture
-      mtrailer->mMouseTrailerWindow = nsnull;
+      mtrailer->mMouseTrailerWindow = nullptr;
       mtrailer->mIsInCaptureMode = false;
       return;
     }
@@ -217,11 +217,11 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
 
       // we are out of this window, destroy timer
       mtrailer->DestroyTimer();
-      mtrailer->mMouseTrailerWindow = nsnull;
+      mtrailer->mMouseTrailerWindow = nullptr;
     }
   } else {
     mtrailer->DestroyTimer();
-    mtrailer->mMouseTrailerWindow = nsnull;
+    mtrailer->mMouseTrailerWindow = nullptr;
   }
 }
 

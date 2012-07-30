@@ -80,7 +80,7 @@ NS_ABORT_IF_FALSE(_nodeType == nsIDOMNode::ELEMENT_NODE ||                  \
                   "Invalid nodeType");                                      \
 NS_ABORT_IF_FALSE((_nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||  \
                    _nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==          \
-                  (_extraName != nsnull),                                   \
+                  (_extraName != nullptr),                                   \
                   "Supply aExtraName for and only for PIs and doctypes");   \
 NS_ABORT_IF_FALSE(_nodeType == nsIDOMNode::ELEMENT_NODE ||                  \
                   _nodeType == nsIDOMNode::ATTRIBUTE_NODE ||                \

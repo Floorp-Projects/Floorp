@@ -90,7 +90,7 @@ void nsLeafBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
     static nsIContent::AttrValuesArray strings[] =
-      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+      {&nsGkAtoms::never, &nsGkAtoms::always, nullptr};
     switch (mContent->FindAttrValueIn(kNameSpaceID_None,
                                       nsGkAtoms::mousethrough,
                                       strings, eCaseMatters)) {

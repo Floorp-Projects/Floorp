@@ -17,7 +17,7 @@ public:
     mState = mState_Init;
     mLastLegalState = mState_ASCII;
     mData = 0;
-    mEUCKRDecoder = nsnull;
+    mEUCKRDecoder = nullptr;
     mRunLength = 0;
   }
 

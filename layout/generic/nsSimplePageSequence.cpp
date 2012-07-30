@@ -46,12 +46,12 @@ PRLogModuleInfo * kLayoutPrintingLogMod = PR_NewLogModule("printing-layout");
 // This object a shared by all the nsPageFrames 
 // parented to a SimplePageSequenceFrame
 nsSharedPageData::nsSharedPageData() :
-  mDateTimeStr(nsnull),
-  mHeadFootFont(nsnull),
-  mPageNumFormat(nsnull),
-  mPageNumAndTotalsFormat(nsnull),
-  mDocTitle(nsnull),
-  mDocURL(nsnull),
+  mDateTimeStr(nullptr),
+  mHeadFootFont(nullptr),
+  mPageNumFormat(nullptr),
+  mPageNumAndTotalsFormat(nullptr),
+  mDocTitle(nullptr),
+  mDocURL(nullptr),
   mReflowSize(0,0),
   mReflowMargin(0,0,0,0),
   mExtraMargin(0,0,0,0),
@@ -233,7 +233,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // Tile the pages vertically
   nsHTMLReflowMetrics kidSize;
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
     // Set the shared data into the page frame before reflow
     nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);
     pf->SetSharedPageData(mPageData);
@@ -255,7 +255,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     // max width then center it horizontally
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
 
-    FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
+    FinishReflowChild(kidFrame, aPresContext, nullptr, kidSize, x, y, 0);
     y += kidSize.height;
     y += pageCSSMargin.bottom;
 
@@ -277,7 +277,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
       }
 
       // Add it to our child list
-      mFrames.InsertFrame(nsnull, kidFrame, continuingPage);
+      mFrames.InsertFrame(nullptr, kidFrame, continuingPage);
     }
 
     // Get the next page
@@ -295,7 +295,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   PRInt32 pageNum = 1;
   for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
     nsPageFrame * pf = static_cast<nsPageFrame*>(page);
-    if (pf != nsnull) {
+    if (pf != nullptr) {
       pf->SetPageNumInfo(pageNum, pageTot);
     }
     pageNum++;
@@ -310,7 +310,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nsAutoString formattedDateString;
   time_t ltime;
   time( &ltime );
-  if (NS_SUCCEEDED(mDateFormatter->FormatTime(nsnull /* nsILocale* locale */,
+  if (NS_SUCCEEDED(mDateFormatter->FormatTime(nullptr /* nsILocale* locale */,
                                               kDateFormatShort,
                                               kTimeFormatNoSeconds,
                                               ltime,
@@ -404,7 +404,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 
   // Sets the format into a static data member which will own the memory and free it
   PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
-  if (uStr != nsnull) {
+  if (uStr != nullptr) {
     SetPageNumberFormat(uStr, aPageNumOnly); // nsPageFrame will own the memory
   }
 
@@ -501,7 +501,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
   // print are 1 and then two (which is different than printing a page range, where
   // the page numbers would have been 2 and then 3)
 
-  if (mCurrentPageFrame == nsnull) {
+  if (mCurrentPageFrame == nullptr) {
     return NS_ERROR_FAILURE;
   }
 
@@ -524,7 +524,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
       mPrintThisPage = false;
     } else if (mPageNum > mToPageNum) {
       mPageNum++;
-      mCurrentPageFrame = nsnull;
+      mCurrentPageFrame = nullptr;
       return NS_OK;
     } else {
       PRInt32 length = mPageRanges.Length();
@@ -707,16 +707,16 @@ nsSimplePageSequenceFrame::GetType() const
 void
 nsSimplePageSequenceFrame::SetPageNumberFormat(PRUnichar * aFormatStr, bool aForPageNumOnly)
 { 
-  NS_ASSERTION(aFormatStr != nsnull, "Format string cannot be null!");
-  NS_ASSERTION(mPageData != nsnull, "mPageData string cannot be null!");
+  NS_ASSERTION(aFormatStr != nullptr, "Format string cannot be null!");
+  NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
 
   if (aForPageNumOnly) {
-    if (mPageData->mPageNumFormat != nsnull) {
+    if (mPageData->mPageNumFormat != nullptr) {
       nsMemory::Free(mPageData->mPageNumFormat);
     }
     mPageData->mPageNumFormat = aFormatStr;
   } else {
-    if (mPageData->mPageNumAndTotalsFormat != nsnull) {
+    if (mPageData->mPageNumAndTotalsFormat != nullptr) {
       nsMemory::Free(mPageData->mPageNumAndTotalsFormat);
     }
     mPageData->mPageNumAndTotalsFormat = aFormatStr;
@@ -727,10 +727,10 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(PRUnichar * aFormatStr, bool aFor
 void
 nsSimplePageSequenceFrame::SetDateTimeStr(PRUnichar * aDateTimeStr)
 { 
-  NS_ASSERTION(aDateTimeStr != nsnull, "DateTime string cannot be null!");
-  NS_ASSERTION(mPageData != nsnull, "mPageData string cannot be null!");
+  NS_ASSERTION(aDateTimeStr != nullptr, "DateTime string cannot be null!");
+  NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
 
-  if (mPageData->mDateTimeStr != nsnull) {
+  if (mPageData->mDateTimeStr != nullptr) {
     nsMemory::Free(mPageData->mDateTimeStr);
   }
   mPageData->mDateTimeStr = aDateTimeStr;

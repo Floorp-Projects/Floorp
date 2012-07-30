@@ -114,7 +114,7 @@ nsSystemInfo::Init()
 
 
 #ifdef MOZ_PLATFORM_MAEMO
-    char *  line = nsnull;
+    char *  line = nullptr;
     size_t  len = 0;
     ssize_t read;
 #if MOZ_PLATFORM_MAEMO > 5

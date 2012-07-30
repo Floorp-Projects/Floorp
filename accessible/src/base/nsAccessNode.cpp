@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-ApplicationAccessible* nsAccessNode::gApplicationAccessible = nsnull;
+ApplicationAccessible* nsAccessNode::gApplicationAccessible = nullptr;
 
 /*
  * Class nsAccessNode
@@ -78,8 +78,8 @@ void nsAccessNode::LastRelease()
 void
 nsAccessNode::Shutdown()
 {
-  mContent = nsnull;
-  mDoc = nsnull;
+  mContent = nullptr;
+  mDoc = nullptr;
 }
 
 ApplicationAccessible*
@@ -100,7 +100,7 @@ nsAccessNode::GetApplicationAccessible()
     if (NS_FAILED(rv)) {
       gApplicationAccessible->Shutdown();
       NS_RELEASE(gApplicationAccessible);
-      return nsnull;
+      return nullptr;
     }
   }
 
@@ -129,23 +129,23 @@ nsAccessNode::RootAccessible() const
     nsCoreUtils::GetDocShellTreeItemFor(mContent);
   NS_ASSERTION(docShellTreeItem, "No docshell tree item for mContent");
   if (!docShellTreeItem) {
-    return nsnull;
+    return nullptr;
   }
   nsCOMPtr<nsIDocShellTreeItem> root;
   docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
   NS_ASSERTION(root, "No root content tree item");
   if (!root) {
-    return nsnull;
+    return nullptr;
   }
 
   DocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
-  return docAcc ? docAcc->AsRoot() : nsnull;
+  return docAcc ? docAcc->AsRoot() : nullptr;
 }
 
 nsIFrame*
 nsAccessNode::GetFrame() const
 {
-  return mContent ? mContent->GetPrimaryFrame() : nsnull;
+  return mContent ? mContent->GetPrimaryFrame() : nullptr;
 }
 
 bool
@@ -162,7 +162,7 @@ nsAccessNode::Language(nsAString& aLanguage)
   if (!mDoc)
     return;
 
-  nsCoreUtils::GetLanguageFor(mContent, nsnull, aLanguage);
+  nsCoreUtils::GetLanguageFor(mContent, nullptr, aLanguage);
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
     mContent->OwnerDoc()->GetHeaderData(nsGkAtoms::headerContentLanguage,
                                         aLanguage);

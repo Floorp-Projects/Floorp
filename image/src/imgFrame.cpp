@@ -105,7 +105,7 @@ static bool ShouldUseImageSurfaces()
 
 imgFrame::imgFrame() :
   mDecoded(0, 0, 0, 0),
-  mPalettedImageData(nsnull),
+  mPalettedImageData(nullptr),
   mSinglePixelColor(0),
   mTimeout(100),
   mDisposalMethod(0), /* imgIContainer::kDisposeNotSpecified */
@@ -179,7 +179,7 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         // no error
         mImageSurface = mWinSurface->GetAsImageSurface();
       } else {
-        mWinSurface = nsnull;
+        mWinSurface = nullptr;
       }
     }
 #endif
@@ -192,7 +192,7 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
       mImageSurface = new gfxImageSurface(gfxIntSize(mSize.width, mSize.height), mFormat);
 
     if (!mImageSurface || mImageSurface->CairoStatus()) {
-      mImageSurface = nsnull;
+      mImageSurface = nullptr;
       // guess
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -254,13 +254,13 @@ nsresult imgFrame::Optimize()
         mSinglePixel = true;
 
         // blow away the older surfaces (if they exist), to release their memory
-        mImageSurface = nsnull;
-        mOptSurface = nsnull;
+        mImageSurface = nullptr;
+        mOptSurface = nullptr;
 #ifdef USE_WIN_SURFACE
-        mWinSurface = nsnull;
+        mWinSurface = nullptr;
 #endif
 #ifdef XP_MACOSX
-        mQuartzSurface = nsnull;
+        mQuartzSurface = nullptr;
 #endif
 
         // We just dumped most of our allocated memory, so tell the discard
@@ -282,7 +282,7 @@ nsresult imgFrame::Optimize()
   if (mNeverUseDeviceSurface || ShouldUseImageSurfaces())
     return NS_OK;
 
-  mOptSurface = nsnull;
+  mOptSurface = nullptr;
 
 #ifdef USE_WIN_SURFACE
   // we need to special-case windows here, because windows has
@@ -310,7 +310,7 @@ nsresult imgFrame::Optimize()
     if (ddbSize <= kMaxSingleDDBSize &&
         ddbSize + gTotalDDBSize <= kMaxDDBSize)
     {
-      nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, gfxIntSize(mSize.width, mSize.height), mFormat);
+      nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nullptr, gfxIntSize(mSize.width, mSize.height), mFormat);
       if (wsurf) {
         gTotalDDBs++;
         gTotalDDBSize += ddbSize;
@@ -332,16 +332,16 @@ nsresult imgFrame::Optimize()
   }
 #endif
 
-  if (mOptSurface == nsnull)
+  if (mOptSurface == nullptr)
     mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
 
   if (mOptSurface) {
-    mImageSurface = nsnull;
+    mImageSurface = nullptr;
 #ifdef USE_WIN_SURFACE
-    mWinSurface = nsnull;
+    mWinSurface = nullptr;
 #endif
 #ifdef XP_MACOSX
-    mQuartzSurface = nsnull;
+    mQuartzSurface = nullptr;
 #endif
   }
 
@@ -583,14 +583,14 @@ void imgFrame::GetImageData(PRUint8 **aData, PRUint32 *length) const
   else if (mPalettedImageData)
     *aData = mPalettedImageData + PaletteDataLength();
   else
-    *aData = nsnull;
+    *aData = nullptr;
 
   *length = GetImageDataLength();
 }
 
 bool imgFrame::GetIsPaletted() const
 {
-  return mPalettedImageData != nsnull;
+  return mPalettedImageData != nullptr;
 }
 
 bool imgFrame::GetHasAlpha() const
@@ -601,7 +601,7 @@ bool imgFrame::GetHasAlpha() const
 void imgFrame::GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const
 {
   if (!mPalettedImageData) {
-    *aPalette = nsnull;
+    *aPalette = nullptr;
     *length = 0;
   } else {
     *aPalette = (PRUint32 *) mPalettedImageData;
@@ -635,12 +635,12 @@ nsresult imgFrame::LockImageData()
       context.SetSource(mOptSurface);
     context.Paint();
 
-    mOptSurface = nsnull;
+    mOptSurface = nullptr;
 #ifdef USE_WIN_SURFACE
-    mWinSurface = nsnull;
+    mWinSurface = nullptr;
 #endif
 #ifdef XP_MACOSX
-    mQuartzSurface = nsnull;
+    mQuartzSurface = nullptr;
 #endif
   }
 

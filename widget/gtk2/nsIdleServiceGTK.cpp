@@ -13,7 +13,7 @@
 
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* sIdleLog = nsnull;
+static PRLogModuleInfo* sIdleLog = nullptr;
 #endif
 
 typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
@@ -25,9 +25,9 @@ typedef void (*_XScreenSaverQueryInfo_fn)(Display* dpy, Drawable drw,
                                           XScreenSaverInfo *info);
 
 static bool sInitialized = false;
-static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nsnull;
-static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
-static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
+static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nullptr;
+static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nullptr;
+static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nullptr;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceGTK, nsIdleService)
 
@@ -62,7 +62,7 @@ static void Initialize()
 }
 
 nsIdleServiceGTK::nsIdleServiceGTK()
-    : mXssInfo(nsnull)
+    : mXssInfo(nullptr)
 {
 #ifdef PR_LOGGING
     if (!sIdleLog)
@@ -83,7 +83,7 @@ nsIdleServiceGTK::~nsIdleServiceGTK()
 #if 0
     if (xsslib) {
         PR_UnloadLibrary(xsslib);
-        xsslib = nsnull;
+        xsslib = nullptr;
     }
 #endif
 }

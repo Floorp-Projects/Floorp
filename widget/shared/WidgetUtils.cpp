@@ -31,14 +31,14 @@ WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
       if (!widget) {
         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(baseWin));
         if (!docShellAsItem)
-          return nsnull;
+          return nullptr;
 
         nsCOMPtr<nsIDocShellTreeItem> parent;
         docShellAsItem->GetParent(getter_AddRefs(parent));
 
         window = do_GetInterface(parent);
         if (!window)
-          return nsnull;
+          return nullptr;
 
         baseWin = do_QueryInterface(window->GetDocShell());
       }

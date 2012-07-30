@@ -83,7 +83,7 @@ OfflineCacheUpdateParent::Schedule(const URI& aManifestURI,
         nsresult rv;
         // Leave aDocument argument null. Only glues and children keep 
         // document instances.
-        rv = update->Init(manifestURI, documentURI, nsnull, nsnull);
+        rv = update->Init(manifestURI, documentURI, nullptr, nullptr);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = update->Schedule();

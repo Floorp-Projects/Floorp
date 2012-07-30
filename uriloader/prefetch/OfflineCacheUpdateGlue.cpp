@@ -75,7 +75,7 @@ OfflineCacheUpdateGlue::Schedule()
         LOG(("Calling offline-cache-update-added"));
         observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(this),
                                          "offline-cache-update-added",
-                                         nsnull);
+                                         nullptr);
         LOG(("Done offline-cache-update-added"));
     }
 
@@ -102,7 +102,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
     if (aDocument)
         SetDocument(aDocument);
 
-    return mUpdate->Init(aManifestURI, aDocumentURI, nsnull, aCustomProfileDir);
+    return mUpdate->Init(aManifestURI, aDocumentURI, nullptr, aCustomProfileDir);
 }
 
 void
@@ -152,7 +152,7 @@ OfflineCacheUpdateGlue::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, PRUin
             LOG(("Calling offline-cache-update-completed"));
             observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(this),
                                              "offline-cache-update-completed",
-                                             nsnull);
+                                             nullptr);
             LOG(("Done offline-cache-update-completed"));
         }
 

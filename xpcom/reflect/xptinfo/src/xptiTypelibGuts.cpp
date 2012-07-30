@@ -19,7 +19,7 @@ xptiTypelibGuts::Create(XPTHeader* aHeader)
                              (sizeof(xptiInterfaceEntry*) *
                               (aHeader->num_interfaces - 1)));
     if(!place)
-        return nsnull;
+        return nullptr;
     return new(place) xptiTypelibGuts(aHeader);
 }
 

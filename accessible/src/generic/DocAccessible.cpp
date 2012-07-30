@@ -81,7 +81,7 @@ DocAccessible::
   HyperTextAccessibleWrap(aRootContent, this),
   mDocument(aDocument), mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mLoadEventType(0),
-  mVirtualCursor(nsnull),
+  mVirtualCursor(nullptr),
   mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible;
@@ -368,7 +368,7 @@ DocAccessible::TakeFocus()
   NS_ENSURE_STATE(fm);
 
   nsCOMPtr<nsIDOMElement> newFocus;
-  return fm->MoveFocus(mDocument->GetWindow(), nsnull,
+  return fm->MoveFocus(mDocument->GetWindow(), nullptr,
                        nsIFocusManager::MOVEFOCUS_ROOT, 0,
                        getter_AddRefs(newFocus));
 }
@@ -459,7 +459,7 @@ DocAccessible::GetWindowHandle(void** aWindow)
 NS_IMETHODIMP
 DocAccessible::GetWindow(nsIDOMWindow** aDOMWin)
 {
-  *aDOMWin = nsnull;
+  *aDOMWin = nullptr;
   if (!mDocument) {
     return NS_ERROR_FAILURE;  // Accessible is Shutdown()
   }
@@ -477,7 +477,7 @@ NS_IMETHODIMP
 DocAccessible::GetDOMDocument(nsIDOMDocument** aDOMDocument)
 {
   NS_ENSURE_ARG_POINTER(aDOMDocument);
-  *aDOMDocument = nsnull;
+  *aDOMDocument = nullptr;
 
   if (mDocument)
     CallQueryInterface(mDocument, aDOMDocument);
@@ -489,7 +489,7 @@ NS_IMETHODIMP
 DocAccessible::GetParentDocument(nsIAccessibleDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
-  *aDocument = nsnull;
+  *aDocument = nullptr;
 
   if (!IsDefunct())
     NS_IF_ADDREF(*aDocument = ParentDocument());
@@ -514,7 +514,7 @@ DocAccessible::GetChildDocumentAt(PRUint32 aIndex,
                                   nsIAccessibleDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
-  *aDocument = nsnull;
+  *aDocument = nullptr;
 
   if (IsDefunct())
     return NS_OK;
@@ -528,7 +528,7 @@ NS_IMETHODIMP
 DocAccessible::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
 {
   NS_ENSURE_ARG_POINTER(aVirtualCursor);
-  *aVirtualCursor = nsnull;
+  *aVirtualCursor = nullptr;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -552,24 +552,24 @@ DocAccessible::GetEditor() const
   // the html:body (for HTML document case) or document element is editable.
   if (!mDocument->HasFlag(NODE_IS_EDITABLE) &&
       !mContent->HasFlag(NODE_IS_EDITABLE))
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
   if (!editingSession)
-    return nsnull; // No editing session interface
+    return nullptr; // No editing session interface
 
   nsCOMPtr<nsIEditor> editor;
   editingSession->GetEditorForWindow(mDocument->GetWindow(), getter_AddRefs(editor));
   if (!editor)
-    return nsnull;
+    return nullptr;
 
   bool isEditable = false;
   editor->GetIsDocumentEditable(&isEditable);
   if (isEditable)
     return editor.forget();
 
-  return nsnull;
+  return nullptr;
 }
 
 // DocAccessible public method
@@ -582,7 +582,7 @@ DocAccessible::GetAccessible(nsINode* aNode) const
   // document accessible.
   if (!accessible) {
     if (GetNode() != aNode)
-      return nsnull;
+      return nullptr;
 
     accessible = const_cast<DocAccessible*>(this);
   }
@@ -637,11 +637,11 @@ DocAccessible::Shutdown()
     logging::DocDestroy("document shutdown", mDocument, this);
 #endif
 
-  mPresShell->SetAccDocument(nsnull);
+  mPresShell->SetAccDocument(nullptr);
 
   if (mNotificationController) {
     mNotificationController->Shutdown();
-    mNotificationController = nsnull;
+    mNotificationController = nullptr;
   }
 
   RemoveEventListeners();
@@ -651,7 +651,7 @@ DocAccessible::Shutdown()
   // some reason for MSAA, refer to bug 757392 for details).
   mFlags |= eIsDefunct;
   nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
-  mDocument = nsnull;
+  mDocument = nullptr;
 
   if (mParent) {
     DocAccessible* parentDocument = mParent->Document();
@@ -671,10 +671,10 @@ DocAccessible::Shutdown()
 
   if (mVirtualCursor) {
     mVirtualCursor->RemoveObserver(this);
-    mVirtualCursor = nsnull;
+    mVirtualCursor = nullptr;
   }
 
-  mPresShell = nsnull;  // Avoid reentrancy
+  mPresShell = nullptr;  // Avoid reentrancy
 
   mDependentIDsHash.Clear();
   mNodeToAccessibleMap.Clear();
@@ -688,7 +688,7 @@ DocAccessible::Shutdown()
 nsIFrame*
 DocAccessible::GetFrame() const
 {
-  nsIFrame* root = nsnull;
+  nsIFrame* root = nullptr;
   if (mPresShell)
     root = mPresShell->GetRootFrame();
 
@@ -702,7 +702,7 @@ DocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
   *aRelativeFrame = GetFrame();
 
   nsIDocument *document = mDocument;
-  nsIDocument *parentDoc = nsnull;
+  nsIDocument *parentDoc = nullptr;
 
   while (document) {
     nsIPresShell *presShell = document->GetShell();
@@ -812,7 +812,7 @@ DocAccessible::RemoveEventListeners()
 
   if (mScrollWatchTimer) {
     mScrollWatchTimer->Cancel();
-    mScrollWatchTimer = nsnull;
+    mScrollWatchTimer = nullptr;
     NS_RELEASE_THIS(); // Kung fu death grip
   }
 
@@ -842,7 +842,7 @@ DocAccessible::ScrollTimerCallback(nsITimer* aTimer, void* aClosure)
     docAcc->mScrollPositionChangedTicks = 0;
     if (docAcc->mScrollWatchTimer) {
       docAcc->mScrollWatchTimer->Cancel();
-      docAcc->mScrollWatchTimer = nsnull;
+      docAcc->mScrollWatchTimer = nullptr;
       NS_RELEASE(docAcc); // Release kung fu death grip
     }
   }
@@ -978,7 +978,7 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
   if (aAttribute == nsGkAtoms::aria_checked ||
       aAttribute == nsGkAtoms::aria_pressed) {
     mARIAAttrOldValue = (aModType != nsIDOMMutationEvent::ADDITION) ?
-      nsAccUtils::GetARIAToken(aElement, aAttribute) : nsnull;
+      nsAccUtils::GetARIAToken(aElement, aAttribute) : nullptr;
   }
 }
 
@@ -1335,18 +1335,18 @@ void*
 DocAccessible::GetNativeWindow() const
 {
   if (!mPresShell)
-    return nsnull;
+    return nullptr;
 
   nsIViewManager* vm = mPresShell->GetViewManager();
   if (!vm)
-    return nsnull;
+    return nullptr;
 
   nsCOMPtr<nsIWidget> widget;
   vm->GetRootWidget(getter_AddRefs(widget));
   if (widget)
     return widget->GetNativeData(NS_NATIVE_WINDOW);
 
-  return nsnull;
+  return nullptr;
 }
 
 Accessible*
@@ -1364,17 +1364,17 @@ DocAccessible::GetAccessibleByUniqueIDInSubtree(void* aUniqueID)
       return child;
   }
 
-  return nsnull;
+  return nullptr;
 }
 
 Accessible*
 DocAccessible::GetAccessibleOrContainer(nsINode* aNode)
 {
   if (!aNode || !aNode->IsInDoc())
-    return nsnull;
+    return nullptr;
 
   nsINode* currNode = aNode;
-  Accessible* accessible = nsnull;
+  Accessible* accessible = nullptr;
   while (!(accessible = GetAccessible(currNode)) &&
          (currNode = currNode->GetNodeParent()));
 
@@ -1419,7 +1419,7 @@ DocAccessible::UnbindFromDocument(Accessible* aAccessible)
   // Fire focus event on accessible having DOM focus if active item was removed
   // from the tree.
   if (FocusMgr()->IsActiveItem(aAccessible)) {
-    FocusMgr()->ActiveItemChanged(nsnull);
+    FocusMgr()->ActiveItemChanged(nullptr);
     A11YDEBUG_FOCUS_ACTIVEITEMCHANGE_CAUSE("tree shutdown", aAccessible)
   }
 
@@ -1515,7 +1515,7 @@ DocAccessible::CacheChildren()
   nsAccTreeWalker walker(this, mDocument->GetRootElement(),
                          CanHaveAnonChildren());
 
-  Accessible* child = nsnull;
+  Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
 }
 

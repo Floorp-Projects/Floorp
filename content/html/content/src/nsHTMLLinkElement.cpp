@@ -67,7 +67,7 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nullptr, aValue, aNotify);
   }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
@@ -256,7 +256,7 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::_empty, &nsGkAtoms::stylesheet, nsnull};
+    {&nsGkAtoms::_empty, &nsGkAtoms::stylesheet, nullptr};
 
   if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
                                        nsGkAtoms::rev) &&
@@ -300,7 +300,7 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       dropSheet = !(linkTypes & STYLESHEET);          
     }
     
-    UpdateStyleSheetInternal(nsnull,
+    UpdateStyleSheetInternal(nullptr,
                              dropSheet ||
                              (aName == nsGkAtoms::title ||
                               aName == nsGkAtoms::media ||
@@ -324,7 +324,7 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
        aAttribute == nsGkAtoms::title ||
        aAttribute == nsGkAtoms::media ||
        aAttribute == nsGkAtoms::type)) {
-    UpdateStyleSheetInternal(nsnull, true);
+    UpdateStyleSheetInternal(nullptr, true);
   }
 
   // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState
@@ -385,7 +385,7 @@ nsHTMLLinkElement::GetStyleSheetURL(bool* aIsInline)
   nsAutoString href;
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
   if (href.IsEmpty()) {
-    return nsnull;
+    return nullptr;
   }
   return Link::GetURI();
 }

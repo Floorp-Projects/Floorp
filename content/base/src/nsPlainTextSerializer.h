@@ -79,7 +79,7 @@ protected:
 
   /**
    * Returns the local name of the element as an atom if the element is an
-   * HTML element and the atom is a static atom. Otherwise, nsnull is returned.
+   * HTML element and the atom is a static atom. Otherwise, nullptr is returned.
    */
   static nsIAtom* GetIdForContent(nsIContent* aContent);
   nsresult DoOpenContainer(nsIAtom* aTag);

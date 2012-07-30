@@ -49,7 +49,7 @@ public:
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
-  bool IsTrivial(nsISVGChildFrame **aSingleChild = nsnull);
+  bool IsTrivial(nsISVGChildFrame **aSingleChild = nullptr);
 
   bool IsValid();
 

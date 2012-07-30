@@ -76,7 +76,7 @@ class nsCParserNode :  public nsIParserNode {
 #else
       nsFixedSizeAllocator& pool = aNodeAllocator->GetArenaPool();
       void* place = pool.Alloc(sizeof(nsCParserNode));
-      NS_ENSURE_TRUE(place, nsnull);
+      NS_ENSURE_TRUE(place, nullptr);
       return ::new (place)
 #endif
         nsCParserNode(aToken, aTokenAllocator, aNodeAllocator);
@@ -253,7 +253,7 @@ public:
 #else
       nsFixedSizeAllocator& pool = aNodeAllocator->GetArenaPool();
       void* place = pool.Alloc(sizeof(nsCParserStartNode));
-      NS_ENSURE_TRUE(place, nsnull);
+      NS_ENSURE_TRUE(place, nullptr);
       return ::new (place)
 #endif
         nsCParserStartNode(aToken, aTokenAllocator, aNodeAllocator);

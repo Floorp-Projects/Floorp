@@ -110,7 +110,7 @@ public:
     if (!gHistoryService) {
       nsCOMPtr<nsINavHistoryService> serv =
         do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
-      NS_ENSURE_TRUE(serv, nsnull);
+      NS_ENSURE_TRUE(serv, nullptr);
       NS_ASSERTION(gHistoryService, "Should have static instance pointer now");
     }
     return gHistoryService;

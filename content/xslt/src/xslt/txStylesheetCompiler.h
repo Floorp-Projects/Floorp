@@ -52,16 +52,16 @@ public:
                              txStylesheetCompiler* aCompiler) = 0;
     virtual void onDoneCompiling(txStylesheetCompiler* aCompiler,
                                  nsresult aResult,
-                                 const PRUnichar *aErrorText = nsnull,
-                                 const PRUnichar *aParam = nsnull) = 0;
+                                 const PRUnichar *aErrorText = nullptr,
+                                 const PRUnichar *aParam = nullptr) = 0;
 };
 
 #define TX_DECL_ACOMPILEOBSERVER \
   nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
                    txStylesheetCompiler* aCompiler); \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
-                       const PRUnichar *aErrorText = nsnull, \
-                       const PRUnichar *aParam = nsnull);
+                       const PRUnichar *aErrorText = nullptr, \
+                       const PRUnichar *aParam = nullptr);
 
 class txStylesheetCompilerState : public txIParseContext
 {
@@ -206,8 +206,8 @@ public:
     nsresult characters(const nsAString& aStr);
     nsresult doneLoading();
 
-    void cancel(nsresult aError, const PRUnichar *aErrorText = nsnull,
-                const PRUnichar *aParam = nsnull);
+    void cancel(nsresult aError, const PRUnichar *aErrorText = nullptr,
+                const PRUnichar *aParam = nullptr);
 
     txStylesheet* getStylesheet();
 

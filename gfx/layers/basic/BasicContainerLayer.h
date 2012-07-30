@@ -73,9 +73,9 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
     aContainer->mLastChild = prev;
   }
 
-  aChild->SetNextSibling(nsnull);
-  aChild->SetPrevSibling(nsnull);
-  aChild->SetParent(nsnull);
+  aChild->SetNextSibling(nullptr);
+  aChild->SetPrevSibling(nullptr);
+  aChild->SetParent(nullptr);
 
   aContainer->DidRemoveChild(aChild);
   NS_RELEASE(aChild);

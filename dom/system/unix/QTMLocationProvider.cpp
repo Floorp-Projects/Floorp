@@ -79,7 +79,7 @@ QTMLocationProvider::Shutdown()
         return NS_ERROR_NOT_IMPLEMENTED;
 
     mLocation->stopUpdates();
-    mCallback = nsnull;
+    mCallback = nullptr;
 
     return NS_OK;
 }

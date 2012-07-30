@@ -155,7 +155,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const gfxPattern::GraphicsFilter aFilte
     nsRefPtr<gfxASurface> surface =
         gfxPlatform::GetPlatform()->CreateOffscreenSurface(mSize, gfxASurface::CONTENT_COLOR_ALPHA);
     if (!surface || surface->CairoStatus() != 0)
-        return nsnull;
+        return nullptr;
 
     nsRefPtr<gfxContext> ctx = new gfxContext(surface);
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);

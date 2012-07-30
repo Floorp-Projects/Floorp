@@ -37,7 +37,7 @@ static const size_t kNodeInfoPoolSizes[] = {
 static const PRInt32 kNodeInfoPoolInitialSize = sizeof(nsNodeInfo) * 64;
 
 // static
-nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nsnull;
+nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nullptr;
 
 // static
 nsNodeInfo*
@@ -48,14 +48,14 @@ nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   if (!sNodeInfoPool) {
     sNodeInfoPool = new nsFixedSizeAllocator();
     if (!sNodeInfoPool)
-      return nsnull;
+      return nullptr;
 
     nsresult rv = sNodeInfoPool->Init("NodeInfo Pool", kNodeInfoPoolSizes,
                                       1, kNodeInfoPoolInitialSize);
     if (NS_FAILED(rv)) {
       delete sNodeInfoPool;
-      sNodeInfoPool = nsnull;
-      return nsnull;
+      sNodeInfoPool = nullptr;
+      return nullptr;
     }
   }
 
@@ -64,7 +64,7 @@ nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   return place ?
     new (place) nsNodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName,
                            aOwnerManager) :
-    nsnull;
+    nullptr;
 }
 
 nsNodeInfo::~nsNodeInfo()
@@ -220,7 +220,7 @@ nsNodeInfo::ClearCache()
 {
   // Clear our cache.
   delete sNodeInfoPool;
-  sNodeInfoPool = nsnull;
+  sNodeInfoPool = nullptr;
 }
 
 void

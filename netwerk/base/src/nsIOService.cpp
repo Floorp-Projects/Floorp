@@ -59,7 +59,7 @@
 
 #define MAX_RECURSION_COUNT 50
 
-nsIOService* gIOService = nsnull;
+nsIOService* gIOService = nullptr;
 static bool gHasWarnedUploadChannel2;
 
 // A general port blacklist.  Connections to these ports will not be allowed unless 
@@ -224,7 +224,7 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    gIOService = nsnull;
+    gIOService = nullptr;
 }
 
 nsresult
@@ -294,13 +294,13 @@ nsIOService::GetInstance() {
     if (!gIOService) {
         gIOService = new nsIOService();
         if (!gIOService)
-            return nsnull;
+            return nullptr;
         NS_ADDREF(gIOService);
 
         nsresult rv = gIOService->Init();
         if (NS_FAILED(rv)) {
             NS_RELEASE(gIOService);
-            return nsnull;
+            return nullptr;
         }
         return gIOService;
     }
@@ -443,7 +443,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
             spec.Append(':');
 
             nsIURI *uri;
-            rv = (*result)->NewURI(spec, nsnull, nsnull, &uri);
+            rv = (*result)->NewURI(spec, nullptr, nullptr, &uri);
             if (NS_SUCCEEDED(rv)) {
                 NS_RELEASE(uri);
                 return rv;
@@ -467,7 +467,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
             spec.Append(':');
 
             nsIURI *uri;
-            rv = (*result)->NewURI(spec, nsnull, nsnull, &uri);
+            rv = (*result)->NewURI(spec, nullptr, nullptr, &uri);
             if (NS_SUCCEEDED(rv)) {
                 NS_RELEASE(uri);
                 return rv;
@@ -494,7 +494,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 NS_IMETHODIMP
 nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
 {
-    return net_ExtractURLScheme(inURI, nsnull, nsnull, &scheme);
+    return net_ExtractURLScheme(inURI, nullptr, nullptr, &scheme);
 }
 
 NS_IMETHODIMP 
@@ -573,7 +573,7 @@ nsIOService::NewFileURI(nsIFile *file, nsIURI **result)
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
-    return NewChannelFromURIWithProxyFlags(aURI, nsnull, 0, result);
+    return NewChannelFromURIWithProxyFlags(aURI, nullptr, 0, result);
 }
 
 void
@@ -595,7 +595,7 @@ nsIOService::LookupProxyInfo(nsIURI *aURI,
         rv = mProxyService->Resolve(aProxyURI ? aProxyURI : aURI, aProxyFlags,
                                     getter_AddRefs(pi));
         if (NS_FAILED(rv))
-            pi = nsnull;
+            pi = nullptr;
     }
     pi.forget(outPI);
 }
@@ -735,7 +735,7 @@ nsIOService::SetOffline(bool offline)
 
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
         if (observerService) {
-            (void)observerService->NotifyObservers(nsnull,
+            (void)observerService->NotifyObservers(nullptr,
                 NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
                 NS_LITERAL_STRING("true").get() :
                 NS_LITERAL_STRING("false").get());
@@ -936,7 +936,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool rem
 void
 nsIOService::GetPrefBranch(nsIPrefBranch **result)
 {
-    *result = nsnull;
+    *result = nullptr;
     CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
@@ -984,7 +984,7 @@ nsIOService::Observe(nsISupports *subject,
         SetOffline(true);
 
         // Break circular reference.
-        mProxyService = nsnull;
+        mProxyService = nullptr;
     }
     else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
         if (!mOfflineForProfileChange && mManageOfflineStatus) {
@@ -1064,7 +1064,7 @@ NS_IMETHODIMP
 nsIOService::ToImmutableURI(nsIURI* uri, nsIURI** result)
 {
     if (!uri) {
-        *result = nsnull;
+        *result = nullptr;
         return NS_OK;
     }
 
@@ -1225,7 +1225,7 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
     // speculative connect should not be performed because the potential
     // reward is slim with tcp peers closely located to the browser.
     nsCOMPtr<nsIProxyInfo> pi;
-    LookupProxyInfo(aURI, nsnull, 0, &scheme, getter_AddRefs(pi));
+    LookupProxyInfo(aURI, nullptr, 0, &scheme, getter_AddRefs(pi));
     if (pi) 
         return NS_OK;
 

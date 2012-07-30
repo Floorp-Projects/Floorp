@@ -404,7 +404,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Initialize
     svgElem->mHasChildrenOnlyTransform =
-      anonKid->HasChildrenOnlyTransform(nsnull);
+      anonKid->HasChildrenOnlyTransform(nullptr);
   }
 
   // If our SVG viewport has changed, update our content and notify.
@@ -587,7 +587,7 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
         aAttribute == nsGkAtoms::transform) {
 
       // make sure our cached transform matrix gets (lazily) updated
-      mCanvasTM = nsnull;
+      mCanvasTM = nullptr;
 
       nsSVGUtils::NotifyChildrenOfSVGChange(GetFirstPrincipalChild(),
                 aAttribute == nsGkAtoms::viewBox ?
@@ -722,7 +722,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(PRUint32 aFlags)
 
   if (aFlags & TRANSFORM_CHANGED) {
     // Make sure our canvas transform matrix gets (lazily) recalculated:
-    mCanvasTM = nsnull;
+    mCanvasTM = nullptr;
 
     if (haveNonFulLZoomTransformChange &&
         !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
@@ -817,7 +817,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
     }
   }
   if (aEmbeddingFrame) {
-    *aEmbeddingFrame = nsnull;
+    *aEmbeddingFrame = nullptr;
   }
   return false;
 }

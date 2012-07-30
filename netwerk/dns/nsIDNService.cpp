@@ -59,7 +59,7 @@ nsresult nsIDNService::Init()
     prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, true); 
     prefInternal->AddObserver(NS_NET_PREF_IDNBLACKLIST, this, true);
     prefInternal->AddObserver(NS_NET_PREF_SHOWPUNYCODE, this, true);
-    prefsChanged(prefInternal, nsnull);
+    prefsChanged(prefInternal, nullptr);
   }
 
   return NS_OK;
@@ -116,7 +116,7 @@ nsIDNService::nsIDNService()
   mMultilingualTestBed = false;
 
   if (idn_success != idn_nameprep_create(NULL, &mNamePrepHandle))
-    mNamePrepHandle = nsnull;
+    mNamePrepHandle = nullptr;
 
   mNormalizer = do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID);
   /* member initializers and constructor code */
@@ -409,7 +409,7 @@ static nsresult punycode(const char* prefix, const nsAString& in, nsACString& ou
 
   enum punycode_status status = punycode_encode(ucs4Len,
                                                 ucs4Buf,
-                                                nsnull,
+                                                nullptr,
                                                 &encodedLength,
                                                 encodedBuf);
 
@@ -508,7 +508,7 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
     return NS_ERROR_FAILURE;
 
   // prohibit
-  const PRUint32 *found = nsnull;
+  const PRUint32 *found = nullptr;
   idn_err = idn_nameprep_isprohibited(mNamePrepHandle, 
                                       (const PRUint32 *) ucs4Buf, &found);
   if (idn_err != idn_success || found)
@@ -625,7 +625,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
                                                 PromiseFlatCString(in).get() + kACEPrefixLen,
                                                 &output_length,
                                                 output,
-                                                nsnull);
+                                                nullptr);
   if (status != punycode_success) {
     delete [] output;
     return NS_ERROR_FAILURE;

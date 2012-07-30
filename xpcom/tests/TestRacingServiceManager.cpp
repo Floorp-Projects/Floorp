@@ -58,7 +58,7 @@ NS_DEFINE_CID(kFactoryCID2, FACTORY_CID2);
 PRInt32 gComponent1Count = 0;
 PRInt32 gComponent2Count = 0;
 
-ReentrantMonitor* gReentrantMonitor = nsnull;
+ReentrantMonitor* gReentrantMonitor = nullptr;
 
 bool gCreateInstanceCalled = false;
 bool gMainThreadWaiting = false;
@@ -76,7 +76,7 @@ public:
   ~AutoCreateAndDestroyReentrantMonitor() {
     if (*mReentrantMonitorPtr) {
       delete *mReentrantMonitorPtr;
-      *mReentrantMonitorPtr = nsnull;
+      *mReentrantMonitorPtr = nullptr;
     }
   }
 
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
   // Reset for the contractID test
   gMainThreadWaiting = gCreateInstanceCalled = false;
   gFactory->mFirstComponentCreated = runnable->mFirstRunnableDone = true;
-  component = nsnull;
+  component = nullptr;
 
   rv = newThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, 1);

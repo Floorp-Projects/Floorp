@@ -16,7 +16,7 @@ class nsSVGString
 
 public:
   void Init(PRUint8 aAttrEnum) {
-    mAnimVal = nsnull;
+    mAnimVal = nullptr;
     mAttrEnum = aAttrEnum;
     mIsBaseSet = false;
   }

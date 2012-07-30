@@ -193,14 +193,14 @@ nsSVGMpathElement::GetReferencedPath()
     NS_ABORT_IF_FALSE(!mHrefTarget.get(),
                       "We shouldn't have an xlink:href target "
                       "if we don't have an xlink:href attribute");
-    return nsnull;
+    return nullptr;
   }
 
   nsIContent* genericTarget = mHrefTarget.get();
   if (genericTarget && genericTarget->IsSVG(nsGkAtoms::path)) {
     return static_cast<nsSVGPathElement*>(genericTarget);
   }
-  return nsnull;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------

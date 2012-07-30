@@ -213,7 +213,7 @@ nsEventSource::Close()
 
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = nsnull;
+    mTimer = nullptr;
   }
 
   ResetConnection();
@@ -224,10 +224,10 @@ nsEventSource::Close()
     delete static_cast<Message*>(mMessagesToDispatch.PopFront());
   }
 
-  mSrc = nsnull;
+  mSrc = nullptr;
   mFrozen = false;
 
-  mUnicodeDecoder = nsnull;
+  mUnicodeDecoder = nullptr;
 
   mReadyState = nsIEventSource::CLOSED;
 
@@ -261,7 +261,7 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  JSContext* cx = nsnull;
+  JSContext* cx = nullptr;
   if (stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
     const char *filename;
     if (nsJSUtils::GetCallingLocation(cx, &filename, &mScriptLine)) {
@@ -290,7 +290,7 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> srcURI;
-  rv = NS_NewURI(getter_AddRefs(srcURI), aURL, nsnull, baseURI);
+  rv = NS_NewURI(getter_AddRefs(srcURI), aURL, nullptr, baseURI);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   // we observe when the window freezes and thaws
@@ -725,8 +725,8 @@ nsEventSource::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                                    aNewChannel,
                                                    aFlags, fwd);
     if (NS_FAILED(rv)) {
-      mRedirectCallback = nsnull;
-      mNewRedirectChannel = nsnull;
+      mRedirectCallback = nullptr;
+      mNewRedirectChannel = nullptr;
       mErrorLoadOnRedirect = true;
       DispatchFailConnection();
     }
@@ -758,10 +758,10 @@ nsEventSource::OnRedirectVerifyCallback(nsresult aResult)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mNewRedirectChannel = nsnull;
+  mNewRedirectChannel = nullptr;
 
   mRedirectCallback->OnRedirectVerifyCallback(aResult);
-  mRedirectCallback = nsnull;
+  mRedirectCallback = nullptr;
 
   return NS_OK;
 }
@@ -830,7 +830,7 @@ nsEventSource::GetBaseURI(nsIURI **aBaseURI)
 {
   NS_ENSURE_ARG_POINTER(aBaseURI);
 
-  *aBaseURI = nsnull;
+  *aBaseURI = nullptr;
 
   nsCOMPtr<nsIURI> baseURI;
 
@@ -911,8 +911,8 @@ nsEventSource::InitChannelAndRequestEventSource()
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), mSrc, nsnull, mLoadGroup,
-                     nsnull, loadFlags, channelPolicy);
+  rv = NS_NewChannel(getter_AddRefs(channel), mSrc, nullptr, mLoadGroup,
+                     nullptr, loadFlags, channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mHttpChannel = do_QueryInterface(channel);
@@ -934,7 +934,7 @@ nsEventSource::InitChannelAndRequestEventSource()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Start reading from the channel
-  rv = mHttpChannel->AsyncOpen(listener, nsnull);
+  rv = mHttpChannel->AsyncOpen(listener, nullptr);
   if (NS_SUCCEEDED(rv)) {
     mWaitingForOnStopRequest = true;
   }
@@ -965,7 +965,7 @@ nsEventSource::AnnounceConnection()
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMEvent(getter_AddRefs(event), nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to create the open event!!!");
     return;
@@ -980,7 +980,7 @@ nsEventSource::AnnounceConnection()
 
   event->SetTrusted(true);
 
-  rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the open event!!!");
     return;
@@ -999,12 +999,12 @@ nsEventSource::ResetConnection()
   }
   mLastConvertionResult = NS_OK;
 
-  mHttpChannel = nsnull;
-  mNotificationCallbacks = nsnull;
-  mChannelEventSink = nsnull;
+  mHttpChannel = nullptr;
+  mNotificationCallbacks = nullptr;
+  mChannelEventSink = nullptr;
   mStatus = PARSE_STATE_OFF;
-  mRedirectCallback = nsnull;
-  mNewRedirectChannel = nsnull;
+  mRedirectCallback = nullptr;
+  mNewRedirectChannel = nullptr;
 
   mReadyState = nsIEventSource::CONNECTING;
 
@@ -1035,7 +1035,7 @@ nsEventSource::ReestablishConnection()
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMEvent(getter_AddRefs(event), nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to create the error event!!!");
     return;
@@ -1050,7 +1050,7 @@ nsEventSource::ReestablishConnection()
 
   event->SetTrusted(true);
 
-  rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the error event!!!");
     return;
@@ -1120,7 +1120,7 @@ nsEventSource::PrintErrorOnConsole(const char *aBundleURI,
 
   rv = errObj->InitWithWindowID(message.get(),
                                 mScriptFile.get(),
-                                nsnull,
+                                nullptr,
                                 mScriptLine, 0,
                                 nsIScriptError::errorFlag,
                                 "Event Source", mInnerWindowID);
@@ -1191,7 +1191,7 @@ nsEventSource::FailConnection()
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
+  rv = NS_NewDOMEvent(getter_AddRefs(event), nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to create the error event!!!");
     return;
@@ -1206,7 +1206,7 @@ nsEventSource::FailConnection()
 
   event->SetTrusted(true);
 
-  rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+  rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the error event!!!");
     return;
@@ -1244,7 +1244,7 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
     nsContentUtils::GetDocumentFromScriptContext(sc);
 
   // mScriptContext should be initialized because of GetBaseURI() above.
-  // Still need to consider the case that doc is nsnull however.
+  // Still need to consider the case that doc is nullptr however.
   rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, false);
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
@@ -1253,7 +1253,7 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
                                  mPrincipal,
                                  doc,
                                  NS_LITERAL_CSTRING(TEXT_EVENT_STREAM),
-                                 nsnull,    // extra
+                                 nullptr,    // extra
                                  &shouldLoad,
                                  nsContentUtils::GetContentPolicy(),
                                  nsContentUtils::GetSecurityManager());
@@ -1421,7 +1421,7 @@ nsEventSource::DispatchAllMessageEvents()
     // which does not bubble, is not cancelable, and has no default action
 
     nsCOMPtr<nsIDOMEvent> event;
-    rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nsnull, nsnull);
+    rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nullptr, nullptr);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to create the message event!!!");
       return;
@@ -1432,7 +1432,7 @@ nsEventSource::DispatchAllMessageEvents()
                                         false, false,
                                         jsData,
                                         mOrigin,
-                                        message->mLastEventID, nsnull);
+                                        message->mLastEventID, nullptr);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to init the message event!!!");
       return;
@@ -1440,7 +1440,7 @@ nsEventSource::DispatchAllMessageEvents()
 
     messageEvent->SetTrusted(true);
 
-    rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+    rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the message event!!!");
       return;

@@ -96,7 +96,7 @@ nsXULTemplateResultXML::GetId(nsAString& aId)
 NS_IMETHODIMP
 nsXULTemplateResultXML::GetResource(nsIRDFResource** aResource)
 {
-    *aResource = nsnull;
+    *aResource = nullptr;
     return NS_OK;
 }
 
@@ -179,7 +179,7 @@ nsXULTemplateResultXML::RuleMatched(nsISupports* aQueryNode,
 {
     // when a rule matches, set the bindings that must be used.
     nsXULTemplateQueryProcessorXML* processor = mQuery ? mQuery->Processor() :
-                                                         nsnull;
+                                                         nullptr;
     if (processor) {
         nsXMLBindingSet* bindings =
             processor->GetOptionalBindingsForRule(aRuleNode);

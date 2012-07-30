@@ -136,7 +136,7 @@ nsControllerCommandTable::SupportsCommand(const char * aCommandName, nsISupports
   nsCOMPtr<nsIControllerCommand> commandHandler;
   FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
 
-  *aResult = (commandHandler.get() != nsnull);
+  *aResult = (commandHandler.get() != nullptr);
   return NS_OK;
 }
 
@@ -197,7 +197,7 @@ nsControllerCommandTable::GetCommandState(const char *aCommandName, nsICommandPa
 nsresult
 NS_NewControllerCommandTable(nsIControllerCommandTable** aResult)
 {
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  NS_PRECONDITION(aResult != nullptr, "null ptr");
   if (! aResult)
     return NS_ERROR_NULL_POINTER;
 

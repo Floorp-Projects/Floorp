@@ -164,18 +164,18 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   aDocShell->GetPresShell(getter_AddRefs(presShell));
   mPresShell = do_GetWeakReference(presShell);      
 
-  mStartFindRange = nsnull;
+  mStartFindRange = nullptr;
   mStartPointRange = new nsRange();
   mSearchRange = new nsRange();
   mEndPointRange = new nsRange();
 
-  mFoundLink = nsnull;
-  mFoundEditable = nsnull;
-  mCurrentWindow = nsnull;
+  mFoundLink = nullptr;
+  mFoundEditable = nullptr;
+  mCurrentWindow = nullptr;
 
-  mSelectionController = nsnull;
+  mSelectionController = nullptr;
 
-  mFind = nsnull;
+  mFind = nullptr;
 
   return NS_OK;
 }
@@ -268,9 +268,9 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                            PRUint16* aResult)
 {
   *aResult = FIND_NOTFOUND;
-  mFoundLink = nsnull;
-  mFoundEditable = nsnull;
-  mCurrentWindow = nsnull;
+  mFoundLink = nullptr;
+  mFoundEditable = nullptr;
+  mCurrentWindow = nullptr;
   nsCOMPtr<nsIPresShell> startingPresShell (GetPresShell());
   if (!startingPresShell) {    
     nsCOMPtr<nsIDocShell> ds = do_QueryReferent(mDocShell);
@@ -349,7 +349,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
   if (NS_FAILED(GetSearchContainers(currentContainer,
                                     (!aIsFirstVisiblePreferred ||
                                      mStartFindRange) ?
-                                    selectionController.get() : nsnull,
+                                    selectionController.get() : nullptr,
                                     aIsFirstVisiblePreferred,  aFindPrev,
                                     getter_AddRefs(presShell),
                                     getter_AddRefs(presContext)))) {
@@ -511,7 +511,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
       if (!mFoundEditable && fm) {
         nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(window);
-        fm->MoveFocus(win, nsnull, nsIFocusManager::MOVEFOCUS_CARET,
+        fm->MoveFocus(win, nullptr, nsIFocusManager::MOVEFOCUS_CARET,
                       nsIFocusManager::FLAG_NOSCROLL | nsIFocusManager::FLAG_NOSWITCHFRAME,
                       getter_AddRefs(mFoundLink));
       }
@@ -575,7 +575,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
     }
 
     if (continueLoop) {
-      if (NS_FAILED(GetSearchContainers(currentContainer, nsnull,
+      if (NS_FAILED(GetSearchContainers(currentContainer, nullptr,
                                         aIsFirstVisiblePreferred, aFindPrev,
                                         getter_AddRefs(presShell),
                                         getter_AddRefs(presContext)))) {
@@ -647,8 +647,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   NS_ENSURE_ARG_POINTER(aPresShell);
   NS_ENSURE_ARG_POINTER(aPresContext);
 
-  *aPresShell = nsnull;
-  *aPresContext = nsnull;
+  *aPresShell = nullptr;
+  *aPresContext = nullptr;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
   if (!docShell)
@@ -709,7 +709,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     // IsRangeVisible. It returns the first visible range after searchRange
     IsRangeVisible(presShell, presContext, mSearchRange, 
                    aIsFirstVisiblePreferred, true, 
-                   getter_AddRefs(mStartPointRange), nsnull);
+                   getter_AddRefs(mStartPointRange), nullptr);
   }
   else {
     PRInt32 startOffset;
@@ -852,7 +852,7 @@ nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
   if (!mTypeAheadBuffer.IsEmpty())
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
-    FindItNow(nsnull, aLinksOnly, false, aFindBackwards, aResult);
+    FindItNow(nullptr, aLinksOnly, false, aFindBackwards, aResult);
 
   return NS_OK;
 }
@@ -891,8 +891,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
 
     // These will be initialized to their true values after the first character
     // is typed
-    mStartFindRange = nsnull;
-    mSelectionController = nsnull;
+    mStartFindRange = nullptr;
+    mSelectionController = nullptr;
 
     *aResult = FIND_FOUND;
     return NS_OK;
@@ -911,7 +911,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       atEnd = true;
     
     if (!atEnd)
-      mStartFindRange = nsnull;
+      mStartFindRange = nullptr;
   }
 
   if (!mIsSoundInitialized && !mNotFoundSoundURL.IsEmpty()) {
@@ -929,7 +929,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   // After each keystroke, ensure sound object is destroyed, to free up memory 
   // allocated for error sound, otherwise Windows' nsISound impl 
   // holds onto the last played sound, using up memory.
-  mSoundInterface = nsnull;
+  mSoundInterface = nullptr;
 #endif
 
   PRInt32 bufferLength = mTypeAheadBuffer.Length();
@@ -984,7 +984,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   // ----------- Find the text! ---------------------
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  nsresult rv = FindItNow(nsnull, aLinksOnly, isFirstVisiblePreferred,
+  nsresult rv = FindItNow(nullptr, aLinksOnly, isFirstVisiblePreferred,
                           false, aResult);
 
   // ---------Handle success or failure ---------------
@@ -993,7 +993,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       // If first letter, store where the first find succeeded
       // (mStartFindRange)
 
-      mStartFindRange = nsnull;
+      mStartFindRange = nullptr;
       if (selection) {
         nsCOMPtr<nsIDOMRange> startFindRange;
         selection->GetRangeAt(0, getter_AddRefs(startFindRange));
@@ -1020,8 +1020,8 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   if (!aPresShell)
     return;
 
-  // if aCurrentNode is nsnull, get selection for document
-  *aDOMSel = nsnull;
+  // if aCurrentNode is nullptr, get selection for document
+  *aDOMSel = nullptr;
 
   nsPresContext* presContext = aPresShell->GetPresContext();
 
@@ -1163,9 +1163,9 @@ already_AddRefed<nsIPresShell>
 nsTypeAheadFind::GetPresShell()
 {
   if (!mPresShell)
-    return nsnull;
+    return nullptr;
 
-  nsIPresShell *shell = nsnull;
+  nsIPresShell *shell = nullptr;
   CallQueryReferent(mPresShell.get(), &shell);
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();

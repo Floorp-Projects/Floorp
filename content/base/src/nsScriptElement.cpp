@@ -59,7 +59,7 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
       event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
     }
 
-    nsEventDispatcher::Dispatch(cont, presContext, &event, nsnull, &status);
+    nsEventDispatcher::Dispatch(cont, presContext, &event, nullptr, &status);
   }
 
   return rv;
