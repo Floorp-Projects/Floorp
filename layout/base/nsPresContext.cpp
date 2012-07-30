@@ -19,6 +19,8 @@
 #include "nsIFrame.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
+#include "nsIPrintSettings.h"
+#include "nsILanguageAtomService.h"
 #include "nsStyleContext.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsIComponentManager.h"
@@ -1527,6 +1529,18 @@ nsPresContext::GetContainerExternal() const
 }
 
 #ifdef IBMBIDI
+bool
+nsPresContext::BidiEnabledExternal() const
+{
+  return BidiEnabledInternal();
+}
+
+bool
+nsPresContext::BidiEnabledInternal() const
+{
+  return Document()->GetBidiEnabled();
+}
+
 void
 nsPresContext::SetBidiEnabled() const
 {
@@ -1810,6 +1824,12 @@ nsPresContext::MatchMedia(const nsAString& aMediaQueryList,
   PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
 
   result.forget(aResult);
+}
+
+nsCompatibility
+nsPresContext::CompatibilityMode() const
+{
+  return Document()->GetCompatibilityMode();
 }
 
 void
@@ -2387,6 +2407,18 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   }
   return mHasPendingInterrupt;
 }
+
+nsIFrame*
+nsPresContext::GetPrimaryFrameFor(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "Don't do that");
+  if (GetPresShell() &&
+      GetPresShell()->GetDocument() == aContent->GetCurrentDoc()) {
+    return aContent->GetPrimaryFrame();
+  }
+  return nsnull;
+}
+
 
 size_t
 nsPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
