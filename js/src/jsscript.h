@@ -87,7 +87,7 @@ enum BindingKind { ARGUMENT, VARIABLE, CONSTANT };
 
 struct Binding
 {
-    PropertyName *maybeName;  /* NULL for destructuring formals. */
+    PropertyName *name;
     BindingKind kind;
 };
 
@@ -166,7 +166,7 @@ class Bindings
      * Bindings instance. Once such a transfer occurs, the old bindings must
      * not be used again.
      */
-    inline void transfer(Bindings *bindings);
+    inline void transferFrom(Bindings *bindings);
 
     uint16_t numArgs() const { return nargs; }
     uint16_t numVars() const { return nvars; }
@@ -189,6 +189,10 @@ class Bindings
      * The result is guaranteed not to have duplicate property names.
      */
     Shape *callObjectShape(JSContext *cx) const;
+
+    /* Extract a list of the closed-over args and vars. */
+    typedef Vector<uint32_t, 32> SlotVector;
+    bool extractClosedArgsAndVars(JSContext *cx, SlotVector *args, SlotVector *vars);
 
     /* See Scope::extensibleParents */
     inline bool extensibleParents();
@@ -214,25 +218,7 @@ class Bindings
      * runtime, by calling an "add" method. All ARGUMENT bindings must be added
      * before before any VARIABLE or CONSTANT bindings.
      */
-    bool add(JSContext *cx, HandleAtom name, BindingKind kind);
-
-    /* Convenience specializations. */
-    bool addVariable(JSContext *cx, HandleAtom name) {
-        return add(cx, name, VARIABLE);
-    }
-    bool addConstant(JSContext *cx, HandleAtom name) {
-        return add(cx, name, CONSTANT);
-    }
-    bool addArgument(JSContext *cx, HandleAtom name, uint16_t *slotp) {
-        JS_ASSERT(name != NULL); /* not destructuring */
-        *slotp = nargs;
-        return add(cx, name, ARGUMENT);
-    }
-    bool addDestructuring(JSContext *cx, uint16_t *slotp) {
-        *slotp = nargs;
-        Rooted<JSAtom*> atom(cx, NULL);
-        return add(cx, atom, ARGUMENT);
-    }
+    bool add(JSContext *cx, HandleAtom name, BindingKind kind, bool aliased);
 
     void noteDup() { hasDup_ = true; }
     bool hasDup() const { return hasDup_; }

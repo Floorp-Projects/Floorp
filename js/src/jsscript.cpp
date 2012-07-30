@@ -84,7 +84,7 @@ BindingIter::settle()
         return;
     Shape &shape = shape_.front();
     jsid id = shape_.front().propid();
-    binding_.maybeName = JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->asPropertyName() : NULL;
+    binding_.name = JSID_TO_ATOM(id)->asPropertyName();
     binding_.kind = shape.slot() - CallObject::RESERVED_SLOTS < bindings_->numArgs()
                     ? ARGUMENT
                     : shape.writable() ? VARIABLE : CONSTANT;
@@ -125,7 +125,7 @@ Bindings::argumentsVarIndex(JSContext *cx) const
 }
 
 bool
-Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
+Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind, bool aliased)
 {
     if (!ensureShape(cx))
         return false;
@@ -169,7 +169,8 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         id = AtomToId(name);
     }
 
-    StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ);
+    uint32_t flags = BaseShape::VAROBJ | (aliased ? BaseShape::CLOSED_VAR : 0);
+    StackBaseShape base(&CallClass, cx->global(), flags);
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
@@ -224,6 +225,29 @@ Bindings::callObjectShape(JSContext *cx) const
     }
 
     return shape;
+}
+
+bool
+Bindings::extractClosedArgsAndVars(JSContext *cx, SlotVector *args, SlotVector *vars)
+{
+    if (!ensureShape(cx))
+        return false;
+
+    for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
+        Shape &shape = r.front();
+        if (shape.base()->isClosedVar()) {
+            unsigned i = shape.slot() - CallObject::RESERVED_SLOTS;
+            if (i < nargs) {
+                if (!args->append(i))
+                    return false;
+            } else {
+                JS_ASSERT(i < count());
+                if (!vars->append(i - nargs))
+                    return false;
+            }
+        }
+    }
+    return true;
 }
 
 void
@@ -402,63 +426,21 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (nameCount > 0) {
         LifoAllocScope las(&cx->tempLifoAlloc());
 
-        /*
-         * To xdr the names we prefix the names with a bitmap descriptor and
-         * then xdr the names as strings. For argument names (indexes below
-         * nargs) the corresponding bit in the bitmap is unset when the name
-         * is null. Such null names are not encoded or decoded. For variable
-         * names (indexes starting from nargs) bitmap's bit is set when the
-         * name is declared as const, not as ordinary var.
-         * */
-        unsigned bitmapLength = JS_HOWMANY(nameCount, JS_BITS_PER_UINT32);
-        uint32_t *bitmap = cx->tempLifoAlloc().newArray<uint32_t>(bitmapLength);
-        if (!bitmap) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-
         BindingVector names(cx);
         if (mode == XDR_ENCODE) {
             if (!GetOrderedBindings(cx, script->bindings, &names))
                 return false;
-            PodZero(bitmap, bitmapLength);
-            for (unsigned i = 0; i < nameCount; i++) {
-                if (i < nargs && names[i].maybeName)
-                    bitmap[i >> JS_BITS_PER_UINT32_LOG2] |= JS_BIT(i & (JS_BITS_PER_UINT32 - 1));
-            }
-        }
-        for (unsigned i = 0; i < bitmapLength; ++i) {
-            if (!xdr->codeUint32(&bitmap[i]))
-                return false;
         }
 
         for (unsigned i = 0; i < nameCount; i++) {
-            if (i < nargs &&
-                !(bitmap[i >> JS_BITS_PER_UINT32_LOG2] & JS_BIT(i & (JS_BITS_PER_UINT32 - 1))))
-            {
-                if (mode == XDR_DECODE) {
-                    uint16_t dummy;
-                    if (!bindings.addDestructuring(cx, &dummy))
-                        return false;
-                } else {
-                    JS_ASSERT(!names[i].maybeName);
-                }
-                continue;
-            }
-
             RootedAtom name(cx);
             if (mode == XDR_ENCODE)
-                name = names[i].maybeName;
+                name = names[i].name;
             if (!XDRAtom(xdr, name.address()))
                 return false;
             if (mode == XDR_DECODE) {
-                BindingKind kind = (i < nargs)
-                                   ? ARGUMENT
-                                   : (bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
-                                      JS_BIT(i & (JS_BITS_PER_UINT32 - 1))
-                                     ? CONSTANT
-                                     : VARIABLE);
-                if (!bindings.add(cx, name, kind))
+                BindingKind kind = (i < nargs) ? ARGUMENT : VARIABLE;
+                if (!bindings.add(cx, name, kind, /* aliased = */ false))
                     return false;
             }
         }
@@ -589,7 +571,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                                                 nClosedVars, nTypeSets))
             return JS_FALSE;
 
-        script->bindings.transfer(&bindings);
+        script->bindings.transferFrom(&bindings);
         JS_ASSERT(!script->mainOffset);
         script->mainOffset = prologLength;
         script->nfixed = uint16_t(version >> 16);
@@ -1690,6 +1672,10 @@ JSScript::fullyInitTrivial(JSContext *cx, Handle<JSScript*> script)
 /* static */ bool
 JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, BytecodeEmitter *bce)
 {
+    Bindings::SlotVector closedArgs(cx), closedVars(cx);
+    if (!script->bindings.extractClosedArgsAndVars(cx, &closedArgs, &closedVars))
+        return false;
+
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
     JS_ASSERT(bce->objectList.length <= INDEX_LIMIT);
@@ -1697,15 +1683,11 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
 
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
-
-    if (!bce->sc->bindings.ensureShape(cx))
-        return false;
-
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
-    uint16_t nClosedArgs = uint16_t(bce->closedArgs.length());
-    JS_ASSERT(nClosedArgs == bce->closedArgs.length());
-    uint16_t nClosedVars = uint16_t(bce->closedVars.length());
-    JS_ASSERT(nClosedVars == bce->closedVars.length());
+    uint16_t nClosedArgs = uint16_t(closedArgs.length());
+    JS_ASSERT(nClosedArgs == closedArgs.length());
+    uint16_t nClosedVars = uint16_t(closedVars.length());
+    JS_ASSERT(nClosedVars == closedVars.length());
     if (!partiallyInit(cx, script, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
                        bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
                        bce->constList.length(), nClosedArgs, nClosedVars,
@@ -1716,7 +1698,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    uint32_t nfixed = bce->sc->inFunction() ? bce->sc->bindings.numVars() : 0;
+    uint32_t nfixed = bce->sc->inFunction() ? bce->script->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1766,11 +1748,9 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     }
 
     if (nClosedArgs)
-        PodCopy<uint32_t>(script->closedArgs()->vector, &bce->closedArgs[0], nClosedArgs);
+        PodCopy<uint32_t>(script->closedArgs()->vector, &closedArgs[0], nClosedArgs);
     if (nClosedVars)
-        PodCopy<uint32_t>(script->closedVars()->vector, &bce->closedVars[0], nClosedVars);
-
-    script->bindings.transfer(&bce->sc->bindings);
+        PodCopy<uint32_t>(script->closedVars()->vector, &closedVars[0], nClosedVars);
 
     RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
@@ -2144,15 +2124,9 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         return NULL;
 
     for (unsigned i = 0; i < names.length(); ++i) {
-        if (JSAtom *atom = names[i].maybeName) {
-            Rooted<JSAtom*> root(cx, atom);
-            if (!bindings.add(cx, root, names[i].kind))
-                return NULL;
-        } else {
-            uint16_t _;
-            if (!bindings.addDestructuring(cx, &_))
-                return NULL;
-        }
+        Rooted<JSAtom*> atom(cx, names[i].name);
+        if (!bindings.add(cx, atom, names[i].kind, /* aliasedVar = */ false))
+            return NULL;
     }
 
     if (!bindings.ensureShape(cx))
@@ -2221,7 +2195,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         return NULL;
     }
 
-    dst->bindings.transfer(&bindings);
+    dst->bindings.transferFrom(&bindings);
 
     /* This assignment must occur before all the Rebase calls. */
     dst->data = data;

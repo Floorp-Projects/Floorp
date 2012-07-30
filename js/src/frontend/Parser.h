@@ -327,7 +327,8 @@ Parser::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 }
 
 bool
-DefineArg(ParseNode *pn, HandlePropertyName name, unsigned i, Parser *parser);
+DefineArg(Parser *parser, ParseNode *funcpn, HandlePropertyName name, bool destructuringArg = false,
+          Definition **duplicatedArg = NULL);
 
 } /* namespace frontend */
 } /* namespace js */
