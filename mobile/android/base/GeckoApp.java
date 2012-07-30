@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.ui.PanZoomController;
+import org.mozilla.gecko.util.ConfigurationUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -476,8 +477,7 @@ abstract public class GeckoApp
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-            DisplayMetrics metrics = new DisplayMetrics();
-            ((Activity) GeckoApp.mAppContext).getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            DisplayMetrics metrics = ConfigurationUtils.getDisplayMetrics(mAppContext);
 
             // heightPixels changes during rotation.
             int restrictedHeightSpec = MeasureSpec.makeMeasureSpec((int) (0.75 * metrics.heightPixels), MeasureSpec.AT_MOST);
@@ -603,12 +603,6 @@ abstract public class GeckoApp
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null)
             outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
-    }
-
-    public DisplayMetrics getDisplayMetrics() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        return metrics;
     }
 
     public void getAndProcessThumbnailForTab(final Tab tab) {
