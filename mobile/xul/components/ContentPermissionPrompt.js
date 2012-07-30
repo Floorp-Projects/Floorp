@@ -11,26 +11,26 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const kCountBeforeWeRemember = 5;
 
-function setPagePermission(type, uri, allow) {
+function setPagePermission(type, principal, allow) {
   let pm = Services.perms;
   let contentPrefs = Services.contentPrefs;
   let contentPrefName = type + ".request.remember";
 
-  if (!contentPrefs.hasPref(uri, contentPrefName))
-      contentPrefs.setPref(uri, contentPrefName, 0);
+  if (!contentPrefs.hasPref(principal.URI, contentPrefName))
+      contentPrefs.setPref(principal.URI, contentPrefName, 0);
 
-  let count = contentPrefs.getPref(uri, contentPrefName);
+  let count = contentPrefs.getPref(principal.URI, contentPrefName);
 
   if (allow == false)
     count--;
   else
     count++;
-    
-  contentPrefs.setPref(uri, contentPrefName, count);
+
+  contentPrefs.setPref(principal.URI, contentPrefName, count);
   if (count == kCountBeforeWeRemember)
-    pm.add(uri, type, Ci.nsIPermissionManager.ALLOW_ACTION);
+    pm.addFromPrincipal(principal, type, Ci.nsIPermissionManager.ALLOW_ACTION);
   else if (count == -kCountBeforeWeRemember)
-    pm.add(uri, type, Ci.nsIPermissionManager.DENY_ACTION);
+    pm.addFromPrincipal(principal, type, Ci.nsIPermissionManager.DENY_ACTION);
 }
 
 const kEntities = { "geolocation": "geolocation", "desktop-notification": "desktopNotification",
@@ -70,7 +70,7 @@ ContentPermissionPrompt.prototype = {
   },
 
   handleExistingPermission: function handleExistingPermission(request) {
-    let result = Services.perms.testExactPermission(request.uri, request.type);
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return true;
@@ -101,7 +101,7 @@ ContentPermissionPrompt.prototype = {
       label: browserBundle.GetStringFromName(entityName + ".allow"),
       accessKey: null,
       callback: function(notification) {
-        setPagePermission(request.type, request.uri, true);
+        setPagePermission(request.type, request.principal, true);
         request.allow();
       }
     },
@@ -109,13 +109,13 @@ ContentPermissionPrompt.prototype = {
       label: browserBundle.GetStringFromName(entityName + ".dontAllow"),
       accessKey: null,
       callback: function(notification) {
-        setPagePermission(request.type, request.uri, false);
+        setPagePermission(request.type, request.principal, false);
         request.cancel();
       }
     }];
 
     let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
-                                                     [request.uri.host], 1);
+                                                     [request.principal.URI.host], 1);
     let newBar = notificationBox.appendNotification(message,
                                                     request.type,
                                                     "", // Notifications in Fennec do not display images.
