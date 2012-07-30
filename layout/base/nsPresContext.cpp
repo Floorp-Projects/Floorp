@@ -297,7 +297,6 @@ nsPresContext::~nsPresContext()
                                   this);
 
   NS_IF_RELEASE(mDeviceContext);
-  NS_IF_RELEASE(mLanguage);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -1121,14 +1120,12 @@ void
 nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
   if (mLangService) {
-    NS_IF_RELEASE(mLanguage);
-    mLanguage = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
+    mLanguage = mLangService->LookupCharSet(aCharSet.get());
     // this will be a language group (or script) code rather than a true language code
 
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
     if (mLanguage == nsGkAtoms::Unicode) {
-      NS_RELEASE(mLanguage);
-      NS_IF_ADDREF(mLanguage = mLangService->GetLocaleLanguage()); 
+      mLanguage = mLangService->GetLocaleLanguage();
     }
     ResetCachedFontPrefs();
   }
