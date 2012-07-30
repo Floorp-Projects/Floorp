@@ -522,6 +522,10 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "mozilla/dom/Activity.h"
 
+#include "DOMCameraManager.h"
+#include "CameraControl.h"
+#include "CameraCapabilities.h"
+
 #include "DOMError.h"
 #include "DOMRequest.h"
 #include "nsIOpenWindowEventDetail.h"
@@ -1668,6 +1672,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
+  NS_DEFINE_CLASSINFO_DATA(CameraManager, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CameraControl, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CameraCapabilities, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(DOMError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -2466,6 +2477,7 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_BT
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorBluetooth)
 #endif
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorCamera)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
 
   DOM_CLASSINFO_MAP_END
@@ -4456,6 +4468,18 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 #endif
+
+  DOM_CLASSINFO_MAP_BEGIN(CameraManager, nsIDOMCameraManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCameraManager)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CameraControl, nsICameraControl)
+    DOM_CLASSINFO_MAP_ENTRY(nsICameraControl)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CameraCapabilities, nsICameraCapabilities)
+    DOM_CLASSINFO_MAP_ENTRY(nsICameraCapabilities)
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DOMError, nsIDOMDOMError)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMError)
