@@ -246,8 +246,6 @@ nsPresContext::~nsPresContext()
     // unclear if these are needed, but can't hurt
     mEventManager->NotifyDestroyPresContext(this);
     mEventManager->SetPresContext(nsnull);
-
-    NS_RELEASE(mEventManager);
   }
 
   if (mPrefChangedTimer)
@@ -356,8 +354,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
     // unclear if these are needed, but can't hurt
     tmp->mEventManager->NotifyDestroyPresContext(tmp);
     tmp->mEventManager->SetPresContext(nsnull);
-
-    NS_RELEASE(tmp->mEventManager);
+    tmp->mEventManager = nsnull;
   }
 
   // We own only the items in mDOMMediaQueryLists that have listeners;
@@ -924,7 +921,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   }
 
   mEventManager = new nsEventStateManager();
-  NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
 
