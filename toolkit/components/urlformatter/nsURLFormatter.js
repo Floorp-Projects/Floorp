@@ -24,6 +24,12 @@ const PREF_PARTNER_BRANCH             = "app.partner.";
 const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 
+#ifdef OFFICIAL_BUILD
+const MOZ_OFFICIAL_BUILD = true;
+#else
+const MOZ_OFFICIAL_BUILD = false;
+#endif
+
 function nsURLFormatterService() {
   XPCOMUtils.defineLazyGetter(this, "appInfo", function UFS_appInfo() {
     return Cc["@mozilla.org/xre/app-info;1"].
@@ -121,7 +127,8 @@ nsURLFormatterService.prototype = {
     OS_VERSION:       function() this.OSVersion,
     CHANNEL:          function() this.updateChannel,
     DISTRIBUTION:     function() this.distribution.id,
-    DISTRIBUTION_VERSION: function() this.distribution.version
+    DISTRIBUTION_VERSION: function() this.distribution.version,
+    SAFEBROWSING_ID:  function() MOZ_OFFICIAL_BUILD ? "navclient-auto-ffox" : this.appInfo.name,
   },
 
   formatURL: function uf_formatURL(aFormat) {
