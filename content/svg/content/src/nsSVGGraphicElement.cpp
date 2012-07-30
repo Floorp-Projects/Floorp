@@ -124,9 +124,10 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *eleme
 NS_IMETHODIMP nsSVGGraphicElement::GetTransform(
     nsIDOMSVGAnimatedTransformList **aTransform)
 {
-  *aTransform =
-    DOMSVGAnimatedTransformList::GetDOMWrapper(GetAnimatedTransformList(), this)
-    .get();
+  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
+  // to allocate the SVGAnimatedTransformList if it hasn't already done so:
+  *aTransform = DOMSVGAnimatedTransformList::GetDOMWrapper(
+                  GetAnimatedTransformList(DO_ALLOCATE), this).get();
   return NS_OK;
 }
 
@@ -237,9 +238,9 @@ nsSVGGraphicElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
 }
 
 SVGAnimatedTransformList*
-nsSVGGraphicElement::GetAnimatedTransformList()
+nsSVGGraphicElement::GetAnimatedTransformList(PRUint32 aFlags)
 {
-  if (!mTransforms) {
+  if (!mTransforms && (aFlags & DO_ALLOCATE)) {
     mTransforms = new SVGAnimatedTransformList();
   }
   return mTransforms;
