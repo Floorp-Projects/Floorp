@@ -22,8 +22,6 @@ LIBXUL_LIBRARY	= 1
 EXPORTS_NAMESPACES = mozilla/css
 
 EXPORTS		= \
-		AnimationCommon.h \
-		nsAnimationManager.h \
 		nsCSSAnonBoxList.h \
 		nsCSSAnonBoxes.h \
 		nsCSSFontDescList.h \
@@ -57,7 +55,6 @@ EXPORTS		= \
 		nsRuleNode.h \
 		nsRuleProcessorData.h \
 		nsRuleWalker.h \
-		nsStyleAnimation.h \
 		nsStyleContext.h \
 		nsStyleCoord.h \
 		nsStyleSet.h \
@@ -127,9 +124,7 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-LOCAL_INCLUDES	+= \
+LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../generic \
 		-I$(srcdir)/../xul/base/src \
