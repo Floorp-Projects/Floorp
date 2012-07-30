@@ -497,49 +497,6 @@ ReportBadParameter(JSContext *cx, Parser *parser, JSAtom *name, unsigned errorNu
            parser->reportStrictModeError(dn, errorNumber, bytes.ptr());
 }
 
-/*
- * In strict mode code, all parameter names must be distinct, must not be
- * strict mode reserved keywords, and must not be 'eval' or 'arguments'.  We
- * must perform these checks here, and not eagerly during parsing, because a
- * function's body may turn on strict mode for the function head.
- */
-static bool
-CheckStrictParameters(JSContext *cx, Parser *parser)
-{
-    SharedContext *sc = parser->tc->sc;
-    JS_ASSERT(sc->inFunction());
-
-    if (!sc->needStrictChecks() || sc->bindings.numArgs() == 0)
-        return true;
-
-    /* name => whether we've warned about the name already */
-    HashMap<JSAtom *, bool> parameters(cx);
-    if (!parameters.init(sc->bindings.numArgs()))
-        return false;
-
-    // Start with lastVariable(), not the last argument, for destructuring.
-    for (BindingIter bi(cx, sc->bindings); bi; bi++) {
-        PropertyName *name = bi->maybeName;
-        if (!name)
-            continue;
-
-        /*
-         * Check for a duplicate parameter: warn or report an error exactly
-         * once for each duplicated parameter.
-         */
-        if (HashMap<JSAtom *, bool>::AddPtr p = parameters.lookupForAdd(name)) {
-            if (!p->value && !ReportBadParameter(cx, parser, name, JSMSG_DUPLICATE_FORMAL))
-                return false;
-            p->value = true;
-        } else {
-            if (!parameters.add(p, name, false))
-                return false;
-        }
-    }
-
-    return true;
-}
-
 static bool
 BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kind)
 {
@@ -608,13 +565,6 @@ Parser::functionBody(FunctionBodyType type)
             pn = NULL;
         }
     }
-
-    /*
-     * Check CheckStrictParameters before arguments logic below adds
-     * 'arguments' to bindings.
-     */
-    if (!CheckStrictParameters(context, this))
-        return NULL;
 
     Rooted<PropertyName*> arguments(context, context->runtime->atomState.argumentsAtom);
 
@@ -1191,28 +1141,37 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 bool
 frontend::DefineArg(ParseNode *pn, PropertyName *name, unsigned i, Parser *parser)
 {
+    JSContext *cx = parser->context;
+    TreeContext *tc = parser->tc;
+    SharedContext *sc = tc->sc;
+
     /*
      * Make an argument definition node, distinguished by being in
      * parser->tc->decls but having PNK_NAME kind and JSOP_NOP op. Insert it in
      * a PNK_ARGSBODY list node returned via pn->pn_body.
      */
-    ParseNode *argpn = NameNode::create(PNK_NAME, name, parser, parser->tc);
+    ParseNode *argpn = NameNode::create(PNK_NAME, name, parser, tc);
     if (!argpn)
         return false;
     JS_ASSERT(argpn->isKind(PNK_NAME) && argpn->isOp(JSOP_NOP));
 
-    if (!CheckStrictBinding(parser->context, parser, name, argpn))
+    if (sc->needStrictChecks() && tc->decls.lookupFirst(name)) {
+        if (!ReportBadParameter(cx, parser, name, JSMSG_DUPLICATE_FORMAL))
+            return false;
+    }
+
+    if (!CheckStrictBinding(cx, parser, name, argpn))
         return false;
 
     /* Arguments are initialized by definition. */
-    if (!Define(argpn, name, parser->tc))
+    if (!Define(argpn, name, tc))
         return false;
 
     ParseNode *argsbody = pn->pn_body;
     argsbody->append(argpn);
 
     argpn->setOp(JSOP_GETARG);
-    if (!argpn->pn_cookie.set(parser->context, parser->tc->staticLevel, i))
+    if (!argpn->pn_cookie.set(cx, tc->staticLevel, i))
         return false;
     argpn->pn_dflags |= PND_BOUND;
     return true;
