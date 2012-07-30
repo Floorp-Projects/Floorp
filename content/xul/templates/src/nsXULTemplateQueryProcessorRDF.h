@@ -333,7 +333,7 @@ protected:
     /**
      * The queries
      */
-    nsCOMArray<nsITemplateRDFQuery> mQueries;
+    nsTArray<nsCOMPtr<nsITemplateRDFQuery> > mQueries;
 
     /**
      * All of the RDF tests in the rule network, which are checked when a new

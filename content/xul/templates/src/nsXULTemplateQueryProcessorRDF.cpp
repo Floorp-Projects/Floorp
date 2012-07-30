@@ -107,7 +107,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorRDF)
     if (tmp->mRuleToBindingsMap.IsInitialized()) {
         tmp->mRuleToBindingsMap.EnumerateRead(RuleToBindingTraverser, &cb);
     }
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mQueries)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(mQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateQueryProcessorRDF)
@@ -433,9 +433,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = mQueries.AppendObject(query);
-    if (NS_FAILED(rv))
-        return rv;
+    mQueries.AppendElement(query);
 
     *_retval = query;
     NS_ADDREF(*_retval);
@@ -472,7 +470,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
         }
         else {
             // clear the cached results
-            PRInt32 count = mQueries.Count();
+            PRInt32 count = mQueries.Length();
             for (PRInt32 r = 0; r < count; r++) {
                 mQueries[r]->ClearCachedResults();
             }
