@@ -1059,6 +1059,7 @@ bool GLContextEGL::AttachSharedHandle(TextureImage::TextureShareType aType,
         NS_ASSERTION(mShareWithEGLImage, "EGLImage not supported or disabled in runtime");
 
         EGLTextureWrapper* wrap = (EGLTextureWrapper*)aSharedHandle;
+        wrap->WaitSync();
         fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, wrap->GetEGLImage());
         break;
     }
