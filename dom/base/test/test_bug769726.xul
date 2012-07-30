@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=769726
+-->
+<window title="Mozilla Bug 769726"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="MockIdleService.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=769726"
+     target="_blank">Mozilla Bug 769726</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+// msgXCount
+var msg0Count = 0;
+var msg2Count = 0;
+var msg4Count = 0;
+var IdleHandler0 = function() { dump("rmsg 0, should never be used!\n"); };
+var idleObserver0 = {time: 1, onidle: IdleHandler0, onactive: IdleHandler0};
+
+/* Start test bug 769726 */
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setBoolPref("dom.idle-observers-api.fuzz_time.disabled", true);
+addLoadEvent(nextTest);
+var gen = doTest();
+
+/*******************************************************************************
+* setCachePref()
+*******************************************************************************/
+var gOrigMaxTotalViewers = undefined;
+function setCachePref(enabled) {
+  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+  if (enabled) {
+    is(typeof gOrigMaxTotalViewers, "undefined", "don't double-enable bfcache");
+    prefBranch.setBoolPref("browser.sessionhistory.cache_subframes", true);
+    gOrigMaxTotalViewers =
+      prefBranch.getIntPref("browser.sessionhistory.max_total_viewers");
+    prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", 10);
+  }
+  else {
+    is(typeof gOrigMaxTotalViewers, "number", "don't double-disable bfcache");
+    prefBranch.setIntPref("browser.sessionhistory.max_total_viewers",
+    gOrigMaxTotalViewers);
+    gOrigMaxTotalViewers = undefined;
+    try {
+      prefBranch.clearUserPref("browser.sessionhistory.cache_subframes");
+    } catch (e) { /* Pref didn't exist, meh */ }
+  }
+}
+
+/*******************************************************************************
+* IFrame1_Callback()
+*******************************************************************************/
+function IFrame1_Callback() {
+  dump("IFrame1_Callback()\n");
+  let passed = false;
+  msg2Count++;
+  ok(true, "Failed notifying idle observer when web page 1 thawed. " +
+  "Idle observer is registered within web page 1 " +
+  "in file bfcache_iframe2.html.\n");
+
+  history.forward();
+  if (msg2Count === 1 && msg4Count === 1) {
+    dump("msg2Count: " + msg2Count + " msg4Count " + msg4Count + "\n");
+    passed = true;
+  }
+  ok(passed, "Failed OS Idle API bug 769726 bfcache test.\n");
+  SimpleTest.executeSoon(nextTest);
+}
+
+/*******************************************************************************
+* IFrame2_Callback()
+*******************************************************************************/
+function IFrame2_Callback() {
+  dump("IFrame2_Callback()\n");
+  msg4Count++;
+  ok(true, "Failed notifying idle observer registered within web page 2 " +
+  "in file bfcache_iframe2.html.\n");
+  history.back();
+}
+
+/*******************************************************************************
+* nextTest()
+*******************************************************************************/
+function nextTest() {
+  try {
+    gen.next();
+  } catch (e if e instanceof StopIteration) {
+  }
+}
+
+/*******************************************************************************
+* doTest()
+*******************************************************************************/
+function doTest() {
+  var container = document.getElementById('container');
+  setCachePref(true);
+
+  RegisterMockIdleService();
+  window.idleServiceObj = idleServiceObj;
+  window.idleServiceObj.observers.push( {observer: idleObserver0, time: 0, } );
+  idleServiceObj.idleTime = 500;
+
+  // create a new iframe
+  var iframe = document.createElementNS("http://www.w3.org/1999/xhtml",
+  "iframe");
+  container.appendChild(iframe);
+  iframe.contentWindow.x = "y";
+
+  // Try loading in an iframe
+  iframe.setAttribute("src", "bfcache_iframe1.html");
+  iframe.onload = nextTest;
+  event = yield;
+
+  SimpleTest.executeSoon(nextTest);
+  event = yield;
+
+  // Try loading again in an iframe
+  iframe.setAttribute("src", "bfcache_iframe2.html");
+  iframe.onload = nextTest;
+  yield;
+
+  yield;
+  setCachePref(false);
+  SimpleTest.finish();
+  yield;
+}
+
+  ]]></script>
+  <vbox id="container" flex="1">
+    <description>Below will an iframe be added</description>
+  </vbox>
+</window>
+
