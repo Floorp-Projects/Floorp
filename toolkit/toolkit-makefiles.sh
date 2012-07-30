@@ -190,6 +190,7 @@ MAKEFILES_content="
   content/html/document/Makefile
   content/html/document/public/Makefile
   content/html/document/src/Makefile
+  content/media/webrtc/Makefile
   content/svg/Makefile
   content/svg/document/src/Makefile
   content/svg/content/Makefile
@@ -269,6 +270,7 @@ MAKEFILES_netwerk="
   netwerk/ipc/Makefile
   netwerk/protocol/Makefile
   netwerk/protocol/about/Makefile
+  netwerk/protocol/app/Makefile
   netwerk/protocol/data/Makefile
   netwerk/protocol/device/Makefile
   netwerk/protocol/file/Makefile
@@ -448,12 +450,14 @@ MAKEFILES_xulapp="
   toolkit/components/find/Makefile
   toolkit/components/intl/Makefile
   toolkit/components/microformats/Makefile
+  toolkit/components/osfile/Makefile
   toolkit/components/parentalcontrols/Makefile
   toolkit/components/passwordmgr/Makefile
   toolkit/components/perf/Makefile
   toolkit/components/places/Makefile
   toolkit/components/prompts/Makefile
   toolkit/components/prompts/src/Makefile
+  toolkit/components/social/Makefile
   toolkit/components/startup/Makefile
   toolkit/components/startup/public/Makefile
   toolkit/components/statusfilter/Makefile
@@ -463,6 +467,7 @@ MAKEFILES_xulapp="
   toolkit/components/viewconfig/Makefile
   toolkit/components/viewsource/Makefile
   toolkit/devtools/Makefile
+  toolkit/devtools/sourcemap/Makefile
   toolkit/identity/Makefile
   toolkit/locales/Makefile
   toolkit/mozapps/downloads/Makefile
@@ -472,9 +477,11 @@ MAKEFILES_xulapp="
   toolkit/mozapps/preferences/Makefile
   toolkit/mozapps/shared/Makefile
   toolkit/mozapps/update/Makefile
+  toolkit/mozapps/update/common/Makefile
   toolkit/obsolete/Makefile
   toolkit/profile/Makefile
   toolkit/themes/Makefile
+  toolkit/webapps/Makefile
   toolkit/xre/Makefile
 "
 
@@ -798,6 +805,7 @@ if [ "$ENABLE_TESTS" ]; then
     js/xpconnect/tests/mochitest/Makefile
     layout/base/tests/Makefile
     layout/base/tests/chrome/Makefile
+    layout/base/tests/cpp-tests/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
     layout/inspector/tests/Makefile
@@ -858,6 +866,8 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/components/contentprefs/tests/Makefile
     toolkit/components/downloads/test/Makefile
     toolkit/components/microformats/tests/Makefile
+    toolkit/components/osfile/tests/Makefile
+    toolkit/components/osfile/tests/mochi/Makefile
     toolkit/components/passwordmgr/test/Makefile
     toolkit/components/places/tests/Makefile
     toolkit/components/places/tests/chrome/Makefile
@@ -866,6 +876,8 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/components/places/tests/mochitest/bug_461710/Makefile
     toolkit/components/prompts/test/Makefile
     toolkit/components/satchel/test/Makefile
+    toolkit/components/social/test/Makefile
+    toolkit/components/social/test/browser/Makefile
     toolkit/components/telemetry/tests/Makefile
     toolkit/components/urlformatter/tests/Makefile
     toolkit/components/viewsource/test/Makefile
@@ -876,6 +888,7 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/content/tests/chrome/rtltest/Makefile
     toolkit/content/tests/widgets/Makefile
     toolkit/devtools/debugger/tests/Makefile
+    toolkit/devtools/sourcemap/tests/Makefile
     toolkit/identity/tests/Makefile
     toolkit/identity/tests/chrome/Makefile
     toolkit/identity/tests/mochitest/Makefile
@@ -895,6 +908,7 @@ if [ "$ENABLE_TESTS" ]; then
     xpcom/tests/Makefile
     xpcom/tests/bug656331_component/Makefile
     xpcom/tests/component/Makefile
+    xpcom/tests/component_no_aslr/Makefile
     xpcom/tests/external/Makefile
     xpcom/typelib/xpt/tests/Makefile
   "
@@ -904,15 +918,18 @@ if [ "$ENABLE_TESTS" ]; then
       accessible/tests/mochitest/Makefile
       accessible/tests/mochitest/actions/Makefile
       accessible/tests/mochitest/attributes/Makefile
+      accessible/tests/mochitest/bounds/Makefile
       accessible/tests/mochitest/editabletext/Makefile
       accessible/tests/mochitest/elm/Makefile
       accessible/tests/mochitest/events/Makefile
       accessible/tests/mochitest/focus/Makefile
+      accessible/tests/mochitest/hittest/Makefile
       accessible/tests/mochitest/hyperlink/Makefile
       accessible/tests/mochitest/hypertext/Makefile
       accessible/tests/mochitest/name/Makefile
       accessible/tests/mochitest/pivot/Makefile
       accessible/tests/mochitest/relations/Makefile
+      accessible/tests/mochitest/role/Makefile
       accessible/tests/mochitest/selectable/Makefile
       accessible/tests/mochitest/states/Makefile
       accessible/tests/mochitest/table/Makefile
@@ -1082,7 +1099,9 @@ if [ "$ACCESSIBILITY" ]; then
     accessible/public/Makefile
     accessible/src/Makefile
     accessible/src/base/Makefile
+    accessible/src/generic/Makefile
     accessible/src/html/Makefile
+    accessible/src/jsat/Makefile
     accessible/src/xpcom/Makefile
   "
   if [ ! "$DISABLE_XFORMS_HOOKS" ]; then
