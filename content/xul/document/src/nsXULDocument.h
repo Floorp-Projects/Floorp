@@ -345,7 +345,7 @@ protected:
      * same order as in the document, then the overlays from the chrome
      * registry.
      */
-    nsCOMArray<nsIURI> mUnloadedOverlays;
+    nsTArray<nsCOMPtr<nsIURI> > mUnloadedOverlays;
 
     /**
      * Load the transcluded script at the specified URI. If the
